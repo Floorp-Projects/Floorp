@@ -35,12 +35,6 @@ function setup() {
   // XXX(valentin): It would be nice to just call trr_test_setup() here, but
   // the relative path here makes it awkward. Would be nice to fix someday.
   addCertFromFile(certdb, "../unit/http2-ca.pem", "CTu,u,u");
-
-  if (!gDNS) {
-    gDNS = Cc["@mozilla.org/network/dns-service;1"].getService(
-      Ci.nsIDNSService
-    );
-  }
 }
 
 setup();

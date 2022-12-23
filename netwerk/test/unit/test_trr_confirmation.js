@@ -4,21 +4,22 @@
 
 "use strict";
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
 async function waitForConfirmationState(state, msToWait = 0) {
   await TestUtils.waitForCondition(
-    () => dns.currentTrrConfirmationState == state,
-    `Timed out waiting for ${state}. Currently ${dns.currentTrrConfirmationState}`,
+    () => Services.dns.currentTrrConfirmationState == state,
+    `Timed out waiting for ${state}. Currently ${Services.dns.currentTrrConfirmationState}`,
     1,
     msToWait
   );
-  equal(dns.currentTrrConfirmationState, state, "expected confirmation state");
+  equal(
+    Services.dns.currentTrrConfirmationState,
+    state,
+    "expected confirmation state"
+  );
 }
 
 const CONFIRM_OFF = 0;
@@ -73,7 +74,7 @@ add_task(async function start_trr_server() {
 function trigger15Failures() {
   // We need to clear the cache in case a previous call to this method
   // put the results in the DNS cache.
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   let dnsRequests = [];
   // There are actually two TRR requests sent for A and AAAA records, so doing
@@ -113,9 +114,9 @@ add_task(async function confirm_off() {
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OFF);
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRROFF);
-  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OFF);
 });
 
 add_task(async function confirm_disabled() {
@@ -124,14 +125,14 @@ add_task(async function confirm_disabled() {
     "confirm.example.com"
   );
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
-  equal(dns.currentTrrConfirmationState, CONFIRM_DISABLED);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_DISABLED);
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
-  equal(dns.currentTrrConfirmationState, CONFIRM_DISABLED);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_DISABLED);
 });
 
 add_task(async function confirm_ok() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.confirmationNS",
     "confirm.example.com"
@@ -154,7 +155,7 @@ add_task(async function confirm_ok() {
   );
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
@@ -169,13 +170,13 @@ add_task(async function confirm_ok() {
   );
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
   await new Promise(resolve => do_timeout(100, resolve));
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Confirmation should still be pending"
   );
@@ -187,11 +188,11 @@ add_task(async function confirm_timeout() {
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OFF);
   await registerNS(7000);
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
@@ -206,13 +207,13 @@ add_task(async function confirm_fail_fast() {
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OFF);
   await trrServer.registerDoHAnswers("confirm.example.com", "NS", {
     error: 404,
   });
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
@@ -224,12 +225,12 @@ add_task(async function multiple_failures() {
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OFF);
 
   await registerNS(100);
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
@@ -241,7 +242,7 @@ add_task(async function multiple_failures() {
   // Check that failures during confirmation are ignored.
   await trigger15Failures();
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
@@ -260,7 +261,7 @@ add_task(async function test_connectivity_change() {
   );
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
@@ -276,7 +277,7 @@ add_task(async function test_connectivity_change() {
   );
   // This means a CP check completed successfully. But no CP was previously
   // detected, so this is mostly a no-op.
-  equal(dns.currentTrrConfirmationState, CONFIRM_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OK);
 
   Services.obs.notifyObservers(
     null,
@@ -285,7 +286,7 @@ add_task(async function test_connectivity_change() {
   );
   // This basically a successful CP login event. Wasn't captive before.
   // Still treating as a no-op.
-  equal(dns.currentTrrConfirmationState, CONFIRM_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OK);
 
   // This makes the TRR service set mCaptiveIsPassed=false
   Services.obs.notifyObservers(
@@ -309,7 +310,7 @@ add_task(async function test_connectivity_change() {
   );
   // The notification should cause us to send a new confirmation request
   equal(
-    dns.currentTrrConfirmationState,
+    Services.dns.currentTrrConfirmationState,
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
@@ -326,10 +327,10 @@ add_task(async function test_network_change() {
     "confirm.example.com",
     "NS"
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OK);
 
   Services.obs.notifyObservers(null, "network:link-status-changed", "up");
-  equal(dns.currentTrrConfirmationState, CONFIRM_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OK);
   equal(
     await trrServer.requestCount("confirm.example.com", "NS"),
     confirmationCount
@@ -342,7 +343,7 @@ add_task(async function test_network_change() {
   // The network up event should reset the confirmation to TRYING_OK and do
   // another NS req
   Services.obs.notifyObservers(null, "network:link-status-changed", "up");
-  equal(dns.currentTrrConfirmationState, CONFIRM_TRYING_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_TRYING_OK);
   await waitForConfirmationState(CONFIRM_OK, 1000);
   // two extra confirmation events should have been received by the server
   equal(
@@ -356,12 +357,12 @@ add_task(async function test_uri_pref_change() {
     "confirm.example.com",
     "NS"
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_OK);
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query?changed`
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_TRYING_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_TRYING_OK);
   await waitForConfirmationState(CONFIRM_OK, 1000);
   equal(
     await trrServer.requestCount("confirm.example.com", "NS"),
@@ -385,10 +386,10 @@ add_task(async function test_autodetected_uri() {
     "confirm.example.com",
     "NS"
   );
-  dns.setDetectedTrrURI(
+  Services.dns.setDetectedTrrURI(
     `https://foo.example.com:${trrServer.port}/dns-query?changed2`
   );
-  equal(dns.currentTrrConfirmationState, CONFIRM_TRYING_OK);
+  equal(Services.dns.currentTrrConfirmationState, CONFIRM_TRYING_OK);
   await waitForConfirmationState(CONFIRM_OK, 1000);
   equal(
     await trrServer.requestCount("confirm.example.com", "NS"),

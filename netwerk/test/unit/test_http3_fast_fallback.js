@@ -13,9 +13,6 @@ let h2Port;
 let h3Port;
 let trrServer;
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
@@ -35,6 +32,7 @@ add_setup(async function setup() {
   trr_test_setup();
 
   if (mozinfo.socketprocess_networking) {
+    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 
@@ -772,7 +770,7 @@ add_task(async function testTwoFastFallbackTimers() {
 
   Services.obs.notifyObservers(null, "net:prune-all-connections");
   Services.obs.notifyObservers(null, "network:reset-http3-excluded-list");
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   // Do the same test again, but with a different configuration.
   Services.prefs.setIntPref(

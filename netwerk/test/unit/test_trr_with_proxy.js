@@ -71,7 +71,7 @@ class ProxyFilter {
 
 async function doTest(proxySetup, delay) {
   info("Verifying a basic A record");
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2"); // TRR-first
 
   trrProxy = new TRRProxy();
@@ -200,12 +200,12 @@ add_task(async function test_trr_proxy() {
 add_task(async function test_trr_uri_change() {
   Services.prefs.setIntPref("network.proxy.type", 0);
   Services.prefs.setBoolPref("network.trr.async_connInfo", true);
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2", "127.0.0.1");
 
   await new TRRDNSListener("car.example.com", "127.0.0.1");
 
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
   await new TRRDNSListener("car.example.net", "2.2.2.2");
 });

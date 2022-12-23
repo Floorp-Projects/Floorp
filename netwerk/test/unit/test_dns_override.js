@@ -1,8 +1,5 @@
 "use strict";
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
@@ -77,7 +74,7 @@ add_task(async function test_bad_IPs() {
 add_task(async function test_ipv4() {
   let listener = new Listener();
   override.addIPOverride(DOMAIN, "1.2.3.4");
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -88,14 +85,14 @@ add_task(async function test_ipv4() {
   );
   Assert.equal(await listener.firstAddress(), "1.2.3.4");
 
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 });
 
 add_task(async function test_ipv6() {
   let listener = new Listener();
   override.addIPOverride(DOMAIN, "fe80::6a99:9b2b:6ccc:6e1b");
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -106,14 +103,14 @@ add_task(async function test_ipv6() {
   );
   Assert.equal(await listener.firstAddress(), "fe80::6a99:9b2b:6ccc:6e1b");
 
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 });
 
 add_task(async function test_clearOverrides() {
   let listener = new Listener();
   override.addIPOverride(DOMAIN, "1.2.3.4");
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -124,11 +121,11 @@ add_task(async function test_clearOverrides() {
   );
   Assert.equal(await listener.firstAddress(), "1.2.3.4");
 
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 
   listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -140,7 +137,7 @@ add_task(async function test_clearOverrides() {
   Assert.notEqual(await listener.firstAddress(), "1.2.3.4");
 
   await new Promise(resolve => do_timeout(1000, resolve));
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 });
 
@@ -149,7 +146,7 @@ add_task(async function test_clearHostOverride() {
   override.addIPOverride(OTHER, "2.2.2.2");
   override.clearHostOverride(DOMAIN);
   let listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -162,7 +159,7 @@ add_task(async function test_clearHostOverride() {
   Assert.notEqual(await listener.firstAddress(), "2.2.2.2");
 
   listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     OTHER,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -181,7 +178,7 @@ add_task(async function test_clearHostOverride() {
   // If the next task ever starts failing, with an IP that is not in this
   // file, then likely the timeout is too small.
   await new Promise(resolve => do_timeout(1000, resolve));
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 });
 
@@ -191,7 +188,7 @@ add_task(async function test_multiple_IPs() {
   override.addIPOverride(DOMAIN, "::1");
   override.addIPOverride(DOMAIN, "fe80::6a99:9b2b:6ccc:6e1b");
   let listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -207,7 +204,7 @@ add_task(async function test_multiple_IPs() {
     "fe80::6a99:9b2b:6ccc:6e1b",
   ]);
 
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 });
 
@@ -217,7 +214,7 @@ add_task(async function test_address_family_flags() {
   override.addIPOverride(DOMAIN, "::1");
   override.addIPOverride(DOMAIN, "fe80::6a99:9b2b:6ccc:6e1b");
   let listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
@@ -232,7 +229,7 @@ add_task(async function test_address_family_flags() {
   ]);
 
   listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,
@@ -243,14 +240,14 @@ add_task(async function test_address_family_flags() {
   );
   Assert.deepEqual(await listener.addresses(), ["2.2.2.2", "1.1.1.1"]);
 
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 });
 
 add_task(async function test_cname_flag() {
   override.addIPOverride(DOMAIN, "2.2.2.2");
   let listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -269,7 +266,7 @@ add_task(async function test_cname_flag() {
   Assert.equal(inRecord.getNextAddrAsString(), "2.2.2.2");
 
   listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,
@@ -283,13 +280,13 @@ add_task(async function test_cname_flag() {
   Assert.equal(inRecord.canonicalName, DOMAIN, "No canonical name specified");
   Assert.equal(inRecord.getNextAddrAsString(), "2.2.2.2");
 
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 
   override.addIPOverride(DOMAIN, "2.2.2.2");
   override.setCnameOverride(DOMAIN, OTHER);
   listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,
@@ -303,14 +300,14 @@ add_task(async function test_cname_flag() {
   Assert.equal(inRecord.canonicalName, OTHER, "Must have correct CNAME");
   Assert.equal(inRecord.getNextAddrAsString(), "2.2.2.2");
 
-  dns.clearCache(false);
+  Services.dns.clearCache(false);
   override.clearOverrides();
 });
 
 add_task(async function test_nxdomain() {
   override.addIPOverride(DOMAIN, "N/A");
   let listener = new Listener();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     DOMAIN,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,

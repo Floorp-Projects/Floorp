@@ -52,6 +52,7 @@ add_setup(async function setup() {
   });
 
   if (mozinfo.socketprocess_networking) {
+    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 
@@ -97,7 +98,7 @@ async function ODoHConfigTest(query, ODoHHost, expectedResult = false) {
   }
 
   await topicObserved("odoh-service-activated");
-  Assert.equal(dns.ODoHActivated, expectedResult);
+  Assert.equal(Services.dns.ODoHActivated, expectedResult);
 }
 
 add_task(async function testODoHConfig1() {
@@ -127,12 +128,12 @@ add_task(async function testODoHConfig6() {
 
   // This is triggered by the expiration of the TTL.
   await topicObserved("odoh-service-activated");
-  Assert.ok(!dns.ODoHActivated);
+  Assert.ok(!Services.dns.ODoHActivated);
   Services.prefs.clearUserPref("network.trr.odoh.min_ttl");
 });
 
 add_task(async function testODoHConfig7() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
   Services.prefs.setBoolPref("network.trr.odoh.enabled", true);
   // At this point, we've queried the ODoHConfig, but there is no usable config
@@ -147,11 +148,11 @@ async function ODoHConfigTestHTTP(configUri, expectedResult) {
   Services.prefs.setCharPref("network.trr.odoh.configs_uri", configUri);
 
   await topicObserved("odoh-service-activated");
-  Assert.equal(dns.ODoHActivated, expectedResult);
+  Assert.equal(Services.dns.ODoHActivated, expectedResult);
 }
 
 add_task(async function testODoHConfig8() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setCharPref("network.trr.uri", "");
 
   await ODoHConfigTestHTTP(
@@ -178,7 +179,7 @@ add_task(async function testODoHConfig9() {
   Services.prefs.clearUserPref("network.trr.odoh.configs_uri");
 
   await topicObserved("odoh-service-activated");
-  Assert.ok(dns.ODoHActivated);
+  Assert.ok(Services.dns.ODoHActivated);
 
   await ODoHConfigTestHTTP(
     `https://foo.example.com:${h2Port}/odohconfig?downloadFrom=http`,
@@ -187,7 +188,7 @@ add_task(async function testODoHConfig9() {
 
   // This is triggered by the expiration of the TTL.
   await topicObserved("odoh-service-activated");
-  Assert.ok(dns.ODoHActivated);
+  Assert.ok(Services.dns.ODoHActivated);
   Services.prefs.clearUserPref("network.trr.odoh.min_ttl");
 });
 
@@ -269,7 +270,7 @@ add_task(test_no_retry_without_doh);
 add_task(test_connection_reuse_and_cycling).skip(); // Bug 1742743
 
 add_task(async function testODoHConfigNotAvailableInMode3() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref("network.trr.uri", "");
 
@@ -284,7 +285,7 @@ add_task(async function testODoHConfigNotAvailableInMode3() {
 });
 
 add_task(async function testODoHConfigNotAvailableInMode2() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 2);
   Services.prefs.setCharPref("network.trr.uri", "");
 
