@@ -79,13 +79,13 @@ struct nsHostKey {
   const nsCString host;
   const nsCString mTrrServer;
   uint16_t type = 0;
-  uint16_t flags = 0;
+  nsIDNSService::DNSFlags flags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
   uint16_t af = 0;
   bool pb = false;
   const nsCString originSuffix;
   explicit nsHostKey(const nsACString& host, const nsACString& aTrrServer,
-                     uint16_t type, uint16_t flags, uint16_t af, bool pb,
-                     const nsACString& originSuffix);
+                     uint16_t type, nsIDNSService::DNSFlags flags, uint16_t af,
+                     bool pb, const nsACString& originSuffix);
   bool operator==(const nsHostKey& other) const;
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   PLDHashNumber Hash() const;
@@ -150,13 +150,15 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
 
   // Checks if the record is usable (not expired and has a value)
   bool HasUsableResult(const mozilla::TimeStamp& now,
-                       uint16_t queryFlags = 0) const;
+                       nsIDNSService::DNSFlags queryFlags =
+                           nsIDNSService::RESOLVE_DEFAULT_FLAGS) const;
 
-  static DnsPriority GetPriority(uint16_t aFlags);
+  static DnsPriority GetPriority(nsIDNSService::DNSFlags aFlags);
 
   virtual void Cancel();
-  virtual bool HasUsableResultInternal(const mozilla::TimeStamp& now,
-                                       uint16_t queryFlags) const = 0;
+  virtual bool HasUsableResultInternal(
+      const mozilla::TimeStamp& now,
+      nsIDNSService::DNSFlags queryFlags) const = 0;
   virtual bool RefreshForNegativeResponse() const { return true; }
 
   mozilla::LinkedList<RefPtr<nsResolveHostCallback>> mCallbacks;
@@ -283,8 +285,9 @@ class AddrHostRecord final : public nsHostRecord {
   ~AddrHostRecord();
 
   // Checks if the record is usable (not expired and has a value)
-  bool HasUsableResultInternal(const mozilla::TimeStamp& now,
-                               uint16_t queryFlags) const override;
+  bool HasUsableResultInternal(
+      const mozilla::TimeStamp& now,
+      nsIDNSService::DNSFlags queryFlags) const override;
 
   bool RemoveOrRefresh(bool aTrrToo);  // Mark records currently being resolved
                                        // as needed to resolve again.
@@ -294,7 +297,7 @@ class AddrHostRecord final : public nsHostRecord {
   void NotifyRetryingTrr();
   void ResolveComplete();
 
-  static DnsPriority GetPriority(uint16_t aFlags);
+  static DnsPriority GetPriority(nsIDNSService::DNSFlags aFlags);
 
   // true if pending and on the queue (not yet given to getaddrinfo())
   bool onQueue() { return LoadNative() && isInList(); }
@@ -375,8 +378,9 @@ class TypeHostRecord final : public nsHostRecord,
   ~TypeHostRecord();
 
   // Checks if the record is usable (not expired and has a value)
-  bool HasUsableResultInternal(const mozilla::TimeStamp& now,
-                               uint16_t queryFlags) const override;
+  bool HasUsableResultInternal(
+      const mozilla::TimeStamp& now,
+      nsIDNSService::DNSFlags queryFlags) const override;
   bool RefreshForNegativeResponse() const override;
 
   mozilla::net::TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
@@ -391,16 +395,16 @@ class TypeHostRecord final : public nsHostRecord,
 
 NS_DEFINE_STATIC_IID_ACCESSOR(TypeHostRecord, TYPEHOSTRECORD_IID)
 
-static inline bool IsHighPriority(uint16_t flags) {
+static inline bool IsHighPriority(nsIDNSService::DNSFlags flags) {
   return !(flags & (nsHostRecord::DNS_PRIORITY_LOW |
                     nsHostRecord::DNS_PRIORITY_MEDIUM));
 }
 
-static inline bool IsMediumPriority(uint16_t flags) {
+static inline bool IsMediumPriority(nsIDNSService::DNSFlags flags) {
   return flags & nsHostRecord::DNS_PRIORITY_MEDIUM;
 }
 
-static inline bool IsLowPriority(uint16_t flags) {
+static inline bool IsLowPriority(nsIDNSService::DNSFlags flags) {
   return flags & nsHostRecord::DNS_PRIORITY_LOW;
 }
 

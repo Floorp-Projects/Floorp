@@ -16,9 +16,9 @@
 
 #include "nsIDNSListener.h"
 #include "nsIRequest.h"
+#include "nsIDNSService.h"
 
 class nsIURI;
-class nsIDNSService;
 class nsIDNSHTTPSSVCRecord;
 
 class nsDNSPrefetch final : public nsIDNSListener {
@@ -63,7 +63,7 @@ class nsDNSPrefetch final : public nsIDNSListener {
   mozilla::TimeStamp mEndTimestamp;
   nsWeakPtr mListener;
 
-  nsresult Prefetch(uint32_t flags);
+  nsresult Prefetch(nsIDNSService::DNSFlags flags);
 };
 
 #endif
