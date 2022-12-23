@@ -5,7 +5,6 @@
 // except according to those terms.
 
 #![allow(clippy::upper_case_acronyms)]
-#![allow(unknown_lints, deref_nullptr)] // Until bindgen#1651 is fixed.
 #![allow(
     dead_code,
     non_upper_case_globals,

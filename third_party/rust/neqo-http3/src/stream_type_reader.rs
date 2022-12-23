@@ -14,12 +14,12 @@ use neqo_qpack::decoder::QPACK_UNI_STREAM_TYPE_DECODER;
 use neqo_qpack::encoder::QPACK_UNI_STREAM_TYPE_ENCODER;
 use neqo_transport::{Connection, StreamId, StreamType};
 
-pub const HTTP3_UNI_STREAM_TYPE_PUSH: u64 = 0x1;
-pub const WEBTRANSPORT_UNI_STREAM: u64 = 0x54;
-pub const WEBTRANSPORT_STREAM: u64 = 0x41;
+pub(crate) const HTTP3_UNI_STREAM_TYPE_PUSH: u64 = 0x1;
+pub(crate) const WEBTRANSPORT_UNI_STREAM: u64 = 0x54;
+pub(crate) const WEBTRANSPORT_STREAM: u64 = 0x41;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum NewStreamType {
+pub(crate) enum NewStreamType {
     Control,
     Decoder,
     Encoder,
@@ -74,7 +74,7 @@ impl NewStreamType {
 ///    the `ReadType` state, `NewStreamHeadReader` changes to `ReadId` state and from there
 ///    to `Done` state
 #[derive(Debug)]
-pub enum NewStreamHeadReader {
+pub(crate) enum NewStreamHeadReader {
     ReadType {
         role: Role,
         reader: IncrementalDecoderUint,

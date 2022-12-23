@@ -35,6 +35,10 @@ pub enum WebTransportEvent {
         stream_id: StreamId,
         session_id: StreamId,
     },
+    Datagram {
+        session_id: StreamId,
+        datagram: Vec<u8>,
+    },
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -208,6 +212,15 @@ impl ExtendedConnectEvents for Http3ClientEvents {
             WebTransportEvent::NewStream {
                 stream_id: stream_info.stream_id(),
                 session_id: stream_info.session_id().unwrap(),
+            },
+        ));
+    }
+
+    fn new_datagram(&self, session_id: StreamId, datagram: Vec<u8>) {
+        self.insert(Http3ClientEvent::WebTransport(
+            WebTransportEvent::Datagram {
+                session_id,
+                datagram,
             },
         ));
     }

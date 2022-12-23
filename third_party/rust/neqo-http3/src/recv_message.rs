@@ -24,7 +24,7 @@ use std::fmt::Debug;
 use std::rc::Rc;
 
 #[allow(clippy::module_name_repetitions)]
-pub struct RecvMessageInfo {
+pub(crate) struct RecvMessageInfo {
     pub message_type: MessageType,
     pub stream_type: Http3StreamType,
     pub stream_id: StreamId,

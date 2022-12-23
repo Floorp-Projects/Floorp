@@ -729,6 +729,12 @@ nsresult Http3Session::ProcessEvents() {
             mStreamIdHash.InsertOrUpdate(wtStream->StreamId(),
                                          std::move(wtStream));
           } break;
+          case WebTransportEventExternal::Tag::Datagram:
+            LOG(
+                ("Http3Session::ProcessEvents - "
+                 "WebTransportEventExternal::Tag::Datagram [this=%p]",
+                 this));
+            break;
         }
       } break;
       default:

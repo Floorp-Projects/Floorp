@@ -596,7 +596,7 @@ impl SecretAgent {
     /// Return any fatal alert that the TLS stack might have sent.
     #[must_use]
     pub fn alert(&self) -> Option<&Alert> {
-        (&*self.alert).as_ref()
+        (*self.alert).as_ref()
     }
 
     /// Call this function to mark the peer as authenticated.
@@ -930,7 +930,7 @@ impl Client {
     /// Error returned when the configuration is invalid.
     pub fn enable_ech(&mut self, ech_config_list: impl AsRef<[u8]>) -> Res<()> {
         let config = ech_config_list.as_ref();
-        qdebug!([self], "Enable ECH for a server: {}", hex_with_len(&config));
+        qdebug!([self], "Enable ECH for a server: {}", hex_with_len(config));
         self.ech_config = Vec::from(config);
         if config.is_empty() {
             unsafe { ech::SSL_EnableTls13GreaseEch(self.agent.fd, PRBool::from(true)) }
@@ -1189,8 +1189,8 @@ impl Deref for Agent {
     #[must_use]
     fn deref(&self) -> &SecretAgent {
         match self {
-            Self::Client(c) => &**c,
-            Self::Server(s) => &**s,
+            Self::Client(c) => c,
+            Self::Server(s) => s,
         }
     }
 }
@@ -1198,8 +1198,8 @@ impl Deref for Agent {
 impl DerefMut for Agent {
     fn deref_mut(&mut self) -> &mut SecretAgent {
         match self {
-            Self::Client(c) => &mut **c,
-            Self::Server(s) => &mut **s,
+            Self::Client(c) => c,
+            Self::Server(s) => s,
         }
     }
 }

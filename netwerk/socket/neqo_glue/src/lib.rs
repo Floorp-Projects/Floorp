@@ -696,6 +696,9 @@ pub enum WebTransportEventExternal {
         stream_type: WebTransportStreamType,
         session_id: u64,
     },
+    Datagram {
+        session_id: u64,
+    },
 }
 
 impl WebTransportEventExternal {
@@ -728,6 +731,14 @@ impl WebTransportEventExternal {
                 stream_type: stream_id.stream_type().into(),
                 session_id: session_id.as_u64(),
             },
+            WebTransportEvent::Datagram {
+                session_id,
+                datagram: _
+             } => {
+                WebTransportEventExternal::Datagram {
+                    session_id: session_id.as_u64(),
+                }
+             }
         }
     }
 }

@@ -229,6 +229,13 @@ impl Http3Server {
                             handler.clone(),
                             stream_info,
                         )),
+                    Http3ServerConnEvent::ExtendedConnectDatagram {
+                        session_id,
+                        datagram,
+                    } => self.events.webtransport_datagram(
+                        WebTransportRequest::new(conn.clone(), handler.clone(), session_id),
+                        datagram,
+                    ),
                 }
             }
         }

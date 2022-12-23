@@ -11,7 +11,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct EncoderRecvStream {
+pub(crate) struct EncoderRecvStream {
     stream_id: StreamId,
     encoder: Rc<RefCell<QPackEncoder>>,
 }

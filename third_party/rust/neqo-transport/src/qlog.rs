@@ -338,7 +338,7 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
         Frame::Crypto { offset, data } => {
             QuicFrame::crypto(offset.to_string(), data.len().to_string())
         }
-        Frame::NewToken { token } => QuicFrame::new_token(token.len().to_string(), hex(&token)),
+        Frame::NewToken { token } => QuicFrame::new_token(token.len().to_string(), hex(token)),
         Frame::Stream {
             fin,
             stream_id,
@@ -397,7 +397,7 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
             sequence_number.to_string(),
             retire_prior.to_string(),
             connection_id.len() as u64,
-            hex(&connection_id),
+            hex(connection_id),
             hex(stateless_reset_token),
         ),
         Frame::RetireConnectionId { sequence_number } => {
