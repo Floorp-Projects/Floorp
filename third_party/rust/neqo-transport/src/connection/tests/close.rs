@@ -71,7 +71,7 @@ fn early_application_close() {
     let dgram = server.process(dgram, now()).dgram();
     assert!(dgram.is_some());
 
-    server.close(now(), 77, String::from(""));
+    server.close(now(), 77, String::new());
     assert!(server.state().closed());
     let dgram = server.process(None, now()).dgram();
     assert!(dgram.is_some());

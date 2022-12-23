@@ -4,13 +4,18 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-pub mod hframe;
-pub mod reader;
-pub mod wtframe;
+pub(crate) mod hframe;
+pub(crate) mod reader;
+pub(crate) mod wtframe;
 
-pub use hframe::{HFrame, H3_FRAME_TYPE_HEADERS, H3_FRAME_TYPE_SETTINGS, H3_RESERVED_FRAME_TYPES};
-pub use reader::{FrameReader, StreamReaderConnectionWrapper, StreamReaderRecvStreamWrapper};
-pub use wtframe::WebTransportFrame;
+#[allow(unused_imports)]
+pub(crate) use hframe::{
+    HFrame, H3_FRAME_TYPE_HEADERS, H3_FRAME_TYPE_SETTINGS, H3_RESERVED_FRAME_TYPES,
+};
+pub(crate) use reader::{
+    FrameReader, StreamReaderConnectionWrapper, StreamReaderRecvStreamWrapper,
+};
+pub(crate) use wtframe::WebTransportFrame;
 
 #[cfg(test)]
 mod tests;

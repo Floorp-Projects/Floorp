@@ -205,7 +205,7 @@ impl Simulator {
             }
 
             if self.nodes.iter().all(|n| n.node.done()) {
-                let real_elapsed = Instant::now() - real_start;
+                let real_elapsed = real_start.elapsed();
                 println!("{}: real elapsed time: {:?}", self.name, real_elapsed);
                 let elapsed = now - start;
                 println!("{}: simulated elapsed time: {:?}", self.name, elapsed);

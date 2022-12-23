@@ -21,10 +21,11 @@ use neqo_common::{
 use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, ResumptionToken, SecretAgentInfo};
 use neqo_qpack::Stats as QpackStats;
 use neqo_transport::{
-    AppError, Connection, ConnectionEvent, ConnectionId, ConnectionIdGenerator, Output,
-    Stats as TransportStats, StreamId, StreamType, Version, ZeroRttState,
+    AppError, Connection, ConnectionEvent, ConnectionId, ConnectionIdGenerator, DatagramTracking,
+    Output, Stats as TransportStats, StreamId, StreamType, Version, ZeroRttState,
 };
 use std::cell::RefCell;
+use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::mem;
@@ -59,6 +60,231 @@ fn alpn_from_quic_version(version: Version) -> &'static str {
     }
 }
 
+/// # The HTTP/3 client API
+///
+/// This module implements the HTTP/3 client API. The main implementation of the protocol is in
+/// [connection.rs](https://github.com/mozilla/neqo/blob/main/neqo-http3/src/connection.rs) which
+/// implements common behavior for the client-side and the server-side. `Http3Client` structure
+/// implements the public API and set of functions that differ between the client and the server.
+
+/// The API is used for:
+/// - create and close an endpoint:
+///   - [`new`](struct.Http3Client.html#method.new)
+///   - [`new_with_conn`](struct.Http3Client.html#method.new_with_conn)
+///   - [`close`](struct.Http3Client.html#method.close)
+/// - configuring an endpoint:
+///   - [`authenticated`](struct.Http3Client.html#method.authenticated)
+///   - [`enable_ech`](struct.Http3Client.html#method.enable_ech)
+///   - [`enable_resumption`](struct.Http3Client.html#method.enable_resumption)
+///   - [`initiate_key_update`](struct.Http3Client.html#method.initiate_key_update)
+///   - [`set_qlog`](struct.Http3Client.html#method.set_qlog)
+/// - retrieving information about a connection:
+/// - [`peer_certificate`](struct.Http3Client.html#method.peer_certificate)
+///   - [`qpack_decoder_stats`](struct.Http3Client.html#method.qpack_decoder_stats)
+///   - [`qpack_encoder_stats`](struct.Http3Client.html#method.qpack_encoder_stats)
+///   - [`transport_stats`](struct.Http3Client.html#method.transport_stats)
+///   - [`state`](struct.Http3Client.html#method.state)
+///   - [`take_resumption_token`](struct.Http3Client.html#method.take_resumption_token)
+///   - [`tls_inf`](struct.Http3Client.html#method.tls_info)
+/// - driving HTTP/3 session:
+///   - [`process_output`](struct.Http3Client.html#method.process_output)
+///   - [`process_input`](struct.Http3Client.html#method.process_input)
+///   - [`process`](struct.Http3Client.html#method.process)
+/// - create requests, send/receive data, and cancel requests:
+///   - [`fetch`](struct.Http3Client.html#method.fetch)
+///   - [`send_data`](struct.Http3Client.html#method.send_data)
+///   - [`read_dara`](struct.Http3Client.html#method.read_data)
+///   - [`stream_close_send`](struct.Http3Client.html#method.stream_close_send)
+///   - [`cancel_fetch`](struct.Http3Client.html#method.cancel_fetch)
+///   - [`stream_reset_send`](struct.Http3Client.html#method.stream_reset_send)
+///   - [`stream_stop_sending`](struct.Http3Client.html#method.stream_stop_sending)
+///   - [`set_stream_max_data`](struct.Http3Client.html#method.set_stream_max_data)
+/// - priority feature:
+///   - [`priority_update`](struct.Http3Client.html#method.priority_update)
+/// - `WebTransport` feature:
+///   - [`webtransport_create_session`](struct.Http3Client.html#method.webtransport_create_session)
+///   - [`webtransport_close_session`](struct.Http3Client.html#method.webtransport_close_session)
+///   - [`webtransport_create_stream`](struct.Http3Client.html#method.webtransport_create_sstream)
+///   - [`webtransport_enabled`](struct.Http3Client.html#method.webtransport_enabled)
+///
+/// ## Examples
+///
+/// ### Fetching a resource
+///
+/// ```ignore
+/// let mut client = Http3Client::new(...);
+///
+/// // Perform a handshake
+/// ...
+///
+/// let req = client
+///     .fetch(
+///         Instant::now(),
+///         "GET",
+///         &("https", "something.com", "/"),
+///         &[Header::new("example1", "value1"), Header::new("example1", "value2")],
+///         Priority::default(),
+///     )
+///     .unwrap();
+///
+/// client.stream_close_send(req).unwrap();
+///
+/// loop {
+///     // exchange packets
+///     ...
+///
+///     while let Some(event) = client.next_event() {
+///         match event {
+///             Http3ClientEvent::HeaderReady { stream_id, headers, interim, fin } => {
+///                 println!("New response headers received for stream {:?} [fin={?}, interim={:?}]: {:?}",
+///                     stream_id,
+///                     fin,
+///                     interim,
+///                     headers,
+///                 );
+///             }
+///             Http3ClientEvent::DataReadable { stream_id } => {
+///                 println!("New data available on stream {}", stream_id);
+///                let mut buf = [0; 100];
+///                let (amount, fin) = client.read_data(now(), stream_id, &mut buf).unwrap();
+///                 println!("Read {:?} bytes from stream {:?} [fin={?}]",
+///                     amount,
+///                     stream_id,
+///                     fin,
+///                 );
+///             }
+///             _ => {
+///                 println!("Unhandled event {:?}", event);
+///             }
+///         }
+///     }
+/// }
+///```
+///
+/// ### Creating a `WebTransport` session
+///
+/// ```ignore
+/// let mut client = Http3Client::new(...);
+///
+/// // Perform a handshake
+/// ...
+///
+/// // Create a session
+/// let wt_session_id = client
+///     .webtransport_create_session(now(), &("https", "something.com", "/"), &[])
+///     .unwrap();
+///
+/// loop {
+///     // exchange packets
+///     ...
+///
+///     while let Some(event) = client.next_event() {
+///         match event {
+///             Http3ClientEvent::WebTransport(WebTransportEvent::Session{
+///                 stream_id,
+///                 status
+///             }) => {
+///                 println!("The response from the server: WebTransport session ID {:?} status={:?}",
+///                     stream_id,
+///                     status,
+///                 );
+///             }
+///             _ => {
+///                 println!("Unhandled event {:?}", event);
+///             }
+///         }
+///     }
+/// }
+///
+///```
+///
+/// ### `WebTransport`: create a stream, send and receive data on the stream
+///
+/// ```ignore
+/// const BUF_CLIENT: &[u8] = &[0; 10];
+/// // wt_session_id is the session ID of a newly created WebTransport session, see the example above.
+///
+/// // create a  stream
+/// let wt_stream_id = client
+///     .webtransport_create_stream(wt_session_id, StreamType::BiDi)
+///     .unwrap();
+///
+/// // send data
+/// let data_sent = client.send_data(wt_stream_id, BUF_CLIENT).unwrap();
+/// assert_eq!(data_sent, BUF_CLIENT.len());
+///
+/// // close stream for sending
+/// client.stream_close_send(wt_stream_id).unwrap();
+///
+/// // wait for data from the server
+/// loop {
+///     // exchange packets
+///     ...
+///
+///     while let Some(event) = client.next_event() {
+///         match event {
+///             Http3ClientEvent::DataReadable{ stream_id } => {
+///                 println!("Data receivedd form the server on WebTransport stream ID {:?}",
+///                     stream_id,
+///                 );
+///                 let mut buf = [0; 100];
+///                 let (amount, fin) = client.read_data(now(), stream_id, &mut buf).unwrap();
+///                 println!("Read {:?} bytes from stream {:?} [fin={?}]",
+///                     amount,
+///                     stream_id,
+///                     fin,
+///                 );
+///             }
+///             _ => {
+///                 println!("Unhandled event {:?}", event);
+///             }
+///         }
+///     }
+/// }
+/// ```
+///
+/// ### `WebTransport`: receive a new stream form the server
+///
+/// ```ignore
+/// // wt_session_id is the session ID of a newly created WebTransport session, see the example above.
+///
+/// // wait for a new stream from the server
+/// loop {
+///     // exchange packets
+///     ...
+///
+///     while let Some(event) = client.next_event() {
+///         match event {
+///             Http3ClientEvent::WebTransport(WebTransportEvent::NewStream {
+///                 stream_id,
+///                 session_id,
+///             }) => {
+///                 println!("New stream received on session{:?}, stream id={:?} stream type={:?}",
+///                     sesson_id.stream_id(),
+///                     stream_id.stream_id(),
+///                     stream_id.stream_type()
+///                 );
+///             }
+///             Http3ClientEvent::DataReadable{ stream_id } => {
+///                 println!("Data receivedd form the server on WebTransport stream ID {:?}",
+///                     stream_id,
+///                 );
+///                 let mut buf = [0; 100];
+///                 let (amount, fin) = client.read_data(now(), stream_id, &mut buf).unwrap();
+///                 println!("Read {:?} bytes from stream {:?} [fin={:?}]",
+///                     amount,
+///                     stream_id,
+///                     fin,
+///                 );
+///             }
+///             _ => {
+///                 println!("Unhandled event {:?}", event);
+///             }
+///         }
+///     }
+/// }
+/// ```
+///
 pub struct Http3Client {
     conn: Connection,
     base_handler: Http3Connection,
@@ -75,7 +301,7 @@ impl Display for Http3Client {
 impl Http3Client {
     /// # Errors
     /// Making a `neqo-transport::connection` may produce an error. This can only be a crypto error if
-    /// the socket can't be created or configured.
+    /// the crypto context can't be created or configured.
     pub fn new(
         server_name: impl Into<String>,
         cid_manager: Rc<RefCell<dyn ConnectionIdGenerator>>,
@@ -103,6 +329,10 @@ impl Http3Client {
         ))
     }
 
+    /// This is a similar function to `new`. In this case, `neqo-transport::connection` has been
+    /// already created.
+    ///
+    /// It is recommended to use `new` instead.
     #[must_use]
     pub fn new_with_conn(c: Connection, http3_parameters: Http3Parameters) -> Self {
         let events = Http3ClientEvents::default();
@@ -125,6 +355,7 @@ impl Http3Client {
         self.conn.role()
     }
 
+    /// The function returns the current state of the connection.
     #[must_use]
     pub fn state(&self) -> Http3State {
         self.base_handler.state()
@@ -142,6 +373,10 @@ impl Http3Client {
     }
 
     /// This called when peer certificates have been verified.
+    ///
+    /// `Http3ClientEvent::AuthenticationNeeded` event is emitted when peer’s certificates are
+    /// available and need to be verified. When the verification is completed this function is
+    /// called. To inform HTTP/3 session of the verification results.
     pub fn authenticated(&mut self, status: AuthenticationStatus, now: Instant) {
         self.conn.authenticated(status, now);
     }
@@ -175,12 +410,18 @@ impl Http3Client {
         })
     }
 
-    /// Get a resumption token.  The correct way to obtain a resumption token is
-    /// waiting for the `Http3ClientEvent::ResumptionToken` event.  However, some
-    /// servers don't send `NEW_TOKEN` frames and so that event might be slow in
-    /// arriving.  This is especially a problem for short-lived connections, where
-    /// the connection is closed before any events are released.  This retrieves
-    /// the token, without waiting for the `NEW_TOKEN` frame to arrive.
+    /// The correct way to obtain a resumption token is to wait for the
+    /// `Http3ClientEvent::ResumptionToken` event. To emit the event we are waiting for a
+    /// resumtion token and a `NEW_TOKEN` frame to arrive. Some servers don't send `NEW_TOKEN`
+    /// frames and in this case, we wait for 3xPTO before emitting an event. This is especially a
+    /// problem for short-lived connections, where the connection is closed before any events are
+    /// released. This function retrieves the token, without waiting for a `NEW_TOKEN` frame to
+    /// arrive.
+    ///
+    /// In addition to the token, HTTP/3 settings are encoded into the token before giving it to
+    /// the application(`encode_resumption_token`). When the resumption token is supplied to a new
+    /// connection the HTTP/3 setting will be decoded and used until the setting are received from
+    /// the server.
     pub fn take_resumption_token(&mut self, now: Instant) -> Option<ResumptionToken> {
         self.conn
             .take_resumption_token(now)
@@ -188,6 +429,10 @@ impl Http3Client {
     }
 
     /// This may be call if an application has a resumption token. This must be called before connection starts.
+    ///
+    /// The resumption token also contains encoded HTTP/3 settings. The settings will be decoded
+    /// and used until the setting are received from the server.
+    ///
     /// # Errors
     /// An error is return if token cannot be decoded or a connection is is a wrong state.
     /// # Panics
@@ -201,7 +446,7 @@ impl Http3Client {
             Some(v) => v,
             None => return Err(Error::InvalidResumptionToken),
         };
-        qtrace!([self], "  settings {}", hex_with_len(&settings_slice));
+        qtrace!([self], "  settings {}", hex_with_len(settings_slice));
         let mut dec_settings = Decoder::from(settings_slice);
         let mut settings = HSettings::default();
         Error::map_error(
@@ -209,7 +454,7 @@ impl Http3Client {
             Error::InvalidResumptionToken,
         )?;
         let tok = dec.decode_remainder();
-        qtrace!([self], "  Transport token {}", hex(&tok));
+        qtrace!([self], "  Transport token {}", hex(tok));
         self.conn.enable_resumption(now, tok)?;
         if self.conn.state().closed() {
             let state = self.conn.state().clone();
@@ -260,8 +505,9 @@ impl Http3Client {
 
     // API: Request/response
 
-    /// This is call to make a new http request. Each request can have headers and they are added when request
-    /// is created. A response body may be added by calling `send_data`.
+    /// The function fetches a resource using `method`, `target` and `headers`. A response body
+    /// may be added by calling `send_data`. `stream_close_send` must be sent to finish the request
+    /// even if request data are not sent.
     /// # Errors
     /// If a new stream cannot be created an error will be return.
     /// # Panics
@@ -308,8 +554,8 @@ impl Http3Client {
         self.base_handler.queue_update_priority(stream_id, priority)
     }
 
-    /// An application may reset a stream(request).
-    /// Both sides, sending and receiving side, will be closed.
+    /// An application may cancel a stream(request).
+    /// Both sides, the receiviing and sending side, sending and receiving side, will be closed.
     /// # Errors
     /// An error will be return if a stream does not exist.
     pub fn cancel_fetch(&mut self, stream_id: StreamId, error: AppError) -> Res<()> {
@@ -343,7 +589,10 @@ impl Http3Client {
             .stream_stop_sending(&mut self.conn, stream_id, error)
     }
 
-    /// To supply a request body this function is called (headers are supplied through the `fetch` function.)
+    /// This function is used for regular HTTP requests and `WebTransport` streams.
+    /// In the case of regular HTTP requests, the request body is supplied using this function, and
+    /// headers are supplied through the `fetch` function.
+    ///
     /// # Errors
     /// `InvalidStreamId` if the stream does not exist,
     /// `AlreadyClosed` if the stream has already been closed.
@@ -478,6 +727,35 @@ impl Http3Client {
         )
     }
 
+    /// Send `WebTransport` datagram.
+    /// # Errors
+    /// It may return `InvalidStreamId` if a stream does not exist anymore.
+    /// The function returns `TooMuchData` if the supply buffer is bigger than
+    /// the allowed remote datagram size.
+    pub fn webtransport_send_datagram(
+        &mut self,
+        session_id: StreamId,
+        buf: &[u8],
+        id: impl Into<DatagramTracking>,
+    ) -> Res<()> {
+        qtrace!("webtransport_send_datagram session:{:?}", session_id);
+        self.base_handler
+            .webtransport_send_datagram(session_id, &mut self.conn, buf, id)
+    }
+
+    /// Returns the current max size of a datagram that can fit into a packet.
+    /// The value will change over time depending on the encoded size of the
+    ///  packet number, ack frames, etc.
+    /// # Errors
+    /// The function returns `NotAvailable` if datagrams are not enabled.
+    /// # Panics
+    /// This cannot panic. The max varint length is 8.
+    pub fn webtransport_max_datagram_size(&self, session_id: StreamId) -> Res<u64> {
+        Ok(self.conn.max_datagram_size()?
+            - u64::try_from(Encoder::varint_len(session_id.as_u64())).unwrap())
+    }
+
+    /// This function combines  `process_input` and `process_output` function.
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
         qtrace!([self], "Process.");
         if let Some(d) = dgram {
@@ -486,19 +764,34 @@ impl Http3Client {
         self.process_output(now)
     }
 
-    /// Supply an incoming QUIC packet.
+    /// The function should be called when there is a new UDP packet available. The function will
+    /// handle the packet payload.
+    ///
+    /// First, the payload will be handled by the QUIC layer. Afterward, `process_http3` will be
+    /// called to handle new [`ConnectionEvent`][1]s.
+    ///
+    /// After this function is called `process_output` should be called to check whether new
+    /// packets need to be sent or if a timer needs to be updated.
+    ///
+    /// [1]: ../neqo_transport/enum.ConnectionEvent.html
     pub fn process_input(&mut self, dgram: Datagram, now: Instant) {
         qtrace!([self], "Process input.");
         self.conn.process_input(dgram, now);
         self.process_http3(now);
     }
 
-    // Only used by neqo-interop
+    /// This should not be used because it gives access to functionalities that may disrupt the
+    /// proper functioning of the HTTP/3 session.
+    /// Only used by `neqo-interop`.
     pub fn conn(&mut self) -> &mut Connection {
         &mut self.conn
     }
 
     /// Process HTTP3 layer.
+    /// When `process_output`, `process_input`, or `process` is called we must call this function
+    /// as well. The functions calls `Http3Client::check_connection_events` to handle events from
+    /// the QUC layer and calls `Http3Connection::process_sending` to ensure that HTTP/3 layer
+    /// data, e.g. control frames, are sent.
     fn process_http3(&mut self, now: Instant) {
         qtrace!([self], "Process http3 internal.");
         match self.base_handler.state() {
@@ -521,8 +814,32 @@ impl Http3Client {
         }
     }
 
-    /// Get packet that need to be written into a UDP socket or a timer value if there is no data to send.
-    /// This function should be called repeatedly until timer value is returned.
+    /// The function should be called to check if there is a new UDP packet to be sent. It should
+    /// be called after a new packet is received and processed and after a timer expires (QUIC
+    /// needs timers to handle events like PTO detection and timers are not implemented by the neqo
+    /// library, but instead must be driven by the application).
+    ///
+    /// `process_output` can return:
+    /// - a [`Output::Datagram(Datagram)`][1]: data that should be sent as a UDP payload,
+    /// - a [`Output::Callback(Duration)`][1]: the duration of a  timer. `process_output` should be called at least after the time expires,
+    /// - [`Output::None`][1]: this is returned when `Nttp3Client` is done and can be destroyed.
+    ///
+    /// The application should call this function repeatedly until a timer value or None is
+    /// returned. After that, the application should call the function again if a new UDP packet is
+    /// received and processed or the timer value expires.
+    ///
+    /// The HTTP/3 neqo implementation drives the HTTP/3 and QUC layers, therefore this function
+    /// will call both layers:
+    ///  - First it calls HTTP/3 layer processing (`process_http3`) to make sure the layer writes
+    ///    data to QUIC layer or cancels streams if needed.
+    ///  - Then QUIC layer processing is called - [`Connection::process_output`][3]. This produces a
+    ///    packet or a timer value. It may also produce ned [`ConnectionEvent`][2]s, e.g. connection
+    ///    state-change event.
+    ///  - Therefore the HTTP/3 layer processing (`process_http3`) is called again.
+    ///
+    /// [1]: ../neqo_transport/enum.Output.html
+    /// [2]: ../neqo_transport/struct.ConnectionEvents.html
+    /// [3]: ../neqo_transport/struct.Connection.html#method.process_output
     pub fn process_output(&mut self, now: Instant) -> Output {
         qtrace!([self], "Process output.");
 
@@ -537,8 +854,8 @@ impl Http3Client {
         out
     }
 
-    // This function takes the provided result and check for an error.
-    // An error results in closing the connection.
+    /// This function takes the provided result and check for an error.
+    /// An error results in closing the connection.
     fn check_result<ERR>(&mut self, now: Instant, res: &Res<ERR>) -> bool {
         match &res {
             Err(Error::HttpGoaway) => {
@@ -559,13 +876,31 @@ impl Http3Client {
         }
     }
 
-    // If this return an error the connection must be closed.
+    /// This function checks [`ConnectionEvent`][2]s emitted by the QUIC layer, e.g. connection change
+    /// state events, new incoming stream data is available, a stream is was reset, etc. The HTTP/3
+    /// layer needs to handle these events. Most of the events are handled by
+    /// [`Http3Connection`][1] by calling appropriate functions, e.g. `handle_state_change`,
+    /// `handle_stream_reset`, etc. [`Http3Connection`][1] handle functionalities that are common
+    /// for the client and server side. Some of the functionalities are specific to the client and
+    /// they are handled by `Http3Client`. For example, [`ConnectionEvent::RecvStreamReadable`][3] event
+    /// is handled by `Http3Client::handle_stream_readable`. The  function calls
+    /// `Http3Connection::handle_stream_readable` and then hands the return value as appropriate
+    /// for the client-side.
+    ///
+    /// [1]: https://github.com/mozilla/neqo/blob/main/neqo-http3/src/connection.rs
+    /// [2]: ../neqo_transport/enum.ConnectionEvent.html
+    /// [3]: ../neqo_transport/enum.ConnectionEvent.html#variant.RecvStreamReadable
     fn check_connection_events(&mut self) -> Res<()> {
         qtrace!([self], "Check connection events.");
         while let Some(e) = self.conn.next_event() {
             qdebug!([self], "check_connection_events - event {:?}.", e);
             match e {
                 ConnectionEvent::NewStream { stream_id } => {
+                    // During this event we only add a new stream to the Http3Connection stream list,
+                    // with NewStreamHeadReader stream handler.
+                    // This function will not read from the stream and try to decode the stream.
+                    // RecvStreamReadable  will be emitted after this event and reading, i.e. decoding
+                    // of a stream will happen during that event.
                     self.base_handler.add_new_stream(stream_id);
                 }
                 ConnectionEvent::SendStreamWritable { stream_id } => {
@@ -617,8 +952,10 @@ impl Http3Client {
                         self.events.resumption_token(t);
                     }
                 }
+                ConnectionEvent::Datagram(dgram) => {
+                    self.base_handler.handle_datagram(&dgram);
+                }
                 ConnectionEvent::SendStreamComplete { .. }
-                | ConnectionEvent::Datagram { .. }
                 | ConnectionEvent::OutgoingDatagramOutcome { .. }
                 | ConnectionEvent::IncomingDatagramDropped => {}
             }
@@ -626,6 +963,25 @@ impl Http3Client {
         Ok(())
     }
 
+    /// This function handled new data available on a stream. It calls
+    /// `Http3Client::handle_stream_readable` and handles its response. Reading streams are mostly
+    /// handled by [`Http3Connection`][1] because most part of it is common for the client and
+    /// server. The following actions need to be handled by the client-specific code:
+    ///  - `ReceiveOutput::NewStream(NewStreamType::Push(_))` - the server cannot receive a push
+    ///    stream,
+    ///  - `ReceiveOutput::NewStream(NewStreamType::Http)` - client cannot  receive a
+    ///    server-initiated HTTP request,
+    ///  - `ReceiveOutput::NewStream(NewStreamType::WebTransportStream(_))` - because
+    ///    `Http3ClientEvents`is needed and events handler is specific to the client.
+    ///  - `ReceiveOutput::ControlFrames(control_frames)` - some control frame handling differs
+    ///     between the  client and the server:
+    ///     - `HFrame::CancelPush` - only the client-side may receive it,
+    ///     - `HFrame::MaxPushId { .. }`, `HFrame::PriorityUpdateRequest { .. } ` and
+    ///        `HFrame::PriorityUpdatePush` can only be receive on the server side,
+    ///     - `HFrame::Goaway { stream_id }` needs specific handling by the client by the protocol
+    ///        specification.
+    ///
+    /// [1]: https://github.com/mozilla/neqo/blob/main/neqo-http3/src/connection.rs
     fn handle_stream_readable(&mut self, stream_id: StreamId) -> Res<()> {
         match self
             .base_handler
@@ -4326,7 +4682,7 @@ mod tests {
             &mut client,
             &mut server,
             request_stream_id,
-            &[0x0, 0x3, 0x61, 0x62, 0x63], // a data frame
+            [0x0, 0x3, 0x61, 0x62, 0x63], // a data frame
             false,
         );
 
@@ -4351,7 +4707,7 @@ mod tests {
             &mut client,
             &mut server,
             request_stream_id,
-            &[0x0, 0x0],
+            [0x0, 0x0],
             true,
         );
 

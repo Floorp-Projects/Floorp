@@ -48,6 +48,7 @@ pub use self::connection::{
 };
 pub use self::events::{ConnectionEvent, ConnectionEvents};
 pub use self::frame::CloseError;
+pub use self::quic_datagrams::DatagramTracking;
 pub use self::stats::Stats;
 pub use self::stream_id::{StreamId, StreamType};
 pub use self::version::Version;

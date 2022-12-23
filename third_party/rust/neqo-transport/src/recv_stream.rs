@@ -1248,7 +1248,7 @@ mod tests {
         assert!(s.has_frames_to_write());
 
         // consume it
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
+        let mut builder = PacketBuilder::short(Encoder::new(), false, []);
         let mut token = Vec::new();
         s.write_frame(&mut builder, &mut token, &mut FrameStats::default());
 
@@ -1361,7 +1361,7 @@ mod tests {
         s.read(&mut buf).unwrap();
         assert!(session_fc.borrow().frame_needed());
         // consume it
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
+        let mut builder = PacketBuilder::short(Encoder::new(), false, []);
         let mut token = Vec::new();
         session_fc
             .borrow_mut()
@@ -1382,7 +1382,7 @@ mod tests {
         s.read(&mut buf).unwrap();
         assert!(session_fc.borrow().frame_needed());
         // consume it
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
+        let mut builder = PacketBuilder::short(Encoder::new(), false, []);
         let mut token = Vec::new();
         session_fc
             .borrow_mut()
@@ -1630,7 +1630,7 @@ mod tests {
         assert!(s.fc().unwrap().frame_needed());
 
         // Write the fc update frame
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
+        let mut builder = PacketBuilder::short(Encoder::new(), false, []);
         let mut token = Vec::new();
         let mut stats = FrameStats::default();
         fc.borrow_mut()

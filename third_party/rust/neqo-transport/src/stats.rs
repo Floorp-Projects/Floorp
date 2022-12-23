@@ -216,7 +216,7 @@ pub struct StatsCell {
 impl Deref for StatsCell {
     type Target = RefCell<Stats>;
     fn deref(&self) -> &Self::Target {
-        &*self.stats
+        &self.stats
     }
 }
 

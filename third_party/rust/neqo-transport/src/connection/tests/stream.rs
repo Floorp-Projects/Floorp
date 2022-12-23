@@ -674,7 +674,7 @@ fn change_flow_control(stream_type: StreamType, new_fc: u64) {
     // server should receive a MAX_SREAM_DATA frame if the flow control window is updated.
     let out2 = client.process(None, now());
     let out3 = server.process(out2.dgram(), now());
-    let expected = if RECV_BUFFER_START < new_fc { 1 } else { 0 };
+    let expected = usize::from(RECV_BUFFER_START < new_fc);
     assert_eq!(server.stats().frame_rx.max_stream_data, expected);
 
     // If the flow control window has been increased, server can write more data.

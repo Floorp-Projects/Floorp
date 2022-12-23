@@ -679,7 +679,7 @@ impl LossRecovery {
         };
 
         let (acked_packets, any_ack_eliciting) =
-            space.remove_acked(acked_ranges, &mut *self.stats.borrow_mut());
+            space.remove_acked(acked_ranges, &mut self.stats.borrow_mut());
         if acked_packets.is_empty() {
             // No new information.
             return (Vec::new(), Vec::new());
@@ -887,7 +887,7 @@ impl LossRecovery {
         self.pto_state
             .as_mut()
             .unwrap()
-            .count_pto(&mut *self.stats.borrow_mut());
+            .count_pto(&mut self.stats.borrow_mut());
 
         qlog::metrics_updated(
             &mut self.qlog,

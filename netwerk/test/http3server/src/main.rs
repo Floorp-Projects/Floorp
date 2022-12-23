@@ -11,6 +11,7 @@ use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
     Error, Http3OrWebTransportStream, Http3Parameters, Http3Server, Http3ServerEvent,
     WebTransportRequest, WebTransportServerEvent,
+    WebTransportSessionAcceptAction,
 };
 use neqo_transport::server::Server;
 use neqo_transport::{
@@ -431,13 +432,13 @@ impl HttpServer for Http3TestServer {
                             let path = ph.value();
                             qtrace!("Serve request {}", path);
                             if path == "/success" {
-                                session.response(true).unwrap();
+                                session.response(&WebTransportSessionAcceptAction::Accept).unwrap();
                             } else if path == "/reject" {
-                                session.response(false).unwrap();
+                                session.response(&WebTransportSessionAcceptAction::Reject([Header::new(":status", "404")].to_vec())).unwrap();
                             } else if path == "/closeafter0ms" {
-                                session.response(true).unwrap();
+                                session.response(&WebTransportSessionAcceptAction::Accept).unwrap();
                             } else if path == "/closeafter100ms" {
-                                session.response(true).unwrap();
+                                session.response(&WebTransportSessionAcceptAction::Accept).unwrap();
                                 let expires = Instant::now() + Duration::from_millis(100);
                                 if !self.sessions_to_close.contains_key(&expires) {
                                     self.sessions_to_close.insert(expires, Vec::new());
@@ -447,17 +448,17 @@ impl HttpServer for Http3TestServer {
                                     .unwrap()
                                     .push(session);
                             } else if path == "/create_unidi_stream" {
-                                session.response(true).unwrap();
+                                session.response(&WebTransportSessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((session, StreamType::UniDi));
                             } else if path == "/create_bidi_stream" {
-                                session.response(true).unwrap();
+                                session.response(&WebTransportSessionAcceptAction::Accept).unwrap();
                                 self.sessions_to_create_stream.push((session, StreamType::BiDi));
                             } else {
-                                session.response(true).unwrap();
+                                session.response(&WebTransportSessionAcceptAction::Accept).unwrap();
                             }
                         }
                         _ => {
-                            session.response(false).unwrap();
+                            session.response(&WebTransportSessionAcceptAction::Reject([Header::new(":status", "404")].to_vec())).unwrap();
                         }
                     }
                 }
@@ -475,6 +476,16 @@ impl HttpServer for Http3TestServer {
                     if !stream.stream_info.is_http() {
                         self.webtransport_bidi_stream.insert(stream);
                     }
+                }
+                Http3ServerEvent::WebTransport(WebTransportServerEvent::Datagram {
+                    session,
+                    datagram,
+                }) => {
+                    qdebug!(
+                        "WebTransportServerEvent::Datagram {:?} {:?}",
+                        session,
+                        datagram
+                    );
                 }
             }
         }

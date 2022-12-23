@@ -767,7 +767,7 @@ impl Path {
 
         // Send PATH_RESPONSE.
         let resp_sent = if let Some(challenge) = self.challenge.take() {
-            qtrace!([self], "Responding to path challenge {}", hex(&challenge));
+            qtrace!([self], "Responding to path challenge {}", hex(challenge));
             builder.encode_varint(FRAME_TYPE_PATH_RESPONSE);
             builder.encode(&challenge[..]);
             if builder.len() > builder.limit() {

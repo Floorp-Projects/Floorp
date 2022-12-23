@@ -6,17 +6,18 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use crate::connection::Http3State;
+use crate::connection::{Http3State, WebTransportSessionAcceptAction};
 use crate::connection_server::Http3ServerHandler;
 use crate::{
     features::extended_connect::SessionCloseReason, Http3StreamInfo, Http3StreamType, Priority, Res,
 };
-use neqo_common::{qdebug, qinfo, Header};
+use neqo_common::{qdebug, qinfo, Encoder, Header};
 use neqo_transport::server::ActiveConnectionRef;
-use neqo_transport::{AppError, Connection, StreamId, StreamType};
+use neqo_transport::{AppError, Connection, DatagramTracking, StreamId, StreamType};
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
+use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
@@ -244,7 +245,7 @@ impl WebTransportRequest {
     /// Respond to a `WebTransport` session request.
     /// # Errors
     /// It may return `InvalidStreamId` if a stream does not exist anymore.
-    pub fn response(&mut self, accept: bool) -> Res<()> {
+    pub fn response(&mut self, accept: &WebTransportSessionAcceptAction) -> Res<()> {
         qinfo!([self], "Set a response for a WebTransport session.");
         self.stream_handler
             .handler
@@ -298,6 +299,45 @@ impl WebTransportRequest {
             Http3StreamInfo::new(id, Http3StreamType::WebTransport(session_id)),
         ))
     }
+
+    /// Send `WebTransport` datagram.
+    /// # Errors
+    /// It may return `InvalidStreamId` if a stream does not exist anymore.
+    /// The function returns `TooMuchData` if the supply buffer is bigger than
+    /// the allowed remote datagram size.
+    pub fn send_datagram(&mut self, buf: &[u8], id: impl Into<DatagramTracking>) -> Res<()> {
+        let session_id = self.stream_handler.stream_id();
+        self.stream_handler
+            .handler
+            .borrow_mut()
+            .webtransport_send_datagram(
+                &mut self.stream_handler.conn.borrow_mut(),
+                session_id,
+                buf,
+                id,
+            )
+    }
+
+    #[must_use]
+    pub fn remote_datagram_size(&self) -> u64 {
+        self.stream_handler.conn.borrow().remote_datagram_size()
+    }
+
+    /// Returns the current max size of a datagram that can fit into a packet.
+    /// The value will change over time depending on the encoded size of the
+    /// packet number, ack frames, etc.
+    /// # Errors
+    /// The function returns `NotAvailable` if datagrams are not enabled.
+    /// # Panics
+    /// This cannot panic. The max varint length is 8.
+    pub fn max_datagram_size(&self) -> Res<u64> {
+        let max_size = self.stream_handler.conn.borrow().max_datagram_size()?;
+        Ok(max_size
+            - u64::try_from(Encoder::varint_len(
+                self.stream_handler.stream_id().as_u64(),
+            ))
+            .unwrap())
+    }
 }
 
 impl Deref for WebTransportRequest {
@@ -340,6 +380,10 @@ pub enum WebTransportServerEvent {
         reason: SessionCloseReason,
     },
     NewStream(Http3OrWebTransportStream),
+    Datagram {
+        session: WebTransportRequest,
+        datagram: Vec<u8>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -506,6 +550,12 @@ impl Http3ServerEvents {
     pub(crate) fn webtransport_new_stream(&self, stream: Http3OrWebTransportStream) {
         self.insert(Http3ServerEvent::WebTransport(
             WebTransportServerEvent::NewStream(stream),
+        ));
+    }
+
+    pub(crate) fn webtransport_datagram(&self, session: WebTransportRequest, datagram: Vec<u8>) {
+        self.insert(Http3ServerEvent::WebTransport(
+            WebTransportServerEvent::Datagram { session, datagram },
         ));
     }
 }

@@ -7,16 +7,144 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
+/*!
+
+# The HTTP/3 protocol
+
+This crate implements [RFC9114](https://datatracker.ietf.org/doc/html/rfc9114).
+
+The implementation depends on:
+ - [neqo-transport](../neqo_transport/index.html) --- implements the QUIC protocol
+   ([RFC9000](https://www.rfc-editor.org/info/rfc9000)) and
+ - [neqo-qpack](../neqo_qpack/index.html) --- implements QPACK
+   ([RFC9204](https://www.rfc-editor.org/info/rfc9204));
+
+## Features
+
+Both client and server-side HTTP/3 protocols are implemented, although the server-side
+implementation is not meant to be used in production and its only purpose is to facilitate testing
+of the client-side code.
+
+__`WebTransport`__
+([draft version 2](https://datatracker.ietf.org/doc/html/draft-vvv-webtransport-http3-02)) is
+supported and can be enabled using [`Http3Parameters`](struct.Http3Parameters.html).
+
+## Interaction with an application
+
+### Driving HTTP/3  session
+
+The crate does not create an OS level UDP socket, it produces, i.e. encodes, data that should be
+sent as a payload in a UDP packet and consumes data received on the UDP socket. For example,
+[`std::net::UdpSocket`](std::net::UdpSocket) or [`mio::net::UdpSocket`](https://crates.io/crates/mio)
+could be used for creating UDP sockets.
+
+The application is responsible for creating a socket, polling the socket, and sending and receiving
+data from the socket.
+
+In addition to receiving data HTTP/3 session’s actions may be triggered when a certain amount of
+time passes, e.g. after a certain amount of time data may be considered lost and should be
+retransmitted, packet pacing requires a timer, etc. The implementation does not use timers, but
+instead informs the application when processing needs to be triggered.
+
+
+The core functions for driving HTTP/3 sessions are:
+ - __On the client-side__ :
+   - [`process_output`](struct.Http3Client.html#method.process_output) used for producing UDP
+payload. If a payload is not produced this function returns a callback time, e.g. the time when
+[`process_output`](struct.Http3Client.html#method.process_output) should be called again.
+   - [`process_input`](struct.Http3Client.html#method.process_input)  used consuming UDP payload.
+   - [`process`](struct.Http3Client.html#method.process) combines the 2 functions into one, i.e. it
+consumes UDP payload if available and produces some UDP payload to be sent or returns a
+callback time.
+- __On the server-side__ only [`process`](struct.Http3Server.html#method.process) is
+available.
+
+An example interaction with a socket:
+
+```ignore
+let socket = match UdpSocket::bind(local_addr) {
+    Err(e) => {
+        eprintln!("Unable to bind UDP socket: {}", e);
+    }
+    Ok(s) => s,
+};
+let mut client = Http3Client::new(...);
+
+...
+
+// process_output can return 3 values, data to be sent, time duration when process_output should
+// be called, and None when Http3Client is done.
+match client.process_output(Instant::now()) {
+    Output::Datagram(dgram) => {
+        // Send dgram on a socket.
+        socket.send_to(&dgram[..], dgram.destination())
+
+    }
+    Output::Callback(duration) => {
+        // the client is idle for “duration”, set read timeout on the socket to this value and
+        // poll the socket for reading in the meantime.
+        socket.set_read_timeout(Some(duration)).unwrap();
+    }
+    Output::None => {
+        // client is done.
+    }
+};
+
+...
+
+// Reading new data coming for the network.
+match socket.recv_from(&mut buf[..]) {
+     Ok((sz, remote)) => {
+        let d = Datagram::new(remote, *local_addr, &buf[..sz]);
+        client.process_input(d, Instant::now());
+    }
+    Err(err) => {
+         eprintln!("UDP error: {}", err);
+    }
+}
+ ```
+
+### HTTP/3 session events
+
+[`Http3Client`](struct.Http3Client.html) and [`Http3Server`](struct.Http3Server.html) produce
+events that can be obtain by calling
+[`next_event`](neqo_common/event/trait.Provider.html#tymethod.next_event). The events are of type
+[`Http3ClientEvent`](enum.Http3ClientEvent.html) and
+[`Http3ServerEvent`](enum.Http3ServerEvent.html) respectively. They are informing the application
+when the connection changes state, when new data is received on a stream, etc.
+
+```ignore
+...
+
+while let Some(event) = client.next_event() {
+    match event {
+        Http3ClientEvent::DataReadable { stream_id } => {
+            println!("New data available on stream {}", stream_id);
+        }
+        Http3ClientEvent::StateChange(Http3State::Connected) => {
+            println!("Http3 session is in state Connected now");
+        }
+        _ => {
+            println!("Unhandled event {:?}", event);
+        }
+    }
+}
+```
+
+
+
+*/
+
 mod buffered_send_stream;
 mod client_events;
 mod conn_params;
 mod connection;
-pub mod connection_client;
+mod connection_client;
 mod connection_server;
 mod control_stream_local;
 mod control_stream_remote;
 pub mod features;
-pub mod frames;
+mod frames;
 mod headers_checks;
 mod priority;
 mod push_controller;
@@ -24,12 +152,12 @@ mod qlog;
 mod qpack_decoder_receiver;
 mod qpack_encoder_receiver;
 mod recv_message;
-pub mod request_target;
+mod request_target;
 mod send_message;
-pub mod server;
+mod server;
 mod server_connection_events;
 mod server_events;
-pub mod settings;
+mod settings;
 mod stream_type_reader;
 
 use neqo_qpack::Error as QpackError;
@@ -38,24 +166,24 @@ pub use neqo_transport::{Output, StreamId};
 use std::fmt::Debug;
 
 use crate::priority::PriorityHandler;
-pub use buffered_send_stream::BufferedStream;
+use buffered_send_stream::BufferedStream;
 pub use client_events::{Http3ClientEvent, WebTransportEvent};
 pub use conn_params::Http3Parameters;
-pub use connection::Http3State;
+pub use connection::{Http3State, WebTransportSessionAcceptAction};
 pub use connection_client::Http3Client;
 use features::extended_connect::WebTransportSession;
-pub use frames::HFrame;
-pub use neqo_common::{Header, MessageType};
+use frames::HFrame;
+pub use neqo_common::Header;
+use neqo_common::MessageType;
 pub use priority::Priority;
 pub use server::Http3Server;
 pub use server_events::{
     Http3OrWebTransportStream, Http3ServerEvent, WebTransportRequest, WebTransportServerEvent,
 };
-pub use settings::HttpZeroRttChecker;
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
-pub use stream_type_reader::NewStreamType;
+use stream_type_reader::NewStreamType;
 
 type Res<T> = Result<T, Error>;
 
@@ -299,9 +427,8 @@ pub enum Http3StreamType {
 
 #[must_use]
 #[derive(PartialEq, Eq, Debug)]
-pub enum ReceiveOutput {
+enum ReceiveOutput {
     NoOutput,
-    PushStream,
     ControlFrames(Vec<HFrame>),
     UnblockedStreams(Vec<StreamId>),
     NewStream(NewStreamType),
@@ -313,11 +440,11 @@ impl Default for ReceiveOutput {
     }
 }
 
-pub trait Stream: Debug {
+trait Stream: Debug {
     fn stream_type(&self) -> Http3StreamType;
 }
 
-pub trait RecvStream: Stream {
+trait RecvStream: Stream {
     /// The stream reads data from the corresponding quic stream and returns `ReceiveOutput`.
     /// The function also returns true as the second parameter if the stream is done and
     /// could be forgotten, i.e. removed from all records.
@@ -345,7 +472,7 @@ pub trait RecvStream: Stream {
     }
 }
 
-pub trait HttpRecvStream: RecvStream {
+trait HttpRecvStream: RecvStream {
     /// This function is similar to the receive function and has the same output, i.e.
     /// a `ReceiveOutput` enum and bool. The bool is true if the stream is completely done
     /// and can be forgotten, i.e. removed from all records.
@@ -400,12 +527,12 @@ impl Http3StreamInfo {
     }
 }
 
-pub trait RecvStreamEvents: Debug {
+trait RecvStreamEvents: Debug {
     fn data_readable(&self, _stream_info: Http3StreamInfo) {}
     fn recv_closed(&self, _stream_info: Http3StreamInfo, _close_type: CloseType) {}
 }
 
-pub trait HttpRecvStreamEvents: RecvStreamEvents {
+trait HttpRecvStreamEvents: RecvStreamEvents {
     fn header_ready(
         &self,
         stream_info: Http3StreamInfo,
@@ -416,7 +543,7 @@ pub trait HttpRecvStreamEvents: RecvStreamEvents {
     fn extended_connect_new_session(&self, _stream_id: StreamId, _headers: Vec<Header>) {}
 }
 
-pub trait SendStream: Stream {
+trait SendStream: Stream {
     /// # Errors
     /// Error my occure during sending data, e.g. protocol error, etc.
     fn send(&mut self, conn: &mut Connection) -> Res<()>;
@@ -454,7 +581,7 @@ pub trait SendStream: Stream {
     }
 }
 
-pub trait HttpSendStream: SendStream {
+trait HttpSendStream: SendStream {
     /// This function is used to supply headers to a http message. The
     /// function is used for request headers, response headers, 1xx response and
     /// trailers.
@@ -465,7 +592,7 @@ pub trait HttpSendStream: SendStream {
     fn any(&self) -> &dyn Any;
 }
 
-pub trait SendStreamEvents: Debug {
+trait SendStreamEvents: Debug {
     fn send_closed(&self, _stream_info: Http3StreamInfo, _close_type: CloseType) {}
     fn data_writable(&self, _stream_info: Http3StreamInfo) {}
 }
@@ -477,7 +604,7 @@ pub trait SendStreamEvents: Debug {
 ///                  that do not close the complete connection, e.g. unallowed headers.
 ///   `Done` - the stream was closed without an error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CloseType {
+enum CloseType {
     ResetApp(AppError),
     ResetRemote(AppError),
     LocalError(AppError),
@@ -493,5 +620,10 @@ impl CloseType {
             }
             Self::Done => None,
         }
+    }
+
+    #[must_use]
+    pub fn locally_initiated(&self) -> bool {
+        matches!(self, CloseType::ResetApp(_))
     }
 }

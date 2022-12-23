@@ -99,7 +99,7 @@ impl QpackData {
 impl Deref for QpackData {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
-        &*self.buf
+        &self.buf
     }
 }
 
