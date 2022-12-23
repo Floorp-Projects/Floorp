@@ -8529,6 +8529,10 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
   MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
 
+  if (nsCOMPtr<nsIDNSAddrRecord> r = do_QueryInterface(rec)) {
+    r->GetEffectiveTRRMode(&mEffectiveTRRMode);
+  }
+
   LOG(
       ("nsHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
        "%s status[0x%" PRIx32 "]\n",

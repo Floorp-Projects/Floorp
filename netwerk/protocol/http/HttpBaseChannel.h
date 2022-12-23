@@ -281,6 +281,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetIsTRRServiceChannel(bool* aTRR) override;
   NS_IMETHOD SetIsTRRServiceChannel(bool aTRR) override;
   NS_IMETHOD GetIsResolvedByTRR(bool* aResolvedByTRR) override;
+  NS_IMETHOD GetEffectiveTRRMode(
+      nsIRequest::TRRMode* aEffectiveTRRMode) override;
   NS_IMETHOD GetIsLoadedBySocketProcess(bool* aResult) override;
   NS_IMETHOD GetIsOCSP(bool* value) override;
   NS_IMETHOD SetIsOCSP(bool value) override;
@@ -788,6 +790,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   uint32_t mCaps;
 
   ClassOfService mClassOfService;
+  // This should be set the the actual TRR mode used to resolve the request.
+  // Is initially set to TRR_DEFAULT_MODE, but should be updated to the actual
+  // mode used by the request
+  nsIRequest::TRRMode mEffectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
 
  public:
   void SetEarlyHints(

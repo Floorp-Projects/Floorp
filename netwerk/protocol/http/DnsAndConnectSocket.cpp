@@ -965,10 +965,10 @@ nsresult DnsAndConnectSocket::TransportSetup::CheckConnectedResult(
     bool trrEnabled;
     mDNSRecord->IsTRR(&trrEnabled);
     if (trrEnabled) {
-      uint32_t trrMode = 0;
+      nsIRequest::TRRMode trrMode = nsIRequest::TRR_DEFAULT_MODE;
       mDNSRecord->GetEffectiveTRRMode(&trrMode);
       // If current trr mode is trr only, we should not retry.
-      if (trrMode != 3) {
+      if (trrMode != nsIRequest::TRR_ONLY_MODE) {
         // Drop state to closed.  This will trigger a new round of
         // DNS resolving. Bypass the cache this time since the
         // cached data came from TRR and failed already!
