@@ -942,20 +942,22 @@ double ParserAtomsTable::toNumber(TaggedParserAtomIndex index) const {
 }
 
 UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
-    JSContext* cx, TaggedParserAtomIndex index) const {
+    FrontendContext* fc, TaggedParserAtomIndex index) const {
+  auto* alloc = fc->getAllocator();
+
   if (index.isParserAtomIndex()) {
     const auto* atom = getParserAtom(index.toParserAtomIndex());
     return UniqueChars(
         atom->hasLatin1Chars()
-            ? JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range()).c_str()
-            : JS::CharsToNewUTF8CharsZ(cx, atom->twoByteRange()).c_str());
+            ? JS::CharsToNewUTF8CharsZ(alloc, atom->latin1Range()).c_str()
+            : JS::CharsToNewUTF8CharsZ(alloc, atom->twoByteRange()).c_str());
   }
 
   if (index.isWellKnownAtomId()) {
     const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
     return UniqueChars(
         JS::CharsToNewUTF8CharsZ(
-            cx,
+            alloc,
             mozilla::Range(reinterpret_cast<const Latin1Char*>(info.content),
                            info.length))
             .c_str());
@@ -965,7 +967,7 @@ UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
     Latin1Char content[1];
     getLength1Content(index.toLength1StaticParserString(), content);
     return UniqueChars(
-        JS::CharsToNewUTF8CharsZ(cx, mozilla::Range(content, 1)).c_str());
+        JS::CharsToNewUTF8CharsZ(alloc, mozilla::Range(content, 1)).c_str());
   }
 
   if (index.isLength2StaticParserString()) {
@@ -973,7 +975,8 @@ UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
     getLength2Content(index.toLength2StaticParserString(), content);
     return UniqueChars(
         JS::CharsToNewUTF8CharsZ(
-            cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2))
+            alloc,
+            mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2))
             .c_str());
   }
 
@@ -982,7 +985,8 @@ UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
   getLength3Content(index.toLength3StaticParserString(), content);
   return UniqueChars(
       JS::CharsToNewUTF8CharsZ(
-          cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 3))
+          alloc,
+          mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 3))
           .c_str());
 }
 
