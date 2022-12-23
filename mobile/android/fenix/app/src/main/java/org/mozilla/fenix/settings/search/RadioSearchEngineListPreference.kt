@@ -83,7 +83,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
                 engine = engine,
                 layoutInflater = layoutInflater,
                 res = context.resources,
-                allowDeletion = state.searchEngines.size > 1,
+                allowDeletion = state.searchEngines.count { it.type != SearchEngine.Type.APPLICATION } > 1,
                 isSelected = engine == state.selectedOrDefaultSearchEngine,
             )
 
