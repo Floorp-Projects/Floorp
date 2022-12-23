@@ -1298,7 +1298,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     rv = channel->Open(getter_AddRefs(input));
     NS_ENSURE_SUCCESS(rv, nullptr);
     nsString dataString;
-    char16_t* dataStringBuf = nullptr;
+    Utf8Unit* dataStringBuf = nullptr;
     size_t dataStringLength = 0;
     if (input) {
       nsCString buffer;
@@ -1308,12 +1308,11 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
       }
 
       uint32_t size = (uint32_t)std::min(written, (uint64_t)UINT32_MAX);
-      ScriptLoader::ConvertToUTF16(channel, (uint8_t*)buffer.get(), size,
-                                   u""_ns, nullptr, dataStringBuf,
-                                   dataStringLength);
+      ScriptLoader::ConvertToUTF8(channel, (uint8_t*)buffer.get(), size, u""_ns,
+                                  nullptr, dataStringBuf, dataStringLength);
     }
 
-    if (!dataStringBuf || dataStringLength == 0) {
+    if (!dataStringBuf) {
       return nullptr;
     }
 
@@ -1327,10 +1326,9 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
       options.setSourceIsLazy(false);
     }
 
-    JS::UniqueTwoByteChars srcChars(dataStringBuf);
-
-    JS::SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(cx, std::move(srcChars), dataStringLength)) {
+    JS::SourceText<Utf8Unit> srcBuf;
+    if (!srcBuf.init(cx, dataStringBuf, dataStringLength,
+                     JS::SourceOwnership::TakeOwnership)) {
       return nullptr;
     }
 
