@@ -2958,21 +2958,6 @@ BrowserGlue.prototype = {
       () => Services.search.runBackgroundChecks(),
 
       () => lazy.BrowserUsageTelemetry.reportInstallationTelemetry(),
-
-      async () => {
-        let win = lazy.BrowserWindowTracker.getTopWindow({ private: false });
-        if (!win) {
-          return;
-        }
-
-        if (typeof win.navigator.requestMIDIAccess != "function") {
-          return;
-        }
-
-        const { inputs, outputs } = await win.navigator.requestMIDIAccess();
-        const hasMIDIDevices = inputs.size + outputs.size > 0;
-        Services.telemetry.scalarSet("dom.midi.has_devices", hasMIDIDevices);
-      },
     ];
 
     for (let task of idleTasks) {
