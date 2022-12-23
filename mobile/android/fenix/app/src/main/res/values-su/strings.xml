@@ -65,8 +65,12 @@
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Tambah takulan ka tab pribadi nu muka ti layar Tepas.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Buka tab nyamuni saterusna dina sakali toél.</string>
     <!-- Text for the positive button -->
     <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Tambah takulan</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Tambahkeun ka layar Tepas</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Teu, nuhun</string>
 
@@ -1906,6 +1910,11 @@
     <!-- Awesome bar suggestion's headers -->
     <!-- Search suggestions title for Firefox Suggest. -->
     <string name="firefox_suggest_header">Firefox Suggest</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Pamaluruhan Google</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Pamaluruhan %s</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Setél tutumbu ti raramatloka, surélék, jeung surat pikeun muka otomatis dina Firefox.</string>

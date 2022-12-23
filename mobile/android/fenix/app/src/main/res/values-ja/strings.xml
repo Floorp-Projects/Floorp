@@ -69,10 +69,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">プライベートタブを開くショートカットをホーム画面に追加します。</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">プライベートタブを開くショートカットをホーム画面に追加します。</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">タップ 1 回で次のプライベートタブを開きます。</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">追加する</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">追加する</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">ホーム画面に追加</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">追加しない</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -349,6 +353,20 @@
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox が自動的に Cookie バナーによる Cookie 要求を拒否しようとします。拒否オプションが利用できない場合、すべての Cookie を受け入れてバナーを閉じることがあります。</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">このサイトでオフ</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">このサイトでオン</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s で Cookie バナー削減を有効にしますか?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s で Cookie バナー削減を無効にしますか?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s はこのサイトの Cookie を消去してページを読み込み直します。すべての Cookie を消去すると、ログアウトしたり、ショッピングカートが空になったりする場合があります。</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s が自動的に Cookie 要求を拒否しようとします。拒否オプションが利用できない場合、%2$s がすべての Cookie を受け入れてバナーを閉じることがあります。</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">セキュリティ強化のため、自動的に HTTPS 暗号化プロトコルを使用してサイトへの接続を試行します。</string>
@@ -1085,8 +1103,6 @@
     <string name="share_copy_link_to_clipboard">クリップボードにコピー</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">クリップボードにコピーしました</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">ログインして同期</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync にログイン</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1908,6 +1924,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">自動的に閉じる機能が有効です</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox Suggest</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Google 検索</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s 検索</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">ウェブサイトやメール、メッセージのリンクを自動的に Firefox で開きます。</string>
 
@@ -1946,7 +1971,6 @@
     <string name="experiments_snackbar">データを送信するにはテレメトリーを有効にしてください。</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">設定を開く</string>
-    <string name="firefox_suggest_header">Firefox Suggest</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

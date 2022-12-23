@@ -72,6 +72,8 @@
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Προσθέστε συντόμευση για άνοιγμα ιδιωτικών καρτελών από την αρχική οθόνη.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Εκκινήστε την επόμενη ιδιωτική καρτέλα με ένα πάτημα.</string>
     <!-- Text for the positive button -->
     <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Προσθήκη συντόμευσης</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
@@ -350,10 +352,19 @@
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Το Firefox προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie σε μπάνερ cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το Firefox μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
 
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Ανενεργή για αυτόν τον ιστότοπο</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Ενεργή για αυτόν τον ιστότοπο</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Ενεργοποίηση μείωσης banner cookie για το %1$s;</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Απενεργοποίηση μείωσης banner cookie για το %1$s;</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">Το %1$s θα απαλείψει τα cookies του ιστοτόπου και θα ανανεώσει τη σελίδα. Η απαλοιφή όλων των cookies ενδέχεται να σας αποσυνδέσει ή να αδειάσει τα καλάθια αγορών.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">Το %1$s προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το %2$s μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Προσπαθεί αυτόματα να συνδεθεί σε ιστοτόπους με το πρωτόκολλο κρυπτογράφησης HTTPS για αυξημένη ασφάλεια.</string>
