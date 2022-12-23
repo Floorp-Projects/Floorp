@@ -1013,22 +1013,23 @@ ipc::IPCResult WebGPUChild::RecvDropAction(const ipc::ByteBuf& aByteBuf) {
 
 void WebGPUChild::DeviceCreateSwapChain(
     RawId aSelfId, const RGBDescriptor& aRgbDesc, size_t maxBufferCount,
-    const layers::CompositableHandle& aHandle) {
+    const layers::RemoteTextureOwnerId& aOwnerId) {
   RawId queueId = aSelfId;  // TODO: multiple queues
   nsTArray<RawId> bufferIds(maxBufferCount);
   for (size_t i = 0; i < maxBufferCount; ++i) {
     bufferIds.AppendElement(
         ffi::wgpu_client_make_buffer_id(mClient.get(), aSelfId));
   }
-  SendDeviceCreateSwapChain(aSelfId, queueId, aRgbDesc, bufferIds, aHandle);
+  SendDeviceCreateSwapChain(aSelfId, queueId, aRgbDesc, bufferIds, aOwnerId);
 }
 
-void WebGPUChild::SwapChainPresent(const layers::CompositableHandle& aHandle,
-                                   RawId aTextureId) {
+void WebGPUChild::SwapChainPresent(RawId aTextureId,
+                                   const RemoteTextureId& aRemoteTextureId,
+                                   const RemoteTextureOwnerId& aOwnerId) {
   // Hack: the function expects `DeviceId`, but it only uses it for `backend()`
   // selection.
   RawId encoderId = ffi::wgpu_client_make_encoder_id(mClient.get(), aTextureId);
-  SendSwapChainPresent(aHandle, aTextureId, encoderId);
+  SendSwapChainPresent(aTextureId, encoderId, aRemoteTextureId, aOwnerId);
 }
 
 void WebGPUChild::RegisterDevice(Device* const aDevice) {

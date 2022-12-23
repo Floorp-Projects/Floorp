@@ -92,15 +92,14 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
                                       op.textureFlags());
       break;
     }
-    case CompositableOperationDetail::TOpEnableAsyncCompositable: {
-      const OpEnableAsyncCompositable& op =
-          aDetail.get_OpEnableAsyncCompositable();
-      if (op.enable()) {
-        aCompositable->SetAsyncRef(
-            AsyncCompositableRef(GetChildProcessId(), aHandle));
-      } else {
-        aCompositable->SetAsyncRef(AsyncCompositableRef());
-      }
+    case CompositableOperationDetail::TOpEnableRemoteTexturePushCallback: {
+      const OpEnableRemoteTexturePushCallback& op =
+          aDetail.get_OpEnableRemoteTexturePushCallback();
+
+      aCompositable->SetAsyncRef(
+          AsyncCompositableRef(GetChildProcessId(), aHandle));
+      aCompositable->EnableRemoteTexturePushCallback(
+          op.ownerId(), GetChildProcessId(), op.size(), op.textureFlags());
       break;
     }
     case CompositableOperationDetail::TOpDeliverAcquireFence: {

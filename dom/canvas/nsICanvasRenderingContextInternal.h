@@ -40,7 +40,6 @@ class PresShell;
 class WebGLFramebufferJS;
 namespace layers {
 class CanvasRenderer;
-class CompositableHandle;
 class Layer;
 class Image;
 class LayerManager;

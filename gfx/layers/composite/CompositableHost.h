@@ -13,12 +13,12 @@
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"  // for override
 #include "mozilla/RefPtr.h"      // for RefPtr, RefCounted, etc
-//#include "mozilla/gfx/MatrixFwd.h"  // for Matrix4x4
+// #include "mozilla/gfx/MatrixFwd.h"  // for Matrix4x4
 #include "mozilla/gfx/Polygon.h"  // for Polygon
 #include "mozilla/gfx/Rect.h"     // for Rect
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
-//#include "mozilla/layers/LayersTypes.h"      // for LayerRenderState, etc
+// #include "mozilla/layers/LayersTypes.h"      // for LayerRenderState, etc
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/TextureHost.h"  // for TextureHost
 #include "nsCOMPtr.h"                    // for already_AddRefed
@@ -92,6 +92,15 @@ class CompositableHost {
                                 const gfx::IntSize aSize,
                                 const TextureFlags aFlags) = 0;
   virtual void RemoveTextureHost(TextureHost* aTexture);
+
+  // Enable remote texture push callback
+  virtual void EnableRemoteTexturePushCallback(
+      const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
+      const gfx::IntSize aSize, const TextureFlags aFlags) = 0;
+  // Called from RemoteTextureMap when a new remote texture is pushed
+  virtual void NotifyPushTexture(const RemoteTextureId aTextureId,
+                                 const RemoteTextureOwnerId aOwnerId,
+                                 const base::ProcessId aForPid) = 0;
 
   uint64_t GetCompositorBridgeID() const { return mCompositorBridgeID; }
 

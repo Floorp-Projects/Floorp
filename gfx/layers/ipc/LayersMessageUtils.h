@@ -208,7 +208,7 @@ struct ParamTraits<mozilla::layers::CompositableHandleOwner>
     : public ContiguousEnumSerializerInclusive<
           mozilla::layers::CompositableHandleOwner,
           mozilla::layers::CompositableHandleOwner::WebRenderBridge,
-          mozilla::layers::CompositableHandleOwner::InProcessManager> {};
+          mozilla::layers::CompositableHandleOwner::ImageBridge> {};
 
 template <>
 struct ParamTraits<mozilla::layers::RemoteTextureId> {

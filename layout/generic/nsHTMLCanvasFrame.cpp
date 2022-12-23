@@ -124,15 +124,9 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
 
       RefPtr<ImageContainer> container = element->GetImageContainer();
       if (container) {
+        MOZ_ASSERT(container->IsAsync());
         aManager->CommandBuilder().PushImage(this, container, aBuilder,
                                              aResources, aSc, bounds, bounds);
-        return true;
-      }
-
-      CompositableHandle handle = element->GetCompositableHandle();
-      if (handle) {
-        aManager->CommandBuilder().PushInProcessImage(this, handle, aBuilder,
-                                                      aResources, aSc, bounds);
         return true;
       }
 
@@ -142,7 +136,8 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
     switch (element->GetCurrentContextType()) {
       case CanvasContextType::Canvas2D:
       case CanvasContextType::WebGL1:
-      case CanvasContextType::WebGL2: {
+      case CanvasContextType::WebGL2:
+      case CanvasContextType::WebGPU: {
         bool isRecycled;
         RefPtr<WebRenderCanvasData> canvasData =
             aManager->CommandBuilder()
@@ -192,33 +187,6 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
             OpUpdateAsyncImagePipeline(data->GetPipelineId().value(), scBounds,
                                        VideoInfo::Rotation::kDegree_0, filter,
                                        mixBlendMode));
-        break;
-      }
-      case CanvasContextType::WebGPU: {
-        nsHTMLCanvasFrame* canvasFrame =
-            static_cast<nsHTMLCanvasFrame*>(mFrame);
-        HTMLCanvasElement* canvasElement =
-            static_cast<HTMLCanvasElement*>(canvasFrame->GetContent());
-        webgpu::CanvasContext* canvasContext =
-            canvasElement->GetWebGPUContext();
-
-        if (!canvasContext || !canvasContext->mHandle) {
-          return true;
-        }
-
-        nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
-        IntrinsicSize intrinsicSize =
-            IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-        AspectRatio intrinsicRatio =
-            IntrinsicRatioFromCanvasSize(canvasSizeInPx);
-        nsRect area =
-            mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
-        nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-            area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
-        LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-            dest, mFrame->PresContext()->AppUnitsPerDevPixel());
-        aManager->CommandBuilder().PushInProcessImage(
-            this, canvasContext->mHandle, aBuilder, aResources, aSc, bounds);
         break;
       }
       case CanvasContextType::ImageBitmap: {

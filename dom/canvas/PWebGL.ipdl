@@ -9,7 +9,6 @@ include protocol PCanvasManager;
 include "mozilla/layers/LayersMessageUtils.h";
 
 [MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
-using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SurfaceDescriptor from "mozilla/layers/LayersTypes.h";
 using std::string from "string";
 using mozilla::uvec2 from "mozilla/dom/WebGLIpdl.h";

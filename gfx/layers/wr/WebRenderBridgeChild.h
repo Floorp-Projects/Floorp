@@ -205,8 +205,10 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
                         const RemoteTextureOwnerId aOwnerId,
                         const gfx::IntSize aSize,
                         const TextureFlags aFlags) override;
-  void EnableAsyncCompositable(CompositableClient* aCompositable,
-                               bool aEnable) override;
+  void EnableRemoteTexturePushCallback(CompositableClient* aCompositable,
+                                       const RemoteTextureOwnerId aOwnerId,
+                                       const gfx::IntSize aSize,
+                                       const TextureFlags aFlags) override;
   void UpdateFwdTransactionId() override;
   uint64_t GetFwdTransactionId() override;
   bool InForwarderThread() override;

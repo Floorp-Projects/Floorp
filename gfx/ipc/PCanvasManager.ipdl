@@ -9,7 +9,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 include protocol PWebGL;
 include protocol PWebGPU;
 
-using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 using mozilla::webgl::FrontBufferSnapshotIpc from "mozilla/dom/WebGLIpdl.h";
 
 namespace mozilla {
@@ -41,7 +41,7 @@ parent:
   // intended to be used by the main thread in the content process to block
   // reading without having to block on the worker thread that owns the context
   // instance.
-  sync GetSnapshot(uint32_t aManagerId, int32_t aProtocolId, CompositableHandle aHandle) returns (FrontBufferSnapshotIpc ret);
+  sync GetSnapshot(uint32_t aManagerId, int32_t aProtocolId, RemoteTextureOwnerId? ownerId) returns (FrontBufferSnapshotIpc ret);
 };
 
 } // gfx

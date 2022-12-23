@@ -462,10 +462,12 @@ void WebRenderBridgeChild::UseRemoteTexture(CompositableClient* aCompositable,
       OpUseRemoteTexture(aTextureId, aOwnerId, aSize, aFlags)));
 }
 
-void WebRenderBridgeChild::EnableAsyncCompositable(
-    CompositableClient* aCompositable, bool aEnable) {
+void WebRenderBridgeChild::EnableRemoteTexturePushCallback(
+    CompositableClient* aCompositable, const RemoteTextureOwnerId aOwnerId,
+    const gfx::IntSize aSize, const TextureFlags aFlags) {
   AddWebRenderParentCommand(CompositableOperation(
-      aCompositable->GetIPCHandle(), OpEnableAsyncCompositable(aEnable)));
+      aCompositable->GetIPCHandle(),
+      OpEnableRemoteTexturePushCallback(aOwnerId, aSize, aFlags)));
 }
 
 void WebRenderBridgeChild::UpdateFwdTransactionId() {

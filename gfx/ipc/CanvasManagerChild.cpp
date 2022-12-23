@@ -145,14 +145,14 @@ RefPtr<webgpu::WebGPUChild> CanvasManagerChild::GetWebGPUChild() {
 
 already_AddRefed<DataSourceSurface> CanvasManagerChild::GetSnapshot(
     uint32_t aManagerId, int32_t aProtocolId,
-    const layers::CompositableHandle& aHandle, SurfaceFormat aFormat,
+    const Maybe<RemoteTextureOwnerId>& aOwnerId, SurfaceFormat aFormat,
     bool aPremultiply, bool aYFlip) {
   if (!CanSend()) {
     return nullptr;
   }
 
   webgl::FrontBufferSnapshotIpc res;
-  if (!SendGetSnapshot(aManagerId, aProtocolId, aHandle, &res)) {
+  if (!SendGetSnapshot(aManagerId, aProtocolId, aOwnerId, &res)) {
     return nullptr;
   }
 

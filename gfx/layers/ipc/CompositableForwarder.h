@@ -88,8 +88,9 @@ class CompositableForwarder : public KnowsCompositor {
                                 const gfx::IntSize aSize,
                                 const TextureFlags aFlags) = 0;
 
-  virtual void EnableAsyncCompositable(CompositableClient* aCompositable,
-                                       bool aEnable) = 0;
+  virtual void EnableRemoteTexturePushCallback(
+      CompositableClient* aCompositable, const RemoteTextureOwnerId aOwnerId,
+      const gfx::IntSize aSize, const TextureFlags aFlags) = 0;
 
   virtual void UpdateFwdTransactionId() = 0;
   virtual uint64_t GetFwdTransactionId() = 0;
