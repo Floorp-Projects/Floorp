@@ -644,30 +644,25 @@ export function serialize(
     }
 
     return serialized;
-  }
-  // TODO: Bug 1770733 and 1792524. Remove the if condition when the serialization of all the other types is implemented,
-  // since then the serialization of plain objects should be the fallback.
-  else if (className == "Object") {
+  } else if (ChromeUtils.isDOMObject(value)) {
     const serialized = buildSerialized("object", handleId);
-    setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
-
-    if (!knownObject && maxDepth !== null && maxDepth > 0) {
-      serialized.value = serializeMapping(
-        Object.entries(value),
-        maxDepth,
-        childOwnership,
-        serializationInternalMap,
-        realm
-      );
-    }
     return serialized;
   }
 
-  lazy.logger.warn(
-    `Unsupported type: ${type} for remote value: ${stringify(value)}`
-  );
+  // Otherwise serialize the JavaScript object as generic object.
+  const serialized = buildSerialized("object", handleId);
+  setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-  return undefined;
+  if (!knownObject && maxDepth !== null && maxDepth > 0) {
+    serialized.value = serializeMapping(
+      Object.entries(value),
+      maxDepth,
+      childOwnership,
+      serializationInternalMap,
+      realm
+    );
+  }
+  return serialized;
 }
 
 /**
