@@ -1,16 +1,14 @@
-extern crate criterion;
-extern crate httparse;
 
 use std::time::Duration;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 
-const REQ_SHORT: &'static [u8] = b"\
+const REQ_SHORT: &[u8] = b"\
 GET / HTTP/1.0\r\n\
 Host: example.com\r\n\
 Cookie: session=60; user_id=1\r\n\r\n";
 
-const REQ: &'static [u8] = b"\
+const REQ: &[u8] = b"\
 GET /wp-content/uploads/2010/03/hello-kitty-darth-vader-pink.jpg HTTP/1.1\r\n\
 Host: www.kittyhell.com\r\n\
 User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; ja-JP-mac; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3 Pathtraq/0.9\r\n\
@@ -44,13 +42,13 @@ fn req_short(c: &mut Criterion) {
         }));
 }
 
-const RESP_SHORT: &'static [u8] = b"\
+const RESP_SHORT: &[u8] = b"\
 HTTP/1.0 200 OK\r\n\
 Date: Wed, 21 Oct 2015 07:28:00 GMT\r\n\
 Set-Cookie: session=60; user_id=1\r\n\r\n";
 
 // These particular headers don't all make semantic sense for a response, but they're syntactically valid.
-const RESP: &'static [u8] = b"\
+const RESP: &[u8] = b"\
 HTTP/1.1 200 OK\r\n\
 Date: Wed, 21 Oct 2015 07:28:00 GMT\r\n\
 Host: www.kittyhell.com\r\n\

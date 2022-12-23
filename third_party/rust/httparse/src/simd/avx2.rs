@@ -1,4 +1,4 @@
-use ::iter::Bytes;
+use crate::iter::Bytes;
 
 pub enum Scan {
     /// Returned when an implementation finds a noteworthy token.
@@ -129,7 +129,7 @@ fn avx2_code_matches_uri_chars_table() {
     unsafe {
         assert!(byte_is_allowed(b'_', parse_uri_batch_32));
 
-        for (b, allowed) in ::URI_MAP.iter().cloned().enumerate() {
+        for (b, allowed) in crate::URI_MAP.iter().cloned().enumerate() {
             assert_eq!(
                 byte_is_allowed(b as u8, parse_uri_batch_32), allowed,
                 "byte_is_allowed({:?}) should be {:?}", b, allowed,
@@ -148,7 +148,7 @@ fn avx2_code_matches_header_value_chars_table() {
     unsafe {
         assert!(byte_is_allowed(b'_', match_header_value_batch_32));
 
-        for (b, allowed) in ::HEADER_VALUE_MAP.iter().cloned().enumerate() {
+        for (b, allowed) in crate::HEADER_VALUE_MAP.iter().cloned().enumerate() {
             assert_eq!(
                 byte_is_allowed(b as u8, match_header_value_batch_32), allowed,
                 "byte_is_allowed({:?}) should be {:?}", b, allowed,

@@ -68,8 +68,15 @@ pub const AVX_2: usize = 2;
     ),
 ))]
 pub const AVX_2_AND_SSE_42: usize = 3;
-#[cfg(httparse_simd)]
-const NONE: usize = ::core::usize::MAX;
+
+#[cfg(all(
+    httparse_simd,
+    any(
+        target_arch = "x86",
+        target_arch = "x86_64",
+    ),
+))]
+const NONE: usize = std::usize::MAX;
 #[cfg(all(
     httparse_simd,
     not(any(
@@ -116,7 +123,7 @@ mod runtime {
         feat
     }
 
-    pub fn match_uri_vectored(bytes: &mut ::Bytes) {
+    pub fn match_uri_vectored(bytes: &mut crate::iter::Bytes) {
         unsafe {
             match detect() {
                 super::SSE_42 => super::sse42::parse_uri_batch_16(bytes),
@@ -134,7 +141,7 @@ mod runtime {
         // else do nothing
     }
 
-    pub fn match_header_value_vectored(bytes: &mut ::Bytes) {
+    pub fn match_header_value_vectored(bytes: &mut crate::iter::Bytes) {
         unsafe {
             match detect() {
                 super::SSE_42 => super::sse42::match_header_value_batch_16(bytes),
@@ -176,7 +183,7 @@ pub use self::runtime::*;
     ),
 ))]
 mod sse42_compile_time {
-    pub fn match_uri_vectored(bytes: &mut ::Bytes) {
+    pub fn match_uri_vectored(bytes: &mut crate::iter::Bytes) {
         if detect() == super::SSE_42 {
             unsafe {
                 super::sse42::parse_uri_batch_16(bytes);
@@ -186,7 +193,7 @@ mod sse42_compile_time {
         // else do nothing
     }
 
-    pub fn match_header_value_vectored(bytes: &mut ::Bytes) {
+    pub fn match_header_value_vectored(bytes: &mut crate::iter::Bytes) {
         if detect() == super::SSE_42 {
             unsafe {
                 super::sse42::match_header_value_batch_16(bytes);
@@ -225,7 +232,7 @@ pub use self::sse42_compile_time::*;
     ),
 ))]
 mod avx2_compile_time {
-    pub fn match_uri_vectored(bytes: &mut ::Bytes) {
+    pub fn match_uri_vectored(bytes: &mut crate::iter::Bytes) {
         // do both, since avx2 only works when bytes.len() >= 32
         if detect() == super::AVX_2_AND_SSE_42 {
             unsafe {
@@ -242,7 +249,7 @@ mod avx2_compile_time {
         // else do nothing
     }
 
-    pub fn match_header_value_vectored(bytes: &mut ::Bytes) {
+    pub fn match_header_value_vectored(bytes: &mut crate::iter::Bytes) {
         // do both, since avx2 only works when bytes.len() >= 32
         if detect() == super::AVX_2_AND_SSE_42 {
             let scanned = unsafe {

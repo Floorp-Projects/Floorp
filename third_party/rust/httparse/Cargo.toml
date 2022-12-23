@@ -10,8 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
+edition = "2018"
 name = "httparse"
-version = "1.7.1"
+version = "1.8.0"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 build = "build.rs"
 description = "A tiny, safe, speedy, zero-copy HTTP/1.x parser."
