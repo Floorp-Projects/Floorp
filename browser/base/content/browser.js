@@ -2288,6 +2288,7 @@ var gBrowserInit = {
         let fromExternal = undefined;
         let globalHistoryOptions = undefined;
         let triggeringRemoteType = undefined;
+        let forceAllowDataURI = false;
         if (window.arguments[1]) {
           if (!(window.arguments[1] instanceof Ci.nsIPropertyBag2)) {
             throw new Error(
@@ -2321,6 +2322,11 @@ var gBrowserInit = {
               "triggeringRemoteType"
             );
           }
+          if (extraOptions.hasKey("forceAllowDataURI")) {
+            forceAllowDataURI = extraOptions.getPropertyAsBool(
+              "forceAllowDataURI"
+            );
+          }
         }
 
         try {
@@ -2339,6 +2345,7 @@ var gBrowserInit = {
             allowInheritPrincipal: window.arguments[9] !== false,
             csp: window.arguments[10],
             forceAboutBlankViewerInCurrent: !!window.arguments[6],
+            forceAllowDataURI,
             hasValidUserGestureActivation,
             fromExternal,
             globalHistoryOptions,

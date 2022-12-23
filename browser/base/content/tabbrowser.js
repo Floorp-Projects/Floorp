@@ -2558,6 +2558,7 @@
         eventDetail,
         focusUrlBar,
         forceNotRemote,
+        forceAllowDataURI,
         fromExternal,
         index,
         lazyTabTitle,
@@ -2905,6 +2906,9 @@
           }
           if (disableTRR) {
             flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISABLE_TRR;
+          }
+          if (forceAllowDataURI) {
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
           }
           try {
             b.loadURI(aURI, {
