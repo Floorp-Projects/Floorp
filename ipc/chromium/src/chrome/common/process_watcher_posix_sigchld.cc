@@ -25,7 +25,12 @@ static constexpr int kMaxWaitMs = 2000;
 // This is also somewhat arbitrary, but loosely based on Try results.
 // See also toolkit.asyncshutdown.crash_timeout (currently 60s) after
 // which the parent process will be killed.
+#if defined(MOZ_ASAN) || defined(MOZ_TSAN)
+// Sanitizers slow things down in some cases; see bug 1806224.
+static constexpr int kShutdownWaitMs = 40000;
+#else
 static constexpr int kShutdownWaitMs = 8000;
+#endif
 
 namespace {
 

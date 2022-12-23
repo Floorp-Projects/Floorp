@@ -24,6 +24,9 @@ static constexpr int kWaitInterval = 2000;
 // least in the wdspec tests; ~20s has been observed, and we'll spam
 // false positives unless this is increased.
 static constexpr DWORD kShutdownWaitMs = 80000;
+#elif defined(MOZ_ASAN) || defined(MOZ_TSAN)
+// Sanitizers also slow things down in some cases; see bug 1806224.
+static constexpr DWORD kShutdownWaitMs = 40000;
 #else
 static constexpr DWORD kShutdownWaitMs = 8000;
 #endif
