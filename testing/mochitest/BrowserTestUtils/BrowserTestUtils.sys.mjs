@@ -149,20 +149,25 @@ export var BrowserTestUtils = {
     }
     let tab = await BrowserTestUtils.openNewForegroundTab(options);
     let originalWindow = tab.ownerGlobal;
-    let result = await taskFn(tab.linkedBrowser);
-    let finalWindow = tab.ownerGlobal;
-    if (originalWindow == finalWindow && !tab.closing && tab.linkedBrowser) {
-      // taskFn may resolve within a tick after opening a new tab.
-      // We shouldn't remove the newly opened tab in the same tick.
-      // Wait for the next tick here.
-      await TestUtils.waitForTick();
-      BrowserTestUtils.removeTab(tab);
-    } else {
-      Services.console.logStringMessage(
-        "BrowserTestUtils.withNewTab: Tab was already closed before " +
-          "removeTab would have been called"
-      );
+    let result;
+    try {
+      result = await taskFn(tab.linkedBrowser);
+    } finally {
+      let finalWindow = tab.ownerGlobal;
+      if (originalWindow == finalWindow && !tab.closing && tab.linkedBrowser) {
+        // taskFn may resolve within a tick after opening a new tab.
+        // We shouldn't remove the newly opened tab in the same tick.
+        // Wait for the next tick here.
+        await TestUtils.waitForTick();
+        BrowserTestUtils.removeTab(tab);
+      } else {
+        Services.console.logStringMessage(
+          "BrowserTestUtils.withNewTab: Tab was already closed before " +
+            "removeTab would have been called"
+        );
+      }
     }
+
     return Promise.resolve(result);
   },
 
