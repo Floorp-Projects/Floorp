@@ -1,3 +1,7 @@
+const TAB_SLEEP_ENABLED_PREF = "floorp.tabsleep.enabled";
+const TAB_SLEEP_TESTMODE_ENABLED_PREF = "floorp.tabsleep.testmode.enabled";
+const TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF = "floorp.tabsleep.tabTimeoutSeconds";
+
 const EXCLUDE_URL_PATTERNS = [
     "auth",
     "verify",
@@ -67,13 +71,13 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
 
 
 (async function main() {
-    let isEnabled = await browser.aboutConfigPrefs.getPref("floorp.tabsleep.enabled");
+    let isEnabled = await browser.aboutConfigPrefs.getPref(TAB_SLEEP_ENABLED_PREF);
     browser.aboutConfigPrefs.onPrefChange.addListener(function() {
         browser.runtime.reload();
-    }, "floorp.tabsleep.enabled");
+    }, TAB_SLEEP_ENABLED_PREF);
     if (!isEnabled) return;
 
-    let isTestMode = await browser.aboutConfigPrefs.getPref("floorp.tabsleep.testmode.enabled");
+    let isTestMode = await browser.aboutConfigPrefs.getPref(TAB_SLEEP_TESTMODE_ENABLED_PREF);
     if (isTestMode) console.log("Test mode is enabled");
 
     let systemMemory = await browser.memoryInfo.getSystemMemorySize();
@@ -85,7 +89,7 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     async function prefHandle() {
         TAB_TIMEOUT_SECONDS = Math.floor(60 * (systemMemoryGB * 3));
         try {
-            let pref = await browser.aboutConfigPrefs.getIntPref("floorp.tabsleep.tabTimeoutSeconds");
+            let pref = await browser.aboutConfigPrefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
             if (pref !== 0) TAB_TIMEOUT_SECONDS = pref;
         } catch (e) {
             console.error(e);
@@ -94,7 +98,7 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
         console.log(`TAB_TIMEOUT_SECONDS: ${TAB_TIMEOUT_SECONDS}`);
     }
     await prefHandle();
-    browser.aboutConfigPrefs.onPrefChange.addListener(prefHandle, "floorp.tabsleep.tabTimeoutSeconds");
+    browser.aboutConfigPrefs.onPrefChange.addListener(prefHandle, TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
 
     setInterval(async function() {
         let tabs = await browser.tabs.query({
