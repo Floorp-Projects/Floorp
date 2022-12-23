@@ -76,7 +76,6 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     browser.aboutConfigPrefs.onPrefChange.addListener(function() {
         browser.runtime.reload();
     }, TAB_SLEEP_ENABLED_PREF);
-    if (!isEnabled) return;
 
     let isTestMode = await browser.aboutConfigPrefs.getPref(TAB_SLEEP_TESTMODE_ENABLED_PREF);
     if (isTestMode) console.log("Test mode is enabled");
@@ -100,6 +99,22 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     }
     await prefHandle();
     browser.aboutConfigPrefs.onPrefChange.addListener(prefHandle, TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
+
+    browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        sendResponse({
+            response: "status-data",
+            data: {
+                status: {
+                    systemMemory: systemMemory,
+                    tabSleepEnabled: Boolean(isEnabled),
+                    testModeEnabled: Boolean(isTestMode),
+                    tabTimeoutSeconds: TAB_TIMEOUT_SECONDS,
+                }
+            }
+        })
+    });
+
+    if (!isEnabled) return;
 
     setInterval(async function() {
         let tabs = await browser.tabs.query({

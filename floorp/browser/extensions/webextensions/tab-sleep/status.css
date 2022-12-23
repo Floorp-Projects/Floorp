@@ -1,0 +1,27 @@
+body {
+    background-color: #f9f9fb;
+    color: #15141a;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #2b2a33;
+        color: #fbfbfe;
+    }
+}
+
+.statuses-box > .status-box {
+    display: flex;
+}
+
+.statuses-box > .status-box > .title {
+    flex: 1;
+}
+
+.statuses-box > .status-box > .value {
+    flex: 1;
+}
+
+.statuses-box > .status-box:not(:nth-of-type(2)) {
+    background-color: rgba(128, 128, 128, 0.1);
+}
