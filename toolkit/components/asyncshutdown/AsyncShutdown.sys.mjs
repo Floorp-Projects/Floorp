@@ -36,11 +36,7 @@
  * resolved or rejected.
  */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -363,14 +359,12 @@ function getOrigin(topFrame, filename = null, lineNumber = null, stack = null) {
   }
 }
 
-var EXPORTED_SYMBOLS = ["AsyncShutdown"];
-
 /**
  * {string} topic -> phase
  */
 var gPhases = new Map();
 
-var AsyncShutdown = {
+export var AsyncShutdown = {
   /**
    * Access function getPhase. For testing purposes only.
    */

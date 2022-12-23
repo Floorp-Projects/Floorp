@@ -13,8 +13,8 @@ XPIDL_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "AsyncShutdown.jsm",
-    "nsAsyncShutdown.jsm",
+    "AsyncShutdown.sys.mjs",
+    "nsAsyncShutdown.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
