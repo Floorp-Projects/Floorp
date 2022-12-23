@@ -61,7 +61,8 @@ export class UrlbarView {
 
     this.#mainContainer = this.panel.querySelector(".urlbarView-body-inner");
     this.#rows = this.panel.querySelector(".urlbarView-results");
-    this.#resultMenu = this.panel.querySelector(".urlbarView-result-menu");
+    this.resultMenu = this.panel.querySelector(".urlbarView-result-menu");
+    this.#resultMenuCommands = new WeakMap();
 
     this.#rows.addEventListener("mousedown", this);
 
@@ -70,7 +71,8 @@ export class UrlbarView {
     this.#rows.addEventListener("overflow", this);
     this.#rows.addEventListener("underflow", this);
 
-    this.#resultMenu.addEventListener("command", this);
+    this.resultMenu.addEventListener("command", this);
+    this.resultMenu.addEventListener("popupshowing", this);
 
     // `noresults` is used to style the one-offs without their usual top border
     // when no results are present.
@@ -744,9 +746,9 @@ export class UrlbarView {
 
   openResultMenu(result, anchor) {
     this.#resultMenuResult = result;
-    this.#resultMenu.openPopup(anchor, "bottomright topright");
+    this.resultMenu.openPopup(anchor, "bottomright topright");
     anchor.toggleAttribute("open", true);
-    this.#resultMenu.addEventListener(
+    this.resultMenu.addEventListener(
       "popuphidden",
       () => {
         anchor.toggleAttribute("open", false);
@@ -876,8 +878,8 @@ export class UrlbarView {
   #queryUpdatedResults;
   #queryWasCancelled;
   #removeStaleRowsTimer;
-  #resultMenu;
   #resultMenuResult;
+  #resultMenuCommands;
   #rows;
   #selectedElement;
 
@@ -1281,10 +1283,17 @@ export class UrlbarView {
       });
     }
     if (lazy.UrlbarPrefs.get("resultMenu")) {
-      this.#addRowButton(item, {
-        name: "menu",
-        l10n: { id: "urlbar-result-menu-button" },
-      });
+      let menuCommands = [];
+      if (result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY) {
+        menuCommands.push("remove-from-history");
+      }
+      if (menuCommands.length) {
+        this.#resultMenuCommands.set(result, menuCommands);
+        this.#addRowButton(item, {
+          name: "menu",
+          l10n: { id: "urlbar-result-menu-button" },
+        });
+      }
     }
   }
 
@@ -2690,13 +2699,24 @@ export class UrlbarView {
   }
 
   on_command(event) {
-    if (event.currentTarget == this.#resultMenu) {
+    if (event.currentTarget == this.resultMenu) {
       let result = this.#resultMenuResult;
       let menuitem = event.target;
       switch (menuitem.dataset.command) {
-        case "test":
-          console.log(result);
+        case "remove-from-history":
+          this.controller.handleDeleteEntry(null, result);
           break;
+      }
+    }
+  }
+
+  on_popupshowing(event) {
+    if (event.currentTarget == this.resultMenu) {
+      let availableCommands = this.#resultMenuCommands.get(
+        this.#resultMenuResult
+      );
+      for (let menuitem of this.resultMenu.querySelector("[data-command]")) {
+        menuitem.hidden = !availableCommands.includes(menuitem.dataset.command);
       }
     }
   }
