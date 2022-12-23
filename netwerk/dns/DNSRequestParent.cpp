@@ -128,7 +128,7 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request,
     bool isTRR = false;
     rec->IsTRR(&isTRR);
 
-    uint32_t effectiveTRRMode = 0;
+    nsIRequest::TRRMode effectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
     rec->GetEffectiveTRRMode(&effectiveTRRMode);
 
     uint32_t ttl = 0;

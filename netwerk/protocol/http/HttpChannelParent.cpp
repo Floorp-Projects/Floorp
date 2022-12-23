@@ -1259,6 +1259,10 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
+  nsIRequest::TRRMode effectiveMode = nsIRequest::TRR_DEFAULT_MODE;
+  mChannel->GetEffectiveTRRMode(&effectiveMode);
+  args.effectiveTRRMode() = effectiveMode;
+
   if (mIPCClosed ||
       !mBgParent->OnStartRequest(
           *responseHead, useResponseHead,

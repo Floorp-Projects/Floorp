@@ -352,7 +352,7 @@ nsDNSRecord::ReportUnusable(uint16_t aPort) {
 }
 
 NS_IMETHODIMP
-nsDNSRecord::GetEffectiveTRRMode(uint32_t* aMode) {
+nsDNSRecord::GetEffectiveTRRMode(nsIRequest::TRRMode* aMode) {
   *aMode = mHostRecord->EffectiveTRRMode();
   return NS_OK;
 }
