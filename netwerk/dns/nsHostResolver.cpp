@@ -1114,7 +1114,7 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
   }
 
   LOG(("NameLookup: %s effectiveTRRmode: %d flags: %X", rec->host.get(),
-       rec->mEffectiveTRRMode, rec->flags));
+       static_cast<nsIRequest::TRRMode>(rec->mEffectiveTRRMode), rec->flags));
 
   if (rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR) {
     rec->RecordReason(TRRSkippedReason::TRR_DISABLED_FLAG);
