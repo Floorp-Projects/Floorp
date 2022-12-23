@@ -56,6 +56,7 @@ class ChildDNSRecord : public nsIDNSAddrRecord {
   bool mIsTRR = false;
   bool mResolvedInSocketProcess = false;
   nsIRequest::TRRMode mEffectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
+  nsITRRSkipReason::value mTRRSkipReason = nsITRRSkipReason::TRR_UNSET;
   uint32_t mTTL = 0;
 };
 
@@ -191,6 +192,12 @@ ChildDNSRecord::ReportUnusable(uint16_t aPort) {
 NS_IMETHODIMP
 ChildDNSRecord::GetEffectiveTRRMode(nsIRequest::TRRMode* aMode) {
   *aMode = mEffectiveTRRMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP ChildDNSRecord::GetTrrSkipReason(
+    nsITRRSkipReason::value* aTrrSkipReason) {
+  *aTrrSkipReason = mTRRSkipReason;
   return NS_OK;
 }
 

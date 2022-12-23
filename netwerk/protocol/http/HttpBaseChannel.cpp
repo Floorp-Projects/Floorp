@@ -3607,6 +3607,12 @@ HttpBaseChannel::GetEffectiveTRRMode(nsIRequest::TRRMode* aEffectiveTRRMode) {
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetTrrSkipReason(nsITRRSkipReason::value* aTrrSkipReason) {
+  *aTrrSkipReason = mTRRSkipReason;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetIsLoadedBySocketProcess(bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = LoadLoadedBySocketProcess();

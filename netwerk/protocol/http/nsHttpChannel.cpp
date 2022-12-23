@@ -8531,6 +8531,7 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 
   if (nsCOMPtr<nsIDNSAddrRecord> r = do_QueryInterface(rec)) {
     r->GetEffectiveTRRMode(&mEffectiveTRRMode);
+    r->GetTrrSkipReason(&mTRRSkipReason);
   }
 
   LOG(
