@@ -80,7 +80,7 @@ class AsyncScriptCompiler final : public nsIIncrementalStreamLoaderObserver,
   RefPtr<Promise> mPromise;
   nsString mCharset;
   JS::OffThreadToken* mToken;
-  UniqueTwoByteChars mScriptText;
+  UniquePtr<Utf8Unit[], JS::FreePolicy> mScriptText;
   size_t mScriptLength;
 };
 
@@ -137,7 +137,7 @@ static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
 }
 
 bool AsyncScriptCompiler::StartCompile(JSContext* aCx) {
-  JS::SourceText<char16_t> srcBuf;
+  JS::SourceText<Utf8Unit> srcBuf;
   if (!srcBuf.init(aCx, std::move(mScriptText), mScriptLength)) {
     return false;
   }
@@ -242,7 +242,7 @@ AsyncScriptCompiler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     return NS_OK;
   }
 
-  nsresult rv = ScriptLoader::ConvertToUTF16(
+  nsresult rv = ScriptLoader::ConvertToUTF8(
       nullptr, aBuf, aLength, mCharset, nullptr, mScriptText, mScriptLength);
   if (NS_FAILED(rv)) {
     Reject(cx, "Unable to decode script");
