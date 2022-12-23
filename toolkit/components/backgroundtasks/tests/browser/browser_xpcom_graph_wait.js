@@ -30,14 +30,14 @@ const backgroundtaskPhases = {
     allowlist: {
       modules: [
         "resource://gre/modules/AppConstants.sys.mjs",
-        "resource://gre/modules/AsyncShutdown.jsm",
+        "resource://gre/modules/AsyncShutdown.sys.mjs",
         "resource://gre/modules/BackgroundTasksManager.sys.mjs",
         "resource://gre/modules/Console.sys.mjs",
         "resource://gre/modules/EnterprisePolicies.sys.mjs",
         "resource://gre/modules/EnterprisePoliciesParent.sys.mjs",
         "resource://gre/modules/PromiseUtils.sys.mjs",
         "resource://gre/modules/XPCOMUtils.sys.mjs",
-        "resource://gre/modules/nsAsyncShutdown.jsm",
+        "resource://gre/modules/nsAsyncShutdown.sys.mjs",
       ],
       // Human-readable contract IDs are many-to-one mapped to CIDs, so this
       // list is a little misleading.  For example, all of

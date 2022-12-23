@@ -65,7 +65,7 @@ const known_scripts = {
 // items in the main list, which we expect will always load.
 const intermittently_loaded_scripts = {
   modules: new Set([
-    "resource://gre/modules/nsAsyncShutdown.jsm",
+    "resource://gre/modules/nsAsyncShutdown.sys.mjs",
 
     // Cookie banner handling.
     "resource://gre/actors/CookieBannerChild.jsm",

@@ -6,8 +6,6 @@
  * An implementation of nsIAsyncShutdown* based on AsyncShutdown.jsm
  */
 
-"use strict";
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -239,7 +237,7 @@ nsAsyncShutdownBarrier.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIAsyncShutdownBarrier"]),
 };
 
-function nsAsyncShutdownService() {
+export function nsAsyncShutdownService() {
   // Cache for the getters
 
   for (let _k of [
@@ -276,6 +274,7 @@ function nsAsyncShutdownService() {
     _propertyBagConverter: PropertyBagConverter,
   };
 }
+
 nsAsyncShutdownService.prototype = {
   makeBarrier(name) {
     return new nsAsyncShutdownBarrier(new lazy.AsyncShutdown.Barrier(name));
@@ -283,5 +282,3 @@ nsAsyncShutdownService.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIAsyncShutdownService"]),
 };
-
-var EXPORTED_SYMBOLS = ["nsAsyncShutdownService"];
