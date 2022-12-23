@@ -357,6 +357,12 @@ nsDNSRecord::GetEffectiveTRRMode(nsIRequest::TRRMode* aMode) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDNSRecord::GetTrrSkipReason(
+    nsITRRSkipReason::value* aTrrSkipReason) {
+  *aTrrSkipReason = mHostRecord->TrrSkipReason();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDNSRecord::GetTtl(uint32_t* aTtl) { return mHostRecord->GetTtl(aTtl); }
 
@@ -1427,6 +1433,12 @@ nsDNSService::SetDetectedTrrURI(const nsACString& aURI) {
 }
 
 NS_IMETHODIMP
+nsDNSService::GetTRRSkipReasonName(nsITRRSkipReason::value aValue,
+                                   nsACString& aName) {
+  return mozilla::net::GetTRRSkipReasonName(aValue, aName);
+}
+
+NS_IMETHODIMP
 nsDNSService::GetCurrentTrrURI(nsACString& aURI) {
   if (mTrrService) {
     mTrrService->GetURI(aURI);
@@ -1518,3 +1530,163 @@ nsDNSService::ResetExcludedSVCDomainName(const nsACString& aOwnerName) {
   mFailedSVCDomainNames.Remove(aOwnerName);
   return NS_OK;
 }
+
+namespace mozilla::net {
+nsresult GetTRRSkipReasonName(TRRSkippedReason aReason, nsACString& aName) {
+  static_assert(TRRSkippedReason::TRR_UNSET == 0);
+  static_assert(TRRSkippedReason::TRR_OK == 1);
+  static_assert(TRRSkippedReason::TRR_NO_GSERVICE == 2);
+  static_assert(TRRSkippedReason::TRR_PARENTAL_CONTROL == 3);
+  static_assert(TRRSkippedReason::TRR_OFF_EXPLICIT == 4);
+  static_assert(TRRSkippedReason::TRR_REQ_MODE_DISABLED == 5);
+  static_assert(TRRSkippedReason::TRR_MODE_NOT_ENABLED == 6);
+  static_assert(TRRSkippedReason::TRR_FAILED == 7);
+  static_assert(TRRSkippedReason::TRR_MODE_UNHANDLED_DEFAULT == 8);
+  static_assert(TRRSkippedReason::TRR_MODE_UNHANDLED_DISABLED == 9);
+  static_assert(TRRSkippedReason::TRR_DISABLED_FLAG == 10);
+  static_assert(TRRSkippedReason::TRR_TIMEOUT == 11);
+  static_assert(TRRSkippedReason::TRR_CHANNEL_DNS_FAIL == 12);
+  static_assert(TRRSkippedReason::TRR_IS_OFFLINE == 13);
+  static_assert(TRRSkippedReason::TRR_NOT_CONFIRMED == 14);
+  static_assert(TRRSkippedReason::TRR_DID_NOT_MAKE_QUERY == 15);
+  static_assert(TRRSkippedReason::TRR_UNKNOWN_CHANNEL_FAILURE == 16);
+  static_assert(TRRSkippedReason::TRR_HOST_BLOCKED_TEMPORARY == 17);
+  static_assert(TRRSkippedReason::TRR_SEND_FAILED == 18);
+  static_assert(TRRSkippedReason::TRR_NET_RESET == 19);
+  static_assert(TRRSkippedReason::TRR_NET_TIMEOUT == 20);
+  static_assert(TRRSkippedReason::TRR_NET_REFUSED == 21);
+  static_assert(TRRSkippedReason::TRR_NET_INTERRUPT == 22);
+  static_assert(TRRSkippedReason::TRR_NET_INADEQ_SEQURITY == 23);
+  static_assert(TRRSkippedReason::TRR_NO_ANSWERS == 24);
+  static_assert(TRRSkippedReason::TRR_DECODE_FAILED == 25);
+  static_assert(TRRSkippedReason::TRR_EXCLUDED == 26);
+  static_assert(TRRSkippedReason::TRR_SERVER_RESPONSE_ERR == 27);
+  static_assert(TRRSkippedReason::TRR_RCODE_FAIL == 28);
+  static_assert(TRRSkippedReason::TRR_NO_CONNECTIVITY == 29);
+  static_assert(TRRSkippedReason::TRR_NXDOMAIN == 30);
+  static_assert(TRRSkippedReason::TRR_REQ_CANCELLED == 31);
+  static_assert(TRRSkippedReason::ODOH_KEY_NOT_USABLE == 32);
+  static_assert(TRRSkippedReason::ODOH_UPDATE_KEY_FAILED == 33);
+  static_assert(TRRSkippedReason::ODOH_KEY_NOT_AVAILABLE == 34);
+  static_assert(TRRSkippedReason::ODOH_ENCRYPTION_FAILED == 35);
+  static_assert(TRRSkippedReason::ODOH_DECRYPTION_FAILED == 36);
+
+  switch (aReason) {
+    case TRRSkippedReason::TRR_UNSET:
+      aName = "TRR_UNSET"_ns;
+      break;
+    case TRRSkippedReason::TRR_OK:
+      aName = "TRR_OK"_ns;
+      break;
+    case TRRSkippedReason::TRR_NO_GSERVICE:
+      aName = "TRR_NO_GSERVICE"_ns;
+      break;
+    case TRRSkippedReason::TRR_PARENTAL_CONTROL:
+      aName = "TRR_PARENTAL_CONTROL"_ns;
+      break;
+    case TRRSkippedReason::TRR_OFF_EXPLICIT:
+      aName = "TRR_OFF_EXPLICIT"_ns;
+      break;
+    case TRRSkippedReason::TRR_REQ_MODE_DISABLED:
+      aName = "TRR_REQ_MODE_DISABLED"_ns;
+      break;
+    case TRRSkippedReason::TRR_MODE_NOT_ENABLED:
+      aName = "TRR_MODE_NOT_ENABLED"_ns;
+      break;
+    case TRRSkippedReason::TRR_FAILED:
+      aName = "TRR_FAILED"_ns;
+      break;
+    case TRRSkippedReason::TRR_MODE_UNHANDLED_DEFAULT:
+      aName = "TRR_MODE_UNHANDLED_DEFAULT"_ns;
+      break;
+    case TRRSkippedReason::TRR_MODE_UNHANDLED_DISABLED:
+      aName = "TRR_MODE_UNHANDLED_DISABLED"_ns;
+      break;
+    case TRRSkippedReason::TRR_DISABLED_FLAG:
+      aName = "TRR_DISABLED_FLAG"_ns;
+      break;
+    case TRRSkippedReason::TRR_TIMEOUT:
+      aName = "TRR_TIMEOUT"_ns;
+      break;
+    case TRRSkippedReason::TRR_CHANNEL_DNS_FAIL:
+      aName = "TRR_CHANNEL_DNS_FAIL"_ns;
+      break;
+    case TRRSkippedReason::TRR_IS_OFFLINE:
+      aName = "TRR_IS_OFFLINE"_ns;
+      break;
+    case TRRSkippedReason::TRR_NOT_CONFIRMED:
+      aName = "TRR_NOT_CONFIRMED"_ns;
+      break;
+    case TRRSkippedReason::TRR_DID_NOT_MAKE_QUERY:
+      aName = "TRR_DID_NOT_MAKE_QUERY"_ns;
+      break;
+    case TRRSkippedReason::TRR_UNKNOWN_CHANNEL_FAILURE:
+      aName = "TRR_UNKNOWN_CHANNEL_FAILURE"_ns;
+      break;
+    case TRRSkippedReason::TRR_HOST_BLOCKED_TEMPORARY:
+      aName = "TRR_HOST_BLOCKED_TEMPORARY"_ns;
+      break;
+    case TRRSkippedReason::TRR_SEND_FAILED:
+      aName = "TRR_SEND_FAILED"_ns;
+      break;
+    case TRRSkippedReason::TRR_NET_RESET:
+      aName = "TRR_NET_RESET"_ns;
+      break;
+    case TRRSkippedReason::TRR_NET_TIMEOUT:
+      aName = "TRR_NET_TIMEOUT"_ns;
+      break;
+    case TRRSkippedReason::TRR_NET_REFUSED:
+      aName = "TRR_NET_REFUSED"_ns;
+      break;
+    case TRRSkippedReason::TRR_NET_INTERRUPT:
+      aName = "TRR_NET_INTERRUPT"_ns;
+      break;
+    case TRRSkippedReason::TRR_NET_INADEQ_SEQURITY:
+      aName = "TRR_NET_INADEQ_SEQURITY"_ns;
+      break;
+    case TRRSkippedReason::TRR_NO_ANSWERS:
+      aName = "TRR_NO_ANSWERS"_ns;
+      break;
+    case TRRSkippedReason::TRR_DECODE_FAILED:
+      aName = "TRR_DECODE_FAILED"_ns;
+      break;
+    case TRRSkippedReason::TRR_EXCLUDED:
+      aName = "TRR_EXCLUDED"_ns;
+      break;
+    case TRRSkippedReason::TRR_SERVER_RESPONSE_ERR:
+      aName = "TRR_SERVER_RESPONSE_ERR"_ns;
+      break;
+    case TRRSkippedReason::TRR_RCODE_FAIL:
+      aName = "TRR_RCODE_FAIL"_ns;
+      break;
+    case TRRSkippedReason::TRR_NO_CONNECTIVITY:
+      aName = "TRR_NO_CONNECTIVITY"_ns;
+      break;
+    case TRRSkippedReason::TRR_NXDOMAIN:
+      aName = "TRR_NXDOMAIN"_ns;
+      break;
+    case TRRSkippedReason::TRR_REQ_CANCELLED:
+      aName = "TRR_REQ_CANCELLED"_ns;
+      break;
+    case TRRSkippedReason::ODOH_KEY_NOT_USABLE:
+      aName = "ODOH_KEY_NOT_USABLE"_ns;
+      break;
+    case TRRSkippedReason::ODOH_UPDATE_KEY_FAILED:
+      aName = "ODOH_UPDATE_KEY_FAILED"_ns;
+      break;
+    case TRRSkippedReason::ODOH_KEY_NOT_AVAILABLE:
+      aName = "ODOH_KEY_NOT_AVAILABLE"_ns;
+      break;
+    case TRRSkippedReason::ODOH_ENCRYPTION_FAILED:
+      aName = "ODOH_ENCRYPTION_FAILED"_ns;
+      break;
+    case TRRSkippedReason::ODOH_DECRYPTION_FAILED:
+      aName = "ODOH_DECRYPTION_FAILED"_ns;
+      break;
+    default:
+      MOZ_ASSERT(false, "Unknown value");
+  }
+
+  return NS_OK;
+}
+}  // namespace mozilla::net

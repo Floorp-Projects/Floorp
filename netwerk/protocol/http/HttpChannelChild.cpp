@@ -433,6 +433,7 @@ void HttpChannelChild::OnStartRequest(
   mAltDataLength = aArgs.altDataLength();
   StoreResolvedByTRR(aArgs.isResolvedByTRR());
   mEffectiveTRRMode = aArgs.effectiveTRRMode();
+  mTRRSkipReason = aArgs.trrSkipReason();
 
   SetApplyConversion(aArgs.applyConversion());
 
