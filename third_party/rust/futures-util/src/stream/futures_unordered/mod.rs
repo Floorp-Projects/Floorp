@@ -22,6 +22,7 @@ use futures_task::{FutureObj, LocalFutureObj, LocalSpawn, Spawn, SpawnError};
 mod abort;
 
 mod iter;
+#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/102352
 pub use self::iter::{IntoIter, Iter, IterMut, IterPinMut, IterPinRef};
 
 mod task;

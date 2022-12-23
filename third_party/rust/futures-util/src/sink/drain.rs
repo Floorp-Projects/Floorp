@@ -32,6 +32,12 @@ pub fn drain<T>() -> Drain<T> {
 
 impl<T> Unpin for Drain<T> {}
 
+impl<T> Clone for Drain<T> {
+    fn clone(&self) -> Self {
+        drain()
+    }
+}
+
 impl<T> Sink<T> for Drain<T> {
     type Error = Never;
 

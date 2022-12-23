@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures"
-version = "0.3.23"
+version = "0.3.25"
 description = """
 An implementation of futures and streams featuring zero allocations,
 composability, and iterator-like interfaces.
@@ -47,33 +47,33 @@ features = [
 ]
 
 [dependencies.futures-channel]
-version = "0.3.23"
+version = "0.3.25"
 features = ["sink"]
 default-features = false
 
 [dependencies.futures-core]
-version = "0.3.23"
+version = "0.3.25"
 default-features = false
 
 [dependencies.futures-executor]
-version = "0.3.23"
+version = "0.3.25"
 optional = true
 default-features = false
 
 [dependencies.futures-io]
-version = "0.3.23"
+version = "0.3.25"
 default-features = false
 
 [dependencies.futures-sink]
-version = "0.3.23"
+version = "0.3.25"
 default-features = false
 
 [dependencies.futures-task]
-version = "0.3.23"
+version = "0.3.25"
 default-features = false
 
 [dependencies.futures-util]
-version = "0.3.23"
+version = "0.3.25"
 features = ["sink"]
 default-features = false
 
