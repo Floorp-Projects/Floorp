@@ -229,7 +229,8 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
   nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
                                 nsXULPrototypeDocument* aProtoDoc);
 
-  nsresult Compile(const char16_t* aText, size_t aTextLength,
+  template <typename Unit>
+  nsresult Compile(const Unit* aText, size_t aTextLength,
                    JS::SourceOwnership aOwnership, nsIURI* aURI,
                    uint32_t aLineNo, mozilla::dom::Document* aDocument,
                    nsIOffThreadScriptReceiver* aOffThreadReceiver = nullptr);

@@ -1860,8 +1860,9 @@ static void OffThreadScriptReceiverCallback(JS::OffThreadToken* aToken,
   NS_DispatchToMainThread(notify);
 }
 
+template <typename Unit>
 nsresult nsXULPrototypeScript::Compile(
-    const char16_t* aText, size_t aTextLength, JS::SourceOwnership aOwnership,
+    const Unit* aText, size_t aTextLength, JS::SourceOwnership aOwnership,
     nsIURI* aURI, uint32_t aLineNo, Document* aDocument,
     nsIOffThreadScriptReceiver* aOffThreadReceiver /* = nullptr */) {
   // We'll compile the script in the compilation scope.
@@ -1870,14 +1871,14 @@ nsresult nsXULPrototypeScript::Compile(
     if (aOwnership == JS::SourceOwnership::TakeOwnership) {
       // In this early-exit case -- before the |srcBuf.init| call will
       // own |aText| -- we must relinquish ownership manually.
-      js_free(const_cast<char16_t*>(aText));
+      js_free(const_cast<Unit*>(aText));
     }
 
     return NS_ERROR_UNEXPECTED;
   }
   JSContext* cx = jsapi.cx();
 
-  JS::SourceText<char16_t> srcBuf;
+  JS::SourceText<Unit> srcBuf;
   if (NS_WARN_IF(!srcBuf.init(cx, aText, aTextLength, aOwnership))) {
     return NS_ERROR_FAILURE;
   }
@@ -1914,6 +1915,15 @@ nsresult nsXULPrototypeScript::Compile(
   }
   return NS_OK;
 }
+
+template nsresult nsXULPrototypeScript::Compile<char16_t>(
+    const char16_t* aText, size_t aTextLength, JS::SourceOwnership aOwnership,
+    nsIURI* aURI, uint32_t aLineNo, Document* aDocument,
+    nsIOffThreadScriptReceiver* aOffThreadReceiver);
+template nsresult nsXULPrototypeScript::Compile<Utf8Unit>(
+    const Utf8Unit* aText, size_t aTextLength, JS::SourceOwnership aOwnership,
+    nsIURI* aURI, uint32_t aLineNo, Document* aDocument,
+    nsIOffThreadScriptReceiver* aOffThreadReceiver);
 
 nsresult nsXULPrototypeScript::InstantiateScript(
     JSContext* aCx, JS::MutableHandle<JSScript*> aScript) {

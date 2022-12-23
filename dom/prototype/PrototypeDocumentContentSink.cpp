@@ -854,14 +854,14 @@ PrototypeDocumentContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
                                         !mOffThreadCompileStringBuf),
                "PrototypeDocument can't load multiple scripts at once");
 
-    rv = ScriptLoader::ConvertToUTF16(channel, string, stringLen, u""_ns,
-                                      mDocument, mOffThreadCompileStringBuf,
-                                      mOffThreadCompileStringLength);
+    rv = ScriptLoader::ConvertToUTF8(channel, string, stringLen, u""_ns,
+                                     mDocument, mOffThreadCompileStringBuf,
+                                     mOffThreadCompileStringLength);
     if (NS_SUCCEEDED(rv)) {
       // Pass ownership of the buffer, carefully emptying the existing
       // fields in the process.  Note that the |Compile| function called
       // below always takes ownership of the buffer.
-      char16_t* units = nullptr;
+      Utf8Unit* units = nullptr;
       size_t unitsLength = 0;
 
       std::swap(units, mOffThreadCompileStringBuf);
