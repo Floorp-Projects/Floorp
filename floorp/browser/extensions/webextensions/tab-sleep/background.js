@@ -1,4 +1,7 @@
 const EXCLUDE_URL_PATTERNS = [
+    "auth",
+    "verify",
+    "verification",
     "create",
     "delete",
     "edit",
