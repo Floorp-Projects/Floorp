@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "getrandom"
-version = "0.2.7"
+version = "0.2.8"
 authors = ["The Rand Project Developers"]
 exclude = [".*"]
 description = "A small cross-platform library for retrieving random data from system source"
