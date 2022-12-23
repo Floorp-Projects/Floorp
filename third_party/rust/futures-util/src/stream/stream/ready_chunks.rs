@@ -20,10 +20,7 @@ pin_project! {
     }
 }
 
-impl<St: Stream> ReadyChunks<St>
-where
-    St: Stream,
-{
+impl<St: Stream> ReadyChunks<St> {
     pub(super) fn new(stream: St, capacity: usize) -> Self {
         assert!(capacity > 0);
 
@@ -85,7 +82,7 @@ impl<St: Stream> Stream for ReadyChunks<St> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let chunk_len = if self.items.is_empty() { 0 } else { 1 };
+        let chunk_len = usize::from(!self.items.is_empty());
         let (lower, upper) = self.stream.size_hint();
         let lower = (lower / self.cap).saturating_add(chunk_len);
         let upper = match upper {

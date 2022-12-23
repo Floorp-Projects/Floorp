@@ -204,7 +204,7 @@ impl<S: Stream> Stream for Peekable<S> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let peek_len = if self.peeked.is_some() { 1 } else { 0 };
+        let peek_len = usize::from(self.peeked.is_some());
         let (lower, upper) = self.stream.size_hint();
         let lower = lower.saturating_add(peek_len);
         let upper = match upper {

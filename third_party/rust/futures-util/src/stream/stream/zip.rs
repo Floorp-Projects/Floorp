@@ -102,8 +102,8 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let queued1_len = if self.queued1.is_some() { 1 } else { 0 };
-        let queued2_len = if self.queued2.is_some() { 1 } else { 0 };
+        let queued1_len = usize::from(self.queued1.is_some());
+        let queued2_len = usize::from(self.queued2.is_some());
         let (stream1_lower, stream1_upper) = self.stream1.size_hint();
         let (stream2_lower, stream2_upper) = self.stream2.size_hint();
 

@@ -99,7 +99,7 @@ where
         if self.done_skipping {
             self.stream.size_hint()
         } else {
-            let pending_len = if self.pending_item.is_some() { 1 } else { 0 };
+            let pending_len = usize::from(self.pending_item.is_some());
             let (_, upper) = self.stream.size_hint();
             let upper = match upper {
                 Some(x) => x.checked_add(pending_len),

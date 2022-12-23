@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-task"
-version = "0.3.23"
+version = "0.3.25"
 description = """
 Tools for working with tasks.
 """
