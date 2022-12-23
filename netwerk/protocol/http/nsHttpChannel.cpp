@@ -6413,7 +6413,12 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
     mDNSPrefetch =
         new nsDNSPrefetch(mURI, originAttributes, nsIRequest::GetTRRMode(),
                           this, LoadTimingEnabled());
-    nsresult rv = mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
+    nsIDNSService::DNSFlags dnsFlags =
+        nsIDNSService::RESOLVE_WANT_RECORD_ON_ERROR;
+    if (mCaps & NS_HTTP_REFRESH_DNS) {
+      dnsFlags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
+    }
+    nsresult rv = mDNSPrefetch->PrefetchHigh(dnsFlags);
 
     if (dnsStrategy & DNS_BLOCK_ON_ORIGIN_RESOLVE) {
       LOG(("  blocking on prefetching origin"));
