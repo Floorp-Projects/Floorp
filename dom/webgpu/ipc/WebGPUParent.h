@@ -13,7 +13,14 @@
 #include "WebGPUTypes.h"
 #include "base/timer.h"
 
-namespace mozilla::webgpu {
+namespace mozilla {
+
+namespace layers {
+class RemoteTextureOwnerClient;
+}  // namespace layers
+
+namespace webgpu {
+
 class ErrorBuffer;
 class PresentationData;
 
@@ -68,18 +75,20 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvRenderPipelineDestroy(RawId aPipelineId);
   ipc::IPCResult RecvImplicitLayoutDestroy(
       RawId aImplicitPlId, const nsTArray<RawId>& aImplicitBglIds);
-  ipc::IPCResult RecvDeviceCreateSwapChain(RawId aDeviceId, RawId aQueueId,
-                                           const layers::RGBDescriptor& aDesc,
-                                           const nsTArray<RawId>& aBufferIds,
-                                           const CompositableHandle& aHandle);
+  ipc::IPCResult RecvDeviceCreateSwapChain(
+      RawId aDeviceId, RawId aQueueId, const layers::RGBDescriptor& aDesc,
+      const nsTArray<RawId>& aBufferIds,
+      const layers::RemoteTextureOwnerId& aOwnerId);
   ipc::IPCResult RecvDeviceCreateShaderModule(
       RawId aDeviceId, RawId aModuleId, const nsString& aLabel,
       const nsCString& aCode, DeviceCreateShaderModuleResolver&& aOutMessage);
 
-  ipc::IPCResult RecvSwapChainPresent(const CompositableHandle& aHandle,
-                                      RawId aTextureId,
-                                      RawId aCommandEncoderId);
-  ipc::IPCResult RecvSwapChainDestroy(const CompositableHandle& aHandle);
+  ipc::IPCResult RecvSwapChainPresent(
+      RawId aTextureId, RawId aCommandEncoderId,
+      const layers::RemoteTextureId& aRemoteTextureId,
+      const layers::RemoteTextureOwnerId& aOwnerId);
+  ipc::IPCResult RecvSwapChainDestroy(
+      const layers::RemoteTextureOwnerId& aOwnerId);
 
   ipc::IPCResult RecvDeviceAction(RawId aDeviceId,
                                   const ipc::ByteBuf& aByteBuf);
@@ -100,10 +109,9 @@ class WebGPUParent final : public PWebGPUParent {
       RawId aDeviceId, DevicePopErrorScopeResolver&& aResolver);
   ipc::IPCResult RecvGenerateError(RawId aDeviceId, const nsCString& message);
 
-  ipc::IPCResult GetFrontBufferSnapshot(IProtocol* aProtocol,
-                                        const CompositableHandle& aHandle,
-                                        Maybe<Shmem>& aShmem,
-                                        gfx::IntSize& aSize);
+  ipc::IPCResult GetFrontBufferSnapshot(
+      IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
+      Maybe<Shmem>& aShmem, gfx::IntSize& aSize);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -133,11 +141,17 @@ class WebGPUParent final : public PWebGPUParent {
   /// regardless of their state.
   std::unordered_map<uint64_t, BufferMapData> mSharedMemoryMap;
   /// Associated presentation data for each swapchain.
-  std::unordered_map<uint64_t, RefPtr<PresentationData>> mCanvasMap;
+  std::unordered_map<layers::RemoteTextureOwnerId, RefPtr<PresentationData>,
+                     layers::RemoteTextureOwnerId::HashFn>
+      mCanvasMap;
+
+  RefPtr<layers::RemoteTextureOwnerClient> mRemoteTextureOwner;
+
   /// Associated stack of error scopes for each device.
   std::unordered_map<uint64_t, ErrorScopeStack> mErrorScopeMap;
 };
 
-}  // namespace mozilla::webgpu
+}  // namespace webgpu
+}  // namespace mozilla
 
 #endif  // WEBGPU_PARENT_H_

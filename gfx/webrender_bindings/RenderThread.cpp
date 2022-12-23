@@ -18,7 +18,6 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/glean/GleanMetrics.h"
-#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorManagerParent.h"
@@ -131,7 +130,6 @@ void RenderThread::Start(uint32_t aNamespace) {
 #ifdef XP_WIN
   widget::WinCompositorWindowThread::Start();
 #endif
-  layers::CompositableInProcessManager::Initialize(aNamespace);
   layers::SharedSurfacesParent::Initialize();
 
   RefPtr<Runnable> runnable = WrapRunnable(
@@ -159,7 +157,6 @@ void RenderThread::ShutDown() {
   oldThread->Shutdown();
 
   layers::SharedSurfacesParent::Shutdown();
-  layers::CompositableInProcessManager::Shutdown();
 
 #ifdef XP_WIN
   if (widget::WinCompositorWindowThread::Get()) {

@@ -6,9 +6,9 @@
 #include "WebGPUParent.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
-#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
@@ -68,11 +68,8 @@ class PresentationData {
  public:
   RawId mDeviceId = 0;
   RawId mQueueId = 0;
-  RefPtr<layers::WebRenderImageHost> mImageHost;
-  RefPtr<layers::MemoryTextureHost> mTextureHost;
+  layers::RGBDescriptor mDesc;
   uint32_t mSourcePitch = 0;
-  uint32_t mTargetPitch = 0;
-  uint32_t mRowCount = 0;
   int32_t mNextFrameID = 1;
   std::vector<RawId> mUnassignedBufferIds;
   std::vector<RawId> mAvailableBufferIds;
@@ -80,17 +77,12 @@ class PresentationData {
   Mutex mBuffersLock MOZ_UNANNOTATED;
 
   PresentationData(RawId aDeviceId, RawId aQueueId,
-                   already_AddRefed<layers::WebRenderImageHost> aImageHost,
-                   already_AddRefed<layers::MemoryTextureHost> aTextureHost,
-                   uint32_t aSourcePitch, uint32_t aTargetPitch, uint32_t aRows,
+                   const layers::RGBDescriptor& aDesc, uint32_t aSourcePitch,
                    const nsTArray<RawId>& aBufferIds)
       : mDeviceId(aDeviceId),
         mQueueId(aQueueId),
-        mImageHost(aImageHost),
-        mTextureHost(aTextureHost),
+        mDesc(aDesc),
         mSourcePitch(aSourcePitch),
-        mTargetPitch(aTargetPitch),
-        mRowCount(aRows),
         mBuffersLock("WebGPU presentation buffers") {
     MOZ_COUNT_CTOR(PresentationData);
 
@@ -682,7 +674,8 @@ ipc::IPCResult WebGPUParent::RecvImplicitLayoutDestroy(
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
     RawId aDeviceId, RawId aQueueId, const RGBDescriptor& aDesc,
-    const nsTArray<RawId>& aBufferIds, const CompositableHandle& aHandle) {
+    const nsTArray<RawId>& aBufferIds,
+    const layers::RemoteTextureOwnerId& aOwnerId) {
   switch (aDesc.format()) {
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
@@ -703,12 +696,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
 
   const uint32_t bufferStride =
       bufferStrideWithMask.value() & ~kBufferAlignmentMask;
-  // GetRGBStride does its own size validation and returns 0 if invalid.
-  const auto textureStride = layers::ImageDataSerializer::GetRGBStride(aDesc);
-  if (textureStride <= 0) {
-    MOZ_ASSERT_UNREACHABLE("Invalid texture stride!");
-    return IPC_OK();
-  }
 
   const auto rows = CheckedInt<uint32_t>(aDesc.size().height);
   if (!rows.isValid()) {
@@ -716,38 +703,16 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
     return IPC_OK();
   }
 
-  const auto wholeBufferSize = rows * bufferStride;
-  const auto wholeTextureSize = rows * textureStride;
-  if (!wholeBufferSize.isValid() || !wholeTextureSize.isValid()) {
-    MOZ_ASSERT_UNREACHABLE("Invalid total buffer/texture size!");
-    return IPC_OK();
+  if (!mRemoteTextureOwner) {
+    mRemoteTextureOwner =
+        MakeRefPtr<layers::RemoteTextureOwnerClient>(OtherPid());
   }
+  // RemoteTextureMap::GetRemoteTextureForDisplayList() works synchronously.
+  mRemoteTextureOwner->RegisterTextureOwner(aOwnerId, /* aIsSyncMode */ true);
 
-  auto* textureHostData = new (fallible) uint8_t[wholeTextureSize.value()];
-  if (NS_WARN_IF(!textureHostData)) {
-    ReportError(
-        aDeviceId,
-        "Error in Device::create_swapchain: failed to allocate texture buffer"_ns);
-    return IPC_OK();
-  }
-
-  layers::TextureInfo texInfo(layers::CompositableType::IMAGE);
-  layers::TextureFlags texFlags = layers::TextureFlags::NO_FLAGS;
-  wr::ExternalImageId externalId =
-      layers::CompositableInProcessManager::GetNextExternalImageId();
-
-  RefPtr<layers::WebRenderImageHost> imageHost =
-      layers::CompositableInProcessManager::Add(aHandle, OtherPid(), texInfo);
-
-  auto textureHost =
-      MakeRefPtr<layers::MemoryTextureHost>(textureHostData, aDesc, texFlags);
-  textureHost->DisableExternalTextures();
-  textureHost->EnsureRenderTexture(Some(externalId));
-
-  auto data = MakeRefPtr<PresentationData>(
-      aDeviceId, aQueueId, imageHost.forget(), textureHost.forget(),
-      bufferStride, textureStride, rows.value(), aBufferIds);
-  if (!mCanvasMap.insert({aHandle.Value(), data}).second) {
+  auto data = MakeRefPtr<PresentationData>(aDeviceId, aQueueId, aDesc,
+                                           bufferStride, aBufferIds);
+  if (!mCanvasMap.emplace(aOwnerId, data).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }
   return IPC_OK();
@@ -789,13 +754,28 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
 }
 
 struct PresentRequest {
+  PresentRequest(const ffi::WGPUGlobal* aContext,
+                 RefPtr<PresentationData>& aData,
+                 RefPtr<layers::RemoteTextureOwnerClient>& aRemoteTextureOwner,
+                 const layers::RemoteTextureId aTextureId,
+                 const layers::RemoteTextureOwnerId aOwnerId)
+      : mContext(aContext),
+        mData(aData),
+        mRemoteTextureOwner(aRemoteTextureOwner),
+        mTextureId(aTextureId),
+        mOwnerId(aOwnerId) {}
+
   const ffi::WGPUGlobal* mContext;
   RefPtr<PresentationData> mData;
+  RefPtr<layers::RemoteTextureOwnerClient> mRemoteTextureOwner;
+  const layers::RemoteTextureId mTextureId;
+  const layers::RemoteTextureOwnerId mOwnerId;
 };
 
 static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
                             uint8_t* userdata) {
-  auto* req = reinterpret_cast<PresentRequest*>(userdata);
+  UniquePtr<PresentRequest> req(reinterpret_cast<PresentRequest*>(userdata));
+
   PresentationData* data = req->mData.get();
   // get the buffer ID
   RawId bufferId;
@@ -810,44 +790,29 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
       ("PresentCallback for buffer %" PRIu64 " status=%d\n", bufferId, status));
   // copy the data
   if (status == ffi::WGPUBufferMapAsyncStatus_Success) {
-    const auto bufferSize = data->mRowCount * data->mSourcePitch;
+    const auto bufferSize = data->mDesc.size().height * data->mSourcePitch;
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
         req->mContext, bufferId, 0, bufferSize);
     MOZ_ASSERT(mapped.length >= bufferSize);
-    if (data->mTextureHost) {
+    auto textureData =
+        req->mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
+            req->mOwnerId, data->mDesc.size(), data->mDesc.format());
+    if (!textureData) {
+      gfxCriticalNoteOnce << "Failed to allocate BufferTextureData";
+      return;
+    }
+    layers::MappedTextureData mappedData;
+    if (textureData && textureData->BorrowMappedData(mappedData)) {
       uint8_t* src = mapped.ptr;
-      uint8_t* dst = data->mTextureHost->GetBuffer();
-      for (uint32_t row = 0; row < data->mRowCount; ++row) {
-        memcpy(dst, src, data->mTargetPitch);
-        dst += data->mTargetPitch;
+      uint8_t* dst = mappedData.data;
+      for (auto row = 0; row < data->mDesc.size().height; ++row) {
+        memcpy(dst, src, mappedData.stride);
+        dst += mappedData.stride;
         src += data->mSourcePitch;
       }
-      layers::CompositorThread()->Dispatch(NS_NewRunnableFunction(
-          "webgpu::WebGPUParent::PresentCallback",
-          [imageHost = data->mImageHost, texture = data->mTextureHost,
-           frameID = data->mNextFrameID++]() {
-            AutoTArray<layers::CompositableHost::TimedTexture, 1> textures;
-
-            layers::CompositableHost::TimedTexture* timedTexture =
-                textures.AppendElement();
-
-            // TODO(aosmond): We recreate the WebRenderTextureHost object each
-            // time so that the pipeline actually updates, as it checks if the
-            // texture is the same as before issuing the transaction update to
-            // WR. We really ought to be cycling between a front and buffer back
-            // here to avoid a race uploading the texture and doing the copy in
-            // PresentCallback.
-            timedTexture->mTexture = new layers::WebRenderTextureHost(
-                layers::TextureFlags::BORROWED_EXTERNAL_ID, texture,
-                texture->GetMaybeExternalImageId().ref());
-            timedTexture->mTimeStamp = TimeStamp();
-            timedTexture->mPictureRect =
-                gfx::IntRect(gfx::IntPoint(0, 0), texture->GetSize());
-            timedTexture->mFrameID = frameID;
-            timedTexture->mProducerID = 0;
-
-            imageHost->UseTextureHost(textures);
-          }));
+      req->mRemoteTextureOwner->PushTexture(req->mTextureId, req->mOwnerId,
+                                            std::move(textureData),
+                                            /* aSharedSurface */ nullptr);
     } else {
       NS_WARNING("WebGPU present skipped: the swapchain is resized!");
     }
@@ -862,53 +827,48 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     // TODO: better handle errors
     NS_WARNING("WebGPU frame mapping failed!");
   }
-  // free yourself
-  delete req;
 }
 
 ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
-    IProtocol* aProtocol, const CompositableHandle& aHandle,
+    IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
     Maybe<Shmem>& aShmem, gfx::IntSize& aSize) {
-  const auto& lookup = mCanvasMap.find(aHandle.Value());
-  if (lookup == mCanvasMap.end()) {
+  const auto& lookup = mCanvasMap.find(aOwnerId);
+  if (lookup == mCanvasMap.end() || !mRemoteTextureOwner) {
     return IPC_OK();
   }
 
   RefPtr<PresentationData> data = lookup->second.get();
-  aSize = data->mTextureHost->GetSize();
-  uint32_t stride =
-      aSize.width * BytesPerPixel(data->mTextureHost->GetFormat());
-  uint32_t len = data->mRowCount * stride;
+  aSize = data->mDesc.size();
+  uint32_t stride = layers::ImageDataSerializer::ComputeRGBStride(
+      data->mDesc.format(), aSize.width);
+  uint32_t len = data->mDesc.size().height * stride;
   Shmem shmem;
   if (!AllocShmem(len, &shmem)) {
     return IPC_OK();
   }
 
-  uint8_t* dst = shmem.get<uint8_t>();
-  uint8_t* src = data->mTextureHost->GetBuffer();
-  for (uint32_t row = 0; row < data->mRowCount; ++row) {
-    memcpy(dst, src, stride);
-    src += data->mTargetPitch;
-    dst += stride;
-  }
-
+  mRemoteTextureOwner->GetLatestBufferSnapshot(aOwnerId, shmem, aSize);
   aShmem.emplace(std::move(shmem));
+
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
-    const CompositableHandle& aHandle, RawId aTextureId,
-    RawId aCommandEncoderId) {
+    RawId aTextureId, RawId aCommandEncoderId,
+    const layers::RemoteTextureId& aRemoteTextureId,
+    const layers::RemoteTextureOwnerId& aOwnerId) {
   // step 0: get the data associated with the swapchain
-  const auto& lookup = mCanvasMap.find(aHandle.Value());
-  if (lookup == mCanvasMap.end()) {
+  const auto& lookup = mCanvasMap.find(aOwnerId);
+  if (lookup == mCanvasMap.end() || !mRemoteTextureOwner ||
+      !mRemoteTextureOwner->IsRegistered(aOwnerId)) {
     NS_WARNING("WebGPU presenting on a destroyed swap chain!");
     return IPC_OK();
   }
+
   RefPtr<PresentationData> data = lookup->second.get();
   RawId bufferId = 0;
-  const auto& size = data->mTextureHost->GetSize();
-  const auto bufferSize = data->mRowCount * data->mSourcePitch;
+  const auto& size = data->mDesc.size();
+  const auto bufferSize = data->mDesc.size().height * data->mSourcePitch;
 
   // step 1: find an available staging buffer, or create one
   {
@@ -1001,13 +961,11 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   // texture,
   // we can just give it the contents of the last mapped buffer instead of the
   // copy.
-  auto* const presentRequest = new PresentRequest{
-      mContext.get(),
-      data,
-  };
+  auto presentRequest = MakeUnique<PresentRequest>(
+      mContext.get(), data, mRemoteTextureOwner, aRemoteTextureId, aOwnerId);
 
   ffi::WGPUBufferMapCallbackC callback = {
-      &PresentCallback, reinterpret_cast<uint8_t*>(presentRequest)};
+      &PresentCallback, reinterpret_cast<uint8_t*>(presentRequest.release())};
   ffi::wgpu_server_buffer_map(mContext.get(), bufferId, 0, bufferSize,
                               ffi::WGPUHostMap_Read, callback);
 
@@ -1015,8 +973,11 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
 }
 
 ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
-    const CompositableHandle& aHandle) {
-  const auto& lookup = mCanvasMap.find(aHandle.Value());
+    const layers::RemoteTextureOwnerId& aOwnerId) {
+  if (mRemoteTextureOwner) {
+    mRemoteTextureOwner->UnregisterTextureOwner(aOwnerId);
+  }
+  const auto& lookup = mCanvasMap.find(aOwnerId);
   MOZ_ASSERT(lookup != mCanvasMap.end());
   if (lookup == mCanvasMap.end()) {
     NS_WARNING("WebGPU presenting on a destroyed swap chain!");
@@ -1025,8 +986,6 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
 
   RefPtr<PresentationData> data = lookup->second.get();
   mCanvasMap.erase(lookup);
-  data->mTextureHost = nullptr;
-  layers::CompositableInProcessManager::Release(aHandle, OtherPid());
 
   MutexAutoLock lock(data->mBuffersLock);
   ipc::ByteBuf dropByteBuf;
@@ -1047,11 +1006,11 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
 
 void WebGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   mTimer.Stop();
-  for (const auto& p : mCanvasMap) {
-    const CompositableHandle handle(p.first);
-    layers::CompositableInProcessManager::Release(handle, OtherPid());
-  }
   mCanvasMap.clear();
+  if (mRemoteTextureOwner) {
+    mRemoteTextureOwner->UnregisterAllTextureOwners();
+    mRemoteTextureOwner = nullptr;
+  }
   ffi::wgpu_server_poll_all_devices(mContext.get(), true);
   mContext = nullptr;
 }

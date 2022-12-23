@@ -295,8 +295,10 @@ struct OpUseRemoteTexture {
   TextureFlags textureFlags;
 };
 
-struct OpEnableAsyncCompositable {
-  bool enable;
+struct OpEnableRemoteTexturePushCallback {
+  RemoteTextureOwnerId ownerId;
+  IntSize size;
+  TextureFlags textureFlags;
 };
 
 struct OpNotifyNotUsed {
@@ -323,7 +325,7 @@ union CompositableOperationDetail {
 
   OpUseRemoteTexture;
 
-  OpEnableAsyncCompositable;
+  OpEnableRemoteTexturePushCallback;
 
   OpDeliverAcquireFence;
 };

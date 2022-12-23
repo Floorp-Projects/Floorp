@@ -30,7 +30,7 @@ class CanvasManagerParent final : public PCanvasManagerParent {
   mozilla::ipc::IPCResult RecvInitialize(const uint32_t& aId);
   mozilla::ipc::IPCResult RecvGetSnapshot(
       const uint32_t& aManagerId, const int32_t& aProtocolId,
-      const CompositableHandle& aHandle,
+      const Maybe<RemoteTextureOwnerId>& aOwnerId,
       webgl::FrontBufferSnapshotIpc* aResult);
 
  private:

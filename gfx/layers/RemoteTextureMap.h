@@ -36,6 +36,7 @@ class SharedSurface;
 
 namespace layers {
 
+class CompositableHost;
 class RemoteTextureHostWrapper;
 class TextureData;
 class TextureHost;
@@ -50,13 +51,17 @@ class RemoteTextureOwnerClient final {
   explicit RemoteTextureOwnerClient(const base::ProcessId aForPid);
 
   bool IsRegistered(const RemoteTextureOwnerId aOwnerId);
-  void RegisterTextureOwner(const RemoteTextureOwnerId aOwnerId);
+  void RegisterTextureOwner(const RemoteTextureOwnerId aOwnerId,
+                            bool aIsSyncMode);
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerId);
   void UnregisterAllTextureOwners();
   void PushTexture(const RemoteTextureId aTextureId,
                    const RemoteTextureOwnerId aOwnerId,
                    UniquePtr<TextureData>&& aTextureData,
                    const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
+  void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
+                               const ipc::Shmem& aDestShmem,
+                               const gfx::IntSize& aSize);
   UniquePtr<TextureData> CreateOrRecycleBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, gfx::IntSize aSize,
       gfx::SurfaceFormat aFormat);
@@ -95,8 +100,16 @@ class RemoteTextureMap {
                    const base::ProcessId aForPid,
                    UniquePtr<TextureData>&& aTextureData,
                    const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
+
+  void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
+                               const base::ProcessId aForPid,
+                               const ipc::Shmem& aDestShmem,
+                               const gfx::IntSize& aSize);
+
+  // aIsSyncMode defines if RemoteTextureMap::GetRemoteTextureForDisplayList()
+  // works synchronously.
   void RegisterTextureOwner(const RemoteTextureOwnerId aOwnerId,
-                            const base::ProcessId aForPid);
+                            const base::ProcessId aForPid, bool aIsSyncMode);
   void UnregisterTextureOwner(const RemoteTextureOwnerId aOwnerIds,
                               const base::ProcessId aForPid);
   void UnregisterTextureOwners(
@@ -129,6 +142,14 @@ class RemoteTextureMap {
                                           const RemoteTextureOwnerId aOwnerId,
                                           const base::ProcessId aForPid);
 
+  void RegisterRemoteTexturePushListener(const RemoteTextureOwnerId aOwnerId,
+                                         const base::ProcessId aForPid,
+                                         CompositableHost* aListener);
+
+  void UnregisterRemoteTexturePushListener(const RemoteTextureOwnerId aOwnerId,
+                                           const base::ProcessId aForPid,
+                                           CompositableHost* aListener);
+
   UniquePtr<TextureData> GetRecycledBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
       gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
@@ -157,6 +178,7 @@ class RemoteTextureMap {
   };
 
   struct TextureOwner {
+    bool mIsSyncMode = true;
     // Holds TextureDataHolders that wait to be used for building wr display
     // list.
     std::deque<UniquePtr<TextureDataHolder>> mWaitingTextureDataHolders;
@@ -203,6 +225,10 @@ class RemoteTextureMap {
   std::map<std::pair<base::ProcessId, RemoteTextureId>,
            UniquePtr<RemoteTextureHostWrapperHolder>>
       mRemoteTextureHostWrapperHolders;
+
+  std::map<std::pair<base::ProcessId, RemoteTextureOwnerId>,
+           RefPtr<CompositableHost>>
+      mRemoteTexturePushListeners;
 
   static StaticAutoPtr<RemoteTextureMap> sInstance;
 };

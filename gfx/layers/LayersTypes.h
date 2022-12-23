@@ -326,7 +326,6 @@ class CompositableHandle final {
 enum class CompositableHandleOwner : uint8_t {
   WebRenderBridge,
   ImageBridge,
-  InProcessManager,
 };
 
 struct RemoteTextureId {

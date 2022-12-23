@@ -129,6 +129,16 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
     flags |= TextureFlags::IS_OPAQUE;
   }
 
+  // With remote texture push callback, a new pushed remote texture is notifiled
+  // from RemoteTextureMap to WebRenderImageHost.
+  if (mData.mRemoteTextureOwnerIdOfPushCallback) {
+    GetForwarder()->EnableRemoteTexturePushCallback(
+        mCanvasClient, *mData.mRemoteTextureOwnerIdOfPushCallback, mData.mSize,
+        flags);
+    EnsurePipeline();
+    return;
+  }
+
   // -
 
   const auto fnGetExistingTc =

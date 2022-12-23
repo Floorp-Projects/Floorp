@@ -6,7 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using layers::RGBDescriptor from "mozilla/layers/LayersSurfaces.h";
-using layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using layers::RemoteTextureId from "mozilla/layers/LayersTypes.h";
+using layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
@@ -71,9 +72,9 @@ parent:
   async ComputePipelineDestroy(RawId selfId);
   async RenderPipelineDestroy(RawId selfId);
   async ImplicitLayoutDestroy(RawId implicitPlId, RawId[] implicitBglIds);
-  async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, CompositableHandle handle);
-  async SwapChainPresent(CompositableHandle handle, RawId textureId, RawId commandEncoderId);
-  async SwapChainDestroy(CompositableHandle handle);
+  async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, RemoteTextureOwnerId ownerId);
+  async SwapChainPresent(RawId textureId, RawId commandEncoderId, RemoteTextureId remoteTextureId, RemoteTextureOwnerId remoteTextureOwnerId);
+  async SwapChainDestroy(RemoteTextureOwnerId ownerId);
 
   async DevicePushErrorScope(RawId selfId);
   async DevicePopErrorScope(RawId selfId) returns (MaybeScopedError maybeError);

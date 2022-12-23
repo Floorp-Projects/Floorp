@@ -40,6 +40,14 @@ WebRenderImageHost::~WebRenderImageHost() {
 }
 
 void WebRenderImageHost::OnReleased() {
+  if (mRemoteTextureOwnerIdOfPushCallback) {
+    RemoteTextureMap::Get()->UnregisterRemoteTexturePushListener(
+        *mRemoteTextureOwnerIdOfPushCallback, mForPidOfPushCallback, this);
+    mRemoteTextureOwnerIdOfPushCallback = Nothing();
+    mSizeOfPushCallback = gfx::IntSize();
+    mFlagsOfPushCallback = TextureFlags::NO_FLAGS;
+  }
+
   if (mRemoteTextureHost) {
     mRemoteTextureHost = nullptr;
   }
@@ -136,6 +144,40 @@ void WebRenderImageHost::UseRemoteTexture(const RemoteTextureId aTextureId,
       }
     }
   }
+}
+
+void WebRenderImageHost::EnableRemoteTexturePushCallback(
+    const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
+    const gfx::IntSize aSize, const TextureFlags aFlags) {
+  if (!GetAsyncRef()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+
+  if (mRemoteTextureOwnerIdOfPushCallback.isSome()) {
+    RemoteTextureMap::Get()->UnregisterRemoteTexturePushListener(aOwnerId,
+                                                                 aForPid, this);
+  }
+
+  RemoteTextureMap::Get()->RegisterRemoteTexturePushListener(aOwnerId, aForPid,
+                                                             this);
+  mRemoteTextureOwnerIdOfPushCallback = Some(aOwnerId);
+  mForPidOfPushCallback = aForPid;
+  mSizeOfPushCallback = aSize;
+  mFlagsOfPushCallback = aFlags;
+}
+
+void WebRenderImageHost::NotifyPushTexture(const RemoteTextureId aTextureId,
+                                           const RemoteTextureOwnerId aOwnerId,
+                                           const base::ProcessId aForPid) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  if (mRemoteTextureOwnerIdOfPushCallback != Some(aOwnerId)) {
+    // RemoteTextureOwnerId is already obsoleted
+    return;
+  }
+  UseRemoteTexture(aTextureId, aOwnerId, aForPid, mSizeOfPushCallback,
+                   mFlagsOfPushCallback);
 }
 
 void WebRenderImageHost::CleanupResources() {

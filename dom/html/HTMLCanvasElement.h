@@ -343,8 +343,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   layers::ImageContainer* GetImageContainer() const { return mImageContainer; }
 
-  layers::CompositableHandle GetCompositableHandle() const;
-
  protected:
   bool mResetLayer;
   bool mMaybeModified;  // we fetched the context, so we may have written to the

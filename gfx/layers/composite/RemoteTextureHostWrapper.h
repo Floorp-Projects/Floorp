@@ -97,7 +97,10 @@ class RemoteTextureHostWrapper : public TextureHost {
       const MonitorAutoLock& aProofOfLock);
   // Called only by RemoteTextureMap
   void SetRemoteTextureHostForDisplayList(const MonitorAutoLock& aProofOfLock,
-                                          TextureHost* aTextureHost);
+                                          TextureHost* aTextureHost,
+                                          bool aIsSyncMode);
+  void ClearRemoteTextureHostForDisplayList(
+      const MonitorAutoLock& aProofOfLock);
 
   // Updated by RemoteTextureMap
   //
@@ -106,6 +109,8 @@ class RemoteTextureHostWrapper : public TextureHost {
   // mTextureId. In async mode, it could be previous TextureHost that is
   // compatible to the mTextureId's TextureHost.
   CompositableTextureHostRef mRemoteTextureForDisplayList;
+
+  bool mIsSyncMode = true;
 
   friend class RemoteTextureMap;
 };

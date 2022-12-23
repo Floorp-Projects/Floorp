@@ -19,7 +19,6 @@ namespace dom {
 struct GPURequestAdapterOptions;
 }  // namespace dom
 namespace layers {
-class CompositableHandle;
 class CompositorBridgeChild;
 }  // namespace layers
 namespace webgpu {
@@ -105,9 +104,10 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
-                             const layers::CompositableHandle& aHandle);
-  void SwapChainPresent(const layers::CompositableHandle& aHandle,
-                        RawId aTextureId);
+                             const layers::RemoteTextureOwnerId& aOwnerId);
+  void SwapChainPresent(RawId aTextureId,
+                        const RemoteTextureId& aRemoteTextureId,
+                        const RemoteTextureOwnerId& aOwnerId);
 
   void RegisterDevice(Device* const aDevice);
   void UnregisterDevice(RawId aId);

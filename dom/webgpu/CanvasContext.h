@@ -38,8 +38,6 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  layers::CompositableHandle mHandle;
-
  public:  // nsICanvasRenderingContextInternal
   int32_t GetWidth() override { return mWidth; }
   int32_t GetHeight() override { return mHeight; }
@@ -53,6 +51,9 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
       nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) override {
     return NS_OK;
   }
+
+  bool UpdateWebRenderCanvasData(mozilla::nsDisplayListBuilder* aBuilder,
+                                 WebRenderCanvasData* aCanvasData) override;
 
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 layers::CanvasRenderer* aRenderer) override;
@@ -87,6 +88,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   RefPtr<Texture> GetCurrentTexture(ErrorResult& aRv);
   void MaybeQueueSwapChainPresent();
   void SwapChainPresent();
+  void ForceNewFrame();
 
  private:
   uint32_t mWidth = 0, mHeight = 0;
@@ -96,6 +98,9 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   RefPtr<Texture> mTexture;
   gfx::SurfaceFormat mGfxFormat = gfx::SurfaceFormat::R8G8B8A8;
   gfx::IntSize mGfxSize;
+
+  Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
+  Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
 };
 
 }  // namespace webgpu

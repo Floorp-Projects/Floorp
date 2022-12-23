@@ -45,19 +45,10 @@ RefPtr<layers::ImageContainer> OffscreenCanvasDisplayHelper::GetImageContainer()
   return mImageContainer;
 }
 
-layers::CompositableHandle OffscreenCanvasDisplayHelper::GetCompositableHandle()
-    const {
-  MutexAutoLock lock(mMutex);
-  return mData.mHandle;
-}
-
 void OffscreenCanvasDisplayHelper::UpdateContext(
     CanvasContextType aType, const Maybe<int32_t>& aChildId) {
-  RefPtr<layers::ImageContainer> imageContainer;
-  if (aType != CanvasContextType::WebGPU) {
-    imageContainer = MakeRefPtr<layers::ImageContainer>(
-        layers::ImageContainer::ASYNCHRONOUS);
-  }
+  RefPtr<layers::ImageContainer> imageContainer =
+      MakeRefPtr<layers::ImageContainer>(layers::ImageContainer::ASYNCHRONOUS);
 
   MutexAutoLock lock(mMutex);
 
@@ -94,7 +85,7 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     MaybeQueueInvalidateElement();
   }
 
-  if (mData.mHandle) {
+  if (mData.mOwnerId.isSome()) {
     // No need to update the ImageContainer as the presentation itself is
     // handled in the compositor process.
     return true;
@@ -279,14 +270,14 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
   Maybe<int32_t> childId;
   HTMLCanvasElement* canvasElement;
   RefPtr<gfx::SourceSurface> surface;
-  layers::CompositableHandle handle;
+  Maybe<layers::RemoteTextureOwnerId> ownerId;
 
   {
     MutexAutoLock lock(mMutex);
     hasAlpha = !mData.mIsOpaque;
     isAlphaPremult = mData.mIsAlphaPremult;
     originPos = mData.mOriginPos;
-    handle = mData.mHandle;
+    ownerId = mData.mOwnerId;
     managerId = mContextManagerId;
     childId = mContextChildId;
     canvasElement = mCanvasElement;
@@ -340,7 +331,7 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
     // We don't have a usable surface, and the context lives in the compositor
     // process.
     return gfx::CanvasManagerChild::Get()->GetSnapshot(
-        managerId.value(), childId.value(), handle,
+        managerId.value(), childId.value(), ownerId,
         hasAlpha ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::R8G8B8X8,
         hasAlpha && !isAlphaPremult, originPos == gl::OriginPos::BottomLeft);
   }
