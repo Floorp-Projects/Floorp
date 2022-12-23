@@ -9,12 +9,12 @@ ChromeUtils.defineESModuleGetters(this, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 const TEST_PROVIDER_INFO = [

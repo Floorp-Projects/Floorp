@@ -4,8 +4,8 @@
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
 const { UpdateUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/UpdateUtils.sys.mjs"

@@ -8,11 +8,11 @@ const { ExtensionStorageIDB } = ChromeUtils.import(
 const { getTrimmedString } = ChromeUtils.import(
   "resource://gre/modules/ExtensionTelemetry.jsm"
 );
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const HISTOGRAM_JSON_IDS = [

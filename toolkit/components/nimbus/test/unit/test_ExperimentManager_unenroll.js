@@ -3,8 +3,8 @@
 const { TelemetryEvents } = ChromeUtils.import(
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 const UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";

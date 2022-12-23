@@ -327,7 +327,7 @@ Tests involving Event Telemetry often follow this four-step form:
    events recorded by Event Telemetry against your provided list of expected events.
    If you only need to check the number of events recorded, you can use
    ``TelemetryTestUtils.assertNumberOfEvents(expectedNum, filter, options);``.
-   Both utilities have `helpful inline documentation <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/tests/utils/TelemetryTestUtils.jsm>`_.
+   Both utilities have :searchfox:`helpful inline documentation <toolkit/components/telemetry/tests/utils/TelemetryTestUtils.sys.mjs>`.
 
 
 Version History

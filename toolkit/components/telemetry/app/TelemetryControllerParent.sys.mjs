@@ -8,13 +8,8 @@ import { AsyncShutdown } from "resource://gre/modules/AsyncShutdown.sys.mjs";
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { DeferredTask } from "resource://gre/modules/DeferredTask.sys.mjs";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
-const { TelemetryControllerBase } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryControllerBase.jsm"
-);
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
+import { TelemetryControllerBase } from "resource://gre/modules/TelemetryControllerBase.sys.mjs";
 
 const Utils = TelemetryUtils;
 
@@ -47,24 +42,24 @@ ChromeUtils.defineModuleGetter(
   "resource://services-crypto/jwcrypto.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ClientID: "resource://gre/modules/ClientID.jsm",
-  CoveragePing: "resource://gre/modules/CoveragePing.jsm",
-  TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  TelemetryArchive: "resource://gre/modules/TelemetryArchive.jsm",
-  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
-  TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ClientID: "resource://gre/modules/ClientID.sys.mjs",
+  CoveragePing: "resource://gre/modules/CoveragePing.sys.mjs",
+  TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryArchive: "resource://gre/modules/TelemetryArchive.sys.mjs",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
+  TelemetrySend: "resource://gre/modules/TelemetrySend.sys.mjs",
   TelemetryReportingPolicy:
-    "resource://gre/modules/TelemetryReportingPolicy.jsm",
-  TelemetryModules: "resource://gre/modules/ModulesPing.jsm",
+    "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
+  TelemetryModules: "resource://gre/modules/ModulesPing.sys.mjs",
   TelemetryUntrustedModulesPing:
-    "resource://gre/modules/UntrustedModulesPing.jsm",
-  UpdatePing: "resource://gre/modules/UpdatePing.jsm",
-  TelemetryHealthPing: "resource://gre/modules/HealthPing.jsm",
-  TelemetryEventPing: "resource://gre/modules/EventPing.jsm",
-  TelemetryPrioPing: "resource://gre/modules/PrioPing.jsm",
-  UninstallPing: "resource://gre/modules/UninstallPing.jsm",
+    "resource://gre/modules/UntrustedModulesPing.sys.mjs",
+  UpdatePing: "resource://gre/modules/UpdatePing.sys.mjs",
+  TelemetryHealthPing: "resource://gre/modules/HealthPing.sys.mjs",
+  TelemetryEventPing: "resource://gre/modules/EventPing.sys.mjs",
+  TelemetryPrioPing: "resource://gre/modules/PrioPing.sys.mjs",
+  UninstallPing: "resource://gre/modules/UninstallPing.sys.mjs",
 });
 
 /**

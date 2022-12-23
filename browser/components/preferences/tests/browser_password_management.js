@@ -3,8 +3,8 @@
 const { LoginTestUtils } = ChromeUtils.import(
   "resource://testing-common/LoginTestUtils.jsm"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 var passwordsDialog;

@@ -1,16 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { TelemetrySession } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySession.jsm"
+const { TelemetrySession } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetrySession.sys.mjs"
 );
 
 // The @mozilla/xre/app-info;1 XPCOM object provided by the xpcshell test harness doesn't
 // implement the nsIXULAppInfo interface, which is needed by Services and
-// TelemetrySession.jsm. updateAppInfo() creates and registers a minimal mock app-info.
+// TelemetrySession.sys.mjs. updateAppInfo() creates and registers a minimal mock app-info.
 const { updateAppInfo } = ChromeUtils.importESModule(
   "resource://testing-common/AppInfo.sys.mjs"
 );
@@ -40,8 +40,8 @@ add_task(async function actualTest() {
   await TelemetryController.testSetup();
 
   // Test the module logic
-  let { TelemetryTimestamps } = ChromeUtils.import(
-    "resource://gre/modules/TelemetryTimestamps.jsm"
+  let { TelemetryTimestamps } = ChromeUtils.importESModule(
+    "resource://gre/modules/TelemetryTimestamps.sys.mjs"
   );
   let now = Date.now();
   TelemetryTimestamps.add("foo");

@@ -10,7 +10,9 @@ do_get_profile();
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { ClientID } = ChromeUtils.importESModule(
+  "resource://gre/modules/ClientID.sys.mjs"
+);
 const { Discovery } = ChromeUtils.import("resource:///modules/Discovery.jsm");
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs"

@@ -8,11 +8,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   HomePage: "resource:///modules/HomePage.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   sinon: "resource://testing-common/Sinon.jsm",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 const HOMEPAGE_IGNORELIST = "homepage-urls";

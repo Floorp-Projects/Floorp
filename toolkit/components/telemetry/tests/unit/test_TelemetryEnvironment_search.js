@@ -1,14 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
 );
-const { TelemetryEnvironmentTesting } = ChromeUtils.import(
-  "resource://testing-common/TelemetryEnvironmentTesting.jsm"
+const { TelemetryEnvironmentTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryEnvironmentTesting.sys.mjs"
 );
 
 SearchTestUtils.init(this);

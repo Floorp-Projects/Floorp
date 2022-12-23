@@ -204,7 +204,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   };
 
   // Make sure that any additions done to ErrorType enum are also mirrored in
-  // XHR_ERROR_TYPE enum of TelemetrySend.jsm.
+  // XHR_ERROR_TYPE enum of TelemetrySend.sys.mjs.
   enum class ErrorType : uint16_t {
     eOK,
     eRequest,

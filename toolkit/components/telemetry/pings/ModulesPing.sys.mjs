@@ -10,12 +10,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryController",
-  "resource://gre/modules/TelemetryController.jsm"
-);
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,

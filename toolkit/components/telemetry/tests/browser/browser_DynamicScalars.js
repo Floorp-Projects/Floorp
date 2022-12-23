@@ -3,11 +3,11 @@
 const { ContentTaskUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
 
 const CONTENT_CREATED = "ipc:content-created";

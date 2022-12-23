@@ -8,12 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "TelemetryEvents",

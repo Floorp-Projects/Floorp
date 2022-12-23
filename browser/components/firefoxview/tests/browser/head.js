@@ -13,8 +13,8 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { FeatureCalloutMessages } = ChromeUtils.import(
   "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {

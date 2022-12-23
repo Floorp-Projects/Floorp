@@ -10,8 +10,8 @@ const { RemoteSettingsClient } = ChromeUtils.import(
 const { UptakeTelemetry, Policy } = ChromeUtils.import(
   "resource://services-common/uptake-telemetry.js"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const PREF_SETTINGS_SERVER = "services.settings.server";

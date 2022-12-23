@@ -13,6 +13,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -24,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TargetingContext"];

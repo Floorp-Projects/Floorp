@@ -7,7 +7,9 @@
 const { AddonStudies } = ChromeUtils.import(
   "resource://normandy/lib/AddonStudies.jsm"
 );
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { ClientID } = ChromeUtils.importESModule(
+  "resource://gre/modules/ClientID.sys.mjs"
+);
 
 ChromeUtils.defineModuleGetter(
   this,

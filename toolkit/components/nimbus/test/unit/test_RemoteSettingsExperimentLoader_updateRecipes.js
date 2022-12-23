@@ -12,8 +12,8 @@ const { NimbusFeatures } = ChromeUtils.import(
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 const { TelemetryEvents } = ChromeUtils.import(
   "resource://normandy/lib/TelemetryEvents.jsm"

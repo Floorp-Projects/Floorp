@@ -7,21 +7,14 @@
  * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/prio-ping.html
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
-});
-
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const Utils = TelemetryUtils;
 

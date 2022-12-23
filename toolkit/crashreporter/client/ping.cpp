@@ -232,7 +232,7 @@ static Json::Value CreateRootNode(
   return root;
 }
 
-// Generates the URL used to submit the crash ping, see TelemetrySend.jsm
+// Generates the URL used to submit the crash ping, see TelemetrySend.sys.mjs
 string GenerateSubmissionUrl(const string& aUrl, const string& aId,
                              const string& aName, const string& aVersion,
                              const string& aChannel, const string& aBuildId) {

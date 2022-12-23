@@ -9,11 +9,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionParent.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryTestUtils",
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();

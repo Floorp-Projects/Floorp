@@ -6,14 +6,14 @@
 const { CrashManager } = ChromeUtils.import(
   "resource://gre/modules/CrashManager.jsm"
 );
-const { TelemetryArchiveTesting } = ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm"
+const { TelemetryArchiveTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryArchiveTesting.sys.mjs"
 );
 const { configureLogging, getManager, sleep } = ChromeUtils.import(
   "resource://testing-common/CrashManagerTest.jsm"
 );
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);

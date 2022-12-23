@@ -38,7 +38,7 @@ The client id is submitted with this ping.
 Send behavior
 -------------
 
-``TelemetryHealthPing.jsm`` tracks several problems:
+``HealthPing.jsm`` tracks several problems:
 
 * The size of other assembled pings exceeds the ping limit.
 * Failures while sending other pings.

@@ -3,9 +3,12 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.jsm",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 // Helpers for testing telemetry events.

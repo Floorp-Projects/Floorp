@@ -6,11 +6,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryController",
-  "resource://gre/modules/TelemetryController.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+});
 
 function BHRTelemetryService() {
   // Allow tests to get access to this object to verify it works correctly.

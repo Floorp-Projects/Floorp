@@ -1,7 +1,7 @@
 "use strict";
 
-const { TelemetrySession } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySession.jsm"
+const { TelemetrySession } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetrySession.sys.mjs"
 );
 
 const DUMMY_PAGE_DATA_URI = `data:text/html,

@@ -14,8 +14,8 @@ const { cleanupStorePrefCache } = ExperimentFakes;
 const { ExperimentStore } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentStore.jsm"
 );
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 const { TelemetryEvents } = ChromeUtils.import(
   "resource://normandy/lib/TelemetryEvents.jsm"

@@ -7,18 +7,10 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+  sendStandalonePing: "resource://gre/modules/TelemetrySend.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "sendStandalonePing",
-  "resource://gre/modules/TelemetrySend.jsm"
-);
 
 const PREF_BRANCH = "browser.ping-centre.";
 

@@ -4,18 +4,13 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { TelemetrySession } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySession.jsm"
-);
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetrySession } from "resource://gre/modules/TelemetrySession.sys.mjs";
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+
 // Other pings
-const { TelemetryPrioPing } = ChromeUtils.import(
-  "resource://gre/modules/PrioPing.jsm"
-);
+import { TelemetryPrioPing } from "resource://gre/modules/PrioPing.sys.mjs";
 
 const lazy = {};
 

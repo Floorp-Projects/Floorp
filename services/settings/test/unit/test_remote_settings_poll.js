@@ -25,8 +25,8 @@ const {
   BROADCAST_ID,
 } = ChromeUtils.import("resource://services-settings/remote-settings.js");
 const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const IS_ANDROID = AppConstants.platform == "android";

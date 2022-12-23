@@ -11,34 +11,23 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+import { ClientID } from "resource://gre/modules/ClientID.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { ServiceRequest } from "resource://gre/modules/ServiceRequest.sys.mjs";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryStorage",
-  "resource://gre/modules/TelemetryStorage.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryReportingPolicy",
-  "resource://gre/modules/TelemetryReportingPolicy.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryHealthPing: "resource://gre/modules/HealthPing.sys.mjs",
+  TelemetryReportingPolicy:
+    "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
+  TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryHealthPing",
-  "resource://gre/modules/HealthPing.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "NimbusFeatures",
@@ -1289,7 +1278,7 @@ export var TelemetrySendImpl = {
     } else {
       // This is a ping in the old format.
       if (!("slug" in ping)) {
-        // That's odd, we don't have a slug. Generate one so that TelemetryStorage.jsm works.
+        // That's odd, we don't have a slug. Generate one so that TelemetryStorage.sys.mjs works.
         ping.slug = Utils.generateUUID();
       }
 

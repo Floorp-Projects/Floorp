@@ -40,6 +40,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SnapshotMonitor: "resource:///modules/SnapshotMonitor.sys.mjs",
+  TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
@@ -90,7 +91,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
-  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
 });
@@ -1564,8 +1564,8 @@ BrowserGlue.prototype = {
     ChromeUtils.addProfilerMarker("earlyBlankFirstPaint", startTime);
     win.openTime = Cu.now();
 
-    let { TelemetryTimestamps } = ChromeUtils.import(
-      "resource://gre/modules/TelemetryTimestamps.jsm"
+    let { TelemetryTimestamps } = ChromeUtils.importESModule(
+      "resource://gre/modules/TelemetryTimestamps.sys.mjs"
     );
     TelemetryTimestamps.add("blankWindowShown");
   },

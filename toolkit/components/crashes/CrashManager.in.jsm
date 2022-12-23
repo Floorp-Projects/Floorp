@@ -18,10 +18,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
 });
 
 var EXPORTED_SYMBOLS = [

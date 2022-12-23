@@ -13,8 +13,8 @@ ChromeUtils.defineESModuleGetters(this, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const OPEN_HISTOGRAM = "SQLITE_STORE_OPEN";

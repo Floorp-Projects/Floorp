@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
-const { TelemetryArchiveTesting } = ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm"
+const { TelemetryArchiveTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryArchiveTesting.sys.mjs"
 );
 
 add_task(async function test_updatePing() {

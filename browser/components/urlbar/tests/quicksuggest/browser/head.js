@@ -15,12 +15,9 @@ ChromeUtils.defineESModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {

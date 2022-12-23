@@ -5,8 +5,8 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
 });
 
 SearchTestUtils.init(this);

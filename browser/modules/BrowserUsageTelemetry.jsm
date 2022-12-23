@@ -22,6 +22,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ClientID: "resource://gre/modules/ClientID.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
@@ -31,7 +32,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ClientID: "resource://gre/modules/ClientID.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   WindowsInstallsInfo:

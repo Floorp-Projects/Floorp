@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
+  UpdatePing: "resource://gre/modules/UpdatePing.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -20,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   LaterRun: "resource:///modules/LaterRun.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
-  UpdatePing: "resource://gre/modules/UpdatePing.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   UpdateManager: ["@mozilla.org/updates/update-manager;1", "nsIUpdateManager"],

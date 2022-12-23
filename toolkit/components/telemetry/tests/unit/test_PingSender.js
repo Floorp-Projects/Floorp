@@ -10,14 +10,14 @@
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
 );
-const { TelemetrySend } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySend.jsm"
+const { TelemetrySend } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetrySend.sys.mjs"
 );
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
+const { TelemetryStorage } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryStorage.sys.mjs"
 );
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"

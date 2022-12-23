@@ -9,8 +9,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { BrowserUsageTelemetry } = ChromeUtils.import(
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",

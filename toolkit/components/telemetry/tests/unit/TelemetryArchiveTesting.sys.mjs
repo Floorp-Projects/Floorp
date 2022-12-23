@@ -1,6 +1,4 @@
-const { TelemetryArchive } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryArchive.jsm"
-);
+import { TelemetryArchive } from "resource://gre/modules/TelemetryArchive.sys.mjs";
 
 function checkForProperties(ping, expected) {
   for (let [props, val] of expected) {

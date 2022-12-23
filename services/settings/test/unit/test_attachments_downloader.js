@@ -9,8 +9,8 @@ const { UptakeTelemetry } = ChromeUtils.import(
 const { Downloader } = ChromeUtils.import(
   "resource://services-settings/Attachments.jsm"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 

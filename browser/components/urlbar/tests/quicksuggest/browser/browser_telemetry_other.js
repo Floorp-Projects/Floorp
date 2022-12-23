@@ -8,8 +8,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
 
 const SPONSORED_SUGGESTION = {

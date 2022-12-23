@@ -92,7 +92,7 @@ Instrumentation Tests
 In addition to the tests of Firefox Telemetry,
 other code owners have written tests that ensure that their code records appropriate values to Telemetry.
 They should use the
-``toolkit/components/telemetry/tests/unit/TelemetryTestUtils.jsm``
+``toolkit/components/telemetry/tests/unit/TelemetryTestUtils.sys.mjs``
 module to make their lives easier.
 This can be used for tests like
 “If five bookmarks are read from the database,

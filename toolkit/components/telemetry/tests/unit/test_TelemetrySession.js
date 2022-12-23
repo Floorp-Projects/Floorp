@@ -8,15 +8,17 @@
  * checked in the second request.
  */
 
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const { TelemetrySession } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySession.jsm"
+const { ClientID } = ChromeUtils.importESModule(
+  "resource://gre/modules/ClientID.sys.mjs"
 );
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetrySession } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetrySession.sys.mjs"
 );
-const { TelemetryReportingPolicy } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryReportingPolicy.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
+);
+const { TelemetryReportingPolicy } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryReportingPolicy.sys.mjs"
 );
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
@@ -69,8 +71,8 @@ function sendPing() {
 }
 
 function fakeGenerateUUID(sessionFunc, subsessionFunc) {
-  const { Policy } = ChromeUtils.import(
-    "resource://gre/modules/TelemetrySession.jsm"
+  const { Policy } = ChromeUtils.importESModule(
+    "resource://gre/modules/TelemetrySession.sys.mjs"
   );
   Policy.generateSessionUUID = sessionFunc;
   Policy.generateSubsessionUUID = subsessionFunc;

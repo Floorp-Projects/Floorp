@@ -19,8 +19,8 @@ const { ExperimentManager } = ChromeUtils.import(
 const { TelemetryFeed } = ChromeUtils.import(
   "resource://activity-stream/lib/TelemetryFeed.jsm"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const MESSAGE_CONTENT = {

@@ -139,7 +139,7 @@
     "functions": [{
       "name": "submitPing",
       "type": "function",
-      "description": "Submits a custom ping to the Telemetry back-end. See <code>submitExternalPing</code> inside TelemetryController.jsm for more details.",
+      "description": "Submits a custom ping to the Telemetry back-end. See <code>submitExternalPing</code> inside TelemetryController.sys.mjs for more details.",
       "async": true,
       "parameters": [
         {

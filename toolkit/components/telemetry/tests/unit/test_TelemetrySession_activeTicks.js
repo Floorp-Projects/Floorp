@@ -2,11 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { TelemetrySession } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySession.jsm"
+const { TelemetrySession } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetrySession.sys.mjs"
 );
 
 function tick(aHowMany) {

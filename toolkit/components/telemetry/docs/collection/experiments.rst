@@ -7,7 +7,7 @@ The experiment annotations are sent with any ping that includes the :doc:`../dat
 
 The JS API
 ==========
-Privileged JavaScript code can annotate experiments using the functions exposed by ``TelemetryEnvironment.jsm``.
+Privileged JavaScript code can annotate experiments using the functions exposed by ``TelemetryEnvironment.sys.mjs``.
 
 The following function adds an annotation to the environment for the provided ``id``, ``branch`` and ``options``. Calling this function repeatedly with the same ``id`` will overwrite the state and trigger new subsessions (subject to throttling).
 ``options`` is an object that may contain ``type`` to tag the experiment with a specific type or ``enrollmentId`` to tag the enrollment in this experiment with an identifier.

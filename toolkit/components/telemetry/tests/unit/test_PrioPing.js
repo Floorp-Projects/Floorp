@@ -4,11 +4,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryPrioPing",
-  "resource://gre/modules/PrioPing.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryPrioPing: "resource://gre/modules/PrioPing.sys.mjs",
+});
 
 function checkPingStructure(type, payload, options) {
   Assert.equal(
@@ -39,7 +37,9 @@ function checkPingStructure(type, payload, options) {
 }
 
 function fakePolicy(set, clear, send, snapshot) {
-  let { Policy } = ChromeUtils.import("resource://gre/modules/PrioPing.jsm");
+  let { Policy } = ChromeUtils.importESModule(
+    "resource://gre/modules/PrioPing.sys.mjs"
+  );
   Policy.setTimeout = set;
   Policy.clearTimeout = clear;
   Policy.sendPing = send;

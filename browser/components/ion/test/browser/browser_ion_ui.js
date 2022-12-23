@@ -8,12 +8,12 @@ const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"
 );
 
-const { TelemetryArchive } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryArchive.jsm"
+const { TelemetryArchive } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryArchive.sys.mjs"
 );
 
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
+const { TelemetryStorage } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryStorage.sys.mjs"
 );
 
 const ORIG_AVAILABLE_LOCALES = Services.locale.availableLocales;

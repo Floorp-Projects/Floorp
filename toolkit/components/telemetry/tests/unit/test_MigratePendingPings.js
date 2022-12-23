@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
+const { TelemetryStorage } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryStorage.sys.mjs"
 );
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
 const { makeFakeAppDir } = ChromeUtils.importESModule(
   "resource://testing-common/AppData.sys.mjs"

@@ -14,8 +14,8 @@ const { LoginCSVImport } = ChromeUtils.import(
 const { LoginExport } = ChromeUtils.import(
   "resource://gre/modules/LoginExport.jsm"
 );
-const { TelemetryTestUtils: TTU } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils: TTU } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 // Enable the collection (during test) for all products so even products

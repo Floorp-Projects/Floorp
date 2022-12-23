@@ -6,21 +6,22 @@
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryReportingPolicy:
+    "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
+  TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.sys.mjs",
+  TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
-  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
-  TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  TelemetryReportingPolicy:
-    "resource://gre/modules/TelemetryReportingPolicy.jsm",
-  TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.jsm",
 });
 
 const Utils = TelemetryUtils;
@@ -387,8 +388,8 @@ var Impl = {
     // Look for app-specific timestamps
     var appTimestamps = {};
     try {
-      let { TelemetryTimestamps } = ChromeUtils.import(
-        "resource://gre/modules/TelemetryTimestamps.jsm"
+      let { TelemetryTimestamps } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetryTimestamps.sys.mjs"
       );
       appTimestamps = TelemetryTimestamps.get();
     } catch (ex) {}

@@ -73,7 +73,7 @@ interface nsIXULRuntime : nsISupports
   };
 
   // If you update this enum, don't forget to raise the limit in
-  // TelemetryEnvironmentTesting.jsm and record the new value in
+  // TelemetryEnvironmentTesting.sys.mjs and record the new value in
   // environment.rst
   cenum ContentWin32kLockdownState : 8 {
     LockdownEnabled = 1,  // no longer used

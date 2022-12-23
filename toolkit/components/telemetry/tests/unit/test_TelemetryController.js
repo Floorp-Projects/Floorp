@@ -8,21 +8,23 @@
  * checked in the second request.
  */
 
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { ClientID } = ChromeUtils.importESModule(
+  "resource://gre/modules/ClientID.sys.mjs"
 );
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { TelemetrySend } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySend.jsm"
+const { TelemetryStorage } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryStorage.sys.mjs"
 );
-const { TelemetryArchive } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryArchive.jsm"
+const { TelemetrySend } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetrySend.sys.mjs"
 );
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryArchive } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryArchive.sys.mjs"
+);
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
@@ -33,8 +35,8 @@ const { ContentTaskUtils } = ChromeUtils.importESModule(
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
-const { TelemetryArchiveTesting } = ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm"
+const { TelemetryArchiveTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryArchiveTesting.sys.mjs"
 );
 
 ChromeUtils.defineModuleGetter(

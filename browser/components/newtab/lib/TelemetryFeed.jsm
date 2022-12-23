@@ -44,7 +44,10 @@ ChromeUtils.defineModuleGetter(
   "resource://activity-stream/lib/UTEventReporting.jsm"
 );
 ChromeUtils.defineESModuleGetters(lazy, {
+  ClientID: "resource://gre/modules/ClientID.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
@@ -57,17 +60,10 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ClientID",
-  "resource://gre/modules/ClientID.jsm"
-);
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 });
 
 const ACTIVITY_STREAM_ID = "activity-stream";

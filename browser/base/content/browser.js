@@ -48,6 +48,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SubDialogManager: "resource://gre/modules/SubDialog.sys.mjs",
   TabsSetupFlowManager:
     "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   UrlbarInput: "resource:///modules/UrlbarInput.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -84,10 +85,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Pocket: "chrome://pocket/content/Pocket.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PromptUtils: "resource://gre/modules/SharedPromptUtils.jsm",
-
   // TODO (Bug 1529552): Remove once old urlbar code goes away.
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
-
   RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
@@ -95,7 +94,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SitePermissions: "resource:///modules/SitePermissions.jsm",
   TabModalPrompt: "chrome://global/content/tabprompts.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   Translation: "resource:///modules/translation/TranslationParent.jsm",
   UITour: "resource:///modules/UITour.jsm",
   Weave: "resource://services-sync/main.js",
@@ -1895,8 +1893,8 @@ var gBrowserInit = {
   },
 
   _delayedStartup() {
-    let { TelemetryTimestamps } = ChromeUtils.import(
-      "resource://gre/modules/TelemetryTimestamps.jsm"
+    let { TelemetryTimestamps } = ChromeUtils.importESModule(
+      "resource://gre/modules/TelemetryTimestamps.sys.mjs"
     );
     TelemetryTimestamps.add("delayedStartupStarted");
 

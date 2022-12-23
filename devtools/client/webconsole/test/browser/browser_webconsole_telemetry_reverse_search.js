@@ -6,8 +6,8 @@
 
 "use strict";
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Test reverse_search telemetry event`;

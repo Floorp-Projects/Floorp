@@ -8,9 +8,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
@@ -36,11 +34,9 @@ XPCOMUtils.defineLazyGetter(lazy, "gPingsArchivePath", function() {
 XPCOMUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function() {
   return OS.Path.join(lazy.gDataReportingDir, ABORTED_SESSION_FILE_NAME);
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryHealthPing",
-  "resource://gre/modules/HealthPing.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryHealthPing: "resource://gre/modules/HealthPing.sys.mjs",
+});
 // Maxmimum time, in milliseconds, archive pings should be retained.
 const MAX_ARCHIVED_PINGS_RETENTION_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
 
