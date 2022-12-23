@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 import { Domain } from "chrome://remote/content/cdp/domains/Domain.sys.mjs";
 
 const lazy = {};
@@ -15,10 +17,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/cdp/domains/parent/page/DialogHandler.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   streamRegistry: "chrome://remote/content/cdp/domains/parent/IO.sys.mjs",
-  Stream: "chrome://remote/content/cdp/domains/parent/IO.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   UnsupportedError: "chrome://remote/content/cdp/Error.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 const MAX_CANVAS_DIMENSION = 32767;
@@ -540,9 +545,9 @@ export class Page extends Domain {
    *     Return as base64-encoded string (ReturnAsBase64),
    *     or stream (ReturnAsStream). Defaults to ReturnAsBase64.
    *
-   * @return {Promise<{data:string, stream:Stream}>}
+   * @return {Promise<{data:string, stream:string}>
    *     Based on the transferMode setting data is a base64-encoded string,
-   *     or stream is a Stream.
+   *     or stream is a handle to a OS.File stream.
    */
   async printToPDF(options = {}) {
     const {
@@ -588,8 +593,13 @@ export class Page extends Domain {
       throw new TypeError("paperWidth is zero or negative");
     }
 
-    let path;
-    let stream;
+    // Create a unique filename for the temporary PDF file
+    const basePath = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.tmpDir,
+      "remote-agent.pdf"
+    );
+    const { file, path: filePath } = await lazy.OS.File.openUnique(basePath);
+    await file.close();
 
     const psService = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
       Ci.nsIPrintSettingsService
@@ -601,37 +611,9 @@ export class Page extends Domain {
     printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
     printSettings.printerName = "";
     printSettings.printSilent = true;
-
-    if (transferMode === PDF_TRANSFER_MODES.stream) {
-      // If we are returning a stream, we write the PDF to disk so that we don't
-      // keep (potentially very large) PDFs in memory. We can then stream them
-      // to the client via the returned Stream.
-      //
-      // NOTE: This is a potentially premature optimization -- it might be fine
-      // to keep these PDFs in memory, but we don't have specifics on how CDP is
-      // used in the field so it is possible that leaving the PDFs in memory
-      // could cause a regression.
-      path = await IOUtils.createUniqueFile(
-        PathUtils.tempDir,
-        "remote-agent.pdf"
-      );
-
-      printSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationFile;
-      printSettings.toFileName = path;
-    } else {
-      // If we are returning the data immediately, there is no sense writing it
-      // to disk only to read it later.
-      const UINT32_MAX = 0xffffffff;
-      stream = Cc["@mozilla.org/storagestream;1"].createInstance(
-        Ci.nsIStorageStream
-      );
-      stream.init(4096, UINT32_MAX);
-
-      printSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationStream;
-      printSettings.outputStream = stream.getOutputStream(0);
-    }
+    printSettings.outputDestination =
+      Ci.nsIPrintSettings.kOutputDestinationFile;
+    printSettings.toFileName = filePath;
 
     printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
     printSettings.paperWidth = paperWidth;
@@ -663,7 +645,6 @@ export class Page extends Domain {
     const { linkedBrowser } = this.session.target.tab;
 
     await linkedBrowser.browsingContext.print(printSettings);
-    // TODO: Bug 1785046 fixes this.
 
     // Bug 1603739 - With e10s enabled the promise returned by print() resolves
     // too early, which means the file hasn't been completely written.
@@ -672,36 +653,33 @@ export class Page extends Domain {
 
       let lastSize = 0;
       const timerId = lazy.setInterval(async () => {
-        if (transferMode === PDF_TRANSFER_MODES.stream) {
-          const fileInfo = await IOUtils.stat(path);
-
-          if (lastSize > 0 && fileInfo.size == lastSize) {
-            lazy.clearInterval(timerId);
-            resolve();
-          }
-          lastSize = fileInfo.size;
-        } else if (!stream.writeInProgress) {
+        const fileInfo = await lazy.OS.File.stat(filePath);
+        if (lastSize > 0 && fileInfo.size == lastSize) {
           lazy.clearInterval(timerId);
           resolve();
         }
+        lastSize = fileInfo.size;
       }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
     });
 
+    const fp = await lazy.OS.File.open(filePath);
+
     const retval = { data: null, stream: null };
     if (transferMode == PDF_TRANSFER_MODES.stream) {
-      retval.stream = lazy.streamRegistry.add(new lazy.Stream(path));
+      retval.stream = lazy.streamRegistry.add(fp);
     } else {
-      const inputStream = Cc["@mozilla.org/binaryinputstream"].createInstance(
-        Ci.nsIBinaryInputStream
-      );
-      inputStream.setInputStream(stream.getInputStream(0));
+      // return all data as a base64 encoded string
+      let bytes;
+      try {
+        bytes = await fp.read();
+      } finally {
+        fp.close();
+        await lazy.OS.File.remove(filePath);
+      }
 
-      const available = inputStream.available();
-      const bytes = inputStream.readBytes(available);
-
-      retval.data = btoa(bytes);
-
-      stream.close();
+      // Each UCS2 character has an upper byte of 0 and a lower byte matching
+      // the binary data
+      retval.data = btoa(String.fromCharCode.apply(null, bytes));
     }
 
     return retval;
