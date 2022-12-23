@@ -159,6 +159,9 @@ class ChromeUtils {
   static void GetClassName(GlobalObject& aGlobal, JS::Handle<JSObject*> aObj,
                            bool aUnwrap, nsAString& aRetval);
 
+  static bool IsDOMObject(GlobalObject& aGlobal, JS::Handle<JSObject*> aObj,
+                          bool aUnwrap);
+
   static void ShallowClone(GlobalObject& aGlobal, JS::Handle<JSObject*> aObj,
                            JS::Handle<JSObject*> aTarget,
                            JS::MutableHandle<JSObject*> aRetval,
