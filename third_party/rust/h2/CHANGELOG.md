@@ -1,3 +1,8 @@
+# 0.3.15 (October 21, 2022)
+
+* Remove `B: Buf` bound on `SendStream`'s parameter
+* add accessor for `StreamId` u32
+
 # 0.3.14 (August 16, 2022)
 
 * Add `Error::is_reset` function.

@@ -94,7 +94,7 @@ use std::task::{Context, Poll};
 /// [`send_trailers`]: #method.send_trailers
 /// [`send_reset`]: #method.send_reset
 #[derive(Debug)]
-pub struct SendStream<B: Buf> {
+pub struct SendStream<B> {
     inner: proto::StreamRef<B>,
 }
 
@@ -108,8 +108,14 @@ pub struct SendStream<B: Buf> {
 /// new stream.
 ///
 /// [Section 5.1.1]: https://tools.ietf.org/html/rfc7540#section-5.1.1
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct StreamId(u32);
+
+impl From<StreamId> for u32 {
+    fn from(src: StreamId) -> Self {
+        src.0
+    }
+}
 
 /// Receives the body stream and trailers from the remote peer.
 ///
@@ -381,6 +387,18 @@ impl<B: Buf> SendStream<B> {
 impl StreamId {
     pub(crate) fn from_internal(id: crate::frame::StreamId) -> Self {
         StreamId(id.into())
+    }
+
+    /// Returns the `u32` corresponding to this `StreamId`
+    ///
+    /// # Note
+    ///
+    /// This is the same as the `From<StreamId>` implementation, but
+    /// included as an inherent method because that implementation doesn't
+    /// appear in rustdocs, as well as a way to force the type instead of
+    /// relying on inference.
+    pub fn as_u32(&self) -> u32 {
+        (*self).into()
     }
 }
 // ===== impl RecvStream =====
