@@ -7,8 +7,6 @@
 
 """Print a C++ header file for the IDL files specified on the command line"""
 
-from __future__ import absolute_import
-
 import itertools
 import os.path
 import re

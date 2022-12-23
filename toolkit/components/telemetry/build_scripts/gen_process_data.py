@@ -5,8 +5,6 @@
 # Write out processes data for C++. The processes are defined
 # in a file provided as a command-line argument.
 
-from __future__ import print_function
-
 import collections
 import sys
 

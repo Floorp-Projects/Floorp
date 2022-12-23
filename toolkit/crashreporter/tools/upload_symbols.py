@@ -14,8 +14,6 @@
 # you can put the token in a file and set `SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE`
 # environment variable to the path to the file.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
 import logging
 import os

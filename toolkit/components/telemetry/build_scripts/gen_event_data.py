@@ -5,8 +5,6 @@
 # Write out event information for C++. The events are defined
 # in a file provided as a command-line argument.
 
-from __future__ import print_function
-
 import itertools
 import json
 import sys

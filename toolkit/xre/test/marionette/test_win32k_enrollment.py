@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 from contextlib import contextmanager
 
 from marionette_harness import MarionetteTestCase

@@ -5,8 +5,6 @@
 # Generate updater.ini by doing some light substitution on the localized updater.ini input,
 # and appending the contents of updater_ini_append on Windows.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import codecs
 import re
 import shutil

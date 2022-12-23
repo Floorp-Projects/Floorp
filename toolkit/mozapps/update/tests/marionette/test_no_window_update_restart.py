@@ -9,8 +9,6 @@
 # windows at all and mochitest has a test runner window that Firefox recognizes, but mustn't close
 # during testing.
 
-from __future__ import absolute_import
-
 from marionette_driver import Wait, errors
 from marionette_harness import MarionetteTestCase
 

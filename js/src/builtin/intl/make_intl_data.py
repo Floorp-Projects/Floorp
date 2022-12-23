@@ -41,8 +41,6 @@
     simple digit mappings and verifies that it's in sync with ICU/CLDR.
 """
 
-from __future__ import print_function
-
 import io
 import json
 import os

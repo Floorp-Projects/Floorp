@@ -6,8 +6,6 @@
 #
 # The events are defined in files provided as command-line arguments.
 
-from __future__ import print_function
-
 import sys
 
 import buildconfig

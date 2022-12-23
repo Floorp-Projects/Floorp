@@ -5,8 +5,6 @@
 # This module contains code for managing WebIDL files and bindings for
 # the build system.
 
-from __future__ import print_function, unicode_literals
-
 import errno
 import hashlib
 import io

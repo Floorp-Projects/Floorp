@@ -15,8 +15,6 @@ paths by default when using macOS's /usr/bin/python.
 Includes generous amount of logging to aid debugging for use in automated tests.
 """
 
-from __future__ import absolute_import, print_function
-
 import argparse
 import logging
 import os

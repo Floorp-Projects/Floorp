@@ -1,8 +1,6 @@
 # produce mozlog-compatible log messages, following the spec at
 # https://mozbase.readthedocs.io/en/latest/mozlog.html
 
-from __future__ import print_function
-
 import json
 import os
 from time import time

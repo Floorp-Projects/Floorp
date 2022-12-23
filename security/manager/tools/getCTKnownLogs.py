@@ -14,8 +14,6 @@ and edited to include the disqualification time for the disqualified logs using
 https://cs.chromium.org/chromium/src/net/cert/ct_known_logs_static-inc.h
 """
 
-from __future__ import print_function
-
 import argparse
 import base64
 import datetime

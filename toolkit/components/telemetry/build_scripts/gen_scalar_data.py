@@ -5,8 +5,6 @@
 # Write out scalar information for C++.  The scalars are defined
 # in a file provided as a command-line argument.
 
-from __future__ import print_function
-
 import json
 import sys
 from collections import OrderedDict

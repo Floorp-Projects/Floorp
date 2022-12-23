@@ -6,8 +6,6 @@
 
 """This script analyzes a JSON file emitted by DMD."""
 
-from __future__ import absolute_import, division, print_function
-
 import argparse
 import collections
 import gzip
@@ -639,7 +637,7 @@ def printDigest(args, digest):
                 cond = is_match
             elif arg.startswith("!"):
                 key = arg[1:]
-                cond = lambda rec, key: not is_match(rec, key)  # noqa: E731
+                def cond(rec, key): return not is_match(rec, key)  # noqa: E731
             else:
                 key = arg
                 cond = is_match

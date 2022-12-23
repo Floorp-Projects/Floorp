@@ -5,8 +5,6 @@
 # This file contains utility functions shared by the scalars and the histogram generation
 # scripts.
 
-from __future__ import print_function
-
 import os
 import re
 import sys

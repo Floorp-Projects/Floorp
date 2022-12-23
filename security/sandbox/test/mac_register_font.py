@@ -9,8 +9,6 @@ mac_register_font.py
 Mac-specific utility command to register a font file with the OS.
 """
 
-from __future__ import print_function
-
 import argparse
 import sys
 

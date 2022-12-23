@@ -15,8 +15,6 @@
 # To install what you need, on Ubuntu,
 #   sudo apt-get install python-fontforge
 
-from __future__ import print_function, absolute_import
-
 import fontforge
 
 # generate a set of fonts, each with our special glyph at one codepoint,

@@ -36,8 +36,6 @@
 #
 # It uses the C preprocessor to process its inputs.
 
-from __future__ import with_statement
-
 import errno
 import os
 import re

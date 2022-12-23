@@ -5,8 +5,6 @@
 """ Hello I am a fake jsshell for testing purpose.
 Add more features!
 """
-from __future__ import absolute_import
-
 import argparse
 import sys
 

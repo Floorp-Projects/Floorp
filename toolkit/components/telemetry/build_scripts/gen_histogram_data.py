@@ -5,8 +5,6 @@
 # Write out histogram information for C++.  The histograms are defined
 # in a file provided as a command-line argument.
 
-from __future__ import print_function
-
 import sys
 from os import path
 

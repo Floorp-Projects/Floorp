@@ -9,8 +9,6 @@
 # sees if they `Release' or `Dtor'. If not, it reports them as leaks.
 # Please see README file in the same directory.
 
-from __future__ import absolute_import, print_function
-
 import sys
 
 import six
