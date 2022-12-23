@@ -700,8 +700,14 @@
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Zmanjšanje števila pasic s piškotki</string>
 
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Zmanjšajte število pasic s samodejnim zavračanjem zahtev za nastavljanje piškotkov, kadar je to mogoče.</string>
+
     <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
     <string name="cookie_banner_further_reduce_option_title">Dodatno zmanjšaj število pasic s piškotki</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Zahteve pasic s piškotki bodo sprejete, tako da bo skritih več pasic.</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Zmanjšanje števila pasic s piškotki</string>
@@ -727,8 +733,11 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
     <string name="cookie_banner_exception_panel_title_state_off_for_site">Izključim zmanjšanje števila pasic s piškotki za %1$s?</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s bo počistil piškotke tega spletnega mesta in osvežil stran. Če počistite vse piškotke, boste morda odjavljeni ali se bo izpraznila vaša nakupovalna košarica.</string>
+
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s lahko poskusi samodejno zavrniti zahteve za nastavljanje piškotkov. Če zavrnitev ni možnost, lahko %1$s sprejme vse piškotke in zapre pasico.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s lahko poskusi samodejno zavrniti zahteve za nastavljanje piškotkov. Če zavrnitev ni možna, lahko %1$s sprejme vse piškotke in zapre pasico.</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Samodejno predvajanje</string>
