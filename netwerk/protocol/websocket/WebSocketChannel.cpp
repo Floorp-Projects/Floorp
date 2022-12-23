@@ -2855,9 +2855,10 @@ nsresult WebSocketChannel::DoAdmissionDNS() {
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
   nsCOMPtr<nsICancelable> cancelable;
-  rv = dns->AsyncResolveNative(
-      hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT, 0, nullptr, this, main,
-      mLoadInfo->GetOriginAttributes(), getter_AddRefs(cancelable));
+  rv = dns->AsyncResolveNative(hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+                               nsIDNSService::RESOLVE_DEFAULT_FLAGS, nullptr,
+                               this, main, mLoadInfo->GetOriginAttributes(),
+                               getter_AddRefs(cancelable));
   if (NS_FAILED(rv)) {
     return rv;
   }

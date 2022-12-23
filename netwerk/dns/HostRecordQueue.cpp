@@ -10,7 +10,8 @@
 namespace mozilla {
 namespace net {
 
-void HostRecordQueue::InsertRecord(nsHostRecord* aRec, uint16_t aFlags,
+void HostRecordQueue::InsertRecord(nsHostRecord* aRec,
+                                   nsIDNSService::DNSFlags aFlags,
                                    const MutexAutoLock& aProofOfLock) {
   if (aRec->isInList()) {
     MOZ_DIAGNOSTIC_ASSERT(!mEvictionQ.contains(aRec),
@@ -155,7 +156,8 @@ void HostRecordQueue::MaybeRemoveFromQ(nsHostRecord* aRec,
   aRec->remove();
 }
 
-void HostRecordQueue::MoveToAnotherPendingQ(nsHostRecord* aRec, uint16_t aFlags,
+void HostRecordQueue::MoveToAnotherPendingQ(nsHostRecord* aRec,
+                                            nsIDNSService::DNSFlags aFlags,
                                             const MutexAutoLock& aProofOfLock) {
   if (!(mHighQ.contains(aRec) || mMediumQ.contains(aRec) ||
         mLowQ.contains(aRec))) {
