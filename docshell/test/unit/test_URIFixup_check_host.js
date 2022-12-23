@@ -14,13 +14,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsINativeDNSResolverOverride"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gDNSService",
-  "@mozilla.org/network/dns-service;1",
-  "nsIDNSService"
-);
-
 add_task(async function setup() {
   Services.prefs.setStringPref("browser.fixup.alternate.prefix", "www.");
   Services.prefs.setStringPref("browser.fixup.alternate.suffix", ".com");
@@ -95,7 +88,7 @@ add_task(async function test_uri_with_force_fixup() {
   );
 
   lazy.gDNSOverride.clearHostOverride(fixedURI.displayHost);
-  lazy.gDNSService.clearCache(false);
+  Services.dns.clearCache(false);
 });
 
 add_task(async function test_uri_with_get_fixup() {
@@ -112,7 +105,7 @@ add_task(async function test_uri_with_get_fixup() {
   );
 
   lazy.gDNSOverride.clearHostOverride(uri.displayHost);
-  lazy.gDNSService.clearCache(false);
+  Services.dns.clearCache(false);
 });
 
 add_task(async function test_intranet_like_uri() {
@@ -132,7 +125,7 @@ add_task(async function test_intranet_like_uri() {
 
   lazy.gDNSOverride.clearHostOverride(uri.displayHost);
   lazy.gDNSOverride.clearHostOverride(uri.displayHost + ".");
-  lazy.gDNSService.clearCache(false);
+  Services.dns.clearCache(false);
 });
 
 add_task(async function test_intranet_like_uri_without_fixup() {
@@ -156,7 +149,7 @@ add_task(async function test_intranet_like_uri_without_fixup() {
 
   lazy.gDNSOverride.clearHostOverride(uri.displayHost);
   lazy.gDNSOverride.clearHostOverride(uri.displayHost + ".");
-  lazy.gDNSService.clearCache(false);
+  Services.dns.clearCache(false);
 });
 
 add_task(async function test_ip_address() {
@@ -185,6 +178,6 @@ add_task(async function test_ip_address() {
   );
 
   lazy.gDNSOverride.clearHostOverride(uri.displayHost);
-  lazy.gDNSService.clearCache(false);
+  Services.dns.clearCache(false);
   Services.obs.removeObserver(observer, topic);
 });

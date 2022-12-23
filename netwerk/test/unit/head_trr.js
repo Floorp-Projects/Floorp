@@ -14,7 +14,6 @@ const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-let gDNS;
 
 /// Sets the TRR related prefs and adds the certificate we use for the HTTP2
 /// server.
@@ -139,18 +138,12 @@ class TRRDNSListener {
     );
     const currentThread = threadManager.currentThread;
 
-    if (!gDNS) {
-      gDNS = Cc["@mozilla.org/network/dns-service;1"].getService(
-        Ci.nsIDNSService
-      );
-    }
-
     this.additionalInfo =
       trrServer == "" && port == -1
         ? null
-        : gDNS.newAdditionalInfo(trrServer, port);
+        : Services.dns.newAdditionalInfo(trrServer, port);
     try {
-      this.request = gDNS.asyncResolve(
+      this.request = Services.dns.asyncResolve(
         this.name,
         this.type,
         this.options.flags || 0,
@@ -240,7 +233,7 @@ class TRRDNSListener {
   }
 
   cancel(aStatus = Cr.NS_ERROR_ABORT) {
-    gDNS.cancelAsyncResolve(
+    Services.dns.cancelAsyncResolve(
       this.name,
       this.type,
       this.options.flags || 0,

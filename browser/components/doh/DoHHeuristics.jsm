@@ -19,13 +19,6 @@ const lazy = {};
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
-  "gDNSService",
-  "@mozilla.org/network/dns-service;1",
-  "nsIDNSService"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
   "gNetworkLinkService",
   "@mozilla.org/network/network-link-service;1",
   "nsINetworkLinkService"
@@ -139,7 +132,7 @@ async function dnsLookup(hostname, resolveCanonicalName = false) {
       Ci.nsIDNSService.RESOLVE_BYPASS_CACHE |
       Ci.nsIDNSService.RESOLVE_CANONICAL_NAME;
     try {
-      request = lazy.gDNSService.asyncResolve(
+      request = Services.dns.asyncResolve(
         hostname,
         Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         dnsFlags,

@@ -81,13 +81,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
-  "gDNSService",
-  "@mozilla.org/network/dns-service;1",
-  "nsIDNSService"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
   "gNetworkLinkService",
   "@mozilla.org/network/network-link-service;1",
   "nsINetworkLinkService"
@@ -369,7 +362,7 @@ const DoHController = {
     };
 
     if (results.steeredProvider) {
-      lazy.gDNSService.setDetectedTrrURI(results.steeredProvider.uri);
+      Services.dns.setDetectedTrrURI(results.steeredProvider.uri);
       resultsForTelemetry.steeredProvider = results.steeredProvider.id;
     }
 

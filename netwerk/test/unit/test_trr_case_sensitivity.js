@@ -4,10 +4,6 @@
 
 "use strict";
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
-
 trr_test_setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
@@ -41,7 +37,7 @@ add_task(async function test_trr_casing() {
   let [, resp] = await channelOpenPromise(chan);
   equal(resp, "<h1> 404 Path not found: /test?bla=some</h1>");
 
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
