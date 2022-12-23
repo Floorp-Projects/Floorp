@@ -40,6 +40,17 @@
         <!-- Long Description -->
         <div id="errorLongDesc"></div>
 
+        <p id="trrOnlyContainer" hidden="">
+          <p id="trrOnlyMessage"></p>
+          <div class="trr-message-container">
+            <span id="trrOnlyDescription"></span>
+            <p id="trrLearnMoreContainer" hidden="">
+              <a id="trrOnlylearnMoreLink" target="_blank" rel="noopener noreferrer" data-l10n-id="neterror-learn-more-link"></a>
+            </p>
+          </div>
+          <p data-l10n-id="neterror-dns-not-found-trr-only-attackers"> </p>
+        </p>
+
         <p id="tlsVersionNotice" hidden=""></p>
 
         <p id="learnMoreContainer" hidden="">
@@ -68,6 +79,8 @@
 
       <div id="netErrorButtonContainer" class="button-container" hidden="">
         <button class="primary try-again" data-l10n-id="neterror-try-again-button"></button>
+        <button id="trrExceptionButton" data-l10n-id="neterror-add-exception-button" hidden=""></button>
+        <button id="trrSettingsButton" data-l10n-id="neterror-settings-button" hidden=""></button>
       </div>
 
       <div class="advanced-panel-container">
