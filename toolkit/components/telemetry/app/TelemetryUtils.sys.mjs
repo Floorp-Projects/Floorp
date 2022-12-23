@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TelemetryUtils"];
-
 const { TelemetryControllerBase } = ChromeUtils.import(
   "resource://gre/modules/TelemetryControllerBase.jsm"
 );
@@ -24,7 +20,7 @@ const IS_CONTENT_PROCESS = (function() {
   return runtime.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 })();
 
-var TelemetryUtils = {
+export var TelemetryUtils = {
   /**
    * When telemetry is disabled, identifying information (such as client ID)
    * should be removed. A topic event is emitted with a subject that matches

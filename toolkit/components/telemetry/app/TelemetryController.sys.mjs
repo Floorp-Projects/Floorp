@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * This module chooses the correct telemetry controller module to load
  * based on the process:
@@ -23,8 +21,6 @@
  * fast.
  */
 
-var EXPORTED_SYMBOLS = ["TelemetryController"];
-
 // We can't use Services.appinfo here because tests stub out the appinfo
 // service, and if we touch Services.appinfo now, the built-in version
 // will be cached in place of the stub.
@@ -33,7 +29,7 @@ const isParentProcess =
   Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType ===
   Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
-var TelemetryController;
+export var TelemetryController;
 if (isParentProcess) {
   ({ TelemetryController } = ChromeUtils.import(
     "resource://gre/modules/TelemetryControllerParent.jsm"

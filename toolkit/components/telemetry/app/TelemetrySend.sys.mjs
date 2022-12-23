@@ -9,37 +9,17 @@
  * newest first.
  */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = [
-  "TelemetrySend",
-  "Policy",
-  "SendScheduler",
-  "TelemetrySendImpl",
-  "PING_SUBMIT_TIMEOUT_MS",
-  "sendStandalonePing",
-  "gzipCompressString",
-];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-const { ServiceRequest } = ChromeUtils.importESModule(
-  "resource://gre/modules/ServiceRequest.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+import { ServiceRequest } from "resource://gre/modules/ServiceRequest.sys.mjs";
+
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 
@@ -95,7 +75,7 @@ const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * MS_IN_A_MINUTE;
 const MIDNIGHT_FUZZING_DELAY_MS = Math.random() * MIDNIGHT_FUZZING_INTERVAL_MS;
 
 // Timeout after which we consider a ping submission failed.
-const PING_SUBMIT_TIMEOUT_MS = 1.5 * MS_IN_A_MINUTE;
+export const PING_SUBMIT_TIMEOUT_MS = 1.5 * MS_IN_A_MINUTE;
 
 // To keep resource usage in check, we limit ping sending to a maximum number
 // of pings per minute.
@@ -128,7 +108,7 @@ const XHR_ERROR_TYPE = [
  * Tests override properties on this object to allow for control of behavior
  * that would otherwise be very hard to cover.
  */
-var Policy = {
+export var Policy = {
   now: () => new Date(),
   midnightPingFuzzingDelay: () => MIDNIGHT_FUZZING_DELAY_MS,
   pingSubmissionTimeout: () => PING_SUBMIT_TIMEOUT_MS,
@@ -170,7 +150,7 @@ function savePing(aPing) {
 /**
  * @return {String} This returns a string with the gzip compressed data.
  */
-function gzipCompressString(string) {
+export function gzipCompressString(string) {
   let observer = {
     buffer: "",
     onStreamComplete(loader, context, status, length, result) {
@@ -206,7 +186,7 @@ function gzipCompressString(string) {
 
 const STANDALONE_PING_TIMEOUT = 30 * 1000; // 30 seconds
 
-function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
+export function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     let request = new ServiceRequest({ mozAnon: true });
     request.mozBackgroundRequest = true;
@@ -248,7 +228,7 @@ function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
   });
 }
 
-var TelemetrySend = {
+export var TelemetrySend = {
   get pendingPingCount() {
     return TelemetrySendImpl.pendingPingCount;
   },
@@ -445,7 +425,7 @@ var CancellableTimeout = {
 /**
  * SendScheduler implements the timer & scheduling behavior for ping sends.
  */
-var SendScheduler = {
+export var SendScheduler = {
   // Whether any ping sends failed since the last tick. If yes, we start with our exponential
   // backoff timeout.
   _sendsFailed: false,
@@ -731,7 +711,7 @@ var SendScheduler = {
   },
 };
 
-var TelemetrySendImpl = {
+export var TelemetrySendImpl = {
   _sendingEnabled: false,
   // Tracks the shutdown state.
   _shutdown: false,

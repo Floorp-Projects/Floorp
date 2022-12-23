@@ -3,11 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
@@ -25,14 +22,12 @@ const PING_TYPE = "update";
 const UPDATE_DOWNLOADED_TOPIC = "update-downloaded";
 const UPDATE_STAGED_TOPIC = "update-staged";
 
-var EXPORTED_SYMBOLS = ["UpdatePing"];
-
 /**
  * This module is responsible for listening to all the relevant update
  * signals, gathering the needed information and assembling the "update"
  * ping.
  */
-var UpdatePing = {
+export var UpdatePing = {
   _enabled: false,
 
   earlyInit() {

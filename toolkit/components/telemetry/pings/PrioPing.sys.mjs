@@ -7,13 +7,7 @@
  * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/prio-ping.html
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TelemetryPrioPing", "Policy"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -39,14 +33,14 @@ const PRIO_LIMIT_REACHED_TOPIC = "origin-telemetry-storage-limit-reached";
 
 const PRIO_PING_VERSION = "1";
 
-var Policy = {
+export var Policy = {
   sendPing: (type, payload, options) =>
     lazy.TelemetryController.submitExternalPing(type, payload, options),
   getEncodedOriginSnapshot: async aClear =>
     Services.telemetry.getEncodedOriginSnapshot(aClear),
 };
 
-var TelemetryPrioPing = {
+export var TelemetryPrioPing = {
   Reason: Object.freeze({
     PERIODIC: "periodic", // Sent the ping containing Origin Telemetry from the past periodic interval (default 24h).
     MAX: "max", // Sent the ping containing at least the maximum number (default 10) of prioData elements, earlier than the periodic interval.

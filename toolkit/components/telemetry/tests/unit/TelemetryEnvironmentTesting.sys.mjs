@@ -1,12 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -21,8 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   // AttributionCode is only needed for Firefox
   AttributionCode: "resource:///modules/AttributionCode.jsm",
 });
-
-var EXPORTED_SYMBOLS = ["TelemetryEnvironmentTesting"];
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -106,7 +101,7 @@ var SysInfo = {
  * TelemetryEnvironmentTesting - tools for testing the telemetry environment
  * reporting.
  */
-var TelemetryEnvironmentTesting = {
+export var TelemetryEnvironmentTesting = {
   EXPECTED_HDD_FIELDS,
 
   init(appInfo) {
