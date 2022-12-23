@@ -1,4 +1,4 @@
-use ::iter::Bytes;
+use crate::iter::Bytes;
 
 pub unsafe fn parse_uri_batch_16(bytes: &mut Bytes) {
     while bytes.as_ref().len() >= 16 {
@@ -109,7 +109,7 @@ fn sse_code_matches_uri_chars_table() {
     unsafe {
         assert!(byte_is_allowed(b'_', parse_uri_batch_16));
 
-        for (b, allowed) in ::URI_MAP.iter().cloned().enumerate() {
+        for (b, allowed) in crate::URI_MAP.iter().cloned().enumerate() {
             assert_eq!(
                 byte_is_allowed(b as u8, parse_uri_batch_16), allowed,
                 "byte_is_allowed({:?}) should be {:?}", b, allowed,
@@ -128,7 +128,7 @@ fn sse_code_matches_header_value_chars_table() {
     unsafe {
         assert!(byte_is_allowed(b'_', match_header_value_batch_16));
 
-        for (b, allowed) in ::HEADER_VALUE_MAP.iter().cloned().enumerate() {
+        for (b, allowed) in crate::HEADER_VALUE_MAP.iter().cloned().enumerate() {
             assert_eq!(
                 byte_is_allowed(b as u8, match_header_value_batch_16), allowed,
                 "byte_is_allowed({:?}) should be {:?}", b, allowed,
