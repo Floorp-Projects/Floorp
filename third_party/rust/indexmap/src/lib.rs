@@ -85,6 +85,7 @@ extern crate std;
 
 use alloc::vec::{self, Vec};
 
+mod arbitrary;
 #[macro_use]
 mod macros;
 mod equivalent;

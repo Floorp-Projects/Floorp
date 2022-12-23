@@ -1,3 +1,8 @@
+- 1.9.2
+
+  - `IndexMap` and `IndexSet` both implement `arbitrary::Arbitrary<'_>` and
+    `quickcheck::Arbitrary` if those optional dependency features are enabled.
+
 - 1.9.1
 
   - The MSRV now allows Rust 1.56.0 as well. However, currently `hashbrown`
