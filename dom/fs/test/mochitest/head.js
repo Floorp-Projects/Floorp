@@ -63,7 +63,10 @@ add_setup(async function() {
     "/tests/dom/quota/test/modules/StorageUtils.js"
   );
 
-  const optionalPrefsToSet = [["dom.fs.enabled", true]];
+  const optionalPrefsToSet = [
+    ["dom.fs.enabled", true],
+    ["dom.fs.writable_file_stream.enabled", true],
+  ];
 
   await setStoragePrefs(optionalPrefsToSet);
 
