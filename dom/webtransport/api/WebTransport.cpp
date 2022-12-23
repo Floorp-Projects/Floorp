@@ -113,11 +113,23 @@ bool WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
     aError.ThrowSyntaxError("Invalid WebTransport URL");
     return false;
   }
-  // XXX and other steps in the constructor requirement (TypeError). Order is
-  // important.
+  bool dedicated =
+      !aOptions.mAllowPooling;  // spec language, optimizer will eliminate this
+  bool requireUnreliable = aOptions.mRequireUnreliable;
+  WebTransportCongestionControl congestionControl = aOptions.mCongestionControl;
+  if (aOptions.mServerCertificateHashes.WasPassed()) {
+    // XXX bug 1806693
+    aError.ThrowNotSupportedError("No support for serverCertificateHashes yet");
+    // XXX if dedicated is false and serverCertificateHashes is non-null, then
+    // throw a TypeError. Also should enforce in parent
+    return false;
+  }
+
   // https://w3c.github.io/webtransport/#webtransport-constructor Spec 5.2
   backgroundChild
-      ->SendCreateWebTransportParent(aURL /*, aOptions*/,
+      ->SendCreateWebTransportParent(aURL, dedicated, requireUnreliable,
+                                     (uint32_t)congestionControl,
+                                     // XXX serverCertHashes,
                                      std::move(parentEndpoint))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,

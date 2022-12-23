@@ -138,8 +138,9 @@ class BackgroundParentImpl : public PBackgroundParent {
       CreateFileSystemManagerParentResolver&& aResolver) override;
 
   mozilla::ipc::IPCResult RecvCreateWebTransportParent(
-      const nsAString& aURL,
-      // WebTransportOptions aOptions,
+      const nsAString& aURL, const bool& aDedicated,
+      const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
+      // Sequence<WebTransportHash>* aServerCertHashes,
       Endpoint<PWebTransportParent>&& aParentEndpoint,
       CreateWebTransportParentResolver&& aResolver) override;
 
