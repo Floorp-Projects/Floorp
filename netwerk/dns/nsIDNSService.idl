@@ -90,9 +90,12 @@ interface nsIDNSService : nsISupports
         RESOLVE_IP_HINT = (1 << 14),
         // If set, do not use ODoH for resolving the host name.
         RESOLVE_DISABLE_ODOH = (1 << 15),
+        // If set, the DNS service will pass a DNS record to
+        // OnLookupComplete even when there was a resolution error.
+        RESOLVE_WANT_RECORD_ON_ERROR = (1 << 16),
 
         // Bitflag containing all possible flags.
-        ALL_DNSFLAGS_BITS = ((1 << 16) - 1),
+        ALL_DNSFLAGS_BITS = ((1 << 17) - 1),
     };
 
     /**

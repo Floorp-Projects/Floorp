@@ -45,9 +45,12 @@ class nsDNSPrefetch final : public nsIDNSListener {
   static nsresult Shutdown();
 
   // Call one of the following methods to start the Prefetch.
-  nsresult PrefetchHigh(bool refreshDNS = false);
-  nsresult PrefetchMedium(bool refreshDNS = false);
-  nsresult PrefetchLow(bool refreshDNS = false);
+  nsresult PrefetchHigh(
+      nsIDNSService::DNSFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS);
+  nsresult PrefetchMedium(
+      nsIDNSService::DNSFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS);
+  nsresult PrefetchLow(
+      nsIDNSService::DNSFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS);
 
   nsresult FetchHTTPSSVC(
       bool aRefreshDNS, bool aPrefetch,
