@@ -75,21 +75,16 @@ nsresult nsDNSPrefetch::Prefetch(nsIDNSService::DNSFlags flags) {
       mOriginAttributes, getter_AddRefs(tmpOutstanding));
 }
 
-nsresult nsDNSPrefetch::PrefetchLow(bool refreshDNS) {
-  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW |
-                  (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE
-                              : nsIDNSService::RESOLVE_DEFAULT_FLAGS));
+nsresult nsDNSPrefetch::PrefetchLow(nsIDNSService::DNSFlags aFlags) {
+  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW | aFlags);
 }
 
-nsresult nsDNSPrefetch::PrefetchMedium(bool refreshDNS) {
-  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
-                  (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE
-                              : nsIDNSService::RESOLVE_DEFAULT_FLAGS));
+nsresult nsDNSPrefetch::PrefetchMedium(nsIDNSService::DNSFlags aFlags) {
+  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM | aFlags);
 }
 
-nsresult nsDNSPrefetch::PrefetchHigh(bool refreshDNS) {
-  return Prefetch(refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE
-                             : nsIDNSService::RESOLVE_DEFAULT_FLAGS);
+nsresult nsDNSPrefetch::PrefetchHigh(nsIDNSService::DNSFlags aFlags) {
+  return Prefetch(aFlags);
 }
 
 namespace {
