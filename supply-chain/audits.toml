@@ -519,6 +519,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.4.4 -> 0.4.5"
 
+[[audits.fallible_collections]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.4.5 -> 0.4.6"
+notes = "The changes in this version are mine."
+
 [[audits.fastrand]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
