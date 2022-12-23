@@ -11,7 +11,7 @@ interface nsITRRSkipReason: nsISupports
   // it will mess up telemetry.
   // When adding a reason here, make sure it is documented in
   // netwerk/docs/dns/trr-skip-reasons.md
-  cenum value: 8 {
+  cenum value: 32 {
     TRR_UNSET = 0,
     TRR_OK = 1,           // Only set when we actually got a positive TRR result
     TRR_NO_GSERVICE = 2,  // no gService
