@@ -4,10 +4,6 @@
 
 "use strict";
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
-
 trr_test_setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
@@ -43,7 +39,7 @@ add_task(async function setup_server() {
 });
 
 add_task(async function test_parse_additional_section() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
@@ -306,7 +302,7 @@ add_task(async function test_additional_after_resolve() {
 // record field and this addditional record was previously unsuccessfully
 // resolved
 add_task(async function test_additional_cached_record_override() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 2);
   Services.prefs.setCharPref(
     "network.trr.uri",

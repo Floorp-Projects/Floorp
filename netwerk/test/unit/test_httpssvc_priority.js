@@ -12,10 +12,6 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
 });
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
-
 add_task(async function testPriorityAndECHConfig() {
   let trrServer = new TRRServer();
   registerCleanupFunction(async () => {
@@ -99,7 +95,7 @@ add_task(async function testPriorityAndECHConfig() {
   Assert.equal(answer[3].name, "test.p4.com");
 
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   ({ inRecord } = await new TRRDNSListener("test.priority.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   }));

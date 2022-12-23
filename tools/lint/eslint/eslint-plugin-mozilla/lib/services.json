@@ -18,6 +18,7 @@
     "nsIDAPTelemetry": "DAPTelemetry",
     "nsIDOMRequestService": "DOMRequest",
     "nsIDOMStorageManager": "domStorageManager",
+    "nsIDNSService": "dns",
     "nsIDirectoryService": "dirsvc",
     "nsIDroppedLinkHandler": "droppedLinkHandler",
     "nsIEffectiveTLDService": "eTLD",

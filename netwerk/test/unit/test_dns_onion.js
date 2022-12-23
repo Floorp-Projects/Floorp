@@ -1,6 +1,5 @@
 "use strict";
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var mainThread = Services.tm.currentThread;
 
 var onionPref;
@@ -31,7 +30,7 @@ const defaultOriginAttributes = {};
 
 function do_test_dontBlock() {
   prefs.setBoolPref("network.dns.blockDotOnion", false);
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     "private.onion",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -45,7 +44,7 @@ function do_test_dontBlock() {
 function do_test_block() {
   prefs.setBoolPref("network.dns.blockDotOnion", true);
   try {
-    dns.asyncResolve(
+    Services.dns.asyncResolve(
       "private.onion",
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,

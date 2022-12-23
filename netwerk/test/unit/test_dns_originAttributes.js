@@ -1,6 +1,5 @@
 "use strict";
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var prefs = Services.prefs;
 var mainThread = Services.tm.currentThread;
 
@@ -41,7 +40,7 @@ const secondOriginAttributes = { userContextId: 2 };
 function run_test() {
   do_test_pending();
   prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     "localhost",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -56,7 +55,7 @@ function run_test() {
 // correctly.
 function test2() {
   do_test_pending();
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     "localhost",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     Ci.nsIDNSService.RESOLVE_OFFLINE,
@@ -73,7 +72,7 @@ function test2() {
 function test3() {
   do_test_pending();
   try {
-    dns.asyncResolve(
+    Services.dns.asyncResolve(
       "localhost",
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       Ci.nsIDNSService.RESOLVE_OFFLINE,

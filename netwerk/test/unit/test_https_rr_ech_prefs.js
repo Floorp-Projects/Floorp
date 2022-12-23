@@ -8,10 +8,6 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 let trrServer;
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
-
 function setup() {
   trr_test_setup();
 
@@ -101,7 +97,7 @@ add_task(async function testEchConfigEnabled() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.bar.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   checkResult(inRecord, false, false, {
@@ -122,10 +118,10 @@ add_task(async function testEchConfigEnabled() {
   checkResult(inRecord, true, true);
 
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   ({ inRecord } = await new TRRDNSListener("test.bar.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   }));
 
   checkResult(inRecord, false, false, {
@@ -156,7 +152,7 @@ add_task(async function testEchConfigEnabled() {
 // When network.dns.http3_echconfig.enabled is false, we should try to
 // connect with h2 and echConfig.
 add_task(async function testTwoRecordsHaveEchConfig() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   let trrServer = new TRRServer();
   await trrServer.start();
@@ -203,7 +199,7 @@ add_task(async function testTwoRecordsHaveEchConfig() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.foo.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   checkResult(inRecord, false, false, {
@@ -224,9 +220,9 @@ add_task(async function testTwoRecordsHaveEchConfig() {
   checkResult(inRecord, true, true);
 
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   ({ inRecord } = await new TRRDNSListener("test.foo.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   }));
 
   checkResult(inRecord, false, false, {
@@ -255,7 +251,7 @@ add_task(async function testTwoRecordsHaveEchConfig() {
 // When network.dns.http3_echconfig.enabled is false, we should use the record
 // that supports h3 and h2 (the alpn is h2).
 add_task(async function testTwoRecordsHaveEchConfig1() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   let trrServer = new TRRServer();
   await trrServer.start();
@@ -302,7 +298,7 @@ add_task(async function testTwoRecordsHaveEchConfig1() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.foo.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   checkResult(inRecord, false, false, {
@@ -327,9 +323,9 @@ add_task(async function testTwoRecordsHaveEchConfig1() {
   });
 
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   ({ inRecord } = await new TRRDNSListener("test.foo.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   }));
 
   checkResult(inRecord, false, false, {
@@ -361,7 +357,7 @@ add_task(async function testTwoRecordsHaveEchConfig1() {
 //   There are two records: only one support h3 and only one has echConfig.
 // This test is about never usng the record without echConfig.
 add_task(async function testOneRecordsHasEchConfig() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   let trrServer = new TRRServer();
   await trrServer.start();
@@ -405,7 +401,7 @@ add_task(async function testOneRecordsHasEchConfig() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.foo.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   checkResult(inRecord, false, false, {
@@ -426,9 +422,9 @@ add_task(async function testOneRecordsHasEchConfig() {
   checkResult(inRecord, true, true);
 
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   ({ inRecord } = await new TRRDNSListener("test.foo.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   }));
 
   checkResult(inRecord, false, false, {
@@ -455,7 +451,7 @@ add_task(async function testOneRecordsHasEchConfig() {
 // Test the case that "network.http.http3.enable" and
 // "network.http.http2.enabled" are true/false.
 add_task(async function testHttp3AndHttp2Pref() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   let trrServer = new TRRServer();
   await trrServer.start();
@@ -503,7 +499,7 @@ add_task(async function testHttp3AndHttp2Pref() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.foo.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   checkResult(inRecord, false, false, {
