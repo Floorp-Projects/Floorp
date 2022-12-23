@@ -390,7 +390,6 @@ mochitest-devtools-chrome:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan-qr/opt: []
                     linux.*64-ccov-qr/opt: []
                     default: built-projects
     tier: default
