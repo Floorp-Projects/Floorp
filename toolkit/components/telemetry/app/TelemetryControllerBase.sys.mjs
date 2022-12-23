@@ -3,16 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TelemetryControllerBase"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryController::";
@@ -36,7 +28,7 @@ var gLogger = null;
 var gPrefixLogger = null;
 var gLogAppenderDump = null;
 
-var TelemetryControllerBase = Object.freeze({
+export var TelemetryControllerBase = Object.freeze({
   // Whether the FHR/Telemetry unification features are enabled.
   // Changing this pref requires a restart.
   IS_UNIFIED_TELEMETRY: Services.prefs.getBoolPref(Preferences.Unified, false),

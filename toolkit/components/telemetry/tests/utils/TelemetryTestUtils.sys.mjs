@@ -1,15 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
-const EXPORTED_SYMBOLS = ["TelemetryTestUtils"];
-
-const { Assert } = ChromeUtils.importESModule(
-  "resource://testing-common/Assert.sys.mjs"
-);
-
-var TelemetryTestUtils = {
+export var TelemetryTestUtils = {
   /* Scalars */
 
   /**

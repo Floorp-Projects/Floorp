@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["TelemetryArchive"];
-
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
@@ -27,7 +20,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/TelemetryStorage.jsm"
 );
 
-var TelemetryArchive = {
+export var TelemetryArchive = {
   /**
    * Get a list of the archived pings, sorted by the creation date.
    * Note that scanning the archived pings on disk is delayed on startup,

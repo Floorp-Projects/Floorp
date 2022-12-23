@@ -6,16 +6,10 @@
  * This module collects data on send failures and other critical issues with Telemetry submissions.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TelemetryHealthPing", "Policy"];
-
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -42,13 +36,13 @@ const MAX_SEND_DISCARDED_PINGS = 10;
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryHealthPing::";
 
-var Policy = {
+export var Policy = {
   setSchedulerTickTimeout: (callback, delayMs) =>
     lazy.setTimeout(callback, delayMs),
   clearSchedulerTickTimeout: id => lazy.clearTimeout(id),
 };
 
-var TelemetryHealthPing = {
+export var TelemetryHealthPing = {
   Reason: Object.freeze({
     IMMEDIATE: "immediate", // Ping was sent immediately after recording with no delay.
     DELAYED: "delayed", // Recorded data was sent after a delay.

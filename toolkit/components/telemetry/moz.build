@@ -102,29 +102,29 @@ XPCOM_MANIFESTS += [
 EXTRA_COMPONENTS += ["TelemetryStartup.manifest"]
 
 EXTRA_JS_MODULES += [
-    "app/ClientID.jsm",
-    "app/TelemetryArchive.jsm",
-    "app/TelemetryController.jsm",
-    "app/TelemetryControllerBase.jsm",
-    "app/TelemetryControllerContent.jsm",
-    "app/TelemetryControllerParent.jsm",
-    "app/TelemetryEnvironment.jsm",
-    "app/TelemetryReportingPolicy.jsm",
-    "app/TelemetryScheduler.jsm",
-    "app/TelemetrySend.jsm",
-    "app/TelemetryStorage.jsm",
-    "app/TelemetryTimestamps.jsm",
-    "app/TelemetryUtils.jsm",
+    "app/ClientID.sys.mjs",
+    "app/TelemetryArchive.sys.mjs",
+    "app/TelemetryController.sys.mjs",
+    "app/TelemetryControllerBase.sys.mjs",
+    "app/TelemetryControllerContent.sys.mjs",
+    "app/TelemetryControllerParent.sys.mjs",
+    "app/TelemetryEnvironment.sys.mjs",
+    "app/TelemetryReportingPolicy.sys.mjs",
+    "app/TelemetryScheduler.sys.mjs",
+    "app/TelemetrySend.sys.mjs",
+    "app/TelemetryStorage.sys.mjs",
+    "app/TelemetryTimestamps.sys.mjs",
+    "app/TelemetryUtils.sys.mjs",
     "dap/DAPTelemetrySender.sys.mjs",
-    "pings/CoveragePing.jsm",
-    "pings/EventPing.jsm",
-    "pings/HealthPing.jsm",
-    "pings/ModulesPing.jsm",
-    "pings/PrioPing.jsm",
-    "pings/TelemetrySession.jsm",
-    "pings/UntrustedModulesPing.jsm",
-    "pings/UpdatePing.jsm",
-    "TelemetryStartup.jsm",
+    "pings/CoveragePing.sys.mjs",
+    "pings/EventPing.sys.mjs",
+    "pings/HealthPing.sys.mjs",
+    "pings/ModulesPing.sys.mjs",
+    "pings/PrioPing.sys.mjs",
+    "pings/TelemetrySession.sys.mjs",
+    "pings/UntrustedModulesPing.sys.mjs",
+    "pings/UpdatePing.sys.mjs",
+    "TelemetryStartup.sys.mjs",
 ]
 
 EXTRA_JS_MODULES.backgroundtasks += [
@@ -133,12 +133,12 @@ EXTRA_JS_MODULES.backgroundtasks += [
 
 if CONFIG["OS_ARCH"] == "WINNT":
     EXTRA_JS_MODULES += [
-        "pings/UninstallPing.jsm",
+        "pings/UninstallPing.sys.mjs",
     ]
 
 TESTING_JS_MODULES += [
-    "tests/unit/TelemetryArchiveTesting.jsm",
-    "tests/unit/TelemetryEnvironmentTesting.jsm",
+    "tests/unit/TelemetryArchiveTesting.sys.mjs",
+    "tests/unit/TelemetryEnvironmentTesting.sys.mjs",
 ]
 
 PYTHON_UNITTEST_MANIFESTS += [

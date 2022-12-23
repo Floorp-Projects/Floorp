@@ -45,8 +45,8 @@ const known_scripts = {
     "resource:///modules/InteractionsBlocklist.sys.mjs",
 
     // Telemetry
-    "resource://gre/modules/TelemetryControllerBase.jsm", // bug 1470339
-    "resource://gre/modules/TelemetryControllerContent.jsm", // bug 1470339
+    "resource://gre/modules/TelemetryControllerBase.sys.mjs", // bug 1470339
+    "resource://gre/modules/TelemetryControllerContent.sys.mjs", // bug 1470339
 
     // Extensions
     "resource://gre/modules/ExtensionProcessScript.jsm",

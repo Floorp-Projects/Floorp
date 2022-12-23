@@ -3,26 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["TelemetryStorage", "Policy"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
+import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryStorage::";
@@ -109,7 +98,7 @@ PingParseError.prototype.constructor = PingParseError;
 /**
  * This is a policy object used to override behavior for testing.
  */
-var Policy = {
+export var Policy = {
   now: () => new Date(),
   getArchiveQuota: () => ARCHIVE_QUOTA_BYTES,
   getPendingPingsQuota: () =>
@@ -157,7 +146,7 @@ function internString(str) {
   return Symbol.keyFor(Symbol.for(str));
 }
 
-var TelemetryStorage = {
+export var TelemetryStorage = {
   get pingDirectoryPath() {
     return OS.Path.join(OS.Constants.Path.profileDir, "saved-telemetry-pings");
   },

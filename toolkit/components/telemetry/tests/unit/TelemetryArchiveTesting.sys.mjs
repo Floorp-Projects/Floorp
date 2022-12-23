@@ -2,8 +2,6 @@ const { TelemetryArchive } = ChromeUtils.import(
   "resource://gre/modules/TelemetryArchive.jsm"
 );
 
-var EXPORTED_SYMBOLS = ["TelemetryArchiveTesting"];
-
 function checkForProperties(ping, expected) {
   for (let [props, val] of expected) {
     let test = ping;
@@ -70,7 +68,7 @@ Checker.prototype = {
   },
 };
 
-const TelemetryArchiveTesting = {
+export const TelemetryArchiveTesting = {
   setup() {
     Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
     Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);

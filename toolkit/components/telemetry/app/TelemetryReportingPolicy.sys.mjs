@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["TelemetryReportingPolicy", "Policy"];
-
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
@@ -55,7 +48,7 @@ const NOTIFICATION_DELAY_NEXT_RUNS_MSEC = 10 * 1000; // 10s
  * Tests override properties on this object to allow for control of behavior
  * that would otherwise be very hard to cover.
  */
-var Policy = {
+export var Policy = {
   now: () => new Date(),
   setShowInfobarTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
   clearShowInfobarTimeout: id => clearTimeout(id),
@@ -67,6 +60,7 @@ var Policy = {
     );
   },
 };
+
 /**
  * Represents a request to display data policy.
  *
@@ -105,7 +99,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
   },
 });
 
-var TelemetryReportingPolicy = {
+export var TelemetryReportingPolicy = {
   // The current policy version number. If the version number stored in the prefs
   // is smaller than this, data upload will be disabled until the user is re-notified
   // about the policy changes.

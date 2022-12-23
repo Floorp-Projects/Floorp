@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -22,7 +20,7 @@ ChromeUtils.defineModuleGetter(
  * TelemetryStartup is needed to forward the "profile-after-change" notification
  * to TelemetryController.jsm.
  */
-function TelemetryStartup() {}
+export function TelemetryStartup() {}
 
 TelemetryStartup.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIObserver",
@@ -50,5 +48,3 @@ function annotateEnvironment() {
     // crash reporting not built or disabled? Ignore errors
   }
 }
-
-var EXPORTED_SYMBOLS = ["TelemetryStartup"];

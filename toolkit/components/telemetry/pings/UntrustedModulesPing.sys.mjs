@@ -9,16 +9,8 @@
  * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/third-party-modules-ping.html
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TelemetryUntrustedModulesPing"];
-
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -41,7 +33,7 @@ const LOGGER_PREFIX = "TelemetryUntrustedModulesPing::";
 const TIMER_NAME = "telemetry_untrustedmodules_ping";
 const PING_SUBMISSION_NAME = "third-party-modules";
 
-var TelemetryUntrustedModulesPing = Object.freeze({
+export var TelemetryUntrustedModulesPing = Object.freeze({
   _log: Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX),
 
   start() {

@@ -7,16 +7,10 @@
  * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/event-ping.html
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TelemetryEventPing", "Policy"];
-
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -44,14 +38,14 @@ const LOGGER_PREFIX = "TelemetryEventPing::";
 
 const EVENT_LIMIT_REACHED_TOPIC = "event-telemetry-storage-limit-reached";
 
-var Policy = {
+export var Policy = {
   setTimeout: (callback, delayMs) => lazy.setTimeout(callback, delayMs),
   clearTimeout: id => lazy.clearTimeout(id),
   sendPing: (type, payload, options) =>
     lazy.TelemetryController.submitExternalPing(type, payload, options),
 };
 
-var TelemetryEventPing = {
+export var TelemetryEventPing = {
   Reason: Object.freeze({
     PERIODIC: "periodic", // Sent the ping containing events from the past periodic interval (default one hour).
     MAX: "max", // Sent the ping containing the maximum number (default 1000) of event records, earlier than the periodic interval.

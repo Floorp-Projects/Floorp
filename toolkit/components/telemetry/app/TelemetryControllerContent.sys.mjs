@@ -3,11 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { DeferredTask } from "resource://gre/modules/DeferredTask.sys.mjs";
 
-const { DeferredTask } = ChromeUtils.importESModule(
-  "resource://gre/modules/DeferredTask.sys.mjs"
-);
 const { TelemetryControllerBase } = ChromeUtils.import(
   "resource://gre/modules/TelemetryControllerBase.jsm"
 );
@@ -18,9 +15,7 @@ const TELEMETRY_DELAY =
 // Delay before initializing telemetry if we're testing (ms)
 const TELEMETRY_TEST_DELAY = 1;
 
-var EXPORTED_SYMBOLS = ["TelemetryController", "getTelemetryController"];
-
-var TelemetryController = Object.freeze({
+export var TelemetryController = Object.freeze({
   /**
    * Used only for testing purposes.
    */
@@ -102,6 +97,6 @@ var Impl = {
 };
 
 // Used by service registration, which requires a callable function.
-function getTelemetryController() {
+export function getTelemetryController() {
   return TelemetryController;
 }

@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const lazy = {};
 
@@ -19,8 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
-
-var EXPORTED_SYMBOLS = ["CoveragePing"];
 
 const COVERAGE_VERSION = "2";
 
@@ -38,7 +33,7 @@ const log = Log.repository.getLogger("Telemetry::CoveragePing");
 log.level = Services.prefs.getIntPref(LOG_LEVEL_PREF, Log.Level.Error);
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
-var CoveragePing = Object.freeze({
+export var CoveragePing = Object.freeze({
   async startup() {
     if (!Services.prefs.getBoolPref(COVERAGE_ENABLED_PREF, false)) {
       log.debug("coverage not enabled");

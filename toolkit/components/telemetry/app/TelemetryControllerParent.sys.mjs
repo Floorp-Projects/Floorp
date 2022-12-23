@@ -3,29 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { AsyncShutdown } from "resource://gre/modules/AsyncShutdown.sys.mjs";
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+import { DeferredTask } from "resource://gre/modules/DeferredTask.sys.mjs";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { AsyncShutdown } = ChromeUtils.importESModule(
-  "resource://gre/modules/AsyncShutdown.sys.mjs"
-);
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-const { DeferredTask } = ChromeUtils.importESModule(
-  "resource://gre/modules/DeferredTask.sys.mjs"
-);
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
 const { TelemetryControllerBase } = ChromeUtils.import(
   "resource://gre/modules/TelemetryControllerBase.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const Utils = TelemetryUtils;
 
@@ -81,15 +70,13 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 /**
  * This is a policy object used to override behavior for testing.
  */
-var Policy = {
+export var Policy = {
   now: () => new Date(),
   generatePingId: () => Utils.generateUUID(),
   getCachedClientID: () => lazy.ClientID.getCachedClientID(),
 };
 
-var EXPORTED_SYMBOLS = ["TelemetryController", "Policy"];
-
-var TelemetryController = Object.freeze({
+export var TelemetryController = Object.freeze({
   /**
    * Used only for testing purposes.
    */

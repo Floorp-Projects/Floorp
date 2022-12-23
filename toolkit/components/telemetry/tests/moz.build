@@ -15,7 +15,7 @@ SharedLibrary("modules-test")
 NO_PGO = True
 
 TESTING_JS_MODULES += [
-    "utils/TelemetryTestUtils.jsm",
+    "utils/TelemetryTestUtils.sys.mjs",
 ]
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
