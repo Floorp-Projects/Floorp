@@ -2309,6 +2309,7 @@ BrowserGlue.prototype = {
       // It's important that SafeBrowsing is initialized reasonably
       // early, so we use a maximum timeout for it.
       {
+        name: "SafeBrowsing.init",
         task: () => {
           lazy.SafeBrowsing.init();
         },
@@ -2316,6 +2317,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "ContextualIdentityService.load",
         task: async () => {
           await lazy.ContextualIdentityService.load();
           lazy.Discovery.update();
@@ -2323,6 +2325,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "PlacesUIUtils.unblockToolbars",
         task: () => {
           // We postponed loading bookmarks toolbar content until startup
           // has finished, so we can start loading it now:
@@ -2331,6 +2334,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "PlacesDBUtils.telemetry",
         condition: lazy.TelemetryUtils.isTelemetryEnabled,
         task: () => {
           lazy.PlacesDBUtils.telemetry().catch(console.error);
@@ -2339,6 +2343,7 @@ BrowserGlue.prototype = {
 
       // Begin listening for incoming push messages.
       {
+        name: "PushService.ensureReady",
         task: () => {
           try {
             lazy.PushService.wrappedJSObject.ensureReady();
@@ -2353,18 +2358,21 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "BrowserGlue._recordContentBlockingTelemetry",
         task: () => {
           this._recordContentBlockingTelemetry();
         },
       },
 
       {
+        name: "BrowserGlue._recordDataSanitizationPrefs",
         task: () => {
           this._recordDataSanitizationPrefs();
         },
       },
 
       {
+        name: "enableCertErrorUITelemetry",
         task: () => {
           let enableCertErrorUITelemetry = Services.prefs.getBoolPref(
             "security.certerrors.recordEventTelemetry",
@@ -2382,6 +2390,7 @@ BrowserGlue.prototype = {
       // because a restored page contains a password field, it will be loaded on
       // the main thread, and this initialization request will be ignored.
       {
+        name: "Services.logins",
         task: () => {
           try {
             Services.logins;
@@ -2394,6 +2403,7 @@ BrowserGlue.prototype = {
 
       // Add breach alerts pref observer reasonably early so the pref flip works
       {
+        name: "_addBreachAlertsPrefObserver",
         task: () => {
           this._addBreachAlertsPrefObserver();
         },
@@ -2401,6 +2411,7 @@ BrowserGlue.prototype = {
 
       // Report pinning status and the type of shortcut used to launch
       {
+        name: "pinningStatusTelemetry",
         condition: AppConstants.platform == "win",
         task: async () => {
           let shellService = Cc[
@@ -2462,6 +2473,7 @@ BrowserGlue.prototype = {
       // See https://bugzilla.mozilla.org/show_bug.cgi?id=1762994 for additional
       // background.
       {
+        name: "ensurePrivateBrowsingShortcutExists",
         condition:
           AppConstants.platform == "win" &&
           // Pref'ed off until Private Browsing window separation is enabled by default
@@ -2534,6 +2546,7 @@ BrowserGlue.prototype = {
       // Report whether Firefox is the default handler for various files types,
       // in particular, ".pdf".
       {
+        name: "IsDefaultHandlerForPDF",
         condition: AppConstants.platform == "win",
         task: () => {
           Services.telemetry.keyedScalarSet(
@@ -2547,12 +2560,14 @@ BrowserGlue.prototype = {
       // Install built-in themes. We already installed the active built-in
       // theme, if any, before UI startup.
       {
+        name: "BuiltInThemes.ensureBuiltInThemes",
         task: async () => {
           await lazy.BuiltInThemes.ensureBuiltInThemes();
         },
       },
 
       {
+        name: "WinTaskbarJumpList.startup",
         condition: AppConstants.platform == "win",
         task: () => {
           // For Windows 7, initialize the jump list module.
@@ -2571,6 +2586,7 @@ BrowserGlue.prototype = {
 
       // Report macOS Dock status
       {
+        name: "MacDockSupport.isAppInDock",
         condition: AppConstants.platform == "macosx",
         task: () => {
           try {
@@ -2587,12 +2603,14 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "BrowserGlue._maybeShowDefaultBrowserPrompt",
         task: () => {
           this._maybeShowDefaultBrowserPrompt();
         },
       },
 
       {
+        name: "ScreenshotsUtils.initialize",
         task: () => {
           if (
             Services.prefs.getBoolPref("screenshots.browser.component.enabled")
@@ -2603,6 +2621,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "trackStartupCrashEndSetTimeout",
         task: () => {
           lazy.setTimeout(function() {
             Services.tm.idleDispatchToMainThread(
@@ -2613,6 +2632,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "handlerService.asyncInit",
         task: () => {
           let handlerService = Cc[
             "@mozilla.org/uriloader/handler-service;1"
@@ -2622,6 +2642,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "JawsScreenReaderVersionCheck.onWindowsRestored",
         condition: AppConstants.platform == "win",
         task: () => {
           JawsScreenReaderVersionCheck.onWindowsRestored();
@@ -2629,24 +2650,28 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "RFPHelper.init",
         task: () => {
           lazy.RFPHelper.init();
         },
       },
 
       {
+        name: "Blocklist.loadBlocklistAsync",
         task: () => {
           lazy.Blocklist.loadBlocklistAsync();
         },
       },
 
       {
+        name: "TabUnloader.init",
         task: () => {
           lazy.TabUnloader.init();
         },
       },
 
       {
+        name: "urlQueryStrippingListService.init",
         task: () => {
           // Init the url query stripping list.
           let urlQueryStrippingListService = Cc[
@@ -2658,6 +2683,7 @@ BrowserGlue.prototype = {
 
       // Run TRR performance measurements for DoH.
       {
+        name: "doh-rollout.trrRacer.run",
         task: () => {
           let enabledPref = "doh-rollout.trrRace.enabled";
           let completePref = "doh-rollout.trrRace.complete";
@@ -2687,6 +2713,7 @@ BrowserGlue.prototype = {
       // FOG doesn't need to be initialized _too_ early because it has a
       // pre-init buffer.
       {
+        name: "initializeFOG",
         task: () => {
           Services.fog.initializeFOG();
         },
@@ -2694,6 +2721,7 @@ BrowserGlue.prototype = {
 
       // Add the import button if this is the first startup.
       {
+        name: "PlacesUIUtils.ImportButton",
         task: async () => {
           // First check if we've already added the import button, in which
           // case we should check for events indicating we can remove it.
@@ -2723,12 +2751,14 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "ASRouterNewTabHook.createInstance",
         task: () => {
           lazy.ASRouterNewTabHook.createInstance(lazy.ASRouterDefaultConfig());
         },
       },
 
       {
+        name: "BackgroundUpdate",
         condition: AppConstants.MOZ_UPDATE_AGENT,
         task: async () => {
           // Never in automation!  This is close to
@@ -2756,6 +2786,7 @@ BrowserGlue.prototype = {
 
       // Login detection service is used in fission to identify high value sites.
       {
+        name: "LoginDetection.init",
         task: () => {
           let loginDetection = Cc[
             "@mozilla.org/login-detection-service;1"
@@ -2765,12 +2796,14 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "BrowserGlue._collectTelemetryPiPEnabled",
         task: () => {
           this._collectTelemetryPiPEnabled();
         },
       },
       // Schedule a sync (if enabled) after we've loaded
       {
+        name: "WeaveService",
         task: async () => {
           if (lazy.WeaveService.enabled) {
             await lazy.WeaveService.whenLoaded();
@@ -2780,6 +2813,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "unblock-untrusted-modules-thread",
         condition: AppConstants.platform == "win",
         task: () => {
           Services.obs.notifyObservers(
@@ -2790,6 +2824,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "UpdateListener.maybeShowUnsupportedNotification",
         condition: AppConstants.MOZ_UPDATER,
         task: () => {
           lazy.UpdateListener.maybeShowUnsupportedNotification();
@@ -2797,12 +2832,14 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "QuickSuggest.init",
         task: () => {
           lazy.QuickSuggest.init();
         },
       },
 
       {
+        name: "DAPTelemetrySender.startup",
         condition:
           lazy.TelemetryUtils.isTelemetryEnabled &&
           lazy.NimbusFeatures.dapTelemetry.getVariable("enabled"),
@@ -2812,6 +2849,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        name: "browser-startup-idle-tasks-finished",
         task: () => {
           // Use idleDispatch a second time to run this after the per-window
           // idle tasks.
@@ -2840,7 +2878,11 @@ BrowserGlue.prototype = {
             } catch (ex) {
               Cu.reportError(ex);
             } finally {
-              ChromeUtils.addProfilerMarker("startupIdleTask", startTime);
+              ChromeUtils.addProfilerMarker(
+                "startupIdleTask",
+                startTime,
+                task.name
+              );
             }
           }
         },
@@ -2864,7 +2906,7 @@ BrowserGlue.prototype = {
    */
   _scheduleBestEffortUserIdleTasks() {
     const idleTasks = [
-      () => {
+      function primaryPasswordTelemetry() {
         // Telemetry for primary-password - we do this after a delay as it
         // can cause IO if NSS/PSM has not already initialized.
         let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
@@ -2879,7 +2921,7 @@ BrowserGlue.prototype = {
         }
       },
 
-      () => {
+      function GMPInstallManagerSimpleCheckAndInstall() {
         let { GMPInstallManager } = ChromeUtils.importESModule(
           "resource://gre/modules/GMPInstallManager.sys.mjs"
         );
@@ -2887,36 +2929,44 @@ BrowserGlue.prototype = {
         // We don't really care about the results, if someone is interested they
         // can check the log.
         this._gmpInstallManager.simpleCheckAndInstall().catch(() => {});
-      },
+      }.bind(this),
 
-      () => {
+      function RemoteSettingsInit() {
         lazy.RemoteSettings.init();
         this._addBreachesSyncHandler();
-      },
+      }.bind(this),
 
-      () => {
+      function PublicSuffixListInit() {
         lazy.PublicSuffixList.init();
       },
 
-      () => {
+      function RemoteSecuritySettingsInit() {
         lazy.RemoteSecuritySettings.init();
       },
 
-      () => {
+      function CorroborateInit() {
         if (Services.prefs.getBoolPref("corroborator.enabled", false)) {
           lazy.Corroborate.init().catch(Cu.reportError);
         }
       },
 
-      () => lazy.BrowserUsageTelemetry.reportProfileCount(),
+      function BrowserUsageTelemetryReportProfileCount() {
+        lazy.BrowserUsageTelemetry.reportProfileCount();
+      },
 
-      () => lazy.OsEnvironment.reportAllowedAppSources(),
+      function reportAllowedAppSources() {
+        lazy.OsEnvironment.reportAllowedAppSources();
+      },
 
-      () => Services.search.runBackgroundChecks(),
+      function searchBackgroundChecks() {
+        Services.search.runBackgroundChecks();
+      },
 
-      () => lazy.BrowserUsageTelemetry.reportInstallationTelemetry(),
+      function reportInstallationTelemetry() {
+        lazy.BrowserUsageTelemetry.reportInstallationTelemetry();
+      },
 
-      async () => {
+      async function reportHasMIDIDevices() {
         let win = lazy.BrowserWindowTracker.getTopWindow({ private: false });
         if (!win) {
           return;
@@ -2941,7 +2991,11 @@ BrowserGlue.prototype = {
           } catch (ex) {
             Cu.reportError(ex);
           } finally {
-            ChromeUtils.addProfilerMarker("startupLateIdleTask", startTime);
+            ChromeUtils.addProfilerMarker(
+              "startupLateIdleTask",
+              startTime,
+              task.name
+            );
           }
         }
       });
