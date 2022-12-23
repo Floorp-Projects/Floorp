@@ -1,4 +1,4 @@
-name: macOS x64 Universal build
+name: macOS Universal build
 
 on: workflow_dispatch
 

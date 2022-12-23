@@ -283,7 +283,7 @@ jobs:
     - name: Publish 🎁
       uses: actions/upload-artifact@master
       with:
-        name: floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ${{ env.RUNNER_USERDIR }}/output
 
     - name: Clean up (Self-hosted only)

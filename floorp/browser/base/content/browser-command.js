@@ -118,13 +118,14 @@ function setSidebarMode() {
 }
 
 function setSidebarPageSetting(webpanel_id){
-  const webpanelURL = BROWSER_SIDEBAR_DATA.data[webpanel_id].url
+    var webpandata = BROWSER_SIDEBAR_DATA.data[webpanel_id]
+    var webpanobject = document.getElementById(`webpanel${webpanel_id}`)
+    const webpanelURL = webpandata.url
     const sidebar2elem = document.getElementById("sidebar2");
-    const wibpanel_usercontext = BROWSER_SIDEBAR_DATA.data[webpanel_id].usercontext ?? 0
-    const webpanel_userAgent = BROWSER_SIDEBAR_DATA.data[webpanel_id].userAgent ?? false
-
-
-setSidebarWidth(webpanel_id)
+    const wibpanel_usercontext = webpandata.usercontext ?? 0
+    const webpanel_userAgent = webpandata.userAgent ?? false
+    
+    setSidebarWidth(webpanel_id)
 
     switch (webpanelURL) {
       case "floorp//bmt":
@@ -149,8 +150,8 @@ setSidebarWidth(webpanel_id)
         break;
       default:
         showSidebarNodes(2);
-         if(document.getElementById(`webpanel${webpanel_id}`) != null && document.getElementById(`webpanel${webpanel_id}`).getAttribute("usercontextid") != wibpanel_usercontext) document.getElementById(`webpanel${webpanel_id}`).remove()
-         if(document.getElementById(`webpanel${webpanel_id}`) == null){
+         if(webpanobject != null && webpanobject.getAttribute("usercontextid") != wibpanel_usercontext) webpanobject.remove()
+         if(webpanobject == null){
           let browserManagerSidebarWebpanel = document.createXULElement("browser");
           browserManagerSidebarWebpanel.setAttribute("usercontextid", wibpanel_usercontext);
           browserManagerSidebarWebpanel.setAttribute("xmlns", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -175,11 +176,11 @@ setSidebarWidth(webpanel_id)
           document.getElementById("sidebar2-box").appendChild(browserManagerSidebarWebpanel);
         break;
         } else {
-          document.getElementById(`webpanel${webpanel_id}`).setAttribute("src", webpanelURL);
-          if(document.getElementById(`webpanel${webpanel_id}`).getAttribute("changeuseragent") != String(webpanel_userAgent) || document.getElementById(`webpanel${webpanel_id}`).getAttribute("usercontextid") != wibpanel_usercontext){
-            document.getElementById(`webpanel${webpanel_id}`).setAttribute("usercontextid", wibpanel_usercontext);
-            document.getElementById(`webpanel${webpanel_id}`).setAttribute("changeuseragent", String(webpanel_userAgent));
-            document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE)
+          webpanobject.setAttribute("src", webpanelURL);
+          if(webpanobject.getAttribute("changeuseragent") != String(webpanel_userAgent) || webpanobject.getAttribute("usercontextid") != wibpanel_usercontext){
+            webpanobject.setAttribute("usercontextid", wibpanel_usercontext);
+            webpanobject.setAttribute("changeuseragent", String(webpanel_userAgent));
+            webpanobject.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE)
           }
 
         }

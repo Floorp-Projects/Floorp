@@ -89,21 +89,8 @@ userChrome.css は、ツールバーなどのブラウザーを制御する場�
 @charset "UTF-8";
 
 `);
-  
+  CustomizableUI.addWidgetToArea("undo-closed-tab", CustomizableUI.AREA_NAVBAR, -1);
   window.setTimeout(() => {
     Services.prefs.setStringPref("browser.contentblocking.category", "strict")
   }, 5000);
-
-  (async function installXPIFromURL() {
-    let url, install, installed;
-
-    url = "https://addons.mozilla.org/firefox/downloads/latest/Gesturefy/latest.xpi" 
-    install = await AddonManager.getInstallForURL(url);
-    await install.install();
-
-    url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi" 
-    install = await AddonManager.getInstallForURL(url);
-    installed = await install.install();
-    await installed.disable();
-  })();
 }
