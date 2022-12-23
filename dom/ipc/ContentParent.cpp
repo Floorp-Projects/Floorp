@@ -3835,8 +3835,8 @@ static void InitShutdownClients() {
     }
 
     nsCOMPtr<nsIAsyncShutdownClient> client;
-    // TODO: It seems as if getPhase from AsyncShutdown.jsm does not check if
-    // we are beyond our phase already. See bug 1762840.
+    // TODO: It seems as if getPhase from AsyncShutdown.sys.mjs does not check
+    // if we are beyond our phase already. See bug 1762840.
     if (!AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
       rv = svc->GetXpcomWillShutdown(getter_AddRefs(client));
       if (NS_SUCCEEDED(rv)) {

@@ -62,8 +62,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
 );
-const { AsyncShutdown } = ChromeUtils.import(
-  "resource://gre/modules/AsyncShutdown.jsm"
+const { AsyncShutdown } = ChromeUtils.importESModule(
+  "resource://gre/modules/AsyncShutdown.sys.mjs"
 );
 var Native = ChromeUtils.import(
   "resource://gre/modules/osfile/osfile_native.jsm"

@@ -972,8 +972,8 @@ Tester.prototype = {
           });
         };
 
-        let { AsyncShutdown } = ChromeUtils.import(
-          "resource://gre/modules/AsyncShutdown.jsm"
+        let { AsyncShutdown } = ChromeUtils.importESModule(
+          "resource://gre/modules/AsyncShutdown.sys.mjs"
         );
 
         let barrier = new AsyncShutdown.Barrier(

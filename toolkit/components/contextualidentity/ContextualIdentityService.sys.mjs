@@ -26,12 +26,8 @@ XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function() {
   return new TextEncoder();
 });
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });

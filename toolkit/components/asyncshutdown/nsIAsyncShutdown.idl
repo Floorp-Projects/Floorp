@@ -7,7 +7,7 @@
  * asynchronous services.
  *
  * Note that this XPCOM component is designed primarily for C++
- * clients. JavaScript clients should rather use AsyncShutdown.jsm,
+ * clients. JavaScript clients should rather use AsyncShutdown.sys.mjs,
  * which provides a better API and better error reporting for them.
  */
 
@@ -110,7 +110,7 @@ interface nsIAsyncShutdownClient: nsISupports {
    *
    * It is strongly recommended that JS clients of this API use
    * `jsclient` instead of the `nsIAsyncShutdownClient`. See
-   * AsyncShutdown.jsm for more information on the JS version of
+   * AsyncShutdown.sys.mjs for more information on the JS version of
    * this API.
    */
   readonly attribute jsval jsclient;
