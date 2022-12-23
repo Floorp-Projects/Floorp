@@ -8,8 +8,6 @@
 # linux) to the information; I certainly wouldn't want anyone parsing this
 # information and having behaviour depend on it
 
-from __future__ import absolute_import, print_function
-
 import os
 import platform
 import re

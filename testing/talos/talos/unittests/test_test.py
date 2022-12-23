@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import mozunit
 import pytest
 from talos.test import Test, TsBase, register_test, test_dict, ts_paint

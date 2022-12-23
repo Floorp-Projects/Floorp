@@ -27,6 +27,4 @@ debugger-specific arguments:
   run_process(args, ...)
 
 """
-from __future__ import absolute_import
-
 from .mozdebug import *

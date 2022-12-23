@@ -4,8 +4,6 @@
 
 # class to process, format, and report raptor test results
 # received from the raptor control server
-from __future__ import absolute_import
-
 import json
 import os
 import pathlib

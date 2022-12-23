@@ -5,8 +5,6 @@
 """
 module to handle Gecko profiling.
 """
-from __future__ import absolute_import
-
 import json
 import os
 import tempfile

@@ -13,8 +13,6 @@ which mach > /dev/null 2>&1 && exec mach python "$0" "$@" ||
 echo "mach not found, either add it to your \$PATH or run this script via ./mach python testing/runtimes/writeruntimes"; exit  # noqa
 '''
 
-from __future__ import absolute_import, print_function
-
 import datetime
 import json
 import os

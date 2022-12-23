@@ -5,8 +5,6 @@ test nonce in prefs delimeters
 see https://bugzilla.mozilla.org/show_bug.cgi?id=722804
 """
 
-from __future__ import absolute_import
-
 import os
 
 import mozunit

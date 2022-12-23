@@ -8,8 +8,6 @@
 
     Runs a thing to see if it crashes within a set period.
 """
-from __future__ import absolute_import
-
 import os
 import sys
 

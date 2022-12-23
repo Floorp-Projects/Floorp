@@ -20,7 +20,6 @@ WARNING: This script does NOT respond to SIGINT. You must use SIGQUIT or SIGKILL
 ### stage.mozilla.org, see
 # https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
 
-from __future__ import absolute_import
 import logging
 import os
 import shutil

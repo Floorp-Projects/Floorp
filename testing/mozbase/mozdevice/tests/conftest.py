@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 import sys
 from random import randint, seed
 from unittest.mock import patch

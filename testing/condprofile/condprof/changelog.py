@@ -7,8 +7,6 @@
 """
 Maintains a unique file that lists all artifacts operations.
 """
-from __future__ import absolute_import
-
 import json
 import os
 import sys

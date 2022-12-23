@@ -9,8 +9,6 @@
 # New code should try to use the standard subprocess module, and only use
 # mozprocess if absolutely necessary.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import codecs
 import errno
 import io

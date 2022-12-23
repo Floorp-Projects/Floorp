@@ -7,8 +7,6 @@
 
 # Firefox about:memory log parser.
 
-from __future__ import absolute_import, print_function
-
 import argparse
 import gzip
 import json

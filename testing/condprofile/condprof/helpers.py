@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """ Helpers to build scenarii
 """
-from __future__ import absolute_import
-
 from condprof.util import logger
 
 _SUPPORTED_MOBILE_BROWSERS = "fenix", "gecko", "firefox"

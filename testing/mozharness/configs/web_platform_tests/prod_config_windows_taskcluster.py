@@ -6,8 +6,6 @@
 
 # This is a template config file for web-platform-tests test.
 
-from __future__ import absolute_import
-
 import os
 import platform
 import sys

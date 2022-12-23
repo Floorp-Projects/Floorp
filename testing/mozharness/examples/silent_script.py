@@ -7,7 +7,6 @@
 concept, logging.  http://escapewindow.dreamwidth.org/230853.html
 """
 
-from __future__ import absolute_import
 import os
 import shutil
 

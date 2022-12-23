@@ -4,8 +4,6 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 #
 
-from __future__ import absolute_import, print_function
-
 import os
 import pprint
 import re

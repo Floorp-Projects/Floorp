@@ -8,7 +8,6 @@
 Test virtualenv creation. This installs talos in the local venv; that's it.
 """
 
-from __future__ import absolute_import
 import os
 import sys
 

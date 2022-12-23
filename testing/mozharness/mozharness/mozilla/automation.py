@@ -7,8 +7,6 @@
 """Code to integration with automation.
 """
 
-from __future__ import absolute_import
-
 try:
     import simplejson as json
 

@@ -7,8 +7,6 @@
 """Generic ways to upload + download files.
 """
 
-from __future__ import absolute_import
-
 import pprint
 
 try:

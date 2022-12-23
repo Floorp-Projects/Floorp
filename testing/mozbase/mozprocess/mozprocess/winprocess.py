@@ -38,8 +38,6 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import subprocess
 import sys
 from ctypes import (

@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """CounterManager for Mac OSX"""
-from __future__ import absolute_import, print_function
-
 import subprocess
 import sys
 

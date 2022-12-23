@@ -9,8 +9,6 @@ from a source repo using best practices to ensure optimal clone
 times and storage efficiency.
 """
 
-from __future__ import absolute_import
-
 import contextlib
 import json
 import os

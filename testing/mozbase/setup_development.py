@@ -13,8 +13,6 @@ If no arguments are given, install all packages.
 See https://wiki.mozilla.org/Auto-tools/Projects/Mozbase
 """
 
-from __future__ import absolute_import, print_function
-
 import os
 import subprocess
 import sys

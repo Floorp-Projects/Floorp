@@ -4,8 +4,6 @@
 tests for mozfile.load
 """
 
-from __future__ import absolute_import
-
 import mozunit
 import pytest
 from mozfile import load

@@ -4,8 +4,6 @@
 
 # originally taken from /testing/talos/talos/filter.py
 
-from __future__ import absolute_import, division
-
 import math
 
 """
