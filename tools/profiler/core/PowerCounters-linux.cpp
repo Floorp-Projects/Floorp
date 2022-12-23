@@ -99,7 +99,8 @@ static double GetRaplPerfEventScale(RaplEventType aEventType) {
   double scale;
 
   if (sysfsFile >> scale) {
-    return scale;
+    RAPL_LOG("Read scale from %s: %.22e", sysfsFileName.c_str(), scale);
+    return scale * 1e9;
   }
 
   return PERF_EVENT_SCALE_NANOJOULES;
@@ -115,7 +116,7 @@ static uint64_t GetRaplPerfEventConfig(RaplEventType aEventType) {
     return static_cast<uint64_t>(aEventType);
   }
 
-  char buffer[64] = {};
+  char buffer[7] = {};
   const std::string key = "event=";
 
   if (!sysfsFile.get(buffer, static_cast<std::streamsize>(key.length()) + 1) ||
@@ -157,7 +158,7 @@ class RaplProfilerCount final : public BaseProfilerCount {
     RAPL_LOG("Config for event %s: 0x%llx", mLabel, attr.config);
 
     mEventScale = GetRaplPerfEventScale(aPerfEventConfig);
-    RAPL_LOG("Scale for event %s: %e", mLabel, mEventScale);
+    RAPL_LOG("Scale for event %s: %.22e", mLabel, mEventScale);
 
     long fd = syscall(__NR_perf_event_open, &attr, -1, 0, -1, 0);
     if (fd < 0) {
