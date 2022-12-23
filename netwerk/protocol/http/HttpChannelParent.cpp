@@ -1263,6 +1263,10 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   mChannel->GetEffectiveTRRMode(&effectiveMode);
   args.effectiveTRRMode() = effectiveMode;
 
+  TRRSkippedReason reason = TRRSkippedReason::TRR_UNSET;
+  mChannel->GetTrrSkipReason(&reason);
+  args.trrSkipReason() = reason;
+
   if (mIPCClosed ||
       !mBgParent->OnStartRequest(
           *responseHead, useResponseHead,

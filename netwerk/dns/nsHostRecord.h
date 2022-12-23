@@ -13,7 +13,7 @@
 #include "nsIDNSService.h"
 #include "nsIDNSByTypeRecord.h"
 #include "PLDHashTable.h"
-#include "TRRSkippedReason.h"
+#include "nsITRRSkipReason.h"
 
 class nsHostRecord;
 class nsHostResolver;
@@ -269,6 +269,7 @@ class AddrHostRecord final : public nsHostRecord {
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
   nsIRequest::TRRMode EffectiveTRRMode() const { return mEffectiveTRRMode; }
+  nsITRRSkipReason::value TrrSkipReason() const { return mTRRSkippedReason; }
 
   nsresult GetTtl(uint32_t* aResult);
 
