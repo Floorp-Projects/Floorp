@@ -472,6 +472,7 @@ fn vec_try_extend<T>(v: &mut Vec<T>, new_cap: usize) -> Result<(), TryReserveErr
     let elem_size = core::mem::size_of::<T>();
     let new_alloc_size = new_cap
         .checked_mul(elem_size)
+        .filter(|size| *size <= isize::MAX as usize)
         .ok_or(TryReserveError::CapacityOverflow)?;
 
     // required for alloc safety
@@ -824,7 +825,7 @@ mod tests {
     fn try_clone_oom() {
         let layout = Layout::new::<u8>();
         let v =
-            unsafe { Vec::<u8>::from_raw_parts(alloc(layout), core::usize::MAX, core::usize::MAX) };
+            unsafe { Vec::<u8>::from_raw_parts(alloc(layout), core::isize::MAX as usize, core::isize::MAX as usize) };
         assert!(v.try_clone().is_err());
     }
 
@@ -832,7 +833,7 @@ mod tests {
     fn tryvec_try_clone_oom() {
         let layout = Layout::new::<u8>();
         let inner =
-            unsafe { Vec::<u8>::from_raw_parts(alloc(layout), core::usize::MAX, core::usize::MAX) };
+            unsafe { Vec::<u8>::from_raw_parts(alloc(layout), core::isize::MAX as usize, core::isize::MAX as usize) };
         let tv = TryVec { inner };
         assert!(tv.try_clone().is_err());
     }
@@ -846,6 +847,10 @@ mod tests {
     #[test]
     fn oom() {
         let mut vec: Vec<char> = Vec::new();
+        match FallibleVec::try_reserve(&mut vec, core::usize::MAX / std::mem::size_of::<char>()) {
+            Ok(_) => panic!("it should be OOM"),
+            _ => (),
+        }
         match FallibleVec::try_reserve(&mut vec, core::usize::MAX) {
             Ok(_) => panic!("it should be OOM"),
             _ => (),
@@ -855,6 +860,10 @@ mod tests {
     #[test]
     fn tryvec_oom() {
         let mut vec: TryVec<char> = TryVec::new();
+        match vec.reserve(core::usize::MAX / std::mem::size_of::<char>()) {
+            Ok(_) => panic!("it should be OOM"),
+            _ => (),
+        }
         match vec.reserve(core::usize::MAX) {
             Ok(_) => panic!("it should be OOM"),
             _ => (),

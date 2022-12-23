@@ -110,8 +110,7 @@ url = "=2.1.0"
 # Force mio to stay at 0.8.0 to avoid windows-sys dependencies.
 mio = "=0.8.0"
 
-# Since we're building with at least rustc 1.63, enable rust 1.57 features.
-# This happens to work around issues the older code has with 1.65.
+# Since we're building with at least rustc 1.63, enable rust 1.57 features (use of try_reserve methods).
 fallible_collections = { version = "0.4", features = ["rust_1_57"] }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
