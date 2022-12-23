@@ -7,8 +7,6 @@
 # Requires `pyyaml` and `voluptuous`
 # (both are in-tree under third_party/python)
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import errno
 import os
 import re

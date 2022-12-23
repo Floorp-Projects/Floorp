@@ -21,8 +21,6 @@ A future need, perhaps.
 """
 
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import binascii
 import hashlib
 import logging

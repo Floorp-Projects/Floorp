@@ -7,8 +7,6 @@ Fetch and unpack architecture-specific Maven zips, verify cross-architecture
 compatibility, and ready inputs to an Android multi-architecture fat AAR build.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
 import sys
 from collections import OrderedDict, defaultdict

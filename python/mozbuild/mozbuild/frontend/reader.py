@@ -16,8 +16,6 @@ The BuildReader contains basic logic for traversing a tree of mozbuild files.
 It does this by examining specific variables populated during execution.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import ast
 import inspect
 import logging

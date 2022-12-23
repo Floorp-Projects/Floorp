@@ -10,8 +10,6 @@ r"""Repackage ZIP archives (or directories) into MSIX App Packages.
   this is an issue with plating.
 """
 
-from __future__ import absolute_import, print_function
-
 import itertools
 import logging
 import os

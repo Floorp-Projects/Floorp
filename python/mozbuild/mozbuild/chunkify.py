@@ -7,8 +7,6 @@
 # of version 1.2. Its license (MPL2) is contained in repo root LICENSE file.
 # Please make modifications there where possible.
 
-from __future__ import absolute_import, print_function
-
 from itertools import islice
 
 

@@ -8,8 +8,6 @@ All the terminal interaction code is consolidated so the complexity can be in
 one place, away from code that is commonly looked at.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 import sys
 

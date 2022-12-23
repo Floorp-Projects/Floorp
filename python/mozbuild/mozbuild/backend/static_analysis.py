@@ -7,8 +7,6 @@
 # tracks folders that can be built in the non-unified environment and generates
 # the coresponding build commands for the files.
 
-from __future__ import absolute_import, print_function
-
 import os
 
 import mozpack.path as mozpath

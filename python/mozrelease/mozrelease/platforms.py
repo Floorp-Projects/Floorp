@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 update_platform_map = {
     "android": ["Android_arm-eabi-gcc3"],
     "android-arm": ["Android_arm-eabi-gcc3"],

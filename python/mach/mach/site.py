@@ -5,8 +5,6 @@
 # This file contains code for managing the Python import scope for Mach. This
 # generally involves populating a Python virtualenv.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import ast
 import enum
 import functools

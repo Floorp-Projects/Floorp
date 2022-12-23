@@ -5,8 +5,6 @@
 # This file contains miscellaneous utility functions that don't belong anywhere
 # in particular.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
 import collections
 import collections.abc

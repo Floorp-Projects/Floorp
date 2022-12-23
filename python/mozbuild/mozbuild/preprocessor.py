@@ -22,8 +22,6 @@ value :
   | \w+  # string identifier or value;
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import errno
 import io
 import os

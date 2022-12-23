@@ -7,8 +7,6 @@ Use pywatchman to watch source directories and perform partial |mach
 build faster| builds.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import datetime
 import sys
 import time
