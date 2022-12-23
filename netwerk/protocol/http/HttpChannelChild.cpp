@@ -432,6 +432,7 @@ void HttpChannelChild::OnStartRequest(
   StoreDeliveringAltData(aArgs.deliveringAltData());
   mAltDataLength = aArgs.altDataLength();
   StoreResolvedByTRR(aArgs.isResolvedByTRR());
+  mEffectiveTRRMode = aArgs.effectiveTRRMode();
 
   SetApplyConversion(aArgs.applyConversion());
 
