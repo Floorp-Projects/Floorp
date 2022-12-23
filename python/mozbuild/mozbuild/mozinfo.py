@@ -5,8 +5,6 @@
 # This module produces a JSON file that provides basic build info and
 # configuration metadata.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import json
 import os
 import platform

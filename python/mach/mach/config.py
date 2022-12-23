@@ -14,8 +14,6 @@ ConfigProvider classes are associated with ConfigSettings and define what
 settings are available.
 """
 
-from __future__ import absolute_import, unicode_literals
-
 import collections
 import collections.abc
 import sys

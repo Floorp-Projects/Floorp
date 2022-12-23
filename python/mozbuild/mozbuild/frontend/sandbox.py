@@ -17,8 +17,6 @@ KeyError are machine parseable. This machine-friendly data is used to present
 user-friendly error messages in the case of errors.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import os
 import sys
 import weakref

@@ -5,8 +5,6 @@
 # A simple script to invoke mozinstall from the command line without depending
 # on a build config.
 
-from __future__ import absolute_import, print_function
-
 import sys
 
 import mozinstall

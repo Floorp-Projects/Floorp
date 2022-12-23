@@ -7,8 +7,6 @@ if the entry does not already exist.
 
 Usage: buildlist.py <filename> <entry> [<entry> ...]
 """
-from __future__ import absolute_import, print_function, unicode_literals
-
 import io
 import os
 import sys

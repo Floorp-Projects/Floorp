@@ -14,8 +14,6 @@ If you are looking for the absolute authority on what moz.build files can
 contain, you've come to the right place.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import itertools
 import operator
 import os
