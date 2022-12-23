@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "hyper"
-version = "0.14.20"
+version = "0.14.22"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 include = [
     "Cargo.toml",
@@ -204,7 +204,7 @@ version = "0.2"
 version = "0.4"
 
 [dependencies.httparse]
-version = "1.6"
+version = "1.8"
 
 [dependencies.httpdate]
 version = "1.0"
