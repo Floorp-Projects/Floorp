@@ -8,10 +8,8 @@
 //-------------------------------------------------------------------------Observer----------------------------------------------------------------------------
 
  Services.prefs.addObserver("floorp.browser.tabbar.settings", function(){
-   try {
-    document.getElementById("tabbardesgin").remove();
-    document.getElementById("tabbar-script").remove();
-   } catch(e) {}
+   document.getElementById("tabbardesgin")?.remove();
+   document.getElementById("tabbar-script")?.remove();
    document.getElementById("navigator-toolbox").insertBefore(document.getElementById("titlebar"), document.getElementById("navigator-toolbox").firstChild);
    document.getElementById("TabsToolbar").before(document.getElementById("toolbar-menubar"));
 
