@@ -34,44 +34,6 @@ for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
 }
 
 
-// Monitor tab activity.
-// TODO: 再生中のタブは常にアクティビティがあるものとして解釈する。
-// TODO: タブスリープが無効のときにタブ監視をしないようにする。
-let tabsLastActivity = {};
-function onTabsActivity(tabId) {
-    if (typeof tabId !== "number") return;
-    tabsLastActivity[String(tabId)] = (new Date()).getTime();
-}
-function onTabsRemoveActivity(tabId) {
-    if (typeof tabId !== "number") return;
-    delete tabsLastActivity[String(tabId)];
-}
-browser.tabs.onActivated.addListener(function (activeInfo) {
-    onTabsActivity(activeInfo.tabId);
-});
-browser.tabs.onCreated.addListener(function (tab) {
-    onTabsActivity(tab.id);
-});
-browser.tabs.onRemoved.addListener(onTabsRemoveActivity);
-browser.tabs.onReplaced.addListener(function (addedTabId, removedTabId) {
-    onTabsRemoveActivity(removedTabId);
-    onTabsActivity(addedTabId);
-});
-browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
-    if (
-        typeof changeInfo.attention !== "undefined" ||
-        typeof changeInfo.audible !== "undefined" ||
-        typeof changeInfo.isArticle !== "undefined" ||
-        typeof changeInfo.mutedInfo !== "undefined" ||
-        typeof changeInfo.pinned !== "undefined" ||
-        typeof changeInfo.status !== "undefined" ||
-        typeof changeInfo.url !== "undefined"
-    ) {
-        onTabsActivity(tabId);
-    }
-});
-
-
 (async function main() {
     let isEnabled = await browser.aboutConfigPrefs.getPref(TAB_SLEEP_ENABLED_PREF);
     browser.aboutConfigPrefs.onPrefChange.addListener(function() {
@@ -118,6 +80,42 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     });
 
     if (!isEnabled) return;
+
+    // Monitor tab activity.
+    // TODO: 再生中のタブは常にアクティビティがあるものとして解釈する。
+    let tabsLastActivity = {};
+    function onTabsActivity(tabId) {
+        if (typeof tabId !== "number") return;
+        tabsLastActivity[String(tabId)] = (new Date()).getTime();
+    }
+    function onTabsRemoveActivity(tabId) {
+        if (typeof tabId !== "number") return;
+        delete tabsLastActivity[String(tabId)];
+    }
+    browser.tabs.onActivated.addListener(function (activeInfo) {
+        onTabsActivity(activeInfo.tabId);
+    });
+    browser.tabs.onCreated.addListener(function (tab) {
+        onTabsActivity(tab.id);
+    });
+    browser.tabs.onRemoved.addListener(onTabsRemoveActivity);
+    browser.tabs.onReplaced.addListener(function (addedTabId, removedTabId) {
+        onTabsRemoveActivity(removedTabId);
+        onTabsActivity(addedTabId);
+    });
+    browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
+        if (
+            typeof changeInfo.attention !== "undefined" ||
+            typeof changeInfo.audible !== "undefined" ||
+            typeof changeInfo.isArticle !== "undefined" ||
+            typeof changeInfo.mutedInfo !== "undefined" ||
+            typeof changeInfo.pinned !== "undefined" ||
+            typeof changeInfo.status !== "undefined" ||
+            typeof changeInfo.url !== "undefined"
+        ) {
+            onTabsActivity(tabId);
+        }
+    });
 
     setInterval(async function() {
         let tabs = await browser.tabs.query({
