@@ -38,7 +38,7 @@ TEST(IntlDateTimeFormat, Style_enUS_utf8)
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30\u202FPM"));
+  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Style_enUS_utf16)
@@ -51,7 +51,7 @@ TEST(IntlDateTimeFormat, Style_enUS_utf16)
   TestBuffer<char16_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_TRUE(buffer.verboseMatches(u"Sep 23, 2002, 8:07:30\u202FPM"));
+  ASSERT_TRUE(buffer.verboseMatches(u"Sep 23, 2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Style_ar_utf8)
@@ -86,7 +86,7 @@ TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30\u202FPM"));
+  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
@@ -103,7 +103,7 @@ TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
                       .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
-  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 12:07:30\u202FPM"));
+  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 12:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, GetAllowedHourCycles)
@@ -191,7 +191,7 @@ TEST(IntlDateTimeFormat, Components)
 
   TestBuffer<char16_t> buffer;
   ASSERT_TRUE(FormatComponents(buffer, components));
-  ASSERT_TRUE(buffer.verboseMatches(u"9/23/2002, 8:07:30\u202FPM"));
+  ASSERT_TRUE(buffer.verboseMatches(u"9/23/2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Components_es_ES)
@@ -246,7 +246,7 @@ TEST(IntlDateTimeFormat, ComponentsHour12Default)
 
   TestBuffer<char16_t> buffer;
   ASSERT_TRUE(FormatComponents(buffer, components));
-  ASSERT_TRUE(buffer.verboseMatches(u"8:07\u202FPM"));
+  ASSERT_TRUE(buffer.verboseMatches(u"8:07 PM"));
 }
 
 TEST(IntlDateTimeFormat, ComponentsHour24)

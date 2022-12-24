@@ -47,7 +47,7 @@ TEST(IntlDateIntervalFormat, TryFormatDateTime)
   spanResult = formatted.ToSpan();
   ASSERT_TRUE(spanResult.isOk());
   ASSERT_EQ(spanResult.unwrap(),
-            MakeStringSpan(u"01/03, 00:00\u2009–\u200901/05, 00:00"));
+            MakeStringSpan(u"01/03, 00:00 – 01/05, 00:00"));
 }
 
 TEST(IntlDateIntervalFormat, TryFormatCalendar)
@@ -104,7 +104,7 @@ TEST(IntlDateIntervalFormat, TryFormatCalendar)
   spanResult = formatted.ToSpan();
   ASSERT_TRUE(spanResult.isOk());
   ASSERT_EQ(spanResult.unwrap(),
-            MakeStringSpan(u"01/03, 00:00\u2009–\u200901/05, 00:00"));
+            MakeStringSpan(u"01/03, 00:00 – 01/05, 00:00"));
 }
 
 TEST(IntlDateIntervalFormat, TryFormattedToParts)
@@ -123,8 +123,7 @@ TEST(IntlDateIntervalFormat, TryFormattedToParts)
   ASSERT_FALSE(equal);
 
   Span<const char16_t> formattedSpan = formatted.ToSpan().unwrap();
-  ASSERT_EQ(formattedSpan,
-            MakeStringSpan(u"01/03, 00:00\u2009–\u200901/05, 00:00"));
+  ASSERT_EQ(formattedSpan, MakeStringSpan(u"01/03, 00:00 – 01/05, 00:00"));
 
   mozilla::intl::DateTimePartVector parts;
   result = dif->TryFormattedToParts(formatted, parts);
@@ -165,7 +164,7 @@ TEST(IntlDateIntervalFormat, TryFormattedToParts)
   ASSERT_EQ(parts[6].mSource, DateTimePartSource::StartRange);
 
   ASSERT_EQ(parts[7].mType, DateTimePartType::Literal);
-  ASSERT_EQ(getSubSpan(7), MakeStringSpan(u"\u2009–\u2009"));
+  ASSERT_EQ(getSubSpan(7), MakeStringSpan(u" – "));
   ASSERT_EQ(parts[7].mSource, DateTimePartSource::Shared);
 
   ASSERT_EQ(parts[8].mType, DateTimePartType::Month);
