@@ -13,6 +13,7 @@ jobs:
       run: |
         export DATE_STR=`date +"%Y%m%d%I%M%S"`
         echo "DATE_STR=$DATE_STR" >> $GITHUB_ENV
+        pip install mercurial
 
     - uses: actions/checkout@v3
       name: Clone 🧬
