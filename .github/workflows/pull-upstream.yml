@@ -42,12 +42,3 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git push origin upstream-esr102-${DATE_STR}
-
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v4
-      with:
-        branch: ESR102
-        title: Pull upstream
-        body: |
-          Pull upstream
-          Warning: Be sure to create a merge commit and merge it in.
