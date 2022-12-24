@@ -13,7 +13,7 @@ jobs:
       shell: bash -xe {0}
       run: |
         bdat=`date +"%Y%m%d%I%M%S"`
-        echo "::set-output name=bid::${bdat}"
+        echo "bid=${bdat}" >> $GITHUB_OUTPUT
 
   build-m1:
     runs-on: macos-latest
