@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 setInterval(function() {
     getStatusData();
-}, 10000);
+}, 1000);
 
 setInterval(function() {
     getTabsLastActivityInfoData();
