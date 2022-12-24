@@ -89,7 +89,23 @@ void nsHtml5DocumentBuilder::SetDocumentMode(nsHtml5DocumentMode m) {
       break;
   }
   mDocument->SetCompatibilityMode(mode);
+
   if (errMsgId) {
+    nsCOMPtr<nsIURI> docURI = mDocument->GetDocumentURI();
+    bool isData = false;
+    docURI->SchemeIs("data", &isData);
+    bool isHttp = false;
+    docURI->SchemeIs("http", &isHttp);
+    bool isHttps = false;
+    docURI->SchemeIs("https", &isHttps);
+
+    nsCOMPtr<nsIPrincipal> principal = mDocument->GetPrincipal();
+    if (principal->GetIsNullPrincipal() && !isData && !isHttp && !isHttps) {
+      // Don't normally warn for null principals. It may well be internal
+      // documents for which the warning is not applicable.
+      return;
+    }
+
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag, "HTML_PARSER__DOCTYPE"_ns, mDocument,
         nsContentUtils::eHTMLPARSER_PROPERTIES, errMsgId);
