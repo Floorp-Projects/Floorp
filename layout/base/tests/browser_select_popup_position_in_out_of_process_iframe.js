@@ -50,6 +50,7 @@ add_task(async function() {
   });
 
   await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content);
     const input = content.document.getElementById("select");
     const focusPromise = new Promise(resolve => {
       input.addEventListener("focus", resolve, { once: true });
