@@ -107,5 +107,23 @@ add_task(async function() {
     "There is no doctype warning message"
   );
 
+  info("Navigate to a about:blank");
+  await navigateTo("about:blank");
+  info("Wait for a bit to make sure there is no doctype messages");
+  await wait(1000);
+  ok(
+    !findWarningMessage(hud, `doctype`),
+    "There is no doctype warning message for about:blank"
+  );
+
+  info("Navigate to a view-source uri");
+  await navigateTo(`view-source:${TEST_URI_NO_DOCTYPE}`);
+  info("Wait for a bit to make sure there is no doctype messages");
+  await wait(1000);
+  ok(
+    !findWarningMessage(hud, `doctype`),
+    "There is no doctype warning message for view-source"
+  );
+
   await closeConsole();
 });
