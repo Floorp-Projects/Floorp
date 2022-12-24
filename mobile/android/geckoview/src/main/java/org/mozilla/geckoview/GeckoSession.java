@@ -952,18 +952,15 @@ public class GeckoSession {
 
             delegate.onHideAction(GeckoSession.this, reason);
           } else if ("GeckoView:ShowMagnifier".equals(event)) {
-            final GeckoBundle ptBundle = message.getBundle("clientPoint");
-            if (ptBundle == null) {
+            final PointF point = message.getPointF("screenPoint");
+            if (point == null) {
               throw new IllegalArgumentException("Invalid argument");
             }
 
-            final Matrix matrix = new Matrix();
-            GeckoSession.this.getClientToSurfaceMatrix(matrix);
-            final float[] origin =
-                new float[] {(float) ptBundle.getDouble("x"), (float) ptBundle.getDouble("y")};
-            matrix.mapPoints(origin);
-
-            GeckoSession.this.getMagnifier().show(new PointF(origin[0], origin[1]));
+            // Magnifier is surface coordinate.
+            point.x -= GeckoSession.this.mLeft;
+            point.y -= GeckoSession.this.mClientTop;
+            GeckoSession.this.getMagnifier().show(point);
           } else if ("GeckoView:HideMagnifier".equals(event)) {
             GeckoSession.this.getMagnifier().dismiss();
           } else if ("GeckoView:ClipboardPermissionRequest".equals(event)) {
