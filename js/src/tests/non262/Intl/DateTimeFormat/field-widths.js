@@ -9,7 +9,7 @@ const tests = [
       hour: "numeric",
     },
     locales: {
-      "en": "3\u202FAM",
+      "en": "3 AM",
       "de": "03 Uhr",
     },
   },
@@ -18,7 +18,7 @@ const tests = [
       hour: "2-digit",
     },
     locales: {
-      "en": "03\u202FAM",
+      "en": "03 AM",
       "de": "03 Uhr",
     },
   },
@@ -70,7 +70,7 @@ const tests = [
       minute: "numeric",
     },
     locales: {
-      "en": "3:04\u202FAM",
+      "en": "3:04 AM",
       "de": "03:04",
     },
   },
@@ -80,7 +80,7 @@ const tests = [
       minute: "2-digit",
     },
     locales: {
-      "en": "3:04\u202FAM",
+      "en": "3:04 AM",
       "de": "03:04",
     },
   },
@@ -90,7 +90,7 @@ const tests = [
       minute: "numeric",
     },
     locales: {
-      "en": "03:04\u202FAM",
+      "en": "03:04 AM",
       "de": "03:04",
     },
   },
@@ -100,7 +100,7 @@ const tests = [
       minute: "2-digit",
     },
     locales: {
-      "en": "03:04\u202FAM",
+      "en": "03:04 AM",
       "de": "03:04",
     },
   },
@@ -155,8 +155,8 @@ const tests = [
       hourCycle: "h12",
     },
     locales: {
-      "en": "3:04\u202FAM",
-      "de": "3:04\u202FAM",
+      "en": "3:04 AM",
+      "de": "3:04 AM",
     },
   },
   {
@@ -166,8 +166,8 @@ const tests = [
       hourCycle: "h12",
     },
     locales: {
-      "en": "03:04\u202FAM",
-      "de": "03:04\u202FAM",
+      "en": "03:04 AM",
+      "de": "03:04 AM",
     },
   },
 
@@ -204,7 +204,7 @@ for (let {options, locales} of tests) {
 }
 
 const toLocaleTests = {
-  "en": "1/2/2021, 3:04:05\u202FAM",
+  "en": "1/2/2021, 3:04:05 AM",
   "de": "2.1.2021, 03:04:05",
 };
 
@@ -213,7 +213,7 @@ for (let [locale, expected] of Object.entries(toLocaleTests)) {
 }
 
 const toLocaleTimeTests = {
-  "en": "3:04:05\u202FAM",
+  "en": "3:04:05 AM",
   "de": "03:04:05",
 };
 
