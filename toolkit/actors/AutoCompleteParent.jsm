@@ -443,6 +443,10 @@ class AutoCompleteParent extends JSWindowActorParent {
       }
 
       case "FormAutoComplete:ClosePopup": {
+        if (lazy.DELEGATE_AUTOCOMPLETE) {
+          lazy.GeckoViewAutocomplete.delegateDismiss();
+          break;
+        }
         this.closePopup();
         break;
       }
