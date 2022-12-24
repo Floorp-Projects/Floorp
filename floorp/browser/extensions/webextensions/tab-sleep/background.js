@@ -47,16 +47,12 @@ for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
     let systemMemoryGB = systemMemory / 1024 / 1024 / 1024;
     console.log(`System Memory (GB): ${systemMemoryGB}`);
 
+    let TAB_TIMEOUT_SECONDS_DEFAULT = Math.floor(60 * (systemMemoryGB * 3));
+    await browser.aboutConfigPrefs.setDefaultIntPref(TAB_TIMEOUT_SECONDS_DEFAULT);
     let TAB_TIMEOUT_SECONDS;
     let tabTimeoutMiliseconds;
     async function prefHandle() {
-        TAB_TIMEOUT_SECONDS = Math.floor(60 * (systemMemoryGB * 3));
-        try {
-            let pref = await browser.aboutConfigPrefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
-            if (pref !== 0) TAB_TIMEOUT_SECONDS = pref;
-        } catch (e) {
-            console.error(e);
-        }
+        TAB_TIMEOUT_SECONDS = await browser.aboutConfigPrefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
         tabTimeoutMiliseconds = TAB_TIMEOUT_SECONDS * 1000;
         console.log(`TAB_TIMEOUT_SECONDS: ${TAB_TIMEOUT_SECONDS}`);
     }
