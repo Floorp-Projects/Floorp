@@ -31,8 +31,8 @@ jobs:
     - name: Clone mozilla-unified 🧬
       run: |
         export PATH=~/git-cinnabar:$PATH
-        cd mozilla-unified
         git clone hg::https://hg.mozilla.org/mozilla-unified
+        cd mozilla-unified
         git checkout -b upstream-esr102-${DATE_STR} origin/bookmarks/esr102
 
     - name: Fetch Floorp 🧬
