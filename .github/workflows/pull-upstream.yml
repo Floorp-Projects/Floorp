@@ -17,8 +17,6 @@ jobs:
 
     - uses: actions/checkout@v3
       name: Clone 🧬
-      with:
-        fetch-depth: 0
 
     - name: Setup git-cinnabar
       run: |
@@ -30,15 +28,23 @@ jobs:
         cd ~
         git cinnabar download
 
-    - name: Fetch mozilla-unified 🧬
+    - name: Clone mozilla-unified 🧬
       run: |
         export PATH=~/git-cinnabar:$PATH
-        git remote add upstream hg::https://hg.mozilla.org/mozilla-unified
-        git fetch upstream
-        git checkout -b upstream-esr102-${DATE_STR} upstream/bookmarks/esr102
+        cd mozilla-unified
+        git clone hg::https://hg.mozilla.org/mozilla-unified
+        git checkout -b upstream-esr102-${DATE_STR} origin/bookmarks/esr102
+
+    - name: Fetch Floorp 🧬
+      run: |
+        export PATH=~/git-cinnabar:$PATH
+        cd mozilla-unified
+        git remote add floorp https://github.com/${{ github.repository }}
+        git fetch floorp
 
     - name: Push
       run: |
+        cd mozilla-unified
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git push origin upstream-esr102-${DATE_STR}
+        git push floorp upstream-esr102-${DATE_STR}
