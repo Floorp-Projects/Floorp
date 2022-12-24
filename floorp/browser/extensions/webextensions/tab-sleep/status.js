@@ -1,6 +1,6 @@
 function getStatusData() {
     function handleResponse(message) {
-        if (message["response"] === "status-data") {
+        if (message && message["response"] === "status-data") {
             let status = message["data"]["status"];
             let keys = Object.keys(status);
             for (let key of keys) {
@@ -24,7 +24,7 @@ function getStatusData() {
 
 function getTabsLastActivityInfoData() {
     function handleResponse(message) {
-        if (message["response"] === "tabs-last-activity-data") {
+        if (message && message["response"] === "tabs-last-activity-data") {
             let tabsActivityInfoBox = document.querySelector(".tabsLastActivityInfo-box");
             let template = document.querySelector(".tabLastActivityInfo-box.box-template");
             let tabsLastActivity = message["data"]["tabsLastActivity"];
