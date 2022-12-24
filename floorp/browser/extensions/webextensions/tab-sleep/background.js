@@ -48,7 +48,7 @@ for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
     console.log(`System Memory (GB): ${systemMemoryGB}`);
 
     let TAB_TIMEOUT_SECONDS_DEFAULT = Math.floor(60 * (systemMemoryGB * 3));
-    await browser.aboutConfigPrefs.setDefaultIntPref(TAB_TIMEOUT_SECONDS_DEFAULT);
+    await browser.aboutConfigPrefs.setDefaultIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, TAB_TIMEOUT_SECONDS_DEFAULT);
     let TAB_TIMEOUT_SECONDS;
     let tabTimeoutMiliseconds;
     async function prefHandle() {
