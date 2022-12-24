@@ -1,4 +1,4 @@
-function getData() {
+function getStatusData() {
     function handleResponse(message) {
         if (message["response"] === "status-data") {
             let status = message["data"]["status"];
@@ -22,10 +22,44 @@ function getData() {
     sending.then(handleResponse, handleError);
 }
 
+function getTabsLastActivityInfoData() {
+    function handleResponse(message) {
+        if (message["response"] === "tabs-last-activity-data") {
+            let tabsActivityInfoBox = document.querySelector(".tabsLastActivityInfo-box");
+            let template = document.querySelector(".tabLastActivityInfo-box.box-template");
+            let tabsLastActivity = message["data"]["tabsLastActivity"];
+            tabsActivityInfoBox.innerHTML = "";
+            for (let tabLastActivity of tabsLastActivity) {
+                let title = tabLastActivity["title"];
+                let lastActivity = tabLastActivity["lastActivity"];
+                let elem = template.cloneNode(true);
+                elem.classList.remove("box-template");
+                elem.querySelector(".title").innerText = title;
+                elem.querySelector(".value").innerText = lastActivity;
+                tabsActivityInfoBox.appendChild(elem);
+            }
+        }
+    }
+    
+    function handleError(error) {
+        console.error(error);
+    }
+
+    var sending = browser.runtime.sendMessage({
+        request: "tabs-last-activity-data"
+    });
+    sending.then(handleResponse, handleError);
+}
+
 document.addEventListener("DOMContentLoaded", function() {
-    getData();
+    getStatusData();
+    getTabsLastActivityInfoData();
 }, { once: true });
 
 setInterval(function() {
-    getData();
-}, 10000)
+    getStatusData();
+}, 10000);
+
+setInterval(function() {
+    getTabsLastActivityInfoData();
+}, 1000);

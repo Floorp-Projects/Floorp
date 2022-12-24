@@ -25,3 +25,23 @@ body {
 .statuses-box > .status-box:not(:nth-of-type(2)) {
     background-color: rgba(128, 128, 128, 0.1);
 }
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box {
+    display: flex;
+}
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box > .title {
+    flex: 1;
+}
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box > .value {
+    flex: 1;
+}
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box:nth-child(odd) {
+    background-color: rgba(128, 128, 128, 0.1);
+}
+
+.box-template {
+    display: none;
+}

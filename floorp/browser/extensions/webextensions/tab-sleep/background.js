@@ -117,6 +117,28 @@ for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
         }
     });
 
+    browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        (async() => {
+            let tabsLastActivity_data = [];
+            let keys = Object.keys(tabsLastActivity);
+            for (let key of keys) {
+                tabsLastActivity_data.push({
+                    title: (await browser.tabs.get(Number(key))).title,
+                    lastActivity: tabsLastActivity[key],
+                })
+            }
+            if (request["request"] === "tabs-last-activity-data") {
+                sendResponse({
+                    response: "tabs-last-activity-data",
+                    data: {
+                        tabsLastActivity: tabsLastActivity_data
+                    }
+                });
+            }
+        })();
+        return true;
+    });
+
     setInterval(async function() {
         let tabs = await browser.tabs.query({
             active: false,
