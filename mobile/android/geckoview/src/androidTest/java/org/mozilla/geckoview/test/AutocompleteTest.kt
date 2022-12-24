@@ -35,6 +35,31 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 class AutocompleteTest : BaseSessionTest() {
     val acceptDelay: Long = 100
 
+    // This is a utility to delete previous credit card and address information.
+    // Some credit card tests may not use fetched data since pop up is opened
+    // before fetching it.
+    private fun clearData() {
+        mainSession.loadTestPath(ADDRESS_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val fetchHandled = GeckoResult<Void>()
+        sessionRule.delegateDuringNextWait(object : StorageDelegate {
+            override fun onAddressFetch(): GeckoResult<Array<Address>>? {
+                return null
+            }
+            override fun onCreditCardFetch(): GeckoResult<Array<CreditCard>>? {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    fetchHandled.complete(null)
+                }, acceptDelay)
+
+                return null
+            }
+        })
+
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        sessionRule.waitForResult(fetchHandled)
+    }
+
     @Test
     fun loginBuilderDefaultValue() {
         val login = LoginEntry.Builder()
@@ -157,6 +182,9 @@ class AutocompleteTest : BaseSessionTest() {
 
     @Test
     fun creditCardSelectAndFill() {
+        // Workaround to fetch and open prompt
+        clearData()
+
         // Test:
         // 1. Load a credit card form page.
         // 2. Focus on the name input field.
@@ -341,6 +369,81 @@ class AutocompleteTest : BaseSessionTest() {
             address.email,
             equalTo("")
         )
+    }
+
+    @Test
+    fun creditCardSelectDismiss() {
+        // Workaround to fetch and open prompt
+        clearData()
+
+        val name = arrayOf("Peter Parker", "John Doe", "Taro Yamada")
+        val number = arrayOf("1234-1234-1234-1234", "2345-2345-2345-2345", "5555-5555-5555-5555")
+        val guid = arrayOf("test-guid1", "test-guid2", "test-guid3")
+        val expMonth = arrayOf("04", "08", "12")
+        val expYear = arrayOf("22", "23", "24")
+        val savedCC = arrayOf(
+            CreditCard.Builder()
+                .guid(guid[0])
+                .name(name[0])
+                .number(number[0])
+                .expirationMonth(expMonth[0])
+                .expirationYear(expYear[0])
+                .build(),
+            CreditCard.Builder()
+                .guid(guid[1])
+                .name(name[1])
+                .number(number[1])
+                .expirationMonth(expMonth[1])
+                .expirationYear(expYear[1])
+                .build(),
+            CreditCard.Builder()
+                .guid(guid[2])
+                .name(name[2])
+                .number(number[2])
+                .expirationMonth(expMonth[2])
+                .expirationYear(expYear[2])
+                .build()
+        )
+
+        mainSession.loadTestPath(CC_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sessionRule.delegateUntilTestEnd(object : StorageDelegate {
+            @AssertCalled
+            override fun onCreditCardFetch(): GeckoResult<Array<CreditCard>>? {
+                return GeckoResult.fromValue(savedCC)
+            }
+        })
+
+        val result = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
+            override fun onPromptDismiss(prompt: PromptDelegate.BasePrompt) {
+                result.complete(prompt.dismiss())
+            }
+        }
+
+        val promptHandled = GeckoResult<Void>()
+        mainSession.delegateUntilTestEnd(object : PromptDelegate {
+            @AssertCalled
+            override fun onCreditCardSelect(session: GeckoSession, prompt: AutocompleteRequest<CreditCardSelectOption>): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat(
+                    "There should be three options",
+                    prompt.options.size,
+                    equalTo(3)
+                )
+                prompt.setDelegate(promptInstanceDelegate)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    promptHandled.complete(null)
+                }, acceptDelay)
+
+                return GeckoResult()
+            }
+        })
+
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        sessionRule.waitForResult(promptHandled)
+        mainSession.evaluateJS("document.querySelector('#name').blur()")
+        sessionRule.waitForResult(result)
     }
 
     @Test
@@ -592,6 +695,73 @@ class AutocompleteTest : BaseSessionTest() {
         )
 
         checkAddressesForCorrectness(savedAddresses.toTypedArray(), selectedAddress)
+    }
+
+    @Test
+    fun addressSelectDismiss() {
+        val name = "Peter Parker"
+        val givenName = "Peter"
+        val familyName = "Parker"
+        val streetAddress = "20 Ingram Street, Forest Hills Gardens, Queens"
+        val postalCode = "11375"
+        val country = "US"
+        val email = "spiderman@newyork.com"
+        val tel = "+1 180090021"
+        val organization = ""
+        val guid = "test-guid"
+        val savedAddress = Address.Builder()
+            .guid(guid)
+            .name(name)
+            .givenName(givenName)
+            .familyName(familyName)
+            .streetAddress(streetAddress)
+            .postalCode(postalCode)
+            .country(country)
+            .email(email)
+            .tel(tel)
+            .organization(organization)
+            .build()
+        val savedAddresses = mutableListOf<Address>(savedAddress)
+
+        sessionRule.delegateUntilTestEnd(object : StorageDelegate {
+            @AssertCalled
+            override fun onAddressFetch(): GeckoResult<Array<Address>>? {
+                return GeckoResult.fromValue(savedAddresses.toTypedArray())
+            }
+        })
+
+        val result = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
+            override fun onPromptDismiss(prompt: PromptDelegate.BasePrompt) {
+                result.complete(prompt.dismiss())
+            }
+        }
+
+        val promptHandled = GeckoResult<Void>()
+        mainSession.delegateUntilTestEnd(object : PromptDelegate {
+            @AssertCalled
+            override fun onAddressSelect(session: GeckoSession, prompt: AutocompleteRequest<AddressSelectOption>): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat(
+                    "There should be one option",
+                    prompt.options.size,
+                    equalTo(1)
+                )
+                prompt.setDelegate(promptInstanceDelegate)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    promptHandled.complete(null)
+                }, acceptDelay)
+
+                return GeckoResult()
+            }
+        })
+
+        mainSession.loadTestPath(ADDRESS_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("document.querySelector('#givenName').focus()")
+        sessionRule.waitForResult(promptHandled)
+        mainSession.evaluateJS("document.querySelector('#givenName').blur()")
+        sessionRule.waitForResult(result)
     }
 
     @Test
@@ -2285,5 +2455,78 @@ class AutocompleteTest : BaseSessionTest() {
         // Submit the selection.
         mainSession.evaluateJS("document.querySelector('#form1').submit()")
         mainSession.waitForPageStop()
+    }
+
+    @Test
+    fun loginSelectDismiss() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                // Enable login management since it's disabled in automation.
+                "signon.rememberSignons" to true,
+                "signon.autofillForms.http" to true,
+                "signon.userInputRequiredToCapture.enabled" to false
+            )
+        )
+
+        val user = arrayOf("user1x", "user2x")
+        val pass = arrayOf("pass1x", "pass2x")
+        val guid = arrayOf("test-guid1", "test-guid2")
+        val origin = GeckoSessionTestRule.TEST_ENDPOINT
+        val savedLogins = arrayOf(
+            LoginEntry.Builder()
+                .guid(guid[0])
+                .origin(origin)
+                .formActionOrigin(origin)
+                .username(user[0])
+                .password(pass[0])
+                .build(),
+            LoginEntry.Builder()
+                .guid(guid[1])
+                .origin(origin)
+                .formActionOrigin(origin)
+                .username(user[1])
+                .password(pass[1])
+                .build()
+        )
+
+        sessionRule.delegateUntilTestEnd(object : StorageDelegate {
+            @AssertCalled
+            override fun onLoginFetch(domain: String): GeckoResult<Array<LoginEntry>>? {
+                return GeckoResult.fromValue(savedLogins)
+            }
+        })
+
+        val result = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
+            override fun onPromptDismiss(prompt: PromptDelegate.BasePrompt) {
+                result.complete(prompt.dismiss())
+            }
+        }
+
+        val promptHandled = GeckoResult<Void>()
+        mainSession.delegateUntilTestEnd(object : PromptDelegate {
+            @AssertCalled
+            override fun onLoginSelect(session: GeckoSession, prompt: AutocompleteRequest<LoginSelectOption>): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat(
+                    "There should be two options",
+                    prompt.options.size,
+                    equalTo(2)
+                )
+                prompt.setDelegate(promptInstanceDelegate)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    promptHandled.complete(null)
+                }, acceptDelay)
+
+                return GeckoResult()
+            }
+        })
+
+        mainSession.loadTestPath(FORMS3_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("document.querySelector('#user1').focus()")
+        sessionRule.waitForResult(promptHandled)
+        mainSession.evaluateJS("document.querySelector('#user1').blur()")
+        sessionRule.waitForResult(result)
     }
 }
