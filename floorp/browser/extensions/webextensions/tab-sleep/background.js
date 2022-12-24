@@ -78,7 +78,6 @@ for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
     if (!isEnabled) return;
 
     // Monitor tab activity.
-    // TODO: 再生中のタブは常にアクティビティがあるものとして解釈する。
     let tabsLastActivity = {};
     function onTabsActivity(tabId) {
         if (typeof tabId !== "number") return;
