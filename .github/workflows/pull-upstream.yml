@@ -1,0 +1,52 @@
+name: Pull upstream
+
+on: workflow_dispatch
+
+jobs:
+  pull-upstream:
+    name: Pull upstream
+    
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Setup
+      run: |
+        export DATE_STR=`date +"%Y%m%d%I%M%S"`
+        echo "DATE_STR=$DATE_STR" >> $GITHUB_ENV
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+      with:
+        fetch-depth: 0
+
+    - name: Setup git-cinnabar
+      run: |
+        cd ~
+        git clone https://github.com/glandium/git-cinnabar
+        cd git-cinnabar
+        git checkout 0.5.11
+        export PATH=~/git-cinnabar:$PATH
+        cd ~
+        git cinnabar download
+
+    - name: Fetch mozilla-unified 🧬
+      run: |
+        export PATH=~/git-cinnabar:$PATH
+        git remote add upstream hg::https://hg.mozilla.org/mozilla-unified
+        git fetch upstream
+        git checkout -b upstream-esr102-${DATE_STR} upstream/bookmarks/esr102
+
+    - name: Push
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git push origin upstream-esr102-${DATE_STR}
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4
+      with:
+        branch: ESR102
+        title: Pull upstream
+        body: |
+          Pull upstream
+          Warning: Be sure to create a merge commit and merge it in.
