@@ -22,7 +22,7 @@ body {
     flex: 1;
 }
 
-.statuses-box > .status-box:not(:nth-of-type(2)) {
+.statuses-box > .status-box:nth-child(odd) {
     background-color: rgba(128, 128, 128, 0.1);
 }
 
