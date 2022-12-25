@@ -95,6 +95,13 @@
       <html:input type="number" min="1" value="0" id="MultirowValue"/>
     </hbox>
 
+    <checkbox  data-l10n-id="enable-tab-sleep"
+               id="tab-sleep" preference="floorp.tabsleep.enabled"/>
+    <hbox>
+      <description flex="1" data-l10n-id="tab-sleep-timeout-value"/>
+      <html:input type="number" min="0" value="0" id="tabSleepTimeoutSecondsValue"/>
+    </hbox>
+
     <checkbox  data-l10n-id="enable-tab-scroll-change"
                id="tabscroll" preference="toolkit.tabbox.switchByScrolling"/>
 

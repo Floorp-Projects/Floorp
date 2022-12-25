@@ -86,6 +86,8 @@ pref("floorp.browser.sidebar2.data", "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",
 
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
+pref("floorp.tabsleep.enabled", false);
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン

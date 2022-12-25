@@ -1,0 +1,47 @@
+body {
+    background-color: #f9f9fb;
+    color: #15141a;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #2b2a33;
+        color: #fbfbfe;
+    }
+}
+
+.statuses-box > .status-box {
+    display: flex;
+}
+
+.statuses-box > .status-box > .title {
+    flex: 1;
+}
+
+.statuses-box > .status-box > .value {
+    flex: 1;
+}
+
+.statuses-box > .status-box:nth-child(odd) {
+    background-color: rgba(128, 128, 128, 0.1);
+}
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box {
+    display: flex;
+}
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box > .title {
+    flex: 1;
+}
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box > .value {
+    flex: 1;
+}
+
+.tabsLastActivityInfo-box > .tabLastActivityInfo-box:nth-child(odd) {
+    background-color: rgba(128, 128, 128, 0.1);
+}
+
+.box-template {
+    display: none;
+}

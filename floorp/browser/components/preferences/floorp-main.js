@@ -37,6 +37,7 @@ Preferences.addAll([
   { id: "floorp.browser.sidebar.useIconProvider", type: "string" },
   { id: "floorp.navbar.bottom", type: "bool" },
   { id: "floorp.disable.fullscreen.notification", type: "bool" },
+  { id: "floorp.tabsleep.enabled", type: "bool" },
 ]);
 
 window.addEventListener("load", function() {
@@ -97,6 +98,18 @@ window.addEventListener("load", function() {
   {
     let prefName = "browser.tabs.tabMinWidth";
     let elem = document.getElementById("tabWidthValue");
+    elem.value = Services.prefs.getIntPref(prefName, undefined);
+    elem.addEventListener('change', function () {
+      Services.prefs.setIntPref(prefName, Number(elem.value));
+    });
+    Services.prefs.addObserver(prefName, function () {
+      elem.value = Services.prefs.getIntPref(prefName, undefined);
+    });
+  }
+
+  {
+    let prefName = "floorp.tabsleep.tabTimeoutSeconds";
+    let elem = document.getElementById("tabSleepTimeoutSecondsValue");
     elem.value = Services.prefs.getIntPref(prefName, undefined);
     elem.addEventListener('change', function () {
       Services.prefs.setIntPref(prefName, Number(elem.value));

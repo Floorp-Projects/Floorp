@@ -1,0 +1,15 @@
+[
+  {
+    "namespace": "memoryInfo",
+    "description": "Get memory info",
+    "functions": [
+      {
+        "name": "getSystemMemorySize",
+        "type": "function",
+        "description": "Get a preference's value",
+        "parameters": [],
+        "async": true
+      }
+    ]
+  }
+]
