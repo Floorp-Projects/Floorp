@@ -108,7 +108,7 @@ exit 23";
 
         // EROFS: Read-only file system
         assert_eq!(
-            EROFS as i32,
+            EROFS,
             File::create(tempdir.path().join("test"))
                 .unwrap_err()
                 .raw_os_error()
@@ -156,7 +156,7 @@ exit 23";
 
         // EACCES: Permission denied
         assert_eq!(
-            EACCES as i32,
+            EACCES,
             Command::new(&test_path)
                 .status()
                 .unwrap_err()

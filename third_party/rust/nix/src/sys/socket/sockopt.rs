@@ -5,6 +5,7 @@ use crate::Result;
 use crate::errno::Errno;
 use crate::sys::time::TimeVal;
 use libc::{self, c_int, c_void, socklen_t};
+use std::convert::TryFrom;
 use std::mem::{
     self,
     MaybeUninit
@@ -97,7 +98,10 @@ macro_rules! getsockopt_impl {
                                                getter.ffi_len());
                     Errno::result(res)?;
 
-                    Ok(getter.assume_init())
+                    match <$ty>::try_from(getter.assume_init()) {
+                        Err(_) => Err(Errno::EINVAL),
+                        Ok(r) => Ok(r)
+                    }
                 }
             }
         }
@@ -449,7 +453,7 @@ sockopt_impl!(
     SndBufForce, SetOnly, libc::SOL_SOCKET, libc::SO_SNDBUFFORCE, usize);
 sockopt_impl!(
     /// Gets the socket type as an integer.
-    SockType, GetOnly, libc::SOL_SOCKET, libc::SO_TYPE, super::SockType);
+    SockType, GetOnly, libc::SOL_SOCKET, libc::SO_TYPE, super::SockType, GetStruct<i32>);
 sockopt_impl!(
     /// Returns a value indicating whether or not this socket has been marked to
     /// accept connections with `listen(2)`.
@@ -816,7 +820,7 @@ struct SetBool {
 
 impl<'a> Set<'a, bool> for SetBool {
     fn new(val: &'a bool) -> SetBool {
-        SetBool { val: if *val { 1 } else { 0 } }
+        SetBool { val: i32::from(*val) }
     }
 
     fn ffi_ptr(&self) -> *const c_void {
@@ -863,7 +867,7 @@ struct SetU8 {
 
 impl<'a> Set<'a, u8> for SetU8 {
     fn new(val: &'a u8) -> SetU8 {
-        SetU8 { val: *val as u8 }
+        SetU8 { val: *val }
     }
 
     fn ffi_ptr(&self) -> *const c_void {

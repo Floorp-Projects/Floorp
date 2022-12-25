@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.25.1] - 2022-12-02
+### Added
+
+- Added `SockaddrStorage::{as_unix_addr, as_unix_addr_mut}`
+  ([#1871](https://github.com/nix-rust/nix/pull/1871))
+
+### Changed
+
+### Fixed
+
+- Workaround XNU bug causing netmasks returned by `getifaddrs` to misbehave.
+  ([#1788](https://github.com/nix-rust/nix/pull/1788))
+- Fix microsecond calculation for `TimeSpec`.
+  ([#1801](https://github.com/nix-rust/nix/pull/1801))
+- Fix `User::from_name` and `Group::from_name` panicking
+  when given a name containing a nul.
+  ([#1815](https://github.com/nix-rust/nix/pull/1815))
+- Fix `User::from_uid` and `User::from_name` crash on Android platform.
+  ([#1824](https://github.com/nix-rust/nix/pull/1824))
+- Fixed using `SockaddrStorage` to store a Unix-domain socket address on Linux.
+  ([#1871](https://github.com/nix-rust/nix/pull/1871))
+- Fix UB with `sys::socket::sockopt::SockType` using `SOCK_PACKET`.
+  ([#1821](https://github.com/nix-rust/nix/pull/1821))
+
+### Removed
+
 ## [0.25.0] - 2022-08-13
 ### Added
 

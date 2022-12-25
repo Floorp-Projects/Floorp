@@ -153,7 +153,7 @@ impl<T> IoVec<T> {
         unsafe {
             slice::from_raw_parts(
                 self.0.iov_base as *const u8,
-                self.0.iov_len as usize)
+                self.0.iov_len)
         }
     }
 }

@@ -894,6 +894,8 @@ cfg_if!{
         /// [cfgetispeed(3p)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/cfgetispeed.html)).
         ///
         /// `cfgetispeed()` extracts the input baud rate from the given `Termios` structure.
+        // The cast is not unnecessary on all platforms.
+        #[allow(clippy::unnecessary_cast)]
         pub fn cfgetispeed(termios: &Termios) -> u32 {
             let inner_termios = termios.get_libc_termios();
             unsafe { libc::cfgetispeed(&*inner_termios) as u32 }
@@ -903,6 +905,8 @@ cfg_if!{
         /// [cfgetospeed(3p)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/cfgetospeed.html)).
         ///
         /// `cfgetospeed()` extracts the output baud rate from the given `Termios` structure.
+        // The cast is not unnecessary on all platforms.
+        #[allow(clippy::unnecessary_cast)]
         pub fn cfgetospeed(termios: &Termios) -> u32 {
             let inner_termios = termios.get_libc_termios();
             unsafe { libc::cfgetospeed(&*inner_termios) as u32 }

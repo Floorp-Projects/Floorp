@@ -151,6 +151,33 @@ fn test_so_tcp_maxseg() {
     close(ssock).unwrap();
 }
 
+#[test]
+fn test_so_type() {
+    let sockfd = socket(
+        AddressFamily::Inet,
+        SockType::Stream,
+        SockFlag::empty(),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(Ok(SockType::Stream), getsockopt(sockfd, sockopt::SockType));
+}
+
+/// getsockopt(_, sockopt::SockType) should gracefully handle unknown socket
+/// types.  Regression test for https://github.com/nix-rust/nix/issues/1819
+#[cfg(any(target_os = "android", target_os = "linux",))]
+#[test]
+fn test_so_type_unknown() {
+    use nix::errno::Errno;
+
+    require_capability!("test_so_type", CAP_NET_RAW);
+    let sockfd = unsafe { libc::socket(libc::AF_PACKET, libc::SOCK_PACKET, 0) };
+    assert!(sockfd >= 0, "Error opening socket: {}", nix::Error::last());
+
+    assert_eq!(Err(Errno::EINVAL), getsockopt(sockfd, sockopt::SockType));
+}
+
 // The CI doesn't supported getsockopt and setsockopt on emulated processors.
 // It's believed that a QEMU issue, the tests run ok on a fully emulated system.
 // Current CI just run the binary with QEMU but the Kernel remains the same as the host.
