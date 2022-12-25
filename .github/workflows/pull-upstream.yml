@@ -16,10 +16,11 @@ jobs:
 
     - name: Setup git
       run: |
-        echo ${GITHUB_TOKEN} | gh auth login --with-token
         gh auth setup-git
         git config --global user.name github-actions
         git config --global user.email github-actions@github.com
+      env:
+        GH_TOKEN: ${{ github.token }}
 
     - name: Setup git-cinnabar
       run: |
@@ -54,3 +55,5 @@ jobs:
       run: |
         cd mozilla-unified
         gh pr create --repo ${{ github.repository }} --base ESR102 --head upstream-esr102-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
+      env:
+        GH_TOKEN: ${{ github.token }}
