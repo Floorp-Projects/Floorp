@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "memmap2"
-version = "0.5.7"
+version = "0.5.8"
 authors = [
     "Dan Burkert <dan@danburkert.com>",
     "Yevhenii Reizner <razrfalcon@gmail.com>",
@@ -26,7 +26,7 @@ keywords = [
     "io",
     "file",
 ]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/RazrFalcon/memmap2-rs"
 
 [dependencies.stable_deref_trait]
