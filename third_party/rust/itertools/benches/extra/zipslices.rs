@@ -3,7 +3,7 @@ use std::cmp;
 // Note: There are different ways to implement ZipSlices.
 // This version performed the best in benchmarks.
 //
-// I also implemented a version with three pointes (tptr, tend, uptr),
+// I also implemented a version with three pointers (tptr, tend, uptr),
 // that mimiced slice::Iter and only checked bounds by using tptr == tend,
 // but that was inferior to this solution.
 

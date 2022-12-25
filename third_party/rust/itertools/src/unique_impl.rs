@@ -1,6 +1,5 @@
-
 use std::collections::HashMap;
-use std::collections::hash_map::{Entry};
+use std::collections::hash_map::Entry;
 use std::hash::Hash;
 use std::fmt;
 use std::iter::FusedIterator;
@@ -12,7 +11,9 @@ use std::iter::FusedIterator;
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct UniqueBy<I: Iterator, V, F> {
     iter: I,
-    // Use a hashmap for the entry API
+    // Use a Hashmap for the Entry API in order to prevent hashing twice.
+    // This can maybe be replaced with a HashSet once `get_or_insert_with`
+    // or a proper Entry API for Hashset is stable and meets this msrv
     used: HashMap<V, ()>,
     f: F,
 }

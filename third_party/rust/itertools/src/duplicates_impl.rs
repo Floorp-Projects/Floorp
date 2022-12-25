@@ -188,7 +188,6 @@ mod private {
 /// An iterator adapter to filter for duplicate elements.
 ///
 /// See [`.duplicates_by()`](crate::Itertools::duplicates_by) for more information.
-#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub type DuplicatesBy<I, V, F> = private::DuplicatesBy<I, V, private::ByFn<F>>;
 
 /// Create a new `DuplicatesBy` iterator.

@@ -35,9 +35,7 @@ pub struct Interleave<I, J> {
 
 /// Create an iterator that interleaves elements in `i` and `j`.
 ///
-/// [`IntoIterator`] enabled version of `i.interleave(j)`.
-///
-/// See [`.interleave()`](crate::Itertools::interleave) for more information.
+/// [`IntoIterator`] enabled version of `[Itertools::interleave]`.
 pub fn interleave<I, J>(i: I, j: J) -> Interleave<<I as IntoIterator>::IntoIter, <J as IntoIterator>::IntoIter>
     where I: IntoIterator,
           J: IntoIterator<Item = I::Item>
@@ -210,7 +208,7 @@ impl<I> PutBack<I>
     /// If a value is already in the put back slot, it is overwritten.
     #[inline]
     pub fn put_back(&mut self, x: I::Item) {
-        self.top = Some(x)
+        self.top = Some(x);
     }
 }
 
@@ -329,12 +327,7 @@ impl<I, J> Iterator for Product<I, J>
             }
             Some(x) => x
         };
-        match self.a_cur {
-            None => None,
-            Some(ref a) => {
-                Some((a.clone(), elt_b))
-            }
-        }
+        self.a_cur.as_ref().map(|a| (a.clone(), elt_b))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -492,7 +485,6 @@ impl<T: PartialOrd> MergePredicate<T> for MergeLte {
 /// Iterator element type is `I::Item`.
 ///
 /// See [`.merge()`](crate::Itertools::merge_by) for more information.
-#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub type Merge<I, J> = MergeBy<I, J, MergeLte>;
 
 /// Create an iterator that merges elements in `i` and `j`.

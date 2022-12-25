@@ -113,19 +113,15 @@ where
 
                 Some(indices.map(|i| vals[i].clone()).collect())
             }
-            PermutationState::Complete(CompleteState::Start { .. }) => None,
             PermutationState::Complete(CompleteState::Ongoing { ref indices, ref cycles }) => {
                 let k = cycles.len();
-
                 Some(indices[0..k].iter().map(|&i| vals[i].clone()).collect())
             },
-            PermutationState::Empty => None
+            PermutationState::Complete(CompleteState::Start { .. }) | PermutationState::Empty => None
         }
     }
 
     fn count(self) -> usize {
-        let Permutations { vals, state } = self;
-
         fn from_complete(complete_state: CompleteState) -> usize {
             match complete_state.remaining() {
                 CompleteStateRemaining::Known(count) => count,
@@ -135,6 +131,7 @@ where
             }
         }
 
+        let Permutations { vals, state } = self;
         match state {
             PermutationState::StartUnknownLen { k } => {
                 let n = vals.len() + vals.it.count();

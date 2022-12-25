@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "itertools"
-version = "0.10.3"
+version = "0.10.5"
 authors = ["bluss"]
 exclude = ["/bors.toml"]
 description = "Extra iterator adaptors, iterator methods, free functions, and macros."
@@ -85,4 +85,4 @@ version = "0.7"
 [features]
 default = ["use_std"]
 use_alloc = []
-use_std = ["use_alloc"]
+use_std = ["use_alloc", "either/use_std"]

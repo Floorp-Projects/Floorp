@@ -1,5 +1,3 @@
-use paste;
-use permutohedron;
 use quickcheck as qc;
 use rand::{distributions::{Distribution, Standard}, Rng, SeedableRng, rngs::StdRng};
 use rand::{seq::SliceRandom, thread_rng};
@@ -123,12 +121,12 @@ fn unique() {
 #[test]
 fn intersperse() {
     let xs = ["a", "", "b", "c"];
-    let v: Vec<&str> = xs.iter().map(|x| x.clone()).intersperse(", ").collect();
+    let v: Vec<&str> = xs.iter().cloned().intersperse(", ").collect();
     let text: String = v.concat();
     assert_eq!(text, "a, , b, c".to_string());
 
     let ys = [0, 1, 2, 3];
-    let mut it = ys[..0].iter().map(|x| *x).intersperse(1);
+    let mut it = ys[..0].iter().copied().intersperse(1);
     assert!(it.next() == None);
 }
 
@@ -474,7 +472,7 @@ impl<T: Clone + Send, R: Clone + Rng + SeedableRng + Send> qc::Arbitrary for Ran
 
 // Check that taking the k smallest is the same as
 //  sorting then taking the k first elements
-fn k_smallest_sort<I>(i: I, k: u16) -> ()
+fn k_smallest_sort<I>(i: I, k: u16)
 where
     I: Iterator + Clone,
     I::Item: Ord + Debug,
@@ -538,10 +536,10 @@ fn sorted_by_cached_key() {
 fn test_multipeek() {
     let nums = vec![1u8,2,3,4,5];
 
-    let mp = multipeek(nums.iter().map(|&x| x));
+    let mp = multipeek(nums.iter().copied());
     assert_eq!(nums, mp.collect::<Vec<_>>());
 
-    let mut mp = multipeek(nums.iter().map(|&x| x));
+    let mut mp = multipeek(nums.iter().copied());
     assert_eq!(mp.peek(), Some(&1));
     assert_eq!(mp.next(), Some(1));
     assert_eq!(mp.peek(), Some(&2));
@@ -579,7 +577,7 @@ fn test_multipeek_peeking_next() {
     use crate::it::PeekingNext;
     let nums = vec![1u8,2,3,4,5,6,7];
 
-    let mut mp = multipeek(nums.iter().map(|&x| x));
+    let mut mp = multipeek(nums.iter().copied());
     assert_eq!(mp.peeking_next(|&x| x != 0), Some(1));
     assert_eq!(mp.next(), Some(2));
     assert_eq!(mp.peek(), Some(&3));
@@ -604,10 +602,10 @@ fn test_multipeek_peeking_next() {
 fn test_peek_nth() {
     let nums = vec![1u8,2,3,4,5];
 
-    let iter = peek_nth(nums.iter().map(|&x| x));
+    let iter = peek_nth(nums.iter().copied());
     assert_eq!(nums, iter.collect::<Vec<_>>());
 
-    let mut iter = peek_nth(nums.iter().map(|&x| x));
+    let mut iter = peek_nth(nums.iter().copied());
 
     assert_eq!(iter.peek_nth(0), Some(&1));
     assert_eq!(iter.peek_nth(0), Some(&1));
@@ -638,7 +636,7 @@ fn test_peek_nth() {
 fn test_peek_nth_peeking_next() {
     use it::PeekingNext;
     let nums = vec![1u8,2,3,4,5,6,7];
-    let mut iter = peek_nth(nums.iter().map(|&x| x));
+    let mut iter = peek_nth(nums.iter().copied());
 
     assert_eq!(iter.peeking_next(|&x| x != 0), Some(1));
     assert_eq!(iter.next(), Some(2));
@@ -694,7 +692,7 @@ fn group_by() {
         }
     }
 
-    let toupper = |ch: &char| ch.to_uppercase().nth(0).unwrap();
+    let toupper = |ch: &char| ch.to_uppercase().next().unwrap();
 
     // try all possible orderings
     for indices in permutohedron::Heap::new(&mut [0, 1, 2, 3]) {
@@ -993,6 +991,54 @@ fn diff_shorter() {
 }
 
 #[test]
+fn extrema_set() {
+    use std::cmp::Ordering;
+
+    // A peculiar type: Equality compares both tuple items, but ordering only the
+    // first item. Used to distinguish equal elements.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    struct Val(u32, u32);
+
+    impl PartialOrd<Val> for Val {
+        fn partial_cmp(&self, other: &Val) -> Option<Ordering> {
+            self.0.partial_cmp(&other.0)
+        }
+    }
+
+    impl Ord for Val {
+        fn cmp(&self, other: &Val) -> Ordering {
+            self.0.cmp(&other.0)
+        }
+    }
+
+    assert_eq!(None::<u32>.iter().min_set(), Vec::<&u32>::new());
+    assert_eq!(None::<u32>.iter().max_set(), Vec::<&u32>::new());
+
+    assert_eq!(Some(1u32).iter().min_set(), vec![&1]);
+    assert_eq!(Some(1u32).iter().max_set(), vec![&1]);
+
+    let data = vec![Val(0, 1), Val(2, 0), Val(0, 2), Val(1, 0), Val(2, 1)];
+
+    let min_set = data.iter().min_set();
+    assert_eq!(min_set, vec![&Val(0, 1), &Val(0, 2)]);
+
+    let min_set_by_key = data.iter().min_set_by_key(|v| v.1);
+    assert_eq!(min_set_by_key, vec![&Val(2, 0), &Val(1, 0)]);
+
+    let min_set_by = data.iter().min_set_by(|x, y| x.1.cmp(&y.1));
+    assert_eq!(min_set_by, vec![&Val(2, 0), &Val(1, 0)]);
+
+    let max_set = data.iter().max_set();
+    assert_eq!(max_set, vec![&Val(2, 0), &Val(2, 1)]);
+
+    let max_set_by_key = data.iter().max_set_by_key(|v| v.1);
+    assert_eq!(max_set_by_key, vec![&Val(0, 2)]);
+
+    let max_set_by = data.iter().max_set_by(|x, y| x.1.cmp(&y.1));
+    assert_eq!(max_set_by, vec![&Val(0, 2)]);
+}
+
+#[test]
 fn minmax() {
     use std::cmp::Ordering;
     use crate::it::MinMaxResult;
@@ -1043,9 +1089,9 @@ fn format() {
     let t2 = format!("{:?}", data.iter().format("--"));
     assert_eq!(t2, ans2);
 
-    let dataf = [1.1, 2.71828, -22.];
+    let dataf = [1.1, 5.71828, -22.];
     let t3 = format!("{:.2e}", dataf.iter().format(", "));
-    assert_eq!(t3, "1.10e0, 2.72e0, -2.20e1");
+    assert_eq!(t3, "1.10e0, 5.72e0, -2.20e1");
 }
 
 #[test]
@@ -1062,7 +1108,7 @@ fn fold_while() {
     let vec = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     let sum = vec.into_iter().fold_while(0, |acc, item| {
         iterations += 1;
-        let new_sum = acc.clone() + item;
+        let new_sum = acc + item;
         if new_sum <= 20 {
             FoldWhile::Continue(new_sum)
         } else {
@@ -1095,7 +1141,7 @@ fn tree_fold1() {
         "0 1 x 2 3 x x 4 5 x 6 7 x x x 8 9 x 10 11 x x 12 13 x 14 15 x x x x",
     ];
     for (i, &s) in x.iter().enumerate() {
-        let expected = if s == "" { None } else { Some(s.to_string()) };
+        let expected = if s.is_empty() { None } else { Some(s.to_string()) };
         let num_strings = (0..i).map(|x| x.to_string());
         let actual = num_strings.tree_fold1(|a, b| format!("{} {} x", a, b));
         assert_eq!(actual, expected);

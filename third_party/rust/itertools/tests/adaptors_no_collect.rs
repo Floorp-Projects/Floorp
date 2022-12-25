@@ -11,12 +11,11 @@ impl Iterator for PanickingCounter {
     fn next(&mut self) -> Option<Self::Item> {
         self.curr += 1;
 
-        if self.curr == self.max {
-            panic!(
-                "Input iterator reached maximum of {} suggesting collection by adaptor",
-                self.max
-            );
-        }
+        assert_ne!(
+            self.curr, self.max,
+            "Input iterator reached maximum of {} suggesting collection by adaptor",
+            self.max
+        );
 
         Some(())
     }

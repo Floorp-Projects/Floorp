@@ -28,16 +28,12 @@ where
         if self.done {
             return false;
         }
-        let next_item = self.it.next();
-        match next_item {
-            Some(x) => {
-                self.buffer.push(x);
-                true
-            }
-            None => {
-                self.done = true;
-                false
-            }
+        if let Some(x) = self.it.next() {
+            self.buffer.push(x);
+            true
+        } else {
+            self.done = true;
+            false
         }
     }
 
@@ -61,7 +57,7 @@ where
 {
     type Output = <Vec<I::Item> as Index<J>>::Output;
 
-    fn index(&self, _index: J) -> &Self::Output {
-        self.buffer.index(_index)
+    fn index(&self, index: J) -> &Self::Output {
+        self.buffer.index(index)
     }
 }

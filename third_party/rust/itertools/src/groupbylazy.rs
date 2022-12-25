@@ -1,13 +1,13 @@
 use std::cell::{Cell, RefCell};
 use alloc::vec::{self, Vec};
 
-/// A trait to unify FnMut for GroupBy with the chunk key in IntoChunks
+/// A trait to unify `FnMut` for `GroupBy` with the chunk key in `IntoChunks`
 trait KeyFunction<A> {
     type Key;
     fn call_mut(&mut self, arg: A) -> Self::Key;
 }
 
-impl<'a, A, K, F: ?Sized> KeyFunction<A> for F
+impl<A, K, F: ?Sized> KeyFunction<A> for F
     where F: FnMut(A) -> K
 {
     type Key = K;
@@ -18,7 +18,7 @@ impl<'a, A, K, F: ?Sized> KeyFunction<A> for F
 }
 
 
-/// ChunkIndex acts like the grouping key function for IntoChunks
+/// `ChunkIndex` acts like the grouping key function for `IntoChunks`
 #[derive(Debug)]
 struct ChunkIndex {
     size: usize,
@@ -37,7 +37,7 @@ impl ChunkIndex {
     }
 }
 
-impl<'a, A> KeyFunction<A> for ChunkIndex {
+impl<A> KeyFunction<A> for ChunkIndex {
     type Key = usize;
     #[inline(always)]
     fn call_mut(&mut self, _arg: A) -> Self::Key {
@@ -330,7 +330,7 @@ impl<K, I, F> GroupBy<K, I, F>
 
     /// `client`: Index of group
     fn drop_group(&self, client: usize) {
-        self.inner.borrow_mut().drop_group(client)
+        self.inner.borrow_mut().drop_group(client);
     }
 }
 
@@ -482,7 +482,7 @@ impl<I> IntoChunks<I>
 
     /// `client`: Index of chunk
     fn drop_group(&self, client: usize) {
-        self.inner.borrow_mut().drop_group(client)
+        self.inner.borrow_mut().drop_group(client);
     }
 }
 

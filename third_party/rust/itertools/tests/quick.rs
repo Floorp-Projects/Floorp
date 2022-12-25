@@ -258,12 +258,13 @@ where
         let mut it = get_it();
 
         for _ in 0..(counts.len() - 1) {
-            if let None = it.next() {
+            #[allow(clippy::manual_assert)]
+            if it.next().is_none() {
                 panic!("Iterator shouldn't be finished, may not be deterministic");
             }
         }
 
-        if let None = it.next() {
+        if it.next().is_none() {
             break 'outer;
         }
 
@@ -438,7 +439,7 @@ quickcheck! {
         }
         assert_eq!(answer, actual);
 
-        assert_eq!(answer.into_iter().last(), a.clone().multi_cartesian_product().last());
+        assert_eq!(answer.into_iter().last(), a.multi_cartesian_product().last());
     }
 
     #[allow(deprecated)]
@@ -498,15 +499,13 @@ quickcheck! {
         exact_size(it)
     }
 
-    fn equal_merge(a: Vec<i16>, b: Vec<i16>) -> bool {
-        let mut sa = a.clone();
-        let mut sb = b.clone();
-        sa.sort();
-        sb.sort();
-        let mut merged = sa.clone();
-        merged.extend(sb.iter().cloned());
+    fn equal_merge(mut a: Vec<i16>, mut b: Vec<i16>) -> bool {
+        a.sort();
+        b.sort();
+        let mut merged = a.clone();
+        merged.extend(b.iter().cloned());
         merged.sort();
-        itertools::equal(&merged, sa.iter().merge(&sb))
+        itertools::equal(&merged, a.iter().merge(&b))
     }
     fn size_merge(a: Iter<u16>, b: Iter<u16>) -> bool {
         correct_size_hint(a.merge(b))
@@ -517,7 +516,7 @@ quickcheck! {
             exact_size(multizip((a, b, c)))
     }
     fn size_zip_rc(a: Iter<i16>, b: Iter<i16>) -> bool {
-        let rc = rciter(a.clone());
+        let rc = rciter(a);
         correct_size_hint(multizip((&rc, &rc, b)))
     }
 
@@ -526,19 +525,16 @@ quickcheck! {
         correct_size_hint(izip!(filt, b.clone(), c.clone())) &&
             exact_size(izip!(a, b, c))
     }
-    fn equal_kmerge(a: Vec<i16>, b: Vec<i16>, c: Vec<i16>) -> bool {
+    fn equal_kmerge(mut a: Vec<i16>, mut b: Vec<i16>, mut c: Vec<i16>) -> bool {
         use itertools::free::kmerge;
-        let mut sa = a.clone();
-        let mut sb = b.clone();
-        let mut sc = c.clone();
-        sa.sort();
-        sb.sort();
-        sc.sort();
-        let mut merged = sa.clone();
-        merged.extend(sb.iter().cloned());
-        merged.extend(sc.iter().cloned());
+        a.sort();
+        b.sort();
+        c.sort();
+        let mut merged = a.clone();
+        merged.extend(b.iter().cloned());
+        merged.extend(c.iter().cloned());
         merged.sort();
-        itertools::equal(merged.into_iter(), kmerge(vec![sa, sb, sc]))
+        itertools::equal(merged.into_iter(), kmerge(vec![a, b, c]))
     }
 
     // Any number of input iterators
@@ -610,7 +606,7 @@ quickcheck! {
     fn size_2_zip_longest(a: Iter<i16>, b: Iter<i16>) -> bool {
         let it = a.clone().zip_longest(b.clone());
         let jt = a.clone().zip_longest(b.clone());
-        itertools::equal(a.clone(),
+        itertools::equal(a,
                          it.filter_map(|elt| match elt {
                              EitherOrBoth::Both(x, _) => Some(x),
                              EitherOrBoth::Left(x) => Some(x),
@@ -618,7 +614,7 @@ quickcheck! {
                          }
                          ))
             &&
-        itertools::equal(b.clone(),
+        itertools::equal(b,
                          jt.filter_map(|elt| match elt {
                              EitherOrBoth::Both(_, y) => Some(y),
                              EitherOrBoth::Right(y) => Some(y),
@@ -721,7 +717,7 @@ quickcheck! {
 
         assert_eq!(expected_first, curr_perm);
 
-        while let Some(next_perm) = perms.next() {
+        for next_perm in perms {
             assert!(
                 next_perm > curr_perm,
                 "next perm isn't greater-than current; next_perm={:?} curr_perm={:?} n={}",
@@ -943,8 +939,7 @@ quickcheck! {
     fn fuzz_group_by_lazy_1(it: Iter<u8>) -> bool {
         let jt = it.clone();
         let groups = it.group_by(|k| *k);
-        let res = itertools::equal(jt, groups.into_iter().flat_map(|(_, x)| x));
-        res
+        itertools::equal(jt, groups.into_iter().flat_map(|(_, x)| x))
     }
 }
 
@@ -1286,7 +1281,7 @@ quickcheck! {
             .map(|i| (i % modulo, i))
             .into_group_map()
             .into_iter()
-            .map(|(key, vals)| (key, vals.into_iter().fold(0u64, |acc, val| acc + val)))
+            .map(|(key, vals)| (key, vals.into_iter().sum()))
             .collect::<HashMap<_,_>>();
         assert_eq!(lookup, group_map_lookup);
 
@@ -1551,10 +1546,10 @@ quickcheck! {
 }
 
 quickcheck! {
-    #[test]
     fn counts(nums: Vec<isize>) -> TestResult {
         let counts = nums.iter().counts();
         for (&item, &count) in counts.iter() {
+            #[allow(clippy::absurd_extreme_comparisons)]
             if count <= 0 {
                 return TestResult::failed();
             }
@@ -1602,7 +1597,7 @@ quickcheck! {
 
 fn is_fused<I: Iterator>(mut it: I) -> bool
 {
-    while let Some(_) = it.next() {}
+    for _ in it.by_ref() {}
     for _ in 0..10{
         if it.next().is_some(){
             return false;
@@ -1693,3 +1688,62 @@ quickcheck! {
     }
 }
 
+quickcheck! {
+    fn min_set_contains_min(a: Vec<(usize, char)>) -> bool {
+        let result_set = a.iter().min_set();
+        if let Some(result_element) = a.iter().min() {
+            result_set.contains(&result_element)
+        } else {
+            result_set.is_empty()
+        }
+    }
+
+    fn min_set_by_contains_min(a: Vec<(usize, char)>) -> bool {
+        let compare = |x: &&(usize, char), y: &&(usize, char)| x.1.cmp(&y.1);
+        let result_set = a.iter().min_set_by(compare);
+        if let Some(result_element) = a.iter().min_by(compare) {
+            result_set.contains(&result_element)
+        } else {
+            result_set.is_empty()
+        }
+    }
+
+    fn min_set_by_key_contains_min(a: Vec<(usize, char)>) -> bool {
+        let key = |x: &&(usize, char)| x.1;
+        let result_set = a.iter().min_set_by_key(&key);
+        if let Some(result_element) = a.iter().min_by_key(&key) {
+            result_set.contains(&result_element)
+        } else {
+            result_set.is_empty()
+        }
+    }
+
+    fn max_set_contains_max(a: Vec<(usize, char)>) -> bool {
+        let result_set = a.iter().max_set();
+        if let Some(result_element) = a.iter().max() {
+            result_set.contains(&result_element)
+        } else {
+            result_set.is_empty()
+        }
+    }
+
+    fn max_set_by_contains_max(a: Vec<(usize, char)>) -> bool {
+        let compare = |x: &&(usize, char), y: &&(usize, char)| x.1.cmp(&y.1);
+        let result_set = a.iter().max_set_by(compare);
+        if let Some(result_element) = a.iter().max_by(compare) {
+            result_set.contains(&result_element)
+        } else {
+            result_set.is_empty()
+        }
+    }
+
+    fn max_set_by_key_contains_max(a: Vec<(usize, char)>) -> bool {
+        let key = |x: &&(usize, char)| x.1;
+        let result_set = a.iter().max_set_by_key(&key);
+        if let Some(result_element) = a.iter().max_by_key(&key) {
+            result_set.contains(&result_element)
+        } else {
+            result_set.is_empty()
+        }
+    }
+}

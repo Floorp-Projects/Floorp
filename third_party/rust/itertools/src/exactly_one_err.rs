@@ -11,10 +11,10 @@ use crate::size_hint;
 /// Iterator returned for the error case of `IterTools::exactly_one()`
 /// This iterator yields exactly the same elements as the input iterator.
 ///
-/// During the execution of exactly_one the iterator must be mutated.  This wrapper
+/// During the execution of `exactly_one` the iterator must be mutated.  This wrapper
 /// effectively "restores" the state of the input iterator when it's handed back.
 ///
-/// This is very similar to PutBackN except this iterator only supports 0-2 elements and does not
+/// This is very similar to `PutBackN` except this iterator only supports 0-2 elements and does not
 /// use a `Vec`.
 #[derive(Clone)]
 pub struct ExactlyOneError<I>

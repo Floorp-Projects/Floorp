@@ -39,7 +39,6 @@ pub fn new<I, K, V>(iter: I) -> GroupingMap<I>
 /// `GroupingMapBy` is an intermediate struct for efficient group-and-fold operations.
 /// 
 /// See [`GroupingMap`] for more informations.
-#[must_use = "GroupingMapBy is lazy and do nothing unless consumed"]
 pub type GroupingMapBy<I, F> = GroupingMap<MapForGrouping<I, F>>;
 
 /// `GroupingMap` is an intermediate struct for efficient group-and-fold operations.
@@ -290,7 +289,7 @@ impl<I, K, V> GroupingMap<I>
         where F: FnMut(&K, &V) -> CK,
               CK: Ord,
     {
-        self.max_by(|key, v1, v2| f(key, &v1).cmp(&f(key, &v2)))
+        self.max_by(|key, v1, v2| f(key, v1).cmp(&f(key, v2)))
     }
 
     /// Groups elements from the `GroupingMap` source by key and finds the minimum of each group.
@@ -368,7 +367,7 @@ impl<I, K, V> GroupingMap<I>
         where F: FnMut(&K, &V) -> CK,
               CK: Ord,
     {
-        self.min_by(|key, v1, v2| f(key, &v1).cmp(&f(key, &v2)))
+        self.min_by(|key, v1, v2| f(key, v1).cmp(&f(key, v2)))
     }
 
     /// Groups elements from the `GroupingMap` source by key and find the maximum and minimum of
@@ -481,7 +480,7 @@ impl<I, K, V> GroupingMap<I>
         where F: FnMut(&K, &V) -> CK,
               CK: Ord,
     {
-        self.minmax_by(|key, v1, v2| f(key, &v1).cmp(&f(key, &v2)))
+        self.minmax_by(|key, v1, v2| f(key, v1).cmp(&f(key, v2)))
     }
     
     /// Groups elements from the `GroupingMap` source by key and sums them.

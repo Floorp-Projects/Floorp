@@ -55,7 +55,7 @@ pub struct IntersperseWith<I, ElemF>
     peek: Option<I::Item>,
 }
 
-/// Create a new IntersperseWith iterator
+/// Create a new `IntersperseWith` iterator
 pub fn intersperse_with<I, ElemF>(iter: I, elt: ElemF) -> IntersperseWith<I, ElemF>
     where I: Iterator,
 {
@@ -107,8 +107,7 @@ impl<I, ElemF> Iterator for IntersperseWith<I, ElemF>
         self.iter.fold(accum,
             |accum, x| {
                 let accum = f(accum, element.generate());
-                let accum = f(accum, x);
-                accum
+                f(accum, x)
         })
     }
 }
