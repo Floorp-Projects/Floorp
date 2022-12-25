@@ -365,9 +365,7 @@ pub struct Symbol<T> {
 impl<T> Symbol<T> {
     /// Convert the loaded `Symbol` into a raw pointer.
     pub fn into_raw(self) -> *mut raw::c_void {
-        let pointer = self.pointer;
-        mem::forget(self);
-        pointer
+        self.pointer
     }
 }
 

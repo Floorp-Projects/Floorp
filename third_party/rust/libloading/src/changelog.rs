@@ -1,5 +1,12 @@
 //! The change log.
 
+/// Release 0.7.4 (2022-11-07)
+///
+/// This release has no functional changes.
+///
+/// `RTLD_LAZY`, `RTLD_GLOBAL` and `RTLD_LOCAL` constants have been implemented for AIX platforms.
+pub mod r0_7_4 {}
+
 /// Release 0.7.3 (2022-01-15)
 ///
 /// This release has no functional changes.
@@ -198,7 +205,7 @@ pub mod r0_6_1 {}
 /// Release 0.6.0 (2020-04-05)
 ///
 /// * Introduced a new method [`os::unix::Library::get_singlethreaded`];
-/// * Added (untested) support for building when targetting Redox and Fuchsia;
+/// * Added (untested) support for building when targeting Redox and Fuchsia;
 /// * The APIs exposed by this library no longer panic and instead return an `Err` when it used
 ///   to panic.
 ///

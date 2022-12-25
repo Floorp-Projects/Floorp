@@ -307,7 +307,7 @@ impl fmt::Debug for Library {
             let mut buf =
                 mem::MaybeUninit::<[mem::MaybeUninit::<WCHAR>; 1024]>::uninit().assume_init();
             let len = libloaderapi::GetModuleFileNameW(self.0,
-                (&mut buf[..]).as_mut_ptr().cast(), 1024) as usize;
+                buf[..].as_mut_ptr().cast(), 1024) as usize;
             if len == 0 {
                 f.write_str(&format!("Library@{:p}", self.0))
             } else {
@@ -333,9 +333,7 @@ pub struct Symbol<T> {
 impl<T> Symbol<T> {
     /// Convert the loaded `Symbol` into a handle.
     pub fn into_raw(self) -> FARPROC {
-        let pointer = self.pointer;
-        mem::forget(self);
-        pointer
+        self.pointer
     }
 }
 
