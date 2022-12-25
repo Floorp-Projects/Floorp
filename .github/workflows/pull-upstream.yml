@@ -16,7 +16,7 @@ jobs:
 
     - name: Setup git
       run: |
-        echo ${{ secrets.PERSONAL_TOKEN_TYPELING1578 }} | gh auth login --with-token
+        echo ${{ secrets.PERSONAL_TOKEN_PULL_UPSTREAM_TYPELING1578 }} | gh auth login --with-token
         gh auth setup-git
         git config --global user.name github-actions
         git config --global user.email github-actions@github.com
