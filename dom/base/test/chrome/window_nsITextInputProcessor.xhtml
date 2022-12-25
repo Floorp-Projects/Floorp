@@ -28,6 +28,10 @@ var SimpleTest = window.arguments[0].SimpleTest;
 
 SimpleTest.waitForFocus(runTests, window);
 
+function getHTMLEditor(aWindow) {
+  return SpecialPowers.wrap(aWindow).docShell.editingSession?.getEditorForWindow(aWindow);
+}
+
 function ok(aCondition, aMessage)
 {
   SimpleTest.ok(aCondition, aMessage);
@@ -4463,6 +4467,85 @@ async function runQuerySelectionEventTestAtTextChangeNotification() {
   });
 }
 
+async function runIMEStateUpdateTests() {
+  const TIP = createTIP();
+  let notifications = [];
+  function callback(aTIP, aNotification)
+  {
+    if (aTIP != TIP) {
+      return true;
+    }
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-focus":
+      case "notify-blur":
+        notifications.push(aNotification.type);
+        break;
+    }
+    return true;
+  }
+
+  contenteditable.focus();
+  TIP.beginInputTransactionForTests(window, callback);
+  await new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(resolve)
+  )); // wait for flushing pending notifications if there is.
+
+  // run IMEStateManager::UpdateIMEState to disable IME
+  notifications = [];
+  const editor = getHTMLEditor(window);
+  editor.flags |= Ci.nsIEditor.eEditorReadonlyMask;
+  await new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(resolve)
+  )); // wait for flush pending notification even if handled asynchronously.
+  is(
+    notifications.length ? notifications[0] : undefined,
+    "notify-blur",
+    "runIMEStateUpdateTests: Making the HTMLEditor readonly should cause a blur notification"
+  );
+  is(
+    notifications.length,
+    1,
+    `runIMEStateUpdateTests: Making the HTMLEditor readonly should not cause any other notifications, but got ${
+      notifications.length > 1 ? notifications[1] : ""
+    } notification`
+  );
+  is(
+    SpecialPowers.getDOMWindowUtils(window)?.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    `runIMEStateUpdateTests: Making the HTMLEditor readonly should make IME disabled`
+  );
+
+  // run IMEStateManager::UpdateIMEState to enable IME
+  notifications = [];
+  editor.flags &= ~Ci.nsIEditor.eEditorReadonlyMask;
+  await new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(resolve)
+  )); // wait for flush pending notification even if handled asynchronously.
+  is(
+    notifications.length ? notifications[0] : undefined,
+    "notify-focus",
+    "runIMEStateUpdateTests: Making the HTMLEditor editable should cause a focus notification without blur notification"
+  );
+  is(
+    notifications.length,
+    1,
+    `runIMEStateUpdateTests: Making the HTMLEditor editable should not cause any other notifications, but got ${
+      notifications.length > 1 ? notifications[1] : ""
+    } notification`
+  );
+  is(
+    SpecialPowers.getDOMWindowUtils(window)?.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+    `runIMEStateUpdateTests: Making the HTMLEditor readonly should make IME disabled`
+  );
+}
+
 async function runTests()
 {
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
@@ -4480,6 +4563,7 @@ async function runTests()
   await runUnloadTests1();
   await runUnloadTests2();
   await runQuerySelectionEventTestAtTextChangeNotification();
+  await runIMEStateUpdateTests();
 
   finish();
 }
