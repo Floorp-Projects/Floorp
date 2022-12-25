@@ -1210,6 +1210,11 @@ criteria = "safe-to-deploy"
 version = "0.2.15"
 notes = "All code written or reviewed by Josh Stone."
 
+[[audits.num_cpus]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.13.1 -> 1.14.0"
+
 [[audits.ohttp]]
 who = "Dana Keeler <dkeeler@mozilla.com>"
 criteria = "safe-to-deploy"

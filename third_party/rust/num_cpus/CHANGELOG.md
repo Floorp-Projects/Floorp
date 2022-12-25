@@ -1,3 +1,10 @@
+## v1.14.0
+
+### Features
+
+- add support for cgroups v2
+- Skip reading files in Miri
+
 ## v1.13.1
 
 ### Fixes
