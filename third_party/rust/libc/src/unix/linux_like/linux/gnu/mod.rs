@@ -954,6 +954,8 @@ pub const NT_LWPSTATUS: ::c_int = 16;
 pub const NT_LWPSINFO: ::c_int = 17;
 pub const NT_PRFPXREG: ::c_int = 20;
 
+pub const ELFOSABI_ARM_AEABI: u8 = 64;
+
 // linux/keyctl.h
 pub const KEYCTL_DH_COMPUTE: u32 = 23;
 pub const KEYCTL_PKEY_QUERY: u32 = 24;
@@ -1024,6 +1026,9 @@ pub const STATX_ATTR_APPEND: ::c_int = 0x0020;
 pub const STATX_ATTR_NODUMP: ::c_int = 0x0040;
 pub const STATX_ATTR_ENCRYPTED: ::c_int = 0x0800;
 pub const STATX_ATTR_AUTOMOUNT: ::c_int = 0x1000;
+pub const STATX_ATTR_MOUNT_ROOT: ::c_int = 0x2000;
+pub const STATX_ATTR_VERITY: ::c_int = 0x00100000;
+pub const STATX_ATTR_DAX: ::c_int = 0x00200000;
 
 pub const SOMAXCONN: ::c_int = 4096;
 
@@ -1308,11 +1313,47 @@ extern "C" {
         buflen: ::size_t,
         result: *mut *mut ::group,
     ) -> ::c_int;
+    pub fn fgetpwent_r(
+        stream: *mut ::FILE,
+        pwd: *mut ::passwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut ::passwd,
+    ) -> ::c_int;
+    pub fn fgetgrent_r(
+        stream: *mut ::FILE,
+        grp: *mut ::group,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut ::group,
+    ) -> ::c_int;
 
     pub fn sethostid(hostid: ::c_long) -> ::c_int;
 
     pub fn memfd_create(name: *const ::c_char, flags: ::c_uint) -> ::c_int;
     pub fn mlock2(addr: *const ::c_void, len: ::size_t, flags: ::c_uint) -> ::c_int;
+
+    pub fn euidaccess(pathname: *const ::c_char, mode: ::c_int) -> ::c_int;
+    pub fn eaccess(pathname: *const ::c_char, mode: ::c_int) -> ::c_int;
+
+    pub fn asctime_r(tm: *const ::tm, buf: *mut ::c_char) -> *mut ::c_char;
+    pub fn ctime_r(timep: *const time_t, buf: *mut ::c_char) -> *mut ::c_char;
+
+    pub fn strftime(
+        s: *mut ::c_char,
+        max: ::size_t,
+        format: *const ::c_char,
+        tm: *const ::tm,
+    ) -> ::size_t;
+    pub fn strptime(s: *const ::c_char, format: *const ::c_char, tm: *mut ::tm) -> *mut ::c_char;
+
+    pub fn dirname(path: *mut ::c_char) -> *mut ::c_char;
+    /// POSIX version of `basename(3)`, defined in `libgen.h`.
+    #[link_name = "__xpg_basename"]
+    pub fn posix_basename(path: *mut ::c_char) -> *mut ::c_char;
+    /// GNU version of `basename(3)`, defined in `string.h`.
+    #[link_name = "basename"]
+    pub fn gnu_basename(path: *const ::c_char) -> *mut ::c_char;
 }
 
 extern "C" {

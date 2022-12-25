@@ -41,7 +41,7 @@ pub type tcflag_t = ::c_uint;
 pub type useconds_t = u32;
 
 cfg_if! {
-    if #[cfg(target_os = "horizon")] {
+    if #[cfg(any(target_os = "horizon", all(target_os = "espidf", espidf_time64)))] {
         pub type time_t = ::c_longlong;
     } else {
         pub type time_t = i32;

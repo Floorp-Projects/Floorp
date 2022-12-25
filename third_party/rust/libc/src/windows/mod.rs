@@ -509,6 +509,14 @@ extern "C" {
     pub fn aligned_malloc(size: size_t, alignment: size_t) -> *mut c_void;
     #[link_name = "_aligned_free"]
     pub fn aligned_free(ptr: *mut ::c_void);
+    #[link_name = "_putenv"]
+    pub fn putenv(envstring: *const ::c_char) -> ::c_int;
+    #[link_name = "_wputenv"]
+    pub fn wputenv(envstring: *const ::wchar_t) -> ::c_int;
+    #[link_name = "_putenv_s"]
+    pub fn putenv_s(envstring: *const ::c_char, value_string: *const ::c_char) -> ::errno_t;
+    #[link_name = "_wputenv_s"]
+    pub fn wputenv_s(envstring: *const ::wchar_t, value_string: *const ::wchar_t) -> ::errno_t;
 }
 
 extern "system" {

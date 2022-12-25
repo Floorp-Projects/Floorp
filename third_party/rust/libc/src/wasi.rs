@@ -39,6 +39,7 @@ pub type blkcnt_t = i64;
 pub type nfds_t = c_ulong;
 pub type wchar_t = i32;
 pub type nl_item = c_int;
+pub type __wasi_rights_t = u64;
 
 s_no_extra_traits! {
     #[repr(align(16))]
@@ -47,8 +48,6 @@ s_no_extra_traits! {
         priv_: [f64; 4]
     }
 }
-
-pub type __wasi_rights_t = u64;
 
 #[allow(missing_copy_implementations)]
 #[cfg_attr(feature = "extra_traits", derive(Debug))]

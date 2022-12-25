@@ -104,6 +104,15 @@ cfg_if! {
         pub const SO_DETACH_REUSEPORT_BPF: ::c_int = 68;
     }
 }
+
+cfg_if! {
+    if #[cfg(any(target_arch = "x86",
+                 target_arch = "x86_64",
+                 target_arch = "aarch64"))] {
+        pub const FICLONE: ::c_ulong = 0x40049409;
+        pub const FICLONERANGE: ::c_ulong = 0x4020940D;
+    }
+}
 // pub const SO_PREFER_BUSY_POLL: ::c_int = 69;
 // pub const SO_BUSY_POLL_BUDGET: ::c_int = 70;
 
