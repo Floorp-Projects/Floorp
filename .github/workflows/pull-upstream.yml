@@ -16,8 +16,6 @@ jobs:
 
     - name: Setup git 🪛
       run: |
-        echo ${{ secrets.PERSONAL_TOKEN_PULL_UPSTREAM }} | gh auth login --with-token
-        gh auth setup-git
         git config --global user.name github-actions
         git config --global user.email github-actions@github.com
 
@@ -42,7 +40,7 @@ jobs:
     - name: Fetch Floorp 📥
       run: |
         cd mozilla-unified
-        git remote add floorp https://github.com/${{ github.repository }}
+        git remote add floorp https://${GITHUB_ACTOR}:${{ github.token }}@github.com/${{ github.repository }}
         git fetch floorp
 
     - name: Push 🎁
