@@ -16,7 +16,7 @@ jobs:
 
     - name: Setup git
       run: |
-        gh auth login
+        gh auth login --with-token
         gh auth setup-git
         git config --global user.name github-actions
         git config --global user.email github-actions@github.com
