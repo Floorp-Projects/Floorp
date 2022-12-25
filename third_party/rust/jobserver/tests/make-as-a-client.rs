@@ -5,7 +5,6 @@ use std::net::{TcpListener, TcpStream};
 use std::process::Command;
 
 use jobserver::Client;
-use tempdir::TempDir;
 
 macro_rules! t {
     ($e:expr) => {
@@ -37,7 +36,7 @@ fn main() {
     }
 
     let c = t!(Client::new(1));
-    let td = TempDir::new("foo").unwrap();
+    let td = tempfile::tempdir().unwrap();
 
     let prog = env::var("MAKE").unwrap_or_else(|_| "make".to_string());
 

@@ -10,7 +10,6 @@ use std::thread;
 use futures::future::{self, Future};
 use futures::stream::{self, Stream};
 use jobserver::Client;
-use tempdir::TempDir;
 use tokio_core::reactor::Core;
 use tokio_process::CommandExt;
 
@@ -128,7 +127,7 @@ fn main() {
             None => true,
         })
         .map(|test| {
-            let td = t!(TempDir::new("foo"));
+            let td = t!(tempfile::tempdir());
             let makefile = format!(
                 "\
 all: export TEST_TO_RUN={}

@@ -170,6 +170,26 @@ impl Client {
         self.name.clone()
     }
 
+    pub fn available(&self) -> io::Result<usize> {
+        // Can't read value of a semaphore on Windows, so
+        // try to acquire without sleeping, since we can find out the
+        // old value on release. If acquisiton fails, then available is 0.
+        unsafe {
+            let r = WaitForSingleObject(self.sem.0, 0);
+            if r != WAIT_OBJECT_0 {
+                Ok(0)
+            } else {
+                let mut prev: LONG = 0;
+                let r = ReleaseSemaphore(self.sem.0, 1, &mut prev);
+                if r != 0 {
+                    Ok(prev as usize + 1)
+                } else {
+                    Err(io::Error::last_os_error())
+                }
+            }
+        }
+    }
+
     pub fn configure(&self, _cmd: &mut Command) {
         // nothing to do here, we gave the name of our semaphore to the
         // child above

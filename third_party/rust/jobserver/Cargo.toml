@@ -3,21 +3,23 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "jobserver"
-version = "0.1.24"
+version = "0.1.25"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
-description = "An implementation of the GNU make jobserver for Rust\n"
+description = """
+An implementation of the GNU make jobserver for Rust
+"""
 homepage = "https://github.com/alexcrichton/jobserver-rs"
 documentation = "https://docs.rs/jobserver"
+readme = "README.md"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/alexcrichton/jobserver-rs"
 
@@ -43,19 +45,21 @@ harness = false
 [[test]]
 name = "helper"
 path = "tests/helper.rs"
+
 [dev-dependencies.futures]
 version = "0.1"
 
 [dev-dependencies.num_cpus]
 version = "1.0"
 
-[dev-dependencies.tempdir]
-version = "0.3"
+[dev-dependencies.tempfile]
+version = "3"
 
 [dev-dependencies.tokio-core]
 version = "0.1"
 
 [dev-dependencies.tokio-process]
 version = "0.2"
+
 [target."cfg(unix)".dependencies.libc]
 version = "0.2.50"
