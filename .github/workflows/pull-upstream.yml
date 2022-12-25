@@ -9,19 +9,19 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-    - name: Setup
+    - name: Setup 🪛
       run: |
         export DATE_STR=`date +"%Y%m%d%I%M%S"`
         echo "DATE_STR=$DATE_STR" >> $GITHUB_ENV
 
-    - name: Setup git
+    - name: Setup git 🪛
       run: |
         echo ${{ secrets.PERSONAL_TOKEN_PULL_UPSTREAM }} | gh auth login --with-token
         gh auth setup-git
         git config --global user.name github-actions
         git config --global user.email github-actions@github.com
 
-    - name: Setup git-cinnabar
+    - name: Setup git-cinnabar 🪛
       run: |
         cd ~
         git clone https://github.com/glandium/git-cinnabar
@@ -31,7 +31,7 @@ jobs:
         cd ~
         git cinnabar download
 
-    - name: Clone mozilla-unified
+    - name: Clone mozilla-unified 🧬
       run: |
         export PATH=~/git-cinnabar:$PATH
         git clone hg::https://hg.mozilla.org/mozilla-unified
@@ -39,13 +39,13 @@ jobs:
         git rev-list --count origin/bookmarks/esr102
         git checkout -b upstream-esr102-${DATE_STR} origin/bookmarks/esr102
 
-    - name: Fetch Floorp 🧬
+    - name: Fetch Floorp 📥
       run: |
         cd mozilla-unified
         git remote add floorp https://github.com/${{ github.repository }}
         git fetch floorp
 
-    - name: Push
+    - name: Push 🎁
       run: |
         cd mozilla-unified
         git push floorp upstream-esr102-${DATE_STR}
