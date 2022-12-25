@@ -30,7 +30,7 @@
 //!
 //! ![performance](https://raw.githubusercontent.com/dtolnay/itoa/master/performance.png)
 
-#![doc(html_root_url = "https://docs.rs/itoa/1.0.3")]
+#![doc(html_root_url = "https://docs.rs/itoa/1.0.5")]
 #![no_std]
 #![allow(
     clippy::cast_lossless,
@@ -43,6 +43,8 @@ mod udiv128;
 
 use core::mem::{self, MaybeUninit};
 use core::{ptr, slice, str};
+#[cfg(feature = "no-panic")]
+use no_panic::no_panic;
 
 /// A correctly sized stack allocation for the formatted integer to be written
 /// into.
@@ -76,6 +78,7 @@ impl Buffer {
     /// This is a cheap operation; you don't need to worry about reusing buffers
     /// for efficiency.
     #[inline]
+    #[cfg_attr(feature = "no-panic", no_panic)]
     pub fn new() -> Buffer {
         let bytes = [MaybeUninit::<u8>::uninit(); I128_MAX_LEN];
         Buffer { bytes }
@@ -83,6 +86,7 @@ impl Buffer {
 
     /// Print an integer into this buffer and return a reference to its string
     /// representation within the buffer.
+    #[cfg_attr(feature = "no-panic", no_panic)]
     pub fn format<I: Integer>(&mut self, i: I) -> &str {
         i.write(unsafe {
             &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
@@ -122,6 +126,7 @@ macro_rules! impl_Integer {
 
             #[allow(unused_comparisons)]
             #[inline]
+            #[cfg_attr(feature = "no-panic", no_panic)]
             fn write(self, buf: &mut [MaybeUninit<u8>; $max_len]) -> &str {
                 let is_nonnegative = self >= 0;
                 let mut n = if is_nonnegative {
@@ -223,6 +228,7 @@ macro_rules! impl_Integer128 {
 
             #[allow(unused_comparisons)]
             #[inline]
+            #[cfg_attr(feature = "no-panic", no_panic)]
             fn write(self, buf: &mut [MaybeUninit<u8>; $max_len]) -> &str {
                 let is_nonnegative = self >= 0;
                 let n = if is_nonnegative {
