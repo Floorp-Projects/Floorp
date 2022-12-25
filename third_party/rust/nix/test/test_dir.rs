@@ -19,7 +19,7 @@ fn flags() -> OFlag {
 #[allow(clippy::unnecessary_sort_by)] // False positive
 fn read() {
     let tmp = tempdir().unwrap();
-    File::create(&tmp.path().join("foo")).unwrap();
+    File::create(tmp.path().join("foo")).unwrap();
     std::os::unix::fs::symlink("foo", tmp.path().join("bar")).unwrap();
     let mut dir = Dir::open(tmp.path(), flags(), Mode::empty()).unwrap();
     let mut entries: Vec<_> = dir.iter().map(|e| e.unwrap()).collect();

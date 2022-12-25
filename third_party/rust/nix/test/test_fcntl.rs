@@ -64,7 +64,7 @@ fn test_renameat() {
     let old_dirfd =
         open(old_dir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let old_path = old_dir.path().join("old");
-    File::create(&old_path).unwrap();
+    File::create(old_path).unwrap();
     let new_dir = tempfile::tempdir().unwrap();
     let new_dirfd =
         open(new_dir.path(), OFlag::empty(), Mode::empty()).unwrap();
@@ -94,7 +94,7 @@ fn test_renameat2_behaves_like_renameat_with_no_flags() {
     let old_dirfd =
         open(old_dir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let old_path = old_dir.path().join("old");
-    File::create(&old_path).unwrap();
+    File::create(old_path).unwrap();
     let new_dir = tempfile::tempdir().unwrap();
     let new_dirfd =
         open(new_dir.path(), OFlag::empty(), Mode::empty()).unwrap();
@@ -186,12 +186,12 @@ fn test_renameat2_noreplace() {
     let old_dirfd =
         open(old_dir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let old_path = old_dir.path().join("old");
-    File::create(&old_path).unwrap();
+    File::create(old_path).unwrap();
     let new_dir = tempfile::tempdir().unwrap();
     let new_dirfd =
         open(new_dir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let new_path = new_dir.path().join("new");
-    File::create(&new_path).unwrap();
+    File::create(new_path).unwrap();
     assert_eq!(
         renameat2(
             Some(old_dirfd),
@@ -216,7 +216,7 @@ fn test_readlink() {
     let src = tempdir.path().join("a");
     let dst = tempdir.path().join("b");
     println!("a: {:?}, b: {:?}", &src, &dst);
-    fs::symlink(&src.as_path(), &dst.as_path()).unwrap();
+    fs::symlink(src.as_path(), dst.as_path()).unwrap();
     let dirfd = open(tempdir.path(), OFlag::empty(), Mode::empty()).unwrap();
     let expected_dir = src.to_str().unwrap();
 

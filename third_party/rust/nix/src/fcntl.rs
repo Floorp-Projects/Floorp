@@ -809,9 +809,7 @@ pub fn fspacectl_all(fd: RawFd, offset: libc::off_t, len: libc::off_t)
                 0,                      // No flags are currently supported
                 &mut rqsr
         )};
-        if let Err(e) = Errno::result(res) {
-            return Err(e);
-        }
+        Errno::result(res)?;
     }
     Ok(())
 }

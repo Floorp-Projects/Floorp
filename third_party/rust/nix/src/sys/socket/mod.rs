@@ -5,7 +5,7 @@ use cfg_if::cfg_if;
 use crate::{Result, errno::Errno};
 use libc::{self, c_void, c_int, iovec, socklen_t, size_t,
         CMSG_FIRSTHDR, CMSG_NXTHDR, CMSG_DATA, CMSG_LEN};
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::{mem, ptr, slice};
 use std::os::unix::io::RawFd;
 #[cfg(feature = "net")]
@@ -120,6 +120,24 @@ pub enum SockType {
     /// guarantee ordering.
     #[cfg(not(any(target_os = "haiku")))]
     Rdm = libc::SOCK_RDM,
+}
+// The TryFrom impl could've been derived using libc_enum!.  But for
+// backwards-compatibility with Nix-0.25.0 we manually implement it, so as to
+// keep the old variant names.
+impl TryFrom<i32> for SockType {
+    type Error = crate::Error;
+
+    fn try_from(x: i32) -> Result<Self> {
+        match x {
+            libc::SOCK_STREAM => Ok(Self::Stream),
+            libc::SOCK_DGRAM => Ok(Self::Datagram),
+            libc::SOCK_SEQPACKET => Ok(Self::SeqPacket),
+            libc::SOCK_RAW => Ok(Self::Raw),
+            #[cfg(not(any(target_os = "haiku")))]
+            libc::SOCK_RDM => Ok(Self::Rdm),
+            _ => Err(Errno::EINVAL)
+        }
+    }
 }
 
 /// Constants used in [`socket`](fn.socket.html) and [`socketpair`](fn.socketpair.html)
@@ -839,6 +857,8 @@ impl ControlMessageOwned {
     unsafe fn decode_from(header: &cmsghdr) -> ControlMessageOwned
     {
         let p = CMSG_DATA(header);
+        // The cast is not unnecessary on all platforms.
+        #[allow(clippy::unnecessary_cast)]
         let len = header as *const _ as usize + header.cmsg_len as usize
             - p as usize;
         match (header.cmsg_level, header.cmsg_type) {
@@ -1459,7 +1479,7 @@ pub fn sendmsg<S>(fd: RawFd, iov: &[IoSlice<'_>], cmsgs: &[ControlMessage],
     // because subsequent code will not clear the padding bytes.
     let mut cmsg_buffer = vec![0u8; capacity];
 
-    let mhdr = pack_mhdr_to_send(&mut cmsg_buffer[..], &iov, &cmsgs, addr);
+    let mhdr = pack_mhdr_to_send(&mut cmsg_buffer[..], iov, cmsgs, addr);
 
     let ret = unsafe { libc::sendmsg(fd, &mhdr, flags.bits()) };
 
@@ -1643,7 +1663,7 @@ pub fn recvmmsg<'a, I, S>(
             }
         );
 
-        (msg_controllen as usize, &mut d.cmsg_buffer)
+        (msg_controllen, &mut d.cmsg_buffer)
     }).collect();
 
     let timeout = if let Some(mut t) = timeout {
@@ -1662,6 +1682,8 @@ pub fn recvmmsg<'a, I, S>(
         .zip(addresses.iter().map(|addr| unsafe{addr.assume_init()}))
         .zip(results.into_iter())
         .map(|((mmsghdr, address), (msg_controllen, cmsg_buffer))| {
+            // The cast is not unnecessary on all platforms.
+            #[allow(clippy::unnecessary_cast)]
             unsafe {
                 read_mhdr(
                     mmsghdr.msg_hdr,
@@ -1675,15 +1697,17 @@ pub fn recvmmsg<'a, I, S>(
         .collect())
 }
 
-unsafe fn read_mhdr<'a, 'b, S>(
+unsafe fn read_mhdr<'a, S>(
     mhdr: msghdr,
     r: isize,
     msg_controllen: usize,
     address: S,
-    cmsg_buffer: &'a mut Option<&'b mut Vec<u8>>
-) -> RecvMsg<'b, S>
+    cmsg_buffer: &mut Option<&'a mut Vec<u8>>
+) -> RecvMsg<'a, S>
     where S: SockaddrLike
 {
+    // The cast is not unnecessary on all platforms.
+    #[allow(clippy::unnecessary_cast)]
     let cmsghdr = {
         if mhdr.msg_controllen > 0 {
             // got control message(s)
@@ -2131,7 +2155,7 @@ pub fn sockaddr_storage_to_addr(
     match c_int::from(addr.ss_family) {
         #[cfg(feature = "net")]
         libc::AF_INET => {
-            assert!(len as usize >= mem::size_of::<sockaddr_in>());
+            assert!(len >= mem::size_of::<sockaddr_in>());
             let sin = unsafe {
                 *(addr as *const sockaddr_storage as *const sockaddr_in)
             };
@@ -2139,7 +2163,7 @@ pub fn sockaddr_storage_to_addr(
         }
         #[cfg(feature = "net")]
         libc::AF_INET6 => {
-            assert!(len as usize >= mem::size_of::<sockaddr_in6>());
+            assert!(len >= mem::size_of::<sockaddr_in6>());
             let sin6 = unsafe {
                 *(addr as *const _ as *const sockaddr_in6)
             };

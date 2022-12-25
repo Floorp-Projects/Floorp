@@ -28,6 +28,7 @@ feature! {
 /// won't send any signal.
 ///
 /// [`pthread_kill(3)`]: https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_kill.html
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[cfg(not(target_os = "redox"))]
 pub fn pthread_kill<T>(thread: Pthread, signal: T) -> Result<()>
     where T: Into<Option<crate::sys::signal::Signal>>

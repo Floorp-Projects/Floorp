@@ -12,12 +12,12 @@ fn compile_kernel_module() -> (PathBuf, String, TempDir) {
 
     copy(
         "test/test_kmod/hello_mod/hello.c",
-        &tmp_dir.path().join("hello.c"),
+        tmp_dir.path().join("hello.c"),
     )
     .expect("unable to copy hello.c to temporary build directory");
     copy(
         "test/test_kmod/hello_mod/Makefile",
-        &tmp_dir.path().join("Makefile"),
+        tmp_dir.path().join("Makefile"),
     )
     .expect("unable to copy Makefile to temporary build directory");
 

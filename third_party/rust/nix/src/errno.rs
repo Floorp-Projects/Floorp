@@ -47,7 +47,7 @@ fn clear() {
 
 /// Returns the platform-specific value of errno
 pub fn errno() -> i32 {
-    unsafe { (*errno_location()) as i32 }
+    unsafe { *errno_location() }
 }
 
 impl Errno {

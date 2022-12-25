@@ -1139,6 +1139,11 @@ criteria = "safe-to-deploy"
 delta = "0.15.0 -> 0.25.0"
 notes = "Plenty of new bindings but also several important bug fixes (including buffer overflows). New unsafe sections are restricted to wrappers and are no more dangerous than calling the C functions."
 
+[[audits.nix]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.25.0 -> 0.25.1"
+
 [[audits.nss-gk-api]]
 who = "John M. Schanck <jschanck@mozilla.com>"
 criteria = "safe-to-deploy"

@@ -903,7 +903,7 @@ fn test_linkat_file() {
     let newfilepath = tempdir.path().join(newfilename);
 
     // Create file
-    File::create(&oldfilepath).unwrap();
+    File::create(oldfilepath).unwrap();
 
     // Get file descriptor for base directory
     let dirfd =
@@ -936,7 +936,7 @@ fn test_linkat_olddirfd_none() {
     let newfilepath = tempdir_newfile.path().join(newfilename);
 
     // Create file
-    File::create(&oldfilepath).unwrap();
+    File::create(oldfilepath).unwrap();
 
     // Get file descriptor for base directory of new file
     let dirfd = fcntl::open(
@@ -973,7 +973,7 @@ fn test_linkat_newdirfd_none() {
     let newfilepath = tempdir_newfile.path().join(newfilename);
 
     // Create file
-    File::create(&oldfilepath).unwrap();
+    File::create(oldfilepath).unwrap();
 
     // Get file descriptor for base directory of old file
     let dirfd = fcntl::open(
@@ -1101,7 +1101,7 @@ fn test_unlinkat_dir_noremovedir() {
     let dirpath = tempdir.path().join(dirname);
 
     // Create dir
-    DirBuilder::new().recursive(true).create(&dirpath).unwrap();
+    DirBuilder::new().recursive(true).create(dirpath).unwrap();
 
     // Get file descriptor for base directory
     let dirfd =

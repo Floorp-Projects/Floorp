@@ -30,6 +30,8 @@ impl SysInfo {
     }
 
     /// Returns the time since system boot.
+    // The cast is not unnecessary on all platforms.
+    #[allow(clippy::unnecessary_cast)]
     pub fn uptime(&self) -> Duration {
         // Truncate negative values to 0
         Duration::from_secs(cmp::max(self.0.uptime, 0) as u64)
@@ -64,6 +66,8 @@ impl SysInfo {
         self.scale_mem(self.0.freeram)
     }
 
+    // The cast is not unnecessary on all platforms.
+    #[allow(clippy::unnecessary_cast)]
     fn scale_mem(&self, units: mem_blocks_t) -> u64 {
         units as u64 * self.0.mem_unit as u64
     }
