@@ -234,9 +234,6 @@ pref("font.name-list.sans-serif.ja", "Noto Sans JP, Meiryo, Yu Gothic, MS PGothi
 pref("font.name-list.monospace.ja", "Noto Sans JP, MS Gothic, MS Mincho, Meiryo, Yu Gothic, Yu Mincho, MS PGothic, MS PMincho");
 #endif
 
-// Windows ネイティブ通知を使用する
-pref("alerts.useSystemBackend", true);
-
 // 多少のパフォーマンス改善
 pref("gfx.canvas.accelerated", true);
 pref("gfx.webrender.all", true);

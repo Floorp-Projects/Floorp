@@ -35,6 +35,25 @@ let isUpdated = false;
 }
 
 
+// Optimize the notification function.
+{
+    let isNativeNotificationEnabled = false;
+    let isWinNotificationServerEnabled = false;
+    if (AppConstants.platform === "win") {
+        let version = Services.sysinfo.getProperty("version");
+        if (version === "10.0") {
+            isNativeNotificationEnabled = true;
+            isWinNotificationServerEnabled = true;
+        }
+    } else {
+        isNativeNotificationEnabled = true;
+    }
+    let prefs = Services.prefs.getDefaultBranch(null);
+    prefs.setBoolPref("alerts.useSystemBackend", isNativeNotificationEnabled);
+    prefs.setBoolPref("alerts.useSystemBackend.windows.notificationserver.enabled", isWinNotificationServerEnabled);
+}
+
+
 async function onFinalUIStartup() {
     Services.obs.removeObserver(onFinalUIStartup, "final-ui-startup");
 
