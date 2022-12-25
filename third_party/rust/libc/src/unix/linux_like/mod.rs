@@ -231,11 +231,11 @@ s_no_extra_traits! {
 
     pub struct sockaddr_storage {
         pub ss_family: sa_family_t,
-        __ss_align: ::size_t,
         #[cfg(target_pointer_width = "32")]
-        __ss_pad2: [u8; 128 - 2 * 4],
+        __ss_pad2: [u8; 128 - 2 - 4],
         #[cfg(target_pointer_width = "64")]
-        __ss_pad2: [u8; 128 - 2 * 8],
+        __ss_pad2: [u8; 128 - 2 - 8],
+        __ss_align: ::size_t,
     }
 
     pub struct utsname {
@@ -1434,6 +1434,7 @@ cfg_if! {
         pub const UDF_SUPER_MAGIC: ::c_long = 0x15013346;
         pub const USBDEVICE_SUPER_MAGIC: ::c_long = 0x00009fa2;
         pub const XENFS_SUPER_MAGIC: ::c_long = 0xabba1974;
+        pub const NSFS_MAGIC: ::c_long = 0x6e736673;
     } else if #[cfg(target_arch = "s390x")] {
         pub const ADFS_SUPER_MAGIC: ::c_uint = 0x0000adf5;
         pub const AFFS_SUPER_MAGIC: ::c_uint = 0x0000adff;
@@ -1487,6 +1488,7 @@ cfg_if! {
         pub const UDF_SUPER_MAGIC: ::c_uint = 0x15013346;
         pub const USBDEVICE_SUPER_MAGIC: ::c_uint = 0x00009fa2;
         pub const XENFS_SUPER_MAGIC: ::c_uint = 0xabba1974;
+        pub const NSFS_MAGIC: ::c_uint = 0x6e736673;
     }
 }
 

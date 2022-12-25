@@ -329,6 +329,8 @@ cfg_if! {
             cfg(target_feature = "crt-static"))]
         #[link(name = "gcc", kind = "static", modifiers = "-bundle",
             cfg(target_feature = "crt-static"))]
+        #[link(name = "c", kind = "static", modifiers = "-bundle",
+            cfg(target_feature = "crt-static"))]
         #[link(name = "util", cfg(not(target_feature = "crt-static")))]
         #[link(name = "rt", cfg(not(target_feature = "crt-static")))]
         #[link(name = "pthread", cfg(not(target_feature = "crt-static")))]
@@ -356,6 +358,7 @@ cfg_if! {
         extern {}
     } else if #[cfg(any(target_os = "macos",
                         target_os = "ios",
+                        target_os = "tvos",
                         target_os = "watchos",
                         target_os = "android",
                         target_os = "openbsd"))] {
@@ -1030,7 +1033,12 @@ extern "C" {
     pub fn getrusage(resource: ::c_int, usage: *mut rusage) -> ::c_int;
 
     #[cfg_attr(
-        any(target_os = "macos", target_os = "ios", target_os = "watchos"),
+        any(
+            target_os = "macos",
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos"
+        ),
         link_name = "realpath$DARWIN_EXTSN"
     )]
     pub fn realpath(pathname: *const ::c_char, resolved: *mut ::c_char) -> *mut ::c_char;
@@ -1197,7 +1205,12 @@ extern "C" {
         link_name = "__res_init"
     )]
     #[cfg_attr(
-        any(target_os = "macos", target_os = "ios", target_os = "watchos"),
+        any(
+            target_os = "macos",
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos"
+        ),
         link_name = "res_9_init"
     )]
     pub fn res_init() -> ::c_int;
@@ -1293,7 +1306,7 @@ extern "C" {
     #[cfg_attr(target_os = "netbsd", link_name = "__select50")]
     pub fn select(
         nfds: ::c_int,
-        readfs: *mut fd_set,
+        readfds: *mut fd_set,
         writefds: *mut fd_set,
         errorfds: *mut fd_set,
         timeout: *mut timeval,
@@ -1345,7 +1358,7 @@ extern "C" {
     #[cfg_attr(target_os = "netbsd", link_name = "__pselect50")]
     pub fn pselect(
         nfds: ::c_int,
-        readfs: *mut fd_set,
+        readfds: *mut fd_set,
         writefds: *mut fd_set,
         errorfds: *mut fd_set,
         timeout: *const timespec,
@@ -1483,6 +1496,7 @@ cfg_if! {
         pub use self::linux_like::*;
     } else if #[cfg(any(target_os = "macos",
                         target_os = "ios",
+                        target_os = "tvos",
                         target_os = "watchos",
                         target_os = "freebsd",
                         target_os = "dragonfly",

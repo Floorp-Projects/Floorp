@@ -1785,6 +1785,23 @@ pub const BIOCSDLT: ::c_ulong = 0x80044278;
 pub const BIOCGSEESENT: ::c_ulong = 0x40044276;
 pub const BIOCSSEESENT: ::c_ulong = 0x80044277;
 
+// <sys/fstypes.h>
+pub const MNT_UNION: ::c_int = 0x00000020;
+pub const MNT_NOCOREDUMP: ::c_int = 0x00008000;
+pub const MNT_RELATIME: ::c_int = 0x00020000;
+pub const MNT_IGNORE: ::c_int = 0x00100000;
+pub const MNT_NFS4ACLS: ::c_int = 0x00200000;
+pub const MNT_DISCARD: ::c_int = 0x00800000;
+pub const MNT_EXTATTR: ::c_int = 0x01000000;
+pub const MNT_LOG: ::c_int = 0x02000000;
+pub const MNT_NOATIME: ::c_int = 0x04000000;
+pub const MNT_AUTOMOUNTED: ::c_int = 0x10000000;
+pub const MNT_SYMPERM: ::c_int = 0x20000000;
+pub const MNT_NODEVMTIME: ::c_int = 0x40000000;
+pub const MNT_SOFTDEP: ::c_int = 0x80000000;
+pub const MNT_POSIX1EACLS: ::c_int = 0x00000800;
+pub const MNT_ACLS: ::c_int = MNT_POSIX1EACLS;
+
 //<sys/timex.h>
 pub const NTP_API: ::c_int = 4;
 pub const MAXPHASE: ::c_long = 500000000;
@@ -2271,6 +2288,39 @@ pub const LSZOMB: ::c_int = 5;
 pub const LSONPROC: ::c_int = 7;
 pub const LSSUSPENDED: ::c_int = 8;
 
+pub const _REG_RDI: ::c_int = 0;
+pub const _REG_RSI: ::c_int = 1;
+pub const _REG_RDX: ::c_int = 2;
+pub const _REG_RCX: ::c_int = 3;
+pub const _REG_R8: ::c_int = 4;
+pub const _REG_R9: ::c_int = 5;
+pub const _REG_R10: ::c_int = 6;
+pub const _REG_R11: ::c_int = 7;
+pub const _REG_R12: ::c_int = 8;
+pub const _REG_R13: ::c_int = 9;
+pub const _REG_R14: ::c_int = 10;
+pub const _REG_R15: ::c_int = 11;
+pub const _REG_RBP: ::c_int = 12;
+pub const _REG_RBX: ::c_int = 13;
+pub const _REG_RAX: ::c_int = 14;
+pub const _REG_GS: ::c_int = 15;
+pub const _REG_FS: ::c_int = 16;
+pub const _REG_ES: ::c_int = 17;
+pub const _REG_DS: ::c_int = 18;
+pub const _REG_TRAPNO: ::c_int = 19;
+pub const _REG_ERR: ::c_int = 20;
+pub const _REG_RIP: ::c_int = 21;
+pub const _REG_CS: ::c_int = 22;
+pub const _REG_RFLAGS: ::c_int = 23;
+pub const _REG_RSP: ::c_int = 24;
+pub const _REG_SS: ::c_int = 25;
+
+// sys/xattr.h
+pub const XATTR_CREATE: ::c_int = 0x01;
+pub const XATTR_REPLACE: ::c_int = 0x02;
+// sys/extattr.h
+pub const EXTATTR_NAMESPACE_EMPTY: ::c_int = 0;
+
 const_fn! {
     {const} fn _ALIGN(p: usize) -> usize {
         (p + _ALIGNBYTES) & !_ALIGNBYTES
@@ -2351,6 +2401,16 @@ safe_f! {
     pub {const} fn WIFCONTINUED(status: ::c_int) -> bool {
         status == 0xffff
     }
+
+    pub {const} fn makedev(major: ::c_uint, minor: ::c_uint) -> ::dev_t {
+        let major = major as ::dev_t;
+        let minor = minor as ::dev_t;
+        let mut dev = 0;
+        dev |= (major << 8) & 0x000ff00;
+        dev |= (minor << 12) & 0xfff00000;
+        dev |= minor & 0xff;
+        dev
+    }
 }
 
 extern "C" {
@@ -2399,6 +2459,24 @@ extern "C" {
         envp: *const *const ::c_char,
     ) -> ::c_int;
 
+    pub fn extattr_list_fd(
+        fd: ::c_int,
+        attrnamespace: ::c_int,
+        data: *mut ::c_void,
+        nbytes: ::size_t,
+    ) -> ::ssize_t;
+    pub fn extattr_list_file(
+        path: *const ::c_char,
+        attrnamespace: ::c_int,
+        data: *mut ::c_void,
+        nbytes: ::size_t,
+    ) -> ::ssize_t;
+    pub fn extattr_list_link(
+        path: *const ::c_char,
+        attrnamespace: ::c_int,
+        data: *mut ::c_void,
+        nbytes: ::size_t,
+    ) -> ::ssize_t;
     pub fn extattr_delete_fd(
         fd: ::c_int,
         attrnamespace: ::c_int,

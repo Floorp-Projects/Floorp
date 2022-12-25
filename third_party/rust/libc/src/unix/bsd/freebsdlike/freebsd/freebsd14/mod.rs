@@ -468,6 +468,19 @@ pub const DOMAINSET_POLICY_INTERLEAVE: ::c_int = 4;
 
 pub const MINCORE_SUPER: ::c_int = 0x60;
 
+safe_f! {
+    pub {const} fn makedev(major: ::c_uint, minor: ::c_uint) -> ::dev_t {
+        let major = major as ::dev_t;
+        let minor = minor as ::dev_t;
+        let mut dev = 0;
+        dev |= ((major & 0xffffff00) as dev_t) << 32;
+        dev |= ((major & 0x000000ff) as dev_t) << 8;
+        dev |= ((minor & 0x0000ff00) as dev_t) << 24;
+        dev |= ((minor & 0xffff00ff) as dev_t) << 0;
+        dev
+    }
+}
+
 extern "C" {
     pub fn setgrent();
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int) -> ::c_int;
@@ -514,14 +527,8 @@ extern "C" {
         policy: ::c_int,
     ) -> ::c_int;
 
-    pub fn copy_file_range(
-        infd: ::c_int,
-        inoffp: *mut ::off_t,
-        outfd: ::c_int,
-        outoffp: *mut ::off_t,
-        len: ::size_t,
-        flags: ::c_uint,
-    ) -> ::ssize_t;
+    pub fn dirname(path: *mut ::c_char) -> *mut ::c_char;
+    pub fn basename(path: *mut ::c_char) -> *mut ::c_char;
 }
 
 #[link(name = "kvm")]
