@@ -23,7 +23,16 @@ jobs:
         git clone https://github.com/glandium/git-cinnabar
         cd git-cinnabar
         git checkout 0.5.11
-        make
+        export PATH=~/git-cinnabar:$PATH
+        cd ~
+        git cinnabar download
+
+    - name: Clone mozilla-unified
+      run: |
+        export PATH=~/git-cinnabar:$PATH
+        git clone hg::https://hg.mozilla.org/mozilla-unified
+        cd mozilla-unified
+        git rev-list --count origin/bookmarks/esr102
 
     - uses: actions/checkout@v3
       name: Clone 🧬
