@@ -4,10 +4,12 @@ use std::fmt;
 
 use super::adaptors::{PutBack, put_back};
 use crate::either_or_both::EitherOrBoth;
+#[cfg(doc)]
+use crate::Itertools;
 
 /// Return an iterator adaptor that merge-joins items from the two base iterators in ascending order.
 ///
-/// See [`.merge_join_by()`](crate::Itertools::merge_join_by) for more information.
+/// [`IntoIterator`] enabled version of [`Itertools::merge_join_by`].
 pub fn merge_join_by<I, J, F>(left: I, right: J, cmp_fn: F)
     -> MergeJoinBy<I::IntoIter, J::IntoIter, F>
     where I: IntoIterator,

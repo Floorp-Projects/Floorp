@@ -80,7 +80,7 @@ fn sift_down<T, S>(heap: &mut [T], index: usize, mut less_than: S)
     // that wouldn't be predicted if present
     while child + 1 < heap.len() {
         // pick the smaller of the two children
-        // use aritmethic to avoid an unpredictable branch
+        // use arithmetic to avoid an unpredictable branch
         child += less_than(&heap[child+1], &heap[child]) as usize;
 
         // sift down is done if we are already in order
@@ -104,7 +104,6 @@ fn sift_down<T, S>(heap: &mut [T], index: usize, mut less_than: S)
 /// Iterator element type is `I::Item`.
 ///
 /// See [`.kmerge()`](crate::Itertools::kmerge) for more information.
-#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub type KMerge<I> = KMergeBy<I, KMergeByLt>;
 
 pub trait KMergePredicate<T> {
@@ -129,7 +128,7 @@ impl<T, F: FnMut(&T, &T)->bool> KMergePredicate<T> for F {
 /// Create an iterator that merges elements of the contained iterators using
 /// the ordering function.
 ///
-/// Equivalent to `iterable.into_iter().kmerge()`.
+/// [`IntoIterator`] enabled version of [`Itertools::kmerge`].
 ///
 /// ```
 /// use itertools::kmerge;
@@ -170,7 +169,7 @@ impl<I, F> fmt::Debug for KMergeBy<I, F>
 
 /// Create an iterator that merges elements of the contained iterators.
 ///
-/// Equivalent to `iterable.into_iter().kmerge_by(less_than)`.
+/// [`IntoIterator`] enabled version of [`Itertools::kmerge_by`].
 pub fn kmerge_by<I, F>(iterable: I, mut less_than: F)
     -> KMergeBy<<I::Item as IntoIterator>::IntoIter, F>
     where I: IntoIterator,
@@ -214,6 +213,7 @@ impl<I, F> Iterator for KMergeBy<I, F>
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
+        #[allow(deprecated)] //TODO: once msrv hits 1.51. replace `fold1` with `reduce`
         self.heap.iter()
                  .map(|i| i.size_hint())
                  .fold1(size_hint::add)

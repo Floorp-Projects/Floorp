@@ -18,5 +18,6 @@ pub fn concat<I>(iterable: I) -> I::Item
     where I: IntoIterator,
           I::Item: Extend<<<I as IntoIterator>::Item as IntoIterator>::Item> + IntoIterator + Default
 {
-    iterable.into_iter().fold1(|mut a, b| { a.extend(b); a }).unwrap_or_else(<_>::default)
+    #[allow(deprecated)] //TODO: once msrv hits 1.51. replace `fold1` with `reduce`
+    iterable.into_iter().fold1(|mut a, b| { a.extend(b); a }).unwrap_or_default()
 }

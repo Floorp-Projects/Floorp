@@ -64,7 +64,7 @@ where
         // If this is the first iteration, return early
         if self.first {
             // In empty edge cases, stop iterating immediately
-            return if self.indices.len() != 0 && !self.pool.get_next() {
+            return if !(self.indices.is_empty() || self.pool.get_next()) {
                 None
             // Otherwise, yield the initial state
             } else {
@@ -92,7 +92,7 @@ where
                 // We need to update the rightmost non-max value
                 // and all those to the right
                 for indices_index in increment_from..self.indices.len() {
-                    self.indices[indices_index] = increment_value
+                    self.indices[indices_index] = increment_value;
                 }
                 Some(self.current())
             }

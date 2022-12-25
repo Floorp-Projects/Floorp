@@ -23,7 +23,7 @@ where
     debug_fmt_fields!(PadUsing, iter, min, pos);
 }
 
-/// Create a new **PadUsing** iterator.
+/// Create a new `PadUsing` iterator.
 pub fn pad_using<I, F>(iter: I, min: usize, filler: F) -> PadUsing<I, F>
     where I: Iterator,
           F: FnMut(usize) -> I::Item

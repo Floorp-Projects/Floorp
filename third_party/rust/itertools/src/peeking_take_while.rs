@@ -90,7 +90,7 @@ where
     debug_fmt_fields!(PeekingTakeWhile, iter);
 }
 
-/// Create a PeekingTakeWhile
+/// Create a `PeekingTakeWhile`
 pub fn peeking_take_while<I, F>(iter: &mut I, f: F) -> PeekingTakeWhile<I, F>
     where I: Iterator,
 {

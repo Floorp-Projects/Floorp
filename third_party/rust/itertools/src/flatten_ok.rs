@@ -44,11 +44,11 @@ where
             if let Some(inner) = &mut self.inner_front {
                 if let Some(item) = inner.next() {
                     return Some(Ok(item));
-                } else {
-                    // This is necessary for the iterator to implement `FusedIterator`
-                    // with only the orginal iterator being fused.
-                    self.inner_front = None;
                 }
+
+                // This is necessary for the iterator to implement `FusedIterator`
+                // with only the original iterator being fused.
+                self.inner_front = None;
             }
 
             match self.iter.next() {
@@ -59,11 +59,11 @@ where
                     if let Some(inner) = &mut self.inner_back {
                         if let Some(item) = inner.next() {
                             return Some(Ok(item));
-                        } else {
-                            // This is necessary for the iterator to implement `FusedIterator`
-                            // with only the orginal iterator being fused.
-                            self.inner_back = None;
                         }
+
+                        // This is necessary for the iterator to implement `FusedIterator`
+                        // with only the original iterator being fused.
+                        self.inner_back = None;
                     } else {
                         return None;
                     }
@@ -103,11 +103,11 @@ where
             if let Some(inner) = &mut self.inner_back {
                 if let Some(item) = inner.next_back() {
                     return Some(Ok(item));
-                } else {
-                    // This is necessary for the iterator to implement `FusedIterator`
-                    // with only the orginal iterator being fused.
-                    self.inner_back = None;
                 }
+
+                // This is necessary for the iterator to implement `FusedIterator`
+                // with only the original iterator being fused.
+                self.inner_back = None;
             }
 
             match self.iter.next_back() {
@@ -118,11 +118,11 @@ where
                     if let Some(inner) = &mut self.inner_front {
                         if let Some(item) = inner.next_back() {
                             return Some(Ok(item));
-                        } else {
-                            // This is necessary for the iterator to implement `FusedIterator`
-                            // with only the orginal iterator being fused.
-                            self.inner_front = None;
                         }
+
+                        // This is necessary for the iterator to implement `FusedIterator`
+                        // with only the original iterator being fused.
+                        self.inner_front = None;
                     } else {
                         return None;
                     }
@@ -138,7 +138,6 @@ where
     T: IntoIterator,
     T::IntoIter: Clone,
 {
-    #[inline]
     clone_fields!(iter, inner_front, inner_back);
 }
 

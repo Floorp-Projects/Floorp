@@ -40,7 +40,7 @@ pub fn multi_cartesian_product<H>(iters: H) -> MultiProduct<<H::Item as IntoIter
 }
 
 #[derive(Clone, Debug)]
-/// Holds the state of a single iterator within a MultiProduct.
+/// Holds the state of a single iterator within a `MultiProduct`.
 struct MultiProductIter<I>
     where I: Iterator + Clone,
           I::Item: Clone
@@ -50,7 +50,7 @@ struct MultiProductIter<I>
     iter_orig: I,
 }
 
-/// Holds the current state during an iteration of a MultiProduct.
+/// Holds the current state during an iteration of a `MultiProduct`.
 #[derive(Debug)]
 enum MultiProductIterState {
     StartOfIter,

@@ -39,11 +39,11 @@ macro_rules! impl_unzip_iter {
         #[allow(non_snake_case)]
         impl<IT: Iterator<Item = ($($T,)*)>, $($T, $FromT: Default + Extend<$T>),* > MultiUnzip<($($FromT,)*)> for IT {
             fn multiunzip(self) -> ($($FromT,)*) {
-                // This implementation mirrors the logic of Iterator::unzip as close as possible.
-                // Unfortunately a lot of the used api there is still unstable represented by
-                // the commented out parts that follow.
+                // This implementation mirrors the logic of Iterator::unzip resp. Extend for (A, B) as close as possible.
+                // Unfortunately a lot of the used api there is still unstable (https://github.com/rust-lang/rust/issues/72631).
                 //
-                // https://doc.rust-lang.org/src/core/iter/traits/iterator.rs.html#2816-2844
+                // Iterator::unzip: https://doc.rust-lang.org/src/core/iter/traits/iterator.rs.html#2825-2865
+                // Extend for (A, B): https://doc.rust-lang.org/src/core/iter/traits/collect.rs.html#370-411
 
                 let mut res = ($($FromT::default(),)*);
                 let ($($FromT,)*) = &mut res;

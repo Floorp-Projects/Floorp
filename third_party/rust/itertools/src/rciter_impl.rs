@@ -51,7 +51,6 @@ pub fn rciter<I>(iterable: I) -> RcIter<I::IntoIter>
 }
 
 impl<I> Clone for RcIter<I> {
-    #[inline]
     clone_fields!(rciter);
 }
 
