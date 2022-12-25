@@ -13,9 +13,15 @@ jobs:
       run: |
         export DATE_STR=`date +"%Y%m%d%I%M%S"`
         echo "DATE_STR=$DATE_STR" >> $GITHUB_ENV
-        pip install -U mercurial
-        sudo apt update
-        sudo apt upgrade
+
+    - name: Setup git
+      run: |
+        gh auth login
+        gh auth setup-git
+        git config --global user.name github-actions
+        git config --global user.email github-actions@github.com
+      env:
+        GH_TOKEN: ${{ github.token }}
 
     - name: Setup git-cinnabar
       run: |
@@ -33,21 +39,20 @@ jobs:
         git clone hg::https://hg.mozilla.org/mozilla-unified
         cd mozilla-unified
         git rev-list --count origin/bookmarks/esr102
+        git checkout -b upstream-esr102-${DATE_STR} origin/bookmarks/esr102
 
-    - uses: actions/checkout@v3
-      name: Clone 🧬
-      with:
-        fetch-depth: 0
-
-    - name: Fetch mozilla-unified 🧬
+    - name: Fetch Floorp 🧬
       run: |
-        export PATH=~/git-cinnabar:$PATH
-        git remote add upstream hg::https://hg.mozilla.org/mozilla-unified
-        git fetch upstream
-        git checkout -b upstream-esr102-${DATE_STR} upstream/bookmarks/esr102
+        cd mozilla-unified
+        git remote add floorp https://github.com/${{ github.repository }}
+        git fetch floorp
 
     - name: Push
       run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git push origin upstream-esr102-${DATE_STR}
+        cd mozilla-unified
+        git push floorp upstream-esr102-${DATE_STR}
+
+    - name: Create Pull Request
+      run: |
+        cd mozilla-unified
+        gh pr create --base ESR102 --head upstream-esr102-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
