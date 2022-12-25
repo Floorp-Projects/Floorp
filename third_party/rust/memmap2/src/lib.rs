@@ -800,6 +800,30 @@ impl MmapRaw {
     pub fn flush_async_range(&self, offset: usize, len: usize) -> Result<()> {
         self.inner.flush_async(offset, len)
     }
+
+    /// Advise OS how this memory map will be accessed. Only supported on Unix.
+    ///
+    /// See [madvise()](https://man7.org/linux/man-pages/man2/madvise.2.html) map page.
+    #[cfg(unix)]
+    pub fn advise(&self, advice: Advice) -> Result<()> {
+        self.inner.advise(advice)
+    }
+
+    /// Lock the whole memory map into RAM. Only supported on Unix.
+    ///
+    /// See [mlock()](https://man7.org/linux/man-pages/man2/mlock.2.html) map page.
+    #[cfg(unix)]
+    pub fn lock(&mut self) -> Result<()> {
+        self.inner.lock()
+    }
+
+    /// Unlock the whole memory map. Only supported on Unix.
+    ///
+    /// See [munlock()](https://man7.org/linux/man-pages/man2/munlock.2.html) map page.
+    #[cfg(unix)]
+    pub fn unlock(&mut self) -> Result<()> {
+        self.inner.unlock()
+    }
 }
 
 impl fmt::Debug for MmapRaw {
@@ -1006,6 +1030,12 @@ impl MmapMut {
     ///
     /// If the memory map is file-backed, the file must have been opened with execute permissions.
     ///
+    /// On systems with separate instructions and data caches (a category that includes many ARM
+    /// chips), a platform-specific call may be needed to ensure that the changes are visible to the
+    /// execution unit (e.g. when using this function to implement a JIT compiler).  For more
+    /// details, see [this ARM write-up](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/caches-and-self-modifying-code)
+    /// or the `man` page for [`sys_icache_invalidate`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/sys_icache_invalidate.3.html).
+    ///
     /// # Errors
     ///
     /// This method returns an error when the underlying system call fails, which can happen for a
@@ -1088,7 +1118,7 @@ mod test {
 
     #[cfg(unix)]
     use crate::advice::Advice;
-    use std::fs::{self, OpenOptions};
+    use std::fs::OpenOptions;
     use std::io::{Read, Write};
     #[cfg(unix)]
     use std::os::unix::io::AsRawFd;
@@ -1622,7 +1652,7 @@ mod test {
     /// Returns true if a non-zero amount of memory is locked.
     #[cfg(target_os = "linux")]
     fn is_locked() -> bool {
-        let status = &fs::read_to_string("/proc/self/status")
+        let status = &std::fs::read_to_string("/proc/self/status")
             .expect("/proc/self/status should be available");
         for line in status.lines() {
             if line.starts_with("VmLck:") {
