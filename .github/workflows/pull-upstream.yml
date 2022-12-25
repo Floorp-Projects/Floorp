@@ -28,9 +28,8 @@ jobs:
         git clone https://github.com/glandium/git-cinnabar
         cd git-cinnabar
         git checkout 0.5.11
+        make
         export PATH=~/git-cinnabar:$PATH
-        cd ~
-        git cinnabar download
 
     - name: Fetch mozilla-unified 🧬
       run: |
