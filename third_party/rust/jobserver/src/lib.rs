@@ -208,7 +208,7 @@ impl Client {
     /// with `CLOEXEC` so they're not automatically inherited by spawned
     /// children.
     ///
-    /// # Unsafety
+    /// # Safety
     ///
     /// This function is `unsafe` to call on Unix specifically as it
     /// transitively requires usage of the `from_raw_fd` function, which is
@@ -273,6 +273,19 @@ impl Client {
         })
     }
 
+    /// Returns amount of tokens in the read-side pipe.
+    ///
+    /// # Return value
+    ///
+    /// Number of bytes available to be read from the jobserver pipe
+    ///
+    /// # Errors
+    ///
+    /// Underlying errors from the ioctl will be passed up.
+    pub fn available(&self) -> io::Result<usize> {
+        self.inner.available()
+    }
+
     /// Configures a child process to have access to this client's jobserver as
     /// well.
     ///
@@ -290,13 +303,41 @@ impl Client {
     ///
     /// On platforms other than Unix and Windows this panics.
     pub fn configure(&self, cmd: &mut Command) {
+        cmd.env("CARGO_MAKEFLAGS", &self.mflags_env());
+        self.inner.configure(cmd);
+    }
+
+    /// Configures a child process to have access to this client's jobserver as
+    /// well.
+    ///
+    /// This function is required to be called to ensure that a jobserver is
+    /// properly inherited to a child process. If this function is *not* called
+    /// then this `Client` will not be accessible in the child process. In other
+    /// words, if not called, then `Client::from_env` will return `None` in the
+    /// child process (or the equivalent of `Child::from_env` that `make` uses).
+    ///
+    /// ## Platform-specific behavior
+    ///
+    /// On Unix and Windows this will clobber the `CARGO_MAKEFLAGS`,
+    /// `MAKEFLAGS` and `MFLAGS` environment variables for the child process,
+    /// and on Unix this will also allow the two file descriptors for
+    /// this client to be inherited to the child.
+    ///
+    /// On platforms other than Unix and Windows this panics.
+    pub fn configure_make(&self, cmd: &mut Command) {
+        let value = self.mflags_env();
+        cmd.env("CARGO_MAKEFLAGS", &value);
+        cmd.env("MAKEFLAGS", &value);
+        cmd.env("MFLAGS", &value);
+        self.inner.configure(cmd);
+    }
+
+    fn mflags_env(&self) -> String {
         let arg = self.inner.string_arg();
         // Older implementations of make use `--jobserver-fds` and newer
         // implementations use `--jobserver-auth`, pass both to try to catch
         // both implementations.
-        let value = format!("-j --jobserver-fds={0} --jobserver-auth={0}", arg);
-        cmd.env("CARGO_MAKEFLAGS", &value);
-        self.inner.configure(cmd);
+        format!("-j --jobserver-fds={0} --jobserver-auth={0}", arg)
     }
 
     /// Converts this `Client` into a helper thread to deal with a blocking

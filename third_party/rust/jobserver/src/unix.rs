@@ -1,7 +1,9 @@
 use libc::c_int;
+
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::mem;
+use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::process::Command;
 use std::ptr;
@@ -21,13 +23,24 @@ pub struct Acquired {
 }
 
 impl Client {
-    pub fn new(limit: usize) -> io::Result<Client> {
+    pub fn new(mut limit: usize) -> io::Result<Client> {
         let client = unsafe { Client::mk()? };
+
         // I don't think the character written here matters, but I could be
         // wrong!
-        for _ in 0..limit {
-            (&client.write).write_all(&[b'|'])?;
+        const BUFFER: [u8; 128] = [b'|'; 128];
+
+        set_nonblocking(client.write.as_raw_fd(), true)?;
+
+        while limit > 0 {
+            let n = limit.min(BUFFER.len());
+
+            (&client.write).write_all(&BUFFER[..n])?;
+            limit -= n;
         }
+
+        set_nonblocking(client.write.as_raw_fd(), false)?;
+
         Ok(client)
     }
 
@@ -192,6 +205,12 @@ impl Client {
         format!("{},{}", self.read.as_raw_fd(), self.write.as_raw_fd())
     }
 
+    pub fn available(&self) -> io::Result<usize> {
+        let mut len = MaybeUninit::<c_int>::uninit();
+        cvt(unsafe { libc::ioctl(self.read.as_raw_fd(), libc::FIONREAD, len.as_mut_ptr()) })?;
+        Ok(unsafe { len.assume_init() } as usize)
+    }
+
     pub fn configure(&self, cmd: &mut Command) {
         // Here we basically just want to say that in the child process
         // we'll configure the read/write file descriptors to *not* be
@@ -320,6 +339,16 @@ fn set_cloexec(fd: c_int, set: bool) -> io::Result<()> {
         }
         Ok(())
     }
+}
+
+fn set_nonblocking(fd: c_int, set: bool) -> io::Result<()> {
+    let status_flag = if set { libc::O_NONBLOCK } else { 0 };
+
+    unsafe {
+        cvt(libc::fcntl(fd, libc::F_SETFL, status_flag))?;
+    }
+
+    Ok(())
 }
 
 fn cvt(t: c_int) -> io::Result<c_int> {
