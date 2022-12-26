@@ -6490,7 +6490,7 @@
   # Whether to use a video overlay layers for sw decoded video with DirectComposition
 -   name: gfx.webrender.dcomp-video-sw-overlay-win
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: @IS_EARLY_BETA_OR_EARLIER@
     mirror: once
 -   name: gfx.video.convert-i420-to-nv12.force-enabled
     type: bool
