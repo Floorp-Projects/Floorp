@@ -28,7 +28,6 @@ Perform a debug build of Gecko.
 .. code::
 
    ac_add_options --enable-debug
-   ac_add_options --with-android-ndk="<path>/.mozbuild/android-ndk-r17b"
 
 2. Ensure that the following lines are commented out in your
    ``mozconfig`` if present. ``./mach configure`` will not allow
