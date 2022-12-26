@@ -1308,20 +1308,17 @@ gfxRect SVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
 /* static */
 nscolor SVGUtils::GetFallbackOrPaintColor(
-    const ComputedStyle& aStyle, StyleSVGPaint nsStyleSVG::*aFillOrStroke) {
+    const ComputedStyle& aStyle, StyleSVGPaint nsStyleSVG::*aFillOrStroke,
+    nscolor aDefaultFallbackColor) {
   const auto& paint = aStyle.StyleSVG()->*aFillOrStroke;
   nscolor color;
   switch (paint.kind.tag) {
     case StyleSVGPaintKind::Tag::PaintServer:
     case StyleSVGPaintKind::Tag::ContextStroke:
-      color = paint.fallback.IsColor()
-                  ? paint.fallback.AsColor().CalcColor(aStyle)
-                  : NS_RGBA(0, 0, 0, 0);
-      break;
     case StyleSVGPaintKind::Tag::ContextFill:
       color = paint.fallback.IsColor()
                   ? paint.fallback.AsColor().CalcColor(aStyle)
-                  : NS_RGB(0, 0, 0);
+                  : aDefaultFallbackColor;
       break;
     default:
       color = paint.kind.AsColor().CalcColor(aStyle);
@@ -1407,8 +1404,8 @@ void SVGUtils::MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  sRGBColor color(sRGBColor::FromABGR(
-      GetFallbackOrPaintColor(*aFrame->Style(), &nsStyleSVG::mFill)));
+  sRGBColor color(sRGBColor::FromABGR(GetFallbackOrPaintColor(
+      *aFrame->Style(), &nsStyleSVG::mFill, NS_RGB(0, 0, 0))));
   color.a *= fillOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
 }
@@ -1474,8 +1471,8 @@ void SVGUtils::MakeStrokePatternFor(nsIFrame* aFrame, gfxContext* aContext,
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  sRGBColor color(sRGBColor::FromABGR(
-      GetFallbackOrPaintColor(*aFrame->Style(), &nsStyleSVG::mStroke)));
+  sRGBColor color(sRGBColor::FromABGR(GetFallbackOrPaintColor(
+      *aFrame->Style(), &nsStyleSVG::mStroke, NS_RGBA(0, 0, 0, 0))));
   color.a *= strokeOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
 }
