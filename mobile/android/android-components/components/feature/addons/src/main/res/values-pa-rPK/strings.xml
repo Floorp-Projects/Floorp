@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">سیٹنگاں</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">چالو</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">بند</string>
+    </resources>
