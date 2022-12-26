@@ -100,6 +100,7 @@ static void SetupInheritablePaint(const DrawTarget* aDrawTarget,
                                   SVGContextPaint* aOuterContextPaint,
                                   SVGContextPaintImpl::Paint& aTargetPaint,
                                   StyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                  nscolor aDefaultFallbackColor,
                                   imgDrawingParams& aImgParams) {
   const nsStyleSVG* style = aFrame->StyleSVG();
   SVGPaintServerFrame* ps =
@@ -138,8 +139,8 @@ static void SetupInheritablePaint(const DrawTarget* aDrawTarget,
     }
   }
 
-  nscolor color =
-      SVGUtils::GetFallbackOrPaintColor(*aFrame->Style(), aFillOrStroke);
+  nscolor color = SVGUtils::GetFallbackOrPaintColor(
+      *aFrame->Style(), aFillOrStroke, aDefaultFallbackColor);
   aTargetPaint.SetColor(color);
 }
 
@@ -161,7 +162,7 @@ DrawMode SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
 
     SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
                           aOuterContextPaint, mFillPaint, &nsStyleSVG::mFill,
-                          aImgParams);
+                          NS_RGB(0, 0, 0), aImgParams);
 
     SetFillOpacity(opacity);
 
@@ -175,9 +176,9 @@ DrawMode SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
     float opacity =
         SVGUtils::GetOpacity(style->mStrokeOpacity, aOuterContextPaint);
 
-    SetupInheritablePaint(aDrawTarget, aContextMatrix, aFrame, opacity,
-                          aOuterContextPaint, mStrokePaint,
-                          &nsStyleSVG::mStroke, aImgParams);
+    SetupInheritablePaint(
+        aDrawTarget, aContextMatrix, aFrame, opacity, aOuterContextPaint,
+        mStrokePaint, &nsStyleSVG::mStroke, NS_RGBA(0, 0, 0, 0), aImgParams);
 
     SetStrokeOpacity(opacity);
 
