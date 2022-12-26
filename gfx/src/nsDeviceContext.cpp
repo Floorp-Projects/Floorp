@@ -189,6 +189,19 @@ uint32_t nsDeviceContext::GetDepth() {
   return uint32_t(depth);
 }
 
+dom::ScreenColorGamut nsDeviceContext::GetColorGamut() {
+  nsCOMPtr<nsIScreen> screen;
+  FindScreen(getter_AddRefs(screen));
+  if (!screen) {
+    auto& screenManager = ScreenManager::GetSingleton();
+    screenManager.GetPrimaryScreen(getter_AddRefs(screen));
+    MOZ_ASSERT(screen);
+  }
+  dom::ScreenColorGamut colorGamut;
+  screen->GetColorGamut(&colorGamut);
+  return colorGamut;
+}
+
 nsresult nsDeviceContext::GetDeviceSurfaceDimensions(nscoord& aWidth,
                                                      nscoord& aHeight) {
   if (IsPrinterContext()) {

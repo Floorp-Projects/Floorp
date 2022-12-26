@@ -1,0 +1,40 @@
+<!doctype html>
+<title>Test: color-gamut only matches sRGB when resisting fingerprinting</title>
+<link rel="match" href="../reference/ref-filled-green-100px-square.xht">
+<!--
+ This test is trivial as long as Firefox only matches the sRGB color-gamut media
+ query. Once Firefox can match additional color-gamuts, though, we should still
+ only match sRGB when resisting fingerprinting.
+-->
+<style>
+div {
+    width: 100px;
+    height: 100px;
+}
+
+div.with-gamut {
+  background-color: red;
+}
+
+div.without-gamuts {
+  background-color: green;
+}
+
+@media (color-gamut: srgb) {
+    div.with-gamut {
+        background-color: green;
+    }
+}
+
+@media (color-gamut: p3), (color-gamut: rec2020) {
+  div.without-gamuts {
+    background-color: red;
+  }
+}
+</style>
+
+<p>Test passes if there are two filled green squares and <strong>no red</strong>.
+
+<div class=with-gamut></div>
+<p></p>
+<div class=without-gamuts></div>

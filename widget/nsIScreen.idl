@@ -7,6 +7,7 @@
 #include "nsISupports.idl"
 
 %{C++
+#include "mozilla/dom/ScreenBinding.h"
 #include "Units.h"
 
 /**
@@ -18,6 +19,8 @@ enum class DisplayType: int32_t {
   DISPLAY_VIRTUAL   // wireless displays, such as Chromecast, WiFi-Display, etc.
 };
 %}
+
+native ScreenColorGamut(mozilla::dom::ScreenColorGamut);
 
 [scriptable, builtinclass, uuid(826e80c8-d70f-42e2-8aa9-82c05f2a370a)]
 interface nsIScreen : nsISupports
@@ -64,6 +67,10 @@ interface nsIScreen : nsISupports
 
   [infallible] readonly attribute long pixelDepth;
   [infallible] readonly attribute long colorDepth;
+  /**
+   * ScreenColorGamut is native type, which cannot be declared [infallible].
+   */
+  readonly attribute ScreenColorGamut colorGamut;
 
   /**
    * The number of device pixels per desktop pixel for this screen (for
