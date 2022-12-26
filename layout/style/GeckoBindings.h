@@ -43,7 +43,8 @@ class LoaderReusableStyleSheets;
 }
 namespace dom {
 enum class CompositeOperationOrAuto : uint8_t;
-}
+enum class ScreenColorGamut : uint8_t;
+}  // namespace dom
 }  // namespace mozilla
 
 #ifdef NIGHTLY_BUILD
@@ -601,6 +602,8 @@ bool Gecko_MediaFeatures_ShouldAvoidNativeTheme(const mozilla::dom::Document*);
 bool Gecko_MediaFeatures_UseOverlayScrollbars(const mozilla::dom::Document*);
 uint32_t Gecko_MediaFeatures_GetColorDepth(const mozilla::dom::Document*);
 uint32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
+    const mozilla::dom::Document*);
+mozilla::dom::ScreenColorGamut Gecko_MediaFeatures_ColorGamut(
     const mozilla::dom::Document*);
 
 void Gecko_MediaFeatures_GetDeviceSize(const mozilla::dom::Document*,

@@ -19,6 +19,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
+#include "mozilla/dom/ScreenBinding.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #include "mozilla/RelativeLuminanceUtils.h"
@@ -147,6 +148,17 @@ uint32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
   bool color = true;
   ps->GetPrintInColor(&color);
   return color ? 0 : kDefaultMonochromeBpp;
+}
+
+dom::ScreenColorGamut Gecko_MediaFeatures_ColorGamut(
+    const Document* aDocument) {
+  auto colorGamut = dom::ScreenColorGamut::Srgb;
+  if (!aDocument->ShouldResistFingerprinting()) {
+    if (auto* dx = GetDeviceContextFor(aDocument)) {
+      colorGamut = dx->GetColorGamut();
+    }
+  }
+  return colorGamut;
 }
 
 uint32_t Gecko_MediaFeatures_GetColorDepth(const Document* aDocument) {

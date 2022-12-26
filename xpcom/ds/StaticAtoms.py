@@ -258,6 +258,7 @@ STATIC_ATOMS = [
     Atom("collapse", "collapse"),
     Atom("collapsed", "collapsed"),
     Atom("color", "color"),
+    Atom("color_gamut", "color-gamut"),
     Atom("color_index", "color-index"),
     Atom("color_scheme", "color-scheme"),
     Atom("cols", "cols"),

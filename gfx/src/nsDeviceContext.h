@@ -34,6 +34,10 @@ class nsIScreenManager;
 class nsIWidget;
 struct nsRect;
 
+namespace mozilla::dom {
+enum class ScreenColorGamut : uint8_t;
+}  // namespace mozilla::dom
+
 class nsDeviceContext final {
  public:
   typedef mozilla::gfx::PrintTarget PrintTarget;
@@ -118,6 +122,11 @@ class nsDeviceContext final {
    * Return the bit depth of the device.
    */
   uint32_t GetDepth();
+
+  /**
+   * Return the color gamut of the device.
+   */
+  mozilla::dom::ScreenColorGamut GetColorGamut();
 
   /**
    * Get the size of the displayable area of the output device
