@@ -17,11 +17,27 @@ urlbar:
     extra_keys:
       sap:
         description: >
-          Where the user action started. e.g. `urlbar`, `handoff` etc.
+          `sap` is the meaning of `search access point`. It records where the
+          user started the search action from. The possible values are: `urlbar`
+          , `handoff`, `urlbar_newtab` and `urlbar_addonpage`.
         type: string
       interaction:
         description: >
-          How the user started the search. e.g. `typed`, `pasted` etc.
+          How the user started the search action. The possible values are:
+          `typed`, `pasted`, `topsite_search` (clicked on a topsite search
+          shortcut), `topsites` (selected a topsite result with empty search
+          string), `returned` (The user abandoned a search, then returned to it)
+          , `restarted` (The user abandoned a search, then returned to it,
+          cleared it and typed a completely different string), `refined` (The
+          user abandoned a search, then returned to it, and partially modified
+          the string), `persisted_search_terms` (The user returned to a previous
+          successful search that persisted terms in the urlbar),
+          `persisted_search_terms_restarted` (The user returned to a previous
+          successful search that persisted terms in the urlbar, then cleared it
+          and typed a completely different string) and
+          `persisted_search_terms_refined` (The user returned to a previous
+          successful search that persisted terms in the urlbar, and partially
+          modified the string).
         type: string
       search_mode:
         description: >
@@ -33,26 +49,47 @@ urlbar:
           search mode is not active, this will be an empty string.
         type: string
       n_chars:
-        description: Number of typed characters.
+        description: >
+          The length of string used for the search. It includes whitespaces.
         type: quantity
       n_words:
-        description: Number of typed words (doesn’t support CJK languages).
+        description: >
+          The length of words used for the search. The words are made by
+          splitting the search string by whitespaces, thus this doesn’t support
+          CJK languages. For performance reasons a maximum of 255 characters are
+          considered when splitting.
         type: quantity
       n_results:
         description: >
-          Number of results, if this is high the results list below may be
-          incomplete due to size limits.
+          The number of results shown to the user. If this is high the results
+          list below may be truncated due to technical limitations. Also note in
+          that case not all the results may be physically visible due to the
+          screen size limitation.
         type: quantity
       groups:
         description: >
-          Comma separated list of result groups in order, groups may be
-          repeated, since the list will match 1:1 the results list, so we
-          Can link each result to a group
+          Comma separated list of result groups in the order they were shown to
+          the user. The groups may be repeated, since the list will match 1:1
+          the results list, so we can link each result to a group. The possible
+          group names are: `heuristic`, `adaptive_history`, `search_history`,
+          `search_suggest`, `top_pick`, `top_site`, `remote_tab`, `addon`,
+          `general`, `suggest`, `about_page` and `suggested_index`. If the group
+          did not fall into any of these, this will be `unknown` and a bug
+          should be filed to investigate it.
         type: string
       results:
         description: >
-          Comma separated list of result types in the order they were
-          shown to the user.
+          Comma separated list of result types in the order they were shown to
+          the user. The possible result types are: `autofill_about`,
+          `autofill_adaptive`, `autofill_origin`, `autofill_url`,
+          `autofill_unknown`, `bookmark`, `history`, `keyword`, `search_engine`,
+          `search_suggest`, `search_history`, `url`, `action`, `tab`,
+          `remote_tab`, `addon`, `tip_onboard`, `tip_redirect`, `tip_unknown`,
+          `intervention_clear`, `intervention_refresh`, `intervention_update`,
+          `intervention_unknown`, `tab_to_search`, `top_site`, `calc`, `unit`,
+          `suggest_sponsor` and `suggest_non_sponsor`. If the result type did
+          not fall into any of these, this will be `unknown` and a bug should
+          be filed to investigate it.
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414
@@ -71,11 +108,27 @@ urlbar:
     extra_keys:
       sap:
         description: >
-          Where the user action started. e.g. `urlbar`, `handoff` etc.
+          `sap` is the meaning of `search access point`. It records where the
+          user started the search action from. The possible values are: `urlbar`
+          , `handoff`, `urlbar_newtab` and `urlbar_addonpage`.
         type: string
       interaction:
         description: >
-          How the user started the search. e.g. `typed`, `pasted` etc.
+          How the user started the search action. The possible values are:
+          `typed`, `pasted`, `topsite_search` (clicked on a topsite search
+          shortcut), `topsites` (selected a topsite result with empty search
+          string), `returned` (The user abandoned a search, then returned to it)
+          , `restarted` (The user abandoned a search, then returned to it,
+          cleared it and typed a completely different string), `refined` (The
+          user abandoned a search, then returned to it, and partially modified
+          the string), `persisted_search_terms` (The user returned to a previous
+          successful search that persisted terms in the urlbar),
+          `persisted_search_terms_restarted` (The user returned to a previous
+          successful search that persisted terms in the urlbar, then cleared it
+          and typed a completely different string) and
+          `persisted_search_terms_refined` (The user returned to a previous
+          successful search that persisted terms in the urlbar, and partially
+          modified the string).
         type: string
       search_mode:
         description: >
@@ -87,42 +140,86 @@ urlbar:
           search mode is not active, this will be an empty string.
         type: string
       n_chars:
-        description: Number of typed characters.
+        description: >
+          The length of string used for the search. It includes whitespaces.
         type: quantity
       n_words:
-        description: Number of typed words (doesn’t support CJK languages).
+        description: >
+          The length of words used for the search. The words are made by
+          splitting the search string by whitespaces, thus this doesn’t support
+          CJK languages. For performance reasons a maximum of 255 characters are
+          considered when splitting.
         type: quantity
       n_results:
         description: >
-          Number of results, if this is high the results list below may be
-          incomplete due to size limits. This limit is defined in
-          `browser.urlbar.maxRichResults` preference that specifies the maximum
-          number of results in the urlbar popup.
+          The number of results shown to the user. If this is high the results
+          list below may be truncated due to technical limitations. Also note in
+          that case not all the results may be physically visible due to the
+          screen size limitation.
         type: quantity
       selected_result:
-        description: Type of the selected result.
+        description: >
+          The type of the result the user selected. The possible result types
+          are: `autofill_about`, `autofill_adaptive`, `autofill_origin`,
+          `autofill_url`, `autofill_unknown`, `bookmark`, `history`, `keyword`,
+          `search_engine`, `search_suggest`, `search_history`, `url`, `action`,
+          `tab`, `remote_tab`, `addon`, `tip_onboard`, `tip_redirect`,
+          `tip_unknown`, `intervention_clear`, `intervention_refresh`,
+          `intervention_update`, `intervention_unknown`, `tab_to_search`,
+          `top_site`, `calc`, `unit`, `suggest_sponsor` and
+          `suggest_non_sponsor`. If the result type did not fall into any of
+          these, this will be `unknown`.
         type: string
       selected_result_subtype:
         description: >
-          Set when a result provides multiple choices, like quick actions.
+          The subtype of the result the user selected. Currently, only the
+          action of the quick actions is the target to this. The possible values
+          are: `addon`, `bookmarks`, `clear`, `downloads`, `extensions`,
+          `inspect`, `logins`, `plugins`, `print`, `private`, `refresh`,
+          `restart`, `screenshot`, `settings`, `themes`, `update` and
+          `viewsource`. Otherwise, an empty string is returned.
         type: string
       provider:
         description: >
-          Name of the `UrlbarProvider` that returned the selected result.
+          The name of the `UrlbarProvider` that provided the selected result.
+          The possible values are: `AboutPages`, `AliasEngines`, `Autofill`,
+          `BookmarkKeywords`, `calculator`, `UrlbarProviderContextualSearch`,
+          `HeuristicFallback`, `InputHistory`, `UrlbarProviderInterventions`,
+          `Omnibox`, `OpenTabs`, `Places`, `PreloadedSites`, `PrivateSearch`,
+          `quickactions`, `UrlbarProviderQuickSuggest`, `RemoteTabs`,
+          `SearchSuggestions`, `UrlbarProviderSearchTips`, `TabToSearch`,
+          `TokenAliasEngines`, `UrlbarProviderTopSites`, `UnitConversion` and
+          `UnifiedComplete`.
         type: string
       engagement_type:
-        description: Which action was executed on the result.
+        description: >
+          Records how the user selected the result. The possible values are:
+          `click`, `enter`, `drop_go`, `paste_go`, `dismiss`, `help`.
         type: string
       groups:
         description: >
-          Comma separated list of result groups in order, groups may be
-          repeated, since the list will match 1:1 the results list, so we
-          can link each result to a group.
+          Comma separated list of result groups in the order they were shown to
+          the user. The groups may be repeated, since the list will match 1:1
+          the results list, so we can link each result to a group. The possible
+          group names are: `heuristic`, `adaptive_history`, `search_history`,
+          `search_suggest`, `top_pick`, `top_site`, `remote_tab`, `addon`,
+          `general`, `suggest`, `about_page` and `suggested_index`. If the group
+          did not fall into any of these, this will be `unknown` and a bug
+          should be filed to investigate it.
         type: string
       results:
         description: >
-          Comma separated list of result types in the order they were
-          shown to the user.
+          Comma separated list of result types in the order they were shown to
+          the user. The possible result types are: `autofill_about`,
+          `autofill_adaptive`, `autofill_origin`, `autofill_url`,
+          `autofill_unknown`, `bookmark`, `history`, `keyword`, `search_engine`,
+          `search_suggest`, `search_history`, `url`, `action`, `tab`,
+          `remote_tab`, `addon`, `tip_onboard`, `tip_redirect`, `tip_unknown`,
+          `intervention_clear`, `intervention_refresh`, `intervention_update`,
+          `intervention_unknown`, `tab_to_search`, `top_site`, `calc`, `unit`,
+          `suggest_sponsor` and `suggest_non_sponsor`. If the result type did
+          not fall into any of these, this will be `unknown` and a bug should
+          be filed to investigate it.
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
@@ -144,11 +241,27 @@ urlbar:
         type: string
       sap:
         description: >
-          Where the user action started. e.g. `urlbar`, `handoff` etc.
+          `sap` is the meaning of `search access point`. It records where the
+          user started the search action from. The possible values are: `urlbar`
+          , `handoff`, `urlbar_newtab` and `urlbar_addonpage`.
         type: string
       interaction:
         description: >
-          How the user started the search. e.g. `typed`, `pasted` etc.
+          How the user started the search action. The possible values are:
+          `typed`, `pasted`, `topsite_search` (clicked on a topsite search
+          shortcut), `topsites` (selected a topsite result with empty search
+          string), `returned` (The user abandoned a search, then returned to it)
+          , `restarted` (The user abandoned a search, then returned to it,
+          cleared it and typed a completely different string), `refined` (The
+          user abandoned a search, then returned to it, and partially modified
+          the string), `persisted_search_terms` (The user returned to a previous
+          successful search that persisted terms in the urlbar),
+          `persisted_search_terms_restarted` (The user returned to a previous
+          successful search that persisted terms in the urlbar, then cleared it
+          and typed a completely different string) and
+          `persisted_search_terms_refined` (The user returned to a previous
+          successful search that persisted terms in the urlbar, and partially
+          modified the string).
         type: string
       search_mode:
         description: >
@@ -160,26 +273,47 @@ urlbar:
           search mode is not active, this will be an empty string.
         type: string
       n_chars:
-        description: Number of typed characters.
+        description: >
+          The length of string used for the search. It includes whitespaces.
         type: quantity
       n_words:
-        description: Number of typed words (doesn’t support CJK languages).
+        description: >
+          The length of words used for the search. The words are made by
+          splitting the search string by whitespaces, thus this doesn’t support
+          CJK languages. For performance reasons a maximum of 255 characters are
+          considered when splitting.
         type: quantity
       n_results:
         description: >
-          Number of results, if this is high the results list below may be
-          incomplete due to size limits.
+          The number of results shown to the user. If this is high the results
+          list below may be truncated due to technical limitations. Also note in
+          that case not all the results may be physically visible due to the
+          screen size limitation.
         type: quantity
       groups:
         description: >
-          Comma separated list of result groups in order, groups may be
-          repeated, since the list will match 1:1 the results list, so we
-          Can link each result to a group
+          Comma separated list of result groups in the order they were shown to
+          the user. The groups may be repeated, since the list will match 1:1
+          the results list, so we can link each result to a group. The possible
+          group names are: `heuristic`, `adaptive_history`, `search_history`,
+          `search_suggest`, `top_pick`, `top_site`, `remote_tab`, `addon`,
+          `general`, `suggest`, `about_page` and `suggested_index`. If the group
+          did not fall into any of these, this will be `unknown` and a bug
+          should be filed to investigate it.
         type: string
       results:
         description: >
-          Comma separated list of result types in the order they were
-          shown to the user.
+          Comma separated list of result types in the order they were shown to
+          the user. The possible result types are: `autofill_about`,
+          `autofill_adaptive`, `autofill_origin`, `autofill_url`,
+          `autofill_unknown`, `bookmark`, `history`, `keyword`, `search_engine`,
+          `search_suggest`, `search_history`, `url`, `action`, `tab`,
+          `remote_tab`, `addon`, `tip_onboard`, `tip_redirect`, `tip_unknown`,
+          `intervention_clear`, `intervention_refresh`, `intervention_update`,
+          `intervention_unknown`, `tab_to_search`, `top_site`, `calc`, `unit`,
+          `suggest_sponsor` and `suggest_non_sponsor`. If the result type did
+          not fall into any of these, this will be `unknown` and a bug should
+          be filed to investigate it.
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800579
