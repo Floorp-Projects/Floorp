@@ -1,6 +1,5 @@
 use std::{
     cell::UnsafeCell,
-    hint,
     panic::{RefUnwindSafe, UnwindSafe},
     sync::atomic::{AtomicU8, Ordering},
 };
@@ -59,7 +58,7 @@ impl<T> OnceCell<T> {
             //   but that is more complicated
             // - finally, if it returns Ok, we store the value and store the flag with
             //   `Release`, which synchronizes with `Acquire`s.
-            let f = unsafe { crate::take_unchecked(&mut f) };
+            let f = unsafe { crate::unwrap_unchecked(f.take()) };
             match f() {
                 Ok(value) => unsafe {
                     // Safe b/c we have a unique access and no panic may happen
@@ -101,15 +100,8 @@ impl<T> OnceCell<T> {
     /// the contents are acquired by (synchronized to) this thread.
     pub(crate) unsafe fn get_unchecked(&self) -> &T {
         debug_assert!(self.is_initialized());
-        let slot: &Option<T> = &*self.value.get();
-        match slot {
-            Some(value) => value,
-            // This unsafe does improve performance, see `examples/bench`.
-            None => {
-                debug_assert!(false);
-                hint::unreachable_unchecked()
-            }
-        }
+        let slot = &*self.value.get();
+        crate::unwrap_unchecked(slot.as_ref())
     }
 
     /// Gets the mutable reference to the underlying value.
