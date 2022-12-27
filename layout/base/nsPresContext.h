@@ -1127,10 +1127,10 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   }
 
   void DidUseFrameRateMultiplier() {
-    if (!mNextFrameRateMultiplier) {
-      mNextFrameRateMultiplier = 1;
-    } else if (mNextFrameRateMultiplier < 8) {
-      mNextFrameRateMultiplier = mNextFrameRateMultiplier * 2;
+    // This heuristic is used to reduce frame rate between fcp and the end of
+    // the page load.
+    if (mNextFrameRateMultiplier < 8) {
+      ++mNextFrameRateMultiplier;
     }
   }
 
