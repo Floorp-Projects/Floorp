@@ -85,6 +85,9 @@ class nsDisplayTableBackgroundSet {
   }
 
   const ActiveScrolledRoot* GetTableASR() { return mTableASR; }
+  layers::ScrollableLayerGuid::ViewID GetScrollParentId() {
+    return mCurrentScrollParentId;
+  }
 
  private:
   // This class is only used on stack, so we don't have to worry about leaking
@@ -101,6 +104,7 @@ class nsDisplayTableBackgroundSet {
   nsTArray<nsTableColFrame*> mColumns;
   nsPoint mToReferenceFrame;
   nsRect mDirtyRect;
+  layers::ScrollableLayerGuid::ViewID mCurrentScrollParentId;
 
   const DisplayItemClipChain* mCombinedTableClipChain;
   const ActiveScrolledRoot* mTableASR;

@@ -510,6 +510,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
               displayData->mContainingBlockClipChain);
           asrSetter.SetCurrentActiveScrolledRoot(
               displayData->mContainingBlockActiveScrolledRoot);
+          asrSetter.SetCurrentScrollParentId(displayData->mScrollParentId);
           thisItemASR = displayData->mContainingBlockActiveScrolledRoot;
         }
         nsDisplayCanvasBackgroundImage* bgItem = nullptr;
