@@ -82,7 +82,7 @@ impl Error {
     ///
     /// This method is identical to `std::io::Error::raw_os_error()`, except
     /// that it works in `no_std` contexts. If this method returns `None`, the
-    /// error value can still be formatted via the `Diplay` implementation.
+    /// error value can still be formatted via the `Display` implementation.
     #[inline]
     pub fn raw_os_error(&self) -> Option<i32> {
         #[cfg(feature = "std")]

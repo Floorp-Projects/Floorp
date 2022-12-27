@@ -52,36 +52,59 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-macro_rules! fill_via_chunks {
-    ($src:expr, $dst:expr, $ty:ty) => {{
-        const SIZE: usize = core::mem::size_of::<$ty>();
-        let chunk_size_u8 = min($src.len() * SIZE, $dst.len());
-        let chunk_size = (chunk_size_u8 + SIZE - 1) / SIZE;
+trait Observable: Copy {
+    type Bytes: AsRef<[u8]>;
+    fn to_le_bytes(self) -> Self::Bytes;
 
-        // The following can be replaced with safe code, but unfortunately it's
-        // ca. 8% slower.
-        if cfg!(target_endian = "little") {
-            unsafe {
-                core::ptr::copy_nonoverlapping(
-                    $src.as_ptr() as *const u8,
-                    $dst.as_mut_ptr(),
-                    chunk_size_u8);
-            }
-        } else {
-            for (&n, chunk) in $src.iter().zip($dst.chunks_mut(SIZE)) {
-                let tmp = n.to_le();
-                let src_ptr = &tmp as *const $ty as *const u8;
-                unsafe {
-                    core::ptr::copy_nonoverlapping(
-                        src_ptr,
-                        chunk.as_mut_ptr(),
-                        chunk.len());
-                }
-            }
+    // Contract: observing self is memory-safe (implies no uninitialised padding)
+    fn as_byte_slice(x: &[Self]) -> &[u8];
+}
+impl Observable for u32 {
+    type Bytes = [u8; 4];
+    fn to_le_bytes(self) -> Self::Bytes {
+        self.to_le_bytes()
+    }
+    fn as_byte_slice(x: &[Self]) -> &[u8] {
+        let ptr = x.as_ptr() as *const u8;
+        let len = x.len() * core::mem::size_of::<Self>();
+        unsafe { core::slice::from_raw_parts(ptr, len) }
+    }
+}
+impl Observable for u64 {
+    type Bytes = [u8; 8];
+    fn to_le_bytes(self) -> Self::Bytes {
+        self.to_le_bytes()
+    }
+    fn as_byte_slice(x: &[Self]) -> &[u8] {
+        let ptr = x.as_ptr() as *const u8;
+        let len = x.len() * core::mem::size_of::<Self>();
+        unsafe { core::slice::from_raw_parts(ptr, len) }
+    }
+}
+
+fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
+    let size = core::mem::size_of::<T>();
+    let byte_len = min(src.len() * size, dest.len());
+    let num_chunks = (byte_len + size - 1) / size;
+
+    if cfg!(target_endian = "little") {
+        // On LE we can do a simple copy, which is 25-50% faster:
+        dest[..byte_len].copy_from_slice(&T::as_byte_slice(&src[..num_chunks])[..byte_len]);
+    } else {
+        // This code is valid on all arches, but slower than the above:
+        let mut i = 0;
+        let mut iter = dest[..byte_len].chunks_exact_mut(size);
+        for chunk in &mut iter {
+            chunk.copy_from_slice(src[i].to_le_bytes().as_ref());
+            i += 1;
         }
+        let chunk = iter.into_remainder();
+        if !chunk.is_empty() {
+            chunk.copy_from_slice(&src[i].to_le_bytes().as_ref()[..chunk.len()]);
+        }
+    }
 
-        (chunk_size, chunk_size_u8)
-    }};
+    (num_chunks, byte_len)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -115,7 +138,7 @@ macro_rules! fill_via_chunks {
 /// }
 /// ```
 pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u32)
+    fill_via_chunks(src, dest)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -129,7 +152,7 @@ pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
 ///
 /// See `fill_via_u32_chunks` for an example.
 pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u64)
+    fill_via_chunks(src, dest)
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
