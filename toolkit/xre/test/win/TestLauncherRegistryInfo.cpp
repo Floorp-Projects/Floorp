@@ -219,6 +219,10 @@ static mozilla::LauncherVoidResult DeleteAllRegstryValues() {
   return DeleteRegistryValueData(gTelemetryValue);
 }
 
+bool GetInstallHash(const char16_t*, mozilla::UniquePtr<NS_tchar[]>& result) {
+  return true;
+}
+
 static mozilla::LauncherVoidResult SetupEnabledScenario() {
   // Reset the registry state to an enabled state. First, we delete all existing
   // registry values (if any).
