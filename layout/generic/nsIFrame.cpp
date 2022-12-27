@@ -787,8 +787,11 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (!IsPlaceholderFrame() && !aPrevInFlow) {
     UpdateVisibleDescendantsState();
   }
+}
 
-  if (disp->IsContentVisibilityAuto() &&
+void nsIFrame::InitPrimaryFrame() {
+  MOZ_ASSERT(IsPrimaryFrame());
+  if (StyleDisplay()->IsContentVisibilityAuto() &&
       IsContentVisibilityPropertyApplicable()) {
     PresShell()->RegisterContentVisibilityAutoFrame(this);
     auto* element = Element::FromNodeOrNull(GetContent());
@@ -803,6 +806,8 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // this should also be called when scrolling or focus causes content to be
   // skipped or unskipped.
   UpdateAnimationVisibility();
+
+  HandleLastRememberedSize();
 }
 
 void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,

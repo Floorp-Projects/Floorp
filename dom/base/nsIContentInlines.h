@@ -53,7 +53,6 @@ inline void nsIContent::SetPrimaryFrame(nsIFrame* aFrame) {
     if (MOZ_LIKELY(!IsHTMLElement(nsGkAtoms::area)) ||
         aFrame->GetContent() == this) {
       aFrame->SetIsPrimaryFrame(true);
-      aFrame->HandleLastRememberedSize();
     }
   } else if (nsIFrame* currentPrimaryFrame = GetPrimaryFrame()) {
     if (MOZ_LIKELY(!IsHTMLElement(nsGkAtoms::area)) ||
