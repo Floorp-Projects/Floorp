@@ -329,7 +329,7 @@ function openLinkIn(url, where, params) {
       );
     } else {
       if (!aInitiatingDoc) {
-        Cu.reportError(
+        console.error(
           "openUILink/openLinkIn was called with " +
             "where == 'save' but without initiatingDoc.  See bug 814264."
         );

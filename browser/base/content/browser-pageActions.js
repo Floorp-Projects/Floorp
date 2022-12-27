@@ -346,7 +346,7 @@ var BrowserPageActions = {
     PanelMultiView.openPopup(panelNode, anchorNode, {
       position: "bottomright topright",
       triggerEvent: event,
-    }).catch(Cu.reportError);
+    }).catch(console.error);
   },
 
   _makeActivatedActionPanelForAction(action) {
@@ -923,7 +923,7 @@ var BrowserPageActions = {
     PanelMultiView.openPopup(this.panelNode, this.mainButtonNode, {
       position: "bottomright topright",
       triggerEvent: event,
-    }).catch(Cu.reportError);
+    }).catch(console.error);
   },
 
   /**

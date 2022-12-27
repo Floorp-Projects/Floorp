@@ -30,7 +30,7 @@ add_task(async function allowOnionMixedContent() {
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_URL
-  ).catch(Cu.reportError);
+  ).catch(console.error);
   const browser = gBrowser.getBrowserForTab(tab);
 
   await assertMixedContentBlockingState(browser, {

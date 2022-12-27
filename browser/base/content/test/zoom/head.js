@@ -76,7 +76,7 @@ var FullZoomHelper = {
           resolve(value);
         },
         handleError(error) {
-          Cu.reportError(error);
+          console.error(error);
         },
       });
     });
@@ -179,7 +179,7 @@ var FullZoomHelper = {
 
   failAndContinue: function failAndContinue(func) {
     return function(err) {
-      Cu.reportError(err);
+      console.error(err);
       ok(false, err);
       func();
     };

@@ -501,12 +501,12 @@
         // since we can update the image during the dnd.
         PageThumbs.captureToCanvas(browser, canvas)
           .then(captureListener)
-          .catch(e => Cu.reportError(e));
+          .catch(e => console.error(e));
       } else {
         // For the non e10s case we can just use PageThumbs
         // sync, so let's use the canvas for setDragImage.
         PageThumbs.captureToCanvas(browser, canvas).catch(e =>
-          Cu.reportError(e)
+          console.error(e)
         );
         dragImageOffset = dragImageOffset * scale;
       }

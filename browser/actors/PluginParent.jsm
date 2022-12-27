@@ -46,7 +46,7 @@ const PluginManager = {
       !propertyBag.hasKey("pluginDumpID") ||
       !propertyBag.hasKey("pluginName")
     ) {
-      Cu.reportError("PluginManager can not read plugin information.");
+      console.error("PluginManager can not read plugin information.");
       return;
     }
 
@@ -85,7 +85,7 @@ const PluginManager = {
   submitCrashReport(pluginCrashID, keyVals = {}) {
     let report = this.getCrashReport(pluginCrashID);
     if (!report) {
-      Cu.reportError(
+      console.error(
         `Could not find plugin dump IDs for ${JSON.stringify(pluginCrashID)}.` +
           `It is possible that a report was already submitted.`
       );
@@ -119,8 +119,9 @@ class PluginParent extends JSWindowActorParent {
         break;
 
       default:
-        Cu.reportError(
-          "PluginParent did not expect to handle message " + msg.name
+        console.error(
+          "PluginParent did not expect to handle message ",
+          msg.name
         );
         break;
     }

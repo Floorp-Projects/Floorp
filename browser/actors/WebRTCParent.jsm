@@ -79,7 +79,7 @@ class WebRTCParent extends JSWindowActorParent {
                 return false;
               }
             } catch (err) {
-              Cu.reportError(`error in PeerConnection blocker: ${err.message}`);
+              console.error(`error in PeerConnection blocker: ${err.message}`);
             }
           }
           return true;
@@ -1017,7 +1017,7 @@ function prompt(aActor, aBrowser, aRequest) {
                   // No preview for you.
                   return;
                 }
-                Cu.reportError(
+                console.error(
                   `error in preview: ${err.message} ${err.constraint}`
                 );
               }

@@ -100,14 +100,14 @@ var StarUI = {
 
           if (removeBookmarksOnPopupHidden && guidsForRemoval) {
             if (this._isNewBookmark) {
-              PlacesTransactions.undo().catch(Cu.reportError);
+              PlacesTransactions.undo().catch(console.error);
               break;
             }
             // Remove all bookmarks for the bookmark's url, this also removes
             // the tags for the url.
             PlacesTransactions.Remove(guidsForRemoval)
               .transact()
-              .catch(Cu.reportError);
+              .catch(console.error);
           } else if (this._isNewBookmark) {
             this.showConfirmation();
           }
@@ -303,7 +303,7 @@ var StarUI = {
 
     let canvas = PageThumbs.createCanvas(window);
     PageThumbs.captureToCanvas(gBrowser.selectedBrowser, canvas).catch(e =>
-      Cu.reportError(e)
+      console.error(e)
     );
     document.mozSetImageElement("editBookmarkPanelImageCanvas", canvas);
   },
@@ -465,7 +465,7 @@ var PlacesCommandHook = {
         info.title = info.title || url.href;
         charset = browser.characterSet;
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
 
       if (showEditUI) {
@@ -479,7 +479,7 @@ var PlacesCommandHook = {
 
       if (charset) {
         PlacesUIUtils.setCharsetForPage(url, charset, window).catch(
-          Cu.reportError
+          console.error
         );
       }
     }
@@ -1767,7 +1767,7 @@ var BookmarkingUI = {
 
     PlacesUtils.bookmarks
       .fetch({ url: this._uri }, b => guids.add(b.guid), { concurrent: true })
-      .catch(Cu.reportError)
+      .catch(console.error)
       .then(() => {
         if (pendingUpdate != this._pendingUpdate) {
           return;
@@ -1799,8 +1799,9 @@ var BookmarkingUI = {
             );
             this._hasBookmarksObserver = true;
           } catch (ex) {
-            Cu.reportError(
-              "BookmarkingUI failed adding a bookmarks observer: " + ex
+            console.error(
+              "BookmarkingUI failed adding a bookmarks observer: ",
+              ex
             );
           }
         }

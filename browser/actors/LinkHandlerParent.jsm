@@ -124,7 +124,7 @@ class LinkHandlerParent extends JSWindowActorParent {
     try {
       iconURI = Services.io.newURI(iconURL);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       return;
     }
     if (iconURI.scheme != "data") {
@@ -149,7 +149,7 @@ class LinkHandlerParent extends JSWindowActorParent {
           iconURI
         );
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 

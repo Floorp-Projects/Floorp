@@ -435,7 +435,7 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
       { shouldSuppress }
     );
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
     return null;
   }
 });
@@ -1847,7 +1847,7 @@ var gBrowserInit = {
         try {
           gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToAdopt);
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
 
         // Clear the reference to the tab once its adoption has been completed.
@@ -1966,7 +1966,7 @@ var gBrowserInit = {
     BookmarkingUI.init();
     BrowserSearch.delayedStartupInit();
     gProtectionsHandler.init();
-    HomePage.delayedStartup().catch(Cu.reportError);
+    HomePage.delayedStartup().catch(console.error);
 
     let safeMode = document.getElementById("helpSafeMode");
     if (Services.appinfo.inSafeMode) {
@@ -2352,7 +2352,7 @@ var gBrowserInit = {
             triggeringRemoteType,
           });
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
 
         window.focus();
@@ -2440,7 +2440,7 @@ var gBrowserInit = {
           }
           Services.telemetry.setEventRecordingEnabled("downloads", true);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       },
       { timeout: 10000 }
@@ -3151,7 +3151,7 @@ function loadURI(
       allowInheritPrincipal,
     });
   } catch (e) {
-    Cu.reportError(e);
+    console.error(e);
   }
 }
 
@@ -3732,7 +3732,7 @@ function openHomeDialog(aURL) {
   );
 
   if (pressedVal == 0) {
-    HomePage.set(aURL).catch(Cu.reportError);
+    HomePage.set(aURL).catch(console.error);
   }
 }
 
@@ -4420,7 +4420,7 @@ const BrowserSearch = {
     this._updateURLBarPlaceholderFromDefaultEngine(
       PrivateBrowsingUtils.isWindowPrivate(window),
       false
-    ).catch(Cu.reportError);
+    ).catch(console.error);
   },
 };
 
@@ -6243,7 +6243,7 @@ nsBrowserAccess.prototype = {
 
   openURI(aURI, aOpenWindowInfo, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
     if (!aURI) {
-      Cu.reportError("openURI should only be called with a valid URI");
+      console.error("openURI should only be called with a valid URI");
       throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
     return this.getContentWindowOrOpenURI(
@@ -6270,7 +6270,7 @@ nsBrowserAccess.prototype = {
     var isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     if (aOpenWindowInfo && isExternal) {
-      Cu.reportError(
+      console.error(
         "nsBrowserAccess.openURI did not expect aOpenWindowInfo to be " +
           "passed if the context is OPEN_EXTERNAL."
       );
@@ -6360,7 +6360,7 @@ nsBrowserAccess.prototype = {
           // context for a newly opened window is ready.
           browsingContext = null;
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB: {
@@ -7272,7 +7272,7 @@ function middleMousePaste(event) {
     } catch (ex) {
       // Things may go wrong when adding url to session history,
       // but don't let that interfere with the loading of the url.
-      Cu.reportError(ex);
+      console.error(ex);
     }
 
     if (
@@ -8977,7 +8977,7 @@ var MousePosTracker = {
       try {
         this._callListener(listener);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     });
   },
@@ -9176,7 +9176,7 @@ var PanicButtonNotifier = {
       let anchor = widget.anchor.icon;
       popup.openPopup(anchor, popup.getAttribute("position"));
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
   close() {
@@ -9799,7 +9799,7 @@ var gDialogBox = {
     try {
       await this._open(uri, args);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     } finally {
       let dialog = document.getElementById("window-modal-dialog");
       if (dialog.open) {

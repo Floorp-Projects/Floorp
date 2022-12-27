@@ -382,7 +382,7 @@ var FullZoom = {
     try {
       browser.sendMessageToActor(name, {}, "Pdfjs");
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 

@@ -153,7 +153,7 @@ export class ClickHandlerParent extends JSWindowActorParent {
 
         listener.onContentClick(browser, data);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   }

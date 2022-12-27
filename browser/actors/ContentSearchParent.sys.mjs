@@ -336,7 +336,7 @@ export let ContentSearch = {
       fieldname: browserData.controller.formHistoryParam,
       value: entry.value,
       source: entry.engineName,
-    }).catch(err => Cu.reportError("Error adding form history entry: " + err));
+    }).catch(err => console.error("Error adding form history entry: ", err));
     return true;
   },
 
@@ -380,7 +380,7 @@ export let ContentSearch = {
       try {
         await this["_on" + event.type](event);
       } catch (err) {
-        Cu.reportError(err);
+        console.error(err);
       } finally {
         this._currentEventPromise = null;
 

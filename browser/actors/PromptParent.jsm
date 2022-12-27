@@ -238,7 +238,7 @@ class PromptParent extends JSWindowActorParent {
 
       return promise;
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       onPromptClose(true);
     }
 

@@ -2287,14 +2287,14 @@ class nsContextMenu {
   }
 
   bookmarkThisPage() {
-    window.top.PlacesCommandHook.bookmarkPage().catch(Cu.reportError);
+    window.top.PlacesCommandHook.bookmarkPage().catch(console.error);
   }
 
   bookmarkLink() {
     window.top.PlacesCommandHook.bookmarkLink(
       this.linkURL,
       this.linkTextStr
-    ).catch(Cu.reportError);
+    ).catch(console.error);
   }
 
   addBookmarkForFrame() {
@@ -2302,7 +2302,7 @@ class nsContextMenu {
 
     this.actor.getFrameTitle(this.targetIdentifier).then(title => {
       window.top.PlacesCommandHook.bookmarkLink(uri.spec, title).catch(
-        Cu.reportError
+        console.error
       );
     });
   }

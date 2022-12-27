@@ -611,7 +611,7 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
       case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
         return "cookiesfromunvisitedsitesblocked";
       default:
-        Cu.reportError(
+        console.error(
           `Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`
         );
       // fall through
@@ -684,7 +684,7 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
           label = "contentBlocking.cookies.blockingTrackers3.label";
           break;
         default:
-          Cu.reportError(
+          console.error(
             `Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`
           );
           break;
@@ -781,7 +781,7 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
           : "protections.blocking.cookies.trackers.title";
         break;
       default:
-        Cu.reportError(
+        console.error(
           `Error: Unknown cookieBehavior pref when updating subview: ${this.behaviorPref}`
         );
         break;
@@ -2361,7 +2361,7 @@ var gProtectionsHandler = {
         position: "bottomleft topleft",
         triggerEvent: event,
       }
-    ).catch(Cu.reportError);
+    ).catch(console.error);
   },
 
   showSiteNotWorkingView() {
@@ -2487,7 +2487,7 @@ var gProtectionsHandler = {
       .then(response => {
         this._protectionsPopupSendReportButton.disabled = false;
         if (!response.ok) {
-          Cu.reportError(
+          console.error(
             `Content Blocking report to ${reportEndpoint} failed with status ${response.status}`
           );
           this._protectionsPopupSiteNotWorkingReportError.hidden = false;
@@ -2499,7 +2499,7 @@ var gProtectionsHandler = {
           );
         }
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
 
   onSendReportClicked() {
