@@ -10,13 +10,11 @@
 
 namespace {
 
-bool AddString(void* aBuffer, size_t aBufferSize, const UNICODE_STRING& aStr) {
-  size_t offset = 0;
-  while (offset < aBufferSize) {
+bool AddString(mozilla::Span<wchar_t> aBuffer, const UNICODE_STRING& aStr) {
+  size_t offsetElements = 0;
+  while (offsetElements < aBuffer.Length()) {
     UNICODE_STRING uniStr;
-    ::RtlInitUnicodeString(&uniStr,
-                           reinterpret_cast<wchar_t*>(
-                               reinterpret_cast<uintptr_t>(aBuffer) + offset));
+    ::RtlInitUnicodeString(&uniStr, aBuffer.data() + offsetElements);
 
     if (uniStr.Length == 0) {
       // Reached to the array's last item.
@@ -29,17 +27,19 @@ bool AddString(void* aBuffer, size_t aBufferSize, const UNICODE_STRING& aStr) {
     }
 
     // Go to the next string.
-    offset += uniStr.MaximumLength;
+    offsetElements += uniStr.MaximumLength / sizeof(wchar_t);
   }
 
   // Ensure enough space including the last empty string at the end.
-  if (offset + aStr.MaximumLength + sizeof(wchar_t) > aBufferSize) {
+  if (offsetElements * sizeof(wchar_t) + aStr.Length + sizeof(wchar_t) +
+          sizeof(wchar_t) >
+      aBuffer.LengthBytes()) {
     return false;
   }
 
-  auto newStr = reinterpret_cast<uint8_t*>(aBuffer) + offset;
-  memcpy(newStr, aStr.Buffer, aStr.Length);
-  memset(newStr + aStr.Length, 0, sizeof(wchar_t));
+  auto newStr = aBuffer.Subspan(offsetElements);
+  memcpy(newStr.data(), aStr.Buffer, aStr.Length);
+  memset(newStr.data() + aStr.Length / sizeof(wchar_t), 0, sizeof(wchar_t));
   return true;
 }
 
@@ -107,8 +107,7 @@ void Kernel32ExportsSolver::ResolveInternal() {
 
   MOZ_RELEASE_ASSERT(mState == State::Initialized);
 
-  UNICODE_STRING k32Name;
-  ::RtlInitUnicodeString(&k32Name, L"kernel32.dll");
+  const UNICODE_STRING k32Name = MOZ_LITERAL_UNICODE_STRING(L"kernel32.dll");
 
   // We cannot use GetModuleHandleW because this code can be called
   // before IAT is resolved.
@@ -140,17 +139,17 @@ void Kernel32ExportsSolver::Resolve(RTL_RUN_ONCE& aRunOnce) {
 HANDLE SharedSection::sSectionHandle = nullptr;
 void* SharedSection::sWriteCopyView = nullptr;
 
-void SharedSection::Reset(HANDLE aNewSecionObject) {
+void SharedSection::Reset(HANDLE aNewSectionObject) {
   if (sWriteCopyView) {
     nt::AutoMappedView view(sWriteCopyView);
     sWriteCopyView = nullptr;
   }
 
-  if (sSectionHandle != aNewSecionObject) {
+  if (sSectionHandle != aNewSectionObject) {
     if (sSectionHandle) {
       ::CloseHandle(sSectionHandle);
     }
-    sSectionHandle = aNewSecionObject;
+    sSectionHandle = aNewSectionObject;
   }
 }
 
@@ -169,7 +168,7 @@ void SharedSection::ConvertToReadOnly() {
   Reset(readonlyHandle);
 }
 
-LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
+LauncherVoidResult SharedSection::Init() {
   static_assert(
       kSharedViewSize >= sizeof(Layout),
       "kSharedViewSize is too small to represent SharedSection::Layout.");
@@ -191,21 +190,20 @@ LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
 
-  SharedSection::Layout* view = writableView.as<SharedSection::Layout>();
+  Layout* view = writableView.as<Layout>();
   view->mK32Exports.Init();
 
   return Ok();
 }
 
-LauncherVoidResult SharedSection::AddDepenentModule(PCUNICODE_STRING aNtPath) {
+LauncherVoidResult SharedSection::AddDependentModule(PCUNICODE_STRING aNtPath) {
   nt::AutoMappedView writableView(sSectionHandle, PAGE_READWRITE);
   if (!writableView) {
     return LAUNCHER_ERROR_FROM_WIN32(::RtlGetLastWin32Error());
   }
 
-  SharedSection::Layout* view = writableView.as<SharedSection::Layout>();
-  if (!AddString(view->mModulePathArray,
-                 kSharedViewSize - sizeof(Kernel32ExportsSolver), *aNtPath)) {
+  Layout* view = writableView.as<Layout>();
+  if (!AddString(view->GetModulePathArray(), *aNtPath)) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
   }
 
@@ -220,7 +218,7 @@ LauncherResult<SharedSection::Layout*> SharedSection::GetView() {
     }
     sWriteCopyView = view.release();
   }
-  return reinterpret_cast<SharedSection::Layout*>(sWriteCopyView);
+  return reinterpret_cast<Layout*>(sWriteCopyView);
 }
 
 LauncherVoidResult SharedSection::TransferHandle(

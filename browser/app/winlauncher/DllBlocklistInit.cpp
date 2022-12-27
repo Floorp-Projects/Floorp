@@ -196,8 +196,7 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
   // The launcher process initializes a section object, whose handle is
   // transferred to the browser process, and that transferred handle in
   // the browser process is transferred to the sandbox processes.
-  LauncherVoidResultWithLineInfo result =
-      freestanding::gSharedSection.Init(transferMgr.LocalPEHeaders());
+  LauncherVoidResultWithLineInfo result = freestanding::gSharedSection.Init();
   if (result.isErr()) {
     return result.propagateErr();
   }
