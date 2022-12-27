@@ -15,6 +15,7 @@ where
 {
     iter: Peekable<I>,
     surrogate: bool,
+    still_utf8: bool,
 }
 
 impl<I> CodePoints<I>
@@ -23,12 +24,17 @@ where
 {
     pub(in super::super) fn new<S>(string: S) -> Self
     where
-        S: IntoIterator<IntoIter = I, Item = I::Item>,
+        S: IntoIterator<IntoIter = I>,
     {
         Self {
             iter: string.into_iter().peekable(),
             surrogate: false,
+            still_utf8: true,
         }
+    }
+
+    pub(super) fn is_still_utf8(&self) -> bool {
+        self.still_utf8
     }
 
     fn consume_next(&mut self, code_point: &mut u32) -> Result<()> {
@@ -99,6 +105,7 @@ where
 
                 // This condition is optimized to detect surrogate code points.
                 } else if code_point & 0xFE0 == 0x360 {
+                    self.still_utf8 = false;
                     if code_point & 0x10 == 0 {
                         self.surrogate = true;
                     } else if prev_surrogate {

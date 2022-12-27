@@ -19,7 +19,7 @@ Add the following lines to your "Cargo.toml" file:
 
 ```toml
 [dependencies]
-os_str_bytes = "6.3"
+os_str_bytes = "6.4"
 ```
 
 See the [documentation] for available functionality and examples.
@@ -69,6 +69,11 @@ The minimum supported Rust toolchain version depends on the platform:
         <td><code>*-*-windows-*</code></td>
         <td>1.57.0</td>
     </tr>
+    <tr>
+        <td>Xous</td>
+        <td><code>*-*-xous-*</code></td>
+        <td>unstable</td>
+    </tr>
 </table>
 
 Minor version updates may increase these version requirements. However, the
@@ -78,7 +83,7 @@ crate's minor version:
 
 ```toml
 [dependencies]
-os_str_bytes = "~6.3"
+os_str_bytes = "~6.4"
 ```
 
 ## License
