@@ -12,8 +12,12 @@
 [package]
 edition = "2018"
 name = "profiling"
-version = "1.0.6"
+version = "1.0.7"
 authors = ["Philip Degarmo <aclysma@gmail.com>"]
+exclude = [
+    "/examples",
+    "/screenshots",
+]
 description = "This crate provides a very thin abstraction over other profiler crates."
 homepage = "https://github.com/aclysma/profiling"
 readme = "README.md"
@@ -40,7 +44,7 @@ version = "1.3"
 optional = true
 
 [dependencies.profiling-procmacros]
-version = "1.0.6"
+version = "1.0.7"
 optional = true
 
 [dependencies.puffin]
@@ -56,7 +60,7 @@ version = "0.1"
 optional = true
 
 [dependencies.tracy-client]
-version = "0.13"
+version = "0.14.1"
 optional = true
 
 [dev-dependencies.bincode]
