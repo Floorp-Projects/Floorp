@@ -1422,6 +1422,11 @@ The core logic is very simple, and acts as an abstraction trait for `Cell<T>`
 and `AtomicT`.
 """
 
+[[audits.rand_core]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.6.3 -> 0.6.4"
+
 [[audits.raw-window-handle]]
 who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
