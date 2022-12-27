@@ -7459,7 +7459,8 @@ nsDisplayTableBackgroundSet::nsDisplayTableBackgroundSet(
     nsDisplayListBuilder* aBuilder, nsIFrame* aTable)
     : mBuilder(aBuilder),
       mColGroupBackgrounds(aBuilder),
-      mColBackgrounds(aBuilder) {
+      mColBackgrounds(aBuilder),
+      mCurrentScrollParentId(aBuilder->GetCurrentScrollParentId()) {
   mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
   mozilla::DebugOnly<const nsIFrame*> reference =
       mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);

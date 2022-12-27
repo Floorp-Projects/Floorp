@@ -3310,6 +3310,9 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         autoRecording;
 
     ViewID id = ScrollableLayerGuid::NULL_SCROLL_ID;
+    nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(
+        builder);
+
     if (presShell->GetDocument() &&
         presShell->GetDocument()->IsRootDisplayDocument() &&
         !presShell->GetRootScrollFrame()) {
@@ -3342,7 +3345,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       }
     }
 
-    nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(builder, id);
+    asrSetter.SetCurrentScrollParentId(id);
 
     builder->SetVisibleRect(visibleRect);
     builder->SetIsBuilding(true);
