@@ -138,9 +138,7 @@ static CommandLineArg<bool> sWin32kLockedDown{"-win32kLockedDown",
 static CommandLineArg<uint64_t> sA11yResourceId{"-a11yResourceId",
                                                 "a11yresourceid"};
 #  endif  // defined(ACCESSIBILITY)
-static CommandLineArg<bool> sDisableDynamicDllBlocklist{
-    "-disableDynamicBlocklist", "disabledynamicblocklist"};
-#endif  // defined(XP_WIN)
+#endif    // defined(XP_WIN) && defined(ACCESSIBILITY)
 
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop

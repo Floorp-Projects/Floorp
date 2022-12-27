@@ -88,8 +88,6 @@ policy-DisableSystemAddonUpdate = Prevent the browser from installing and updati
 
 policy-DisableTelemetry = Turn off Telemetry.
 
-policy-DisableThirdPartyModuleBlocking = Prevent the user from blocking third-party modules that get injected into the { -brand-short-name } process.
-
 policy-DisplayBookmarksToolbar = Display the Bookmarks Toolbar by default.
 
 policy-DisplayMenuBar = Display the Menu Bar by default.

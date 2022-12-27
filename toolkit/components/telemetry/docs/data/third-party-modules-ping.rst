@@ -1,4 +1,3 @@
-.. _third-party-modules-ping:
 
 "third-party-modules" ping
 ==========================

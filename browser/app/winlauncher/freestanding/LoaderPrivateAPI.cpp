@@ -88,7 +88,6 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS LoaderPrivateAPIImp final
   nt::AllocatedUnicodeString GetSectionName(void* aSectionAddr) final;
   nt::LoaderAPI::InitDllBlocklistOOPFnPtr GetDllBlocklistInitFn() final;
   nt::LoaderAPI::HandleLauncherErrorFnPtr GetHandleLauncherErrorFn() final;
-  nt::SharedSection* GetSharedSection() final;
 
   // LoaderPrivateAPI
   void NotifyBeginDllLoad(void** aContext,
@@ -221,10 +220,6 @@ LoaderPrivateAPIImp::GetDllBlocklistInitFn() {
 nt::LoaderAPI::HandleLauncherErrorFnPtr
 LoaderPrivateAPIImp::GetHandleLauncherErrorFn() {
   return &HandleLauncherError;
-}
-
-nt::SharedSection* LoaderPrivateAPIImp::GetSharedSection() {
-  return &gSharedSection;
 }
 
 nt::MemorySectionNameBuf LoaderPrivateAPIImp::GetSectionNameBuffer(

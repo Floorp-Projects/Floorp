@@ -8,7 +8,6 @@
 #define mozilla_LoaderAPIInterfaces_h
 
 #include "nscore.h"
-#include "mozilla/glue/SharedSection.h"
 #include "mozilla/ModuleLoadInfo.h"
 
 namespace mozilla {
@@ -105,18 +104,14 @@ class NS_NO_VTABLE LoaderAPI {
    */
   virtual InitDllBlocklistOOPFnPtr GetDllBlocklistInitFn() = 0;
   virtual HandleLauncherErrorFnPtr GetHandleLauncherErrorFn() = 0;
-  virtual SharedSection* GetSharedSection() = 0;
 };
 
-struct WinLauncherServices final {
+struct WinLauncherFunctions final {
   nt::LoaderAPI::InitDllBlocklistOOPFnPtr mInitDllBlocklistOOP;
   nt::LoaderAPI::HandleLauncherErrorFnPtr mHandleLauncherError;
-  SharedSection* mSharedSection;
 
-  WinLauncherServices()
-      : mInitDllBlocklistOOP(nullptr),
-        mHandleLauncherError(nullptr),
-        mSharedSection(nullptr) {}
+  WinLauncherFunctions()
+      : mInitDllBlocklistOOP(nullptr), mHandleLauncherError(nullptr) {}
 };
 
 }  // namespace nt
