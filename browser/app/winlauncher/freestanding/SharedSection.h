@@ -80,18 +80,6 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
 // |     | L""                                                    |
 // +--------------------------------------------------------------+
 class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
-  // As we define a global variable of this class and use it in our blocklist
-  // which is excuted in a process's early stage.  If we have a complex dtor,
-  // the static initializer tries to register that dtor with onexit() of
-  // ucrtbase.dll which is not loaded yet, resulting in crash.  Thus, we have
-  // a raw handle and a pointer as a static variable and manually release them
-  // by calling Reset() where possible.
-  static HANDLE sSectionHandle;
-  static void* sWriteCopyView;
-
-  static constexpr size_t kSharedViewSize = 0x1000;
-
- public:
   struct Layout final {
     Kernel32ExportsSolver mK32Exports;
     wchar_t mModulePathArray[1];
@@ -106,6 +94,20 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
     Layout() = delete;  // disallow instantiation
   };
 
+  // As we define a global variable of this class and use it in our blocklist
+  // which is excuted in a process's early stage.  If we have a complex dtor,
+  // the static initializer tries to register that dtor with onexit() of
+  // ucrtbase.dll which is not loaded yet, resulting in crash.  Thus, we have
+  // a raw handle and a pointer as a static variable and manually release them
+  // by calling Reset() where possible.
+  static HANDLE sSectionHandle;
+  static void* sWriteCopyView;
+
+  static constexpr size_t kSharedViewSize = 0x1000;
+
+  static LauncherVoidResult EnsureWriteCopyView();
+
+ public:
   // Replace |sSectionHandle| with a given handle.
   static void Reset(HANDLE aNewSectionObject = sSectionHandle);
 
@@ -119,8 +121,10 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
   // Append a new string to the |sSectionHandle|
   static LauncherVoidResult AddDependentModule(PCUNICODE_STRING aNtPath);
 
-  // Map |sSectionHandle| to a copy-on-write page and return its address.
-  static LauncherResult<Layout*> GetView();
+  // Map |sSectionHandle| to a copy-on-write page and return a writable pointer
+  // to each structure.
+  Kernel32ExportsSolver* GetKernel32Exports();
+  Span<const wchar_t> GetDependentModules();
 
   // Transfer |sSectionHandle| to a process associated with |aTransferMgr|.
   static LauncherVoidResult TransferHandle(
