@@ -1437,34 +1437,34 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
   nsAutoCString familyName(aFamily->DisplayName().AsString(list));
   nsAutoCString key(aFamily->Key().AsString(list));
 
-  // Read PS-names and fullnames of the faces, and any alternate family names
-  // (either localizations or legacy subfamily names)
-  for (unsigned i = 0; i < aFamily->NumFaces(); ++i) {
-    auto face = static_cast<fontlist::Face*>(facePtrs[i].ToPtr(list));
-    if (!face) {
-      continue;
-    }
-    RefPtr<IDWriteFont> dwFont;
-    if (FAILED(family->GetFont(face->mIndex, getter_AddRefs(dwFont)))) {
-      continue;
-    }
-    RefPtr<IDWriteFontFace> dwFontFace;
-    if (FAILED(dwFont->CreateFontFace(getter_AddRefs(dwFontFace)))) {
-      continue;
-    }
+  MOZ_SEH_TRY {
+    // Read PS-names and fullnames of the faces, and any alternate family names
+    // (either localizations or legacy subfamily names)
+    for (unsigned i = 0; i < aFamily->NumFaces(); ++i) {
+      auto face = static_cast<fontlist::Face*>(facePtrs[i].ToPtr(list));
+      if (!face) {
+        continue;
+      }
+      RefPtr<IDWriteFont> dwFont;
+      if (FAILED(family->GetFont(face->mIndex, getter_AddRefs(dwFont)))) {
+        continue;
+      }
+      RefPtr<IDWriteFontFace> dwFontFace;
+      if (FAILED(dwFont->CreateFontFace(getter_AddRefs(dwFontFace)))) {
+        continue;
+      }
 
-    const char* data;
-    UINT32 size;
-    void* context;
-    BOOL exists;
-    if (FAILED(dwFontFace->TryGetFontTable(
-            NativeEndian::swapToBigEndian(TRUETYPE_TAG('n', 'a', 'm', 'e')),
-            (const void**)&data, &size, &context, &exists)) ||
-        !exists) {
-      continue;
-    }
+      const char* data;
+      UINT32 size;
+      void* context;
+      BOOL exists;
+      if (FAILED(dwFontFace->TryGetFontTable(
+              NativeEndian::swapToBigEndian(TRUETYPE_TAG('n', 'a', 'm', 'e')),
+              (const void**)&data, &size, &context, &exists)) ||
+          !exists) {
+        continue;
+      }
 
-    MOZ_SEH_TRY {
       AutoTArray<nsCString, 4> otherFamilyNames;
       gfxFontUtils::ReadOtherFamilyNamesForFace(familyName, data, size,
                                                 otherFamilyNames, false);
@@ -1491,13 +1491,13 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
               fullname, fontlist::LocalFaceRec::InitData(key, i));
         }
       }
-    }
-    MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-      gfxCriticalNote << "Exception occurred reading names for "
-                      << familyName.get();
-    }
 
-    dwFontFace->ReleaseFontTable(context);
+      dwFontFace->ReleaseFontTable(context);
+    }
+  }
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    gfxCriticalNote << "Exception occurred reading names for "
+                    << familyName.get();
   }
 }
 
