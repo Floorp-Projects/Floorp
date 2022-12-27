@@ -12,6 +12,8 @@ use std::os::solid as os;
 use std::os::unix as os;
 #[cfg(target_os = "wasi")]
 use std::os::wasi as os;
+#[cfg(target_os = "xous")]
+use std::os::xous as os;
 
 use os::ffi::OsStrExt;
 use os::ffi::OsStringExt;

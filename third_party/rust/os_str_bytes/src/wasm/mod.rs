@@ -13,7 +13,7 @@ if_raw_str! {
     pub(super) mod raw;
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) struct EncodingError(Utf8Error);
 
 impl Display for EncodingError {

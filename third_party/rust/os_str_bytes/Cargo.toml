@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.57.0"
 name = "os_str_bytes"
-version = "6.3.0"
+version = "6.4.1"
 authors = ["dylni"]
 exclude = [
     ".*",
@@ -42,7 +42,6 @@ categories = [
 ]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dylni/os_str_bytes"
-resolver = "2"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -60,7 +59,7 @@ version = "2.4"
 optional = true
 
 [dependencies.print_bytes]
-version = "0.6"
+version = "0.7"
 optional = true
 
 [dependencies.uniquote]

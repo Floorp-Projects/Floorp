@@ -100,7 +100,7 @@ where
     }
 }
 
-struct EncodeWide<I>
+pub(in super::super) struct EncodeWide<I>
 where
     I: Iterator<Item = u8>,
 {
@@ -112,14 +112,18 @@ impl<I> EncodeWide<I>
 where
     I: Iterator<Item = u8>,
 {
-    pub(in super::super) fn new<S>(string: S) -> Self
+    fn new<S>(string: S) -> Self
     where
-        S: IntoIterator<IntoIter = I, Item = I::Item>,
+        S: IntoIterator<IntoIter = I>,
     {
         Self {
             iter: CodePoints::new(string),
             surrogate: None,
         }
+    }
+
+    pub(in super::super) fn is_still_utf8(&self) -> bool {
+        self.iter.is_still_utf8()
     }
 }
 
@@ -172,6 +176,6 @@ where
 
 pub(in super::super) fn encode_wide(
     string: &[u8],
-) -> impl '_ + Iterator<Item = Result<u16>> {
+) -> EncodeWide<impl '_ + Iterator<Item = u8>> {
     EncodeWide::new(string.iter().copied())
 }

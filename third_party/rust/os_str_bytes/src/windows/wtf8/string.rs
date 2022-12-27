@@ -3,17 +3,20 @@ use crate::util;
 const SURROGATE_LENGTH: usize = 3;
 
 pub(crate) fn ends_with(string: &[u8], mut suffix: &[u8]) -> bool {
-    let index = match string.len().checked_sub(suffix.len()) {
-        Some(index) => index,
-        None => return false,
+    let index = if let Some(index) = string.len().checked_sub(suffix.len()) {
+        index
+    } else {
+        return false;
     };
     if let Some(&byte) = string.get(index) {
         if util::is_continuation(byte) {
             let index = expect_encoded!(index.checked_sub(1));
-            let mut wide_surrogate = match suffix.get(..SURROGATE_LENGTH) {
-                Some(surrogate) => super::encode_wide(surrogate),
-                None => return false,
-            };
+            let mut wide_surrogate =
+                if let Some(surrogate) = suffix.get(..SURROGATE_LENGTH) {
+                    super::encode_wide(surrogate)
+                } else {
+                    return false;
+                };
             let surrogate_wchar = wide_surrogate
                 .next()
                 .expect("failed decoding non-empty suffix");
@@ -35,9 +38,12 @@ pub(crate) fn ends_with(string: &[u8], mut suffix: &[u8]) -> bool {
 pub(crate) fn starts_with(string: &[u8], mut prefix: &[u8]) -> bool {
     if let Some(&byte) = string.get(prefix.len()) {
         if util::is_continuation(byte) {
-            let index = match prefix.len().checked_sub(SURROGATE_LENGTH) {
-                Some(index) => index,
-                None => return false,
+            let index = if let Some(index) =
+                prefix.len().checked_sub(SURROGATE_LENGTH)
+            {
+                index
+            } else {
+                return false;
             };
             let (substring, surrogate) = prefix.split_at(index);
             let mut wide_surrogate = super::encode_wide(surrogate);
