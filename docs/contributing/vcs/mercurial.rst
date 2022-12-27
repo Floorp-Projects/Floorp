@@ -141,8 +141,7 @@ Selecting a revision to build
 
 Most of the time the `tip` revision of most repositories will build
 without issue. If you are worried about it not, then you may want to
-`get the latest revision that has passed the automatic
-tests <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/LatestPassingSource>`__.
+stick to mozilla-central.
 
 Building
 --------
