@@ -3365,6 +3365,12 @@ class nsContentUtils {
    */
   static nsresult EnsureAndLoadStringBundle(PropertiesFile aFile);
 
+  /**
+   * The method asks nsIAppShell to prioritize Gecko's internal tasks over
+   * the OS level tasks for a short period of time.
+   */
+  static void RequestGeckoTaskBurst();
+
  private:
   static bool InitializeEventTable();
 

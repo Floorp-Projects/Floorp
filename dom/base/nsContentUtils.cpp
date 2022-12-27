@@ -257,6 +257,7 @@
 #include "nsHtml5StringParser.h"
 #include "nsIAboutModule.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsIAppShell.h"
 #include "nsIArray.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIBidiKeyboard.h"
@@ -384,6 +385,7 @@
 #include "nsURLHelper.h"
 #include "nsUnicodeProperties.h"
 #include "nsVariant.h"
+#include "nsWidgetsCID.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsXPCOM.h"
@@ -10951,6 +10953,13 @@ uint32_t nsContentUtils::ResolveObjectType(uint32_t aType) {
   }
 
   return nsIObjectLoadingContent::TYPE_DOCUMENT;
+}
+
+void nsContentUtils::RequestGeckoTaskBurst() {
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(NS_APPSHELL_CID);
+  if (appShell) {
+    appShell->GeckoTaskBurst();
+  }
 }
 
 namespace mozilla {

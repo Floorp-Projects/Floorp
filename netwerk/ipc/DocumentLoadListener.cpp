@@ -2097,6 +2097,12 @@ DocumentLoadListener::RedirectToRealChannel(
 
     cp->TransmitBlobDataIfBlobURL(args.uri());
 
+    if (CanonicalBrowsingContext* bc = GetDocumentBrowsingContext()) {
+      if (bc->IsTop() && bc->IsActive()) {
+        nsContentUtils::RequestGeckoTaskBurst();
+      }
+    }
+
     return cp->SendCrossProcessRedirect(args,
                                         std::move(aStreamFilterEndpoints));
   }
