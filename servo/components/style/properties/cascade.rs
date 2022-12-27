@@ -56,6 +56,7 @@ pub fn cascade<E>(
     pseudo: Option<&PseudoElement>,
     rule_node: &StrongRuleNode,
     guards: &StylesheetGuards,
+    originating_element_style: Option<&ComputedValues>,
     parent_style: Option<&ComputedValues>,
     parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
@@ -74,6 +75,7 @@ where
         pseudo,
         rule_node,
         guards,
+        originating_element_style,
         parent_style,
         parent_style_ignoring_first_line,
         layout_parent_style,
@@ -174,6 +176,7 @@ fn cascade_rules<E>(
     pseudo: Option<&PseudoElement>,
     rule_node: &StrongRuleNode,
     guards: &StylesheetGuards,
+    originating_element_style: Option<&ComputedValues>,
     parent_style: Option<&ComputedValues>,
     parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
@@ -197,6 +200,7 @@ where
         rule_node,
         guards,
         DeclarationIterator::new(rule_node, guards, pseudo),
+        originating_element_style,
         parent_style,
         parent_style_ignoring_first_line,
         layout_parent_style,
@@ -233,6 +237,7 @@ pub fn apply_declarations<'a, E, I>(
     rules: &StrongRuleNode,
     guards: &StylesheetGuards,
     iter: I,
+    originating_element_style: Option<&ComputedValues>,
     parent_style: Option<&ComputedValues>,
     parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
@@ -247,6 +252,10 @@ where
     E: TElement,
     I: Iterator<Item = (&'a PropertyDeclaration, CascadePriority)>,
 {
+    debug_assert_eq!(
+        originating_element_style.is_some(),
+        element.is_some() && pseudo.is_some()
+    );
     debug_assert!(layout_parent_style.is_none() || parent_style.is_some());
     debug_assert_eq!(
         parent_style.is_some(),
@@ -283,7 +292,7 @@ where
 
     let is_root_element = pseudo.is_none() && element.map_or(false, |e| e.is_root());
     let container_size_query =
-        ContainerSizeQuery::for_option_element(element, pseudo.and(parent_style));
+        ContainerSizeQuery::for_option_element(element, originating_element_style);
 
     let mut context = computed::Context::new(
         // We'd really like to own the rules here to avoid refcount traffic, but
@@ -340,6 +349,7 @@ where
             if let Some(visited_rules) = visited_rules {
                 cascade.compute_visited_style_if_needed(
                     element,
+                    originating_element_style,
                     parent_style,
                     parent_style_ignoring_first_line,
                     layout_parent_style,
@@ -726,6 +736,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     fn compute_visited_style_if_needed<E>(
         &mut self,
         element: Option<E>,
+        originating_element_style: Option<&ComputedValues>,
         parent_style: Option<&ComputedValues>,
         parent_style_ignoring_first_line: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
@@ -756,6 +767,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             self.context.builder.pseudo,
             visited_rules,
             guards,
+            visited_parent!(originating_element_style),
             visited_parent!(parent_style),
             visited_parent!(parent_style_ignoring_first_line),
             visited_parent!(layout_parent_style),

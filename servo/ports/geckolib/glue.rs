@@ -4131,6 +4131,7 @@ fn get_pseudo_style(
                             inputs,
                             pseudo,
                             &guards,
+                            Some(styles.primary()),
                             Some(inherited_styles),
                             Some(element),
                         )
@@ -5942,6 +5943,10 @@ pub extern "C" fn Servo_ReparentStyle(
             pseudo.as_ref(),
             inputs,
             &StylesheetGuards::same(&guard),
+            match element.is_some() && pseudo.is_some() {
+                true => Some(parent_style),
+                false => None,
+            },
             Some(parent_style),
             Some(parent_style_ignoring_first_line),
             Some(layout_parent_style),
