@@ -137,8 +137,8 @@ class ThreeDotMenuMainRobot {
         for (i in 1..RETRY_COUNT) {
             try {
                 assertTrue(
-                    "Addon not listed in the Add-ons menu",
-                    mDevice.findObject(UiSelector().text(addonName)).waitForExists(waitingTime),
+                    "Addon not listed in the Add-ons sub-menu",
+                    mDevice.findObject(UiSelector().textContains(addonName)).waitForExists(waitingTime),
                 )
                 break
             } catch (e: AssertionError) {
