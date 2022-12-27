@@ -170,8 +170,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   Document* GetDocument() { return mDocument; }
 
  protected:
-  void FavorPerformanceHint(bool perfOverStarvation, uint32_t starvationDelay);
-
   inline int32_t GetNotificationInterval() {
     if (mDynamicLowerValue) {
       return 1000;

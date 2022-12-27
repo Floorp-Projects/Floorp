@@ -96,7 +96,6 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "ReferrerInfo.h"
 
-#include "nsIAppShell.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
 #include "nsICachingChannel.h"
@@ -265,17 +264,6 @@ using mozilla::ipc::Endpoint;
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
 
-// Hint for native dispatch of events on how long to delay after
-// all documents have loaded in milliseconds before favoring normal
-// native event dispatch priorites over performance
-// Can be overridden with docshell.event_starvation_delay_hint pref.
-#define NS_EVENT_STARVATION_DELAY_HINT 2000
-
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
-// Number of documents currently loading
-static int32_t gNumberOfDocumentsLoading = 0;
-
 static mozilla::LazyLogModule gCharsetMenuLog("CharsetMenu");
 
 #define LOGCHARSETMENU(args) \
@@ -296,16 +284,6 @@ extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
 const char kAppstringsBundleURL[] =
     "chrome://global/locale/appstrings.properties";
-
-static void FavorPerformanceHint(bool aPerfOverStarvation) {
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    appShell->FavorPerformanceHint(
-        aPerfOverStarvation,
-        Preferences::GetUint("docshell.event_starvation_delay_hint",
-                             NS_EVENT_STARVATION_DELAY_HINT));
-  }
-}
 
 static bool IsTopLevelDoc(BrowsingContext* aBrowsingContext,
                           nsILoadInfo* aLoadInfo) {
@@ -6470,14 +6448,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     mIsExecutingOnLoadHandler = false;
 
     mEODForCurrentDocument = true;
-
-    // If all documents have completed their loading
-    // favor native event dispatch priorities
-    // over performance
-    if (--gNumberOfDocumentsLoading == 0) {
-      // Hint to use normal native event dispatch priorities
-      FavorPerformanceHint(false);
-    }
   }
   /* Check if the httpChannel has any cache-control related response headers,
    * like no-store, no-cache. If so, update SHEntry so that
@@ -7615,12 +7585,6 @@ nsresult nsDocShell::RestoreFromHistory() {
   mSavingOldViewer = false;
   mEODForCurrentDocument = false;
 
-  // Tell the event loop to favor plevents over user events, see comments
-  // in CreateContentViewer.
-  if (++gNumberOfDocumentsLoading == 1) {
-    FavorPerformanceHint(true);
-  }
-
   if (document) {
     RefPtr<nsDocShell> parent = GetInProcessParentDocshell();
     if (parent) {
@@ -8110,16 +8074,6 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
         doc->SetPartID(partID);
       }
     }
-  }
-
-  // Give hint to native plevent dispatch mechanism. If a document
-  // is loading the native plevent dispatch mechanism should favor
-  // performance over normal native event dispatch priorities.
-  if (++gNumberOfDocumentsLoading == 1) {
-    // Hint to favor performance for the plevent notification mechanism.
-    // We want the pages to load as fast as possible even if its means
-    // native messages might be starved.
-    FavorPerformanceHint(true);
   }
 
   if (errorOnLocationChangeNeeded) {
