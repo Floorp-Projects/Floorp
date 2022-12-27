@@ -58,23 +58,22 @@ class DllServicesBase : public Authenticode {
     mAuthenticode = aAuthenticode;
   }
 
-  void SetWinLauncherServices(const nt::WinLauncherServices& aWinLauncher) {
-    mWinLauncher = aWinLauncher;
+  void SetWinLauncherFunctions(const nt::WinLauncherFunctions& aFunctions) {
+    mWinLauncherFunctions = aFunctions;
   }
 
   template <typename... Args>
   LauncherVoidResultWithLineInfo InitDllBlocklistOOP(Args&&... aArgs) {
-    MOZ_RELEASE_ASSERT(mWinLauncher.mInitDllBlocklistOOP);
-    return mWinLauncher.mInitDllBlocklistOOP(std::forward<Args>(aArgs)...);
+    MOZ_RELEASE_ASSERT(mWinLauncherFunctions.mInitDllBlocklistOOP);
+    return mWinLauncherFunctions.mInitDllBlocklistOOP(
+        std::forward<Args>(aArgs)...);
   }
 
   template <typename... Args>
   void HandleLauncherError(Args&&... aArgs) {
-    MOZ_RELEASE_ASSERT(mWinLauncher.mHandleLauncherError);
-    mWinLauncher.mHandleLauncherError(std::forward<Args>(aArgs)...);
+    MOZ_RELEASE_ASSERT(mWinLauncherFunctions.mHandleLauncherError);
+    mWinLauncherFunctions.mHandleLauncherError(std::forward<Args>(aArgs)...);
   }
-
-  nt::SharedSection* GetSharedSection() { return mWinLauncher.mSharedSection; }
 
   // In debug builds we override GetBinaryOrgName to add a Gecko-specific
   // assertion. OTOH, we normally do not want people overriding this function,
@@ -113,7 +112,7 @@ class DllServicesBase : public Authenticode {
 
  private:
   Authenticode* mAuthenticode;
-  nt::WinLauncherServices mWinLauncher;
+  nt::WinLauncherFunctions mWinLauncherFunctions;
 };
 
 }  // namespace detail

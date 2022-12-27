@@ -33,5 +33,3 @@ if CONFIG["ENABLE_TESTS"]:
     DIRS += ["tests/gtest"]
 
 TEST_DIRS += ["tests/TestShellEx"]
-
-include("/ipc/chromium/chromium-config.mozbuild")

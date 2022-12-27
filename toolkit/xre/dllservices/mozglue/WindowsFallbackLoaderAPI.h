@@ -26,7 +26,6 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FallbackLoaderAPI final
   nt::AllocatedUnicodeString GetSectionName(void* aSectionAddr) final;
   nt::LoaderAPI::InitDllBlocklistOOPFnPtr GetDllBlocklistInitFn() final;
   nt::LoaderAPI::HandleLauncherErrorFnPtr GetHandleLauncherErrorFn() final;
-  nt::SharedSection* GetSharedSection() final;
 
   void SetObserver(nt::LoaderObserver* aLoaderObserver);
 

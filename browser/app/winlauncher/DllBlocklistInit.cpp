@@ -12,7 +12,6 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ImportDir.h"
 #include "mozilla/NativeNt.h"
-#include "mozilla/PolicyChecks.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
@@ -37,9 +36,7 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
 }
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
-    const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    const bool aDisableDynamicBlocklist,
-    Maybe<std::wstring> aBlocklistFileName) {
+    const wchar_t* aFullImagePath, HANDLE aChildProcess) {
   return mozilla::Ok();
 }
 
@@ -190,9 +187,7 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
 }
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
-    const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    const bool aDisableDynamicBlocklist,
-    Maybe<std::wstring> aBlocklistFileName) {
+    const wchar_t* aFullImagePath, HANDLE aChildProcess) {
   nt::CrossExecTransferManager transferMgr(aChildProcess);
   if (!transferMgr) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
@@ -201,19 +196,10 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
   // The launcher process initializes a section object, whose handle is
   // transferred to the browser process, and that transferred handle in
   // the browser process is transferred to the sandbox processes.
-  LauncherVoidResultWithLineInfo result = freestanding::gSharedSection.Init();
+  LauncherVoidResultWithLineInfo result =
+      freestanding::gSharedSection.Init(transferMgr.LocalPEHeaders());
   if (result.isErr()) {
-    return result;
-  }
-
-  if (aBlocklistFileName.isSome() &&
-      !PolicyCheckBoolean(L"DisableThirdPartyModuleBlocking")) {
-    DynamicBlockList blockList(aBlocklistFileName->c_str());
-    result = freestanding::gSharedSection.SetBlocklist(
-        blockList, aDisableDynamicBlocklist);
-    if (result.isErr()) {
-      return result;
-    }
+    return result.propagateErr();
   }
 
   // Transfer a writable handle to the main process because it needs to append
