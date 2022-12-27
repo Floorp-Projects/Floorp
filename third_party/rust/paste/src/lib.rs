@@ -164,8 +164,18 @@ use std::panic;
 pub fn paste(input: TokenStream) -> TokenStream {
     let mut contains_paste = false;
     let flatten_single_interpolation = true;
-    match expand(input, &mut contains_paste, flatten_single_interpolation) {
-        Ok(expanded) => expanded,
+    match expand(
+        input.clone(),
+        &mut contains_paste,
+        flatten_single_interpolation,
+    ) {
+        Ok(expanded) => {
+            if contains_paste {
+                expanded
+            } else {
+                input
+            }
+        }
         Err(err) => err.to_compile_error(),
     }
 }
@@ -400,6 +410,26 @@ fn parse_bracket_as_segments(input: TokenStream, scope: Span) -> Result<Vec<Segm
 
 fn pasted_to_tokens(mut pasted: String, span: Span) -> Result<TokenStream> {
     let mut tokens = TokenStream::new();
+
+    #[cfg(not(no_literal_fromstr))]
+    {
+        use proc_macro::{LexError, Literal};
+        use std::str::FromStr;
+
+        if pasted.starts_with(|ch: char| ch.is_ascii_digit()) {
+            let literal = match panic::catch_unwind(|| Literal::from_str(&pasted)) {
+                Ok(Ok(literal)) => TokenTree::Literal(literal),
+                Ok(Err(LexError { .. })) | Err(_) => {
+                    return Err(Error::new(
+                        span,
+                        &format!("`{:?}` is not a valid literal", pasted),
+                    ));
+                }
+            };
+            tokens.extend(iter::once(literal));
+            return Ok(tokens);
+        }
+    }
 
     if pasted.starts_with('\'') {
         let mut apostrophe = TokenTree::Punct(Punct::new('\'', Spacing::Joint));
