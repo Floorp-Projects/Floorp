@@ -9,9 +9,9 @@ using Searchfox (start at https://searchfox.org/mozilla-central/source for
 the complete firefox source code of branch HEAD).
 
 In order to modify the source, you have to acquire it either by
-downloading a
-`snapshot <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Downloading_Source_Archives>`__
-of the sources or by checking out the current sources from :ref:`Mercurial <Firefox Contributors' Quick Reference>`.
+downloading a :ref:`snapshot <Mercurial Overview>` of the sources or
+by checking out the current sources from
+:ref:`the repository <Firefox Contributors' Quick Reference>`.
 
 This document describes the directory structure -- i.e., directories that
 are used by at least some of the
@@ -19,11 +19,7 @@ Mozilla project's client products. There are other directories in the
 other Mozilla repository, such as those for Web tools and those for the
 Classic codebase.
 
-See `source code directories
-overview <https://developer.mozilla.org/docs/Archive/Misc_top_level/Source_code_directories_overview>`__ for a
-somewhat different (older) version of the same information. Also see the
-`more detailed overview of the pieces of
-Gecko <https://wiki.mozilla.org/Gecko:Overview>`__.
+See the `more detailed overview of the pieces of Gecko <https://wiki.mozilla.org/Gecko:Overview>`__.
 
 .cargo
 ------
