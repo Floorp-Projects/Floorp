@@ -11,7 +11,7 @@ as a library implementation on crates.io.
 ```toml
 # Cargo.toml
 [dependencies]
-scoped-tls = "0.1"
+scoped-tls = "1.0"
 ```
 
 # License
