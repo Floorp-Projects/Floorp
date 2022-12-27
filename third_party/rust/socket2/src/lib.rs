@@ -1,8 +1,8 @@
 // Copyright 2015 The Rust Project Developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
@@ -50,7 +50,7 @@
 //! This crate has a single feature `all`, which enables all functions even ones
 //! that are not available on all OSs.
 
-#![doc(html_root_url = "https://docs.rs/socket2/0.3")]
+#![doc(html_root_url = "https://docs.rs/socket2/0.4")]
 #![deny(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 // Show required OS/features on docs.rs.
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -327,10 +327,16 @@ impl<'a> DerefMut for MaybeUninitSlice<'a> {
 /// See [`Socket::set_tcp_keepalive`].
 #[derive(Debug, Clone)]
 pub struct TcpKeepalive {
+    #[cfg_attr(target_os = "openbsd", allow(dead_code))]
     time: Option<Duration>,
-    #[cfg(not(any(target_os = "redox", target_os = "solaris")))]
+    #[cfg(not(any(target_os = "openbsd", target_os = "redox", target_os = "solaris")))]
     interval: Option<Duration>,
-    #[cfg(not(any(target_os = "redox", target_os = "solaris", target_os = "windows")))]
+    #[cfg(not(any(
+        target_os = "openbsd",
+        target_os = "redox",
+        target_os = "solaris",
+        target_os = "windows"
+    )))]
     retries: Option<u32>,
 }
 
@@ -339,9 +345,14 @@ impl TcpKeepalive {
     pub const fn new() -> TcpKeepalive {
         TcpKeepalive {
             time: None,
-            #[cfg(not(any(target_os = "redox", target_os = "solaris")))]
+            #[cfg(not(any(target_os = "openbsd", target_os = "redox", target_os = "solaris")))]
             interval: None,
-            #[cfg(not(any(target_os = "redox", target_os = "solaris", target_os = "windows")))]
+            #[cfg(not(any(
+                target_os = "openbsd",
+                target_os = "redox",
+                target_os = "solaris",
+                target_os = "windows"
+            )))]
             retries: None,
         }
     }
@@ -374,9 +385,11 @@ impl TcpKeepalive {
     #[cfg(all(
         feature = "all",
         any(
+            target_os = "android",
             target_os = "dragonfly",
             target_os = "freebsd",
             target_os = "fuchsia",
+            target_os = "illumos",
             target_os = "linux",
             target_os = "netbsd",
             target_vendor = "apple",
@@ -388,8 +401,11 @@ impl TcpKeepalive {
         doc(cfg(all(
             feature = "all",
             any(
+                target_os = "android",
+                target_os = "dragonfly",
                 target_os = "freebsd",
                 target_os = "fuchsia",
+                target_os = "illumos",
                 target_os = "linux",
                 target_os = "netbsd",
                 target_vendor = "apple",
@@ -412,9 +428,11 @@ impl TcpKeepalive {
         feature = "all",
         any(
             doc,
+            target_os = "android",
             target_os = "dragonfly",
             target_os = "freebsd",
             target_os = "fuchsia",
+            target_os = "illumos",
             target_os = "linux",
             target_os = "netbsd",
             target_vendor = "apple",
@@ -425,8 +443,11 @@ impl TcpKeepalive {
         doc(cfg(all(
             feature = "all",
             any(
+                target_os = "android",
+                target_os = "dragonfly",
                 target_os = "freebsd",
                 target_os = "fuchsia",
+                target_os = "illumos",
                 target_os = "linux",
                 target_os = "netbsd",
                 target_vendor = "apple",
