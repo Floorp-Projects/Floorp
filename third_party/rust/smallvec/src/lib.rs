@@ -81,6 +81,11 @@
 #![cfg_attr(feature = "specialization", allow(incomplete_features))]
 #![cfg_attr(feature = "specialization", feature(specialization))]
 #![cfg_attr(feature = "may_dangle", feature(dropck_eyepatch))]
+#![cfg_attr(
+    feature = "debugger_visualizer",
+    feature(debugger_visualizer),
+    debugger_visualizer(natvis_file = "../debug_metadata/smallvec.natvis")
+)]
 #![deny(missing_docs)]
 
 #[doc(hidden)]
@@ -2084,6 +2089,7 @@ impl<T, const N: usize> SmallVec<[T; N]> {
 #[cfg_attr(docsrs, doc(cfg(feature = "const_generics")))]
 unsafe impl<T, const N: usize> Array for [T; N] {
     type Item = T;
+    #[inline]
     fn size() -> usize {
         N
     }
@@ -2095,6 +2101,7 @@ macro_rules! impl_array(
         $(
             unsafe impl<T> Array for [T; $size] {
                 type Item = T;
+                #[inline]
                 fn size() -> usize { $size }
             }
         )+
