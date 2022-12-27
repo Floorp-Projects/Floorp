@@ -1261,10 +1261,6 @@ public class GeckoAppShell {
     return GeckoScreenOrientation.getInstance().getScreenOrientation().value;
   }
 
-  /* package */ static int getRotation() {
-    return sScreenCompat.getRotation();
-  }
-
   @WrapForJNI(calledFrom = "gecko")
   private static int getScreenAngle() {
     return GeckoScreenOrientation.getInstance().getAngle();
@@ -1390,8 +1386,6 @@ public class GeckoAppShell {
 
   private interface ScreenCompat {
     Rect getScreenSize();
-
-    int getRotation();
   }
 
   @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -1401,12 +1395,6 @@ public class GeckoAppShell {
           (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
       final Display disp = wm.getDefaultDisplay();
       return new Rect(0, 0, disp.getWidth(), disp.getHeight());
-    }
-
-    public int getRotation() {
-      final WindowManager wm =
-          (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-      return wm.getDefaultDisplay().getRotation();
     }
   }
 
@@ -1419,12 +1407,6 @@ public class GeckoAppShell {
       final Point size = new Point();
       disp.getRealSize(size);
       return new Rect(0, 0, size.x, size.y);
-    }
-
-    public int getRotation() {
-      final WindowManager wm =
-          (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-      return wm.getDefaultDisplay().getRotation();
     }
   }
 
@@ -1448,11 +1430,6 @@ public class GeckoAppShell {
     public Rect getScreenSize() {
       final WindowManager windowManager = getWindowContext().getSystemService(WindowManager.class);
       return windowManager.getCurrentWindowMetrics().getBounds();
-    }
-
-    public int getRotation() {
-      final WindowManager windowManager = getWindowContext().getSystemService(WindowManager.class);
-      return windowManager.getDefaultDisplay().getRotation();
     }
   }
 
