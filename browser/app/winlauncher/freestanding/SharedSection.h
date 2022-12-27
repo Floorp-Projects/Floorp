@@ -99,6 +99,7 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final : public nt::SharedSection {
     enum class State {
       kUninitialized,
       kInitialized,
+      kLoadedDynamicBlocklistEntries,
       kResolved,
     } mState;
 
@@ -152,7 +153,7 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final : public nt::SharedSection {
   static RTL_RUN_ONCE sEnsureOnce;
 
   static ULONG NTAPI EnsureWriteCopyViewOnce(PRTL_RUN_ONCE, PVOID, PVOID*);
-  static Layout* EnsureWriteCopyView();
+  static Layout* EnsureWriteCopyView(bool requireKernel32Exports = false);
 
   static constexpr size_t kSharedViewSize = 0x1000;
 

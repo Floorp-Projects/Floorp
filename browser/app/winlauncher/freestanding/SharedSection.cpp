@@ -247,42 +247,50 @@ ULONG NTAPI SharedSection::EnsureWriteCopyViewOnce(PRTL_RUN_ONCE, PVOID,
   return sWriteCopyView->Resolve() ? TRUE : FALSE;
 }
 
-SharedSection::Layout* SharedSection::EnsureWriteCopyView() {
+SharedSection::Layout* SharedSection::EnsureWriteCopyView(
+    bool requireKernel32Exports /*= false */) {
   ::RtlRunOnceExecuteOnce(&sEnsureOnce, &EnsureWriteCopyViewOnce, nullptr,
                           nullptr);
   if (!sWriteCopyView) {
     return nullptr;
   }
-  return sWriteCopyView->mState == Layout::State::kResolved ? sWriteCopyView
-                                                            : nullptr;
+  auto requiredState = requireKernel32Exports
+                           ? Layout::State::kResolved
+                           : Layout::State::kLoadedDynamicBlocklistEntries;
+  return sWriteCopyView->mState >= requiredState ? sWriteCopyView : nullptr;
 }
 
 bool SharedSection::Layout::Resolve() {
   if (mState == State::kResolved) {
     return true;
   }
-  if (mState != State::kInitialized) {
+  if (mState == State::kUninitialized) {
     return false;
   }
-  if (!mK32Exports.Resolve()) {
-    return false;
+  if (mState == State::kInitialized) {
+    if (!mNumBlockEntries) {
+      uintptr_t arrayBase = reinterpret_cast<uintptr_t>(mFirstBlockEntry);
+      uint32_t numEntries = 0;
+      for (DllBlockInfo* entry = mFirstBlockEntry;
+           entry->mName.Length && numEntries < GetMaxNumBlockEntries();
+           ++entry) {
+        entry->mName.Buffer = reinterpret_cast<wchar_t*>(
+            arrayBase + reinterpret_cast<uintptr_t>(entry->mName.Buffer));
+        ++numEntries;
+      }
+      mNumBlockEntries = numEntries;
+      // Sort by name so that we can binary-search
+      std::sort(mFirstBlockEntry, mFirstBlockEntry + mNumBlockEntries,
+                [](const DllBlockInfo& a, const DllBlockInfo& b) {
+                  return ::RtlCompareUnicodeString(&a.mName, &b.mName, TRUE) <
+                         0;
+                });
+    }
+    mState = State::kLoadedDynamicBlocklistEntries;
   }
 
-  if (!mNumBlockEntries) {
-    uintptr_t arrayBase = reinterpret_cast<uintptr_t>(mFirstBlockEntry);
-    uint32_t numEntries = 0;
-    for (DllBlockInfo* entry = mFirstBlockEntry;
-         entry->mName.Length && numEntries < GetMaxNumBlockEntries(); ++entry) {
-      entry->mName.Buffer = reinterpret_cast<wchar_t*>(
-          arrayBase + reinterpret_cast<uintptr_t>(entry->mName.Buffer));
-      ++numEntries;
-    }
-    mNumBlockEntries = numEntries;
-    // Sort by name so that we can binary-search
-    std::sort(mFirstBlockEntry, mFirstBlockEntry + mNumBlockEntries,
-              [](const DllBlockInfo& a, const DllBlockInfo& b) {
-                return ::RtlCompareUnicodeString(&a.mName, &b.mName, TRUE) < 0;
-              });
+  if (!mK32Exports.Resolve()) {
+    return false;
   }
 
   mState = State::kResolved;
@@ -305,7 +313,7 @@ bool SharedSection::Layout::IsDisabled() const {
 
 const DllBlockInfo* SharedSection::Layout::SearchBlocklist(
     const UNICODE_STRING& aLeafName) const {
-  MOZ_ASSERT(mState == State::kResolved);
+  MOZ_ASSERT(mState >= State::kLoadedDynamicBlocklistEntries);
   DllBlockInfoComparator comp(aLeafName);
   size_t match;
   if (!BinarySearchIf(mFirstBlockEntry, 0, mNumBlockEntries, comp, &match)) {
@@ -315,7 +323,7 @@ const DllBlockInfo* SharedSection::Layout::SearchBlocklist(
 }
 
 Kernel32ExportsSolver* SharedSection::GetKernel32Exports() {
-  Layout* writeCopyView = EnsureWriteCopyView();
+  Layout* writeCopyView = EnsureWriteCopyView(true);
   return writeCopyView ? &writeCopyView->mK32Exports : nullptr;
 }
 
