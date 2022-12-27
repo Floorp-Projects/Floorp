@@ -279,8 +279,8 @@
 //! # No-std support
 //!
 //! As long as there is a memory allocator, it is possible to use serde_json
-//! without the rest of the Rust standard library. This is supported on Rust
-//! 1.36+. Disable the default "std" feature and enable the "alloc" feature:
+//! without the rest of the Rust standard library. Disable the default "std"
+//! feature and enable the "alloc" feature:
 //!
 //! ```toml
 //! [dependencies]
@@ -300,7 +300,7 @@
 //! [macro]: https://docs.serde.rs/serde_json/macro.json.html
 //! [`serde-json-core`]: https://github.com/rust-embedded-community/serde-json-core
 
-#![doc(html_root_url = "https://docs.rs/serde_json/1.0.85")]
+#![doc(html_root_url = "https://docs.rs/serde_json/1.0.91")]
 // Ignored clippy lints
 #![allow(
     clippy::collapsible_else_if,

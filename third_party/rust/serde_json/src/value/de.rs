@@ -14,7 +14,7 @@ use serde::de::{
     self, Deserialize, DeserializeSeed, EnumAccess, Expected, IntoDeserializer, MapAccess,
     SeqAccess, Unexpected, VariantAccess, Visitor,
 };
-use serde::{forward_to_deserialize_any, serde_if_integer128};
+use serde::forward_to_deserialize_any;
 
 #[cfg(feature = "arbitrary_precision")]
 use crate::number::NumberFromString;
@@ -228,17 +228,14 @@ impl<'de> serde::Deserializer<'de> for Value {
     deserialize_number!(deserialize_i16);
     deserialize_number!(deserialize_i32);
     deserialize_number!(deserialize_i64);
+    deserialize_number!(deserialize_i128);
     deserialize_number!(deserialize_u8);
     deserialize_number!(deserialize_u16);
     deserialize_number!(deserialize_u32);
     deserialize_number!(deserialize_u64);
+    deserialize_number!(deserialize_u128);
     deserialize_number!(deserialize_f32);
     deserialize_number!(deserialize_f64);
-
-    serde_if_integer128! {
-        deserialize_number!(deserialize_i128);
-        deserialize_number!(deserialize_u128);
-    }
 
     #[inline]
     fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Error>
@@ -724,17 +721,14 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     deserialize_value_ref_number!(deserialize_i16);
     deserialize_value_ref_number!(deserialize_i32);
     deserialize_value_ref_number!(deserialize_i64);
+    deserialize_number!(deserialize_i128);
     deserialize_value_ref_number!(deserialize_u8);
     deserialize_value_ref_number!(deserialize_u16);
     deserialize_value_ref_number!(deserialize_u32);
     deserialize_value_ref_number!(deserialize_u64);
+    deserialize_number!(deserialize_u128);
     deserialize_value_ref_number!(deserialize_f32);
     deserialize_value_ref_number!(deserialize_f64);
-
-    serde_if_integer128! {
-        deserialize_number!(deserialize_i128);
-        deserialize_number!(deserialize_u128);
-    }
 
     fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Error>
     where
@@ -1000,7 +994,7 @@ impl<'de> VariantAccess<'de> for VariantRefDeserializer<'de> {
         V: Visitor<'de>,
     {
         match self.value {
-            Some(&Value::Array(ref v)) => {
+            Some(Value::Array(v)) => {
                 if v.is_empty() {
                     visitor.visit_unit()
                 } else {
@@ -1027,7 +1021,7 @@ impl<'de> VariantAccess<'de> for VariantRefDeserializer<'de> {
         V: Visitor<'de>,
     {
         match self.value {
-            Some(&Value::Object(ref v)) => visit_object_ref(v, visitor),
+            Some(Value::Object(v)) => visit_object_ref(v, visitor),
             Some(other) => Err(serde::de::Error::invalid_type(
                 other.unexpected(),
                 &"struct variant",
@@ -1156,15 +1150,12 @@ impl<'de> serde::Deserializer<'de> for MapKeyDeserializer<'de> {
     deserialize_integer_key!(deserialize_i16 => visit_i16);
     deserialize_integer_key!(deserialize_i32 => visit_i32);
     deserialize_integer_key!(deserialize_i64 => visit_i64);
+    deserialize_integer_key!(deserialize_i128 => visit_i128);
     deserialize_integer_key!(deserialize_u8 => visit_u8);
     deserialize_integer_key!(deserialize_u16 => visit_u16);
     deserialize_integer_key!(deserialize_u32 => visit_u32);
     deserialize_integer_key!(deserialize_u64 => visit_u64);
-
-    serde_if_integer128! {
-        deserialize_integer_key!(deserialize_i128 => visit_i128);
-        deserialize_integer_key!(deserialize_u128 => visit_u128);
-    }
+    deserialize_integer_key!(deserialize_u128 => visit_u128);
 
     #[inline]
     fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Error>

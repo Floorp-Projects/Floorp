@@ -6,9 +6,6 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::iter::FromIterator;
 
-#[cfg(feature = "arbitrary_precision")]
-use serde::serde_if_integer128;
-
 macro_rules! from_integer {
     ($($ty:ident)*) => {
         $(
@@ -27,10 +24,8 @@ from_integer! {
 }
 
 #[cfg(feature = "arbitrary_precision")]
-serde_if_integer128! {
-    from_integer! {
-        i128 u128
-    }
+from_integer! {
+    i128 u128
 }
 
 impl From<f32> for Value {

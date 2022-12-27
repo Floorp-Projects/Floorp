@@ -1,18 +1,18 @@
 use crate::de::ParserNumber;
 use crate::error::Error;
+#[cfg(feature = "arbitrary_precision")]
+use crate::error::ErrorCode;
+#[cfg(feature = "arbitrary_precision")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "arbitrary_precision")]
+use alloc::string::{String, ToString};
 use core::fmt::{self, Debug, Display};
 #[cfg(not(feature = "arbitrary_precision"))]
 use core::hash::{Hash, Hasher};
 use serde::de::{self, Unexpected, Visitor};
-use serde::{
-    forward_to_deserialize_any, serde_if_integer128, Deserialize, Deserializer, Serialize,
-    Serializer,
-};
-
-#[cfg(feature = "arbitrary_precision")]
-use crate::error::ErrorCode;
 #[cfg(feature = "arbitrary_precision")]
 use serde::de::{IntoDeserializer, MapAccess};
+use serde::{forward_to_deserialize_any, Deserialize, Deserializer, Serialize, Serializer};
 
 #[cfg(feature = "arbitrary_precision")]
 pub(crate) const TOKEN: &str = "$serde_json::private::Number";
@@ -537,17 +537,14 @@ impl<'de> Deserializer<'de> for Number {
     deserialize_number!(deserialize_i16 => visit_i16);
     deserialize_number!(deserialize_i32 => visit_i32);
     deserialize_number!(deserialize_i64 => visit_i64);
+    deserialize_number!(deserialize_i128 => visit_i128);
     deserialize_number!(deserialize_u8 => visit_u8);
     deserialize_number!(deserialize_u16 => visit_u16);
     deserialize_number!(deserialize_u32 => visit_u32);
     deserialize_number!(deserialize_u64 => visit_u64);
+    deserialize_number!(deserialize_u128 => visit_u128);
     deserialize_number!(deserialize_f32 => visit_f32);
     deserialize_number!(deserialize_f64 => visit_f64);
-
-    serde_if_integer128! {
-        deserialize_number!(deserialize_i128 => visit_i128);
-        deserialize_number!(deserialize_u128 => visit_u128);
-    }
 
     forward_to_deserialize_any! {
         bool char str string bytes byte_buf option unit unit_struct
@@ -565,17 +562,14 @@ impl<'de, 'a> Deserializer<'de> for &'a Number {
     deserialize_number!(deserialize_i16 => visit_i16);
     deserialize_number!(deserialize_i32 => visit_i32);
     deserialize_number!(deserialize_i64 => visit_i64);
+    deserialize_number!(deserialize_i128 => visit_i128);
     deserialize_number!(deserialize_u8 => visit_u8);
     deserialize_number!(deserialize_u16 => visit_u16);
     deserialize_number!(deserialize_u32 => visit_u32);
     deserialize_number!(deserialize_u64 => visit_u64);
+    deserialize_number!(deserialize_u128 => visit_u128);
     deserialize_number!(deserialize_f32 => visit_f32);
     deserialize_number!(deserialize_f64 => visit_f64);
-
-    serde_if_integer128! {
-        deserialize_number!(deserialize_i128 => visit_i128);
-        deserialize_number!(deserialize_u128 => visit_u128);
-    }
 
     forward_to_deserialize_any! {
         bool char str string bytes byte_buf option unit unit_struct
@@ -728,21 +722,9 @@ impl_from_unsigned!(u8, u16, u32, u64, usize);
 impl_from_signed!(i8, i16, i32, i64, isize);
 
 #[cfg(feature = "arbitrary_precision")]
-serde_if_integer128! {
-    impl From<i128> for Number {
-        fn from(i: i128) -> Self {
-            let n = itoa::Buffer::new().format(i).to_owned();
-            Number { n }
-        }
-    }
-
-    impl From<u128> for Number {
-        fn from(u: u128) -> Self {
-            let n = itoa::Buffer::new().format(u).to_owned();
-            Number { n }
-        }
-    }
-}
+impl_from_unsigned!(u128);
+#[cfg(feature = "arbitrary_precision")]
+impl_from_signed!(i128);
 
 impl Number {
     #[cfg(not(feature = "arbitrary_precision"))]

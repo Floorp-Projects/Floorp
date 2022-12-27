@@ -9,9 +9,6 @@ use core::fmt::Display;
 use core::result;
 use serde::ser::{Impossible, Serialize};
 
-#[cfg(feature = "arbitrary_precision")]
-use serde::serde_if_integer128;
-
 impl Serialize for Value {
     #[inline]
     fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
@@ -96,10 +93,8 @@ impl serde::Serializer for Serializer {
     }
 
     #[cfg(feature = "arbitrary_precision")]
-    serde_if_integer128! {
-        fn serialize_i128(self, value: i128) -> Result<Value> {
-            Ok(Value::Number(value.into()))
-        }
+    fn serialize_i128(self, value: i128) -> Result<Value> {
+        Ok(Value::Number(value.into()))
     }
 
     #[inline]
@@ -123,10 +118,8 @@ impl serde::Serializer for Serializer {
     }
 
     #[cfg(feature = "arbitrary_precision")]
-    serde_if_integer128! {
-        fn serialize_u128(self, value: u128) -> Result<Value> {
-            Ok(Value::Number(value.into()))
-        }
+    fn serialize_u128(self, value: u128) -> Result<Value> {
+        Ok(Value::Number(value.into()))
     }
 
     #[inline]
@@ -195,7 +188,7 @@ impl serde::Serializer for Serializer {
         T: ?Sized + Serialize,
     {
         let mut values = Map::new();
-        values.insert(String::from(variant), tri!(to_value(&value)));
+        values.insert(String::from(variant), tri!(to_value(value)));
         Ok(Value::Object(values))
     }
 
@@ -314,7 +307,7 @@ impl serde::ser::SerializeSeq for SerializeVec {
     where
         T: ?Sized + Serialize,
     {
-        self.vec.push(tri!(to_value(&value)));
+        self.vec.push(tri!(to_value(value)));
         Ok(())
     }
 
@@ -363,7 +356,7 @@ impl serde::ser::SerializeTupleVariant for SerializeTupleVariant {
     where
         T: ?Sized + Serialize,
     {
-        self.vec.push(tri!(to_value(&value)));
+        self.vec.push(tri!(to_value(value)));
         Ok(())
     }
 
@@ -406,7 +399,7 @@ impl serde::ser::SerializeMap for SerializeMap {
                 // Panic because this indicates a bug in the program rather than an
                 // expected failure.
                 let key = key.expect("serialize_value called before serialize_key");
-                map.insert(key, tri!(to_value(&value)));
+                map.insert(key, tri!(to_value(value)));
                 Ok(())
             }
             #[cfg(feature = "arbitrary_precision")]
@@ -663,7 +656,7 @@ impl serde::ser::SerializeStructVariant for SerializeStructVariant {
     where
         T: ?Sized + Serialize,
     {
-        self.map.insert(String::from(key), tri!(to_value(&value)));
+        self.map.insert(String::from(key), tri!(to_value(value)));
         Ok(())
     }
 
