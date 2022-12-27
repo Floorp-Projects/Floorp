@@ -230,18 +230,6 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
   return BlockAction::Allow;
 }
 
-struct DllBlockInfoComparator {
-  explicit DllBlockInfoComparator(const UNICODE_STRING& aTarget)
-      : mTarget(&aTarget) {}
-
-  int operator()(const DllBlockInfo& aVal) const {
-    return static_cast<int>(
-        ::RtlCompareUnicodeString(mTarget, &aVal.mName, TRUE));
-  }
-
-  PCUNICODE_STRING mTarget;
-};
-
 static BOOL WINAPI NoOp_DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 
 // This helper function checks whether a given module is included
@@ -308,26 +296,39 @@ static BlockAction DetermineBlockAction(
   DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(info);
   DECLARE_DLL_BLOCKLIST_NUM_ENTRIES(infoNumEntries);
 
-  DllBlockInfoComparator comp(aLeafName);
+  mozilla::freestanding::DllBlockInfoComparator comp(aLeafName);
 
   size_t match;
-  if (!BinarySearchIf(info, 0, infoNumEntries, comp, &match)) {
+  bool onBuiltinList = BinarySearchIf(info, 0, infoNumEntries, comp, &match);
+  const DllBlockInfo* entry = nullptr;
+  mozilla::nt::PEHeaders headers(aBaseAddress);
+  uint64_t version;
+  BlockAction checkResult = BlockAction::Allow;
+  if (onBuiltinList) {
+    entry = &info[match];
+    checkResult = CheckBlockInfo(entry, headers, version);
+  }
+  mozilla::DebugOnly<bool> blockedByDynamicBlocklist = false;
+  // Make sure we handle a case that older versions are blocked by the static
+  // list, but the dynamic list blocks all versions.
+  if (checkResult == BlockAction::Allow) {
+    if (!mozilla::freestanding::gSharedSection.IsDisabled()) {
+      entry = mozilla::freestanding::gSharedSection.SearchBlocklist(aLeafName);
+      if (entry) {
+        checkResult = CheckBlockInfo(entry, headers, version);
+        blockedByDynamicBlocklist = checkResult != BlockAction::Allow;
+      }
+    }
+  }
+  if (checkResult == BlockAction::Allow) {
     return BlockAction::Allow;
   }
 
-  const DllBlockInfo& entry = info[match];
+  gBlockSet.Add(entry->mName, version);
 
-  mozilla::nt::PEHeaders headers(aBaseAddress);
-  uint64_t version;
-  BlockAction checkResult = CheckBlockInfo(&entry, headers, version);
-  if (checkResult == BlockAction::Allow) {
-    return checkResult;
-  }
-
-  gBlockSet.Add(entry.mName, version);
-
-  if ((entry.mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) &&
+  if ((entry->mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) &&
       aK32Exports && RedirectToNoOpEntryPoint(headers, *aK32Exports)) {
+    MOZ_ASSERT(!blockedByDynamicBlocklist, "dynamic blocklist has redirect?");
     return BlockAction::NoOpEntryPoint;
   }
 
