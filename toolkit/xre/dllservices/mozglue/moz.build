@@ -51,6 +51,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.glue += [
+    "SharedSection.h",
     "WindowsDllServices.h",
 ]
 

@@ -247,23 +247,5 @@ LauncherVoidResult SharedSection::TransferHandle(
                                sizeof(remoteHandle));
 }
 
-// This exported function is invoked by SandboxBroker of xul.dll
-// in order to add dependent modules to the CIG exception list.
-extern "C" MOZ_EXPORT const wchar_t* GetDependentModulePaths() {
-  // We enable pre-spawn CIG only in early Beta or earlier for now
-  // because it caused a compat issue (bug 1682304 and 1704373).
-#if defined(EARLY_BETA_OR_EARLIER)
-  const bool isCallerXul = CheckForAddress(RETURN_ADDRESS(), L"xul.dll");
-  MOZ_ASSERT(isCallerXul);
-  if (!isCallerXul) {
-    return nullptr;
-  }
-
-  return gSharedSection.GetDependentModules().data();
-#else
-  return nullptr;
-#endif
-}
-
 }  // namespace freestanding
 }  // namespace mozilla
