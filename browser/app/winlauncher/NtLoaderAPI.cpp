@@ -13,6 +13,9 @@ namespace mozilla {
 
 extern "C" MOZ_EXPORT nt::LoaderAPI* GetNtLoaderAPI(
     nt::LoaderObserver* aNewObserver) {
+  // Make sure the caller is inside mozglue.dll - we don't want to allow
+  // external access to this function, as it contains details about
+  // the SharedSection which is used to sandbox future child processes.
   const bool isCallerMozglue =
       CheckForAddress(RETURN_ADDRESS(), L"mozglue.dll");
   MOZ_ASSERT(isCallerMozglue);
