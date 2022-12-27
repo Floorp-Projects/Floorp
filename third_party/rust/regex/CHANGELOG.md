@@ -1,3 +1,13 @@
+1.7.0 (2022-11-05)
+==================
+This release principally includes an upgrade to Unicode 15.
+
+New features:
+
+* [FEATURE #832](https://github.com/rust-lang/regex/issues/916):
+  Upgrade to Unicode 15.
+
+
 1.6.0 (2022-07-05)
 ==================
 This release principally includes an upgrade to Unicode 14.

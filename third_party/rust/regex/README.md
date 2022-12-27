@@ -23,12 +23,8 @@ can be found on the
 
 ### Usage
 
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-regex = "1.5"
-```
+To bring this crate into your repository, either add `regex` to your
+`Cargo.toml`, or run `cargo add regex`.
 
 Here's a simple example that matches a date in YYYY-MM-DD format and prints the
 year, month and day:

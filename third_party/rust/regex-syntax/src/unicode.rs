@@ -605,6 +605,7 @@ fn ages(canonical_age: &str) -> Result<impl Iterator<Item = Range>> {
             ("V12_1", age::V12_1),
             ("V13_0", age::V13_0),
             ("V14_0", age::V14_0),
+            ("V15_0", age::V15_0),
         ];
         assert_eq!(AGES.len(), age::BY_NAME.len(), "ages are out of sync");
 

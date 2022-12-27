@@ -353,6 +353,9 @@ $     the end of text (or end-of-line with multi-line mode)
 \B    not a Unicode word boundary
 </pre>
 
+The empty regex is valid and matches the empty string. For example, the empty
+regex matches `abc` at positions `0`, `1`, `2` and `3`.
+
 ## Grouping and flags
 
 <pre class="rust">
