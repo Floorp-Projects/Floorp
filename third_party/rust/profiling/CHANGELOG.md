@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.7
+* Update tracy-client to 0.14.1
+
 ## 1.0.6
  * Update tracy-client to 0.13
 
