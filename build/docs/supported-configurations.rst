@@ -145,7 +145,7 @@ platforms may or may not work correctly or build at all.
 -  Linux on various CPU architectures including ARM variants not listed
    above, PowerPC, and x86 CPUs without SSE2 support - maintained by
    various Linux distributions
--  FreeBSD/x86, x86-64, Aarch64 (clang) - maintained by Jan Beich
+-  FreeBSD/x86, x86-64, Aarch64 (clang) - `maintained by gecko@FreeBSD.org <https://www.freshports.org/www/firefox/>`__
 -  OpenBSD/x86, x86-64 (clang) - maintained by Landry Breuil
 -  NetBSD/x86-64 (gcc) - maintained by David Laight
 -  Solaris/x86-64, sparc64 (gcc) - maintained by Petr Sumbera
