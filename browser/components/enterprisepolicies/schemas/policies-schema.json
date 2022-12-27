@@ -390,6 +390,10 @@
       "type": "boolean"
     },
 
+    "DisableThirdPartyModuleBlocking": {
+      "type": "boolean"
+    },
+
     "DisplayBookmarksToolbar": {
       "type": ["boolean", "string"],
       "enum": ["always", "never", "newtab"]
