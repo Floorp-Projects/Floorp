@@ -84,9 +84,9 @@ internal object DownloadNotification {
         notificationAccentColor: Int,
     ): Notification {
         val downloadState = downloadJobState.state
-        val bytesCopied = downloadJobState.currentBytesCopied
         val channelId = ensureChannelExists(context)
         val isIndeterminate = downloadJobState.isIndeterminate()
+        val percentCopied = downloadJobState.getPercent() ?: -1
 
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.mozac_feature_download_ic_ongoing_download)
@@ -94,7 +94,7 @@ internal object DownloadNotification {
             .setContentText(downloadJobState.getProgress())
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .setProgress(downloadState.contentLength?.toInt() ?: 0, bytesCopied.toInt(), isIndeterminate)
+            .setProgress(DownloadNotification.PERCENTAGE_MULTIPLIER, percentCopied, isIndeterminate)
             .setOngoing(true)
             .setWhen(downloadJobState.createdTime)
             .setOnlyAlertOnce(true)
@@ -305,6 +305,16 @@ internal fun NotificationCompat.Builder.setCompatGroup(groupKey: String): Notifi
         setGroup(groupKey)
     } else {
         this
+    }
+}
+
+private fun DownloadJobState.getPercent(): Int? {
+    val bytesCopied = currentBytesCopied
+    val contentLength = state.contentLength
+    return if (contentLength == null || contentLength == 0L) {
+        null
+    } else {
+        (DownloadNotification.PERCENTAGE_MULTIPLIER * bytesCopied / contentLength).toInt()
     }
 }
 
