@@ -1037,9 +1037,7 @@ bool nsPresContext::UpdateContainerQueryStyles() {
 
   bool anyChanged = false;
   for (nsIFrame* frame : mContainerQueryFrames) {
-    if (!frame->IsPrimaryFrame()) {
-      continue;
-    }
+    MOZ_ASSERT(frame->IsPrimaryFrame());
 
     auto type = frame->StyleDisplay()->mContainerType;
     MOZ_ASSERT(type != StyleContainerType::Normal,
