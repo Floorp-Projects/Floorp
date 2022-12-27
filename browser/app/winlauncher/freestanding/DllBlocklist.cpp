@@ -17,6 +17,18 @@
 #include "ModuleLoadFrame.h"
 #include "SharedSection.h"
 
+// clang-format off
+#define MOZ_LITERAL_UNICODE_STRING(s)                                        \
+  {                                                                          \
+    /* Length of the string in bytes, less the null terminator */            \
+    sizeof(s) - sizeof(wchar_t),                                             \
+    /* Length of the string in bytes, including the null terminator */       \
+    sizeof(s),                                                               \
+    /* Pointer to the buffer */                                              \
+    const_cast<wchar_t*>(s)                                                  \
+  }
+// clang-format on
+
 #define DLL_BLOCKLIST_ENTRY(name, ...) \
   {MOZ_LITERAL_UNICODE_STRING(L##name), __VA_ARGS__},
 #define DLL_BLOCKLIST_STRING_TYPE UNICODE_STRING
@@ -230,6 +242,18 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
   return BlockAction::Allow;
 }
 
+struct DllBlockInfoComparator {
+  explicit DllBlockInfoComparator(const UNICODE_STRING& aTarget)
+      : mTarget(&aTarget) {}
+
+  int operator()(const DllBlockInfo& aVal) const {
+    return static_cast<int>(
+        ::RtlCompareUnicodeString(mTarget, &aVal.mName, TRUE));
+  }
+
+  PCUNICODE_STRING mTarget;
+};
+
 static BOOL WINAPI NoOp_DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 
 // This helper function checks whether a given module is included
@@ -242,6 +266,11 @@ static bool IsDependentModule(
   // We enable automatic DLL blocking only in early Beta or earlier for now
   // because it caused a compat issue (bug 1682304 and 1704373).
 #if defined(EARLY_BETA_OR_EARLIER)
+  aK32Exports.Resolve(mozilla::freestanding::gK32ExportsResolveOnce);
+  if (!aK32Exports.IsResolved()) {
+    return false;
+  }
+
   mozilla::nt::PEHeaders exeHeaders(aK32Exports.mGetModuleHandleW(nullptr));
   if (!exeHeaders || !exeHeaders.IsImportDirectoryTampered()) {
     // If no tampering is detected, no need to enumerate the Import Table.
@@ -276,6 +305,11 @@ static bool IsDependentModule(
 static bool RedirectToNoOpEntryPoint(
     const mozilla::nt::PEHeaders& aModule,
     mozilla::freestanding::Kernel32ExportsSolver& aK32Exports) {
+  aK32Exports.Resolve(mozilla::freestanding::gK32ExportsResolveOnce);
+  if (!aK32Exports.IsResolved()) {
+    return false;
+  }
+
   mozilla::interceptor::WindowsDllEntryPointInterceptor interceptor(
       aK32Exports);
   if (!interceptor.Set(aModule, NoOp_DllMain)) {
@@ -296,39 +330,26 @@ static BlockAction DetermineBlockAction(
   DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(info);
   DECLARE_DLL_BLOCKLIST_NUM_ENTRIES(infoNumEntries);
 
-  mozilla::freestanding::DllBlockInfoComparator comp(aLeafName);
+  DllBlockInfoComparator comp(aLeafName);
 
   size_t match;
-  bool onBuiltinList = BinarySearchIf(info, 0, infoNumEntries, comp, &match);
-  const DllBlockInfo* entry = nullptr;
-  mozilla::nt::PEHeaders headers(aBaseAddress);
-  uint64_t version;
-  BlockAction checkResult = BlockAction::Allow;
-  if (onBuiltinList) {
-    entry = &info[match];
-    checkResult = CheckBlockInfo(entry, headers, version);
-  }
-  mozilla::DebugOnly<bool> blockedByDynamicBlocklist = false;
-  // Make sure we handle a case that older versions are blocked by the static
-  // list, but the dynamic list blocks all versions.
-  if (checkResult == BlockAction::Allow) {
-    if (!mozilla::freestanding::gSharedSection.IsDisabled()) {
-      entry = mozilla::freestanding::gSharedSection.SearchBlocklist(aLeafName);
-      if (entry) {
-        checkResult = CheckBlockInfo(entry, headers, version);
-        blockedByDynamicBlocklist = checkResult != BlockAction::Allow;
-      }
-    }
-  }
-  if (checkResult == BlockAction::Allow) {
+  if (!BinarySearchIf(info, 0, infoNumEntries, comp, &match)) {
     return BlockAction::Allow;
   }
 
-  gBlockSet.Add(entry->mName, version);
+  const DllBlockInfo& entry = info[match];
 
-  if ((entry->mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) &&
+  mozilla::nt::PEHeaders headers(aBaseAddress);
+  uint64_t version;
+  BlockAction checkResult = CheckBlockInfo(&entry, headers, version);
+  if (checkResult == BlockAction::Allow) {
+    return checkResult;
+  }
+
+  gBlockSet.Add(entry.mName, version);
+
+  if ((entry.mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) &&
       aK32Exports && RedirectToNoOpEntryPoint(headers, *aK32Exports)) {
-    MOZ_ASSERT(!blockedByDynamicBlocklist, "dynamic blocklist has redirect?");
     return BlockAction::NoOpEntryPoint;
   }
 
@@ -339,6 +360,7 @@ namespace mozilla {
 namespace freestanding {
 
 CrossProcessDllInterceptor::FuncHookType<LdrLoadDllPtr> stub_LdrLoadDll;
+RTL_RUN_ONCE gK32ExportsResolveOnce = RTL_RUN_ONCE_INIT;
 
 NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR aDllPath, PULONG aFlags,
                                   PUNICODE_STRING aDllName,
@@ -405,11 +427,12 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
   nt::GetLeafName(&leafOnStack, sectionFileName);
 
   bool isDependent = false;
-  Kernel32ExportsSolver* k32Exports = gSharedSection.GetKernel32Exports();
+  auto resultView = freestanding::gSharedSection.GetView();
   // Small optimization: Since loading a dependent module does not involve
   // LdrLoadDll, we know isDependent is false if we hold a top frame.
-  if (k32Exports && !ModuleLoadFrame::ExistsTopFrame()) {
-    isDependent = IsDependentModule(leafOnStack, *k32Exports);
+  if (resultView.isOk() && !ModuleLoadFrame::ExistsTopFrame()) {
+    isDependent =
+        IsDependentModule(leafOnStack, resultView.inspect()->mK32Exports);
   }
 
   BlockAction blockAction;
@@ -418,17 +441,20 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
     // use it to bypass CIG.  In a sandbox process, this addition fails
     // because we cannot map the section to a writable region, but it's
     // ignorable because the paths have been added by the browser process.
-    Unused << gSharedSection.AddDependentModule(sectionFileName);
+    Unused << freestanding::gSharedSection.AddDepenentModule(sectionFileName);
 
     // For a dependent module, try redirection instead of blocking it.
     // If we fail, we reluctantly allow the module for free.
     mozilla::nt::PEHeaders headers(*aBaseAddress);
-    blockAction = RedirectToNoOpEntryPoint(headers, *k32Exports)
-                      ? BlockAction::NoOpEntryPoint
-                      : BlockAction::Allow;
+    blockAction =
+        RedirectToNoOpEntryPoint(headers, resultView.inspect()->mK32Exports)
+            ? BlockAction::NoOpEntryPoint
+            : BlockAction::Allow;
   } else {
     // Check blocklist
-    blockAction = DetermineBlockAction(leafOnStack, *aBaseAddress, k32Exports);
+    blockAction = DetermineBlockAction(
+        leafOnStack, *aBaseAddress,
+        resultView.isOk() ? &resultView.inspect()->mK32Exports : nullptr);
   }
 
   ModuleLoadInfo::Status loadStatus = ModuleLoadInfo::Status::Blocked;

@@ -274,17 +274,11 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
     const wchar_t* mName;
     ModuleLoadInfo::Status mStatus;
   } kKnownModules[] = {
-    // Sorted by mName for binary-search
-    {L"TestDllBlocklist_MatchByName.dll", ModuleLoadInfo::Status::Blocked},
-    {L"TestDllBlocklist_MatchByVersion.dll", ModuleLoadInfo::Status::Blocked},
-    {L"TestDllBlocklist_NoOpEntryPoint.dll",
-     ModuleLoadInfo::Status::Redirected},
-#if !defined(MOZ_ASAN)
-    // With ASAN, the test uses mozglue's blocklist where
-    // the user blocklist is not used. So only check for this
-    // DLL in the non-ASAN case.
-    {L"TestDllBlocklist_UserBlocked.dll", ModuleLoadInfo::Status::Blocked},
-#endif  // !defined(MOZ_ASAN)
+      // Sorted by mName for binary-search
+      {L"TestDllBlocklist_MatchByName.dll", ModuleLoadInfo::Status::Blocked},
+      {L"TestDllBlocklist_MatchByVersion.dll", ModuleLoadInfo::Status::Blocked},
+      {L"TestDllBlocklist_NoOpEntryPoint.dll",
+       ModuleLoadInfo::Status::Redirected},
   };
 
   EXPECT_EQ(aData.mProcessType, GeckoProcessType_Default);

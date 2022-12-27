@@ -52,25 +52,16 @@
       </tr>
     </template>
 
-    <template name="card-blocked">
-      <div class="card card-no-hover">
-        <div class="card-head">
-          <h3 class="module-name"></h3>
-          <button class="svg-common svg-button button-block" hidden data-l10n-id="third-party-button-to-block"></button>
-        </div>
-      </div>
-    </template>
-
     <template name="card">
       <div class="card card-no-hover">
         <div class="card-head">
           <h3 class="module-name"></h3>
           <img src="chrome://global/skin/icons/warning.svg"
                class="svg-common image-warning" hidden
-               data-l10n-id="third-party-icon-warning"/>
+               data-l10n-id="third-party-warning-icon"/>
           <img src="chrome://global/skin/icons/security-broken.svg"
                class="svg-common image-unsigned" hidden
-               data-l10n-id="third-party-icon-unsigned"/>
+               data-l10n-id="third-party-unsigned-icon"/>
           <div class="module-tags">
             <span class="module-tag tag-ime" hidden
                   data-l10n-id="third-party-tag-ime"></span>
@@ -79,10 +70,6 @@
           </div>
           <button class="svg-common svg-button button-open-dir"
                   data-l10n-id="third-party-button-open"></button>
-          <button class="svg-common svg-button button-block" hidden
-                  data-l10n-id="third-party-button-to-block"></button>
-          <img src="chrome://global/skin/icons/warning.svg" class="svg-common blocked-by-builtin" hidden
-            data-l10n-id="third-party-blocked-by-builtin" />
           <div class="spacer"></div>
           <button class="svg-common svg-button button-expand"
                   data-l10n-id="third-party-button-expand"></button>

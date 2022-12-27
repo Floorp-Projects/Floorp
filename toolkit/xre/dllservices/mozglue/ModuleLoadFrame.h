@@ -26,7 +26,7 @@ class MOZ_RAII ModuleLoadFrame final {
   ModuleLoadFrame& operator=(ModuleLoadFrame&&) = delete;
 
   static void StaticInit(nt::LoaderObserver* aNewObserver,
-                         nt::WinLauncherServices* aOutWinLauncher);
+                         nt::WinLauncherFunctions* aOutWinLauncherFunctions);
 
  private:
   bool mAlreadyLoaded;
