@@ -3611,10 +3611,7 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
   // GeckoRestyleManager does here, because that relies on knowing the parents
   // of ComputedStyles, and we don't know those.
   ComputedStyle* oldStyle = aFrame->Style();
-  Element* ourElement =
-      oldStyle->GetPseudoType() == PseudoStyleType::NotPseudo && isElement
-          ? aFrame->GetContent()->AsElement()
-          : nullptr;
+  Element* ourElement = isElement ? aFrame->GetContent()->AsElement() : nullptr;
   ComputedStyle* newParent = newParentStyle;
 
   ComputedStyle* newParentIgnoringFirstLine;
