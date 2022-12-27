@@ -86,8 +86,11 @@
 //! a different thread.
 
 // Proc-macro2 types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/proc-macro2/1.0.43")]
-#![cfg_attr(any(proc_macro_span, super_unstable), feature(proc_macro_span))]
+#![doc(html_root_url = "https://docs.rs/proc-macro2/1.0.49")]
+#![cfg_attr(
+    any(proc_macro_span, super_unstable),
+    feature(proc_macro_span, proc_macro_span_shrink)
+)]
 #![cfg_attr(super_unstable, feature(proc_macro_def_site))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(
@@ -507,6 +510,24 @@ impl Span {
     pub fn end(&self) -> LineColumn {
         let imp::LineColumn { line, column } = self.inner.end();
         LineColumn { line, column }
+    }
+
+    /// Creates an empty span pointing to directly before this span.
+    ///
+    /// This method is semver exempt and not exposed by default.
+    #[cfg(all(procmacro2_semver_exempt, any(not(wrap_proc_macro), super_unstable)))]
+    #[cfg_attr(doc_cfg, doc(cfg(procmacro2_semver_exempt)))]
+    pub fn before(&self) -> Span {
+        Span::_new(self.inner.before())
+    }
+
+    /// Creates an empty span pointing to directly after this span.
+    ///
+    /// This method is semver exempt and not exposed by default.
+    #[cfg(all(procmacro2_semver_exempt, any(not(wrap_proc_macro), super_unstable)))]
+    #[cfg_attr(doc_cfg, doc(cfg(procmacro2_semver_exempt)))]
+    pub fn after(&self) -> Span {
+        Span::_new(self.inner.after())
     }
 
     /// Create a new span encompassing `self` and `other`.

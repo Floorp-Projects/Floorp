@@ -505,6 +505,22 @@ impl Span {
         }
     }
 
+    #[cfg(super_unstable)]
+    pub fn before(&self) -> Span {
+        match self {
+            Span::Compiler(s) => Span::Compiler(s.before()),
+            Span::Fallback(s) => Span::Fallback(s.before()),
+        }
+    }
+
+    #[cfg(super_unstable)]
+    pub fn after(&self) -> Span {
+        match self {
+            Span::Compiler(s) => Span::Compiler(s.after()),
+            Span::Fallback(s) => Span::Fallback(s.after()),
+        }
+    }
+
     pub fn join(&self, other: Span) -> Option<Span> {
         let ret = match (self, other) {
             #[cfg(proc_macro_span)]

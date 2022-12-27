@@ -182,7 +182,13 @@ impl FromStr for TokenStream {
 
     fn from_str(src: &str) -> Result<TokenStream, LexError> {
         // Create a dummy file & add it to the source map
-        let cursor = get_cursor(src);
+        let mut cursor = get_cursor(src);
+
+        // Strip a byte order mark if present
+        const BYTE_ORDER_MARK: &str = "\u{feff}";
+        if cursor.starts_with(BYTE_ORDER_MARK) {
+            cursor = cursor.advance(BYTE_ORDER_MARK.len());
+        }
 
         parse::token_stream(cursor)
     }
@@ -510,6 +516,26 @@ impl Span {
             let fi = cm.fileinfo(*self);
             fi.offset_line_column(self.hi as usize)
         })
+    }
+
+    #[cfg(procmacro2_semver_exempt)]
+    pub fn before(&self) -> Span {
+        Span {
+            #[cfg(span_locations)]
+            lo: self.lo,
+            #[cfg(span_locations)]
+            hi: self.lo,
+        }
+    }
+
+    #[cfg(procmacro2_semver_exempt)]
+    pub fn after(&self) -> Span {
+        Span {
+            #[cfg(span_locations)]
+            lo: self.hi,
+            #[cfg(span_locations)]
+            hi: self.hi,
+        }
     }
 
     #[cfg(not(span_locations))]

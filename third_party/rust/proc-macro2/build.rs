@@ -111,7 +111,10 @@ fn main() {
         println!("cargo:rustc-cfg=wrap_proc_macro");
     }
 
-    if version.nightly && feature_allowed("proc_macro_span") {
+    if version.nightly
+        && feature_allowed("proc_macro_span")
+        && feature_allowed("proc_macro_span_shrink")
+    {
         println!("cargo:rustc-cfg=proc_macro_span");
     }
 
