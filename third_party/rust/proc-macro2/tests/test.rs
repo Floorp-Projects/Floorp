@@ -630,3 +630,16 @@ fn check_spans_internal(ts: TokenStream, lines: &mut &[(usize, usize, usize, usi
         }
     }
 }
+
+#[test]
+fn byte_order_mark() {
+    let string = "\u{feff}foo";
+    let tokens = string.parse::<TokenStream>().unwrap();
+    match tokens.into_iter().next().unwrap() {
+        TokenTree::Ident(ident) => assert_eq!(ident, "foo"),
+        _ => unreachable!(),
+    }
+
+    let string = "foo\u{feff}";
+    string.parse::<TokenStream>().unwrap_err();
+}
