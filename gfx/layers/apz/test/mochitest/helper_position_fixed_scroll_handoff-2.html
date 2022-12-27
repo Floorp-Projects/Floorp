@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<head>
+  <title>APZ overscroll handoff for fixed elements</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+<style>
+html, body {
+  margin: 0;
+}
+html {
+  overflow: auto;
+  background: blue;
+}
+.spacer {
+  height: 2000px;
+}
+#fixed {
+  position: fixed;
+  overflow: auto;
+  background: red;
+  width: 200px;
+  height: 200px;
+  top: 0;
+  left: 0;
+}
+</style>
+</head>
+<div id="fixed">
+  <div class="spacer"></div>
+</div>
+<div class="spacer"></div>
+<script type="application/javascript">
+
+async function test() {
+  // Scroll to the bottom of the fixed position element that should
+  // allow overscroll handoff.
+  fixed.scrollTop = fixed.scrollHeight;
+
+  // After scrolling to bottom tick the refresh driver.
+  await promiseFrame();
+
+  info("Start: fixed=" + fixed.scrollTop + " window=" + window.scrollY);
+
+  // Async scroll the fixed element by 200 pixels using the mouse-wheel.
+  // This should handoff the overscroll to the window.
+  await promiseMoveMouseAndScrollWheelOver(fixed, 50, 50, false, 200);
+
+  // Make sure scrolling that has happened is propagated to the main thread.
+  await promiseApzFlushedRepaints();
+
+  // Try another gesture to ensure the overscroll handoff runs.
+  await promiseMoveMouseAndScrollWheelOver(fixed, 50, 50, false, 200);
+  await promiseApzFlushedRepaints();
+
+  // Ensure that the window has scrolled.
+  isnot(window.scrollY, 0, "The overscroll should not handoff");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
