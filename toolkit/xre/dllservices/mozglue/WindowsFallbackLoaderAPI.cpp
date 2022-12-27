@@ -79,6 +79,11 @@ FallbackLoaderAPI::GetHandleLauncherErrorFn() {
   return nullptr;
 }
 
+nt::SharedSection* FallbackLoaderAPI::GetSharedSection() {
+  MOZ_ASSERT_UNREACHABLE("This should not be called so soon!");
+  return nullptr;
+}
+
 void FallbackLoaderAPI::SetObserver(nt::LoaderObserver* aLoaderObserver) {
   mLoaderObserver = aLoaderObserver;
 }
