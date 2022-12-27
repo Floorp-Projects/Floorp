@@ -1307,6 +1307,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.1 -> 0.1.4"
 
+[[audits.pkg-config]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.25 -> 0.3.26"
+
 [[audits.plane-split]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
