@@ -1372,6 +1372,14 @@ bool WindowsProcessLauncher::DoSetup() {
     mCmdLine->AppendLooseValue(UTF8ToWide("-contentproc"));
   }
 
+#  ifdef HAS_DLL_BLOCKLIST
+  if (CommandLine::ForCurrentProcess()->HasSwitch(
+          UTF8ToWide(mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch))) {
+    mCmdLine->AppendLooseValue(
+        UTF8ToWide(mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch));
+  }
+#  endif  // HAS_DLL_BLOCKLIST
+
   mCmdLine->AppendSwitchWithValue(switches::kProcessChannelID, mChannelId);
 
   for (std::vector<std::string>::iterator it = mExtraOpts.begin();
