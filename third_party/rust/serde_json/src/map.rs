@@ -197,9 +197,8 @@ impl Map<String, Value> {
     #[inline]
     pub fn append(&mut self, other: &mut Self) {
         #[cfg(feature = "preserve_order")]
-        for (k, v) in mem::replace(&mut other.map, MapImpl::default()) {
-            self.map.insert(k, v);
-        }
+        self.map
+            .extend(mem::replace(&mut other.map, MapImpl::default()));
         #[cfg(not(feature = "preserve_order"))]
         self.map.append(&mut other.map);
     }
@@ -303,6 +302,11 @@ impl Clone for Map<String, Value> {
         Map {
             map: self.map.clone(),
         }
+    }
+
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        self.map.clone_from(&source.map);
     }
 }
 

@@ -3,6 +3,8 @@ use std::process::Command;
 use std::str::{self, FromStr};
 
 fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
+
     // Decide ideal limb width for arithmetic in the float parser. Refer to
     // src/lexical/math.rs for where this has an effect.
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();

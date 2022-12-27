@@ -1,7 +1,7 @@
-# Serde JSON &emsp; [![Build Status]][travis] [![Latest Version]][crates.io] [![Rustc Version 1.36+]][rustc]
+# Serde JSON &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Rustc Version 1.36+]][rustc]
 
-[Build Status]: https://img.shields.io/github/workflow/status/serde-rs/json/CI/master
-[travis]: https://github.com/serde-rs/json/actions?query=branch%3Amaster
+[Build Status]: https://img.shields.io/github/actions/workflow/status/serde-rs/json/ci.yml?branch=master
+[actions]: https://github.com/serde-rs/json/actions?query=branch%3Amaster
 [Latest Version]: https://img.shields.io/crates/v/serde_json.svg
 [crates.io]: https://crates.io/crates/serde\_json
 [Rustc Version 1.36+]: https://img.shields.io/badge/rustc-1.36+-lightgray.svg
@@ -350,8 +350,8 @@ closed without a response after some time.
 ## No-std support
 
 As long as there is a memory allocator, it is possible to use serde_json without
-the rest of the Rust standard library. This is supported on Rust 1.36+. Disable
-the default "std" feature and enable the "alloc" feature:
+the rest of the Rust standard library. Disable the default "std" feature and
+enable the "alloc" feature:
 
 ```toml
 [dependencies]
