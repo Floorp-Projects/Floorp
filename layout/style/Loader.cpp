@@ -383,9 +383,9 @@ SheetLoadData::SheetLoadData(
 }
 
 SheetLoadData::~SheetLoadData() {
-  MOZ_DIAGNOSTIC_ASSERT(mSheetCompleteCalled || mIntentionallyDropped,
-                        "Should always call SheetComplete, except when "
-                        "dropping the load");
+  MOZ_RELEASE_ASSERT(mSheetCompleteCalled || mIntentionallyDropped,
+                     "Should always call SheetComplete, except when "
+                     "dropping the load");
 }
 
 NS_IMETHODIMP
