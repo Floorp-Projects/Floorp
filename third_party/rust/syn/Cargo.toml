@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "syn"
-version = "1.0.99"
+version = "1.0.107"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = [
     "/benches/**",
@@ -56,6 +56,9 @@ features = [
     "extra-traits",
 ]
 
+[lib]
+doc-scrape-examples = false
+
 [[bench]]
 name = "rust"
 harness = false
@@ -72,7 +75,7 @@ required-features = [
 ]
 
 [dependencies.proc-macro2]
-version = "1.0.39"
+version = "1.0.46"
 default-features = false
 
 [dependencies.quote]
