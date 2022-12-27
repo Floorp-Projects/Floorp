@@ -13,6 +13,7 @@ const { ProcessType } = ChromeUtils.importESModule(
 
 let AboutThirdParty = null;
 let CrashModuleSet = null;
+let gBackgroundTasksDone = false;
 
 async function fetchData() {
   let data = null;
@@ -55,6 +56,7 @@ async function fetchData() {
     module.application = AboutThirdParty.lookupApplication(
       module.dllFile?.path
     );
+    module.moduleName = module.dllFile?.leafName;
   }
 
   for (const [proc, perProc] of Object.entries(data.processes)) {
@@ -86,6 +88,18 @@ async function fetchData() {
       const diff = a.processType.localeCompare(b.processType);
       return diff ? diff : a.processID - b.processID;
     });
+    // If this module was blocked but not by the user, it must have been blocked
+    // by the static blocklist.
+    // But we don't know this for sure unless the background tasks were done
+    // by the time we gathered data about the module above.
+    if (gBackgroundTasksDone) {
+      module.isBlockedByBuiltin =
+        !(module.typeFlags & Ci.nsIAboutThirdParty.ModuleType_BlockedByUser) &&
+        !!module.events.length &&
+        module.events.every(e => e.loadStatus !== 0);
+    } else {
+      module.isBlockedByBuiltin = false;
+    }
   }
 
   data.modules.sort((a, b) => {
@@ -106,7 +120,10 @@ async function fetchData() {
     return b.loadingOnMain - a.loadingOnMain;
   });
 
-  return data.modules;
+  const loadedModuleNames = data.modules.map(module => module.moduleName);
+  let blockedModuleNames = {};
+  AboutThirdParty.getBlockedModuleNames(loadedModuleNames, blockedModuleNames);
+  return { modules: data.modules, blocked: blockedModuleNames.value };
 }
 
 function setContent(element, text, l10n) {
@@ -118,11 +135,98 @@ function setContent(element, text, l10n) {
 }
 
 function onClickOpenDir(event) {
-  const button = event.target.closest("button");
-  if (!button?.fileObj) {
+  const module = event.target.closest(".card").module;
+  if (!module?.dllFile) {
     return;
   }
-  button.fileObj.reveal();
+  module.dllFile.reveal();
+}
+
+// Returns whether we should restart.
+async function confirmRestartPrompt() {
+  let [
+    msg,
+    title,
+    restartButtonText,
+    restartLaterButtonText,
+  ] = await document.l10n.formatValues([
+    { id: "third-party-requires-restart" },
+    { id: "third-party-should-restart-title" },
+    { id: "third-party-should-restart-ok" },
+    { id: "third-party-restart-later" },
+  ]);
+  let buttonFlags =
+    Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
+    Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_IS_STRING +
+    Services.prompt.BUTTON_POS_1_DEFAULT;
+  let buttonIndex = Services.prompt.confirmEx(
+    window.browsingContext.topChromeWindow,
+    title,
+    msg,
+    buttonFlags,
+    restartButtonText,
+    restartLaterButtonText,
+    null,
+    null,
+    {}
+  );
+  return buttonIndex === 0;
+}
+
+async function onBlock(event) {
+  const module = event.target.closest(".card").module;
+  if (!module?.moduleName) {
+    return;
+  }
+
+  const allButtons = document.querySelectorAll(".button-block");
+  // To avoid race conditions, don't allow any modules to be blocked/unblocked
+  // until we've updated and written the blocklist.
+  allButtons.forEach(b => {
+    b.disabled = true;
+  });
+  let updatedBlocklist = false;
+  try {
+    const wasBlocked = event.target.classList.contains("module-blocked");
+    await AboutThirdParty.updateBlocklist(module.moduleName, !wasBlocked);
+
+    event.target.classList.toggle("module-blocked");
+    let blockButtonL10nId;
+    if (wasBlocked) {
+      blockButtonL10nId = "third-party-button-to-block";
+    } else {
+      blockButtonL10nId = AboutThirdParty.isDynamicBlocklistDisabled
+        ? "third-party-button-to-unblock-disabled"
+        : "third-party-button-to-unblock";
+    }
+    event.target.setAttribute("data-l10n-id", blockButtonL10nId);
+    updatedBlocklist = true;
+  } catch (ex) {
+    Cu.reportError("Failed to update the blocklist file - " + ex.result);
+  }
+  allButtons.forEach(b => {
+    b.disabled = false;
+  });
+  if (updatedBlocklist && (await confirmRestartPrompt())) {
+    let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+      Ci.nsISupportsPRBool
+    );
+    Services.obs.notifyObservers(
+      cancelQuit,
+      "quit-application-requested",
+      "restart"
+    );
+    if (!cancelQuit.data) {
+      // restart was not cancelled.
+      // Note that even if we're in safe mode, we don't restart
+      // into safe mode, because it's likely the user is trying to
+      // fix a crash or something, and they'd probably like to
+      // see if it works.
+      Services.startup.quit(
+        Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+      );
+    }
+  }
 }
 
 function onClickExpand(event) {
@@ -161,9 +265,9 @@ function createDetailRow(label, value) {
 }
 
 function copyDataToClipboard(aData) {
-  const clipboardData = aData.map(module => {
+  const modulesData = aData.modules.map(module => {
     const copied = {
-      name: module.dllFile?.leafName,
+      name: module.moduleName,
       fileVersion: module.fileVersion,
     };
 
@@ -200,6 +304,7 @@ function copyDataToClipboard(aData) {
 
     return copied;
   });
+  let clipboardData = { modules: modulesData, blocked: aData.blocked };
 
   return navigator.clipboard.writeText(JSON.stringify(clipboardData, null, 2));
 }
@@ -212,28 +317,85 @@ function correctProcessTypeForFluent(type) {
   return ProcessType.fluentNameFromProcessTypeString(geckoType);
 }
 
+function setUpBlockButton(aCard, isBlocklistDisabled, aModule) {
+  const blockButton = aCard.querySelector(".button-block");
+  if (aModule) {
+    if (!aModule.isBlockedByBuiltin) {
+      blockButton.hidden = aModule.typeFlags == 0;
+      if (aModule.typeFlags & Ci.nsIAboutThirdParty.ModuleType_BlockedByUser) {
+        blockButton.classList.add("module-blocked");
+      }
+    }
+  } else {
+    // This means that this is an entry in the dynamic blocklist that
+    // has not attempted to load, thus we have very little information
+    // about it (just its name). So this should always show up as blocked.
+    blockButton.hidden = false;
+    blockButton.classList.add("module-blocked");
+  }
+  if (isBlocklistDisabled) {
+    blockButton.classList.add("blocklist-disabled");
+  }
+  if (blockButton.classList.contains("module-blocked")) {
+    blockButton.setAttribute(
+      "data-l10n-id",
+      isBlocklistDisabled
+        ? "third-party-button-to-unblock-disabled"
+        : "third-party-button-to-unblock"
+    );
+  }
+}
+
 function visualizeData(aData) {
   const templateCard = document.querySelector("template[name=card]");
+  const templateBlockedCard = document.querySelector(
+    "template[name=card-blocked]"
+  );
   const templateTableRow = document.querySelector(
     "template[name=event-table-row]"
   );
 
+  // These correspond to the enum ModuleLoadInfo::Status
   const labelLoadStatus = [
     "third-party-status-loaded",
     "third-party-status-blocked",
     "third-party-status-redirected",
+    "third-party-status-blocked",
   ];
+
+  const isBlocklistAvailable =
+    AboutThirdParty.isDynamicBlocklistAvailable &&
+    Services.policies.isAllowed("thirdPartyModuleBlocking");
+  const isBlocklistDisabled = AboutThirdParty.isDynamicBlocklistDisabled;
 
   const mainContentFragment = new DocumentFragment();
 
-  for (const module of aData) {
-    const newCard = templateCard.content.cloneNode(true);
-    const leafName = module.dllFile?.leafName;
+  for (const blockedName of aData.blocked) {
+    const newCard = templateBlockedCard.content.cloneNode(true);
+    setContent(newCard.querySelector(".module-name"), blockedName);
+    // Referred by the button click handlers
+    newCard.querySelector(".card").module = {
+      moduleName: blockedName,
+    };
 
-    setContent(newCard.querySelector(".module-name"), leafName);
-    newCard
-      .querySelector(".button-expand")
-      .addEventListener("click", onClickExpand);
+    if (isBlocklistAvailable) {
+      setUpBlockButton(newCard, isBlocklistDisabled, null);
+    }
+    mainContentFragment.appendChild(newCard);
+  }
+
+  for (const module of aData.modules) {
+    const newCard = templateCard.content.cloneNode(true);
+    const moduleName = module.moduleName;
+
+    // Referred by the button click handlers
+    newCard.querySelector(".card").module = {
+      dllFile: module.dllFile,
+      moduleName: module.moduleName,
+      fileVersion: module.fileVersion,
+    };
+
+    setContent(newCard.querySelector(".module-name"), moduleName);
 
     const modTagsContainer = newCard.querySelector(".module-tags");
     if (module.typeFlags & Ci.nsIAboutThirdParty.ModuleType_IME) {
@@ -243,9 +405,12 @@ function visualizeData(aData) {
       modTagsContainer.querySelector(".tag-shellex").hidden = false;
     }
 
-    const btnOpenDir = newCard.querySelector(".button-open-dir");
-    btnOpenDir.fileObj = module.dllFile;
-    btnOpenDir.addEventListener("click", onClickOpenDir);
+    newCard.querySelector(
+      ".blocked-by-builtin"
+    ).hidden = !module.isBlockedByBuiltin;
+    if (isBlocklistAvailable) {
+      setUpBlockButton(newCard, isBlocklistDisabled, module);
+    }
 
     if (module.isCrasher) {
       newCard.querySelector(".image-warning").hidden = false;
@@ -323,7 +488,23 @@ function visualizeData(aData) {
     mainContentFragment.appendChild(newCard);
   }
 
-  document.getElementById("main").appendChild(mainContentFragment);
+  const main = document.getElementById("main");
+  main.appendChild(mainContentFragment);
+  main.addEventListener("click", onClickInMain);
+}
+
+function onClickInMain(event) {
+  const classList = event.target.classList;
+  if (classList.contains("button-open-dir")) {
+    onClickOpenDir(event);
+  } else if (classList.contains("button-block")) {
+    onBlock(event);
+  } else if (
+    classList.contains("button-expand") ||
+    classList.contains("button-collapse")
+  ) {
+    onClickExpand(event);
+  }
 }
 
 function clearVisualizedData() {
@@ -395,6 +576,7 @@ async function onLoad() {
   let hasData = false;
   Promise.all(backgroundTasks)
     .then(() => {
+      gBackgroundTasksDone = true;
       if (!hasData) {
         // If all async tasks were completed before fetchData,
         // or there was no data available, visualizeData shows
@@ -423,9 +605,10 @@ async function onLoad() {
     .catch(Cu.reportError);
 
   const data = await fetchData();
+  // Used for testing purposes
   window.fetchDataDone = true;
 
-  hasData = data?.length;
+  hasData = !!data?.modules.length || !!data?.blocked.length;
   if (!hasData) {
     document.getElementById("no-data").hidden = false;
     return;

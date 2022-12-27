@@ -21,6 +21,10 @@
   background-image: url(chrome://global/skin/icons/folder.svg);
 }
 
+.button-block {
+  background-image: url(chrome://global/skin/icons/blocked.svg);
+}
+
 .button-expand {
   background-image: url(chrome://global/skin/icons/arrow-down.svg);
 }
@@ -36,6 +40,18 @@
 .image-warning {
   fill: #fcd100;
 }
+
+.blocked-by-builtin {
+  fill: red;
+}
+.button-block.module-blocked {
+  fill: red;
+  background-image: url(chrome://global/skin/icons/close-fill.svg);
+}
+.button-block.module-blocked.blocklist-disabled {
+  fill: goldenrod;
+}
+
 
 .card {
   margin-bottom: 16px;
