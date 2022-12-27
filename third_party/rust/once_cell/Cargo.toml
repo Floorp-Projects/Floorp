@@ -10,9 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 name = "once_cell"
-version = "1.13.1"
+version = "1.16.0"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
 exclude = [
     "*.png",
@@ -65,14 +66,25 @@ required-features = ["std"]
 name = "test_synchronization"
 required-features = ["std"]
 
-[dependencies.atomic-polyfill]
+[dependencies.atomic_polyfill]
 version = "1"
 optional = true
+package = "atomic-polyfill"
+
+[dependencies.critical_section]
+version = "1"
+optional = true
+package = "critical-section"
 
 [dependencies.parking_lot_core]
 version = "0.9.3"
 optional = true
 default_features = false
+
+[dev-dependencies.critical_section]
+version = "1.1.1"
+features = ["std"]
+package = "critical-section"
 
 [dev-dependencies.crossbeam-utils]
 version = "0.8.7"
@@ -85,6 +97,11 @@ version = "1.2.0"
 
 [features]
 alloc = ["race"]
+atomic-polyfill = ["critical-section"]
+critical-section = [
+    "critical_section",
+    "atomic_polyfill",
+]
 default = ["std"]
 parking_lot = ["parking_lot_core"]
 race = []

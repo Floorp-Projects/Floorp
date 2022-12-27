@@ -5,14 +5,11 @@
 
 use std::{
     cell::{Cell, UnsafeCell},
-    hint::unreachable_unchecked,
     marker::PhantomData,
     panic::{RefUnwindSafe, UnwindSafe},
     sync::atomic::{AtomicBool, AtomicPtr, Ordering},
     thread::{self, Thread},
 };
-
-use crate::take_unchecked;
 
 #[derive(Debug)]
 pub(crate) struct OnceCell<T> {
@@ -81,7 +78,7 @@ impl<T> OnceCell<T> {
         initialize_or_wait(
             &self.queue,
             Some(&mut || {
-                let f = unsafe { take_unchecked(&mut f) };
+                let f = unsafe { crate::unwrap_unchecked(f.take()) };
                 match f() {
                     Ok(value) => {
                         unsafe { *slot = Some(value) };
@@ -111,15 +108,8 @@ impl<T> OnceCell<T> {
     /// the contents are acquired by (synchronized to) this thread.
     pub(crate) unsafe fn get_unchecked(&self) -> &T {
         debug_assert!(self.is_initialized());
-        let slot: &Option<T> = &*self.value.get();
-        match slot {
-            Some(value) => value,
-            // This unsafe does improve performance, see `examples/bench`.
-            None => {
-                debug_assert!(false);
-                unreachable_unchecked()
-            }
-        }
+        let slot = &*self.value.get();
+        crate::unwrap_unchecked(slot.as_ref())
     }
 
     /// Gets the mutable reference to the underlying value.
