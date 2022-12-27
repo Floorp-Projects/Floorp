@@ -200,6 +200,4 @@ if CONFIG["CC_TYPE"] == "clang-cl":
         "ToastNotificationHandler.cpp",
     ]
 
-SPHINX_TREES["/widget/windows"] = "docs"
-
 REQUIRES_UNIFIED_BUILD = True

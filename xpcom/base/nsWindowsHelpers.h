@@ -327,13 +327,4 @@ struct FreeSidDeleter {
 // This typedef will work for storing a PSID in a UniquePtr and should make
 // things a bit more readable.
 typedef mozilla::UniquePtr<void, FreeSidDeleter> UniqueSidPtr;
-
-// One caller of this function is early in startup and several others are not,
-// so they have different ways of determining the two parameters. This function
-// exists just so any future code that needs to determine whether the dynamic
-// blocklist is disabled remembers to check whether safe mode is active.
-inline bool IsDynamicBlocklistDisabled(bool isSafeMode,
-                                       bool hasCommandLineDisableArgument) {
-  return isSafeMode || hasCommandLineDisableArgument;
-}
 #endif

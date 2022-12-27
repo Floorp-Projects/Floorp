@@ -124,25 +124,6 @@ TEST(TestDllBlocklist, NoOpEntryPoint)
   EXPECT_TRUE(!!::GetModuleHandleW(kLeafName.get()));
 #  endif
 }
-
-// User blocklist needs the launcher process
-TEST(TestDllBlocklist, UserBlocked)
-{
-  constexpr auto kLeafName = u"TestDllBlocklist_UserBlocked.dll"_ns;
-  nsString dllPath = GetFullPath(kLeafName);
-
-  nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
-
-// With ASAN, the test uses mozglue's blocklist where
-// the user blocklist is not used.
-#  if !defined(MOZ_ASAN)
-  EXPECT_TRUE(!hDll);
-  EXPECT_TRUE(!::GetModuleHandleW(kLeafName.get()));
-#  endif
-  hDll.own(::LoadLibraryExW(dllPath.get(), nullptr, LOAD_LIBRARY_AS_DATAFILE));
-  // Mapped as MEM_MAPPED + PAGE_READONLY
-  EXPECT_TRUE(hDll);
-}
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},

@@ -841,14 +841,6 @@ export var Policies = {
     },
   },
 
-  DisableThirdPartyModuleBlocking: {
-    onBeforeUIStartup(manager, param) {
-      if (param) {
-        manager.disallowFeature("thirdPartyModuleBlocking");
-      }
-    },
-  },
-
   DisplayBookmarksToolbar: {
     onBeforeUIStartup(manager, param) {
       let visibility;
