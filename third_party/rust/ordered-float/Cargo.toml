@@ -12,17 +12,36 @@
 [package]
 edition = "2018"
 name = "ordered-float"
-version = "3.0.0"
-authors = ["Jonathan Reem <jonathan.reem@gmail.com>", "Matt Brubeck <mbrubeck@limpet.net>"]
+version = "3.4.0"
+authors = [
+    "Jonathan Reem <jonathan.reem@gmail.com>",
+    "Matt Brubeck <mbrubeck@limpet.net>",
+]
 description = "Wrappers for total ordering on floats"
 readme = "README.md"
-keywords = ["no_std", "ord", "f64", "f32", "sort"]
-categories = ["science", "rust-patterns", "no-std"]
+keywords = [
+    "no_std",
+    "ord",
+    "f64",
+    "f32",
+    "sort",
+]
+categories = [
+    "science",
+    "rust-patterns",
+    "no-std",
+]
 license = "MIT"
 repository = "https://github.com/reem/rust-ordered-float"
+
 [dependencies.arbitrary]
 version = "1.0.0"
 optional = true
+
+[dependencies.bytemuck]
+version = "1.12.2"
+optional = true
+default-features = false
 
 [dependencies.num-traits]
 version = "0.2.1"
@@ -51,10 +70,19 @@ optional = true
 version = "1.0"
 optional = true
 default-features = false
+
+[dependencies.speedy]
+version = "0.8.3"
+optional = true
+default-features = false
+
 [dev-dependencies.serde_test]
 version = "1.0"
 
 [features]
 default = ["std"]
-randtest = ["rand/std", "rand/std_rng"]
+randtest = [
+    "rand/std",
+    "rand/std_rng",
+]
 std = ["num-traits/std"]
