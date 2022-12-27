@@ -35,22 +35,11 @@ interface nsIAppShell : nsISupports
   void exit();
 
   /**
-   * Give hint to native event queue notification mechanism. If the native
-   * platform needs to tradeoff performance vs. native event starvation this
-   * hint tells the native dispatch code which to favor.  The default is to
-   * prevent native event starvation.
-   *
-   * Calls to this function may be nested. When the number of calls that pass
-   * PR_TRUE is subtracted from the number of calls that pass PR_FALSE is
-   * greater than 0, performance is given precedence over preventing event
-   * starvation.
-   *
-   * The starvationDelay arg is only used when favorPerfOverStarvation is
-   * PR_FALSE. It is the amount of time in milliseconds to wait before the
-   * PR_FALSE actually takes effect.
+   * Ask the native event queue notification mechanism to favor Gecko tasks
+   * (instead of native tasks) for a short while. (Content processes always
+   * favor Gecko tasks.)
    */
-  void favorPerformanceHint(in boolean favorPerfOverStarvation,
-                            in unsigned long starvationDelay);
+  void geckoTaskBurst();
 
   /**
    * Suspends the use of additional platform-specific methods (besides the
