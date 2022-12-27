@@ -12,11 +12,18 @@
 [package]
 edition = "2018"
 name = "ppv-lite86"
-version = "0.2.16"
+version = "0.2.17"
 authors = ["The CryptoCorrosion Contributors"]
 description = "Implementation of the crypto-simd API for x86"
-keywords = ["crypto", "simd", "x86"]
-categories = ["cryptography", "no-std"]
+keywords = [
+    "crypto",
+    "simd",
+    "x86",
+]
+categories = [
+    "cryptography",
+    "no-std",
+]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/cryptocorrosion/cryptocorrosion"
 
@@ -27,5 +34,6 @@ default = ["std"]
 no_simd = []
 simd = []
 std = []
+
 [badges.travis-ci]
 repository = "cryptocorrosion/cryptocorrosion"
