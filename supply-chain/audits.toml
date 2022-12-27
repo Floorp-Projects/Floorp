@@ -1465,10 +1465,20 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.5.6 -> 1.6.0"
 
+[[audits.regex]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.6.0 -> 1.7.0"
+
 [[audits.regex-syntax]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.6.26 -> 0.6.27"
+
+[[audits.regex-syntax]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.6.27 -> 0.6.28"
 
 [[audits.rkv]]
 who = "Chris H-C <chutten@mozilla.com>"
