@@ -10,9 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 name = "rayon"
-version = "1.5.3"
+version = "1.6.1"
 authors = [
     "Niko Matsakis <niko@alum.mit.edu>",
     "Josh Stone <cuviper@gmail.com>",
@@ -37,18 +38,12 @@ categories = ["concurrency"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rayon-rs/rayon"
 
-[dependencies.crossbeam-deque]
-version = "0.8.1"
-
 [dependencies.either]
 version = "1.0"
 default-features = false
 
 [dependencies.rayon-core]
-version = "1.9.2"
-
-[dev-dependencies.docopt]
-version = "1"
+version = "1.10.0"
 
 [dev-dependencies.lazy_static]
 version = "1"
@@ -58,10 +53,3 @@ version = "0.8"
 
 [dev-dependencies.rand_xorshift]
 version = "0.3"
-
-[dev-dependencies.serde]
-version = "1.0.85"
-features = ["derive"]
-
-[build-dependencies.autocfg]
-version = "1"

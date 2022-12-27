@@ -1,3 +1,48 @@
+# Release rayon 1.6.1 (2022-12-09)
+
+- Simplified `par_bridge` to only pull one item at a time from the iterator,
+  without batching. Threads that are waiting for iterator items will now block
+  appropriately rather than spinning CPU. (Thanks @njaard!)
+- Added protection against recursion in `par_bridge`, so iterators that also
+  invoke rayon will not cause mutex recursion deadlocks.
+
+# Release rayon-core 1.10.1 (2022-11-18)
+
+- Fixed a race condition with threads going to sleep while a broadcast starts.
+
+# Release rayon 1.6.0 / rayon-core 1.10.0 (2022-11-18)
+
+- The minimum supported `rustc` is now 1.56.
+- The new `IndexedParallelIterator::fold_chunks` and `fold_chunks_with` methods
+  work like `ParallelIterator::fold` and `fold_with` with fixed-size chunks of
+  items. This may be useful for predictable batching performance, without the
+  allocation overhead of `IndexedParallelIterator::chunks`.
+- New "broadcast" methods run a given function on all threads in the pool.
+  These run at a sort of reduced priority after each thread has exhausted their
+  local work queue, but before they attempt work-stealing from other threads.
+  - The global `broadcast` function and `ThreadPool::broadcast` method will
+    block until completion, returning a `Vec` of all return values.
+  - The global `spawn_broadcast` function and methods on `ThreadPool`, `Scope`,
+    and `ScopeFifo` will run detached, without blocking the current thread.
+- Panicking methods now use `#[track_caller]` to report the caller's location.
+- Fixed a truncated length in `vec::Drain` when given an empty range.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @cuviper
+- @idanmuze
+- @JoeyBF
+- @JustForFun88
+- @kianmeng
+- @kornelski
+- @ritchie46
+- @ryanrussell
+- @steffahn
+- @TheIronBorn
+- @willcrozi
+
 # Release rayon 1.5.3 (2022-05-13)
 
 - The new `ParallelSliceMut::par_sort_by_cached_key` is a stable sort that caches

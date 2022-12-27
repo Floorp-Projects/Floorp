@@ -191,25 +191,25 @@ where
     // This binary heap respects the invariant `parent >= child`.
     let sift_down = |v: &mut [T], mut node| {
         loop {
-            // Children of `node`:
-            let left = 2 * node + 1;
-            let right = 2 * node + 2;
+            // Children of `node`.
+            let mut child = 2 * node + 1;
+            if child >= v.len() {
+                break;
+            }
 
             // Choose the greater child.
-            let greater = if right < v.len() && is_less(&v[left], &v[right]) {
-                right
-            } else {
-                left
-            };
+            if child + 1 < v.len() && is_less(&v[child], &v[child + 1]) {
+                child += 1;
+            }
 
             // Stop if the invariant holds at `node`.
-            if greater >= v.len() || !is_less(&v[node], &v[greater]) {
+            if !is_less(&v[node], &v[child]) {
                 break;
             }
 
             // Swap `node` with the greater child, move one step down, and continue sifting.
-            v.swap(node, greater);
-            node = greater;
+            v.swap(node, child);
+            node = child;
         }
     };
 
@@ -426,7 +426,7 @@ where
             // safe. Otherwise, the debug assertions in the `is_done` case guarantee that
             // `width(l, r) == block_l + block_r`, namely, that the block sizes have been adjusted to account
             // for the smaller number of remaining elements.
-            l = unsafe { l.offset(block_l as isize) };
+            l = unsafe { l.add(block_l) };
         }
 
         if start_r == end_r {
@@ -629,8 +629,7 @@ fn break_patterns<T>(v: &mut [T]) {
             random
         };
         let mut gen_usize = || {
-            // TODO 1.53: if usize::BITS <= 32 {
-            if mem::size_of::<usize>() <= 4 {
+            if usize::BITS <= 32 {
                 gen_u32() as usize
             } else {
                 (((gen_u32() as u64) << 32) | (gen_u32() as u64)) as usize
@@ -676,6 +675,7 @@ where
     let len = v.len();
 
     // Three indices near which we are going to choose a pivot.
+    #[allow(clippy::identity_op)]
     let mut a = len / 4 * 1;
     let mut b = len / 4 * 2;
     let mut c = len / 4 * 3;
@@ -850,8 +850,7 @@ where
     }
 
     // Limit the number of imbalanced partitions to `floor(log2(len)) + 1`.
-    // TODO 1.53: let limit = usize::BITS - v.len().leading_zeros();
-    let limit = mem::size_of::<usize>() as u32 * 8 - v.len().leading_zeros();
+    let limit = usize::BITS - v.len().leading_zeros();
 
     recurse(v, &is_less, None, limit);
 }
@@ -864,7 +863,7 @@ mod tests {
 
     #[test]
     fn test_heapsort() {
-        let ref mut rng = thread_rng();
+        let rng = &mut thread_rng();
 
         for len in (0..25).chain(500..501) {
             for &modulus in &[5, 10, 100] {
@@ -891,8 +890,8 @@ mod tests {
         heapsort(&mut v, &|_, _| thread_rng().gen());
         heapsort(&mut v, &|a, b| a < b);
 
-        for i in 0..v.len() {
-            assert_eq!(v[i], i);
+        for (i, &entry) in v.iter().enumerate() {
+            assert_eq!(entry, i);
         }
     }
 }
