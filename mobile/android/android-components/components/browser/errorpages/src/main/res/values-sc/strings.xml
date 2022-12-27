@@ -23,6 +23,9 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Atzeta s’arriscu e sighi</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Custu situ rechedet una connessione segura.</string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avantzadu…</string>
 
@@ -47,6 +50,9 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Modalidade foras de lìnia</string>
 
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Ghenna restrinta pro resones de seguresa</string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Connessione torrada a aviare</string>
 
@@ -62,12 +68,33 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Faddina de cuntenutu corrotu</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Sa pàgina chi ses proende a abèrrere non podet èssere ammustrada, ca est istada agatada una faddina in sa trasmissione de is datos.</p>
+      <ul>
+        <li>Cuntata is meres de su situ pro informare de custu problema.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Cuntenutu faddidu</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Sa pàgina chi ses proende a abèrrere non podet èssere ammustrada, ca est istada agatada una faddina in sa trasmissione de is datos.</p>
+      <ul>
+        <li>Cuntata is meres de su situ pro informare de custu problema.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Faddina de codìfica de su cuntenutu</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Indiritzu no agatadu</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nissuna connessione de internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Controlla sa cunfiguratzione de rete o torra a carrigare sa pàgina luego.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Torra a carrigare</string>
 
@@ -75,9 +102,55 @@
     <string name="mozac_browser_errorpages_malformed_uri_title">Indiritzu non vàlidu</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">S’indiritzu no est vàlidu</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocollu disconnotu</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Archìviu no agatadu</string>
 
-    </resources>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Atzessu denegadu a s’archìviu</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Podet dare chi siat istadu cantzelladu o mòvidu, o chi is permissos de archìviu bi siant blochende s’atzessu.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Connessione cun su serbidore intermediàriu refudada</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Impossìbile agatare su serbidore intermediàriu</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Su situ in s’indiritzu %1$s est istadu sinnaladu comente situ web malitziosu e est istadu blocadu de acordu cun is preferèntzias de seguresa tuas.</p>
+    ]]></string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Ant sinnaladu chi su situ in s’indiritzu %1$s cuntenet programmas non disigiados, e est istadu blocadu de acordu cun is preferèntzias de seguresa tuas.</p>
+    ]]></string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Su situ in s’indiritzu %1$s est istadu sinnaladu comente perigulosu e est istadu blocadu de acordu cun is preferèntzias de seguresa tuas.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de situ ingannosu</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Sa pàgina web in s’indiritzu %1$s est istada sinnalada comente ingannosa e est istada blocada de acordu cun is preferèntzias de seguresa tuas.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Situ seguru non disponìbile</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[As ativadu sa modalidade HTTPS ebbia pro megiorare sa seguresa, ma no esistet sa versione HTTPS de su situ <em>%1$s</em>.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Sighi in su situ HTTP</string>
+</resources>

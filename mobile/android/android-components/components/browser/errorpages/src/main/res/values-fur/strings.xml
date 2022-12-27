@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Torne prove</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Impussibil completâ la richieste</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Pal moment no son disponibilis altris informazions su chest probleme o erôr.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Conession sigure falide</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Nol è pussibil visualizâ la pagjine che tu stâs cirint di viodi parcè che nol è stât pussibil verificâ la autenticitât dai dâts ricevûts.</li>
+        <li>Par plasê contate i proprietaris dal sît web par informâju di chest probleme.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conession sigure falide</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Chest al podarès jessi un probleme cu la configurazion dal servidôr, opûr al podarès jessi che cualchidun al stedi cirint di impersonâ il servidôr.</li>
+        <li>Se in passât la conession a chest servidôr e leve, al podarès stâi che l’erôr al sedi temporani e che tu puedis provâ di gnûf plui tart.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avanzadis…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Cualchidun al podarès cirî di sostituîsi al sît origjinâl e o disconseìn di continuâ.</label>
+        <br><br>
+        <label>I sîts web a garantissin la lôr identitât midiant certificâts. %1$s nol considere atendibil il sît <b>%2$s</b> parcè che l’emitent dal so certificât nol è cognossût, il certificât al è auto-firmât opûr il servidôr nol à mandât i certificâts intermedis previodûts.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Torne indaûr (conseât)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acete il risi e continue</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Chest sît web al domande une conession sigure.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Nol è pussibil mostrâ la pagjine che tu stâs cirint di visualizâ parcè che chest sît web al domande une conession sigure.</li>
+         <li>Al è probabil che il probleme al stedi tal sît web e duncje nol è nuie che tu podedis fâ par risolvilu.</li>
+         <li>Tu puedis però notificâ il probleme al aministradôr dal sît web.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avanzadis…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> al à une politiche di sigurece clamade HTTP Strict Transport Security (HSTS), che al significhe che <b>%2$s</b> al pues conetisi dome in maniere sigure e no tu puedis zontâ une ecezion par visitâ chest sît.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> al à une politiche di sigurece clamade HTTP Strict Transport Security (HSTS), che al significhe che <b>%2$s</b> al pues conetisi dome in maniere sigure e no tu puedis zontâ une ecezion par visitâ chest sît. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Torne indaûr</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">La conession e je stade interote</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Il navigadôr si è conetût cun sucès, ma la conession e je stade interote dilunc il trasferiment des informazions. Torne prove.</p>
+      <ul>
+        <li>Al è pussibil che il sît nol sedi disponibil in mût temporani o che al sedi masse ocupât. Torne prove chi di pôc.</li>
+        <li>Se no tu rivis a cjariâ nissune pagjine, controle i dâts dal dispositîf o la conession Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">La conession e je lade fûr timp massim</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Il sît domandât nol à rispuindût a une richieste di conession e il navigadôr al à fermât di spietâ une rispueste.</p>
+      <ul>
+        <li>Isal pussibil che il servidôr al vedi une richieste masse elevade o une interuzion temporanie? Torne prove plui indenant.</li>
+        <li>Rivistu a visitâ altris sît? Controle la conession di rêt dal to dispositîf.</li>
+        <li>Sono il to dispositîf o la rêt protets di un firewall o un proxy? Lis impostazions sbaliadis a puedin interferî cu la navigazion sul web.</li>
+        <li>Âstu ancjemò problemis? Consulte l’aministradôr de rêt o il furnidôr di acès a internet par vê assistence.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Impussibil conetisi</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Al è pussibil che il sît nol sedi disponibil in maniere temporanie opûr masse ocupât. Torne prove chi di pôc.</li>
+        <li>Se no tu rivis a cjariâ nissune pagjine, controle i dâts dal to dispositîf o la conession Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Rispueste inspietade dal servidôr</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Ilsît al à rispuindût ae richieste di rêt intune maniere inspietade e il navigadôr nol pues continuâ.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Il re-indreçament di cheste pagjine nol funzione ben</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Il navigadôr al à fermât di cirî di recuperâ l’element domandât. Il sît al sta tornant a indreçâ la richieste intune maniere che no vignarà mai completade.</p>
+      <ul>
+        <li>Âstu disabilitât o blocât i cookies necessaris a chest sît?</li>
+        <li>Se acetant i cookies dal sît il probleme al reste, al è probabil che al sedi un probleme di configurazion dal servidôr e no dal to dispositîf.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Modalitât fûr rêt</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Il navigadôr al sta lavorant in modalitât fûr rêt e nol pues conetisi al element domandât.</p>
+      <ul>
+        <li>Il dispositîf isal conetût a une rêt ative?</li>
+        <li>Frache “Torne prove” par passâ ae modalitât in rêt e tornâ a cjariâ la pagjine.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Puarte limitade par resons di sigurece</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>La direzion domandade e à specificât une puarte (p.e. <q>mozilla.org:80</q> pe puarte 80 su mozilla.org) che di solit e ven doprade par <em>altris</em> finalitâts rispiet a chês di navigazion sul Web. Il navigadôr al à anulade la richieste pe tô protezion e sigurece.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">La conession e je stade anulade</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Il colegament ae rêt al è stât interot dilunc la negoziazion di une conession. Torne prove.</p>
+      <ul>
+        <li>Al è pussibil che il sît nol sedi disponibil in maniere temporanie opûr masse ocupât. Torne prove chi di pôc.</li>
+        <li>Se no tu rivis a cjariâ nissune pagjine, controle i dâts dal dispositîf o la conession Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Gjenar di file no sigûr</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Contate il proprietari dal sît web par informâlu di chest probleme.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Erôr di contignût comprometût</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Nol è pussibil mostrâ la pagjine che tu stâs cirint di visualizâ par vie che al è stât rilevât un erôr te trasmission dai dâts.</p>
+      <ul>
+        <li>Contate il proprietari dal sît web par informâlu di chest probleme.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Contignût colassât</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Nol è pussibil mostrâ la pagjine che tu stâs cirint di visualizâ par vie che al è stât rilevât un erôr te trasmission dai dâts.</p>
+      <ul>
+        <li>Contate il proprietari dal sît web par informâlu di chest probleme.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Erôr te codifiche dal contignût</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Nol è pussibil mostrâ la pagjine che tu stâs cirint di visualizâ parcè che no dopre un formât di compression valit o supuartât.</p>
+      <ul>
+        <li>Contate il proprietari dal sît web par informâlu di chest probleme.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Direzion no cjatade</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Il navigadôr nol rive a cjatâ il servidôr host pe direzion indicade.</p>
+      <ul>
+        <li>Controle la direzion par erôrs di scriture come
+          <strong>ww</strong>.esempli.com al puest di
+          <strong>www</strong>.esempli.com.</li>
+        <li>Se no tu rivis a cjariâ nissune pagjine, controle i dâts dal to dispositîf o la conession Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nissune conession a internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verifiche la tô conession di rêt o prove chi di pôc a tornâ a cjariâ la pagjine.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Torne cjame</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Direzion no valide</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>La direzion indicade no je intun formât ricognossût. Controle la sbare de direzion par cjatâ erôr e torne prove.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">La direzion no je valide</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Lis direzions dal web di solit a son scritis te forme <strong>http://www.esempli.com/</strong></li>
+        <li>Controle di vê doprât lis sbaris justis (vâl a dî <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protocol no cognossût</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>La direzion e specifiche un protocol (p.e. <q>wxyz://</q>) che il navigadôr nol ricognòs, duncje il navigadôr nol pues conetisi al sît in maniere juste.</p>
+      <ul>
+        <li>Stâstu cirint di acedi a servizis multimediâi o altris servizis che no son testuâi? Controle sul sît i recuisîts necessaris.</li>
+        <li>Cualchi protocol al podarès domandâ software di tiercis parts o plugins par che il navigadôr ju podedi ricognossi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">File no cjatât</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Isal pussibil che l’element al vedi cambiât non, al sedi stât eliminât o spostât?</li>
+        <li>Isal un erôr di ortografie o scriture te direzion?</li>
+        <li>Âstu permès suficients par acedi al element domandât?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Acès al file dineât</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Al podarès jessi stât eliminât, spostât o i permès sul file a podaressin impedî l’acès.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Il servidôr proxy al à refudât la conession</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Il navigadôr al è configurât in mût di doprâ un servidôr proxy, ma il proxy al à refudât une  conession.</p>
+      <ul>
+        <li>Ise juste la configurazions proxy dal navigadôr? Controle lis impostazions e torne prove.</li>
+        <li>Il servizi proxy permetial lis conessions di cheste rêt?</li>
+        <li>Âstu ancjemò problemis? Consulte l’aministradôr di rêt o il furnidôr di acès a internet pe assistence.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Impussibil contatâ il servidôr proxy</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Il navigadôr al è configurât in mût di doprâ un servidôr proxy, ma nol è stât pussibil cjatâ il proxy.</p>
+      <ul>
+        <li>La configurazion proxy dal navigadôr ise juste? Controle lis impostazions e torne prove.</li>
+        <li>Il dispositîf isal colegât a une rêt ative?</li>
+        <li>Âstu ancjemò problemis? Consulte il to aministradôr di rêt o il furnidôr di acès internet pe assistence.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Probleme di sît cun malware</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Il sît web %1$s al è stât segnalât tant che sît malevul e al è stât blocât daûr des tôs preferencis di sigurece.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Probleme di sît malvolût</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Il sît web %1$s al è stât segnalât tant che sît che al conten software malvolût e al è stât blocât daûr des tôs preferencis di sigurece.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Probleme di sît pericolôs</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Il sît web %1$s al è stât segnalât tant che sît potenzialmentri pericolôs e al è stât blocât daûr des tôs preferencis di sigurece.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Probleme di sît ingjanôs</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Il sît web %1$s al è stât segnalât tant che sît ingjanôs e al è stât blocât daûr des tôs preferencis di sigurece.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Version sigure dal sît no disponibile</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Tu âs ativade la modalitât dome HTTPS par vê une sigurece miorade, ma no je disponibile un version HTTPS di <em>%1$s</em> .]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Continue sul sît HTTP</string>
+</resources>

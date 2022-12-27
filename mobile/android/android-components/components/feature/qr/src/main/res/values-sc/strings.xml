@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Text shown if no camera is available on the device and the QR scanner cannot be displayed. -->
+    <string name="mozac_feature_qr_scanner_no_camera">Nissuna càmera a disponimentu in su dispositivu</string>
+
+</resources>
