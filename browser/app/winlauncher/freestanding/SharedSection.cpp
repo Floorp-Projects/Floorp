@@ -210,7 +210,7 @@ LauncherVoidResult SharedSection::AddDependentModule(PCUNICODE_STRING aNtPath) {
   return Ok();
 }
 
-LauncherResult<SharedSection::Layout*> SharedSection::GetView() {
+LauncherVoidResult SharedSection::EnsureWriteCopyView() {
   if (!sWriteCopyView) {
     nt::AutoMappedView view(sSectionHandle, PAGE_WRITECOPY);
     if (!view) {
@@ -218,7 +218,22 @@ LauncherResult<SharedSection::Layout*> SharedSection::GetView() {
     }
     sWriteCopyView = view.release();
   }
-  return reinterpret_cast<Layout*>(sWriteCopyView);
+  return Ok();
+}
+
+Kernel32ExportsSolver* SharedSection::GetKernel32Exports() {
+  if (EnsureWriteCopyView().isErr()) {
+    return nullptr;
+  }
+  return &reinterpret_cast<SharedSection::Layout*>(sWriteCopyView)->mK32Exports;
+}
+
+Span<const wchar_t> SharedSection::GetDependentModules() {
+  if (EnsureWriteCopyView().isErr()) {
+    return nullptr;
+  }
+  return reinterpret_cast<SharedSection::Layout*>(sWriteCopyView)
+      ->GetModulePathArray();
 }
 
 LauncherVoidResult SharedSection::TransferHandle(
@@ -247,12 +262,7 @@ extern "C" MOZ_EXPORT const wchar_t* GetDependentModulePaths() {
     return nullptr;
   }
 
-  LauncherResult<SharedSection::Layout*> resultView = gSharedSection.GetView();
-  if (resultView.isErr()) {
-    return nullptr;
-  }
-
-  return resultView.inspect()->mModulePathArray;
+  return gSharedSection.GetDependentModules().data();
 #else
   return nullptr;
 #endif
