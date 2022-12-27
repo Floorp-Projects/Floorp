@@ -894,8 +894,9 @@ impl Stylist {
             },
             pseudo,
             guards,
+            /* originating_element_style */ None,
             parent,
-            None,
+            /* element */ None,
         )
     }
 
@@ -988,6 +989,7 @@ impl Stylist {
             cascade_inputs,
             pseudo,
             guards,
+            Some(originating_element_style),
             Some(parent_style),
             Some(element),
         ))
@@ -1002,6 +1004,7 @@ impl Stylist {
         inputs: CascadeInputs,
         pseudo: &PseudoElement,
         guards: &StylesheetGuards,
+        originating_element_style: Option<&ComputedValues>,
         parent_style: Option<&ComputedValues>,
         element: Option<E>,
     ) -> Arc<ComputedValues>
@@ -1025,6 +1028,7 @@ impl Stylist {
             Some(pseudo),
             inputs,
             guards,
+            originating_element_style,
             parent_style,
             parent_style,
             parent_style,
@@ -1051,6 +1055,7 @@ impl Stylist {
         pseudo: Option<&PseudoElement>,
         inputs: CascadeInputs,
         guards: &StylesheetGuards,
+        originating_element_style: Option<&ComputedValues>,
         parent_style: Option<&ComputedValues>,
         parent_style_ignoring_first_line: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
@@ -1086,6 +1091,7 @@ impl Stylist {
             pseudo,
             inputs.rules.as_ref().unwrap_or(self.rule_tree.root()),
             guards,
+            originating_element_style,
             parent_style,
             parent_style_ignoring_first_line,
             layout_parent_style,
@@ -1504,6 +1510,7 @@ impl Stylist {
                     ),
                 )
             }),
+            /* originating_element_style */ None,
             Some(parent_style),
             Some(parent_style),
             Some(parent_style),
