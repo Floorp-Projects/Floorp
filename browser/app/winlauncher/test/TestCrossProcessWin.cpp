@@ -6,9 +6,12 @@
 
 #define MOZ_USE_LAUNCHER_ERROR
 
+#include <atomic>
+#include <thread>
 #include "freestanding/SharedSection.cpp"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/NativeNt.h"
+#include "mozilla/Vector.h"
 
 const wchar_t kChildArg[] = L"--child";
 const char* kTestDependentModulePaths[] = {
@@ -29,6 +32,16 @@ const wchar_t kExpectedDependentModules[] =
 
 using namespace mozilla;
 using namespace mozilla::freestanding;
+
+namespace mozilla::freestanding {
+class SharedSectionTestHelper {
+ public:
+  static constexpr size_t GetModulePathArraySize() {
+    return SharedSection::kSharedViewSize -
+           offsetof(SharedSection::Layout, mModulePathArray);
+  }
+};
+}  // namespace mozilla::freestanding
 
 template <typename T, int N>
 void PrintLauncherError(const LauncherResult<T>& aResult,
@@ -56,10 +69,6 @@ static bool VerifySharedSection(SharedSection& aSharedSection) {
         "TEST-FAILED | TestCrossProcessWin | Failed to map a shared section\n");
     return false;
   }
-
-  // Use a local variable of RTL_RUN_ONCE to resolve Kernel32Exports every time
-  RTL_RUN_ONCE sRunEveryTime = RTL_RUN_ONCE_INIT;
-  k32Exports->Resolve(sRunEveryTime);
 
   HMODULE k32mod = ::GetModuleHandleW(L"kernel32.dll");
   VERIFY_FUNCTION_RESOLVED(k32mod, k32Exports, FlushInstructionCache);
@@ -118,6 +127,74 @@ static bool TestAddString() {
   return true;
 }
 
+static bool TestSharedSectionInit() {
+  LauncherVoidResult result = gSharedSection.Init();
+  if (result.isErr()) {
+    PrintLauncherError(result, "SharedSection::Init failed");
+    return false;
+  }
+
+  constexpr size_t sizeInBytes =
+      SharedSectionTestHelper::GetModulePathArraySize();
+  Span<uint8_t> buffer(MakeUnique<uint8_t[]>(sizeInBytes), sizeInBytes);
+  memset(buffer.data(), 0x88, buffer.size());
+
+  // Try to add a long string that does not fit in the section,
+  // since there's no room for the NULL character to indicate the final string.
+  UNICODE_STRING ustr;
+  ustr.Buffer = reinterpret_cast<wchar_t*>(buffer.data());
+  ustr.Length = ustr.MaximumLength = buffer.size();
+
+  result = gSharedSection.AddDependentModule(&ustr);
+  if (result.isOk()) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "Adding a too long string should fail.\n");
+    return false;
+  }
+
+  gSharedSection.Reset();
+
+  result = gSharedSection.Init();
+  if (result.isErr()) {
+    PrintLauncherError(result, "SharedSection::Init failed");
+    return false;
+  }
+
+  // Keep adding a single-char string until it fails and
+  // make sure no crash.
+  // We want to make sure no strings match any earlier strings so
+  // we can get the expected count. This is a little tricky since
+  // it includes case-insensitivity, so start at the "CJK Unified Ideographs
+  // Extension A" block of Unicode, which has no two characters that compare
+  // equal under a case insensitive comparison.
+  *(reinterpret_cast<wchar_t*>(buffer.data())) = 0x3400;
+  ustr.Length = ustr.MaximumLength = sizeof(wchar_t);
+  wchar_t numberOfStringsAdded = 0;
+  while (gSharedSection.AddDependentModule(&ustr).isOk()) {
+    ++numberOfStringsAdded;
+    // Make sure the string doesn't match any earlier strings
+    wchar_t oldValue = *(reinterpret_cast<wchar_t*>(buffer.data()));
+    *(reinterpret_cast<wchar_t*>(buffer.data())) = oldValue + 1;
+  }
+
+  int numberOfCharactersInBuffer =
+      SharedSectionTestHelper::GetModulePathArraySize() / sizeof(wchar_t);
+  // Each string is two characters long (one "real" character and a null), but
+  // the whole buffer needs an additional null at the end.
+  int expectedNumberOfStringsAdded = (numberOfCharactersInBuffer - 1) / 2;
+  if (numberOfStringsAdded != expectedNumberOfStringsAdded) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "Added %d dependent strings before failing (expected %d).\n",
+        static_cast<int>(numberOfStringsAdded), expectedNumberOfStringsAdded);
+    return false;
+  }
+
+  gSharedSection.Reset();
+  return true;
+}
+
 class ChildProcess final {
   nsAutoHandle mChildProcess;
   nsAutoHandle mChildMainThread;
@@ -138,6 +215,40 @@ class ChildProcess final {
   static volatile const DWORD sReadOnlyProcessId;
 
   static int Main() {
+    SRWLOCK lock = SRWLOCK_INIT;
+    ::AcquireSRWLockExclusive(&lock);
+
+    Vector<std::thread> threads;
+    std::atomic<bool> success = true;
+    for (int i = 0; i < 10; ++i) {
+      Unused << threads.emplaceBack(
+          [&success](SRWLOCK* aLock) {
+            // All threads call GetKernel32Exports(), but only the first thread
+            // maps a write-copy section and populates it.
+            ::AcquireSRWLockShared(aLock);
+            if (gSharedSection.GetKernel32Exports() == nullptr) {
+              success = false;
+            }
+            ::ReleaseSRWLockShared(aLock);
+          },
+          &lock);
+    }
+
+    // Wait a msec for all threads to be ready and release the lock
+    ::Sleep(1);
+    ::ReleaseSRWLockExclusive(&lock);
+
+    for (auto& thread : threads) {
+      thread.join();
+    }
+
+    if (!success) {
+      printf(
+          "TEST-FAILED | TestCrossProcessWin | "
+          "GetKernel32Exports() returned null.\n");
+      return 1;
+    }
+
     if (sExecutableImageBase != ::GetModuleHandle(nullptr)) {
       printf(
           "TEST-FAILED | TestCrossProcessWin | "
@@ -278,6 +389,10 @@ int wmain(int argc, wchar_t* argv[]) {
   }
 
   if (!TestAddString()) {
+    return 1;
+  }
+
+  if (!TestSharedSectionInit()) {
     return 1;
   }
 
