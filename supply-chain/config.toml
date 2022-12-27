@@ -945,10 +945,6 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.percent-encoding]]
-version = "2.1.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.phf]]
 version = "0.10.1"
 criteria = "safe-to-deploy"
