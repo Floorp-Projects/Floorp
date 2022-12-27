@@ -66,12 +66,14 @@
 // repr, leaving it available as a niche for downstream code. For example this
 // allows size_of::<Version>() == size_of::<Option<Version>>().
 
-use crate::alloc::alloc::{alloc, dealloc, Layout};
+use crate::alloc::alloc::{alloc, dealloc, handle_alloc_error, Layout};
+use core::isize;
 use core::mem;
 use core::num::{NonZeroU64, NonZeroUsize};
 use core::ptr::{self, NonNull};
 use core::slice;
 use core::str;
+use core::usize;
 
 const PTR_BYTES: usize = mem::size_of::<NonNull<u8>>();
 
@@ -103,6 +105,7 @@ impl Identifier {
     // SAFETY: string must be ASCII and not contain \0 bytes.
     pub(crate) unsafe fn new_unchecked(string: &str) -> Self {
         let len = string.len();
+        debug_assert!(len <= isize::MAX as usize);
         match len as u64 {
             0 => Self::empty(),
             1..=8 => {
@@ -118,11 +121,27 @@ impl Identifier {
                 // SAFETY: len is in a range that does not contain 0.
                 let size = bytes_for_varint(unsafe { NonZeroUsize::new_unchecked(len) }) + len;
                 let align = 2;
+                // On 32-bit and 16-bit architecture, check for size overflowing
+                // isize::MAX. Making an allocation request bigger than this to
+                // the allocator is considered UB. All allocations (including
+                // static ones) are limited to isize::MAX so we're guaranteed
+                // len <= isize::MAX, and we know bytes_for_varint(len) <= 5
+                // because 128**5 > isize::MAX, which means the only problem
+                // that can arise is when isize::MAX - 5 <= len <= isize::MAX.
+                // This is pretty much guaranteed to be malicious input so we
+                // don't need to care about returning a good error message.
+                if mem::size_of::<usize>() < 8 {
+                    let max_alloc = usize::MAX / 2 - align;
+                    assert!(size <= max_alloc);
+                }
                 // SAFETY: align is not zero, align is a power of two, and
-                // rounding size up to align does not overflow usize::MAX.
+                // rounding size up to align does not overflow isize::MAX.
                 let layout = unsafe { Layout::from_size_align_unchecked(size, align) };
                 // SAFETY: layout's size is nonzero.
                 let ptr = unsafe { alloc(layout) };
+                if ptr.is_null() {
+                    handle_alloc_error(layout);
+                }
                 let mut write = ptr;
                 let mut varint_remaining = len;
                 while varint_remaining > 0 {
@@ -197,12 +216,15 @@ impl Clone for Identifier {
             let size = bytes_for_varint(len) + len.get();
             let align = 2;
             // SAFETY: align is not zero, align is a power of two, and rounding
-            // size up to align does not overflow usize::MAX. This is just
+            // size up to align does not overflow isize::MAX. This is just
             // duplicating a previous allocation where all of these guarantees
             // were already made.
             let layout = unsafe { Layout::from_size_align_unchecked(size, align) };
             // SAFETY: layout's size is nonzero.
             let clone = unsafe { alloc(layout) };
+            if clone.is_null() {
+                handle_alloc_error(layout);
+            }
             // SAFETY: new allocation cannot overlap the previous one (this was
             // not a realloc). The argument ptrs are readable/writeable
             // respectively for size bytes.
