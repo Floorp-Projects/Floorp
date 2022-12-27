@@ -287,6 +287,8 @@ The fork server process is used to reduce the memory overhead and improve launch
 
 The fork server must run before having initialized XPCOM or the IPC layer, and therefore uses a custom low-level IPC system called ``MiniTransceiver`` rather than IPDL to communicate.
 
+.. _launcher-process:
+
 Launcher Process
 ----------------
 
