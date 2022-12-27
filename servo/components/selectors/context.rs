@@ -145,7 +145,7 @@ where
     pub pseudo_element_matching_fn: Option<&'a dyn Fn(&Impl::PseudoElement) -> bool>,
 
     /// Extra implementation-dependent matching data.
-    pub extra_data: Impl::ExtraMatchingData<'a>,
+    pub extra_data: Impl::ExtraMatchingData,
 
     quirks_mode: QuirksMode,
     needs_selector_flags: NeedsSelectorFlags,
