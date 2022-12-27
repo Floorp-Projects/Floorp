@@ -505,44 +505,49 @@ static already_AddRefed<IDWriteFontFace5> CreateFaceWithVariations(
                                      (aTag >> 8) & 0xff, aTag & 0xff);
   };
 
-  RefPtr<IDWriteFontFace5> ff5;
-  aFace->QueryInterface(__uuidof(IDWriteFontFace5),
-                        (void**)getter_AddRefs(ff5));
-  if (!ff5) {
-    return nullptr;
-  }
-
-  RefPtr<IDWriteFontResource> res;
-  if (FAILED(ff5->GetFontResource(getter_AddRefs(res)))) {
-    return nullptr;
-  }
-
-  std::vector<DWRITE_FONT_AXIS_VALUE> fontAxisValues;
-  if (aNumVariations) {
-    fontAxisValues.reserve(aNumVariations);
-    for (uint32_t i = 0; i < aNumVariations; i++) {
-      DWRITE_FONT_AXIS_VALUE axisValue = {
-          makeDWriteAxisTag(aVariations[i].mTag), aVariations[i].mValue};
-      fontAxisValues.push_back(axisValue);
+  MOZ_SEH_TRY {
+    RefPtr<IDWriteFontFace5> ff5;
+    aFace->QueryInterface(__uuidof(IDWriteFontFace5),
+                          (void**)getter_AddRefs(ff5));
+    if (!ff5) {
+      return nullptr;
     }
-  } else {
-    uint32_t count = ff5->GetFontAxisValueCount();
-    if (count) {
-      fontAxisValues.resize(count);
-      if (FAILED(ff5->GetFontAxisValues(fontAxisValues.data(), count))) {
-        fontAxisValues.clear();
+
+    RefPtr<IDWriteFontResource> res;
+    if (FAILED(ff5->GetFontResource(getter_AddRefs(res)))) {
+      return nullptr;
+    }
+
+    std::vector<DWRITE_FONT_AXIS_VALUE> fontAxisValues;
+    if (aNumVariations) {
+      fontAxisValues.reserve(aNumVariations);
+      for (uint32_t i = 0; i < aNumVariations; i++) {
+        DWRITE_FONT_AXIS_VALUE axisValue = {
+            makeDWriteAxisTag(aVariations[i].mTag), aVariations[i].mValue};
+        fontAxisValues.push_back(axisValue);
+      }
+    } else {
+      uint32_t count = ff5->GetFontAxisValueCount();
+      if (count) {
+        fontAxisValues.resize(count);
+        if (FAILED(ff5->GetFontAxisValues(fontAxisValues.data(), count))) {
+          fontAxisValues.clear();
+        }
       }
     }
-  }
 
-  RefPtr<IDWriteFontFace5> newFace;
-  if (FAILED(res->CreateFontFace(aSimulations, fontAxisValues.data(),
-                                 fontAxisValues.size(),
-                                 getter_AddRefs(newFace)))) {
+    RefPtr<IDWriteFontFace5> newFace;
+    if (FAILED(res->CreateFontFace(aSimulations, fontAxisValues.data(),
+                                   fontAxisValues.size(),
+                                   getter_AddRefs(newFace)))) {
+      return nullptr;
+    }
+    return newFace.forget();
+  }
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    gfxCriticalNote << "Exception occurred initializing variation face";
     return nullptr;
   }
-
-  return newFace.forget();
 }
 
 bool UnscaledFontDWrite::InitBold() {
@@ -561,21 +566,27 @@ bool UnscaledFontDWrite::InitBold() {
   if (ff5) {
     mFontFaceBold = ff5;
   } else {
-    UINT32 numFiles = 0;
-    if (FAILED(mFontFace->GetFiles(&numFiles, nullptr))) {
-      return false;
+    MOZ_SEH_TRY {
+      UINT32 numFiles = 0;
+      if (FAILED(mFontFace->GetFiles(&numFiles, nullptr))) {
+        return false;
+      }
+      StackArray<IDWriteFontFile*, 1> files(numFiles);
+      if (FAILED(mFontFace->GetFiles(&numFiles, files.data()))) {
+        return false;
+      }
+      HRESULT hr = Factory::GetDWriteFactory()->CreateFontFace(
+          mFontFace->GetType(), numFiles, files.data(), mFontFace->GetIndex(),
+          sims, getter_AddRefs(mFontFaceBold));
+      for (UINT32 i = 0; i < numFiles; ++i) {
+        files[i]->Release();
+      }
+      if (FAILED(hr) || !mFontFaceBold) {
+        return false;
+      }
     }
-    StackArray<IDWriteFontFile*, 1> files(numFiles);
-    if (FAILED(mFontFace->GetFiles(&numFiles, files.data()))) {
-      return false;
-    }
-    HRESULT hr = Factory::GetDWriteFactory()->CreateFontFace(
-        mFontFace->GetType(), numFiles, files.data(), mFontFace->GetIndex(),
-        sims, getter_AddRefs(mFontFaceBold));
-    for (UINT32 i = 0; i < numFiles; ++i) {
-      files[i]->Release();
-    }
-    if (FAILED(hr) || !mFontFaceBold) {
+    MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      gfxCriticalNote << "Exception occurred initializing bold face";
       return false;
     }
   }
@@ -669,6 +680,8 @@ void ScaledFontDWrite::PrepareCairoScaledFont(cairo_scaled_font_t* aFont) {
 
 already_AddRefed<UnscaledFont> UnscaledFontDWrite::CreateFromFontDescriptor(
     const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex) {
+  // Note that despite the type of aData here, it actually points to a 16-bit
+  // Windows font file path (hence the cast to WCHAR* below).
   if (aDataLength == 0) {
     gfxWarning() << "DWrite font descriptor is truncated.";
     return nullptr;
@@ -678,30 +691,38 @@ already_AddRefed<UnscaledFont> UnscaledFontDWrite::CreateFromFontDescriptor(
   if (!factory) {
     return nullptr;
   }
-  RefPtr<IDWriteFontFile> fontFile;
-  HRESULT hr = factory->CreateFontFileReference((const WCHAR*)aData, nullptr,
-                                                getter_AddRefs(fontFile));
-  if (FAILED(hr)) {
+
+  MOZ_SEH_TRY {
+    RefPtr<IDWriteFontFile> fontFile;
+    HRESULT hr = factory->CreateFontFileReference((const WCHAR*)aData, nullptr,
+                                                  getter_AddRefs(fontFile));
+    if (FAILED(hr)) {
+      return nullptr;
+    }
+    BOOL isSupported;
+    DWRITE_FONT_FILE_TYPE fileType;
+    DWRITE_FONT_FACE_TYPE faceType;
+    UINT32 numFaces;
+    hr = fontFile->Analyze(&isSupported, &fileType, &faceType, &numFaces);
+    if (FAILED(hr) || !isSupported || aIndex >= numFaces) {
+      return nullptr;
+    }
+    IDWriteFontFile* fontFiles[1] = {fontFile.get()};
+    RefPtr<IDWriteFontFace> fontFace;
+    hr = factory->CreateFontFace(faceType, 1, fontFiles, aIndex,
+                                 DWRITE_FONT_SIMULATIONS_NONE,
+                                 getter_AddRefs(fontFace));
+    if (FAILED(hr)) {
+      return nullptr;
+    }
+    RefPtr unscaledFont = new UnscaledFontDWrite(fontFace, nullptr);
+    return unscaledFont.forget();
+  }
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    gfxCriticalNote << "Exception occurred creating unscaledFont for "
+                    << NS_ConvertUTF16toUTF8((const char16_t*)aData).get();
     return nullptr;
   }
-  BOOL isSupported;
-  DWRITE_FONT_FILE_TYPE fileType;
-  DWRITE_FONT_FACE_TYPE faceType;
-  UINT32 numFaces;
-  hr = fontFile->Analyze(&isSupported, &fileType, &faceType, &numFaces);
-  if (FAILED(hr) || !isSupported || aIndex >= numFaces) {
-    return nullptr;
-  }
-  IDWriteFontFile* fontFiles[1] = {fontFile.get()};
-  RefPtr<IDWriteFontFace> fontFace;
-  hr = factory->CreateFontFace(faceType, 1, fontFiles, aIndex,
-                               DWRITE_FONT_SIMULATIONS_NONE,
-                               getter_AddRefs(fontFace));
-  if (FAILED(hr)) {
-    return nullptr;
-  }
-  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontDWrite(fontFace, nullptr);
-  return unscaledFont.forget();
 }
 
 }  // namespace gfx
