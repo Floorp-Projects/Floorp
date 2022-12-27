@@ -1,4 +1,3 @@
-#![doc(html_root_url = "https://docs.rs/rayon/1.5")]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(unreachable_pub)]
@@ -114,6 +113,7 @@ pub use rayon_core::ThreadBuilder;
 pub use rayon_core::ThreadPool;
 pub use rayon_core::ThreadPoolBuildError;
 pub use rayon_core::ThreadPoolBuilder;
+pub use rayon_core::{broadcast, spawn_broadcast, BroadcastContext};
 pub use rayon_core::{current_num_threads, current_thread_index, max_num_threads};
 pub use rayon_core::{in_place_scope, scope, Scope};
 pub use rayon_core::{in_place_scope_fifo, scope_fifo, ScopeFifo};
@@ -135,6 +135,13 @@ unsafe impl<T: Send> Send for SendPtr<T> {}
 
 // SAFETY: !Sync for raw pointers is not for safety, just as a lint
 unsafe impl<T: Send> Sync for SendPtr<T> {}
+
+impl<T> SendPtr<T> {
+    // Helper to avoid disjoint captures of `send_ptr.0`
+    fn get(self) -> *mut T {
+        self.0
+    }
+}
 
 // Implement Clone without the T: Clone bound from the derive
 impl<T> Clone for SendPtr<T> {
