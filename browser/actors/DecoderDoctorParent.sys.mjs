@@ -112,8 +112,9 @@ export class DecoderDoctorParent extends JSWindowActorParent {
     try {
       parsedData = JSON.parse(aMessage.data);
     } catch (ex) {
-      Cu.reportError(
-        "Malformed Decoder Doctor message with data: " + aMessage.data
+      console.error(
+        "Malformed Decoder Doctor message with data: ",
+        aMessage.data
       );
       return;
     }
@@ -190,7 +191,7 @@ export class DecoderDoctorParent extends JSWindowActorParent {
           }
         }
       } else if (!decodeIssue) {
-        Cu.reportError(
+        console.error(
           "Malformed Decoder Doctor unsolved message with no formats nor decode issue"
         );
         return;

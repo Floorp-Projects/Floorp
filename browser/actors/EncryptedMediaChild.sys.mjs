@@ -106,7 +106,7 @@ export class EncryptedMediaChild extends JSWindowActorChild {
     try {
       parsedData = JSON.parse(aData);
     } catch (ex) {
-      Cu.reportError("Malformed EME video message with data: " + aData);
+      console.error("Malformed EME video message with data: ", aData);
       return;
     }
     const { status } = parsedData;

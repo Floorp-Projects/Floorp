@@ -56,7 +56,7 @@ export class AboutReaderChild extends JSWindowActorChild {
           gUrlsToDocTitle.set(this.document.URL, this.document.title);
           this._articlePromise = lazy.ReaderMode.parseDocument(
             this.document
-          ).catch(Cu.reportError);
+          ).catch(console.error);
 
           // Get the article data and cache it in the parent process. The reader mode
           // page will retrieve it when it has loaded.

@@ -927,7 +927,7 @@
               }
             } catch (e) {
               // don't inhibit other listeners
-              Cu.reportError(e);
+              console.error(e);
             }
           }
         }
@@ -1018,7 +1018,7 @@
           description: aDescription,
           previewImageURL: aPreviewImage,
         };
-        PlacesUtils.history.update(pageInfo).catch(Cu.reportError);
+        PlacesUtils.history.update(pageInfo).catch(console.error);
       }
     },
 
@@ -2837,8 +2837,8 @@
           }
         }
       } catch (e) {
-        Cu.reportError("Failed to create tab");
-        Cu.reportError(e);
+        console.error("Failed to create tab");
+        console.error(e);
         t.remove();
         if (t.linkedBrowser) {
           this._tabFilters.delete(t);
@@ -2922,7 +2922,7 @@
               triggeringRemoteType,
             });
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         }
       }
@@ -3627,7 +3627,7 @@
           }
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
       return false;
     },
@@ -3721,7 +3721,7 @@
           this.removeTab(lastToClose, aParams);
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
 
       this._clearMultiSelectionLocked = false;
@@ -4619,12 +4619,12 @@
 
     addProgressListener(aListener) {
       if (arguments.length != 1) {
-        Cu.reportError(
+        console.error(
           "gBrowser.addProgressListener was " +
             "called with a second argument, " +
             "which is not supported. See bug " +
-            "608628. Call stack: " +
-            new Error().stack
+            "608628. Call stack: ",
+          new Error().stack
         );
       }
 
@@ -5183,7 +5183,7 @@
           this.selectedTab = selectedTabs.at(-1);
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
 
       this._clearMultiSelectionLocked = false;

@@ -83,7 +83,7 @@ export class AboutReaderParent extends JSWindowActorParent {
       try {
         listener.receiveMessage(message);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   }
@@ -171,8 +171,9 @@ export class AboutReaderParent extends JSWindowActorParent {
           this.callListeners(message);
           return result;
         } catch (ex) {
-          Cu.reportError(
-            "Error requesting favicon URL for about:reader content: " + ex
+          console.error(
+            "Error requesting favicon URL for about:reader content: ",
+            ex
           );
         }
 
@@ -332,7 +333,7 @@ export class AboutReaderParent extends JSWindowActorParent {
         // Pass up the error so we can navigate the browser in question to the new URL:
         throw e;
       }
-      Cu.reportError("Error downloading and parsing document: " + e);
+      console.error("Error downloading and parsing document: ", e);
       return null;
     });
   }

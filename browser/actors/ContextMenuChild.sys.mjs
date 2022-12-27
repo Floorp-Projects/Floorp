@@ -277,7 +277,7 @@ export class ContextMenuChild extends JSWindowActorChild {
             let imageName = url.substr(url.lastIndexOf("/") + 1);
             return Promise.resolve({ failed: false, dataURL, imageName });
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
 

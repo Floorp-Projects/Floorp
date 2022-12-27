@@ -68,7 +68,7 @@ function updateIndicatorState() {
       break;
     default:
       if (ssi) {
-        Cu.reportError(`Unknown showScreenSharingIndicator: ${ssi}`);
+        console.error(`Unknown showScreenSharingIndicator: ${ssi}`);
       }
       ssL10nId = "";
   }

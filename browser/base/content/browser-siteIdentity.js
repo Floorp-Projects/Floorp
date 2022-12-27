@@ -449,7 +449,7 @@ var gIdentityHandler = {
 
   removeCertException() {
     if (!this._uriHasHost) {
-      Cu.reportError(
+      console.error(
         "Trying to revoke a cert exception on a URI without a host?"
       );
       return;
@@ -626,9 +626,9 @@ var gIdentityHandler = {
       );
       return principal.isOriginPotentiallyTrustworthy;
     } catch (error) {
-      Cu.reportError(
-        "Error while computing isPotentiallyTrustWorthy for pdf viewer page: " +
-          error
+      console.error(
+        "Error while computing isPotentiallyTrustWorthy for pdf viewer page: ",
+        error
       );
       return false;
     }
@@ -1209,7 +1209,7 @@ var gIdentityHandler = {
     PanelMultiView.openPopup(this._identityPopup, this._identityIconBox, {
       position: "bottomleft topleft",
       triggerEvent: event,
-    }).catch(Cu.reportError);
+    }).catch(console.error);
   },
 
   onPopupShown(event) {

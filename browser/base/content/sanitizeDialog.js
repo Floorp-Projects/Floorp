@@ -131,12 +131,12 @@ var gSanitizePromptDialog = {
         range,
       };
       Sanitizer.sanitize(null, options)
-        .catch(Cu.reportError)
+        .catch(console.error)
         .then(() => window.close())
-        .catch(Cu.reportError);
+        .catch(console.error);
       event.preventDefault();
     } catch (er) {
-      Cu.reportError("Exception during sanitize: " + er);
+      console.error("Exception during sanitize: ", er);
     }
   },
 

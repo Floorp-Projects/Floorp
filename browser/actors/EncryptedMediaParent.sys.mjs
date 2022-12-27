@@ -73,7 +73,7 @@ export class EncryptedMediaParent extends JSWindowActorParent {
     try {
       parsedData = JSON.parse(aMessage.data);
     } catch (ex) {
-      Cu.reportError("Malformed EME video message with data: " + aMessage.data);
+      console.error("Malformed EME video message with data: ", aMessage.data);
       return;
     }
     let { status, keySystem } = parsedData;
@@ -129,7 +129,7 @@ export class EncryptedMediaParent extends JSWindowActorParent {
         // about it.
         return;
       default:
-        Cu.reportError(
+        console.error(
           new Error(
             "Unknown message ('" +
               status +

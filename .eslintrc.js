@@ -208,8 +208,6 @@ module.exports = {
       // Bug 877389 - Gradually migrate from Cu.reportError to console.error.
       // Report as warnings where it is not yet passing.
       files: [
-        "browser/actors/**",
-        "browser/base/content/**",
         "browser/components/Browser*.*",
         "browser/components/**",
         "browser/extensions/report-site-issue/**",

@@ -382,7 +382,7 @@ var FullScreen = {
    */
   shiftMacToolbarDown(shiftSize) {
     if (typeof shiftSize !== "number") {
-      Cu.reportError("Tried to shift the toolbar by a non-numeric distance.");
+      console.error("Tried to shift the toolbar by a non-numeric distance.");
       return;
     }
 

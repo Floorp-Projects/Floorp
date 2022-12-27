@@ -247,7 +247,7 @@ var gPermissionPanel = {
     PanelMultiView.openPopup(this._permissionPopup, this._popupAnchor, {
       position: this._popupPosition,
       triggerEvent: event,
-    }).catch(Cu.reportError);
+    }).catch(console.error);
   },
 
   /**
@@ -855,7 +855,7 @@ var gPermissionPanel = {
     }
     let lastAccess = new Date(lastAccessStr);
     if (isNaN(lastAccess)) {
-      Cu.reportError("Invalid timestamp for last geolocation access");
+      console.error("Invalid timestamp for last geolocation access");
       return;
     }
 
