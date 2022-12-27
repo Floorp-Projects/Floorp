@@ -291,7 +291,8 @@ static bool TestDependentModules() {
 
   constexpr size_t sizeInBytes =
       SharedSectionTestHelper::GetModulePathArraySize();
-  Span<uint8_t> buffer(MakeUnique<uint8_t[]>(sizeInBytes), sizeInBytes);
+  UniquePtr<uint8_t[]> bufferData = MakeUnique<uint8_t[]>(sizeInBytes);
+  Span<uint8_t> buffer(bufferData, sizeInBytes);
   memset(buffer.data(), 0x88, buffer.size());
 
   // Try to add a long string that does not fit in the section,
