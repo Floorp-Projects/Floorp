@@ -61,7 +61,7 @@
 //! [CBOR]: https://github.com/enarx/ciborium
 //! [YAML]: https://github.com/dtolnay/serde-yaml
 //! [MessagePack]: https://github.com/3Hren/msgpack-rust
-//! [TOML]: https://github.com/alexcrichton/toml-rs
+//! [TOML]: https://docs.rs/toml
 //! [Pickle]: https://github.com/birkenfeld/serde-pickle
 //! [RON]: https://github.com/ron-rs/ron
 //! [BSON]: https://github.com/mongodb/bson-rust
@@ -81,14 +81,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Serde types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/serde/1.0.144")]
+#![doc(html_root_url = "https://docs.rs/serde/1.0.151")]
 // Support using Serde without the standard library!
 #![cfg_attr(not(feature = "std"), no_std)]
 // Unstable functionality only if the user asks for it. For tracking and
 // discussion of these features please refer to this issue:
 //
 //    https://github.com/serde-rs/serde/issues/812
-#![cfg_attr(feature = "unstable", feature(never_type))]
+#![cfg_attr(feature = "unstable", feature(error_in_core, never_type))]
 #![allow(unknown_lints, bare_trait_objects, deprecated)]
 #![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 // Ignored clippy and clippy_pedantic lints
@@ -118,7 +118,6 @@
         derive_partial_eq_without_eq,
         enum_glob_use,
         explicit_auto_deref,
-        let_underscore_drop,
         map_err_ignore,
         new_without_default,
         result_unit_err,
@@ -237,16 +236,42 @@ mod lib {
     #[cfg(not(no_range_inclusive))]
     pub use self::core::ops::RangeInclusive;
 
-    #[cfg(all(feature = "std", not(no_std_atomic)))]
+    #[cfg(all(feature = "std", no_target_has_atomic, not(no_std_atomic)))]
     pub use std::sync::atomic::{
         AtomicBool, AtomicI16, AtomicI32, AtomicI8, AtomicIsize, AtomicU16, AtomicU32, AtomicU8,
         AtomicUsize, Ordering,
     };
-    #[cfg(all(feature = "std", not(no_std_atomic64)))]
+    #[cfg(all(feature = "std", no_target_has_atomic, not(no_std_atomic64)))]
     pub use std::sync::atomic::{AtomicI64, AtomicU64};
+
+    #[cfg(all(feature = "std", not(no_target_has_atomic)))]
+    pub use std::sync::atomic::Ordering;
+    #[cfg(all(feature = "std", not(no_target_has_atomic), target_has_atomic = "8"))]
+    pub use std::sync::atomic::{AtomicBool, AtomicI8, AtomicU8};
+    #[cfg(all(feature = "std", not(no_target_has_atomic), target_has_atomic = "16"))]
+    pub use std::sync::atomic::{AtomicI16, AtomicU16};
+    #[cfg(all(feature = "std", not(no_target_has_atomic), target_has_atomic = "32"))]
+    pub use std::sync::atomic::{AtomicI32, AtomicU32};
+    #[cfg(all(feature = "std", not(no_target_has_atomic), target_has_atomic = "64"))]
+    pub use std::sync::atomic::{AtomicI64, AtomicU64};
+    #[cfg(all(feature = "std", not(no_target_has_atomic), target_has_atomic = "ptr"))]
+    pub use std::sync::atomic::{AtomicIsize, AtomicUsize};
 
     #[cfg(any(feature = "std", not(no_core_duration)))]
     pub use self::core::time::Duration;
+}
+
+// None of this crate's error handling needs the `From::from` error conversion
+// performed implicitly by the `?` operator or the standard library's `try!`
+// macro. This simplified macro gives a 5.5% improvement in compile time
+// compared to standard `try!`, and 9% improvement compared to `?`.
+macro_rules! try {
+    ($expr:expr) => {
+        match $expr {
+            Ok(val) => val,
+            Err(err) => return Err(err),
+        }
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,7 +303,7 @@ use self::__private as private;
 #[path = "de/seed.rs"]
 mod seed;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "unstable")))]
 mod std_error;
 
 // Re-export #[derive(Serialize, Deserialize)].

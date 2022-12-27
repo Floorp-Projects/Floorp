@@ -12,7 +12,7 @@
 [package]
 rust-version = "1.31"
 name = "serde_derive"
-version = "1.0.144"
+version = "1.0.151"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
@@ -53,7 +53,7 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.syn]
-version = "1.0.90"
+version = "1.0.104"
 
 [dev-dependencies.serde]
 version = "1.0"

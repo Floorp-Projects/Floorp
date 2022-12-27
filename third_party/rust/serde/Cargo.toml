@@ -12,7 +12,7 @@
 [package]
 rust-version = "1.13"
 name = "serde"
-version = "1.0.144"
+version = "1.0.151"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
@@ -52,7 +52,7 @@ features = [
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies.serde_derive]
-version = "=1.0.144"
+version = "=1.0.151"
 optional = true
 
 [dev-dependencies.serde_derive]

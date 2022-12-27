@@ -1262,6 +1262,17 @@ mod content {
         {
             match self.content {
                 Content::Unit => visitor.visit_unit(),
+
+                // Allow deserializing newtype variant containing unit.
+                //
+                //     #[derive(Deserialize)]
+                //     #[serde(tag = "result")]
+                //     enum Response<T> {
+                //         Success(T),
+                //     }
+                //
+                // We want {"result":"Success"} to deserialize into Response<()>.
+                Content::Map(ref v) if v.is_empty() => visitor.visit_unit(),
                 _ => Err(self.invalid_type(&visitor)),
             }
         }
@@ -1799,7 +1810,7 @@ mod content {
         V: Visitor<'de>,
         E: de::Error,
     {
-        let map = content.iter().map(|&(ref k, ref v)| {
+        let map = content.iter().map(|(k, v)| {
             (
                 ContentRefDeserializer::new(k),
                 ContentRefDeserializer::new(v),
@@ -2096,7 +2107,7 @@ mod content {
             let (variant, value) = match *self.content {
                 Content::Map(ref value) => {
                     let mut iter = value.iter();
-                    let &(ref variant, ref value) = match iter.next() {
+                    let (variant, value) = match iter.next() {
                         Some(v) => v,
                         None => {
                             return Err(de::Error::invalid_value(
@@ -2243,7 +2254,7 @@ mod content {
             V: de::Visitor<'de>,
         {
             match self.value {
-                Some(&Content::Seq(ref v)) => {
+                Some(Content::Seq(v)) => {
                     de::Deserializer::deserialize_any(SeqRefDeserializer::new(v), visitor)
                 }
                 Some(other) => Err(de::Error::invalid_type(
@@ -2266,10 +2277,10 @@ mod content {
             V: de::Visitor<'de>,
         {
             match self.value {
-                Some(&Content::Map(ref v)) => {
+                Some(Content::Map(v)) => {
                     de::Deserializer::deserialize_any(MapRefDeserializer::new(v), visitor)
                 }
-                Some(&Content::Seq(ref v)) => {
+                Some(Content::Seq(v)) => {
                     de::Deserializer::deserialize_any(SeqRefDeserializer::new(v), visitor)
                 }
                 Some(other) => Err(de::Error::invalid_type(
@@ -2392,7 +2403,7 @@ mod content {
             T: de::DeserializeSeed<'de>,
         {
             match self.iter.next() {
-                Some(&(ref key, ref value)) => {
+                Some((key, value)) => {
                     self.value = Some(value);
                     seed.deserialize(ContentRefDeserializer::new(key)).map(Some)
                 }
@@ -2697,7 +2708,7 @@ where
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 macro_rules! forward_to_deserialize_other {
-    ($($func:ident ( $($arg:ty),* ))*) => {
+    ($($func:ident ($($arg:ty),*))*) => {
         $(
             fn $func<V>(self, $(_: $arg,)* _visitor: V) -> Result<V::Value, Self::Error>
             where
