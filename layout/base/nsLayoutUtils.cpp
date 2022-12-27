@@ -1444,11 +1444,6 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
       "GetNearestScrollableOrOverflowClipFrame expects a non-null frame");
 
   auto GetNextFrame = [aFlags](const nsIFrame* aFrame) -> nsIFrame* {
-    if (aFlags & nsLayoutUtils::SCROLLABLE_FOLLOW_OOF_TO_PLACEHOLDER) {
-      return (aFlags & nsLayoutUtils::SCROLLABLE_SAME_DOC)
-                 ? nsLayoutUtils::GetParentOrPlaceholderFor(aFrame)
-                 : nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(aFrame);
-    }
     return (aFlags & nsLayoutUtils::SCROLLABLE_SAME_DOC)
                ? aFrame->GetParent()
                : nsLayoutUtils::GetCrossDocParentFrameInProcess(aFrame);
@@ -2885,8 +2880,7 @@ nsIScrollableFrame* nsLayoutUtils::GetAsyncScrollableAncestorFrame(
     nsIFrame* aTarget) {
   uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT |
                    nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE |
-                   nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT |
-                   nsLayoutUtils::SCROLLABLE_FOLLOW_OOF_TO_PLACEHOLDER;
+                   nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT;
   return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
 }
 
