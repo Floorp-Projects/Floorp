@@ -254,11 +254,6 @@ static bool IsDependentModule(
   // We enable automatic DLL blocking only in early Beta or earlier for now
   // because it caused a compat issue (bug 1682304 and 1704373).
 #if defined(EARLY_BETA_OR_EARLIER)
-  aK32Exports.Resolve(mozilla::freestanding::gK32ExportsResolveOnce);
-  if (!aK32Exports.IsResolved()) {
-    return false;
-  }
-
   mozilla::nt::PEHeaders exeHeaders(aK32Exports.mGetModuleHandleW(nullptr));
   if (!exeHeaders || !exeHeaders.IsImportDirectoryTampered()) {
     // If no tampering is detected, no need to enumerate the Import Table.
@@ -293,11 +288,6 @@ static bool IsDependentModule(
 static bool RedirectToNoOpEntryPoint(
     const mozilla::nt::PEHeaders& aModule,
     mozilla::freestanding::Kernel32ExportsSolver& aK32Exports) {
-  aK32Exports.Resolve(mozilla::freestanding::gK32ExportsResolveOnce);
-  if (!aK32Exports.IsResolved()) {
-    return false;
-  }
-
   mozilla::interceptor::WindowsDllEntryPointInterceptor interceptor(
       aK32Exports);
   if (!interceptor.Set(aModule, NoOp_DllMain)) {
@@ -348,7 +338,6 @@ namespace mozilla {
 namespace freestanding {
 
 CrossProcessDllInterceptor::FuncHookType<LdrLoadDllPtr> stub_LdrLoadDll;
-RTL_RUN_ONCE gK32ExportsResolveOnce = RTL_RUN_ONCE_INIT;
 
 NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR aDllPath, PULONG aFlags,
                                   PUNICODE_STRING aDllName,
