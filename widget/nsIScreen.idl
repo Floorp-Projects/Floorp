@@ -7,8 +7,13 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "mozilla/dom/ScreenBinding.h"
 #include "Units.h"
+
+namespace mozilla::dom {
+// TODO(zrhoffman, bug 1444515): ScreenColorGamut should be forward-declared
+// using `webidl` once the webidl identifier supports enums.
+enum class ScreenColorGamut : uint8_t;
+}  // namespace mozilla::dom
 
 /**
  * The display type of nsIScreen belongs to.
