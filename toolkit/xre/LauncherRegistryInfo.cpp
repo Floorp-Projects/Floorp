@@ -586,7 +586,7 @@ LauncherRegistryInfo::GetBrowserStartTimestamp() {
 LauncherResult<std::wstring>
 LauncherRegistryInfo::BuildDefaultBlocklistFilename() {
   // These flags are chosen to avoid I/O, see bug 1363398.
-  constexpr DWORD flags =
+  const DWORD flags =
       KF_FLAG_SIMPLE_IDLIST | KF_FLAG_DONT_VERIFY | KF_FLAG_NO_ALIAS;
   PWSTR rawPath = nullptr;
   HRESULT hr =
