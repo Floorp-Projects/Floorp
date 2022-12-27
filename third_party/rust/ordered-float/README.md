@@ -1,16 +1,6 @@
 # Ordered Floats
 
-Provides several wrapper types for Ord and Eq implementations on f64.
-
-## Usage
-
-Use the crates.io repository; add this to your `Cargo.toml` along
-with the rest of your dependencies:
-
-```toml
-[dependencies]
-ordered-float = "2.0"
-```
+Provides several wrapper types for Ord and Eq implementations on f64 and friends.
 
 See the [API documentation](https://docs.rs/ordered-float) for further details.
 
@@ -28,10 +18,13 @@ ordered-float = { version = "3.0", default-features = false }
 
 The following optional features can be enabled in `Cargo.toml`:
 
+* `bytemuck`: Adds implementations for traits provided by the `bytemuck` crate.
 * `rand`: Adds implementations for various distribution types provided by the `rand` crate.
 * `serde`: Implements the `serde::Serialize` and `serde::Deserialize` traits.
 * `schemars`: Implements the `schemars::JsonSchema` trait.
 * `proptest`: Implements the `proptest::Arbitrary` trait.
+* `rkyv`: Implements `rkyv`'s `Archive`, `Serialize` and `Deserialize` traits.
+* `speedy`: Implements `speedy`'s `Readable` and `Writable` traits.
 
 ## License
 

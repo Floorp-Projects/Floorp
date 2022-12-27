@@ -1,6 +1,7 @@
 #![no_std]
 #![cfg_attr(test, deny(warnings))]
 #![deny(missing_docs)]
+#![allow(clippy::derive_partial_eq_without_eq)]
 
 //! Wrappers for total order on Floats.  See the [`OrderedFloat`] and [`NotNan`] docs for details.
 
@@ -27,7 +28,9 @@ use core::str::FromStr;
 use num_traits::float::FloatCore as Float;
 #[cfg(feature = "std")]
 pub use num_traits::Float;
-use num_traits::{Bounded, FromPrimitive, Num, NumCast, One, Signed, ToPrimitive, Zero};
+use num_traits::{
+    AsPrimitive, Bounded, FromPrimitive, Num, NumCast, One, Signed, ToPrimitive, Zero,
+};
 
 // masks for the parts of the IEEE 754 float
 const SIGN_MASK: u64 = 0x8000000000000000u64;
@@ -166,6 +169,20 @@ impl<T: Float> Hash for OrderedFloat<T> {
 impl<T: Float + fmt::Display> fmt::Display for OrderedFloat<T> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl<T: Float + fmt::LowerExp> fmt::LowerExp for OrderedFloat<T> {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl<T: Float + fmt::UpperExp> fmt::UpperExp for OrderedFloat<T> {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }
@@ -451,6 +468,49 @@ impl<T: NumCast> NumCast for OrderedFloat<T> {
         T::from(n).map(OrderedFloat)
     }
 }
+
+macro_rules! impl_as_primitive {
+    (@ (OrderedFloat<$T: ty>) => $(#[$cfg:meta])* impl (OrderedFloat<$U: ty>) ) => {
+        $(#[$cfg])*
+        impl AsPrimitive<OrderedFloat<$U>> for OrderedFloat<$T> {
+            #[inline] fn as_(self) -> OrderedFloat<$U> { OrderedFloat(self.0 as $U) }
+        }
+    };
+    (@ ($T: ty) => $(#[$cfg:meta])* impl (OrderedFloat<$U: ty>) ) => {
+        $(#[$cfg])*
+        impl AsPrimitive<OrderedFloat<$U>> for $T {
+            #[inline] fn as_(self) -> OrderedFloat<$U> { OrderedFloat(self as $U) }
+        }
+    };
+    (@ (OrderedFloat<$T: ty>) => $(#[$cfg:meta])* impl ($U: ty) ) => {
+        $(#[$cfg])*
+        impl AsPrimitive<$U> for OrderedFloat<$T> {
+            #[inline] fn as_(self) -> $U { self.0 as $U }
+        }
+    };
+    ($T: tt => { $( $U: tt ),* } ) => {$(
+        impl_as_primitive!(@ $T => impl $U);
+    )*};
+}
+
+impl_as_primitive!((OrderedFloat<f32>) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((OrderedFloat<f64>) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+
+impl_as_primitive!((u8) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((i8) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((u16) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((i16) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((u32) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((i32) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((u64) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((i64) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((usize) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((isize) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((f32) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+impl_as_primitive!((f64) => { (OrderedFloat<f32>), (OrderedFloat<f64>) });
+
+impl_as_primitive!((OrderedFloat<f32>) => { (u8), (u16), (u32), (u64), (usize), (i8), (i16), (i32), (i64), (isize), (f32), (f64) });
+impl_as_primitive!((OrderedFloat<f64>) => { (u8), (u16), (u32), (u64), (usize), (i8), (i16), (i32), (i64), (isize), (f32), (f64) });
 
 impl<T: FromPrimitive> FromPrimitive for OrderedFloat<T> {
     fn from_i64(n: i64) -> Option<Self> {
@@ -1270,7 +1330,7 @@ fn raw_double_bits<F: Float>(f: &F) -> u64 {
     }
 
     let exp_u64 = exp as u16 as u64;
-    let sign_u64 = if sign > 0 { 1u64 } else { 0u64 };
+    let sign_u64 = (sign > 0) as u64;
     (man & MAN_MASK) | ((exp_u64 << 52) & EXP_MASK) | ((sign_u64 << 63) & SIGN_MASK)
 }
 
@@ -1639,6 +1699,93 @@ mod impl_rkyv {
         let mut deserializer = DefaultDeserializer::default();
         let deser_float: NotNan<f64> = archived_value.deserialize(&mut deserializer).unwrap();
         assert_eq!(deser_float, float);
+    }
+}
+
+#[cfg(feature = "speedy")]
+mod impl_speedy {
+    use super::{NotNan, OrderedFloat};
+    use num_traits::Float;
+    use speedy::{Context, Readable, Reader, Writable, Writer};
+
+    impl<C, T> Writable<C> for OrderedFloat<T>
+    where
+        C: Context,
+        T: Writable<C>,
+    {
+        fn write_to<W: ?Sized + Writer<C>>(&self, writer: &mut W) -> Result<(), C::Error> {
+            self.0.write_to(writer)
+        }
+
+        fn bytes_needed(&self) -> Result<usize, C::Error> {
+            self.0.bytes_needed()
+        }
+    }
+
+    impl<C, T> Writable<C> for NotNan<T>
+    where
+        C: Context,
+        T: Writable<C>,
+    {
+        fn write_to<W: ?Sized + Writer<C>>(&self, writer: &mut W) -> Result<(), C::Error> {
+            self.0.write_to(writer)
+        }
+
+        fn bytes_needed(&self) -> Result<usize, C::Error> {
+            self.0.bytes_needed()
+        }
+    }
+
+    impl<'a, T, C: Context> Readable<'a, C> for OrderedFloat<T>
+    where
+        T: Readable<'a, C>,
+    {
+        fn read_from<R: Reader<'a, C>>(reader: &mut R) -> Result<Self, C::Error> {
+            T::read_from(reader).map(OrderedFloat)
+        }
+
+        fn minimum_bytes_needed() -> usize {
+            T::minimum_bytes_needed()
+        }
+    }
+
+    impl<'a, T: Float, C: Context> Readable<'a, C> for NotNan<T>
+    where
+        T: Readable<'a, C>,
+    {
+        fn read_from<R: Reader<'a, C>>(reader: &mut R) -> Result<Self, C::Error> {
+            let value: T = reader.read_value()?;
+            Self::new(value).map_err(|error| {
+                speedy::Error::custom(std::format!("failed to read NotNan: {}", error)).into()
+            })
+        }
+
+        fn minimum_bytes_needed() -> usize {
+            T::minimum_bytes_needed()
+        }
+    }
+
+    #[test]
+    fn test_ordered_float() {
+        let float = OrderedFloat(1.0f64);
+        let buffer = float.write_to_vec().unwrap();
+        let deser_float: OrderedFloat<f64> = OrderedFloat::read_from_buffer(&buffer).unwrap();
+        assert_eq!(deser_float, float);
+    }
+
+    #[test]
+    fn test_not_nan() {
+        let float = NotNan(1.0f64);
+        let buffer = float.write_to_vec().unwrap();
+        let deser_float: NotNan<f64> = NotNan::read_from_buffer(&buffer).unwrap();
+        assert_eq!(deser_float, float);
+    }
+
+    #[test]
+    fn test_not_nan_with_nan() {
+        let nan_buf = f64::nan().write_to_vec().unwrap();
+        let nan_err: Result<NotNan<f64>, _> = NotNan::read_from_buffer(&nan_buf);
+        assert!(nan_err.is_err());
     }
 }
 
@@ -2025,4 +2172,44 @@ mod impl_arbitrary {
         }
     }
     impl_arbitrary! { f32, f64 }
+}
+
+#[cfg(feature = "bytemuck")]
+mod impl_bytemuck {
+    use super::{Float, NotNan, OrderedFloat};
+    use bytemuck::{AnyBitPattern, CheckedBitPattern, NoUninit, Pod, Zeroable};
+
+    unsafe impl<T: Zeroable> Zeroable for OrderedFloat<T> {}
+
+    // The zero bit pattern is indeed not a NaN bit pattern.
+    unsafe impl<T: Zeroable> Zeroable for NotNan<T> {}
+
+    unsafe impl<T: Pod> Pod for OrderedFloat<T> {}
+
+    // `NotNan<T>` can only implement `NoUninit` and not `Pod`, since not every bit pattern is
+    // valid (NaN bit patterns are invalid). `NoUninit` guarantees that we can read any bit pattern
+    // from the value, which is fine in this case.
+    unsafe impl<T: NoUninit> NoUninit for NotNan<T> {}
+
+    unsafe impl<T: Float + AnyBitPattern> CheckedBitPattern for NotNan<T> {
+        type Bits = T;
+
+        fn is_valid_bit_pattern(bits: &Self::Bits) -> bool {
+            !bits.is_nan()
+        }
+    }
+
+    #[test]
+    fn test_not_nan_bit_pattern() {
+        use bytemuck::checked::{try_cast, CheckedCastError};
+
+        let nan = f64::NAN;
+        assert_eq!(
+            try_cast::<f64, NotNan<f64>>(nan),
+            Err(CheckedCastError::InvalidBitPattern),
+        );
+
+        let pi = core::f64::consts::PI;
+        assert!(try_cast::<f64, NotNan<f64>>(pi).is_ok());
+    }
 }

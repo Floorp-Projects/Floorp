@@ -665,7 +665,7 @@ fn not_nan_panic_safety() {
     let catch_op = |mut num, op: fn(&mut NotNan<_>)| {
         let mut num_ref = panic::AssertUnwindSafe(&mut num);
         #[allow(clippy::needless_borrow)] // mut-borrow needed for msrv 1.36.0
-        let _ = panic::catch_unwind(move || op(&mut *num_ref));
+        let _ = panic::catch_unwind(move || op(&mut num_ref));
         num
     };
 
