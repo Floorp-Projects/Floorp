@@ -579,7 +579,7 @@ gf-floorp-close-sidebar-description = Close Sidebar on Floorp
 
 
 gf-floorp-open-browser-manager-sidebar-name = [Floorp] Open BMS
-gf-floorp-open-browser-manager-sidebar-description = Open Browser Manager Sidebaron Floorp
+gf-floorp-open-browser-manager-sidebar-description = Open Browser Manager Sidebar on Floorp
 
 gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
 gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar on Floorp
