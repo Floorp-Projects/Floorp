@@ -665,6 +665,7 @@ var gXPInstallObserver = {
         }
         // displayURI becomes it's own label, so we unset it for this panel. It will become part of the
         // messageString above.
+        let displayURI = options.displayURI;
         options.displayURI = undefined;
 
         options.eventCallback = topic => {
@@ -739,6 +740,23 @@ var gXPInstallObserver = {
             }
           },
         };
+
+        let neverAllowCallback = () => {
+          SitePermissions.setForPrincipal(
+            browser.contentPrincipal,
+            "install",
+            SitePermissions.BLOCK
+          );
+          for (let install of installInfo.installs) {
+            if (install.state != AddonManager.STATE_CANCELLED) {
+              install.cancel();
+            }
+          }
+          if (installInfo.cancel) {
+            installInfo.cancel();
+          }
+        };
+
         let neverAllowAction = {
           label: gNavigatorBundle.getString(
             "xpinstallPromptMessage.neverAllow"
@@ -746,33 +764,43 @@ var gXPInstallObserver = {
           accessKey: gNavigatorBundle.getString(
             "xpinstallPromptMessage.neverAllow.accesskey"
           ),
+          callback: neverAllowCallback,
+        };
+
+        let neverAllowAndReportAction = {
+          label: gNavigatorBundle.getString(
+            "xpinstallPromptMessage.neverAllowAndReport"
+          ),
+          accessKey: gNavigatorBundle.getString(
+            "xpinstallPromptMessage.neverAllowAndReport.accesskey"
+          ),
           callback: () => {
-            SitePermissions.setForPrincipal(
-              browser.contentPrincipal,
-              "install",
-              SitePermissions.BLOCK
-            );
-            for (let install of installInfo.installs) {
-              if (install.state != AddonManager.STATE_CANCELLED) {
-                install.cancel();
-              }
-            }
-            if (installInfo.cancel) {
-              installInfo.cancel();
-            }
+            AMTelemetry.recordEvent({
+              method: "reportSuspiciousSite",
+              object: "suspiciousSite",
+              value: displayURI?.displayHost ?? "(unknown)",
+            });
+            neverAllowCallback();
           },
         };
 
         secHistogram.add(
           Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED
         );
+
+        let declineActions = [dontAllowAction, neverAllowAction];
+        if (isSitePermissionAddon) {
+          // Restrict this to site permission add-ons for now pending a decision
+          // from product about how to approach this for extensions.
+          declineActions.push(neverAllowAndReportAction);
+        }
         let popup = PopupNotifications.show(
           browser,
           notificationID,
           messageString,
           gUnifiedExtensions.getPopupAnchorID(browser, window),
           action,
-          [dontAllowAction, neverAllowAction],
+          declineActions,
           options
         );
         removeNotificationOnEnd(popup, installInfo.installs);
