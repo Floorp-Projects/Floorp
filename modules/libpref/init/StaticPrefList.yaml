@@ -8566,6 +8566,13 @@
   mirror: always
   rust: true
 
+# Is support for CSS overflow: overlay enabled
+- name: layout.css.overflow-overlay.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for overscroll-behavior enabled?
 - name: layout.css.overscroll-behavior.enabled
   type: bool

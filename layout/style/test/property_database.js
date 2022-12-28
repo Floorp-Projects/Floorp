@@ -11648,15 +11648,27 @@ if (IsCSSPropertyPrefEnabled("layout.css.caption-side-non-standard.enabled")) {
 }
 
 {
-  const enabled = IsCSSPropertyPrefEnabled(
+  const mozHiddenUnscrollableEnabled = IsCSSPropertyPrefEnabled(
     "layout.css.overflow-moz-hidden-unscrollable.enabled"
+  );
+  const overlayEnabled = IsCSSPropertyPrefEnabled(
+    "layout.css.overflow-overlay.enabled"
   );
   for (let p of ["overflow", "overflow-x", "overflow-y"]) {
     let prop = gCSSProperties[p];
-    let values = enabled ? prop.other_values : prop.invalid_values;
-    values.push("-moz-hidden-unscrollable");
+    let mozHiddenUnscrollableValues = mozHiddenUnscrollableEnabled
+      ? prop.other_values
+      : prop.invalid_values;
+    let overlayValues = overlayEnabled
+      ? prop.other_values
+      : prop.invalid_values;
+    mozHiddenUnscrollableValues.push("-moz-hidden-unscrollable");
+    overlayValues.push("overlay");
     if (p == "overflow") {
-      values.push("-moz-hidden-unscrollable -moz-hidden-unscrollable");
+      mozHiddenUnscrollableValues.push(
+        "-moz-hidden-unscrollable -moz-hidden-unscrollable"
+      );
+      overlayValues.push("overlay overlay");
     }
   }
 }
