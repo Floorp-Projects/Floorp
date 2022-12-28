@@ -50,48 +50,18 @@ def windows_sdk_dir(value, compiler, host_compiler):
     )
 
 
-# The Windows SDK 8.1 and 10 have different layouts. The former has
-# $SDK/include/$subdir, while the latter has $SDK/include/$version/$subdir.
-# The vcvars* scripts don't actually care about the version, they just take
-# the last alphanumerically.
-# The $SDK/lib directories always have version subdirectories, but while the
-# versions match the one in $SDK/include for SDK 10, it's "winv6.3" for SDK
-# 8.1.
-
-
-@imports("os")
-@imports("re")
-@imports(_from="__builtin__", _import="Exception")
+@imports("glob")
 def get_sdk_dirs(sdk, subdir):
     def get_dirs_containing(sdk, stem, subdir):
-        base = os.path.join(sdk, stem)
-        try:
-            subdirs = [
-                d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d))
-            ]
-        except Exception:
-            subdirs = []
-        if not subdirs:
-            return ()
-        if subdir in subdirs:
-            return (base,)
-        # At this point, either we have an incomplete or invalid SDK directory,
-        # or we exclusively have version numbers in subdirs.
-        return tuple(
-            os.path.join(base, s)
-            for s in subdirs
-            if os.path.isdir(os.path.join(base, s, subdir))
-        )
+        return [
+            os.path.dirname(p) for p in glob.glob(os.path.join(sdk, stem, "*", subdir))
+        ]
 
     def categorize(dirs):
         return {os.path.basename(d): d for d in dirs}
 
     include_dirs = categorize(get_dirs_containing(sdk, "include", subdir))
     lib_dirs = categorize(get_dirs_containing(sdk, "lib", subdir))
-
-    if "include" in include_dirs:
-        include_dirs["winv6.3"] = include_dirs["include"]
-        del include_dirs["include"]
 
     valid_versions = sorted(set(include_dirs) & set(lib_dirs), reverse=True)
     return [
