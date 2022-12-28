@@ -35,4 +35,3 @@ interface HTMLMarqueeElement : HTMLElement {
   undefined start();
   undefined stop();
 };
-

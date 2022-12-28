@@ -33,4 +33,3 @@ interface ImageCaptureError {
   readonly attribute unsigned short code;
   readonly attribute DOMString message;
 };
-

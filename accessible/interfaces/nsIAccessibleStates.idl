@@ -74,4 +74,3 @@ interface nsIAccessibleStates : nsISupports
   const unsigned long  EXT_STATE_PINNED                  = 0x00010000;  // Indicates object is pinned.
   const unsigned long  EXT_STATE_CURRENT                 = 0x00020000;  // Indicates object is the current item in its container
 };
-

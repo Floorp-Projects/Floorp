@@ -33,4 +33,3 @@ interface nsIDocumentLoader : nsISupports
   // The defaultLoadRequest of the loadgroup associated with this docloader
   readonly attribute nsIChannel documentChannel;
 };
-

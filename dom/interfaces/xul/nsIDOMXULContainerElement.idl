@@ -21,4 +21,3 @@ interface nsIDOMXULContainerItemElement : nsISupports
 interface nsIDOMXULContainerElement : nsIDOMXULContainerItemElement
 {
 };
-

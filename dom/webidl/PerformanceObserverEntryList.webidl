@@ -22,4 +22,3 @@ interface PerformanceObserverEntryList {
   PerformanceEntryList getEntriesByName(DOMString name,
                                         optional DOMString entryType);
 };
-

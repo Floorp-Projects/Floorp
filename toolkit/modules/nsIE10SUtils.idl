@@ -24,7 +24,7 @@ interface nsIE10SUtils : nsISupports {
    * Determine what remote type should be used to launch a worker script with
    * the given principal.
    *
-   * @param aPrincipal  
+   * @param aPrincipal
    *   The result principal for the document being loaded.
    * @param aWorkerTypeName
    *   The type of remote worker being launched (Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_*).

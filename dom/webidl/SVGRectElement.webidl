@@ -25,4 +25,3 @@ interface SVGRectElement : SVGGeometryElement {
   [Constant]
   readonly attribute SVGAnimatedLength ry;
 };
-

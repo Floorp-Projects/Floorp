@@ -42,4 +42,3 @@ interface OffscreenCanvas : EventTarget {
   Promise<Blob> toBlob(optional DOMString type = "",
                        optional any encoderOptions);
 };
-

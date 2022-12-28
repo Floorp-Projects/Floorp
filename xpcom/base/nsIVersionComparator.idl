@@ -46,4 +46,3 @@ interface nsIVersionComparator : nsISupports
    */
   long compare(in ACString A, in ACString B);
 };
-

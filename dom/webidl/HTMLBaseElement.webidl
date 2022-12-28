@@ -21,4 +21,3 @@ interface HTMLBaseElement : HTMLElement {
            [CEReactions, SetterThrows, Pure]
            attribute DOMString target;
 };
-

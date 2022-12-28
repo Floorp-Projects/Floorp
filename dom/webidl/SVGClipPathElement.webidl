@@ -17,4 +17,3 @@ interface SVGClipPathElement : SVGElement {
   [Constant]
   readonly attribute SVGAnimatedTransformList transform;
 };
-

@@ -48,4 +48,3 @@ partial interface Blob {
   [ChromeOnly]
   readonly attribute DOMString blobImplType;
 };
-

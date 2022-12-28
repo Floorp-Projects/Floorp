@@ -47,4 +47,3 @@ interface DOMParser {
   [Func="IsChromeOrUAWidget"]
   undefined forceEnableDTD();
 };
-

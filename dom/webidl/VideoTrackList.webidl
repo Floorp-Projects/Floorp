@@ -19,4 +19,3 @@ interface VideoTrackList : EventTarget {
            attribute EventHandler onaddtrack;
            attribute EventHandler onremovetrack;
 };
-

@@ -29,4 +29,3 @@ interface nsIBidiKeyboard : nsISupports
    */
   readonly attribute boolean haveBidiKeyboards;
 };
-

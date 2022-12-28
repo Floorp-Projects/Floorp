@@ -17,4 +17,3 @@ interface SVGAnimatedTransformList {
   [Constant]
   readonly attribute SVGTransformList animVal;
 };
-

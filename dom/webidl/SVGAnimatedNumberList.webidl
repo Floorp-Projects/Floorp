@@ -17,4 +17,3 @@ interface SVGAnimatedNumberList {
   [Constant]
   readonly attribute SVGNumberList animVal;
 };
-

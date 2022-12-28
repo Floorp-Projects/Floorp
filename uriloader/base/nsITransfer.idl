@@ -61,7 +61,7 @@ interface nsITransfer : nsIWebProgressListener2 {
      *                   a source that desires privacy.
      *
      * @param aDownloadClassification Indicates wheter the download is unwanted,
-     *                                should be considered dangerous or insecure. 
+     *                                should be considered dangerous or insecure.
      *
      * @param aReferrerInfo The Referrer this download is started with
      *

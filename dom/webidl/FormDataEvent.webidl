@@ -10,7 +10,7 @@
 [Exposed=Window]
 interface FormDataEvent : Event {
   constructor(DOMString type, optional FormDataEventInit eventInitDict = {});
-    
+
   // C++ can't deal with a method called FormData() in the generated code
   [BinaryName="GetFormData"]
   readonly attribute FormData formData;

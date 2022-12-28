@@ -351,4 +351,3 @@ interface nsIDNSService : nsISupports
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIDNSService::DNSFlags)
 
 %}
-

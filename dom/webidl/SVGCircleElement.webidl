@@ -19,4 +19,3 @@ interface SVGCircleElement : SVGGeometryElement {
   [Constant]
   readonly attribute SVGAnimatedLength r;
 };
-

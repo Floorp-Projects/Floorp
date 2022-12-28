@@ -28,4 +28,3 @@ interface nsIAccessibleImage : nsISupports
    */
   void getImageSize(out long width, out long height);
 };
-

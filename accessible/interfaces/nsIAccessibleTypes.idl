@@ -78,4 +78,3 @@ interface nsIAccessibleCoordinateType : nsISupports
    */
   const unsigned long COORDTYPE_PARENT_RELATIVE = 0x02;
 };
-

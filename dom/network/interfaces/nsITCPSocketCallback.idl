@@ -56,4 +56,3 @@ interface nsITCPSocketCallback : nsISupports {
   void updateBufferedAmount(in uint32_t bufferedAmount,
                             in uint32_t trackingNumber);
 };
-

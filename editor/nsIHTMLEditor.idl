@@ -340,4 +340,3 @@ interface nsIHTMLEditor : nsISupports
    */
   attribute boolean returnInParagraphCreatesNewParagraph;
 };
-

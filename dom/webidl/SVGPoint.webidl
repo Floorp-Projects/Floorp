@@ -21,4 +21,3 @@ interface SVGPoint {
   [NewObject, Throws]
   SVGPoint matrixTransform(optional DOMMatrix2DInit matrix = {});
 };
-

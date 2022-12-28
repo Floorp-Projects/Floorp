@@ -15,4 +15,3 @@ interface mixin SVGTests {
   readonly attribute SVGStringList requiredExtensions;
   readonly attribute SVGStringList systemLanguage;
 };
-

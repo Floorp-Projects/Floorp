@@ -15,4 +15,3 @@ interface SVGAnimatedBoolean {
            attribute boolean baseVal;
   readonly attribute boolean animVal;
 };
-

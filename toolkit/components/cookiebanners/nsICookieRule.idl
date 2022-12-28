@@ -43,4 +43,3 @@ interface nsICookieRule : nsISupports {
     [noscript]
     nsICookieRule copyForDomain(in ACString aDomain);
 };
-

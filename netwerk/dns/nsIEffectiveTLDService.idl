@@ -203,4 +203,3 @@ interface nsIEffectiveTLDService : nsISupports
      */
     bool hasRootDomain(in AUTF8String aInput, in AUTF8String aHost);
 };
-

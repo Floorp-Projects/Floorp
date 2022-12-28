@@ -29,4 +29,3 @@ interface SVGFilterElement : SVGElement {
 };
 
 SVGFilterElement includes SVGURIReference;
-

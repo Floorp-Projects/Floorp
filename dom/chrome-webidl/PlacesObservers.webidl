@@ -29,4 +29,3 @@ namespace PlacesObservers {
   [Throws]
   undefined notifyListeners(sequence<PlacesEvent> events);
 };
-

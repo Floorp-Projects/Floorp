@@ -33,7 +33,7 @@ interface URI;
 interface MatchPattern {
   [Throws]
   constructor(DOMString pattern, optional MatchPatternOptions options = {});
- 
+
   /**
    * Returns true if the given URI matches the pattern.
    *

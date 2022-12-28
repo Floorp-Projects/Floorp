@@ -56,4 +56,3 @@ interface nsIXULBrowserWindow : nsISupports
    */
   uint32_t getTabCount();
 };
-

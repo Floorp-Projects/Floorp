@@ -39,4 +39,3 @@ dictionary DhKeyAlgorithm : KeyAlgorithm {
   required Uint8Array prime;
   required Uint8Array generator;
 };
-

@@ -34,4 +34,3 @@ enum ClientType {
   "serviceworker",
   "all"
 };
-

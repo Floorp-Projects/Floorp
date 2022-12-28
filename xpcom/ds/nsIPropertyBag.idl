@@ -26,5 +26,3 @@ interface nsIPropertyBag : nsISupports
      */
     nsIVariant getProperty(in AString name);
 };
-
-

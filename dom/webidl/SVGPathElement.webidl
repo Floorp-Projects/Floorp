@@ -16,4 +16,3 @@ interface SVGPathElement : SVGGeometryElement {
 };
 
 SVGPathElement includes SVGAnimatedPathData;
-

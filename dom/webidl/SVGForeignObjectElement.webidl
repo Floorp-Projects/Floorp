@@ -21,4 +21,3 @@ interface SVGForeignObjectElement : SVGGraphicsElement {
   [Constant]
   readonly attribute SVGAnimatedLength height;
 };
-

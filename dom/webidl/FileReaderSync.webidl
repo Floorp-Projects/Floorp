@@ -13,7 +13,7 @@
 [Exposed=(DedicatedWorker,SharedWorker)]
 interface FileReaderSync {
   constructor();
- 
+
   // Synchronously return strings
 
   [Throws]

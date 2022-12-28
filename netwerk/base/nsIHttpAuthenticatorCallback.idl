@@ -28,4 +28,3 @@ interface nsIHttpAuthenticatorCallback : nsISupports
                         in nsISupports aContinuationState);
 
 };
-

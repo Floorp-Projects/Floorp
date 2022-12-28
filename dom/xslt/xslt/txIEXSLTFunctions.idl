@@ -18,4 +18,3 @@ interface txIEXSLTFunctions : nsISupports {
 
   boolean test(in AString str, in AString regex, in AString flags);
 };
-

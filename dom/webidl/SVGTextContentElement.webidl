@@ -39,5 +39,3 @@ interface SVGTextContentElement : SVGGraphicsElement {
   [Throws]
   undefined selectSubString(unsigned long charnum, unsigned long nchars);
 };
-
-

@@ -38,4 +38,3 @@ interface RTCPeerConnectionStatic {
   undefined registerPeerConnectionLifecycleCallback(
     PeerConnectionLifecycleCallback cb);
 };
-

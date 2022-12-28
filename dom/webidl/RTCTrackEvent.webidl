@@ -18,7 +18,7 @@ dictionary RTCTrackEventInit : EventInit {
  Exposed=Window]
 interface RTCTrackEvent : Event {
     constructor(DOMString type, RTCTrackEventInit eventInitDict);
-  
+
     readonly        attribute RTCRtpReceiver           receiver;
     readonly        attribute MediaStreamTrack         track;
 

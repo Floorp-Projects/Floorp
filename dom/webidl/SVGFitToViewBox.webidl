@@ -16,4 +16,3 @@ interface mixin SVGFitToViewBox {
   [Constant]
   readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
 };
-

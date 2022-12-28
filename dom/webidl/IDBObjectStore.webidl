@@ -65,4 +65,3 @@ interface IDBObjectStore {
     [Throws]
     undefined       deleteIndex (DOMString indexName);
 };
-

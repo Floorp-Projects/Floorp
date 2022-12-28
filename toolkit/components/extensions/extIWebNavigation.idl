@@ -32,4 +32,3 @@ interface extIWebNavigation : nsISupports
   void onDOMContentLoaded(in BrowsingContext bc,
                           in nsIURI documentURI);
 };
-

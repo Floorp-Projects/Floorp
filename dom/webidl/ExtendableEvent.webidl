@@ -10,7 +10,7 @@
 [Exposed=ServiceWorker]
 interface ExtendableEvent : Event {
   constructor(DOMString type, optional ExtendableEventInit eventInitDict = {});
-  
+
   // https://github.com/slightlyoff/ServiceWorker/issues/261
   [Throws]
   undefined waitUntil(Promise<any> p);

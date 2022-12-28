@@ -17,4 +17,3 @@ interface AudioListener {
     undefined setPosition(double x, double y, double z);
     undefined setOrientation(double x, double y, double z, double xUp, double yUp, double zUp);
 };
-

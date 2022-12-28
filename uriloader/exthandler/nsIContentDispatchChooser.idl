@@ -38,4 +38,3 @@ interface nsIContentDispatchChooser : nsISupports {
            in BrowsingContext aBrowsingContext,
            [optional] in bool aWasTriggeredExternally);
 };
-

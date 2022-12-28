@@ -88,7 +88,7 @@ interface nsIPermissionManager : nsISupports
    * in the passed array argument.
    * This will return an array of all permissions which are not set to default.
    *
-   * @param types  an array of case-sensitive ASCII strings, identifying the 
+   * @param types  an array of case-sensitive ASCII strings, identifying the
    *               permissions to be matched.
    */
   Array<nsIPermission> getAllByTypes(in Array<ACString> types);

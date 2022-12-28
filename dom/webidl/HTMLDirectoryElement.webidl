@@ -19,4 +19,3 @@ interface HTMLDirectoryElement : HTMLElement {
            [CEReactions, SetterThrows, Pure]
            attribute boolean compact;
 };
-

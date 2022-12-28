@@ -80,15 +80,15 @@ interface nsITransportSecurityInfo : nsISupports {
     readonly attribute nsITransportSecurityInfo_OverridableErrorCategory overridableErrorCategory;
 
     /**
-     * True if OCSP requests were made to query the status of certificates 
-     * used in this connection. 
-     */ 
+     * True if OCSP requests were made to query the status of certificates
+     * used in this connection.
+     */
     [must_use]
     readonly attribute boolean madeOCSPRequests;
 
     /**
-     * True if the DNS record used for this connection was fetched over an encrypted connection. 
-     */ 
+     * True if the DNS record used for this connection was fetched over an encrypted connection.
+     */
     [must_use]
     readonly attribute boolean usedPrivateDNS;
 

@@ -224,7 +224,7 @@ interface nsIMIMEService : nsISupports {
 
     /**
      * Similar to getValidFileName, but used when a specific filename needs
-     * to be validated. The filename is modified as needed based on the 
+     * to be validated. The filename is modified as needed based on the
      * content type in the same manner as getValidFileName.
      *
      * If the filename came from a uri, it should not be escaped, that is,

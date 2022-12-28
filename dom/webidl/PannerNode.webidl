@@ -82,4 +82,3 @@ interface PannerNode : AudioNode {
 
 // Mozilla extension
 PannerNode includes AudioNodePassThrough;
-

@@ -7,4 +7,3 @@ namespace WorkerTestUtils {
   [Throws]
   unsigned long currentTimerNestingLevel();
 };
-

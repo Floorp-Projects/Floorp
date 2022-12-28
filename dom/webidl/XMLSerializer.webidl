@@ -37,4 +37,3 @@ interface XMLSerializer {
   [Throws, ChromeOnly]
   undefined serializeToStream(Node root, OutputStream stream, DOMString? charset);
 };
-

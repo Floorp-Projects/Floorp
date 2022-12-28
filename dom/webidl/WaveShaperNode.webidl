@@ -36,4 +36,3 @@ interface WaveShaperNode : AudioNode {
 
 // Mozilla extension
 WaveShaperNode includes AudioNodePassThrough;
-

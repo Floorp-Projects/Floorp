@@ -166,7 +166,7 @@ partial interface DataTransfer {
   [ChromeOnly]
   readonly attribute DOMString mozTriggeringPrincipalURISpec;
 
-  [ChromeOnly] 
+  [ChromeOnly]
   readonly attribute ContentSecurityPolicy? mozCSP;
 
   /**

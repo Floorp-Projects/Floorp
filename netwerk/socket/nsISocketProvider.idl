@@ -120,16 +120,16 @@ interface nsISocketProvider : nsISupports
      */
     const long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = 1 << 4;
 
-    /** 
+    /**
      * If set, do not send an ECH extension (whether GREASE or 'real').
      * Currently false by default and is set when retrying failed connections.
      */
     const unsigned long DONT_TRY_ECH = (1 << 10);
 
-    /** 
-     *  If set, indicates that the connection is a retry. 
-     */ 
-    const unsigned long IS_RETRY = (1 << 11); 
+    /**
+     *  If set, indicates that the connection is a retry.
+     */
+    const unsigned long IS_RETRY = (1 << 11);
 
     /**
      * If set, indicates that the connection used a privacy-preserving DNS

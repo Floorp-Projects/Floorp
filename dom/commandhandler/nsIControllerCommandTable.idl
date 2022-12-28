@@ -100,4 +100,3 @@ interface nsIControllerCommandTable : nsISupports
   inline const nsControllerCommandTable* AsControllerCommandTable() const;
 %}
 };
-

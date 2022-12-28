@@ -68,4 +68,3 @@ interface nsIServiceManager : nsISupports
 #include "nsServiceManagerUtils.h"
 #endif
 %}
-

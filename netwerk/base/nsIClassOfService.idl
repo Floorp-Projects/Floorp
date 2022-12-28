@@ -14,7 +14,7 @@
  * information in different ways.
  */
 
-// convenience class for passing around the class of service 
+// convenience class for passing around the class of service
 %{C++
 namespace mozilla::net {
 class ClassOfService;
@@ -27,7 +27,7 @@ interface nsIClassOfService : nsISupports
 {
   attribute unsigned long classFlags;
   attribute bool incremental;
- 
+
   void clearClassFlags(in unsigned long flags);
   void addClassFlags(in unsigned long flags);
   void setClassOfService(in ClassOfService s);

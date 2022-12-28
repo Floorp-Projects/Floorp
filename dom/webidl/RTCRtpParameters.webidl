@@ -64,7 +64,7 @@ dictionary RTCRtpCodecParameters {
 dictionary RTCRtpParameters {
   // We do not support these, but every wpt test involving parameters insists
   // that these be present, regardless of whether the test-case has anything to
-  // do with these in particular (see validateRtpParameters). 
+  // do with these in particular (see validateRtpParameters).
   sequence<RTCRtpHeaderExtensionParameters> headerExtensions;
   RTCRtcpParameters                         rtcp;
   sequence<RTCRtpCodecParameters>           codecs;

@@ -34,4 +34,3 @@ interface SVGAElement : SVGGraphicsElement {
 };
 
 SVGAElement includes SVGURIReference;
-

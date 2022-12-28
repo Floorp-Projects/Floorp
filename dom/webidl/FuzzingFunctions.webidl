@@ -17,7 +17,7 @@ interface FuzzingFunctions {
    * Synchronously perform a garbage collection.
    */
   static undefined garbageCollect();
- 
+
   /**
    * Synchronously perform a compacting garbage collection.
    */
@@ -103,7 +103,7 @@ interface FuzzingFunctions {
    *                           want to emulate key press with another keyboard
    *                           layout, you should specify both values.
    *
-   * For example: 
+   * For example:
    *   // Synthesize "Tab" key events.
    *   synthesizeKeyboardEvents("Tab");
    *   // Synthesize Shift + Tab key events.

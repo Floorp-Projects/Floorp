@@ -44,7 +44,7 @@ interface Flex
  * in a given flex line, per flexbox spec section 9.7 step 1. Note that
  * this value doesn't necessarily mean that any items on this line
  * are *actually* growing (or shrinking).  This simply indicates what
- * the layout algorithm "wants" to do, based on the free space -- 
+ * the layout algorithm "wants" to do, based on the free space --
  * and items will stretch from their flex base size in the corresponding
  * direction, if permitted by their min/max constraints and their
  * corresponding flex factor.

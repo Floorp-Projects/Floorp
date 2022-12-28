@@ -23,4 +23,3 @@ interface IDBVersionChangeEvent : Event {
     [Constant] readonly attribute unsigned long long oldVersion;
     [Constant] readonly attribute unsigned long long? newVersion;
 };
-

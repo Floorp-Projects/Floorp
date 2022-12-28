@@ -80,4 +80,3 @@ interface amIAddonManagerStartup : nsISupports
   void initializeURLPreloader();
 
 };
-

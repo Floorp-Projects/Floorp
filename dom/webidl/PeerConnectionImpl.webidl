@@ -124,7 +124,7 @@ interface PeerConnectionImpl  {
 
   [Throws]
   Promise<any> chain(ChainedOperation op);
-  undefined updateNegotiationNeeded(); 
+  undefined updateNegotiationNeeded();
 
   boolean createdSender(RTCRtpSender sender);
 };

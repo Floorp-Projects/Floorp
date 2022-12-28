@@ -13,4 +13,3 @@ interface nsIWindowMediatorListener : nsISupports
     void onOpenWindow(in nsIAppWindow window);
     void onCloseWindow(in nsIAppWindow window);
 };
-

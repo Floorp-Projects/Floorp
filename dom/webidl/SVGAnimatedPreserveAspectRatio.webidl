@@ -17,4 +17,3 @@ interface SVGAnimatedPreserveAspectRatio {
   [Constant]
   readonly attribute SVGPreserveAspectRatio animVal;
 };
-

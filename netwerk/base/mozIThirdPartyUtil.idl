@@ -229,4 +229,3 @@ interface mozIThirdPartyUtil : nsISupports
  */
 #define THIRDPARTYUTIL_CONTRACTID "@mozilla.org/thirdpartyutil;1"
 %}
-

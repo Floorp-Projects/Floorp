@@ -25,4 +25,3 @@ interface MediaElementAudioSourceNode : AudioNode {
 
 // Mozilla extensions
 MediaElementAudioSourceNode includes AudioNodePassThrough;
-

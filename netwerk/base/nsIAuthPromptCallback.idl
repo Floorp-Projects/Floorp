@@ -41,4 +41,3 @@ interface nsIAuthPromptCallback : nsISupports
    */
   void onAuthCancelled(in nsISupports aContext, in boolean userCancel);
 };
-

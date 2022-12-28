@@ -17,4 +17,3 @@ interface SVGAnimatedLengthList {
   [Constant]
   readonly attribute SVGLengthList animVal;
 };
-

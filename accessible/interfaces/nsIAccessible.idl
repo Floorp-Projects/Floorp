@@ -349,4 +349,3 @@ interface nsIAccessible : nsISupports
   [notxpcom, nostdcall] InternalAccessible toInternalGeneric();
 
 };
-

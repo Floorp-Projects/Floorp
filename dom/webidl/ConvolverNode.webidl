@@ -30,4 +30,3 @@ interface ConvolverNode : AudioNode {
 
 // Mozilla extension
 ConvolverNode includes AudioNodePassThrough;
-

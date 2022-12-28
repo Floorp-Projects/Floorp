@@ -28,4 +28,3 @@ interface nsPIPromptService : nsISupports
 
    void doDialog(in nsIDOMWindow aParent, in nsIDialogParamBlock aParamBlock, in string aChromeURL);
 };
-

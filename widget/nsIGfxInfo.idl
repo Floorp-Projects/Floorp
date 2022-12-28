@@ -331,5 +331,3 @@ interface nsIGfxInfo : nsISupports
   // Causes the GPU process to crash. This is intended only for use by tests.
   void crashGPUProcessForTests();
 };
-
-

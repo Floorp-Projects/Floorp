@@ -24,4 +24,3 @@ interface ValidityState {
   readonly attribute boolean customError;
   readonly attribute boolean valid;
 };
-

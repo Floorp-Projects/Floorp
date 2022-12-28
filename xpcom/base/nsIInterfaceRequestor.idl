@@ -33,4 +33,3 @@ interface nsIInterfaceRequestor : nsISupports
     void getInterface(in nsIIDRef uuid,
                       [iid_is(uuid),retval] out nsQIResult result);
 };
-

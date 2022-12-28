@@ -134,4 +134,3 @@ interface nsIJumpListShortcut : nsIJumpListItem
    */
   attribute nsIURI faviconPageUri;
 };
-

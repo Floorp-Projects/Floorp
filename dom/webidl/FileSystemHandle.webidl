@@ -20,7 +20,7 @@ interface FileSystemHandle {
   Promise<undefined> move(FileSystemDirectoryHandle parent);
   [NewObject]
   Promise<undefined> move(FileSystemDirectoryHandle parent, USVString name);
-  
+
   [NewObject]
   Promise<boolean> isSameEntry(FileSystemHandle other);
 };

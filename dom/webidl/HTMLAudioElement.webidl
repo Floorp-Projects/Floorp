@@ -16,4 +16,3 @@
 interface HTMLAudioElement : HTMLMediaElement {
   [HTMLConstructor] constructor();
 };
-

@@ -149,7 +149,7 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   //
   // TODO - Bug 1638099: This method should also allow the WebExtension framework
   // to mark the registration as disabled (e.g. through an additional parameter),
-  // to avoid it to be started again until the WebExtensions framework does explicitly 
+  // to avoid it to be started again until the WebExtensions framework does explicitly
   // mark it back to enabled.
   void forceShutdown();
 };
@@ -182,12 +182,12 @@ interface nsIServiceWorkerManager : nsISupports
    * file part of the Firefox profile directory).
    *
    * NOTE: this test helper does
-   * - fail if "dom.serviceWorkers.testing.enabled" is not set to true 
-   * - fail if there are controlled clients (the test case is responsible of making sure that 
+   * - fail if "dom.serviceWorkers.testing.enabled" is not set to true
+   * - fail if there are controlled clients (the test case is responsible of making sure that
    *   there is none when this method is being called)
    * - shutdown and clear all service worker registrations (but without removing them from
    *   the registration stored in serviceworker.txt)
-   * - force reload the registration data stored in serviceworker.txt (but the test case using 
+   * - force reload the registration data stored in serviceworker.txt (but the test case using
    *   this helper is responsible to be sure that the registrations have been already written
    *   on disk)
    */
@@ -202,7 +202,7 @@ interface nsIServiceWorkerManager : nsISupports
    */
   [implicit_jscontext]
   Promise registerForTest(in nsIPrincipal aPrincipal,
-                          in AString aScope, 
+                          in AString aScope,
                           in AString aScriptURL);
 
   /**

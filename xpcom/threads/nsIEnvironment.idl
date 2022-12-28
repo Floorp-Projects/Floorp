@@ -52,4 +52,3 @@ interface nsIEnvironment : nsISupports
      */
     boolean exists(in AString aName);
 };
-

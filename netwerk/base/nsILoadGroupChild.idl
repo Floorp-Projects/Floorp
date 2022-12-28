@@ -39,4 +39,3 @@ interface nsILoadGroupChild : nsISupports
      */
     readonly attribute nsILoadGroup rootLoadGroup;
 };
-

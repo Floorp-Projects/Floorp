@@ -14,4 +14,3 @@ interface mixin SVGURIReference {
   [Constant]
   readonly attribute SVGAnimatedString href;
 };
-

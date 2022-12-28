@@ -203,4 +203,3 @@ interface nsIURIFixup : nsISupports
      */
     bool isDomainKnown(in AUTF8String aDomain);
 };
-

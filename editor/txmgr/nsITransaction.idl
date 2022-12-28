@@ -80,4 +80,3 @@ interface nsITransaction : nsISupports
   GetAsEditTransactionBase();
 %}
 };
-

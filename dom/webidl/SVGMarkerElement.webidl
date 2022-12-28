@@ -45,4 +45,3 @@ interface SVGMarkerElement : SVGElement {
 };
 
 SVGMarkerElement includes SVGFitToViewBox;
-

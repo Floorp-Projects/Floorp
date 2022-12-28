@@ -10,7 +10,7 @@
 [Exposed=(Window,Worker)]
 interface MessageEvent : Event {
   constructor(DOMString type, optional MessageEventInit eventInitDict = {});
-  
+
   /**
    * Custom data associated with this event.
    */
