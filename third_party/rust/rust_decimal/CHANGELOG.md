@@ -1,5 +1,28 @@
 # Version History
 
+## 1.27.0
+
+### Added
+
+* Added `Copy`/`Clone` traits for `rkvy::Archive` ([#539](https://github.com/paupino/rust-decimal/pull/539))
+* Support precision for scientific notation formatting ([#555](https://github.com/paupino/rust-decimal/pull/555), [#557](https://github.com/paupino/rust-decimal/pull/557))
+
+### Fixed
+
+* Fixed edge case parsing of strings whereby it would incorrectly error instead of round ([#541](https://github.com/paupino/rust-decimal/pull/541)) 
+
+### Changed
+
+* Update diesel feature to use release version ([#546](https://github.com/paupino/rust-decimal/pull/546))
+* Updated documentation to include `cargo-edit` instructions ([#538](https://github.com/paupino/rust-decimal/pull/538))
+* Start using new feature resolver for cargo dependencies ([#551](https://github.com/paupino/rust-decimal/pull/551))
+* Optional serde deserialization avoids using `deserialize_any` except in explicit use cases ([#558](https://github.com/paupino/rust-decimal/pull/558))
+
+### Credit
+
+This release wouldn't have been possible without the help of the community. Special call out and thank you to [@icy-ux](https://github.com/icy-ux), [@CAD97](https://github.com/CAD97), [@nicksenger](https://github.com/nicksenger),
+[@c410-f3r](https://github.com/c410-f3r) and [@yongqli](https://github.com/yongqli).
+
 ## 1.26.1
 
 ### Fixed

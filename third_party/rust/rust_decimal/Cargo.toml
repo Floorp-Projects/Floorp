@@ -11,8 +11,9 @@
 
 [package]
 edition = "2021"
+rust-version = "1.60"
 name = "rust_decimal"
-version = "1.26.1"
+version = "1.27.0"
 authors = ["Paul Mason <paul@form1.co.nz>"]
 build = "build.rs"
 exclude = ["tests/generated/*"]
@@ -33,7 +34,6 @@ categories = [
 ]
 license = "MIT"
 repository = "https://github.com/paupino/rust-decimal"
-resolver = "2"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -53,7 +53,7 @@ version = "0.7"
 default-features = false
 
 [dependencies.borsh]
-version = "0.9.3"
+version = "0.9"
 optional = true
 default-features = false
 
@@ -63,7 +63,7 @@ optional = true
 default-features = false
 
 [dependencies.byteorder]
-version = "1.3"
+version = "1.0"
 optional = true
 default-features = false
 
@@ -73,13 +73,13 @@ optional = true
 default-features = false
 
 [dependencies.diesel1]
-version = "1.4"
+version = "1.0"
 optional = true
 default-features = false
 package = "diesel"
 
 [dependencies.diesel2]
-version = "2.0.0-rc.1"
+version = "2.0"
 optional = true
 default-features = false
 package = "diesel"
@@ -219,7 +219,6 @@ maths = []
 maths-nopanic = ["maths"]
 rkyv-safe = [
     "bytecheck",
-    "rkyv",
     "rkyv/validation",
 ]
 rocket-traits = ["rocket"]
@@ -235,5 +234,15 @@ serde-with-arbitrary-precision = [
 ]
 serde-with-float = ["serde"]
 serde-with-str = ["serde"]
-std = []
+std = [
+    "arrayvec/std",
+    "borsh?/std",
+    "bytecheck?/std",
+    "byteorder?/std",
+    "bytes?/std",
+    "rand?/std",
+    "rkyv?/std",
+    "serde?/std",
+    "serde_json?/std",
+]
 tokio-pg = ["db-tokio-postgres"]

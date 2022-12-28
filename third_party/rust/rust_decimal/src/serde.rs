@@ -386,11 +386,21 @@ impl<'de> serde::de::Visitor<'de> for OptionDecimalVisitor {
         Ok(None)
     }
 
+    #[cfg(all(feature = "serde-str", feature = "serde-float"))]
     fn visit_some<D>(self, d: D) -> Result<Option<Decimal>, D::Error>
     where
         D: serde::de::Deserializer<'de>,
     {
+        // We've got multiple types that we may see so we need to use any
         d.deserialize_any(DecimalVisitor).map(Some)
+    }
+
+    #[cfg(not(all(feature = "serde-str", feature = "serde-float")))]
+    fn visit_some<D>(self, d: D) -> Result<Option<Decimal>, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        <Decimal as serde::Deserialize>::deserialize(d).map(Some)
     }
 }
 
@@ -773,12 +783,15 @@ mod test {
         assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":"123.400"}"#);
         let deserialized: StringExample = serde_json::from_str(r#"{"value":"123.400"}"#).unwrap();
         assert_eq!(deserialized.value, original.value);
+        assert!(deserialized.value.is_some());
+        assert_eq!(deserialized.value.unwrap().unpack(), original.value.unwrap().unpack());
 
         // Null tests
         let original = StringExample { value: None };
         assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":null}"#);
         let deserialized: StringExample = serde_json::from_str(r#"{"value":null}"#).unwrap();
         assert_eq!(deserialized.value, original.value);
+        assert!(deserialized.value.is_none());
     }
 
     #[test]
@@ -796,12 +809,14 @@ mod test {
         assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":123.4}"#);
         let deserialized: StringExample = serde_json::from_str(r#"{"value":123.4}"#).unwrap();
         assert_eq!(deserialized.value, original.value);
+        assert!(deserialized.value.is_some()); // Scale is different!
 
         // Null tests
         let original = StringExample { value: None };
         assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":null}"#);
         let deserialized: StringExample = serde_json::from_str(r#"{"value":null}"#).unwrap();
         assert_eq!(deserialized.value, original.value);
+        assert!(deserialized.value.is_none());
     }
 
     #[test]
@@ -819,11 +834,14 @@ mod test {
         assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":123.400}"#);
         let deserialized: StringExample = serde_json::from_str(r#"{"value":123.400}"#).unwrap();
         assert_eq!(deserialized.value, original.value);
+        assert!(deserialized.value.is_some());
+        assert_eq!(deserialized.value.unwrap().unpack(), original.value.unwrap().unpack());
 
         // Null tests
         let original = StringExample { value: None };
         assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":null}"#);
         let deserialized: StringExample = serde_json::from_str(r#"{"value":null}"#).unwrap();
         assert_eq!(deserialized.value, original.value);
+        assert!(deserialized.value.is_none());
     }
 }
