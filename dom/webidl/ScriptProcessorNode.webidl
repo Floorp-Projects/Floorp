@@ -22,4 +22,3 @@ interface ScriptProcessorNode : AudioNode {
 
 // Mozilla extension
 ScriptProcessorNode includes AudioNodePassThrough;
-

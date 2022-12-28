@@ -268,4 +268,3 @@ interface imgIRequest : nsIRequest
   const uint32_t CATEGORY_DISPLAY     = 1 << 3;
   void boostPriority(in uint32_t aCategory);
 };
-

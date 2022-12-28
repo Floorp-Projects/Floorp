@@ -13,4 +13,3 @@
 [Exposed=Window]
 interface SVGAnimateElement : SVGAnimationElement {
 };
-

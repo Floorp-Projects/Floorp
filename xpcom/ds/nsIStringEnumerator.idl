@@ -35,4 +35,3 @@ interface nsIUTF8StringEnumerator : nsIStringEnumeratorBase
     boolean hasMore();
     AUTF8String getNext();
 };
-

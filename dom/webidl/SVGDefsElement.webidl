@@ -13,4 +13,3 @@
 [Exposed=Window]
 interface SVGDefsElement : SVGGraphicsElement {
 };
-

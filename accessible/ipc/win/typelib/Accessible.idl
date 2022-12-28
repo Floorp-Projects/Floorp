@@ -13,4 +13,3 @@ library Accessible
   interface IEnumVARIANT;
   interface IServiceProvider;
 };
-

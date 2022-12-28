@@ -126,4 +126,3 @@ interface nsIEventListenerService : nsISupports
   void addListenerChangeListener(in nsIListenerChangeListener aListener);
   void removeListenerChangeListener(in nsIListenerChangeListener aListener);
 };
-

@@ -69,4 +69,3 @@ interface nsIDirIndex : nsISupports
      */
     attribute PRTime lastModified;
 };
-

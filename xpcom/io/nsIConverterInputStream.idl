@@ -43,4 +43,3 @@ interface nsIConverterInputStream : nsIUnicharInputStream {
     void init (in nsIInputStream aStream, in string aCharset,
                in long aBufferSize, in char16_t aReplacementChar);
 };
-

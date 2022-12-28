@@ -132,4 +132,3 @@ interface nsPIWindowWatcher : nsISupports
                                        in float aOpenerFullZoom,
                                        in nsIOpenWindowInfo aOpenWindowInfo);
 };
-

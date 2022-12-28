@@ -25,10 +25,10 @@ interface mozIExtensionListenerCallOptions : nsISupports
     // A runtime.Port instance is prepended to the event listener call arguments.
     RUNTIME_PORT,
   };
- 
+
   readonly attribute mozIExtensionListenerCallOptions_APIObjectType apiObjectType;
- 
-  // An optional javascript object that should provide the attributes expected 
+
+  // An optional javascript object that should provide the attributes expected
   // by related apiObjectType webidl dictionary type (e.g. ExtensionPortDescriptor
   // if apiObjectType is RUNTIME_PORT).
   readonly attribute jsval apiObjectDescriptor;
@@ -43,7 +43,7 @@ interface mozIExtensionListenerCallOptions : nsISupports
 
     // The event listener will be called with a function as the last call parameter
     // that behaves like the runtime.onMessage's sendResponse parameter:
-    // 
+    //
     // - if the event listener already returned false, sendResponse calls are ignored
     //   (if it has not been called already)
     // - if the event listener already returned true, the first sendResponse call
@@ -64,7 +64,7 @@ interface mozIExtensionEventListener : nsISupports
     in Array<jsval> args,
     [optional] in mozIExtensionListenerCallOptions listenerCallOptions);
 };
- 
+
 [scriptable, builtinclass, uuid(0fee1c8f-e363-46a6-bd0c-d3c3338e2534)]
 interface mozIExtensionAPIRequest : nsISupports
 {
@@ -155,7 +155,7 @@ interface mozIExtensionAPIRequestHandler : nsISupports
    *         JS value returned by the API request handler, may contain a value
    *         (the result of the API call or a WebIDL dictionary that is used to
    *         initialize WebIDL-based API object, e.g. ExtensionPort) or
-   *         an Error to be throw on the thread that originated the request. 
+   *         an Error to be throw on the thread that originated the request.
    */
   void handleAPIRequest(in nsISupports extension,
                         in mozIExtensionAPIRequest apiRequest,
@@ -167,7 +167,7 @@ interface mozIExtensionAPIRequestHandler : nsISupports
    *
    * @param extension An instance of the WebExtensionPolicy webidl interface.
    * @param serviceWorkerInfo
-   */ 
+   */
   void initExtensionWorker(in nsISupports extension,
                            in mozIExtensionServiceWorkerInfo serviceWorkerInfo);
 

@@ -16,4 +16,3 @@
 interface HTMLHeadElement : HTMLElement {
   [HTMLConstructor] constructor();
 };
-

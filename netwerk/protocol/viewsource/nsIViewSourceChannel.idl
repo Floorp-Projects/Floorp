@@ -39,5 +39,3 @@ interface nsIViewSourceChannel : nsIChannel
      */
     [notxpcom, nostdcall] nsIChannel getInnerChannel();
 };
-
-

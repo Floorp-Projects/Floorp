@@ -49,4 +49,3 @@ interface SVGMatrix {
   [NewObject, Throws]
   SVGMatrix skewY(float angle);
 };
-

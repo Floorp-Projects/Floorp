@@ -42,7 +42,7 @@ interface nsICookieJarSettings : nsISerializable
   [infallible] readonly attribute boolean limitForeignContexts;
 
   [infallible] readonly attribute boolean blockingAllThirdPartyContexts;
-  
+
   [infallible] readonly attribute boolean blockingAllContexts;
   /**
    * Whether our cookie behavior mandates partitioning third-party content.

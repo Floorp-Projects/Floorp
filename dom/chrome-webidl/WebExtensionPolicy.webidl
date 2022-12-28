@@ -15,7 +15,7 @@ callback WebExtensionLocalizeCallback = DOMString (DOMString unlocalizedText);
 interface WebExtensionPolicy {
   [Throws]
   constructor(WebExtensionInit options);
-  
+
   /**
    * The add-on's internal ID, as specified in its manifest.json file or its
    * XPI signature.

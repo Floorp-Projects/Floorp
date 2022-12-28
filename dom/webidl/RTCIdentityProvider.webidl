@@ -63,4 +63,3 @@ dictionary RTCIdentityProviderOptions {
   DOMString usernameHint;
   DOMString peerIdentity;
 };
-

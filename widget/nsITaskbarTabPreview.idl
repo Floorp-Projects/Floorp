@@ -60,4 +60,3 @@ interface nsITaskbarTabPreview : nsITaskbarPreview
   [notxpcom]
   void EnsureRegistration();
 };
-

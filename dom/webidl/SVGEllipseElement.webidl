@@ -21,4 +21,3 @@ interface SVGEllipseElement : SVGGeometryElement {
   [Constant]
   readonly attribute SVGAnimatedLength ry;
 };
-

@@ -56,4 +56,3 @@ interface nsIDirIndexParser : nsIStreamListener {
      */
     attribute string encoding;
 };
-

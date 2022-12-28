@@ -33,4 +33,3 @@ interface SVGAngle {
   [Throws]
   undefined convertToSpecifiedUnits(unsigned short unitType);
 };
-

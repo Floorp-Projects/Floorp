@@ -118,5 +118,3 @@ namespace mozilla {
 mozilla::UniquePtr<mozilla::PresState> NewPresState();
 } // namespace mozilla
 %}
-
-

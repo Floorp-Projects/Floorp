@@ -46,4 +46,3 @@ interface nsIEditorMailSupport : nsISupports
   [can_run_script]
   void insertTextWithQuotations(in AString aStringToInsert);
 };
-

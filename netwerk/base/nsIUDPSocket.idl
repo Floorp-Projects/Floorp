@@ -297,7 +297,7 @@ interface nsIUDPSocket : nsISupports
      * dontFragment
      *
      * The don't fragment flag.
-     * The socket must be initialized before calling this function. 
+     * The socket must be initialized before calling this function.
      */
     [noscript] attribute boolean dontFragment;
 };

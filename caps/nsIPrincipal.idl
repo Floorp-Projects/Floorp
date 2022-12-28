@@ -478,7 +478,7 @@ interface nsIPrincipal : nsISupports
     readonly attribute ACString storageOriginKey;
 
     /**
-     * Creates and Returns a new ReferrerInfo with the 
+     * Creates and Returns a new ReferrerInfo with the
      * Principals URI
      *
      * May be called from any thread.

@@ -37,4 +37,3 @@ interface nsIApplicationChooser : nsISupports
    */
   void open(in ACString contentType, in nsIApplicationChooserFinishedCallback applicationChooserFinishedCallback);
 };
-

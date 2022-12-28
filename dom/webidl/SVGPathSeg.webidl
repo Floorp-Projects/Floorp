@@ -252,4 +252,3 @@ interface SVGPathSegCurvetoQuadraticSmoothRel : SVGPathSeg {
   [SetterThrows]
   attribute float y;
 };
-

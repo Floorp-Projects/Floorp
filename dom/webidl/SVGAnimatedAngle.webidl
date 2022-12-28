@@ -17,4 +17,3 @@ interface SVGAnimatedAngle {
   [Constant]
   readonly attribute SVGAngle animVal;
 };
-

@@ -30,4 +30,3 @@ interface SVGImageElement : SVGGraphicsElement {
 
 SVGImageElement includes MozImageLoadingContent;
 SVGImageElement includes SVGURIReference;
-

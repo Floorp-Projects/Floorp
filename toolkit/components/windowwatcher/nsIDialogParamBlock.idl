@@ -39,4 +39,3 @@ interface nsIDialogParamBlock:  nsISupports {
 %{C++
 #define NS_DIALOGPARAMBLOCK_CONTRACTID "@mozilla.org/embedcomp/dialogparam;1"
 %}
-

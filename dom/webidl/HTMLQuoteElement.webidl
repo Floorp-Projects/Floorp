@@ -19,4 +19,3 @@ interface HTMLQuoteElement : HTMLElement {
            [CEReactions, SetterThrows, Pure]
            attribute DOMString cite;
 };
-

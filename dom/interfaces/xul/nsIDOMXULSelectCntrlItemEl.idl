@@ -26,5 +26,3 @@ interface nsIDOMXULSelectControlItemElement : nsISupports {
   // XXX defined in XULElement, but should be defined here
   // void doCommand();
 };
-
-

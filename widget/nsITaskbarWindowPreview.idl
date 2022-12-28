@@ -67,4 +67,3 @@ interface nsITaskbarWindowPreview : nsITaskbarPreview
    */
   attribute boolean enableCustomDrawing;
 };
-

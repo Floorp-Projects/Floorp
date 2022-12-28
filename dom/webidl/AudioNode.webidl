@@ -73,4 +73,3 @@ interface mixin AudioNodePassThrough {
   [ChromeOnly]
   attribute boolean passThrough;
 };
-

@@ -35,4 +35,3 @@ interface nsIHTMLObjectResizer : nsISupports
    */
   void hideResizers();
 };
-

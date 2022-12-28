@@ -90,4 +90,3 @@ interface nsICookieBannerRule : nsISupports {
      */
     void clearClickRule();
 };
-

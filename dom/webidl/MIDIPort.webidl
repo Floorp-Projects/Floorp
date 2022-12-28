@@ -39,4 +39,3 @@ interface MIDIPort : EventTarget {
   [Throws]
   Promise<MIDIPort> close();
 };
-

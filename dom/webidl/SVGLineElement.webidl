@@ -21,4 +21,3 @@ interface SVGLineElement : SVGGeometryElement {
   [Constant]
   readonly attribute SVGAnimatedLength y2;
 };
-

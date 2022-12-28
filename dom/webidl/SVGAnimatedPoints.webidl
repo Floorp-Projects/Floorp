@@ -16,4 +16,3 @@ interface mixin SVGAnimatedPoints {
   [Constant]
   readonly attribute SVGPointList animatedPoints;
 };
-

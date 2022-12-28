@@ -9,4 +9,3 @@ interface nsISharingHandlerApp : nsIHandlerApp
 {
   void share(in AString data, [optional] in AString title);
 };
-

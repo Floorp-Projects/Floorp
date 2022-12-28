@@ -82,4 +82,3 @@ interface nsIEditingSession : nsISupports
   mozilla::HTMLEditor* GetHTMLEditorForWindow(mozIDOMWindowProxy* aWindow);
 %}
 };
-

@@ -37,4 +37,3 @@ interface DynamicsCompressorNode : AudioNode {
 
 // Mozilla extension
 DynamicsCompressorNode includes AudioNodePassThrough;
-

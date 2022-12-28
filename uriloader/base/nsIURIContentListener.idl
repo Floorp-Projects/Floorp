@@ -121,4 +121,3 @@ interface nsIURIContentListener : nsISupports
   */
   attribute nsIURIContentListener parentContentListener;
 };
-

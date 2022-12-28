@@ -36,4 +36,3 @@ interface SVGPreserveAspectRatio {
   [SetterThrows]
   attribute unsigned short meetOrSlice;
 };
-

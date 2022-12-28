@@ -57,4 +57,3 @@ interface nsIPersistentProperties : nsIProperties
 
   [notxpcom, nostdcall] size_t sizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 };
-

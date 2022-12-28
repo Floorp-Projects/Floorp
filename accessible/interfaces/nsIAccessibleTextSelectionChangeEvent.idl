@@ -14,7 +14,7 @@ interface nsIArray;
 interface nsIAccessibleTextSelectionChangeEvent: nsIAccessibleEvent
 {
   /**
-   * Return an array of disjoint ranges for selected text within the 
+   * Return an array of disjoint ranges for selected text within the
    * source of this event.
    */
   readonly attribute nsIArray selectionRanges;

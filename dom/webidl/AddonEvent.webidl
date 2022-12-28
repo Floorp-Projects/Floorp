@@ -9,4 +9,3 @@ interface AddonEvent : Event {
 dictionary AddonEventInit : EventInit {
   required DOMString id;
 };
-

@@ -32,4 +32,3 @@ interface SVGTextPathElement : SVGTextContentElement {
 };
 
 SVGTextPathElement includes SVGURIReference;
-

@@ -137,4 +137,3 @@ partial interface MouseEvent
   [ChromeOnly]
   boolean clickEventPrevented();
 };
-

@@ -90,4 +90,3 @@ interface nsICommandParams : nsISupports
   inline const nsCommandParams* AsCommandParams() const;
 %}
 };
-

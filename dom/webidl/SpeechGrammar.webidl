@@ -22,4 +22,3 @@ interface SpeechGrammar {
     [Throws]
     attribute float weight;
 };
-

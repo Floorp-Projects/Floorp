@@ -48,4 +48,3 @@ interface RTCRtpTransceiver {
     [ChromeOnly]
     boolean hasBeenUsedToSend();
 };
-

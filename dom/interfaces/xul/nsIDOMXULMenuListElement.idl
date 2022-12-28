@@ -21,4 +21,3 @@ interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
   // For editable menu lists only.
   readonly attribute Element inputField;
 };
-

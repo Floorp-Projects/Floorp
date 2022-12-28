@@ -14,7 +14,7 @@ interface MIDIMessageEvent : Event
 {
   [Throws]
   constructor(DOMString type, optional MIDIMessageEventInit eventInitDict = {});
-  
+
   [Throws]
   readonly attribute Uint8Array  data;
 };

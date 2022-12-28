@@ -12,4 +12,3 @@
 interface MIDIInput : MIDIPort {
   attribute EventHandler onmidimessage;
 };
-

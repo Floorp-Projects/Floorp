@@ -17,5 +17,3 @@ interface nsIDOMXULControlElement : nsISupports {
 //  void focus();
 //  void blur();
 };
-
-

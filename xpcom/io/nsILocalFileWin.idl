@@ -96,4 +96,3 @@ interface nsILocalFileWin : nsIFile
     [noscript] void setWindowsFileAttributes(in unsigned long aSetAttrs,
                                              in unsigned long aClearAttrs);
 };
-

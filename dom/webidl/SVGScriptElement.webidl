@@ -21,4 +21,3 @@ interface SVGScriptElement : SVGElement {
 };
 
 SVGScriptElement includes SVGURIReference;
-

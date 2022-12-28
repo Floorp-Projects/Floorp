@@ -64,4 +64,3 @@ interface nsIConsoleService : nsISupports
 
 #define NS_CONSOLESERVICE_CONTRACTID "@mozilla.org/consoleservice;1"
 %}
-

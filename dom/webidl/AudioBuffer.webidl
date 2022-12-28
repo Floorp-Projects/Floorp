@@ -25,7 +25,7 @@ interface AudioBuffer {
     readonly attribute float sampleRate;
     readonly attribute unsigned long length;
 
-    // in seconds 
+    // in seconds
     readonly attribute double duration;
 
     readonly attribute unsigned long numberOfChannels;

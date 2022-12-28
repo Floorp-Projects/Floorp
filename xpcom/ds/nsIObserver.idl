@@ -35,4 +35,3 @@ interface nsIObserver : nsISupports {
                   in wstring     aData );
 
 };
-

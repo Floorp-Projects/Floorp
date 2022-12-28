@@ -92,5 +92,3 @@ interface nsIWebSocketListener : nsISupports
     [must_use] void OnError();
 
 };
-
-

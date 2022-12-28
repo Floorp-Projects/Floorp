@@ -37,4 +37,3 @@ interface SVGAnimationElement : SVGElement {
 };
 
 SVGAnimationElement includes SVGTests;
-

@@ -173,4 +173,3 @@ interface ISimpleDOMNode : IUnknown
 
   [propget] HRESULT language([out, retval] BSTR *language);
 }
-

@@ -23,4 +23,3 @@ interface SVGTextPositioningElement : SVGTextContentElement {
   [Constant]
   readonly attribute SVGAnimatedNumberList rotate;
 };
-

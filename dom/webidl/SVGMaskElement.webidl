@@ -30,4 +30,3 @@ interface SVGMaskElement : SVGElement {
   [Constant]
   readonly attribute SVGAnimatedLength height;
 };
-

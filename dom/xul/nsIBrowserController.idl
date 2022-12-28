@@ -18,5 +18,3 @@ interface nsIBrowserController : nsISupports
                              in Array<ACString> enabledCommands,
                              in Array<ACString> disabledCommands);
 };
-
-

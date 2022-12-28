@@ -22,4 +22,3 @@ interface SVGStyleElement : SVGElement {
   attribute DOMString title;
 };
 SVGStyleElement includes LinkStyle;
-

@@ -98,13 +98,3 @@ interface nsIComponentRegistrar : nsISupports
      */
     nsCIDPtr contractIDToCID(in string aContractID);
 };
-
-
-
-
-
-
-
-
-
-

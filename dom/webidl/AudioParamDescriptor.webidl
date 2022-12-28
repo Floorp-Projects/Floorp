@@ -20,4 +20,3 @@ dictionary AudioParamDescriptor {
     // implemented
     // AutomationRate automationRate = "a-rate";
 };
-

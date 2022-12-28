@@ -30,7 +30,7 @@ interface nsILoginManagerPrompter : nsISupports {
    * @param autoFilledLoginGuid
    *        A string guid value for the login which was autofilled into the form
    * @param possibleValues
-   *        Contains values from anything that we think, but are not sure, might be 
+   *        Contains values from anything that we think, but are not sure, might be
    *        a username or password.  Has two properties, 'usernames' and 'passwords'.
    */
   nsIPromptInstance promptToSavePassword(
@@ -60,7 +60,7 @@ interface nsILoginManagerPrompter : nsISupports {
    * @param autoFilledLoginGuid
    *        A string guid value for the login which was autofilled into the form
    * @param possibleValues
-   *        Contains values from anything that we think, but are not sure, might be 
+   *        Contains values from anything that we think, but are not sure, might be
    *        a username or password.  Has two properties, 'usernames' and 'passwords'.
    */
   nsIPromptInstance promptToChangePassword(

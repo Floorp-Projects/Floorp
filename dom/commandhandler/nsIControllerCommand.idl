@@ -50,4 +50,3 @@ interface nsIControllerCommand : nsISupports
   void    doCommandParams(in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandContext);
 
 };
-

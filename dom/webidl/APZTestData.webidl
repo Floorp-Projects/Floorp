@@ -6,7 +6,7 @@
 
 /*
  * This file declares data structures used to communicate data logged by
- * various components for the purpose of APZ testing (see bug 961289 and 
+ * various components for the purpose of APZ testing (see bug 961289 and
  * gfx/layers/apz/test/APZTestData.h) to JS test code.
  */
 

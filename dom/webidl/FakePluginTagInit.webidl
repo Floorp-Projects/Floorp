@@ -46,4 +46,3 @@ dictionary FakePluginMimeEntry {
   DOMString description = "";
   DOMString extension = "";
 };
-

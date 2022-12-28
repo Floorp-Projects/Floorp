@@ -243,4 +243,3 @@ interface SubtleCrypto {
                          boolean extractable,
                          sequence<KeyUsage> keyUsages );
 };
-

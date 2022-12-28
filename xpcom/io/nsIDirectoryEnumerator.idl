@@ -32,4 +32,3 @@ interface nsIDirectoryEnumerator : nsISimpleEnumerator
    */
   void close();
 };
-

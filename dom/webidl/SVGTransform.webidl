@@ -40,4 +40,3 @@ interface SVGTransform {
   [Throws]
   undefined setSkewY(float angle);
 };
-

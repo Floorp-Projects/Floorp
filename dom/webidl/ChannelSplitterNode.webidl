@@ -21,4 +21,3 @@ interface ChannelSplitterNode : AudioNode {
   constructor(BaseAudioContext context,
               optional ChannelSplitterOptions options = {});
 };
-

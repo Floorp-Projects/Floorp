@@ -27,4 +27,3 @@ interface StreamFilterDataEvent : Event {
 dictionary StreamFilterDataEventInit : EventInit {
   required ArrayBuffer data;
 };
-

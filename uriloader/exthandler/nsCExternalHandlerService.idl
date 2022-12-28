@@ -30,4 +30,3 @@ nsIExternalHelperAppService
 "@mozilla.org/uriloader/local-handler-app;1"
 
 %}
-

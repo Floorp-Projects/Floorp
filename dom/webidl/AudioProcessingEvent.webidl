@@ -22,4 +22,3 @@ interface AudioProcessingEvent : Event {
   readonly attribute AudioBuffer outputBuffer;
 
 };
-

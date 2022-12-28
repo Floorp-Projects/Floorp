@@ -15,4 +15,3 @@ interface nsIUserIdleServiceInternal : nsIUserIdleService
    **/
   void resetIdleTimeOut(in unsigned long idleDeltaInMS);
 };
-
