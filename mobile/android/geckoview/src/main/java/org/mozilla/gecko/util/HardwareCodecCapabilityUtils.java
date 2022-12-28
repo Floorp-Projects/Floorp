@@ -197,6 +197,16 @@ public final class HardwareCodecCapabilityUtils {
         for (final int colorFormat : capabilities.colorFormats) {
           Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
         }
+        if (Build.VERSION.SDK_INT >= 24) {
+          for (final MediaCodecInfo.CodecProfileLevel pl : capabilities.profileLevels) {
+            Log.v(
+                LOGTAG,
+                "   Profile: 0x"
+                    + Integer.toHexString(pl.profile)
+                    + "/Level=0x"
+                    + Integer.toHexString(pl.level));
+          }
+        }
         for (final int supportedColorFormat : supportedColorList) {
           for (final int codecColorFormat : capabilities.colorFormats) {
             if (codecColorFormat == supportedColorFormat) {
