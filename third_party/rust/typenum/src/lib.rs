@@ -59,7 +59,7 @@
     )
 )]
 #![cfg_attr(feature = "cargo-clippy", deny(clippy::missing_inline_in_public_items))]
-#![doc(html_root_url = "https://docs.rs/typenum/1.15.0")]
+#![doc(html_root_url = "https://docs.rs/typenum/1.16.0")]
 
 // For debugging macros:
 // #![feature(trace_macros)]
@@ -71,12 +71,16 @@ use core::cmp::Ordering;
 mod generated {
     include!(concat!(env!("OUT_DIR"), "/op.rs"));
     include!(concat!(env!("OUT_DIR"), "/consts.rs"));
+    #[cfg(feature = "const-generics")]
+    include!(concat!(env!("OUT_DIR"), "/generic_const_mappings.rs"));
 }
 
 #[cfg(not(feature = "force_unix_path_separator"))]
 mod generated {
     include!(env!("TYPENUM_BUILD_OP"));
     include!(env!("TYPENUM_BUILD_CONSTS"));
+    #[cfg(feature = "const-generics")]
+    include!(env!("TYPENUM_BUILD_GENERIC_CONSTS"));
 }
 
 pub mod bit;
@@ -91,7 +95,6 @@ pub mod array;
 
 pub use crate::{
     array::{ATerm, TArr},
-    consts::*,
     generated::consts,
     int::{NInt, PInt},
     marker_traits::*,
@@ -99,6 +102,21 @@ pub use crate::{
     type_operators::*,
     uint::{UInt, UTerm},
 };
+
+#[doc(no_inline)]
+#[rustfmt::skip]
+pub use consts::{
+    False, True, B0, B1,
+    U0, U1, U2, *,
+    N1, N2, Z0, P1, P2, *,
+};
+
+#[cfg(feature = "const-generics")]
+pub use crate::generated::generic_const_mappings;
+
+#[cfg(feature = "const-generics")]
+#[doc(no_inline)]
+pub use generic_const_mappings::{Const, ToUInt, U};
 
 /// A potential output from `Cmp`, this is the type equivalent to the enum variant
 /// `core::cmp::Ordering::Greater`.

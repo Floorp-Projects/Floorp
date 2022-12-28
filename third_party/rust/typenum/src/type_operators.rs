@@ -587,4 +587,6 @@ pub trait Gcd<Rhs> {
 pub trait ToInt<T> {
     /// Method returning the concrete value for the type.
     fn to_int() -> T;
+    /// The concrete value for the type. Can be used in `const` contexts.
+    const INT: T;
 }
