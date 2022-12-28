@@ -49,14 +49,20 @@ index fb237c5..b2ba069 100644
 EOF
 
 chmod +w src/config.h.W32
-sed -i "/#define BATCH_MODE_ONLY_SHELL/s/\/\*\(.*\)\*\//\1/" src/config.h.W32
-cmd /c build_w32.bat
+sed "/#define BATCH_MODE_ONLY_SHELL/s/\/\*\(.*\)\*\//\1/" src/config.h.W32 > src/config.h
+export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
+export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs
+make -f Basic.mk \
+  MAKE_HOST=Windows32 \
+  MKDIR.cmd='mkdir -p $1' \
+  RM.cmd='rm -f $1' \
+  CP.cmd='cp $1 $2' \
+  msvc_CC=$MOZ_FETCHES_DIR/clang/bin/clang-cl \
+  msvc_LD=$MOZ_FETCHES_DIR/clang/bin/lld-link
 
 mkdir mozmake
 cp WinRel/gnumake.exe mozmake/mozmake.exe
 
-tar -c mozmake | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > mozmake.tar.zst
+tar -acvf mozmake.tar.zst mozmake
 mkdir -p $UPLOAD_DIR
 cp mozmake.tar.zst $UPLOAD_DIR
-
-. $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh

@@ -301,15 +301,15 @@ win64-mozmake:
         local-toolchain: true
     treeherder:
         symbol: TW64(mozmake)
-    worker-type: b-win2012
     run:
         script: build-mozmake.sh
         toolchain-artifact: public/build/mozmake.tar.zst
-        tooltool-downloads: internal
     fetches:
         fetch:
             - gnumake
         toolchain:
+            - linux64-clang-toolchain
+            - linux64-liblowercase
             - win64-vs2017
 
 nsis:
