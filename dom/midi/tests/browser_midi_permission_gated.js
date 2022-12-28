@@ -358,8 +358,9 @@ add_task(async function testRequestMIDIAccess() {
 
   info("Perm-deny site permission addon install");
   addonInstallPanel = await onAddonInstallBlockedNotification;
-  // Click the "Never allow" menuitem
-  notification.menupopup.querySelector("menuitem").click();
+  // Click the "Report Suspicious Site" menuitem, which has the same effect as
+  // "Never Allow" and also submits a telemetry event (which we check below).
+  notification.menupopup.querySelectorAll("menuitem")[1].click();
 
   rejectionMessage = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -400,7 +401,21 @@ add_task(async function testRequestMIDIAccess() {
     "requestMIDIAccess was rejected without user prompt"
   );
 
-  assertSitePermissionInstallTelemetryEvents(["site_warning", "cancelled"]);
+  // Invoking getAMTelemetryEvents resets the mocked event array, and we want
+  // to test two different things here, so we cache it.
+  let events = AddonTestUtils.getAMTelemetryEvents();
+  Assert.deepEqual(
+    events.filter(evt => evt.method == "reportSuspiciousSite")[0],
+    {
+      method: "reportSuspiciousSite",
+      object: "suspiciousSite",
+      value: "example.com",
+    }
+  );
+  assertSitePermissionInstallTelemetryEvents(
+    ["site_warning", "cancelled"],
+    events
+  );
 });
 
 add_task(async function testIframeRequestMIDIAccess() {
@@ -671,8 +686,11 @@ add_task(function teardown_telemetry_events() {
  *
  * @param {Array<String>} expectedSteps: An array of the expected extra.step values recorded.
  */
-function assertSitePermissionInstallTelemetryEvents(expectedSteps) {
-  let amInstallEvents = AddonTestUtils.getAMTelemetryEvents()
+function assertSitePermissionInstallTelemetryEvents(
+  expectedSteps,
+  events = null
+) {
+  let amInstallEvents = (events ?? AddonTestUtils.getAMTelemetryEvents())
     .filter(evt => evt.method === "install" && evt.object === "sitepermission")
     .map(evt => evt.extra.step);
 
