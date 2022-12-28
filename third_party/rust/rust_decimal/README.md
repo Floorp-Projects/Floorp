@@ -11,14 +11,26 @@ A Decimal number implementation written in pure Rust suitable for financial calc
 
 The binary representation consists of a 96 bit integer number, a scaling factor used to specify the decimal fraction and a 1 bit sign. Because of this representation, trailing zeros are preserved and may be exposed when in string form. These can be truncated using the `normalize` or `round_dp` functions.
 
-## Getting started
+## Installing
 
-To get started, add `rust_decimal` and optionally `rust_decimal_macros` to your `Cargo.toml`:
+Using [`cargo-edit`](https://crates.io/crates/cargo-edit):
+
+```sh
+$ cargo add rust_decimal
+```
+
+In addition, if you would like to use the optimized macro for convenient creation of decimals:
+
+```sh
+$ cargo add rust_decimal_macros
+```
+
+Alternatively, you can edit your `Cargo.toml` directly and run `cargo update`:
 
 ```toml
 [dependencies]
-rust_decimal = "1.26"
-rust_decimal_macros = "1.26"
+rust_decimal = "1.27"
+rust_decimal_macros = "1.27"
 ```
 
 ## Usage
@@ -29,11 +41,12 @@ Decimal numbers can be created in a few distinct ways. The easiest and most effi
 // Procedural macros need importing directly
 use rust_decimal_macros::dec;
 
-let number = dec!(-1.23);
-assert_eq!("-1.23", number.to_string());
+let number = dec!(-1.23) + dec!(3.45);
+assert_eq!(number, dec!(2.22));
+assert_eq!(number.to_string(), "2.22");
 ```
 
-Alternatively you can also use one of the Decimal number convenience functions:
+Alternatively you can also use one of the Decimal number convenience functions ([see the docs](https://docs.rs/rust_decimal/) for more details):
 
 ```rust
 // Using the prelude can help importing trait based functions (e.g. core::str::FromStr).
@@ -43,6 +56,10 @@ use rust_decimal::prelude::*;
 let scaled = Decimal::new(202, 2);
 assert_eq!("2.02", scaled.to_string());
 
+// From a 128 bit integer
+let balance = Decimal::from_i128_with_scale(5_897_932_384_626_433_832, 2);
+assert_eq!("58979323846264338.32", balance.to_string());
+
 // From a string representation
 let from_string = Decimal::from_str("2.02").unwrap();
 assert_eq!("2.02", from_string.to_string());
@@ -51,12 +68,16 @@ assert_eq!("2.02", from_string.to_string());
 let from_string_base16 = Decimal::from_str_radix("ffff", 16).unwrap();
 assert_eq!("65535", from_string_base16.to_string());
 
+// From scientific notation
+let sci = Decimal::from_scientific("9.7e-7").unwrap();
+assert_eq!("0.00000097", sci.to_string());
+
 // Using the `Into` trait
-let my_int: Decimal = 3i32.into();
+let my_int: Decimal = 3_i32.into();
 assert_eq!("3", my_int.to_string());
 
 // Using the raw decimal representation
-let pi = Decimal::from_parts(1102470952, 185874565, 1703060790, false, 28);
+let pi = Decimal::from_parts(1_102_470_952, 185_874_565, 1_703_060_790, false, 28);
 assert_eq!("3.1415926535897932384626433832", pi.to_string());
 ```
 
@@ -64,11 +85,12 @@ Once you have instantiated your `Decimal` number you can perform calculations wi
 
 ```rust
 use rust_decimal::prelude::*;
+use rust_decimal_macros::dec;
 
-let amount = Decimal::from_str("25.12").unwrap();
-let tax = Decimal::from_str("0.085").unwrap();
-let total = amount + (amount * tax).round_dp(2);
-assert_eq!(total.to_string(), "27.26");
+let amount = dec!(25.12);
+let tax_percentage = dec!(0.085);
+let total = amount + (amount * tax_percentage).round_dp(2);
+assert_eq!(total, dec!(27.26));
 ```
 
 ## Features
@@ -119,15 +141,15 @@ Enables the tokio postgres module allowing for async communication with PostgreS
 
 ### `db-diesel-postgres`
 
-Enable `diesel` PostgreSQL support. By default, this enables version `1.4` of `diesel`. If you wish to use the `diesel`
-release candidates then you can do so by using `db-diesel2-postgres`. Please note, the `db-diesel2-*` features are considered
-unstable and will be upgraded as and when new `diesel 2.x` features are released.
+Enable `diesel` PostgreSQL support. By default, this enables version `1.4` of `diesel`. If you wish to use the `2.0` 
+version of `diesel` then you can do so by using the feature `db-diesel2-postgres`. Please note, if both features are 
+enabled then version 2 will supersede version 1.
 
 ### `db-diesel-mysql`
 
-Enable `diesel` MySQL support. By default, this enables version `1.4` of `diesel`. If you wish to use the `diesel`
-release candidates then you can do so by using `db-diesel2-mysql`. Please note, the `db-diesel2-*` features are considered
-unstable and will be upgraded as and when new `diesel 2.x` features are released.
+Enable `diesel` MySQL support. By default, this enables version `1.4` of `diesel`. If you wish to use the `2.0` 
+version of `diesel` then you can do so by using the feature `db-diesel2-mysql`. Please note, if both features are
+enabled then version 2 will supersede version 1.
 
 ### `legacy-ops`
 
@@ -272,8 +294,8 @@ Please refer to the [Build document](BUILD.md) for more information on building 
 
 ## Minimum Rust Compiler Version
 
-The current _minimum_ compiler version is [`1.56.0`](https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1560-2021-10-21)
-which was released on `2021-10-21`.
+The current _minimum_ compiler version is [`1.60.0`](https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1600-2022-04-07)
+which was released on `2022-04-07`.
 
 This library maintains support for rust compiler versions that are 4 minor versions away from the current stable rust compiler version.
 For example, if the current stable compiler version is `1.50.0` then we will guarantee support up to and including `1.46.0`.
