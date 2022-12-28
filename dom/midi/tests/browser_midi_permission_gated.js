@@ -410,6 +410,7 @@ add_task(async function testRequestMIDIAccess() {
       method: "reportSuspiciousSite",
       object: "suspiciousSite",
       value: "example.com",
+      extra: {},
     }
   );
   assertSitePermissionInstallTelemetryEvents(
