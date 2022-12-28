@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "UtilityProcessManager.h"
 
+#include "JSOracleParent.h"
 #include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Preferences.h"
@@ -348,6 +349,11 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
             return StartRemoteDecodingUtilityPromise::CreateAndReject(aError,
                                                                       __func__);
           });
+}
+
+RefPtr<UtilityProcessManager::JSOraclePromise>
+UtilityProcessManager::StartJSOracle(dom::JSOracleParent* aParent) {
+  return StartUtility(RefPtr{aParent}, SandboxingKind::GENERIC_UTILITY);
 }
 
 bool UtilityProcessManager::IsProcessLaunching(SandboxingKind aSandbox) {

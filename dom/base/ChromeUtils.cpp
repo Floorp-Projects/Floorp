@@ -1071,7 +1071,7 @@ static WebIDLUtilityActorName UtilityActorNameToWebIDL(
     mozilla::UtilityActorName aType) {
   // Max is the value of the last enum, not the length, so add one.
   static_assert(WebIDLUtilityActorNameValues::Count ==
-                    static_cast<size_t>(UtilityActorName::MfMediaEngineCDM) + 1,
+                    static_cast<size_t>(UtilityActorName::JSOracle) + 1,
                 "In order for this static cast to be okay, "
                 "UtilityActorName must match UtilityActorName exactly");
 
@@ -1083,6 +1083,7 @@ static WebIDLUtilityActorName UtilityActorNameToWebIDL(
                                     AudioDecoder_AppleMedia);
     UTILITYACTORNAME_TO_WEBIDL_CASE(AudioDecoder_WMF, AudioDecoder_WMF);
     UTILITYACTORNAME_TO_WEBIDL_CASE(MfMediaEngineCDM, MfMediaEngineCDM);
+    UTILITYACTORNAME_TO_WEBIDL_CASE(JSOracle, JSOracle);
   }
 
   MOZ_ASSERT(false, "Unhandled case in WebIDLUtilityActorName");
