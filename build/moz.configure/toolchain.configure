@@ -1492,10 +1492,17 @@ set_config("CXX_IS_ICECREAM", cxx_is_icecream)
 #   lld is not used by default on Linux and Android because it introduces layout changes
 #   that prevent elfhack from working. See e.g.
 #   https://bugzilla.mozilla.org/show_bug.cgi?id=1563654#c2.
-@depends(target)
-def is_linker_option_enabled(target):
-    if target.kernel not in ("WINNT", "SunOS"):
-        return True
+@template
+def is_not_winnt_or_sunos(host_or_target):
+    @depends(host_or_target)
+    def is_not_winnt_or_sunos(host_or_target):
+        if host_or_target.kernel not in ("WINNT", "SunOS"):
+            return True
+
+    return is_not_winnt_or_sunos
+
+
+is_linker_option_enabled = is_not_winnt_or_sunos(target)
 
 
 @deprecated_option("--enable-gold", env="MOZ_FORCE_GOLD", when=is_linker_option_enabled)
@@ -1556,7 +1563,7 @@ def select_linker_tmpl(host_or_target):
             developer_options,
             dependable(None),
             host,
-            when=is_linker_option_enabled,
+            when=is_not_winnt_or_sunos(host_or_target),
         )
         host_or_target_str = "host"
 
