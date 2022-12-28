@@ -727,6 +727,8 @@
 //!    in [bunyan] format, enriched with timing information.
 //!  - [`tracing-wasm`] provides a `Subscriber`/`Layer` implementation that reports
 //!    events and spans via browser `console.log` and [User Timing API (`window.performance`)].
+//!  - [`tracing-web`] provides a layer implementation of level-aware logging of events
+//!    to web browsers' `console.*` and span events to the [User Timing API (`window.performance`)].
 //!  - [`tide-tracing`] provides a [tide] middleware to trace all incoming requests and responses.
 //!  - [`test-log`] takes care of initializing `tracing` for tests, based on
 //!    environment variables with an `env_logger` compatible syntax.
@@ -744,6 +746,7 @@
 //!    grouping together logs from the same spans during writing.
 //!  - [`tracing-loki`] provides a layer for shipping logs to [Grafana Loki].
 //!  - [`tracing-logfmt`] provides a layer that formats events and spans into the logfmt format.
+//!  - [`reqwest-tracing`] provides a middleware to trace [`reqwest`] HTTP requests.
 //!
 //! If you're the maintainer of a `tracing` ecosystem crate not listed above,
 //! please let us know! We'd love to add your project to the list!
@@ -761,6 +764,7 @@
 //! [`tracing-bunyan-formatter`]: https://crates.io/crates/tracing-bunyan-formatter
 //! [bunyan]: https://github.com/trentm/node-bunyan
 //! [`tracing-wasm`]: https://docs.rs/tracing-wasm
+//! [`tracing-web`]: https://docs.rs/tracing-web
 //! [User Timing API (`window.performance`)]: https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API
 //! [`tide-tracing`]: https://crates.io/crates/tide-tracing
 //! [tide]: https://crates.io/crates/tide
@@ -781,6 +785,8 @@
 //! [`tracing-loki`]: https://crates.io/crates/tracing-loki
 //! [Grafana Loki]: https://grafana.com/oss/loki/
 //! [`tracing-logfmt`]: https://crates.io/crates/tracing-logfmt
+//! [`reqwest-tracing`]: https://crates.io/crates/reqwest-tracing
+//! [`reqwest`]: https://crates.io/crates/reqwest
 //!
 //! <pre class="ignore" style="white-space:normal;font:inherit;">
 //!     <strong>Note</strong>: Some of these ecosystem crates are currently
@@ -811,7 +817,7 @@
 //!
 //!   ```toml
 //!   [dependencies]
-//!   tracing = { version = "0.1.36", default-features = false }
+//!   tracing = { version = "0.1.37", default-features = false }
 //!   ```
 //!
 //! <pre class="ignore" style="white-space:normal;font:inherit;">
@@ -894,7 +900,7 @@
 //! [flags]: #crate-feature-flags
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg), deny(rustdoc::broken_intra_doc_links))]
-#![doc(html_root_url = "https://docs.rs/tracing/0.1.36")]
+#![doc(html_root_url = "https://docs.rs/tracing/0.1.37")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png",
     issue_tracker_base_url = "https://github.com/tokio-rs/tracing/issues/"

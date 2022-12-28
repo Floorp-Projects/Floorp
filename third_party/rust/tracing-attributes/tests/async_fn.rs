@@ -14,6 +14,7 @@ async fn test_async_fn(polls: usize) -> Result<(), ()> {
 
 // Reproduces a compile error when returning an `impl Trait` from an
 // instrumented async fn (see https://github.com/tokio-rs/tracing/issues/1615)
+#[allow(dead_code)] // this is just here to test whether it compiles.
 #[instrument]
 async fn test_ret_impl_trait(n: i32) -> Result<impl Iterator<Item = i32>, ()> {
     let n = n;
@@ -22,6 +23,7 @@ async fn test_ret_impl_trait(n: i32) -> Result<impl Iterator<Item = i32>, ()> {
 
 // Reproduces a compile error when returning an `impl Trait` from an
 // instrumented async fn (see https://github.com/tokio-rs/tracing/issues/1615)
+#[allow(dead_code)] // this is just here to test whether it compiles.
 #[instrument(err)]
 async fn test_ret_impl_trait_err(n: i32) -> Result<impl Iterator<Item = i32>, &'static str> {
     Ok((0..10).filter(move |x| *x < n))
@@ -29,6 +31,15 @@ async fn test_ret_impl_trait_err(n: i32) -> Result<impl Iterator<Item = i32>, &'
 
 #[instrument]
 async fn test_async_fn_empty() {}
+
+// Reproduces a compile error when an instrumented function body contains inner
+// attributes (https://github.com/tokio-rs/tracing/issues/2294).
+#[deny(unused_variables)]
+#[instrument]
+async fn repro_async_2294() {
+    #![allow(unused_variables)]
+    let i = 42;
+}
 
 // Reproduces https://github.com/tokio-rs/tracing/issues/1613
 #[instrument]
@@ -53,6 +64,7 @@ async fn repro_1613_2() {
 }
 
 // Reproduces https://github.com/tokio-rs/tracing/issues/1831
+#[allow(dead_code)] // this is just here to test whether it compiles.
 #[instrument]
 #[deny(unused_braces)]
 fn repro_1831() -> Pin<Box<dyn Future<Output = ()>>> {
@@ -61,6 +73,7 @@ fn repro_1831() -> Pin<Box<dyn Future<Output = ()>>> {
 
 // This replicates the pattern used to implement async trait methods on nightly using the
 // `type_alias_impl_trait` feature
+#[allow(dead_code)] // this is just here to test whether it compiles.
 #[instrument(ret, err)]
 #[deny(unused_braces)]
 #[allow(clippy::manual_async_fn)]

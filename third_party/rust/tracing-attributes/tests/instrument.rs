@@ -3,6 +3,15 @@ use tracing::Level;
 use tracing_attributes::instrument;
 use tracing_mock::*;
 
+// Reproduces a compile error when an instrumented function body contains inner
+// attributes (https://github.com/tokio-rs/tracing/issues/2294).
+#[deny(unused_variables)]
+#[instrument]
+fn repro_2294() {
+    #![allow(unused_variables)]
+    let i = 42;
+}
+
 #[test]
 fn override_everything() {
     #[instrument(target = "my_target", level = "debug")]

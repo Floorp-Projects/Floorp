@@ -133,7 +133,7 @@ pub use tracing_core::dispatcher::with_default;
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub use tracing_core::dispatcher::DefaultGuard;
 pub use tracing_core::dispatcher::{
-    get_default, set_global_default, Dispatch, SetGlobalDefaultError,
+    get_default, set_global_default, Dispatch, SetGlobalDefaultError, WeakDispatch,
 };
 
 /// Private API for internal use by tracing's macros.

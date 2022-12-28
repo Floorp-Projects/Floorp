@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.49.0"
 name = "tracing-core"
-version = "0.1.29"
+version = "0.1.30"
 authors = ["Tokio Contributors <team@tokio.rs>"]
 description = """
 Core primitives for application-level tracing.

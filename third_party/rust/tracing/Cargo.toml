@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.49.0"
 name = "tracing"
-version = "0.1.36"
+version = "0.1.37"
 authors = [
     "Eliza Weisman <eliza@buoyant.io>",
     "Tokio Contributors <team@tokio.rs>",
@@ -98,11 +98,11 @@ optional = true
 version = "0.2.9"
 
 [dependencies.tracing-attributes]
-version = "0.1.22"
+version = "0.1.23"
 optional = true
 
 [dependencies.tracing-core]
-version = "0.1.29"
+version = "0.1.30"
 default-features = false
 
 [dev-dependencies.criterion]

@@ -1,3 +1,21 @@
+# 0.1.30 (October 6, 2022)
+
+This release of `tracing-core` adds a new `on_register_dispatch` method to the
+`Subscriber` trait to allow the `Subscriber` to perform initialization after
+being registered as a `Dispatch`, and a `WeakDispatch` type to allow a
+`Subscriber` to store its own `Dispatch` without creating reference count
+cycles.
+
+### Added
+
+- `Subscriber::on_register_dispatch` method ([#2269])
+- `WeakDispatch` type and `Dispatch::downgrade()` function ([#2293])
+
+Thanks to @jswrenn for contributing to this release!
+
+[#2269]: https://github.com/tokio-rs/tracing/pull/2269
+[#2293]: https://github.com/tokio-rs/tracing/pull/2293
+
 # 0.1.29 (July 29, 2022)
 
 This release of `tracing-core` adds `PartialEq` and `Eq` implementations for
