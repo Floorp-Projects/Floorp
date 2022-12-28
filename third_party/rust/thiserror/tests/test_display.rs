@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use thiserror::Error;
 
 fn assert<T: Display>(expected: &str, value: T) {
@@ -128,6 +128,35 @@ fn test_match() {
     #[error("{}: {0}", match .1 {
         Some(n) => format!("error occurred with {}", n),
         None => "there was an empty error".to_owned(),
+    })]
+    struct Error(String, Option<usize>);
+
+    assert(
+        "error occurred with 1: ...",
+        Error("...".to_owned(), Some(1)),
+    );
+    assert(
+        "there was an empty error: ...",
+        Error("...".to_owned(), None),
+    );
+}
+
+#[test]
+fn test_nested_display() {
+    // Same behavior as the one in `test_match`, but without String allocations.
+    #[derive(Error, Debug)]
+    #[error("{}", {
+        struct Msg<'a>(&'a String, &'a Option<usize>);
+        impl<'a> Display for Msg<'a> {
+            fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                match self.1 {
+                    Some(n) => write!(formatter, "error occurred with {}", n),
+                    None => write!(formatter, "there was an empty error"),
+                }?;
+                write!(formatter, ": {}", self.0)
+            }
+        }
+        Msg(.0, .1)
     })]
     struct Error(String, Option<usize>);
 

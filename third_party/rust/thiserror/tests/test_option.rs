@@ -1,6 +1,7 @@
-// FIXME: needs to be updated to provide_ref/request_ref API.
-#![cfg(any())]
-#![cfg_attr(thiserror_nightly_testing, feature(backtrace))]
+#![cfg_attr(
+    thiserror_nightly_testing,
+    feature(error_generic_member_access, provide_any)
+)]
 
 #[cfg(thiserror_nightly_testing)]
 pub mod structs {
