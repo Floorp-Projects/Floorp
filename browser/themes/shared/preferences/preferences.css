@@ -1282,8 +1282,7 @@ richlistitem .text-link:hover {
 }
 
 #firefox-mobile {
-  background-image: url("chrome://devtools/skin/images/browsers/mobile.svg");
-  padding-top: 5px;
+  background-image: url("chrome://browser/skin/device-phone.svg");
 }
 
 #mozilla-vpn {
