@@ -21,7 +21,7 @@
                 "moz-extension://*/views/options/*"
             ],
             "js": [
-                "gesturefly/gesturefly.js"
+                "gesturefy/gesturefy.js"
             ]
       }
   ],
