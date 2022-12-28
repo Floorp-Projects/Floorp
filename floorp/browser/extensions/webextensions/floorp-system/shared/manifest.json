@@ -15,6 +15,16 @@
     "downloads",
     "<all_urls>"
   ],
+  "content_scripts": [
+      {
+            "matches": [
+                "moz-extension://*/views/options/*"
+            ],
+            "js": [
+                "gesturefly/gesturefly.js"
+            ]
+      }
+  ],
   "experiment_apis": {
     "aboutConfigPrefs": {
         "schema": "API/aboutConfigPrefs.json",
@@ -31,6 +41,20 @@
         "script": "API/BrowserInfo.js",
         "paths": [["BrowserInfo"]]
       }
+    },
+    "browserL10n": {
+      "schema": "API/browserL10n.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "script": "API/browserL10n.js",
+        "paths": [
+          [
+            "browserL10n"
+          ]
+        ]
+      }
     }
   },
   "page_action": {
@@ -43,6 +67,7 @@
   },
   "background": {
     "scripts": [
+      "gesturefly/background.js",
       "webcompat.js",
       "update.js",
       "download-notification.js"

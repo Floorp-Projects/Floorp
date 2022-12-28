@@ -559,3 +559,36 @@ import-from-vivaldi =
 status-bar =
     .label = Status Bar
      .accesskey = S
+
+##################################################################### Gesturefly ###############################################################
+
+gf-floorp-open-tree-style-tab-name = [Floorp] Open Tree Style Tab
+gf-floorp-open-tree-style-tab-description = Open Tree Style Tab on Sidebar
+
+gf-floorp-open-bookmarks-sidebar-name = [Floorp] Open Bookmarks on Sidebar
+gf-floorp-open-bookmarks-sidebar-description = Open Bookmarks on Sidebar
+
+gf-floorp-open-history-sidebar-name = [Floorp] Open History on Sidebar
+gf-floorp-open-history-sidebar-description = Open History on Sidebar
+
+gf-floorp-open-synctabs-sidebar-name = [Floorp] Open Synced Tabs on Sidebar
+gf-floorp-open-synctabs-sidebar-description = Open Synced Tabs on Sidebar
+
+gf-floorp-close-sidebar-name = [Floorp] Close Sidebar
+gf-floorp-close-sidebar-description = Close Sidebar on Floorp
+
+
+gf-floorp-open-browser-manager-sidebar-name = [Floorp] Open BMS
+gf-floorp-open-browser-manager-sidebar-description = Open Browser Manager Sidebaron Floorp
+
+gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
+gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar on Floorp
+
+gf-floorp-show-statusbar-name = [Floorp] Show Status Bar
+gf-floorp-show-statusbar-description = Show Status Bar on Floorp
+
+gf-floorp-hide-statusbar-name = [Floorp] Hide Status Bar
+gf-floorp-hide-statusbar-description = Hide Status Bar on Floorp
+
+gf-floorp-toggle-statusbar-name = [Floorp] Toggle Status Bar
+gf-floorp-toggle-statusbar-description = Show or Hide Status Bar on Floorp
