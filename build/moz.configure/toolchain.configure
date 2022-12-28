@@ -543,10 +543,15 @@ def vs_version(value):
     return value[0]
 
 
+@depends(target, host)
+def is_windows(target, host):
+    return host.kernel == "WINNT" or target.kernel == "WINNT"
+
+
 option(
     env="VC_PATH",
     nargs=1,
-    when=host_is_windows,
+    when=is_windows,
     help="Path to the Microsoft Visual C/C++ compiler",
 )
 
@@ -556,7 +561,7 @@ option(
     vs_version,
     build_environment,
     "VC_PATH",
-    when=host_is_windows,
+    when=is_windows,
 )
 @imports(_from="operator", _import="itemgetter")
 def vc_compiler_paths_for_version(host, vs_version, env, vc_path):
@@ -565,6 +570,9 @@ def vc_compiler_paths_for_version(host, vs_version, env, vc_path):
     if vc_path:
         # Use an arbitrary version, it doesn't matter.
         all_versions = [(Version("15"), vc_path[0])]
+    elif host.kernel != "WINNT":
+        # Don't try to do anything when VC_PATH is not set on cross-compiles.
+        return
     else:
         all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
     if not all_versions:
@@ -592,7 +600,7 @@ def vc_compiler_paths_for_version(host, vs_version, env, vc_path):
         }
 
 
-@depends(target, vc_compiler_paths_for_version, when=host_is_windows)
+@depends(target, vc_compiler_paths_for_version, when=is_windows)
 def vc_compiler_path(target, paths):
     vc_target = {
         "x86": "x86",
@@ -2078,13 +2086,6 @@ set_config("PREPROCESS_OPTION", preprocess_option)
 
 # We only want to include windows.configure when we are compiling on
 # Windows, or for Windows.
-
-
-@depends(target, host)
-def is_windows(target, host):
-    return host.kernel == "WINNT" or target.kernel == "WINNT"
-
-
 include("windows.configure", when=is_windows)
 
 
