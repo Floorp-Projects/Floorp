@@ -1,7 +1,6 @@
 //! The [`Duration`] struct and its associated `impl`s.
 
 use core::cmp::Ordering;
-use core::convert::{TryFrom, TryInto};
 use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
@@ -184,11 +183,16 @@ impl Duration {
         Self::new_unchecked(self.seconds.saturating_abs(), self.nanoseconds.abs())
     }
 
-    /// Convert the existing `Duration` to a `std::time::Duration` and its sign. This doesn't
-    /// actually require the standard library, but is currently only used when it's enabled.
-    #[allow(clippy::missing_const_for_fn)] // false positive
-    #[cfg(feature = "std")]
-    pub(crate) fn abs_std(self) -> StdDuration {
+    /// Convert the existing `Duration` to a `std::time::Duration` and its sign. This returns a
+    /// [`std::time::Duration`] and does not saturate the returned value (unlike [`Duration::abs`]).
+    ///
+    /// ```rust
+    /// # use time::ext::{NumericalDuration, NumericalStdDuration};
+    /// assert_eq!(1.seconds().unsigned_abs(), 1.std_seconds());
+    /// assert_eq!(0.seconds().unsigned_abs(), 0.std_seconds());
+    /// assert_eq!((-1).seconds().unsigned_abs(), 1.std_seconds());
+    /// ```
+    pub const fn unsigned_abs(self) -> StdDuration {
         StdDuration::new(self.seconds.unsigned_abs(), self.nanoseconds.unsigned_abs())
     }
     // endregion abs
@@ -196,6 +200,16 @@ impl Duration {
     // region: constructors
     /// Create a new `Duration` without checking the validity of the components.
     pub(crate) const fn new_unchecked(seconds: i64, nanoseconds: i32) -> Self {
+        if seconds < 0 {
+            debug_assert!(nanoseconds <= 0);
+            debug_assert!(nanoseconds > -1_000_000_000);
+        } else if seconds > 0 {
+            debug_assert!(nanoseconds >= 0);
+            debug_assert!(nanoseconds < 1_000_000_000);
+        } else {
+            debug_assert!(nanoseconds.unsigned_abs() < 1_000_000_000);
+        }
+
         Self {
             seconds,
             nanoseconds,
@@ -213,13 +227,18 @@ impl Duration {
     /// assert_eq!(Duration::new(1, 2_000_000_000), 3.seconds());
     /// ```
     pub const fn new(mut seconds: i64, mut nanoseconds: i32) -> Self {
-        seconds += nanoseconds as i64 / 1_000_000_000;
+        seconds = expect_opt!(
+            seconds.checked_add(nanoseconds as i64 / 1_000_000_000),
+            "overflow constructing `time::Duration`"
+        );
         nanoseconds %= 1_000_000_000;
 
         if seconds > 0 && nanoseconds < 0 {
+            // `seconds` cannot overflow here because it is positive.
             seconds -= 1;
             nanoseconds += 1_000_000_000;
         } else if seconds < 0 && nanoseconds > 0 {
+            // `seconds` cannot overflow here because it is negative.
             seconds += 1;
             nanoseconds -= 1_000_000_000;
         }
@@ -235,7 +254,10 @@ impl Duration {
     /// assert_eq!(Duration::weeks(1), 604_800.seconds());
     /// ```
     pub const fn weeks(weeks: i64) -> Self {
-        Self::seconds(weeks * 604_800)
+        Self::seconds(expect_opt!(
+            weeks.checked_mul(604_800),
+            "overflow constructing `time::Duration`"
+        ))
     }
 
     /// Create a new `Duration` with the given number of days. Equivalent to
@@ -246,7 +268,10 @@ impl Duration {
     /// assert_eq!(Duration::days(1), 86_400.seconds());
     /// ```
     pub const fn days(days: i64) -> Self {
-        Self::seconds(days * 86_400)
+        Self::seconds(expect_opt!(
+            days.checked_mul(86_400),
+            "overflow constructing `time::Duration`"
+        ))
     }
 
     /// Create a new `Duration` with the given number of hours. Equivalent to
@@ -257,7 +282,10 @@ impl Duration {
     /// assert_eq!(Duration::hours(1), 3_600.seconds());
     /// ```
     pub const fn hours(hours: i64) -> Self {
-        Self::seconds(hours * 3_600)
+        Self::seconds(expect_opt!(
+            hours.checked_mul(3_600),
+            "overflow constructing `time::Duration`"
+        ))
     }
 
     /// Create a new `Duration` with the given number of minutes. Equivalent to
@@ -268,7 +296,10 @@ impl Duration {
     /// assert_eq!(Duration::minutes(1), 60.seconds());
     /// ```
     pub const fn minutes(minutes: i64) -> Self {
-        Self::seconds(minutes * 60)
+        Self::seconds(expect_opt!(
+            minutes.checked_mul(60),
+            "overflow constructing `time::Duration`"
+        ))
     }
 
     /// Create a new `Duration` with the given number of seconds.
@@ -289,6 +320,12 @@ impl Duration {
     /// assert_eq!(Duration::seconds_f64(-0.5), -0.5.seconds());
     /// ```
     pub fn seconds_f64(seconds: f64) -> Self {
+        if seconds > i64::MAX as f64 || seconds < i64::MIN as f64 {
+            crate::expect_failed("overflow constructing `time::Duration`");
+        }
+        if seconds.is_nan() {
+            crate::expect_failed("passed NaN to `time::Duration::seconds_f64`");
+        }
         Self::new_unchecked(seconds as _, ((seconds % 1.) * 1_000_000_000.) as _)
     }
 
@@ -300,6 +337,12 @@ impl Duration {
     /// assert_eq!(Duration::seconds_f32(-0.5), (-0.5).seconds());
     /// ```
     pub fn seconds_f32(seconds: f32) -> Self {
+        if seconds > i64::MAX as f32 || seconds < i64::MIN as f32 {
+            crate::expect_failed("overflow constructing `time::Duration`");
+        }
+        if seconds.is_nan() {
+            crate::expect_failed("passed NaN to `time::Duration::seconds_f32`");
+        }
         Self::new_unchecked(seconds as _, ((seconds % 1.) * 1_000_000_000.) as _)
     }
 
@@ -350,10 +393,14 @@ impl Duration {
     /// As the input range cannot be fully mapped to the output, this should only be used where it's
     /// known to result in a valid value.
     pub(crate) const fn nanoseconds_i128(nanoseconds: i128) -> Self {
-        Self::new_unchecked(
-            (nanoseconds / 1_000_000_000) as _,
-            (nanoseconds % 1_000_000_000) as _,
-        )
+        let seconds = nanoseconds / 1_000_000_000;
+        let nanoseconds = nanoseconds % 1_000_000_000;
+
+        if seconds > i64::MAX as i128 || seconds < i64::MIN as i128 {
+            crate::expect_failed("overflow constructing `time::Duration`");
+        }
+
+        Self::new_unchecked(seconds as _, nanoseconds as _)
     }
     // endregion constructors
 
@@ -742,38 +789,81 @@ impl Duration {
 // region: trait impls
 /// The format returned by this implementation is not stable and must not be relied upon.
 ///
+/// By default this produces an exact, full-precision printout of the duration.
+/// For a concise, rounded printout instead, you can use the `.N` format specifier:
+///
+/// ```
+/// # use time::Duration;
+/// #
+/// let duration = Duration::new(123456, 789011223);
+/// println!("{duration:.3}");
+/// ```
+///
 /// For the purposes of this implementation, a day is exactly 24 hours and a minute is exactly 60
 /// seconds.
 impl fmt::Display for Duration {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        /// Format a single item.
-        macro_rules! item {
-            ($name:literal, $value:expr) => {
-                match $value {
-                    0 => Ok(()),
-                    value => value.fmt(f).and(f.write_str($name)),
-                }
-            };
-        }
-
-        if self.is_zero() {
-            return f.write_str("0s");
-        }
-
-        let seconds = self.seconds.unsigned_abs();
-        let nanoseconds = self.nanoseconds.unsigned_abs();
-
         if self.is_negative() {
             f.write_str("-")?;
         }
 
-        item!("d", seconds / 86_400)?;
-        item!("h", seconds / 3_600 % 24)?;
-        item!("m", seconds / 60 % 60)?;
-        item!("s", seconds % 60)?;
-        item!("ms", nanoseconds / 1_000_000)?;
-        item!("µs", nanoseconds / 1_000 % 1_000)?;
-        item!("ns", nanoseconds % 1_000)?;
+        if let Some(_precision) = f.precision() {
+            // Concise, rounded representation.
+
+            if self.is_zero() {
+                // Write a zero value with the requested precision.
+                return (0.).fmt(f).and_then(|_| f.write_str("s"));
+            }
+
+            /// Format the first item that produces a value greater than 1 and then break.
+            macro_rules! item {
+                ($name:literal, $value:expr) => {
+                    let value = $value;
+                    if value >= 1.0 {
+                        return value.fmt(f).and_then(|_| f.write_str($name));
+                    }
+                };
+            }
+
+            // Even if this produces a de-normal float, because we're rounding we don't really care.
+            let seconds = self.unsigned_abs().as_secs_f64();
+
+            item!("d", seconds / 86_400.);
+            item!("h", seconds / 3_600.);
+            item!("m", seconds / 60.);
+            item!("s", seconds);
+            item!("ms", seconds * 1_000.);
+            item!("µs", seconds * 1_000_000.);
+            item!("ns", seconds * 1_000_000_000.);
+        } else {
+            // Precise, but verbose representation.
+
+            if self.is_zero() {
+                return f.write_str("0s");
+            }
+
+            /// Format a single item.
+            macro_rules! item {
+                ($name:literal, $value:expr) => {
+                    match $value {
+                        0 => Ok(()),
+                        value => value.fmt(f).and_then(|_| f.write_str($name)),
+                    }
+                };
+            }
+
+            let seconds = self.seconds.unsigned_abs();
+            let nanoseconds = self.nanoseconds.unsigned_abs();
+
+            item!("d", seconds / 86_400)?;
+            item!("h", seconds / 3_600 % 24)?;
+            item!("m", seconds / 60 % 60)?;
+            item!("s", seconds % 60)?;
+            item!("ms", nanoseconds / 1_000_000)?;
+            item!("µs", nanoseconds / 1_000 % 1_000)?;
+            item!("ns", nanoseconds % 1_000)?;
+        }
+
         Ok(())
     }
 }

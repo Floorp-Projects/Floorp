@@ -4,7 +4,7 @@ use core::fmt;
 use core::marker::PhantomData;
 
 use serde::de;
-#[cfg(feature = "serde-well-known")]
+#[cfg(feature = "parsing")]
 use serde::Deserializer;
 
 #[cfg(feature = "parsing")]
@@ -13,8 +13,8 @@ use super::{
     UTC_OFFSET_FORMAT,
 };
 use crate::error::ComponentRange;
-#[cfg(feature = "serde-well-known")]
-use crate::format_description::well_known;
+#[cfg(feature = "parsing")]
+use crate::format_description::well_known::*;
 use crate::{Date, Duration, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset, Weekday};
 
 /// A serde visitor for various types.
@@ -194,7 +194,7 @@ impl<'a> de::Visitor<'a> for Visitor<Weekday> {
         }
     }
 
-    fn visit_u8<E: de::Error>(self, value: u8) -> Result<Weekday, E> {
+    fn visit_u64<E: de::Error>(self, value: u64) -> Result<Weekday, E> {
         match value {
             1 => Ok(Weekday::Monday),
             2 => Ok(Weekday::Tuesday),
@@ -204,7 +204,7 @@ impl<'a> de::Visitor<'a> for Visitor<Weekday> {
             6 => Ok(Weekday::Saturday),
             7 => Ok(Weekday::Sunday),
             _ => Err(E::invalid_value(
-                de::Unexpected::Unsigned(value.into()),
+                de::Unexpected::Unsigned(value),
                 &"a value in the range 1..=7",
             )),
         }
@@ -236,7 +236,7 @@ impl<'a> de::Visitor<'a> for Visitor<Month> {
         }
     }
 
-    fn visit_u8<E: de::Error>(self, value: u8) -> Result<Month, E> {
+    fn visit_u64<E: de::Error>(self, value: u64) -> Result<Month, E> {
         match value {
             1 => Ok(Month::January),
             2 => Ok(Month::February),
@@ -251,79 +251,66 @@ impl<'a> de::Visitor<'a> for Visitor<Month> {
             11 => Ok(Month::November),
             12 => Ok(Month::December),
             _ => Err(E::invalid_value(
-                de::Unexpected::Unsigned(value.into()),
+                de::Unexpected::Unsigned(value),
                 &"a value in the range 1..=12",
             )),
         }
     }
 }
 
-#[cfg(feature = "serde-well-known")]
-impl<'a> de::Visitor<'a> for Visitor<well_known::Rfc2822> {
-    type Value = OffsetDateTime;
+/// Implement a visitor for a well-known format.
+macro_rules! well_known {
+    ($article:literal, $name:literal, $($ty:tt)+) => {
+        #[cfg(feature = "parsing")]
+        impl<'a> de::Visitor<'a> for Visitor<$($ty)+> {
+            type Value = OffsetDateTime;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("an RFC2822-formatted `OffsetDateTime`")
-    }
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str(concat!($article, " ", $name, "-formatted `OffsetDateTime`"))
+            }
 
-    fn visit_str<E: de::Error>(self, value: &str) -> Result<OffsetDateTime, E> {
-        OffsetDateTime::parse(value, &well_known::Rfc2822).map_err(E::custom)
-    }
+            fn visit_str<E: de::Error>(self, value: &str) -> Result<OffsetDateTime, E> {
+                OffsetDateTime::parse(value, &$($ty)+).map_err(E::custom)
+            }
+        }
+
+        #[cfg(feature = "parsing")]
+        impl<'a> de::Visitor<'a> for Visitor<Option<$($ty)+>> {
+            type Value = Option<OffsetDateTime>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str(concat!(
+                    $article,
+                    " ",
+                    $name,
+                    "-formatted `Option<OffsetDateTime>`"
+                ))
+            }
+
+            fn visit_some<D: Deserializer<'a>>(
+                self,
+                deserializer: D,
+            ) -> Result<Option<OffsetDateTime>, D::Error> {
+                deserializer
+                    .deserialize_any(Visitor::<$($ty)+>(PhantomData))
+                    .map(Some)
+            }
+
+            fn visit_none<E: de::Error>(self) -> Result<Option<OffsetDateTime>, E> {
+                Ok(None)
+            }
+
+            fn visit_unit<E: de::Error>(self) -> Result<Self::Value, E> {
+                Ok(None)
+            }
+        }
+    };
 }
 
-#[cfg(feature = "serde-well-known")]
-impl<'a> de::Visitor<'a> for Visitor<Option<well_known::Rfc2822>> {
-    type Value = Option<OffsetDateTime>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("an RFC2822-formatted `Option<OffsetDateTime>`")
-    }
-
-    fn visit_some<D: Deserializer<'a>>(
-        self,
-        deserializer: D,
-    ) -> Result<Option<OffsetDateTime>, D::Error> {
-        deserializer
-            .deserialize_any(Visitor::<well_known::Rfc2822>(PhantomData))
-            .map(Some)
-    }
-
-    fn visit_none<E: de::Error>(self) -> Result<Option<OffsetDateTime>, E> {
-        Ok(None)
-    }
-}
-
-#[cfg(feature = "serde-well-known")]
-impl<'a> de::Visitor<'a> for Visitor<well_known::Rfc3339> {
-    type Value = OffsetDateTime;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("an RFC3339-formatted `OffsetDateTime`")
-    }
-
-    fn visit_str<E: de::Error>(self, value: &str) -> Result<OffsetDateTime, E> {
-        OffsetDateTime::parse(value, &well_known::Rfc3339).map_err(E::custom)
-    }
-}
-
-#[cfg(feature = "serde-well-known")]
-impl<'a> de::Visitor<'a> for Visitor<Option<well_known::Rfc3339>> {
-    type Value = Option<OffsetDateTime>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("an RFC3339-formatted `Option<OffsetDateTime>`")
-    }
-
-    fn visit_some<D: Deserializer<'a>>(
-        self,
-        deserializer: D,
-    ) -> Result<Option<OffsetDateTime>, D::Error> {
-        deserializer
-            .deserialize_any(Visitor::<well_known::Rfc3339>(PhantomData))
-            .map(Some)
-    }
-
-    fn visit_none<E: de::Error>(self) -> Result<Option<OffsetDateTime>, E> {
-        Ok(None)
-    }
-}
+well_known!("an", "RFC2822", Rfc2822);
+well_known!("an", "RFC3339", Rfc3339);
+well_known!(
+    "an",
+    "ISO 8601",
+    Iso8601::<{ super::iso8601::SERDE_CONFIG }>
+);

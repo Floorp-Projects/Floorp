@@ -1,11 +1,9 @@
-//! Implementations of the [`quickcheck::Arbitrary`](quickcheck_dep::Arbitrary) trait.
+//! Implementations of the [`quickcheck::Arbitrary`](quickcheck::Arbitrary) trait.
 //!
 //! This enables users to write tests such as this, and have test values provided automatically:
 //!
 //! ```
 //! # #![allow(dead_code)]
-//! # use quickcheck_dep::quickcheck;
-//! # #[cfg(pretend_we_didnt_rename_the_dependency)]
 //! use quickcheck::quickcheck;
 //! use time::Date;
 //!
@@ -38,7 +36,7 @@
 
 use alloc::boxed::Box;
 
-use quickcheck_dep::{empty_shrinker, single_shrinker, Arbitrary, Gen};
+use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
 
 use crate::{Date, Duration, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset, Weekday};
 
@@ -159,9 +157,9 @@ impl Arbitrary for OffsetDateTime {
 
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.utc_datetime.utc_to_offset(self.offset), self.offset)
+            (self.local_datetime, self.offset)
                 .shrink()
-                .map(|(utc_datetime, offset)| utc_datetime.assume_offset(offset)),
+                .map(|(local_datetime, offset)| local_datetime.assume_offset(offset)),
         )
     }
 }
@@ -176,7 +174,10 @@ impl Arbitrary for Weekday {
             3 => Thursday,
             4 => Friday,
             5 => Saturday,
-            _ => Sunday,
+            val => {
+                debug_assert!(val == 6);
+                Sunday
+            }
         }
     }
 
@@ -203,7 +204,10 @@ impl Arbitrary for Month {
             9 => September,
             10 => October,
             11 => November,
-            _ => December,
+            val => {
+                debug_assert!(val == 12);
+                December
+            }
         }
     }
 

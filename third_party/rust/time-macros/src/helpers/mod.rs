@@ -1,12 +1,17 @@
+#[cfg(any(feature = "formatting", feature = "parsing"))]
 mod string;
 
 use std::iter::Peekable;
 use std::str::FromStr;
 
-use proc_macro::{token_stream, Span, TokenStream, TokenTree};
+#[cfg(any(feature = "formatting", feature = "parsing"))]
+use proc_macro::TokenStream;
+use proc_macro::{token_stream, Span, TokenTree};
+use time_core::util::{days_in_year, is_leap_year};
 
 use crate::Error;
 
+#[cfg(any(feature = "formatting", feature = "parsing"))]
 pub(crate) fn get_string_literal(tokens: TokenStream) -> Result<(Span, Vec<u8>), Error> {
     let mut tokens = tokens.into_iter();
 
@@ -76,10 +81,6 @@ pub(crate) fn consume_punct(
     }
 }
 
-fn is_leap_year(year: i32) -> bool {
-    (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0))
-}
-
 fn jan_weekday(year: i32, ordinal: i32) -> u8 {
     macro_rules! div_floor {
         ($a:expr, $b:expr) => {{
@@ -99,17 +100,9 @@ fn jan_weekday(year: i32, ordinal: i32) -> u8 {
     .rem_euclid(7)) as _
 }
 
-pub(crate) fn days_in_year(year: i32) -> u16 {
-    365 + is_leap_year(year) as u16
-}
-
 pub(crate) fn days_in_year_month(year: i32, month: u8) -> u8 {
     [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month as usize - 1]
         + (month == 2 && is_leap_year(year)) as u8
-}
-
-pub(crate) fn weeks_in_year(year: i32) -> u8 {
-    52 + (jan_weekday(year, 1) + is_leap_year(year) as u8 == 3) as u8
 }
 
 pub(crate) fn ywd_to_yo(year: i32, week: u8, iso_weekday_number: u8) -> (i32, u16) {

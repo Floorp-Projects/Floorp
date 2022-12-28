@@ -1,13 +1,12 @@
 //! Get the system's UTC offset on Windows.
 
-use core::convert::TryInto;
 use core::mem::MaybeUninit;
 
 use crate::{OffsetDateTime, UtcOffset};
 
 // ffi: WINAPI FILETIME struct
 #[repr(C)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, clippy::missing_docs_in_private_items)]
 struct FileTime {
     dwLowDateTime: u32,
     dwHighDateTime: u32,
@@ -15,7 +14,7 @@ struct FileTime {
 
 // ffi: WINAPI SYSTEMTIME struct
 #[repr(C)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, clippy::missing_docs_in_private_items)]
 struct SystemTime {
     wYear: u16,
     wMonth: u16,
@@ -34,7 +33,7 @@ extern "system" {
 
     // https://docs.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-systemtimetotzspecificlocaltime
     fn SystemTimeToTzSpecificLocalTime(
-        lpTimeZoneInformation: *const std::ffi::c_void, // We only pass `nullptr` here
+        lpTimeZoneInformation: *const core::ffi::c_void, // We only pass `nullptr` here
         lpUniversalTime: *const SystemTime,
         lpLocalTime: *mut SystemTime,
     ) -> i32;
