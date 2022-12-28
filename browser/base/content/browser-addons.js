@@ -779,6 +779,7 @@ var gXPInstallObserver = {
               method: "reportSuspiciousSite",
               object: "suspiciousSite",
               value: displayURI?.displayHost ?? "(unknown)",
+              extra: {},
             });
             neverAllowCallback();
           },
