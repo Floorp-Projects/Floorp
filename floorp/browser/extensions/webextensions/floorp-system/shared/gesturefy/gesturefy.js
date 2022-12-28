@@ -2,7 +2,7 @@ const window_ = window.wrappedJSObject.window;
 const browser_ = window.wrappedJSObject.browser;
 
 if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
-  let gestureflyController = {
+  let gesturefyController = {
     "commandsId": ["open-tree-style-tab","open-bookmarks-sidebar","open-history-sidebar","open-synctabs-sidebar","close-sidebar","open-browser-manager-sidebar","close-browser-manager-sidebar","show-statusbar","hide-statusbar","toggle-statusbar"],
     "commandObject": {
       "open-tree-style-tab": `{"name":"SendMessageToOtherAddon","settings":{"extensionId":"floorp-actions@floorp.ablaze.one","message":"{\\"action\\": \\"open-tree-style-tab\\"}"}}`
@@ -43,16 +43,16 @@ if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
     },
     popupCommandSet:function( id){
       document.querySelector("#gesturePopupCommandSelect").setAttribute("value", `{"name":"SendMessageToOtherAddon","settings":{"extensionId":"floorp-actions@floorp.ablaze.one","message":"{\\"action\\": \\"${id}\\"}"}}`)
-      gestureflyController.commandList.children[1].textContent = gestureflyController.l10n["gf-floorp-" + id + "-name"]
-      gestureflyController.commandList.children[1].setAttribute("title",gestureflyController.l10n["gf-floorp-" + id + "-name"])
-      gestureflyController.commandList.children[2].classList.remove("has-settings")
-      document.querySelector("#gesturePopupLabelInput").setAttribute("placeholder",gestureflyController.l10n["gf-floorp-" + id + "-name"])
+      gesturefyController.commandList.children[1].textContent = gesturefyController.l10n["gf-floorp-" + id + "-name"]
+      gesturefyController.commandList.children[1].setAttribute("title",gesturefyController.l10n["gf-floorp-" + id + "-name"])
+      gesturefyController.commandList.children[2].classList.remove("has-settings")
+      document.querySelector("#gesturePopupLabelInput").setAttribute("placeholder",gesturefyController.l10n["gf-floorp-" + id + "-name"])
       if(document.querySelector("#gesturePopupLabelInput").getAttribute("FloorpGFBeforeText") == document.querySelector("#gesturePopupLabelInput").value || document.querySelector("#gesturePopupLabelInput").value == ""){
-        document.querySelector("#gesturePopupLabelInput").value = gestureflyController.l10n["gf-floorp-" + id + "-name"]
+        document.querySelector("#gesturePopupLabelInput").value = gesturefyController.l10n["gf-floorp-" + id + "-name"]
         document.querySelector("#gesturePopupLabelInput").style.color = "gray"
       }
       
-      document.querySelector("#gesturePopupLabelInput").setAttribute("FloorpGFBeforeText",gestureflyController.l10n["gf-floorp-" + id + "-name"])
+      document.querySelector("#gesturePopupLabelInput").setAttribute("FloorpGFBeforeText",gesturefyController.l10n["gf-floorp-" + id + "-name"])
       
     },
     observerFunction: function () {
@@ -66,8 +66,8 @@ if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
     },
     closeCommandPanel: function (event) {
 
-      const overlay = gestureflyController.commandList.getElementById("overlay");
-      const commandBar = gestureflyController.commandList.getElementById("commandBar");
+      const overlay = gesturefyController.commandList.getElementById("overlay");
+      const commandBar = gesturefyController.commandList.getElementById("commandBar");
 
       let commandIdTemp = event.currentTarget.id
       overlay.addEventListener("transitionend", function removeOverlay(event) {
@@ -75,7 +75,7 @@ if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
         if (event.currentTarget === event.target) {
           overlay.removeEventListener("transitionend", removeOverlay);
           overlay.remove();
-          gestureflyController.popupCommandSet(commandIdTemp.replace("gf-floorp-",""))
+          gesturefyController.popupCommandSet(commandIdTemp.replace("gf-floorp-",""))
         }
       });
       commandBar.addEventListener("transitionend", function removeCommandBar(event) {
@@ -183,25 +183,25 @@ if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
 
     }
   };
-  gestureflyController.observer = new MutationObserver(gestureflyController.observerFunction.bind(gestureflyController));
-  gestureflyController.cmdListObserver = new MutationObserver(gestureflyController.observerCommandSelectFunction.bind(gestureflyController));
+  gesturefyController.observer = new MutationObserver(gesturefyController.observerFunction.bind(gesturefyController));
+  gesturefyController.cmdListObserver = new MutationObserver(gesturefyController.observerCommandSelectFunction.bind(gesturefyController));
 
   (async () => {
-    //gestureflyController.commandMjs = (await import(location.origin + "/core/models/command.mjs")).default
-    //gestureflyController.setting = await browser_.storage.local.get()
-    for(const i of gestureflyController.commandsId){
-      gestureflyController.l10nArg.text.push("gf-floorp-" + i + "-name")
-      gestureflyController.l10nArg.text.push("gf-floorp-" + i + "-description")
+    //gesturefyController.commandMjs = (await import(location.origin + "/core/models/command.mjs")).default
+    //gesturefyController.setting = await browser_.storage.local.get()
+    for(const i of gesturefyController.commandsId){
+      gesturefyController.l10nArg.text.push("gf-floorp-" + i + "-name")
+      gesturefyController.l10nArg.text.push("gf-floorp-" + i + "-description")
     }
 
-    let l10nArr = await browser.runtime.sendMessage(gestureflyController.l10nArg)
+    let l10nArr = await browser.runtime.sendMessage(gesturefyController.l10nArg)
     let l10nTexts = {}
     for (let i = 0; i < l10nArr.length; i++) {
-      l10nTexts[gestureflyController.l10nArg.text[i]] = l10nArr[i]
+      l10nTexts[gesturefyController.l10nArg.text[i]] = l10nArr[i]
     }
 
-    gestureflyController.l10n = l10nTexts
-    gestureflyController.setObserver()
-    gestureflyController.setCmdListObserver()
+    gesturefyController.l10n = l10nTexts
+    gesturefyController.setObserver()
+    gesturefyController.setCmdListObserver()
   })()
 }

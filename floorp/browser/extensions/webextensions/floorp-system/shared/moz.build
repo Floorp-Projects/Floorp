@@ -58,9 +58,9 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["webcompat"] += [
     "webcompat/fix-youtube-comment.js",
 ]
 
-FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["gesturefly"] += [
-    "gesturefly/background.js",
-    "gesturefly/gesturefly.js",
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["gesturefy"] += [
+    "gesturefy/background.js",
+    "gesturefy/gesturefy.js",
 ]
 
 with Files("**"):

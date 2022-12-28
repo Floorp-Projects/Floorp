@@ -560,7 +560,7 @@ status-bar =
     .label = Status Bar
      .accesskey = S
 
-##################################################################### Gesturefly ###############################################################
+##################################################################### Gesturefy ###############################################################
 
 gf-floorp-open-tree-style-tab-name = [Floorp] Open Tree Style Tab
 gf-floorp-open-tree-style-tab-description = Open Tree Style Tab on Sidebar
