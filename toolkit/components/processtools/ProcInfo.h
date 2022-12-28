@@ -74,6 +74,7 @@ enum class UtilityActorName {
   AudioDecoder_AppleMedia,
   AudioDecoder_WMF,
   MfMediaEngineCDM,
+  JSOracle,
 };
 
 // String that will be used e.g. to annotate crash reports
