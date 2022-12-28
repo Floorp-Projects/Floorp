@@ -12,8 +12,5 @@ export UPX="${MOZ_FETCHES_DIR}/upx-3.95-win64/upx.exe"
 if [ -f "${UPX}" ]; then
     chmod +x "${UPX}"
 fi
-mk_add_options "export PATH=${VC_PATH}/bin/hostx64/x86:${PATH}"
-
-unset VC_PATH
 
 fi
