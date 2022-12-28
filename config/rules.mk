@@ -607,6 +607,12 @@ else
 relativize = $1
 endif
 
+ifdef WINE
+# asmarm64 needs a library that can be found in $PATH but for some reason,
+# wine wants its path in $WINEPATH, so fill that to make it happy.
+$(ASOBJS) $(SOBJS): export WINEPATH=$(subst :,;,$(PATH))
+endif
+
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
