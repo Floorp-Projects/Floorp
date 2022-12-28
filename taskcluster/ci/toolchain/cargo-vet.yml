@@ -24,7 +24,7 @@ linux64-cargo-vet:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-rust-1.61
+            - linux64-rust-toolchain
             - sysroot-x86_64-linux-gnu
 
 macosx64-cargo-vet:
@@ -37,7 +37,7 @@ macosx64-cargo-vet:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-toolchain
-            - linux64-rust-macos-1.61
+            - linux64-rust-macos-toolchain
             - macosx64-sdk
 
 macosx64-aarch64-cargo-vet:
@@ -49,7 +49,7 @@ macosx64-aarch64-cargo-vet:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-toolchain
-            - linux64-rust-macos-1.61
+            - linux64-rust-macos-toolchain
             - macosx64-sdk
 
 win64-cargo-vet:
@@ -60,6 +60,6 @@ win64-cargo-vet:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-rust-windows-1.61
+            - linux64-rust-windows-toolchain
             - linux64-liblowercase
             - win64-vs2017
