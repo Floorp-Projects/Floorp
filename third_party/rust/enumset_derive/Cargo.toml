@@ -12,10 +12,11 @@
 [package]
 edition = "2018"
 name = "enumset_derive"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Alissa Rao <lymia@lymiahugs.com>"]
 description = "An internal helper crate for enumset. Not public API."
 documentation = "https://lymia.moe/doc/enumset/enumset/"
+readme = "README.md"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Lymia/enumset"
 
@@ -23,11 +24,11 @@ repository = "https://github.com/Lymia/enumset"
 proc-macro = true
 
 [dependencies.darling]
-version = "0.13.0"
+version = "0.14"
 default-features = false
 
 [dependencies.proc-macro-crate]
-version = "1.1.3"
+version = "1"
 optional = true
 
 [dependencies.proc-macro2]

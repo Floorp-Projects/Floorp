@@ -65,6 +65,12 @@ note: required by a bound in `enumset::EnumSet::<T>::from_repr`
     |              ^^^^^^^^^^^^^^^^^^^ required by this bound in `enumset::EnumSet::<T>::from_repr`
 
 error[E0277]: the trait bound `OkayEnumButCantUseFromRepr: EnumSetTypeWithRepr` is not satisfied
+  --> tests/compile-fail/variants.rs:64:5
+   |
+64 |     EnumSet::<OkayEnumButCantUseFromRepr>::from_repr(1);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `EnumSetTypeWithRepr` is not implemented for `OkayEnumButCantUseFromRepr`
+
+error[E0277]: the trait bound `OkayEnumButCantUseFromRepr: EnumSetTypeWithRepr` is not satisfied
   --> tests/compile-fail/variants.rs:64:54
    |
 64 |     EnumSet::<OkayEnumButCantUseFromRepr>::from_repr(1);
