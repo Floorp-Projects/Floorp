@@ -512,19 +512,22 @@ mod inner {
     mod unix {
         use std::fmt;
         use std::cmp::Ordering;
+        use std::mem::zeroed;
         use std::ops::{Add, Sub};
         use libc;
 
         use Duration;
 
         pub fn get_time() -> (i64, i32) {
-            let mut tv = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+            // SAFETY: libc::timespec is zero initializable.
+            let mut tv: libc::timespec = unsafe { zeroed() };
             unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut tv); }
             (tv.tv_sec as i64, tv.tv_nsec as i32)
         }
 
         pub fn get_precise_ns() -> u64 {
-            let mut ts = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+            // SAFETY: libc::timespec is zero initializable.
+            let mut ts: libc::timespec = unsafe { zeroed() };
             unsafe {
                 libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts);
             }
@@ -552,10 +555,8 @@ mod inner {
         impl SteadyTime {
             pub fn now() -> SteadyTime {
                 let mut t = SteadyTime {
-                    t: libc::timespec {
-                        tv_sec: 0,
-                        tv_nsec: 0,
-                    }
+                    // SAFETY: libc::timespec is zero initializable.
+                    t: unsafe { zeroed() }
                 };
                 unsafe {
                     assert_eq!(0, libc::clock_gettime(libc::CLOCK_MONOTONIC,
