@@ -1,6 +1,5 @@
 //! Conversion range error
 
-use core::convert::TryFrom;
 use core::fmt;
 
 use crate::error;

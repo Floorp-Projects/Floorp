@@ -1,6 +1,5 @@
 //! Invalid variant error
 
-use core::convert::TryFrom;
 use core::fmt;
 
 /// An error type indicating that a [`FromStr`](core::str::FromStr) call failed because the value

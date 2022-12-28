@@ -1,10 +1,10 @@
 use std::iter::Peekable;
 
 use proc_macro::{token_stream, TokenTree};
+use time_core::util::{days_in_year, weeks_in_year};
 
 use crate::helpers::{
-    consume_any_ident, consume_number, consume_punct, days_in_year, days_in_year_month,
-    weeks_in_year, ymd_to_yo, ywd_to_yo,
+    consume_any_ident, consume_number, consume_punct, days_in_year_month, ymd_to_yo, ywd_to_yo,
 };
 use crate::to_tokens::ToTokenTree;
 use crate::Error;

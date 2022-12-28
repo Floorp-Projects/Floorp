@@ -1,16 +1,11 @@
 //! Invalid format description
 
 use alloc::string::String;
-use core::convert::TryFrom;
 use core::fmt;
 
 use crate::error;
 
 /// The format description provided was not valid.
-#[cfg_attr(
-    __time_03_docs,
-    doc(cfg(all(any(feature = "formatting", feature = "parsing"), feature = "alloc")))
-)]
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InvalidFormatDescription {
@@ -44,20 +39,12 @@ pub enum InvalidFormatDescription {
     },
 }
 
-#[cfg_attr(
-    __time_03_docs,
-    doc(cfg(all(any(feature = "formatting", feature = "parsing"), feature = "alloc")))
-)]
 impl From<InvalidFormatDescription> for crate::Error {
     fn from(original: InvalidFormatDescription) -> Self {
         Self::InvalidFormatDescription(original)
     }
 }
 
-#[cfg_attr(
-    __time_03_docs,
-    doc(cfg(all(any(feature = "formatting", feature = "parsing"), feature = "alloc")))
-)]
 impl TryFrom<crate::Error> for InvalidFormatDescription {
     type Error = error::DifferentVariant;
 
@@ -74,18 +61,16 @@ impl fmt::Display for InvalidFormatDescription {
         use InvalidFormatDescription::*;
         match self {
             UnclosedOpeningBracket { index } => {
-                write!(f, "unclosed opening bracket at byte index {}", index)
+                write!(f, "unclosed opening bracket at byte index {index}")
             }
-            InvalidComponentName { name, index } => write!(
-                f,
-                "invalid component name `{}` at byte index {}",
-                name, index
-            ),
+            InvalidComponentName { name, index } => {
+                write!(f, "invalid component name `{name}` at byte index {index}")
+            }
             InvalidModifier { value, index } => {
-                write!(f, "invalid modifier `{}` at byte index {}", value, index)
+                write!(f, "invalid modifier `{value}` at byte index {index}")
             }
             MissingComponentName { index } => {
-                write!(f, "missing component name at byte index {}", index)
+                write!(f, "missing component name at byte index {index}")
             }
         }
     }

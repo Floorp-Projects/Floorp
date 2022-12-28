@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 use std::fmt;
-use std::iter::once;
 
 use proc_macro::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 
+#[cfg(any(feature = "formatting", feature = "parsing"))]
 use crate::format_description::error::InvalidFormatDescription;
 
 trait WithSpan {
@@ -29,6 +29,7 @@ pub(crate) enum Error {
         span_start: Option<Span>,
         span_end: Option<Span>,
     },
+    #[cfg(any(feature = "formatting", feature = "parsing"))]
     ExpectedString {
         span_start: Option<Span>,
         span_end: Option<Span>,
@@ -37,6 +38,7 @@ pub(crate) enum Error {
         tree: TokenTree,
     },
     UnexpectedEndOfInput,
+    #[cfg(any(feature = "formatting", feature = "parsing"))]
     InvalidFormatDescription {
         error: InvalidFormatDescription,
         span_start: Option<Span>,
@@ -52,13 +54,15 @@ pub(crate) enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::MissingComponent { name, .. } => write!(f, "missing component: {}", name),
+            Self::MissingComponent { name, .. } => write!(f, "missing component: {name}"),
             Self::InvalidComponent { name, value, .. } => {
-                write!(f, "invalid component: {} was {}", name, value)
+                write!(f, "invalid component: {name} was {value}")
             }
+            #[cfg(any(feature = "formatting", feature = "parsing"))]
             Self::ExpectedString { .. } => f.write_str("expected string"),
-            Self::UnexpectedToken { tree } => write!(f, "unexpected token: {}", tree),
+            Self::UnexpectedToken { tree } => write!(f, "unexpected token: {tree}"),
             Self::UnexpectedEndOfInput => f.write_str("unexpected end of input"),
+            #[cfg(any(feature = "formatting", feature = "parsing"))]
             Self::InvalidFormatDescription { error, .. } => error.fmt(f),
             Self::Custom { message, .. } => f.write_str(message),
         }
@@ -70,9 +74,10 @@ impl Error {
         match self {
             Self::MissingComponent { span_start, .. }
             | Self::InvalidComponent { span_start, .. }
-            | Self::ExpectedString { span_start, .. }
-            | Self::InvalidFormatDescription { span_start, .. }
             | Self::Custom { span_start, .. } => *span_start,
+            #[cfg(any(feature = "formatting", feature = "parsing"))]
+            Self::ExpectedString { span_start, .. }
+            | Self::InvalidFormatDescription { span_start, .. } => *span_start,
             Self::UnexpectedToken { tree } => Some(tree.span()),
             Self::UnexpectedEndOfInput => Some(Span::mixed_site()),
         }
@@ -83,9 +88,10 @@ impl Error {
         match self {
             Self::MissingComponent { span_end, .. }
             | Self::InvalidComponent { span_end, .. }
-            | Self::ExpectedString { span_end, .. }
-            | Self::InvalidFormatDescription { span_end, .. }
             | Self::Custom { span_end, .. } => *span_end,
+            #[cfg(any(feature = "formatting", feature = "parsing"))]
+            Self::ExpectedString { span_end, .. }
+            | Self::InvalidFormatDescription { span_end, .. } => *span_end,
             Self::UnexpectedToken { tree, .. } => Some(tree.span()),
             Self::UnexpectedEndOfInput => Some(Span::mixed_site()),
         }
@@ -117,11 +123,12 @@ impl Error {
     }
 
     /// Like `to_compile_error`, but for use in macros that produce items.
+    #[cfg(all(feature = "serde", any(feature = "formatting", feature = "parsing")))]
     pub(crate) fn to_compile_error_standalone(&self) -> TokenStream {
         let end = self.span_end();
         self.to_compile_error()
             .into_iter()
-            .chain(once(
+            .chain(std::iter::once(
                 TokenTree::from(Punct::new(';', Spacing::Alone)).with_span(end),
             ))
             .collect()

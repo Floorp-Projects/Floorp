@@ -1,6 +1,5 @@
 //! Different variant error
 
-use core::convert::TryFrom;
 use core::fmt;
 
 /// An error type indicating that a [`TryFrom`](core::convert::TryFrom) call failed because the

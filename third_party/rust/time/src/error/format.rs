@@ -1,6 +1,5 @@
 //! Error formatting a struct
 
-use core::convert::TryFrom;
 use core::fmt;
 use std::io;
 
@@ -9,7 +8,6 @@ use crate::error;
 /// An error occurred when formatting.
 #[non_exhaustive]
 #[allow(missing_copy_implementations)]
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "formatting")))]
 #[derive(Debug)]
 pub enum Format {
     /// The type being formatted does not contain sufficient information to format a component.
@@ -32,8 +30,7 @@ impl fmt::Display for Format {
             ),
             Self::InvalidComponent(component) => write!(
                 f,
-                "The {} component cannot be formatted into the requested format.",
-                component
+                "The {component} component cannot be formatted into the requested format."
             ),
             Self::StdIo(err) => err.fmt(f),
         }
@@ -67,14 +64,12 @@ impl std::error::Error for Format {
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "formatting")))]
 impl From<Format> for crate::Error {
     fn from(original: Format) -> Self {
         Self::Format(original)
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "formatting")))]
 impl TryFrom<crate::Error> for Format {
     type Error = error::DifferentVariant;
 
@@ -92,6 +87,6 @@ impl Format {
     #[doc(hidden)] // Exposed only for the `declare_format_string` macro
     pub fn into_invalid_serde_value<S: serde::Serializer>(self) -> S::Error {
         use serde::ser::Error;
-        S::Error::custom(format!("{}", self))
+        S::Error::custom(self)
     }
 }

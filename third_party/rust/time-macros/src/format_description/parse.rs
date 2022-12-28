@@ -43,12 +43,12 @@ fn parse_item<'a>(
     if let [b'[', b'[', remaining @ ..] = s {
         *index += 2;
         return Ok(ParsedItem {
-            item: FormatItem::Literal(&[b'[']),
+            item: FormatItem::Literal(b"["),
             remaining,
         });
     };
 
-    if s.starts_with(&[b'[']) {
+    if s.starts_with(b"[") {
         if let Some(bracket_index) = s.iter().position(|&c| c == b']') {
             *index += 1; // opening bracket
             let ret_val = ParsedItem {

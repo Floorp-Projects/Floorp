@@ -1,6 +1,5 @@
 //! Get the system's UTC offset on Unix.
 
-use core::convert::TryInto;
 use core::mem::MaybeUninit;
 
 use crate::{OffsetDateTime, UtcOffset};
@@ -44,8 +43,22 @@ unsafe fn timestamp_to_tm(timestamp: i64) -> Option<libc::tm> {
 }
 
 /// Convert a `libc::tm` to a `UtcOffset`. Returns `None` on any error.
-// `tm_gmtoff` extension
-#[cfg(not(any(target_os = "solaris", target_os = "illumos")))]
+// This is available to any target known to have the `tm_gmtoff` extension.
+#[cfg(any(
+    target_os = "redox",
+    target_os = "linux",
+    target_os = "l4re",
+    target_os = "android",
+    target_os = "emscripten",
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "watchos",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "haiku",
+))]
 fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
     let seconds: i32 = tm.tm_gmtoff.try_into().ok()?;
     UtcOffset::from_hms(
@@ -57,10 +70,23 @@ fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
 }
 
 /// Convert a `libc::tm` to a `UtcOffset`. Returns `None` on any error.
-// Solaris/Illumos is unsound and requires opting into.
 #[cfg(all(
     not(unsound_local_offset),
-    any(target_os = "solaris", target_os = "illumos")
+    not(any(
+        target_os = "redox",
+        target_os = "linux",
+        target_os = "l4re",
+        target_os = "android",
+        target_os = "emscripten",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "haiku",
+    ))
 ))]
 #[allow(unused_variables, clippy::missing_const_for_fn)]
 fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
@@ -68,13 +94,30 @@ fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
 }
 
 /// Convert a `libc::tm` to a `UtcOffset`. Returns `None` on any error.
+// This method can return an incorrect value, as it only approximates the `tm_gmtoff` field. As such
+// it is gated behind `--cfg unsound_local_offset`. The reason it can return an incorrect value is
+// that daylight saving time does not start on the same date every year, nor are the rules for
+// daylight saving time the same for every year. This implementation assumes 1970 is equivalent to
+// every other year, which is not always the case.
 #[cfg(all(
     unsound_local_offset,
-    any(target_os = "solaris", target_os = "illumos")
+    not(any(
+        target_os = "redox",
+        target_os = "linux",
+        target_os = "l4re",
+        target_os = "android",
+        target_os = "emscripten",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "haiku",
+    ))
 ))]
 fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
-    use core::convert::TryFrom;
-
     use crate::Date;
 
     let mut tm = tm;

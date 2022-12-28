@@ -13,18 +13,16 @@ impl fmt::Display for InvalidFormatDescription {
         use InvalidFormatDescription::*;
         match self {
             UnclosedOpeningBracket { index } => {
-                write!(f, "unclosed opening bracket at byte index {}", index)
+                write!(f, "unclosed opening bracket at byte index {index}")
             }
-            InvalidComponentName { name, index } => write!(
-                f,
-                "invalid component name `{}` at byte index {}",
-                name, index
-            ),
+            InvalidComponentName { name, index } => {
+                write!(f, "invalid component name `{name}` at byte index {index}",)
+            }
             InvalidModifier { value, index } => {
-                write!(f, "invalid modifier `{}` at byte index {}", value, index)
+                write!(f, "invalid modifier `{value}` at byte index {index}")
             }
             MissingComponentName { index } => {
-                write!(f, "missing component name at byte index {}", index)
+                write!(f, "missing component name at byte index {index}")
             }
         }
     }

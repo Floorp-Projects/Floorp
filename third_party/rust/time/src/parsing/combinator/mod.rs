@@ -66,10 +66,10 @@ pub(crate) fn one_or_more<'a, P: Fn(&'a [u8]) -> Option<ParsedItem<'a, ()>>>(
 /// Consume between `n` and `m` instances of the provided parser.
 pub(crate) fn n_to_m<
     'a,
-    T,
-    P: Fn(&'a [u8]) -> Option<ParsedItem<'a, T>>,
     const N: u8,
     const M: u8,
+    T,
+    P: Fn(&'a [u8]) -> Option<ParsedItem<'a, T>>,
 >(
     parser: P,
 ) -> impl Fn(&'a [u8]) -> Option<ParsedItem<'a, &'a [u8]>> {
@@ -99,32 +99,32 @@ pub(crate) fn n_to_m<
 }
 
 /// Consume between `n` and `m` digits, returning the numerical value.
-pub(crate) fn n_to_m_digits<T: Integer, const N: u8, const M: u8>(
+pub(crate) fn n_to_m_digits<const N: u8, const M: u8, T: Integer>(
     input: &[u8],
 ) -> Option<ParsedItem<'_, T>> {
     debug_assert!(M >= N);
-    n_to_m::<_, _, N, M>(any_digit)(input)?.flat_map(|value| value.parse_bytes())
+    n_to_m::<N, M, _, _>(any_digit)(input)?.flat_map(|value| value.parse_bytes())
 }
 
 /// Consume exactly `n` digits, returning the numerical value.
-pub(crate) fn exactly_n_digits<T: Integer, const N: u8>(input: &[u8]) -> Option<ParsedItem<'_, T>> {
-    n_to_m_digits::<_, N, N>(input)
+pub(crate) fn exactly_n_digits<const N: u8, T: Integer>(input: &[u8]) -> Option<ParsedItem<'_, T>> {
+    n_to_m_digits::<N, N, _>(input)
 }
 
 /// Consume exactly `n` digits, returning the numerical value.
-pub(crate) fn exactly_n_digits_padded<'a, T: Integer, const N: u8>(
+pub(crate) fn exactly_n_digits_padded<'a, const N: u8, T: Integer>(
     padding: Padding,
 ) -> impl Fn(&'a [u8]) -> Option<ParsedItem<'a, T>> {
-    n_to_m_digits_padded::<_, N, N>(padding)
+    n_to_m_digits_padded::<N, N, _>(padding)
 }
 
 /// Consume between `n` and `m` digits, returning the numerical value.
-pub(crate) fn n_to_m_digits_padded<'a, T: Integer, const N: u8, const M: u8>(
+pub(crate) fn n_to_m_digits_padded<'a, const N: u8, const M: u8, T: Integer>(
     padding: Padding,
 ) -> impl Fn(&'a [u8]) -> Option<ParsedItem<'a, T>> {
     debug_assert!(M >= N);
     move |mut input| match padding {
-        Padding::None => n_to_m_digits::<_, 1, M>(input),
+        Padding::None => n_to_m_digits::<1, M, _>(input),
         Padding::Space => {
             debug_assert!(N > 0);
 
@@ -151,7 +151,7 @@ pub(crate) fn n_to_m_digits_padded<'a, T: Integer, const N: u8, const M: u8>(
             ParsedItem(input, &orig_input[..(orig_input.len() - input.len())])
                 .flat_map(|value| value.parse_bytes())
         }
-        Padding::Zero => n_to_m_digits::<_, N, M>(input),
+        Padding::Zero => n_to_m_digits::<N, M, _>(input),
     }
 }
 

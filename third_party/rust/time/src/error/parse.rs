@@ -1,12 +1,10 @@
 //! Error that occurred at some stage of parsing
 
-use core::convert::TryFrom;
 use core::fmt;
 
 use crate::error::{self, ParseFromDescription, TryFromParsed};
 
 /// An error that occurred at some stage of parsing.
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "parsing")))]
 #[allow(variant_size_differences)]
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -41,14 +39,12 @@ impl std::error::Error for Parse {
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "parsing")))]
 impl From<TryFromParsed> for Parse {
     fn from(err: TryFromParsed) -> Self {
         Self::TryFromParsed(err)
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "parsing")))]
 impl TryFrom<Parse> for TryFromParsed {
     type Error = error::DifferentVariant;
 
@@ -60,14 +56,12 @@ impl TryFrom<Parse> for TryFromParsed {
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "parsing")))]
 impl From<ParseFromDescription> for Parse {
     fn from(err: ParseFromDescription) -> Self {
         Self::ParseFromDescription(err)
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "parsing")))]
 impl TryFrom<Parse> for ParseFromDescription {
     type Error = error::DifferentVariant;
 
@@ -79,7 +73,6 @@ impl TryFrom<Parse> for ParseFromDescription {
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "parsing")))]
 impl From<Parse> for crate::Error {
     fn from(err: Parse) -> Self {
         match err {
@@ -90,7 +83,6 @@ impl From<Parse> for crate::Error {
     }
 }
 
-#[cfg_attr(__time_03_docs, doc(cfg(feature = "parsing")))]
 impl TryFrom<crate::Error> for Parse {
     type Error = error::DifferentVariant;
 

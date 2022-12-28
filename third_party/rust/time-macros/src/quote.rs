@@ -8,6 +8,7 @@ macro_rules! quote {
     }};
 }
 
+#[cfg(any(feature = "formatting", feature = "parsing"))]
 macro_rules! quote_append {
     ($ts:ident $($x:tt)*) => {{
         quote_inner!($ts $($x)*);
@@ -65,6 +66,7 @@ macro_rules! quote_inner {
     ($ts:ident ? $($tail:tt)*) => { sym!($ts '?'); quote_inner!($ts $($tail)*); };
     ($ts:ident ! $($tail:tt)*) => { sym!($ts '!'); quote_inner!($ts $($tail)*); };
     ($ts:ident | $($tail:tt)*) => { sym!($ts '|'); quote_inner!($ts $($tail)*); };
+    ($ts:ident * $($tail:tt)*) => { sym!($ts '*'); quote_inner!($ts $($tail)*); };
 
     // Identifier
     ($ts:ident $i:ident $($tail:tt)*) => {

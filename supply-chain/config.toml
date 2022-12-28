@@ -889,10 +889,6 @@ criteria = "safe-to-deploy"
 version = "1.13.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.num_threads]]
-version = "0.1.6"
-criteria = "safe-to-run"
-
 [[exemptions.objc]]
 version = "0.2.7"
 criteria = "safe-to-deploy"
