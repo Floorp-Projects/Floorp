@@ -3,6 +3,12 @@
 This file lists the most important changes made in each release of
 `textwrap`.
 
+## Version 0.15.2 (2022-10-24)
+
+This release is identical to 0.15.0 and is only there to give people a
+way to install crates which depend on the yanked 0.15.1 release. See
+[#484](https://github.com/mgeisler/textwrap/issues/484) for details.
+
 ## Version 0.15.0 (2022-02-27)
 
 This is a major feature release with two main changes:

@@ -12,16 +12,33 @@
 [package]
 edition = "2018"
 name = "textwrap"
-version = "0.15.0"
+version = "0.15.2"
 authors = ["Martin Geisler <martin@geisler.net>"]
-exclude = [".github/", ".gitignore", "benches/", "examples/", "fuzz/", "images/"]
+exclude = [
+    ".github/",
+    ".gitignore",
+    "benches/",
+    "examples/",
+    "fuzz/",
+    "images/",
+]
 description = "Powerful library for word wrapping, indenting, and dedenting strings"
 documentation = "https://docs.rs/textwrap/"
 readme = "README.md"
-keywords = ["text", "formatting", "wrap", "typesetting", "hyphenation"]
-categories = ["text-processing", "command-line-interface"]
+keywords = [
+    "text",
+    "formatting",
+    "wrap",
+    "typesetting",
+    "hyphenation",
+]
+categories = [
+    "text-processing",
+    "command-line-interface",
+]
 license = "MIT"
 repository = "https://github.com/mgeisler/textwrap"
+
 [package.metadata.docs.rs]
 all-features = true
 
@@ -44,6 +61,7 @@ harness = false
 name = "indent"
 path = "benches/indent.rs"
 harness = false
+
 [dependencies.hyphenation]
 version = "0.8.4"
 features = ["embed_en-us"]
@@ -64,6 +82,7 @@ optional = true
 [dependencies.unicode-width]
 version = "0.1.9"
 optional = true
+
 [dev-dependencies.criterion]
 version = "0.3.5"
 
@@ -77,6 +96,11 @@ version = "0.9.0"
 version = "0.9.4"
 
 [features]
-default = ["unicode-linebreak", "unicode-width", "smawk"]
+default = [
+    "unicode-linebreak",
+    "unicode-width",
+    "smawk",
+]
+
 [target."cfg(unix)".dev-dependencies.termion]
 version = "1.5.6"
