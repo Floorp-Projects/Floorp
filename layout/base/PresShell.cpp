@@ -4184,29 +4184,26 @@ void PresShell::CancelPostedReflowCallbacks() {
 }
 
 void PresShell::HandlePostedReflowCallbacks(bool aInterruptible) {
-  while (true) {
-    // Call all our callbacks, tell us if we need to flush again.
-    bool shouldFlush = false;
-    while (mFirstCallbackEventRequest) {
-      nsCallbackEventRequest* node = mFirstCallbackEventRequest;
-      mFirstCallbackEventRequest = node->next;
-      if (!mFirstCallbackEventRequest) {
-        mLastCallbackEventRequest = nullptr;
-      }
-      nsIReflowCallback* callback = node->callback;
-      FreeByObjectID(eArenaObjectID_nsCallbackEventRequest, node);
-      if (callback && callback->ReflowFinished()) {
+  bool shouldFlush = false;
+
+  while (mFirstCallbackEventRequest) {
+    nsCallbackEventRequest* node = mFirstCallbackEventRequest;
+    mFirstCallbackEventRequest = node->next;
+    if (!mFirstCallbackEventRequest) {
+      mLastCallbackEventRequest = nullptr;
+    }
+    nsIReflowCallback* callback = node->callback;
+    FreeByObjectID(eArenaObjectID_nsCallbackEventRequest, node);
+    if (callback) {
+      if (callback->ReflowFinished()) {
         shouldFlush = true;
       }
     }
+  }
 
-    if (!shouldFlush || mIsDestroying) {
-      return;
-    }
-
-    // The flush might cause us to have more callbacks.
-    const auto flushType =
-        aInterruptible ? FlushType::InterruptibleLayout : FlushType::Layout;
+  FlushType flushType =
+      aInterruptible ? FlushType::InterruptibleLayout : FlushType::Layout;
+  if (shouldFlush && !mIsDestroying) {
     FlushPendingNotifications(flushType);
   }
 }
