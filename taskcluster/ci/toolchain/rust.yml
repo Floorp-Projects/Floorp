@@ -11,20 +11,6 @@ job-defaults:
         script: repack_rust.py
         toolchain-artifact: public/build/rustc.tar.zst
 
-linux64-rust-1.61:
-    treeherder:
-        symbol: TL(rust-1.61)
-    run:
-        arguments: [
-            '--channel', '1.61.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-            '--target', 'wasm32-wasi',
-        ]
-        toolchain-alias: linux64-rust-toolchain
-
 linux64-rust-1.65:
     treeherder:
         symbol: TL(rust-1.65)
@@ -36,7 +22,9 @@ linux64-rust-1.65:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'wasm32-wasi',
         ]
-        toolchain-alias: linux64-rust-base
+        toolchain-alias:
+            - linux64-rust-base
+            - linux64-rust-toolchain
 
 linux64-rust-1.66:
     treeherder:
