@@ -1658,7 +1658,10 @@ def select_linker_tmpl(host_or_target):
             result = try_linker("lld")
         elif (
             linker is None
-            and developer_options
+            and (
+                developer_options
+                or (host_or_target_str == "host" and c_compiler.type == "clang")
+            )
             and (result is None or result.KIND in ("bfd", "gold"))
         ):
             # try and use lld if available.
