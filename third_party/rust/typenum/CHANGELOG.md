@@ -7,6 +7,10 @@ against this Rust version.
 
 ### Unreleased
 
+### 1.16.0 (2022-12-05)
+- [added] `const INT` field to the `ToInt` trait.
+- [added] `const-generics` field with `U<N>` mapping wher `N` is a const generic.
+
 ### 1.15.0 (2021-12-25)
 - [fixed] Cross-compilation issue due to doing math in build script. (PR #177)
 - [added] New feature `scale_info` for using inside

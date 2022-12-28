@@ -11,11 +11,19 @@
 
 [package]
 edition = "2018"
+rust-version = "1.37.0"
 name = "typenum"
-version = "1.15.0"
-authors = ["Paho Lurie-Gregg <paho@paholg.com>", "Andre Bogus <bogusandre@gmail.com>"]
+version = "1.16.0"
+authors = [
+    "Paho Lurie-Gregg <paho@paholg.com>",
+    "Andre Bogus <bogusandre@gmail.com>",
+]
 build = "build/main.rs"
-description = "Typenum is a Rust library for type-level numbers evaluated at\n    compile time. It currently supports bits, unsigned integers, and signed\n    integers. It also provides a type-level array of type-level numbers, but its\n    implementation is incomplete."
+description = """
+Typenum is a Rust library for type-level numbers evaluated at
+    compile time. It currently supports bits, unsigned integers, and signed
+    integers. It also provides a type-level array of type-level numbers, but its
+    implementation is incomplete."""
 documentation = "https://docs.rs/typenum"
 readme = "README.md"
 categories = ["no-std"]
@@ -24,12 +32,14 @@ repository = "https://github.com/paholg/typenum"
 
 [lib]
 name = "typenum"
+
 [dependencies.scale-info]
 version = "1.0"
 optional = true
 default-features = false
 
 [features]
+const-generics = []
 force_unix_path_separator = []
 i128 = []
 no_std = []

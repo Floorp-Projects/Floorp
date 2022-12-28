@@ -4,6 +4,8 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+#[cfg(feature = "const-generics")]
+mod generic_const_mappings;
 mod op;
 mod tests;
 
@@ -75,21 +77,25 @@ pub fn gen_int(i: i64) -> IntCode {
 )]
 pub fn no_std() {}
 
-// fixme: get a warning when testing without this
-#[allow(dead_code)]
-fn main() {
-    let highest: u64 = 1024;
-
+const HIGHEST: u64 = 1024;
+fn uints() -> impl Iterator<Item = u64> {
     // Use hardcoded values to avoid issues with cross-compilation.
     // See https://github.com/paholg/typenum/issues/162
     let first2: u32 = 11; // (highest as f64).log(2.0).round() as u32 + 1;
     let first10: u32 = 4; // (highest as f64).log(10.0) as u32 + 1;
-    let uints = (0..(highest + 1))
+    (0..(HIGHEST + 1))
         .chain((first2..64).map(|i| 2u64.pow(i)))
-        .chain((first10..20).map(|i| 10u64.pow(i)));
+        .chain((first10..20).map(|i| 10u64.pow(i)))
+}
+
+// fixme: get a warning when testing without this
+#[allow(dead_code)]
+fn main() {
+    println!("cargo:rerun-if-changed=build/main.rs"); // Allow caching the generation if `src/*` files change.
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest = Path::new(&out_dir).join("consts.rs");
+    #[cfg(not(feature = "force_unix_path_separator"))]
     println!("cargo:rustc-env=TYPENUM_BUILD_CONSTS={}", dest.display());
 
     let mut f = File::create(&dest).unwrap();
@@ -162,11 +168,11 @@ pub mod consts {{
     pub type True = B1;
     pub type False = B0;
 ",
-        highest = highest
+        highest = HIGHEST,
     )
     .unwrap();
 
-    for u in uints {
+    for u in uints() {
         writeln!(f, "    pub type U{} = {};", u, gen_uint(u)).unwrap();
         if u <= ::std::i64::MAX as u64 && u != 0 {
             let i = u as i64;
@@ -183,4 +189,7 @@ pub mod consts {{
     tests::build_tests().unwrap();
 
     op::write_op_macro().unwrap();
+
+    #[cfg(feature = "const-generics")]
+    generic_const_mappings::emit_impls().unwrap();
 }

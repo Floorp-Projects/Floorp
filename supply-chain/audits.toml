@@ -1890,6 +1890,11 @@ who = "Lee Salzman <lsalzman@gmail.com>"
 criteria = "safe-to-deploy"
 version = "0.1.0"
 
+[[audits.typenum]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.15.0 -> 1.16.0"
+
 [[audits.uluru]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
