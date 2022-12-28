@@ -8,7 +8,7 @@ job-defaults:
     worker:
         max-run-time: 1800
     run:
-        script: build-grcov.sh
+        script: build-rust-based-toolchain.sh
         toolchain-artifact: public/build/grcov.tar.zst
     fetches:
         fetch:
@@ -17,6 +17,8 @@ job-defaults:
 linux64-grcov:
     treeherder:
         symbol: TL(grcov)
+    run:
+        arguments: ['x86_64-unknown-linux-gnu']
     fetches:
         toolchain:
             - linux64-rust-toolchain
@@ -27,8 +29,11 @@ linux64-grcov:
 win64-grcov:
     treeherder:
         symbol: TW64(grcov)
-    worker-type: b-win2012
+    run:
+        arguments: ['x86_64-pc-windows-msvc']
     fetches:
         toolchain:
-            - win64-rust-toolchain
+            - linux64-clang-toolchain
+            - linux64-liblowercase
+            - linux64-rust-windows-toolchain
             - win64-vs2017

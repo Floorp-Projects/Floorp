@@ -4,10 +4,11 @@
 ---
 job-defaults:
     description: "rust-size toolchain build"
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run:
-        script: build-rust-size.sh
+        script: build-rust-based-toolchain.sh
     fetches:
         fetch:
             - rust-size
@@ -15,20 +16,24 @@ job-defaults:
 linux64-rust-size:
     treeherder:
         symbol: TL(rust-size)
-    worker-type: b-linux-gcp
     run:
+        arguments: ['x86_64-unknown-linux-gnu']
         toolchain-artifact: public/build/rust-size.tar.zst
     fetches:
         toolchain:
+            - linux64-clang-toolchain
             - linux64-rust-toolchain
+            - sysroot-x86_64-linux-gnu
 
 win64-rust-size:
     treeherder:
         symbol: TW64(rust-size)
-    worker-type: b-win2012
     run:
+        arguments: ['x86_64-pc-windows-msvc']
         toolchain-artifact: public/build/rust-size.tar.zst
     fetches:
         toolchain:
-            - win64-rust-toolchain
+            - linux64-clang-toolchain
+            - linux64-liblowercase
+            - linux64-rust-windows-toolchain
             - win64-vs2017

@@ -10,7 +10,7 @@ job-defaults:
     worker:
         max-run-time: 3600
     run:
-        script: build-cbindgen.sh
+        script: build-rust-based-toolchain.sh
         toolchain-artifact: public/build/cbindgen.tar.zst
     fetches:
         fetch:
@@ -58,10 +58,11 @@ macosx64-aarch64-cbindgen:
 win64-cbindgen:
     treeherder:
         symbol: TW64(cbindgen)
-    worker-type: b-win2012
     run:
         arguments: ['x86_64-pc-windows-msvc']
     fetches:
         toolchain:
-            - win64-rust-toolchain
+            - linux64-clang-toolchain
+            - linux64-rust-windows-toolchain
+            - linux64-liblowercase
             - win64-vs2017

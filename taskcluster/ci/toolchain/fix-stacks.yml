@@ -10,7 +10,7 @@ job-defaults:
     worker:
         max-run-time: 1800
     run:
-        script: build-fix-stacks.sh
+        script: build-rust-based-toolchain.sh
         toolchain-artifact: public/build/fix-stacks.tar.zst
     fetches:
         fetch:

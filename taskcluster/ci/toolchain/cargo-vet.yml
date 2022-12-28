@@ -10,7 +10,7 @@ job-defaults:
     worker:
         max-run-time: 1800
     run:
-        script: build-cargo-vet.sh
+        script: build-rust-based-toolchain.sh
         toolchain-artifact: public/build/cargo-vet.tar.zst
     fetches:
         fetch:
@@ -20,7 +20,7 @@ linux64-cargo-vet:
     treeherder:
         symbol: TL(cargo-vet)
     run:
-        arguments: ['x86_64-unknown-linux-gnu']
+        arguments: ['x86_64-unknown-linux-gnu', 'reqwest/native-tls-vendored']
     fetches:
         toolchain:
             - linux64-clang-toolchain

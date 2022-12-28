@@ -9,8 +9,10 @@ job-defaults:
     worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
+        env:
+            FETCH: rust-minidump/minidump-stackwalk
     run:
-        script: build-minidump-stackwalk.sh
+        script: build-rust-based-toolchain.sh
         toolchain-artifact: public/build/minidump-stackwalk.tar.zst
     fetches:
         fetch:
