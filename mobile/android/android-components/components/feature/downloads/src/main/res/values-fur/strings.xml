@@ -23,7 +23,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">Impussibil vierzi il file</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported1">Nissune app cjatade par vierzi i files %1$s</string>
+    <string name="mozac_feature_downloads_open_not_supported1">Nissune aplicazion cjatade par vierzi i files %1$s</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Pause</string>

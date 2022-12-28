@@ -29,7 +29,7 @@
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Passe a</string>
     <!-- Text for context menu item to open the link in an external app. -->
-    <string name="mozac_feature_contextmenu_open_link_in_external_app">Vierç link intune app esterne</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Vierç link intune aplicazion esterne</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">Condivît direzion e-mail</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->

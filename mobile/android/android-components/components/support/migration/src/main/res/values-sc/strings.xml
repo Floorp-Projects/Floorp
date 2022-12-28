@@ -7,5 +7,5 @@
     <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
     <string name="mozac_support_migration_complete_notification_title">Atualizatzione cumpleta</string>
     <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
-    <string name="mozac_support_migration_complete_notification_text">Firefox est istadu atualizadu... e megioradu!</string>
+    <string name="mozac_support_migration_complete_notification_text">Firefox est istadu atualizadu… e megioradu!</string>
 </resources>
