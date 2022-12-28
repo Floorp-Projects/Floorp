@@ -77,6 +77,7 @@ object FenixDependencies {
     const val osslicenses_plugin = "com.google.android.gms:oss-licenses-plugin:${FenixVersions.osslicenses_plugin}"
 
     const val mozilla_compose_awesomebar = "org.mozilla.components:compose-awesomebar:${FenixVersions.mozilla_android_components}"
+    const val mozilla_compose_cfr = "org.mozilla.components:compose-cfr:${FenixVersions.mozilla_android_components}"
 
     const val mozilla_concept_awesomebar = "org.mozilla.components:concept-awesomebar:${FenixVersions.mozilla_android_components}"
     const val mozilla_concept_base = "org.mozilla.components:concept-base:${FenixVersions.mozilla_android_components}"

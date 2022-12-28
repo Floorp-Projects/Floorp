@@ -6,17 +6,20 @@ package org.mozilla.fenix.onboarding
 
 import android.content.Context
 import android.view.View
+import androidx.compose.material.Text
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getColor
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.compose.cfr.CFRPopup
+import mozilla.components.compose.cfr.CFRPopupProperties
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.cfr.CFRPopup
-import org.mozilla.fenix.compose.cfr.CFRPopupProperties
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.recentsyncedtabs.view.RecentSyncedTabViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabsHeaderViewHolder
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Vertical padding needed to improve the visual alignment of the popup and respect the UX design.
@@ -54,11 +57,15 @@ class HomeCFRPresenter(
 
     private fun showSyncedTabCFR(view: View) {
         CFRPopup(
-            text = context.getString(R.string.sync_cfr_message),
             anchor = view,
             properties = CFRPopupProperties(
-                indicatorDirection = CFRPopup.IndicatorDirection.DOWN,
+                popupBodyColors = listOf(
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_end),
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_start),
+                ),
                 popupVerticalOffset = CFR_TO_ANCHOR_VERTICAL_PADDING.dp,
+                dismissButtonColor = getColor(context, R.color.fx_mobile_icon_color_oncolor),
+                indicatorDirection = CFRPopup.IndicatorDirection.DOWN,
             ),
             onDismiss = {
                 when (it) {
@@ -66,7 +73,16 @@ class HomeCFRPresenter(
                     false -> Onboarding.syncCfrImplicitDismissal.record(NoExtras())
                 }
             },
-        ).show()
+            text = {
+                FirefoxTheme {
+                    Text(
+                        text = context.getString(R.string.sync_cfr_message),
+                        color = FirefoxTheme.colors.textOnColorPrimary,
+                        style = FirefoxTheme.typography.body2,
+                    )
+                }
+            },
+        )
 
         // Turn off both the recent tab and synced tab CFR after the recent synced tab CFR is shown.
         context.settings().showSyncCFR = false
@@ -78,16 +94,29 @@ class HomeCFRPresenter(
     @Suppress("MagicNumber")
     private fun showJumpBackInCFR(view: View) {
         CFRPopup(
-            text = context.getString(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
             anchor = view,
             properties = CFRPopupProperties(
-                indicatorDirection = CFRPopup.IndicatorDirection.DOWN,
+                popupBodyColors = listOf(
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_end),
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_start),
+                ),
                 popupVerticalOffset = (-40).dp, // Offset the top spacer in the recent tabs header.
+                dismissButtonColor = getColor(context, R.color.fx_mobile_icon_color_oncolor),
+                indicatorDirection = CFRPopup.IndicatorDirection.DOWN,
             ),
             onDismiss = {
                 when (it) {
                     true -> RecentTabs.jumpBackInCfrDismissed.record(NoExtras())
                     false -> RecentTabs.jumpBackInCfrCancelled.record(NoExtras())
+                }
+            },
+            text = {
+                FirefoxTheme {
+                    Text(
+                        text = context.getString(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
+                        color = FirefoxTheme.colors.textOnColorPrimary,
+                        style = FirefoxTheme.typography.body2,
+                    )
                 }
             },
         ).show()

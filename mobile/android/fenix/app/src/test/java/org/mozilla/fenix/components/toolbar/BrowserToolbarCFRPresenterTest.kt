@@ -6,7 +6,6 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import android.view.View
-import androidx.compose.ui.unit.dp
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -27,17 +26,13 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.telemetry.glean.testing.GleanTestRule
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.cfr.CFRPopup
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -179,31 +174,6 @@ class BrowserToolbarCFRPresenterTest {
     }
 
     @Test
-    fun `WHEN the TCP CFR is instantiated THEN set the intended properties`() {
-        val anchor: View = mockk(relaxed = true)
-        val settings: Settings = mockk(relaxed = true)
-        val presenter = createPresenter(
-            anchor = anchor,
-            settings = settings,
-        )
-
-        presenter.showTcpCfr()
-
-        verify { settings.shouldShowTotalCookieProtectionCFR = false }
-        assertNotNull(presenter.tcpCfrPopup)
-        presenter.tcpCfrPopup?.let {
-            assertEquals("Test", it.text)
-            assertEquals(anchor, it.anchor)
-            assertEquals(CFRPopup.DEFAULT_WIDTH.dp, it.properties.popupWidth)
-            assertEquals(CFRPopup.IndicatorDirection.DOWN, it.properties.indicatorDirection)
-            assertTrue(it.properties.dismissOnBackPress)
-            assertTrue(it.properties.dismissOnClickOutside)
-            assertFalse(it.properties.overlapAnchor)
-            assertEquals(CFRPopup.DEFAULT_INDICATOR_START_OFFSET.dp, it.properties.indicatorArrowStartOffset)
-        }
-    }
-
-    @Test
     fun `WHEN the TCP CFR is shown THEN log telemetry`() {
         val presenter = createPresenter(
             anchor = mockk(relaxed = true),
@@ -214,27 +184,6 @@ class BrowserToolbarCFRPresenterTest {
         presenter.showTcpCfr()
 
         assertNotNull(TrackingProtection.tcpCfrShown.testGetValue())
-    }
-
-    @Test
-    fun `WHEN the TCP CFR is dismissed THEN log telemetry`() {
-        val presenter = createPresenter(
-            anchor = mockk(relaxed = true),
-        )
-        every { presenter.tryToShowCookieBannerDialogIfNeeded() } just Runs
-
-        presenter.showTcpCfr()
-
-        assertNull(TrackingProtection.tcpCfrExplicitDismissal.testGetValue())
-        presenter.tcpCfrPopup!!.onDismiss.invoke(true)
-        assertNotNull(TrackingProtection.tcpCfrExplicitDismissal.testGetValue())
-
-        assertNull(TrackingProtection.tcpCfrImplicitDismissal.testGetValue())
-        presenter.tcpCfrPopup!!.onDismiss.invoke(false)
-        assertNotNull(TrackingProtection.tcpCfrImplicitDismissal.testGetValue())
-        verify {
-            presenter.tryToShowCookieBannerDialogIfNeeded()
-        }
     }
 
     /**
@@ -256,7 +205,10 @@ class BrowserToolbarCFRPresenterTest {
      * Calls to show a CFR will fail. If this behavior is needed to work use [createPresenterThatShowsCFRs].
      */
     private fun createPresenter(
-        context: Context = mockk { every { getString(R.string.tcp_cfr_message) } returns "Test" },
+        context: Context = mockk {
+            every { getString(R.string.tcp_cfr_message) } returns "Test"
+            every { getColor(any()) } returns 0
+        },
         anchor: View = mockk(),
         browserStore: BrowserStore = mockk(),
         settings: Settings = mockk(relaxed = true) { every { shouldShowTotalCookieProtectionCFR } returns true },
