@@ -703,7 +703,7 @@ dependencies = [
  "storage_variant",
  "tempfile",
  "thin-vec",
- "time 0.1.44",
+ "time 0.1.45",
  "wr_malloc_size_of",
  "xpcom",
 ]
@@ -758,7 +758,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "serde",
- "time 0.1.44",
+ "time 0.1.45",
  "winapi",
 ]
 
@@ -2276,7 +2276,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "time 0.1.44",
+ "time 0.1.45",
  "uuid",
  "whatsys",
 ]
@@ -2299,7 +2299,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "time 0.1.44",
+ "time 0.1.45",
  "uniffi",
  "uniffi_build",
  "uniffi_macros",
@@ -5090,7 +5090,7 @@ dependencies = [
  "static_prefs",
  "style_derive",
  "style_traits",
- "time 0.1.44",
+ "time 0.1.45",
  "to_shmem",
  "to_shmem_derive",
  "toml",
@@ -5307,9 +5307,9 @@ checksum = "54a433ab7cb47761ed81046b241764cf11d00dbaf7d648d9e49c111c25ebbcdf"
 
 [[package]]
 name = "time"
-version = "0.1.44"
+version = "0.1.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6db9e6914ab8b1ae1c260a4ae7a49b6c5611b40328a735b21862567685e73255"
+checksum = "1b797afad3f312d1c66a56d11d0316f916356d11bd158fbc6ca6389ff6bf805a"
 dependencies = [
  "libc",
  "wasi 0.10.0+wasi-snapshot-preview999",
@@ -6185,7 +6185,7 @@ dependencies = [
  "smallvec",
  "svg_fmt",
  "swgl",
- "time 0.1.44",
+ "time 0.1.45",
  "topological-sort",
  "tracy-rs",
  "webrender_api",
@@ -6208,7 +6208,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_derive",
- "time 0.1.44",
+ "time 0.1.45",
  "wr_malloc_size_of",
 ]
 
