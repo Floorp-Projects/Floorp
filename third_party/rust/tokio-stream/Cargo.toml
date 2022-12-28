@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.49"
 name = "tokio-stream"
-version = "0.1.9"
+version = "0.1.11"
 authors = ["Tokio Contributors <team@tokio.rs>"]
 description = """
 Utilities to work with `Stream` and `tokio`.
@@ -55,8 +55,8 @@ version = "0.3"
 version = "0.3"
 default-features = false
 
-[dev-dependencies.proptest]
-version = "1"
+[dev-dependencies.parking_lot]
+version = "0.12.0"
 
 [dev-dependencies.tokio]
 version = "1.2.0"
@@ -76,3 +76,6 @@ sync = [
     "tokio-util",
 ]
 time = ["tokio/time"]
+
+[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.proptest]
+version = "1"
