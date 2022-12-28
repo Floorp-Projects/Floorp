@@ -1,4 +1,4 @@
-53261
+53355
 0/nm
 0th/pt
 1/n1
@@ -4220,7 +4220,7 @@ FPO
 FSF/M
 FSLIC
 FTC
-FTM/MS
+FTM/SM
 FUD/S
 FWD
 FWIW
@@ -7708,7 +7708,7 @@ MSG/M
 MST/M
 MSW
 MT/M
-MTF/MS
+MTF/SM
 MTV/M
 MVP/M
 MW
@@ -13711,7 +13711,7 @@ absolution/M
 absolutism/M
 absolutist/MS
 absolve/DSG
-absorb/AGDSRZ
+absorb/AZGDRS
 absorbance/S
 absorbancy/M
 absorbency/M
@@ -14721,8 +14721,7 @@ amortize/DSGB
 amount/GMDS
 amour/MS
 amoxicillin
-amp/SMY
-amped
+amp/SMDY
 amperage/M
 ampere/MS
 ampersand/MS
@@ -15181,7 +15180,7 @@ apparatus/MS
 apparel/MDGS
 apparent/Y
 apparition/SM
-appeal/GMDSB
+appeal/GBMDS
 appealing/UY
 appear/AESDG
 appearance/EAMS
@@ -15221,7 +15220,7 @@ appliqueing
 appliqué/SMG
 appliquéd
 apply/ANXGDS
-appoint/AELSVGDRZ
+appoint/AELSVGZRD
 appointee/SM
 appointment/AESM
 apportion/AGDLS
@@ -15529,7 +15528,7 @@ ascribe/GBDS
 ascription/M
 aseptic
 aseptically
-asexual/YS
+asexual/SY
 asexuality/M
 ash/MDNSG
 ashamed/UY
@@ -15815,7 +15814,7 @@ audiophile/SM
 audiotape/SM
 audiovisual/S
 audiovisuals/M
-audit/GMDSB
+audit/BGMDS
 auditability
 auditee
 audition/SMDG
@@ -19196,7 +19195,7 @@ certainty/USM
 certifiable
 certifiably
 certificate/MGDS
-certification's
+certification/AMS
 certify/CDSNXG
 certitude/IM
 certitudes
@@ -19470,7 +19469,7 @@ chesty/TR
 chevalier/SM
 cheviot/M
 chevron/MS
-chew/SZGMDRB
+chew/SBZGMDR
 chewer/M
 chewiness/M
 chewy/PTR
@@ -20424,7 +20423,7 @@ columbine/SM
 column/SMD
 columnar
 columnist/SM
-com/JL
+com/J
 coma/MS
 comaker/SM
 comatose
@@ -20495,11 +20494,11 @@ commendatory
 commensurability
 commensurable
 commensurate/IY
-comment/ZGSMD
+comment/ZGSMDR
 commentary/SM
 commentate/DSG
 commentator/SM
-commenter/MS
+commenter/M
 commerce/M
 commercial/SMY
 commercialism/M
@@ -20592,8 +20591,8 @@ compartmentalization/M
 compartmentalize/DSG
 compass/GMDS
 compassion/M
-compassionate/YU
-compatibility/IMS
+compassionate/UY
+compatibility/ISM
 compatible/IMS
 compatibly/I
 compatriot/MS
@@ -20652,14 +20651,14 @@ complicity/M
 compliment/MDGS
 complimentary/U
 comply/NDSXG
-compo/S
+compo
 component/SM
 comport/LSGD
 comportment/M
-composable
+compos/RBZ
 compose/AECGSD
 composedly
-composer/MS
+composer/M
 composite/MYGNXPDS
 composition/CM
 compositional
@@ -20830,7 +20829,7 @@ confederacy/SM
 confederate/M
 confer/SB
 conferee/SM
-conference/MGSD
+conference/MGDS
 conferrable
 conferral/M
 conferred
@@ -21145,6 +21144,7 @@ contractility
 contraction/S
 contractual/Y
 contradict/SDG
+contradicted/U
 contradiction/SM
 contradictory
 contradistinction/MS
@@ -21373,7 +21373,7 @@ corona/SM
 coronal/MS
 coronary/SM
 coronation/SM
-coronavirus/SM
+coronavirus/MS
 coroner/MS
 coronet/MS
 corp
@@ -22628,7 +22628,7 @@ decriminalization/M
 decry/GDS
 decrypt/BSGD
 decryption
-dedendum/MS
+dedendum/SM
 dedicate/AGDS
 dedication/SM
 dedicator/SM
@@ -23449,7 +23449,7 @@ dirty/DRSTGP
 dis/M
 disable/DSGL
 disablement/M
-disambiguate/NGDS
+disambiguate/DSGN
 disappointing/Y
 disarming/Y
 disastrous/Y
@@ -23962,7 +23962,6 @@ double/ADSG
 doubleheader/MS
 doublespeak/M
 doublet/MS
-doubling
 doubloon/SM
 doubly
 doubt/SMDRZG
@@ -25514,7 +25513,7 @@ ether/M
 ethereal/Y
 ethic/SM
 ethical/UY
-ethicist/MS
+ethicist/SM
 ethics/M
 ethmoid
 ethnic/SM
@@ -25673,6 +25672,7 @@ exaltation/M
 exam/MS
 examination/AMS
 examine/AGDS
+examined/U
 examiner/MS
 example/MGDS
 exampled/U
@@ -25814,8 +25814,8 @@ exobiology/M
 exodus/MS
 exogenous
 exon/MS
-exonerate/GNDS
-exoneration/MS
+exonerate/GNDSX
+exoneration/M
 exoplanet/MS
 exorbitance/M
 exorbitant/Y
@@ -28031,7 +28031,7 @@ gaseous
 gash/MDSG
 gasholder/S
 gasket/SM
-gaslight/MSDG
+gaslight/MDGS
 gasman
 gasmen
 gasohol/M
@@ -31282,7 +31282,7 @@ incendiary/SM
 incense/MGDS
 incentive's
 incentive/ES
-incentivize/DSGE
+incentivize/EDSG
 inception/SM
 incessant/Y
 incest/M
@@ -31321,7 +31321,6 @@ incombustible
 incommode/GD
 incommodious
 incommunicado
-incompatibility/S
 incompetent/MS
 incomplete/Y
 inconceivability/M
@@ -32475,7 +32474,7 @@ jinricksha/SM
 jinrikisha/SM
 jinx/MDSG
 jitney/SM
-jitter/DG
+jitter/SDG
 jitterbug/MS
 jitterbugged
 jitterbugger/M
@@ -33211,7 +33210,7 @@ lassie/SM
 lassitude/M
 lasso/SMDG
 last/MDYSG
-lasting/YU
+lasting/UY
 lat/S
 latch's
 latch/UDSG
@@ -35620,7 +35619,7 @@ misfit/SM
 misfitted
 misfitting
 misfortune/SM
-misgender/DGS
+misgender/SDG
 misgiving/MS
 misgovern/SDGL
 misgovernment/M
@@ -35719,7 +35718,7 @@ mistrial/MS
 mistrust/MDSG
 mistrustful/Y
 misty/PRT
-mistype/GSD
+mistype/GDS
 misunderstand/SGJ
 misunderstanding/M
 misunderstood
@@ -36093,7 +36092,7 @@ mosaic/MS
 mosey/SGD
 mosh/DSG
 mosque/MS
-mosquito/MS
+mosquito/SM
 mosquitoes
 moss/MS
 mossback/SM
@@ -37482,7 +37481,7 @@ number's
 number/ASDG
 numbered/U
 numberless
-numbingly
+numbing/Y
 numbness/M
 numbskull/SM
 numerable/I
@@ -38276,7 +38275,7 @@ outshone
 outshout/GDS
 outside/MZRS
 outsider/M
-outsize/MSD
+outsize/MDS
 outskirt/MS
 outsmart/GDS
 outsold
@@ -41055,7 +41054,7 @@ prepped
 preppie/M
 prepping
 preppy/TRSM
-preprocess/DGS
+preprocess/DSG
 preprogrammed
 preprogramming
 prepubescence/M
@@ -41493,7 +41492,7 @@ prosciutto/M
 proscribe/DG
 proscription/MS
 prose/M
-prosecute/DSXGNB
+prosecute/DSBXGN
 prosecution/M
 prosecutor/MS
 proselyte/DSMG
@@ -41830,11 +41829,12 @@ purple/MTRS
 purplish
 purport/SMDG
 purported/Y
-purpose/DSMYG
-purposed/A
+purpose's
+purpose/ADSG
 purposeful/YP
 purposefulness/M
 purposeless/PY
+purposely
 purr/GMDS
 purse/MZGDRS
 purser/M
@@ -42254,14 +42254,13 @@ rake/MGDS
 rakish/YP
 rakishness/M
 rally/DSMG
-ram/SM
+ram/SMN
 ramble/DRSMZGJ
 rambler/M
 rambunctious/PY
 rambunctiousness/M
 rambutan/S
 ramekin/SM
-ramen
 ramie/M
 ramification/M
 ramify/DSXNG
@@ -42522,7 +42521,6 @@ receptive/PY
 receptiveness/M
 receptivity/M
 receptor/SM
-recertification/SM
 recess/MDSGV
 recessional/SM
 recessionary
@@ -42919,7 +42917,7 @@ renegade/DSMG
 renege/DRSZG
 reneger/M
 renew/DSBG
-renewables
+renewable/S
 renewal/MS
 rennet/M
 rennin/M
@@ -43022,7 +43020,6 @@ repulsion/M
 repulsive/YP
 repulsiveness/M
 repurchase/GDS
-repurpose/DGS
 reputability/M
 reputably/E
 reputation/MS
@@ -43116,9 +43113,9 @@ respiratory
 respire/DG
 resplendence/M
 resplendent/Y
-respond/SGD
+respond/SZGDR
 respondent/SM
-responder/MS
+responder/M
 response/MS
 responsibility/SM
 responsible
@@ -45098,7 +45095,7 @@ shapeless/YP
 shapelessness/M
 shapeliness/M
 shapely/PTR
-shapeshift/GRZD
+shapeshift/ZGDR
 shard/MS
 share/MZGDRSB
 shareable
@@ -45194,7 +45191,7 @@ shiatsu/M
 shibboleth/M
 shibboleths
 shield/MDGS
-shift/GMDSRZ
+shift/ZGMDRS
 shiftily
 shiftiness/M
 shiftless/PY
@@ -45549,7 +45546,7 @@ silky/TRP
 sill/MS
 silliness/M
 silly/TRSMP
-silo/MSD
+silo/MDS
 silt/GMDS
 silty/TR
 silvan
@@ -46036,7 +46033,7 @@ smelliness/M
 smelly/RPT
 smelt/SMDRZG
 smelter/M
-smidge/MS
+smidge/SM
 smidgen/MS
 smilax/M
 smile/DSMG
@@ -46650,7 +46647,7 @@ spectator/SM
 specter/AMS
 spectra
 spectral
-spectrogram/MS
+spectrogram/SM
 spectrometer/MS
 spectroscope/MS
 spectroscopic
@@ -47852,7 +47849,7 @@ subtlety/SM
 subtly
 subtopic/SM
 subtotal/SGMD
-subtract/GSDV
+subtract/GVSD
 subtraction/SM
 subtrahend/SM
 subtropic/S
@@ -47978,7 +47975,7 @@ summerhouse/SM
 summertime/M
 summery
 summing
-summit/MSD
+summit/MDS
 summitry/M
 summon/DRSZG
 summoner/M
@@ -48213,7 +48210,7 @@ surroundings/M
 surtax/MDSG
 surtitle/S
 surveil/S
-surveillance/MS
+surveillance/SM
 surveillant/MS
 surveilled
 surveilling
@@ -49900,7 +49897,7 @@ tractably/I
 traction/FEACKM
 tractor/FCKMS
 trad
-trade/JDRSMZGB
+trade/BJDRSMZG
 trademark/SGMD
 tradeoff/S
 trader/M
@@ -50449,10 +50446,10 @@ tumor/SM
 tumorous
 tumult/SM
 tumultuous/Y
-tun/SZGMDR
+tun/SZGMDRB
 tuna/MS
 tundra/SM
-tune/MSB
+tune/MS
 tuneful/YP
 tunefulness/M
 tuneless/Y
@@ -50763,7 +50760,6 @@ unconscionable
 unconscionably
 unconscious/M
 unconstitutional/Y
-uncontradicted
 uncontrollably
 uncontroversial
 uncool
@@ -50932,7 +50928,6 @@ unequal/DY
 unerring/Y
 unessential
 uneven/Y
-unexamined
 unexceptionably
 unexcited
 unexciting
@@ -51542,7 +51537,7 @@ veranda/SM
 verandah/M
 verandahs
 verapamil
-verb/KMSDG
+verb/KMDGS
 verbal/MYS
 verbalization/M
 verbalize/GDS
@@ -51563,8 +51558,8 @@ verifiability
 verifiable/U
 verification/M
 verified/U
-verifier/SM
-verify/DSNG
+verifier/M
+verify/DRSNZG
 verily
 verisimilitude/M
 veritable
@@ -52299,7 +52294,7 @@ webfoot/M
 webinar/SM
 webisode/MS
 weblog/MS
-webmail/MS
+webmail/SM
 webmaster/SM
 webmistress/MS
 webpage/SM
@@ -52511,7 +52506,7 @@ whisper/MDRSZG
 whisperer/M
 whist/M
 whistle/MZGDRS
-whistleblower/MSG
+whistleblower/GMS
 whistler/M
 whit/MDNRSXTGJ
 white/SPM
@@ -52682,7 +52677,7 @@ windfall/MS
 windflower/MS
 windily
 windiness/M
-winding/MS
+winding/SM
 windjammer/SM
 windlass/MS
 windless
