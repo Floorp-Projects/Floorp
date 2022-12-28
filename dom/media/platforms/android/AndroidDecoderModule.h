@@ -29,13 +29,6 @@ class AndroidDecoderModule : public PlatformDecoderModule {
       const nsACString& aMimeType,
       DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  bool SupportsColorDepth(
-      gfx::ColorDepth aColorDepth,
-      DecoderDoctorDiagnostics* aDiagnostics) const override {
-    return aColorDepth == gfx::ColorDepth::COLOR_8 ||
-           aColorDepth == gfx::ColorDepth::COLOR_10;
-  }
-
   static media::DecodeSupportSet SupportsMimeType(const nsACString& aMimeType);
 
   static nsTArray<nsCString> GetSupportedMimeTypes();
