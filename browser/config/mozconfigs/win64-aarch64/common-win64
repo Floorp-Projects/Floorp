@@ -13,7 +13,6 @@ if [ -f "${UPX}" ]; then
     chmod +x "${UPX}"
 fi
 mk_add_options "export PATH=${VC_PATH}/bin/hostx64/arm64:${PATH}"
-mk_add_options "export WINEPATH=${VC_PATH}/bin/hostx64/x64"
 
 unset VC_PATH
 
