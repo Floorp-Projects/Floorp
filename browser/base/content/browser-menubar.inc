@@ -437,6 +437,9 @@
               </menupopup>
             </menu>
 #ifdef XP_MACOSX
+<!-- Do not dynamically modify the Window menu and be careful when making static changes to it.
+     macOS adds extra functionality to this menu, such as a list of windows, which can break when
+     modifying this menu. See bug 1642138 and bug 1807697 for example. -->
             <menu id="windowMenu"
                    data-l10n-id="menu-window-menu">
                 <menupopup id="windowPopup">
