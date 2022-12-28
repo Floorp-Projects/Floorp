@@ -174,14 +174,6 @@ wix-3.14.0:
         sha256: 923892298f37514622c58cbbd9c2cadf2822d9bb53df8ee83aaeb05280777611
         size: 34664320
 
-grcov-osx-x86_64:
-    description: grcov binary release
-    fetch:
-        type: static-url
-        url: https://github.com/mozilla/grcov/releases/download/v0.7.1/grcov-osx-x86_64.tar.bz2
-        sha256: c7c323e0647b1309b412874000d677e8f5b898401ec57761c57a9c396c433823
-        size: 2476735
-
 zlib-1.2.13:
     description: zlib 1.2.13 source code
     fetch:
