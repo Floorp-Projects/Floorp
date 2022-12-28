@@ -67,7 +67,7 @@
   },
   "background": {
     "scripts": [
-      "gesturefly/background.js",
+      "gesturefy/background.js",
       "webcompat.js",
       "update.js",
       "download-notification.js"
