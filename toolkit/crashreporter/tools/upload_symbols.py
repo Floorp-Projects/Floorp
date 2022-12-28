@@ -17,7 +17,6 @@
 import argparse
 import logging
 import os
-import shutil
 import sys
 
 import redo
@@ -80,25 +79,16 @@ def main():
     zip_path = args.archive
 
     if args.archive.endswith(".tar.zst"):
+        import concurrent.futures
         import gzip
         import tarfile
         import tempfile
 
         import zstandard
         from mozpack.files import File
-        from mozpack.mozjar import JarWriter
+        from mozpack.mozjar import Deflater, JarWriter
 
-        def prepare_zip_from(archive, tmpdir):
-            if archive.startswith("http"):
-                resp = requests.get(archive, allow_redirects=True, stream=True)
-                resp.raise_for_status()
-                reader = resp.raw
-                # Work around taskcluster generic-worker possibly gzipping the tar.zst.
-                if resp.headers.get("Content-Encoding") == "gzip":
-                    reader = gzip.GzipFile(fileobj=reader)
-            else:
-                reader = open(archive, "rb")
-
+        def iter_files_from_tar(reader):
             ctx = zstandard.ZstdDecompressor()
             uncompressed = ctx.stream_reader(reader)
             with tarfile.open(
@@ -109,46 +99,61 @@ def main():
                     if info is None:
                         break
                     log.info(info.name)
-                    data = tar.extractfile(info)
-                    path = os.path.join(tmpdir, info.name.lstrip("/"))
-                    if info.name.endswith(".dbg"):
-                        os.makedirs(os.path.dirname(path), exist_ok=True)
-                        with open(path, "wb") as fh:
-                            with gzip.GzipFile(
-                                fileobj=fh, mode="wb", compresslevel=5
-                            ) as c:
-                                shutil.copyfileobj(data, c)
-                        jar.add(info.name + ".gz", File(path), compress=False)
-                    elif info.name.endswith(".dSYM.tar"):
-                        import bz2
+                    data = tar.extractfile(info).read()
+                    yield (info.name, data)
 
-                        os.makedirs(os.path.dirname(path), exist_ok=True)
-                        with open(path, "wb") as fh:
-                            c = bz2.BZ2Compressor()
-                            while True:
-                                buf = data.read(16384)
-                                if not buf:
-                                    break
-                                fh.write(c.compress(buf))
-                            fh.write(c.flush())
-                        jar.add(info.name + ".bz2", File(path), compress=False)
-                    elif info.name.endswith((".pdb", ".exe", ".dll")):
-                        import subprocess
+        def prepare_from(archive, tmpdir):
+            if archive.startswith("http"):
+                resp = requests.get(archive, allow_redirects=True, stream=True)
+                resp.raise_for_status()
+                reader = resp.raw
+                # Work around taskcluster generic-worker possibly gzipping the tar.zst.
+                if resp.headers.get("Content-Encoding") == "gzip":
+                    reader = gzip.GzipFile(fileobj=reader)
+            else:
+                reader = open(archive, "rb")
 
-                        makecab = os.environ.get("MAKECAB", "makecab")
-                        os.makedirs(os.path.dirname(path), exist_ok=True)
-                        with open(path, "wb") as fh:
-                            shutil.copyfileobj(data, fh)
+            def handle_file(data):
+                name, data = data
+                path = os.path.join(tmpdir, name.lstrip("/"))
+                if name.endswith(".dbg"):
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    with open(path, "wb") as fh:
+                        with gzip.GzipFile(fileobj=fh, mode="wb", compresslevel=5) as c:
+                            c.write(data)
+                    return (name + ".gz", File(path))
+                elif name.endswith(".dSYM.tar"):
+                    import bz2
 
-                        subprocess.check_call(
-                            [makecab, "-D", "CompressionType=MSZIP", path, path + "_"],
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.STDOUT,
-                        )
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    with open(path, "wb") as fh:
+                        fh.write(bz2.compress(data))
+                    return (name + ".bz2", File(path))
+                elif name.endswith((".pdb", ".exe", ".dll")):
+                    import subprocess
 
-                        jar.add(info.name[:-1] + "_", File(path + "_"), compress=False)
-                    else:
-                        jar.add(info.name, data)
+                    makecab = os.environ.get("MAKECAB", "makecab")
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    with open(path, "wb") as fh:
+                        fh.write(data)
+
+                    subprocess.check_call(
+                        [makecab, "-D", "CompressionType=MSZIP", path, path + "_"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.STDOUT,
+                    )
+
+                    return (name[:-1] + "_", File(path + "_"))
+                else:
+                    deflater = Deflater(compress_level=5)
+                    deflater.write(data)
+                    return (name, deflater)
+
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=os.cpu_count()
+            ) as executor:
+                yield from executor.map(handle_file, iter_files_from_tar(reader))
+
             reader.close()
 
         tmpdir = tempfile.TemporaryDirectory()
@@ -159,9 +164,10 @@ def main():
         is_existing = False
         try:
             for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
-                with JarWriter(zip_path, compress_level=5) as jar:
+                with JarWriter(zip_path) as jar:
                     try:
-                        prepare_zip_from(args.archive, tmpdir.name)
+                        for name, data in prepare_from(args.archive, tmpdir.name):
+                            jar.add(name, data, compress=not isinstance(data, File))
                         is_existing = True
                         break
                     except requests.exceptions.RequestException as e:
