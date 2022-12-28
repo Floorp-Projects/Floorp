@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.14.2 (October 26, 2022)
+
+- Derived impls of `FromMeta` will now error on literals, rather than silently ignoring them. [#193](https://github.com/TedDriggs/darling/pull/193)
+- Don't include property paths in compile errors when spans are available. [#203](https://github.com/TedDriggs/darling/pull/203)
+
+## v0.14.1 (April 28, 2022)
+
+- Fix a bug where using a trait that accepts `#[darling(attributes(...))]` without specifying any attributes would emit code that did not compile. [#183](https://github.com/TedDriggs/darling/issues/183)
+- Impl `Clone` for `darling::Error` [#184](https://github.com/TedDriggs/darling/pull/184)
+- Impl `From<darling::Error> for syn::Error` [#184](https://github.com/TedDriggs/darling/pull/184)
+- Add `Error::span` and `Error::explicit_span` methods [#184](https://github.com/TedDriggs/darling/pull/184)
+
+## v0.14.0 (April 13, 2022)
+
+- **BREAKING CHANGE:** Remove many trait impls from `util::Flag`. 
+  This type had a number of deref and operator impls that made it usable as sort-of-a-boolean.
+  Real-world usage showed this type is more useful if it's able to carry a span for good errors,
+  and that most of those impls were unnecessary. [#179](https://github.com/TedDriggs/darling/pull/179)
+- Remove need for `#[darling(default)]` on `Option<T>` and `Flag` fields [#161](https://github.com/TedDriggs/darling/issues/161)
+- Improve validation of enum shapes [#178](https://github.com/TedDriggs/darling/pull/178)
+- Bump `proc-macro2` dependency to 1.0.37 [#180](https://github.com/TedDriggs/darling/pull/180)
+- Bump `quote` dependency to 1.0.18 [#180](https://github.com/TedDriggs/darling/pull/180)
+- Bump `syn` dependency to 1.0.91 [#180](https://github.com/TedDriggs/darling/pull/180)
+
 ## v0.13.4 (April 6, 2022)
 
 - Impl `FromMeta` for `syn::Visibility` [#173](https://github.com/TedDriggs/darling/pull/173)

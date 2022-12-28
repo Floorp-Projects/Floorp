@@ -8,11 +8,6 @@ pub trait ExtractAttribute {
     /// A set of mutable declarations for all members of the implementing type.
     fn local_declarations(&self) -> TokenStream;
 
-    /// A set of immutable declarations for all members of the implementing type.
-    /// This is used in the case where a deriving struct handles no attributes and therefore can
-    /// never change its default state.
-    fn immutable_declarations(&self) -> TokenStream;
-
     /// Gets the list of attribute names that should be parsed by the extractor.
     fn attr_names(&self) -> &PathList;
 
@@ -32,17 +27,9 @@ pub trait ExtractAttribute {
     /// Gets the core from-meta-item loop that should be used on matching attributes.
     fn core_loop(&self) -> TokenStream;
 
-    fn declarations(&self) -> TokenStream {
-        if !self.attr_names().is_empty() {
-            self.local_declarations()
-        } else {
-            self.immutable_declarations()
-        }
-    }
-
     /// Generates the main extraction loop.
     fn extractor(&self) -> TokenStream {
-        let declarations = self.declarations();
+        let declarations = self.local_declarations();
 
         let will_parse_any = !self.attr_names().is_empty();
         let will_fwd_any = self

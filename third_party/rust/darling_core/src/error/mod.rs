@@ -56,8 +56,7 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 ///    to ensure those errors appear in the right place. Use `darling::util::SpannedValue` to keep
 ///    span information around on parsed fields so that custom diagnostics can point to the correct
 ///    parts of the input AST.
-#[derive(Debug)]
-#[cfg_attr(test, derive(Clone))]
+#[derive(Debug, Clone)]
 pub struct Error {
     kind: ErrorKind,
     locations: Vec<String>,
@@ -252,6 +251,20 @@ impl Error {
         self
     }
 
+    /// Get a span for the error.
+    ///
+    /// # Return Value
+    /// This function will return [`Span::call_site()`](proc_macro2::Span) if [`Self::has_span`] is `false`.
+    /// To get the span only if one has been explicitly set for `self`, instead use [`Error::explicit_span`].
+    pub fn span(&self) -> Span {
+        self.span.unwrap_or_else(Span::call_site)
+    }
+
+    /// Get the span for `self`, if one has been set.
+    pub fn explicit_span(&self) -> Option<Span> {
+        self.span
+    }
+
     /// Recursively converts a tree of errors to a flattened list.
     pub fn flatten(self) -> Self {
         Error::multiple(self.into_vec())
@@ -336,18 +349,7 @@ impl Error {
 
         #[cfg(not(feature = "diagnostics"))]
         {
-            self.flatten()
-                .into_iter()
-                .map(|e| e.single_to_syn_error().to_compile_error())
-                .collect()
-        }
-    }
-
-    #[cfg(not(feature = "diagnostics"))]
-    fn single_to_syn_error(self) -> ::syn::Error {
-        match self.span {
-            Some(span) => ::syn::Error::new(span, self.kind),
-            None => ::syn::Error::new(Span::call_site(), self),
+            syn::Error::from(self).into_compile_error()
         }
     }
 
@@ -437,6 +439,34 @@ impl From<syn::Error> for Error {
         Self {
             span: Some(e.span()),
             ..Self::custom(e)
+        }
+    }
+}
+
+impl From<Error> for syn::Error {
+    fn from(e: Error) -> Self {
+        if e.len() == 1 {
+            if let Some(span) = e.explicit_span() {
+                // Don't include the location path if the error has an explicit span,
+                // since it will be redundant and isn't consistent with how rustc
+                // exposes errors.
+                syn::Error::new(span, e.kind)
+            } else {
+                // If the error's span is going to be the macro call site, include
+                // the location information to try and help the user pinpoint the issue.
+                syn::Error::new(e.span(), e)
+            }
+        } else {
+            let mut syn_errors = e.flatten().into_iter().map(syn::Error::from);
+            let mut error = syn_errors
+                .next()
+                .expect("darling::Error can never be empty");
+
+            for next_error in syn_errors {
+                error.combine(next_error);
+            }
+
+            error
         }
     }
 }
@@ -662,10 +692,14 @@ impl Extend<Error> for Accumulator {
 
 impl Drop for Accumulator {
     fn drop(&mut self) {
-        if let Some(errors) = &mut self.0 {
-            match errors.len() {
-                0 => panic!("darling::error::Accumulator dropped without being finished"),
-                error_count => panic!("darling::error::Accumulator dropped without being finished. {} errors were lost.", error_count)
+        // don't try to panic if we are currently unwinding a panic
+        // otherwise we end up with an unhelful "thread panicked while panicking. aborting." message
+        if !std::thread::panicking() {
+            if let Some(errors) = &mut self.0 {
+                match errors.len() {
+                    0 => panic!("darling::error::Accumulator dropped without being finished"),
+                    error_count => panic!("darling::error::Accumulator dropped without being finished. {} errors were lost.", error_count)
+                }
             }
         }
     }

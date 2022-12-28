@@ -95,6 +95,9 @@ mozbuild = { path = "build/rust/mozbuild" }
 # Patch cfg-if 0.1 to 1.0
 cfg-if = { path = "build/rust/cfg-if" }
 
+# Patch darling 0.13 to 0.14
+darling = { path = "build/rust/darling" }
+
 # Patch redox_users to an empty crate
 redox_users = { path = "build/rust/redox_users" }
 

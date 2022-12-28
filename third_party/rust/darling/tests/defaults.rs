@@ -121,3 +121,69 @@ mod stacked_defaults {
         assert_eq!(person.name.last, "Doe");
     }
 }
+
+mod implicit_default {
+    use darling::{util::Flag, FromDeriveInput};
+    use syn::parse_quote;
+
+    // No use of `darling(default)` here at all!
+    // This struct will fill in missing fields using FromMeta::from_none.
+    #[derive(FromDeriveInput)]
+    #[darling(attributes(person))]
+    struct Person {
+        first_name: String,
+        last_name: Option<String>,
+        lefty: Flag,
+    }
+
+    #[test]
+    fn missing_fields_fill() {
+        let person = Person::from_derive_input(&parse_quote! {
+            #[person(first_name = "James")]
+            struct Foo;
+        })
+        .unwrap();
+
+        assert_eq!(person.first_name, "James");
+        assert_eq!(person.last_name, None);
+        assert!(!person.lefty.is_present());
+    }
+}
+
+/// Test that a field-level implicit default using FromMeta::from_none is superseded
+/// by the parent declaring `#[darling(default)]`.
+mod overridden_implicit_default {
+    use darling::{util::Flag, FromDeriveInput};
+    use syn::parse_quote;
+
+    #[derive(FromDeriveInput)]
+    #[darling(default, attributes(person))]
+    struct Person {
+        first_name: String,
+        last_name: Option<String>,
+        lefty: Flag,
+    }
+
+    impl Default for Person {
+        fn default() -> Self {
+            Self {
+                first_name: "Jane".into(),
+                last_name: Some("Doe".into()),
+                lefty: Flag::default(),
+            }
+        }
+    }
+
+    #[test]
+    fn fill_missing() {
+        let person = Person::from_derive_input(&parse_quote!(
+            #[person(last_name = "Archer")]
+            struct Foo;
+        ))
+        .unwrap();
+
+        assert_eq!(person.first_name, "Jane");
+        assert_eq!(person.last_name, Some("Archer".into()));
+        assert!(!person.lefty.is_present());
+    }
+}

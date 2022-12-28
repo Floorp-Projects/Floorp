@@ -4,7 +4,7 @@ use syn::{Generics, Ident, WherePredicate};
 use crate::ast::{Data, Fields};
 use crate::codegen::{
     error::{ErrorCheck, ErrorDeclaration},
-    field, DefaultExpression, Field, FieldsGen, PostfixTransform, Variant,
+    DefaultExpression, Field, FieldsGen, PostfixTransform, Variant,
 };
 use crate::usage::{CollectTypeParams, IdentSet, Purpose};
 
@@ -90,17 +90,6 @@ impl<'a> TraitImpl<'a> {
     pub(in crate::codegen) fn local_declarations(&self) -> TokenStream {
         if let Data::Struct(ref vd) = self.data {
             let vdr = vd.as_ref().map(Field::as_declaration);
-            let decls = vdr.fields.as_slice();
-            quote!(#(#decls)*)
-        } else {
-            quote!()
-        }
-    }
-
-    /// Generate immutable variable declarations for all fields.
-    pub(in crate::codegen) fn immutable_declarations(&self) -> TokenStream {
-        if let Data::Struct(ref vd) = self.data {
-            let vdr = vd.as_ref().map(|f| field::Declaration::new(f, false));
             let decls = vdr.fields.as_slice();
             quote!(#(#decls)*)
         } else {

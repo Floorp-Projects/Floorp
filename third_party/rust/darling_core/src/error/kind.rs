@@ -6,10 +6,10 @@ type DeriveInputShape = String;
 type FieldName = String;
 type MetaFormat = String;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 // Don't want to publicly commit to ErrorKind supporting equality yet, but
 // not having it makes testing very difficult.
-#[cfg_attr(test, derive(Clone, PartialEq, Eq))]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub(in crate::error) enum ErrorKind {
     /// An arbitrary error message.
     Custom(String),
@@ -104,10 +104,10 @@ impl From<ErrorUnknownField> for ErrorKind {
 
 /// An error for an unknown field, with a possible "did-you-mean" suggestion to get
 /// the user back on the right track.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 // Don't want to publicly commit to ErrorKind supporting equality yet, but
 // not having it makes testing very difficult.
-#[cfg_attr(test, derive(Clone, PartialEq, Eq))]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub(in crate::error) struct ErrorUnknownField {
     name: String,
     did_you_mean: Option<String>,

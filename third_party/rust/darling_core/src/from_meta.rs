@@ -78,6 +78,20 @@ pub trait FromMeta: Sized {
         .map_err(|e| e.with_span(item))
     }
 
+    /// When a field is omitted from a parent meta-item, `from_none` is used to attempt
+    /// recovery before a missing field error is generated.
+    ///
+    /// **Most types should not override this method.** `darling` already allows field-level
+    /// missing-field recovery using `#[darling(default)]` and `#[darling(default = "...")]`,
+    /// and users who add a `String` field to their `FromMeta`-deriving struct would be surprised
+    /// if they get back `""` instead of a missing field error when that field is omitted.
+    ///
+    /// The primary use-case for this is `Option<T>` fields gracefully handlling absence without
+    /// needing `#[darling(default)]`.
+    fn from_none() -> Option<Self> {
+        None
+    }
+
     /// Create an instance from the presence of the word in the attribute with no
     /// additional options specified.
     fn from_word() -> Result<Self> {
@@ -390,18 +404,30 @@ impl FromMeta for ident_case::RenameRule {
 }
 
 impl<T: FromMeta> FromMeta for Option<T> {
+    fn from_none() -> Option<Self> {
+        Some(None)
+    }
+
     fn from_meta(item: &Meta) -> Result<Self> {
         FromMeta::from_meta(item).map(Some)
     }
 }
 
 impl<T: FromMeta> FromMeta for Box<T> {
+    fn from_none() -> Option<Self> {
+        T::from_none().map(Box::new)
+    }
+
     fn from_meta(item: &Meta) -> Result<Self> {
         FromMeta::from_meta(item).map(Box::new)
     }
 }
 
 impl<T: FromMeta> FromMeta for Result<T> {
+    fn from_none() -> Option<Self> {
+        T::from_none().map(Ok)
+    }
+
     fn from_meta(item: &Meta) -> Result<Self> {
         Ok(FromMeta::from_meta(item))
     }
@@ -418,18 +444,30 @@ impl<T: FromMeta> FromMeta for ::std::result::Result<T, Meta> {
 }
 
 impl<T: FromMeta> FromMeta for Rc<T> {
+    fn from_none() -> Option<Self> {
+        T::from_none().map(Rc::new)
+    }
+
     fn from_meta(item: &Meta) -> Result<Self> {
         FromMeta::from_meta(item).map(Rc::new)
     }
 }
 
 impl<T: FromMeta> FromMeta for Arc<T> {
+    fn from_none() -> Option<Self> {
+        T::from_none().map(Arc::new)
+    }
+
     fn from_meta(item: &Meta) -> Result<Self> {
         FromMeta::from_meta(item).map(Arc::new)
     }
 }
 
 impl<T: FromMeta> FromMeta for RefCell<T> {
+    fn from_none() -> Option<Self> {
+        T::from_none().map(RefCell::new)
+    }
+
     fn from_meta(item: &Meta) -> Result<Self> {
         FromMeta::from_meta(item).map(RefCell::new)
     }
@@ -583,7 +621,7 @@ mod tests {
 
     #[test]
     fn unit_succeeds() {
-        let () = fm::<()>(quote!(ignore));
+        fm::<()>(quote!(ignore));
     }
 
     #[test]

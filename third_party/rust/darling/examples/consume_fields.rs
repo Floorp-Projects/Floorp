@@ -137,7 +137,8 @@ struct MyFieldReceiver {
     /// We declare this as an `Option` so that during tokenization we can write
     /// `field.volume.unwrap_or(derive_input.volume)` to facilitate field-level
     /// overrides of struct-level settings.
-    #[darling(default)]
+    ///
+    /// Because this field is an `Option`, we don't need to include `#[darling(default)]`
     volume: Option<Volume>,
 }
 
