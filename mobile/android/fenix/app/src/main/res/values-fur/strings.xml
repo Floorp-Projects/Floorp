@@ -1,0 +1,1181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s privât</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Privât)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Altris opzions</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Abilite la navigazion privade</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Disabilite la navigazion privade</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Cîr o inserìs une direzion</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Cîr te cronologjie</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Cîr tai segnelibris</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Cîr tes schedis</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Inserìs i tiermins di ricercje</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Lis tôs schedis viertis a vignaran mostradis achì.</string>
+
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Lis tôs schedis privadis a vignaran mostradis achì.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d selezionadis</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Zonte gnove racuelte</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Non</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Selezione racuelte</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Jes de modalitât di selezion multiple</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Salve lis schedis selezionadis intune racuelte</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Selezionade</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Zontâts di resint</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Mostre ducj i segnelibris salvâts</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Gjave</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s al è prodot di Mozilla.</string>
+
+
+    <!-- Private Browsing -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        %1$s al nete la cronologjie di ricercje e di navigazion des tôs schedis privadis cuant che tu lis sieris o tu jessis de aplicazion. Ancje se chest no ti rint anonim sui sîts web o al to furnidôr di servizis internet, al rint plui sempliç tignî privât ce che tu fasis in rêt, a chei altris che a doprin chest dispositîf.</string>
+    <string name="private_browsing_common_myths">
+       Falsis crodincis su la navigazion privade
+    </string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Zonte une scurte par vierzi schedis privadis de tô schermade principâl.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Vierç la prossime schede privade intune sole tocjade.</string>
+    <!-- Text for the positive button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Zonte scurte</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Zonte a schermade principâl</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
+    <string name="cfr_neg_button_text">No graciis</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Tu puedis configurâ %1$s par vierzi in automatic i colegaments tes aplicazions.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Va aes impostazions</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Scarte</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Siere</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">La nestre plui fuarte funzion di protezion de riservatece mai realizade e isole lis spiis inter-sîts.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Plui informazions su la Protezion Totâl dai Cookies</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Al covente l’acès ae fotocjamare. Va tes impostazions di Android, va te schede dai permès e tocje permet.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Va aes impostazions</string>
+
+
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Siere</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Stabilìs che lis schedis viertis che no son stadis visualizadis tal ultin dì, setemane o mês, si sierin in automatic.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Visualize opzions</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Siere</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Lis schedis che no tu visualizis par dôs setemanis a vegnin spostadis achì.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Disative tes impostazions</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Sierâ in automatic dopo un mês?</string>
+
+
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s al pues sierâ lis schedis che no tu âs visualizât tal ultin mês.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Siere</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Ative il sierâ automatic</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Gnove schede</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Gnove schede privade</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Torne a cheste schede</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Mostre dutis</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Boton par mostrâ dutis lis schedis resintis</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Viôt dutis lis schedis sincronizadis</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Dispositîf sincronizât</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Gjave</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Gjave</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Visitâts di resint</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Gjave</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Visualize dutis lis esplorazions fatis</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Indaûr</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Indenant</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Inzorne</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Ferme</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Components adizionâi</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Nissun component adizionâl achì</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Jutori</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Novitâts</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Impostazions</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Librarie</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Sît di scritori</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Zonte a schermade principâl</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Instale</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Torne sincronize</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Cjate te pagjine</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Salve intune racuelte</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Condivît</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Vierç in %1$s</string>
+
+
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">AL FUNZIONE GRACIE A %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Al funzione gracie a %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Viodude di leture</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Siere la viodude di leture</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Vierç intune aplicazion</string>
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Personalize viodude di leture</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Zonte</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Modifiche</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Personalize pagjine iniziâl</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Schermade principâl</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Lenghe selezionade</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Dopre lenghe dal dispositîf</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Cîr lenghe</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Scansione</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Motôr di ricercje</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Impostazions motôr di ricercje</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Tache il link des notis</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Permet</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">No sta permeti</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Permeti sugjeriments di ricercje tes sessions privadis?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s al condividarà cul motôr di ricercje predefinît dut ce che tu scrivis te sbare de direzion.</string>
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Cîr in %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Cîr dret de sbare de direzion</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Impostazions ricercje</string>
+    <!-- Header text for the search selector menu -->
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Cheste volte cîr cun:</string>
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Cheste volte cîr in:</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Scuvierç la tô pagjine iniziâl personalizade. Lis schedis resintis, i segnelibris e i risultâts des ricercjis a vignaran fûr achì.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Benvignût intun internet plui personâl</string>
+
+
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Plui colôrs. Riservatece miorade. Stesse dedizion ae int invezit che ai profits.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Passâ di un schermi a chel altri al è plui facil di simpri</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Ripie di dulà che tu jeris restât cu lis schedis di altris dispositîfs, cumò disponibil dret de tô pagjine iniziâl.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Scomence</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Jentre</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Salte</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Sincronizazion des schedis in vore! Ripie di dulà che tu jeris restât sul altri dispositîf.</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Siere</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Vierç intune gnove schede in %1$s</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Cîr</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Cîr tal web</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Ricercje vocâl</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Impostazions</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Gjenerâl</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Informazions</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Motôr di ricercje predefinît</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Ricercje</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Sbare de direzion</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Valute su Google Play</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Informazions su %1$s</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Met come navigadôr predefinît</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Avanzadis</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Riservatece e sigurece</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Permès dai sîts</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Navigazion privade</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Vierç i colegaments intun barcon privât</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Permet la cature di schermadis te navigazion privade</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Se permetût, lis schedis privadis a saran visibilis ancje cuant che a son viertis plui aplicazions</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Zonte scurte navigazion privade</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Modalitât dome-HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Riduzion strisson pai cookies</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Ridûs i strissons pai cookies</string>
+
+
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox al cîr in automatic di refudâ lis richiestis dai cookies cuant che al ven visualizât un strisson pai cookies. Se la opzion par refudâju no je disponibile, Firefox al podarès acetâ ducj i cookies par sierâ il strisson.</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Disative par chest sît</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Ative par chest sît</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Ativâ la riduzion strisson dai cookies par %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Disativâ la riduzion strisson dai cookies par %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s al netarà vie i cookies di chest sît e al inzornarà la pagjine. Al è pussibil che netant vie ducj i cookies tu vegnis disconetût dal sît opûr che i carei des spesis a sedin disvuedâts.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s al pues cirî di refudâ in automatic lis richiestis dai cookies. Se no je disponibile une opzion par refudâju, %2$s al podarès acetâ ducj i cookies par sierâ il strisson.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Al cîr di conetisi in automatic ai sîts doprant il protocol di cifradure HTTPS par vê une sigurece miorade.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Ativade</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Disativave</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Plui informazions</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Ative in dutis lis schedis</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Ative dome in schedis privadis</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Version sigure dal sît no disponibile</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Al è probabil che il sît web nol supuarti HTTPS.</string>
+
+
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Dut câs al è ancje pussibil che al sedi un tentatîf di atac. Se tu continuis su chest sît web, no tu varessis di inserî nissune informazion sensibile. Se tu continuis, la modalitât dome-HTTPS e vignarà disativade in mût temporani par chest sît.</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Acessibilitât</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Servidôr personalizât pal account Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Servidôr personalizât par Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Serivdôr par Firefox Account/Sync modificât. La aplicazion e vignarà sierade par aplicâ lis modifichis…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Account</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Sbare dai struments</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Teme</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Pagjine iniziâl</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Mots</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Personalize</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Jentre par sincronizâ schedis, segnelibris, passwords e altri.</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Account Firefox</string>
+
+
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Torne conet par ripiâ la sincronizazion</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Lenghe</string>
+
+
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Sielte di dâts</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Racuelte di dâts</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Debug di lontan vie USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Visualize motôrs di ricercje</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Mostre sugjeriments di ricercje</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Mostre ricercje vocâl</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Mostre in sessions privadis</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Mostre sugjeriments des notis</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Cîr te cronologjie di navigazion</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Cîr tai segnelibris</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Cîr tes schedis sincronizadis</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Impostazions account</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Complete in automatic i URLs</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Vierç i links tes aplicazions</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Gjestôr esterni dai discjariaments</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Components adizionâi</string>
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Notifichis</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Racuelte personalizade di components adizionai</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Va ben</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Anule</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Non de racuelte</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Proprietari de racuelte (ID utent)</string>
+
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Racuelte di components adizionâi modificade. La aplicazion e vignarà sierade par aplicâ lis modifichis…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Ripie di chi</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Segnelibris resints</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Visitâts di resint</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
+
+
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Storiis che a fasin pensâ</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Articui selezionâts di %s</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Storiis sponsorizadis</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Fonts</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Scurtis sponsorizadis</string>
+
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Element fonts: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Fonts inzornât!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Visualize</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Impussibil discjamâ il fonts</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Torne prove</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Impussibil cambiâ il fonts</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Plui informazions</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">%s classic</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Edizion limitade</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">La gnove racuelte di Vôs indipendentis. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">La gnove racuelte di Vôs indipendentis.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Prove une man di colôr</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Sielç il fonts che ti ispire.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Scuvierç altris fonts</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Il component adizionâl nol è supuartât</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Il component adizionâ al è za instalât</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Sincronize cumò</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Sielç ce sincronizâ</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Cronologjie</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Segnelibris</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Credenziâls</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Schedis viertis</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Disconet</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Non dispositîf</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Tu scugnis inserî un non pal dispositîf.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Daûr a sincronizâ…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Sincronizazion falide. Ultime lade a bon fin: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Sincronizazion falide. Ultime sincronizazion: mai</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Ultime sincronizazion: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Ultime sincronizazion: mai</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s su %2$s %3$s</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Cjartis di credit</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Recapits</string>
+
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Schedis ricevudis</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Notifichis pes schedis ricevudis di altris dispositîfs Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Schede ricevude</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Schede di %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Ecezions</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Ative par ducj i sîts</string>
+
+
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Lis ecezions ti permetin di disabilitâ par cierts sîts la protezion da lis spiis.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Plui informazions</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Dâts tecnics e di utilizazion</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Al condivît cun Mozilla informazions su prestazions, utilizazion, hardware e personalizazions dal navigadôr par judânus a miorâ %1$s</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Dâts di comercializazion</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Al condivît i dâts di utilizazion di base cun Adjust, il nestri furnidôr di comercializazion mobile</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Studis</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Al permet a Mozilla di instalâ e puartâ indenant studis</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Sincronize e salve i tiei dâts</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Jentre par tornâ a conetiti</string>
+
+
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Gjave account</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Scansione il codiç QR visualizât su <b>firefox.com/pair</b>]]></string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Superiôr</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Inferiôr</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Clâr</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Scûr</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Stabilît dal sparagn energjetic</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Va daûr dal teme dal dispositîf</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tire par inzornâ</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Scor par platâ la sbare dai struments</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Scor la sbare dai struments in bande par cambiâ schede</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Scor la sbare dai struments in alt par vierzi lis schedis</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Discjamâts</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Segnelibris</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Segnelibris di scritori</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Menù segnelibris</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Sbare dai segnelibris</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Altris segnelibris</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Cronologjie</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Gnove schede</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Impostazions</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Siere</string>
+
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">Vierzi %d schedis?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Vierzint cussì tantis schedis tu podaressis morestâ %s dilunc il cjariament des pagjinis. Continuâ distès?</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Vierç schedis</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Anule</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d sît</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d sîts</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Schedis sieradis di resint</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Mostre cronologjie complete</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d schedis</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d schede</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Nissune schede sierade di resint achì</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Schedis</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Viodude schedis</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Liste</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Gridele</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Siere schedis</string>
+
+
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">A man</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Dopo un dì</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Dopo une setemane</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Dopo un mês</string>
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Siere in automatic lis schedis viertis</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Schermade di vierzidure</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Pagjine iniziâl</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Ultime schede</string>
+
+
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Pagjine iniziâl dopo cuatri oris di inativitât</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Siere a man</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Siere dopo un dì</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Siere dopo une setemane</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Siere dopo un mês</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Sposte lis schedis vecjis te sezion inativis</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Lis schedis che no tu visualizis di dôs setemanis a vegnin spostadis te sezion inativis.</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Gjave</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Atîfs</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s al pues instalâ e puartâ indenant studis di cuant in cuant.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Plui informazions</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">La aplicazion e jessarà par aplicâ lis modifichis</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Va ben</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Anule</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Daûr a sierâ la aplicazion par aplicâ lis modifichis…</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Schedis viertis</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Schedis privadis</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Schedis sincronizadis</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Zonte schede</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Zonte schede privade</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privade</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sincronize</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Condivît dutis lis schedis</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Schedis sieradis di resint</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Sieradis di resint</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Impostazions account</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Impostazions schedis</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Siere dutis lis schedis</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Segnelibri</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Siere</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Condivît lis schedis selezionadis</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Menù schedis selezionadis</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Gjave schede de racuelte</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Selezione schedis</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Siere schede</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Siere schede %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Menù schedis viertis</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Salve schedis intune racuelte</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Elimine racuelte</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Cambie non ae racuelte</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Vierç schedis</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Non de racuelte</string>
+
+
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Cambie non</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Gjave</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Elimine de cronologjie</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (modalitât privade)</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Inserìs i tiermins di ricercje</string>
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Scancele la cronologjie</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Cronologjie eliminade</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s eliminât</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Elimine</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d selezionâts</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Vuê</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Îr</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Ultins 7 dîs</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Ultins 30 dîs</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Plui vecjos</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Nissune cronologjie achì</string>
+
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Discjariaments gjavâts</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s gjavât</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Nissun file discjariât</string>
+
+
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d selezionâts</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Gjave</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Nus displâs. %1$s nol rive a cjariâ chê pagjine.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Invie la segnalazion di colàs a Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Siere schede</string>
+
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Ripristine schede</string>
+
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Eliminâ pardabon cheste cartele?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s al eliminarà i elements selezionâts.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Anule</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Zonte cartele</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Segnelibri salvât!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">MODIFICHE</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Modifiche</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Copie</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Condivît</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Vierç intune gnove schede</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Vierç intune schede privade</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Vierç ducj in gnovis schedis</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Vierç ducj in schedis privadis</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Elimine</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Salve</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d selezionâts</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Modifiche segnelibri</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Modifiche cartele</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Jentre par viodi i segnelibris sincronizâts</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">CARTELE</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">NON</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Zonte cartele</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Selezione cartele</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Il titul al è obligatori</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">URL no valit</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Nissun segnelibri achì</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Eliminât %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Segnelibris eliminâts</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Daûr a eliminâ lis cartelis selezionadis</string>
+
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">ANULE</string>
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Inserìs i tiermins di ricercje</string>
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Va aes impostazions</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Sfuei des impostazions rapidis</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Racomandade</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Nete permès</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">Va ben</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Anule</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Nete permès</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">Va ben</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Anule</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Nete i permès su ducj i sîts</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Riproduzion automatiche</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Fotocjamare</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Microfon</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Posizion</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Notifiche</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Archiviazion permanente</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookies inter-sîts</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Contignûts protets di DRM</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Domande il permès</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blocât</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Permetût</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blocât di Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Ecezions</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Ativade</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Disativade</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Permet audio e video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Permet audio e video</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Bloche audio e video dome su dâts mobii</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Audio e video a saran riprodots cul Wi-Fi</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Bloche dome l’audio</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Bloche dome l’audio</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Bloche audio e video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Bloche audio e video</string>
+
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Ativât</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Disativât</string>
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Ativât</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Disativât</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Racueltis</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Menù racuelte</string>
+
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Tire dongje i argoments che ti interessin.\nMet dongje lis ricercjis, i sîts e lis schedis similis par doprâlis in mût svelt plui indenant.</string>
+
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Selezione schedis</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Selezione racuelte</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Non racuelte</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Zonte gnove racuelte</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Selezione dut</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Deselezione dut</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Selezione lis schedis di salvâ</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d schedis selezionadis</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d schede selezionade</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Schedis salvadis!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Racuelte salvade!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Schede salvade!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Siere</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Salve</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Visualize</string>
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">Va ben</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Anule</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Racuelte %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">Condivît</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Condivît</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Salve come PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Impussibil gjenerâ il PDF</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Invie a dispositîf</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Dutis lis azions</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Dopradis di resint</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Copie intes notis</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Copiât intes notis</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Jentre par sincronizâ</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Sincronize e salve i dâts</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Mande a ducj i dispositîfs</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Torne conet a Sync</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Fûr rêt</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Conet un altri dispositîf</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Par inviâ une schede, jentre in Firefox su almancul un altri dispositîf.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Capît</string>
+
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Impussibil condividi cun cheste aplicazion</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Mande a dispositîf</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Nissun dispositîf conetût</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Plui informazions sul mandâ schedis…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Conet un altri dispositîf…</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Siere lis schedis privadis</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Comercializazion</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s al è svelt e riservât</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Met %1$s come to navigadôr predefinît</string>
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Prove la navigazion privade</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Navighe cence salvâ cookies o cronologjie in %1$s</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Racuelte eliminade</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Cambiât non ae racuelte</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Schede sierade</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Schedis sieradis</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Segnelibris salvâts!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Zontât aes scurtis!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Schede privade sierade</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Schedis privadis sieradis</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">ANULE</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Sît gjavât</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Permet a %1$s di vierzi %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">PERMET</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">DINEE</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Direzion web no valide.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">Va ben</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Eliminâ pardabon %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">La eliminazion di cheste schede e eliminarà dute la racuelte. Tu puedis creâ gnovis racueltis cuant che tu vûs.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Eliminâ %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Elimine</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Daûr a jentrâ in modalitât plen schermi</string>
+
+    </resources>

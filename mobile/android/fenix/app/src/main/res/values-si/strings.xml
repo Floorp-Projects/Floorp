@@ -65,10 +65,10 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">ඔබගේ මුල් තිරයෙන් පෞද්. පටිති විවෘත කිරීමට කෙටි මඟක් යොදන්න.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">ඔබගේ මුල් තිරයෙන් පෞද්. පටිති විවෘත කිරීමට කෙටි මඟක් යොදන්න.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">කෙටිමඟක් යොදන්න</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">කෙටිමඟක් යොදන්න</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">එපා, ස්තුතියි</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -1050,8 +1050,6 @@
     <string name="share_copy_link_to_clipboard">පසුරු පුවරුවට පිටපතක්</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">පසුරු පුවරුවට පිටපත් විය</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">සමමුහූර්තයට පිවිසෙන්න</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">සමමුහූර්තයට පිවිසෙන්න</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1848,6 +1846,11 @@
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ස්වයං වැසීම සක්‍රිය කරන්න</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">ස්වයං වැසීම සබලයි</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">ගූගල් සෙවුම</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s සෙවුම</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">ෆයර්ෆොක්ස් හි ස්වයංක්‍රීයව විවෘත වීමට අඩවි, වි-තැපැල් සහ පණිවිඩ වලින් සබැඳි සකසන්න.</string>
