@@ -267,3 +267,8 @@ toolkit/components/certviewer/content/package-lock.json
 ^tools/esmify/jscodeshift.cmd
 ^tools/esmify/jscodeshift.ps1
 ^tools/esmify/package-lock.json
+
+# Ignore support files for en-US dictionary updates
+^extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/scowl
+^extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/support_files/
+^extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/*en_US-mozilla*
