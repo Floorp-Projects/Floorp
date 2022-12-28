@@ -243,7 +243,12 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         return "%s/%s" % (self.config["upload_path_base"], self.config["revision"])
 
     def run_make(self, target, capture_output=False):
-        cmd = ["make", target] + self.query_make_params()
+        make = (
+            f"{os.environ['MOZ_FETCHES_DIR']}/mozmake/mozmake"
+            if sys.platform == "win32"
+            else "make"
+        )
+        cmd = [make, target] + self.query_make_params()
         dirs = self.query_abs_dirs()
         repo_dir = os.path.join(dirs["abs_work_dir"], "openh264")
         env = None
