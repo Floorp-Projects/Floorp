@@ -26,6 +26,18 @@ linux64-grcov:
             - linux64-binutils
             - sysroot-x86_64-linux-gnu
 
+macosx64-grcov:
+    treeherder:
+        symbol: TM(grcov)
+    run:
+        arguments: ['x86_64-apple-darwin']
+    fetches:
+        toolchain:
+            - linux64-rust-macos-toolchain
+            - linux64-clang-toolchain
+            - linux64-cctools-port
+            - macosx64-sdk
+
 win64-grcov:
     treeherder:
         symbol: TW64(grcov)
