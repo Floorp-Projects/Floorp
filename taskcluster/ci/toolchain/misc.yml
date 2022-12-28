@@ -286,14 +286,20 @@ linux64-makecab:
     description: "makecab toolchain build"
     treeherder:
         symbol: TL(cab)
+    worker:
+        env:
+            FETCH: rust-makecab
     run:
-        script: build-makecab.sh
+        script: build-rust-based-toolchain.sh
+        arguments: ['x86_64-unknown-linux-gnu']
         toolchain-artifact: public/build/makecab.tar.zst
     fetches:
         fetch:
             - makecab
         toolchain:
+            - linux64-clang-toolchain
             - linux64-rust-toolchain
+            - sysroot-x86_64-linux-gnu
 
 win64-mozmake:
     description: "mozmake for Windows"

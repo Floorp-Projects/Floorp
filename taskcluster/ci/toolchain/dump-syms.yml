@@ -6,10 +6,12 @@ job-defaults:
     attributes:
         local-toolchain: true
     description: "dump_syms toolchain build"
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run:
-        script: build-dump-syms.sh
+        script: build-rust-based-toolchain.sh
+        toolchain-artifact: public/build/dump_syms.tar.zst
     fetches:
         fetch:
             - dump-syms
@@ -17,9 +19,8 @@ job-defaults:
 linux64-dump_syms:
     treeherder:
         symbol: TL(dump_syms)
-    worker-type: b-linux-gcp
     run:
-        toolchain-artifact: public/build/dump_syms.tar.zst
+        arguments: ['x86_64-unknown-linux-gnu']
     fetches:
         toolchain:
             - linux64-binutils
@@ -33,7 +34,6 @@ macosx64-dump_syms:
     worker-type: b-linux-gcp
     run:
         arguments: ['x86_64-apple-darwin']
-        toolchain-artifact: public/build/dump_syms.tar.zst
     fetches:
         toolchain:
             - linux64-rust-macos-1.66
@@ -44,10 +44,8 @@ macosx64-dump_syms:
 macosx64-aarch64-dump_syms:
     treeherder:
         symbol: TM(dump_syms-arm64)
-    worker-type: b-linux-gcp
     run:
         arguments: ['aarch64-apple-darwin']
-        toolchain-artifact: public/build/dump_syms.tar.zst
     fetches:
         toolchain:
             - linux64-rust-macos-1.66
@@ -58,10 +56,11 @@ macosx64-aarch64-dump_syms:
 win64-dump_syms:
     treeherder:
         symbol: TW64(dump_syms)
-    worker-type: b-win2012
     run:
-        toolchain-artifact: public/build/dump_syms.tar.zst
+        arguments: ['x86_64-pc-windows-msvc']
     fetches:
         toolchain:
-            - win64-rust-1.66
+            - linux64-clang-toolchain
+            - linux64-rust-windows-1.66
+            - linux64-liblowercase
             - win64-vs2017

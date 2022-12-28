@@ -8,9 +8,13 @@ job-defaults:
         local-toolchain: true
     treeherder:
         symbol: TL(sccache)
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 1800
     run:
         using: toolchain-script
-        script: build-sccache.sh
+        script: build-rust-based-toolchain.sh
+        toolchain-artifact: public/build/sccache.tar.zst
     fetches:
         fetch:
             - sccache
@@ -18,11 +22,13 @@ job-defaults:
 linux64-sccache:
     treeherder:
         symbol: TL(sccache)
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 1800
     run:
-        toolchain-artifact: public/build/sccache.tar.zst
+        arguments:
+            - x86_64-unknown-linux-gnu
+            - all
+            - dist-server
+            - openssl/vendored
+            - native-zlib
     fetches:
         toolchain:
             - linux64-rust-toolchain
@@ -33,12 +39,11 @@ linux64-sccache:
 macosx64-sccache:
     treeherder:
         symbol: TM(sccache)
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 1800
     run:
-        arguments: ['x86_64-apple-darwin']
-        toolchain-artifact: public/build/sccache.tar.zst
+        arguments:
+            - x86_64-apple-darwin
+            - all
+            - native-zlib
     fetches:
         toolchain:
             - linux64-rust-macos-toolchain
@@ -49,12 +54,13 @@ macosx64-sccache:
 macosx64-aarch64-sccache:
     treeherder:
         symbol: TM(sccache-aarch64)
-    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run:
-        arguments: ['aarch64-apple-darwin']
-        toolchain-artifact: public/build/sccache.tar.zst
+        arguments:
+            - aarch64-apple-darwin
+            - all
+            - native-zlib
     fetches:
         toolchain:
             - linux64-rust-macos-toolchain
@@ -65,12 +71,20 @@ macosx64-aarch64-sccache:
 win64-sccache:
     treeherder:
         symbol: TW64(sccache)
-    worker-type: b-win2012
     worker:
-        max-run-time: 3600
+        env:
+            # Blake3 assembly can't be cross-compiled. The intrinsics version should be good enough.
+            CARGO_FEATURE_PREFER_INTRINSICS: '1'
     run:
-        toolchain-artifact: public/build/sccache.tar.zst
+        arguments:
+            - x86_64-pc-windows-msvc
+            - dist-client
+            - s3
+            - gcs
+            - native-zlib
     fetches:
         toolchain:
-            - win64-rust-toolchain
+            - linux64-clang-toolchain
+            - linux64-liblowercase
+            - linux64-rust-windows-toolchain
             - win64-vs2017

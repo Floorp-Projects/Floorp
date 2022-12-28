@@ -235,19 +235,6 @@ linux64-rust-windows-1.66:
         ]
         toolchain-alias: linux64-rust-windows
 
-win64-rust-1.61:
-    treeherder:
-        symbol: TW64(rust-1.61)
-    run:
-        arguments: [
-            '--channel', '1.61.0',
-            '--host', 'x86_64-pc-windows-msvc',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-            '--target', 'aarch64-pc-windows-msvc',
-        ]
-        toolchain-alias: win64-rust-toolchain
-
 win64-rust-1.66:
     treeherder:
         symbol: TW64(rust)
