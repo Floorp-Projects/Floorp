@@ -146,8 +146,9 @@
 //!   # }
 //!   ```
 //!
-//! - The Error trait's `backtrace()` method is implemented to return whichever
-//!   field has a type named `Backtrace`, if any.
+//! - The Error trait's `provide()` method is implemented to provide whichever
+//!   field has a type named `Backtrace`, if any, as a
+//!   `std::backtrace::Backtrace`.
 //!
 //!   ```rust
 //!   # const IGNORE: &str = stringify! {
@@ -163,7 +164,8 @@
 //!
 //! - If a field is both a source (named `source`, or has `#[source]` or
 //!   `#[from]` attribute) *and* is marked `#[backtrace]`, then the Error
-//!   trait's `backtrace()` method is forwarded to the source's backtrace.
+//!   trait's `provide()` method is forwarded to the source's `provide` so that
+//!   both layers of the error share the same backtrace.
 //!
 //!   ```rust
 //!   # const IGNORE: &str = stringify! {
@@ -196,6 +198,31 @@
 //!   }
 //!   ```
 //!
+//!   Another use case is hiding implementation details of an error
+//!   representation behind an opaque error type, so that the representation is
+//!   able to evolve without breaking the crate's public API.
+//!
+//!   ```
+//!   # use thiserror::Error;
+//!   #
+//!   // PublicError is public, but opaque and easy to keep compatible.
+//!   #[derive(Error, Debug)]
+//!   #[error(transparent)]
+//!   pub struct PublicError(#[from] ErrorRepr);
+//!
+//!   impl PublicError {
+//!       // Accessors for anything we do want to expose publicly.
+//!   }
+//!
+//!   // Private and free to change across minor version of the crate.
+//!   #[derive(Error, Debug)]
+//!   enum ErrorRepr {
+//!       # /*
+//!       ...
+//!       # */
+//!   }
+//!   ```
+//!
 //! - See also the [`anyhow`] library for a convenient single error type to use
 //!   in application code.
 //!
@@ -206,16 +233,22 @@
     clippy::doc_markdown,
     clippy::module_name_repetitions,
     clippy::return_self_not_must_use,
+    clippy::wildcard_imports,
 )]
+#![cfg_attr(provide_any, feature(provide_any))]
 
 mod aserror;
 mod display;
+#[cfg(provide_any)]
+mod provide;
 
 pub use thiserror_impl::*;
 
 // Not public API.
 #[doc(hidden)]
-pub mod private {
+pub mod __private {
     pub use crate::aserror::AsDynError;
     pub use crate::display::{DisplayAsDisplay, PathAsDisplay};
+    #[cfg(provide_any)]
+    pub use crate::provide::ThiserrorProvide;
 }

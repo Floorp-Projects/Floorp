@@ -1773,10 +1773,20 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.31 -> 1.0.32"
 
+[[audits.thiserror]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.32 -> 1.0.38"
+
 [[audits.thiserror-impl]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.31 -> 1.0.32"
+
+[[audits.thiserror-impl]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.32 -> 1.0.38"
 
 [[audits.threadbound]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
