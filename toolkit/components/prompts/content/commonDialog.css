@@ -116,7 +116,7 @@ dialog[subdialog] {
   /* With "baseline" alignment, if the checkbox is larger than the label, it
    * behaves like "start" positioned to the top; otherwise, it is positioned to
    * the bottom edge of the label, so shift back up to center it with text.  */
-  translate: 0 calc(-0.35 * max(1em - 100%, 0px) + 1px);
+  translate: 0 calc(-0.35em + 1px);
 }
 
 #commonDialog[subdialog] input {
