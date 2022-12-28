@@ -3,9 +3,7 @@ if [ -z "${VSPATH}" ]; then
 fi
 
 if [ -d "${VSPATH}" ]; then
-    VSWINPATH="$(cd ${VSPATH} && (pwd -W 2>/dev/null || pwd))"
-
-    export WINDOWSSDKDIR="${VSWINPATH}/windows kits/10"
+    export WINDOWSSDKDIR="${VSPATH}/windows kits/10"
     export WIN32_REDIST_DIR="${VSPATH}/vc/redist/msvc/14.16.27012/arm64/microsoft.vc141.crt"
     export VC_PATH="${VSPATH}/vc/tools/msvc/14.16.27023"
 fi
