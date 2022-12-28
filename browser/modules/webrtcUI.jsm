@@ -1278,8 +1278,8 @@ function showOrCreateMenuForWindow(aWindow) {
 
     let container, insertionPoint;
     if (AppConstants.platform == "macosx") {
-      container = document.getElementById("windowPopup");
-      insertionPoint = document.getElementById("sep-window-list");
+      container = document.getElementById("menu_ToolsPopup");
+      insertionPoint = document.getElementById("devToolsSeparator");
       let separator = document.createXULElement("menuseparator");
       separator.id = "tabSharingSeparator";
       container.insertBefore(separator, insertionPoint);
