@@ -1829,6 +1829,11 @@ criteria = "safe-to-deploy"
 version = "0.7.0"
 notes = "One of original auther was Zibi Braniecki who worked at Mozilla and maintained by ICU4X developers (Google and Mozilla). I've vetted the one instance of unsafe code."
 
+[[audits.tokio-macros]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.8.0 -> 1.8.2"
+
 [[audits.topological-sort]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"

@@ -13,12 +13,13 @@
 edition = "2018"
 rust-version = "1.49"
 name = "tokio-macros"
-version = "1.8.0"
+version = "1.8.2"
 authors = ["Tokio Contributors <team@tokio.rs>"]
 description = """
 Tokio's proc macros.
 """
 homepage = "https://tokio.rs"
+readme = "README.md"
 categories = ["asynchronous"]
 license = "MIT"
 repository = "https://github.com/tokio-rs/tokio"
