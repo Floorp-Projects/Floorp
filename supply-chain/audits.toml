@@ -1686,6 +1686,11 @@ criteria = "safe-to-deploy"
 version = "0.1.1"
 notes = "Developed in-tree, effectively."
 
+[[audits.sfv]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.9.2 -> 0.9.3"
+
 [[audits.sha1]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"

@@ -1,5 +1,5 @@
 [![License](https://img.shields.io/crates/l/sfv)](LICENSE-MIT)
-[![Build Status](https://img.shields.io/github/workflow/status/undef1nd/sfv/CI/master)](https://github.com/undef1nd/sfv/actions/workflows/ci-workflow.yml?query=branch%3Amaster)
+![Build Status](https://img.shields.io/github/actions/workflow/status/undef1nd/sfv/ci-workflow.yml)
 [![Version](https://img.shields.io/crates/v/sfv)](https://crates.io/crates/sfv)
 [![Docs](https://img.shields.io/docsrs/sfv?color=white)](https://docs.rs/sfv)
 
