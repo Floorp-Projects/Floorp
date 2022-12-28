@@ -1834,6 +1834,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.8.0 -> 1.8.2"
 
+[[audits.tokio-stream]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.1.9 -> 0.1.11"
+
 [[audits.topological-sort]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
