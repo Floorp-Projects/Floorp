@@ -4619,7 +4619,6 @@ checksum = "ee9164faf726e4f3ece4978b25ca877ddc6802fa77f38cdccb32c7f805ecd70c"
 dependencies = [
  "arrayvec",
  "num-traits",
- "serde",
 ]
 
 [[package]]
@@ -4888,9 +4887,9 @@ dependencies = [
 
 [[package]]
 name = "sfv"
-version = "0.9.2"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5082e028484c60920c1b0dc8ab6bd4663f075e15095c5a9009fae779c01f6364"
+checksum = "b4f1641177943b4e6faf7622463ae6dfe0f143eb88799e91e2e2e68ede568af5"
 dependencies = [
  "data-encoding",
  "indexmap",
