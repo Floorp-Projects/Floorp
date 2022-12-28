@@ -59,7 +59,6 @@ jobs:
         run-on-projects: ['release']
         fetches:
             toolchain:
-                - linux64-binutils
                 - linux64-clang
                 - linux64-rust
                 - linux64-rust-size
@@ -89,7 +88,6 @@ jobs:
             tooltool-downloads: public
         fetches:
             toolchain:
-                - linux64-binutils
                 - linux64-clang
                 - linux64-rust
                 - linux64-rust-size
@@ -123,7 +121,6 @@ jobs:
             mozconfig-variant: profile-generate
         fetches:
             toolchain:
-                - linux64-binutils
                 - linux64-cctools-port
                 - linux64-clang
                 - linux64-hfsplus
@@ -183,7 +180,6 @@ jobs:
                 - android-sdk-linux
                 - linux64-jdk
                 # Workaround issues in binutils from the ndk with the compiler-rt from clang-13
-                - linux64-binutils
                 - linux64-clang
                 - linux64-rust-android
                 - linux64-rust-size
@@ -271,7 +267,6 @@ jobs:
                     LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         fetches:
             toolchain:
-                - linux64-binutils
                 - linux64-clang
                 - linux64-rust-cross
                 - linux64-rust-size
@@ -312,7 +307,6 @@ jobs:
                     LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         fetches:
             toolchain:
-                - linux64-binutils
                 - linux64-clang
                 - linux64-rust-cross
                 - linux64-rust-size

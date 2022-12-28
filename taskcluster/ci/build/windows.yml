@@ -41,7 +41,6 @@ win32/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -95,7 +94,6 @@ win32/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -150,7 +148,6 @@ win32-fuzzing/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -206,7 +203,6 @@ win64/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -257,7 +253,6 @@ win64-hybrid/plain:
     run-on-projects: ['integration']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -311,7 +306,6 @@ win64-fuzzing/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -414,7 +408,6 @@ win64/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -526,7 +519,6 @@ win32-shippable/opt:
                 LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -583,7 +575,6 @@ win64-shippable/opt:
                 LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -632,7 +623,6 @@ win32-add-on-devel/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -682,7 +672,6 @@ win64-add-on-devel/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -732,7 +721,6 @@ win64-noopt/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -782,7 +770,6 @@ win32-noopt/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1107,7 +1094,6 @@ win64-asan/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1162,7 +1148,6 @@ win64-asan/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1227,7 +1212,6 @@ win64-asan-reporter-shippable/opt:
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1277,7 +1261,6 @@ win64-asan-fuzzing/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1349,7 +1332,6 @@ win32-devedition/opt:
     run-on-projects: ['mozilla-beta']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1407,7 +1389,6 @@ win64-devedition/opt:
     run-on-projects: ['mozilla-beta']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1459,7 +1440,6 @@ win64-aarch64/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1520,7 +1500,6 @@ win64-aarch64/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1722,7 +1701,6 @@ win64-aarch64-shippable-no-eme/opt:
     run-on-projects: ['all']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size
@@ -1882,7 +1860,6 @@ win64-aarch64-devedition-no-eme/opt:
     run-on-projects: ['mozilla-beta']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-cross
             - linux64-rust-size

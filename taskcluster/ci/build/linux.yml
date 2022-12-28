@@ -37,7 +37,6 @@ linux64/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -75,7 +74,6 @@ linux64-x11/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -115,7 +113,6 @@ linux64-plain/opt:
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-nasm
@@ -157,7 +154,6 @@ linux64-hybrid/plain:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-nasm
@@ -238,7 +234,6 @@ linux64-plain-clang-trunk/opt:
     run-on-projects: []
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang-trunk
             - linux64-rust
             - linux64-nasm
@@ -282,7 +277,6 @@ linux64-fuzzing/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
             - linux64-dump_syms
@@ -328,7 +322,6 @@ linux64-fuzzing-noopt/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
             - linux64-dump_syms
@@ -376,7 +369,6 @@ linux64/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
             - linux64-dump_syms
@@ -416,7 +408,6 @@ linux64-plain/debug:
     run-on-projects: [trunk]
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-nasm
@@ -509,7 +500,6 @@ linux/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -553,7 +543,6 @@ linux-fuzzing/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
             - linux64-dump_syms
@@ -599,7 +588,6 @@ linux/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -642,7 +630,6 @@ linux-rusttests/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
@@ -685,7 +672,6 @@ linux-rusttests/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
@@ -868,7 +854,6 @@ linux-asan-fuzzing/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -955,7 +940,6 @@ linux64-asan/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-dev
             - linux64-rust-size
@@ -996,7 +980,6 @@ linux64-tsan/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-dev
             - linux64-rust-size
@@ -1040,7 +1023,6 @@ linux64-tsan-fuzzing/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-dev
             - linux64-rust-size
@@ -1086,7 +1068,6 @@ linux64-asan-fuzzing/noopt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-dev
             - linux64-rust-size
@@ -1135,7 +1116,6 @@ linux64-asan-fuzzing-nyx/opt:
     fetches:
         toolchain:
             - linux64-afl-instrumentation
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-dev
             - linux64-rust-size
@@ -1181,7 +1161,6 @@ linux64-asan-fuzzing/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-dev
             - linux64-rust-size
@@ -1227,7 +1206,6 @@ linux64-asan-fuzzing-ccov/opt:
     use-sccache: false
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -1268,7 +1246,6 @@ linux64-fuzzing-ccov/opt:
     use-sccache: false
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
             - linux64-dump_syms
@@ -1324,7 +1301,6 @@ linux64-asan-reporter-shippable/opt:
             firefox-mozilla-central-asan
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -1363,7 +1339,6 @@ linux64-asan/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust-dev
             - linux64-rust-size
@@ -1457,7 +1432,6 @@ linux64-noopt/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -1499,7 +1473,6 @@ linux64-rusttests/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
@@ -1541,7 +1514,6 @@ linux64-rusttests/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
@@ -1587,7 +1559,6 @@ linux64-ccov/opt:
     use-sccache: false
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
@@ -1628,7 +1599,6 @@ linux64-ccov/debug:
     use-sccache: false
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
@@ -1667,7 +1637,6 @@ linux64-add-on-devel/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
