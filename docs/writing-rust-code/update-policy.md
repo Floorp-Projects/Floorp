@@ -137,7 +137,7 @@ Here are the Rust versions for each Firefox version.
 | Firefox 108 | Rust 1.65.0 | 1.63.0 | 2022 November 3 | 2022 November 10 | 2022 December 13
 | Firefox 109 | Rust 1.65.0 | 1.63.0 | 2022 November 3 | 2022 December 8 | 2023 January 17
 | **Estimated** |
-| Firefox 110 | Rust 1.66.0 | ? | 2022 December 15 | 2023 January 5 | 2023 February 14
+| Firefox 110 | Rust 1.66.0 | 1.65.0 | 2022 December 15 | 2023 January 5 | 2023 February 14
 | Firefox 111 | Rust 1.67.0 | ? | 2022 January 26 | 2023 February 9 | 2023 March 14
 | Firefox 112 | Rust 1.67.0 | ? | 2022 January 26 | 2023 March 9 | 2023 April 11
 | Firefox 113 | Rust 1.68.0 | ? | 2022 March 9 | 2023 April 6 | 2023 May 9
