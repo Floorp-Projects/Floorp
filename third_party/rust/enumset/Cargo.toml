@@ -12,11 +12,11 @@
 [package]
 edition = "2018"
 name = "enumset"
-version = "1.0.11"
+version = "1.0.12"
 authors = ["Alissa Rao <lymia@lymiahugs.com>"]
 description = "A library for creating compact sets of enums."
 documentation = "https://docs.rs/enumset/"
-readme = "../README.md"
+readme = "README.md"
 keywords = [
     "enum",
     "bitset",
@@ -26,29 +26,29 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/Lymia/enumset"
 
 [dependencies.enumset_derive]
-version = "0.6.0"
+version = "0.6.1"
 
 [dependencies.serde2]
-version = "1.0.91"
+version = "1"
 optional = true
 default-features = false
 package = "serde"
 
 [dev-dependencies.bincode]
-version = "1.0"
+version = "1"
 features = ["i128"]
 
 [dev-dependencies.rustversion]
-version = "1.0.2"
+version = "1"
 
 [dev-dependencies.serde_derive]
-version = "1.0.91"
+version = "1"
 
 [dev-dependencies.serde_json]
-version = "1.0.39"
+version = "1"
 
 [dev-dependencies.trybuild]
-version = "1.0.24"
+version = "1"
 
 [features]
 alloc = []
