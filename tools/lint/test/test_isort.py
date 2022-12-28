@@ -26,7 +26,7 @@ def foobar():
     path = create_temp_file(contents, name="bad.py")
     results = lint([path])
     assert len(results) == 1
-    assert results[0].level == "warning"
+    assert results[0].level == "error"
 
     lint([path], fix=True)
     assert fixed == 1
