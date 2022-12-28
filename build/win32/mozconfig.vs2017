@@ -3,10 +3,9 @@ if [ -z "${VSPATH}" ]; then
 fi
 
 if [ -d "${VSPATH}" ]; then
-    export WINDOWSSDKDIR="${VSPATH}/windows kits/10"
     export WIN32_REDIST_DIR="${VSPATH}/vc/redist/msvc/14.16.27012/x86/microsoft.vc141.crt"
     export WIN_UCRT_REDIST_DIR="${VSPATH}/windows kits/10/redist/ucrt/dlls/x86"
-    export VC_PATH="${VSPATH}/vc/tools/msvc/14.16.27023"
+    export WINSYSROOT="${VSPATH}"
 fi
 
 ac_add_options --target=i686-pc-mingw32

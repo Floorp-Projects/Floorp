@@ -548,6 +548,16 @@ def is_windows(target, host):
     return host.kernel == "WINNT" or target.kernel == "WINNT"
 
 
+# Calling this a sysroot is a little weird, but it's the terminology clang went
+# with with its -winsysroot flag.
+option(
+    env="WINSYSROOT",
+    nargs=1,
+    when=is_windows,
+    help='Path to a Windows "sysroot" (directory containing MSVC, SDKs)',
+)
+
+
 option(
     env="VC_PATH",
     nargs=1,
@@ -561,12 +571,21 @@ option(
     vs_version,
     build_environment,
     "VC_PATH",
+    "WINSYSROOT",
     when=is_windows,
 )
+@imports("os")
 @imports(_from="operator", _import="itemgetter")
-def vc_compiler_paths_for_version(host, vs_version, env, vc_path):
-    if vc_path and vs_version:
-        die("VC_PATH and --with-visual-studio-version cannot be used together.")
+def vc_compiler_paths_for_version(host, vs_version, env, vc_path, winsysroot):
+    if (vc_path or winsysroot) and vs_version:
+        var = "VC_PATH" if vc_path else "WINSYSROOT"
+        die(f"{var} and --with-visual-studio-version cannot be used together.")
+    if winsysroot:
+        if vc_path:
+            die("WINSYSROOT and VC_PATH cannot be set together.")
+        base_vc_path = os.path.join(winsysroot[0], "VC", "Tools", "MSVC")
+        versions = os.listdir(base_vc_path)
+        vc_path = [os.path.join(base_vc_path, str(max(Version(v) for v in versions)))]
     if vc_path:
         # Use an arbitrary version, it doesn't matter.
         all_versions = [(Version("15"), vc_path[0])]

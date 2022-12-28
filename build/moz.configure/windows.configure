@@ -31,14 +31,19 @@ def valid_windows_version(value):
 option(env="WINDOWSSDKDIR", nargs=1, help="Directory containing the Windows SDK")
 
 
-@depends("WINDOWSSDKDIR", c_compiler, host_c_compiler)
-def windows_sdk_dir(value, compiler, host_compiler):
+@depends("WINDOWSSDKDIR", "WINSYSROOT", c_compiler, host_c_compiler)
+def windows_sdk_dir(value, winsysroot, compiler, host_compiler):
     if value:
+        if winsysroot:
+            die("WINDOWSSDKDIR and WINSYSROOT cannot be set together.")
         return value
     # Ideally, we'd actually check for host/target ABI being MSVC, but
     # that's waiting for bug 1617793.
     if compiler.type != "clang-cl" and host_compiler.type != "clang-cl":
         return ()
+
+    if winsysroot:
+        return [os.path.join(winsysroot[0], "Windows Kits", "10")]
 
     return set(
         normalize_path(x[1])
