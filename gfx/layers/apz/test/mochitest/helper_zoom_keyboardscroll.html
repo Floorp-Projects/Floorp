@@ -25,6 +25,7 @@
       // Zoom in
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
       await promiseApzFlushedRepaints();
+      await promiseFrame();
 
       is(await getResolution(), 2.0, "should have zoomed (6)");
 
@@ -36,6 +37,7 @@
       window.synthesizeKey("KEY_ArrowRight");
 
       await promiseApzFlushedRepaints();
+      await promiseFrame();
 
       is(await getResolution(), 2.0, "should be zoomed (11)");
 
@@ -47,6 +49,7 @@
       window.synthesizeKey("KEY_ArrowDown");
 
       await promiseApzFlushedRepaints();
+      await promiseFrame();
 
       is(await getResolution(), 2.0, "should be zoomed (16)");
 
@@ -58,6 +61,7 @@
       // Zoom back out
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1.0);
       await promiseApzFlushedRepaints();
+      await promiseFrame();
 
       is(await getResolution(), 1.0, "should not be zoomed (21)");
     }
