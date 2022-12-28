@@ -2,6 +2,7 @@
 shellcheck:
     description: Shell script linter
     include:
+        - extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/
         - taskcluster/docker/
     exclude: []
     # 1090: https://github.com/koalaman/shellcheck/wiki/SC1090
