@@ -1,3 +1,55 @@
+# 0.1.37 (October 6, 2022)
+
+This release of `tracing` incorporates changes from `tracing-core`
+[v0.1.30][core-0.1.30] and `tracing-attributes` [v0.1.23][attrs-0.1.23],
+including the new `Subscriber::on_register_dispatch` method for performing late
+initialization after a `Subscriber` is registered as a `Dispatch`, and bugfixes
+for the `#[instrument]` attribute. Additionally, it fixes instances of the
+`bare_trait_objects` lint, which is now a warning on `tracing`'s MSRV and will
+become an error in the next edition.
+
+### Fixed
+
+- **attributes**: Incorrect handling of inner attributes in `#[instrument]`ed
+  functions ([#2307])
+- **attributes**: Incorrect location of compiler diagnostic spans generated for
+  type errors in `#[instrument]`ed `async fn`s ([#2270])
+- **attributes**: Updated `syn` dependency to fix compilation with `-Z
+  minimal-versions` ([#2246])
+- `bare_trait_objects` warning in `valueset!` macro expansion ([#2308])
+
+### Added
+
+- **core**: `Subscriber::on_register_dispatch` method ([#2269])
+- **core**: `WeakDispatch` type and `Dispatch::downgrade()` function ([#2293])
+
+### Changed
+
+- `tracing-core`: updated to [0.1.30][core-0.1.30]
+- `tracing-attributes`: updated to [0.1.23][attrs-0.1.23]
+
+### Documented
+
+- Added [`tracing-web`] and [`reqwest-tracing`] to related crates ([#2283],
+  [#2331])
+
+Thanks to new contributors @compiler-errors, @e-nomem, @WorldSEnder, @Xiami2012,
+and @tl-rodrigo-gryzinski, as well as @jswrenn and @CAD97, for contributing to
+this release!
+
+[core-0.1.30]: https://github.com/tokio-rs/tracing/releases/tag/tracing-core-0.1.30
+[attrs-0.1.23]: https://github.com/tokio-rs/tracing/releases/tag/tracing-attributes-0.1.23
+[`tracing-web`]: https://crates.io/crates/tracing-web/
+[`reqwest-tracing`]: https://crates.io/crates/reqwest-tracing/
+[#2246]: https://github.com/tokio-rs/tracing/pull/2246
+[#2269]: https://github.com/tokio-rs/tracing/pull/2269
+[#2283]: https://github.com/tokio-rs/tracing/pull/2283
+[#2270]: https://github.com/tokio-rs/tracing/pull/2270
+[#2293]: https://github.com/tokio-rs/tracing/pull/2293
+[#2307]: https://github.com/tokio-rs/tracing/pull/2307
+[#2308]: https://github.com/tokio-rs/tracing/pull/2308
+[#2331]: https://github.com/tokio-rs/tracing/pull/2331
+
 # 0.1.36 (July 29, 2022)
 
 This release adds support for owned values and fat pointers as arguments to the

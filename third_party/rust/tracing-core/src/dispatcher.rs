@@ -134,7 +134,7 @@ use crate::stdlib::{
     fmt,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Arc,
+        Arc, Weak,
     },
 };
 
@@ -142,14 +142,48 @@ use crate::stdlib::{
 use crate::stdlib::{
     cell::{Cell, RefCell, RefMut},
     error,
-    sync::Weak,
 };
 
+#[cfg(feature = "alloc")]
+use alloc::sync::{Arc, Weak};
+
+#[cfg(feature = "alloc")]
+use core::ops::Deref;
+
 /// `Dispatch` trace data to a [`Subscriber`].
-///
 #[derive(Clone)]
 pub struct Dispatch {
     subscriber: Arc<dyn Subscriber + Send + Sync>,
+}
+
+/// `WeakDispatch` is a version of [`Dispatch`] that holds a non-owning reference
+/// to a [`Subscriber`].
+///
+/// The Subscriber` may be accessed by calling [`WeakDispatch::upgrade`],
+/// which returns an `Option<Dispatch>`. If all [`Dispatch`] clones that point
+/// at the `Subscriber` have been dropped, [`WeakDispatch::upgrade`] will return
+/// `None`. Otherwise, it will return `Some(Dispatch)`.
+///
+/// A `WeakDispatch` may be created from a [`Dispatch`] by calling the
+/// [`Dispatch::downgrade`] method. The primary use for creating a
+/// [`WeakDispatch`] is to allow a Subscriber` to hold a cyclical reference to
+/// itself without creating a memory leak. See [here] for details.
+///
+/// This type is analogous to the [`std::sync::Weak`] type, but for a
+/// [`Dispatch`] rather than an [`Arc`].
+///
+/// [`Arc`]: std::sync::Arc
+/// [here]: Subscriber#avoiding-memory-leaks
+#[derive(Clone)]
+pub struct WeakDispatch {
+    subscriber: Weak<dyn Subscriber + Send + Sync>,
+}
+
+#[cfg(feature = "alloc")]
+#[derive(Clone)]
+enum Kind<T> {
+    Global(&'static (dyn Collect + Send + Sync)),
+    Scoped(T),
 }
 
 #[cfg(feature = "std")]
@@ -430,8 +464,34 @@ impl Dispatch {
         Registrar(Arc::downgrade(&self.subscriber))
     }
 
-    /// Registers a new callsite with this subscriber, returning whether or not
-    /// the subscriber is interested in being notified about the callsite.
+    /// Creates a [`WeakDispatch`] from this `Dispatch`.
+    ///
+    /// A [`WeakDispatch`] is similar to a [`Dispatch`], but it does not prevent
+    /// the underlying [`Subscriber`] from being dropped. Instead, it only permits
+    /// access while other references to the `Subscriber` exist. This is equivalent
+    /// to the standard library's [`Arc::downgrade`] method, but for `Dispatch`
+    /// rather than `Arc`.
+    ///
+    /// The primary use for creating a [`WeakDispatch`] is to allow a `Subscriber`
+    /// to hold a cyclical reference to itself without creating a memory leak.
+    /// See [here] for details.
+    ///
+    /// [`Arc::downgrade`]: std::sync::Arc::downgrade
+    /// [here]: Subscriber#avoiding-memory-leaks
+    pub fn downgrade(&self) -> WeakDispatch {
+        WeakDispatch {
+            subscriber: Arc::downgrade(&self.subscriber),
+        }
+    }
+
+    #[inline(always)]
+    #[cfg(not(feature = "alloc"))]
+    pub(crate) fn subscriber(&self) -> &(dyn Subscriber + Send + Sync) {
+        &self.subscriber
+    }
+
+    /// Registers a new callsite with this collector, returning whether or not
+    /// the collector is interested in being notified about the callsite.
     ///
     /// This calls the [`register_callsite`] function on the [`Subscriber`]
     /// that this `Dispatch` forwards to.
@@ -631,14 +691,14 @@ impl Dispatch {
     /// `T`.
     #[inline]
     pub fn is<T: Any>(&self) -> bool {
-        <dyn Subscriber>::is::<T>(&*self.subscriber)
+        <dyn Subscriber>::is::<T>(&self.subscriber)
     }
 
     /// Returns some reference to the `Subscriber` this `Dispatch` forwards to
     /// if it is of type `T`, or `None` if it isn't.
     #[inline]
     pub fn downcast_ref<T: Any>(&self) -> Option<&T> {
-        <dyn Subscriber>::downcast_ref(&*self.subscriber)
+        <dyn Subscriber>::downcast_ref(&self.subscriber)
     }
 }
 
@@ -664,6 +724,45 @@ where
     #[inline]
     fn from(subscriber: S) -> Self {
         Dispatch::new(subscriber)
+    }
+}
+
+// === impl WeakDispatch ===
+
+impl WeakDispatch {
+    /// Attempts to upgrade this `WeakDispatch` to a [`Dispatch`].
+    ///
+    /// Returns `None` if the referenced `Dispatch` has already been dropped.
+    ///
+    /// ## Examples
+    ///
+    /// ```
+    /// # use tracing_core::subscriber::NoSubscriber;
+    /// # use tracing_core::dispatcher::Dispatch;
+    /// let strong = Dispatch::new(NoSubscriber::default());
+    /// let weak = strong.downgrade();
+    ///
+    /// // The strong here keeps it alive, so we can still access the object.
+    /// assert!(weak.upgrade().is_some());
+    ///
+    /// drop(strong); // But not any more.
+    /// assert!(weak.upgrade().is_none());
+    /// ```
+    pub fn upgrade(&self) -> Option<Dispatch> {
+        self.subscriber
+            .upgrade()
+            .map(|subscriber| Dispatch { subscriber })
+    }
+}
+
+impl fmt::Debug for WeakDispatch {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut tuple = f.debug_tuple("WeakDispatch");
+        match self.subscriber.upgrade() {
+            Some(subscriber) => tuple.field(&format_args!("Some({:p})", subscriber)),
+            None => tuple.field(&format_args!("None")),
+        };
+        tuple.finish()
     }
 }
 

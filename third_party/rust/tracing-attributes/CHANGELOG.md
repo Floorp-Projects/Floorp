@@ -1,3 +1,24 @@
+# 0.1.23 (October 6, 2022)
+
+This release of `tracing-attributes` fixes a bug where compiler diagnostic spans
+for type errors in `#[instrument]`ed `async fn`s have the location of the
+`#[instrument]` attribute rather than the location of the actual error, and a
+bug where inner attributes in `#[instrument]`ed functions would cause a compiler
+error.
+### Fixed
+
+- Fix incorrect handling of inner attributes in `#[instrument]`ed functions ([#2307])
+- Add fake return to improve spans generated for type errors in `async fn`s ([#2270])
+- Updated `syn` dependency to fix compilation with `-Z minimal-versions`
+  ([#2246])
+
+Thanks to new contributors @compiler-errors and @e-nomem, as well as @CAD97, for
+contributing to this release!
+
+[#2307]: https://github.com/tokio-rs/tracing/pull/2307
+[#2270]: https://github.com/tokio-rs/tracing/pull/2270
+[#2246]: https://github.com/tokio-rs/tracing/pull/2246
+
 # 0.1.22 (July 1, 2022)
 
 This release fixes an issue where using the `err` or `ret` arguments to
