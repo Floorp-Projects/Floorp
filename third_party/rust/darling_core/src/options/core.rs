@@ -4,12 +4,11 @@ use crate::ast::{Data, Fields, Style};
 use crate::codegen;
 use crate::codegen::PostfixTransform;
 use crate::options::{DefaultExpression, InputField, InputVariant, ParseAttribute, ParseData};
-use crate::util::Flag;
 use crate::{Error, FromMeta, Result};
 
 /// A struct or enum which should have `FromMeta` or `FromDeriveInput` implementations
 /// generated.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Core {
     /// The type identifier.
     pub ident: syn::Ident,
@@ -40,7 +39,7 @@ pub struct Core {
     pub bound: Option<Vec<syn::WherePredicate>>,
 
     /// Whether or not unknown fields should produce an error at compilation time.
-    pub allow_unknown_fields: Flag,
+    pub allow_unknown_fields: Option<bool>,
 }
 
 impl Core {
@@ -164,7 +163,7 @@ impl<'a> From<&'a Core> for codegen::TraitImpl<'a> {
             default: v.as_codegen_default(),
             post_transform: v.post_transform.as_ref(),
             bound: v.bound.as_ref().map(|i| i.as_slice()),
-            allow_unknown_fields: v.allow_unknown_fields.into(),
+            allow_unknown_fields: v.allow_unknown_fields.unwrap_or_default(),
         }
     }
 }

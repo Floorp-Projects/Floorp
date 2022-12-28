@@ -20,7 +20,6 @@ struct MyTypeParam {
     pub ident: syn::Ident,
     #[darling(default)]
     pub foo: bool,
-    #[darling(default)]
     pub bar: Option<String>,
 }
 

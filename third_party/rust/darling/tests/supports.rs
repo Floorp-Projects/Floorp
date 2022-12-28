@@ -46,6 +46,12 @@ mod source {
         }
     }
 
+    pub fn empty_enum() -> DeriveInput {
+        parse_quote! {
+            enum Hello {}
+        }
+    }
+
     pub fn named_struct() -> DeriveInput {
         parse_quote! {
             struct Hello {
@@ -80,4 +86,5 @@ fn struct_named() {
     StructContainer::from_derive_input(&source::tuple_struct()).unwrap_err();
     StructContainer::from_derive_input(&source::named_field_enum()).unwrap_err();
     StructContainer::from_derive_input(&source::newtype_enum()).unwrap_err();
+    StructContainer::from_derive_input(&source::empty_enum()).unwrap_err();
 }

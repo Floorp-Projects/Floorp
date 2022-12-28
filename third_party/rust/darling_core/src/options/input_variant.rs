@@ -73,7 +73,7 @@ impl InputVariant {
         }
 
         if self.allow_unknown_fields.is_none() {
-            self.allow_unknown_fields = Some(parent.allow_unknown_fields.is_some());
+            self.allow_unknown_fields = Some(parent.allow_unknown_fields.unwrap_or_default());
         }
 
         self

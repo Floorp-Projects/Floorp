@@ -44,3 +44,31 @@ fn verify_skipped_field_not_required() {
         }
     );
 }
+
+/// This test verifies that a skipped field will still prefer an explicit default
+/// over the default that would come from its field type. It would be incorrect for
+/// `Defaulting::from_derive_input` to fail here, and it would be wrong for the value
+/// of `dolor` to be `None`.
+#[test]
+fn verify_default_supersedes_from_none() {
+    fn default_dolor() -> Option<u8> {
+        Some(2)
+    }
+
+    #[derive(Debug, PartialEq, Eq, FromDeriveInput)]
+    #[darling(attributes(skip_test))]
+    pub struct Defaulting {
+        #[darling(skip, default = "default_dolor")]
+        dolor: Option<u8>,
+    }
+
+    let di = parse_quote! {
+        #[skip_test]
+        struct Baz;
+    };
+
+    assert_eq!(
+        Defaulting::from_derive_input(&di).unwrap(),
+        Defaulting { dolor: Some(2) }
+    )
+}

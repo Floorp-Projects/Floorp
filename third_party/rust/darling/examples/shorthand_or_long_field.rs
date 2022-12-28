@@ -19,7 +19,7 @@ struct MyDeriveInput {
     /// explicit that they're expecting the inference behavior to avoid cluttering some hypothetical
     /// database. Therefore this field is required, but can take word form or key-value form.
     ///
-    /// To make this field optional, we could add `#[darling(default)]`, and we could additionally
+    /// To make this field optional, we could add `#[darling(default)]`, or we could
     /// wrap it in `Option` if the presence or absence of the word makes a difference.
     table: Override<Table>,
 }
@@ -39,7 +39,6 @@ impl MyDeriveInput {
 #[derive(Debug, Clone, FromMeta)]
 struct Table {
     name: String,
-    #[darling(default)]
     value: Option<Path>,
 }
 

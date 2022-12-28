@@ -104,7 +104,8 @@ fn do_stuff() {
 # Features
 Darling's features are built to work well for real-world projects.
 
-* **Defaults**: Supports struct- and field-level defaults, using the same path syntax as `serde`.
+* **Defaults**: Supports struct- and field-level defaults, using the same path syntax as `serde`. 
+  Additionally, `Option<T>` and `darling::util::Flag` fields are innately optional; you don't need to declare `#[darling(default)]` for those.
 * **Field Renaming**: Fields can have different names in usage vs. the backing code.
 * **Auto-populated fields**: Structs deriving `FromDeriveInput` and `FromField` can declare properties named `ident`, `vis`, `ty`, `attrs`, and `generics` to automatically get copies of the matching values from the input AST. `FromDeriveInput` additionally exposes `data` to get access to the body of the deriving type, and `FromVariant` exposes `fields`.
 * **Mapping function**: Use `#[darling(map="path")]` or `#[darling(and_then="path")]` to specify a function that runs on the result of parsing a meta-item field. This can change the return type, which enables you to parse to an intermediate form and convert that to the type you need in your struct.

@@ -66,7 +66,7 @@ impl<'a> ToTokens for FromVariantImpl<'a> {
         let supports = self.supports.map(|i| {
             quote! {
                 #i
-                __validate_data(&#input.fields)?;
+                __errors.handle(__validate_data(&#input.fields));
             }
         });
 
@@ -106,10 +106,6 @@ impl<'a> ToTokens for FromVariantImpl<'a> {
 impl<'a> ExtractAttribute for FromVariantImpl<'a> {
     fn local_declarations(&self) -> TokenStream {
         self.base.local_declarations()
-    }
-
-    fn immutable_declarations(&self) -> TokenStream {
-        self.base.immutable_declarations()
     }
 
     fn attr_names(&self) -> &PathList {

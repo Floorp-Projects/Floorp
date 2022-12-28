@@ -63,7 +63,7 @@ impl<'a> ToTokens for FromDeriveInputImpl<'a> {
         let supports = self.supports.map(|i| {
             quote! {
                 #i
-                __validate_body(&#input.data)?;
+                __errors.handle(__validate_body(&#input.data));
             }
         });
 
@@ -129,10 +129,6 @@ impl<'a> ExtractAttribute for FromDeriveInputImpl<'a> {
 
     fn local_declarations(&self) -> TokenStream {
         self.base.local_declarations()
-    }
-
-    fn immutable_declarations(&self) -> TokenStream {
-        self.base.immutable_declarations()
     }
 }
 
