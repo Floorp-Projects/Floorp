@@ -538,10 +538,9 @@ option(
 )
 
 
-@depends("--with-visual-studio-version", when=host_is_windows)
-def vs_major_version(value):
-    if value:
-        return {"2017": 15}[value[0]]
+@depends_if("--with-visual-studio-version", when=host_is_windows)
+def vs_version(value):
+    return value[0]
 
 
 option(
@@ -554,17 +553,14 @@ option(
 
 @depends(
     host,
-    vs_major_version,
+    vs_version,
     build_environment,
     "VC_PATH",
-    "--with-visual-studio-version",
     when=host_is_windows,
 )
 @imports(_from="operator", _import="itemgetter")
-def vc_compiler_paths_for_version(
-    host, vs_major_version, env, vc_path, vs_release_name
-):
-    if vc_path and vs_release_name:
+def vc_compiler_paths_for_version(host, vs_version, env, vc_path):
+    if vc_path and vs_version:
         die("VC_PATH and --with-visual-studio-version cannot be used together.")
     if vc_path:
         # Use an arbitrary version, it doesn't matter.
@@ -573,10 +569,11 @@ def vc_compiler_paths_for_version(
         all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
     if not all_versions:
         return
-    if vs_major_version:
+    if vs_version:
+        vs_major_version = {"2017": 15}[vs_version]
         versions = [d for (v, d) in all_versions if v.major == vs_major_version]
         if not versions:
-            die("Visual Studio %s could not be found!" % vs_release_name)
+            die("Visual Studio %s could not be found!" % vs_version)
         path = versions[0]
     else:
         # Choose the newest version.
