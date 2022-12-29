@@ -388,21 +388,6 @@ android-hw-p2-8-0-arm7-shippable-qr/opt:
     test-sets:
         - android-hw-browsertime
 
-android-hw-p2-8-0-android-aarch64-qr/debug:
-    build-platform: android-aarch64/debug
-    test-sets:
-        - android-hw-aarch64
-
-android-hw-p2-8-0-android-aarch64-qr/opt:
-    build-platform: android-aarch64/opt
-    test-sets:
-        - android-hw-aarch64
-
-android-hw-p2-8-0-android-aarch64-shippable-qr/opt:
-    build-platform: android-aarch64-shippable/opt
-    test-sets:
-        - android-hw-aarch64
-
 # android-hw-p5-13-0 Google Pixel 5 Android 13.0
 
 android-hw-p5-13-0-arm7-qr/opt:
@@ -423,20 +408,17 @@ android-hw-p5-13-0-arm7-qr/debug:
 android-hw-p5-13-0-android-aarch64-qr/debug:
     build-platform: android-aarch64/debug
     test-sets:
-        # - android-hw-aarch64
-        - android-hw-p5
+        - android-hw-aarch64
         - android-hw-aarch64-debug-unittests
 
 android-hw-p5-13-0-android-aarch64-qr/opt:
     build-platform: android-aarch64/opt
     test-sets:
-        # - android-hw-aarch64
-        - android-hw-p5
+        - android-hw-aarch64
         - android-hw-aarch64-opt-unittests
 
 android-hw-p5-13-0-android-aarch64-shippable-qr/opt:
     build-platform: android-aarch64-shippable/opt
     test-sets:
-        # - android-hw-aarch64
-        - android-hw-p5
+        - android-hw-aarch64
         - android-hw-aarch64-pgo-unittests
