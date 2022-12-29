@@ -12,7 +12,7 @@
 [package]
 rust-version = "1.17"
 name = "unicode-xid"
-version = "0.2.3"
+version = "0.2.4"
 authors = [
     "erick.tryzelaar <erick.tryzelaar@gmail.com>",
     "kwantam <kwantam@gmail.com>",
