@@ -448,7 +448,7 @@ struct nsCSSRendering {
      * When this flag is passed, images are downscaled during decode. This
      * is also implied by PAINTBG_TO_WINDOW.
      */
-    PAINTBG_HIGH_QUALITY_SCALING = 0x16,
+    PAINTBG_HIGH_QUALITY_SCALING = 0x10,
   };
 
   struct PaintBGParams {
