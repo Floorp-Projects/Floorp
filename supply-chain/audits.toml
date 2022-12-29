@@ -338,6 +338,11 @@ which is statically guaranteed to be safe. Inputs to the macro have to be
 static so there's no uncontrolled input whatsoever.
 """
 
+[[audits.cstr]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.10 -> 0.2.11"
+
 [[audits.cubeb]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
