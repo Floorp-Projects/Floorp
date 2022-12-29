@@ -1672,13 +1672,6 @@
 #endif
   mirror: always
 
-# When this pref is enabled, the JS validator will be enabled for
-# ORB.
-- name: browser.opaqueResponseBlocking.javascriptValidator
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # When this pref is enabled, <object> and <embed> elements will create
 # synthetic documents when the resource type they're loading is an image.
 - name: browser.opaqueResponseBlocking.syntheticBrowsingContext
