@@ -1939,6 +1939,11 @@ who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
 version = "0.9.0"
 
+[[audits.unic-langid]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.9.0 -> 0.9.1"
+
 [[audits.unic-langid-impl]]
 who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
@@ -1963,6 +1968,11 @@ delta = "0.9.0 -> 0.9.1"
 who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
 version = "0.9.0"
+
+[[audits.unic-langid-macros-impl]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.9.0 -> 0.9.1"
 
 [[audits.unicode-ident]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
