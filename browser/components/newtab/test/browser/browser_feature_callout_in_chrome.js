@@ -40,6 +40,32 @@ const pdfMatch = sinon.match(val => {
   );
 });
 
+const validateCalloutCustomPosition = (element, positionOverride, doc) => {
+  const browserBox = doc.querySelector("hbox#browser");
+  for (let position in positionOverride) {
+    if (Object.prototype.hasOwnProperty.call(positionOverride, position)) {
+      // The substring here is to remove the `px` at the end of our position override strings
+      const relativePos = positionOverride[position].substring(
+        0,
+        positionOverride[position].length - 2
+      );
+      const elPos = element.getBoundingClientRect()[position];
+      const browserPos = browserBox.getBoundingClientRect()[position];
+
+      if (position in ["top", "left"]) {
+        if (elPos !== browserPos + relativePos) {
+          return false;
+        }
+      } else if (position in ["right", "bottom"]) {
+        if (elPos !== browserPos - relativePos) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+};
+
 const testMessage = {
   message: {
     id: "TEST_MESSAGE",
@@ -88,11 +114,11 @@ add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
   sendTriggerStub.callThrough();
 
-  let win = await BrowserTestUtils.openNewBrowserWindow();
+  const win = await BrowserTestUtils.openNewBrowserWindow();
   await openURLInWindow(win, PDF_TEST_URL);
-  let doc = win.document;
+  const doc = win.document;
   await waitForCalloutScreen(doc, testMessageCalloutSelector);
-  let container = doc.querySelector(calloutSelector);
+  const container = doc.querySelector(calloutSelector);
   ok(
     container,
     "Feature Callout is rendered in the browser chrome with a new window when a message is available"
@@ -117,10 +143,10 @@ add_task(
     sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
     sendTriggerStub.callThrough();
 
-    let win = await BrowserTestUtils.openNewBrowserWindow();
+    const win = await BrowserTestUtils.openNewBrowserWindow();
 
-    let doc = win.document;
-    let tab1 = await BrowserTestUtils.openNewForegroundTab(
+    const doc = win.document;
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
       PDF_TEST_URL
     );
@@ -131,7 +157,7 @@ add_task(
       "Feature callout rendered when opening a new tab with PDF url"
     );
 
-    let tab2 = await openURLInNewTab(win, "about:preferences");
+    const tab2 = await openURLInNewTab(win, "about:preferences");
     tab2.focus();
     await BrowserTestUtils.waitForCondition(() => {
       return !doc.body.querySelector("#root.featureCallout");
@@ -142,7 +168,7 @@ add_task(
       "Feature callout removed when tab without PDF URL is navigated to"
     );
 
-    let tab3 = await openURLInNewTab(win, PDF_TEST_URL);
+    const tab3 = await openURLInNewTab(win, PDF_TEST_URL);
     tab3.focus();
     await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
@@ -169,10 +195,10 @@ add_task(
     sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
     sendTriggerStub.callThrough();
 
-    let win = await BrowserTestUtils.openNewBrowserWindow();
+    const win = await BrowserTestUtils.openNewBrowserWindow();
 
-    let doc = win.document;
-    let tab1 = await BrowserTestUtils.openNewForegroundTab(
+    const doc = win.document;
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
       PDF_TEST_URL
     );
@@ -207,10 +233,10 @@ add_task(
     sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
     sendTriggerStub.callThrough();
 
-    let win = await BrowserTestUtils.openNewBrowserWindow();
+    const win = await BrowserTestUtils.openNewBrowserWindow();
 
-    let doc = win.document;
-    let tab1 = await BrowserTestUtils.openNewForegroundTab(
+    const doc = win.document;
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
       PDF_TEST_URL
     );
@@ -241,10 +267,10 @@ add_task(
     sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
     sendTriggerStub.callThrough();
 
-    let win = await BrowserTestUtils.openNewBrowserWindow();
-    let doc = win.document;
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+    const doc = win.document;
 
-    let tab1 = await BrowserTestUtils.addTab(win.gBrowser, PDF_TEST_URL);
+    const tab1 = await BrowserTestUtils.addTab(win.gBrowser, PDF_TEST_URL);
     ok(
       !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout not rendered when opening a background tab with PDF url"
@@ -257,6 +283,64 @@ add_task(
       "Feature callout still not rendered after closing background tab with PDF url"
     );
 
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+  }
+);
+
+add_task(
+  async function feature_callout_is_positioned_relative_to_browser_window() {
+    // Deep copying our test message so we can alter it without disrupting future tests
+    const pdfTestMessage = JSON.parse(JSON.stringify(testMessage));
+    const pdfTestMessageCalloutSelector =
+      pdfTestMessage.message.content.screens[0].id;
+
+    pdfTestMessage.message.content.screens[0].parent_selector = "hbox#browser";
+    pdfTestMessage.message.content.screens[0].content.callout_position_override = {
+      top: "45px",
+      right: "25px",
+    };
+
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.withArgs(pdfMatch).resolves(pdfTestMessage);
+    sendTriggerStub.callThrough();
+
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+    await openURLInWindow(win, PDF_TEST_URL);
+    const doc = win.document;
+    await waitForCalloutScreen(doc, pdfTestMessageCalloutSelector);
+
+    // Verify that callout renders in appropriate position (without infobar element)
+    const callout = doc.querySelector(`.${pdfTestMessageCalloutSelector}`);
+    ok(callout, "Callout is rendered when navigating to PDF file");
+    ok(
+      validateCalloutCustomPosition(
+        callout,
+        pdfTestMessage.message.content.screens[0].content
+          .callout_position_override,
+        doc
+      ),
+      "Callout custom position is as expected"
+    );
+
+    // Add height to the top of the browser to simulate an infobar or other element
+    const navigatorToolBox = doc.querySelector("#navigator-toolbox-background");
+    navigatorToolBox.style.height = "150px";
+    // We test in a new tab because the callout does not adjust itself
+    // when size of the navigator-toolbox-background box changes.
+    const tab = await openURLInNewTab(win, "https://example.com/some2.pdf");
+    // Verify that callout renders in appropriate position (with infobar element displayed)
+    ok(
+      validateCalloutCustomPosition(
+        callout,
+        pdfTestMessage.message.content.screens[0].content
+          .callout_position_override,
+        doc
+      ),
+      "Callout custom position is as expected while navigator toolbox height is extended"
+    );
+    BrowserTestUtils.removeTab(tab);
     await BrowserTestUtils.closeWindow(win);
     sandbox.restore();
   }
