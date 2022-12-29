@@ -143,7 +143,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_title">ਸੁਰੱਖਿਆ ਕਾਰਣਾ ਕਰਕੇ ਪੋਰਟ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ</string>
+    <string name="mozac_browser_errorpages_port_blocked_title">ਸੁਰੱਖਿਆ ਕਾਰਨਾਂ ਕਰਕੇ ਪੋਰਟ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ</string>
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
