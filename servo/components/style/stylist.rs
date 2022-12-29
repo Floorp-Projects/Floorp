@@ -966,7 +966,7 @@ impl Stylist {
         element: E,
         pseudo: &PseudoElement,
         rule_inclusion: RuleInclusion,
-        originating_element_style: &Arc<ComputedValues>,
+        originating_element_style: &ComputedValues,
         parent_style: &Arc<ComputedValues>,
         is_probe: bool,
         matching_fn: Option<&dyn Fn(&PseudoElement) -> bool>,
@@ -1112,7 +1112,7 @@ impl Stylist {
         &self,
         guards: &StylesheetGuards,
         element: E,
-        originating_element_style: &Arc<ComputedValues>,
+        originating_element_style: &ComputedValues,
         parent_style: &Arc<ComputedValues>,
         pseudo: &PseudoElement,
         is_probe: bool,
@@ -1143,7 +1143,7 @@ impl Stylist {
 
         matching_context.pseudo_element_matching_fn = matching_fn;
         matching_context.extra_data.originating_element_style =
-            Some(originating_element_style.clone());
+            Some(originating_element_style);
 
         self.push_applicable_declarations(
             element,
@@ -1175,7 +1175,7 @@ impl Stylist {
             );
             matching_context.pseudo_element_matching_fn = matching_fn;
             matching_context.extra_data.originating_element_style =
-                Some(originating_element_style.clone());
+                Some(originating_element_style);
 
             self.push_applicable_declarations(
                 element,
@@ -2393,7 +2393,7 @@ impl CascadeData {
                 .matches(
                     stylist.device(),
                     element,
-                    context.extra_data.originating_element_style.as_ref(),
+                    context.extra_data.originating_element_style,
                     &mut context.extra_data.cascade_input_flags,
                 )
                 .to_bool(/* unknown = */ false);
