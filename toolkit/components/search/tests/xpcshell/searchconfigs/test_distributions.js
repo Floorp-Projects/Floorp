@@ -18,18 +18,6 @@ for (let [locale, region] of [
   ["ru", "RU"],
   ["zh-CN", "CN"],
 ]) {
-  for (let distribution of ["acer-001", "acer-002"]) {
-    tests.push({
-      distribution,
-      locale,
-      region,
-      test: engines =>
-        hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
-        hasDefault(engines, "Bing") &&
-        hasEnginesFirst(engines, ["Bing"]),
-    });
-  }
-
   for (let distribution of ["acer-003", "acer-004"]) {
     tests.push({
       distribution,
@@ -41,16 +29,6 @@ for (let [locale, region] of [
         hasEnginesFirst(engines, ["Bing"]),
     });
   }
-
-  tests.push({
-    distribution: "acer-g-003",
-    locale,
-    region,
-    test: engines =>
-      hasParams(engines, "Bing", "searchbar", "pc=MOZE") &&
-      hasDefault(engines, "Bing") &&
-      hasEnginesFirst(engines, ["Bing"]),
-  });
 }
 
 for (let canonicalId of ["canonical", "canonical-001", "canonical-002"]) {
