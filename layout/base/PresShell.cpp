@@ -9440,9 +9440,8 @@ void PresShell::DidDoReflow(bool aInterruptible) {
     return;
   }
 
-  auto clearPendingDidDoReflow = MakeScopeExit([&] {
-    mPendingDidDoReflow = false;
-  });
+  auto clearPendingDidDoReflow =
+      MakeScopeExit([&] { mPendingDidDoReflow = false; });
 
   mHiddenContentInForcedLayout.Clear();
 
