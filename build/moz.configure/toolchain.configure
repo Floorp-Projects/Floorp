@@ -1186,6 +1186,7 @@ def compiler(
         macos_target,
         multiarch_dir,
         winsysroot,
+        host,
     )
     @checking("whether %s can be used" % what, lambda x: bool(x))
     @imports(_from="mozbuild.shellutil", _import="quote")
@@ -1199,6 +1200,7 @@ def compiler(
         macos_target,
         multiarch_dir,
         winsysroot,
+        host,
     ):
         wrapper = list(compiler_wrapper or ())
         flags = []
@@ -1315,7 +1317,7 @@ def compiler(
                     "Only clang-cl 8.0 or newer is supported (found version %s)"
                     % info.version
                 )
-            if winsysroot:
+            if winsysroot and host.os != "WINNT":
                 overlay = os.path.join(winsysroot, "overlay.yaml")
                 if os.path.exists(overlay):
                     overlay_flags = ["-Xclang", "-ivfsoverlay", "-Xclang", overlay]
