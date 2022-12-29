@@ -305,7 +305,8 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
             getString(R.string.credit_cards_biometric_prompt_message_pin),
             getString(R.string.credit_cards_biometric_prompt_message),
         )
-        startActivityForResult(intent, PIN_REQUEST)
+
+        startForResult.launch(intent)
     }
 
     private fun navigateToCreditCardManagementFragment() {

@@ -4,15 +4,17 @@
 
 package org.mozilla.fenix.settings.biometric
 
-import android.app.Activity.RESULT_OK
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.getSystemService
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.requirePreference
 
@@ -23,6 +25,15 @@ import org.mozilla.fenix.settings.requirePreference
 abstract class BiometricPromptPreferenceFragment : PreferenceFragmentCompat() {
 
     private val biometricPromptFeature = ViewBoundFeatureWrapper<BiometricPromptFeature>()
+    internal lateinit var startForResult: ActivityResultLauncher<Intent>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        startForResult = registerForActivityResult {
+            navigateOnSuccess()
+        }
+    }
 
     /**
      * Gets the string to be used for [BiometricPromptFeature.requestAuthentication] prompting to
@@ -106,15 +117,5 @@ abstract class BiometricPromptPreferenceFragment : PreferenceFragmentCompat() {
                 navigateOnSuccess()
             }
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == PIN_REQUEST && resultCode == RESULT_OK) {
-            navigateOnSuccess()
-        }
-    }
-
-    companion object {
-        const val PIN_REQUEST = 303
     }
 }

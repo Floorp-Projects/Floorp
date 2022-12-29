@@ -6,7 +6,6 @@ package org.mozilla.fenix.search
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
@@ -27,6 +26,7 @@ import android.view.ViewStub
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
@@ -87,6 +87,7 @@ import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
@@ -96,7 +97,6 @@ import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.search.toolbar.SearchSelectorToolbarAction
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.widget.VoiceSearchActivity
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
 
@@ -110,6 +110,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private lateinit var toolbarView: ToolbarView
     private lateinit var inlineAutocompleteEditText: InlineAutocompleteEditText
     private lateinit var awesomeBarView: AwesomeBarView
+    private lateinit var startForResult: ActivityResultLauncher<Intent>
 
     private val searchSelectorMenu by lazy {
         SearchSelectorMenu(
@@ -155,6 +156,14 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.SearchDialogStyle)
+
+        startForResult = registerForActivityResult { result ->
+            result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.first()?.also {
+                toolbarView.view.edit.updateUrl(url = it, shouldHighlight = true)
+                interactor.onTextChanged(it)
+                toolbarView.view.edit.focus()
+            }
+        }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -620,16 +629,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         hideDeviceKeyboard()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (requestCode == VoiceSearchActivity.SPEECH_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            intent?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.first()?.also {
-                toolbarView.view.edit.updateUrl(url = it, shouldHighlight = true)
-                interactor.onTextChanged(it)
-                toolbarView.view.edit.focus()
-            }
-        }
-    }
-
     override fun onBackPressed(): Boolean {
         return when {
             qrFeature.onBackPressed() -> {
@@ -851,8 +850,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
     }
 
-    @Suppress("DEPRECATION")
-    // https://github.com/mozilla-mobile/fenix/issues/19919
     private fun launchVoiceSearch() {
         // Note if a user disables speech while the app is on the search fragment
         // the voice button will still be available and *will* cause a crash if tapped,
@@ -865,7 +862,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PROMPT, requireContext().getString(R.string.voice_search_explainer))
         }
-        startActivityForResult(speechIntent, VoiceSearchActivity.SPEECH_REQUEST_CODE)
+
+        startForResult.launch(speechIntent)
     }
 
     private fun updateQrButton(searchFragmentState: SearchFragmentState) {
