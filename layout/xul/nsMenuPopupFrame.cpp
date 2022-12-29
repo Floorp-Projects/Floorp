@@ -648,19 +648,23 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState) {
     needCallback = true;
   }
 
-  nsRect bounds(GetRect());
+  // First do XUL layout on our contents.
+  const nsSize preLayoutSize = GetSize();
   XULLayout(aState);
 
   // If the width or height changed, readjust the popup position. This is a
   // special case for tooltips where the preferred height doesn't include the
   // real height for its inline element, but does once it is laid out.
   // This is bug 228673 which doesn't have a simple fix.
+  // FIXME(emilio): Unclear if this is still an issue with modern flex
+  // emulation. Perhaps we should try to remove this.
   bool rePosition = shouldPosition && (mPosition == POPUPPOSITION_SELECTION);
-  nsSize newsize = GetSize();
-  if (newsize.width > bounds.width || newsize.height > bounds.height) {
-    // the size after layout was larger than the preferred size,
-    // so set the preferred size accordingly
-    mPrefSize = newsize;
+  const nsSize postLayoutSize = GetSize();
+  if (postLayoutSize.width > preLayoutSize.width ||
+      postLayoutSize.height > preLayoutSize.height) {
+    // the size after layout was larger than the preferred size, so set the
+    // preferred size accordingly.
+    mPrefSize = postLayoutSize;
     if (isOpen) {
       rePosition = true;
       needCallback = true;
