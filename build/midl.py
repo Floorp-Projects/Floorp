@@ -33,6 +33,21 @@ def search_path(paths, path):
     raise RuntimeError(f"Cannot find {path}")
 
 
+# Filter-out -std= flag from the preprocessor command, as we're not preprocessing
+# C or C++, and the command would fail with the flag.
+def filter_preprocessor(cmd):
+    prev = None
+    for arg in cmd:
+        if arg == "-Xclang":
+            prev = arg
+            continue
+        if not arg.startswith("-std="):
+            if prev:
+                yield prev
+            yield arg
+        prev = None
+
+
 # Preprocess all the direct and indirect inputs of midl, and put all the
 # preprocessed inputs in the given `base` directory. Returns a tuple containing
 # the path of the main preprocessed input, and the modified flags to use instead
@@ -50,11 +65,11 @@ def preprocess(base, input, flags):
     parser.add_argument("-acf")
     args, remainder = parser.parse_known_args(flags)
     preprocessor = (
-        [buildconfig.substs["_CXX"]]
+        list(filter_preprocessor(buildconfig.substs["CXXCPP"]))
         # Ideally we'd use the real midl version, but querying it adds a
         # significant overhead to configure. In practice, the version number
         # doesn't make a difference at the moment.
-        + ["-E", "-D__midl=801"]
+        + ["-D__midl=801"]
         + [f"-D{d}" for d in args.D or ()]
         + [f"-I{i}" for i in args.I or ()]
     )
