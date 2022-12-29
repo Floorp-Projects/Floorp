@@ -64,5 +64,4 @@ win64-cbindgen:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-toolchain
-            - linux64-liblowercase
             - win64-vs2017

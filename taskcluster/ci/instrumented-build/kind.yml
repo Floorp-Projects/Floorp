@@ -263,9 +263,6 @@ jobs:
             extra-config:
                 stage_platform: win32
                 mozconfig_platform: win32
-                env:
-                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         fetches:
             toolchain:
                 - linux64-clang
@@ -276,7 +273,6 @@ jobs:
                 - linux64-cbindgen
                 - linux64-dump_syms
                 - linux64-wine
-                - linux64-liblowercase
                 - linux64-winchecksec
                 - nsis
                 - sysroot-x86_64-linux-gnu
@@ -303,9 +299,6 @@ jobs:
             extra-config:
                 stage_platform: win64
                 mozconfig_platform: win64
-                env:
-                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         fetches:
             toolchain:
                 - linux64-clang
@@ -316,7 +309,6 @@ jobs:
                 - linux64-cbindgen
                 - linux64-dump_syms
                 - linux64-wine
-                - linux64-liblowercase
                 - linux64-winchecksec
                 - nsis
                 - sysroot-x86_64-linux-gnu

@@ -62,7 +62,6 @@ win32-minidump-stackwalk:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-liblowercase
             - linux64-rust-windows-toolchain
             - win64-vs2017
 
@@ -74,7 +73,6 @@ win64-minidump-stackwalk:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-liblowercase
             - linux64-rust-windows-toolchain
             - win64-vs2017
 

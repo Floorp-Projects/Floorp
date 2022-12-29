@@ -558,6 +558,11 @@ option(
 )
 
 
+@depends_if("WINSYSROOT", when=is_windows)
+def winsysroot(winsysroot):
+    return winsysroot[0]
+
+
 option(
     env="VC_PATH",
     nargs=1,
@@ -571,7 +576,7 @@ option(
     vs_version,
     build_environment,
     "VC_PATH",
-    "WINSYSROOT",
+    winsysroot,
     when=is_windows,
 )
 @imports("os")
@@ -583,7 +588,7 @@ def vc_compiler_paths_for_version(host, vs_version, env, vc_path, winsysroot):
     if winsysroot:
         if vc_path:
             die("WINSYSROOT and VC_PATH cannot be set together.")
-        base_vc_path = os.path.join(winsysroot[0], "VC", "Tools", "MSVC")
+        base_vc_path = os.path.join(winsysroot, "VC", "Tools", "MSVC")
         versions = os.listdir(base_vc_path)
         vc_path = [os.path.join(base_vc_path, str(max(Version(v) for v in versions)))]
     if vc_path:
@@ -606,8 +611,8 @@ def vc_compiler_paths_for_version(host, vs_version, env, vc_path, winsysroot):
         # Choose the newest version.
         path = all_versions[-1][1]
     host_dir = {
-        "x86_64": "HostX64",
-        "x86": "HostX86",
+        "x86_64": "Hostx64",
+        "x86": "Hostx86",
     }.get(host.cpu)
     if host_dir:
         path = os.path.join(path, "bin", host_dir)
@@ -1180,6 +1185,7 @@ def compiler(
         sysroot,
         macos_target,
         multiarch_dir,
+        winsysroot,
     )
     @checking("whether %s can be used" % what, lambda x: bool(x))
     @imports(_from="mozbuild.shellutil", _import="quote")
@@ -1192,6 +1198,7 @@ def compiler(
         sysroot,
         macos_target,
         multiarch_dir,
+        winsysroot,
     ):
         wrapper = list(compiler_wrapper or ())
         flags = []
@@ -1308,6 +1315,23 @@ def compiler(
                     "Only clang-cl 8.0 or newer is supported (found version %s)"
                     % info.version
                 )
+            if winsysroot:
+                overlay = os.path.join(winsysroot, "overlay.yaml")
+                if os.path.exists(overlay):
+                    overlay_flags = ["-Xclang", "-ivfsoverlay", "-Xclang", overlay]
+                    if info.version >= "16.0" or (
+                        # clang-cl 15 normally doesn't support the root-relative
+                        # overlay we use, but the bootstrapped clang-cl 15 is patched
+                        # to support it, so check we're using a patched version.
+                        info.version >= "15.0"
+                        and try_preprocess(
+                            wrapper + [compiler] + flags + overlay_flags,
+                            language,
+                            "",
+                            onerror=lambda: False,
+                        )
+                    ):
+                        flags.extend(overlay_flags)
 
         # If you want to bump the version check here ensure the version
         # is known for Xcode in get_compiler_info.

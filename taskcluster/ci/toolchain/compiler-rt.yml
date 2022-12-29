@@ -188,7 +188,6 @@ win32-compiler-rt-15:
             - clang-15
         toolchain:
             - linux64-clang-15-stage1
-            - linux64-liblowercase
             - win64-vs2019
 
 win64-compiler-rt-15:
@@ -207,7 +206,6 @@ win64-compiler-rt-15:
             - clang-15
         toolchain:
             - linux64-clang-15-stage1
-            - linux64-liblowercase
             - win64-vs2019
 
 wasm32-wasi-compiler-rt-15:
@@ -424,7 +422,6 @@ win32-compiler-rt-trunk:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - linux64-liblowercase
             - win64-vs2019
 
 win64-compiler-rt-trunk:
@@ -445,7 +442,6 @@ win64-compiler-rt-trunk:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - linux64-liblowercase
             - win64-vs2019
 
 wasm32-wasi-compiler-rt-trunk:
