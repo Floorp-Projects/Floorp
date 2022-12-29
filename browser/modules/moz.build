@@ -61,6 +61,9 @@ with Files("EveryWindow.jsm"):
 with Files("ExtensionsUI.jsm"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
+with Files("FeatureCallout.sys.mjs"):
+    BUG_COMPONENT = ("Firefox", "Messaging System")
+
 with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
 
@@ -128,6 +131,7 @@ EXTRA_JS_MODULES += [
     "EveryWindow.jsm",
     "ExtensionsUI.jsm",
     "FaviconLoader.jsm",
+    "FeatureCallout.sys.mjs",
     "HomePage.jsm",
     "LaterRun.jsm",
     "NewTabPagePreloading.jsm",

@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+/*eslint-env browser*/
+
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
@@ -862,18 +862,4 @@ export class FeatureCallout {
     this._setupWindowFunctions();
     await this._renderCallout();
   }
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("DOMContentLoaded", () => {
-    // Get the message id from the feature tour pref
-    // (If/when this surface is used with other pages,
-    // add logic to select the correct pref for a given
-    // page's tour using its location)
-    let Callout = new FeatureCallout({
-      win: window,
-      prefName: "browser.firefox-view.feature-tour",
-    });
-    Callout.showFeatureCallout();
-  });
 }
