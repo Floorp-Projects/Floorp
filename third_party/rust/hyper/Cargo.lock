@@ -207,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "0.14.22"
+version = "0.14.23"
 dependencies = [
  "bytes",
  "futures-channel",
