@@ -1924,7 +1924,7 @@
     <string name="firefox_suggest_header">Firefox ਸੁਝਾਅ</string>
 
     <!-- Title for search suggestions when Google is the default search suggestion engine. -->
-    <string name="google_search_engine_suggestion_header">ਗੂਗਲ ਖੋਜ</string>
+    <string name="google_search_engine_suggestion_header">Google ਖੋਜ</string>
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">%s ਖੋਜ</string>
 
