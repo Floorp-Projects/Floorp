@@ -1623,6 +1623,8 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
       aOriginatingElement.GetAttr(nsGkAtoms::value, value);
 
       auto AppendAccessKeyLabel = [&] {
+        // Always append accesskey text in uppercase, see bug 1806167.
+        ToUpperCase(accesskey);
         nsAutoString accessKeyLabel = u"("_ns + accesskey + u")"_ns;
         if (!StringEndsWith(value, accessKeyLabel)) {
           if (nsTextBoxFrame::InsertSeparatorBeforeAccessKey() &&
