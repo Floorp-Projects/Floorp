@@ -184,6 +184,8 @@ add_task(async function test_shouldShowPinPromo() {
 });
 
 add_task(async function test_shouldShowRelayPromo() {
+  // This test assumes by default no uri is configured.
+  Preferences.set("identity.fxaccounts.autoconfig.uri", "");
   Assert.ok(BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.RELAY));
 
   // Don't show when there is an enterprise policy active
