@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "unicode-normalization"
-version = "0.1.21"
+version = "0.1.22"
 authors = [
     "kwantam <kwantam@gmail.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",

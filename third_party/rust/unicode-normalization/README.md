@@ -31,7 +31,7 @@ to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-unicode-normalization = "0.1.20"
+unicode-normalization = "0.1.22"
 ```
 
 ## `no_std` + `alloc` support
