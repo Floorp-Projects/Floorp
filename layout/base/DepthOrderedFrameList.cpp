@@ -32,7 +32,7 @@ void DepthOrderedFrameList::Remove(nsIFrame* aFrame) {
 }
 
 nsIFrame* DepthOrderedFrameList::PopShallowestRoot() {
-  // List is sorted in order of decreasing depth, so there are no deeper
+  // List is sorted in order of decreasing depth, so there are no shallower
   // frames than the last one.
   const FrameAndDepth& lastFAD = mList.PopLastElement();
   nsIFrame* frame = lastFAD.mFrame;
