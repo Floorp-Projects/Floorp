@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.SystemClock
+import android.text.TextUtils
 import android.text.format.DateUtils
 import android.util.AttributeSet
 import android.view.ActionMode
@@ -143,6 +144,7 @@ import org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragmen
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
 import java.lang.ref.WeakReference
+import java.util.Locale
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
@@ -237,6 +239,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         )
 
         components.publicSuffixList.prefetch()
+
+        // Changing a language on the Language screen restarts the activity, but the activity keeps
+        // the old layout direction. We have to update the direction manually.
+        window.decorView.layoutDirection = TextUtils.getLayoutDirectionFromLocale(Locale.getDefault())
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
