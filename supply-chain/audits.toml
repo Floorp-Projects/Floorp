@@ -2000,6 +2000,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.20 -> 0.1.21"
 
+[[audits.unicode-normalization]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.1.21 -> 0.1.22"
+
 [[audits.uniffi]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
