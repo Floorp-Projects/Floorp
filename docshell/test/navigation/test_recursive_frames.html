@@ -18,7 +18,9 @@
     { // too many recursive iframes
       frameId: "recursiveFrame",
       expectedLocations: [
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_recursive.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_recursive.html",
         "about:blank",
       ],
@@ -26,9 +28,13 @@
     { // too many recursive iframes
       frameId: "twoRecursiveIframes",
       expectedLocations: [
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_load_as_example_com.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.org/tests/docshell/test/navigation/frame_load_as_example_org.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_load_as_example_com.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.org/tests/docshell/test/navigation/frame_load_as_example_org.html",
         "about:blank",
       ],
@@ -36,11 +42,17 @@
     { // too many recursive iframes
       frameId: "threeRecursiveIframes",
       expectedLocations: [
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://sub1.test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host1.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_load_as_host2.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host3.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://sub1.test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host1.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_load_as_host2.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_load_as_host3.html",
         "about:blank",
       ],
@@ -48,20 +60,30 @@
     { // too many nested iframes
       frameId: "sixRecursiveIframes",
       expectedLocations: [
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_1_out_of_6.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_2_out_of_6.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://sub1.test1.mochi.test:8888/tests/docshell/test/navigation/frame_3_out_of_6.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://sub2.xn--lt-uia.mochi.test:8888/tests/docshell/test/navigation/frame_4_out_of_6.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://test2.mochi.test:8888/tests/docshell/test/navigation/frame_5_out_of_6.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.org/tests/docshell/test/navigation/frame_6_out_of_6.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/frame_1_out_of_6.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://test1.mochi.test:8888/tests/docshell/test/navigation/frame_2_out_of_6.html",
       ],
     },
     { // too many recursive objects
       frameId: "recursiveObject",
       expectedLocations: [
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://sub2.xn--lt-uia.mochi.test:8888/tests/docshell/test/navigation/object_recursive_load.html",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://sub2.xn--lt-uia.mochi.test:8888/tests/docshell/test/navigation/object_recursive_load.html",
       ],
     },
@@ -69,6 +91,7 @@
       frameId: "nestedSrcdoc",
       expectedLocations: [
         "about:srcdoc",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/tests/docshell/test/navigation/file_nested_srcdoc.html",
         "about:srcdoc",
         "about:srcdoc",

@@ -23,6 +23,7 @@ function iframe_loaded() {
 
   var obj = { name: "name" };
   obj.__defineGetter__("a", function() {
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     $("iframe").contentWindow.location = "http://example.com";
 
     // Wait until we've loaded example.com.

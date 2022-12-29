@@ -19,6 +19,7 @@
             await new Promise(r => {
                 frame.onload = r;
                 document.body.appendChild(frame);
+                // eslint-disable-next-line @microsoft/sdl/no-insecure-url
                 frame.contentWindow.location = "http://example.net/tests/docshell/test/dummy_page.html";
             });
             if (SpecialPowers.useRemoteSubframes) {

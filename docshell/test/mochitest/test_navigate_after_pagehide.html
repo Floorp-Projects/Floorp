@@ -18,6 +18,7 @@ add_task(async function() {
     location.href = "/";
   })`);
 
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   iframe.src = "http://example.com/";
   await new Promise(resolve =>
     iframe.addEventListener("load", resolve, { once: true })

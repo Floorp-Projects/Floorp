@@ -17,6 +17,7 @@
 
     info("popup blank.html loaded");
     let tell_opener = new URL("file_tell_opener.html", location.href);
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     let xorigin_url = new URL(tell_opener.pathname, "http://example.com");
 
     let resolveStartedUnload;

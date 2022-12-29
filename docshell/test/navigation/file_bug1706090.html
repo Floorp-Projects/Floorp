@@ -26,6 +26,7 @@
           location.href = "https://example.com:443" + location.pathname;
         } else if (event.data == "sameSite") {
           bc.close();
+          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
           location.href = "http://test1.mochi.test:8888" + location.pathname;
         }
       }
