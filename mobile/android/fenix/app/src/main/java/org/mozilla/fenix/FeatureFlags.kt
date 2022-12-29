@@ -72,5 +72,5 @@ object FeatureFlags {
      *
      * Feature flag tracking: https://github.com/mozilla-mobile/fenix/issues/27759
      * */
-    val storageMaintenanceFeature = Config.channel.isNightlyOrDebug
+    val storageMaintenanceFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 }
