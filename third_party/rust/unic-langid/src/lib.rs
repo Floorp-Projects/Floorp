@@ -30,13 +30,13 @@
 //!
 //! # Optional features
 //!
-//! ## `langid!` and `langids!` macros
+//! ## `langid!`, `langids!`, and `langid_slice!` macros
 //!
 //! If `feature = "macros"` is selected, the crate provides a procedural macro
 //! which allows to construct build-time well-formed language identifiers with zero-cost at runtime.
 //!
 //! ``` ignore
-//! use unic_langid::{langid, langids, lang, region, script, variant};
+//! use unic_langid::{langid, langid_slice, langids, lang, region, script, variant, LanguageIdentifier};
 //! use unic_langid::subtags::{Language, Script, Region, Variant};
 //! use std::str::FromStr;
 //!
@@ -51,6 +51,8 @@
 //! assert_eq!(lang_ids[0], "es-AR");
 //! assert_eq!(lang_ids[1], "en-US");
 //! assert_eq!(lang_ids[2], "de");
+//!
+//! const LANGUAGES: &[LanguageIdentifier] = langid_slice!["en-GB", "fr"];
 //!
 //! assert_eq!(lang!("pl"), "pl");
 //! assert_eq!(lang!("pl"), Language::from_str("pl").unwrap());
@@ -112,12 +114,23 @@ pub use unic_langid_macros::{lang, langid, region, script, variant};
 #[macro_export]
 macro_rules! langids {
     ( $($langid:expr),* ) => {
-        {
-            let mut v = vec![];
-            $(
-                v.push(langid!($langid));
-            )*
-            v
-        }
+        vec![$(
+            $crate::langid!($langid),
+        )*]
+    };
+    ( $($langid:expr,)* ) => {
+        $crate::langids![$($langid),*]
+    };
+}
+#[cfg(feature = "unic-langid-macros")]
+#[macro_export]
+macro_rules! langid_slice {
+    ( $($langid:expr),* ) => {
+        &[$(
+            $crate::langid!($langid),
+        )*]
+    };
+    ( $($langid:expr,)* ) => {
+        $crate::langid_slice![$($langid),*]
     };
 }
