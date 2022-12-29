@@ -34,7 +34,6 @@
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #if !JS_HAS_INTL_API
 #  include "js/LocaleSensitive.h"
 #endif
@@ -469,19 +468,13 @@ const JSClass StringObject::class_ = {
  */
 static MOZ_ALWAYS_INLINE JSString* ToStringForStringFunction(
     JSContext* cx, const char* funName, HandleValue thisv) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
-    return nullptr;
-  }
-
   if (thisv.isString()) {
     return thisv.toString();
   }
 
   if (thisv.isObject()) {
-    RootedObject obj(cx, &thisv.toObject());
-    if (obj->is<StringObject>()) {
-      StringObject* nobj = &obj->as<StringObject>();
+    if (thisv.toObject().is<StringObject>()) {
+      StringObject* nobj = &thisv.toObject().as<StringObject>();
       // We have to make sure that the ToPrimitive call from ToString
       // would be unobservable.
       if (HasNoToPrimitiveMethodPure(nobj, cx) &&
