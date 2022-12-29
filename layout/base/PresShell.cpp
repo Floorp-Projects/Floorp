@@ -584,63 +584,6 @@ class MOZ_STACK_CLASS AutoPointerEventTargetUpdater final {
   nsIContent** mTargetContent;
 };
 
-void PresShell::DirtyRootsList::Add(nsIFrame* aFrame) {
-  // Is this root already scheduled for reflow?
-  // FIXME: This could possibly be changed to a uniqueness assertion, with some
-  // work in ResizeReflowIgnoreOverride (and maybe others?)
-  if (mList.Contains(aFrame)) {
-    // We don't expect frame to change depths.
-    MOZ_ASSERT(aFrame->GetDepthInFrameTree() ==
-               mList[mList.IndexOf(aFrame)].mDepth);
-    return;
-  }
-
-  mList.InsertElementSorted(
-      FrameAndDepth{aFrame, aFrame->GetDepthInFrameTree()},
-      FrameAndDepth::CompareByReverseDepth{});
-}
-
-void PresShell::DirtyRootsList::Remove(nsIFrame* aFrame) {
-  mList.RemoveElement(aFrame);
-}
-
-nsIFrame* PresShell::DirtyRootsList::PopShallowestRoot() {
-  // List is sorted in order of decreasing depth, so there are no deeper
-  // frames than the last one.
-  const FrameAndDepth& lastFAD = mList.PopLastElement();
-  nsIFrame* frame = lastFAD.mFrame;
-  // We don't expect frame to change depths.
-  MOZ_ASSERT(frame->GetDepthInFrameTree() == lastFAD.mDepth);
-  return frame;
-}
-
-void PresShell::DirtyRootsList::Clear() { mList.Clear(); }
-
-bool PresShell::DirtyRootsList::Contains(nsIFrame* aFrame) const {
-  return mList.Contains(aFrame);
-}
-
-bool PresShell::DirtyRootsList::IsEmpty() const { return mList.IsEmpty(); }
-
-bool PresShell::DirtyRootsList::FrameIsAncestorOfDirtyRoot(
-    nsIFrame* aFrame) const {
-  MOZ_ASSERT(aFrame);
-
-  // Look for a path from any dirty roots to aFrame, following GetParent().
-  // This check mirrors what FrameNeedsReflow() would have done if the reflow
-  // root didn't get in the way.
-  for (nsIFrame* dirtyFrame : mList) {
-    do {
-      if (dirtyFrame == aFrame) {
-        return true;
-      }
-      dirtyFrame = dirtyFrame->GetParent();
-    } while (dirtyFrame);
-  }
-
-  return false;
-}
-
 bool PresShell::sDisableNonTestMouseEvents = false;
 
 LazyLogModule PresShell::gLog("PresShell");
@@ -4687,7 +4630,7 @@ void PresShell::NotifyCounterStylesAreDirty() {
 }
 
 bool PresShell::FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const {
-  return mDirtyRoots.FrameIsAncestorOfDirtyRoot(aFrame);
+  return mDirtyRoots.FrameIsAncestorOfAnyElement(aFrame);
 }
 
 void PresShell::ReconstructFrames() {

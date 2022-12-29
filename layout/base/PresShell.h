@@ -9,6 +9,7 @@
 #ifndef mozilla_PresShell_h
 #define mozilla_PresShell_h
 
+#include "DepthOrderedFrameList.h"
 #include "mozilla/PresShellForwards.h"
 
 #include <stdio.h>  // for FILE definition
@@ -2920,50 +2921,8 @@ class PresShell final : public nsStubDocumentObserver,
   // A hash table of heap allocated weak frames.
   nsTHashSet<WeakFrame*> mWeakFrames;
 
-  class DirtyRootsList {
-   public:
-    // Add a dirty root.
-    void Add(nsIFrame* aFrame);
-    // Remove this frame if present.
-    void Remove(nsIFrame* aFrame);
-    // Remove and return one of the shallowest dirty roots from the list.
-    // (If two roots are at the same depth, order is indeterminate.)
-    nsIFrame* PopShallowestRoot();
-    // Remove all dirty roots.
-    void Clear();
-    // Is this frame one of the dirty roots?
-    bool Contains(nsIFrame* aFrame) const;
-    // Are there no dirty roots?
-    bool IsEmpty() const;
-    // Is the given frame an ancestor of any dirty root?
-    bool FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const;
-
-   private:
-    struct FrameAndDepth {
-      nsIFrame* mFrame;
-      const uint32_t mDepth;
-
-      // Easy conversion to nsIFrame*, as it's the most likely need.
-      operator nsIFrame*() const { return mFrame; }
-
-      // Used to sort by reverse depths, i.e., deeper < shallower.
-      class CompareByReverseDepth {
-       public:
-        bool Equals(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
-          return aA.mDepth == aB.mDepth;
-        }
-        bool LessThan(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
-          // Reverse depth! So '>' instead of '<'.
-          return aA.mDepth > aB.mDepth;
-        }
-      };
-    };
-    // List of all known dirty roots, sorted by decreasing depths.
-    nsTArray<FrameAndDepth> mList;
-  };
-
   // Reflow roots that need to be reflowed.
-  DirtyRootsList mDirtyRoots;
+  DepthOrderedFrameList mDirtyRoots;
 
   // These two fields capture call stacks of any changes that require a restyle
   // or a reflow. Only the first change per restyle / reflow is recorded (the

@@ -1015,7 +1015,7 @@ struct QueryContainerState {
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContainerState, QueryContainerState);
 
 void nsPresContext::RegisterContainerQueryFrame(nsIFrame* aFrame) {
-  mContainerQueryFrames.Insert(aFrame);
+  mContainerQueryFrames.Add(aFrame);
 }
 
 void nsPresContext::UnregisterContainerQueryFrame(nsIFrame* aFrame) {
@@ -1035,17 +1035,15 @@ bool nsPresContext::UpdateContainerQueryStyles() {
 
   PresShell()->DoFlushLayout(/* aInterruptible = */ false);
 
+  AutoTArray<nsIFrame*, 8> framesToUpdate;
+
   bool anyChanged = false;
-  for (nsIFrame* frame : mContainerQueryFrames) {
+  for (nsIFrame* frame : mContainerQueryFrames.IterFromShallowest()) {
     MOZ_ASSERT(frame->IsPrimaryFrame());
 
     auto type = frame->StyleDisplay()->mContainerType;
     MOZ_ASSERT(type != StyleContainerType::Normal,
                "Non-container frames shouldn't be in this type");
-
-    if (!mUpdatedContainerQueryContents.EnsureInserted(frame->GetContent())) {
-      continue;
-    }
 
     const QueryContainerState newState{frame->GetSize(),
                                        frame->GetWritingMode()};
@@ -1064,6 +1062,30 @@ bool nsPresContext::UpdateContainerQueryStyles() {
     if (!changed) {
       continue;
     }
+
+    const bool updatingAncestor = [&] {
+      for (nsIFrame* f : framesToUpdate) {
+        if (nsLayoutUtils::IsProperAncestorFrame(f, frame)) {
+          return true;
+        }
+      }
+      return false;
+    }();
+
+    if (updatingAncestor) {
+      // We're going to update an ancestor container of this frame already,
+      // avoid updating this one too until all our ancestor containers are
+      // updated.
+      continue;
+    }
+
+    // To prevent unstable layout, only update once per-element per-flush.
+    if (NS_WARN_IF(!mUpdatedContainerQueryContents.EnsureInserted(
+            frame->GetContent()))) {
+      continue;
+    }
+
+    framesToUpdate.AppendElement(frame);
 
     // TODO(emilio): More fine-grained invalidation rather than invalidating the
     // whole subtree, probably!
