@@ -600,7 +600,6 @@ class UrlInputFragment :
         } else {
             requireComponents.searchUseCases.newPrivateTabSearch.invoke(
                 searchTerms = searchTerms,
-                private = true,
                 source = SessionState.Source.Internal.UserEntered,
             )
         }

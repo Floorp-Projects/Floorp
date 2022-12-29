@@ -112,7 +112,6 @@ class SearchUseCases(
                 searchTerms,
                 source = SessionState.Source.Internal.None,
                 selected = true,
-                private = isPrivate,
                 searchEngine = searchEngine,
                 parentSessionId = parentSessionId,
             )
@@ -123,7 +122,6 @@ class SearchUseCases(
          *
          * @param searchTerms the search terms.
          * @param selected whether or not the new session should be selected, defaults to true.
-         * @param private whether or not the new session should be private, defaults to false.
          * @param source the source of the new session.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
          * @param parentSessionId optional parent session to attach this new search session to
@@ -133,7 +131,6 @@ class SearchUseCases(
             searchTerms: String,
             source: SessionState.Source,
             selected: Boolean = true,
-            private: Boolean = false,
             searchEngine: SearchEngine? = null,
             parentSessionId: String? = null,
         ) {
@@ -151,7 +148,7 @@ class SearchUseCases(
                 parentId = parentSessionId,
                 source = source,
                 selectTab = selected,
-                private = private,
+                private = isPrivate,
                 isSearch = true,
             )
 
