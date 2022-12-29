@@ -89,6 +89,9 @@ Review groups
    * - #mozbase-rust
      - Changes to Mozbase in Rust
      - `Member list <https://phabricator.services.mozilla.com/project/members/114/>`__
+   * - #necko-reviewers
+     - Changes to network code (aka necko, aka netwerk)
+     - `Member list <https://phabricator.services.mozilla.com/project/members/127/>`__
    * - #nss-reviewers
      - Changes to Network Security Services (NSS)
      - `Member list <https://phabricator.services.mozilla.com/project/members/156/>`__
