@@ -408,9 +408,11 @@ android-hw-arm7-debug-unittests:
 android-hw-aarch64-debug-unittests:
     - jittest
 
-android-hw-aarch64:
+android-hw-p5:
     - crashtest-qr
     - reftest-qr
+
+android-hw-aarch64:
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl1-ext

@@ -239,7 +239,7 @@ reftest-qr:
         by-variant:
             webrender-sw+no-fission:
                 by-test-platform:
-                    android-hw-p2-8-0-android-aarch64-qr/debug: built-projects
+                    android-hw-p5-13-0-android-aarch64-qr/debug: built-projects
                     default: []
             no-fission: built-projects
     max-run-time: 2400
