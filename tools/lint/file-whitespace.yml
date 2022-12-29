@@ -146,12 +146,14 @@ file-whitespace:
         - .cpp
         - .css
         - .dtd
+        - .idl
         - .ftl
         - .h
         - .html
         - .properties
         - .rs
         - .rst
+        - .webidl
         - .xhtml
     support-files:
         - 'tools/lint/file-whitespace/**'
