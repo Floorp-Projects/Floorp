@@ -9366,7 +9366,8 @@ nsSizeMode nsWindow::FrameState::GetSizeMode() const { return mSizeMode; }
 void nsWindow::FrameState::CheckInvariant() const {
   MOZ_ASSERT(mSizeMode >= 0 && mSizeMode < nsSizeMode_Invalid);
   MOZ_ASSERT(mLastSizeMode >= 0 && mLastSizeMode < nsSizeMode_Invalid);
-  MOZ_ASSERT(mOldSizeMode >= 0 && mOldSizeMode < nsSizeMode_Invalid);
+  MOZ_ASSERT(mPreFullscreenSizeMode >= 0 &&
+             mPreFullscreenSizeMode < nsSizeMode_Invalid);
   MOZ_ASSERT(mWindow);
 
   // We should never observe fullscreen sizemode unless fullscreen is enabled
@@ -9375,7 +9376,7 @@ void nsWindow::FrameState::CheckInvariant() const {
 
   // Something went wrong if we somehow saved fullscreen mode when we are
   // changing into fullscreen mode
-  MOZ_ASSERT(mOldSizeMode != nsSizeMode_Fullscreen);
+  MOZ_ASSERT(mPreFullscreenSizeMode != nsSizeMode_Fullscreen);
 }
 
 void nsWindow::FrameState::ConsumePreXULSkeletonState(bool aWasMaximized) {
@@ -9402,24 +9403,21 @@ void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode) {
 }
 
 void nsWindow::FrameState::EnsureFullscreenMode(bool aFullScreen) {
-  if (mFullscreenMode == aFullScreen) {
-    if (aFullScreen) {
-      // NOTE(emilio): When minimizing a fullscreen window we remain with
-      // mFullscreenMode = true, but mSizeMode = nsSizeMode_Minimized. Make
-      // sure we actually end up with a fullscreen sizemode when restoring a
-      // window from that state.
-      SetSizeModeInternal(nsSizeMode_Fullscreen);
-    }
-    return;
+  const bool changed = aFullScreen != mFullscreenMode;
+  if (changed && aFullScreen) {
+    // Save the size mode from before fullscreen.
+    mPreFullscreenSizeMode = mSizeMode;
   }
-
-  mWindow->OnFullscreenWillChange(aFullScreen);
   mFullscreenMode = aFullScreen;
-  if (aFullScreen) {
-    mOldSizeMode = mSizeMode;
+  if (changed || aFullScreen) {
+    // NOTE(emilio): When minimizing a fullscreen window we remain with
+    // mFullscreenMode = true, but mSizeMode = nsSizeMode_Minimized. We need to
+    // make sure to call SetSizeModeInternal even if mFullscreenMode didn't
+    // change, to ensure we actually end up with a fullscreen sizemode when
+    // restoring a window from that state.
+    SetSizeModeInternal(aFullScreen ? nsSizeMode_Fullscreen
+                                    : mPreFullscreenSizeMode);
   }
-  SetSizeModeInternal(aFullScreen ? nsSizeMode_Fullscreen : mOldSizeMode);
-  mWindow->OnFullscreenChanged(aFullScreen);
 }
 
 void nsWindow::FrameState::OnFrameChanging() {
@@ -9471,6 +9469,14 @@ void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
     return;
   }
 
+  const bool fullscreenChange =
+      mSizeMode == nsSizeMode_Fullscreen || aMode == nsSizeMode_Fullscreen;
+  const bool fullscreen = aMode == nsSizeMode_Fullscreen;
+
+  if (fullscreenChange) {
+    mWindow->OnFullscreenWillChange(fullscreen);
+  }
+
   mLastSizeMode = mSizeMode;
   mSizeMode = aMode;
 
@@ -9482,6 +9488,10 @@ void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
   if (mWindow->mIsVisible &&
       (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
     mWindow->DispatchFocusToTopLevelWindow(true);
+  }
+
+  if (fullscreenChange) {
+    mWindow->OnFullscreenChanged(fullscreen);
   }
 }
 
