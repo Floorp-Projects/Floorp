@@ -2379,3 +2379,8 @@ who = "Henri Sivonen <hsivonen@hsivonen.fi>"
 criteria = "safe-to-deploy"
 version = "0.2.0"
 notes = "I, Henri Sivonen, wrote this crate myself for Gecko even though it's published on crates.io."
+
+[[audits.zip]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.6.2 -> 0.6.3"
