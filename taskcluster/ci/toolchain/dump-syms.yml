@@ -62,5 +62,4 @@ win64-dump_syms:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-1.66
-            - linux64-liblowercase
             - win64-vs2017

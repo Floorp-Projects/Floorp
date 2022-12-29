@@ -279,7 +279,6 @@ win64-winchecksec:
             - winchecksec
         toolchain:
             - linux64-clang-toolchain
-            - linux64-liblowercase
             - win64-vs2017
 
 linux64-makecab:
@@ -315,7 +314,6 @@ win64-mozmake:
             - gnumake
         toolchain:
             - linux64-clang-toolchain
-            - linux64-liblowercase
             - win64-vs2017
 
 nsis:

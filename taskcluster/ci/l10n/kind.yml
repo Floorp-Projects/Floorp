@@ -49,7 +49,6 @@ job-template:
                     - linux64-hfsplus
                 win.*:
                     - linux64-wine
-                    - linux64-liblowercase
                     - nsis
         fetch:
             by-build-platform:

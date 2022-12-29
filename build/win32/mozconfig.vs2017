@@ -3,8 +3,8 @@ if [ -z "${VSPATH}" ]; then
 fi
 
 if [ -d "${VSPATH}" ]; then
-    export WIN32_REDIST_DIR="${VSPATH}/vc/redist/msvc/14.16.27012/x86/microsoft.vc141.crt"
-    export WIN_UCRT_REDIST_DIR="${VSPATH}/windows kits/10/redist/ucrt/dlls/x86"
+    export WIN32_REDIST_DIR="${VSPATH}/VC/Redist/MSVC/14.16.27012/x86/Microsoft.VC141.CRT"
+    export WIN_UCRT_REDIST_DIR="${VSPATH}/Windows Kits/10/Redist/ucrt/DLLs/x86"
     export WINSYSROOT="${VSPATH}"
 fi
 

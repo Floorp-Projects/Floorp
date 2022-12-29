@@ -19,8 +19,8 @@ case "$TARGET" in
   . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
   # Bug 1584530: don't require the Microsoft MSVC runtime to be installed.
   export RUSTFLAGS="-Ctarget-feature=+crt-static -C linker=$MOZ_FETCHES_DIR/clang/bin/lld-link"
-  export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
-  export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs
+  export TARGET_CFLAGS="-Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
+  export TARGET_CXXFLAGS="-Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
   ;;
 # OSX cross builds are a bit harder
 *-apple-darwin)

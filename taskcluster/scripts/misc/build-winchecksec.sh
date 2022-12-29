@@ -12,9 +12,6 @@ x86_64-pc-windows-msvc)
     SUFFIX=.exe
     export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
 
-    export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
-    export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs
-
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
 
     # Patch pe-parse because clang-cl doesn't support /analyze.
@@ -34,8 +31,8 @@ EOF
       -DCMAKE_CXX_COMPILER=clang-cl
       -DCMAKE_C_COMPILER=clang-cl
       -DCMAKE_LINKER=lld-link
-      -DCMAKE_C_FLAGS=-fuse-ld=lld
-      -DCMAKE_CXX_FLAGS="-fuse-ld=lld -EHsc"
+      -DCMAKE_C_FLAGS="-fuse-ld=lld -Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
+      -DCMAKE_CXX_FLAGS="-fuse-ld=lld -EHsc -Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
       -DCMAKE_RC_COMPILER=llvm-rc
       -DCMAKE_MT=llvm-mt
       -DCMAKE_SYSTEM_NAME=Windows

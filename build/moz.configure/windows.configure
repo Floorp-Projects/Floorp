@@ -65,8 +65,8 @@ def get_sdk_dirs(sdk, subdir):
     def categorize(dirs):
         return {os.path.basename(d): d for d in dirs}
 
-    include_dirs = categorize(get_dirs_containing(sdk, "include", subdir))
-    lib_dirs = categorize(get_dirs_containing(sdk, "lib", subdir))
+    include_dirs = categorize(get_dirs_containing(sdk, "Include", subdir))
+    lib_dirs = categorize(get_dirs_containing(sdk, "Lib", subdir))
 
     valid_versions = sorted(set(include_dirs) & set(lib_dirs), reverse=True)
     return [

@@ -126,8 +126,6 @@ case "$target" in
   "
   ;;
 *-pc-windows-msvc)
-  export LD_PRELOAD="/builds/worker/fetches/liblowercase/liblowercase.so"
-  export LOWERCASE_DIRS="/builds/worker/fetches/vs"
   EXTRA_CMAKE_FLAGS="
     $EXTRA_CMAKE_FLAGS
     -DCMAKE_TOOLCHAIN_FILE=$MOZ_FETCHES_DIR/llvm-project/llvm/cmake/platforms/WinMsvc.cmake

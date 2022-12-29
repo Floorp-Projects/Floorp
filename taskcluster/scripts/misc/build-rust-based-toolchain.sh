@@ -44,8 +44,8 @@ x86_64-unknown-linux-gnu)
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
     export CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
     export CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
-    export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
-    export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs
+    export TARGET_CFLAGS="-Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
+    export TARGET_CXXFLAGS="-Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
     ;;
 esac
 

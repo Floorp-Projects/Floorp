@@ -123,9 +123,6 @@ jobs:
                 - builds/taskcluster_sub_win64/searchfox_debug.py
             extra-config:
                 mozconfig_platform: win64
-                env:
-                    LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         use-sccache: true
         fetches:
             toolchain:
@@ -138,7 +135,6 @@ jobs:
                 - linux64-sccache
                 - linux64-dump_syms
                 - linux64-wine
-                - linux64-liblowercase
                 - linux64-winchecksec
                 - nsis
                 - sysroot-x86_64-linux-gnu

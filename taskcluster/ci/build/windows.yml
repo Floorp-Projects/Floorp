@@ -35,9 +35,6 @@ win32/debug:
         mozconfig-variant: debug
         extra-config:
             mozconfig_platform: win32
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     use-sccache: true
     fetches:
         toolchain:
@@ -50,7 +47,6 @@ win32/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -87,9 +83,6 @@ win32/opt:
         extra-config:
             stage_platform: win32
             mozconfig_platform: win32
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -103,7 +96,6 @@ win32/opt:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -140,9 +132,6 @@ win32-fuzzing/debug:
         extra-config:
             stage_platform: win32
             mozconfig_platform: win32
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: debug-fuzzing
     run-on-projects: ['trunk']
     use-sccache: true
@@ -157,7 +146,6 @@ win32-fuzzing/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -197,9 +185,6 @@ win64/debug:
         mozconfig-variant: debug
         extra-config:
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     use-sccache: true
     fetches:
         toolchain:
@@ -212,7 +197,6 @@ win64/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -246,9 +230,6 @@ win64-hybrid/plain:
         mozconfig-variant: hybrid
         extra-config:
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     use-sccache: true
     run-on-projects: ['integration']
     fetches:
@@ -262,7 +243,6 @@ win64-hybrid/plain:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -298,9 +278,6 @@ win64-fuzzing/debug:
             - builds/taskcluster_sub_win64/debug.py
         extra-config:
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: debug-fuzzing
     run-on-projects: ['trunk']
     use-sccache: true
@@ -315,7 +292,6 @@ win64-fuzzing/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -397,13 +373,6 @@ win64/opt:
         extra-config:
             stage_platform: win64
             mozconfig_platform: win64
-            env:
-                # Setting LD_PRELOAD at the worker level would set it during
-                # fetch-content, which can fail randomly when a tar/unzip subprocess
-                # of fetch-content starts while the library is being extracted by
-                # another.
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -417,7 +386,6 @@ win64/opt:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -514,9 +482,6 @@ win32-shippable/opt:
         extra-config:
             stage_platform: win32
             mozconfig_platform: win32
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     fetches:
         toolchain:
             - linux64-clang
@@ -527,7 +492,6 @@ win32-shippable/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -570,9 +534,6 @@ win64-shippable/opt:
         extra-config:
             stage_platform: win64
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     fetches:
         toolchain:
             - linux64-clang
@@ -583,7 +544,6 @@ win64-shippable/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -615,9 +575,6 @@ win32-add-on-devel/opt:
         extra-config:
             stage_platform: win32-add-on-devel
             mozconfig_platform: win32
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
     use-sccache: true
@@ -632,7 +589,6 @@ win32-add-on-devel/opt:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -664,9 +620,6 @@ win64-add-on-devel/opt:
         extra-config:
             stage_platform: win64-on-devel
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
     use-sccache: true
@@ -681,7 +634,6 @@ win64-add-on-devel/opt:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -714,9 +666,6 @@ win64-noopt/debug:
         mozconfig-variant: noopt-debug
         extra-config:
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     run-on-projects: ['mozilla-central']
     use-sccache: true
     fetches:
@@ -730,7 +679,6 @@ win64-noopt/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -763,9 +711,6 @@ win32-noopt/debug:
         mozconfig-variant: noopt-debug
         extra-config:
             mozconfig_platform: win32
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     run-on-projects: ['mozilla-central']
     use-sccache: true
     fetches:
@@ -779,7 +724,6 @@ win32-noopt/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1087,9 +1031,6 @@ win64-asan/debug:
             - builds/taskcluster_sub_win64/asan_debug.py
         extra-config:
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: debug-asan
     use-sccache: true
     fetches:
@@ -1103,7 +1044,6 @@ win64-asan/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1141,9 +1081,6 @@ win64-asan/opt:
         extra-config:
             stage_platform: win64-asan
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: nightly-asan
     use-sccache: true
     fetches:
@@ -1157,7 +1094,6 @@ win64-asan/opt:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1201,9 +1137,6 @@ win64-asan-reporter-shippable/opt:
         extra-config:
             stage_platform: win64-asan-reporter
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: nightly-asan-reporter
         mar-channel-id:
             firefox-mozilla-central-asan
@@ -1220,7 +1153,6 @@ win64-asan-reporter-shippable/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1254,9 +1186,6 @@ win64-asan-fuzzing/opt:
         extra-config:
             stage_platform: win64-fuzzing-asan
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: nightly-fuzzing-asan
     use-sccache: true
     fetches:
@@ -1270,7 +1199,6 @@ win64-asan-fuzzing/opt:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1325,9 +1253,6 @@ win32-devedition/opt:
         extra-config:
             stage_platform: win32-devedition
             mozconfig_platform: win32
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -1340,7 +1265,6 @@ win32-devedition/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1382,9 +1306,6 @@ win64-devedition/opt:
         extra-config:
             stage_platform: win64-devedition
             mozconfig_platform: win64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -1397,7 +1318,6 @@ win64-devedition/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1433,9 +1353,6 @@ win64-aarch64/debug:
             - builds/taskcluster_sub_win64/debug.py
         extra-config:
             mozconfig_platform: win64-aarch64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: debug
     use-sccache: true
     fetches:
@@ -1449,7 +1366,6 @@ win64-aarch64/debug:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1493,9 +1409,6 @@ win64-aarch64/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -1509,7 +1422,6 @@ win64-aarch64/opt:
             - linux64-sccache
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1695,9 +1607,6 @@ win64-aarch64-shippable-no-eme/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
     run-on-projects: ['all']
     fetches:
         toolchain:
@@ -1709,7 +1618,6 @@ win64-aarch64-shippable-no-eme/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
@@ -1853,9 +1761,6 @@ win64-aarch64-devedition-no-eme/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-            env:
-                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -1868,7 +1773,6 @@ win64-aarch64-devedition-no-eme/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-wine
-            - linux64-liblowercase
             - linux64-winchecksec
             - nsis
             - sysroot-x86_64-linux-gnu
