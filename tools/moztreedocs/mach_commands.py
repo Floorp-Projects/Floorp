@@ -178,7 +178,7 @@ def build_docs(
         if fatal_warnings:
             return die(
                 "failed to generate documentation:\n "
-                f"Got fatal warnings:\n{''.join(fatal_warnings)}"
+                f"Error: Got fatal warnings:\n{''.join(fatal_warnings)}"
             )
 
     # Upload the artifact containing the link to S3
