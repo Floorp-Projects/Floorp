@@ -12,14 +12,32 @@
 [package]
 edition = "2018"
 name = "unicode-segmentation"
-version = "1.9.0"
-authors = ["kwantam <kwantam@gmail.com>", "Manish Goregaokar <manishsmail@gmail.com>"]
-exclude = ["target/*", "Cargo.lock", "scripts/tmp", "benches/texts/*", "*.txt"]
-description = "This crate provides Grapheme Cluster, Word and Sentence boundaries\naccording to Unicode Standard Annex #29 rules.\n"
+version = "1.10.0"
+authors = [
+    "kwantam <kwantam@gmail.com>",
+    "Manish Goregaokar <manishsmail@gmail.com>",
+]
+exclude = [
+    "target/*",
+    "Cargo.lock",
+    "scripts/tmp",
+    "benches/texts/*",
+    "*.txt",
+]
+description = """
+This crate provides Grapheme Cluster, Word and Sentence boundaries
+according to Unicode Standard Annex #29 rules.
+"""
 homepage = "https://github.com/unicode-rs/unicode-segmentation"
 documentation = "https://unicode-rs.github.io/unicode-segmentation"
 readme = "README.md"
-keywords = ["text", "unicode", "grapheme", "word", "boundary"]
+keywords = [
+    "text",
+    "unicode",
+    "grapheme",
+    "word",
+    "boundary",
+]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/unicode-rs/unicode-segmentation"
 
@@ -34,6 +52,7 @@ harness = false
 [[bench]]
 name = "word_bounds"
 harness = false
+
 [dev-dependencies.criterion]
 version = "0.3"
 
