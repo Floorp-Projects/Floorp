@@ -16,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
@@ -80,6 +81,7 @@ internal class CrashListAdapter(
                 append(crashReporter, crashWithReports.reports, onSelection)
             }
         }
+        ViewCompat.enableAccessibleClickableSpanSupport(holder.footerView)
     }
 
     @SuppressLint("NotifyDataSetChanged")
