@@ -49,6 +49,7 @@ function receiveMessage(event) {
 
 function performNavigation() {
   testframe.removeEventListener("load", performNavigation);
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   testframe.setAttribute("src", "http://example.com/tests/docshell/test/navigation/file_triggeringprincipal_subframe_same_origin_nav.html");
 }
 

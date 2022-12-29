@@ -15,6 +15,7 @@
       "use strict";
       const PATH = "/tests/docshell/test/mochitest/";
       const SAME_ORIGIN = new URL(PATH, window.location.origin);;
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       const CROSS_ORIGIN_1 = new URL(PATH, "http://test1.example.com/");
       const CROSS_ORIGIN_2 = new URL(PATH, "https://example.com/");
       const TARGET = "ping.html";

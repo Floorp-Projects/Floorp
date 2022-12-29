@@ -11,6 +11,7 @@
 SimpleTest.waitForExplicitFinish();
 
 const SAME_ORIGIN_URI = "http://mochi.test:8888/tests/docshell/test/dummy_page.html";
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const CROSS_ORIGIN_URI = "http://example.com/tests/docshell/test/dummy_page.html";
 const NUMBER_OF_TESTS = 3;
 let testCounter = 0;
