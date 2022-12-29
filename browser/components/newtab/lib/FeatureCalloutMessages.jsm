@@ -403,11 +403,11 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FEATURE_CALLOUT_1_A",
-            parent_selector: "#editorFreeText",
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
               callout_position_override: {
-                top: "130px",
+                top: "45px",
                 right: "55px",
               },
               arrow_position: "top-end",
@@ -474,11 +474,11 @@ const MESSAGES = () => {
           EMPTY_SCREEN,
           {
             id: "FEATURE_CALLOUT_2_A",
-            parent_selector: "#editorInk",
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
               callout_position_override: {
-                top: "130px",
+                top: "45px",
                 right: "25px",
               },
               arrow_position: "top-end",
@@ -542,11 +542,11 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FEATURE_CALLOUT_1_B",
-            parent_selector: "#editorFreeText",
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
               callout_position_override: {
-                top: "130px",
+                top: "45px",
                 right: "55px",
               },
               arrow_position: "top-end",
@@ -613,11 +613,11 @@ const MESSAGES = () => {
           EMPTY_SCREEN,
           {
             id: "FEATURE_CALLOUT_2_B",
-            parent_selector: "#editorInk",
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
               callout_position_override: {
-                top: "130px",
+                top: "45px",
                 right: "25px",
               },
               arrow_position: "top-end",
