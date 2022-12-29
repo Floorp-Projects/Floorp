@@ -110,10 +110,8 @@ void SharedStyleSheetCache::LoadCompletedInternal(
   // Go through and deal with the whole linked list.
   auto* data = &aData;
   do {
-    MOZ_DIAGNOSTIC_ASSERT(!data->mSheetCompleteCalled);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MOZ_RELEASE_ASSERT(!data->mSheetCompleteCalled);
     data->mSheetCompleteCalled = true;
-#endif
 
     if (!data->mSheetAlreadyComplete) {
       // If mSheetAlreadyComplete, then the sheet could well be modified between

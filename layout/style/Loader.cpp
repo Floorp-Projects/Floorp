@@ -1882,11 +1882,9 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
         return Err(rv);
       }
     } else {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       // We don't have to notify anyone of this load, as it was complete, so
       // drop it intentionally.
       data->mIntentionallyDropped = true;
-#endif
     }
 
     // The load hasn't been completed yet, will be done in PostLoadEvent.
@@ -2026,9 +2024,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
     // We're completely done.  No need to notify, even, since the
     // @import rule addition/modification will trigger the right style
     // changes automatically.
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     data->mIntentionallyDropped = true;
-#endif
     return NS_OK;
   }
 
@@ -2121,9 +2117,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
     } else {
       // We don't have to notify anyone of this load, as it was complete, so
       // drop it intentionally.
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       data->mIntentionallyDropped = true;
-#endif
     }
     return sheet;
   }
