@@ -8,7 +8,6 @@
 #ifndef mozilla_net_OpaqueResponseUtils_h
 #define mozilla_net_OpaqueResponseUtils_h
 
-#include "mozilla/dom/JSValidatorParent.h"
 #include "nsIContentPolicy.h"
 #include "nsIStreamListener.h"
 #include "nsUnknownDecoder.h"
@@ -73,13 +72,7 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
  private:
   virtual ~OpaqueResponseBlocker() = default;
 
-  nsresult ValidateJavaScript(HttpBaseChannel* aChannel, nsIURI* aURI,
-                              nsILoadInfo* aLoadInfo);
-
-  void ResolveAndProcessData(HttpBaseChannel* aChannel, bool aAllowed,
-                             Maybe<ipc::Shmem>& aSharedData);
-
-  void MaybeRunOnStopRequest(HttpBaseChannel* aChannel);
+  nsresult ValidateJavaScript(HttpBaseChannel* aChannel);
 
   nsCOMPtr<nsIStreamListener> mNext;
 
@@ -88,10 +81,6 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
 
   State mState = State::Sniffing;
   nsresult mStatus = NS_OK;
-
-  RefPtr<dom::JSValidatorParent> mJSValidator;
-
-  Maybe<nsresult> mPendingOnStopRequestStatus{Nothing()};
 };
 
 class nsCompressedAudioVideoImageDetector : public nsUnknownDecoder {

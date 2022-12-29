@@ -8,7 +8,6 @@ include PrefsTypes;
 
 include protocol PProfiler;
 include protocol PUtilityAudioDecoder;
-include protocol PJSOracle;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -82,8 +81,6 @@ child:
   async TestTelemetryProbes();
 
   async StartUtilityAudioDecoderService(Endpoint<PUtilityAudioDecoderParent> aEndpoint);
-
-  async StartJSOracleService(Endpoint<PJSOracleChild> aEndpoint);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
   async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
