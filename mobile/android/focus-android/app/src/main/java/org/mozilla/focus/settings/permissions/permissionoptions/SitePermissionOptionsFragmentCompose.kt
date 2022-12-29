@@ -107,9 +107,11 @@ fun OptionsPermissionList(
                         onClick = item.onClick,
                     )
                 }
-            }
-            if (componentPermissionBlockedByAndroidVisibility) {
-                ComponentPermissionBlockedByAndroid(goToPhoneSettings, permissionLabel)
+                item {
+                    if (componentPermissionBlockedByAndroidVisibility) {
+                        ComponentPermissionBlockedByAndroid(goToPhoneSettings, permissionLabel)
+                    }
+                }
             }
         }
     }
