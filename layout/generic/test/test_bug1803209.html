@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+
+<style>
+.box {
+    background: linear-gradient(90deg, rgba(256,0,0,1), rgba(256,0,0,1));
+    background-attachment: fixed;
+    width: 25%;
+    height: 450px;
+}
+</style>
+
+<div style="height: 1000vh;"></div>
+<div class="box"></div>
+
+
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+add_task(async function() {
+  let utils = SpecialPowers.DOMWindowUtils;
+
+  let sc = document.getElementById("sc");
+  let boundingClientRect = document.documentElement.getBoundingClientRect();
+
+  let canvas = document.createElement("canvas");
+  canvas.setAttribute("width", boundingClientRect.width);
+  canvas.setAttribute("height", boundingClientRect.height);
+  let ctx = canvas.getContext("2d");
+
+  let rect = new window.DOMRect(boundingClientRect.x, boundingClientRect.y,
+                 boundingClientRect.width,
+                 boundingClientRect.height);
+
+  let image = await SpecialPowers.snapshotContext(window, rect, "rgb(255,255,255)");
+
+  SpecialPowers.wrap(ctx).drawImage(image, 0, 0);
+
+  var data = ctx.getImageData(0, 0, boundingClientRect.width, boundingClientRect.height).data;
+  var foundRed = false;
+  for (var i = 0; i < data.length; i+=4) {
+    if (data[i] == 255 && data[i+1] == 0 && data[i+2] == 0 && data[i+3] == 255) {
+      foundRed = true;
+      break;
+    }
+  }
+  ok(foundRed, "found some red pixels");
+});
+</script>
+</body>
+</html>
