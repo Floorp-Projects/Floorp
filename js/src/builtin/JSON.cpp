@@ -706,11 +706,6 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
   /* Step 11 must be handled by the caller. */
   MOZ_ASSERT(!IsFilteredValue(v));
 
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
-    return false;
-  }
-
   /*
    * This method implements the Str algorithm in ES5 15.12.3, but:
    *
@@ -757,6 +752,11 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
   if (v.isBigInt()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BIGINT_NOT_SERIALIZABLE);
+    return false;
+  }
+
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
