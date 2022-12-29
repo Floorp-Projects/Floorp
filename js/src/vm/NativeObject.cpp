@@ -1985,11 +1985,6 @@ bool js::NativeGetOwnPropertyDescriptor(
 
 static bool GetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
                                   MutableHandleValue vp) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
-    return false;
-  }
-
   cx->check(obj, id, vp);
 
   const JSClass* clasp = obj->getClass();
@@ -2281,11 +2276,6 @@ bool js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg,
 
 static bool SetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
                                   HandleValue v, ObjectOpResult& result) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
-    return false;
-  }
-
   cx->check(obj, id, v);
 
   const JSClass* clasp = obj->getClass();
