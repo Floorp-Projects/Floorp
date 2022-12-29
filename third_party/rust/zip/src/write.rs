@@ -174,7 +174,11 @@ impl FileOptions {
     ///
     /// The format is represented with unix-style permissions.
     /// The default is `0o644`, which represents `rw-r--r--` for files,
-    /// and `0o755`, which represents `rwxr-xr-x` for directories
+    /// and `0o755`, which represents `rwxr-xr-x` for directories.
+    ///
+    /// This method only preserves the file permissions bits (via a `& 0o777`) and discards
+    /// higher file mode bits. So it cannot be used to denote an entry as a directory,
+    /// symlink, or other special file type.
     #[must_use]
     pub fn unix_permissions(mut self, mode: u32) -> FileOptions {
         self.permissions = Some(mode & 0o777);
@@ -348,7 +352,7 @@ impl<W: Write + io::Seek> ZipWriter<W> {
 
         {
             let writer = self.inner.get_plain();
-            let header_start = writer.seek(io::SeekFrom::Current(0))?;
+            let header_start = writer.stream_position()?;
 
             let permissions = options.permissions.unwrap_or(0o100644);
             let mut file = ZipFileData {
@@ -375,7 +379,7 @@ impl<W: Write + io::Seek> ZipWriter<W> {
             };
             write_local_file_header(writer, &file)?;
 
-            let header_end = writer.seek(io::SeekFrom::Current(0))?;
+            let header_end = writer.stream_position()?;
             self.stats.start = header_end;
             *file.data_start.get_mut() = header_end;
 
@@ -404,7 +408,7 @@ impl<W: Write + io::Seek> ZipWriter<W> {
             file.crc32 = self.stats.hasher.clone().finalize();
             file.uncompressed_size = self.stats.bytes_written;
 
-            let file_end = writer.seek(io::SeekFrom::Current(0))?;
+            let file_end = writer.stream_position()?;
             file.compressed_size = file_end - self.stats.start;
 
             update_local_file_header(writer, file)?;
@@ -723,7 +727,7 @@ impl<W: Write + io::Seek> ZipWriter<W> {
 
     /// Add a directory entry, taking a Path as argument.
     ///
-    /// This function ensures that the '/' path seperator is used. It also ignores all non 'Normal'
+    /// This function ensures that the '/' path separator is used. It also ignores all non 'Normal'
     /// Components, such as a starting '/' or '..' and '.'.
     #[deprecated(
         since = "0.5.7",
@@ -747,17 +751,55 @@ impl<W: Write + io::Seek> ZipWriter<W> {
         Ok(inner.unwrap())
     }
 
+    /// Add a symlink entry.
+    ///
+    /// The zip archive will contain an entry for path `name` which is a symlink to `target`.
+    ///
+    /// No validation or normalization of the paths is performed. For best results,
+    /// callers should normalize `\` to `/` and ensure symlinks are relative to other
+    /// paths within the zip archive.
+    ///
+    /// WARNING: not all zip implementations preserve symlinks on extract. Some zip
+    /// implementations may materialize a symlink as a regular file, possibly with the
+    /// content incorrectly set to the symlink target. For maximum portability, consider
+    /// storing a regular file instead.
+    pub fn add_symlink<N, T>(
+        &mut self,
+        name: N,
+        target: T,
+        mut options: FileOptions,
+    ) -> ZipResult<()>
+    where
+        N: Into<String>,
+        T: Into<String>,
+    {
+        if options.permissions.is_none() {
+            options.permissions = Some(0o777);
+        }
+        *options.permissions.as_mut().unwrap() |= 0o120000;
+        // The symlink target is stored as file content. And compressing the target path
+        // likely wastes space. So always store.
+        options.compression_method = CompressionMethod::Stored;
+
+        self.start_entry(name, options, None)?;
+        self.writing_to_file = true;
+        self.write_all(target.into().as_bytes())?;
+        self.writing_to_file = false;
+
+        Ok(())
+    }
+
     fn finalize(&mut self) -> ZipResult<()> {
         self.finish_file()?;
 
         {
             let writer = self.inner.get_plain();
 
-            let central_start = writer.seek(io::SeekFrom::Current(0))?;
+            let central_start = writer.stream_position()?;
             for file in self.files.iter() {
                 write_central_directory_header(writer, file)?;
             }
-            let central_size = writer.seek(io::SeekFrom::Current(0))? - central_start;
+            let central_size = writer.stream_position()? - central_start;
 
             if self.files.len() > spec::ZIP64_ENTRY_THR
                 || central_size.max(central_start) > spec::ZIP64_BYTES_THR
@@ -1286,6 +1328,13 @@ mod test {
     }
 
     #[test]
+    fn unix_permissions_bitmask() {
+        // unix_permissions() throws away upper bits.
+        let options = FileOptions::default().unix_permissions(0o120777);
+        assert_eq!(options.permissions, Some(0o777));
+    }
+
+    #[test]
     fn write_zip_dir() {
         let mut writer = ZipWriter::new(io::Cursor::new(Vec::new()));
         writer
@@ -1310,6 +1359,67 @@ mod test {
                 0, 0, 237, 65, 0, 0, 0, 0, 116, 101, 115, 116, 47, 80, 75, 5, 6, 0, 0, 0, 0, 1, 0,
                 1, 0, 51, 0, 0, 0, 35, 0, 0, 0, 0, 0,
             ] as &[u8]
+        );
+    }
+
+    #[test]
+    fn write_symlink_simple() {
+        let mut writer = ZipWriter::new(io::Cursor::new(Vec::new()));
+        writer
+            .add_symlink(
+                "name",
+                "target",
+                FileOptions::default().last_modified_time(
+                    DateTime::from_date_and_time(2018, 8, 15, 20, 45, 6).unwrap(),
+                ),
+            )
+            .unwrap();
+        assert!(writer
+            .write(b"writing to a symlink is not allowed and will not write any data")
+            .is_err());
+        let result = writer.finish().unwrap();
+        assert_eq!(result.get_ref().len(), 112);
+        assert_eq!(
+            *result.get_ref(),
+            &[
+                80u8, 75, 3, 4, 20, 0, 0, 0, 0, 0, 163, 165, 15, 77, 252, 47, 111, 70, 6, 0, 0, 0,
+                6, 0, 0, 0, 4, 0, 0, 0, 110, 97, 109, 101, 116, 97, 114, 103, 101, 116, 80, 75, 1,
+                2, 46, 3, 20, 0, 0, 0, 0, 0, 163, 165, 15, 77, 252, 47, 111, 70, 6, 0, 0, 0, 6, 0,
+                0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 161, 0, 0, 0, 0, 110, 97, 109, 101,
+                80, 75, 5, 6, 0, 0, 0, 0, 1, 0, 1, 0, 50, 0, 0, 0, 40, 0, 0, 0, 0, 0
+            ] as &[u8],
+        );
+    }
+
+    #[test]
+    fn write_symlink_wonky_paths() {
+        let mut writer = ZipWriter::new(io::Cursor::new(Vec::new()));
+        writer
+            .add_symlink(
+                "directory\\link",
+                "/absolute/symlink\\with\\mixed/slashes",
+                FileOptions::default().last_modified_time(
+                    DateTime::from_date_and_time(2018, 8, 15, 20, 45, 6).unwrap(),
+                ),
+            )
+            .unwrap();
+        assert!(writer
+            .write(b"writing to a symlink is not allowed and will not write any data")
+            .is_err());
+        let result = writer.finish().unwrap();
+        assert_eq!(result.get_ref().len(), 162);
+        assert_eq!(
+            *result.get_ref(),
+            &[
+                80u8, 75, 3, 4, 20, 0, 0, 0, 0, 0, 163, 165, 15, 77, 95, 41, 81, 245, 36, 0, 0, 0,
+                36, 0, 0, 0, 14, 0, 0, 0, 100, 105, 114, 101, 99, 116, 111, 114, 121, 92, 108, 105,
+                110, 107, 47, 97, 98, 115, 111, 108, 117, 116, 101, 47, 115, 121, 109, 108, 105,
+                110, 107, 92, 119, 105, 116, 104, 92, 109, 105, 120, 101, 100, 47, 115, 108, 97,
+                115, 104, 101, 115, 80, 75, 1, 2, 46, 3, 20, 0, 0, 0, 0, 0, 163, 165, 15, 77, 95,
+                41, 81, 245, 36, 0, 0, 0, 36, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255,
+                161, 0, 0, 0, 0, 100, 105, 114, 101, 99, 116, 111, 114, 121, 92, 108, 105, 110,
+                107, 80, 75, 5, 6, 0, 0, 0, 0, 1, 0, 1, 0, 60, 0, 0, 0, 80, 0, 0, 0, 0, 0
+            ] as &[u8],
         );
     }
 
