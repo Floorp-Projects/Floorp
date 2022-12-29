@@ -10,18 +10,22 @@ file-perm:
         - .flac
         - .h
         - .html
+        - .idl
         - .jsm
         - .jsx
         - .m
         - .m4s
+        - .md
         - .mjs
         - .mm
         - .mp4
         - .png
         - .rs
+        - .rst
         - .svg
         - .ttf
         - .wasm
+        - .webidl
         - .xhtml
         - .xml
         - .xul
