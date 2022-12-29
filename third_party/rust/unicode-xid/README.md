@@ -26,6 +26,15 @@ on std, and instead uses equivalent functions from core.
 
 # changelog
 
+## 0.2.4
+
+- Update to Unicode 15.0.0
+- Replace `const` tables with `static` tables.
+
+## 0.2.3
+
+- Update to Unicode 14.0.0
+
 ## 0.2.2
 
 - Add an ASCII fast-path
