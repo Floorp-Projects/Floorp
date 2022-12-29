@@ -218,20 +218,6 @@ wrench-deps:
         toolchain:
             - linux64-rust  # whatever m-c is built with
 
-linux64-liblowercase:
-    description: "liblowercase"
-    treeherder:
-        symbol: TL(lc)
-    run:
-        script: build-liblowercase.sh
-        sparse-profile: liblowercase
-        toolchain-artifact: public/build/liblowercase.tar.zst
-        resources:
-            - build/liblowercase/
-    fetches:
-        toolchain:
-            - linux64-rust-toolchain
-
 linux64-wine:
     description: "Wine build for Windows Cross Compile"
     attributes:

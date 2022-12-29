@@ -23,9 +23,6 @@ members = [
 # Excluded crates may be built as dependencies, but won't be considered members
 # of the workspace and their dev-dependencies won't be included.
 exclude = [
-  # Excluded because it's for a toolchain task
-  "build/liblowercase",
-
   # Exclude third-party code vendored into mozilla-central.
   "servo",
   "third_party/rust",
