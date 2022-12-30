@@ -495,11 +495,11 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
     job = CreateJobAndAssignProcess(process.get());
   }
 
-  bool disableDynamicBlocklist =
-      isSafeMode.value() ||
+  bool disableDynamicBlocklist = IsDynamicBlocklistDisabled(
+      isSafeMode.value(),
       mozilla::CheckArg(
           argc, argv, mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch,
-          nullptr, mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND;
+          nullptr, mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND);
   LauncherVoidResult setupResult = PostCreationSetup(
       argv[0], process.get(), mainThread.get(), deelevationStatus,
       isSafeMode.value(), disableDynamicBlocklist, blocklistFileName);

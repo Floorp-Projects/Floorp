@@ -7,11 +7,18 @@
 #include "AboutThirdParty.h"
 
 #include "AboutThirdPartyUtils.h"
+#include "base/command_line.h"
+#include "base/string_util.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/DynamicBlocklist.h"
+#include "mozilla/GeckoArgs.h"
 #include "mozilla/NativeNt.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/WinDllServices.h"
 #include "MsiDatabase.h"
+#include "nsAppRunner.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIWindowsRegKey.h"
 #include "nsThreadUtils.h"
@@ -54,6 +61,20 @@ void EnumSubkeys(nsIWindowsRegKey* aRegBase, const CallbackT& aCallback) {
       MOZ_ASSERT_UNREACHABLE("Unexpected CallbackResult.");
     }
   }
+}
+
+Span<const DllBlockInfo> GetDynamicBlocklistSpan(
+    RefPtr<DllServices>&& aDllSvc) {
+  if (!aDllSvc) {
+    return nullptr;
+  }
+
+  nt::SharedSection* sharedSection = aDllSvc->GetSharedSection();
+  if (!sharedSection) {
+    return nullptr;
+  }
+
+  return sharedSection->GetDynamicBlocklist();
 }
 
 }  // anonymous namespace
@@ -655,6 +676,15 @@ void AboutThirdParty::BackgroundThread() {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(mWorkerState == WorkerState::Running);
 
+  auto cleanup = MakeScopeExit(
+      [self = RefPtr{this}] { self->mWorkerState = WorkerState::Done; });
+
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  if (!dllSvc) {
+    // Probably we're shutting down.  Bail out before expensive tasks.
+    return;
+  }
+
   KnownModule::EnumAll(
       [self = RefPtr{this}](const nsString& aDllPath, KnownModuleType aType) {
         self->AddKnownModule(aDllPath, aType);
@@ -663,11 +693,56 @@ void AboutThirdParty::BackgroundThread() {
   InstalledApplications apps;
   apps.Collect(mComponentPaths, mLocations);
 
-  mWorkerState = WorkerState::Done;
+#if defined(MOZ_LAUNCHER_PROCESS)
+  Span<const DllBlockInfo> blocklist =
+      GetDynamicBlocklistSpan(std::move(dllSvc));
+  if (blocklist.IsEmpty()) {
+    return;
+  }
+
+  for (auto info = blocklist.begin(); info != blocklist.end(); ++info) {
+    if (!info->mName.Buffer || !info->mName.Length ||
+        info->mName.Length > info->mName.MaximumLength ||
+        info->mMaxVersion != DllBlockInfo::ALL_VERSIONS ||
+        info->mFlags != DllBlockInfo::Flags::FLAGS_DEFAULT) {
+      break;
+    }
+
+    nsString name(info->mName.Buffer, info->mName.Length / sizeof(wchar_t));
+    mDynamicBlocklist.Insert(std::move(name));
+  }
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
+}
+
+NS_IMETHODIMP AboutThirdParty::GetBlockedModuleNames(
+    const nsTArray<nsString>& aLoadedModuleNames,
+    nsTArray<nsString>& aBlockedModuleNames) {
+  MOZ_ASSERT(NS_IsMainThread());
+  aBlockedModuleNames.SetLength(0);
+#if defined(MOZ_LAUNCHER_PROCESS)
+  if (mWorkerState != WorkerState::Done) {
+    return NS_OK;
+  }
+  // Blocklist entries are case-insensitive
+  nsTHashSet<nsStringCaseInsensitiveHashKey> loadedModuleNameSet;
+  for (const nsString& loadedModuleName : aLoadedModuleNames) {
+    loadedModuleNameSet.Insert(loadedModuleName);
+  }
+  for (const auto& blocklistEntry : mDynamicBlocklist) {
+    // Only return entries that we haven't already tried to load,
+    // because those will already show up in the page
+    if (!loadedModuleNameSet.Contains(blocklistEntry)) {
+      aBlockedModuleNames.AppendElement(blocklistEntry);
+    }
+  }
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
+  return NS_OK;
 }
 
 NS_IMETHODIMP AboutThirdParty::LookupModuleType(const nsAString& aLeafName,
                                                 uint32_t* aResult) {
+  static_assert(static_cast<uint32_t>(KnownModuleType::Last) <= 32,
+                "Too many flags in KnownModuleType");
   constexpr uint32_t kShellExtensions =
       1u << static_cast<uint32_t>(KnownModuleType::IconOverlay) |
       1u << static_cast<uint32_t>(KnownModuleType::ContextMenuHandler) |
@@ -687,9 +762,15 @@ NS_IMETHODIMP AboutThirdParty::LookupModuleType(const nsAString& aLeafName,
     return NS_OK;
   }
 
+#if defined(MOZ_LAUNCHER_PROCESS)
+  if (mDynamicBlocklist.Contains(aLeafName)) {
+    *aResult |= nsIAboutThirdParty::ModuleType_BlockedByUser;
+  }
+#endif
+
   uint32_t flags;
   if (!mKnownModules.Get(aLeafName, &flags)) {
-    *aResult = nsIAboutThirdParty::ModuleType_Unknown;
+    *aResult |= nsIAboutThirdParty::ModuleType_Unknown;
     return NS_OK;
   }
 
@@ -703,6 +784,7 @@ NS_IMETHODIMP AboutThirdParty::LookupModuleType(const nsAString& aLeafName,
 
   return NS_OK;
 }
+
 NS_IMETHODIMP AboutThirdParty::LookupApplication(
     const nsAString& aModulePath, nsIInstalledApplication** aResult) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -737,6 +819,76 @@ NS_IMETHODIMP AboutThirdParty::LookupApplication(
   app = mLocations[bounds.first()].second();
   app.forget(aResult);
   return NS_OK;
+}
+
+NS_IMETHODIMP AboutThirdParty::GetIsDynamicBlocklistAvailable(
+    bool* aIsDynamicBlocklistAvailable) {
+  *aIsDynamicBlocklistAvailable =
+      !GetDynamicBlocklistSpan(DllServices::Get()).IsEmpty();
+  return NS_OK;
+}
+
+NS_IMETHODIMP AboutThirdParty::GetIsDynamicBlocklistDisabled(
+    bool* aIsDynamicBlocklistDisabled) {
+  *aIsDynamicBlocklistDisabled = IsDynamicBlocklistDisabled(
+      gSafeMode, CommandLine::ForCurrentProcess()->HasSwitch(UTF8ToWide(
+                     mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP AboutThirdParty::UpdateBlocklist(const nsAString& aLeafName,
+                                               bool aNewBlockStatus,
+                                               JSContext* aCx,
+                                               dom::Promise** aResult) {
+#if defined(MOZ_LAUNCHER_PROCESS)
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  MOZ_ASSERT(global);
+
+  ErrorResult result;
+  RefPtr<dom::Promise> promise(dom::Promise::Create(global, result));
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  auto returnPromise = MakeScopeExit([&] { promise.forget(aResult); });
+
+  if (aNewBlockStatus) {
+    mDynamicBlocklist.Insert(aLeafName);
+  } else {
+    mDynamicBlocklist.Remove(aLeafName);
+  }
+
+  auto newTask = MakeUnique<DynamicBlocklistWriter>(promise, mDynamicBlocklist);
+  if (!newTask->IsReady()) {
+    promise->MaybeReject(NS_ERROR_CANNOT_CONVERT_DATA);
+    return NS_OK;
+  }
+
+  UniquePtr<DynamicBlocklistWriter> oldTask(
+      mPendingWriter.exchange(newTask.release()));
+  if (oldTask) {
+    oldTask->Cancel();
+  }
+
+  nsresult rv = NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(__func__,
+                             [self = RefPtr{this}]() {
+                               UniquePtr<DynamicBlocklistWriter> task(
+                                   self->mPendingWriter.exchange(nullptr));
+                               if (task) {
+                                 task->Run();
+                               }
+                             }),
+      NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    promise->MaybeReject(rv);
+  }
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
 }
 
 RefPtr<BackgroundThreadPromise> AboutThirdParty::CollectSystemInfoAsync() {

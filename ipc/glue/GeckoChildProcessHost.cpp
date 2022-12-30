@@ -1373,8 +1373,10 @@ bool WindowsProcessLauncher::DoSetup() {
   }
 
 #  ifdef HAS_DLL_BLOCKLIST
-  if (CommandLine::ForCurrentProcess()->HasSwitch(
-          UTF8ToWide(mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch))) {
+  if (IsDynamicBlocklistDisabled(
+          gSafeMode,
+          CommandLine::ForCurrentProcess()->HasSwitch(UTF8ToWide(
+              mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch)))) {
     mCmdLine->AppendLooseValue(
         UTF8ToWide(mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch));
   }
