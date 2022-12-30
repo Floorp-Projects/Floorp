@@ -24,12 +24,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.DOWN
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.UP
-import mozilla.components.ui.icons.R
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Complete content of the popup.
@@ -122,8 +123,8 @@ fun CFRPopupContent(
                 .size(48.dp),
         ) {
             Icon(
-                painter = painterResource(R.drawable.mozac_ic_close_20),
-                contentDescription = "Test",
+                painter = painterResource(iconsR.drawable.mozac_ic_close_20),
+                contentDescription = stringResource(R.string.mozac_cfr_dismiss_button_content_description),
                 modifier = Modifier
                     // Following alignment and padding are intended to visually align the middle
                     // of the "X" button with the top of the text.
