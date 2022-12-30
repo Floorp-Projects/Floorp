@@ -7,8 +7,10 @@
 #ifndef mozilla_glue_SharedSection_h
 #define mozilla_glue_SharedSection_h
 
+#include <winternl.h>
 #include "nscore.h"
 #include "mozilla/Span.h"
+#include "mozilla/WindowsDllBlocklistInfo.h"
 
 namespace mozilla::nt {
 
@@ -16,6 +18,7 @@ namespace mozilla::nt {
 // through DllServices.
 struct NS_NO_VTABLE SharedSection {
   virtual Span<const wchar_t> GetDependentModules() = 0;
+  virtual Span<const DllBlockInfoT<UNICODE_STRING>> GetDynamicBlocklist() = 0;
 };
 
 }  // namespace mozilla::nt

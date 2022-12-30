@@ -4,14 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include <thread>
+#include <winternl.h>
+
 #define MOZ_USE_LAUNCHER_ERROR
 
 #include <atomic>
 #include <thread>
 #include "freestanding/SharedSection.cpp"
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/DynamicBlocklist.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/Vector.h"
+
+#define DLL_BLOCKLIST_ENTRY(name, ...) \
+  {MOZ_LITERAL_UNICODE_STRING(L##name), __VA_ARGS__},
+#define DLL_BLOCKLIST_STRING_TYPE UNICODE_STRING
+
+#include "mozilla/WindowsDllBlocklistLauncherDefs.h"
 
 const wchar_t kChildArg[] = L"--child";
 const char* kTestDependentModulePaths[] = {
@@ -30,6 +40,25 @@ const wchar_t kExpectedDependentModules[] =
     L"A B C.exe\0"
     L"X Y Z.dll\0";
 
+const UNICODE_STRING kStringNotInBlocklist =
+    MOZ_LITERAL_UNICODE_STRING(L"Test_NotInBlocklist.dll");
+const UNICODE_STRING kTestDependentModuleString =
+    MOZ_LITERAL_UNICODE_STRING(L"Test_DependentModule.dll");
+
+// clang-format off
+const DllBlockInfo kDllBlocklistShort[] = {
+  // The entries do not have to be sorted.
+  DLL_BLOCKLIST_ENTRY("X Y Z_Test", MAKE_VERSION(1, 2, 65535, 65535),
+                      DllBlockInfo::BLOCK_WIN8_AND_OLDER)
+  DLL_BLOCKLIST_ENTRY("\u30E9\u30FC\u30E1\u30F3_Test")
+  DLL_BLOCKLIST_ENTRY("Avmvirtualsource_Test.ax", MAKE_VERSION(1, 0, 0, 3),
+                      DllBlockInfo::BROWSER_PROCESS_ONLY)
+  DLL_BLOCKLIST_ENTRY("1ccelerator_Test.dll", MAKE_VERSION(3, 2, 1, 6))
+  DLL_BLOCKLIST_ENTRY("atkdx11disp_Test.dll", DllBlockInfo::ALL_VERSIONS)
+  {},
+};
+// clang-format on
+
 using namespace mozilla;
 using namespace mozilla::freestanding;
 
@@ -38,10 +67,31 @@ class SharedSectionTestHelper {
  public:
   static constexpr size_t GetModulePathArraySize() {
     return SharedSection::kSharedViewSize -
-           offsetof(SharedSection::Layout, mModulePathArray);
+           (offsetof(SharedSection::Layout, mFirstBlockEntry) +
+            sizeof(DllBlockInfo));
   }
 };
 }  // namespace mozilla::freestanding
+
+class TempFile final {
+  wchar_t mFullPath[MAX_PATH + 1];
+
+ public:
+  TempFile() : mFullPath{0} {
+    wchar_t tempDir[MAX_PATH + 1];
+    DWORD len = ::GetTempPathW(ArrayLength(tempDir), tempDir);
+    if (!len) {
+      return;
+    }
+
+    len = ::GetTempFileNameW(tempDir, L"blocklist", 0, mFullPath);
+    if (!len) {
+      return;
+    }
+  }
+
+  operator const wchar_t*() const { return mFullPath[0] ? mFullPath : nullptr; }
+};
 
 template <typename T, int N>
 void PrintLauncherError(const LauncherResult<T>& aResult,
@@ -91,6 +141,27 @@ static bool VerifySharedSection(SharedSection& aSharedSection) {
     return false;
   }
 
+  for (const DllBlockInfo* info = kDllBlocklistShort; info->mName.Buffer;
+       ++info) {
+    const DllBlockInfo* matched = aSharedSection.SearchBlocklist(info->mName);
+    if (!matched) {
+      printf(
+          "TEST-FAILED | TestCrossProcessWin | No blocklist entry match for "
+          "entry in blocklist.\n");
+      return false;
+    }
+  }
+
+  if (aSharedSection.SearchBlocklist(kStringNotInBlocklist)) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | Found blocklist entry match for "
+        "something not in the blocklist.\n");
+  }
+
+  if (aSharedSection.IsDisabled()) {
+    printf("TEST-FAILED | TestCrossProcessWin | Wrong disabled value.\n");
+  }
+
   return true;
 }
 
@@ -127,7 +198,91 @@ static bool TestAddString() {
   return true;
 }
 
-static bool TestSharedSectionInit() {
+// Convert |aBlockEntries|, which is an array ending with an empty instance
+// of DllBlockInfo, to DynamicBlockList by storing it to a temp file, loading
+// as DynamicBlockList, and deleting the temp file.
+static DynamicBlockList ConvertStaticBlocklistToDynamic(
+    const DllBlockInfo aBlockEntries[]) {
+  size_t originalLength = 0;
+  CheckedUint32 totalStringLen = 0;
+  for (const DllBlockInfo* entry = aBlockEntries; entry->mName.Length;
+       ++entry) {
+    totalStringLen += entry->mName.Length;
+    MOZ_RELEASE_ASSERT(totalStringLen.isValid());
+    ++originalLength;
+  }
+
+  // Pack all strings in this buffer without null characters
+  UniquePtr<uint8_t[]> stringBuffer =
+      MakeUnique<uint8_t[]>(totalStringLen.value());
+
+  // The string buffer is placed immediately after the array of DllBlockInfo
+  const size_t stringBufferOffset = (originalLength + 1) * sizeof(DllBlockInfo);
+
+  // Entries in the dynamic blocklist do have to be sorted,
+  // unlike in the static blocklist.
+  UniquePtr<DllBlockInfo[]> sortedBlockEntries =
+      MakeUnique<DllBlockInfo[]>(originalLength);
+  memcpy(sortedBlockEntries.get(), aBlockEntries,
+         sizeof(DllBlockInfo) * originalLength);
+  std::sort(sortedBlockEntries.get(), sortedBlockEntries.get() + originalLength,
+            [](const DllBlockInfo& a, const DllBlockInfo& b) {
+              return ::RtlCompareUnicodeString(&a.mName, &b.mName, TRUE) < 0;
+            });
+
+  Vector<DllBlockInfo> copied;
+  Unused << copied.resize(originalLength + 1);  // aBlockEntries + sentinel
+
+  size_t currentStringOffset = 0;
+  for (size_t i = 0; i < originalLength; ++i) {
+    copied[i].mMaxVersion = sortedBlockEntries[i].mMaxVersion;
+    copied[i].mFlags = sortedBlockEntries[i].mFlags;
+
+    // Copy the module's name to the string buffer and store its offset
+    // in mName.Buffer
+    memcpy(stringBuffer.get() + currentStringOffset,
+           sortedBlockEntries[i].mName.Buffer,
+           sortedBlockEntries[i].mName.Length);
+    copied[i].mName.Buffer =
+        reinterpret_cast<wchar_t*>(stringBufferOffset + currentStringOffset);
+    // Only keep mName.Length and leave mName.MaximumLength to be zero
+    copied[i].mName.Length = sortedBlockEntries[i].mName.Length;
+
+    currentStringOffset += sortedBlockEntries[i].mName.Length;
+  }
+
+  TempFile blocklistFile;
+  nsAutoHandle file(::CreateFileW(blocklistFile, GENERIC_WRITE, FILE_SHARE_READ,
+                                  nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                                  nullptr));
+  MOZ_RELEASE_ASSERT(file);
+
+  DynamicBlockListBase::FileHeader header;
+  header.mSignature = DynamicBlockListBase::kSignature;
+  header.mFileVersion = DynamicBlockListBase::kCurrentVersion;
+  header.mPayloadSize =
+      sizeof(DllBlockInfo) * copied.length() + totalStringLen.value();
+
+  DWORD written = 0;
+  MOZ_RELEASE_ASSERT(
+      ::WriteFile(file.get(), &header, sizeof(header), &written, nullptr));
+  MOZ_RELEASE_ASSERT(::WriteFile(file.get(), copied.begin(),
+                                 sizeof(DllBlockInfo) * copied.length(),
+                                 &written, nullptr));
+  MOZ_RELEASE_ASSERT(::WriteFile(file.get(), stringBuffer.get(),
+                                 totalStringLen.value(), &written, nullptr));
+
+  DynamicBlockList blockList(blocklistFile);
+  ::DeleteFileW(blocklistFile);
+  return blockList;
+}
+
+const DynamicBlockList gFullList =
+    ConvertStaticBlocklistToDynamic(gWindowsDllBlocklist);
+const DynamicBlockList gShortList =
+    ConvertStaticBlocklistToDynamic(kDllBlocklistShort);
+
+static bool TestDependentModules() {
   LauncherVoidResult result = gSharedSection.Init();
   if (result.isErr()) {
     PrintLauncherError(result, "SharedSection::Init failed");
@@ -146,14 +301,13 @@ static bool TestSharedSectionInit() {
   ustr.Length = ustr.MaximumLength = buffer.size();
 
   result = gSharedSection.AddDependentModule(&ustr);
-  if (result.isOk()) {
+  if (result.isOk() || result.inspectErr() != WindowsError::FromWin32Error(
+                                                  ERROR_INSUFFICIENT_BUFFER)) {
     printf(
         "TEST-FAILED | TestCrossProcessWin | "
         "Adding a too long string should fail.\n");
     return false;
   }
-
-  gSharedSection.Reset();
 
   result = gSharedSection.Init();
   if (result.isErr()) {
@@ -188,6 +342,85 @@ static bool TestSharedSectionInit() {
         "TEST-FAILED | TestCrossProcessWin | "
         "Added %d dependent strings before failing (expected %d).\n",
         static_cast<int>(numberOfStringsAdded), expectedNumberOfStringsAdded);
+    return false;
+  }
+
+  // SetBlocklist is not allowed after AddDependentModule
+  result = gSharedSection.SetBlocklist(gShortList, false);
+  if (result.isOk() || result.inspectErr() !=
+                           WindowsError::FromWin32Error(ERROR_INVALID_STATE)) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "SetBlocklist is not allowed after AddDependentModule\n");
+    return false;
+  }
+
+  gSharedSection.Reset();
+  return true;
+}
+
+static bool TestDynamicBlocklist() {
+  if (!gFullList.GetPayloadSize() || !gShortList.GetPayloadSize()) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | DynamicBlockList::LoadFile "
+        "failed\n");
+    return false;
+  }
+
+  LauncherVoidResult result = gSharedSection.Init();
+  if (result.isErr()) {
+    PrintLauncherError(result, "SharedSection::Init failed");
+    return false;
+  }
+
+  // Set gShortList, and gShortList
+  // 1. Setting gShortList succeeds
+  // 2. Next try to set gShortList fails
+  result = gSharedSection.SetBlocklist(gShortList, false);
+  if (result.isErr()) {
+    PrintLauncherError(result, "SetBlocklist(gShortList) failed");
+    return false;
+  }
+  result = gSharedSection.SetBlocklist(gShortList, false);
+  if (result.isOk() || result.inspectErr() !=
+                           WindowsError::FromWin32Error(ERROR_INVALID_STATE)) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "SetBlocklist is allowed only once\n");
+    return false;
+  }
+
+  result = gSharedSection.Init();
+  if (result.isErr()) {
+    PrintLauncherError(result, "SharedSection::Init failed");
+    return false;
+  }
+
+  // Add gFullList and gShortList
+  // 1. Adding gFullList always fails because it doesn't fit the section
+  // 2. Adding gShortList succeeds because no entry is added yet
+  MOZ_RELEASE_ASSERT(
+      gFullList.GetPayloadSize() >
+          SharedSectionTestHelper::GetModulePathArraySize(),
+      "Test assumes gFullList is too big to fit in shared section");
+  result = gSharedSection.SetBlocklist(gFullList, false);
+  if (result.isOk() || result.inspectErr() != WindowsError::FromWin32Error(
+                                                  ERROR_INSUFFICIENT_BUFFER)) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "SetBlocklist(gFullList) should fail\n");
+    return false;
+  }
+  result = gSharedSection.SetBlocklist(gShortList, false);
+  if (result.isErr()) {
+    PrintLauncherError(result, "SetBlocklist(gShortList) failed");
+    return false;
+  }
+
+  // AddDependentModule is allowed after SetBlocklist
+  result = gSharedSection.AddDependentModule(&kTestDependentModuleString);
+  if (result.isErr()) {
+    PrintLauncherError(result, "SharedSection::AddDependentModule failed");
     return false;
   }
 
@@ -272,11 +505,9 @@ class ChildProcess final {
     // Test a scenario to transfer a transferred section as a readonly handle
     gSharedSection.ConvertToReadOnly();
 
-    UNICODE_STRING ustr;
-    ::RtlInitUnicodeString(&ustr, L"test");
-    LauncherVoidResult result = gSharedSection.AddDependentModule(&ustr);
-
     // AddDependentModule fails as the handle is readonly.
+    LauncherVoidResult result =
+        gSharedSection.AddDependentModule(&kTestDependentModuleString);
     if (result.inspectErr() !=
         WindowsError::FromWin32Error(ERROR_ACCESS_DENIED)) {
       PrintLauncherError(result, "The readonly section was writable");
@@ -369,7 +600,11 @@ int wmain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
-  if (!TestSharedSectionInit()) {
+  if (!TestDependentModules()) {
+    return 1;
+  }
+
+  if (!TestDynamicBlocklist()) {
     return 1;
   }
 
@@ -427,6 +662,12 @@ int wmain(int argc, wchar_t* argv[]) {
   if (result.isErr()) {
     PrintLauncherError(result, "SharedSection::Init failed");
     return 1;
+  }
+
+  result = gSharedSection.SetBlocklist(gShortList, false);
+  if (result.isErr()) {
+    PrintLauncherError(result, "SetBlocklist(gShortList) failed");
+    return false;
   }
 
   for (const char* testString : kTestDependentModulePaths) {
