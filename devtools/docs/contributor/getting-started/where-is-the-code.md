@@ -11,4 +11,3 @@ On the other hand, the repositories in `devtools-html` are more straightforward 
 Even if you only want to work on a tool whose code is on `devtools-html`, you might still need to go through the step of getting and compiling the code from `mozilla-central` in order to do integration work (such as updating a tool bundle).
 
 From now on, this guide will focus on building the full DevTools within Firefox. Please refer to individual project instructions for tools hosted in `devtools-html`.
-

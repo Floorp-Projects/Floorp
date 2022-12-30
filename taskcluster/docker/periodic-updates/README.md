@@ -35,7 +35,7 @@ These scripts have been moved from
 nsSTSPreloadList.inc from whichever `BRANCH` is specified, add in the mandatory
 hosts, and those from the Chromium source, and check them all to see if their
 SSL configuration is valid, and whether or not they have the
-Strict-Transport-Security header set with an appropriate `max-age`. 
+Strict-Transport-Security header set with an appropriate `max-age`.
 
 This javascript has been modified to use async calls to improve performance.
 

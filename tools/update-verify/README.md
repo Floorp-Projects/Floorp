@@ -16,7 +16,7 @@ Update Verification
 `verify.sh`
 
 >  Does a low-level check of all advertised MAR files. Expects to have a
->  file named all-locales, but does not (yet) handle platform exceptions, so 
+>  file named all-locales, but does not (yet) handle platform exceptions, so
 >  these should be removed from the locales file.
 >
 >  Prints errors on both STDOUT and STDIN, the intention is to run the
@@ -31,10 +31,10 @@ Update Verification
 >  3) check that the partial and full match the advertised size and sha1sum
 >  4) downloads the latest release, and an older release
 >  5) applies MAR to the older release, and compares the two releases.
->  
+>
 >  Step 5 is repeated for both the complete and partial MAR.
 >
->  Expects to have an updates.cfg file, describing all releases to try updating 
+>  Expects to have an updates.cfg file, describing all releases to try updating
 >  from.
 
 Valid Platforms for AUS

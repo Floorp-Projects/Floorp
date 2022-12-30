@@ -62,4 +62,3 @@ After the config has been running as tier-2 makes it to beta and then to the rel
  * turn off the backstop jobs
 
 This allows developers to schedule time in a 6 weeks period to investigate and fix any test failures.
-

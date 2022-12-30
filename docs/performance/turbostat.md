@@ -19,7 +19,7 @@ sudo turbostat
 If you get an error saying `"turbostat: no /dev/cpu/0/msr"`, you need to
 run the following command:
 
-``` 
+```
 sudo modprobe msr
 ```
 

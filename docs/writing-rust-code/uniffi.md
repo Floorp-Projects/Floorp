@@ -55,7 +55,7 @@ Here's how you can create a new set of bindings using UniFFI:
   3. Generate bindings code for your crate
       - Add the path of your UDL (that you made in step 1) in `toolkit/components/uniffi-bindgen-gecko-js/mach_commands.py`
       - Run `./mach uniffi generate`
-          - add your newly generated `Rust{udl-name}.jsm` file to `toolkit/components/uniffi-bindgen-gecko-js/components/moz.build` 
+          - add your newly generated `Rust{udl-name}.jsm` file to `toolkit/components/uniffi-bindgen-gecko-js/components/moz.build`
       - Then simply import your `jsm` module to the file you want to use it in and start using your APIs!
 
         Example from tabs module:

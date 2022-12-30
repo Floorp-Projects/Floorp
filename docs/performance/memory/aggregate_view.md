@@ -181,7 +181,7 @@ Stack\":
 Now at the top we can immediately see the `createToolbarButton()` call
 accounting for 89% of the heap usage in our page.
 
-## no stack available 
+## no stack available
 
 In the example above you\'ll note that 7% of the heap is marked \"(no
 stack available)\". This is because not all heap usage results from your

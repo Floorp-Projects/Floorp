@@ -5,7 +5,7 @@ Rust toolchains used and required to build Firefox.
 
 This allows contributors to know when new features will be usable, and
 downstream packagers to know what toolchain will be required for each Firefox
-release. Both benefit from the predictability of a schedule. 
+release. Both benefit from the predictability of a schedule.
 
 ## Policy
 

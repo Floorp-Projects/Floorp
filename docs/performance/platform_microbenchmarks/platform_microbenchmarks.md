@@ -11,10 +11,10 @@ not sure).
 
 ## String tests
 
-* PerfStripWhitespace 
-* PerfCompressWhitespace 
-* PerfStripCharsWhitespace 
-* PerfStripCRLF 
+* PerfStripWhitespace
+* PerfCompressWhitespace
+* PerfStripCharsWhitespace
+* PerfStripCRLF
 * PerfStripCharsCRLF
 
 These tests measure the amount of time it takes to perform a large

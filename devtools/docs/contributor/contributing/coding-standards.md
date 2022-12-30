@@ -7,4 +7,3 @@ We have pages defining standards, best practices and tips for various languages 
 * [JavaScript](./javascript.md)
 * [CSS](./css.md)
 * [SVG](../frontend/svgs.md)
-

@@ -41,7 +41,7 @@ Performance counter stats for 'system wide':
 
 It's not clear from the output, but the following relationship holds.
 
-``` 
+```
 energy-pkg >= energy-cores + energy-gpu
 ```
 

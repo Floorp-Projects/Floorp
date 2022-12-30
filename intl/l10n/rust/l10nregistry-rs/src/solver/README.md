@@ -9,7 +9,7 @@ The main concept behind it is a problem solver which takes a list of resources a
 The algorithm is notoriously hard to read, write, and modify, which prompts this documentation to be extensive and provide an example with diagram presentations to aid the reader.
 
 # Example
-For the purpose of a graphical illustration of the example, we will evaluate a scenario with two sources and three resources. 
+For the purpose of a graphical illustration of the example, we will evaluate a scenario with two sources and three resources.
 
 The sources and resource identifiers will be named in concise way (*1* or *A*) to simplify diagrams, while a more tangible names derived from real-world examples in Firefox use-case will be listed in their initial definition.
 
@@ -69,7 +69,7 @@ and which starting point can be visualized as:
 ┌┲━┱┬───┬───┐
 │┃0┃│   │   │
 └╂─╂┴───┴───┘
- ┃ ┃     
+ ┃ ┃
  ┗━┛
 ```
 ###### Diagrams generated with use of http://marklodato.github.io/js-boxdrawing/
@@ -110,7 +110,7 @@ for set in multi_prod {
 #### Reasons for a custom algorithm
 
 Unfortunately, the computational complexity of generating all possible sets is growing exponentially, both in the cost of CPU and memory use.
-On a high-end laptop, computing the sets for all possible variations of the example above generates *8* sets and takes only *700 nanoseconds*, but computing the same for four sources and 16 resources (a scenario theoretically possible in Firefox with one language pack and Preferences UI for example) generates over *4 billion* sets and takes over *2 minutes*. 
+On a high-end laptop, computing the sets for all possible variations of the example above generates *8* sets and takes only *700 nanoseconds*, but computing the same for four sources and 16 resources (a scenario theoretically possible in Firefox with one language pack and Preferences UI for example) generates over *4 billion* sets and takes over *2 minutes*.
 
 Since one part of static cost is the I/O, the application of a [Memoization](https://en.wikipedia.org/wiki/Memoization) technique allows us to minimize the cost of constructing, storing and retrieving sets.
 
@@ -118,7 +118,7 @@ Second important observation is that in most scenarios any resource exists in on
 
 ## Optimizations
 
-The algorithm used here is highly efficient. For the conservative scenario listed above, where 4 sources and 15 resources are all present in every source, the total time on the reference hardware is cut from *2 minutes* to *24 seconds*, while generating the same *4 billion* sets for a **5x** performance improvement. 
+The algorithm used here is highly efficient. For the conservative scenario listed above, where 4 sources and 15 resources are all present in every source, the total time on the reference hardware is cut from *2 minutes* to *24 seconds*, while generating the same *4 billion* sets for a **5x** performance improvement.
 
 ### Streaming Iterator
 Unline regular iterator, a streaming iterator allows a borrowed reference to be returned, which in this case, where the solver yields a read-only "view" of a solution, allows us to avoid having to clone it.
@@ -141,13 +141,13 @@ This can be performed in one of two ways:
  The algorithm is synchronous and each extension of the candidate is evaluated serially, one by one, allowing the for *backtracking* as soon as a given extension of a partial solution is confirmed to not lead to a complete solution.
 
 Bringing back the initial state of the solver:
- 
+
 ```text
   ▼
 ┌┲━┱┬───┬───┐
 │┃0┃│   │   │
 └╂─╂┴───┴───┘
- ┃ ┃     
+ ┃ ┃
  ┗━┛
 ```
 
@@ -161,7 +161,7 @@ If the test returns a success, the extensions of the candidate is generated:
 ┌┲━┱┬┲━┱┬───┐
 │┃0┃│┃0┃│   │
 └╂─╂┴╂─╂┴───┘
- ┃ ┃ ┃ ┃ 
+ ┃ ┃ ┃ ┃
  ┗━┛ ┗━┛
 ```
 
@@ -178,8 +178,8 @@ If the test returns a failure, the next step is to evaluate alternative source f
 ┌┲━┱┬╂─╂┬───┐
 │┃0┃│┃1┃│   │
 └╂─╂┴┺━┹┴───┘
- ┃ ┃    
- ┗━┛ 
+ ┃ ┃
+ ┗━┛
  ```
 
 and that will potentially lead to a partial solution `[0, 1, ]` to be stored for the next iteration.
@@ -237,4 +237,3 @@ The algorithm explained above is tailored to the problem domain of `L10nRegistry
 It is important to maintain this guide up to date as any changes to the algorithm are to be made.
 
 Good luck.
-

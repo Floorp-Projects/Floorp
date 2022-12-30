@@ -157,7 +157,7 @@ sample output.
       plugin-container                 67269  31.49     72.46  1.80    0.00               186.90  66.68             0.00
       com.apple.WebKit.Plugin.64       67373  55.55     74.38  0.74    0.00               9.51    3.13              0.02
     com.apple.Terminal                 109    6.22                                        0.40    0.23              0.00
-      Terminal                         208    6.25      92.99  0.00    0.00               0.33    0.20              0.00 
+      Terminal                         208    6.25      92.99  0.00    0.00               0.33    0.20              0.00
 
 The `rapl` output is first, then the `powermetrics` output. As well as
 the browser processes, the `WindowServer` and kernel tasks are shown

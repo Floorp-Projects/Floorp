@@ -1,7 +1,7 @@
 # Memory Tools
 
 The Memory tool lets you take a snapshot of the current tab's memory
-[heap](https://en.wikipedia.org/wiki/Memory_management#HEAP). 
+[heap](https://en.wikipedia.org/wiki/Memory_management#HEAP).
 It then provides a number of views of the heap that can
 show you which objects account for memory usage and exactly where in
 your code you are allocating memory.

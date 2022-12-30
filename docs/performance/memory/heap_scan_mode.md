@@ -58,7 +58,7 @@ in a path separator. For instance, `~/logs/leak/`.
 
 The command you need to run Firefox will look something like this:
 
-    XPCOM_MEM_BLOAT_LOG=1 MOZ_CC_LOG_SHUTDOWN=1 MOZ_DISABLE_CONTENT_SANDBOX=t MOZ_CC_LOG_DIRECTORY=$logdir 
+    XPCOM_MEM_BLOAT_LOG=1 MOZ_CC_LOG_SHUTDOWN=1 MOZ_DISABLE_CONTENT_SANDBOX=t MOZ_CC_LOG_DIRECTORY=$logdir
     MOZ_CC_LOG_PROCESS=content MOZ_CC_LOG_THREAD=main MOZ_DMD_SHUTDOWN_LOG=$logdir MOZ_DMD_LOG_PROCESS=tab ./mach run --dmd --mode=scan
 
 Breaking this down:

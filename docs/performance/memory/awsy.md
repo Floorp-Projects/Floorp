@@ -1,7 +1,7 @@
 # Are We Slim Yet (AWSY)
 
 The Are We Slim Yet project (commonly known as AWSY) for several years
-tracked memory usage across builds on the (now defunct) website. 
+tracked memory usage across builds on the (now defunct) website.
 It used the same
 infrastructure as
 [about:memory](about_colon_memory.md) to measure

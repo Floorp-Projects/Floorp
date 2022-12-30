@@ -142,4 +142,3 @@ Once it is done executing, the profile lives in a zip file you have to uncompres
 unzip testing/mozharness/build/blobber_upload_dir/profile_damp.zip
 ```
 Then you have to open [https://profiler.firefox.com/](https://profiler.firefox.com/) and manually load the profile file that lives here: `profile_damp/page_0_pagecycle_1/cycle_0.profile`
-

@@ -11,7 +11,7 @@ Value: 0
 This reason is set on _nsHostRecord_ before we attempt to resolve the domain.
 Normally we should not report this value into telemetry - if we do that means there's a bug in the code.
 
- 
+
 ## TRR_OK
 
 Value: 1
@@ -226,4 +226,3 @@ This reason is set when the DNS response contains NXDOMAIN rcode (0x03).
 Value: 31
 
 This reason is set when the request was cancelled prior to completion.
-

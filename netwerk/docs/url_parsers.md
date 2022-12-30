@@ -38,7 +38,7 @@ While we could simply pass strings around and leave it to the final consumer to 
 
 ### Diagram of interfaces
 ```{mermaid}
-classDiagram  
+classDiagram
 nsISupports <-- nsIURI
 nsIURI <-- nsIURL
 nsIURL <-- nsIFileURL
@@ -114,7 +114,7 @@ nsIJARURI o-- nsJARURI
 ## Class and interface diagram
 
 ```{mermaid}
-classDiagram  
+classDiagram
 nsISupports <-- nsIURI
 nsIURI <-- nsIURL
 nsIURL <-- nsIFileURL

@@ -368,7 +368,7 @@ values as the parent process.
 ### Child process startup (parent side)
 When the first child process is created, the parent process serializes most of
 its hash table into a shared, immutable snapshot. This snapshot is stored in a
-shared memory region managed by a `SharedPrefMap` instance. 
+shared memory region managed by a `SharedPrefMap` instance.
 
 Sanitized preferences (matching _either_ the denylist of the dynamically named
 heuristic) are not included in the shared memory region. After building the

@@ -2,7 +2,7 @@
 
 Getting started working on a bug can be hard, specially if you lack context.
 
-This guide is meant to provide a list of steps to provide the necessary information to resolve a bug. 
+This guide is meant to provide a list of steps to provide the necessary information to resolve a bug.
 
 * Use a descriptive title. Avoid jargon and abbreviations where possible, they make it hard for other people to find existing bugs, and to understand them.
 * Explain the problem in depth and provide the steps to reproduce. Be as specific as possible, and include things such as operating system and version if reporting a bug.

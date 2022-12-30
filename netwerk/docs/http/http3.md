@@ -5,7 +5,7 @@ The HTTP/3 and QUIC protocol are implemented in the neqo library. Http3Session, 
 The following classes are necessary:
 - HttpConnectionUDP - this is the object that is registered in nsHttpConnectionMgr and it is also used as an async listener to socket events (it implements nsIUDPSocketSyncListener)
 - nsUDPSocket - represent a UDP socket and implements nsASocketHandler. nsSocketTransportService manages UDP and TCP sockets and calls the corresponding nsASocketHandler when the socket encounters an error or has data to be read, etc.
-- NeqoHttp3Conn is a c++ object that maps to the rust object Http3Client. 
+- NeqoHttp3Conn is a c++ object that maps to the rust object Http3Client.
 - Http3Session manages NeqoHttp3Conn/Http3Client and provides bridge between the rust implementation and necko legacy code, i.e. HttpConnectionUDP and nsHttpTransaction.
 - Http3Streams are used to map reading and writing from/into a nsHttpTransaction onto the NeqoHttp3Conn/Http3Client API (e.g. nsHttpTransaction::OnWriteSegment will call Http3Client::read_data). NeqoHttp3Conn is only accessed by Http3Sesson and NeqoHttp3Conn functions are exposed through Http3Session where needed.
 
@@ -28,7 +28,7 @@ graph TD
 As described in [this docs](https://github.com/mozilla/neqo/blob/main/neqo-http3/src/lib.rs), neqo does not create a socket,  it produces, i.e. encodes, data that should be sent as a payload in a UDP packet and consumes data received on the UDP socket. Therefore the necko is responsible for creating a socket and reading and writing data from/into the socket. Necko uses nsUDPSocket and nsSocketTransportService for this.
 The UDP socket is constantly polled for reading. It is not polled for writing, we let QUIC control to not overload the network path and buffers.
 
-When the UDP socket has an available packet, nsSocketTransportService will return from the polling function and call nsUDPSocket::OnSocketReady, which calls HttpConnectionUDP::OnPacketReceived, HttpConnectionUDP::RecvData and further Http3Session::RecvData. For writing data 
+When the UDP socket has an available packet, nsSocketTransportService will return from the polling function and call nsUDPSocket::OnSocketReady, which calls HttpConnectionUDP::OnPacketReceived, HttpConnectionUDP::RecvData and further Http3Session::RecvData. For writing data
 HttpConnectionUDP::SendData is called which calls Http3Session::SendData.
 
 Neqo needs an external timer. The timer is managed by Http3Session. When the timer expires HttpConnectionUDP::OnQuicTimeoutExpired is executed that calls Http3Session::ProcessOutputAndEvents.
@@ -48,7 +48,7 @@ Three main neqo functions responsible for driving neqo are process_input, proces
 In this function we take data from the UDP socket and call NeqoHttp3Conn::ProcessInput that maps to Http3Client::process_input. The packets are read from the socket until the socket buffer is empty.
 
 **ProcessEvents**
-This function process all available neqo events. It returns earlier only in case of a fatal error. 
+This function process all available neqo events. It returns earlier only in case of a fatal error.
 It calls NeqoHttp3Conn::GetEvent which maps to Http3Client::next_event.
 The events and their handling will be explained below.
 
@@ -149,6 +149,6 @@ For **HeaderReady** and **DataReadable** the Http3Stream::WriteSegments function
 
 The **Session** event is posted when a WebTransport session is successfully negotiated.
 
-The **SessionClosed** event is posted when a connection is closed gracefully or abruptly. 
+The **SessionClosed** event is posted when a connection is closed gracefully or abruptly.
 
 The **NewStream** is posted when a new stream has been opened by the peer.

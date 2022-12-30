@@ -91,4 +91,4 @@ page whenever it executes a JavaScript `debugger;` statement.
 
 [img-chrome-pref]: enable-chrome-devtools.png
 [img-scratchpad-browser]: scratchpad-browser-environment.png
-[img-example-alert]: debugger-alert.png  
+[img-example-alert]: debugger-alert.png

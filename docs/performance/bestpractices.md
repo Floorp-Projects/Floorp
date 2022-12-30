@@ -6,7 +6,7 @@ in terms of its impact on other parts of Firefox. Always keep in mind
 the side effects your changes may have, from blocking other tasks, to
 interfering with other user interface elements.
 
-## Avoid the main thread where possible 
+## Avoid the main thread where possible
 
 The main thread is where we process user events and do painting. It's
 also important to note that most of our JavaScript runs on the main
@@ -21,7 +21,7 @@ elevated privileges than a standard worker allows, consider using a
 ChromeWorker, which is a Firefox-only API which lets you create
 workers with more elevated privileges.
 
-## Use requestIdleCallback() 
+## Use requestIdleCallback()
 
 If you simply cannot avoid doing some kind of long job on the main
 thread, try to break it up into smaller pieces that you can run when the
@@ -45,7 +45,7 @@ document, set the **hidden** attribute to **true** by default. By doing
 so, you cause the binding applied on demand rather than at load time,
 which makes initial construction of the XUL document faster.
 
-## Get familiar with the pipeline that gets pixels to the screen 
+## Get familiar with the pipeline that gets pixels to the screen
 
 Learn how pixels you draw make their way to the screen. Knowing the path
 they will take through the various layers of the browser engine will
@@ -55,7 +55,7 @@ The rendering process goes through the following steps:
 
 ![This is the pipeline that a browser uses to get pixels to the screen](img/rendering.png)
 
-The above image is used under [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/), 
+The above image is used under [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/),
 courtesy of [this page](https://developers.google.com/web/fundamentals/performance/rendering/avoid-large-complex-layouts-and-layout-thrashing)
 from our friends at Google, which itself is well worth the read.
 
@@ -72,7 +72,7 @@ of your DOM writes (most importantly, anything that could change the
 size or position of things in the DOM) just before the style and layout
 steps of the pipeline, combining all the style and layout calculations
 into a single batch so it all happens once, in a single frame tick,
-instead of across multiple frames. 
+instead of across multiple frames.
 
 See [Detecting and avoiding synchronous reflow](#detecting-and-avoiding-synchronous-reflow)
 below for more information.
@@ -80,9 +80,9 @@ below for more information.
 This also means that *requestAnimationFrame()* is **not a good place**
 to put queries for layout or style information.
 
-## Detecting and avoiding synchronous style flushes 
+## Detecting and avoiding synchronous style flushes
 
-### What are style flushes? 
+### What are style flushes?
 When CSS is applied to a document (HTML or XUL, it doesn’t matter), the
 browser does calculations to figure out which CSS styles will apply to
 each element. This happens the first time the page loads and the CSS is
@@ -166,7 +166,7 @@ driver.
 tracks work to make it impossible to modify the DOM within a
 *promiseDocumentFlushed* callback.
 
-### Writing tests to ensure you don’t add more synchronous style flushes 
+### Writing tests to ensure you don’t add more synchronous style flushes
 
 Unlike reflow, there isn’t a “observer” mechanism for style
 recalculations. However, as of Firefox 49, the
@@ -236,7 +236,7 @@ worse (see next section).
 **To repeat, only interruptible reflows in web content can be
 interrupted.**
 
-### Uninterruptible reflow 
+### Uninterruptible reflow
 
 Uninterruptible reflow is what we want to **avoid at all costs**.
 Uninterruptible reflow occurs when some DOM node’s styles have changed
@@ -286,7 +286,7 @@ place (the layout step of the 16ms tick) as opposed to multiple times
 during the 16ms tick (which has a higher probability of running through
 the 16ms budget).
 
-### How do I avoid triggering uninterruptible reflow? 
+### How do I avoid triggering uninterruptible reflow?
 
 Here's a [list of things that JavaScript can ask for that can cause
 uninterruptible reflow](https://gist.github.com/paulirish/5d52fb081b3570c81e3a), to
@@ -460,7 +460,7 @@ post](https://davidwalsh.name/documentfragment):
     var frag = document.createDocumentFragment();
 
     // Create numerous list items, add to fragment
- 
+
     for(var x = 0; x < 10; x++) {
         var li = document.createElement("li");
         li.innerHTML = "List item " + x;
@@ -474,7 +474,7 @@ post](https://davidwalsh.name/documentfragment):
 The above is strictly cheaper than individually adding each node to the
 DOM.
 
-## The Gecko profiler add-on is your friend 
+## The Gecko profiler add-on is your friend
 
 The Gecko profiler is your best friend when diagnosing performance
 problems and looking for bottlenecks. There’s plenty of excellent
@@ -484,7 +484,7 @@ documentation on MDN about the Gecko profiler:
 
 -  [Advanced profile analysis](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler)
 
-## Don’t guess—measure. 
+## Don’t guess—measure.
 
 If you’re working on a performance improvement, this should go without
 saying: ensure that what you care about is actually improving by
@@ -553,7 +553,7 @@ A Promise-based wrapper for IndexedDB,
 [IndexedDB.sys.mjs](http://searchfox.org/mozilla-central/source/toolkit/modules/IndexedDB.sys.mjs)
 is available for chrome code.
 
-## Test on weak hardware 
+## Test on weak hardware
 
 For the folks paid to work on Firefox, we tend to have pretty powerful
 hardware for development. This is great, because it reduces build times,
@@ -566,7 +566,7 @@ a sense of what our users are working with. Test on slower machines to
 make it more obvious to yourself if what you’ve written impacts the
 performance of the browser.
 
-## Consider loading scripts with the subscript loader asynchronously 
+## Consider loading scripts with the subscript loader asynchronously
 
 If you've ever used the subscript loader, you might not know that it can
 load scripts asynchronously, and return a Promise once they're loaded.
