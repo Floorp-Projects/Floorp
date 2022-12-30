@@ -1422,7 +1422,7 @@ items from that key's value."
 
         env = self.query_build_env()
 
-        grcov_path = os.path.join(os.environ["MOZ_FETCHES_DIR"], "grcov")
+        grcov_path = os.path.join(os.environ["MOZ_FETCHES_DIR"], "grcov", "grcov")
         if not os.path.isabs(grcov_path):
             grcov_path = os.path.join(base_work_dir, grcov_path)
         if self._is_windows():
