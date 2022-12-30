@@ -25,7 +25,6 @@ linux64-minidump-stackwalk:
         arguments: ['x86_64-unknown-linux-gnu']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang-toolchain
             - linux64-rust-toolchain
             - sysroot-x86_64-linux-gnu
