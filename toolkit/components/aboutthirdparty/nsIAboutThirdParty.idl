@@ -21,6 +21,7 @@ interface nsIAboutThirdParty : nsISupports
   const unsigned long ModuleType_Unknown = 1 << 0;
   const unsigned long ModuleType_IME = 1 << 1;
   const unsigned long ModuleType_ShellExtension = 1 << 2;
+  const unsigned long ModuleType_BlockedByUser = 1 << 3;
 
   /**
    * Returns a bitwise combination of the ModuleType_* flags
@@ -33,6 +34,29 @@ interface nsIAboutThirdParty : nsISupports
    * the given path of a module in its installation.
    */
   nsIInstalledApplication lookupApplication(in AString aModulePath);
+
+  /**
+   * Gets the list of modules that have been blocklisted but have not
+   * attempted to load.
+   */
+  void getBlockedModuleNames(in Array<AString> aLoadedModuleNames, out Array<AString> aBlockedModuleNames);
+
+  /**
+   * Returns true if DynamicBlocklist is available.
+   */
+  readonly attribute bool isDynamicBlocklistAvailable;
+
+  /**
+   * Returns true if DynamicBlocklist is available but disabled.
+   */
+  readonly attribute bool isDynamicBlocklistDisabled;
+
+  /**
+   * Add or remove an entry from the dynamic blocklist and save
+   * the resulting file.
+   */
+  [implicit_jscontext] Promise updateBlocklist(in AString aLeafName,
+                                               in boolean aNewBlockStatus);
 
   /**
    * Posts a background task to collect system information and resolves
