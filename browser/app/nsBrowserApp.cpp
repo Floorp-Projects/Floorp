@@ -411,7 +411,6 @@ int main(int argc, char* argv[], char* envp[]) {
   // a writable section handle because all dependent modules have been
   // loaded.
   mozilla::freestanding::gSharedSection.ConvertToReadOnly();
-  ::RtlRunOnceInitialize(&mozilla::freestanding::gK32ExportsResolveOnce);
 
   mozilla::CreateAndStorePreXULSkeletonUI(GetModuleHandle(nullptr), argc, argv);
 #endif

@@ -50,14 +50,6 @@ namespace freestanding {
 
 SharedSection gSharedSection;
 
-bool Kernel32ExportsSolver::IsInitialized() const {
-  return mState == State::Initialized || IsResolved();
-}
-
-bool Kernel32ExportsSolver::IsResolved() const {
-  return mState == State::Resolved;
-}
-
 // Why don't we use ::GetProcAddress?
 // If the export table of kernel32.dll is tampered in the current process,
 // we cannot transfer an RVA because the function pointed by the RVA may not
@@ -80,10 +72,6 @@ bool Kernel32ExportsSolver::IsResolved() const {
       base + reinterpret_cast<uintptr_t>(m##name))
 
 void Kernel32ExportsSolver::Init() {
-  if (mState == State::Initialized || mState == State::Resolved) {
-    return;
-  }
-
   interceptor::MMPolicyInProcess policy;
   auto k32Exports = nt::PEExportSection<interceptor::MMPolicyInProcess>::Get(
       ::GetModuleHandleW(L"kernel32.dll"), policy);
@@ -96,23 +84,18 @@ void Kernel32ExportsSolver::Init() {
   INIT_FUNCTION(k32Exports, GetModuleHandleW);
   INIT_FUNCTION(k32Exports, GetSystemInfo);
   INIT_FUNCTION(k32Exports, VirtualProtect);
-
-  mState = State::Initialized;
 }
 
-void Kernel32ExportsSolver::ResolveInternal() {
-  if (mState == State::Resolved) {
-    return;
-  }
-
-  MOZ_RELEASE_ASSERT(mState == State::Initialized);
-
+bool Kernel32ExportsSolver::Resolve() {
   const UNICODE_STRING k32Name = MOZ_LITERAL_UNICODE_STRING(L"kernel32.dll");
 
   // We cannot use GetModuleHandleW because this code can be called
   // before IAT is resolved.
   auto k32Module = nt::GetModuleHandleFromLeafName(k32Name);
-  MOZ_RELEASE_ASSERT(k32Module.isOk());
+  if (k32Module.isErr()) {
+    // Probably this is called before kernel32.dll is loaded.
+    return false;
+  }
 
   uintptr_t k32Base =
       nt::PEHeaders::HModuleToBaseAddr<uintptr_t>(k32Module.unwrap());
@@ -122,27 +105,18 @@ void Kernel32ExportsSolver::ResolveInternal() {
   RESOLVE_FUNCTION(k32Base, GetSystemInfo);
   RESOLVE_FUNCTION(k32Base, VirtualProtect);
 
-  mState = State::Resolved;
-}
-
-/* static */
-ULONG NTAPI Kernel32ExportsSolver::ResolveOnce(PRTL_RUN_ONCE aRunOnce,
-                                               PVOID aParameter, PVOID*) {
-  reinterpret_cast<Kernel32ExportsSolver*>(aParameter)->ResolveInternal();
-  return TRUE;
-}
-
-void Kernel32ExportsSolver::Resolve(RTL_RUN_ONCE& aRunOnce) {
-  ::RtlRunOnceExecuteOnce(&aRunOnce, &ResolveOnce, this, nullptr);
+  return true;
 }
 
 HANDLE SharedSection::sSectionHandle = nullptr;
-void* SharedSection::sWriteCopyView = nullptr;
+SharedSection::Layout* SharedSection::sWriteCopyView = nullptr;
+RTL_RUN_ONCE SharedSection::sEnsureOnce = RTL_RUN_ONCE_INIT;
 
 void SharedSection::Reset(HANDLE aNewSectionObject) {
   if (sWriteCopyView) {
     nt::AutoMappedView view(sWriteCopyView);
     sWriteCopyView = nullptr;
+    ::RtlRunOnceInitialize(&sEnsureOnce);
   }
 
   if (sSectionHandle != aNewSectionObject) {
@@ -192,7 +166,7 @@ LauncherVoidResult SharedSection::Init() {
 
   Layout* view = writableView.as<Layout>();
   view->mK32Exports.Init();
-
+  view->mState = Layout::State::kInitialized;
   return Ok();
 }
 
@@ -210,30 +184,53 @@ LauncherVoidResult SharedSection::AddDependentModule(PCUNICODE_STRING aNtPath) {
   return Ok();
 }
 
-LauncherVoidResult SharedSection::EnsureWriteCopyView() {
+/* static */
+ULONG NTAPI SharedSection::EnsureWriteCopyViewOnce(PRTL_RUN_ONCE, PVOID,
+                                                   PVOID*) {
   if (!sWriteCopyView) {
     nt::AutoMappedView view(sSectionHandle, PAGE_WRITECOPY);
     if (!view) {
-      return LAUNCHER_ERROR_FROM_WIN32(::RtlGetLastWin32Error());
+      return TRUE;
     }
-    sWriteCopyView = view.release();
+    sWriteCopyView = view.as<Layout>();
+    view.release();
   }
-  return Ok();
+  return sWriteCopyView->Resolve() ? TRUE : FALSE;
+}
+
+SharedSection::Layout* SharedSection::EnsureWriteCopyView() {
+  ::RtlRunOnceExecuteOnce(&sEnsureOnce, &EnsureWriteCopyViewOnce, nullptr,
+                          nullptr);
+  if (!sWriteCopyView) {
+    return nullptr;
+  }
+  return sWriteCopyView->mState == Layout::State::kResolved ? sWriteCopyView
+                                                            : nullptr;
+}
+
+bool SharedSection::Layout::Resolve() {
+  if (mState == State::kResolved) {
+    return true;
+  }
+  if (mState != State::kInitialized) {
+    return false;
+  }
+  if (!mK32Exports.Resolve()) {
+    return false;
+  }
+
+  mState = State::kResolved;
+  return true;
 }
 
 Kernel32ExportsSolver* SharedSection::GetKernel32Exports() {
-  if (EnsureWriteCopyView().isErr()) {
-    return nullptr;
-  }
-  return &reinterpret_cast<SharedSection::Layout*>(sWriteCopyView)->mK32Exports;
+  Layout* writeCopyView = EnsureWriteCopyView();
+  return writeCopyView ? &writeCopyView->mK32Exports : nullptr;
 }
 
 Span<const wchar_t> SharedSection::GetDependentModules() {
-  if (EnsureWriteCopyView().isErr()) {
-    return nullptr;
-  }
-  return reinterpret_cast<SharedSection::Layout*>(sWriteCopyView)
-      ->GetModulePathArray();
+  Layout* writeCopyView = EnsureWriteCopyView();
+  return writeCopyView ? writeCopyView->GetModulePathArray() : nullptr;
 }
 
 LauncherVoidResult SharedSection::TransferHandle(
