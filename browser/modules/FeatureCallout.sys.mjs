@@ -692,6 +692,8 @@ export class FeatureCallout {
     this.loadingConfig = false;
 
     if (result.message.template !== "feature_callout") {
+      // If another message type, like a Spotlight modal, is included
+      // in the tour, save the template name as the current screen.
       this.currentScreen = result.message.template;
       return false;
     }

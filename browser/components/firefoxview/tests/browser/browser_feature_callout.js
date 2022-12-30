@@ -378,8 +378,21 @@ add_task(async function feature_callout_dismiss_on_page_click() {
   await SpecialPowers.pushPrefEnv({
     set: [[featureTourPref, `{"message":"","screen":"","complete":true}`]],
   });
-  const screenId = "FIREFOX_VIEW_COLORWAYS_REMINDER";
-  const testMessage = getCalloutMessageById(screenId);
+  const screenId = "FIREFOX_VIEW_TAB_PICKUP_REMINDER";
+  const testClickSelector = "#recently-closed-tabs-container";
+  let testMessage = getCalloutMessageById(screenId);
+  // Configure message with a dismiss action on tab container click
+  testMessage.message.content.screens[0].content.page_event_listeners = [
+    {
+      params: {
+        type: "click",
+        selectors: testClickSelector,
+      },
+      action: {
+        dismiss: true,
+      },
+    },
+  ];
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
   const spy = new TelemetrySpy(sandbox);
 
@@ -394,8 +407,8 @@ add_task(async function feature_callout_dismiss_on_page_click() {
       info("Waiting for callout to render");
       await waitForCalloutScreen(document, screenId);
 
-      info("Clicking page button");
-      document.querySelector("#colorways-button").click();
+      info("Clicking page element");
+      document.querySelector(testClickSelector).click();
       await waitForCalloutRemoved(document);
 
       // Test that appropriate telemetry is sent
@@ -404,7 +417,7 @@ add_task(async function feature_callout_dismiss_on_page_click() {
         event_context: {
           action: "DISMISS",
           reason: "CLICK",
-          source: sinon.match("#colorways-button"),
+          source: sinon.match(testClickSelector),
           page: document.location.href,
         },
         message_id: screenId,
@@ -414,7 +427,7 @@ add_task(async function feature_callout_dismiss_on_page_click() {
         event_context: {
           source: sinon
             .match("PAGE_EVENT:")
-            .and(sinon.match("#colorways-button")),
+            .and(sinon.match(testClickSelector)),
           page: document.location.href,
         },
         message_id: screenId,
