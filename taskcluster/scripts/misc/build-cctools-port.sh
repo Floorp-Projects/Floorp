@@ -24,8 +24,6 @@ mkdir -p $CROSSTOOLS_BUILD_DIR $LIBTAPI_BUILD_DIR
 
 cd $GECKO_PATH
 
-export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
-
 # Common setup for libtapi and cctools
 export CC=$CLANG_DIR/bin/clang
 export CXX=$CLANG_DIR/bin/clang++
@@ -49,6 +47,8 @@ cmake $LIBTAPI_SOURCE_DIR/src/llvm \
       -DCMAKE_BUILD_TYPE=RELEASE \
       -DCMAKE_INSTALL_PREFIX=$CROSSTOOLS_BUILD_DIR \
       -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot \
+      -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld \
+      -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld \
       -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" \
       -DTAPI_REPOSITORY_STRING=$TAPI_REPOSITORY \
       -DTAPI_FULL_VERSION=$TAPI_VERSION
@@ -61,7 +61,7 @@ ninja libtapi install-libtapi install-tapi-headers -v
 # Also set it up such that loading libtapi doesn't require a LD_LIBRARY_PATH.
 # (this requires two dollars and extra backslashing because it's used verbatim
 # via a Makefile)
-export LDFLAGS="-lpthread -Wl,-rpath-link,$MOZ_FETCHES_DIR/sysroot/lib/x86_64-linux-gnu -Wl,-rpath-link,$MOZ_FETCHES_DIR/sysroot/usr/lib/x86_64-linux-gnu -Wl,-rpath,\\\$\$ORIGIN/../lib,-rpath,\\\$\$ORIGIN/../../clang/lib"
+export LDFLAGS="-fuse-ld=lld -lpthread -Wl,-rpath-link,$MOZ_FETCHES_DIR/sysroot/lib/x86_64-linux-gnu -Wl,-rpath-link,$MOZ_FETCHES_DIR/sysroot/usr/lib/x86_64-linux-gnu -Wl,-rpath,\\\$\$ORIGIN/../lib,-rpath,\\\$\$ORIGIN/../../clang/lib"
 
 export CC="$CC --sysroot=$MOZ_FETCHES_DIR/sysroot"
 export CXX="$CXX --sysroot=$MOZ_FETCHES_DIR/sysroot"

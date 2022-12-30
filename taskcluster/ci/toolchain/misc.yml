@@ -49,7 +49,6 @@ linux64-cctools-port:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-binutils
             - linux64-toolchain-sysroot
         fetch:
             - cctools-port
@@ -129,7 +128,6 @@ linux64-mar-tools:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-binutils
     run:
         script: build-mar-tools.sh
         sparse-profile: null
