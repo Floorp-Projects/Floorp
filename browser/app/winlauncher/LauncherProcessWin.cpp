@@ -15,6 +15,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/glue/Debug.h"
+#include "mozilla/GeckoArgs.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
 #include "mozilla/UniquePtr.h"
@@ -57,7 +58,8 @@ const volatile DeelevationStatus gDeelevationStatus =
 static mozilla::LauncherVoidResult PostCreationSetup(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
     HANDLE aChildMainThread, mozilla::DeelevationStatus aDStatus,
-    const bool aIsSafeMode) {
+    const bool aIsSafeMode, const bool aDisableDynamicBlocklist,
+    mozilla::Maybe<std::wstring> aBlocklistFileName) {
   /* scope for txManager */ {
     mozilla::nt::CrossExecTransferManager txManager(aChildProcess);
     if (!txManager) {
@@ -78,8 +80,9 @@ static mozilla::LauncherVoidResult PostCreationSetup(
     }
   }
 
-  return mozilla::InitializeDllBlocklistOOPFromLauncher(aFullImagePath,
-                                                        aChildProcess);
+  return mozilla::InitializeDllBlocklistOOPFromLauncher(
+      aFullImagePath, aChildProcess, aDisableDynamicBlocklist,
+      aBlocklistFileName);
 }
 
 /**
@@ -294,8 +297,14 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
 #if defined(MOZ_LAUNCHER_PROCESS)
   LauncherRegistryInfo regInfo;
   Maybe<bool> runAsLauncher = RunAsLauncherProcess(regInfo, argc, argv);
+  LauncherResult<std::wstring> blocklistFileNameResult =
+      regInfo.GetBlocklistFileName();
+  Maybe<std::wstring> blocklistFileName =
+      blocklistFileNameResult.isOk() ? Some(blocklistFileNameResult.unwrap())
+                                     : Nothing();
 #else
   Maybe<bool> runAsLauncher = RunAsLauncherProcess(argc, argv);
+  Maybe<std::wstring> blocklistFileName = Nothing();
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
   if (!runAsLauncher || !runAsLauncher.value()) {
 #if defined(MOZ_LAUNCHER_PROCESS)
@@ -486,9 +495,14 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
     job = CreateJobAndAssignProcess(process.get());
   }
 
-  LauncherVoidResult setupResult =
-      PostCreationSetup(argv[0], process.get(), mainThread.get(),
-                        deelevationStatus, isSafeMode.value());
+  bool disableDynamicBlocklist =
+      isSafeMode.value() ||
+      mozilla::CheckArg(
+          argc, argv, mozilla::geckoargs::sDisableDynamicDllBlocklist.sMatch,
+          nullptr, mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND;
+  LauncherVoidResult setupResult = PostCreationSetup(
+      argv[0], process.get(), mainThread.get(), deelevationStatus,
+      isSafeMode.value(), disableDynamicBlocklist, blocklistFileName);
   if (setupResult.isErr()) {
     HandleLauncherError(setupResult);
     ::TerminateProcess(process.get(), 1);

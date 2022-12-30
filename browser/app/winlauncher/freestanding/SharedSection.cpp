@@ -6,7 +6,9 @@
 
 #include "SharedSection.h"
 
+#include <algorithm>
 #include "CheckForCaller.h"
+#include "mozilla/BinarySearch.h"
 
 namespace {
 
@@ -167,6 +169,8 @@ LauncherVoidResult SharedSection::Init() {
   Layout* view = writableView.as<Layout>();
   view->mK32Exports.Init();
   view->mState = Layout::State::kInitialized;
+  // Leave view->mDependentModulePathArrayStart to be zero to indicate
+  // we can add blocklist entries
   return Ok();
 }
 
@@ -177,10 +181,55 @@ LauncherVoidResult SharedSection::AddDependentModule(PCUNICODE_STRING aNtPath) {
   }
 
   Layout* view = writableView.as<Layout>();
-  if (!AddString(view->GetModulePathArray(), *aNtPath)) {
+  if (!view->mDependentModulePathArrayStart) {
+    // This is the first time AddDependentModule is called.  We set the initial
+    // value to mDependentModulePathArrayStart, which *closes* the blocklist.
+    // After this, AddBlocklist is no longer allowed.
+    view->mDependentModulePathArrayStart =
+        FIELD_OFFSET(Layout, mFirstBlockEntry) + sizeof(DllBlockInfo);
+  }
+
+  if (!AddString(view->GetDependentModules(), *aNtPath)) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
   }
 
+  return Ok();
+}
+
+LauncherVoidResult SharedSection::SetBlocklist(
+    const DynamicBlockList& aBlocklist, bool isDisabled) {
+  if (!aBlocklist.GetPayloadSize()) {
+    return Ok();
+  }
+
+  nt::AutoMappedView writableView(sSectionHandle, PAGE_READWRITE);
+  if (!writableView) {
+    return LAUNCHER_ERROR_FROM_WIN32(::RtlGetLastWin32Error());
+  }
+
+  Layout* view = writableView.as<Layout>();
+  if (view->mDependentModulePathArrayStart > 0) {
+    // If the dependent module array is already available, we must not update
+    // the blocklist.
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_STATE);
+  }
+
+  view->mBlocklistIsDisabled = isDisabled ? 1 : 0;
+  uintptr_t bufferEnd = reinterpret_cast<uintptr_t>(view) + kSharedViewSize;
+  size_t bytesCopied = aBlocklist.CopyTo(
+      view->mFirstBlockEntry,
+      bufferEnd - reinterpret_cast<uintptr_t>(view->mFirstBlockEntry));
+  if (!bytesCopied) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+  }
+
+  // Setting mDependentModulePathArrayStart to a non-zero value means
+  // we no longer accept blocklist entries
+  // Just to be safe, make sure we don't overwrite mFirstBlockEntry even
+  // if there are no entries.
+  view->mDependentModulePathArrayStart =
+      FIELD_OFFSET(Layout, mFirstBlockEntry) +
+      std::max(bytesCopied, sizeof(DllBlockInfo));
   return Ok();
 }
 
@@ -219,8 +268,50 @@ bool SharedSection::Layout::Resolve() {
     return false;
   }
 
+  if (!mNumBlockEntries) {
+    uintptr_t arrayBase = reinterpret_cast<uintptr_t>(mFirstBlockEntry);
+    uint32_t numEntries = 0;
+    for (DllBlockInfo* entry = mFirstBlockEntry;
+         entry->mName.Length && numEntries < GetMaxNumBlockEntries(); ++entry) {
+      entry->mName.Buffer = reinterpret_cast<wchar_t*>(
+          arrayBase + reinterpret_cast<uintptr_t>(entry->mName.Buffer));
+      ++numEntries;
+    }
+    mNumBlockEntries = numEntries;
+    // Sort by name so that we can binary-search
+    std::sort(mFirstBlockEntry, mFirstBlockEntry + mNumBlockEntries,
+              [](const DllBlockInfo& a, const DllBlockInfo& b) {
+                return ::RtlCompareUnicodeString(&a.mName, &b.mName, TRUE) < 0;
+              });
+  }
+
   mState = State::kResolved;
   return true;
+}
+
+Span<wchar_t> SharedSection::Layout::GetDependentModules() {
+  if (!mDependentModulePathArrayStart) {
+    return nullptr;
+  }
+  return Span<wchar_t>(
+      reinterpret_cast<wchar_t*>(reinterpret_cast<uintptr_t>(this) +
+                                 mDependentModulePathArrayStart),
+      (kSharedViewSize - mDependentModulePathArrayStart) / sizeof(wchar_t));
+}
+
+bool SharedSection::Layout::IsDisabled() const {
+  return !!mBlocklistIsDisabled;
+}
+
+const DllBlockInfo* SharedSection::Layout::SearchBlocklist(
+    const UNICODE_STRING& aLeafName) const {
+  MOZ_ASSERT(mState == State::kResolved);
+  DllBlockInfoComparator comp(aLeafName);
+  size_t match;
+  if (!BinarySearchIf(mFirstBlockEntry, 0, mNumBlockEntries, comp, &match)) {
+    return nullptr;
+  }
+  return &mFirstBlockEntry[match];
 }
 
 Kernel32ExportsSolver* SharedSection::GetKernel32Exports() {
@@ -230,7 +321,23 @@ Kernel32ExportsSolver* SharedSection::GetKernel32Exports() {
 
 Span<const wchar_t> SharedSection::GetDependentModules() {
   Layout* writeCopyView = EnsureWriteCopyView();
+  return writeCopyView ? writeCopyView->GetDependentModules() : nullptr;
+}
+
+Span<const DllBlockInfo> SharedSection::GetDynamicBlocklist() {
+  Layout* writeCopyView = EnsureWriteCopyView();
   return writeCopyView ? writeCopyView->GetModulePathArray() : nullptr;
+}
+
+const DllBlockInfo* SharedSection::SearchBlocklist(
+    const UNICODE_STRING& aLeafName) {
+  Layout* writeCopyView = EnsureWriteCopyView();
+  return writeCopyView ? writeCopyView->SearchBlocklist(aLeafName) : nullptr;
+}
+
+bool SharedSection::IsDisabled() {
+  Layout* writeCopyView = EnsureWriteCopyView();
+  return writeCopyView ? writeCopyView->IsDisabled() : false;
 }
 
 LauncherVoidResult SharedSection::TransferHandle(

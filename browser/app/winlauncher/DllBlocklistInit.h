@@ -9,6 +9,9 @@
 
 #include <windows.h>
 
+#if defined(MOZ_LAUNCHER_PROCESS)
+#  include "mozilla/LauncherRegistryInfo.h"
+#endif
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla {
@@ -19,7 +22,9 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const bool aIsSocketProcess);
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
-    const wchar_t* aFullImagePath, HANDLE aChildProcess);
+    const wchar_t* aFullImagePath, HANDLE aChildProcess,
+    const bool aDisableDynamicBlocklist,
+    Maybe<std::wstring> aBlocklistFileName);
 
 }  // namespace mozilla
 

@@ -40,7 +40,12 @@ TEST_DIRS += [
 ]
 
 if CONFIG["MOZ_LAUNCHER_PROCESS"]:
+    LOCAL_INCLUDES += [
+        "/other-licenses/nsis/Contrib/CityHash/cityhash",
+    ]
     UNIFIED_SOURCES += [
+        "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
+        "/toolkit/mozapps/update/common/commonupdatedir.cpp",
         "/toolkit/xre/LauncherRegistryInfo.cpp",
     ]
 

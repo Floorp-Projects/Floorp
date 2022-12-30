@@ -48,6 +48,7 @@ class LauncherRegistryInfo final {
   LauncherVoidResult DisableDueToFailure();
   LauncherVoidResult Commit();
   void Abort();
+  LauncherResult<std::wstring> GetBlocklistFileName();
 
  private:
   enum class Disposition { CreatedNew, OpenedExisting };
@@ -70,11 +71,13 @@ class LauncherRegistryInfo final {
   LauncherResult<Maybe<DWORD>> GetSavedImageTimestamp();
   LauncherResult<Maybe<uint64_t>> GetLauncherStartTimestamp();
   LauncherResult<Maybe<uint64_t>> GetBrowserStartTimestamp();
+  LauncherResult<std::wstring> BuildDefaultBlocklistFilename();
 
   const std::wstring& ResolveLauncherValueName();
   const std::wstring& ResolveBrowserValueName();
   const std::wstring& ResolveImageTimestampValueName();
   const std::wstring& ResolveTelemetryValueName();
+  const std::wstring& ResolveBlocklistValueName();
 
  private:
   Maybe<uint64_t> mLauncherTimestampToWrite;
@@ -86,12 +89,14 @@ class LauncherRegistryInfo final {
   std::wstring mBrowserValueName;
   std::wstring mLauncherValueName;
   std::wstring mTelemetryValueName;
+  std::wstring mBlocklistValueName;
 
   static const wchar_t kLauncherSubKeyPath[];
   static const wchar_t kLauncherSuffix[];
   static const wchar_t kBrowserSuffix[];
   static const wchar_t kImageTimestampSuffix[];
   static const wchar_t kTelemetrySuffix[];
+  static const wchar_t kBlocklistSuffix[];
 };
 
 }  // namespace mozilla
