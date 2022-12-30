@@ -5297,9 +5297,9 @@ dependencies = [
 
 [[package]]
 name = "threadbound"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54a433ab7cb47761ed81046b241764cf11d00dbaf7d648d9e49c111c25ebbcdf"
+checksum = "06638f039e6c49cd649d92e0e792f665d088bece8eba4c99c6fdfc2776b4ddb0"
 
 [[package]]
 name = "time"

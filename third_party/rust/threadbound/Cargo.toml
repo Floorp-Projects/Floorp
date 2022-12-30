@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "threadbound"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Make any value Sync but only available on its original thread."
 documentation = "https://docs.rs/threadbound"
