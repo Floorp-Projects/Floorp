@@ -8,6 +8,7 @@ const kClsidTestShellEx = "{10a9521e-0205-4cc7-93a1-62f30a9a54b3}";
 const kFriendlyName = "Minimum Shell Extension for Firefox testing";
 const kExtensionSubkeys = [".zzz\\shellex\\IconHandler"];
 const kExtensionModuleName = "TestShellEx.dll";
+const kUserBlockedModuleName = "TestDllBlocklist_UserBlocked.dll";
 const kFileFilterInDialog = "*.zzz";
 const kATP = Cc["@mozilla.org/about-thirdparty;1"].getService(
   Ci.nsIAboutThirdParty
