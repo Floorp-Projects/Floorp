@@ -99,7 +99,7 @@ impl fmt::Debug for Timestamp {
         }
 
         f.debug_tuple("Timestamp")
-            .field(&TimestampValue(&self))
+            .field(&TimestampValue(self))
             .finish()
     }
 }

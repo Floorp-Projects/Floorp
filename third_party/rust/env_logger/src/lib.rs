@@ -1,10 +1,6 @@
-// Copyright 2014-2015 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
@@ -107,7 +103,7 @@
 //! your program is in a file called, for example, `hello.rs`, the path would
 //! simply be be `hello`.
 //!
-//! Furthermore, the the log can be filtered using prefix-search based on the
+//! Furthermore, the log can be filtered using prefix-search based on the
 //! specified log target. A value of, for example, `RUST_LOG=example`, would
 //! match all of the messages with targets:
 //!
@@ -676,7 +672,7 @@ impl Builder {
     ///
     /// # Examples
     ///
-    /// Only include messages for info and above for logs in `path::to::module`:
+    /// Only include messages for info and above for logs globally:
     ///
     /// ```
     /// use env_logger::Builder;

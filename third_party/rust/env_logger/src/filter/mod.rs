@@ -151,7 +151,7 @@ impl Filter {
         }
 
         if let Some(filter) = self.filter.as_ref() {
-            if !filter.is_match(&*record.args().to_string()) {
+            if !filter.is_match(&record.args().to_string()) {
                 return false;
             }
         }
