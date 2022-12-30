@@ -1317,6 +1317,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.7 -> 0.3.8"
 
+[[audits.parking_lot_core]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.8.5 -> 0.8.6"
+
 [[audits.paste]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
