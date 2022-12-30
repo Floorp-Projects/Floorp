@@ -66,6 +66,30 @@ const validateCalloutCustomPosition = (element, positionOverride, doc) => {
   return true;
 };
 
+const validateCalloutRTLPosition = (element, positionOverride) => {
+  for (let position in positionOverride) {
+    if (Object.prototype.hasOwnProperty.call(positionOverride, position)) {
+      const pixelPosition = positionOverride[position];
+      if (position === "left") {
+        const actualLeft = Number(
+          pixelPosition.substring(0, pixelPosition.length - 2)
+        );
+        if (element.getBoundingClientRect().right !== actualLeft) {
+          return false;
+        }
+      } else if (position === "right") {
+        const expectedLeft = Number(
+          pixelPosition.substring(0, pixelPosition.length - 2)
+        );
+        if (element.getBoundingClientRect().left !== expectedLeft) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+};
+
 const testMessage = {
   message: {
     id: "TEST_MESSAGE",
@@ -341,6 +365,51 @@ add_task(
       "Callout custom position is as expected while navigator toolbox height is extended"
     );
     BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+  }
+);
+
+add_task(
+  async function custom_position_callout_is_horizontally_reversed_in_rtl_layouts() {
+    // Deep copying our test message so we can alter it without disrupting future tests
+    const pdfTestMessage = JSON.parse(JSON.stringify(testMessage));
+    const pdfTestMessageCalloutSelector =
+      pdfTestMessage.message.content.screens[0].id;
+
+    pdfTestMessage.message.content.screens[0].parent_selector = "hbox#browser";
+    pdfTestMessage.message.content.screens[0].content.callout_position_override = {
+      top: "45px",
+      right: "25px",
+    };
+
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.withArgs(pdfMatch).resolves(pdfTestMessage);
+    sendTriggerStub.callThrough();
+
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+    win.document.dir = "rtl";
+    ok(
+      win.document.documentElement.getAttribute("dir") === "rtl",
+      "browser window is in RTL"
+    );
+
+    await openURLInWindow(win, PDF_TEST_URL);
+    const doc = win.document;
+    await waitForCalloutScreen(doc, pdfTestMessageCalloutSelector);
+
+    const callout = doc.querySelector(`.${pdfTestMessageCalloutSelector}`);
+    ok(callout, "Callout is rendered when navigating to PDF file");
+    ok(
+      validateCalloutRTLPosition(
+        callout,
+        pdfTestMessage.message.content.screens[0].content
+          .callout_position_override
+      ),
+      "Callout custom position is rendered appropriately in RTL mode"
+    );
+
     await BrowserTestUtils.closeWindow(win);
     sandbox.restore();
   }
