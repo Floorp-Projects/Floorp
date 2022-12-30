@@ -203,6 +203,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         ProfilerMarkerFactProcessor.create { components.core.engine.profiler }.register()
 
         run {
+            // Make sure the engine is initialized and ready to use.
+            components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+                components.core.engine.warmUp()
+            }
+
             // We need to always initialize Glean and do it early here.
             initializeGlean()
 
@@ -213,10 +218,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             components.strictMode.enableStrictMode(true)
             warmBrowsersCache()
 
-            // Make sure the engine is initialized and ready to use.
-            components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-                components.core.engine.warmUp()
-            }
             initializeWebExtensionSupport()
             if (FeatureFlags.storageMaintenanceFeature) {
                 // Make sure to call this function before registering a storage worker
