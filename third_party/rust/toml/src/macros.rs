@@ -7,26 +7,24 @@ use crate::value::{Array, Table, Value};
 /// [`toml::Value`]: value/enum.Value.html
 ///
 /// ```rust
-/// fn main() {
-///     let cargo_toml = toml::toml! {
-///         [package]
-///         name = "toml"
-///         version = "0.4.5"
-///         authors = ["Alex Crichton <alex@alexcrichton.com>"]
+/// let cargo_toml = toml::toml! {
+///     [package]
+///     name = "toml"
+///     version = "0.4.5"
+///     authors = ["Alex Crichton <alex@alexcrichton.com>"]
 ///
-///         [badges]
-///         travis-ci = { repository = "alexcrichton/toml-rs" }
+///     [badges]
+///     travis-ci = { repository = "alexcrichton/toml-rs" }
 ///
-///         [dependencies]
-///         serde = "1.0"
+///     [dependencies]
+///     serde = "1.0"
 ///
-///         [dev-dependencies]
-///         serde_derive = "1.0"
-///         serde_json = "1.0"
-///     };
+///     [dev-dependencies]
+///     serde_derive = "1.0"
+///     serde_json = "1.0"
+/// };
 ///
-///     println!("{:#?}", cargo_toml);
-/// }
+/// println!("{:#?}", cargo_toml);
 /// ```
 #[macro_export]
 macro_rules! toml {
@@ -432,16 +430,15 @@ fn traverse<'a>(root: &'a mut Value, path: &[&str]) -> &'a mut Value {
     for &key in path {
         // Lexical lifetimes :D
         let cur1 = cur;
-        let cur2;
 
         // From the TOML spec:
         //
         // > Each double-bracketed sub-table will belong to the most recently
         // > defined table element above it.
-        if cur1.is_array() {
-            cur2 = cur1.as_array_mut().unwrap().last_mut().unwrap();
+        let cur2 = if cur1.is_array() {
+            cur1.as_array_mut().unwrap().last_mut().unwrap()
         } else {
-            cur2 = cur1;
+            cur1
         };
 
         // We are about to index into this value, so it better be a table.

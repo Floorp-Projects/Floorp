@@ -70,19 +70,17 @@ where
 ///     enabled: bool,
 /// }
 ///
-/// fn main() {
-///     let config = Config {
-///         database: Database {
-///             ip: "192.168.1.1".to_string(),
-///             port: vec![8001, 8002, 8003],
-///             connection_max: 5000,
-///             enabled: false,
-///         },
-///     };
+/// let config = Config {
+///     database: Database {
+///         ip: "192.168.1.1".to_string(),
+///         port: vec![8001, 8002, 8003],
+///         connection_max: 5000,
+///         enabled: false,
+///     },
+/// };
 ///
-///     let toml = toml::to_string(&config).unwrap();
-///     println!("{}", toml)
-/// }
+/// let toml = toml::to_string(&config).unwrap();
+/// println!("{}", toml)
 /// ```
 pub fn to_string<T: ?Sized>(value: &T) -> Result<String, Error>
 where
@@ -108,6 +106,7 @@ where
 
 /// Errors that can occur when serializing a type.
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[non_exhaustive]
 pub enum Error {
     /// Indicates that a Rust type was requested to be serialized but it was not
     /// supported.
@@ -124,7 +123,7 @@ pub enum Error {
     #[doc(hidden)]
     KeyNewline,
 
-    /// An array had to be homogenous, but now it is allowed to be heterogenous.
+    /// An array had to be homogeneous, but now it is allowed to be heterogeneous.
     #[doc(hidden)]
     ArrayMixedType,
 
@@ -145,13 +144,10 @@ pub enum Error {
     /// A custom error which could be generated when serializing a particular
     /// type.
     Custom(String),
-
-    #[doc(hidden)]
-    __Nonexhaustive,
 }
 
 #[derive(Debug, Default, Clone)]
-/// Internal place for holding array setings
+/// Internal place for holding array settings
 struct ArraySettings {
     indent: usize,
     trailing_comma: bool,
@@ -427,7 +423,7 @@ impl<'a> Serializer<'a> {
         self.emit_key(type_)?;
         write!(self.dst, "{}", t).map_err(ser::Error::custom)?;
         if let State::Table { .. } = self.state {
-            self.dst.push_str("\n");
+            self.dst.push('\n');
         }
         Ok(())
     }
@@ -478,7 +474,7 @@ impl<'a> Serializer<'a> {
         match (len, &self.settings.array) {
             (Some(0..=1), _) | (_, &None) => {
                 if first.get() {
-                    self.dst.push_str("[")
+                    self.dst.push('[')
                 } else {
                     self.dst.push_str(", ")
                 }
@@ -490,7 +486,7 @@ impl<'a> Serializer<'a> {
                     self.dst.push_str(",\n")
                 }
                 for _ in 0..a.indent {
-                    self.dst.push_str(" ");
+                    self.dst.push(' ');
                 }
             }
         }
@@ -509,11 +505,10 @@ impl<'a> Serializer<'a> {
     }
 
     fn escape_key(&mut self, key: &str) -> Result<(), Error> {
-        let ok = key.len() > 0
-            && key.chars().all(|c| match c {
-                'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => true,
-                _ => false,
-            });
+        let ok = !key.is_empty()
+            && key
+                .chars()
+                .all(|c| matches!(c,'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_'));
         if ok {
             write!(self.dst, "{}", key).map_err(ser::Error::custom)?;
         } else {
@@ -715,13 +710,13 @@ impl<'a> Serializer<'a> {
             }
             _ => {}
         }
-        self.dst.push_str("[");
+        self.dst.push('[');
         if array_of_tables {
-            self.dst.push_str("[");
+            self.dst.push('[');
         }
         self.emit_key_part(state)?;
         if array_of_tables {
-            self.dst.push_str("]");
+            self.dst.push(']');
         }
         self.dst.push_str("]\n");
         Ok(())
@@ -740,7 +735,7 @@ impl<'a> Serializer<'a> {
                 table_emitted.set(true);
                 let first = self.emit_key_part(parent)?;
                 if !first {
-                    self.dst.push_str(".");
+                    self.dst.push('.');
                 }
                 self.escape_key(key)?;
                 Ok(false)
@@ -838,7 +833,7 @@ impl<'a, 'b> ser::Serializer for &'b mut Serializer<'a> {
         self.emit_key(ArrayState::Started)?;
         self.emit_str(value, false)?;
         if let State::Table { .. } = self.state {
-            self.dst.push_str("\n");
+            self.dst.push('\n');
         }
         Ok(())
     }
@@ -999,11 +994,11 @@ impl<'a, 'b> ser::SerializeSeq for SerializeSeq<'a, 'b> {
             Some(ArrayState::StartedAsATable) => return Ok(()),
             Some(ArrayState::Started) => match (self.len, &self.ser.settings.array) {
                 (Some(0..=1), _) | (_, &None) => {
-                    self.ser.dst.push_str("]");
+                    self.ser.dst.push(']');
                 }
                 (_, &Some(ref a)) => {
                     if a.trailing_comma {
-                        self.ser.dst.push_str(",");
+                        self.ser.dst.push(',');
                     }
                     self.ser.dst.push_str("\n]");
                 }
@@ -1015,7 +1010,7 @@ impl<'a, 'b> ser::SerializeSeq for SerializeSeq<'a, 'b> {
             }
         }
         if let State::Table { .. } = self.ser.state {
-            self.ser.dst.push_str("\n");
+            self.ser.dst.push('\n');
         }
         Ok(())
     }
@@ -1145,7 +1140,7 @@ impl<'a, 'b> ser::SerializeStruct for SerializeTable<'a, 'b> {
         match *self {
             SerializeTable::Datetime(ref mut ser) => {
                 if key == datetime::FIELD {
-                    value.serialize(DateStrEmitter(&mut *ser))?;
+                    value.serialize(DateStrEmitter(*ser))?;
                 } else {
                     return Err(Error::DateInvalid);
                 }
@@ -1543,7 +1538,6 @@ impl fmt::Display for Error {
             Error::Custom(ref s) => s.fmt(f),
             Error::KeyNewline => unreachable!(),
             Error::ArrayMixedType => unreachable!(),
-            Error::__Nonexhaustive => panic!(),
         }
     }
 }

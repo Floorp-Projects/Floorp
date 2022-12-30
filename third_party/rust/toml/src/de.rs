@@ -60,17 +60,15 @@ where
 ///     name: String,
 /// }
 ///
-/// fn main() {
-///     let config: Config = toml::from_str(r#"
-///         title = 'TOML Example'
+/// let config: Config = toml::from_str(r#"
+///     title = 'TOML Example'
 ///
-///         [owner]
-///         name = 'Lisa'
-///     "#).unwrap();
+///     [owner]
+///     name = 'Lisa'
+/// "#).unwrap();
 ///
-///     assert_eq!(config.title, "TOML Example");
-///     assert_eq!(config.owner.name, "Lisa");
-/// }
+/// assert_eq!(config.title, "TOML Example");
+/// assert_eq!(config.owner.name, "Lisa");
 /// ```
 pub fn from_str<'de, T>(s: &'de str) -> Result<T, Error>
 where
@@ -100,6 +98,7 @@ struct ErrorInner {
 
 /// Errors that can occur when deserializing a type.
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[non_exhaustive]
 enum ErrorKind {
     /// EOF was reached when looking for a value
     UnexpectedEof,
@@ -193,9 +192,6 @@ enum ErrorKind {
 
     /// Unquoted string was found when quoted one was expected
     UnquotedString,
-
-    #[doc(hidden)]
-    __Nonexhaustive,
 }
 
 /// Deserialization implementation for TOML.
@@ -328,7 +324,7 @@ impl<'de, 'b> de::Deserializer<'de> for &'b mut Deserializer<'de> {
 // by their index in the passed slice. We use a list as the implementation
 // uses this data structure for arrays as well as tables,
 // so if any top level [[name]] array contains multiple entries,
-// there are multiple entires in the list.
+// there are multiple entries in the list.
 // The lookup is performed in the `SeqAccess` implementation of `MapVisitor`.
 // The lists are ordered, which we exploit in the search code by using
 // bisection.
@@ -527,8 +523,8 @@ impl<'de, 'b> de::MapAccess<'de> for MapVisitor<'de, 'b> {
             cur: 0,
             max: self.max,
             array,
-            table_indices: &*self.table_indices,
-            table_pindices: &*self.table_pindices,
+            table_indices: self.table_indices,
+            table_pindices: self.table_pindices,
             tables: &mut *self.tables,
             de: &mut *self.de,
         });
@@ -589,10 +585,10 @@ impl<'de, 'b> de::SeqAccess<'de> for MapVisitor<'de, 'b> {
             max: next,
             cur: 0,
             array: false,
-            table_indices: &*self.table_indices,
-            table_pindices: &*self.table_pindices,
-            tables: &mut self.tables,
-            de: &mut self.de,
+            table_indices: self.table_indices,
+            table_pindices: self.table_pindices,
+            tables: self.tables,
+            de: self.de,
         })?;
         self.cur_parent = next;
         Ok(Some(ret))
@@ -644,7 +640,7 @@ impl<'de, 'b> de::Deserializer<'de> for MapVisitor<'de, 'b> {
     {
         if name == spanned::NAME
             && fields == [spanned::START, spanned::END, spanned::VALUE]
-            && !(self.array && !self.values.peek().is_none())
+            && !(self.array && self.values.peek().is_some())
         {
             // TODO we can't actually emit spans here for the *entire* table/array
             // due to the format that toml uses. Setting the start and end to 0 is
@@ -721,7 +717,7 @@ impl<'a> StrDeserializer<'a> {
     }
 }
 
-impl<'a, 'b> de::IntoDeserializer<'a, Error> for StrDeserializer<'a> {
+impl<'a> de::IntoDeserializer<'a, Error> for StrDeserializer<'a> {
     type Deserializer = Self;
 
     fn into_deserializer(self) -> Self::Deserializer {
@@ -1536,7 +1532,7 @@ impl<'a> Deserializer<'a> {
                     .unwrap_or_else(|| header.1.len());
                 Ok((
                     Value {
-                        e: E::DottedTable(table.values.unwrap_or_else(Vec::new)),
+                        e: E::DottedTable(table.values.unwrap_or_default()),
                         start,
                         end,
                     },
@@ -1554,12 +1550,12 @@ impl<'a> Deserializer<'a> {
             start,
             end,
         };
-        if s.starts_with("0x") {
-            self.integer(&s[2..], 16).map(to_integer)
-        } else if s.starts_with("0o") {
-            self.integer(&s[2..], 8).map(to_integer)
-        } else if s.starts_with("0b") {
-            self.integer(&s[2..], 2).map(to_integer)
+        if let Some(value) = s.strip_prefix("0x") {
+            self.integer(value, 16).map(to_integer)
+        } else if let Some(value) = s.strip_prefix("0o") {
+            self.integer(value, 8).map(to_integer)
+        } else if let Some(value) = s.strip_prefix("0b") {
+            self.integer(value, 2).map(to_integer)
         } else if s.contains('e') || s.contains('E') {
             self.float(s, None).map(|f| Value {
                 e: E::Float(f),
@@ -1620,10 +1616,10 @@ impl<'a> Deserializer<'a> {
         let allow_leading_zeros = radix != 10;
         let (prefix, suffix) = self.parse_integer(s, allow_sign, allow_leading_zeros, radix)?;
         let start = self.tokens.substr_offset(s);
-        if suffix != "" {
+        if !suffix.is_empty() {
             return Err(self.error(start, ErrorKind::NumberInvalid));
         }
-        i64::from_str_radix(&prefix.replace("_", "").trim_start_matches('+'), radix)
+        i64::from_str_radix(prefix.replace('_', "").trim_start_matches('+'), radix)
             .map_err(|_e| self.error(start, ErrorKind::NumberInvalid))
     }
 
@@ -1675,7 +1671,7 @@ impl<'a> Deserializer<'a> {
 
         let mut fraction = None;
         if let Some(after) = after_decimal {
-            if suffix != "" {
+            if !suffix.is_empty() {
                 return Err(self.error(start, ErrorKind::NumberInvalid));
             }
             let (a, b) = self.parse_integer(after, false, true, 10)?;
@@ -1694,7 +1690,7 @@ impl<'a> Deserializer<'a> {
             } else {
                 self.parse_integer(&suffix[1..], true, true, 10)?
             };
-            if b != "" {
+            if !b.is_empty() {
                 return Err(self.error(start, ErrorKind::NumberInvalid));
             }
             exponent = Some(a);
@@ -1708,11 +1704,11 @@ impl<'a> Deserializer<'a> {
             .filter(|c| *c != '_')
             .collect::<String>();
         if let Some(fraction) = fraction {
-            number.push_str(".");
+            number.push('.');
             number.extend(fraction.chars().filter(|c| *c != '_'));
         }
         if let Some(exponent) = exponent {
-            number.push_str("E");
+            number.push('E');
             number.extend(exponent.chars().filter(|c| *c != '_'));
         }
         number
@@ -1854,8 +1850,7 @@ impl<'a> Deserializer<'a> {
     }
 
     fn dotted_key(&mut self) -> Result<Vec<(Span, Cow<'a, str>)>, Error> {
-        let mut result = Vec::new();
-        result.push(self.table_key()?);
+        let mut result = vec![self.table_key()?];
         self.eat_whitespace()?;
         while self.eat(Token::Period)? {
             self.eat_whitespace()?;
@@ -1865,7 +1860,7 @@ impl<'a> Deserializer<'a> {
         Ok(result)
     }
 
-    /// Stores a value in the appropriate hierachical structure positioned based on the dotted key.
+    /// Stores a value in the appropriate hierarchical structure positioned based on the dotted key.
     ///
     /// Given the following definition: `multi.part.key = "value"`, `multi` and `part` are
     /// intermediate parts which are mapped to the relevant fields in the deserialized type's data
@@ -2149,7 +2144,6 @@ impl fmt::Display for Error {
                 f,
                 "invalid TOML value, did you mean to use a quoted string?"
             )?,
-            ErrorKind::__Nonexhaustive => panic!(),
         }
 
         if !self.inner.key.is_empty() {
@@ -2211,7 +2205,7 @@ impl<'a> Header<'a> {
         if self.first || self.tokens.eat(Token::Period)? {
             self.first = false;
             self.tokens.eat_whitespace()?;
-            self.tokens.table_key().map(|t| t).map(Some)
+            self.tokens.table_key().map(Some)
         } else {
             self.tokens.expect(Token::RightBracket)?;
             if self.array {

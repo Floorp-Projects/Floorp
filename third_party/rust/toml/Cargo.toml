@@ -11,25 +11,74 @@
 
 [package]
 edition = "2018"
+rust-version = "1.48.0"
 name = "toml"
-version = "0.5.9"
+version = "0.5.10"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "LICENSE*",
+    "README.md",
+    "examples/**/*",
+    "benches/**/*",
+    "tests/**/*",
+]
 description = """
 A native Rust encoder and decoder of TOML-formatted files and streams. Provides
 implementations of the standard Serialize/Deserialize traits for TOML data to
 facilitate deserializing and serializing Rust structures.
 """
-homepage = "https://github.com/alexcrichton/toml-rs"
+homepage = "https://github.com/toml-rs/toml"
 documentation = "https://docs.rs/toml"
 readme = "README.md"
-keywords = ["encoding"]
+keywords = [
+    "encoding",
+    "toml",
+]
 categories = [
-    "config",
     "encoding",
     "parser-implementations",
+    "parsing",
+    "config",
 ]
 license = "MIT/Apache-2.0"
-repository = "https://github.com/alexcrichton/toml-rs"
+repository = "https://github.com/toml-rs/toml"
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "Unreleased"
+replace = "{{version}}"
+min = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = '\.\.\.HEAD'
+replace = "...{{tag_name}}"
+exactly = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "ReleaseDate"
+replace = "{{date}}"
+min = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "<!-- next-header -->"
+replace = """
+<!-- next-header -->
+## [Unreleased] - ReleaseDate
+"""
+exactly = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "<!-- next-url -->"
+replace = """
+<!-- next-url -->
+[Unreleased]: https://github.com/toml-rs/toml_edit/compare/{{tag_name}}...HEAD"""
+exactly = 1
 
 [dependencies.indexmap]
 version = "1.0"
