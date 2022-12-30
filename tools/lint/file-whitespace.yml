@@ -150,6 +150,7 @@ file-whitespace:
         - .ftl
         - .h
         - .html
+        - .md
         - .properties
         - .rs
         - .rst
