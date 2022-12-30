@@ -47,6 +47,7 @@ EXPORTS.mozilla += [
     "ModuleLoadInfo.h",
     "WindowsDllBlocklist.h",
     "WindowsDllBlocklistCommon.h",
+    "WindowsDllBlocklistInfo.h",
 ]
 
 EXPORTS.mozilla.glue += [
