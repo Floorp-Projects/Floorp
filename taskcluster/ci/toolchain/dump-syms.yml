@@ -23,7 +23,6 @@ linux64-dump_syms:
         arguments: ['x86_64-unknown-linux-gnu']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang-toolchain
             - linux64-rust-1.66
             - sysroot-x86_64-linux-gnu

@@ -33,7 +33,6 @@ linux64-sccache:
         toolchain:
             - linux64-rust-toolchain
             - linux64-clang-toolchain
-            - linux64-binutils
             - sysroot-x86_64-linux-gnu
 
 macosx64-sccache:
