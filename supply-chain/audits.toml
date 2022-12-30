@@ -1469,6 +1469,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.18 -> 1.0.21"
 
+[[audits.quote]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.21 -> 1.0.23"
+
 [[audits.radium]]
 who = "Nika Layzell <nika@thelayzells.com>"
 criteria = "safe-to-deploy"
