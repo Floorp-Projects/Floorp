@@ -35,6 +35,7 @@ OS_LIBS += [
     "comctl32",
     "ole32",
     "shell32",
+    "uuid",
     "userenv",
     "ws2_32",
 ]
