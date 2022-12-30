@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.36"
 name = "ryu"
-version = "1.0.11"
+version = "1.0.12"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 exclude = [
     "performance.png",
