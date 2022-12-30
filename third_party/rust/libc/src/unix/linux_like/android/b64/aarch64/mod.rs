@@ -374,6 +374,9 @@ pub const SYS_pwritev2: ::c_long = 287;
 pub const SYS_pkey_mprotect: ::c_long = 288;
 pub const SYS_pkey_alloc: ::c_long = 289;
 pub const SYS_pkey_free: ::c_long = 290;
+pub const SYS_io_uring_setup: ::c_long = 425;
+pub const SYS_io_uring_enter: ::c_long = 426;
+pub const SYS_io_uring_register: ::c_long = 427;
 pub const SYS_syscalls: ::c_long = 436;
 
 cfg_if! {
