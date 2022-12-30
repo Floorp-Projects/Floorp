@@ -1705,6 +1705,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.144 -> 1.0.151"
 
+[[audits.serde]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.151 -> 1.0.152"
+
 [[audits.serde_bytes]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1734,6 +1739,11 @@ delta = "1.0.143 -> 1.0.144"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.144 -> 1.0.151"
+
+[[audits.serde_derive]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.151 -> 1.0.152"
 
 [[audits.serde_json]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
