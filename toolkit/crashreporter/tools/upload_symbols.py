@@ -28,6 +28,7 @@ log.setLevel(logging.INFO)
 
 DEFAULT_URL = "https://symbols.mozilla.org/upload/"
 MAX_RETRIES = 7
+MAX_ZIP_SIZE = 500000000  # 500 MB
 
 
 def print_error(r):
@@ -94,11 +95,15 @@ def main():
         tmpdir = None
         if args.archive.endswith(".tar.zst"):
             tmpdir = tempfile.TemporaryDirectory()
-            zip_path = convert_zst_archive(args.archive, tmpdir)
+            zip_paths = convert_zst_archive(args.archive, tmpdir)
         else:
-            zip_path = args.archive
+            zip_paths = [args.archive]
 
-        return upload_symbols(zip_path)
+        for zip_path in zip_paths:
+            result = upload_symbols(zip_path)
+            if result:
+                return result
+        return 0
     finally:
         if tmpdir:
             tmpdir.cleanup()
@@ -117,6 +122,7 @@ def convert_zst_archive(zst_archive, tmpdir):
     """
     import concurrent.futures
     import gzip
+    import itertools
     import tarfile
 
     import zstandard
@@ -131,7 +137,6 @@ def convert_zst_archive(zst_archive, tmpdir):
                 info = tar.next()
                 if info is None:
                     break
-                log.info(info.name)
                 data = tar.extractfile(info).read()
                 yield (info.name, data)
 
@@ -148,6 +153,7 @@ def convert_zst_archive(zst_archive, tmpdir):
 
         def handle_file(data):
             name, data = data
+            log.info("Compressing %s", name)
             path = os.path.join(tmpdir, name.lstrip("/"))
             if name.endswith(".dbg"):
                 os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -189,19 +195,37 @@ def convert_zst_archive(zst_archive, tmpdir):
 
         reader.close()
 
-    zip_path = os.path.join(tmpdir.name, "symbols.zip")
+    zip_paths_iter = iter(
+        os.path.join(tmpdir.name, "symbols{}.zip".format("" if i == 1 else i))
+        for i in itertools.count(start=1)
+    )
+    zip_path = next(zip_paths_iter)
     log.info('Preparing symbol archive "{0}" from "{1}"'.format(zip_path, zst_archive))
     for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
-        with JarWriter(zip_path) as jar:
-            try:
-                for name, data in prepare_from(zst_archive, tmpdir.name):
-                    jar.add(name, data, compress=not isinstance(data, File))
-                break
-            except requests.exceptions.RequestException as e:
-                log.error("Error: {0}".format(e))
+        zip_paths = []
+        jar = None
+        try:
+            for name, data in prepare_from(zst_archive, tmpdir.name):
+                if not jar:
+                    jar = JarWriter(zip_path)
+                    zip_paths.append(zip_path)
+                    size = 0
+                log.info("Adding %s", name)
+                jar.add(name, data, compress=not isinstance(data, File))
+                size += data.size() if isinstance(data, File) else data.compressed_size
+                if size > MAX_ZIP_SIZE:
+                    jar.finish()
+                    jar = None
+                    zip_path = next(zip_paths_iter)
+                    log.info('Continuing with symbol archive "{}"'.format(zip_path))
+            if jar:
+                jar.finish()
+            return zip_paths
+        except requests.exceptions.RequestException as e:
+            log.error("Error: {0}".format(e))
             log.info("Retrying...")
 
-    return zip_path
+    return []
 
 
 def upload_symbols(zip_path):
