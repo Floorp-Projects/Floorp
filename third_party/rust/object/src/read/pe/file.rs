@@ -304,49 +304,60 @@ where
             None => return Ok(None),
         };
         let debug_data = data_dir.data(self.data, &self.common.sections).map(Bytes)?;
-        let debug_dir = debug_data
-            .read_at::<pe::ImageDebugDirectory>(0)
+        let debug_data_size = data_dir.size.get(LE) as usize;
+
+        let count = debug_data_size / mem::size_of::<pe::ImageDebugDirectory>();
+        let rem = debug_data_size % mem::size_of::<pe::ImageDebugDirectory>();
+        if rem != 0 || count < 1 {
+            return Err(Error("Invalid PE debug dir size"));
+        }
+
+        let debug_dirs = debug_data
+            .read_slice_at::<pe::ImageDebugDirectory>(0, count)
             .read_error("Invalid PE debug dir size")?;
 
-        if debug_dir.typ.get(LE) != pe::IMAGE_DEBUG_TYPE_CODEVIEW {
-            return Ok(None);
+        for debug_dir in debug_dirs {
+            if debug_dir.typ.get(LE) != pe::IMAGE_DEBUG_TYPE_CODEVIEW {
+                continue;
+            }
+
+            let info = self
+                .data
+                .read_slice_at::<u8>(
+                    debug_dir.pointer_to_raw_data.get(LE) as u64,
+                    debug_dir.size_of_data.get(LE) as usize,
+                )
+                .read_error("Invalid CodeView Info address")?;
+
+            let mut info = Bytes(info);
+
+            let sig = info
+                .read_bytes(4)
+                .read_error("Invalid CodeView signature")?;
+            if sig.0 != b"RSDS" {
+                continue;
+            }
+
+            let guid: [u8; 16] = info
+                .read_bytes(16)
+                .read_error("Invalid CodeView GUID")?
+                .0
+                .try_into()
+                .unwrap();
+
+            let age = info.read::<U32<LE>>().read_error("Invalid CodeView Age")?;
+
+            let path = info
+                .read_string()
+                .read_error("Invalid CodeView file path")?;
+
+            return Ok(Some(CodeView {
+                path: ByteString(path),
+                guid,
+                age: age.get(LE),
+            }));
         }
-
-        let info = self
-            .data
-            .read_slice_at::<u8>(
-                debug_dir.pointer_to_raw_data.get(LE) as u64,
-                debug_dir.size_of_data.get(LE) as usize,
-            )
-            .read_error("Invalid CodeView Info address")?;
-
-        let mut info = Bytes(info);
-
-        let sig = info
-            .read_bytes(4)
-            .read_error("Invalid CodeView signature")?;
-        if sig.0 != b"RSDS" {
-            return Ok(None);
-        }
-
-        let guid: [u8; 16] = info
-            .read_bytes(16)
-            .read_error("Invalid CodeView GUID")?
-            .0
-            .try_into()
-            .unwrap();
-
-        let age = info.read::<U32<LE>>().read_error("Invalid CodeView Age")?;
-
-        let path = info
-            .read_string()
-            .read_error("Invalid CodeView file path")?;
-
-        Ok(Some(CodeView {
-            path: ByteString(path),
-            guid,
-            age: age.get(LE),
-        }))
+        Ok(None)
     }
 
     fn has_debug_symbols(&self) -> bool {

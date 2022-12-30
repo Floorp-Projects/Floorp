@@ -34,7 +34,7 @@ where
     type Item = ElfSegment<'data, 'file, Elf, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(segment) = self.iter.next() {
+        for segment in self.iter.by_ref() {
             if segment.p_type(self.file.endian) == elf::PT_LOAD {
                 return Some(ElfSegment {
                     file: self.file,

@@ -195,6 +195,8 @@ where
             macho::CPU_TYPE_X86 => Architecture::I386,
             macho::CPU_TYPE_X86_64 => Architecture::X86_64,
             macho::CPU_TYPE_MIPS => Architecture::Mips,
+            macho::CPU_TYPE_POWERPC => Architecture::PowerPc,
+            macho::CPU_TYPE_POWERPC64 => Architecture::PowerPc64,
             _ => Architecture::Unknown,
         }
     }

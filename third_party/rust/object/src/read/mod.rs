@@ -22,7 +22,8 @@ pub use util::*;
     feature = "elf",
     feature = "macho",
     feature = "pe",
-    feature = "wasm"
+    feature = "wasm",
+    feature = "xcoff"
 ))]
 mod any;
 #[cfg(any(
@@ -30,7 +31,8 @@ mod any;
     feature = "elf",
     feature = "macho",
     feature = "pe",
-    feature = "wasm"
+    feature = "wasm",
+    feature = "xcoff"
 ))]
 pub use any::*;
 
@@ -49,11 +51,14 @@ pub mod macho;
 #[cfg(feature = "pe")]
 pub mod pe;
 
-mod traits;
-pub use traits::*;
-
 #[cfg(feature = "wasm")]
 pub mod wasm;
+
+#[cfg(feature = "xcoff")]
+pub mod xcoff;
+
+mod traits;
+pub use traits::*;
 
 mod private {
     pub trait Sealed {}
@@ -176,6 +181,12 @@ pub enum FileKind {
     /// A Wasm file.
     #[cfg(feature = "wasm")]
     Wasm,
+    /// A 32-bit XCOFF file.
+    #[cfg(feature = "xcoff")]
+    Xcoff32,
+    /// A 64-bit XCOFF file.
+    #[cfg(feature = "xcoff")]
+    Xcoff64,
 }
 
 impl FileKind {
@@ -236,6 +247,10 @@ impl FileKind {
             | [0x4c, 0x01, ..]
             // COFF x86-64
             | [0x64, 0x86, ..] => FileKind::Coff,
+            #[cfg(feature = "xcoff")]
+            [0x01, 0xDF, ..] => FileKind::Xcoff32,
+            #[cfg(feature = "xcoff")]
+            [0x01, 0xF7, ..] => FileKind::Xcoff64,
             _ => return Err(Error("Unknown file magic")),
         };
         Ok(kind)

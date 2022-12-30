@@ -39,7 +39,7 @@
 //!
 //! /// Reads a file and displays the content of the ".boot" section.
 //! fn main() -> Result<(), Box<dyn Error>> {
-//! # #[cfg(feature = "read")] {
+//! # #[cfg(all(feature = "read", feature = "std"))] {
 //!   let bin_data = fs::read("./multiboot2-binary.elf")?;
 //!   let obj_file = object::File::parse(&*bin_data)?;
 //!   if let Some(section) = obj_file.section_by_name(".boot") {
@@ -72,6 +72,9 @@
 
 #[cfg(feature = "cargo-all")]
 compile_error!("'--all-features' is not supported; use '--features all' instead");
+
+#[cfg(all(feature = "xcoff", not(feature = "unstable")))]
+compile_error!("'xcoff` is an unstable feature; enable 'unstable' as well");
 
 #[cfg(any(feature = "read_core", feature = "write_core"))]
 #[allow(unused_imports)]
@@ -110,3 +113,5 @@ pub mod elf;
 pub mod macho;
 #[cfg(any(feature = "coff", feature = "pe"))]
 pub mod pe;
+#[cfg(feature = "xcoff")]
+pub mod xcoff;

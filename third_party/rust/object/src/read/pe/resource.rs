@@ -1,7 +1,8 @@
 use alloc::string::String;
+use core::char;
 
 use crate::read::{ReadError, ReadRef, Result};
-use crate::{pe, LittleEndian as LE, U16};
+use crate::{pe, LittleEndian as LE, U16Bytes};
 
 /// The `.rsrc` section of a PE file.
 #[derive(Debug, Clone, Copy)]
@@ -17,7 +18,7 @@ impl<'data> ResourceDirectory<'data> {
 
     /// Parses the root resource directory.
     pub fn root(&self) -> Result<ResourceDirectoryTable<'data>> {
-        ResourceDirectoryTable::parse(&self.data, 0)
+        ResourceDirectoryTable::parse(self.data, 0)
     }
 }
 
@@ -92,13 +93,13 @@ impl pe::ImageResourceDirectoryEntry {
     ) -> Result<ResourceDirectoryEntryData<'data>> {
         if self.is_table() {
             ResourceDirectoryTable::parse(section.data, self.data_offset())
-                .map(|t| ResourceDirectoryEntryData::Table(t))
+                .map(ResourceDirectoryEntryData::Table)
         } else {
             section
                 .data
                 .read_at::<pe::ImageResourceDataEntry>(self.data_offset().into())
                 .read_error("Invalid resource entry")
-                .map(|d| ResourceDirectoryEntryData::Data(d))
+                .map(ResourceDirectoryEntryData::Data)
         }
     }
 }
@@ -143,21 +144,32 @@ pub struct ResourceName {
 impl ResourceName {
     /// Converts to a `String`.
     pub fn to_string_lossy(&self, directory: ResourceDirectory) -> Result<String> {
-        let d = self.data(directory)?;
-        Ok(String::from_utf16_lossy(d))
+        let d = self.data(directory)?.iter().map(|c| c.get(LE));
+
+        Ok(char::decode_utf16(d)
+            .map(|r| r.unwrap_or(char::REPLACEMENT_CHARACTER))
+            .collect::<String>())
     }
 
     /// Returns the string unicode buffer.
-    pub fn data<'data>(&self, directory: ResourceDirectory<'data>) -> Result<&'data [u16]> {
+    pub fn data<'data>(
+        &self,
+        directory: ResourceDirectory<'data>,
+    ) -> Result<&'data [U16Bytes<LE>]> {
         let mut offset = u64::from(self.offset);
         let len = directory
             .data
-            .read::<U16<LE>>(&mut offset)
+            .read::<U16Bytes<LE>>(&mut offset)
             .read_error("Invalid resource name offset")?;
         directory
             .data
-            .read_slice::<u16>(&mut offset, len.get(LE).into())
+            .read_slice::<U16Bytes<LE>>(&mut offset, len.get(LE).into())
             .read_error("Invalid resource name length")
+    }
+
+    /// Returns the string buffer as raw bytes.
+    pub fn raw_data<'data>(&self, directory: ResourceDirectory<'data>) -> Result<&'data [u8]> {
+        self.data(directory).map(crate::pod::bytes_of_slice)
     }
 }
 

@@ -14,6 +14,7 @@ type Result<T> = result::Result<T, ()>;
 
 /// A trait for types that can safely be converted from and to byte slices.
 ///
+/// # Safety
 /// A type that is `Pod` must:
 /// - be `#[repr(C)]` or `#[repr(transparent)]`
 /// - have no invalid byte values
