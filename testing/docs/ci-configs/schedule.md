@@ -43,6 +43,6 @@ August 2019 | January 2020 | [Bug 1572242](https://bugzilla.mozilla.org/show_bug
  * *OS*: base operating system such as Android, Linux, Mac OSX, Windows
  * *Hardware*: specific cpu/memory/disk/graphics/display/inputs that we are using, could be physical hardware we own or manage, or it could be a cloud provider.
  * *Platform*: a combination of hardware and OS
- * *Configuration*: what we change on a platform (can be runtime with flags), installed OS software updates (service pack), tools (python/node/etc.), hardware or OS settings (anti aliasing, display resolution, background processes, clipboard), environment variables, 
+ * *Configuration*: what we change on a platform (can be runtime with flags), installed OS software updates (service pack), tools (python/node/etc.), hardware or OS settings (anti aliasing, display resolution, background processes, clipboard), environment variables,
  * *Test Failure*: a test doesn’t report the expected result (if we expect fail and we crash, that is unexpected).  Typically this is a failure, but it can be a timeout, crash, not run, or even pass
  * *Greening up*: Assuming all tests return expected results (passing), they are green.  When tests fail, they are orange.  We need to find a way to get all tests green by investigating test failures.
