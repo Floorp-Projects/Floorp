@@ -24,36 +24,16 @@
 
 namespace mozilla {
 namespace freestanding {
+class SharedSectionTestHelper;
 
 // This class calculates RVAs of kernel32's functions and transfers them
 // to a target process, where the transferred RVAs are resolved into
 // function addresses so that the target process can use them after
 // kernel32.dll is loaded and before IAT is resolved.
-class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
-    : public interceptor::MMPolicyInProcessEarlyStage::Kernel32Exports {
-  enum class State {
-    Uninitialized,
-    Initialized,
-    Resolved,
-  } mState;
-
-  static ULONG NTAPI ResolveOnce(PRTL_RUN_ONCE aRunOnce, PVOID aParameter,
-                                 PVOID*);
-  void ResolveInternal();
-
- public:
-  Kernel32ExportsSolver() = default;
-
-  Kernel32ExportsSolver(const Kernel32ExportsSolver&) = delete;
-  Kernel32ExportsSolver(Kernel32ExportsSolver&&) = delete;
-  Kernel32ExportsSolver& operator=(const Kernel32ExportsSolver&) = delete;
-  Kernel32ExportsSolver& operator=(Kernel32ExportsSolver&&) = delete;
-
-  bool IsInitialized() const;
-  bool IsResolved() const;
-
+struct MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
+    : interceptor::MMPolicyInProcessEarlyStage::Kernel32Exports {
   void Init();
-  void Resolve(RTL_RUN_ONCE& aRunOnce);
+  bool Resolve();
 };
 
 // This class manages a section which is created in the launcher process and
@@ -72,7 +52,7 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
 // |     | GetModuleHandleW                                       |
 // |     | GetSystemInfo                                          |
 // |     | VirtualProtect                                         |
-// |     | State [Uninitialized|Initialized|Resolved]             |
+// |     | State [kUninitialized|kInitialized|kResolved]          |
 // +--------------------------------------------------------------+
 // | (2) | L"NT path 1"                                           |
 // |     | L"NT path 2"                                           |
@@ -81,6 +61,12 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
 // +--------------------------------------------------------------+
 class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
   struct Layout final {
+    enum class State {
+      kUninitialized,
+      kInitialized,
+      kResolved,
+    } mState;
+
     Kernel32ExportsSolver mK32Exports;
     wchar_t mModulePathArray[1];
 
@@ -92,6 +78,7 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
               sizeof(wchar_t));
     }
     Layout() = delete;  // disallow instantiation
+    bool Resolve();
   };
 
   // As we define a global variable of this class and use it in our blocklist
@@ -101,11 +88,16 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
   // a raw handle and a pointer as a static variable and manually release them
   // by calling Reset() where possible.
   static HANDLE sSectionHandle;
-  static void* sWriteCopyView;
+  static Layout* sWriteCopyView;
+  static RTL_RUN_ONCE sEnsureOnce;
+
+  static ULONG NTAPI EnsureWriteCopyViewOnce(PRTL_RUN_ONCE, PVOID, PVOID*);
+  static Layout* EnsureWriteCopyView();
 
   static constexpr size_t kSharedViewSize = 0x1000;
 
-  static LauncherVoidResult EnsureWriteCopyView();
+  // For test use only
+  friend class SharedSectionTestHelper;
 
  public:
   // Replace |sSectionHandle| with a given handle.
@@ -122,7 +114,7 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
   static LauncherVoidResult AddDependentModule(PCUNICODE_STRING aNtPath);
 
   // Map |sSectionHandle| to a copy-on-write page and return a writable pointer
-  // to each structure.
+  // to each structure, or null if Layout failed to resolve exports.
   Kernel32ExportsSolver* GetKernel32Exports();
   Span<const wchar_t> GetDependentModules();
 
@@ -133,7 +125,6 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final {
 };
 
 extern SharedSection gSharedSection;
-extern RTL_RUN_ONCE gK32ExportsResolveOnce;
 
 }  // namespace freestanding
 }  // namespace mozilla
