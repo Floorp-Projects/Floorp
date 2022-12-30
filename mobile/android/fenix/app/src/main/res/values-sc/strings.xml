@@ -94,6 +94,9 @@
     <string name="tab_tray_inactive_onboarding_button_text">Disativa in sa cunfiguratzione</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Boles serrare in automàticu a pustis de unu mese?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s podet serrare is ischedas chi no apas visualizadu in s’ùrtimu mese.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Serra</string>
 
@@ -107,6 +110,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ischeda privada noa</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Torra a s’ischeda</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Ammustra totu</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
@@ -230,6 +236,9 @@
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Custa borta, chirca cun:</string>
 
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Iscoberi sa personalizatzione de sa pàgina printzipale. Is ischedas reghentes, sinnalibros e resurtados de chirca ant a èssere ammustrados inoghe.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Ti donamus su benebènnidu a un’internet mègius</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -238,6 +247,8 @@
     <string name="onboarding_home_sign_in_button">Identìfica·ti</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Brinca</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Sincronizatzione de is ischedas tuas in cursu. Torra in ue fias in s’àteru dispositivu.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Serra</string>
 
@@ -319,6 +330,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Pàgina printzipale</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personaliza</string>
     <!-- Preference description for banner about signing in -->
@@ -375,6 +388,9 @@
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Nòmine de sa colletzione</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Torra a s’ischeda</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Sinnalibros reghentes</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -500,6 +516,10 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Boga custu contu</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Iscansiona su còdighe QR ammustradu in <b>firefox.com/pair</b>]]></string>
+
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
     <string name="preference_top_toolbar">Superiore</string>
@@ -514,8 +534,16 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Sighi su nòmine de su dispositivu</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Iscurre pro atualizare</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Iscurre pro cuare sa barra de ainas</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Càmbia de ischeda cun iscurrimentu laterale</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Iscurre sa barra de ainas in artu pro abèrrere ischedas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -580,6 +608,12 @@
     <string name="preferences_close_tabs">Serra is ischedas</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
     <string name="close_tabs_manually">Mai</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">A pustis de una die</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">A pustis de una chida</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">A pustis de unu mese</string>
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Serrada de is ischedas in automàticu</string>
 
@@ -590,6 +624,8 @@
     <string name="opening_screen_homepage">Pàgina printzipale</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Ùrtima ischeda</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Pàgina printzipale a pustis de 4 oras de inatividade</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Serra a manu</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -602,6 +638,9 @@
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">Move is ischedas betzas a is inativas</string>
+
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Is ischedas chi no apas visualizadu in duas chidas ant a èssere mòvidas a sa setzione de inativas.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -972,10 +1011,14 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Mannària de su caràtere in automàticu</string>
 
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Cantzella is datos de navigatzione</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Ischedas abertas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ischedas</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Cronologia de navigatzione e datos de is sitos</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d indiritzos</string>
@@ -1060,10 +1103,14 @@
     <string name="sync_scan_code">Iscansiona su còdighe</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[In s’elaboradore tuo, aberi Firefox e bae a <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Iscansiona</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Identìfica·ti cun sa càmera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Imprea sa posta eletrònica</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Non tenes unu contu? <u>Crea·nde unu</u> pro sincronizare Firefox intre dispositivos.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s at a firmare sa sincronizatzione de su contu tuo ma non s’ant a cantzellare is datos de navigatzione de custu dispositivu.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1186,8 +1233,18 @@
     <string name="preferences_passwords_logins_and_passwords">Credentziales e craes</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Sarva credentziales e craes</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Pregunta·mi·ddu</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Non sarves mai</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Cumpletamentu automàticu in %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Cumpleta e salva nòmines de utente e craes in sitos cando impreas %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Cumpletamentu automàticu in àteras aplicatziones</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Cumpleta nòmines de utente e craes in àteras aplicatziones de su dispositivu tuo.</string>
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Agiunghe credentziale</string>
 
@@ -1197,10 +1254,16 @@
     <string name="preferences_passwords_sync_logins_across_devices">Sincronizatzione de credentziales intre dispositivos</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Credentziales sarvadas</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Is credentziales chi as a sarvare o sincronizare cun %s ant a èssere ammustradas inoghe.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Leghe àteru subra de Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Etzetziones</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Is credentziales e is craes non sarvadas ant a èssere ammustradas inoghe.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">No ant a èssere sarvadas is credentziales e is craes de custos sitos.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Cantzella totu is etzetziones</string>
     <!-- Hint for search box in logins list -->
@@ -1231,6 +1294,10 @@
     <string name="saved_login_hide_password">Cua sa crae</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Isbloca pro bìdere is credentziales sarvadas tuas</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Ampara is credentziales e is craes tuas</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Cunfigura una secuèntzia de blocu, PIN o crae pro amparare is credentziales e is craes tuas de s’atzessu de àtera gente chi tèngiat su dispositivu tuo.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">A pustis</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1242,10 +1309,15 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Ùrtimu impreu</string>
 
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Cumpletamentu automàticu</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Indiritzos</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Cartas de crèditu</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Sarva e cumpleta in automàticu is cartas</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Is datos sunt tzifrados</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1260,6 +1332,11 @@
     <string name="preferences_addresses_add_address">Agiunghe un’indiritzu</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Gesti is indiritzos</string>
+
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Sarva e cumpleta in automàticu is indiritzos</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Include datos comente nùmeros, indiritzos eletrònicos e indiritzos de ispeditzione</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Agiunghe una carta</string>
@@ -1365,11 +1442,19 @@
     <string name="search_add_custom_engine_label_other">Àteru</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nòmine</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Cadena de chirca</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Sostitui sa chirca cun «%s». Esempru: \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detàllios de su motore de chirca personalizadu</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Inserta su nòmine de su motore de chirca</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Inserta una cadena de chirca</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Verìfica chi sa cadena de chirca currispondet a su formadu de esempru</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">Faddina in sa connessione cun «%s»</string>
     <!-- Text shown when a user creates a new search engine -->
@@ -1443,7 +1528,7 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Esistit giai una credentziale cun custu nòmine</string>
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
-    <string name="add_login_hostname_hint_text">https://www.esempiu.com</string>
+    <string name="add_login_hostname_hint_text">https://www.esempru.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">S’indiritzu web depet cuntènnere  «https://» o «http://»</string>
 
@@ -1483,6 +1568,8 @@
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Boles serrare in automàticu a pustis de unu mese?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox podet serrare is ischedas chi no apas visualizadu in s’ùrtimu mese.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ATIVA SA SERRADA AUTOMÀTICA</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
