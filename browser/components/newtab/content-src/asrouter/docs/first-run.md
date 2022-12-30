@@ -29,7 +29,7 @@ Special custom onboarding experience shown to users when they try to download an
 
 Note that this uses [attribution data](https://docs.google.com/document/d/1zB5zwiyNVOiTD4I3aZ-Wm8KFai9nnWuRHsPg-NW4tcc/edit#heading=h.szk066tfte4n) added to the browser during the download process, which is only currently implemented for Windows.
 
-Testing instructions: 
+Testing instructions:
 - Set pref browser.newtabpage.activity-stream.asrouter.devtoolsEnabled as true
 - Open about:newtab#devtools
 - Click Targeting -> Attribution -> Force Attribution
@@ -39,7 +39,7 @@ Testing instructions:
 - Run experiments and roll-outs through Nimbus (see [FeatureManifests](https://searchfox.org/mozilla-central/rev/5e955a47c4af398e2a859b34056017764e7a2252/toolkit/components/nimbus/FeatureManifest.js#56)), only windows is supported. FeatureConfig (from prefs or experiments) has higher precedence to defaults. See [Default experience variations](#default-experience-variations)
 - AboutWelcomeDefaults methods [getDefaults](https://searchfox.org/mozilla-central/rev/81c32a2ea5605c5cb22bd02d28c362c140b5cfb4/browser/components/newtab/aboutwelcome/lib/AboutWelcomeDefaults.jsm#539) and [prepareContentForReact](https://searchfox.org/mozilla-central/rev/81c32a2ea5605c5cb22bd02d28c362c140b5cfb4/browser/components/newtab/aboutwelcome/lib/AboutWelcomeDefaults.jsm#566) have dynamic rules which are applied to both experiments and default UI before content is shown to user.
 - about:welcome only shows up for users who download Firefox Beta or release (currently not enabled on Nightly)
-- [Enterprise builds](https://searchfox.org/mozilla-central/rev/5e955a47c4af398e2a859b34056017764e7a2252/browser/components/enterprisepolicies/Policies.jsm#1385) can turn off about:welcome by setting the browser.aboutwelcome.enabled preference to false. 
+- [Enterprise builds](https://searchfox.org/mozilla-central/rev/5e955a47c4af398e2a859b34056017764e7a2252/browser/components/enterprisepolicies/Policies.jsm#1385) can turn off about:welcome by setting the browser.aboutwelcome.enabled preference to false.
 
 #### Default experience variations
 In order of precedence:
@@ -52,7 +52,7 @@ In order of precedence:
     - Import screen allows user to import password, bookmarks and browsing history from previous browser.
     - Set a theme lets users personalize Firefox with a theme.
 
-### Upgrade Dialog 
+### Upgrade Dialog
 Upgrade Dialog was first introduced in Fx89 with MR1 release. It replaces whatsnew tab with an upgrade modal explaining proton changes, setting Firefox as default and/or pinning, and allowing theme change.
 
 #### Feature Details:

@@ -67,7 +67,7 @@ mouse to interact with the UI:
     for your performance problem and/or send it to the appropriate
     person. Try to give some context about what you were doing when the
     performance problem arose such as the URL you were viewing and what
-    actions were you doing (ex. scrolling on gmail.com). 
+    actions were you doing (ex. scrolling on gmail.com).
 
 ![image3](img/reportingperf3.png)
 

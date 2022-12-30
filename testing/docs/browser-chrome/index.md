@@ -68,7 +68,7 @@ Debugging tests
 ---------------
 
 The `./mach test` and `./mach mochitest` commands support a `--jsdebugger`
-flag which will open the browser toolbox. If you add the 
+flag which will open the browser toolbox. If you add the
 [`debugger;` keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger)
 in your test, the debugger will pause there.
 

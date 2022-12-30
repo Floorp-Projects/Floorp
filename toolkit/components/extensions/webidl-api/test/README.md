@@ -37,7 +37,7 @@ To add a new test file to this test suite:
 
     import helpers
 
-    helpers.setup() 
+    helpers.setup()
     ```
   - don't forget to call `mozunit.main` at the end of the test file:
     ```

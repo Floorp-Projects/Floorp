@@ -20,7 +20,7 @@ RootActor: First one, automatically instantiated when we start connecting.
    |   PreferenceActor (for Firefox prefs)
    |
    \-- Descriptor Actor's -or- Watcher Actor
-         | 
+         |
          \ -- Target actors:
               Actors that represent the main "thing" being targeted by a given toolbox,
               such as a tab, frame, worker, add-on, etc. and track its lifetime.

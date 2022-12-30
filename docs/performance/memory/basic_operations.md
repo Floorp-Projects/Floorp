@@ -10,7 +10,7 @@ it, open the developer tool settings, and check the "Memory" box under
 
 From Firefox 50 onwards, the Memory tool is enabled by default.
 
-## Taking a heap snapshot 
+## Taking a heap snapshot
 
 To take a snapshot of the heap, click the "Take snapshot" button, or
 the camera icon on the left:

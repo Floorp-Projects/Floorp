@@ -66,4 +66,3 @@ Then we can run our test with:
 ```
 ./mach talos-test --suite damp --subtest inspector.click
 ```
-

@@ -45,7 +45,7 @@ enabled by setting network.trr.strict\_native\_fallback to true. With
 this, while we will still completely skip TRR for certain requests (like
 captive portal detection, bootstrapping the TRR provider, etc.) we will
 only fall back after a TRR failure to **Do53** for three possible
-reasons: 
+reasons:
 1. We detected, via Confirmation, that TRR is currently out of
 service on the network. This could mean the provider is down or blocked.
 2. The address successfully resolved via TRR could not be connected to.

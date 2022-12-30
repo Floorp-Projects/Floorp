@@ -18,7 +18,7 @@ for the `xpcom` crate, run these commands:
 cd xpcom/rust/xpcom
 MOZ_TOPOBJDIR=$OBJDIR cargo doc
 cd -
-firefox target/doc/xpcom/index.html 
+firefox target/doc/xpcom/index.html
 ```
 where `$OBJDIR` is the path to the object directory.
 

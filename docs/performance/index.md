@@ -25,7 +25,7 @@ explains how to use the Gecko profiler.
 * [GC and CC Logs](memory/gc_and_cc_logs.md)
 * [Leak Gauge](memory/leak_gauge.md) can be generated and analyzed to in various ways. In particular, they can help you understand why a particular object is being kept alive.
 * [LogAlloc](https://searchfox.org/mozilla-central/source/memory/replace/logalloc/README) is a tool that dumps a log of memory allocations in Gecko. That log can then be replayed against Firefox's default memory allocator independently or through another replace-malloc library, allowing the testing of other allocators under the exact same workload.
-* [See also the documentation on Leak-hunting strategies and tips.](memory/leak_hunting_strategies_and_tips.md) 
+* [See also the documentation on Leak-hunting strategies and tips.](memory/leak_hunting_strategies_and_tips.md)
 
 ## Profiling and performance tools
 
@@ -38,7 +38,7 @@ explains how to use the Gecko profiler.
 
 ## Power Profiling
 
-* [An overview of power profiling](power_profiling_overview.md). It includes details about hardware, what can be measured, and recommended approaches. It should be the starting point for anybody new to power profiling. 
+* [An overview of power profiling](power_profiling_overview.md). It includes details about hardware, what can be measured, and recommended approaches. It should be the starting point for anybody new to power profiling.
 * **(Mac, Linux)** [tools/power/rapl](tools_power_rapl.md) is a command-line utility in the Mozilla codebase that uses the Intel RAPL interface to gather direct power estimates for the package, cores, GPU and memory.
 * **(Mac-only)** [powermetrics](powermetrics.md) is a command-line utility that gathers and displays a wide range of global and per-process measurements, including CPU usage, GPU usage, and various wakeups frequencies.
 * **(All-platforms)** [TimerFirings](timerfirings_logging.md) logging is a built-in logging mechanism that prints data on every time fired.
@@ -50,4 +50,4 @@ explains how to use the Gecko profiler.
 
 ## Performance Metrics
 
-* [PerfStats](perfstats.md) - A framework for low-overhead collection of internal performance metrics. 
+* [PerfStats](perfstats.md) - A framework for low-overhead collection of internal performance metrics.

@@ -56,4 +56,3 @@ It can also be useful for patch authors: if the changes comply with these guidel
 * R+: the code should land as soon as possible.
 * R+ with comments: there are some comments, but they are minor enough, or don't require a new review once addressed, trust the author.
 * R cancel / R- / F+: there is something wrong with the code, and a new review is required.
-

@@ -10,4 +10,3 @@ This page provides a very top level overview of what is on each directory in the
 * `devtools/client`: Code for the front-end side of our tools. In theory, each directory corresponds to a panel, but this is not always the case. This directory is only shipped with desktop Firefox, as opposed to other directories above, which are shipped with all Gecko products (Firefox for Android, etc.)
   * `devtools/client/locales`: Strings used in the client front-end.
   * `devtools/client/themes`: CSS and images used in the client front-end.
-

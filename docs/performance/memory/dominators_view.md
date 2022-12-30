@@ -1,4 +1,4 @@
-# Dominators view 
+# Dominators view
 
 The Dominators view is new in Firefox 46.
 
@@ -13,7 +13,7 @@ are, skip to the Dominators UI section. Otherwise, you might want to
 review the article on [Dominators
 concepts](dominators.md).
 
-## Dominators UI 
+## Dominators UI
 
 To see the Dominators view for a snapshot, select \"Dominators\" in the
 \"View\" drop-down list. It looks something like this:
@@ -111,7 +111,7 @@ take you to that spot in the Debugger.
 
 <iframe width="595" height="325" src="https://www.youtube.com/embed/qTF5wCSD124" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
 
-::: 
+:::
 Sometimes you\'ll see \"(no stack available)\" here. In particular,
 allocation stacks are currently only recorded for objects, not for
 arrays, strings, or internal structures.

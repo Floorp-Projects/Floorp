@@ -110,4 +110,4 @@ sudo apt-get install libc6-prof
 It may also be useful to have access to kernel addresses during profiling. These can be exposed with:
 ```
 sudo sh -c "echo 0 > /proc/sys/kernel/kptr_restrict"
-``` 
+```

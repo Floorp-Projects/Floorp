@@ -107,7 +107,7 @@ The appropriate value for the `dir` attribute will then be set when the toolbox 
 
 ### Testing
 
-The recommended workflow to test RTL on DevTools is to use the [Force RTL extension](https://addons.mozilla.org/en-US/firefox/addon/force-rtl/). After changing the direction using Force RTL, you should restart DevTools to make sure all modules apply the new direction. A future version of Force RTL will be able to update dynamically all DevTools documents.<!--TODO: update when the fate of this addon/webextension is known--> 
+The recommended workflow to test RTL on DevTools is to use the [Force RTL extension](https://addons.mozilla.org/en-US/firefox/addon/force-rtl/). After changing the direction using Force RTL, you should restart DevTools to make sure all modules apply the new direction. A future version of Force RTL will be able to update dynamically all DevTools documents.<!--TODO: update when the fate of this addon/webextension is known-->
 
 ## Toggles
 
@@ -128,4 +128,3 @@ The Mozilla way is to perform the toggle using an attribute rather than a class:
 
 * Use `:empty` to match a node that doesn't have children.
 * Usually, if `margin` or `padding` has 4 values, something is wrong. If the left and right values are asymmetrical, you're supposed to use `-start` and `-end`. If the values are symmetrical, use only 3 values (see localization section).
-

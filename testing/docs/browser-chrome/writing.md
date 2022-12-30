@@ -62,7 +62,7 @@ let result = await SpecialPowers.spawn(browser, [42, 100], async (val, val2) => 
   // Replaces the document body with '42':
   content.document.body.textContent = val;
   // Optionally, return a result. Has to be serializable to make it back to
-  // the parent process (so DOM nodes or similar won't work!). 
+  // the parent process (so DOM nodes or similar won't work!).
   return Promise.resolve(val2 * 2);
 });
 ```

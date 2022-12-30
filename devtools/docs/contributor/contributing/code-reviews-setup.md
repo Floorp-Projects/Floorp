@@ -18,7 +18,7 @@ If you added an `:ircnickname` in your Bugzilla's `Real name`, Phabricator will 
 
 ---
 
-Once you understand the above, please [create a Phabricator account](https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html#creating-an-account). 
+Once you understand the above, please [create a Phabricator account](https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html#creating-an-account).
 
 
 

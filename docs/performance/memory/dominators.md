@@ -1,4 +1,4 @@
-# Dominators 
+# Dominators
 
 This article provides an introduction to the concepts of *Reachability*,
 *Shallow* versus *Retained* size, and *Dominators*, as they apply in

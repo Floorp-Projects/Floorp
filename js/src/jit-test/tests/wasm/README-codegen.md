@@ -34,4 +34,3 @@ tail end of the prologue; subsequent lines comprise the operation;
 finally there is the beginning of the epilogue.  Sometimes there is
 only the end of the prologue and the beginning of the operation, as
 the operation is long and we don't care about its tail.
-
