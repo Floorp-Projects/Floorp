@@ -3899,13 +3899,12 @@ dependencies = [
 
 [[package]]
 name = "ohttp"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b2c6a2f1b2f840a52ea235d568701369274f6ca08d98e7d9ca4acadd1fe94c5"
+checksum = "3e4e4bdb61a3d6563cfba7344325a9f1e44e7b7d212dcec7afd247ca8deecdf9"
 dependencies = [
- "bindgen 0.59.999",
+ "bindgen 0.63.0",
  "byteorder",
- "env_logger 0.8.999",
  "hex",
  "lazy_static",
  "log",

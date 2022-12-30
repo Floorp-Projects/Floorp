@@ -62,7 +62,6 @@ pub type KeyId = u8;
 pub fn init() {
     #[cfg(feature = "nss")]
     nss::init();
-    let _ = env_logger::try_init();
 }
 
 /// A tuple of KDF and AEAD identifiers.
@@ -479,9 +478,14 @@ mod test {
     ];
     const RESPONSE: &[u8] = &[0x01, 0x40, 0xc8];
 
+    fn init() {
+        crate::init();
+        let _ = env_logger::try_init();
+    }
+
     #[test]
     fn request_response() {
-        crate::init();
+        init();
 
         let server_config = KeyConfig::new(KEY_ID, KEM, Vec::from(SYMMETRIC)).unwrap();
         let mut server = Server::new(server_config).unwrap();
@@ -506,7 +510,7 @@ mod test {
 
     #[test]
     fn two_requests() {
-        crate::init();
+        init();
 
         let server_config = KeyConfig::new(KEY_ID, KEM, Vec::from(SYMMETRIC)).unwrap();
         let mut server = Server::new(server_config).unwrap();
@@ -535,7 +539,7 @@ mod test {
 
     #[test]
     fn response_truncated() {
-        crate::init();
+        init();
 
         let server_config = KeyConfig::new(KEY_ID, KEM, Vec::from(SYMMETRIC)).unwrap();
         let mut server = Server::new(server_config).unwrap();
@@ -570,7 +574,7 @@ mod test {
             0x01, 0x00, 0x03,
         ];
 
-        crate::init();
+        init();
 
         let config = KeyConfig::parse(EXPECTED_CONFIG).unwrap();
 
