@@ -162,6 +162,8 @@ pub const ELFOSABI_GNU: u8 = 3;
 ///
 /// Compatibility alias.
 pub const ELFOSABI_LINUX: u8 = ELFOSABI_GNU;
+/// GNU/Hurd.
+pub const ELFOSABI_HURD: u8 = 4;
 /// Sun Solaris.
 pub const ELFOSABI_SOLARIS: u8 = 6;
 /// IBM AIX.
@@ -176,6 +178,16 @@ pub const ELFOSABI_TRU64: u8 = 10;
 pub const ELFOSABI_MODESTO: u8 = 11;
 /// OpenBSD.
 pub const ELFOSABI_OPENBSD: u8 = 12;
+/// OpenVMS.
+pub const ELFOSABI_OPENVMS: u8 = 13;
+/// Hewlett-Packard Non-Stop Kernel.
+pub const ELFOSABI_NSK: u8 = 14;
+/// AROS
+pub const ELFOSABI_AROS: u8 = 15;
+/// FenixOS
+pub const ELFOSABI_FENIXOS: u8 = 16;
+/// Nuxi CloudABI
+pub const ELFOSABI_CLOUDABI: u8 = 17;
 /// ARM EABI.
 pub const ELFOSABI_ARM_AEABI: u8 = 64;
 /// ARM.
@@ -6239,18 +6251,17 @@ pub const R_NDS32_TLS_TPOFF: u32 = 102;
 pub const R_NDS32_TLS_DESC: u32 = 119;
 
 // LoongArch values `FileHeader*::e_flags`.
-/// Uses 64-bit GPRs and the stack for parameter passing
-pub const EF_LARCH_ABI_LP64S: u32 = 0x1;
-/// Uses 64-bit GPRs, 32-bit FPRs and the stack for parameter passing
-pub const EF_LARCH_ABI_LP64F: u32 = 0x2;
-/// Uses 64-bit GPRs, 64-bit FPRs and the stack for parameter passing
-pub const EF_LARCH_ABI_LP64D: u32 = 0x3;
-/// Uses 32-bit GPRs and the stack for parameter passing
-pub const EF_LARCH_ABI_ILP32S: u32 = 0x5;
-/// Uses 32-bit GPRs, 32-bit FPRs and the stack for parameter passing
-pub const EF_LARCH_ABI_ILP32F: u32 = 0x6;
-/// Uses 32-bit GPRs, 64-bit FPRs and the stack for parameter passing
-pub const EF_LARCH_ABI_ILP32D: u32 = 0x7;
+/// Additional properties of the base ABI type, including the FP calling
+/// convention.
+pub const EF_LARCH_ABI_MODIFIER_MASK: u32 = 0x7;
+/// Uses GPRs and the stack for parameter passing
+pub const EF_LARCH_ABI_SOFT_FLOAT: u32 = 0x1;
+/// Uses GPRs, 32-bit FPRs and the stack for parameter passing
+pub const EF_LARCH_ABI_SINGLE_FLOAT: u32 = 0x2;
+/// Uses GPRs, 64-bit FPRs and the stack for parameter passing
+pub const EF_LARCH_ABI_DOUBLE_FLOAT: u32 = 0x3;
+/// Uses relocation types directly writing to immediate slots
+pub const EF_LARCH_OBJABI_V1: u32 = 0x40;
 
 // LoongArch values `Rel*::r_type`.
 /// No reloc
@@ -6360,6 +6371,228 @@ pub const R_LARCH_SUB64: u32 = 56;
 pub const R_LARCH_GNU_VTINHERIT: u32 = 57;
 /// GNU C++ vtable member usage
 pub const R_LARCH_GNU_VTENTRY: u32 = 58;
+/// 18-bit PC-relative jump offset with two trailing zeros
+pub const R_LARCH_B16: u32 = 64;
+/// 23-bit PC-relative jump offset with two trailing zeros
+pub const R_LARCH_B21: u32 = 65;
+/// 28-bit PC-relative jump offset with two trailing zeros
+pub const R_LARCH_B26: u32 = 66;
+/// 12..=31 bits of 32/64-bit absolute address
+pub const R_LARCH_ABS_HI20: u32 = 67;
+/// 0..=11 bits of 32/64-bit absolute address
+pub const R_LARCH_ABS_LO12: u32 = 68;
+/// 32..=51 bits of 64-bit absolute address
+pub const R_LARCH_ABS64_LO20: u32 = 69;
+/// 52..=63 bits of 64-bit absolute address
+pub const R_LARCH_ABS64_HI12: u32 = 70;
+/// The signed 32-bit offset `offs` from `PC & 0xfffff000` to
+/// `(S + A + 0x800) & 0xfffff000`, with 12 trailing zeros removed.
+///
+/// We define the *PC relative anchor* for `S + A` as `PC + offs` (`offs`
+/// is sign-extended to VA bits).
+pub const R_LARCH_PCALA_HI20: u32 = 71;
+/// Same as R_LARCH_ABS_LO12.  0..=11 bits of the 32/64-bit offset from the
+/// [PC relative anchor][R_LARCH_PCALA_HI20].
+pub const R_LARCH_PCALA_LO12: u32 = 72;
+/// 32..=51 bits of the 64-bit offset from the
+/// [PC relative anchor][R_LARCH_PCALA_HI20].
+pub const R_LARCH_PCALA64_LO20: u32 = 73;
+/// 52..=63 bits of the 64-bit offset from the
+/// [PC relative anchor][R_LARCH_PCALA_HI20].
+pub const R_LARCH_PCALA64_HI12: u32 = 74;
+/// The signed 32-bit offset `offs` from `PC & 0xfffff000` to
+/// `(GP + G + 0x800) & 0xfffff000`, with 12 trailing zeros removed.
+///
+/// We define the *PC relative anchor* for the GOT entry at `GP + G` as
+/// `PC + offs` (`offs` is sign-extended to VA bits).
+pub const R_LARCH_GOT_PC_HI20: u32 = 75;
+/// 0..=11 bits of the 32/64-bit offset from the
+/// [PC relative anchor][R_LARCH_GOT_PC_HI20] to the GOT entry.
+pub const R_LARCH_GOT_PC_LO12: u32 = 76;
+/// 32..=51 bits of the 64-bit offset from the
+/// [PC relative anchor][R_LARCH_GOT_PC_HI20] to the GOT entry.
+pub const R_LARCH_GOT64_PC_LO20: u32 = 77;
+/// 52..=63 bits of the 64-bit offset from the
+/// [PC relative anchor][R_LARCH_GOT_PC_HI20] to the GOT entry.
+pub const R_LARCH_GOT64_PC_HI12: u32 = 78;
+/// 12..=31 bits of 32/64-bit GOT entry absolute address
+pub const R_LARCH_GOT_HI20: u32 = 79;
+/// 0..=11 bits of 32/64-bit GOT entry absolute address
+pub const R_LARCH_GOT_LO12: u32 = 80;
+/// 32..=51 bits of 64-bit GOT entry absolute address
+pub const R_LARCH_GOT64_LO20: u32 = 81;
+/// 52..=63 bits of 64-bit GOT entry absolute address
+pub const R_LARCH_GOT64_HI12: u32 = 82;
+/// 12..=31 bits of TLS LE 32/64-bit offset from thread pointer
+pub const R_LARCH_TLS_LE_HI20: u32 = 83;
+/// 0..=11 bits of TLS LE 32/64-bit offset from thread pointer
+pub const R_LARCH_TLS_LE_LO12: u32 = 84;
+/// 32..=51 bits of TLS LE 64-bit offset from thread pointer
+pub const R_LARCH_TLS_LE64_LO20: u32 = 85;
+/// 52..=63 bits of TLS LE 64-bit offset from thread pointer
+pub const R_LARCH_TLS_LE64_HI12: u32 = 86;
+/// The signed 32-bit offset `offs` from `PC & 0xfffff000` to
+/// `(GP + IE + 0x800) & 0xfffff000`, with 12 trailing zeros removed.
+///
+/// We define the *PC relative anchor* for the TLS IE GOT entry at
+/// `GP + IE` as `PC + offs` (`offs` is sign-extended to VA bits).
+pub const R_LARCH_TLS_IE_PC_HI20: u32 = 87;
+/// 0..=12 bits of the 32/64-bit offset from the
+/// [PC-relative anchor][R_LARCH_TLS_IE_PC_HI20] to the TLS IE GOT entry.
+pub const R_LARCH_TLS_IE_PC_LO12: u32 = 88;
+/// 32..=51 bits of the 64-bit offset from the
+/// [PC-relative anchor][R_LARCH_TLS_IE_PC_HI20] to the TLS IE GOT entry.
+pub const R_LARCH_TLS_IE64_PC_LO20: u32 = 89;
+/// 52..=63 bits of the 64-bit offset from the
+/// [PC-relative anchor][R_LARCH_TLS_IE_PC_HI20] to the TLS IE GOT entry.
+pub const R_LARCH_TLS_IE64_PC_HI12: u32 = 90;
+/// 12..=31 bits of TLS IE GOT entry 32/64-bit absolute address
+pub const R_LARCH_TLS_IE_HI20: u32 = 91;
+/// 0..=11 bits of TLS IE GOT entry 32/64-bit absolute address
+pub const R_LARCH_TLS_IE_LO12: u32 = 92;
+/// 32..=51 bits of TLS IE GOT entry 64-bit absolute address
+pub const R_LARCH_TLS_IE64_LO20: u32 = 93;
+/// 51..=63 bits of TLS IE GOT entry 64-bit absolute address
+pub const R_LARCH_TLS_IE64_HI12: u32 = 94;
+/// 12..=31 bits of the offset from `PC` to `GP + GD + 0x800`, where
+/// `GP + GD` is a TLS LD GOT entry
+pub const R_LARCH_TLS_LD_PC_HI20: u32 = 95;
+/// 12..=31 bits of TLS LD GOT entry 32/64-bit absolute address
+pub const R_LARCH_TLS_LD_HI20: u32 = 96;
+/// 12..=31 bits of the 32/64-bit PC-relative offset to the PC-relative
+/// anchor for the TLE GD GOT entry.
+pub const R_LARCH_TLS_GD_PC_HI20: u32 = 97;
+/// 12..=31 bits of TLS GD GOT entry 32/64-bit absolute address
+pub const R_LARCH_TLS_GD_HI20: u32 = 98;
+/// 32-bit PC relative
+pub const R_LARCH_32_PCREL: u32 = 99;
+/// Paired with a normal relocation at the same address to indicate the
+/// insturction can be relaxed
+pub const R_LARCH_RELAX: u32 = 100;
+
+// Xtensa values Rel*::r_type`.
+#[allow(missing_docs)]
+pub const R_XTENSA_NONE: u32 = 0;
+#[allow(missing_docs)]
+pub const R_XTENSA_32: u32 = 1;
+#[allow(missing_docs)]
+pub const R_XTENSA_RTLD: u32 = 2;
+#[allow(missing_docs)]
+pub const R_XTENSA_GLOB_DAT: u32 = 3;
+#[allow(missing_docs)]
+pub const R_XTENSA_JMP_SLOT: u32 = 4;
+#[allow(missing_docs)]
+pub const R_XTENSA_RELATIVE: u32 = 5;
+#[allow(missing_docs)]
+pub const R_XTENSA_PLT: u32 = 6;
+#[allow(missing_docs)]
+pub const R_XTENSA_OP0: u32 = 8;
+#[allow(missing_docs)]
+pub const R_XTENSA_OP1: u32 = 9;
+#[allow(missing_docs)]
+pub const R_XTENSA_OP2: u32 = 10;
+#[allow(missing_docs)]
+pub const R_XTENSA_ASM_EXPAND: u32 = 11;
+#[allow(missing_docs)]
+pub const R_XTENSA_ASM_SIMPLIFY: u32 = 12;
+#[allow(missing_docs)]
+pub const R_XTENSA_32_PCREL: u32 = 14;
+#[allow(missing_docs)]
+pub const R_XTENSA_GNU_VTINHERIT: u32 = 15;
+#[allow(missing_docs)]
+pub const R_XTENSA_GNU_VTENTRY: u32 = 16;
+#[allow(missing_docs)]
+pub const R_XTENSA_DIFF8: u32 = 17;
+#[allow(missing_docs)]
+pub const R_XTENSA_DIFF16: u32 = 18;
+#[allow(missing_docs)]
+pub const R_XTENSA_DIFF32: u32 = 19;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT0_OP: u32 = 20;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT1_OP: u32 = 21;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT2_OP: u32 = 22;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT3_OP: u32 = 23;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT4_OP: u32 = 24;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT5_OP: u32 = 25;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT6_OP: u32 = 26;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT7_OP: u32 = 27;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT8_OP: u32 = 28;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT9_OP: u32 = 29;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT10_OP: u32 = 30;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT11_OP: u32 = 31;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT12_OP: u32 = 32;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT13_OP: u32 = 33;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT14_OP: u32 = 34;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT0_ALT: u32 = 35;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT1_ALT: u32 = 36;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT2_ALT: u32 = 37;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT3_ALT: u32 = 38;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT4_ALT: u32 = 39;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT5_ALT: u32 = 40;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT6_ALT: u32 = 41;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT7_ALT: u32 = 42;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT8_ALT: u32 = 43;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT9_ALT: u32 = 44;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT10_ALT: u32 = 45;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT11_ALT: u32 = 46;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT12_ALT: u32 = 47;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT13_ALT: u32 = 48;
+#[allow(missing_docs)]
+pub const R_XTENSA_SLOT14_ALT: u32 = 49;
+#[allow(missing_docs)]
+pub const R_XTENSA_TLSDESC_FN: u32 = 50;
+#[allow(missing_docs)]
+pub const R_XTENSA_TLSDESC_ARG: u32 = 51;
+#[allow(missing_docs)]
+pub const R_XTENSA_TLS_DTPOFF: u32 = 52;
+#[allow(missing_docs)]
+pub const R_XTENSA_TLS_TPOFF: u32 = 53;
+#[allow(missing_docs)]
+pub const R_XTENSA_TLS_FUNC: u32 = 54;
+#[allow(missing_docs)]
+pub const R_XTENSA_TLS_ARG: u32 = 55;
+#[allow(missing_docs)]
+pub const R_XTENSA_TLS_CALL: u32 = 56;
+#[allow(missing_docs)]
+pub const R_XTENSA_PDIFF8: u32 = 57;
+#[allow(missing_docs)]
+pub const R_XTENSA_PDIFF16: u32 = 58;
+#[allow(missing_docs)]
+pub const R_XTENSA_PDIFF32: u32 = 59;
+#[allow(missing_docs)]
+pub const R_XTENSA_NDIFF8: u32 = 60;
+#[allow(missing_docs)]
+pub const R_XTENSA_NDIFF16: u32 = 61;
+#[allow(missing_docs)]
+pub const R_XTENSA_NDIFF32: u32 = 62;
 
 unsafe_impl_endian_pod!(
     FileHeader32,

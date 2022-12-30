@@ -176,6 +176,7 @@ where
             // We only support the 64-bit variant s390x here.
             (elf::EM_S390, true) => Architecture::S390x,
             (elf::EM_SPARCV9, true) => Architecture::Sparc64,
+            (elf::EM_XTENSA, false) => Architecture::Xtensa,
             _ => Architecture::Unknown,
         }
     }
@@ -264,6 +265,9 @@ where
     }
 
     fn symbol_table(&'file self) -> Option<ElfSymbolTable<'data, 'file, Elf, R>> {
+        if self.symbols.is_empty() {
+            return None;
+        }
         Some(ElfSymbolTable {
             endian: self.endian,
             symbols: &self.symbols,
@@ -279,6 +283,9 @@ where
     }
 
     fn dynamic_symbol_table(&'file self) -> Option<ElfSymbolTable<'data, 'file, Elf, R>> {
+        if self.dynamic_symbols.is_empty() {
+            return None;
+        }
         Some(ElfSymbolTable {
             endian: self.endian,
             symbols: &self.dynamic_symbols,
@@ -419,6 +426,8 @@ where
 
     fn flags(&self) -> FileFlags {
         FileFlags::Elf {
+            os_abi: self.header.e_ident().os_abi,
+            abi_version: self.header.e_ident().abi_version,
             e_flags: self.header.e_flags(self.endian),
         }
     }

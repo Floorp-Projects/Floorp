@@ -12,12 +12,13 @@
 [package]
 edition = "2018"
 name = "object"
-version = "0.28.4"
+version = "0.30.0"
 exclude = [
     "/.github",
     "/testfiles",
 ]
 description = "A unified interface for reading and writing object file formats."
+readme = "README.md"
 keywords = [
     "object",
     "elf",
@@ -27,6 +28,7 @@ keywords = [
 ]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/gimli-rs/object"
+resolver = "2"
 
 [package.metadata.docs.rs]
 features = ["doc"]
@@ -55,7 +57,7 @@ version = "1"
 optional = true
 
 [dependencies.hashbrown]
-version = "0.11"
+version = "0.13.1"
 features = ["ahash"]
 optional = true
 default-features = false
@@ -124,6 +126,12 @@ rustc-dep-of-std = [
 ]
 std = ["memchr/std"]
 unaligned = []
+unstable = []
+unstable-all = [
+    "all",
+    "unstable",
+    "xcoff",
+]
 wasm = ["wasmparser"]
 write = [
     "write_std",
@@ -143,3 +151,4 @@ write_std = [
     "indexmap/std",
     "crc32fast/std",
 ]
+xcoff = []

@@ -77,6 +77,11 @@ impl<'data, E: Endian> LoadCommandData<'data, E> {
             .read_error("Invalid Mach-O command size")
     }
 
+    /// Raw bytes of this LoadCommand structure.
+    pub fn raw_data(&self) -> &'data [u8] {
+        self.data.0
+    }
+
     /// Parse a load command string value.
     ///
     /// Strings used by load commands are specified by offsets that are

@@ -2,6 +2,93 @@
 
 --------------------------------------------------------------------------------
 
+## 0.30.0
+
+Released 2022/11/22.
+
+### Breaking changes
+
+* The minimum supported rust version for the `read` feature has changed to 1.52.0.
+  [#458](https://github.com/gimli-rs/object/pull/458)
+
+* The minimum supported rust version for the `write` feature has changed to 1.61.0.
+
+* Fixed endian handling in `read::elf::SymbolTable::shndx`.
+  [#458](https://github.com/gimli-rs/object/pull/458)
+
+* Fixed endian handling in `read::pe::ResourceName`.
+  [#458](https://github.com/gimli-rs/object/pull/458)
+
+* Changed definitions for LoongArch ELF header flags.
+  [#483](https://github.com/gimli-rs/object/pull/483)
+
+### Changed
+
+* Fixed parsing of multiple debug directory entries in `read::pe::PeFile::pdb_info`.
+  [#451](https://github.com/gimli-rs/object/pull/451)
+
+* Changed the section name used when writing COFF stub symbols.
+  [#475](https://github.com/gimli-rs/object/pull/475)
+
+### Added
+
+* Added `read::pe::DataDirectories::delay_load_import_table`.
+  [#448](https://github.com/gimli-rs/object/pull/448)
+
+* Added `read::macho::LoadCommandData::raw_data`.
+  [#449](https://github.com/gimli-rs/object/pull/449)
+
+* Added ELF relocations for LoongArch ps ABI v2.
+  [#450](https://github.com/gimli-rs/object/pull/450)
+
+* Added PowerPC support for Mach-O.
+  [#460](https://github.com/gimli-rs/object/pull/460)
+
+* Added support for reading the AIX big archive format.
+  [#462](https://github.com/gimli-rs/object/pull/462)
+  [#467](https://github.com/gimli-rs/object/pull/467)
+  [#473](https://github.com/gimli-rs/object/pull/473)
+
+* Added support for `RelocationEncoding::AArch64Call` when writing Mach-O files.
+  [#465](https://github.com/gimli-rs/object/pull/465)
+
+* Added support for `RelocationKind::Relative` when writing RISC-V ELF files.
+  [#470](https://github.com/gimli-rs/object/pull/470)
+
+* Added Xtensa architecture support for ELF.
+  [#481](https://github.com/gimli-rs/object/pull/481)
+
+* Added `read::pe::ResourceName::raw_data`.
+  [#487](https://github.com/gimli-rs/object/pull/487)
+
+--------------------------------------------------------------------------------
+
+## 0.29.0
+
+Released 2022/06/22.
+
+### Breaking changes
+
+* The `write` feature now has a minimum supported rust version of 1.56.1.
+  [#444](https://github.com/gimli-rs/object/pull/444)
+
+* Added `os_abi` and `abi_version` fields to `FileFlags::Elf`.
+  [#438](https://github.com/gimli-rs/object/pull/438)
+  [#441](https://github.com/gimli-rs/object/pull/441)
+
+### Changed
+
+* Fixed handling of empty symbol tables in `read::elf::ElfFile::symbol_table` and
+  `read::elf::ElfFile::dynamic_symbol_table`.
+  [#443](https://github.com/gimli-rs/object/pull/443)
+
+### Added
+
+* Added more `ELF_OSABI_*` constants.
+  [#439](https://github.com/gimli-rs/object/pull/439)
+
+--------------------------------------------------------------------------------
+
 ## 0.28.4
 
 Released 2022/05/09.

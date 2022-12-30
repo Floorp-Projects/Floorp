@@ -117,8 +117,7 @@ impl<'a> Object<'a> {
         }
         let stub_size = self.architecture.address_size().unwrap().bytes();
 
-        let mut name = b".rdata$.refptr.".to_vec();
-        name.extend_from_slice(&self.symbols[symbol_id.0].name);
+        let name = b".rdata$.refptr".to_vec();
         let section_id = self.add_section(Vec::new(), name, SectionKind::ReadOnlyData);
         let section = self.section_mut(section_id);
         section.set_data(vec![0; stub_size as usize], u64::from(stub_size));

@@ -34,7 +34,7 @@ where
     type Item = ElfComdat<'data, 'file, Elf, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some((_index, section)) = self.iter.next() {
+        for (_index, section) in self.iter.by_ref() {
             if let Some(comdat) = ElfComdat::parse(self.file, section) {
                 return Some(comdat);
             }

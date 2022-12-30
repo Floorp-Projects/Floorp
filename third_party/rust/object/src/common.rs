@@ -24,6 +24,7 @@ pub enum Architecture {
     S390x,
     Sparc64,
     Wasm32,
+    Xtensa,
 }
 
 impl Architecture {
@@ -52,6 +53,7 @@ impl Architecture {
             Architecture::S390x => Some(AddressSize::U64),
             Architecture::Sparc64 => Some(AddressSize::U64),
             Architecture::Wasm32 => Some(AddressSize::U32),
+            Architecture::Xtensa => Some(AddressSize::U32),
         }
     }
 }
@@ -88,6 +90,7 @@ pub enum BinaryFormat {
     MachO,
     Pe,
     Wasm,
+    Xcoff,
 }
 
 /// The kind of a section.
@@ -305,6 +308,8 @@ pub enum RelocationKind {
     },
     /// Some other COFF relocation. The value is dependent on the architecture.
     Coff(u16),
+    /// Some other XCOFF relocation.
+    Xcoff(u8),
 }
 
 /// Information about how the result of the relocation operation is encoded in the place.
@@ -343,6 +348,11 @@ pub enum RelocationEncoding {
     ///
     /// The `RelocationKind` must be PC relative.
     AArch64Call,
+
+    /// LoongArch branch offset with two trailing zeros.
+    ///
+    /// The `RelocationKind` must be PC relative.
+    LoongArchBranch,
 }
 
 /// File flags that are specific to each file format.
@@ -353,6 +363,10 @@ pub enum FileFlags {
     None,
     /// ELF file flags.
     Elf {
+        /// `os_abi` field in the ELF file header.
+        os_abi: u8,
+        /// `abi_version` field in the ELF file header.
+        abi_version: u8,
         /// `e_flags` field in the ELF file header.
         e_flags: u32,
     },
@@ -365,6 +379,11 @@ pub enum FileFlags {
     Coff {
         /// `Characteristics` field in the COFF file header.
         characteristics: u16,
+    },
+    /// XCOFF file flags.
+    Xcoff {
+        /// `f_flags` field in the XCOFF file header.
+        f_flags: u16,
     },
 }
 
@@ -415,6 +434,11 @@ pub enum SectionFlags {
     Coff {
         /// `Characteristics` field in the section header.
         characteristics: u32,
+    },
+    /// XCOFF section flags.
+    Xcoff {
+        /// `s_flags` field in the section header.
+        s_flags: u32,
     },
 }
 

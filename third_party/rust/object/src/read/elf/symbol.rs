@@ -4,7 +4,6 @@ use core::fmt::Debug;
 use core::slice;
 use core::str;
 
-use crate::elf;
 use crate::endian::{self, Endianness};
 use crate::pod::Pod;
 use crate::read::util::StringTable;
@@ -12,6 +11,7 @@ use crate::read::{
     self, ObjectSymbol, ObjectSymbolTable, ReadError, ReadRef, SectionIndex, SymbolFlags,
     SymbolIndex, SymbolKind, SymbolMap, SymbolMapEntry, SymbolScope, SymbolSection,
 };
+use crate::{elf, U32};
 
 use super::{FileHeader, SectionHeader, SectionTable};
 
@@ -28,7 +28,7 @@ where
     shndx_section: SectionIndex,
     symbols: &'data [Elf::Sym],
     strings: StringTable<'data, R>,
-    shndx: &'data [u32],
+    shndx: &'data [U32<Elf::Endian>],
 }
 
 impl<'data, Elf: FileHeader, R: ReadRef<'data>> Default for SymbolTable<'data, Elf, R> {
@@ -145,8 +145,8 @@ impl<'data, Elf: FileHeader, R: ReadRef<'data>> SymbolTable<'data, Elf, R> {
 
     /// Return the extended section index for the given symbol if present.
     #[inline]
-    pub fn shndx(&self, index: usize) -> Option<u32> {
-        self.shndx.get(index).copied()
+    pub fn shndx(&self, endian: Elf::Endian, index: usize) -> Option<u32> {
+        self.shndx.get(index).map(|x| x.get(endian))
     }
 
     /// Return the section index for the given symbol.
@@ -161,7 +161,7 @@ impl<'data, Elf: FileHeader, R: ReadRef<'data>> SymbolTable<'data, Elf, R> {
         match symbol.st_shndx(endian) {
             elf::SHN_UNDEF => Ok(None),
             elf::SHN_XINDEX => self
-                .shndx(index)
+                .shndx(endian, index)
                 .read_error("Missing ELF symbol extended index")
                 .map(|index| Some(SectionIndex(index as usize))),
             shndx if shndx < elf::SHN_LORESERVE => Ok(Some(SectionIndex(shndx.into()))),
@@ -369,7 +369,7 @@ impl<'data, 'file, Elf: FileHeader, R: ReadRef<'data>> ObjectSymbol<'data>
                 }
             }
             elf::SHN_COMMON => SymbolSection::Common,
-            elf::SHN_XINDEX => match self.symbols.shndx(self.index.0) {
+            elf::SHN_XINDEX => match self.symbols.shndx(self.endian, self.index.0) {
                 Some(index) => SymbolSection::Section(SectionIndex(index as usize)),
                 None => SymbolSection::Unknown,
             },

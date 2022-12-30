@@ -175,11 +175,17 @@ impl<'a> Object<'a> {
 
     pub(crate) fn macho_fixup_relocation(&mut self, mut relocation: &mut Relocation) -> i64 {
         let constant = match relocation.kind {
+            // AArch64Call relocations have special handling for the addend, so don't adjust it
+            RelocationKind::Relative if relocation.encoding == RelocationEncoding::AArch64Call => 0,
             RelocationKind::Relative
             | RelocationKind::GotRelative
             | RelocationKind::PltRelative => relocation.addend + 4,
             _ => relocation.addend,
         };
+        // Aarch64 relocs of these sizes act as if they are double-word length
+        if self.architecture == Architecture::Aarch64 && matches!(relocation.size, 12 | 21 | 26) {
+            relocation.size = 32;
+        }
         relocation.addend -= constant;
         constant
     }
@@ -326,6 +332,8 @@ impl<'a> Object<'a> {
             Architecture::Aarch64 => (macho::CPU_TYPE_ARM64, macho::CPU_SUBTYPE_ARM64_ALL),
             Architecture::I386 => (macho::CPU_TYPE_X86, macho::CPU_SUBTYPE_I386_ALL),
             Architecture::X86_64 => (macho::CPU_TYPE_X86_64, macho::CPU_SUBTYPE_X86_64_ALL),
+            Architecture::PowerPc => (macho::CPU_TYPE_POWERPC, macho::CPU_SUBTYPE_POWERPC_ALL),
+            Architecture::PowerPc64 => (macho::CPU_TYPE_POWERPC64, macho::CPU_SUBTYPE_POWERPC_ALL),
             _ => {
                 return Err(Error(format!(
                     "unimplemented architecture {:?}",
@@ -532,7 +540,7 @@ impl<'a> Object<'a> {
                 debug_assert_eq!(section_offsets[index].reloc_offset, buffer.len());
                 for reloc in &section.relocations {
                     let r_extern;
-                    let r_symbolnum;
+                    let mut r_symbolnum;
                     let symbol = &self.symbols[reloc.symbol.0];
                     if symbol.kind == SymbolKind::Section {
                         r_symbolnum = section_offsets[symbol.section.id().unwrap().0].index as u32;
@@ -587,6 +595,26 @@ impl<'a> Object<'a> {
                         Architecture::Aarch64 => match (reloc.kind, reloc.encoding, reloc.addend) {
                             (RelocationKind::Absolute, RelocationEncoding::Generic, 0) => {
                                 (false, macho::ARM64_RELOC_UNSIGNED)
+                            }
+                            (RelocationKind::Relative, RelocationEncoding::AArch64Call, 0) => {
+                                (true, macho::ARM64_RELOC_BRANCH26)
+                            }
+                            // Non-zero addend, so we have to encode the addend separately
+                            (RelocationKind::Relative, RelocationEncoding::AArch64Call, value) => {
+                                // first emit the BR26 relocation
+                                let reloc_info = macho::RelocationInfo {
+                                    r_address: reloc.offset as u32,
+                                    r_symbolnum,
+                                    r_pcrel: true,
+                                    r_length,
+                                    r_extern: true,
+                                    r_type: macho::ARM64_RELOC_BRANCH26,
+                                };
+                                buffer.write(&reloc_info.relocation(endian));
+
+                                // set up a separate relocation for the addend
+                                r_symbolnum = value as u32;
+                                (false, macho::ARM64_RELOC_ADDEND)
                             }
                             (
                                 RelocationKind::MachO { value, relative },
