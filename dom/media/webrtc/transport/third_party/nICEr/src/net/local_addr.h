@@ -40,12 +40,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct nr_interface_ {
   int type;
-#define NR_INTERFACE_TYPE_UNKNOWN 0x0
-#define NR_INTERFACE_TYPE_WIRED   0x1
-#define NR_INTERFACE_TYPE_WIFI    0x2
-#define NR_INTERFACE_TYPE_MOBILE  0x4
-#define NR_INTERFACE_TYPE_VPN     0x8
-#define NR_INTERFACE_TYPE_TEREDO  0x16
+#define NR_INTERFACE_TYPE_UNKNOWN 0
+#define NR_INTERFACE_TYPE_WIRED   1
+#define NR_INTERFACE_TYPE_WIFI    1 << 1
+#define NR_INTERFACE_TYPE_MOBILE  1 << 2
+#define NR_INTERFACE_TYPE_VPN     1 << 3
+#define NR_INTERFACE_TYPE_TEREDO  1 << 4
   int estimated_speed; /* Speed in kbps */
 } nr_interface;
 
