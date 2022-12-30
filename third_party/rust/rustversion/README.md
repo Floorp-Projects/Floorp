@@ -4,7 +4,7 @@ Compiler version cfg
 [<img alt="github" src="https://img.shields.io/badge/github-dtolnay/rustversion-8da0cb?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/dtolnay/rustversion)
 [<img alt="crates.io" src="https://img.shields.io/crates/v/rustversion.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/rustversion)
 [<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-rustversion-66c2a5?style=for-the-badge&labelColor=555555&logo=docs.rs" height="20">](https://docs.rs/rustversion)
-[<img alt="build status" src="https://img.shields.io/github/workflow/status/dtolnay/rustversion/CI/master?style=for-the-badge" height="20">](https://github.com/dtolnay/rustversion/actions?query=branch%3Amaster)
+[<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/dtolnay/rustversion/ci.yml?branch=master&style=for-the-badge" height="20">](https://github.com/dtolnay/rustversion/actions?query=branch%3Amaster)
 
 This crate provides macros for conditional compilation according to rustc
 compiler version, analogous to [`#[cfg(...)]`][cfg] and

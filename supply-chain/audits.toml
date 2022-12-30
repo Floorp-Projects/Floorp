@@ -1634,6 +1634,11 @@ I don't think logic bugs in the version parsing etc can realistically introduce
 a security vulnerability.
 """
 
+[[audits.rustversion]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.0.9 -> 1.0.11"
+
 [[audits.ryu]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

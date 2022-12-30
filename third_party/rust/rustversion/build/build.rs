@@ -13,6 +13,8 @@ use std::path::Path;
 use std::process::{self, Command};
 
 fn main() {
+    println!("cargo:rerun-if-changed=build/build.rs");
+
     let rustc = env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc"));
 
     let mut is_clippy_driver = false;
