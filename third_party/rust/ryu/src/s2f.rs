@@ -220,7 +220,7 @@ pub fn s2f(buffer: &[u8]) -> Result<f32, Error> {
         // for overflow here.
         ieee_e2 += 1;
     }
-    let ieee = ((((signed_m as u32) << f2s::FLOAT_EXPONENT_BITS) | ieee_e2 as u32)
+    let ieee = ((((signed_m as u32) << f2s::FLOAT_EXPONENT_BITS) | ieee_e2)
         << f2s::FLOAT_MANTISSA_BITS)
         | ieee_m2;
     Ok(f32::from_bits(ieee))

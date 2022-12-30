@@ -43,7 +43,7 @@ pub unsafe fn write_mantissa_long(mut output: u64, mut result: *mut u8) {
 #[cfg_attr(feature = "no-panic", inline)]
 pub unsafe fn write_mantissa(mut output: u32, mut result: *mut u8) {
     while output >= 10_000 {
-        let c = (output - 10_000 * (output / 10_000)) as u32;
+        let c = output - 10_000 * (output / 10_000);
         output /= 10_000;
         let c0 = (c % 100) << 1;
         let c1 = (c / 100) << 1;
@@ -60,7 +60,7 @@ pub unsafe fn write_mantissa(mut output: u32, mut result: *mut u8) {
         result = result.offset(-4);
     }
     if output >= 100 {
-        let c = ((output % 100) << 1) as u32;
+        let c = (output % 100) << 1;
         output /= 100;
         ptr::copy_nonoverlapping(
             DIGIT_TABLE.as_ptr().offset(c as isize),
@@ -70,7 +70,7 @@ pub unsafe fn write_mantissa(mut output: u32, mut result: *mut u8) {
         result = result.offset(-2);
     }
     if output >= 10 {
-        let c = (output << 1) as u32;
+        let c = output << 1;
         ptr::copy_nonoverlapping(
             DIGIT_TABLE.as_ptr().offset(c as isize),
             result.offset(-2),
