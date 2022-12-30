@@ -18,6 +18,7 @@ import argparse
 import logging
 import os
 import sys
+import tempfile
 
 import redo
 import requests
@@ -76,108 +77,7 @@ def main():
             log.info("Retrying...")
         return False
 
-    zip_path = args.archive
-
-    if args.archive.endswith(".tar.zst"):
-        import concurrent.futures
-        import gzip
-        import tarfile
-        import tempfile
-
-        import zstandard
-        from mozpack.files import File
-        from mozpack.mozjar import Deflater, JarWriter
-
-        def iter_files_from_tar(reader):
-            ctx = zstandard.ZstdDecompressor()
-            uncompressed = ctx.stream_reader(reader)
-            with tarfile.open(
-                mode="r|", fileobj=uncompressed, bufsize=1024 * 1024
-            ) as tar:
-                while True:
-                    info = tar.next()
-                    if info is None:
-                        break
-                    log.info(info.name)
-                    data = tar.extractfile(info).read()
-                    yield (info.name, data)
-
-        def prepare_from(archive, tmpdir):
-            if archive.startswith("http"):
-                resp = requests.get(archive, allow_redirects=True, stream=True)
-                resp.raise_for_status()
-                reader = resp.raw
-                # Work around taskcluster generic-worker possibly gzipping the tar.zst.
-                if resp.headers.get("Content-Encoding") == "gzip":
-                    reader = gzip.GzipFile(fileobj=reader)
-            else:
-                reader = open(archive, "rb")
-
-            def handle_file(data):
-                name, data = data
-                path = os.path.join(tmpdir, name.lstrip("/"))
-                if name.endswith(".dbg"):
-                    os.makedirs(os.path.dirname(path), exist_ok=True)
-                    with open(path, "wb") as fh:
-                        with gzip.GzipFile(fileobj=fh, mode="wb", compresslevel=5) as c:
-                            c.write(data)
-                    return (name + ".gz", File(path))
-                elif name.endswith(".dSYM.tar"):
-                    import bz2
-
-                    os.makedirs(os.path.dirname(path), exist_ok=True)
-                    with open(path, "wb") as fh:
-                        fh.write(bz2.compress(data))
-                    return (name + ".bz2", File(path))
-                elif name.endswith((".pdb", ".exe", ".dll")):
-                    import subprocess
-
-                    makecab = os.environ.get("MAKECAB", "makecab")
-                    os.makedirs(os.path.dirname(path), exist_ok=True)
-                    with open(path, "wb") as fh:
-                        fh.write(data)
-
-                    subprocess.check_call(
-                        [makecab, "-D", "CompressionType=MSZIP", path, path + "_"],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.STDOUT,
-                    )
-
-                    return (name[:-1] + "_", File(path + "_"))
-                else:
-                    deflater = Deflater(compress_level=5)
-                    deflater.write(data)
-                    return (name, deflater)
-
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=os.cpu_count()
-            ) as executor:
-                yield from executor.map(handle_file, iter_files_from_tar(reader))
-
-            reader.close()
-
-        tmpdir = tempfile.TemporaryDirectory()
-        zip_path = os.path.join(tmpdir.name, "symbols.zip")
-        log.info(
-            'Preparing symbol archive "{0}" from "{1}"'.format(zip_path, args.archive)
-        )
-        is_existing = False
-        try:
-            for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
-                with JarWriter(zip_path) as jar:
-                    try:
-                        for name, data in prepare_from(args.archive, tmpdir.name):
-                            jar.add(name, data, compress=not isinstance(data, File))
-                        is_existing = True
-                        break
-                    except requests.exceptions.RequestException as e:
-                        log.error("Error: {0}".format(e))
-                    log.info("Retrying...")
-        except Exception:
-            os.remove(zip_path)
-            raise
-
-    elif args.archive.startswith("http"):
+    if args.archive.startswith("http"):
         is_existing = check_file_exists(args.archive)
     else:
         is_existing = os.path.isfile(args.archive)
@@ -190,6 +90,127 @@ def main():
             log.error('Error: archive file "{0}" does not exist!'.format(args.archive))
             return 1
 
+    if args.archive.endswith(".tar.zst"):
+        tmpdir = tempfile.TemporaryDirectory()
+        zip_path = convert_zst_archive(args.archive, tmpdir)
+    else:
+        zip_path = args.archive
+
+    return upload_symbols(zip_path)
+
+
+def convert_zst_archive(zst_archive, tmpdir):
+    """
+    Convert a .tar.zst file to a zip file
+
+    Our build tasks output .tar.zst files, but the tecken server only allows
+    .zip files to be uploaded.
+
+    :param zst_archive: path or URL to a .tar.zst source file
+    :param tmpdir: TemporaryDirectory to store the output zip file in
+    :returns: path to output zip file
+    """
+    import concurrent.futures
+    import gzip
+    import tarfile
+
+    import zstandard
+    from mozpack.files import File
+    from mozpack.mozjar import Deflater, JarWriter
+
+    def iter_files_from_tar(reader):
+        ctx = zstandard.ZstdDecompressor()
+        uncompressed = ctx.stream_reader(reader)
+        with tarfile.open(mode="r|", fileobj=uncompressed, bufsize=1024 * 1024) as tar:
+            while True:
+                info = tar.next()
+                if info is None:
+                    break
+                log.info(info.name)
+                data = tar.extractfile(info).read()
+                yield (info.name, data)
+
+    def prepare_from(archive, tmpdir):
+        if archive.startswith("http"):
+            resp = requests.get(archive, allow_redirects=True, stream=True)
+            resp.raise_for_status()
+            reader = resp.raw
+            # Work around taskcluster generic-worker possibly gzipping the tar.zst.
+            if resp.headers.get("Content-Encoding") == "gzip":
+                reader = gzip.GzipFile(fileobj=reader)
+        else:
+            reader = open(archive, "rb")
+
+        def handle_file(data):
+            name, data = data
+            path = os.path.join(tmpdir, name.lstrip("/"))
+            if name.endswith(".dbg"):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "wb") as fh:
+                    with gzip.GzipFile(fileobj=fh, mode="wb", compresslevel=5) as c:
+                        c.write(data)
+                return (name + ".gz", File(path))
+            elif name.endswith(".dSYM.tar"):
+                import bz2
+
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "wb") as fh:
+                    fh.write(bz2.compress(data))
+                return (name + ".bz2", File(path))
+            elif name.endswith((".pdb", ".exe", ".dll")):
+                import subprocess
+
+                makecab = os.environ.get("MAKECAB", "makecab")
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "wb") as fh:
+                    fh.write(data)
+
+                subprocess.check_call(
+                    [makecab, "-D", "CompressionType=MSZIP", path, path + "_"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.STDOUT,
+                )
+
+                return (name[:-1] + "_", File(path + "_"))
+            else:
+                deflater = Deflater(compress_level=5)
+                deflater.write(data)
+                return (name, deflater)
+
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=os.cpu_count()
+        ) as executor:
+            yield from executor.map(handle_file, iter_files_from_tar(reader))
+
+        reader.close()
+
+    zip_path = os.path.join(tmpdir.name, "symbols.zip")
+    log.info('Preparing symbol archive "{0}" from "{1}"'.format(zip_path, zst_archive))
+    try:
+        for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
+            with JarWriter(zip_path) as jar:
+                try:
+                    for name, data in prepare_from(zst_archive, tmpdir.name):
+                        jar.add(name, data, compress=not isinstance(data, File))
+                    break
+                except requests.exceptions.RequestException as e:
+                    log.error("Error: {0}".format(e))
+                log.info("Retrying...")
+    except Exception:
+        os.remove(zip_path)
+        raise
+
+    return zip_path
+
+
+def upload_symbols(zip_path):
+    """
+    Upload symbols to the tecken server
+
+    :param zip_path: path to the zip file to upload
+    :returns: 0 indicates the upload was successful, non-zero indicates an
+              error that should be used for the script's exit code
+    """
     secret_name = os.environ.get("SYMBOL_SECRET")
     if secret_name is not None:
         auth_token = get_taskcluster_secret(secret_name)
