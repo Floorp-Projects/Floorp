@@ -5,7 +5,7 @@ use proc_macro::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 pub(crate) fn parse_input(tokens: Iter) -> Result<Input, Error> {
     let attrs = parse_attributes(tokens)?;
-    let vis = parse_visibility(tokens)?;
+    let vis = parse_visibility(tokens);
     let kw = parse_ident(tokens)?;
     if kw.to_string() == "use" {
         parse_export(attrs, vis, tokens).map(Input::Export)
@@ -136,16 +136,16 @@ fn parse_group(tokens: Iter, delimiter: Delimiter) -> Result<IterImpl, Error> {
     }
 }
 
-fn parse_visibility(tokens: Iter) -> Result<Visibility, Error> {
+fn parse_visibility(tokens: Iter) -> Visibility {
     if let Some(TokenTree::Ident(ident)) = tokens.peek() {
         if ident.to_string() == "pub" {
             match tokens.next().unwrap() {
-                TokenTree::Ident(vis) => return Ok(Some(vis)),
+                TokenTree::Ident(vis) => return Some(vis),
                 _ => unreachable!(),
             }
         }
     }
-    Ok(None)
+    None
 }
 
 fn parse_attributes(tokens: Iter) -> Result<TokenStream, Error> {
