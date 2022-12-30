@@ -40,7 +40,7 @@ void PrintLauncherError(const LauncherResult<T>& aResult,
 
 #define VERIFY_FUNCTION_RESOLVED(mod, exports, name)            \
   do {                                                          \
-    if (reinterpret_cast<FARPROC>(exports.m##name) !=           \
+    if (reinterpret_cast<FARPROC>(exports->m##name) !=          \
         ::GetProcAddress(mod, #name)) {                         \
       printf(                                                   \
           "TEST-FAILED | TestCrossProcessWin | "                \
@@ -50,30 +50,29 @@ void PrintLauncherError(const LauncherResult<T>& aResult,
   } while (0)
 
 static bool VerifySharedSection(SharedSection& aSharedSection) {
-  LauncherResult<SharedSection::Layout*> resultView = aSharedSection.GetView();
-  if (resultView.isErr()) {
-    PrintLauncherError(resultView, "Failed to map a shared section");
+  Kernel32ExportsSolver* k32Exports = aSharedSection.GetKernel32Exports();
+  if (!k32Exports) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | Failed to map a shared section\n");
     return false;
   }
 
-  SharedSection::Layout* view = resultView.unwrap();
-
   // Use a local variable of RTL_RUN_ONCE to resolve Kernel32Exports every time
   RTL_RUN_ONCE sRunEveryTime = RTL_RUN_ONCE_INIT;
-  view->mK32Exports.Resolve(sRunEveryTime);
+  k32Exports->Resolve(sRunEveryTime);
 
   HMODULE k32mod = ::GetModuleHandleW(L"kernel32.dll");
-  VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, FlushInstructionCache);
-  VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, GetModuleHandleW);
-  VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, GetSystemInfo);
-  VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, VirtualProtect);
+  VERIFY_FUNCTION_RESOLVED(k32mod, k32Exports, FlushInstructionCache);
+  VERIFY_FUNCTION_RESOLVED(k32mod, k32Exports, GetModuleHandleW);
+  VERIFY_FUNCTION_RESOLVED(k32mod, k32Exports, GetSystemInfo);
+  VERIFY_FUNCTION_RESOLVED(k32mod, k32Exports, VirtualProtect);
 
-  const wchar_t* modulesArray = view->mModulePathArray;
-  bool matched = memcmp(modulesArray, kExpectedDependentModules,
+  Span<const wchar_t> modulesArray = aSharedSection.GetDependentModules();
+  bool matched = memcmp(modulesArray.data(), kExpectedDependentModules,
                         sizeof(kExpectedDependentModules)) == 0;
   if (!matched) {
     // Print actual strings on error
-    for (const wchar_t* p = modulesArray; *p;) {
+    for (const wchar_t* p = modulesArray.data(); *p;) {
       printf("%p: %S\n", p, p);
       while (*p) {
         ++p;
