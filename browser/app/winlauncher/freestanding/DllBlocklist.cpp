@@ -405,30 +405,40 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
   nt::GetLeafName(&leafOnStack, sectionFileName);
 
   bool isDependent = false;
-  Kernel32ExportsSolver* k32Exports = gSharedSection.GetKernel32Exports();
-  // Small optimization: Since loading a dependent module does not involve
-  // LdrLoadDll, we know isDependent is false if we hold a top frame.
-  if (k32Exports && !ModuleLoadFrame::ExistsTopFrame()) {
-    isDependent = IsDependentModule(leafOnStack, *k32Exports);
-  }
-
+  const UNICODE_STRING k32Name = MOZ_LITERAL_UNICODE_STRING(L"kernel32.dll");
+  Kernel32ExportsSolver* k32Exports = nullptr;
   BlockAction blockAction;
-  if (isDependent) {
-    // Add an NT dv\path to the shared section so that a sandbox process can
-    // use it to bypass CIG.  In a sandbox process, this addition fails
-    // because we cannot map the section to a writable region, but it's
-    // ignorable because the paths have been added by the browser process.
-    Unused << gSharedSection.AddDependentModule(sectionFileName);
-
-    // For a dependent module, try redirection instead of blocking it.
-    // If we fail, we reluctantly allow the module for free.
-    mozilla::nt::PEHeaders headers(*aBaseAddress);
-    blockAction = RedirectToNoOpEntryPoint(headers, *k32Exports)
-                      ? BlockAction::NoOpEntryPoint
-                      : BlockAction::Allow;
+  // Trying to get the Kernel32Exports while loading kernel32.dll causes Firefox
+  // to crash. (but only during a profile-guided optimization run, oddly) We
+  // know we're never going to block kernel32.dll, so skip all this
+  if (::RtlCompareUnicodeString(&k32Name, &leafOnStack, TRUE) == 0) {
+    blockAction = BlockAction::Allow;
   } else {
-    // Check blocklist
-    blockAction = DetermineBlockAction(leafOnStack, *aBaseAddress, k32Exports);
+    k32Exports = gSharedSection.GetKernel32Exports();
+    // Small optimization: Since loading a dependent module does not involve
+    // LdrLoadDll, we know isDependent is false if we hold a top frame.
+    if (k32Exports && !ModuleLoadFrame::ExistsTopFrame()) {
+      isDependent = IsDependentModule(leafOnStack, *k32Exports);
+    }
+
+    if (isDependent) {
+      // Add an NT dv\path to the shared section so that a sandbox process can
+      // use it to bypass CIG.  In a sandbox process, this addition fails
+      // because we cannot map the section to a writable region, but it's
+      // ignorable because the paths have been added by the browser process.
+      Unused << gSharedSection.AddDependentModule(sectionFileName);
+
+      // For a dependent module, try redirection instead of blocking it.
+      // If we fail, we reluctantly allow the module for free.
+      mozilla::nt::PEHeaders headers(*aBaseAddress);
+      blockAction = RedirectToNoOpEntryPoint(headers, *k32Exports)
+                        ? BlockAction::NoOpEntryPoint
+                        : BlockAction::Allow;
+    } else {
+      // Check blocklist
+      blockAction =
+          DetermineBlockAction(leafOnStack, *aBaseAddress, k32Exports);
+    }
   }
 
   ModuleLoadInfo::Status loadStatus = ModuleLoadInfo::Status::Blocked;
