@@ -2421,9 +2421,20 @@ pub const SND_CNT: usize = SND_MAX as usize + 1;
 pub const UINPUT_VERSION: ::c_uint = 5;
 pub const UINPUT_MAX_NAME_SIZE: usize = 80;
 
+// bionic/libc/kernel/uapi/linux/if_tun.h
 pub const IFF_TUN: ::c_int = 0x0001;
 pub const IFF_TAP: ::c_int = 0x0002;
+pub const IFF_NAPI: ::c_int = 0x0010;
+pub const IFF_NAPI_FRAGS: ::c_int = 0x0020;
 pub const IFF_NO_PI: ::c_int = 0x1000;
+pub const IFF_ONE_QUEUE: ::c_int = 0x2000;
+pub const IFF_VNET_HDR: ::c_int = 0x4000;
+pub const IFF_TUN_EXCL: ::c_int = 0x8000;
+pub const IFF_MULTI_QUEUE: ::c_int = 0x0100;
+pub const IFF_ATTACH_QUEUE: ::c_int = 0x0200;
+pub const IFF_DETACH_QUEUE: ::c_int = 0x0400;
+pub const IFF_PERSIST: ::c_int = 0x0800;
+pub const IFF_NOFILTER: ::c_int = 0x1000;
 
 // start android/platform/bionic/libc/kernel/uapi/linux/if_ether.h
 // from https://android.googlesource.com/
@@ -2615,10 +2626,10 @@ pub const IN_Q_OVERFLOW: u32 = 0x0000_4000;
 pub const IN_IGNORED: u32 = 0x0000_8000;
 pub const IN_ONLYDIR: u32 = 0x0100_0000;
 pub const IN_DONT_FOLLOW: u32 = 0x0200_0000;
-// pub const IN_EXCL_UNLINK:   u32 = 0x0400_0000;
+pub const IN_EXCL_UNLINK: u32 = 0x0400_0000;
 
-// pub const IN_MASK_CREATE:   u32 = 0x1000_0000;
-// pub const IN_MASK_ADD:      u32 = 0x2000_0000;
+pub const IN_MASK_CREATE: u32 = 0x1000_0000;
+pub const IN_MASK_ADD: u32 = 0x2000_0000;
 pub const IN_ISDIR: u32 = 0x4000_0000;
 pub const IN_ONESHOT: u32 = 0x8000_0000;
 
@@ -2738,6 +2749,12 @@ pub const PF_NFC: ::c_int = AF_NFC;
 pub const PF_VSOCK: ::c_int = AF_VSOCK;
 
 pub const SOMAXCONN: ::c_int = 128;
+
+// sys/prctl.h
+pub const PR_SET_PDEATHSIG: ::c_int = 1;
+pub const PR_GET_PDEATHSIG: ::c_int = 2;
+pub const PR_GET_SECUREBITS: ::c_int = 27;
+pub const PR_SET_SECUREBITS: ::c_int = 28;
 
 // sys/system_properties.h
 pub const PROP_VALUE_MAX: ::c_int = 92;
@@ -3445,6 +3462,10 @@ extern "C" {
     pub fn android_set_abort_message(msg: *const ::c_char);
 
     pub fn gettid() -> ::pid_t;
+
+    pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
+
+    pub fn pthread_setname_np(thread: ::pthread_t, name: *const ::c_char) -> ::c_int;
 
     pub fn __system_property_set(__name: *const ::c_char, __value: *const ::c_char) -> ::c_int;
     pub fn __system_property_get(__name: *const ::c_char, __value: *mut ::c_char) -> ::c_int;

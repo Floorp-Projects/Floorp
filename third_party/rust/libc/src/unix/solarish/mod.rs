@@ -2710,7 +2710,6 @@ extern "C" {
 
     pub fn abs(i: ::c_int) -> ::c_int;
     pub fn acct(filename: *const ::c_char) -> ::c_int;
-    pub fn atof(s: *const ::c_char) -> ::c_double;
     pub fn dirfd(dirp: *mut ::DIR) -> ::c_int;
     pub fn labs(i: ::c_long) -> ::c_long;
     pub fn rand() -> ::c_int;

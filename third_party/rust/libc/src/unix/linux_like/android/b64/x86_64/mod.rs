@@ -728,6 +728,9 @@ pub const SYS_pwritev2: ::c_long = 328;
 pub const SYS_pkey_mprotect: ::c_long = 329;
 pub const SYS_pkey_alloc: ::c_long = 330;
 pub const SYS_pkey_free: ::c_long = 331;
+pub const SYS_io_uring_setup: ::c_long = 425;
+pub const SYS_io_uring_enter: ::c_long = 426;
+pub const SYS_io_uring_register: ::c_long = 427;
 
 // offsets in user_regs_structs, from sys/reg.h
 pub const R15: ::c_int = 0;

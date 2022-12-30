@@ -1615,6 +1615,14 @@ safe_f! {
     pub {const} fn IPTOS_ECN(x: u8) -> u8 {
         x & ::IPTOS_ECN_MASK
     }
+
+    #[allow(ellipsis_inclusive_range_patterns)]
+    pub {const} fn KERNEL_VERSION(a: u32, b: u32, c: u32) -> u32 {
+        ((a << 16) + (b << 8)) + match c {
+            0 ... 255 => c,
+            _ => 255,
+        }
+    }
 }
 
 extern "C" {

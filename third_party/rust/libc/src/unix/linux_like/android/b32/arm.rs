@@ -501,6 +501,9 @@ pub const SYS_pwritev2: ::c_long = 393;
 pub const SYS_pkey_mprotect: ::c_long = 394;
 pub const SYS_pkey_alloc: ::c_long = 395;
 pub const SYS_pkey_free: ::c_long = 396;
+pub const SYS_io_uring_setup: ::c_long = 425;
+pub const SYS_io_uring_enter: ::c_long = 426;
+pub const SYS_io_uring_register: ::c_long = 427;
 
 // offsets in mcontext_t.gregs from sys/ucontext.h
 pub const REG_R0: ::c_int = 0;
