@@ -12,7 +12,7 @@
 [package]
 rust-version = "1.31"
 name = "serde_derive"
-version = "1.0.151"
+version = "1.0.152"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
