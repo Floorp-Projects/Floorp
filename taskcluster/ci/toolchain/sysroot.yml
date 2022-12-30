@@ -78,7 +78,8 @@ sysroot-wasm32-wasi-clang-15:
             - clang-15
             - wasi-sdk
         toolchain:
-            - linux64-clang-15
+            - linux64-clang-15-stage1
+            - wasm32-wasi-compiler-rt-15
 
 sysroot-wasm32-wasi-clang-trunk:
     description: "Sysroot for wasi"
@@ -98,7 +99,8 @@ sysroot-wasm32-wasi-clang-trunk:
             - clang-trunk
             - wasi-sdk
         toolchain:
-            - linux64-clang-trunk
+            - linux64-clang-trunk-stage1
+            - wasm32-wasi-compiler-rt-trunk
 
 sysroot-aarch64-linux-gnu:
     description: "Sysroot for linux64 aarch64 builds"
