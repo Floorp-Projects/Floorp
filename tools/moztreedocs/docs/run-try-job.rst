@@ -1,7 +1,7 @@
 Running a try job for Documentation
 -----------------------------------
 
-Documentation has two try jobs associated :
+Documentation has two try jobs associated:
 
   - ``doc-generate`` - This generates the documentation with the committed changes on the try server and gives the same output as if it has landed on regular integration branch.
 
@@ -14,6 +14,8 @@ Documentation has two try jobs associated :
    .. code-block:: shell
 
       mach try fuzzy -q "'doc-upload"
+
+When the documentation is modified, at review phase, reviewbot will automatically generate a temporary documentation with a direct link to the modified pages.
 
 .. important::
 
