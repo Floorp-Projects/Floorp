@@ -1,8 +1,4 @@
-//! A [TOML]-parsing library
-//!
-//! This library implements a [TOML] v0.5.0 compatible parser,
-//! primarily supporting the [`serde`] library for encoding/decoding
-//! various types in Rust.
+//! A [serde]-compatible [TOML]-parsing library
 //!
 //! TOML itself is a simple, ergonomic, and readable configuration format:
 //!
@@ -143,8 +139,8 @@
 //! [TOML]: https://github.com/toml-lang/toml
 //! [Cargo]: https://crates.io/
 //! [`serde`]: https://serde.rs/
+//! [serde]: https://serde.rs/
 
-#![doc(html_root_url = "https://docs.rs/toml/0.5")]
 #![deny(missing_docs)]
 #![warn(rust_2018_idioms)]
 // Makes rustc abort compilation if there are any unsafe blocks in the crate.

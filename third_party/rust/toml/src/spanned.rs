@@ -20,16 +20,14 @@ pub(crate) const VALUE: &str = "$__toml_private_value";
 ///     s: Spanned<String>,
 /// }
 ///
-/// fn main() {
-///     let t = "s = \"value\"\n";
+/// let t = "s = \"value\"\n";
 ///
-///     let u: Value = toml::from_str(t).unwrap();
+/// let u: Value = toml::from_str(t).unwrap();
 ///
-///     assert_eq!(u.s.start(), 4);
-///     assert_eq!(u.s.end(), 11);
-///     assert_eq!(u.s.get_ref(), "value");
-///     assert_eq!(u.s.into_inner(), String::from("value"));
-/// }
+/// assert_eq!(u.s.start(), 4);
+/// assert_eq!(u.s.end(), 11);
+/// assert_eq!(u.s.get_ref(), "value");
+/// assert_eq!(u.s.into_inner(), String::from("value"));
 /// ```
 #[derive(Clone, Debug)]
 pub struct Spanned<T> {
@@ -75,7 +73,7 @@ impl<T> Spanned<T> {
 
 impl Borrow<str> for Spanned<String> {
     fn borrow(&self) -> &str {
-        &self.get_ref()
+        self.get_ref()
     }
 }
 
