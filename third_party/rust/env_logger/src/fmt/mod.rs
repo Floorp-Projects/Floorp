@@ -406,7 +406,7 @@ mod tests {
         String::from_utf8(buf.bytes().to_vec()).expect("failed to read record")
     }
 
-    fn write_target<'a>(target: &'a str, fmt: DefaultFormat) -> String {
+    fn write_target(target: &str, fmt: DefaultFormat) -> String {
         write_record(
             Record::builder()
                 .args(format_args!("log\nmessage"))

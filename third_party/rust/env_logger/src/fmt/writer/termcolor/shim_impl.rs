@@ -24,7 +24,6 @@ impl BufferWriter {
     }
 
     pub(in crate::fmt::writer) fn pipe(
-        _is_test: bool,
         _write_style: WriteStyle,
         pipe: Box<Mutex<dyn io::Write + Send + 'static>>,
     ) -> Self {

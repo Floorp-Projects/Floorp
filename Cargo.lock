@@ -71,7 +71,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e9dd62f37dea550caf48c77591dc50bd1a378ce08855be1a0c42a97b7550fb"
 dependencies = [
  "android_log-sys",
- "env_logger 0.9.0",
+ "env_logger 0.9.3",
  "log",
  "once_cell",
 ]
@@ -1540,14 +1540,14 @@ dependencies = [
 name = "env_logger"
 version = "0.8.999"
 dependencies = [
- "env_logger 0.9.0",
+ "env_logger 0.9.3",
 ]
 
 [[package]]
 name = "env_logger"
-version = "0.9.0"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b2cf0344971ee6c64c31be0d530793fba457d322dfec2810c453d0ef228f9c3"
+checksum = "a12e6657c4c97ebab115a42dcee77225f7f482cdd841cf7088c657a42e9e00e7"
 dependencies = [
  "atty",
  "humantime",
@@ -2040,7 +2040,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger 0.9.0",
+ "env_logger 0.9.3",
  "lazy_static",
  "log",
 ]
@@ -2295,7 +2295,7 @@ dependencies = [
  "bincode",
  "chrono",
  "crossbeam-channel",
- "env_logger 0.9.0",
+ "env_logger 0.9.3",
  "flate2",
  "log",
  "once_cell",
@@ -3604,7 +3604,7 @@ version = "0.6.3"
 source = "git+https://github.com/mozilla/neqo?tag=v0.6.3#4fe628bb911e4437169d974baa628c159e96f879"
 dependencies = [
  "chrono",
- "env_logger 0.9.0",
+ "env_logger 0.9.3",
  "lazy_static",
  "log",
  "qlog",
@@ -3958,7 +3958,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger 0.9.0",
+ "env_logger 0.9.3",
  "lazy_static",
  "libloading",
  "log",
@@ -4955,7 +4955,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger 0.9.0",
+ "env_logger 0.9.3",
  "jsparagus",
  "log",
 ]
