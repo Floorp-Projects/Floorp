@@ -104,6 +104,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">S’indiritzu no est vàlidu</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Is indiritzos web in generale s’iscrient in custa manera: <strong>http://www.esempru.com/</strong></li>
+        <li>Assegura·ti chi ses impreende is barras curretas (<strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocollu disconnotu</string>
 
