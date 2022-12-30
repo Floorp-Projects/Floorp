@@ -1760,6 +1760,13 @@ class XPCShellTests(object):
         if not self.updateMozinfo(prefs, options):
             return False
 
+        self.log.info(
+            "These variables are available in the mozinfo environment and "
+            "can be used to skip tests conditionally:"
+        )
+        for info in sorted(self.mozInfo.items(), key=lambda item: item[0]):
+            self.log.info("    {key}: {value}".format(key=info[0], value=info[1]))
+
         if options.get("self_test"):
             if not self.runSelfTest():
                 return False
