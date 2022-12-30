@@ -1395,6 +1395,11 @@ who = "Simon Friedberger <simon@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.9.1"
 
+[[audits.proc-macro-hack]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.5.19 -> 0.5.20+deprecated"
+
 [[audits.proc-macro2]]
 who = "Nika Layzell <nika@thelayzells.com>"
 criteria = "safe-to-deploy"
