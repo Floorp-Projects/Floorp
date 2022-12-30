@@ -28,9 +28,8 @@ nt::LoaderAPI* ModuleLoadFrame::sLoaderAPI;
 using GetNtLoaderAPIFn = decltype(&mozilla::GetNtLoaderAPI);
 
 /* static */
-void ModuleLoadFrame::StaticInit(
-    nt::LoaderObserver* aNewObserver,
-    nt::WinLauncherFunctions* aOutWinLauncherFunctions) {
+void ModuleLoadFrame::StaticInit(nt::LoaderObserver* aNewObserver,
+                                 nt::WinLauncherServices* aOutWinLauncher) {
   const auto pGetNtLoaderAPI = reinterpret_cast<GetNtLoaderAPIFn>(
       ::GetProcAddress(::GetModuleHandleW(nullptr), "GetNtLoaderAPI"));
   if (!pGetNtLoaderAPI) {
@@ -39,9 +38,9 @@ void ModuleLoadFrame::StaticInit(
     gFallbackLoaderAPI.SetObserver(aNewObserver);
     sLoaderAPI = &gFallbackLoaderAPI;
 
-    if (aOutWinLauncherFunctions) {
-      aOutWinLauncherFunctions->mHandleLauncherError =
-          [](const mozilla::LauncherError&, const char*) {};
+    if (aOutWinLauncher) {
+      aOutWinLauncher->mHandleLauncherError = [](const mozilla::LauncherError&,
+                                                 const char*) {};
       // We intentionally leave mInitDllBlocklistOOP null to make sure calling
       // mInitDllBlocklistOOP in non-Firefox hits MOZ_RELEASE_ASSERT.
     }
@@ -51,11 +50,11 @@ void ModuleLoadFrame::StaticInit(
   sLoaderAPI = pGetNtLoaderAPI(aNewObserver);
   MOZ_ASSERT(sLoaderAPI);
 
-  if (aOutWinLauncherFunctions) {
-    aOutWinLauncherFunctions->mInitDllBlocklistOOP =
-        sLoaderAPI->GetDllBlocklistInitFn();
-    aOutWinLauncherFunctions->mHandleLauncherError =
+  if (aOutWinLauncher) {
+    aOutWinLauncher->mInitDllBlocklistOOP = sLoaderAPI->GetDllBlocklistInitFn();
+    aOutWinLauncher->mHandleLauncherError =
         sLoaderAPI->GetHandleLauncherErrorFn();
+    aOutWinLauncher->mSharedSection = sLoaderAPI->GetSharedSection();
   }
 }
 
