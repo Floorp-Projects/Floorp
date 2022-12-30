@@ -90,13 +90,18 @@ def main():
             log.error('Error: archive file "{0}" does not exist!'.format(args.archive))
             return 1
 
-    if args.archive.endswith(".tar.zst"):
-        tmpdir = tempfile.TemporaryDirectory()
-        zip_path = convert_zst_archive(args.archive, tmpdir)
-    else:
-        zip_path = args.archive
+    try:
+        tmpdir = None
+        if args.archive.endswith(".tar.zst"):
+            tmpdir = tempfile.TemporaryDirectory()
+            zip_path = convert_zst_archive(args.archive, tmpdir)
+        else:
+            zip_path = args.archive
 
-    return upload_symbols(zip_path)
+        return upload_symbols(zip_path)
+    finally:
+        if tmpdir:
+            tmpdir.cleanup()
 
 
 def convert_zst_archive(zst_archive, tmpdir):
@@ -186,19 +191,15 @@ def convert_zst_archive(zst_archive, tmpdir):
 
     zip_path = os.path.join(tmpdir.name, "symbols.zip")
     log.info('Preparing symbol archive "{0}" from "{1}"'.format(zip_path, zst_archive))
-    try:
-        for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
-            with JarWriter(zip_path) as jar:
-                try:
-                    for name, data in prepare_from(zst_archive, tmpdir.name):
-                        jar.add(name, data, compress=not isinstance(data, File))
-                    break
-                except requests.exceptions.RequestException as e:
-                    log.error("Error: {0}".format(e))
-                log.info("Retrying...")
-    except Exception:
-        os.remove(zip_path)
-        raise
+    for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
+        with JarWriter(zip_path) as jar:
+            try:
+                for name, data in prepare_from(zst_archive, tmpdir.name):
+                    jar.add(name, data, compress=not isinstance(data, File))
+                break
+            except requests.exceptions.RequestException as e:
+                log.error("Error: {0}".format(e))
+            log.info("Retrying...")
 
     return zip_path
 
