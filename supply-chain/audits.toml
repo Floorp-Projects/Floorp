@@ -264,6 +264,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.16.0 -> 0.16.2"
 
+[[audits.coreaudio-sys]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.10 -> 0.2.11"
+
 [[audits.cpufeatures]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

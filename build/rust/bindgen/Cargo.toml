@@ -1,6 +1,6 @@
 [package]
 name = "bindgen"
-version = "0.59.999"
+version = "0.61.999"
 edition = "2018"
 license = "BSD-3-Clause"
 
