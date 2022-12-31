@@ -14,7 +14,7 @@ the About window; that's the Windows version.)
 If you have an older version, you will experience bugs, especially
 around symbol loading for local builds.
 
-### Installation
+## Installation
 
 For all versions, the tools are part of the latest [Windows 7 SDK (SDK
 Version
@@ -34,7 +34,7 @@ then restart to enable stack walking:\
 \
 `REG ADD "HKLM\System\CurrentControlSet\Control\Session Manager\Memory Management" -v DisablePagingExecutive -d 0x1 -t REG_DWORD -f`
 
-### Symbol Server Setup
+## Symbol Server Setup
 
 With the latest versions of the Windows Performance Toolkit, you can
 modify the symbol path directly from within the program via the Trace
@@ -65,7 +65,7 @@ not prompted for this, then something isn't configured right in your
 symbol path. (Again, make sure that the directories exist; if they
 don't, it's a silent error.)
 
-### Quick Start
+## Quick Start
 
 All these tools will live, by default, in C:\\Program Files\\Microsoft
 Windows Performance Toolkit. Either run these commands from there, or
@@ -100,7 +100,7 @@ using essentially the same screenshots, so go look there.
 
 The 'stack' view will give results similar to shark.
 
-### Heap Profiling
+## Heap Profiling
 
 xperf has good tools for heap allocation profiling, but they have one
 major limitation: you can't build with jemalloc and get heap events
@@ -109,7 +109,7 @@ fragmentation, and causes memory usage to rise drastically even if only
 a small fraction of that memory is in use. However, even despite this,
 it's a useful way to track allocations/deallocations.
 
-#### Capturing Heap Data
+### Capturing Heap Data
 
 The \"-heap\" option is used to set up heap tracing. Firefox generates
 lots of events, so you may want to play with the
@@ -142,7 +142,7 @@ range that was selected for the summary graph; for example, something
 that's in the AOFI category was allocated before the start of the
 selected time range, but the free event happened inside.
 
-### Tips
+## Tips
 
 -   In the summary views, the yellow bar can be dragged left and right
     to change the grouping \-- for example, drag it to the left of the
@@ -157,7 +157,7 @@ selected time range, but the free event happened inside.
     This can be done by running 'msconfig' and going to Advance
     Options from the \"Boot\" tab.
 
-### Building Firefox
+## Building Firefox
 
 To get good data from a Firefox build, it is important to build with the
 following options in your mozconfig:
@@ -173,7 +173,7 @@ be useful.
 
 This gives us symbols.
 
-### For More Information
+## For More Information
 
 Microsoft's [documentation for xperf](http://msdn.microsoft.com/en-us/library/ff191077.aspx "http://msdn.microsoft.com/en-us/library/ff191077.aspx")
 is pretty good; there is a lot of depth to this tool, and you should

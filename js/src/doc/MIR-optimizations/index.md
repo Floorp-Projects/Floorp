@@ -6,92 +6,92 @@ This is a quick summary of all the MIR passes as of Feb 2021. The italicized pas
 
 The state of the MIR after each of these passes can be visualized using [iongraph](https://github.com/sstangl/iongraph).
 
-### *BuildSSA*
+## *BuildSSA*
 [Single Static Assignment](https://en.wikipedia.org/wiki/Static_single_assignment_form) is a form of IR in which every value is defined exactly once. It has several nice properties for optimization. Note: SSA is why we have phi nodes.
 
-### Prune Unused Branches
+## Prune Unused Branches
 What it says on the tin: prunes away branches that are never taken.
 
-### Fold Empty Blocks
+## Fold Empty Blocks
 A simple cleanup pass to get rid of empty blocks with one predecessor and one successor by folding them into their successor.
 
-### Fold Tests
+## Fold Tests
 Simplifies the code generated for conditional operations. [See the comment here](https://searchfox.org/mozilla-central/rev/bd92b9b4a3c2ff022e830c1358968a84e6e69c95/js/src/jit/IonAnalysis.cpp#849-871).
 
-### Split Critical Edges
+## Split Critical Edges
 In subsequent passes, we may choose to move code around. In preparation, this pass adds empty blocks along [critical edges](https://en.wikipedia.org/wiki/Control-flow_graph#Special_edges), so that we have a safe place to put those instructions.
 
-### Renumber Blocks
+## Renumber Blocks
 This pass literally just reassigns block numbers.
 
-### Eliminate Phis
+## Eliminate Phis
 After some of the above optimizations, some of our phi nodes may be things like `b = phi(a,a)`, which is redundant. This pass cleans those up.
 
-### *Scalar Replacement*
+## *Scalar Replacement*
 If a function allocates and uses an object, but we can [prove that the object never escapes the function](https://en.wikipedia.org/wiki/Escape_analysis), then we can sometimes avoid the allocation entirely by tracking each of the object’s components (fields in C/C++; slots/elements in JS) individually.
 
-### Apply types
+## Apply types
 Each type of MIR node has a [TypePolicy](https://searchfox.org/mozilla-central/rev/fd853f4aea89186efdb368e759a71b7a90c2b89c/js/src/jit/TypePolicy.h#23-35) defining what type of input it accepts. If necessary, this pass inserts (potentially fallible) conversions to guarantee that the types work out.
 
-### *Alias Analysis*
+## *Alias Analysis*
 [Alias analysis](https://en.wikipedia.org/wiki/Alias_analysis) determines whether two instructions may use/modify the same memory. If they do, then they can not be reordered with respect to each other, because that could change the semantics of the program.
 
-### *GVN*
+## *GVN*
 [Global Value Numbering](https://en.wikipedia.org/wiki/Value_numbering) is a classic optimization for finding places where we compute the same value multiple times, and eliminating the redundancy.
 
-### *LICM*
+## *LICM*
 [Loop-Invariant Code Motion](https://en.wikipedia.org/wiki/Loop-invariant_code_motion) finds instructions in a loop that will compute the same value every time and hoists them out of the loop.
 
-### Beta
+## Beta
 This is done in preparation for range analysis. This particular approach to range analysis is [taken from a paper by Gough and Klaren](https://searchfox.org/mozilla-central/rev/fd853f4aea89186efdb368e759a71b7a90c2b89c/js/src/jit/RangeAnalysis.cpp#49-108).
 
-### *Range Analysis*
+## *Range Analysis*
 [A classic optimization](https://en.wikipedia.org/wiki/Value_range_analysis) that determines the possible range of values a definition can take on. Used to implement many of the following passes.
 
-### De-Beta
+## De-Beta
 Remove beta nodes now that we don’t need them.
 
-### RA Check UCE
+## RA Check UCE
 Check to see if range analysis has made any code eligible for Unreachable Code Elimination.
 
-### Truncate Doubles
+## Truncate Doubles
 Strength-reduce double arithmetic to integer arithmetic if range analysis says it’s okay.
 
-### Sink
+## Sink
 If we compute a value that will only be used along some paths, and we could recover the value if one of the other paths bailed out, then we can postpone the computation of that variable until we are sure we will need it. [More details here](https://bugzilla.mozilla.org/show_bug.cgi?id=1093674).
 
-### Remove Unnecessary Bitops
+## Remove Unnecessary Bitops
 Remove bit-wise arithmetic operators that don’t do anything (like `x | 0` on integer input).
 
-### Fold Linear Arithmetic Constants
+## Fold Linear Arithmetic Constants
 Fold `a + constant1 + constant2` into `a + (constant1+constant2)`.
 
-### Effective Address Analysis
+## Effective Address Analysis
 This was added to ensure that we generated good code for memory accesses in asm.js.
 
-### *DCE*
+## *DCE*
 [Dead code elimination](https://en.wikipedia.org/wiki/Dead_code_elimination) removes instructions whose results are never needed.
 
-### *Reordering*
+## *Reordering*
 Shuffle instructions around within a block to reduce the lifetime of intermediate values and reduce register pressure. This is a relatively simple version of [instruction scheduling](https://en.wikipedia.org/wiki/Instruction_scheduling).
 
-### Make loops contiguous
+## Make loops contiguous
 Reorder blocks so that all the blocks in a loop are generated in one contiguous chunk, which is good for cache locality.
 
-### Edge Case Analysis (Late)
+## Edge Case Analysis (Late)
 A place to check for edge cases after code has stopped being moved around. Currently used for checking whether some instructions need to handle negative zero.
 
-### *Bounds Check Elimination*
+## *Bounds Check Elimination*
 [A classic optimization](https://en.wikipedia.org/wiki/Bounds-checking_elimination) that eliminates bounds checks if we can prove at compile time that they can’t fail.
 
-### FoldLoadsWithUnbox
+## FoldLoadsWithUnbox
 Loading a NaN-boxed value and then unboxing it can be slightly more efficient if we do both operations at once.
 
-### Add KeepAlive Instructions
+## Add KeepAlive Instructions
 While we access the slots or elements of an object, we have to ensure that the object itself is not collected by the GC. See [bug 1160884](https://bugzilla.mozilla.org/show_bug.cgi?id=1160884).
 
-### Generate LIR
+## Generate LIR
 After optimization is over, we lower our IR from MIR to LIR to do register allocation and code generation.
 
-### *Allocate Registers*
+## *Allocate Registers*
 Programs can have way more variables than hardware has registers, so we have to decide which values live in which registers when. [This is a very well studied area](https://en.wikipedia.org/wiki/Register_allocation).

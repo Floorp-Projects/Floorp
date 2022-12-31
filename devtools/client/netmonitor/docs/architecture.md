@@ -2,7 +2,7 @@
 
 The Network Monitor (netmonitor) shows you all the network requests Firefox makes (for example, when a page is loaded or when an XMLHttpRequest is performed) , how long each request takes, and details of each request. You can edit the method, query, header and resend the request as well. Read [more](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) to learn all the features and how to use the tool.
 
-### UI
+## UI
 
 The Network Monitor UI is built using [React](http://searchfox.org/mozilla-central/source/devtools/docs/frontend/react.md) components (in `src/components/`).
 
@@ -16,7 +16,7 @@ The Network Monitor UI is built using [React](http://searchfox.org/mozilla-centr
 
 We prefer stateless component (define by function) instead of stateful component (define by class) unless the component has to maintain its internal state.
 
-### State
+## State
 
 ![](https://hacks.mozilla.org/files/2017/06/image8.png)
 

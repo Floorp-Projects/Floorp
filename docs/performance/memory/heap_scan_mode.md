@@ -112,7 +112,7 @@ so it can take a while.
 
 ## Analyzing the Logs
 
-##### Getting the PID and address of the leaking object
+### Getting the PID and address of the leaking object
 
 The first step is to figure out the **PID** of the leaking process. The
 second step is to figure out **the address of the leaking object**,
@@ -143,7 +143,7 @@ If there are multiple files, you'll end up with one that looks like
 the largest `$n`, as this was recorded the latest, and so it will
 contain the least non-garbage.
 
-##### Identifying the root in the cycle collector log
+### Identifying the root in the cycle collector log
 
 The next step is to figure out why the cycle collector could not collect
 the window, using the `find_roots.py` script from the heapgraph
@@ -186,7 +186,7 @@ a head element and a JS object (the JS reflector of the script element).
 We need to figure out what the unknown reference is from, as that is
 where our leak really is.
 
-##### Figure out what is holding the leaking object alive.
+### Figure out what is holding the leaking object alive.
 
 Now we need to use the DMD heap scan logs. These contain the contents of
 every live block of memory.
@@ -258,7 +258,7 @@ This is an iterative process, where you first go through and mark off
 the things that are easily categorizable, and repeat until you have a
 small list of things to analyze.
 
-##### Example analysis of block_analyzer.py results
+### Example analysis of block_analyzer.py results
 
 In one debugging session where I was investigating the leak from bug
 1451985, I eventually reduced the list of entries until this was the

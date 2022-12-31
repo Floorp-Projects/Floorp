@@ -2,7 +2,7 @@
 
 For a more in-depth explanation of JEXL syntax you can read the [Normady project docs](https://mozilla.github.io/normandy/user/filters.html?highlight=jexl).
 
-### How to write JEXL targeting expressions
+## How to write JEXL targeting expressions
 A message needs to contain the `targeting` property (JEXL string) which is evaluated against the provided attributes.
 Examples:
 

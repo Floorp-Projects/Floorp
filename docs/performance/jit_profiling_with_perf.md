@@ -5,7 +5,7 @@ It is possible to collect performance profiles of the SpiderMonkey JIT using per
 
 ![](img/annotation.png)
 
-### Build setup
+## Build setup
 
 To enable JIT profiling with perf jitdump, you must build Firefox or the JS shell with the following flag:
 
@@ -13,7 +13,7 @@ To enable JIT profiling with perf jitdump, you must build Firefox or the JS shel
 ac_add_options --enable-perf
 ```
 
-### Environment Variables
+## Environment Variables
 
 Two environment variables are available for perf JIT profiling:
 
@@ -26,7 +26,7 @@ mkdir output
 export PERF_SPEW_DIR=output
 ```
 
-### Profiling the JS shell
+## Profiling the JS shell
 
 Profiling the JS shell requires the following commands but is very straight forward.
 
@@ -57,7 +57,7 @@ perf report --no-children -i jit.data
 
 All of the above commands can be put into a single shell script.
 
-### Profiling the Browser
+## Profiling the Browser
 
 Profiling the browser is less straight forward than the shell, but the only main difference is that perf must attach to the content process while it is running.
 
@@ -98,7 +98,7 @@ View the profile (--call-graph=graph,0 shows all call stacks instead of the defa
 perf report --no-children --call-graph=graph,0 -i jit.data
 ```
 
-### Additional Information
+## Additional Information
 
 Some Linux distributions offer a "libc6-prof" package that includes frame pointers.  This can help resolve symbols and call stacks that involve libc calls.
 
