@@ -4,6 +4,10 @@
     let platformInfo = await browser.runtime.getPlatformInfo();
     let isWin = platformInfo["os"] === "win";
 
+    async function getL10nValue(id) {
+        return (await browser.browserL10n.getFloorpL10nValues({ file: ["browser/floorp.ftl"], text: [id] }))[0]
+    }
+
     async function checkUpdate() {
         let displayVersion = await browser.BrowserInfo.getDisplayVersion();
         let url = `${API_BASE_URL}/browser-portable/latest.json`;
@@ -80,21 +84,19 @@
                 );
                 await browser.IOFile.removeFile(redirectorUpdateReadyFilePath);
 
-                // TODO: 多言語対応する
                 browser.notifications.create({
                     "type": "basic",
                     "iconUrl": browser.runtime.getURL("icons/link-48-last.png"),
-                    "title": "Update succeeded!",
-                    "message": "Update succeeded! Hope you enjoy the new version of Floorp!"
+                    "title": (await getL10nValue("update-portable-notification-success-title")),
+                    "message": (await getL10nValue("update-portable-notification-success-message"))
                 });
             } catch (e) {
                 console.error(e);
-                // TODO: 多言語対応する
                 browser.notifications.create({
                     "type": "basic",
                     "iconUrl": browser.runtime.getURL("icons/failed.png"),
-                    "title": "Update Error",
-                    "message": "Update failed."
+                    "title": (await getL10nValue("update-portable-notification-failed-title")),
+                    "message": (await getL10nValue("update-portable-notification-failed-redirector-message"))
                 });
             }
         }
@@ -107,12 +109,11 @@
 
         if (!updateInfo["isLatest"]) {
             console.log("Updates found.");
-            // TODO: 多言語対応する
             browser.notifications.create({
                 "type": "basic",
                 "iconUrl": browser.runtime.getURL("icons/link-48.png"),
-                "title": "Updates found!",
-                "message": "Downloading updates..."
+                "title": (await getL10nValue("update-portable-notification-found-title")),
+                "message": (await getL10nValue("update-portable-notification-found-message"))
             });
 
             try {
@@ -129,12 +130,11 @@
                 await browser.IOFile.createEmptyFile(coreUpdateReadyFilePath);
             } catch (e) {
                 console.error(e);
-                // TODO: 多言語対応する
                 browser.notifications.create({
                     "type": "basic",
                     "iconUrl": browser.runtime.getURL("icons/failed.png"),
-                    "title": "Update Error",
-                    "message": "Failed to prepare update."
+                    "title": (await getL10nValue("update-portable-notification-failed-title")),
+                    "message": (await getL10nValue("update-portable-notification-failed-prepare-message"))
                 });
             }
         } else {
