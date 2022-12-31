@@ -63,7 +63,7 @@ OperaProfileMigrator class
   :members:
 
 OperaGXProfileMigrator class
-==========================
+============================
 .. js:autoclass:: OperaGXProfileMigrator
   :members:
 
