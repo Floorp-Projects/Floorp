@@ -381,5 +381,5 @@ API References
    player-api
 
 ``toolkit/actors/PictureInPictureChild.sys.mjs``
---------------------------------------------
+------------------------------------------------
 * :ref:`picture_in_picture_child_video_wrapper_api`

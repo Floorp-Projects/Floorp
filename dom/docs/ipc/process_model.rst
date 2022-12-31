@@ -206,7 +206,7 @@ Like Isolated Web Content, these processes are keyed by the site loaded within t
     In ``about:processes``, COOP+COEP Web Content processes will be listed with a "cross-origin isolated" note after the PID, like ``https://example.com (12345, cross-origin isolated)``.
 
 ServiceWorker Web Content
-""""""""""""""""""""
+"""""""""""""""""""""""""
 
 :remoteType: ``webServiceWorker=$SITE``
 :default count: 1 per-site using ServiceWorkers
