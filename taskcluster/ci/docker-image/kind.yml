@@ -143,8 +143,6 @@ jobs:
         symbol: I(deb11-toolchain)
         parent: debian11-base
         definition: toolchain-build
-        packages:
-            - deb11-cmake
     android-build:
         symbol: I(agb)
         parent: debian11-base
