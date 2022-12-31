@@ -1,0 +1,26 @@
+[
+  {
+    "namespace": "downloadFile",
+    "description": "Download file",
+    "functions": [
+      {
+        "name": "download",
+        "type": "function",
+        "description": "Download file",
+        "parameters": [
+          {
+            "name": "url",
+            "type": "string",
+            "description": "File url"
+          },
+          {
+            "name": "path",
+            "type": "string",
+            "description": "Target path"
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]

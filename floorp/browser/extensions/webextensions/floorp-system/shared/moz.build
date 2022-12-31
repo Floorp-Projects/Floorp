@@ -19,6 +19,7 @@ else:
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "download-notification.js",
+    "portable-update.js",
     "update.js",
     "webcompat.js",
 ]
@@ -38,9 +39,16 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["API"] += [
     "API/BrowserInfo.json",
     "API/browserL10n.js",
     "API/browserL10n.json",
+    "API/decompressZip.js",
+    "API/decompressZip.json",
+    "API/downloadFile.js",
+    "API/downloadFile.json",
+    "API/IOFile.js",
+    "API/IOFile.json",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
+    "icons/failed.png",
     "icons/floorp.png",
     "icons/icon.png",
     "icons/LICENSE",
