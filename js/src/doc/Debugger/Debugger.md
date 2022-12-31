@@ -3,7 +3,7 @@
 When called as a constructor, the `Debugger` object creates a new
 `Debugger` instance.
 
-### `new Debugger([global, ...])`
+## `new Debugger([global, ...])`
 Create a debugger object, and apply its [`addDebuggee`][add] method to
 each of the given <i>global</i> objects to add them as the initial
 debuggees.

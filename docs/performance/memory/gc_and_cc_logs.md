@@ -1,4 +1,4 @@
-## GC and CC logs
+# GC and CC logs
 
 Garbage collector (GC) and cycle collector (CC) logs give information
 about why various JS and C++ objects are alive in the heap. Garbage

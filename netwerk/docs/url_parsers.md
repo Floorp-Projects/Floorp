@@ -5,13 +5,13 @@ In order to ensure thread safety it is important that all of the objects and int
 If you are implementing a new URI type, please make sure that none of the type's public methods change the URL.
 ```
 
-###  Definitions
+##  Definitions
 - URI - Uniform Resource Identifier
 - URL - Uniform Resource Locator
 
 These two terms are used interchangeably throughout the codebase and essentially represent the same thing - a string of characters that represents a specific resource.
 
-### Motivation
+## Motivation
 
 While we could simply pass strings around and leave it to the final consumer to deal with it, that creates a burden for the consumer and would probably be inefficient. Instead we parse the string into a nsIURI object as soon as possible and pass that object through function calls. This allows the consumer to easily extract only the part of the string they are interested in (eg. the hostname or the path).
 

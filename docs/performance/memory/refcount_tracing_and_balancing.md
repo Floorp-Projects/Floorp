@@ -121,7 +121,7 @@ and also improves the performance.
 
     perl -w tools/rb/filter-log.pl --object 0x00253ab0 < ./refcounts.log > my-leak.log
 
-#### Linux Users
+### Linux Users
 
 The log file generated on Linux system often lack function names, file
 names and line numbers. Linux users need to run a script to fix the call

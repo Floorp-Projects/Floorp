@@ -20,7 +20,7 @@ an instance of `Debugger.Memory`; its inherited accessors and methods are
 described below.
 
 
-### Allocation Site Tracking
+## Allocation Site Tracking
 
 The JavaScript engine marks each new object with the call stack at which it was
 allocated, if:
@@ -43,7 +43,7 @@ object, <code><i>dobj</i>.[allocationSite][allocation-site]</code> returns a
 allocated.
 
 
-### Allocation Logging
+## Allocation Logging
 
 If <i>dbg</i> is a [`Debugger`][debugger-object] instance, and
 <code><i>dbg</i>.memory.[trackingAllocationSites][tracking-allocs]</code> is set
@@ -54,7 +54,7 @@ control the limit on the log's size by setting
 <code><i>dbg</i>.memory.[maxAllocationsLogLength][max-alloc-log]</code>.
 
 
-### Censuses
+## Censuses
 
 A *census* is a complete traversal of the graph of all reachable memory items
 belonging to a particular `Debugger`'s debuggees. It produces a count of those
@@ -71,7 +71,7 @@ If <i>dbg</i> is a [`Debugger`][debugger-object] instance, then
 `<i>dbg</i>.memory` is a `Debugger.Memory` instance, which inherits the
 following accessor properties from its prototype:
 
-### `trackingAllocationSites`
+## `trackingAllocationSites`
 A boolean value indicating whether this `Debugger.Memory` instance is
 capturing the JavaScript execution stack when each Object is allocated. This
 accessor property has both a getter and setter: assigning to it enables or
@@ -86,7 +86,7 @@ You can retrieve the allocation site for a given object with the
 [`Debugger.Object.prototype.allocationSite`][allocation-site] accessor
 property.
 
-### `allocationSamplingProbability`
+## `allocationSamplingProbability`
 A number between 0 and 1 that indicates the probability with which each new
 allocation should be entered into the allocations log. 0 is equivalent to
 "never", 1 is "always", and .05 would be "one out of twenty".
@@ -98,12 +98,12 @@ observing the same allocations within a global's scope, the maximum
 <code>allocationSamplingProbability</code> of all the
 <code>Debugger</code>s is used.
 
-### `maxAllocationsLogLength`
+## `maxAllocationsLogLength`
 The maximum number of allocation sites to accumulate in the allocations log
 at a time. This accessor can be both fetched and stored to. Its default
 value is `5000`.
 
-### `allocationsLogOverflowed`
+## `allocationsLogOverflowed`
 Returns `true` if there have been more than
 [`maxAllocationsLogLength`][#max-alloc-log] allocations since the last time
 [`drainAllocationsLog`][#drain-alloc-log] was called and some data has been
@@ -130,14 +130,14 @@ Handler functions run in the same thread in which the event occurred.
 They run in the compartment to which they belong, not in a debuggee
 compartment.
 
-### `onGarbageCollection(statistics)`
+## `onGarbageCollection(statistics)`
 A garbage collection cycle spanning one or more debuggees has just been
 completed.
 
 The *statistics* parameter is an object containing information about the GC
 cycle. It has the following properties:
 
-#### `collections`
+## `collections`
 The `collections` property's value is an array. Because SpiderMonkey's
 collector is incremental, a full collection cycle may consist of
 multiple discrete collection slices with the JS mutator running
@@ -154,7 +154,7 @@ in the `collections` array with the following form:
 Here the `timestamp` values are [timestamps][timestamps] of the GC slice's start
 and end events.
 
-#### `reason`
+## `reason`
 A very short string describing the reason why the collection was
 triggered. Known values include the following:
 
@@ -192,7 +192,7 @@ triggered. Known values include the following:
 * `"SHUTDOWN_CC"`
 * `"USER_INACTIVE"`
 
-#### `nonincrementalReason`
+## `nonincrementalReason`
 If SpiderMonkey's collector determined it could not incrementally
 collect garbage, and had to do a full GC all at once, this is a short
 string describing the reason it determined the full GC was necessary.
@@ -203,7 +203,7 @@ Otherwise, `null` is returned. Known values include the following:
 * `"allocation trigger"`
 * `"requested"`
 
-#### `gcCycleNumber`
+## `gcCycleNumber`
 The GC cycle's "number". Does not correspond to the number
 of GC cycles that have run, but is guaranteed to be monotonically
 increasing.
@@ -211,7 +211,7 @@ increasing.
 Function Properties of the `Debugger.Memory.prototype` Object
 -------------------------------------------------------------
 
-### `drainAllocationsLog()`
+## `drainAllocationsLog()`
 When `trackingAllocationSites` is `true`, this method returns an array of
 recent `Object` allocations within the set of debuggees. *Recent* is
 defined as the `maxAllocationsLogLength` most recent `Object` allocations
@@ -250,7 +250,7 @@ commonly) "Object".
 When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
 `Error`.
 
-### `takeCensus(options)`
+## `takeCensus(options)`
 Carry out a census of the debuggee compartments' contents. A *census* is a
 complete traversal of the graph of all reachable memory items belonging to a
 particular `Debugger`'s debuggees. The census produces a count of those
@@ -494,7 +494,7 @@ This section covers some areas where Firefox's actual behavior deviates from
 what one might expect from the specified behavior of the web platform.
 
 
-### Objects
+## Objects
 
 SpiderMonkey objects usually use less memory than the naïve "table of properties
 with attributes" model would suggest. For example, it is typical for many
@@ -506,7 +506,7 @@ metadata; only property values are stored directly in the object.
 Array objects may also be optimized, if the set of live indices is dense.
 
 
-### Strings
+## Strings
 
 SpiderMonkey has three representations of strings:
 
@@ -532,7 +532,7 @@ SpiderMonkey shares some strings amongst all web pages and browser JS. These
 shared strings, called *atoms*, are not included in censuses' string counts.
 
 
-### Scripts
+## Scripts
 
 SpiderMonkey has a complex, hybrid representation of JavaScript code. There
 are four representations kept in memory:

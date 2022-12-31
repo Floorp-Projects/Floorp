@@ -10,7 +10,7 @@ docs and we can talk about it.
 for react and redux code. The guidelines here are more general
 patterns not specific to code style.
 
-### Why no JSX?
+## Why no JSX?
 
 You probably already noticed we don't use JSX. The answer isn't
 complicated: we don't build our JS code, and we write directly for our
@@ -25,7 +25,7 @@ lot.
 It's not as bad as you may think! If you are used to JSX it may be an
 adjustment, but you won't miss it too much.
 
-### One component per file
+## One component per file
 
 Try to only put one component in a file. This helps avoid large files
 full of components, but it's also technically required for how we wrap
@@ -39,7 +39,7 @@ want to, but note that they won't be directly tested and you will have
 to use `React.createElement` or immediately wrap them in factories to
 use them.
 
-### Export the component directly and create factory on import
+## Export the component directly and create factory on import
 
 Modules are the way components interact. Ideally every component lives
 in a separate file and they require whatever they need. This allows
@@ -68,6 +68,6 @@ module.exports = Thing1;
 Do not export `{ Thing1 }` or anything like that. This is required for
 the factory wrapping as well as hot reloading.
 
-### More to Come
+## More to Come
 
 This is just a start. We will add more to this document.

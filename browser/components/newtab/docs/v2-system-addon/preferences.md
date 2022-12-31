@@ -81,7 +81,7 @@ for more information about what methods are available.
 
 Preferences specific to the Discovery Stream are nested under the sub-branch `browser.newtabpage.activity-stream.discoverystream` (with the exception of `browser.newtabpage.blocked`).
 
-#### `browser.newtabpage.activity-stream.discoverystream.flight.blocks`
+### `browser.newtabpage.activity-stream.discoverystream.flight.blocks`
 
 - Type: `string (JSON)`
 - Default: `{}`
@@ -89,7 +89,7 @@ Preferences specific to the Discovery Stream are nested under the sub-branch `br
 
 Not intended for user configuration, but is programmatically updated. Used for tracking blocked flight IDs when a user dismisses a SPOC. Keys are flight IDs. Values don't have a specific meaning.
 
-#### `browser.newtabpage.blocked`
+### `browser.newtabpage.blocked`
 
 - Type: `string (JSON)`
 - Default: `null`
@@ -97,7 +97,7 @@ Not intended for user configuration, but is programmatically updated. Used for t
 
 Not intended for user configuration, but is programmatically updated. Used for tracking blocked story IDs when a user dismisses one. Keys are story IDs. Values don't have a specific meaning.
 
-#### `browser.newtabpage.activity-stream.discoverystream.config`
+### `browser.newtabpage.activity-stream.discoverystream.config`
 
 - Type `string (JSON)`
 - Default:
@@ -121,7 +121,7 @@ Not intended for user configuration, but is programmatically updated. Used for t
   - `layout_endpoint` (string): The URL for a remote layout definition that will be used if `hardcoded_layout` is `false`.
   - `unused_key` (string): This is not set by default and is unused by this codebase. It's a standardized way to differentiate configurations to prevent experiment participants from being unenrolled.
 
-#### `browser.newtabpage.activity-stream.discoverystream.enabled`
+### `browser.newtabpage.activity-stream.discoverystream.enabled`
 
 - Type: `boolean`
 - Default: `true`
@@ -129,7 +129,7 @@ Not intended for user configuration, but is programmatically updated. Used for t
 
 When this is set to `true` the Discovery Stream experience will show up if `enabled` is also `true` on `browser.newtabpage.activity-stream.discoverystream.config`. Otherwise the old Activity Stream experience will be shown.
 
-#### `browser.newtabpage.activity-stream.discoverystream.endpointSpocsClear`
+### `browser.newtabpage.activity-stream.discoverystream.endpointSpocsClear`
 
 - Type: `string (URL)`
 - Default: `https://spocs.getpocket.com/user`
@@ -137,7 +137,7 @@ When this is set to `true` the Discovery Stream experience will show up if `enab
 
 Endpoint for when a user opts-out of sponsored content to delete the corresponding data from the ad server.
 
-#### `browser.newtabpage.activity-stream.discoverystream.endpoints`
+### `browser.newtabpage.activity-stream.discoverystream.endpoints`
 
 - Type: `string (URLs, CSV)`
 - Default: `https://getpocket.cdn.mozilla.net/,https://spocs.getpocket.com/`
@@ -145,7 +145,7 @@ Endpoint for when a user opts-out of sponsored content to delete the correspondi
 
 A list of endpoints that are allowed to be used by Discovery Stream for remote content (eg: story metadata) and configuration (eg: remote layout definitions for experimentation).
 
-#### `browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout`
+### `browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout`
 
 - Type: `boolean`
 - Default: `false`
@@ -153,7 +153,7 @@ A list of endpoints that are allowed to be used by Discovery Stream for remote c
 
 If this is `false` the default hardcoded layout is used, and if it's `true` then an alternate hardcoded layout (that currently simulates the older AS experience) is used.
 
-#### `browser.newtabpage.activity-stream.discoverystream.rec.impressions`
+### `browser.newtabpage.activity-stream.discoverystream.rec.impressions`
 
 - Type: `string (JSON)`
 - Default: `{}`
@@ -161,7 +161,7 @@ If this is `false` the default hardcoded layout is used, and if it's `true` then
 
 Programmatically generated hash table where the keys are recommendation IDs and the values are timestamps representing the first impression.
 
-#### `browser.newtabpage.activity-stream.discoverystream.spoc.impressions`
+### `browser.newtabpage.activity-stream.discoverystream.spoc.impressions`
 
 - Type: `string (JSON)`
 - Default: `{}`
@@ -169,7 +169,7 @@ Programmatically generated hash table where the keys are recommendation IDs and 
 
 Programmatically generated hash table where the keys are sponsored content IDs and the values are arrays of timestamps for every impression.
 
-#### `browser.newtabpage.activity-stream.discoverystream.locale-list-config`
+### `browser.newtabpage.activity-stream.discoverystream.locale-list-config`
 
 - Type: `string (CSV, locales)`
 - Default: `null`
@@ -177,7 +177,7 @@ Programmatically generated hash table where the keys are sponsored content IDs a
 
 A comma separated list of locales that by default have stories enabled in newtab. It overrides what might be in region-stories-config. So if I set this to "en-US,en-CA,en-GB", all users with a English browser would see newtab stories, even if their region was not in region-stories-config list.
 
-#### `browser.newtabpage.activity-stream.discoverystream.region-stories-config`
+### `browser.newtabpage.activity-stream.discoverystream.region-stories-config`
 
 - Type: `string (CSV, regions)`
 - Default: `US,DE,CA,GB,IE,CH,AT,BE`
@@ -185,7 +185,7 @@ A comma separated list of locales that by default have stories enabled in newtab
 
 A comma separated list of geos that by default have stories enabled in newtab. It matches the client's geo with that list, then looks for a matching locale.
 
-#### `browser.newtabpage.activity-stream.discoverystream.region-spocs-config`
+### `browser.newtabpage.activity-stream.discoverystream.region-spocs-config`
 
 - Type: `string (CSV, regions)`
 - Default: `US,CA,DE`
@@ -193,7 +193,7 @@ A comma separated list of geos that by default have stories enabled in newtab. I
 
 A comma separated list of geos that by default have spocs enabled in newtab. It matches the client's geo with that list.
 
-#### `browser.newtabpage.activity-stream.discoverystream.region-layout-config`
+### `browser.newtabpage.activity-stream.discoverystream.region-layout-config`
 
 - Type: `string (CSV, regions)`
 - Default: `US,CA,GB,DE,IE,CH,AT,BE`
@@ -201,7 +201,7 @@ A comma separated list of geos that by default have spocs enabled in newtab. It 
 
 A comma separated list of geos that have 7 rows of stories enabled in newtab. It matches the client's geo with that list.
 
-#### `browser.newtabpage.activity-stream.discoverystream.region-basic-layout`
+### `browser.newtabpage.activity-stream.discoverystream.region-basic-layout`
 
 - Type: `boolean`
 - Default: false
@@ -209,7 +209,7 @@ A comma separated list of geos that have 7 rows of stories enabled in newtab. It
 
 If this is `true` newtabs with stories enabled see 1 row. It is set programmatically based on the result from region-layout-config.
 
-#### `browser.newtabpage.activity-stream.discoverystream.spocs-endpoint`
+### `browser.newtabpage.activity-stream.discoverystream.spocs-endpoint`
 
 - Type: `string (URL)`
 - Default: `null`
@@ -217,7 +217,7 @@ If this is `true` newtabs with stories enabled see 1 row. It is set programmatic
 
 Override to specify endpoint for SPOCs. Will take precedence over remote and hardcoded layout SPOC endpoints.
 
-#### `browser.newtabpage.activity-stream.discoverystream.personalization.version`
+### `browser.newtabpage.activity-stream.discoverystream.personalization.version`
 
 - Type: `integer`
 - Default: `1`
@@ -225,7 +225,7 @@ Override to specify endpoint for SPOCs. Will take precedence over remote and har
 
 This controls what version of personalization we should use to score newtab stories.
 
-#### `browser.newtabpage.activity-stream.discoverystream.personalization.modelKeys`
+### `browser.newtabpage.activity-stream.discoverystream.personalization.modelKeys`
 
 - Type: `string (CSV)`
 - Default: `nb_model_arts_and_entertainment, nb_model_autos_and_vehicles, nb_model_beauty_and_fitness, nb_model_blogging_resources_and_services, nb_model_books_and_literature, nb_model_business_and_industrial, nb_model_computers_and_electronics, nb_model_finance, nb_model_food_and_drink, nb_model_games, nb_model_health, nb_model_hobbies_and_leisure, nb_model_home_and_garden, nb_model_internet_and_telecom, nb_model_jobs_and_education, nb_model_law_and_government, nb_model_online_communities, nb_model_people_and_society, nb_model_pets_and_animals, nb_model_real_estate, nb_model_reference, nb_model_science, nb_model_shopping, nb_model_sports, nb_model_travel`
@@ -233,7 +233,7 @@ This controls what version of personalization we should use to score newtab stor
 
 This is a configuration for personalization version 2. It is a list of topics the algorithm uses to score stories by.
 
-#### `browser.newtabpage.activity-stream.discoverystream.recs.personalized`
+### `browser.newtabpage.activity-stream.discoverystream.recs.personalized`
 
 - Type: `boolean`
 - Default: false
@@ -241,7 +241,7 @@ This is a configuration for personalization version 2. It is a list of topics th
 
 This controls if newtab story personalization includes regular stories or not. See spocs.personalized for sponsored content.
 
-#### `browser.newtabpage.activity-stream.discoverystream.spocs.personalized`
+### `browser.newtabpage.activity-stream.discoverystream.spocs.personalized`
 
 - Type: `boolean`
 - Default: true
@@ -249,7 +249,7 @@ This controls if newtab story personalization includes regular stories or not. S
 
 This controls if newtab story personalization includes sponsored content or not. See recs.personalized for regular stories.
 
-#### `browser.newtabpage.activity-stream.discoverystream.isCollectionDismissible`
+### `browser.newtabpage.activity-stream.discoverystream.isCollectionDismissible`
 
 - Type: `boolean`
 - Default: true
@@ -257,7 +257,7 @@ This controls if newtab story personalization includes sponsored content or not.
 
 This controls if newtab story collections are dismissible or not.
 
-#### `browser.newtabpage.activity-stream.feeds.section.topstories`
+### `browser.newtabpage.activity-stream.feeds.section.topstories`
 
 - Type: `boolean`
 - Default: true
@@ -265,7 +265,7 @@ This controls if newtab story collections are dismissible or not.
 
 This controls if the user should see newtab stories or not. It is set by the user via about:preferences#home
 
-#### `browser.newtabpage.activity-stream.feeds.system.topstories`
+### `browser.newtabpage.activity-stream.feeds.system.topstories`
 
 - Type: `boolean`
 - Default: false
