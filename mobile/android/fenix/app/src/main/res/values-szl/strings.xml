@@ -41,8 +41,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Niydowne zokłodki</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Ôstatnio spamiyntane</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Pokoż wszyske zokłodki</string>
@@ -63,12 +61,12 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Przidej skrōt do ôtwiyranio prywatnych kart z dōmowego ekranu.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Przidej skrōt do ôtwiyranio prywatnych kart z dōmowego ekranu.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Przidej skrōt</string>
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Przidej skrōt</string>
 
 
-    <!-- Text for the negative button -->
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Niy, dziynkuja</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -126,12 +124,6 @@
     <string name="recent_tabs_show_all">Pokoż wszyske</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Pokoż knefel wszyskich niydownych kart</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Twoje wyszukowanie „%1$s”</string>
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">Strōny: %d</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ôbocz wszyske synchrōnizowane karty</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
@@ -232,7 +224,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Sztalōnki wyszukowarki</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">Wraź link z kamerlika</string>
+    <string name="awesomebar_clipboard_title">Wraź link ze skrytki</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Przizwōl</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -248,28 +240,6 @@
 
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Sztalōnki szukanio</string>
-
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Co je nowego w aplikacyji %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Teroz je snadnij zacznōńć nazod tam, kaj sie skōńczyło.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Spersōnalizowano dōmowo strōna aplikacyje %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Gibko dostōń do ôtwartych kart, zokłodek i historyje wyszukowanio.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Klarowne, zorganizowane karty</string>
-
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Zrōb porzōndek skuli lepszego rozłożynio i autōmatycznego zawiyranio kart.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Niydowne szukania</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Wrōć do niydownego szukanio z domowyj strōny i kart.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Twoja spersōnalizowano dōmowo strōna Firefoksa pōmogo teroz snadnij wrōcić tam, kaj sie skōńczyło. Znojdź niydowne karty, zokłodki i wyniki szukanio.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -321,6 +291,7 @@
     <string name="preferences_add_private_browsing_shortcut">Przidej skrōt do prywatnego przeglōndanio</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Tryb &quot;Ino HTTPS&quot;</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Autōmatycznie prōbuje łōnczyć sie ze strōnami z protokołym kodowanio HTTPS, coby zwiynkszyć bezpieczyństwo.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -361,8 +332,6 @@
     <string name="preferences_gestures">Gesty</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Przipasuj</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Synchrōnizuj zokłodki, historyjo i inksze ze swojim kōntym Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Kōnto Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -386,7 +355,7 @@
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Pokazuj we prywatnych sesyjach</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">Pokazuj dorady z kamerlika</string>
+    <string name="preferences_show_clipboard_suggestions">Pokazuj dorady ze skrytki</string>
 
 
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -435,7 +404,7 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Niydowno nawiedzōne</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Tapety</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -448,11 +417,6 @@
     <string name="wallpaper_updated_snackbar_message">Tapeta je nastawiōno!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Pokoż</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Tyknij logo dōmowyj strōny Firefoxa, coby zmiynić tapeta</string>
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo firefoxa - zmiyń tapeta, knefel</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -534,9 +498,6 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Przizwolo Mozilli instalować i kludzić badania</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Załōncz synchronizacyjo</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Wloguj sie, coby zaś sie połōnczyć</string>
     <!-- Preference for removing FxA account -->
@@ -625,10 +586,6 @@
     <string name="tab_view_list">Wykoz</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Nec</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Grupy szukanio</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Zbiyrej społym powiōnzane strōny </string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zawrzij karty</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -754,9 +711,6 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (prywatny tryb)</string>
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Inksze karty</string>
-
     <!-- History -->
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Wkludź szukane wyrazy</string>
@@ -783,11 +737,6 @@
     <string name="history_older">Starsze</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Niy ma sam żodnyj historyje</string>
-
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Synchrōnizowane z inkszych maszin</string>
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Z inkszych maszin</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1020,14 +969,12 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Niydowno używane</string>
     <!-- Text for the copy link action in the share screen. -->
-    <string name="share_copy_link_to_clipboard">Kopiuj do kamerlika</string>
+    <string name="share_copy_link_to_clipboard">Kopiuj do skrytki</string>
     <!-- Toast shown after copying link to clipboard -->
-    <string name="toast_copy_link_to_clipboard">Skopiowane do kamerlika</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Wloguj sie do synchrōnizacyje</string>
+    <string name="toast_copy_link_to_clipboard">Skopiowane do skrytki</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Wloguj sie do synchrōnizacyje</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Poślij na wszyske masziny</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Połōncz zaś ze synchrōnizacyjōm</string>
@@ -1151,9 +1098,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Skōńcz</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Bez to skasujōm sie wszyske dane przeglōndanio.</string>
-
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s skasuje ôbrane dane przeglōndanio.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1173,23 +1117,9 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Grupa skasowano</string>
 
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s wito!</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synchrōnizuj Firefoxa miyndzy maszinami</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Przekludź zokłodki, historyjo i hasła do aplikacyje %1$s na tyj maszinie.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Zaregistruj sie</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchrōnizacyjo je załōnczōno</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Zawdy z prywatnościōm</string>
 
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s autōmatycznie niy dowo fyrmōm śledzic cie po kryjōmu po necu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standardowo (bazowe)</string>
     <!-- text for standard blocking option button description -->
@@ -1200,14 +1130,7 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Szperuje wiyncyj śledzōncych elymyntōw, tōż strōny gibcyj sie ladujō, ale niykere jejich fōnkcyje mogōm niy fungować. </string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Ôbier, kaj mo być posek z noczyniami</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Dej posek z noczyniami na spodku abo na wiyrchu, coby snadnie do niego dostować. </string>
 
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Twoja prywatność</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s dowo ci kōntrola nad tym, co udostympniosz online i co udostympniosz nōm.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Poczytej ô naszych prawidłach prywatności</string>
 
