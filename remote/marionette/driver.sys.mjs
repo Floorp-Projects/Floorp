@@ -451,16 +451,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       this.dialogObserver.add(this.handleModalDialog.bind(this));
 
       for (let win of lazy.windowManager.windows) {
-        const tabBrowser = lazy.TabManager.getTabBrowser(win);
-
-        if (tabBrowser) {
-          for (const tab of tabBrowser.tabs) {
-            const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
-            this.registerBrowser(contentBrowser);
-          }
-        }
-
-        this.registerListenersForWindow(win);
+        this.registerWindow(win, { registerBrowsers: true });
       }
 
       if (this.mainFrame) {
@@ -498,25 +489,36 @@ GeckoDriver.prototype.newSession = async function(cmd) {
 };
 
 /**
- * Register event listeners for the specified window.
+ * Start observing the specified window.
  *
  * @param {ChromeWindow} win
  *     Chrome window to register event listeners for.
+ * @param {Object=} options
+ * @param {boolean=} options.registerBrowsers
+ *     If true, register all content browsers of found tabs. Defaults to false.
  */
-GeckoDriver.prototype.registerListenersForWindow = function(win) {
+GeckoDriver.prototype.registerWindow = function(win, options = {}) {
+  const { registerBrowsers = false } = options;
   const tabBrowser = lazy.TabManager.getTabBrowser(win);
+
+  if (registerBrowsers && tabBrowser) {
+    for (const tab of tabBrowser.tabs) {
+      const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+      this.registerBrowser(contentBrowser);
+    }
+  }
 
   // Listen for any kind of top-level process switch
   tabBrowser?.addEventListener("XULFrameLoaderCreated", this);
 };
 
 /**
- * Unregister event listeners for the specified window.
+ * Stop observing the specified window.
  *
  * @param {ChromeWindow} win
  *     Chrome window to unregister event listeners for.
  */
-GeckoDriver.prototype.unregisterListenersForWindow = function(win) {
+GeckoDriver.prototype.stopObservingWindow = function(win) {
   const tabBrowser = lazy.TabManager.getTabBrowser(win);
 
   tabBrowser?.removeEventListener("XULFrameLoaderCreated", this);
@@ -540,7 +542,7 @@ GeckoDriver.prototype.handleEvent = function({ target, type }) {
 GeckoDriver.prototype.observe = function(subject, topic, data) {
   switch (topic) {
     case TOPIC_BROWSER_READY:
-      this.registerListenersForWindow(subject);
+      this.registerWindow(subject);
       break;
   }
 };
@@ -2253,7 +2255,7 @@ GeckoDriver.prototype.deleteSession = function() {
   }
 
   for (let win of lazy.windowManager.windows) {
-    this.unregisterListenersForWindow(win);
+    this.stopObservingWindow(win);
   }
 
   // reset to the top-most frame
