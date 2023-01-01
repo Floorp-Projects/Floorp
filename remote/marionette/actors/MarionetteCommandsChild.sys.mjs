@@ -27,11 +27,14 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 );
 
 export class MarionetteCommandsChild extends JSWindowActorChild {
+  #processActor;
+
   constructor() {
     super();
 
-    // The following state is session-specific. It's assumed that we only have
-    // a single session at a time, and the actor is destroyed at the end of a session.
+    this.#processActor = ChromeUtils.domProcessChild.getActor(
+      "WebDriverProcessData"
+    );
 
     // sandbox storage and name of the current sandbox
     this.sandboxes = new lazy.Sandboxes(() => this.document.defaultView);
@@ -61,6 +64,13 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     );
   }
 
+  didDestroy() {
+    lazy.logger.trace(
+      `[${this.browsingContext.id}] MarionetteCommands actor destroyed ` +
+        `for window id ${this.innerWindowId}`
+    );
+  }
+
   async receiveMessage(msg) {
     if (!this.contentWindow) {
       throw new DOMException("Actor is no longer active", "InactiveActor");
@@ -72,8 +82,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
 
       const { name, data: serializedData } = msg;
       const data = lazy.evaluate.fromJSON(serializedData, {
-        seenEls: null,
-        win: this.document.defaultView,
+        seenEls: this.#processActor.getNodeCache(),
+        win: this.contentWindow,
       });
 
       switch (name) {
@@ -165,10 +175,11 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
         await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
       }
 
-      // The element reference store lives in the parent process. Calling
-      // toJSON() without a second argument here passes element reference ids
-      // of DOM nodes to the parent frame.
-      return { data: lazy.evaluate.toJSON(result) };
+      return {
+        data: lazy.evaluate.toJSON(result, {
+          seenEls: this.#processActor.getNodeCache(),
+        }),
+      };
     } catch (e) {
       // Always wrap errors as WebDriverError
       return { error: lazy.error.wrap(e).toJSON() };

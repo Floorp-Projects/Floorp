@@ -12,10 +12,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Capabilities: "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  registerProcessDataActor:
+    "chrome://remote/content/shared/webdriver/process-actors/WebDriverProcessDataParent.sys.mjs",
   RootMessageHandler:
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
   RootMessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.sys.mjs",
+  unregisterProcessDataActor:
+    "chrome://remote/content/shared/webdriver/process-actors/WebDriverProcessDataParent.sys.mjs",
   WebDriverBiDiConnection:
     "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.sys.mjs",
   WebSocketHandshake:
@@ -195,6 +199,8 @@ export class WebDriverSession {
       connection.registerSession(this);
       this._connections.add(connection);
     }
+
+    lazy.registerProcessDataActor();
   }
 
   destroy() {
@@ -216,6 +222,8 @@ export class WebDriverSession {
       );
       this._messageHandler.destroy();
     }
+
+    lazy.unregisterProcessDataActor();
   }
 
   async execute(module, command, params) {

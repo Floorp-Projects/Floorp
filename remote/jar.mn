@@ -57,7 +57,10 @@ remote.jar:
   content/shared/webdriver/Capabilities.sys.mjs (shared/webdriver/Capabilities.sys.mjs)
   content/shared/webdriver/Errors.sys.mjs (shared/webdriver/Errors.sys.mjs)
   content/shared/webdriver/KeyData.sys.mjs (shared/webdriver/KeyData.sys.mjs)
+  content/shared/webdriver/NodeCache.sys.mjs (shared/webdriver/NodeCache.sys.mjs)
   content/shared/webdriver/Session.sys.mjs (shared/webdriver/Session.sys.mjs)
+  content/shared/webdriver/process-actors/WebDriverProcessDataChild.sys.mjs (shared/webdriver/process-actors/WebDriverProcessDataChild.sys.mjs)
+  content/shared/webdriver/process-actors/WebDriverProcessDataParent.sys.mjs (shared/webdriver/process-actors/WebDriverProcessDataParent.sys.mjs)
 
   # imports from external folders
   content/external/EventUtils.js (../testing/mochitest/tests/SimpleTest/EventUtils.js)

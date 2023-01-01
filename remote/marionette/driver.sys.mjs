@@ -18,8 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   browser: "chrome://remote/content/marionette/browser.sys.mjs",
   capture: "chrome://remote/content/shared/Capture.sys.mjs",
-  clearElementIdCache:
-    "chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs",
   Context: "chrome://remote/content/marionette/browser.sys.mjs",
   cookie: "chrome://remote/content/marionette/cookie.sys.mjs",
   DebounceCallback: "chrome://remote/content/marionette/sync.sys.mjs",
@@ -2271,8 +2269,6 @@ GeckoDriver.prototype.deleteSession = function() {
   } catch (e) {
     lazy.logger.debug(`Failed to remove observer "${TOPIC_BROWSER_READY}"`);
   }
-
-  lazy.clearElementIdCache();
 
   // Always unregister actors after all other observers
   // and listeners have been removed.

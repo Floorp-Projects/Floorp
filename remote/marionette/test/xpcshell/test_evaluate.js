@@ -1,83 +1,36 @@
-const { element, WebReference } = ChromeUtils.importESModule(
+const { WebElement, WebReference } = ChromeUtils.importESModule(
   "chrome://remote/content/marionette/element.sys.mjs"
 );
 const { evaluate } = ChromeUtils.importESModule(
   "chrome://remote/content/marionette/evaluate.sys.mjs"
 );
+const { NodeCache } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
+);
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const MemoryReporter = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
+  Ci.nsIMemoryReporterManager
+);
 
-class Element {
-  constructor(tagName, attrs = {}) {
-    this.tagName = tagName;
-    this.localName = tagName;
+const nodeCache = new NodeCache();
 
-    // Set default properties
-    this.isConnected = true;
-    this.ownerDocument = { documentElement: {} };
-    this.ownerGlobal = { document: this.ownerDocument };
+const domEl = browser.document.createElement("img");
+const svgEl = browser.document.createElementNS(SVG_NS, "rect");
 
-    for (let attr in attrs) {
-      this[attr] = attrs[attr];
-    }
-  }
-
-  get nodeType() {
-    return 1;
-  }
-  get ELEMENT_NODE() {
-    return 1;
-  }
-}
-
-class DOMElement extends Element {
-  constructor(tagName, attrs = {}) {
-    super(tagName, attrs);
-    this.namespaceURI = XHTML_NS;
-  }
-}
-
-class SVGElement extends Element {
-  constructor(tagName, attrs = {}) {
-    super(tagName, attrs);
-    this.namespaceURI = SVG_NS;
-  }
-}
-
-class XULElement extends Element {
-  constructor(tagName, attrs = {}) {
-    super(tagName, attrs);
-    this.namespaceURI = XUL_NS;
-  }
-}
-
-const domEl = new DOMElement("p");
-const svgEl = new SVGElement("rect");
-const xulEl = new XULElement("browser");
-
-const domWebEl = WebReference.from(domEl);
-const svgWebEl = WebReference.from(svgEl);
-const xulWebEl = WebReference.from(xulEl);
-
-const domElId = { id: 1, browsingContextId: 4, webElRef: domWebEl.toJSON() };
-const svgElId = { id: 2, browsingContextId: 5, webElRef: svgWebEl.toJSON() };
-const xulElId = { id: 3, browsingContextId: 6, webElRef: xulWebEl.toJSON() };
-
-const elementIdCache = new element.ReferenceStore();
+browser.document.body.appendChild(domEl);
+browser.document.body.appendChild(svgEl);
 
 add_test(function test_acyclic() {
   evaluate.assertAcyclic({});
 
   Assert.throws(() => {
-    let obj = {};
+    const obj = {};
     obj.reference = obj;
     evaluate.assertAcyclic(obj);
   }, /JavaScriptError/);
 
   // custom message
-  let cyclic = {};
+  const cyclic = {};
   cyclic.reference = cyclic;
   Assert.throws(
     () => evaluate.assertAcyclic(cyclic, "", RangeError),
@@ -124,34 +77,32 @@ add_test(function test_toJSON_types() {
   run_next_test();
 });
 
-add_test(function test_toJSON_types_ReferenceStore() {
-  // Temporarily add custom elements until xpcshell tests
-  // have access to real DOM nodes (including the Window Proxy)
-  elementIdCache.add(domElId);
-  elementIdCache.add(svgElId);
-  elementIdCache.add(xulElId);
-
-  deepEqual(evaluate.toJSON(domWebEl, { seenEls: elementIdCache }), domElId);
-  deepEqual(evaluate.toJSON(svgWebEl, { seenEls: elementIdCache }), svgElId);
-  deepEqual(evaluate.toJSON(xulWebEl, { seenEls: elementIdCache }), xulElId);
-
-  Assert.throws(
-    () => evaluate.toJSON(domEl, { seenEls: elementIdCache }),
-    /TypeError/,
-    "Reference store not usable for elements"
+add_test(function test_toJSON_types_NodeCache() {
+  const domElSharedId = nodeCache.add(domEl);
+  deepEqual(
+    evaluate.toJSON(domEl, { seenEls: nodeCache }),
+    WebReference.from(domEl, domElSharedId).toJSON()
   );
 
-  elementIdCache.clear();
+  const svgElSharedId = nodeCache.add(svgEl);
+  deepEqual(
+    evaluate.toJSON(svgEl, { seenEls: nodeCache }),
+    WebReference.from(svgEl, svgElSharedId).toJSON()
+  );
+
+  nodeCache.clear({ all: true });
 
   run_next_test();
 });
 
 add_test(function test_toJSON_sequences() {
+  const domElSharedId = nodeCache.add(domEl);
+
   const input = [
     null,
     true,
     [],
-    domWebEl,
+    domEl,
     {
       toJSON() {
         return "foo";
@@ -160,35 +111,28 @@ add_test(function test_toJSON_sequences() {
     { bar: "baz" },
   ];
 
-  Assert.throws(
-    () => evaluate.toJSON(input, { seenEls: elementIdCache }),
-    /NoSuchElementError/,
-    "Expected no element"
-  );
-
-  elementIdCache.add(domElId);
-
-  const actual = evaluate.toJSON(input, { seenEls: elementIdCache });
+  const actual = evaluate.toJSON(input, { seenEls: nodeCache });
 
   equal(null, actual[0]);
   equal(true, actual[1]);
   deepEqual([], actual[2]);
-  deepEqual(actual[3], domElId);
+  deepEqual(actual[3], { [WebElement.Identifier]: domElSharedId });
   equal("foo", actual[4]);
   deepEqual({ bar: "baz" }, actual[5]);
 
-  elementIdCache.clear();
+  nodeCache.clear({ all: true });
 
   run_next_test();
 });
 
 add_test(function test_toJSON_objects() {
+  const domElSharedId = nodeCache.add(domEl);
+
   const input = {
     null: null,
     boolean: true,
     array: [],
-    webElement: domWebEl,
-    elementId: domElId,
+    element: domEl,
     toJSON: {
       toJSON() {
         return "foo";
@@ -197,52 +141,73 @@ add_test(function test_toJSON_objects() {
     object: { bar: "baz" },
   };
 
-  Assert.throws(
-    () => evaluate.toJSON(input, { seenEls: elementIdCache }),
-    /NoSuchElementError/,
-    "Expected no element"
-  );
-
-  elementIdCache.add(domElId);
-
-  const actual = evaluate.toJSON(input, { seenEls: elementIdCache });
+  const actual = evaluate.toJSON(input, { seenEls: nodeCache });
 
   equal(null, actual.null);
   equal(true, actual.boolean);
   deepEqual([], actual.array);
-  deepEqual(actual.webElement, domElId);
-  deepEqual(actual.elementId, domElId);
+  deepEqual(actual.element, { [WebElement.Identifier]: domElSharedId });
   equal("foo", actual.toJSON);
   deepEqual({ bar: "baz" }, actual.object);
 
-  elementIdCache.clear();
+  nodeCache.clear({ all: true });
 
   run_next_test();
 });
 
-add_test(function test_fromJSON_ReferenceStore() {
-  // Add unknown element to reference store
-  let webEl = evaluate.fromJSON(domElId, { seenEls: elementIdCache });
-  deepEqual(webEl, domWebEl);
-  deepEqual(elementIdCache.get(webEl), domElId);
+add_test(function test_fromJSON_NodeCache() {
+  // Fails to resolve for unknown elements
+  const unknownWebElId = { [WebElement.Identifier]: "foo" };
+  Assert.throws(() => {
+    evaluate.fromJSON(unknownWebElId, {
+      seenEls: nodeCache,
+      win: domEl.ownerGlobal,
+    });
+  }, /NoSuchElementError/);
+
+  const domElSharedId = nodeCache.add(domEl);
+  const domWebEl = { [WebElement.Identifier]: domElSharedId };
+
+  // Fails to resolve for missing window reference
+  Assert.throws(() => {
+    evaluate.fromJSON(domWebEl, {
+      seenEls: nodeCache,
+    });
+  }, /TypeError/);
 
   // Previously seen element is associated with original web element reference
-  const domElId2 = {
-    id: 1,
-    browsingContextId: 4,
-    webElRef: WebReference.from(domEl).toJSON(),
-  };
-  webEl = evaluate.fromJSON(domElId2, { seenEls: elementIdCache });
-  deepEqual(webEl, domWebEl);
-  deepEqual(elementIdCache.get(webEl), domElId);
+  const el = evaluate.fromJSON(domWebEl, {
+    seenEls: nodeCache,
+    win: domEl.ownerGlobal,
+  });
+  deepEqual(el, domEl);
+  deepEqual(el, nodeCache.resolve(domElSharedId));
 
-  elementIdCache.clear();
+  // Fails with stale element reference for removed element
+  let imgEl = browser.document.createElement("img");
+  const win = imgEl.ownerGlobal;
+  const imgElSharedId = nodeCache.add(imgEl);
+  const imgWebEl = { [WebElement.Identifier]: imgElSharedId };
 
-  run_next_test();
+  // Delete element and force a garbage collection
+  imgEl = null;
+
+  MemoryReporter.minimizeMemoryUsage(() => {
+    Assert.throws(() => {
+      evaluate.fromJSON(imgWebEl, {
+        seenEls: nodeCache,
+        win,
+      });
+    }, /StaleElementReferenceError:/);
+
+    nodeCache.clear({ all: true });
+
+    run_next_test();
+  });
 });
 
 add_test(function test_isCyclic_noncyclic() {
-  for (let type of [true, 42, "foo", [], {}, null, undefined]) {
+  for (const type of [true, 42, "foo", [], {}, null, undefined]) {
     ok(!evaluate.isCyclic(type));
   }
 
@@ -250,7 +215,7 @@ add_test(function test_isCyclic_noncyclic() {
 });
 
 add_test(function test_isCyclic_object() {
-  let obj = {};
+  const obj = {};
   obj.reference = obj;
   ok(evaluate.isCyclic(obj));
 
@@ -258,7 +223,7 @@ add_test(function test_isCyclic_object() {
 });
 
 add_test(function test_isCyclic_array() {
-  let arr = [];
+  const arr = [];
   arr.push(arr);
   ok(evaluate.isCyclic(arr));
 
@@ -266,7 +231,7 @@ add_test(function test_isCyclic_array() {
 });
 
 add_test(function test_isCyclic_arrayInObject() {
-  let arr = [];
+  const arr = [];
   arr.push(arr);
   ok(evaluate.isCyclic({ arr }));
 
@@ -274,7 +239,7 @@ add_test(function test_isCyclic_arrayInObject() {
 });
 
 add_test(function test_isCyclic_objectInArray() {
-  let obj = {};
+  const obj = {};
   obj.reference = obj;
   ok(evaluate.isCyclic([obj]));
 

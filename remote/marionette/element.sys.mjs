@@ -5,8 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
-
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
@@ -46,11 +44,6 @@ const XUL_SELECTED_ELS = new Set([
  * web element reference for every element representing the same element
  * is the same.
  *
- * The {@link element.ReferenceStore} provides a mapping between web element
- * references and the ContentDOMReference of DOM elements for each browsing
- * context.  It also provides functionality for looking up and retrieving
- * elements.
- *
  * @namespace
  */
 export const element = {};
@@ -64,141 +57,6 @@ element.Strategy = {
   PartialLinkText: "partial link text",
   TagName: "tag name",
   XPath: "xpath",
-};
-
-/**
- * Stores known/seen web element references and their associated
- * ContentDOMReference ElementIdentifiers.
- *
- * The ContentDOMReference ElementIdentifier is augmented with a WebReference
- * reference, so in Marionette's IPC it looks like the following example:
- *
- * { browsingContextId: 9,
- *   id: 0.123,
- *   webElRef: {element-6066-11e4-a52e-4f735466cecf: <uuid>} }
- *
- * For use in parent process in conjunction with ContentDOMReference in content.
- *
- * @class
- * @memberof element
- */
-element.ReferenceStore = class {
-  constructor() {
-    // uuid -> { id, browsingContextId, webElRef }
-    this.refs = new Map();
-    // id -> webElRef
-    this.domRefs = new Map();
-  }
-
-  clear(browsingContext) {
-    if (!browsingContext) {
-      this.refs.clear();
-      this.domRefs.clear();
-      return;
-    }
-    for (const context of browsingContext.getAllBrowsingContextsInSubtree()) {
-      for (const [uuid, elId] of this.refs) {
-        if (elId.browsingContextId == context.id) {
-          this.refs.delete(uuid);
-          this.domRefs.delete(elId.id);
-        }
-      }
-    }
-  }
-
-  /**
-   * Make a collection of elements seen.
-   *
-   * The order of the returned web element references is guaranteed to
-   * match that of the collection passed in.
-   *
-   * @param {Array.<ElementIdentifer>} elIds
-   *     Sequence of ids to add to set of seen elements.
-   *
-   * @return {Array.<WebReference>}
-   *     List of the web element references associated with each element
-   *     from <var>els</var>.
-   */
-  addAll(elIds) {
-    return [...elIds].map(elId => this.add(elId));
-  }
-
-  /**
-   * Make an element seen.
-   *
-   * @param {ElementIdentifier} elId
-   *    {id, browsingContextId} to add to set of seen elements.
-   *
-   * @return {WebReference}
-   *     Web element reference associated with element.
-   *
-   */
-  add(elId) {
-    if (!elId.id || !elId.browsingContextId) {
-      throw new TypeError(
-        lazy.pprint`Expected ElementIdentifier, got: ${elId}`
-      );
-    }
-    if (this.domRefs.has(elId.id)) {
-      return WebReference.fromJSON(this.domRefs.get(elId.id));
-    }
-    const webEl = WebReference.fromJSON(elId.webElRef);
-    this.refs.set(webEl.uuid, elId);
-    this.domRefs.set(elId.id, elId.webElRef);
-    return webEl;
-  }
-
-  /**
-   * Determine if the provided web element reference is in the store.
-   *
-   * Unlike when getting the element, a staleness check is not
-   * performed.
-   *
-   * @param {WebReference} webEl
-   *     Element's associated web element reference.
-   *
-   * @return {boolean}
-   *     True if element is in the store, false otherwise.
-   *
-   * @throws {TypeError}
-   *     If <var>webEl</var> is not a {@link WebReference}.
-   */
-  has(webEl) {
-    if (!(webEl instanceof WebReference)) {
-      throw new TypeError(lazy.pprint`Expected web element, got: ${webEl}`);
-    }
-    return this.refs.has(webEl.uuid);
-  }
-
-  /**
-   * Retrieve a DOM {@link Element} or a {@link XULElement} by its
-   * unique {@link WebReference} reference.
-   *
-   * @param {WebReference} webEl
-   *     Web element reference to find the associated {@link Element}
-   *     of.
-   * @returns {ElementIdentifier}
-   *     ContentDOMReference identifier
-   *
-   * @throws {TypeError}
-   *     If <var>webEl</var> is not a {@link WebReference}.
-   * @throws {NoSuchElementError}
-   *     If the web element reference <var>uuid</var> has not been
-   *     seen before.
-   */
-  get(webEl) {
-    if (!(webEl instanceof WebReference)) {
-      throw new TypeError(lazy.pprint`Expected web element, got: ${webEl}`);
-    }
-    const elId = this.refs.get(webEl.uuid);
-    if (!elId) {
-      throw new lazy.error.NoSuchElementError(
-        "Web element reference not seen before: " + webEl.uuid
-      );
-    }
-
-    return elId;
-  }
 };
 
 /**
@@ -589,96 +447,73 @@ element.findClosest = function(startNode, selector) {
 };
 
 /**
- * Wrapper around ContentDOMReference.get with additional steps specific to
- * Marionette.
- *
- * @param {Element} el
- *     The DOM element to generate the identifier for.
- *
- * @return {object}
- *     The ContentDOMReference ElementIdentifier for the DOM element augmented
- *     with a Marionette WebReference reference, and some additional properties.
- *
- * @throws {StaleElementReferenceError}
- *     If the element has gone stale, indicating it is no longer
- *     attached to the DOM, or its node document is no longer the
- *     active document.
- */
-element.getElementId = function(el) {
-  if (element.isStale(el)) {
-    throw new lazy.error.StaleElementReferenceError(
-      lazy.pprint`The element reference of ${el} ` +
-        "is stale; either the element is no longer attached to the DOM, " +
-        "it is not in the current frame context, " +
-        "or the document has been refreshed"
-    );
-  }
-
-  const webEl = WebReference.from(el);
-
-  const id = lazy.ContentDOMReference.get(el);
-  const browsingContext = BrowsingContext.get(id.browsingContextId);
-
-  id.webElRef = webEl.toJSON();
-  id.browserId = browsingContext.browserId;
-  id.isTopLevel = !browsingContext.parent;
-
-  return id;
-};
-
-/**
- * Wrapper around ContentDOMReference.resolve with additional error handling
- * specific to Marionette.
+ * Resolve element from specified web element reference.
  *
  * @param {ElementIdentifier} id
- *     The identifier generated via ContentDOMReference.get for a DOM element.
- *
+ *     The WebElement reference identifier for a DOM element.
  * @param {WindowProxy} win
  *     Current window, which may differ from the associated
  *     window of <var>el</var>.
+ * @param {NodeCache} seenEls
+ *     Known element store to look up Element instances from.
  *
- * @return {Element} The DOM element that the identifier was generated for, or
- *     null if the element does not still exist.
+ * @return {Element|null} The DOM element that the identifier was generated
+ *     for, or null if the element does not still exist.
  *
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> doesn't exist
  *     in the current browsing context.
  * @throws {StaleElementReferenceError}
- *     If the element has gone stale, indicating it is no longer
- *     attached to the DOM, or its node document is no longer the
- *     active document.
+ *     If the element has gone stale, indicating its node document is no
+ *     longer the active document or it is no longer attached to the DOM.
  */
-element.resolveElement = function(id, win) {
-  let sameBrowsingContext;
-  if (id.isTopLevel) {
-    // Cross-group navigations cause a swap of the current top-level browsing
-    // context. The only unique identifier is the browser id the browsing
-    // context actually lives in. If it's equal also treat the browsing context
-    // as the same (bug 1690308).
-    // If the element's browsing context is a top-level browsing context,
-    sameBrowsingContext = id.browserId == win?.browsingContext.browserId;
-  } else {
-    // For non top-level browsing contexts check for equality directly.
-    sameBrowsingContext = id.browsingContextId == win?.browsingContext.id;
-  }
+element.resolveElement = function(id, win, seenEls) {
+  const el = seenEls.resolve(id);
 
-  if (!sameBrowsingContext) {
-    throw new lazy.error.NoSuchElementError(
-      `Web element reference not seen before: ${JSON.stringify(id.webElRef)}`
-    );
-  }
+  // For WebDriver classic only elements from the same browsing context
+  // are allowed to be accessed.
+  if (el?.ownerGlobal) {
+    if (win === undefined) {
+      throw new TypeError(
+        "Expected a valid window to resolve the element reference of " +
+          lazy.pprint`${el || JSON.stringify(id.webElRef)}`
+      );
+    }
 
-  const el = lazy.ContentDOMReference.resolve(id);
+    const elementBrowsingContext = el.ownerGlobal.browsingContext;
+    let sameBrowsingContext = true;
+
+    if (elementBrowsingContext.top === elementBrowsingContext) {
+      // Cross-group navigations cause a swap of the current top-level browsing
+      // context. The only unique identifier is the browser id the browsing
+      // context actually lives in. If it's equal also treat the browsing context
+      // as the same (bug 1690308).
+      // If the element's browsing context is a top-level browsing context,
+      sameBrowsingContext =
+        elementBrowsingContext.browserId == win.browsingContext.browserId;
+    } else {
+      // For non top-level browsing contexts check for equality directly.
+      sameBrowsingContext = elementBrowsingContext.id == win.browsingContext.id;
+    }
+
+    if (!sameBrowsingContext) {
+      throw new lazy.error.NoSuchElementError(
+        lazy.pprint`The element reference of ${el ||
+          JSON.stringify(id.webElRef)} ` +
+          "is not known in the current browsing context"
+      );
+    }
+  }
 
   if (element.isStale(el)) {
     throw new lazy.error.StaleElementReferenceError(
       lazy.pprint`The element reference of ${el ||
         JSON.stringify(id.webElRef)} ` +
-        "is stale; either the element is no longer attached to the DOM, " +
-        "it is not in the current frame context, " +
-        "or the document has been refreshed"
+        "is stale; either its node document is not the active document, " +
+        "or it is no longer connected to the DOM"
     );
   }
+
   return el;
 };
 
@@ -1072,6 +907,21 @@ element.isInView = function(el) {
 };
 
 /**
+ * Generates a unique identifier.
+ *
+ * The generated uuid will not contain the curly braces.
+ *
+ * @return {string}
+ *     UUID.
+ */
+element.generateUUID = function() {
+  return Services.uuid
+    .generateUUID()
+    .toString()
+    .slice(1, -1);
+};
+
+/**
  * This function throws the visibility of the element error if the element is
  * not displayed or the given coordinates are not within the viewport.
  *
@@ -1451,6 +1301,9 @@ export class WebReference {
    *
    * @param {(Element|ShadowRoot|WindowProxy|XULElement)} node
    *     Node to construct a web element reference for.
+   * @param {string=} uuid
+   *     Optional unique identifier of the WebReference if already known.
+   *     If not defined a new unique identifier will be created.
    *
    * @return {WebReference)}
    *     Web reference for <var>node</var>.
@@ -1459,8 +1312,10 @@ export class WebReference {
    *     If <var>node</var> is neither a <code>WindowProxy</code>,
    *     DOM or XUL element, or <code>ShadowRoot</code>.
    */
-  static from(node) {
-    const uuid = WebReference.generateUUID();
+  static from(node, uuid) {
+    if (uuid === undefined) {
+      uuid = element.generateUUID();
+    }
 
     if (element.isShadowRoot(node) && !element.isInPrivilegedDocument(node)) {
       // When we support Chrome Shadowroots we will need to
@@ -1569,17 +1424,6 @@ export class WebReference {
       return true;
     }
     return false;
-  }
-
-  /**
-   * Generates a unique identifier.
-   *
-   * @return {string}
-   *     Generated UUID.
-   */
-  static generateUUID() {
-    let uuid = Services.uuid.generateUUID().toString();
-    return uuid.substring(1, uuid.length - 1);
   }
 }
 

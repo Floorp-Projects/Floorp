@@ -303,7 +303,7 @@ export class TCPConnection {
     let rv = await fn.bind(this.driver)(cmd);
 
     if (rv != null) {
-      if (rv instanceof lazy.WebReference || typeof rv != "object") {
+      if (lazy.WebReference.isReference(rv) || typeof rv != "object") {
         resp.body = { value: rv };
       } else {
         resp.body = rv;

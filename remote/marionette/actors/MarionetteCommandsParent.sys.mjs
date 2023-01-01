@@ -8,7 +8,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   capture: "chrome://remote/content/shared/Capture.sys.mjs",
-  element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
@@ -17,16 +16,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
-XPCOMUtils.defineLazyGetter(lazy, "elementIdCache", () => {
-  return new lazy.element.ReferenceStore();
-});
 
 export class MarionetteCommandsParent extends JSWindowActorParent {
   actorCreated() {
     this._resolveDialogOpened = null;
-
-    this.topWindow = this.browsingContext.top.embedderElement?.ownerGlobal;
-    this.topWindow?.addEventListener("TabClose", _onTabClose);
   }
 
   dialogOpenedPromise() {
@@ -36,9 +29,7 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
   }
 
   async sendQuery(name, data) {
-    const serializedData = lazy.evaluate.toJSON(data, {
-      seenEls: lazy.elementIdCache,
-    });
+    const serializedData = lazy.evaluate.toJSON(data);
 
     // return early if a dialog is opened
     const result = await Promise.race([
@@ -51,14 +42,8 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     if ("error" in result) {
       throw lazy.error.WebDriverError.fromJSON(result.error);
     } else {
-      return lazy.evaluate.fromJSON(result.data, {
-        seenEls: lazy.elementIdCache,
-      });
+      return lazy.evaluate.fromJSON(result.data);
     }
-  }
-
-  didDestroy() {
-    this.topWindow?.removeEventListener("TabClose", _onTabClose);
   }
 
   notifyDialogOpened() {
@@ -267,17 +252,6 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
         throw new TypeError(`Invalid capture format: ${format}`);
     }
   }
-}
-
-/**
- * Clear all the entries from the element id cache.
- */
-export function clearElementIdCache() {
-  lazy.elementIdCache.clear();
-}
-
-function _onTabClose(event) {
-  lazy.elementIdCache.clear(event.target.linkedBrowser.browsingContext);
 }
 
 /**
