@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#[cfg(feature = "gecko")]
 use glean::TimerId;
 #[cfg(feature = "gecko")]
 use fog::metrics::wr;
+
+#[cfg(not(feature = "gecko"))]
+pub struct TimerId;
 
 pub struct Telemetry;
 
@@ -12,7 +16,7 @@ pub struct Telemetry;
 #[cfg(not(feature = "gecko"))]
 impl Telemetry {
     // Start rasterize glyph time collection
-    pub fn start_rasterize_glyphs_time() -> TimerId { return TimerId { id: 0 }; }
+    pub fn start_rasterize_glyphs_time() -> TimerId { return TimerId {}; }
     // End rasterize glyph time collection
     pub fn stop_and_accumulate_rasterize_glyphs_time(_id: TimerId) { }
 }
