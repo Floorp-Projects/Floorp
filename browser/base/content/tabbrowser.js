@@ -186,7 +186,7 @@
       "audioMuted",
     ],
 
-    _removingTabs: [],
+    _removingTabs: new Set(),
 
     _multiSelectedTabsSet: new WeakSet(),
 
@@ -3806,7 +3806,7 @@
         isLastTab ||
         aTab.pinned ||
         aTab.hidden ||
-        this._removingTabs.length >
+        this._removingTabs.size >
           3 /* don't want lots of concurrent animations */ ||
         aTab.getAttribute("fadein") !=
           "true" /* fade-in transition hasn't been triggered yet */ ||
@@ -3935,7 +3935,7 @@
         // Closing the tab and replacing it with a blank one is notably slower
         // than closing the window right away. If the caller opts in, take
         // the fast path.
-        if (closeWindow && closeWindowFastpath && !this._removingTabs.length) {
+        if (closeWindow && closeWindowFastpath && !this._removingTabs.size) {
           // This call actually closes the window, unless the user
           // cancels the operation.  We are finished here in both cases.
           this._windowIsClosing = window.closeWindow(
@@ -3981,7 +3981,7 @@
       }
 
       aTab.closing = true;
-      this._removingTabs.push(aTab);
+      this._removingTabs.add(aTab);
       this._invalidateCachedTabs();
 
       // Invalidate hovered tab state tracking for this closing tab.
@@ -4091,12 +4091,12 @@
       aTab.collapsed = true;
       this._blurTab(aTab);
 
-      this._removingTabs.splice(this._removingTabs.indexOf(aTab), 1);
+      this._removingTabs.delete(aTab);
 
       if (aCloseWindow) {
         this._windowIsClosing = true;
-        while (this._removingTabs.length) {
-          this._endRemoveTab(this._removingTabs[0]);
+        for (let tab of this._removingTabs) {
+          this._endRemoveTab(tab);
         }
       } else if (!this._windowIsClosing) {
         if (aNewTab) {

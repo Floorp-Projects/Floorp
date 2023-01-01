@@ -1095,7 +1095,7 @@
             this._expandSpacerBy(this._scrollButtonWidth);
           }
 
-          for (let tab of Array.from(gBrowser._removingTabs)) {
+          for (let tab of gBrowser._removingTabs) {
             gBrowser.removeTab(tab);
           }
 
