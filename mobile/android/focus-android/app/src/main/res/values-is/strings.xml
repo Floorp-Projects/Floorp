@@ -22,6 +22,237 @@
     <string name="menu_share">Deila…</string>
 
 
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Opna með %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Opna með…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Bæta við á ræsisíðu</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Bæta við flýtileiðir</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Fjarlægja úr flýtileiðum</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Nýtt á döfinni</string>
+    <string name="menu_settings">Stillingar</string>
+    <string name="menu_about">Um hugbúnaðinn</string>
+    <string name="menu_help">Hjálp</string>
+
+    <string name="menu_rights">Réttindi þín</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Lokað á rekjara</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Að slökkva á þessu gæti lagað sum vandamál á vefsvæðinu</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Blokkun efnis</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Keyrt með %1$s</string>
+
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Deila með</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Eyða vafraferli</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Opna</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Eyða og opna</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Hreinsa</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Eyða vafraferli</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Hreinsa og opna</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Hreinsa og opna %1$s</string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Leita í Focus</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Leita í Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Leita í Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Leita í Focus næturútgáfunni</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Friðhelgi og öryggi</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Vefefni</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Almennt</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Sjálfgefinn vafri, tungumál</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Gagnasöfnun og notkunarupplýsingar</string>
+
+    <string name="preference_category_search">Leita</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Fá leitartillögur</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s mun senda það sem þú skrifar í slóðina yfir á leitarvélina þína</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Sjálfgefið</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Leitarvél</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Virkt</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Óvirkt</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Sjálfvirk leiðrétting á slóðum</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Sýsla með vefsvæði</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Sýsla með vefsvæði</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Bæta við sérsniðinni vefslóð</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Sjálfvirki útfyllingarlistinn þinn:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Bæta við vefslóð</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Bæta við sérsniðinni vefslóð</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Bæta við sérsniðinni vefslóð</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Bæta tengli við sjálfvirka útfyllingu</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Smákökur og gögn vefsvæðis</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Meðhöndlun gagna</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Frekari upplýsingar</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Bættu við og stjórnaðu sérsniðnum sjálfvirkum útfyllingarslóðum.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL-slóð til að bæta við</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Límdu eða settu inn slóð</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Dæmi: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Til dæmis: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Nýrri sérsniðinni vefslóð bætt við.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Fjarlægja</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Fjarlægja</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Yfirfarðu slóðina sem þú settir inn.</string>
+
+    <string name="preference_language">Tungumál</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Sjálfgefið í stýrikerfinu</string>
+
+    <string name="preference_category_privacy">Friðhelgi</string>
+    <string name="preference_privacy_block_ads">Loka á auglýsingarekjara</string>
+    <string name="preference_privacy_block_ads_summary">Sumar auglýsingar geyma upplýsingar um vefsvæði sem hafa verið heimsótt, þótt sé smellt ekki á auglýsingarnar</string>
+    <string name="preference_privacy_block_analytics">Loka á greiningarekjara</string>
+    <string name="preference_privacy_block_analytics_summary">Notað til að safna, greina og fylgjast með virkni, eins og að snerta og skruna</string>
+    <string name="preference_privacy_block_social">Lokar á samfélagmiðlarekjara</string>
+    <string name="preference_privacy_block_social_summary">Innbyggt í vefsvæðum til að fylgjast með heimsóknum þínum og sýna virkni eins og deilihnappar</string>
+    <string name="preference_privacy_block_content">Loka á aðra efnisrekjara</string>
+    <string name="preference_privacy_block_content_summary2">Virkjun gæti valdið því að sum vefsvæði hagi sér á óvæntan hátt</string>
+    <string name="preference_privacy_category_cookies">Loka á vefkökur</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Nei takk</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Loka einungis á rakningarvefkökur frá utanaðkomandi aðilum</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Loka einungis á vefkökur frá utanaðkomandi aðilum</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Loka á milli-vefsvæða-vefkökur</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Já endilega</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Nota fingrafar til að aflæsa smáforriti</string>
+
+    <string name="preference_category_security">Öryggi</string>
+
+    <string name="preference_category_performance">Afköst</string>
+    <string name="preference_performance_block_webfonts">Loka á vefleturgerðir</string>
+
     <!-- Tips displayed on the home view -->
 
     <!-- Tracking protection bottom sheet -->
