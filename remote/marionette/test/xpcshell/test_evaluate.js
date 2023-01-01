@@ -131,12 +131,12 @@ add_test(function test_toJSON_types_ReferenceStore() {
   elementIdCache.add(svgElId);
   elementIdCache.add(xulElId);
 
-  deepEqual(evaluate.toJSON(domWebEl, elementIdCache), domElId);
-  deepEqual(evaluate.toJSON(svgWebEl, elementIdCache), svgElId);
-  deepEqual(evaluate.toJSON(xulWebEl, elementIdCache), xulElId);
+  deepEqual(evaluate.toJSON(domWebEl, { seenEls: elementIdCache }), domElId);
+  deepEqual(evaluate.toJSON(svgWebEl, { seenEls: elementIdCache }), svgElId);
+  deepEqual(evaluate.toJSON(xulWebEl, { seenEls: elementIdCache }), xulElId);
 
   Assert.throws(
-    () => evaluate.toJSON(domEl, elementIdCache),
+    () => evaluate.toJSON(domEl, { seenEls: elementIdCache }),
     /TypeError/,
     "Reference store not usable for elements"
   );
@@ -161,14 +161,14 @@ add_test(function test_toJSON_sequences() {
   ];
 
   Assert.throws(
-    () => evaluate.toJSON(input, elementIdCache),
+    () => evaluate.toJSON(input, { seenEls: elementIdCache }),
     /NoSuchElementError/,
     "Expected no element"
   );
 
   elementIdCache.add(domElId);
 
-  const actual = evaluate.toJSON(input, elementIdCache);
+  const actual = evaluate.toJSON(input, { seenEls: elementIdCache });
 
   equal(null, actual[0]);
   equal(true, actual[1]);
@@ -198,14 +198,14 @@ add_test(function test_toJSON_objects() {
   };
 
   Assert.throws(
-    () => evaluate.toJSON(input, elementIdCache),
+    () => evaluate.toJSON(input, { seenEls: elementIdCache }),
     /NoSuchElementError/,
     "Expected no element"
   );
 
   elementIdCache.add(domElId);
 
-  const actual = evaluate.toJSON(input, elementIdCache);
+  const actual = evaluate.toJSON(input, { seenEls: elementIdCache });
 
   equal(null, actual.null);
   equal(true, actual.boolean);
@@ -222,7 +222,7 @@ add_test(function test_toJSON_objects() {
 
 add_test(function test_fromJSON_ReferenceStore() {
   // Add unknown element to reference store
-  let webEl = evaluate.fromJSON({ obj: domElId, seenEls: elementIdCache });
+  let webEl = evaluate.fromJSON(domElId, { seenEls: elementIdCache });
   deepEqual(webEl, domWebEl);
   deepEqual(elementIdCache.get(webEl), domElId);
 
@@ -232,7 +232,7 @@ add_test(function test_fromJSON_ReferenceStore() {
     browsingContextId: 4,
     webElRef: WebReference.from(domEl).toJSON(),
   };
-  webEl = evaluate.fromJSON({ obj: domElId2, seenEls: elementIdCache });
+  webEl = evaluate.fromJSON(domElId2, { seenEls: elementIdCache });
   deepEqual(webEl, domWebEl);
   deepEqual(elementIdCache.get(webEl), domElId);
 

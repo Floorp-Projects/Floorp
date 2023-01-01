@@ -36,7 +36,9 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
   }
 
   async sendQuery(name, data) {
-    const serializedData = lazy.evaluate.toJSON(data, lazy.elementIdCache);
+    const serializedData = lazy.evaluate.toJSON(data, {
+      seenEls: lazy.elementIdCache,
+    });
 
     // return early if a dialog is opened
     const result = await Promise.race([
@@ -49,8 +51,7 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     if ("error" in result) {
       throw lazy.error.WebDriverError.fromJSON(result.error);
     } else {
-      return lazy.evaluate.fromJSON({
-        obj: result.data,
+      return lazy.evaluate.fromJSON(result.data, {
         seenEls: lazy.elementIdCache,
       });
     }

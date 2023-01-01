@@ -97,8 +97,7 @@ action.Chain.prototype.dispatchActions = function(
 ) {
   this.seenEls = seenEls;
   this.container = container;
-  let commandArray = lazy.evaluate.fromJSON({
-    obj: args,
+  let commandArray = lazy.evaluate.fromJSON(args, {
     seenEls,
     win: container.frame,
   });
