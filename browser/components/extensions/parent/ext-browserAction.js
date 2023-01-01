@@ -848,7 +848,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
       let policy = WebExtensionPolicy.getByID(this.extension.id);
       messages = OriginControls.getStateMessageIDs({
         policy,
-        uri: node.ownerGlobal.gBrowser.currentURI,
+        tab: node.ownerGlobal.gBrowser.selectedTab,
         isAction: true,
         hasPopup: !!tabData.popup,
       });

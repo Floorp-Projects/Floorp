@@ -267,6 +267,7 @@ class PanelActionBase {
     if (!popupUrl) {
       this.dispatchClick(tab, clickInfo);
     }
+    this.updateOnChange(tab);
     return popupUrl;
   }
 
