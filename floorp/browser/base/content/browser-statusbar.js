@@ -98,4 +98,16 @@ function hideStatusbar() {
             hideStatusbar();
         }
     });
+
+    let statuspanel = document.getElementById("statuspanel");
+    let statusText = document.getElementById("status-text");
+    const observer = new MutationObserver(function(mutationsList, observer) {
+        if (!Services.prefs.getBoolPref("browser.display.statusbar", false)) return;
+        if (statuspanel.getAttribute("inactive") === "true") {
+            statusText.style.visibility = "hidden";
+        } else {
+            statusText.style.visibility = "";
+        }
+    });
+    observer.observe(statuspanel, { attributes: true });
 }
