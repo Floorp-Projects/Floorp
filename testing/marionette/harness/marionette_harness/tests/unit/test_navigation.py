@@ -289,7 +289,7 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate("about:robots")
         self.assertFalse(self.is_remote_tab)
 
-    def test_stale_element_after_remoteness_change(self):
+    def test_no_such_element_after_remoteness_change(self):
         self.marionette.navigate(self.test_page_file_url)
         self.assertTrue(self.is_remote_tab)
         elem = self.marionette.find_element(By.ID, "file-url")
@@ -297,21 +297,7 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate("about:robots")
         self.assertFalse(self.is_remote_tab)
 
-        # Force a GC to get rid of the replaced browsing context.
-        with self.marionette.using_context("chrome"):
-            self.marionette.execute_async_script(
-                """
-                const resolve = arguments[0];
-
-                var memSrv = Cc["@mozilla.org/memory-reporter-manager;1"]
-                  .getService(Ci.nsIMemoryReporterManager);
-
-                Services.obs.notifyObservers(null, "child-mmu-request", null);
-                memSrv.minimizeMemoryUsage(resolve);
-            """
-            )
-
-        with self.assertRaises(errors.StaleElementException):
+        with self.assertRaises(errors.NoSuchElementException):
             elem.click()
 
     def test_about_blank_for_new_docshell(self):

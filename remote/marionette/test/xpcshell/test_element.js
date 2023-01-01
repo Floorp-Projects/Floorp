@@ -12,10 +12,6 @@ const {
   "chrome://remote/content/marionette/element.sys.mjs"
 );
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 class Element {
   constructor(tagName, attrs = {}) {
     this.tagName = tagName;
@@ -509,8 +505,8 @@ add_test(function test_WebReference_isReference() {
   run_next_test();
 });
 
-add_test(function test_WebReference_generateUUID() {
-  equal(typeof WebReference.generateUUID(), "string");
+add_test(function test_generateUUID() {
+  equal(typeof element.generateUUID(), "string");
   run_next_test();
 });
 
