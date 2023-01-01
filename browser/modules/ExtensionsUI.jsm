@@ -639,8 +639,9 @@ var ExtensionsUI = {
     }
 
     let win = popup.ownerGlobal;
-    let uri = win.gBrowser.currentURI;
-    let state = lazy.OriginControls.getState(policy, uri);
+    let tab = win.gBrowser.selectedTab;
+    let uri = tab.linkedBrowser?.currentURI;
+    let state = lazy.OriginControls.getState(policy, tab);
 
     let doc = popup.ownerDocument;
     let whenClicked, alwaysOn, allDomains;

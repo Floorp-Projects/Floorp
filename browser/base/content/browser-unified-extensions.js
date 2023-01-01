@@ -120,7 +120,7 @@ customElements.define(
     #setStateMessage() {
       const messages = OriginControls.getStateMessageIDs({
         policy: this.extension.policy,
-        uri: this.ownerGlobal.gBrowser.currentURI,
+        tab: this.ownerGlobal.gBrowser.selectedTab,
       });
 
       if (!messages) {
@@ -147,7 +147,7 @@ customElements.define(
     #hasAction() {
       const state = OriginControls.getState(
         this.extension.policy,
-        this.ownerGlobal.gBrowser.currentURI
+        this.ownerGlobal.gBrowser.selectedTab
       );
 
       return state && state.whenClicked && !state.hasAccess;

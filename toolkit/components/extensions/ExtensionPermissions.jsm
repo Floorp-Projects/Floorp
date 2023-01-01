@@ -426,24 +426,34 @@ var ExtensionPermissions = {
 };
 
 var OriginControls = {
+  allDomains: new MatchPattern("*://*/*"),
+
   /**
    * @typedef {object} OriginControlState
-   * @param {boolean} noAccess     no options, can never access host.
-   * @param {boolean} whenClicked  option to access host when clicked.
-   * @param {boolean} alwaysOn     option to always access this host.
-   * @param {boolean} allDomains   option to access to all domains.
-   * @param {boolean} hasAccess    extension currently has access to host.
+   * @param {boolean} noAccess        no options, can never access host.
+   * @param {boolean} whenClicked     option to access host when clicked.
+   * @param {boolean} alwaysOn        option to always access this host.
+   * @param {boolean} allDomains      option to access to all domains.
+   * @param {boolean} hasAccess       extension currently has access to host.
+   * @param {boolean} temporaryAccess extension has temporary access to the tab.
    */
 
   /**
-   * Get origin controls state for a given extension on a given host.
+   * Get origin controls state for a given extension on a given tab.
    *
    * @param {WebExtensionPolicy} policy
-   * @param {nsIURI} uri
+   * @param {NativeTab} nativeTab
    * @returns {OriginControlState} Extension origin controls for this host include:
    */
-  getState(policy, uri) {
-    let allDomains = new MatchPattern("*://*/*");
+  getState(policy, nativeTab) {
+    // Note: don't use the nativeTab directly because it's different on mobile.
+    let tab = policy?.extension?.tabManager.getWrapper(nativeTab);
+    let temporaryAccess = tab?.hasActiveTabPermission;
+    let uri = tab?.browser.currentURI;
+
+    if (!uri) {
+      return { noAccess: true };
+    }
 
     // activeTab and the resulting whenClicked state is only applicable for MV2
     // extensions with a browser action and MV3 extensions (with or without).
@@ -460,7 +470,7 @@ var OriginControls = {
     }
 
     if (
-      !allDomains.matches(uri) ||
+      !this.allDomains.matches(uri) ||
       WebExtensionPolicy.isRestrictedURI(uri) ||
       (!couldRequest && !hasAccess && !activeTab)
     ) {
@@ -468,15 +478,16 @@ var OriginControls = {
     }
 
     if (!couldRequest && !hasAccess && activeTab) {
-      return { whenClicked: true };
+      return { whenClicked: true, temporaryAccess };
     }
-    if (policy.allowedOrigins.subsumes(allDomains)) {
+    if (policy.allowedOrigins.subsumes(this.allDomains)) {
       return { allDomains: true, hasAccess };
     }
 
     return {
       whenClicked: true,
       alwaysOn: true,
+      temporaryAccess,
       hasAccess,
     };
   },
@@ -484,8 +495,8 @@ var OriginControls = {
   // Whether to show the attention indicator for extension on current tab.
   getAttention(policy, window) {
     if (policy?.manifestVersion >= 3) {
-      let state = this.getState(policy, window.gBrowser.currentURI);
-      return !!state.whenClicked && !state.hasAccess;
+      let state = this.getState(policy, window.gBrowser.selectedTab);
+      return !!state.whenClicked && !state.hasAccess && !state.temporaryAccess;
     }
     return false;
   },
@@ -524,7 +535,7 @@ var OriginControls = {
    *
    * @param {object} params
    * @param {WebExtensionPolicy} params.policy an extension's policy
-   * @param {nsIURI} params.uri                an URI
+   * @param {NativeTab} params.tab             the current tab
    * @param {boolean} params.isAction          this should be true for
    *                                           extensions with a browser
    *                                           action, false otherwise.
@@ -535,10 +546,8 @@ var OriginControls = {
    * @returns {FluentIdInfo?} An object with origin controls message IDs or
    *                        `null` when there is no message for the state.
    */
-  getStateMessageIDs({ policy, uri, isAction = false, hasPopup = false }) {
-    const state = this.getState(policy, uri);
-
-    // TODO: add support for temporary access.
+  getStateMessageIDs({ policy, tab, isAction = false, hasPopup = false }) {
+    const state = this.getState(policy, tab);
 
     const onHoverForAction = hasPopup
       ? "origin-controls-state-runnable-hover-open"
@@ -560,7 +569,9 @@ var OriginControls = {
 
     if (state.whenClicked) {
       return {
-        default: "origin-controls-state-when-clicked",
+        default: state.temporaryAccess
+          ? "origin-controls-state-temporary-access"
+          : "origin-controls-state-when-clicked",
         onHover: "origin-controls-state-hover-run-visit-only",
       };
     }
