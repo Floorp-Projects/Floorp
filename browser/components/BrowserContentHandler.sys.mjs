@@ -76,7 +76,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
       return uri;
     }
   } catch (e) {
-    Cu.reportError(e);
+    console.error(e);
   }
 
   // We have interpreted the argument as a relative file URI, but the file
@@ -85,7 +85,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
   try {
     uri = Services.uriFixup.getFixupURIInfo(aArgument).preferredURI;
   } catch (e) {
-    Cu.reportError(e);
+    console.error(e);
   }
 
   return uri;
@@ -378,7 +378,7 @@ async function doSearch(searchTerm, cmdLine) {
       lazy.PrivateBrowsingUtils.isWindowPrivate(win),
     lazy.gSystemPrincipal,
     win.gBrowser.selectedBrowser.csp
-  ).catch(Cu.reportError);
+  ).catch(console.error);
 }
 
 export function nsBrowserContentHandler() {
@@ -442,7 +442,7 @@ nsBrowserContentHandler.prototype = {
         cmdLine.preventDefault = true;
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     try {
@@ -458,7 +458,7 @@ nsBrowserContentHandler.prototype = {
         cmdLine.preventDefault = true;
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
@@ -504,7 +504,7 @@ nsBrowserContentHandler.prototype = {
             );
           }
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
@@ -743,7 +743,7 @@ nsBrowserContentHandler.prototype = {
                 return new URL(val);
               } catch (ex) {
                 // Invalid URL, so filter out below
-                Cu.reportError(`Invalid once url: ${ex}`);
+                console.error(`Invalid once url: ${ex}`);
                 return null;
               }
             })
@@ -760,12 +760,12 @@ nsBrowserContentHandler.prototype = {
 
           // Be noisy as properly configured urls should be unchanged
           if (overridePage != url) {
-            Cu.reportError(`Mismatched once urls: ${url}`);
+            console.error(`Mismatched once urls: ${url}`);
           }
         }
       } catch (ex) {
         // Invalid json pref, so ignore (and clear below)
-        Cu.reportError(`Invalid once pref: ${ex}`);
+        console.error(`Invalid once pref: ${ex}`);
       } finally {
         prefb.clearUserPref(ONCE_PREF);
       }
@@ -790,7 +790,7 @@ nsBrowserContentHandler.prototype = {
         startPage = lazy.HomePage.get();
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     if (startPage == "about:blank") {
@@ -1084,7 +1084,7 @@ nsDefaultCommandLineHandler.prototype = {
             cmdLine.preventDefault = true;
           }
         } catch (e) {
-          Cu.reportError(
+          console.error(
             `Error handling Windows notification with tag '${tag}': ${e}`
           );
         }
@@ -1154,7 +1154,7 @@ nsDefaultCommandLineHandler.prototype = {
         }
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     if (cmdLine.findFlag("screenshot", true) != -1) {
@@ -1168,7 +1168,7 @@ nsDefaultCommandLineHandler.prototype = {
     for (let i = 0; i < cmdLine.length; ++i) {
       var curarg = cmdLine.getArgument(i);
       if (curarg.match(/^-/)) {
-        Cu.reportError(
+        console.error(
           "Warning: unrecognized command line flag " + curarg + "\n"
         );
         // To emulate the pre-nsICommandLine behavior, we ignore
@@ -1178,7 +1178,7 @@ nsDefaultCommandLineHandler.prototype = {
         try {
           urilist.push(resolveURIInternal(cmdLine, curarg));
         } catch (e) {
-          Cu.reportError(
+          console.error(
             "Error opening URI '" +
               curarg +
               "' from the command line: " +
