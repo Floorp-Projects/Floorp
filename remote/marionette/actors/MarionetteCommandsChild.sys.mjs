@@ -71,8 +71,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
-      const data = lazy.evaluate.fromJSON({
-        obj: serializedData,
+      const data = lazy.evaluate.fromJSON(serializedData, {
         seenEls: null,
         win: this.document.defaultView,
       });

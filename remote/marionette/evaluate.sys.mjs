@@ -207,13 +207,14 @@ evaluate.sandbox = function(
  *
  * @param {Object} obj
  *     Arbitrary object containing web elements or ElementIdentifiers.
- * @param {element.ReferenceStore=} seenEls
+ * @param {Object=} options
+ * @param {element.ReferenceStore=} options.seenEls
  *     Known element store to look up web elements from. If `seenEls` is an
  *     instance of `element.ReferenceStore`, return WebReference. If `seenEls` is
  *     `undefined` the Element from the ContentDOMReference cache is returned
  *     when executed in the child process, in the parent process the WebReference
  *     is passed-through.
- * @param {WindowProxy=} win
+ * @param {WindowProxy=} options.win
  *     Current browsing context, if `seenEls` is provided.
  *
  * @return {Object}
@@ -228,8 +229,9 @@ evaluate.sandbox = function(
  *     stale, indicating it is no longer attached to the DOM, or its node
  *     document is no longer the active document.
  */
-evaluate.fromJSON = function(options = {}) {
-  const { obj, seenEls, win } = options;
+evaluate.fromJSON = function(obj, options = {}) {
+  const { seenEls, win } = options;
+
   switch (typeof obj) {
     case "boolean":
     case "number":
@@ -243,7 +245,7 @@ evaluate.fromJSON = function(options = {}) {
 
         // arrays
       } else if (Array.isArray(obj)) {
-        return obj.map(e => evaluate.fromJSON({ obj: e, seenEls, win }));
+        return obj.map(e => evaluate.fromJSON(e, { seenEls, win }));
 
         // ElementIdentifier and ReferenceStore (used by JSWindowActor)
       } else if (lazy.WebReference.isReference(obj.webElRef)) {
@@ -260,7 +262,7 @@ evaluate.fromJSON = function(options = {}) {
       // arbitrary objects
       let rv = {};
       for (let prop in obj) {
-        rv[prop] = evaluate.fromJSON({ obj: obj[prop], seenEls, win });
+        rv[prop] = evaluate.fromJSON(obj[prop], { seenEls, win });
       }
       return rv;
   }
@@ -293,7 +295,7 @@ evaluate.fromJSON = function(options = {}) {
  *
  * @param {Object} obj
  *     Object to be marshaled.
- *
+ * @param {Object=} options
  * @param {element.ReferenceStore=} seenEls
  *     Element store to use for lookup of web element references.
  *
@@ -308,7 +310,9 @@ evaluate.fromJSON = function(options = {}) {
  *     attached to the DOM, or its node document is no longer the
  *     active document.
  */
-evaluate.toJSON = function(obj, seenEls) {
+evaluate.toJSON = function(obj, options = {}) {
+  const { seenEls } = options;
+
   const t = Object.prototype.toString.call(obj);
 
   // null
@@ -326,7 +330,7 @@ evaluate.toJSON = function(obj, seenEls) {
     // Array, NodeList, HTMLCollection, et al.
   } else if (lazy.element.isCollection(obj)) {
     evaluate.assertAcyclic(obj);
-    return [...obj].map(el => evaluate.toJSON(el, seenEls));
+    return [...obj].map(el => evaluate.toJSON(el, { seenEls }));
 
     // WebReference
   } else if (lazy.WebReference.isReference(obj)) {
@@ -355,7 +359,7 @@ evaluate.toJSON = function(obj, seenEls) {
     // custom JSON representation
   } else if (typeof obj.toJSON == "function") {
     let unsafeJSON = obj.toJSON();
-    return evaluate.toJSON(unsafeJSON, seenEls);
+    return evaluate.toJSON(unsafeJSON, { seenEls });
   }
 
   // arbitrary objects + files
@@ -364,7 +368,7 @@ evaluate.toJSON = function(obj, seenEls) {
     evaluate.assertAcyclic(obj[prop]);
 
     try {
-      rv[prop] = evaluate.toJSON(obj[prop], seenEls);
+      rv[prop] = evaluate.toJSON(obj[prop], { seenEls });
     } catch (e) {
       if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
         lazy.logger.debug(`Skipping ${prop}: ${e.message}`);
