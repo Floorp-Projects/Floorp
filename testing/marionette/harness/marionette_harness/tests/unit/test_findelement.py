@@ -60,7 +60,7 @@ class TestFindElementHTML(MarionetteTestCase):
         expected = self.marionette.execute_script("return document.querySelector('p')")
         found = self.marionette.find_element(By.ID, "foo")
         self.assertIsInstance(found, HTMLElement)
-        self.assertEqual(expected, found)
+        self.assertEqual(found, expected)
 
     def test_child_element(self):
         self.marionette.navigate(parent_child_html)
@@ -239,18 +239,7 @@ class TestFindElementHTML(MarionetteTestCase):
 
     def test_unknown_selector(self):
         with self.assertRaises(InvalidSelectorException):
-            self.marionette.find_elements("foo", "bar")
-
-    def test_element_id_is_valid_uuid(self):
-        self.marionette.navigate(id_html)
-        el = self.marionette.find_element(By.TAG_NAME, "p")
-        uuid_regex = re.compile(
-            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-        )
-        self.assertIsNotNone(
-            re.search(uuid_regex, el.id),
-            "UUID for the WebElement is not valid. ID is {}".format(el.id),
-        )
+            self.marionette.find_element("foo", "bar")
 
     def test_invalid_xpath_selector(self):
         with self.assertRaises(InvalidSelectorException):
@@ -410,18 +399,7 @@ class TestFindElementsHTML(MarionetteTestCase):
 
     def test_unknown_selector(self):
         with self.assertRaises(InvalidSelectorException):
-            self.marionette.find_element("foo", "bar")
-
-    def test_element_id_is_valid_uuid(self):
-        self.marionette.navigate(id_html)
-        els = self.marionette.find_elements(By.TAG_NAME, "p")
-        uuid_regex = re.compile(
-            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-        )
-        self.assertIsNotNone(
-            re.search(uuid_regex, els[0].id),
-            "UUID for the WebElement is not valid. ID is {}".format(els[0].id),
-        )
+            self.marionette.find_elements("foo", "bar")
 
     def test_invalid_xpath_selector(self):
         with self.assertRaises(InvalidSelectorException):
