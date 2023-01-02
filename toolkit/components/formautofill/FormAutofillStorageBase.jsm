@@ -67,10 +67,10 @@
  *       cc-exp-month,
  *       cc-exp-year,          // 2-digit year will be converted to 4 digits
  *                             // upon saving
+ *       cc-type,              // Optional card network id (instrument type)
  *
  *       // computed fields (These fields are computed based on the above fields
  *       // and are not allowed to be modified directly.)
- *       cc-type,              // Optional card network id (instrument type)
  *       cc-given-name,
  *       cc-additional-name,
  *       cc-family-name,
@@ -128,8 +128,6 @@ const EXPORTED_SYMBOLS = [
   "FormAutofillStorageBase",
   "CreditCardsBase",
   "AddressesBase",
-  "ADDRESS_SCHEMA_VERSION",
-  "CREDIT_CARD_SCHEMA_VERSION",
 ];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
@@ -160,11 +158,7 @@ const CryptoHash = Components.Constructor(
 
 const STORAGE_SCHEMA_VERSION = 1;
 const ADDRESS_SCHEMA_VERSION = 1;
-
-// Version 2: Bug 1486954 - Encrypt `cc-number`
-// Version 3: Bug 1639795 - Update keystore name
-// Version 4: Bug 1667257 - Do not store `cc-type` field
-const CREDIT_CARD_SCHEMA_VERSION = 4;
+const CREDIT_CARD_SCHEMA_VERSION = 3;
 
 const VALID_ADDRESS_FIELDS = [
   "given-name",
@@ -207,10 +201,10 @@ const VALID_CREDIT_CARD_FIELDS = [
   "cc-number",
   "cc-exp-month",
   "cc-exp-year",
+  "cc-type",
 ];
 
 const VALID_CREDIT_CARD_COMPUTED_FIELDS = [
-  "cc-type",
   "cc-given-name",
   "cc-additional-name",
   "cc-family-name",
@@ -1706,9 +1700,11 @@ class CreditCardsBase extends AutofillRecords {
       return hasNewComputedFields;
     }
 
-    let type = lazy.CreditCard.getType(creditCard["cc-number"]);
-    if (type) {
-      creditCard["cc-type"] = type;
+    if ("cc-number" in creditCard && !("cc-type" in creditCard)) {
+      let type = lazy.CreditCard.getType(creditCard["cc-number"]);
+      if (type) {
+        creditCard["cc-type"] = type;
+      }
     }
 
     // Compute split names
@@ -1746,11 +1742,16 @@ class CreditCardsBase extends AutofillRecords {
   }
 
   async _computeMigratedRecord(creditCard) {
-    if (creditCard.version <= 2) {
-      if (creditCard["cc-number-encrypted"]) {
-        // We cannot decrypt the data, so silently remove the record for
-        // the user.
-        if (!creditCard.deleted) {
+    if (creditCard["cc-number-encrypted"]) {
+      switch (creditCard.version) {
+        case 1:
+        case 2: {
+          // We cannot decrypt the data, so silently remove the record for
+          // the user.
+          if (creditCard.deleted) {
+            break;
+          }
+
           this.log.warn(
             "Removing version",
             creditCard.version,
@@ -1771,16 +1772,15 @@ class CreditCardsBase extends AutofillRecords {
             creditCard._sync = existingSync;
             existingSync.changeCounter++;
           }
+          break;
         }
+
+        default:
+          throw new Error(
+            "Unknown credit card version to migrate: " + creditCard.version
+          );
       }
     }
-
-    if (creditCard.version <= 3) {
-      if (creditCard["cc-type"]) {
-        delete creditCard["cc-type"];
-      }
-    }
-
     return super._computeMigratedRecord(creditCard);
   }
 

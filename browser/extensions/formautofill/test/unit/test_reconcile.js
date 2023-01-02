@@ -1,9 +1,7 @@
 "use strict";
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
-const { CREDIT_CARD_SCHEMA_VERSION } = ChromeUtils.import(
-  "resource://autofill/FormAutofillStorageBase.jsm"
-);
+const CURRENT_CC_VERSION = 3;
 
 // NOTE: a guide to reading these test-cases:
 // parent: What the local record looked like the last time we wrote the
@@ -504,7 +502,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     parent: {
       // So when we last wrote the record to the server, it had these values.
       guid: "2bbd2d8fbc6b",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -521,7 +519,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       // we can deduce the record hasn't actually been changed remotely so we
       // can safely ignore the incoming record and write our local changes.
       guid: "2bbd2d8fbc6b",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -535,7 +533,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Remote change",
     parent: {
       guid: "e3680e9f890d",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -547,7 +545,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "e3680e9f890d",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
@@ -562,7 +560,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "New local field",
     parent: {
       guid: "0cba738b1be0",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -575,7 +573,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "0cba738b1be0",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -590,7 +588,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "New remote field",
     parent: {
       guid: "be3ef97f8285",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -602,7 +600,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "be3ef97f8285",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -618,7 +616,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Deleted field locally",
     parent: {
       guid: "9627322248ec",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -631,7 +629,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "9627322248ec",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -646,7 +644,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Deleted field remotely",
     parent: {
       guid: "7d7509f3eeb2",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -660,7 +658,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "7d7509f3eeb2",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -675,7 +673,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     parent: {
       // The last time we wrote this to the server, "cc-exp-month" was 12.
       guid: "e087a06dfc57",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -691,7 +689,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     remote: {
       // Remotely, we've changed "cc-exp-month" to 1.
       guid: "e087a06dfc57",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 1,
@@ -707,7 +705,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Multiple local changes",
     parent: {
       guid: "340a078c596f",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -724,7 +722,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "340a078c596f",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-year": 2000,
@@ -743,7 +741,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Same change to local and remote",
     parent: {
       guid: "0b3a72a1bea2",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -755,7 +753,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "0b3a72a1bea2",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
@@ -770,7 +768,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     parent: {
       // This is what we last wrote to the sync server.
       guid: "62068784d089",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -784,7 +782,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     remote: {
       // An incoming record has a different cc-number than any of the above!
       guid: "62068784d089",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
     },
@@ -805,7 +803,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Conflicting changes to multiple fields",
     parent: {
       guid: "244dbb692e94",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -819,7 +817,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "244dbb692e94",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
       "cc-exp-month": 3,
@@ -840,7 +838,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Field deleted locally, changed remotely",
     parent: {
       guid: "6fc45e03d19a",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -853,7 +851,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "6fc45e03d19a",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 3,
@@ -873,7 +871,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     description: "Field changed locally, deleted remotely",
     parent: {
       guid: "fff9fa27fa18",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
@@ -887,7 +885,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "fff9fa27fa18",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
     },
@@ -910,7 +908,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "Created, last modified time reconciliation without local changes",
     parent: {
       guid: "5113f329c42f",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       timeCreated: 1234,
@@ -921,7 +919,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     local: [],
     remote: {
       guid: "5113f329c42f",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       timeCreated: 1200,
@@ -946,7 +944,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "Created, last modified time reconciliation with local changes",
     parent: {
       guid: "791e5608b80a",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       timeCreated: 1234,
@@ -962,7 +960,7 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
     ],
     remote: {
       guid: "791e5608b80a",
-      version: CREDIT_CARD_SCHEMA_VERSION,
+      version: CURRENT_CC_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       timeCreated: 1300,
