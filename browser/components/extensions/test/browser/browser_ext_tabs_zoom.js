@@ -3,6 +3,11 @@
 "use strict";
 
 const SITE_SPECIFIC_PREF = "browser.zoom.siteSpecific";
+const FULL_ZOOM_PREF = "browser.content.full-zoom";
+
+let gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
+  Ci.nsIContentPrefService2
+);
 
 // A single monitor for the tests.  If it receives any
 // incognito data in event listeners it will fail.
@@ -236,9 +241,23 @@ add_task(async function test_zoom_api() {
         zoomSettings.scope,
         `Scope should be "per-tab"`
       );
+
       await msg("site-specific", null);
 
-      browser.test.notifyPass("tab-zoom");
+      browser.test.onMessage.addListener(async msg => {
+        if (msg === "set-global-zoom-done") {
+          zoomSettings = await browser.tabs.getZoomSettings(tabIds[0]);
+
+          browser.test.assertEq(
+            5,
+            zoomSettings.defaultZoomFactor,
+            `Default zoom should be 5 after being changed`
+          );
+
+          browser.test.notifyPass("tab-zoom");
+        }
+      });
+      await msg("set-global-zoom");
     } catch (e) {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
       browser.test.notifyFail("tab-zoom");
@@ -267,6 +286,17 @@ add_task(async function test_zoom_api() {
     } else if (msg == "set-zoom") {
       let tab = tabTracker.getTab(args[0]);
       ZoomManager.setZoomForBrowser(tab.linkedBrowser);
+    } else if (msg == "set-global-zoom") {
+      resp = gContentPrefs.setGlobal(
+        FULL_ZOOM_PREF,
+        5,
+        Cu.createLoadContext(),
+        {
+          handleCompletion() {
+            extension.sendMessage("set-global-zoom-done", id, resp);
+          },
+        }
+      );
     } else if (msg == "enlarge") {
       FullZoom.enlarge();
     } else if (msg == "site-specific") {
@@ -301,6 +331,14 @@ add_task(async function test_zoom_api() {
   await extension.awaitFinish("tab-zoom");
 
   await extension.unload();
+
+  await new Promise(resolve => {
+    gContentPrefs.setGlobal(FULL_ZOOM_PREF, null, Cu.createLoadContext(), {
+      handleCompletion() {
+        resolve();
+      },
+    });
+  });
 
   privateWindow.close();
   BrowserTestUtils.removeTab(tab1);
