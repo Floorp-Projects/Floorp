@@ -130,12 +130,16 @@ button.case-sensitive-btn {
 }
 
 .search-panel .img.loader {
-  mask-image: url(chrome://devtools/content/debugger/images/loader.svg);
+  background-image: url(chrome://devtools/content/debugger/images/loader.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
   width: 16px;
   height: 16px;
   margin-inline-start: 10px;
   animation: search-loader-rotate 0.5s linear infinite;
-  background-color: var(--theme-selection-background);
+  -moz-context-properties: fill;
+  fill: var(--theme-selection-background);
   display: inline-block;
   top: 4px;
   position: relative;
