@@ -17,6 +17,9 @@
 #include "nsIScriptContext.h"
 
 namespace mozilla {
+namespace dom {
+class EventTarget;
+}  // namespace dom
 
 class TypedEventHandler {
  public:
@@ -152,15 +155,13 @@ class JSEventHandler : public nsIDOMEventListener {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_JSEVENTHANDLER_IID)
 
-  JSEventHandler(nsISupports* aTarget, nsAtom* aType,
+  JSEventHandler(dom::EventTarget* aTarget, nsAtom* aType,
                  const TypedEventHandler& aTypedHandler);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsIDOMEventListener interface
   NS_DECL_NSIDOMEVENTLISTENER
-
-  nsISupports* GetEventTarget() const { return mTarget; }
 
   void Disconnect() { mTarget = nullptr; }
 
@@ -210,7 +211,7 @@ class JSEventHandler : public nsIDOMEventListener {
  protected:
   virtual ~JSEventHandler();
 
-  nsISupports* mTarget;
+  dom::EventTarget* mTarget;
   RefPtr<nsAtom> mEventName;
   TypedEventHandler mTypedHandler;
 };
@@ -223,7 +224,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(JSEventHandler, NS_JSEVENTHANDLER_IID)
  * Factory function.  aHandler must already be bound to aTarget.
  * aContext is allowed to be null if aHandler is already set up.
  */
-nsresult NS_NewJSEventHandler(nsISupports* aTarget, nsAtom* aType,
+nsresult NS_NewJSEventHandler(mozilla::dom::EventTarget* aTarget, nsAtom* aType,
                               const mozilla::TypedEventHandler& aTypedHandler,
                               mozilla::JSEventHandler** aReturn);
 
