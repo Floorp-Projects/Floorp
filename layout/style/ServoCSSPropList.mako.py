@@ -58,9 +58,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     # Servo serializes one value when both are the same, a few tests expect two.
     "border-spacing",
 
-    # Resolved value should be zero when the column-rule-style is none.
-    "column-rule-width",
-
     # These resolve auto to zero in a few cases, but not all.
     "max-height",
     "max-width",
