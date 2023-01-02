@@ -157,7 +157,7 @@ class CodeCoverageMixin(SingleTestMixin):
         if not self.code_coverage_enabled and not self.java_code_coverage_enabled:
             return
 
-        self.grcov_dir = os.environ["MOZ_FETCHES_DIR"]
+        self.grcov_dir = os.path.join(os.environ["MOZ_FETCHES_DIR"], "grcov")
         if not os.path.isfile(os.path.join(self.grcov_dir, self.grcov_bin)):
             raise Exception(
                 "File not found: {}".format(
