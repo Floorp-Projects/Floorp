@@ -20,6 +20,7 @@ netwerk:
       - scripts
       - fetch
       - image
+      - other
     description: >
       Counts the different type of resources that are sent for early hints.
     bugs:
