@@ -25,11 +25,9 @@ namespace mozilla {
 
 using namespace dom;
 
-JSEventHandler::JSEventHandler(nsISupports* aTarget, nsAtom* aType,
+JSEventHandler::JSEventHandler(EventTarget* aTarget, nsAtom* aType,
                                const TypedEventHandler& aTypedHandler)
-    : mEventName(aType), mTypedHandler(aTypedHandler) {
-  nsCOMPtr<nsISupports> base = do_QueryInterface(aTarget);
-  mTarget = base.get();
+    : mTarget(aTarget), mEventName(aType), mTypedHandler(aTypedHandler) {
   // Note, we call HoldJSObjects to get CanSkip called before CC.
   HoldJSObjects(this);
 }
@@ -101,7 +99,7 @@ bool JSEventHandler::IsBlackForCC() {
 }
 
 nsresult JSEventHandler::HandleEvent(Event* aEvent) {
-  nsCOMPtr<EventTarget> target = do_QueryInterface(mTarget);
+  nsCOMPtr<EventTarget> target = mTarget;
   if (!target || !mTypedHandler.HasEventHandler() ||
       !GetTypedEventHandler().Ptr()->CallbackPreserveColor()) {
     return NS_ERROR_FAILURE;
@@ -219,7 +217,8 @@ using namespace mozilla;
  * Factory functions
  */
 
-nsresult NS_NewJSEventHandler(nsISupports* aTarget, nsAtom* aEventType,
+nsresult NS_NewJSEventHandler(mozilla::dom::EventTarget* aTarget,
+                              nsAtom* aEventType,
                               const TypedEventHandler& aTypedHandler,
                               JSEventHandler** aReturn) {
   NS_ENSURE_ARG(aEventType || !NS_IsMainThread());
