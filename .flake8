@@ -46,6 +46,9 @@ exclude =
     toolkit/moz.configure,
     toolkit/nss.configure,
 
+    # mako files are not really python files
+    *.mako.py,
+
     # These paths are intentionally excluded (not necessarily for good reason).
     build/moz.configure/*.configure,
     build/pymake/,

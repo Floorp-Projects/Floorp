@@ -11,6 +11,7 @@ rust:
         - gfx/wr/wr_malloc_size_of/
         - media/mp4parse-rust/
         - servo/
+        - '**/*.mako.rs'
     extensions:
         - rs
     support-files:
