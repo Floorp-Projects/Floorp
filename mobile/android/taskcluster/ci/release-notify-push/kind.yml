@@ -25,8 +25,12 @@ task-defaults:
         subject: "Focus {config[params][version]}-build{config[params][build_number]} has been pushed to the closed testing track on Google Play"
         message:
             by-level:
-                '3': "and Android-Components {config[params][version]}-build{config[params][build_number]} have been pushed to https://maven.mozilla.org/"
-                default: "and Android-Components {config[params][version]}-build{config[params][build_number]} have been pushed to https://maven-default.stage.mozaws.net/"
+                '3':
+                    Focus {config[params][version]}-build{config[params][build_number]} has been pushed to the closed testing track on Google Play
+                    and Android-Components {config[params][version]}-build{config[params][build_number]} have been pushed to https://maven.mozilla.org/
+                default:
+                    Focus {config[params][version]}-build{config[params][build_number]} has not been pushed to the closed testing track on Google Play
+                    and Android-Components {config[params][version]}-build{config[params][build_number]} have been pushed to https://maven-default.stage.mozaws.net/"
         emails:
             by-level:
                 '3': ["release-signoff@mozilla.org"]
