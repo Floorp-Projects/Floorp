@@ -53,7 +53,7 @@ static bool IsOptionInteractivelySelectable(HTMLSelectElement& aSelect,
 namespace mozilla {
 
 static StaticAutoPtr<nsString> sIncrementalString;
-static DOMTimeStamp gLastKeyTime = 0;
+static TimeStamp gLastKeyTime;
 static uintptr_t sLastKeyListener = 0;
 static constexpr int32_t kNothingSelected = -1;
 
@@ -72,6 +72,11 @@ class MOZ_RAII AutoIncrementalSearchHandler {
     if (sLastKeyListener != uintptr_t(&aListener)) {
       sLastKeyListener = uintptr_t(&aListener);
       GetIncrementalString().Truncate();
+      // To make it easier to handle time comparisons in the other methods,
+      // initialize gLastKeyTime to a value in the past.
+      gLastKeyTime = TimeStamp::Now() -
+                     TimeDuration::FromMilliseconds(
+                         StaticPrefs::ui_menu_incremental_search_timeout() * 2);
     }
   }
   ~AutoIncrementalSearchHandler() {
@@ -556,7 +561,7 @@ nsresult HTMLSelectEventListener::KeyPress(dom::Event* aKeyEvent) {
   // string we will use to find options and start searching at the current
   // keystroke.  Otherwise, Truncate the string if it's been a long time
   // since our last keypress.
-  if (keyEvent->mTime - gLastKeyTime >
+  if ((keyEvent->mTimeStamp - gLastKeyTime).ToMilliseconds() >
       StaticPrefs::ui_menu_incremental_search_timeout()) {
     // If this is ' ' and we are at the beginning of the string, treat it as
     // "select this option" (bug 191543)
@@ -572,7 +577,7 @@ nsresult HTMLSelectEventListener::KeyPress(dom::Event* aKeyEvent) {
     GetIncrementalString().Truncate();
   }
 
-  gLastKeyTime = keyEvent->mTime;
+  gLastKeyTime = keyEvent->mTimeStamp;
 
   // Append this keystroke to the search string.
   char16_t uniChar = ToLowerCase(static_cast<char16_t>(keyEvent->mCharCode));
@@ -677,7 +682,7 @@ nsresult HTMLSelectEventListener::KeyDown(dom::Event* aKeyEvent) {
   dropDownMenuOnSpace = mIsCombobox && !mElement->OpenInParentProcess();
 #endif
   bool withinIncrementalSearchTime =
-      keyEvent->mTime - gLastKeyTime <=
+      (keyEvent->mTimeStamp - gLastKeyTime).ToMilliseconds() <=
       StaticPrefs::ui_menu_incremental_search_timeout();
   if ((dropDownMenuOnUpDown &&
        (keyEvent->mKeyCode == NS_VK_UP || keyEvent->mKeyCode == NS_VK_DOWN)) ||

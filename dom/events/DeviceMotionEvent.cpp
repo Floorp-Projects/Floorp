@@ -54,8 +54,6 @@ void DeviceMotionEvent::InitDeviceMotionEvent(
       this, aRotationRate.mAlpha, aRotationRate.mBeta, aRotationRate.mGamma);
   mInterval = aInterval;
   if (!aTimeStamp.IsNull()) {
-    mEvent->mTime = aTimeStamp.Value();
-
     static mozilla::TimeStamp sInitialNow = mozilla::TimeStamp::Now();
     static uint64_t sInitialEventTime = aTimeStamp.Value();
     mEvent->mTimeStamp =

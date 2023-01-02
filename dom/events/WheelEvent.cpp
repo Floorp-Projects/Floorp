@@ -29,7 +29,6 @@ WheelEvent::WheelEvent(EventTarget* aOwner, nsPresContext* aPresContext,
     }
   } else {
     mEventIsInternal = true;
-    mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
     mEvent->AsWheelEvent()->mInputSource =
         MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;

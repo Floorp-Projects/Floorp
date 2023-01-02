@@ -55,7 +55,6 @@ struct ParamTraits<mozilla::WidgetEvent> {
     WriteParam(aWriter, aParam.mMessage);
     WriteParam(aWriter, aParam.mRefPoint);
     WriteParam(aWriter, aParam.mFocusSequenceNumber);
-    WriteParam(aWriter, aParam.mTime);
     WriteParam(aWriter, aParam.mTimeStamp);
     WriteParam(aWriter, aParam.mFlags);
     WriteParam(aWriter, aParam.mLayersId);
@@ -67,7 +66,6 @@ struct ParamTraits<mozilla::WidgetEvent> {
                ReadParam(aReader, &aResult->mMessage) &&
                ReadParam(aReader, &aResult->mRefPoint) &&
                ReadParam(aReader, &aResult->mFocusSequenceNumber) &&
-               ReadParam(aReader, &aResult->mTime) &&
                ReadParam(aReader, &aResult->mTimeStamp) &&
                ReadParam(aReader, &aResult->mFlags) &&
                ReadParam(aReader, &aResult->mLayersId);
@@ -998,7 +996,6 @@ struct ParamTraits<mozilla::InputData> {
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mInputType);
-    WriteParam(aWriter, aParam.mTime);
     WriteParam(aWriter, aParam.mTimeStamp);
     WriteParam(aWriter, aParam.modifiers);
     WriteParam(aWriter, aParam.mFocusSequenceNumber);
@@ -1007,7 +1004,6 @@ struct ParamTraits<mozilla::InputData> {
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mInputType) &&
-           ReadParam(aReader, &aResult->mTime) &&
            ReadParam(aReader, &aResult->mTimeStamp) &&
            ReadParam(aReader, &aResult->modifiers) &&
            ReadParam(aReader, &aResult->mFocusSequenceNumber) &&

@@ -68,7 +68,7 @@ using mozilla::dom::KeyboardEvent;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
-DOMTimeStamp nsMenuPopupFrame::sLastKeyTime = 0;
+TimeStamp nsMenuPopupFrame::sLastKeyTime;
 
 #ifdef MOZ_WAYLAND
 #  include "mozilla/WidgetUtilsGtk.h"
@@ -2128,7 +2128,7 @@ nsMenuFrame* nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent,
   bool isMenu = parentContent && !parentContent->NodeInfo()->Equals(
                                      nsGkAtoms::menulist, kNameSpaceID_XUL);
 
-  DOMTimeStamp keyTime = aKeyEvent->TimeStamp();
+  TimeStamp keyTime = aKeyEvent->WidgetEventPtr()->mTimeStamp;
 
   if (charCode == 0) {
     if (keyCode == dom::KeyboardEvent_Binding::DOM_VK_BACK_SPACE) {

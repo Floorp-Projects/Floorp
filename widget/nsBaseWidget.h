@@ -274,11 +274,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void SetDrawsInTitlebar(bool aState) override {}
   bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
   void FreeNativeData(void* data, uint32_t aDataType) override {}
-  [[nodiscard]] nsresult BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                                         int32_t aHorizontal,
-                                         int32_t aVertical) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   nsresult ActivateNativeMenuItemAt(const nsAString& indexString) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -638,10 +633,10 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
    * a new MultiTouchInput object that is ready to be dispatched.
    */
   mozilla::MultiTouchInput UpdateSynthesizedTouchState(
-      mozilla::MultiTouchInput* aState, uint32_t aTime,
-      mozilla::TimeStamp aTimeStamp, uint32_t aPointerId,
-      TouchPointerState aPointerState, LayoutDeviceIntPoint aPoint,
-      double aPointerPressure, uint32_t aPointerOrientation);
+      mozilla::MultiTouchInput* aState, mozilla::TimeStamp aTimeStamp,
+      uint32_t aPointerId, TouchPointerState aPointerState,
+      LayoutDeviceIntPoint aPoint, double aPointerPressure,
+      uint32_t aPointerOrientation);
 
   /**
    * Dispatch the given MultiTouchInput through APZ to Gecko (if APZ is enabled)

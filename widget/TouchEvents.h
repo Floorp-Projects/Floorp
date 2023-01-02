@@ -153,7 +153,6 @@ class WidgetTouchEvent : public WidgetInputEvent {
                          eTouchEventClass) {
     MOZ_COUNT_CTOR(WidgetTouchEvent);
     mModifiers = aOther.mModifiers;
-    mTime = aOther.mTime;
     mTimeStamp = aOther.mTimeStamp;
     mTouches.AppendElements(aOther.mTouches);
     mInputSource = aOther.mInputSource;

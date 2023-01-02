@@ -22,7 +22,6 @@ CompositionEvent::CompositionEvent(EventTarget* aOwner,
     mEventIsInternal = false;
   } else {
     mEventIsInternal = true;
-    mEvent->mTime = PR_Now();
 
     // XXX compositionstart is cancelable in draft of DOM3 Events.
     //     However, it doesn't make sence for us, we cannot cancel composition

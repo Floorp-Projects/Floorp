@@ -133,7 +133,6 @@ void nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX,
 
   event.mClickCount = 1;
   event.mButton = MouseButton::ePrimary;
-  event.mTime = PR_IntervalNow();
   event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -153,8 +152,6 @@ void nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX,
   }
 
   WidgetTouchEvent event(true, aMessage, aRootWidget);
-
-  event.mTime = PR_IntervalNow();
 
   // XXX: Touch has an identifier of -1 to hint that it is synthesized.
   RefPtr<dom::Touch> t = new dom::Touch(-1, LayoutDeviceIntPoint(aX, aY),

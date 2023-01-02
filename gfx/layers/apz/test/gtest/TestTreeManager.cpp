@@ -219,8 +219,7 @@ TEST_F(APZCTreeManagerGenericTesterMock, Bug1198900) {
   UpdateHitTestingTree();
 
   ScreenPoint origin(100, 50);
-  ScrollWheelInput swi(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,
-                       ScrollWheelInput::SCROLLMODE_INSTANT,
+  ScrollWheelInput swi(mcc->Time(), 0, ScrollWheelInput::SCROLLMODE_INSTANT,
                        ScrollWheelInput::SCROLLDELTA_PIXEL, origin, 0, 10,
                        false, WheelDeltaAdjustmentStrategy::eNone);
   uint64_t blockId;

@@ -1280,9 +1280,9 @@ TEST_F(APZCOverscrollTester, OverscrollByPanGesturesInterruptedByReflowZoom) {
 
   // A sanity check that pan gestures with ctrl modifier will not be handled by
   // APZ.
-  PanGestureInput panInput(
-      PanGestureInput::PANGESTURE_START, MillisecondsSinceStartup(mcc->Time()),
-      mcc->Time(), ScreenIntPoint(5, 5), ScreenPoint(0, -2), MODIFIER_CONTROL);
+  PanGestureInput panInput(PanGestureInput::PANGESTURE_START, mcc->Time(),
+                           ScreenIntPoint(5, 5), ScreenPoint(0, -2),
+                           MODIFIER_CONTROL);
   WidgetWheelEvent wheelEvent = panInput.ToWidgetEvent(nullptr);
   EXPECT_FALSE(APZInputBridge::ActionForWheelEvent(&wheelEvent).isSome());
 

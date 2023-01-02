@@ -95,7 +95,6 @@ void Event::ConstructorInit(EventTarget* aOwner, nsPresContext* aPresContext,
         }
      */
     mEvent = new WidgetEvent(false, eVoidEvent);
-    mEvent->mTime = PR_Now();
   }
 
   InitPresContextData(aPresContext);

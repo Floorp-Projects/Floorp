@@ -457,7 +457,7 @@ class nsCocoaUtils {
   static void InvalidateHiDPIState();
 
   static mozilla::PanGestureInput CreatePanGestureEvent(
-      NSEvent* aNativeEvent, uint32_t aTime, mozilla::TimeStamp aTimeStamp,
+      NSEvent* aNativeEvent, mozilla::TimeStamp aTimeStamp,
       const mozilla::ScreenPoint& aPanStartPoint, const mozilla::ScreenPoint& aPreciseDelta,
       const mozilla::gfx::IntPoint& aLineOrPageDelta, mozilla::Modifiers aModifiers);
 

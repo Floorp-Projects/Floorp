@@ -4858,7 +4858,7 @@ bool nsWindow::DispatchContentCommandEvent(EventMessage aMsg) {
 }
 
 WidgetEventTime nsWindow::GetWidgetEventTime(guint32 aEventTime) {
-  return WidgetEventTime(aEventTime, GetEventTimeStamp(aEventTime));
+  return WidgetEventTime(GetEventTimeStamp(aEventTime));
 }
 
 TimeStamp nsWindow::GetEventTimeStamp(guint32 aEventTime) {
@@ -5007,7 +5007,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
 
           LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
           PanGestureInput panEvent(
-              eventType, aEvent->time, GetEventTimeStamp(aEvent->time),
+              eventType, GetEventTimeStamp(aEvent->time),
               ScreenPoint(touchPoint.x, touchPoint.y), deltas,
               KeymapWrapper::ComputeKeyModifiers(aEvent->state));
           panEvent.mDeltaType = isPageMode ? PanGestureInput::PANDELTA_PAGE
@@ -5418,7 +5418,7 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
   }
 
   PinchGestureInput event(
-      pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
+      pinchGestureType, PinchGestureInput::TRACKPAD,
       GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
       mCurrentTouchpadFocus,
       100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
@@ -5511,7 +5511,6 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
 
   WidgetTouchEvent event(true, msg, this);
   KeymapWrapper::InitInputEvent(event, aEvent->state);
-  event.mTime = aEvent->time;
 
   if (msg == eTouchStart || msg == eTouchMove) {
     mTouches.InsertOrUpdate(aEvent->sequence, std::move(touch));
@@ -8593,7 +8592,6 @@ void nsWindow::EndRemoteDrawingInRegion(
   mSurfaceProvider.EndRemoteDrawingInRegion(aDrawTarget, aInvalidRegion);
 }
 
-// Code shared begin BeginMoveDrag and BeginResizeDrag
 bool nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent, GdkWindow** aWindow,
                            gint* aButton, gint* aRootX, gint* aRootY) {
   if (aMouseEvent->mButton != MouseButton::ePrimary) {
@@ -8630,12 +8628,13 @@ bool nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent, GdkWindow** aWindow,
     // Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=789054
     // To avoid crashes disable double-click on WM without _NET_WM_MOVERESIZE.
     // See _should_perform_ewmh_drag() at gdkwindow-x11.c
+    // XXXsmaug remove this old hack. gtk should be fixed now.
     GdkScreen* screen = gdk_window_get_screen(gdk_window);
     GdkAtom atom = gdk_atom_intern("_NET_WM_MOVERESIZE", FALSE);
     if (!gdk_x11_screen_supports_net_wm_hint(screen, atom)) {
-      static unsigned int lastTimeStamp = 0;
-      if (lastTimeStamp != aMouseEvent->mTime) {
-        lastTimeStamp = aMouseEvent->mTime;
+      static TimeStamp lastTimeStamp;
+      if (lastTimeStamp != aMouseEvent->mTimeStamp) {
+        lastTimeStamp = aMouseEvent->mTimeStamp;
       } else {
         return false;
       }
@@ -8653,57 +8652,6 @@ bool nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent, GdkWindow** aWindow,
   *aRootY = aMouseEvent->mRefPoint.y + offset.y;
 
   return true;
-}
-
-nsresult nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent, int32_t aHorizontal,
-                                   int32_t aVertical) {
-  NS_ENSURE_ARG_POINTER(aEvent);
-
-  if (aEvent->mClass != eMouseEventClass) {
-    // you can only begin a resize drag with a mouse event
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  GdkWindow* gdk_window;
-  gint button, screenX, screenY;
-  if (!GetDragInfo(aEvent->AsMouseEvent(), &gdk_window, &button, &screenX,
-                   &screenY)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // work out what GdkWindowEdge we're talking about
-  GdkWindowEdge window_edge;
-  if (aVertical < 0) {
-    if (aHorizontal < 0) {
-      window_edge = GDK_WINDOW_EDGE_NORTH_WEST;
-    } else if (aHorizontal == 0) {
-      window_edge = GDK_WINDOW_EDGE_NORTH;
-    } else {
-      window_edge = GDK_WINDOW_EDGE_NORTH_EAST;
-    }
-  } else if (aVertical == 0) {
-    if (aHorizontal < 0) {
-      window_edge = GDK_WINDOW_EDGE_WEST;
-    } else if (aHorizontal == 0) {
-      return NS_ERROR_INVALID_ARG;
-    } else {
-      window_edge = GDK_WINDOW_EDGE_EAST;
-    }
-  } else {
-    if (aHorizontal < 0) {
-      window_edge = GDK_WINDOW_EDGE_SOUTH_WEST;
-    } else if (aHorizontal == 0) {
-      window_edge = GDK_WINDOW_EDGE_SOUTH;
-    } else {
-      window_edge = GDK_WINDOW_EDGE_SOUTH_EAST;
-    }
-  }
-
-  // tell the window manager to start the resize
-  gdk_window_begin_resize_drag(gdk_window, window_edge, button, screenX,
-                               screenY, aEvent->mTime);
-
-  return NS_OK;
 }
 
 nsIWidget::WindowRenderer* nsWindow::GetWindowRenderer() {

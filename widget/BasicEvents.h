@@ -419,20 +419,14 @@ struct EventFlags : public BaseEventFlags {
 
 class WidgetEventTime {
  public:
-  // Elapsed time, in milliseconds, from a platform-specific zero time
-  // to the time the message was created
-  uint64_t mTime;
-  // Timestamp when the message was created. Set in parallel to 'time' until we
-  // determine if it is safe to drop 'time' (see bug 77992).
+  // Timestamp when the message was created.
   TimeStamp mTimeStamp;
 
-  WidgetEventTime() : mTime(0), mTimeStamp(TimeStamp::Now()) {}
+  WidgetEventTime() : mTimeStamp(TimeStamp::Now()) {}
 
-  WidgetEventTime(uint64_t aTime, TimeStamp aTimeStamp)
-      : mTime(aTime), mTimeStamp(aTimeStamp) {}
+  explicit WidgetEventTime(TimeStamp aTimeStamp) : mTimeStamp(aTimeStamp) {}
 
   void AssignEventTime(const WidgetEventTime& aOther) {
-    mTime = aOther.mTime;
     mTimeStamp = aOther.mTimeStamp;
   }
 };

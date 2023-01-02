@@ -603,6 +603,8 @@ add_task(async function test_countryAndStateFieldLabels() {
           );
         }
       }
+      // Dispatch a dummy key event so that <select>'s incremental search is cleared.
+      EventUtils.synthesizeKey("VK_ACCEPT", {}, win);
     }
 
     doc.querySelector("#cancel").click();
@@ -905,6 +907,9 @@ add_task(async function test_countrySpecificFieldsGetRequiredness() {
       !provinceField.disabled,
       "address-level1 should not be marked as disabled"
     );
+
+    // Dispatch a dummy key event so that <select>'s incremental search is cleared.
+    EventUtils.synthesizeKey("VK_ACCEPT", {}, win);
 
     doc.querySelector("#country").focus();
     EventUtils.synthesizeKey("Romania", {}, win);

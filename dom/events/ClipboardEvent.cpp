@@ -20,7 +20,6 @@ ClipboardEvent::ClipboardEvent(EventTarget* aOwner, nsPresContext* aPresContext,
     mEventIsInternal = false;
   } else {
     mEventIsInternal = true;
-    mEvent->mTime = PR_Now();
   }
 }
 

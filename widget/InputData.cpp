@@ -25,15 +25,13 @@ InputData::~InputData() = default;
 
 InputData::InputData(InputType aInputType)
     : mInputType(aInputType),
-      mTime(0),
       mFocusSequenceNumber(0),
       mLayersId{0},
       modifiers(0) {}
 
-InputData::InputData(InputType aInputType, uint32_t aTime, TimeStamp aTimeStamp,
+InputData::InputData(InputType aInputType, TimeStamp aTimeStamp,
                      Modifiers aModifiers)
     : mInputType(aInputType),
-      mTime(aTime),
       mTimeStamp(aTimeStamp),
       mFocusSequenceNumber(0),
       mLayersId{0},
@@ -78,7 +76,7 @@ already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch() const {
 
 MultiTouchInput::MultiTouchInput(MultiTouchType aType, uint32_t aTime,
                                  TimeStamp aTimeStamp, Modifiers aModifiers)
-    : InputData(MULTITOUCH_INPUT, aTime, aTimeStamp, aModifiers),
+    : InputData(MULTITOUCH_INPUT, aTimeStamp, aModifiers),
       mType(aType),
       mHandledByAPZ(false) {}
 
@@ -88,7 +86,7 @@ MultiTouchInput::MultiTouchInput()
       mHandledByAPZ(false) {}
 
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
-    : InputData(MULTITOUCH_INPUT, aTouchEvent.mTime, aTouchEvent.mTimeStamp,
+    : InputData(MULTITOUCH_INPUT, aTouchEvent.mTimeStamp,
                 aTouchEvent.mModifiers),
       mHandledByAPZ(aTouchEvent.mFlags.mHandledByAPZ),
       mButton(aTouchEvent.mButton),
@@ -185,7 +183,6 @@ WidgetTouchEvent MultiTouchInput::ToWidgetEvent(nsIWidget* aWidget,
   }
 
   event.mModifiers = this->modifiers;
-  event.mTime = this->mTime;
   event.mTimeStamp = this->mTimeStamp;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
@@ -242,9 +239,9 @@ MouseInput::MouseInput()
 
 MouseInput::MouseInput(MouseType aType, ButtonType aButtonType,
                        uint16_t aInputSource, int16_t aButtons,
-                       const ScreenPoint& aPoint, uint32_t aTime,
-                       TimeStamp aTimeStamp, Modifiers aModifiers)
-    : InputData(MOUSE_INPUT, aTime, aTimeStamp, aModifiers),
+                       const ScreenPoint& aPoint, TimeStamp aTimeStamp,
+                       Modifiers aModifiers)
+    : InputData(MOUSE_INPUT, aTimeStamp, aModifiers),
       mType(aType),
       mButtonType(aButtonType),
       mInputSource(aInputSource),
@@ -254,8 +251,7 @@ MouseInput::MouseInput(MouseType aType, ButtonType aButtonType,
       mPreventClickEvent(false) {}
 
 MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
-    : InputData(MOUSE_INPUT, aMouseEvent.mTime, aMouseEvent.mTimeStamp,
-                aMouseEvent.mModifiers),
+    : InputData(MOUSE_INPUT, aMouseEvent.mTimeStamp, aMouseEvent.mModifiers),
       mType(MOUSE_NONE),
       mButtonType(NONE),
       mInputSource(aMouseEvent.mInputSource),
@@ -399,7 +395,6 @@ WidgetMouseEvent MouseInput::ToWidgetEvent(nsIWidget* aWidget) const {
 
   event.mButtons = mButtons;
   event.mModifiers = modifiers;
-  event.mTime = mTime;
   event.mTimeStamp = mTimeStamp;
   event.mLayersId = mLayersId;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
@@ -428,12 +423,11 @@ PanGestureInput::PanGestureInput()
       mIsNoLineOrPageDelta(true),
       mMayTriggerSwipe(false) {}
 
-PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
-                                 TimeStamp aTimeStamp,
+PanGestureInput::PanGestureInput(PanGestureType aType, TimeStamp aTimeStamp,
                                  const ScreenPoint& aPanStartPoint,
                                  const ScreenPoint& aPanDisplacement,
                                  Modifiers aModifiers)
-    : InputData(PANGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
+    : InputData(PANGESTURE_INPUT, aTimeStamp, aModifiers),
       mType(aType),
       mPanStartPoint(aPanStartPoint),
       mPanDisplacement(aPanDisplacement),
@@ -448,14 +442,13 @@ PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
   mMayTriggerSwipe = SwipeTracker::CanTriggerSwipe(*this);
 }
 
-PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
-                                 TimeStamp aTimeStamp,
+PanGestureInput::PanGestureInput(PanGestureType aType, TimeStamp aTimeStamp,
                                  const ScreenPoint& aPanStartPoint,
                                  const ScreenPoint& aPanDisplacement,
                                  Modifiers aModifiers,
                                  IsEligibleForSwipe aIsEligibleForSwipe)
-    : PanGestureInput(aType, aTime, aTimeStamp, aPanStartPoint,
-                      aPanDisplacement, aModifiers) {
+    : PanGestureInput(aType, aTimeStamp, aPanStartPoint, aPanDisplacement,
+                      aModifiers) {
   mMayTriggerSwipe &= bool(aIsEligibleForSwipe);
 }
 
@@ -480,7 +473,6 @@ bool PanGestureInput::IsMomentum() const {
 WidgetWheelEvent PanGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.mModifiers = this->modifiers;
-  wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
   wheelEvent.mLayersId = mLayersId;
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
@@ -571,11 +563,10 @@ PinchGestureInput::PinchGestureInput()
       mHandledByAPZ(false) {}
 
 PinchGestureInput::PinchGestureInput(
-    PinchGestureType aType, PinchGestureSource aSource, uint32_t aTime,
-    TimeStamp aTimeStamp, const ExternalPoint& aScreenOffset,
-    const ScreenPoint& aFocusPoint, ScreenCoord aCurrentSpan,
-    ScreenCoord aPreviousSpan, Modifiers aModifiers)
-    : InputData(PINCHGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
+    PinchGestureType aType, PinchGestureSource aSource, TimeStamp aTimeStamp,
+    const ExternalPoint& aScreenOffset, const ScreenPoint& aFocusPoint,
+    ScreenCoord aCurrentSpan, ScreenCoord aPreviousSpan, Modifiers aModifiers)
+    : InputData(PINCHGESTURE_INPUT, aTimeStamp, aModifiers),
       mType(aType),
       mSource(aSource),
       mFocusPoint(aFocusPoint),
@@ -598,7 +589,6 @@ bool PinchGestureInput::TransformToLocal(
 WidgetWheelEvent PinchGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.mModifiers = this->modifiers | MODIFIER_CONTROL;
-  wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
   wheelEvent.mLayersId = mLayersId;
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
@@ -713,19 +703,17 @@ bool PinchGestureInput::SetLineOrPageDeltaY(nsIWidget* aWidget) {
 TapGestureInput::TapGestureInput()
     : InputData(TAPGESTURE_INPUT), mType(TAPGESTURE_LONG) {}
 
-TapGestureInput::TapGestureInput(TapGestureType aType, uint32_t aTime,
-                                 TimeStamp aTimeStamp,
+TapGestureInput::TapGestureInput(TapGestureType aType, TimeStamp aTimeStamp,
                                  const ScreenIntPoint& aPoint,
                                  Modifiers aModifiers)
-    : InputData(TAPGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
+    : InputData(TAPGESTURE_INPUT, aTimeStamp, aModifiers),
       mType(aType),
       mPoint(aPoint) {}
 
-TapGestureInput::TapGestureInput(TapGestureType aType, uint32_t aTime,
-                                 TimeStamp aTimeStamp,
+TapGestureInput::TapGestureInput(TapGestureType aType, TimeStamp aTimeStamp,
                                  const ParentLayerPoint& aLocalPoint,
                                  Modifiers aModifiers)
-    : InputData(TAPGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
+    : InputData(TAPGESTURE_INPUT, aTimeStamp, aModifiers),
       mType(aType),
       mLocalPoint(aLocalPoint) {}
 
@@ -743,7 +731,6 @@ WidgetSimpleGestureEvent TapGestureInput::ToWidgetEvent(
     nsIWidget* aWidget) const {
   WidgetSimpleGestureEvent event(true, eTapGesture, aWidget);
 
-  event.mTime = mTime;
   event.mTimeStamp = mTimeStamp;
   event.mLayersId = mLayersId;
   event.mRefPoint = ViewAs<LayoutDevicePixel>(
@@ -773,12 +760,11 @@ ScrollWheelInput::ScrollWheelInput()
       mAPZAction(APZWheelAction::Scroll) {}
 
 ScrollWheelInput::ScrollWheelInput(
-    uint32_t aTime, TimeStamp aTimeStamp, Modifiers aModifiers,
-    ScrollMode aScrollMode, ScrollDeltaType aDeltaType,
-    const ScreenPoint& aOrigin, double aDeltaX, double aDeltaY,
-    bool aAllowToOverrideSystemScrollSpeed,
+    TimeStamp aTimeStamp, Modifiers aModifiers, ScrollMode aScrollMode,
+    ScrollDeltaType aDeltaType, const ScreenPoint& aOrigin, double aDeltaX,
+    double aDeltaY, bool aAllowToOverrideSystemScrollSpeed,
     WheelDeltaAdjustmentStrategy aWheelDeltaAdjustmentStrategy)
-    : InputData(SCROLLWHEEL_INPUT, aTime, aTimeStamp, aModifiers),
+    : InputData(SCROLLWHEEL_INPUT, aTimeStamp, aModifiers),
       mDeltaType(aDeltaType),
       mScrollMode(aScrollMode),
       mOrigin(aOrigin),
@@ -797,7 +783,7 @@ ScrollWheelInput::ScrollWheelInput(
       mAPZAction(APZWheelAction::Scroll) {}
 
 ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
-    : InputData(SCROLLWHEEL_INPUT, aWheelEvent.mTime, aWheelEvent.mTimeStamp,
+    : InputData(SCROLLWHEEL_INPUT, aWheelEvent.mTimeStamp,
                 aWheelEvent.mModifiers),
       mDeltaType(DeltaTypeForDeltaMode(aWheelEvent.mDeltaMode)),
       mScrollMode(SCROLLMODE_INSTANT),
@@ -867,7 +853,6 @@ ScrollUnit ScrollWheelInput::ScrollUnitForDeltaType(
 WidgetWheelEvent ScrollWheelInput::ToWidgetEvent(nsIWidget* aWidget) const {
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.mModifiers = this->modifiers;
-  wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
   wheelEvent.mLayersId = mLayersId;
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
@@ -905,8 +890,7 @@ bool ScrollWheelInput::IsCustomizedByUserPrefs() const {
 }
 
 KeyboardInput::KeyboardInput(const WidgetKeyboardEvent& aEvent)
-    : InputData(KEYBOARD_INPUT, aEvent.mTime, aEvent.mTimeStamp,
-                aEvent.mModifiers),
+    : InputData(KEYBOARD_INPUT, aEvent.mTimeStamp, aEvent.mModifiers),
       mKeyCode(aEvent.mKeyCode),
       mCharCode(aEvent.mCharCode),
       mHandledByAPZ(false) {

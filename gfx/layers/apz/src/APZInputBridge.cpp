@@ -255,7 +255,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
         if (wheelEvent.mDeltaX || wheelEvent.mDeltaY) {
           ScreenPoint origin(wheelEvent.mRefPoint.x, wheelEvent.mRefPoint.y);
           ScrollWheelInput input(
-              wheelEvent.mTime, wheelEvent.mTimeStamp, 0, scrollMode,
+              wheelEvent.mTimeStamp, 0, scrollMode,
               ScrollWheelInput::DeltaTypeForDeltaMode(wheelEvent.mDeltaMode),
               origin, wheelEvent.mDeltaX, wheelEvent.mDeltaY,
               wheelEvent.mAllowToOverrideSystemScrollSpeed, strategy);

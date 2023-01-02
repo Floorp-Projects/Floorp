@@ -190,9 +190,6 @@ class nsWindow final : public nsBaseWidget {
   void Resize(double aX, double aY, double aWidth, double aHeight,
               bool aRepaint) override;
   mozilla::Maybe<bool> IsResizingNativeWidget() override;
-  [[nodiscard]] nsresult BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                                         int32_t aHorizontal,
-                                         int32_t aVertical) override;
   void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget* aWidget,
                    bool aActivate) override;
   void SetSizeMode(nsSizeMode aMode) override;

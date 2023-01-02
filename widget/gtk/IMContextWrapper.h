@@ -599,9 +599,6 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   nsresult DeleteText(GtkIMContext* aContext, int32_t aOffset,
                       uint32_t aNChars);
 
-  // Initializes the GUI event.
-  void InitEvent(WidgetGUIEvent& aEvent);
-
   // Called before destroying the context to work around some platform bugs.
   void PrepareToDestroyContext(GtkIMContext* aContext);
 
