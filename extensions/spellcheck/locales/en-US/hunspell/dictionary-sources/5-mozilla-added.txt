@@ -2910,7 +2910,6 @@ Larisa
 Larisa's
 Larissa
 Larissa's
-Latinx
 Laughton
 Launce
 Launce's
@@ -5299,7 +5298,6 @@ amici
 amicus
 amongst
 amped
-analytics
 anaphylactic
 anaphylaxes
 anaphylaxis
@@ -5419,8 +5417,6 @@ biscotti
 biscotto
 blacksmithing
 blanche
-blockchain
-blockchains
 blogroll
 blogroll's
 blogrolls
@@ -5473,7 +5469,6 @@ chewable
 chickenshit's
 ciphertext
 ciphertexts
-cisgender
 cisgendered
 closable
 codebook
@@ -5516,9 +5511,6 @@ congressionally
 conmanly
 convolutional
 copyrightable
-coronavirus
-coronavirus's
-coronaviruses
 corrigibility
 corrigibility's
 corrigible
@@ -5570,6 +5562,8 @@ curation
 customizable
 cyber
 cybersecurity
+cypher
+cypher's
 cysteine
 cysteine's
 cysteines
@@ -5617,7 +5611,6 @@ definitional
 definitionally
 degenerations
 dehydrogenase's
-deliverables
 demonym
 demonyms
 dequeuing
@@ -5825,9 +5818,7 @@ gerontocracy
 gibibyte
 gibibyte's
 gibibytes
-gigajoule
 gigajoule's
-gigajoules
 glamping
 glom
 glomed
@@ -5874,7 +5865,6 @@ hexane
 hexane's
 hexanes
 hippopotami
-hoc
 holdem
 hophead
 hopheads
@@ -6021,7 +6011,6 @@ mea
 mebibyte
 mebibyte's
 mebibytes
-megajoule
 megajoule's
 merchantability
 merchanting
@@ -6123,8 +6112,6 @@ octopi
 olds
 oligo
 opensource
-opioid
-opioids
 opposable
 opposer
 oppositional
@@ -6241,7 +6228,6 @@ preloading
 preloads
 preparer
 preparers
-prepend
 prepended
 prepending
 prepends
@@ -6438,7 +6424,6 @@ signup's
 signups
 siloed
 single-handedly
-situ
 skeuomorph
 skeuomorphic
 skeuomorphism
@@ -6567,14 +6552,12 @@ tradeoffs
 trailhead
 trailheads
 trainings
-transactional
 transcriptional
 transfect
 transfected
 transfecting
 transfects
 transfeminine
-transformational
 transformative
 transgenderism
 transgene
