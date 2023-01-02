@@ -537,31 +537,26 @@ add_task(
   }
 );
 
-const NO_ACCESS = { id: "origin-controls-state-no-access", args: null };
-const ALWAYS_ON = { id: "origin-controls-state-always-on", args: null };
-const WHEN_CLICKED = { id: "origin-controls-state-when-clicked", args: null };
-const TEMP_ACCESS = {
-  id: "origin-controls-state-temporary-access",
-  args: null,
-};
-
-const HOVER_RUN_VISIT_ONLY = {
-  id: "origin-controls-state-hover-run-visit-only",
-  args: null,
-};
-const HOVER_RUNNABLE_RUN_EXT = {
-  id: "origin-controls-state-runnable-hover-run",
-  args: null,
-};
-const HOVER_RUNNABLE_OPEN_EXT = {
-  id: "origin-controls-state-runnable-hover-open",
-  args: null,
-};
-
 add_task(async function test_messages_origin_controls() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
   });
+
+  const NO_ACCESS = { id: "origin-controls-state-no-access", args: null };
+  const ALWAYS_ON = { id: "origin-controls-state-always-on", args: null };
+  const WHEN_CLICKED = { id: "origin-controls-state-when-clicked", args: null };
+  const HOVER_RUN_VISIT_ONLY = {
+    id: "origin-controls-state-hover-run-visit-only",
+    args: null,
+  };
+  const HOVER_RUNNABLE_RUN_EXT = {
+    id: "origin-controls-state-runnable-hover-run",
+    args: null,
+  };
+  const HOVER_RUNNABLE_OPEN_EXT = {
+    id: "origin-controls-state-runnable-hover-open",
+    args: null,
+  };
 
   const TEST_CASES = [
     {
@@ -1098,263 +1093,4 @@ add_task(async function test_hover_message_when_button_updates_itself() {
   await closeExtensionsPanel(win);
 
   await extension.unload();
-});
-
-// Test the temporary access state messages and attention indicator.
-add_task(async function test_temporary_access() {
-  const TEST_CASES = [
-    {
-      title: "mv3 with active scripts and browser action",
-      manifest: {
-        manifest_version: 3,
-        action: {},
-        content_scripts: [
-          {
-            js: ["script.js"],
-            matches: ["*://example.com/*"],
-          },
-        ],
-      },
-      before: {
-        attention: true,
-        state: WHEN_CLICKED,
-        disabled: false,
-      },
-      messages: ["action-onClicked", "cs-injected"],
-      after: {
-        attention: false,
-        state: TEMP_ACCESS,
-        disabled: false,
-      },
-    },
-    {
-      title: "mv3 with active scripts and no browser action",
-      manifest: {
-        manifest_version: 3,
-        content_scripts: [
-          {
-            js: ["script.js"],
-            matches: ["*://example.com/*"],
-          },
-        ],
-      },
-      before: {
-        attention: true,
-        state: WHEN_CLICKED,
-        disabled: false,
-      },
-      messages: ["cs-injected"],
-      after: {
-        attention: false,
-        state: TEMP_ACCESS,
-        // TODO: This will need updating for bug 1807835.
-        disabled: false,
-      },
-    },
-    {
-      title: "mv3 with browser action and host_permission",
-      manifest: {
-        manifest_version: 3,
-        action: {},
-        host_permissions: ["*://example.com/*"],
-      },
-      before: {
-        attention: true,
-        state: WHEN_CLICKED,
-        disabled: false,
-      },
-      messages: ["action-onClicked"],
-      after: {
-        attention: false,
-        state: TEMP_ACCESS,
-        disabled: false,
-      },
-    },
-    {
-      title: "mv3 with browser action no host_permissions",
-      manifest: {
-        manifest_version: 3,
-        action: {},
-      },
-      before: {
-        attention: false,
-        state: NO_ACCESS,
-        disabled: false,
-      },
-      messages: ["action-onClicked"],
-      after: {
-        attention: false,
-        state: NO_ACCESS,
-        disabled: false,
-      },
-    },
-    // MV2 tests.
-    {
-      title: "mv2 with content scripts and browser action",
-      manifest: {
-        manifest_version: 2,
-        browser_action: {},
-        content_scripts: [
-          {
-            js: ["script.js"],
-            matches: ["*://example.com/*"],
-          },
-        ],
-      },
-      before: {
-        attention: false,
-        state: ALWAYS_ON,
-        disabled: false,
-      },
-      messages: ["action-onClicked", "cs-injected"],
-      after: {
-        attention: false,
-        state: ALWAYS_ON,
-        disabled: false,
-      },
-    },
-    {
-      title: "mv2 with content scripts and no browser action",
-      manifest: {
-        manifest_version: 2,
-        content_scripts: [
-          {
-            js: ["script.js"],
-            matches: ["*://example.com/*"],
-          },
-        ],
-      },
-      before: {
-        attention: false,
-        state: ALWAYS_ON,
-        disabled: true,
-      },
-      messages: ["cs-injected"],
-      after: {
-        attention: false,
-        state: ALWAYS_ON,
-        disabled: true,
-      },
-    },
-    {
-      title: "mv2 with browser action and host_permission",
-      manifest: {
-        manifest_version: 2,
-        browser_action: {},
-        host_permissions: ["*://example.com/*"],
-      },
-      before: {
-        attention: false,
-        state: ALWAYS_ON,
-        disabled: false,
-      },
-      messages: ["action-onClicked"],
-      after: {
-        attention: false,
-        state: ALWAYS_ON,
-        disabled: false,
-      },
-    },
-    {
-      title: "mv2 with browser action no host_permissions",
-      manifest: {
-        manifest_version: 2,
-        browser_action: {},
-      },
-      before: {
-        attention: false,
-        state: NO_ACCESS,
-        disabled: false,
-      },
-      messages: ["action-onClicked"],
-      after: {
-        attention: false,
-        state: NO_ACCESS,
-        disabled: false,
-      },
-    },
-  ];
-
-  let count = 1;
-  await Promise.all(
-    TEST_CASES.map(test => {
-      let id = `test-temp-access-${count++}@ext`;
-      test.extension = ExtensionTestUtils.loadExtension({
-        manifest: {
-          name: test.title,
-          browser_specific_settings: { gecko: { id } },
-          ...test.manifest,
-        },
-        files: {
-          "popup.html": "",
-          "script.js"() {
-            browser.test.sendMessage("cs-injected");
-          },
-        },
-        background() {
-          let action = browser.action ?? browser.browserAction;
-          action?.onClicked.addListener(() => {
-            browser.test.sendMessage("action-onClicked");
-          });
-        },
-        useAddonManager: "temporary",
-      });
-
-      return test.extension.startup();
-    })
-  );
-
-  async function checkButton(extension, expect, click = false) {
-    await openExtensionsPanel(win);
-
-    let item = getUnifiedExtensionsItem(win, extension.id);
-    ok(item, `Expected item for ${extension.id}.`);
-
-    let state = item.querySelector(".unified-extensions-item-message-default");
-    ok(state, "Expected a default state message element.");
-
-    is(
-      item.hasAttribute("attention"),
-      !!expect.attention,
-      "Expected attention badge."
-    );
-    Assert.deepEqual(
-      win.document.l10n.getAttributes(state),
-      expect.state,
-      "Expected l10n attributes for the message."
-    );
-
-    let button = item.querySelector(".unified-extensions-item-action-button");
-    is(button.disabled, !!expect.disabled, "Expect disabled item.");
-
-    // If we should click, and button is not disabled.
-    if (click && !expect.disabled) {
-      let onClick = BrowserTestUtils.waitForEvent(button, "click");
-      button.click();
-      await onClick;
-    } else {
-      // Otherwise, just close the panel.
-      await closeExtensionsPanel(win);
-    }
-  }
-
-  await BrowserTestUtils.withNewTab(
-    { gBrowser: win.gBrowser, url: "https://example.com/" },
-    async () => {
-      for (let { title, extension, before, messages, after } of TEST_CASES) {
-        info(`Test case: ${title}`);
-        await checkButton(extension, before, true);
-
-        await Promise.all(
-          messages.map(msg => {
-            info(`Waiting for ${msg} from clicking the button.`);
-            return extension.awaitMessage(msg);
-          })
-        );
-
-        await checkButton(extension, after);
-        await extension.unload();
-      }
-    }
-  );
 });

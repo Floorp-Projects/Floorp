@@ -1430,15 +1430,10 @@ var gUnifiedExtensions = {
   },
 
   onPanelViewHiding(panelview) {
-    if (window.closed) {
-      return;
-    }
     const list = panelview.querySelector(".unified-extensions-list");
     while (list.lastChild) {
       list.lastChild.remove();
     }
-    // If temporary access was granted, (maybe) clear attention indicator.
-    requestAnimationFrame(() => this.updateAttention());
   },
 
   _panel: null,
