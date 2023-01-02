@@ -107,7 +107,10 @@
 }
 
 .img.loader {
-  mask-image: url(chrome://devtools/content/debugger/images/loader.svg);
+  background-image: url(chrome://devtools/content/debugger/images/loader.svg);
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
+  background-color: unset;
 }
 
 .img.more-tabs {
