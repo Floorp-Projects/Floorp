@@ -243,6 +243,9 @@ nsresult nsHttpTransaction::Init(
   mCallbacks = callbacks;
   mConsumerTarget = target;
   mCaps = caps;
+  // eventsink is a nsHttpChannel when we expect "103 Early Hints" responses.
+  // We expect it in document requests and not e.g. in TRR requests.
+  mEarlyHintObserver = do_QueryInterface(eventsink);
 
   if (requestHead->IsHead()) {
     mNoContent = true;
@@ -428,11 +431,9 @@ nsresult nsHttpTransaction::AsyncRead(nsIStreamListener* listener,
   NS_ENSURE_SUCCESS(rv, rv);
 
   transactionPump.forget(pump);
-  MutexAutoLock lock(mLock);
-  mEarlyHintObserver = do_QueryInterface(listener);
-
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(listener);
   if (httpChannel) {
+    MutexAutoLock lock(mLock);
     mWebTransportSessionEventListener =
         httpChannel->GetWebTransportSessionEventListener();
   }
