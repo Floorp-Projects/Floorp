@@ -20,7 +20,7 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Ваша история посещения сайтов была стёрта.</string>
 
-    <string name="feedback_erase2">История веб-сёрфинга удалена</string>
+    <string name="feedback_erase2">История просмотра сети удалена</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">История просмотров вкладки была стёрта.</string>
@@ -55,8 +55,8 @@
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Что нового</string>
-    <string name="menu_settings">Параметры</string>
-    <string name="menu_about">О программе</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="menu_about">О приложении</string>
     <string name="menu_help">Справка</string>
     <string name="menu_rights">Ваши права</string>
 
@@ -89,7 +89,7 @@
          so that the user doesn't forget about the website still being open. This text is shown in
          the notification. Clicking the notification will have the same effect as clicking the "erase"
          button in the application. -->
-    <string name="notification_erase_text">Удалить историю веб-сёрфинга</string>
+    <string name="notification_erase_text">Удалить историю просмотра сети</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">Открыть</string>
@@ -105,7 +105,7 @@
     <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
          instead of the short title when it has enough space. Android recommends a maximum length
          of 25 characters. -->
-    <string name="shortcut_erase_long_label">Удалить историю веб-сёрфинга</string>
+    <string name="shortcut_erase_long_label">Удалить историю просмотра сети</string>
 
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
@@ -141,7 +141,7 @@
     <string name="about_content"><![CDATA[<p>%1$s даёт вам контроль.</p>
 <p>Используйте его как приватный браузер:
   <ul>
-    <li>Ищите и занимайтесь веб-сёрфингом</li>
+    <li>Ищите и просматривайте сеть</li>
     <li>Блокируйте трекеры (или измените настройки, чтобы разрешить их)</li>
     <li>Стирайте и удаляйте куки, историю поиска и просмотра</li>
   </ul>
@@ -168,7 +168,7 @@
     <string name="preference_category_tracking_protection3">Улучшенная защита от отслеживания</string>
 
     <!-- Preference category for settings related to controlling web content -->
-    <string name="preference_category_web_content">Веб-содержимое</string>
+    <string name="preference_category_web_content">Сетевое содержимое</string>
 
     <!-- Preference category: stealth settings for while switching apps -->
     <string name="preference_category_switching_apps">Смена приложений</string>
@@ -423,7 +423,7 @@
 
     <!-- This text is not visible. Instead it will be read by the accessibility service once we
      finished loading a website -->
-    <string name="accessibility_announcement_loading_finished">Веб-сайт загружен</string>
+    <string name="accessibility_announcement_loading_finished">Сайт загружен</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Дополнительно</string>
@@ -436,7 +436,7 @@
     <string name="content_description_forward">Вперёд</string>
 
     <!-- Content description (not visible, for screen readers etc.): Reload current website -->
-    <string name="content_description_reload">Перезагрузить веб-сайт</string>
+    <string name="content_description_reload">Перезагрузить сайт</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">Перейти назад</string>
@@ -594,7 +594,7 @@
     <string name="notification_browsing_session_channel_description">Уведомления позволяют стереть ваш сеанс в %1$s одним касанием. Вам не нужно открывать приложение или видеть, что запущено в вашем браузере.</string>
 
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
-    <string name="tabs_tray_action_erase">Удалить историю веб-сёрфинга</string>
+    <string name="tabs_tray_action_erase">Удалить историю просмотра сети</string>
 
     <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
       item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
@@ -602,7 +602,7 @@
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
-    <string name="your_rights_content1"><![CDATA[%1$s является бесплатной программой с открытым исходным кодом, созданной Mozilla и другими участниками.]]></string>
+    <string name="your_rights_content1"><![CDATA[%1$s является бесплатным приложением с открытым исходным кодом, созданным Mozilla и другими участниками.]]></string>
 
 
 
@@ -626,7 +626,7 @@
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the GPL
     %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
-    <string name="your_rights_content5"><![CDATA[%1$s также использует списки блокировки от Disconnect, Inc. как отдельные и независимые работы на условиях <a href="%2$s">Генеральной публичной лицензии GNU версии 3</a>, доступные <a href="%3$s">здесь</a>.]]></string>
+    <string name="your_rights_content5"><![CDATA[%1$s также использует списки блокировки от Disconnect, Inc. как отдельные и независимые работы на условиях <a href="%2$s">Основной общественной лицензии GNU 3-ей версии</a>, доступные <a href="%3$s">здесь</a>.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Имя пользователя</string>
@@ -673,7 +673,7 @@
     <string name="preference_performance_request_desktop_site2">Версия для ПК</string>
 
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
-    <string name="custom_tab_copy_url_action">URL скопирован</string>
+    <string name="custom_tab_copy_url_action">Ссылка скопирована</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Инструменты разработчика</string>
@@ -769,7 +769,7 @@
     <string name="preference_phone_feature_notification">Уведомления</string>
 
     <!-- Preference for altering the EME access for all websites -->
-    <string name="preference_phone_feature_media_key_system_access">Защищённое DRM содержимое</string>
+    <string name="preference_phone_feature_media_key_system_access">Защищённое авторским правом содержимое</string>
 
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Всегда спрашивать</string>
@@ -787,13 +787,13 @@
     <string name="preference_allow_audio_video_autoplay">Разрешить аудио и видео</string>
 
     <!-- Preference for block autoplay audio only-->
-    <string name="preference_block_autoplay_audio_only">Блокировать только аудио</string>
+    <string name="preference_block_autoplay_audio_only">Блокировать только звук</string>
 
     <!-- Preference summary for block autoplay audio only-->
-    <string name="preference_block_autoplay_audio_only_summary">Рекомендуется</string>
+    <string name="preference_block_autoplay_audio_only_summary">Желательно</string>
 
     <!-- Preference for block autoplay audio and video-->
-    <string name="preference_block_autoplay_audio_video">Блокировать аудио и видео</string>
+    <string name="preference_block_autoplay_audio_video">Блокировать звуки и видео</string>
 
     <!-- Preference for studies -->
     <string name="preference_studies">Исследования</string>
@@ -947,7 +947,7 @@
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
     <string name="advertising">Реклама</string>
     <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
-    <string name="social">Социальные сети</string>
+    <string name="social">Соцсети</string>
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
     <string name="analytics">Аналитика</string>
     <!-- Preference title for enhanced tracking protection settings -->
@@ -980,7 +980,7 @@
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note2">Сохранённые и отправленные фотографии &lt;b&gt;не будут&lt;/b&gt; удалены, когда вы сотрёте историю %1$s</string>
+    <string name="contextmenu_erased_images_note2">Сохранённые и отправленные изображения &lt;b&gt;не будут&lt;/b&gt; удалены, когда вы сотрёте историю %1$s</string>
 
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
