@@ -1,7 +1,7 @@
 PlacesTransactions.jsm
 ======================
 
-This module serves as the transactions manager for Places (hereinafter *PTM*). Generally, we need a transaction manager because History and Bookmark UI allows users to use `Undo / Redo` functions. To implement those transaction History and Bookmark needed to have a layer between Bookmark API and History API. This layer stores all requested changes in a stack and perform calls to API. That construction allows users perform `Undo / Redo` simply removing / adding that trasaction and call to API from an array. Inside array we store changes from oldest to newest.
+This module serves as the transactions manager for Places (hereinafter *PTM*). Generally, we need a transaction manager because History and Bookmark UI allows users to use `Undo / Redo` functions. To implement those transaction History and Bookmark needed to have a layer between Bookmark API and History API. This layer stores all requested changes in a stack and perform calls to API. That construction allows users perform `Undo / Redo` simply removing / adding that transaction and call to API from an array. Inside array we store changes from oldest to newest.
 
 Transactions implements all the elementary UI commands: creating items, editing their various properties, and so forth. All those commands stored in array and are completed one after another.
 

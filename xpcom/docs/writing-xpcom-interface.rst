@@ -140,7 +140,7 @@ Now write the header: :code:`path/to/ComponentName.h`
       // This second macro includes the declarations for the attributes. There is
       // no need to duplicate these declarations.
       //
-      // In our case it includes a declaration for the isAlive attribue:
+      // In our case it includes a declaration for the isAlive attribute:
       //   GetIsAlive(bool *aIsAlive)
       NS_DECL_NSICOMPONENTNAME
 

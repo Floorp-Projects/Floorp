@@ -24,7 +24,7 @@ The frontend part of the bookmarking experience includes various kind of views:
 
 All the views share a common `Controller`_ that is responsible to handle operations and commands required by the views. Each view creates a Result object and receives notifications about changes from it.
 
-As an example, removing a bookmark from a view will call into the controller that calls into PlacesTransactions to actually do the removal. The removal will notify a `Places event`_, that is catched by the Result, that will immediately update its internal representation of the bookmarks tree. Then the Result sends a notification to the view that will handle it, updating what the user is seeing. The system works according to the classical `Model-View-Controller`_ pattern.
+As an example, removing a bookmark from a view will call into the controller that calls into PlacesTransactions to actually do the removal. The removal will notify a `Places event`_, that is caught by the Result, that will immediately update its internal representation of the bookmarks tree. Then the Result sends a notification to the view that will handle it, updating what the user is seeing. The system works according to the classical `Model-View-Controller`_ pattern.
 
 Fronted dialogs and panels are written using xhtml and shadow DOM. The bookmark dialogs in particular are wrappers around a common template, `editBookmarkPanel.inc.xhtml`_, it could be extended or overloaded like an object (overlay, similar to Web Component).
 

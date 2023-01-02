@@ -287,7 +287,7 @@ xpcshell.ini manifest
 
 The manifest controls what tests are included in a test suite, and the
 configuration of the tests. It is loaded via the \`moz.build\` property
-configuration proprety.
+configuration property.
 
 The following are all of the configuration options for a test suite as
 listed under the ``[DEFAULT]`` section of the manifest.
@@ -534,7 +534,7 @@ Runtime detection
 Some tests will want to only execute certain portions on specific
 platforms. Use
 `AppConstants.jsm <https://searchfox.org/mozilla-central/rev/a0333927deabfe980094a14d0549b589f34cbe49/toolkit/modules/AppConstants.jsm#148>`__
-for determing the platform, for example:
+for determining the platform, for example:
 
 .. code:: brush:
 

@@ -108,7 +108,7 @@ This diagram shows the primary process types in Firefox.
 
 The arrows point from the parent side to the child.  Bolded arrows indicate the
 first top-level actors for the various process types.  The other arrows show
-important actors that are usually the first connections establised between the
+important actors that are usually the first connections established between the
 two processes.  These relationships difficult to discern from code.  Processes
 should clearly document their top-level connections in their IPDL files.
 
@@ -156,7 +156,7 @@ Code for the complete demo can be found `here
 Common Architecture
 ~~~~~~~~~~~~~~~~~~~
 
-Every type of process (besides the launcher and main processses) needs two
+Every type of process (besides the launcher and main processes) needs two
 classes and an actor pair to launch.  This sample will be adding a process type
 we call **Demo**.
 
@@ -645,7 +645,7 @@ exists as long as the ``ProcessChild`` does -- although the message channel may
 be closed.  We will release the reference either when the process is properly
 shutting down or when an IPC error closes the channel.
 
-``Init`` is given the command line arguments constucted above so it will need
+``Init`` is given the command line arguments constructed above so it will need
 to be overridden to parse them.  It does this, binds our actor by
 calling ``Bind`` as was done with the parent, then initializes a bunch of
 components that the process expects to use:
@@ -713,7 +713,7 @@ Destroying the New Process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Gecko processes have a clean way for clients to request that they shutdown.
-Simply calling ``Close()`` on the top level actor at either endoint will begin
+Simply calling ``Close()`` on the top level actor at either endpoint will begin
 the shutdown procedure (so, ``PDemoParent::Close`` or ``PDemoChild::Close``).
 The only other way for a child process to terminate is to crash.  Each of these
 three options requires some special handling.
@@ -1211,7 +1211,7 @@ Set ``MOZ_DEBUG_CHILD_PROCESS=1`` to turn on process startup pausing.  You can
 also set ``MOZ_DEBUG_CHILD_PAUSE=N`` where N is the number of seconds to sleep.
 The default is 10 seconds on Windows and 30 on other platforms.
 
-Pausing for the debugger is not a panacea.  Since the environmental varaiables
+Pausing for the debugger is not a panacea.  Since the environmental variables
 are not specific to process type, you will be forced to wait for all of the
 processes Gecko creates before you wait for it to get to yours.  The pauses can
 also end up exposing unknown concurrency bugs in the browser before it even

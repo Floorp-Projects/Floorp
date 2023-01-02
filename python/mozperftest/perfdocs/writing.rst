@@ -145,9 +145,9 @@ A Python module can be used to run functions during a run lifecycle. Available h
   change the running environment.
 - **after_runs(env)** runs after the test is done.
 - **on_exception(env, layer, exception)** called on any exception. Provides the
-  layer in which the exception occured, and the exception. If the hook returns `True`
+  layer in which the exception occurred, and the exception. If the hook returns `True`
   the exception is ignored and the test resumes. If the hook returns `False`, the
-  exception is ignored and the test ends immediatly. The hook can also re-raise the
+  exception is ignored and the test ends immediately. The hook can also re-raise the
   exception or raise its own exception.
 
 In the example below, the `before_runs` hook is setting the options on the fly,

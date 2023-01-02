@@ -28,11 +28,11 @@ A `VisitInfo` object is any object that contains A SUBSET of the following prope
 Main functions
 --------------
 
-  * Fetching. Fetch the available information for one page. You would have to specify as a string a unique identifier (Guid) or url (url, nsIURI or href). Fetching step returns a promise which is successfully resolved when fetch is completed and page is found. Throws an error when Guid or url does not have an expeected type or, if it is a string, url / Guid is not valid.
+  * Fetching. Fetch the available information for one page. You would have to specify as a string a unique identifier (Guid) or url (url, nsIURI or href). Fetching step returns a promise which is successfully resolved when fetch is completed and page is found. Throws an error when Guid or url does not have an expected type or, if it is a string, url / Guid is not valid.
 
   * Removing pages / visits from database. You would have to specify the desired page / object visit to be removed. Returns a promise which is resolved with true boolean. Throws an error when 'pages' has an unexpected type or if there are no data for provided string / filter.
 
-  * Determing if a page has been visited. Connectes with database and inquries if specified page has been visited or not. Returns a promise which is resolved with a true boolean value if page has been visited, falsy value if not. Throws an error if provided data is not a valid Guid or uri.
+  * Determining if a page has been visited. Connects with database and inquries if specified page has been visited or not. Returns a promise which is resolved with a true boolean value if page has been visited, falsy value if not. Throws an error if provided data is not a valid Guid or uri.
 
   * Clearing all history. Returns a promise which is resolved when operation is completed.
 

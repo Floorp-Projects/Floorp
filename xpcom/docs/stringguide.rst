@@ -68,7 +68,7 @@ There are a number of additional string classes:
 * ``nsLiteral[C]String`` which should rarely be constructed explicitly but
   usually through the ``""_ns`` and ``u""_ns`` user-defined string literals.
   ``nsLiteral[C]String`` is trivially constructible and destructible, and
-  therefore does not emit construction/destruction code when stored in statics,
+  therefore does not emit construction/destruction code when stored in static,
   as opposed to the other string classes.
 
 The Major String Classes
@@ -334,7 +334,7 @@ indicate success or OOM. Calling ``RestartBulkWrite()`` invalidates
 previously-obtained span, raw pointer or length.
 
 Once you are done writing, call ``Finish()``. It takes two arguments: the new
-logical length of the string (which must not exceed the capacity retuned by
+logical length of the string (which must not exceed the capacity returned by
 the ``Length()`` method of the handle) and a boolean indicating whether it's
 OK to attempt to reallocate a smaller buffer in case a smaller mozjemalloc
 bucket could accommodate the new logical length.
@@ -462,7 +462,7 @@ ones are defined in the `Encoding Standard <https://encoding.spec.whatwg.org/>`_
 Conversions from these encodings to
 UTF-8 and UTF-16 are provided by `mozilla::Encoding
 <https://searchfox.org/mozilla-central/source/intl/Encoding.h#109>`_.
-Additonally, on Windows the are some rare cases (e.g. drag&drop) where it's
+Additionally, on Windows the are some rare cases (e.g. drag&drop) where it's
 necessary to call a system API with data encoded in the Windows
 locale-dependent legacy encoding instead of UTF-16. In those rare cases, use
 ``MultiByteToWideChar``/``WideCharToMultiByte`` from kernel32.dll. Do not use
@@ -655,7 +655,7 @@ deal with response bodies.)
 
 .. cpp:function:: NS_ConvertASCIItoUTF16(const nsACString&)
 
-    A ``nsAutoString`` which holds a temproary buffer contianing the value of
+    A ``nsAutoString`` which holds a temporary buffer containing the value of
     the Latin1 to UTF-16 conversion.
 
 .. cpp:function:: void CopyASCIItoUTF16(Span<const char>, nsAString&)

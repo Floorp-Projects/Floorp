@@ -5,7 +5,7 @@ Hunting Leaks
     :local:
     :depth: 2
 
-Different tools and technics are used to hunt leaks:
+Different tools and techniques are used to hunt leaks:
 
 .. list-table::
    :header-rows: 1
