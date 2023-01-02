@@ -15,7 +15,7 @@ The `mach` command will bootstrap the installation of all required tools for the
 framework to run, and display a selection screen to pick a test. Once the
 selection is done, the performance test will run locally.
 
-If you know what test you want to run, you can use its path explicitely::
+If you know what test you want to run, you can use its path explicitly::
 
     $ ./mach perftest perftest_script.js
 

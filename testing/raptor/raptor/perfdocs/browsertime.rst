@@ -28,7 +28,7 @@ Vanilla Browsertime tests
 
 If you want to run highly customized tests, you can make use of our customizable ``browsertime`` test.
 
-With this test, you can customize the page to test, test script to use, and anything else required. It will make use of default settings that Raptor uses in browsertime but these can be overriden with ``--browsertime-arg`` settings.
+With this test, you can customize the page to test, test script to use, and anything else required. It will make use of default settings that Raptor uses in browsertime but these can be overridden with ``--browsertime-arg`` settings.
 
 For example, here's a test on ``https://www.sitespeed.io`` using this custom test:
 
@@ -205,7 +205,7 @@ Mach Browsertime Setup
 ----------------------
 
 **WARNING**
- Raptor-Browsertime (i.e. ``./mach raptor --browsertime -t <TEST>``) is currently required to be ran first in order to acquire the Node-16 binary. In general, it is also not reccomended to use ``./mach browsertime`` for testing as it will be deprecated soon.
+ Raptor-Browsertime (i.e. ``./mach raptor --browsertime -t <TEST>``) is currently required to be ran first in order to acquire the Node-16 binary. In general, it is also not recommended to use ``./mach browsertime`` for testing as it will be deprecated soon.
 
 Note that if you are running Raptor-Browsertime then it will get installed automatically and also update itself. Otherwise, you can run:
 

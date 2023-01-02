@@ -20,7 +20,7 @@ Below, you can find the process of how we run Warm, Cold, and Chimera pageload t
 Warm Pageload
 ==============
 
-In this pageload test type, we open the browser, then repeatedly navigate to the same page without restarting the brower in between cycles.
+In this pageload test type, we open the browser, then repeatedly navigate to the same page without restarting the browser in between cycles.
 
 * A new, or conditioned, browser profile is created
 * The browser is started up

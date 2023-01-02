@@ -32,7 +32,7 @@ runs them sequentially.
 The goal of this organization is to allow adding new performance tests runners
 that will be based on a specific combination of layers. To avoid messy code,
 we need to make sure that each layer represents a single aspect of the process
-and that is completely independant from other layers (besides sharing the data
+and that is completely independent from other layers (besides sharing the data
 through the common environment.)
 
 For instance, we could use `perftest` to run a C++ benchmark by implementing a

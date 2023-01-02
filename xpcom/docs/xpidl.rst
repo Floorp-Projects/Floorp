@@ -139,7 +139,7 @@ an array element.
 Constants and CEnums
 ~~~~~~~~~~~~~~~~~~~~
 
-Constants must be attched to an interface. The only constants supported are
+Constants must be attached to an interface. The only constants supported are
 those which become integer types when compiled to source code; string constants
 and floating point constants are currently not supported.
 

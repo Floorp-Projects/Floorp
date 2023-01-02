@@ -471,7 +471,7 @@ after these descriptors are sent/received (only) in the direction specified.
 
 .. note::
     As a mnemonic to remember which direction they indicate, remember to put
-    the word "to" in front of them.  So, for example, ``parent:`` preceeds
+    the word "to" in front of them.  So, for example, ``parent:`` precedes
     ``__delete__``, meaning ``__delete__`` is sent from the child **to** the
     parent, and ``both:`` states that ``AnotherMsg`` can be sent **to** either
     endpoint.
@@ -856,7 +856,7 @@ them, determined using the type of the object as supplied.  ``WriteBytes`` and
 ``ReadBytesInto`` work on raw, contiguous bytes as expected.  ``MessageWriter``
 and ``MessageReader`` are IPDL internal objects which hold the incoming/outgoing
 message as a stream of bytes and the current spot in the stream.  It is *very*
-rare for client code to need to create or manipulate these obejcts. Their
+rare for client code to need to create or manipulate these objects. Their
 advanced use is beyond the scope of this document.
 
 .. important::
@@ -1276,7 +1276,7 @@ than to leave them in limbo until the destructor is run.
 Consider actors to be like normal reference-counted objects, but where IPDL
 holds a reference while the connection will or does exist.  One common
 architecture has IPDL holding the `only` reference to an actor.  This is common
-with actors created by sending construtor messages but the idea is available to
+with actors created by sending constructor messages but the idea is available to
 any actor.  That only reference is then released when the ``__delete__``
 message is sent or received.
 
@@ -1557,7 +1557,7 @@ On the other hand, some things we can and should control for:
 * Messages incur inherent performance overhead for a number of reasons: IPDL
   internal thread latency (e.g. the I/O thread), parameter (de-)serialization,
   etc.  While not usually dramatic, this cost can add up.  What's more, each
-  message generates a fair amound of C++ code.  For these reasons, it is wise
+  message generates a fair amount of C++ code.  For these reasons, it is wise
   to reduce the number of messages being sent as far as is reasonable.  This
   can be as simple as consolidating two asynchronous messages that are always
   in succession.  Or it can be more complex, like consolidating two
@@ -1762,5 +1762,5 @@ comma-separated list of **top-level** protocols to log (e.g.
 in tracking down a bug.
 
 .. important::
-    The preceeding ``P`` and the ``Parent`` or ``Child`` suffix are required
+    The preceding ``P`` and the ``Parent`` or ``Child`` suffix are required
     when listing individual protocols in ``MOZ_IPC_MESSAGE_LOG``.

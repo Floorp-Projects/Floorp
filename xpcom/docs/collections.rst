@@ -11,7 +11,7 @@ Rust Bindings
 
 When the ``thin_vec`` crate is built in Gecko, ``thin_vec::ThinVec<T>`` is
 guaranteed to have the same memory layout and allocation strategy as
-``nsTArray``, meaning that the two types may be used interchangably across
+``nsTArray``, meaning that the two types may be used interchangeably across
 FFI boundaries. The type is **not** safe to pass by-value over FFI
 boundaries, due to Rust and C++ differing in when they run destructors.
 

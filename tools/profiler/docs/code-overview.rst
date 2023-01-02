@@ -1144,7 +1144,7 @@ elements, etc.), and calls back into a provided
 `JSONWriteFunc interface <https://searchfox.org/mozilla-central/search?q=symbol:T_mozilla%3A%3AJSONWriteFunc>`_
 to output characters.
 
-While these clases live outside of the Profiler directories, it may sometimes be
+While these classes live outside of the Profiler directories, it may sometimes be
 worth maintaining and/or modifying them to better serve the Profiler's needs.
 But there are other users, so be careful not to break other things!
 

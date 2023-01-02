@@ -32,8 +32,8 @@ When a log statement is logged on a thread and the `Firefox Profiler
 recorded as a profiler marker.
 
 This allows getting logs alongside profiler markers and lots of performance
-and contextual informations, in a way that doesn't require disabling the
-sandbox, and works accross all processes.
+and contextual information, in a way that doesn't require disabling the
+sandbox, and works across all processes.
 
 The profile can be downloaded and shared e.g. via Bugzilla or email, or
 uploaded, and the logging statements will be visible either in the marker chart
