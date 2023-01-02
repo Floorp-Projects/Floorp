@@ -105,9 +105,7 @@ FormAutofillPreferences.prototype = {
     formAutofillFragment.appendChild(formAutofillGroup);
 
     let showAddressUI = FormAutofill.isAutofillAddressesAvailable;
-    let showCreditCardUI =
-      FormAutofill.isAutofillCreditCardsAvailable &&
-      !FormAutofill.isAutofillCreditCardsHideUI;
+    let showCreditCardUI = FormAutofill.isAutofillCreditCardsAvailable;
 
     if (!showAddressUI && !showCreditCardUI) {
       return;

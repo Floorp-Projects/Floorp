@@ -169,12 +169,9 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let allFieldNames = activeSection.allFieldNames;
     let filledRecordGUID = activeSection.filledRecordGUID;
 
-    let creditCardsEnabledAndVisible =
-      lazy.FormAutofill.isAutofillCreditCardsEnabled &&
-      !lazy.FormAutofill.isAutofillCreditCardsHideUI;
     let searchPermitted = isAddressField
       ? lazy.FormAutofill.isAutofillAddressesEnabled
-      : creditCardsEnabledAndVisible;
+      : lazy.FormAutofill.isAutofillCreditCardsEnabled;
     let AutocompleteResult = isAddressField
       ? lazy.AddressResult
       : lazy.CreditCardResult;
