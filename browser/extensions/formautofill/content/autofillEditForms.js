@@ -514,6 +514,7 @@ class EditCreditCard extends EditAutofillForm {
       ),
       month: this._elements.form.querySelector("#cc-exp-month"),
       year: this._elements.form.querySelector("#cc-exp-year"),
+      ccType: this._elements.form.querySelector("#cc-type"),
       billingAddress: this._elements.form.querySelector("#billingAddressGUID"),
       billingAddressRow: this._elements.form.querySelector(
         ".billingAddressRow"
@@ -530,6 +531,8 @@ class EditCreditCard extends EditAutofillForm {
     this._addresses = addresses;
     this.generateBillingAddressOptions(preserveFieldValues);
     if (!preserveFieldValues) {
+      // Re-populating the networks will reset the selected option.
+      this.populateNetworks();
       // Re-generating the months will reset the selected option.
       this.generateMonths();
       // Re-generating the years will reset the selected option.
@@ -586,6 +589,23 @@ class EditCreditCard extends EditAutofillForm {
     if (ccExpYear && ccExpYear > currentYear + count) {
       this._elements.year.appendChild(new Option(ccExpYear));
     }
+  }
+
+  populateNetworks() {
+    // Clear the list
+    this._elements.ccType.textContent = "";
+    let frag = document.createDocumentFragment();
+    // include an empty first option
+    frag.appendChild(new Option("", ""));
+
+    let supportedNetworks = FormAutofillUtils.getCreditCardNetworks();
+    for (let id of supportedNetworks) {
+      const option = new Option(undefined, id);
+      // autofill-card-network-amex, ..., autofill-card-network-visa
+      option.dataset.l10nId = `autofill-card-network-${id}`;
+      frag.appendChild(option);
+    }
+    this._elements.ccType.appendChild(frag);
   }
 
   generateBillingAddressOptions(preserveFieldValues) {

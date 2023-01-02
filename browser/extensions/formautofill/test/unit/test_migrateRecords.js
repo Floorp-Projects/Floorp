@@ -13,12 +13,8 @@ add_setup(async () => {
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
-const { ADDRESS_SCHEMA_VERSION } = ChromeUtils.import(
-  "resource://autofill/FormAutofillStorageBase.jsm"
-);
-const { CREDIT_CARD_SCHEMA_VERSION } = ChromeUtils.import(
-  "resource://autofill/FormAutofillStorageBase.jsm"
-);
+const ADDRESS_SCHEMA_VERSION = 1;
+const CREDIT_CARD_SCHEMA_VERSION = 3;
 
 const ADDRESS_TESTCASES = [
   {
@@ -321,27 +317,4 @@ add_task(async function test_migrateEncryptedCreditCardNumber() {
 
   Assert.ok(v1record.deleted);
   Assert.ok(v2record.deleted);
-});
-
-add_task(async function test_migrateNotSaveCreditCardType() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-
-  let profileStorage = new FormAutofillStorage(path);
-  await profileStorage.initialize();
-
-  info("v3 should not contain cc-type");
-
-  let v3record = {
-    guid: "test-guid1",
-    version: 3,
-    "cc-name": "Timothy",
-    "cc-number-encrypted": "aaaa",
-    "cc-type": "visa",
-  };
-
-  profileStorage._store.data.creditCards = [v3record];
-  await profileStorage.creditCards._migrateRecord(v3record, 0);
-  v3record = profileStorage.creditCards._data[0];
-
-  Assert.ok(!("cc-type" in v3record));
 });

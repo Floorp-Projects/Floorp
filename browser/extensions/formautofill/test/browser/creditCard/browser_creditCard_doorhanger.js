@@ -57,7 +57,7 @@ add_task(async function test_submit_creditCard_saved() {
         focusSelector: "#cc-name",
         newValues: {
           "#cc-name": "User 1",
-          "#cc-number": "5577000055770004",
+          "#cc-number": "5038146897157463",
           "#cc-exp-month": "12",
           "#cc-exp-year": "2017",
           "#cc-type": "mastercard",
@@ -918,6 +918,7 @@ add_task(async function test_submit_third_party_creditCard_logo() {
 add_task(async function test_update_third_party_creditCard_logo() {
   const amexCard = {
     "cc-number": "374542158116607",
+    "cc-type": "amex",
     "cc-name": "John Doe",
   };
 
@@ -1069,6 +1070,7 @@ add_task(async function test_save_panel_spaces_in_cc_number_logo() {
 add_task(async function test_update_panel_with_spaces_in_cc_number_logo() {
   const amexCard = {
     "cc-number": "374 54215 8116607",
+    "cc-type": "amex",
     "cc-name": "John Doe",
   };
 
