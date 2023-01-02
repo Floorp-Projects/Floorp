@@ -236,6 +236,10 @@ export class CreditCard {
    * @returns {string|null}
    */
   static getType(ccNumber) {
+    if (!ccNumber) {
+      return null;
+    }
+
     for (let i = 0; i < CREDIT_CARD_IIN.length; i++) {
       const range = CREDIT_CARD_IIN[i];
       if (typeof range.len == "number") {

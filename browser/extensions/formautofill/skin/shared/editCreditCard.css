@@ -6,7 +6,7 @@
   display: grid;
   grid-template-areas:
     "cc-number          cc-exp-month       cc-exp-year"
-    "cc-name            cc-type            cc-csc"
+    "cc-name            cc-csc             ."
     "billingAddressGUID billingAddressGUID billingAddressGUID";
   grid-template-columns: 4fr 2fr 2fr;
   grid-row-gap: var(--grid-column-row-gap);
@@ -38,10 +38,6 @@
 
 #cc-name-container {
   grid-area: cc-name;
-}
-
-#cc-type-container {
-  grid-area: cc-type;
 }
 
 #cc-csc-container {
