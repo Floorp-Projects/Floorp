@@ -413,8 +413,8 @@ class NPZCSupport final
     }
 
     ScrollWheelInput input(
-        aTime, nsWindow::GetEventTimeStamp(aTime),
-        nsWindow::GetModifiers(aMetaState), ScrollWheelInput::SCROLLMODE_SMOOTH,
+        nsWindow::GetEventTimeStamp(aTime), nsWindow::GetModifiers(aMetaState),
+        ScrollWheelInput::SCROLLMODE_SMOOTH,
         ScrollWheelInput::SCROLLDELTA_PIXEL, origin, aHScroll, aVScroll, false,
         // XXX Do we need to support auto-dir scrolling
         // for Android widgets with a wheel device?
@@ -597,8 +597,8 @@ class NPZCSupport final
 
     MouseInput input(
         mouseType, buttonType, MouseEvent_Binding::MOZ_SOURCE_MOUSE,
-        ConvertButtons(buttons), origin, aTime,
-        nsWindow::GetEventTimeStamp(aTime), nsWindow::GetModifiers(aMetaState));
+        ConvertButtons(buttons), origin, nsWindow::GetEventTimeStamp(aTime),
+        nsWindow::GetModifiers(aMetaState));
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
     if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
@@ -2513,8 +2513,6 @@ void nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint) {
   } else {
     event.mRefPoint = LayoutDeviceIntPoint(0, 0);
   }
-
-  event.mTime = PR_Now() / 1000;
 }
 
 void nsWindow::UpdateOverscrollVelocity(const float aX, const float aY) {

@@ -768,8 +768,6 @@ nsDOMWindowUtils::SendWheelEvent(float aX, float aY, double aDeltaX,
   wheelEvent.mLineOrPageDeltaX = aLineOrPageDeltaX;
   wheelEvent.mLineOrPageDeltaY = aLineOrPageDeltaY;
 
-  wheelEvent.mTime = PR_Now() / 1000;
-
   nsPresContext* presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
@@ -891,7 +889,6 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
   }
   WidgetTouchEvent event(true, msg, widget);
   event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
-  event.mTime = PR_Now();
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
@@ -1454,7 +1451,6 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType, float aX,
   event.mDirection = aDirection;
   event.mDelta = aDelta;
   event.mClickCount = aClickCount;
-  event.mTime = PR_IntervalNow();
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext) return NS_ERROR_FAILURE;
@@ -2302,7 +2298,6 @@ static void InitEvent(WidgetGUIEvent& aEvent,
   if (aPt) {
     aEvent.mRefPoint = *aPt;
   }
-  aEvent.mTime = PR_IntervalNow();
 }
 
 NS_IMETHODIMP

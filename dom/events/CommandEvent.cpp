@@ -13,7 +13,6 @@ namespace mozilla::dom {
 CommandEvent::CommandEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                            WidgetCommandEvent* aEvent)
     : Event(aOwner, aPresContext, aEvent ? aEvent : new WidgetCommandEvent()) {
-  mEvent->mTime = PR_Now();
   if (aEvent) {
     mEventIsInternal = false;
   } else {

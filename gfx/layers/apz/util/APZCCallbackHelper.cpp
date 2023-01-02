@@ -512,15 +512,14 @@ nsEventStatus APZCCallbackHelper::DispatchWidgetEvent(WidgetGUIEvent& aEvent) {
 }
 
 nsEventStatus APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-    EventMessage aMsg, uint64_t aTime, const LayoutDevicePoint& aRefPoint,
-    Modifiers aModifiers, int32_t aClickCount, nsIWidget* aWidget) {
+    EventMessage aMsg, const LayoutDevicePoint& aRefPoint, Modifiers aModifiers,
+    int32_t aClickCount, nsIWidget* aWidget) {
   MOZ_ASSERT(aMsg == eMouseMove || aMsg == eMouseDown || aMsg == eMouseUp ||
              aMsg == eMouseLongTap);
 
   WidgetMouseEvent event(true, aMsg, aWidget, WidgetMouseEvent::eReal,
                          WidgetMouseEvent::eNormal);
   event.mRefPoint = LayoutDeviceIntPoint::Truncate(aRefPoint.x, aRefPoint.y);
-  event.mTime = aTime;
   event.mButton = MouseButton::ePrimary;
   event.mButtons |= MouseButtonsFlag::ePrimaryFlag;
   event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH;
@@ -563,12 +562,11 @@ void APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
   }
   APZCCH_LOG("Dispatching single-tap component events to %s\n",
              ToString(aPoint).c_str());
-  int time = 0;
-  DispatchSynthesizedMouseEvent(eMouseMove, time, aPoint, aModifiers,
-                                aClickCount, aWidget);
-  DispatchSynthesizedMouseEvent(eMouseDown, time, aPoint, aModifiers,
-                                aClickCount, aWidget);
-  DispatchSynthesizedMouseEvent(eMouseUp, time, aPoint, aModifiers, aClickCount,
+  DispatchSynthesizedMouseEvent(eMouseMove, aPoint, aModifiers, aClickCount,
+                                aWidget);
+  DispatchSynthesizedMouseEvent(eMouseDown, aPoint, aModifiers, aClickCount,
+                                aWidget);
+  DispatchSynthesizedMouseEvent(eMouseUp, aPoint, aModifiers, aClickCount,
                                 aWidget);
 }
 

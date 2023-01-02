@@ -625,7 +625,6 @@ void nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent, NSEvent* aNativ
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   aInputEvent.mModifiers = ModifiersForEvent(aNativeEvent);
-  aInputEvent.mTime = PR_IntervalNow();
   aInputEvent.mTimeStamp = GetEventTimeStamp([aNativeEvent timestamp]);
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
@@ -1494,9 +1493,11 @@ bool static ShouldConsiderStartingSwipeFromEvent(NSEvent* anEvent) {
          [anEvent hasPreciseScrollingDeltas] && [NSEvent isSwipeTrackingFromScrollEventsEnabled];
 }
 
-PanGestureInput nsCocoaUtils::CreatePanGestureEvent(
-    NSEvent* aNativeEvent, uint32_t aTime, TimeStamp aTimeStamp, const ScreenPoint& aPanStartPoint,
-    const ScreenPoint& aPreciseDelta, const gfx::IntPoint& aLineOrPageDelta, Modifiers aModifiers) {
+PanGestureInput nsCocoaUtils::CreatePanGestureEvent(NSEvent* aNativeEvent, TimeStamp aTimeStamp,
+                                                    const ScreenPoint& aPanStartPoint,
+                                                    const ScreenPoint& aPreciseDelta,
+                                                    const gfx::IntPoint& aLineOrPageDelta,
+                                                    Modifiers aModifiers) {
   PanGestureInput::PanGestureType type = PanGestureTypeForEvent(aNativeEvent);
   // Always force zero deltas on event types that shouldn't cause any scrolling,
   // so that we don't dispatch DOM wheel events for them.
@@ -1504,7 +1505,7 @@ PanGestureInput nsCocoaUtils::CreatePanGestureEvent(
       type == PanGestureInput::PANGESTURE_MAYSTART || type == PanGestureInput::PANGESTURE_CANCELLED;
 
   PanGestureInput panEvent(
-      type, aTime, aTimeStamp, aPanStartPoint, !shouldIgnoreDeltas ? aPreciseDelta : ScreenPoint(),
+      type, aTimeStamp, aPanStartPoint, !shouldIgnoreDeltas ? aPreciseDelta : ScreenPoint(),
       aModifiers,
       PanGestureInput::IsEligibleForSwipe(ShouldConsiderStartingSwipeFromEvent(aNativeEvent)));
 

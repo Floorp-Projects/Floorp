@@ -28,7 +28,6 @@ KeyboardEvent::KeyboardEvent(EventTarget* aOwner, nsPresContext* aPresContext,
     mEventIsInternal = false;
   } else {
     mEventIsInternal = true;
-    mEvent->mTime = PR_Now();
     mEvent->AsKeyboardEvent()->mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
   }
 }

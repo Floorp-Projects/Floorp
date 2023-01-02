@@ -2925,7 +2925,6 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
           mCompositionTargetRange.mOffset, 1);
     }
   }
-  InitEvent(queryCaretOrTextRectEvent);
   nsEventStatus status;
   mLastFocusedWindow->DispatchEvent(&queryCaretOrTextRectEvent, status);
   if (queryCaretOrTextRectEvent.Failed()) {
@@ -3235,10 +3234,6 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
   return NS_OK;
 }
 
-void IMContextWrapper::InitEvent(WidgetGUIEvent& aEvent) {
-  aEvent.mTime = PR_Now() / 1000;
-}
-
 bool IMContextWrapper::EnsureToCacheContentSelection(
     nsAString* aSelectedString) {
   if (aSelectedString) {
@@ -3265,7 +3260,6 @@ bool IMContextWrapper::EnsureToCacheContentSelection(
   nsEventStatus status;
   WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
                                                  dispatcherWindow);
-  InitEvent(querySelectedTextEvent);
   dispatcherWindow->DispatchEvent(&querySelectedTextEvent, status);
   if (NS_WARN_IF(querySelectedTextEvent.Failed())) {
     MOZ_LOG(gIMELog, LogLevel::Error,

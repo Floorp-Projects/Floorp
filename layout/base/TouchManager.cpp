@@ -72,7 +72,6 @@ void TouchManager::EvictTouchPoint(RefPtr<Touch>& aTouch,
           nsCOMPtr<nsIWidget> widget = frame->GetView()->GetNearestWidget(&pt);
           if (widget) {
             WidgetTouchEvent event(true, eTouchEnd, widget);
-            event.mTime = PR_IntervalNow();
             event.mTouches.AppendElement(aTouch);
             nsEventStatus status;
             widget->DispatchEvent(&event, status);

@@ -364,7 +364,7 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       // When pressing space, don't open the menu if performing an incremental
       // search.
       if (keyEvent->mCharCode != ' ' ||
-          !nsMenuPopupFrame::IsWithinIncrementalTime(keyEvent->mTime)) {
+          !nsMenuPopupFrame::IsWithinIncrementalTime(keyEvent->mTimeStamp)) {
         *aEventStatus = nsEventStatus_eConsumeNoDefault;
         OpenMenu(false);
       }

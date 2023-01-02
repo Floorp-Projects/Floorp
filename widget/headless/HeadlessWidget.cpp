@@ -512,9 +512,8 @@ nsresult HeadlessWidget::SynthesizeNativeTouchPoint(
 
   LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
   MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
-      mSynthesizedTouchInput.get(), PR_IntervalNow(), TimeStamp::Now(),
-      aPointerId, aPointerState, pointInWindow, aPointerPressure,
-      aPointerOrientation);
+      mSynthesizedTouchInput.get(), TimeStamp::Now(), aPointerId, aPointerState,
+      pointInWindow, aPointerPressure, aPointerOrientation);
   DispatchTouchInput(inputToDispatch);
   return NS_OK;
 }
@@ -560,8 +559,8 @@ nsresult HeadlessWidget::SynthesizeNativeTouchPadPinch(
   // The headless widget does not support modifiers.
   // Do not pass `aModifierFlags` because it contains native modifier values.
   PinchGestureInput inputToDispatch(
-      pinchGestureType, PinchGestureInput::TRACKPAD, PR_IntervalNow(),
-      TimeStamp::Now(), ExternalPoint(0, 0), touchpadPoint,
+      pinchGestureType, PinchGestureInput::TRACKPAD, TimeStamp::Now(),
+      ExternalPoint(0, 0), touchpadPoint,
       100.0 * ((aEventPhase == PHASE_END) ? ScreenCoord(1.f) : CurrentSpan),
       100.0 * ((aEventPhase == PHASE_END) ? ScreenCoord(1.f) : PreviousSpan),
       0);
@@ -601,8 +600,7 @@ nsresult HeadlessWidget::SynthesizeNativeTouchpadPan(
   ScreenPoint touchpadPoint = ViewAs<ScreenPixel>(
       aPoint - WidgetToScreenOffset(),
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
-  PanGestureInput input(eventType, PR_IntervalNow(), TimeStamp::Now(),
-                        touchpadPoint,
+  PanGestureInput input(eventType, TimeStamp::Now(), touchpadPoint,
                         ScreenPoint(float(aDeltaX), float(aDeltaY)),
                         // Same as SynthesizeNativeTouchPadPinch case we ignore
                         // aModifierFlags.

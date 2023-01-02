@@ -1937,8 +1937,7 @@ void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
 
 /**************************************************************
  *
- * SECTION: nsIWidget::Move, nsIWidget::Resize,
- * nsIWidget::Size, nsIWidget::BeginResizeDrag
+ * SECTION: nsIWidget::Move, nsIWidget::Resize, nsIWidget::Size
  *
  * Repositioning and sizing a window.
  *
@@ -2247,61 +2246,6 @@ mozilla::Maybe<bool> nsWindow::IsResizingNativeWidget() {
     return Some(true);
   }
   return Some(false);
-}
-
-nsresult nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent, int32_t aHorizontal,
-                                   int32_t aVertical) {
-  NS_ENSURE_ARG_POINTER(aEvent);
-
-  if (aEvent->mClass != eMouseEventClass) {
-    // you can only begin a resize drag with a mouse event
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (aEvent->AsMouseEvent()->mButton != MouseButton::ePrimary) {
-    // you can only begin a resize drag with the left mouse button
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // work out what sizemode we're talking about
-  WPARAM syscommand;
-  if (aVertical < 0) {
-    if (aHorizontal < 0) {
-      syscommand = SC_SIZE | WMSZ_TOPLEFT;
-    } else if (aHorizontal == 0) {
-      syscommand = SC_SIZE | WMSZ_TOP;
-    } else {
-      syscommand = SC_SIZE | WMSZ_TOPRIGHT;
-    }
-  } else if (aVertical == 0) {
-    if (aHorizontal < 0) {
-      syscommand = SC_SIZE | WMSZ_LEFT;
-    } else if (aHorizontal == 0) {
-      return NS_ERROR_INVALID_ARG;
-    } else {
-      syscommand = SC_SIZE | WMSZ_RIGHT;
-    }
-  } else {
-    if (aHorizontal < 0) {
-      syscommand = SC_SIZE | WMSZ_BOTTOMLEFT;
-    } else if (aHorizontal == 0) {
-      syscommand = SC_SIZE | WMSZ_BOTTOM;
-    } else {
-      syscommand = SC_SIZE | WMSZ_BOTTOMRIGHT;
-    }
-  }
-
-  // resizing doesn't work if the mouse is already captured
-  CaptureMouse(false);
-
-  // find the top-level window
-  HWND toplevelWnd = WinUtils::GetTopLevelHWND(mWnd, true);
-
-  // tell Windows to start the resize
-  ::PostMessage(toplevelWnd, WM_SYSCOMMAND, syscommand,
-                POINTTOPOINTS(aEvent->mRefPoint));
-
-  return NS_OK;
 }
 
 /**************************************************************
@@ -4325,7 +4269,7 @@ void nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint) {
 
 WidgetEventTime nsWindow::CurrentMessageWidgetEventTime() const {
   LONG messageTime = ::GetMessageTime();
-  return WidgetEventTime(messageTime, GetMessageTimeStamp(messageTime));
+  return WidgetEventTime(GetMessageTimeStamp(messageTime));
 }
 
 /**************************************************************
@@ -7291,8 +7235,8 @@ Maybe<PanGestureInput> nsWindow::ConvertTouchToPanGesture(
   // We need to negate the displacement because for a touch event, moving the
   // fingers down results in scrolling up, but for a touchpad gesture, we want
   // moving the fingers down to result in scrolling down.
-  PanGestureInput result(eventType, aTouchInput.mTime, aTouchInput.mTimeStamp,
-                         focusPoint, -displacement, aTouchInput.modifiers);
+  PanGestureInput result(eventType, aTouchInput.mTimeStamp, focusPoint,
+                         -displacement, aTouchInput.modifiers);
   result.mSimulateMomentum = true;
 
   return Some(result);
@@ -7335,8 +7279,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam) {
         if (touchInput.mTimeStamp.IsNull()) {
           // Initialize a touch event to send.
           touchInput.mType = MultiTouchInput::MULTITOUCH_MOVE;
-          touchInput.mTime = ::GetMessageTime();
-          touchInput.mTimeStamp = GetMessageTimeStamp(touchInput.mTime);
+          touchInput.mTimeStamp = GetMessageTimeStamp(::GetMessageTime());
           ModifierKeyState modifierKeyState;
           touchInput.modifiers = modifierKeyState.GetModifiers();
         }
@@ -7354,8 +7297,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam) {
         if (touchEndInput.mTimeStamp.IsNull()) {
           // Initialize a touch event to send.
           touchEndInput.mType = MultiTouchInput::MULTITOUCH_END;
-          touchEndInput.mTime = ::GetMessageTime();
-          touchEndInput.mTimeStamp = GetMessageTimeStamp(touchEndInput.mTime);
+          touchEndInput.mTimeStamp = GetMessageTimeStamp(::GetMessageTime());
           ModifierKeyState modifierKeyState;
           touchEndInput.modifiers = modifierKeyState.GetModifiers();
         }
@@ -7429,8 +7371,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
     modifierKeyState.InitInputEvent(wheelEvent);
 
     wheelEvent.mButton = 0;
-    wheelEvent.mTime = ::GetMessageTime();
-    wheelEvent.mTimeStamp = GetMessageTimeStamp(wheelEvent.mTime);
+    wheelEvent.mTimeStamp = GetMessageTimeStamp(::GetMessageTime());
     wheelEvent.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
 
     bool endFeedback = true;
@@ -7464,8 +7405,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
   ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
   event.mButton = 0;
-  event.mTime = ::GetMessageTime();
-  event.mTimeStamp = GetMessageTimeStamp(event.mTime);
+  event.mTimeStamp = GetMessageTimeStamp(::GetMessageTime());
   event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
 
   nsEventStatus status;
@@ -8804,9 +8744,7 @@ bool nsWindow::DispatchTouchEventFromWMPointer(
 
   MultiTouchInput touchInput;
   touchInput.mType = touchType;
-  touchInput.mTime = ::GetMessageTime();
-  touchInput.mTimeStamp =
-      GetMessageTimeStamp(static_cast<long>(touchInput.mTime));
+  touchInput.mTimeStamp = GetMessageTimeStamp(::GetMessageTime());
   touchInput.mTouches.AppendElement(touchData);
   touchInput.mButton = aButton;
   touchInput.mButtons = aPointerInfo.mButtons;
@@ -9129,7 +9067,7 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(
     WidgetEventTime time = CurrentMessageWidgetEventTime();
     LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
     MultiTouchInput inputToDispatch = UpdateSynthesizedTouchState(
-        mSynthesizedTouchInput.get(), time.mTime, time.mTimeStamp, aPointerId,
+        mSynthesizedTouchInput.get(), time.mTimeStamp, aPointerId,
         aPointerState, pointInWindow, aPointerPressure, aPointerOrientation);
     DispatchTouchInput(inputToDispatch);
     return NS_OK;

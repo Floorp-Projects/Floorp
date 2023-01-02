@@ -424,7 +424,6 @@ bool DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
       MOZ_ASSERT_UNREACHABLE("handle all enum values");
   }
 
-  PRIntervalTime eventIntervalTime = PR_IntervalNow();
   TimeStamp eventTimeStamp = TimeStamp::Now();
 
   ModifierKeyState modifierKeyState;
@@ -442,7 +441,6 @@ bool DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
 
   PinchGestureInput event{pinchGestureType,
                           PinchGestureInput::TRACKPAD,
-                          eventIntervalTime,
                           eventTimeStamp,
                           screenOffset,
                           position,
@@ -518,15 +516,10 @@ void DManipEventHandler::SendPanCommon(nsWindow* aWindow, Phase aPhase,
     }
   }
 
-  PRIntervalTime eventIntervalTime = PR_IntervalNow();
   TimeStamp eventTimeStamp = TimeStamp::Now();
 
-  PanGestureInput event{panGestureType,
-                        eventIntervalTime,
-                        eventTimeStamp,
-                        aPosition,
-                        ScreenPoint(aDeltaX, aDeltaY),
-                        aMods};
+  PanGestureInput event{panGestureType, eventTimeStamp, aPosition,
+                        ScreenPoint(aDeltaX, aDeltaY), aMods};
 
   aWindow->SendAnAPZEvent(event);
 }

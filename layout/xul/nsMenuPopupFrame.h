@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/StaticPrefs_ui.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
@@ -306,9 +307,10 @@ class nsMenuPopupFrame final : public nsBoxFrame,
                                     bool& doAction);
 
   void ClearIncrementalString() { mIncrementalString.Truncate(); }
-  static bool IsWithinIncrementalTime(DOMTimeStamp time) {
-    return time - sLastKeyTime <=
-           mozilla::StaticPrefs::ui_menu_incremental_search_timeout();
+  static bool IsWithinIncrementalTime(mozilla::TimeStamp time) {
+    return !sLastKeyTime.IsNull() &&
+           ((time - sLastKeyTime).ToMilliseconds() <=
+            mozilla::StaticPrefs::ui_menu_incremental_search_timeout());
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -647,7 +649,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   static int8_t sDefaultLevelIsTop;
 
-  static DOMTimeStamp sLastKeyTime;
+  static mozilla::TimeStamp sLastKeyTime;
 
 };  // class nsMenuPopupFrame
 

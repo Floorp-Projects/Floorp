@@ -2135,10 +2135,9 @@ nsresult nsIWidget::ClearNativeTouchSequence(nsIObserver* aObserver) {
 }
 
 MultiTouchInput nsBaseWidget::UpdateSynthesizedTouchState(
-    MultiTouchInput* aState, uint32_t aTime, mozilla::TimeStamp aTimeStamp,
-    uint32_t aPointerId, TouchPointerState aPointerState,
-    LayoutDeviceIntPoint aPoint, double aPointerPressure,
-    uint32_t aPointerOrientation) {
+    MultiTouchInput* aState, mozilla::TimeStamp aTimeStamp, uint32_t aPointerId,
+    TouchPointerState aPointerState, LayoutDeviceIntPoint aPoint,
+    double aPointerPressure, uint32_t aPointerOrientation) {
   ScreenIntPoint pointerScreenPoint = ViewAs<ScreenPixel>(
       aPoint, PixelCastJustification::LayoutDeviceIsScreenForBounds);
 
@@ -2149,7 +2148,6 @@ MultiTouchInput nsBaseWidget::UpdateSynthesizedTouchState(
   // touch(es). We use |inputToDispatch| for this purpose.
   MultiTouchInput inputToDispatch;
   inputToDispatch.mInputType = MULTITOUCH_INPUT;
-  inputToDispatch.mTime = aTime;
   inputToDispatch.mTimeStamp = aTimeStamp;
 
   int32_t index = aState->IndexOfTouch((int32_t)aPointerId);

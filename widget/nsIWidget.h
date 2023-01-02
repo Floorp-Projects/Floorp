@@ -1459,13 +1459,6 @@ class nsIWidget : public nsISupports {
    */
   virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) = 0;
 
-  /**
-   * Begin a window resizing drag, based on the event passed in.
-   */
-  [[nodiscard]] virtual nsresult BeginResizeDrag(
-      mozilla::WidgetGUIEvent* aEvent, int32_t aHorizontal,
-      int32_t aVertical) = 0;
-
   // TODO: Make this an enum class with MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS or
   //       EnumSet class.
   enum Modifiers : uint32_t {

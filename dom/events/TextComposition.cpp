@@ -202,7 +202,6 @@ BaseEventFlags TextComposition::CloneAndDispatchAs(
 
   WidgetCompositionEvent compositionEvent(aCompositionEvent->IsTrusted(),
                                           aMessage, aCompositionEvent->mWidget);
-  compositionEvent.mTime = aCompositionEvent->mTime;
   compositionEvent.mTimeStamp = aCompositionEvent->mTimeStamp;
   compositionEvent.mData = aCompositionEvent->mData;
   compositionEvent.mNativeIMEContext = aCompositionEvent->mNativeIMEContext;

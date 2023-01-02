@@ -105,7 +105,7 @@ class APZCCallbackHelper {
   /* Synthesize a mouse event with the given parameters, and dispatch it
    * via the given widget. */
   static nsEventStatus DispatchSynthesizedMouseEvent(
-      EventMessage aMsg, uint64_t aTime, const LayoutDevicePoint& aRefPoint,
+      EventMessage aMsg, const LayoutDevicePoint& aRefPoint,
       Modifiers aModifiers, int32_t aClickCount, nsIWidget* aWidget);
 
   /* Dispatch a mouse event with the given parameters.

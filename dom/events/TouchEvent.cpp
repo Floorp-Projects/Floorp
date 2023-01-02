@@ -61,7 +61,6 @@ TouchEvent::TouchEvent(EventTarget* aOwner, nsPresContext* aPresContext,
     }
   } else {
     mEventIsInternal = true;
-    mEvent->mTime = PR_Now();
   }
 }
 

@@ -5858,7 +5858,6 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
                          WidgetMouseEvent::eSynthesized);
   event.mRefPoint =
       LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
-  event.mTime = PR_IntervalNow();
   // XXX set event.mModifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
 

@@ -19,7 +19,6 @@ TransitionEvent::TransitionEvent(EventTarget* aOwner,
     mEventIsInternal = false;
   } else {
     mEventIsInternal = true;
-    mEvent->mTime = PR_Now();
   }
 }
 
