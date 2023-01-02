@@ -137,6 +137,10 @@
     "english": "French",
     "native": "Français"
   },
+  "fur": {
+    "english": "Friulian",
+    "native": "Furlan"
+  },
   "fy-NL": {
     "english": "Frisian",
     "native": "Frysk"
@@ -321,6 +325,10 @@
   "ru": {
     "english": "Russian",
     "native": "Русский"
+  },
+  "sc": {
+    "english": "Sardinian",
+    "native": "Sardu"
   },
   "sco": {
     "native": "Scots"
