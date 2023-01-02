@@ -422,7 +422,7 @@ class TabsPanel extends TabsListBase {
     let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
 
     if (draggedTab === this.dropTargetRow.firstElementChild.tab) {
-      this._cleanupDragDetails();
+      this._clearDropTarget();
       return;
     }
 
@@ -439,7 +439,7 @@ class TabsPanel extends TabsListBase {
     }
     this.gBrowser.moveTabTo(draggedTab, pos);
 
-    this._cleanupDragDetails();
+    this._clearDropTarget();
   }
 
   _onDragLeave(event) {
@@ -463,7 +463,7 @@ class TabsPanel extends TabsListBase {
       return;
     }
 
-    this._cleanupDragDetails();
+    this._clearDropTarget();
   }
 
   _updateDropTarget(event) {
@@ -524,11 +524,10 @@ class TabsPanel extends TabsListBase {
     if (this.dropTargetRow) {
       this.dropTargetRow = null;
     }
-    this.dropIndicator.style.top = `0px`;
-    this.dropIndicator.collapsed = true;
-  }
 
-  _cleanupDragDetails() {
-    this._clearDropTarget();
+    if (this.dropIndicator) {
+      this.dropIndicator.style.top = `0px`;
+      this.dropIndicator.collapsed = true;
+    }
   }
 }
