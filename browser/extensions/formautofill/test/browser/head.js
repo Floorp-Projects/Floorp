@@ -148,7 +148,6 @@ const TEST_CREDIT_CARD_1 = {
   "cc-number": "4111111111111111",
   "cc-exp-month": 4,
   "cc-exp-year": new Date().getFullYear(),
-  "cc-type": "visa",
 };
 
 const TEST_CREDIT_CARD_2 = {
@@ -156,25 +155,21 @@ const TEST_CREDIT_CARD_2 = {
   "cc-number": "4929001587121045",
   "cc-exp-month": 12,
   "cc-exp-year": new Date().getFullYear() + 10,
-  "cc-type": "visa",
 };
 
 const TEST_CREDIT_CARD_3 = {
   "cc-number": "5103059495477870",
   "cc-exp-month": 1,
   "cc-exp-year": 2000,
-  "cc-type": "mastercard",
 };
 
 const TEST_CREDIT_CARD_4 = {
   "cc-number": "5105105105105100",
-  "cc-type": "mastercard",
 };
 
 const TEST_CREDIT_CARD_5 = {
   "cc-name": "Chris P. Bacon",
   "cc-number": "4012888888881881",
-  "cc-type": "visa",
 };
 
 const MAIN_BUTTON = "button";

@@ -663,8 +663,6 @@ add_task(async function test_saveCreditCard() {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-type"], {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     info("saving credit card");
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
@@ -690,7 +688,6 @@ add_task(async function test_editCreditCard() {
   await testDialog(
     EDIT_CREDIT_CARD_DIALOG_URL,
     win => {
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);

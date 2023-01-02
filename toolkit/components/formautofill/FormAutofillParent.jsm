@@ -44,7 +44,6 @@ const { FormAutofillUtils } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
@@ -615,15 +614,11 @@ class FormAutofillParent extends JSWindowActorParent {
       }
     };
 
-    // Remove invalid cc-type values
-    if (
-      creditCard.record["cc-type"] &&
-      !lazy.CreditCard.isValidNetwork(creditCard.record["cc-type"])
-    ) {
-      // Let's reset the credit card to empty, and then network auto-detect will
-      // pick it up.
-      creditCard.record["cc-type"] = "";
-    }
+    // Remove cc-type values
+    // Let's reset the credit card to empty, and then network auto-detect will
+    // pick it up.
+    //creditCard.record["cc-type"] = "";
+    delete creditCard.record["cc-type"];
 
     // If `guid` is present, the form has been autofilled.
     if (creditCard.guid) {
