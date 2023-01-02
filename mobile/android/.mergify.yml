@@ -22,7 +22,6 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
-        rebase_fallback: none
   - name: L10N - Auto Merge
     conditions:
       - author~=(mozilla-l10n-automation-bot|github-actions\[bot\])
@@ -36,7 +35,6 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
-        rebase_fallback: none
   - name: Release automation
     conditions:
       - author=github-actions[bot]
@@ -50,7 +48,6 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
-        rebase_fallback: none
       delete_head_branch:
         force: false
   - name: Needs landing - Rebase
@@ -65,7 +62,6 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
-        rebase_fallback: none
   - name: Needs landing - Squash
     conditions:
       - status-success=complete-pr
@@ -78,4 +74,3 @@ pull_request_rules:
       queue:
         method: squash
         name: default
-        rebase_fallback: none
