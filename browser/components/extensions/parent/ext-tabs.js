@@ -1210,26 +1210,22 @@ this.tabs = class extends ExtensionAPIPersistent {
           return Promise.resolve();
         },
 
-        _getZoomSettings(tabId) {
+        async getZoomSettings(tabId) {
           let nativeTab = getTabOrActive(tabId);
 
-          let { FullZoom } = nativeTab.ownerGlobal;
+          let { FullZoom, ZoomUI } = nativeTab.ownerGlobal;
 
           return {
             mode: "automatic",
             scope: FullZoom.siteSpecific ? "per-origin" : "per-tab",
-            defaultZoomFactor: 1,
+            defaultZoomFactor: await ZoomUI.getGlobalValue(),
           };
         },
 
-        getZoomSettings(tabId) {
-          return Promise.resolve(this._getZoomSettings(tabId));
-        },
-
-        setZoomSettings(tabId, settings) {
+        async setZoomSettings(tabId, settings) {
           let nativeTab = getTabOrActive(tabId);
 
-          let currentSettings = this._getZoomSettings(
+          let currentSettings = await this.getZoomSettings(
             tabTracker.getId(nativeTab)
           );
 
@@ -1238,11 +1234,10 @@ this.tabs = class extends ExtensionAPIPersistent {
               key => settings[key] === currentSettings[key]
             )
           ) {
-            return Promise.reject(
+            throw new ExtensionError(
               `Unsupported zoom settings: ${JSON.stringify(settings)}`
             );
           }
-          return Promise.resolve();
         },
 
         onZoomChange: new EventManager({
@@ -1277,7 +1272,7 @@ this.tabs = class extends ExtensionAPIPersistent {
               }
             };
 
-            let zoomListener = event => {
+            let zoomListener = async event => {
               let browser = event.originalTarget;
 
               // For non-remote browsers, this event is dispatched on the document
@@ -1308,7 +1303,7 @@ this.tabs = class extends ExtensionAPIPersistent {
                   tabId,
                   oldZoomFactor,
                   newZoomFactor,
-                  zoomSettings: tabsApi.tabs._getZoomSettings(tabId),
+                  zoomSettings: await tabsApi.tabs.getZoomSettings(tabId),
                 });
               }
             };
