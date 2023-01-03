@@ -3,9 +3,6 @@
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
-const { CreditCardTelemetry } = ChromeUtils.import(
-  "resource://autofill/Autofilltelemetry.jsm"
-);
 
 const CC_NUM_USES_HISTOGRAM = "CREDITCARD_NUM_USES";
 
@@ -19,9 +16,14 @@ function ccFormArgsv2(method, extra) {
 
 function buildccFormv2Extra(extra, defaultValue) {
   let defaults = {};
-  for (const field of Object.values(
-    CreditCardTelemetry.CC_FORM_V2_SUPPORTED_FIELDS
-  )) {
+  for (const field of [
+    "cc_name",
+    "cc_number",
+    "cc_type",
+    "cc_exp",
+    "cc_exp_month",
+    "cc_exp_year",
+  ]) {
     defaults[field] = defaultValue;
   }
 
@@ -42,6 +44,7 @@ async function assertTelemetry(expected_content, expected_parent) {
         Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
         false
       );
+
       return (
         (snapshots.parent?.length ?? 0) >= (expected_parent?.length ?? 0) &&
         (snapshots.content?.length ?? 0) >= (expected_content?.length ?? 0)
@@ -177,10 +180,10 @@ add_task(async function test_popup_opened() {
   );
 
   await assertTelemetry([
-    ccFormArgsv1("detected"),
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-    ccFormArgsv1("popup_shown"),
+    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
+    ccFormArgsv1("popup_shown"),
   ]);
 
   TelemetryTestUtils.assertScalar(
@@ -228,13 +231,13 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
   );
 
   await assertTelemetry([
-    ccFormArgsv1("detected"),
     ccFormArgsv2(
       "detected",
       buildccFormv2Extra({ cc_number: "1", cc_name: "1", cc_exp: "false" }, "0")
     ),
-    ccFormArgsv1("popup_shown"),
+    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
+    ccFormArgsv1("popup_shown"),
   ]);
 
   TelemetryTestUtils.assertScalar(
@@ -281,10 +284,10 @@ add_task(
     );
 
     await assertTelemetry([
-      ccFormArgsv1("detected"),
       ccFormArgsv2("detected", buildccFormv2Extra({ cc_number: "1" }, "false")),
-      ccFormArgsv1("popup_shown"),
+      ccFormArgsv1("detected"),
       ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
+      ccFormArgsv1("popup_shown"),
     ]);
 
     // Then click on the cc-name field of the form that doesn't have a cc-number field
@@ -298,7 +301,6 @@ add_task(
     );
 
     await assertTelemetry([
-      ccFormArgsv1("detected"),
       ccFormArgsv2(
         "detected",
         buildccFormv2Extra(
@@ -306,8 +308,9 @@ add_task(
           "false"
         )
       ),
-      ccFormArgsv1("popup_shown"),
+      ccFormArgsv1("detected"),
       ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
+      ccFormArgsv1("popup_shown"),
     ]);
 
     TelemetryTestUtils.assertScalar(
@@ -343,7 +346,10 @@ add_task(async function test_submit_creditCard_new() {
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function(browser) {
         let onPopupShown = waitForPopupShown();
-        let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
+        let onChanged;
+        if (expectChanged !== undefined) {
+          onChanged = TestUtils.topicObserved("formautofill-storage-changed");
+        }
 
         await focusUpdateSubmitForm(browser, {
           focusSelector: "#cc-name",
@@ -381,18 +387,18 @@ add_task(async function test_submit_creditCard_new() {
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
 
   let expected_content = [
-    ccFormArgsv1("detected"),
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
+    ccFormArgsv1("detected"),
+    ccFormArgsv2(
+      "submitted",
+      buildccFormv2Extra({ cc_exp: "unavailable" }, "user_filled")
+    ),
     ccFormArgsv1("submitted", {
       // 5 fields plus submit button
       fields_not_auto: "6",
       fields_auto: "0",
       fields_modified: "0",
     }),
-    ccFormArgsv2(
-      "submitted",
-      buildccFormv2Extra({ cc_exp: "unavailable" }, "user_filled")
-    ),
   ];
   await test_per_command(MAIN_BUTTON, undefined, { 1: 1 }, 1);
   await assertTelemetry(expected_content, [
@@ -447,7 +453,7 @@ add_task(async function test_submit_creditCard_autofill() {
 
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
-  is(creditCards.length, 1, "1 credit card in storage");
+  Assert.equal(creditCards.length, 1, "1 credit card in storage");
 
   await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_1);
 
@@ -460,24 +466,24 @@ add_task(async function test_submit_creditCard_autofill() {
 
   await assertTelemetry(
     [
-      ccFormArgsv1("detected"),
       ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-      ccFormArgsv1("popup_shown"),
+      ccFormArgsv1("detected"),
       ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
-      ccFormArgsv1("filled"),
+      ccFormArgsv1("popup_shown"),
       ccFormArgsv2(
         "filled",
         buildccFormv2Extra({ cc_exp: "unavailable" }, "filled")
+      ),
+      ccFormArgsv1("filled"),
+      ccFormArgsv2(
+        "submitted",
+        buildccFormv2Extra({ cc_exp: "unavailable" }, "autofilled")
       ),
       ccFormArgsv1("submitted", {
         fields_not_auto: "3",
         fields_auto: "5",
         fields_modified: "0",
       }),
-      ccFormArgsv2(
-        "submitted",
-        buildccFormv2Extra({ cc_exp: "unavailable" }, "autofilled")
-      ),
     ],
     []
   );
@@ -510,14 +516,17 @@ add_task(async function test_submit_creditCard_update() {
 
     await setStorage(TEST_CREDIT_CARD_1);
     let creditCards = await getCreditCards();
-    is(creditCards.length, 1, "1 credit card in storage");
+    Assert.equal(creditCards.length, 1, "1 credit card in storage");
 
     let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function(browser) {
         let onPopupShown = waitForPopupShown();
-        let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
+        let onChanged;
+        if (expectChanged !== undefined) {
+          onChanged = TestUtils.topicObserved("formautofill-storage-changed");
+        }
 
         await openPopupOn(browser, "form #cc-name");
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -556,22 +565,17 @@ add_task(async function test_submit_creditCard_update() {
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
 
   let expected_content = [
-    ccFormArgsv1("detected"),
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-    ccFormArgsv1("popup_shown"),
+    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
-    ccFormArgsv1("filled"),
+    ccFormArgsv1("popup_shown"),
     ccFormArgsv2(
       "filled",
       buildccFormv2Extra({ cc_exp: "unavailable" }, "filled")
     ),
-    ccFormArgsv1("filled_modified", { field_name: "cc-exp-year" }),
+    ccFormArgsv1("filled"),
     ccFormArgsv2("filled_modified", { field_name: "cc-exp-year" }),
-    ccFormArgsv1("submitted", {
-      fields_not_auto: "3",
-      fields_auto: "5",
-      fields_modified: "1",
-    }),
+    ccFormArgsv1("filled_modified", { field_name: "cc-exp-year" }),
     ccFormArgsv2(
       "submitted",
       buildccFormv2Extra(
@@ -579,6 +583,11 @@ add_task(async function test_submit_creditCard_update() {
         "autofilled"
       )
     ),
+    ccFormArgsv1("submitted", {
+      fields_not_auto: "3",
+      fields_auto: "5",
+      fields_modified: "1",
+    }),
   ];
 
   await test_per_command(MAIN_BUTTON, undefined, { 1: 1 }, 1);
@@ -620,12 +629,12 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
 
   let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
 
-  is(selRecords.length, 1, "One credit card");
+  Assert.equal(selRecords.length, 1, "One credit card");
 
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
   EventUtils.synthesizeKey("VK_DELETE", {}, win);
   await BrowserTestUtils.waitForEvent(selRecords, "RecordsRemoved");
-  is(selRecords.length, 0, "No credit cards left");
+  Assert.equal(selRecords.length, 0, "No credit cards left");
 
   win.close();
 
@@ -684,7 +693,7 @@ add_task(async function test_editCreditCard() {
   await setStorage(TEST_CREDIT_CARD_1);
 
   let creditCards = await getCreditCards();
-  is(creditCards.length, 1, "only one credit card is in storage");
+  Assert.equal(creditCards.length, 1, "only one credit card is in storage");
   await testDialog(
     EDIT_CREDIT_CARD_DIALOG_URL,
     win => {
@@ -726,7 +735,7 @@ add_task(async function test_histogram() {
 
   await setStorage(TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_5);
   let creditCards = await getCreditCards();
-  is(creditCards.length, 3, "3 credit cards in storage");
+  Assert.equal(creditCards.length, 3, "3 credit cards in storage");
 
   assertHistogram(CC_NUM_USES_HISTOGRAM, {
     0: 3,
@@ -790,7 +799,7 @@ add_task(async function test_clear_creditCard_autofill() {
 
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
-  is(creditCards.length, 1, "1 credit card in storage");
+  Assert.equal(creditCards.length, 1, "1 credit card in storage");
 
   let tab = await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_1, {
     closeTab: false,
@@ -798,15 +807,15 @@ add_task(async function test_clear_creditCard_autofill() {
   });
 
   let expected_content = [
-    ccFormArgsv1("detected"),
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-    ccFormArgsv1("popup_shown"),
+    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
-    ccFormArgsv1("filled"),
+    ccFormArgsv1("popup_shown"),
     ccFormArgsv2(
       "filled",
       buildccFormv2Extra({ cc_exp: "unavailable" }, "filled")
     ),
+    ccFormArgsv1("filled"),
   ];
   await assertTelemetry(expected_content, []);
   Services.telemetry.clearEvents();
@@ -822,8 +831,8 @@ add_task(async function test_clear_creditCard_autofill() {
   await popupshown;
 
   expected_content = [
-    ccFormArgsv1("popup_shown"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
+    ccFormArgsv1("popup_shown"),
   ];
   await assertTelemetry(expected_content, []);
   Services.telemetry.clearEvents();
@@ -833,21 +842,21 @@ add_task(async function test_clear_creditCard_autofill() {
   await BrowserTestUtils.synthesizeKey("KEY_Enter", {}, browser);
 
   expected_content = [
-    ccFormArgsv1("filled_modified", { field_name: "cc-name" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-name" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-number" }),
+    ccFormArgsv1("filled_modified", { field_name: "cc-name" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-number" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-exp-month" }),
+    ccFormArgsv1("filled_modified", { field_name: "cc-number" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-exp-month" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-exp-year" }),
+    ccFormArgsv1("filled_modified", { field_name: "cc-exp-month" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-exp-year" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-type" }),
+    ccFormArgsv1("filled_modified", { field_name: "cc-exp-year" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-type" }),
+    ccFormArgsv1("filled_modified", { field_name: "cc-type" }),
     ccFormArgsv2("cleared", { field_name: "cc-number" }),
     // popup is shown again because when the field is cleared and is focused,
     // we automatically triggers the popup.
-    ccFormArgsv1("popup_shown"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
+    ccFormArgsv1("popup_shown"),
   ];
 
   await assertTelemetry(expected_content, []);
