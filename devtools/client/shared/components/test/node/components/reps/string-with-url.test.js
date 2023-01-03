@@ -101,7 +101,7 @@ describe("test String with URL", () => {
     const string = `"${url}"`;
     const openLink = jest.fn();
     const element = renderRep(string, { openLink, useQuotes: true });
-    expect(element.text()).toEqual(`"\\"${url}\\""`);
+    expect(element.text()).toEqual(`'"${url}"'`);
     const link = element.find("a");
     expect(link.prop("href")).toBe(url);
     expect(link.prop("title")).toBe(url);

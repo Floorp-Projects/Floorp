@@ -88,7 +88,7 @@ describe("TextNode", () => {
     const object = stubs.get("testRenderingWithDoubleQuote")._grip;
     const renderRep = props => shallow(TextNode.rep({ object, ...props }));
 
-    const defaultOutput = '#text "hello\\"world"';
+    const defaultOutput = "#text 'hello\"world'";
     const defaultTooltip = '#text "hello"world"';
 
     let component = renderRep({ shouldRenderTooltip: true, mode: undefined });

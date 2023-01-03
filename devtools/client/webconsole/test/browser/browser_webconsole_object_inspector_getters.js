@@ -605,7 +605,7 @@ async function testHypgenGetter(oi) {
 async function testQuotedGetters(oi) {
   const nodes = [
     {
-      name: `"\\"quoted-getter\\""`,
+      name: `'"quoted-getter"'`,
       expected: `"quoted"`,
       expandable: false,
     },
