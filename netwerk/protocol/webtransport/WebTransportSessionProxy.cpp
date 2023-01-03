@@ -61,7 +61,10 @@ nsresult WebTransportSessionProxy::AsyncConnect(
   MOZ_ASSERT(NS_IsMainThread());
 
   LOG(("WebTransportSessionProxy::AsyncConnect"));
-  mListener = aListener;
+  {
+    MutexAutoLock lock(mMutex);
+    mListener = aListener;
+  }
   nsSecurityFlags flags = nsILoadInfo::SEC_COOKIES_OMIT | aSecurityFlags;
   nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
                           nsIRequest::LOAD_BYPASS_CACHE |
@@ -249,12 +252,22 @@ void WebTransportSessionProxy::CreateStreamInternal(
         wrapper->CallOnStreamReady(streamProxy);
       };
 
+  RefPtr<Http3WebTransportSession> session;
+  {
+    MutexAutoLock lock(mMutex);
+    session = mWebTransportSession;
+  }
+
+  if (!session) {
+    MOZ_ASSERT(false, "This should not happen");
+    callback(Err(NS_ERROR_UNEXPECTED));
+    return;
+  }
+
   if (aBidi) {
-    mWebTransportSession->CreateOutgoingBidirectionalStream(
-        std::move(callback));
+    session->CreateOutgoingBidirectionalStream(std::move(callback));
   } else {
-    mWebTransportSession->CreateOutgoingUnidirectionalStream(
-        std::move(callback));
+    session->CreateOutgoingUnidirectionalStream(std::move(callback));
   }
 }
 
@@ -309,6 +322,73 @@ WebTransportSessionProxy::CreateOutgoingBidirectionalStream(
   RefPtr<WebTransportStreamCallbackWrapper> wrapper =
       new WebTransportStreamCallbackWrapper(callback, true);
   CreateStreamInternal(wrapper, true);
+  return NS_OK;
+}
+
+void WebTransportSessionProxy::SendDatagramInternal(
+    const RefPtr<Http3WebTransportSession>& aSession, nsTArray<uint8_t>&& aData,
+    uint64_t aTrackingId) {
+  MOZ_ASSERT(OnSocketThread());
+
+  aSession->SendDatagram(std::move(aData), aTrackingId);
+}
+
+NS_IMETHODIMP
+WebTransportSessionProxy::SendDatagram(const nsTArray<uint8_t>& aData,
+                                       uint64_t aTrackingId) {
+  RefPtr<Http3WebTransportSession> session;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mState != WebTransportSessionProxyState::ACTIVE ||
+        !mWebTransportSession) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    session = mWebTransportSession;
+  }
+
+  nsTArray<uint8_t> copied;
+  copied.Assign(aData);
+  if (!OnSocketThread()) {
+    return gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "WebTransportSessionProxy::SendDatagramInternal",
+        [self = RefPtr{this}, session{std::move(session)},
+         data{std::move(copied)}, trackingId(aTrackingId)]() mutable {
+          self->SendDatagramInternal(session, std::move(data), trackingId);
+        }));
+  }
+
+  SendDatagramInternal(session, std::move(copied), aTrackingId);
+  return NS_OK;
+}
+
+void WebTransportSessionProxy::GetMaxDatagramSizeInternal(
+    const RefPtr<Http3WebTransportSession>& aSession) {
+  MOZ_ASSERT(OnSocketThread());
+
+  aSession->GetMaxDatagramSize();
+}
+
+NS_IMETHODIMP
+WebTransportSessionProxy::GetMaxDatagramSize() {
+  RefPtr<Http3WebTransportSession> session;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mState != WebTransportSessionProxyState::ACTIVE ||
+        !mWebTransportSession) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    session = mWebTransportSession;
+  }
+
+  if (!OnSocketThread()) {
+    return gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "WebTransportSessionProxy::GetMaxDatagramSizeInternal",
+        [self = RefPtr{this}, session{std::move(session)}]() {
+          self->GetMaxDatagramSizeInternal(session);
+        }));
+  }
+
+  GetMaxDatagramSizeInternal(session);
   return NS_OK;
 }
 
@@ -719,6 +799,112 @@ void WebTransportSessionProxy::ChangeState(
       break;
   }
   mState = newState;
+}
+
+void WebTransportSessionProxy::NotifyDatagramReceived(
+    nsTArray<uint8_t>&& aData) {
+  // TODO: this should be on the target thread, but the target thread is main
+  // thread for now.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<WebTransportSessionEventListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
+      return;
+    }
+    listener = mListener;
+  }
+
+  listener->OnDatagramReceived(aData);
+}
+
+NS_IMETHODIMP WebTransportSessionProxy::OnDatagramReceivedInternal(
+    nsTArray<uint8_t>&& aData) {
+  MOZ_ASSERT(OnSocketThread());
+
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "WebTransportSessionProxy::OnDatagramReceived",
+        [self = RefPtr{this}, data{std::move(aData)}]() mutable {
+          self->NotifyDatagramReceived(std::move(data));
+        }));
+  }
+
+  NotifyDatagramReceived(std::move(aData));
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebTransportSessionProxy::OnDatagramReceived(
+    const nsTArray<uint8_t>& aData) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void WebTransportSessionProxy::OnMaxDatagramSizeInternal(uint64_t aSize) {
+  // TODO: this should be on the target thread, but the target thread is main
+  // thread for now.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<WebTransportSessionEventListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
+      return;
+    }
+    listener = mListener;
+  }
+
+  listener->OnMaxDatagramSize(aSize);
+}
+
+NS_IMETHODIMP WebTransportSessionProxy::OnMaxDatagramSize(uint64_t aSize) {
+  MOZ_ASSERT(OnSocketThread());
+
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(
+        NS_NewRunnableFunction("WebTransportSessionProxy::OnMaxDatagramSize",
+                               [self = RefPtr{this}, size(aSize)] {
+                                 self->OnMaxDatagramSizeInternal(size);
+                               }));
+  }
+
+  OnMaxDatagramSizeInternal(aSize);
+  return NS_OK;
+}
+
+void WebTransportSessionProxy::OnOutgoingDatagramOutComeInternal(
+    uint64_t aId, WebTransportSessionEventListener::DatagramOutcome aOutCome) {
+  // TODO: this should be on the target thread, but the target thread is main
+  // thread for now.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<WebTransportSessionEventListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
+      return;
+    }
+    listener = mListener;
+  }
+
+  listener->OnOutgoingDatagramOutCome(aId, aOutCome);
+}
+
+NS_IMETHODIMP
+WebTransportSessionProxy::OnOutgoingDatagramOutCome(
+    uint64_t aId, WebTransportSessionEventListener::DatagramOutcome aOutCome) {
+  MOZ_ASSERT(OnSocketThread());
+
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "WebTransportSessionProxy::OnOutgoingDatagramOutCome",
+        [self = RefPtr{this}, id(aId), outcome(aOutCome)] {
+          self->OnOutgoingDatagramOutComeInternal(id, outcome);
+        }));
+  }
+
+  OnOutgoingDatagramOutComeInternal(aId, aOutCome);
+  return NS_OK;
 }
 
 }  // namespace mozilla::net

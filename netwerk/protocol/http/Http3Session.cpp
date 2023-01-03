@@ -121,6 +121,10 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
     mWebTransportNegotiationStatus = WebTransportNegotiation::NEGOTIATING;
   }
 
+  uint32_t datagramSize =
+      StaticPrefs::network_webtransport_datagrams_enabled()
+          ? StaticPrefs::network_webtransport_datagram_size()
+          : 0;
   nsresult rv = NeqoHttp3Conn::Init(
       mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddr, peerAddr,
       gHttpHandler->DefaultQpackTableSize(),
@@ -128,7 +132,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       StaticPrefs::network_http_http3_max_data(),
       StaticPrefs::network_http_http3_max_stream_data(),
       StaticPrefs::network_http_http3_version_negotiation_enabled(),
-      mConnInfo->GetWebTransport(), gHttpHandler->Http3QlogDir(),
+      mConnInfo->GetWebTransport(), gHttpHandler->Http3QlogDir(), datagramSize,
       getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
     return rv;
@@ -734,6 +738,24 @@ nsresult Http3Session::ProcessEvents() {
                 ("Http3Session::ProcessEvents - "
                  "WebTransportEventExternal::Tag::Datagram [this=%p]",
                  this));
+            uint64_t sessionId = event.web_transport._0.datagram.session_id;
+            RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(sessionId);
+            if (!stream) {
+              LOG(
+                  ("Http3Session::ProcessEvents - WebTransport Datagram - "
+                   "session not found "
+                   "sessionId=0x%" PRIx64 " [this=%p].",
+                   sessionId, this));
+              break;
+            }
+
+            RefPtr<Http3WebTransportSession> wt =
+                stream->GetHttp3WebTransportSession();
+            if (!wt) {
+              break;
+            }
+
+            wt->OnDatagramReceived(std::move(data));
             break;
         }
       } break;
@@ -2249,6 +2271,41 @@ nsresult Http3Session::CreateWebTransportStream(
     uint64_t* aStreamId) {
   return mHttp3Connection->CreateWebTransportStream(aSessionId, aStreamType,
                                                     aStreamId);
+}
+
+void Http3Session::SendDatagram(Http3WebTransportSession* aSession,
+                                nsTArray<uint8_t>& aData,
+                                uint64_t aTrackingId) {
+  nsresult rv = mHttp3Connection->WebTransportSendDatagram(aSession->StreamId(),
+                                                           aData, aTrackingId);
+  LOG(("Http3Session::SendDatagram %p res=%" PRIx32, this,
+       static_cast<uint32_t>(rv)));
+  if (!aTrackingId) {
+    return;
+  }
+
+  switch (rv) {
+    case NS_OK:
+      aSession->OnOutgoingDatagramOutCome(
+          aTrackingId, WebTransportSessionEventListener::DatagramOutcome::SENT);
+      break;
+    case NS_ERROR_NOT_AVAILABLE:
+      aSession->OnOutgoingDatagramOutCome(
+          aTrackingId, WebTransportSessionEventListener::DatagramOutcome::
+                           DROPPED_TOO_MUCH_DATA);
+      break;
+    default:
+      aSession->OnOutgoingDatagramOutCome(
+          aTrackingId,
+          WebTransportSessionEventListener::DatagramOutcome::UNKNOWN);
+      break;
+  }
+}
+
+uint64_t Http3Session::MaxDatagramSize(uint64_t aSessionId) {
+  uint64_t size = 0;
+  Unused << mHttp3Connection->WebTransportMaxDatagramSize(aSessionId, &size);
+  return size;
 }
 
 }  // namespace mozilla::net

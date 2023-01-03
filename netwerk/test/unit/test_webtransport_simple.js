@@ -20,7 +20,9 @@ WebTransportListener.prototype = {
   },
   onSessionClosed(errorCode, reason) {
     info("Error: " + errorCode + " reason: " + reason);
-    this.closed();
+    if (this.closed) {
+      this.closed();
+    }
   },
   onIncomingBidirectionalStreamAvailable(stream) {
     info("got incoming bidirectional stream");
@@ -30,16 +32,35 @@ WebTransportListener.prototype = {
     info("got incoming unidirectional stream");
     this.streamAvailable(stream);
   },
+  onDatagramReceived(data) {
+    info("got datagram");
+    if (this.onDatagram) {
+      this.onDatagram(data);
+    }
+  },
+  onMaxDatagramSize(size) {
+    info("max datagram size: " + size);
+    if (this.onMaxDatagramSize) {
+      this.onMaxDatagramSize(size);
+    }
+  },
+  onOutgoingDatagramOutCome(id, outcome) {
+    if (this.onDatagramOutcome) {
+      this.onDatagramOutcome({ id, outcome });
+    }
+  },
 
   QueryInterface: ChromeUtils.generateQI(["WebTransportSessionEventListener"]),
 };
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("network.webtransport.datagrams.enabled");
 });
 
 add_task(async function setup() {
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
+  Services.prefs.setBoolPref("network.webtransport.datagrams.enabled", true);
 
   h3Port = Services.env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
@@ -52,6 +73,69 @@ add_task(async function setup() {
   );
   // `../unit/` so that unit_ipc tests can use as well
   addCertFromFile(certdb, "../unit/http2-ca.pem", "CTu,u,u");
+});
+
+add_task(async function test_wt_datagram() {
+  let webTransport = NetUtil.newWebTransport();
+  let listener = new WebTransportListener().QueryInterface(
+    Ci.WebTransportSessionEventListener
+  );
+
+  let pReady = new Promise(resolve => {
+    listener.ready = resolve;
+  });
+  let pData = new Promise(resolve => {
+    listener.onDatagram = resolve;
+  });
+  let pSize = new Promise(resolve => {
+    listener.onMaxDatagramSize = resolve;
+  });
+  let pOutcome = new Promise(resolve => {
+    listener.onDatagramOutcome = resolve;
+  });
+
+  webTransport.asyncConnect(
+    NetUtil.newURI(`https://${host}/success`),
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+    listener
+  );
+
+  await pReady;
+
+  webTransport.getMaxDatagramSize();
+  let size = await pSize;
+  info("max size:" + size);
+
+  let rawData = new Uint8Array(size);
+  rawData.fill(42);
+
+  webTransport.sendDatagram(rawData, 1);
+  let { id, outcome } = await pOutcome;
+  Assert.equal(id, 1);
+  Assert.equal(outcome, Ci.WebTransportSessionEventListener.SENT);
+
+  let received = await pData;
+  Assert.deepEqual(received, rawData);
+
+  webTransport.getMaxDatagramSize();
+  size = await pSize;
+  info("max size:" + size);
+
+  rawData = new Uint8Array(size + 1);
+  webTransport.sendDatagram(rawData, 2);
+
+  pOutcome = new Promise(resolve => {
+    listener.onDatagramOutcome = resolve;
+  });
+  ({ id, outcome } = await pOutcome);
+  Assert.equal(id, 2);
+  Assert.equal(
+    outcome,
+    Ci.WebTransportSessionEventListener.DROPPED_TOO_MUCH_DATA
+  );
+
+  webTransport.closeSession(0, "");
 });
 
 add_task(async function test_connect_wt() {

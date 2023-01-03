@@ -12180,6 +12180,12 @@
   value: false
   mirror: always
 
+# WebTransport Datagram size
+- name: network.webtransport.datagram_size
+  type: RelaxedAtomicUint32
+  value: 1200
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
