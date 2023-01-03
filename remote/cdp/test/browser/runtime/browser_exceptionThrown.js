@@ -54,8 +54,8 @@ add_task(async function eventsForScriptErrorWithException({ client }) {
     "TypeError: foo.click is not a function",
     "Got expected text"
   );
-  is(events[0].lineNumber, 9, "Got expected line number");
-  is(events[0].columnNumber, 11, "Got expected column number");
+  is(events[0].lineNumber, 8, "Got expected line number");
+  is(events[0].columnNumber, 10, "Got expected column number");
   is(events[0].url, PAGE_CONSOLE_EVENTS, "Got expected url");
   is(
     events[0].executionContextId,
@@ -69,8 +69,8 @@ add_task(async function eventsForScriptErrorWithException({ client }) {
   is(callFrames[0].functionName, "throwError", "Got expected function name");
   is(typeof callFrames[0].scriptId, "string", "Got scriptId as string");
   is(callFrames[0].url, PAGE_CONSOLE_EVENTS, "Got expected url");
-  is(callFrames[0].lineNumber, 9, "Got expected line number");
-  is(callFrames[0].columnNumber, 11, "Got expected column number");
+  is(callFrames[0].lineNumber, 8, "Got expected line number");
+  is(callFrames[0].columnNumber, 10, "Got expected column number");
 
   is(callFrames[1].functionName, "onclick", "Got expected function name");
   is(callFrames[1].url, PAGE_CONSOLE_EVENTS, "Got expected url");
