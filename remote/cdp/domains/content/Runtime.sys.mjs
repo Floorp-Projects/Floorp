@@ -322,8 +322,8 @@ export class Runtime extends ContentProcessDomain {
         functionName: stack.functionDisplayName,
         scriptId: stack.sourceId.toString(),
         url: stack.source,
-        lineNumber: stack.line,
-        columnNumber: stack.column,
+        lineNumber: stack.line - 1,
+        columnNumber: stack.column - 1,
       });
       stack = stack.parent || stack.asyncParent;
     }
@@ -619,8 +619,8 @@ function fromScriptError(error) {
   // From dom/bindings/nsIScriptError.idl
   return {
     innerWindowId: error.innerWindowID,
-    columnNumber: error.columnNumber,
-    lineNumber: error.lineNumber,
+    columnNumber: error.columnNumber - 1,
+    lineNumber: error.lineNumber - 1,
     stack: error.stack,
     text: error.errorMessage,
     timestamp: error.timeStamp,
