@@ -73,7 +73,7 @@ var ZoomUI = {
           resolve(value);
         },
         handleError(error) {
-          Cu.reportError(error);
+          console.error(error);
         },
       });
     });

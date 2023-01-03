@@ -126,7 +126,7 @@ class PingCentre {
 
     return PingCentre._sendStandalonePing(endpoint, payload).catch(event => {
       Glean.pingCentre.sendFailures.add(1);
-      Cu.reportError(
+      console.error(
         `Structured Ingestion ping failure with error: ${event.type}`
       );
     });
@@ -141,7 +141,7 @@ class PingCentre {
         this._onFhrPrefChange
       );
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   }
 }

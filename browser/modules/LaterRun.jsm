@@ -152,15 +152,15 @@ let LaterRun = {
           let urlString = Services.urlFormatter.formatURL(pageData.url.trim());
           uri = Services.io.newURI(urlString);
         } catch (ex) {
-          Cu.reportError(
-            "Invalid LaterRun page URL " + pageData.url + " ignored."
+          console.error(
+            "Invalid LaterRun page URL ",
+            pageData.url,
+            " ignored."
           );
           continue;
         }
         if (!uri.schemeIs("https")) {
-          Cu.reportError(
-            "Insecure LaterRun page URL " + uri.spec + " ignored."
-          );
+          console.error("Insecure LaterRun page URL ", uri.spec, " ignored.");
         } else {
           pageData.url = uri.spec;
           rv.push(new Page(pageData));

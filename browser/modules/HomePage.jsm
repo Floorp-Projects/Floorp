@@ -197,7 +197,7 @@ let HomePage = {
     await this.delayedStartup();
 
     if (await this.shouldIgnore(value)) {
-      Cu.reportError(
+      console.error(
         `Ignoring homepage setting for ${value} as it is on the ignore list.`
       );
       Services.telemetry.recordEvent(
@@ -297,7 +297,7 @@ let HomePage = {
             lazy.ExtensionPreferencesManager.removeSetting(
               item.id,
               "homepage_override"
-            ).catch(Cu.reportError);
+            ).catch(console.error);
           } else {
             // If we don't have a setting for it, we assume the pref has
             // been incorrectly set somehow.

@@ -617,13 +617,13 @@ var webrtcUI = {
 
       let gBrowser = browser.getTabBrowser();
       if (!gBrowser) {
-        Cu.reportError("Can't stop sharing stream - cannot find gBrowser.");
+        console.error("Can't stop sharing stream - cannot find gBrowser.");
         continue;
       }
 
       let tab = gBrowser.getTabForBrowser(browser);
       if (!tab) {
-        Cu.reportError("Can't stop sharing stream - cannot find tab.");
+        console.error("Can't stop sharing stream - cannot find tab.");
         continue;
       }
 
@@ -891,7 +891,7 @@ var webrtcUI = {
         try {
           gIndicatorWindow.updateIndicatorState();
         } catch (err) {
-          Cu.reportError(
+          console.error(
             `error in gIndicatorWindow.updateIndicatorState(): ${err.message}`
           );
         }

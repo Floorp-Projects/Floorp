@@ -196,7 +196,7 @@ var SiteDataManager = {
                   principal.originAttributes.partitionKey
                 );
               } catch (e) {
-                Cu.reportError(e);
+                console.error(e);
               }
               let site = this._getOrInsertSite(
                 pkBaseDomain || principal.baseDomain
@@ -254,7 +254,7 @@ var SiteDataManager = {
           cookie.originAttributes.partitionKey
         );
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
       let baseDomainOrHost =
         pkBaseDomain || this.getBaseDomainFromHost(cookie.rawHost);

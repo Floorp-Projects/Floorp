@@ -188,7 +188,7 @@ class _BuiltInThemes {
             await addon.uninstall();
           }
         } catch (e) {
-          Cu.reportError(`Failed to uninstall expired theme ${id}`);
+          console.error(`Failed to uninstall expired theme ${id}`);
         }
       }
     }

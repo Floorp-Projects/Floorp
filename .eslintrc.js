@@ -211,8 +211,6 @@ module.exports = {
         "browser/components/**",
         "browser/extensions/report-site-issue/**",
         "browser/extensions/search-detection/**",
-        "browser/modules/**",
-        "browser/themes/BuiltInThemes.sys.mjs",
         "devtools/**",
         "dom/base/DOMRequestHelper.*",
         "dom/push/PushComponents.sys.mjs",

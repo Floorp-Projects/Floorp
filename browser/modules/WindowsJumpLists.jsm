@@ -423,8 +423,11 @@ var Builder = class {
         }
       },
       handleError(aError) {
-        Cu.reportError(
-          "Async execution error (" + aError.result + "): " + aError.message
+        console.error(
+          "Async execution error (",
+          aError.result,
+          "): ",
+          aError.message
         );
       },
       handleCompletion(aReason) {
@@ -446,7 +449,7 @@ var Builder = class {
       .filter(uri => !!uri);
 
     if (URIsToRemove.length) {
-      lazy.PlacesUtils.history.remove(URIsToRemove).catch(Cu.reportError);
+      lazy.PlacesUtils.history.remove(URIsToRemove).catch(console.error);
     }
   }
 };

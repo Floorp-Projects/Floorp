@@ -580,7 +580,7 @@ class IconLoader {
     } catch (e) {
       if (e.result != Cr.NS_BINDING_ABORTED) {
         if (typeof e.data?.wrappedJSObject?.httpStatus !== "number") {
-          Cu.reportError(e);
+          console.error(e);
         }
 
         // Used mainly for tests currently.

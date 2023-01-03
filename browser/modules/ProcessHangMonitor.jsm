@@ -374,7 +374,7 @@ var ProcessHangMonitor = {
             uri_type = "content";
           }
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
           uri_type = "unknown";
         }
       }
@@ -406,7 +406,7 @@ var ProcessHangMonitor = {
         }
       );
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
