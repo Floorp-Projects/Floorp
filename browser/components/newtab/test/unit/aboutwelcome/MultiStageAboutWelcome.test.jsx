@@ -296,7 +296,7 @@ describe("MultiStageAboutWelcome module", () => {
         assert.ok(wrapper.find("div.indicator").exists());
         assert.propertyVal(
           wrapper.find("div.indicator").prop("style"),
-          "width",
+          "--progress-bar-progress",
           "50%"
         );
       });

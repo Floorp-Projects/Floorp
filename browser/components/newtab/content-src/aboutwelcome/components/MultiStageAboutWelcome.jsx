@@ -289,15 +289,16 @@ export const ProgressBar = ({ step, previousStep, totalNumberOfScreens }) => {
   const [progress, setProgress] = React.useState(
     previousStep / totalNumberOfScreens
   );
-  useEffect(() => setProgress(step / totalNumberOfScreens), [
-    step,
-    totalNumberOfScreens,
-  ]);
+  useEffect(() => {
+    // We don't need to hook any dependencies because any time the step changes,
+    // the screen's entire DOM tree will be re-rendered.
+    setProgress(step / totalNumberOfScreens);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div
       className="indicator"
       role="presentation"
-      style={{ width: `${progress * 100}%` }}
+      style={{ "--progress-bar-progress": `${progress * 100}%` }}
     />
   );
 };

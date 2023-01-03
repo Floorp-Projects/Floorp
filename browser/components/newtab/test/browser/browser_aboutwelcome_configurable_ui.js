@@ -488,7 +488,7 @@ add_task(async function test_aboutwelcome_with_progress_bar() {
     const progressBar = await ContentTaskUtils.waitForCondition(() =>
       content.document.querySelector(".progress-bar")
     );
-    const indicator1 = await ContentTaskUtils.waitForCondition(() =>
+    const indicator = await ContentTaskUtils.waitForCondition(() =>
       content.document.querySelector(".indicator")
     );
     // Progress bar should have a gray background.
@@ -498,24 +498,24 @@ add_task(async function test_aboutwelcome_with_progress_bar() {
       "Correct progress bar background"
     );
 
-    const indicatorStyles = content.window.getComputedStyle(indicator1);
+    const indicatorStyles = content.window.getComputedStyle(indicator);
     for (let [key, val] of Object.entries({
       // The filled "completed" element should have
       // `background-color: var(--checkbox-checked-bgcolor);`
       "background-color": "rgb(0, 97, 224)",
       // Base progress bar step styles.
       height: "6px",
-      margin: "0px",
+      "margin-inline": "-1px",
       "padding-block": "0px",
     })) {
       is(indicatorStyles[key], val, `Correct indicator ${key} style`);
     }
-    const indicatorWidth = indicator1.clientWidth;
+    const indicatorX = indicator.getBoundingClientRect().x;
     content.document.querySelector("button.primary").click();
     await ContentTaskUtils.waitForCondition(
       () =>
-        content.document.querySelector(".indicator")?.clientWidth >
-        indicatorWidth,
+        content.document.querySelector(".indicator")?.getBoundingClientRect()
+          .x > indicatorX,
       "Indicator should have grown"
     );
   });
