@@ -733,8 +733,9 @@ impl WebTransportEventExternal {
             },
             WebTransportEvent::Datagram {
                 session_id,
-                datagram: _
+                datagram,
              } => {
+                data.extend_from_slice(datagram.as_ref());
                 WebTransportEventExternal::Datagram {
                     session_id: session_id.as_u64(),
                 }
@@ -1262,6 +1263,38 @@ pub extern "C" fn neqo_http3conn_webtransport_create_stream(
             NS_OK
         }
         Err(Http3Error::StreamLimitError) => NS_BASE_STREAM_WOULD_BLOCK,
+        Err(_) => NS_ERROR_UNEXPECTED,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_webtransport_send_datagram(
+    conn: &mut NeqoHttp3Conn,
+    session_id: u64,
+    data: &mut ThinVec<u8>,
+) -> nsresult {
+    match conn
+        .conn.webtransport_send_datagram(StreamId::from(session_id), data, None)
+    {
+        Ok(()) => NS_OK,
+        Err(_) => NS_ERROR_UNEXPECTED,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_webtransport_max_datagram_size(
+    conn: &mut NeqoHttp3Conn,
+    session_id: u64,
+    result: &mut u64,
+) -> nsresult {
+    match conn
+        .conn
+        .webtransport_max_datagram_size(StreamId::from(session_id))
+    {
+        Ok(size) => {
+            *result = size;
+            NS_OK
+        }
         Err(_) => NS_ERROR_UNEXPECTED,
     }
 }

@@ -135,6 +135,16 @@ class NeqoHttp3Conn final {
                                                      aStreamType, aStreamId);
   }
 
+  nsresult WebTransportSendDatagram(uint64_t aSessionId,
+                                    nsTArray<uint8_t>& aData) {
+    return neqo_http3conn_webtransport_send_datagram(this, aSessionId, &aData);
+  }
+
+  nsresult WebTransportMaxDatagramSize(uint64_t aSessionId, uint64_t* aResult) {
+    return neqo_http3conn_webtransport_max_datagram_size(this, aSessionId,
+                                                         aResult);
+  }
+
  private:
   NeqoHttp3Conn() = delete;
   ~NeqoHttp3Conn() = delete;
