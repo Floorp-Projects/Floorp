@@ -189,7 +189,6 @@ class nsWindow final : public nsBaseWidget {
   void SetIcon(const nsAString& aIconSpec) override;
   void SetWindowClass(const nsAString& xulWinType) override;
   LayoutDeviceIntPoint WidgetToScreenOffset() override;
-  void CaptureMouse(bool aCapture) override;
   void CaptureRollupEvents(bool aDoCapture) override;
   [[nodiscard]] nsresult GetAttention(int32_t aCycleCount) override;
   bool HasPendingInputEvent() override;
@@ -767,6 +766,9 @@ class nsWindow final : public nsBaseWidget {
   // Whether we've received a non-blank paint in which case we can reset the
   // clear color to transparent.
   bool mGotNonBlankPaint : 1;
+
+  // Whether we need to retry capturing the mouse because we' re not mapped yet.
+  bool mNeedsToRetryCapturingMouse : 1;
 
   // This bitmap tracks which pixels are transparent. We don't support
   // full translucency at this time; each pixel is either fully opaque
