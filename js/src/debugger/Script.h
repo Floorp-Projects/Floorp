@@ -59,7 +59,6 @@ class DebuggerScript : public NativeObject {
 
   struct CallData;
 
-  bool isInstance() const;
   Debugger* owner() const;
 
  private:
