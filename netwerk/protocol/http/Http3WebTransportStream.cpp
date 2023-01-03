@@ -160,8 +160,10 @@ nsresult Http3WebTransportStream::TryActivating() {
 
 NS_IMETHODIMP Http3WebTransportStream::OnInputStreamReady(
     nsIAsyncInputStream* aStream) {
-  LOG(("Http3WebTransportStream::OnInputStreamReady [this=%p stream=%p]", this,
-       aStream));
+  LOG1(
+      ("Http3WebTransportStream::OnInputStreamReady [this=%p stream=%p "
+       "state=%d]",
+       this, aStream, mSendState));
   MOZ_ASSERT(mSendState == WAITING_DATA);
 
   mSendState = SENDING;
@@ -340,6 +342,8 @@ nsresult Http3WebTransportStream::ReadSegments() {
               static_cast<uint32_t>(rv2)));
       }
         [[fallthrough]];
+      case WAITING_DATA:
+        [[fallthrough]];
       case SENDING: {
         if (mStreamRole == INCOMING &&
             mStreamType == WebTransportStreamType::UniDi) {
@@ -375,7 +379,7 @@ nsresult Http3WebTransportStream::ReadSegments() {
       // wait for the transaction to call ResumeSend.
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         mSendState = WAITING_DATA;
-        rv = NS_OK;
+        rv = mSendStreamPipeIn->AsyncWait(this, 0, 0, gSocketTransportService);
       }
       again = false;
     } else if (NS_FAILED(mSocketOutCondition)) {

@@ -109,6 +109,7 @@ WebTransportSessionProxy::CloseSession(uint32_t status,
   mCloseStatus = status;
   mReason = reason;
   mListener = nullptr;
+  mPendingEvents.Clear();
   switch (mState) {
     case WebTransportSessionProxyState::INIT:
     case WebTransportSessionProxyState::DONE:
@@ -469,6 +470,7 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
   uint32_t closeStatus = 0;
   uint64_t sessionId;
   bool succeeded = false;
+  nsTArray<std::function<void()>> pendingEvents;
   {
     MutexAutoLock lock(mMutex);
     switch (mState) {
@@ -499,6 +501,7 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
           sessionId = mSessionId;
           listener = mListener;
           ChangeState(WebTransportSessionProxyState::ACTIVE);
+          pendingEvents = std::move(mPendingEvents);
         }
         break;
       case WebTransportSessionProxyState::SESSION_CLOSE_PENDING:
@@ -509,6 +512,11 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
   if (listener) {
     if (succeeded) {
       listener->OnSessionReady(sessionId);
+      if (!pendingEvents.IsEmpty()) {
+        for (const auto& event : pendingEvents) {
+          event();
+        }
+      }
     } else {
       listener->OnSessionClosed(closeStatus,
                                 reason);  // TODO: find a better error.
@@ -637,17 +645,39 @@ WebTransportSessionProxy::OnIncomingStreamAvailableInternal(
     return NS_OK;
   }
 
-  MutexAutoLock lock(mMutex);
-  if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
+  nsCOMPtr<WebTransportSessionEventListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    LOG(
+        ("WebTransportSessionProxy::OnIncomingStreamAvailableInternal %p "
+         "mState=%d mListener=%p",
+         this, mState, mListener.get()));
+    switch (mState) {
+      case WebTransportSessionProxyState::NEGOTIATING_SUCCEEDED:
+        // OnSessionReady is not called yet, so we need to wait.
+        mPendingEvents.AppendElement(
+            [self = RefPtr{this}, stream = RefPtr{aStream}]() {
+              self->OnIncomingStreamAvailableInternal(stream);
+            });
+        break;
+      case WebTransportSessionProxyState::ACTIVE:
+        listener = mListener;
+        break;
+      default:
+        return NS_ERROR_ABORT;
+    }
+  }
+
+  if (!listener) {
     return NS_OK;
   }
 
   RefPtr<WebTransportStreamProxy> streamProxy =
       new WebTransportStreamProxy(aStream);
   if (aStream->StreamType() == WebTransportStreamType::BiDi) {
-    Unused << mListener->OnIncomingBidirectionalStreamAvailable(streamProxy);
+    Unused << listener->OnIncomingBidirectionalStreamAvailable(streamProxy);
   } else {
-    Unused << mListener->OnIncomingUnidirectionalStreamAvailable(streamProxy);
+    Unused << listener->OnIncomingUnidirectionalStreamAvailable(streamProxy);
   }
   return NS_OK;
 }

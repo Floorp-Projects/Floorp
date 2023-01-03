@@ -2,6 +2,8 @@
 //  Simple WebTransport test
 //
 
+/* import-globals-from head_webtransport.js */
+
 "use strict";
 
 var h3Port;
@@ -10,48 +12,6 @@ var host;
 var { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
-
-let WebTransportListener = function() {};
-
-WebTransportListener.prototype = {
-  onSessionReady(sessionId) {
-    info("SessionId " + sessionId);
-    this.ready();
-  },
-  onSessionClosed(errorCode, reason) {
-    info("Error: " + errorCode + " reason: " + reason);
-    if (this.closed) {
-      this.closed();
-    }
-  },
-  onIncomingBidirectionalStreamAvailable(stream) {
-    info("got incoming bidirectional stream");
-    this.streamAvailable(stream);
-  },
-  onIncomingUnidirectionalStreamAvailable(stream) {
-    info("got incoming unidirectional stream");
-    this.streamAvailable(stream);
-  },
-  onDatagramReceived(data) {
-    info("got datagram");
-    if (this.onDatagram) {
-      this.onDatagram(data);
-    }
-  },
-  onMaxDatagramSize(size) {
-    info("max datagram size: " + size);
-    if (this.onMaxDatagramSize) {
-      this.onMaxDatagramSize(size);
-    }
-  },
-  onOutgoingDatagramOutCome(id, outcome) {
-    if (this.onDatagramOutcome) {
-      this.onDatagramOutcome({ id, outcome });
-    }
-  },
-
-  QueryInterface: ChromeUtils.generateQI(["WebTransportSessionEventListener"]),
-};
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.localDomains");
@@ -208,39 +168,6 @@ add_task(async function test_closed_100ms() {
   test_closed("/closeafter100ms");
 });
 
-function WebTransportStreamCallback() {}
-
-WebTransportStreamCallback.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIWebTransportStreamCallback"]),
-
-  onBidirectionalStreamReady(aStream) {
-    Assert.ok(aStream != null);
-    this.finish(aStream);
-  },
-  onUnidirectionalStreamReady(aStream) {
-    Assert.ok(aStream != null);
-    this.finish(aStream);
-  },
-  onError(aError) {
-    this.finish(aError);
-  },
-};
-
-function streamCreatePromise(transport, bidi) {
-  return new Promise(resolve => {
-    let listener = new WebTransportStreamCallback().QueryInterface(
-      Ci.nsIWebTransportStreamCallback
-    );
-    listener.finish = resolve;
-
-    if (bidi) {
-      transport.createOutgoingBidirectionalStream(listener);
-    } else {
-      transport.createOutgoingUnidirectionalStream(listener);
-    }
-  });
-}
-
 add_task(async function test_wt_stream_create() {
   let webTransport = NetUtil.newWebTransport().QueryInterface(
     Ci.nsIWebTransport
@@ -268,47 +195,6 @@ add_task(async function test_wt_stream_create() {
 
   webTransport.closeSession(0, "");
 });
-
-function StreamStatsCallback() {}
-
-StreamStatsCallback.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
-    "nsIWebTransportStreamStatsCallback",
-  ]),
-
-  onSendStatsAvailable(aStats) {
-    Assert.ok(aStats != null);
-    this.finish(aStats);
-  },
-  onReceiveStatsAvailable(aStats) {
-    Assert.ok(aStats != null);
-    this.finish(aStats);
-  },
-};
-
-function sendStreamStatsPromise(stream) {
-  return new Promise(resolve => {
-    let listener = new StreamStatsCallback().QueryInterface(
-      Ci.nsIWebTransportStreamStatsCallback
-    );
-    listener.finish = resolve;
-
-    stream.QueryInterface(Ci.nsIWebTransportSendStream);
-    stream.getSendStreamStats(listener);
-  });
-}
-
-function receiveStreamStatsPromise(stream) {
-  return new Promise(resolve => {
-    let listener = new StreamStatsCallback().QueryInterface(
-      Ci.nsIWebTransportStreamStatsCallback
-    );
-    listener.finish = resolve;
-
-    stream.QueryInterface(Ci.nsIWebTransportReceiveStream);
-    stream.getReceiveStreamStats(listener);
-  });
-}
 
 add_task(async function test_wt_stream_send_and_stats() {
   let webTransport = NetUtil.newWebTransport().QueryInterface(
@@ -344,17 +230,6 @@ add_task(async function test_wt_stream_send_and_stats() {
 
   webTransport.closeSession(0, "");
 });
-
-function inputStreamReader() {}
-
-inputStreamReader.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIInputStreamCallback"]),
-
-  onInputStreamReady(input) {
-    let data = NetUtil.readInputStreamToString(input, input.available());
-    this.finish(data);
-  },
-};
 
 add_task(async function test_wt_receive_stream_and_stats() {
   let webTransport = NetUtil.newWebTransport().QueryInterface(
