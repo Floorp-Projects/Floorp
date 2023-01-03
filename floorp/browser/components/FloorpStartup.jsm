@@ -81,3 +81,22 @@ async function onFinalUIStartup() {
     } catch (e) { console.error(e) }
 }
 Services.obs.addObserver(onFinalUIStartup, "final-ui-startup");
+
+
+// Optimize for portable version
+if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
+    // from firefox-scripts (https://github.com/xiaoxiaoflood/firefox-scripts/blob/2bf4334a604ef2184657ed1ddf512bbe0cd7c63c/chrome/utils/BootstrapLoader.jsm#L19-L22)
+    const Constants = ChromeUtils.import('resource://gre/modules/AppConstants.jsm');
+    const temp = Object.assign({}, Constants.AppConstants);
+    temp.MOZ_UPDATER = false;
+    Constants.AppConstants = Object.freeze(temp);
+
+    // https://searchfox.org/mozilla-esr102/source/toolkit/modules/UpdateUtils.jsm#397
+    // https://searchfox.org/mozilla-esr102/source/toolkit/modules/UpdateUtils.jsm#506-507
+    // https://searchfox.org/mozilla-esr102/source/toolkit/modules/UpdateUtils.jsm#557,573
+    const UpdateUtils = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+    UpdateUtils.UpdateUtils.PER_INSTALLATION_PREFS["app.update.auto"].policyFn =
+        function() { return false };
+    UpdateUtils.UpdateUtils.PER_INSTALLATION_PREFS["app.update.background.enabled"].policyFn =
+        function() { return false };
+}
