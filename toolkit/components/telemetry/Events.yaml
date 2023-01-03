@@ -520,6 +520,45 @@ form_autocomplete:
     record_in_processes: ["main"]
     release_channel_collection: opt-out
 
+address:
+  doorhanger:
+    description: >-
+      User interactions for the browser address autofill doorhanger.
+    objects:
+      - "capture_doorhanger"
+      - "update_doorhanger"
+    methods:
+      - "show"
+      - "save"
+      - "update"
+      - "cancel"
+      - "disable"
+      - "pref"
+    bug_numbers: [1801039]
+    notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
+    expiry_version: never
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+  manage:
+    description: >-
+      User interactions for address autofill preferences management UI.
+    objects:
+      - "manage"
+    methods:
+      - "show"
+      - "add"
+      - "delete"
+      - "show_entry"
+      - "edit"
+    bug_numbers: [1801039]
+    notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
+    expiry_version: never
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
 creditcard:
   doorhanger:
     description: >-
@@ -534,7 +573,7 @@ creditcard:
       - "cancel"
       - "disable"
     bug_numbers: [1653073, 1653083, 1720608, 1767907]
-    notification_emails: ["sgalich@mozilla.com", "dlee@mozilla.com"]
+    notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
     expiry_version: never
     products:
       - "firefox"
@@ -552,7 +591,7 @@ creditcard:
       - "show_entry"
       - "edit"
     bug_numbers: [1653073, 1654167, 1720608, 1767907]
-    notification_emails: ["sgalich@mozilla.com", "dlee@mozilla.com"]
+    notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
     expiry_version: never
     products:
       - "firefox"
@@ -570,7 +609,7 @@ creditcard:
       - "filled_modified"
       - "submitted"
     bug_numbers: [1653073, 1653162, 1720608, 1767907]
-    notification_emails: ["sgalich@mozilla.com", "dlee@mozilla.com"]
+    notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
     expiry_version: never
     products:
       - "firefox"
@@ -618,7 +657,7 @@ creditcard:
       - "submitted"
       - "cleared"
     bug_numbers: [1757731]
-    notification_emails: ["tgiles@mozilla.com", "dlee@mozilla.com"]
+    notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
     expiry_version: never
     products:
       - "firefox"
