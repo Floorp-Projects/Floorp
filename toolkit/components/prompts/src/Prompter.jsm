@@ -662,7 +662,7 @@ Prompter.prototype = {
 };
 
 // Common utils not specific to a particular prompter style.
-var PromptUtilsTemp = {
+var InternalPromptUtils = {
   getLocalizedString(key, formatArgs) {
     if (formatArgs) {
       return this.strBundle.formatStringFromName(key, formatArgs);
@@ -684,25 +684,25 @@ var PromptUtilsTemp = {
       let buttonLabel;
       switch (flags & 0xff) {
         case Ci.nsIPrompt.BUTTON_TITLE_OK:
-          buttonLabel = PromptUtils.getLocalizedString("OK");
+          buttonLabel = this.getLocalizedString("OK");
           break;
         case Ci.nsIPrompt.BUTTON_TITLE_CANCEL:
-          buttonLabel = PromptUtils.getLocalizedString("Cancel");
+          buttonLabel = this.getLocalizedString("Cancel");
           break;
         case Ci.nsIPrompt.BUTTON_TITLE_YES:
-          buttonLabel = PromptUtils.getLocalizedString("Yes");
+          buttonLabel = this.getLocalizedString("Yes");
           break;
         case Ci.nsIPrompt.BUTTON_TITLE_NO:
-          buttonLabel = PromptUtils.getLocalizedString("No");
+          buttonLabel = this.getLocalizedString("No");
           break;
         case Ci.nsIPrompt.BUTTON_TITLE_SAVE:
-          buttonLabel = PromptUtils.getLocalizedString("Save");
+          buttonLabel = this.getLocalizedString("Save");
           break;
         case Ci.nsIPrompt.BUTTON_TITLE_DONT_SAVE:
-          buttonLabel = PromptUtils.getLocalizedString("DontSave");
+          buttonLabel = this.getLocalizedString("DontSave");
           break;
         case Ci.nsIPrompt.BUTTON_TITLE_REVERT:
-          buttonLabel = PromptUtils.getLocalizedString("Revert");
+          buttonLabel = this.getLocalizedString("Revert");
           break;
         case Ci.nsIPrompt.BUTTON_TITLE_IS_STRING:
           buttonLabel = argText[i];
@@ -840,20 +840,20 @@ var PromptUtilsTemp = {
         realm += this.ellipsis;
       }
 
-      return PromptUtils.getLocalizedString("EnterLoginForProxy3", [
+      return this.getLocalizedString("EnterLoginForProxy3", [
         realm,
         displayHost,
       ]);
     }
     if (isPassOnly) {
-      return PromptUtils.getLocalizedString("EnterPasswordOnlyFor", [username]);
+      return this.getLocalizedString("EnterPasswordOnlyFor", [username]);
     }
     if (isCrossOrig) {
-      return PromptUtils.getLocalizedString("EnterCredentialsCrossOrigin", [
+      return this.getLocalizedString("EnterCredentialsCrossOrigin", [
         displayHostOnly,
       ]);
     }
-    return PromptUtils.getLocalizedString("EnterCredentials");
+    return this.getLocalizedString("EnterCredentials");
   },
 
   _legacyMakeAuthMessage(channel, authInfo) {
@@ -881,26 +881,23 @@ var PromptUtilsTemp = {
 
     let text;
     if (isProxy) {
-      text = PromptUtils.getLocalizedString("EnterLoginForProxy3", [
+      text = this.getLocalizedString("EnterLoginForProxy3", [
         realm,
         displayHost,
       ]);
     } else if (isPassOnly) {
-      text = PromptUtils.getLocalizedString("EnterPasswordFor", [
+      text = this.getLocalizedString("EnterPasswordFor", [
         username,
         displayHost,
       ]);
     } else if (isCrossOrig) {
-      text = PromptUtils.getLocalizedString(
-        "EnterUserPasswordForCrossOrigin2",
-        [displayHost]
-      );
-    } else if (!realm) {
-      text = PromptUtils.getLocalizedString("EnterUserPasswordFor2", [
+      text = this.getLocalizedString("EnterUserPasswordForCrossOrigin2", [
         displayHost,
       ]);
+    } else if (!realm) {
+      text = this.getLocalizedString("EnterUserPasswordFor2", [displayHost]);
     } else {
-      text = PromptUtils.getLocalizedString("EnterLoginForRealm3", [
+      text = this.getLocalizedString("EnterLoginForRealm3", [
         realm,
         displayHost,
       ]);
@@ -913,11 +910,8 @@ var PromptUtilsTemp = {
     return this.brandBundle.GetStringFromName("brandFullName");
   },
 };
-Object.setPrototypeOf(PromptUtilsTemp, PromptUtils);
 
-PromptUtils = PromptUtilsTemp;
-
-XPCOMUtils.defineLazyGetter(PromptUtils, "strBundle", function() {
+XPCOMUtils.defineLazyGetter(InternalPromptUtils, "strBundle", function() {
   let bundle = Services.strings.createBundle(
     "chrome://global/locale/commonDialogs.properties"
   );
@@ -927,7 +921,7 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "strBundle", function() {
   return bundle;
 });
 
-XPCOMUtils.defineLazyGetter(PromptUtils, "brandBundle", function() {
+XPCOMUtils.defineLazyGetter(InternalPromptUtils, "brandBundle", function() {
   let bundle = Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
@@ -937,7 +931,7 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "brandBundle", function() {
   return bundle;
 });
 
-XPCOMUtils.defineLazyGetter(PromptUtils, "ellipsis", function() {
+XPCOMUtils.defineLazyGetter(InternalPromptUtils, "ellipsis", function() {
   let ellipsis = "\u2026";
   try {
     ellipsis = Services.prefs.getComplexValue(
@@ -1311,7 +1305,7 @@ class ModalPrompter {
 
   alert(title, text) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("Alert");
+      title = InternalPromptUtils.getLocalizedString("Alert");
     }
 
     let args = {
@@ -1329,7 +1323,7 @@ class ModalPrompter {
 
   alertCheck(title, text, checkLabel, checkValue) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("Alert");
+      title = InternalPromptUtils.getLocalizedString("Alert");
     }
 
     // For sync calls checkValue is an XPCOM inout. XPCOM wraps primitves in
@@ -1358,7 +1352,7 @@ class ModalPrompter {
 
   confirm(title, text) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("Confirm");
+      title = InternalPromptUtils.getLocalizedString("Confirm");
     }
 
     let args = {
@@ -1378,7 +1372,7 @@ class ModalPrompter {
 
   confirmCheck(title, text, checkLabel, checkValue) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("ConfirmCheck");
+      title = InternalPromptUtils.getLocalizedString("ConfirmCheck");
     }
 
     let checked = this.async ? checkValue : checkValue.value;
@@ -1418,7 +1412,7 @@ class ModalPrompter {
     extraArgs = {}
   ) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("Confirm");
+      title = InternalPromptUtils.getLocalizedString("Confirm");
     }
 
     let args = {
@@ -1438,7 +1432,7 @@ class ModalPrompter {
       label2,
       defaultButtonNum,
       isDelayEnabled,
-    ] = PromptUtils.confirmExHelper(flags, button0, button1, button2);
+    ] = InternalPromptUtils.confirmExHelper(flags, button0, button1, button2);
 
     args.defaultButtonNum = defaultButtonNum;
     args.enableDelay = isDelayEnabled;
@@ -1467,7 +1461,7 @@ class ModalPrompter {
 
   nsIPrompt_prompt(title, text, value, checkLabel, checkValue) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("Prompt");
+      title = InternalPromptUtils.getLocalizedString("Prompt");
     }
 
     let args = {
@@ -1502,9 +1496,10 @@ class ModalPrompter {
 
   nsIPrompt_promptUsernameAndPassword(channel, title, text, user, pass) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("PromptUsernameAndPassword3", [
-        PromptUtils.getBrandFullName(),
-      ]);
+      title = InternalPromptUtils.getLocalizedString(
+        "PromptUsernameAndPassword3",
+        [InternalPromptUtils.getBrandFullName()]
+      );
     }
 
     let args = {
@@ -1514,7 +1509,7 @@ class ModalPrompter {
       text,
       user: this.async ? user : user.value,
       pass: this.async ? pass : pass.value,
-      button0Label: PromptUtils.getLocalizedString("SignIn"),
+      button0Label: InternalPromptUtils.getLocalizedString("SignIn"),
       ok: false,
     };
 
@@ -1540,8 +1535,8 @@ class ModalPrompter {
 
   nsIPrompt_promptPassword(channel, title, text, pass) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("PromptPassword3", [
-        PromptUtils.getBrandFullName(),
+      title = InternalPromptUtils.getLocalizedString("PromptPassword3", [
+        InternalPromptUtils.getBrandFullName(),
       ]);
     }
 
@@ -1551,7 +1546,7 @@ class ModalPrompter {
       title,
       text,
       pass: this.async ? pass : pass.value,
-      button0Label: PromptUtils.getLocalizedString("SignIn"),
+      button0Label: InternalPromptUtils.getLocalizedString("SignIn"),
       ok: false,
     };
 
@@ -1575,7 +1570,7 @@ class ModalPrompter {
 
   select(title, text, list, selected) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("Select");
+      title = InternalPromptUtils.getLocalizedString("Select");
     }
 
     let args = {
@@ -1649,9 +1644,9 @@ class ModalPrompter {
   /* ----------  nsIAuthPrompt2  ---------- */
 
   promptAuth(channel, level, authInfo) {
-    let message = PromptUtils.makeAuthMessage(this, channel, authInfo);
+    let message = InternalPromptUtils.makeAuthMessage(this, channel, authInfo);
 
-    let [username, password] = PromptUtils.getAuthInfo(authInfo);
+    let [username, password] = InternalPromptUtils.getAuthInfo(authInfo);
 
     let userParam = this.async ? username : { value: username };
     let passParam = this.async ? password : { value: password };
@@ -1676,7 +1671,7 @@ class ModalPrompter {
         if (ok) {
           let username = bag.getProperty("user");
           let password = bag.getProperty("pass");
-          PromptUtils.setAuthInfo(authInfo, username, password);
+          InternalPromptUtils.setAuthInfo(authInfo, username, password);
         }
         return ok;
       });
@@ -1685,7 +1680,11 @@ class ModalPrompter {
     // For the sync case result is the "ok" boolean which indicates whether
     // the user has confirmed the dialog.
     if (result) {
-      PromptUtils.setAuthInfo(authInfo, userParam.value, passParam.value);
+      InternalPromptUtils.setAuthInfo(
+        authInfo,
+        userParam.value,
+        passParam.value
+      );
     }
     return result;
   }
@@ -1757,17 +1756,20 @@ AuthPromptAdapter.prototype = {
   /* ----------  nsIAuthPrompt2 ---------- */
 
   promptAuth(channel, level, authInfo, checkLabel, checkValue) {
-    let message = PromptUtils.makeAuthMessage(
+    let message = InternalPromptUtils.makeAuthMessage(
       this.oldPrompter,
       channel,
       authInfo
     );
 
-    let [username, password] = PromptUtils.getAuthInfo(authInfo);
+    let [username, password] = InternalPromptUtils.getAuthInfo(authInfo);
     let userParam = { value: username };
     let passParam = { value: password };
 
-    let { displayHost, realm } = PromptUtils.getAuthTarget(channel, authInfo);
+    let { displayHost, realm } = InternalPromptUtils.getAuthTarget(
+      channel,
+      authInfo
+    );
     let authTarget = displayHost + " (" + realm + ")";
 
     let ok;
@@ -1791,7 +1793,11 @@ AuthPromptAdapter.prototype = {
     }
 
     if (ok) {
-      PromptUtils.setAuthInfo(authInfo, userParam.value, passParam.value);
+      InternalPromptUtils.setAuthInfo(
+        authInfo,
+        userParam.value,
+        passParam.value
+      );
     }
     return ok;
   },
