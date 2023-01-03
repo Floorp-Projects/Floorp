@@ -38,7 +38,6 @@ Pattern({
 
           // The below are all Debugger prototype objects.
           Environment:    { count: Pattern.NATURAL },
-          Script:         { count: Pattern.NATURAL },
           Memory:         { count: Pattern.NATURAL },
           Frame:          { count: Pattern.NATURAL }
         })
