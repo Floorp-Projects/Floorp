@@ -353,14 +353,12 @@ function contentTriggerDblclickOn(selector, eventModifiers = {}, browser) {
       ok(itemTarget, "Download item target exists");
 
       let doubleClicked = ContentTaskUtils.waitForEvent(itemTarget, "dblclick");
-      EventUtils.synthesizeMouseAtCenter(
+      // NOTE: we are using sendMouseEvent instead of synthesizeMouseAtCenter
+      // here to prevent an unexpected timeout failure in devedition builds
+      // due to the ContentTaskUtils.waitForEvent promise never been resolved.
+      EventUtils.sendMouseEvent(
+        { type: "dblclick", ...modifiers },
         itemTarget,
-        Object.assign({ clickCount: 1 }, modifiers),
-        content
-      );
-      EventUtils.synthesizeMouseAtCenter(
-        itemTarget,
-        Object.assign({ clickCount: 2 }, modifiers),
         content
       );
       info("Waiting for double-click content task");
