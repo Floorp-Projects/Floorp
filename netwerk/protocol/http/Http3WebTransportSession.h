@@ -68,6 +68,15 @@ class Http3WebTransportSession final : public Http3StreamBase,
   already_AddRefed<Http3WebTransportStream> OnIncomingWebTransportStream(
       WebTransportStreamType aType, uint64_t aId);
 
+  void SendDatagram(nsTArray<uint8_t>&& aData, uint64_t aTrackingId);
+
+  void OnDatagramReceived(nsTArray<uint8_t>&& aData);
+
+  void GetMaxDatagramSize();
+
+  void OnOutgoingDatagramOutCome(
+      uint64_t aId, WebTransportSessionEventListener::DatagramOutcome aOutCome);
+
  private:
   virtual ~Http3WebTransportSession();
 
@@ -90,7 +99,8 @@ class Http3WebTransportSession final : public Http3StreamBase,
   enum SendStreamState {
     PREPARING_HEADERS,
     WAITING_TO_ACTIVATE,
-    SEND_DONE
+    WAITING_DATAGRAM,
+    WRITING_DATAGRAM,
   } mSendState{PREPARING_HEADERS};
 
   nsCString mFlatHttpRequestHeaders;

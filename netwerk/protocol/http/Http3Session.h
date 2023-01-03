@@ -204,6 +204,11 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
                                uint8_t aErrorCode);
   void StreamStopSending(Http3WebTransportStream* aStream, uint8_t aErrorCode);
 
+  void SendDatagram(Http3WebTransportSession* aSession,
+                    nsTArray<uint8_t>& aData, uint64_t aTrackingId);
+
+  uint64_t MaxDatagramSize(uint64_t aSessionId);
+
  private:
   ~Http3Session();
 

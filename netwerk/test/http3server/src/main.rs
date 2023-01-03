@@ -478,7 +478,7 @@ impl HttpServer for Http3TestServer {
                     }
                 }
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::Datagram {
-                    session,
+                    mut session,
                     datagram,
                 }) => {
                     qdebug!(
@@ -486,6 +486,7 @@ impl HttpServer for Http3TestServer {
                         session,
                         datagram
                     );
+                    session.send_datagram(datagram.as_ref(), None).unwrap();
                 }
             }
         }
@@ -721,7 +722,8 @@ impl ServersRunner {
                         .max_table_size_encoder(MAX_TABLE_SIZE)
                         .max_table_size_decoder(MAX_TABLE_SIZE)
                         .max_blocked_streams(MAX_BLOCKED_STREAMS)
-                        .webtransport(true),
+                        .webtransport(true)
+                        .connection_parameters(ConnectionParameters::default().datagram_size(1200)),
                     None,
                 )
                 .expect("We cannot make a server!"),

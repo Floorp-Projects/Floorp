@@ -97,6 +97,7 @@ impl NeqoHttp3Conn {
         version_negotiation: bool,
         webtransport: bool,
         qlog_dir: &nsACString,
+        webtransport_datagram_size: u32,
     ) -> Result<RefPtr<NeqoHttp3Conn>, nsresult> {
         // Nss init.
         init();
@@ -134,6 +135,10 @@ impl NeqoHttp3Conn {
         #[cfg(feature = "fuzzing")]
         if static_prefs::pref!("fuzzing.necko.http3") {
             params = params.idle_timeout(Duration::from_millis(10));
+        }
+
+        if webtransport_datagram_size > 0 {
+            params = params.datagram_size(webtransport_datagram_size.into());
         }
 
         let http3_settings = Http3Parameters::default()
@@ -235,6 +240,7 @@ pub extern "C" fn neqo_http3conn_new(
     version_negotiation: bool,
     webtransport: bool,
     qlog_dir: &nsACString,
+    webtransport_datagram_size: u32,
     result: &mut *const NeqoHttp3Conn,
 ) -> nsresult {
     *result = ptr::null_mut();
@@ -251,6 +257,7 @@ pub extern "C" fn neqo_http3conn_new(
         version_negotiation,
         webtransport,
         qlog_dir,
+        webtransport_datagram_size,
     ) {
         Ok(http3_conn) => {
             http3_conn.forget(result);
@@ -1272,11 +1279,18 @@ pub extern "C" fn neqo_http3conn_webtransport_send_datagram(
     conn: &mut NeqoHttp3Conn,
     session_id: u64,
     data: &mut ThinVec<u8>,
+    tracking_id: u64
 ) -> nsresult {
+    let id = if tracking_id == 0 {
+        None
+    } else {
+        Some(tracking_id)
+    };
     match conn
-        .conn.webtransport_send_datagram(StreamId::from(session_id), data, None)
+        .conn.webtransport_send_datagram(StreamId::from(session_id), data, id)
     {
         Ok(()) => NS_OK,
+        Err(Http3Error::TransportError(TransportError::TooMuchData)) => NS_ERROR_NOT_AVAILABLE,
         Err(_) => NS_ERROR_UNEXPECTED,
     }
 }

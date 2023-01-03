@@ -22,6 +22,7 @@ class Http3WebTransportStream;
 
 [ptr] native Http3WebTransportSessionPtr(mozilla::net::Http3WebTransportSession);
 [ptr] native Http3WebTransportStreamPtr(mozilla::net::Http3WebTransportStream);
+native Datagram(nsTArray<uint8_t>&&);
 
 [builtinclass, scriptable, uuid(c20d6e77-8cb1-4838-a88d-fff826080aa3)]
 interface nsIWebTransport : nsISupports {
@@ -46,7 +47,9 @@ interface nsIWebTransport : nsISupports {
   void createOutgoingBidirectionalStream(in nsIWebTransportStreamCallback aListener);
   void createOutgoingUnidirectionalStream(in nsIWebTransportStreamCallback aListener);
 
-  // bool sendDatagram(in AUTF8String aDatagram);
+  void sendDatagram(in Array<uint8_t> aData, in uint64_t aTrackingId);
+
+  void getMaxDatagramSize();
 };
 
 // Events related to a WebTransport session.
@@ -70,7 +73,22 @@ interface WebTransportSessionEventListener : nsISupports {
   void onIncomingStreamAvailableInternal(in Http3WebTransportStreamPtr aStream);
 
   // When a new datagram has been received.
-  // void onDatagramReceived(in AUTF8String aDatagram);
+  void onDatagramReceived(in Array<uint8_t> aData);
+
+  // This is used internally to pass the datagram to WebTransportSessionProxy.
+  void onDatagramReceivedInternal(in Datagram aData);
+
+  void onMaxDatagramSize(in uint64_t aSize);
+
+  cenum DatagramOutcome: 32 {
+    UNKNOWN               = 0,
+    DROPPED_TOO_MUCH_DATA = 1,
+    SENT                  = 2,
+  };
+
+  void onOutgoingDatagramOutCome(
+    in uint64_t aId,
+    in WebTransportSessionEventListener_DatagramOutcome aOutCome);
 
   // void onStatsAvailable(in WebTransportStats aStats);
 };
