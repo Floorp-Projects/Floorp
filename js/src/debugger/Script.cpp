@@ -104,8 +104,8 @@ void DebuggerScript::trace(JSTracer* trc) {
 NativeObject* DebuggerScript::initClass(JSContext* cx,
                                         Handle<GlobalObject*> global,
                                         HandleObject debugCtor) {
-  return InitClass(cx, debugCtor, nullptr, &class_, construct, 0, properties_,
-                   methods_, nullptr, nullptr);
+  return InitClass(cx, debugCtor, &class_, nullptr, "Script", construct, 0,
+                   properties_, methods_, nullptr, nullptr);
 }
 
 /* static */
