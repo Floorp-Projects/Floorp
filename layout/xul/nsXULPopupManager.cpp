@@ -293,7 +293,7 @@ bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
   if (StaticPrefs::ui_popup_disable_autohide()) {
     // Required on linux to allow events to work on other targets.
     if (mWidget) {
-      mWidget->CaptureRollupEvents(nullptr, false);
+      mWidget->CaptureRollupEvents(false);
     }
     return false;
   }
@@ -1955,7 +1955,7 @@ void nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup) {
   if (item && aOldPopup == item->Content()) return;
 
   if (mWidget) {
-    mWidget->CaptureRollupEvents(nullptr, false);
+    mWidget->CaptureRollupEvents(false);
     mWidget = nullptr;
   }
 
@@ -1963,7 +1963,7 @@ void nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup) {
     nsMenuPopupFrame* popup = item->Frame();
     mWidget = popup->GetWidget();
     if (mWidget) {
-      mWidget->CaptureRollupEvents(nullptr, true);
+      mWidget->CaptureRollupEvents(true);
     }
   }
 

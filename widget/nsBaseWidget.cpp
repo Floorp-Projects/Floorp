@@ -105,8 +105,6 @@ static int32_t gNumWidgets;
 #  include "nsCocoaFeatures.h"
 #endif
 
-nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
-
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::ipc;
@@ -1805,9 +1803,7 @@ const widget::SizeConstraints nsBaseWidget::GetSizeConstraints() {
 
 // static
 nsIRollupListener* nsBaseWidget::GetActiveRollupListener() {
-  // If set, then this is likely an <html:select> dropdown.
-  if (gRollupListener) return gRollupListener;
-
+  // TODO: Simplify this.
   return nsXULPopupManager::GetInstance();
 }
 
