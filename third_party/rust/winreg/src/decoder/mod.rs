@@ -3,42 +3,41 @@
 // http://opensource.org/licenses/MIT>. This file
 // may not be copied, modified, or distributed
 // except according to those terms.
-use std::io;
-use std::fmt;
-use std::error::Error;
-use winapi::shared::minwindef::DWORD;
-use super::{RegKey};
 use super::enums::*;
+use super::RegKey;
+use std::error::Error;
+use std::fmt;
+use std::io;
+use winapi::shared::minwindef::DWORD;
 
-macro_rules! read_value{
-    ($s:ident) => (
+macro_rules! read_value {
+    ($s:ident) => {
         match mem::replace(&mut $s.f_name, None) {
-            Some(ref s) => {
-                $s.key.get_value(s)
-                    .map_err(DecoderError::IoError)
-            },
-            None => Err(DecoderError::NoFieldName)
+            Some(ref s) => $s.key.get_value(s).map_err(DecoderError::IoError),
+            None => Err(DecoderError::NoFieldName),
         }
-    )
+    };
 }
 
-macro_rules! parse_string{
-    ($s:ident) => ({
+macro_rules! parse_string {
+    ($s:ident) => {{
         let s: String = read_value!($s)?;
-        s.parse().map_err(|e| DecoderError::ParseError(format!("{:?}", e)))
-    })
+        s.parse()
+            .map_err(|e| DecoderError::ParseError(format!("{:?}", e)))
+    }};
 }
 
 macro_rules! no_impl {
-    ($e:expr) => (
+    ($e:expr) => {
         Err(DecoderError::DecodeNotImplemented($e.to_owned()))
-    )
+    };
 }
 
-#[cfg(feature = "serialization-serde")] mod serialization_serde;
+#[cfg(feature = "serialization-serde")]
+mod serialization_serde;
 
 #[derive(Debug)]
-pub enum DecoderError{
+pub enum DecoderError {
     DecodeNotImplemented(String),
     DeserializerError(String),
     IoError(io::Error),
@@ -52,16 +51,7 @@ impl fmt::Display for DecoderError {
     }
 }
 
-impl Error for DecoderError {
-    fn description(&self) -> &str {
-        use self::DecoderError::*;
-        match *self {
-            DecodeNotImplemented(ref s) | DeserializerError(ref s) | ParseError(ref s) => s,
-            IoError(ref e) => e.description(),
-            NoFieldName => "No field name"
-        }
-    }
-}
+impl Error for DecoderError {}
 
 impl From<io::Error> for DecoderError {
     fn from(err: io::Error) -> DecoderError {
@@ -101,11 +91,11 @@ impl Decoder {
     }
 
     fn new(key: RegKey) -> Decoder {
-        Decoder{
-            key: key,
+        Decoder {
+            key,
             f_name: None,
             reading_state: DecoderReadingState::WaitingForKey,
-            enumeration_state: DecoderEnumerationState::EnumeratingKeys(0)
+            enumeration_state: DecoderEnumerationState::EnumeratingKeys(0),
         }
     }
 }

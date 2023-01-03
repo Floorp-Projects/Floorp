@@ -3,41 +3,42 @@
 // http://opensource.org/licenses/MIT>. This file
 // may not be copied, modified, or distributed
 // except according to those terms.
-use std::io;
-use std::fmt;
-use std::error::Error;
-use winapi::shared::minwindef::DWORD;
-use super::RegKey;
+use self::EncoderState::*;
 use super::enums::*;
 use super::transaction::Transaction;
-use self::EncoderState::*;
+use super::RegKey;
+use std::error::Error;
+use std::fmt;
+use std::io;
+use winapi::shared::minwindef::DWORD;
 
-macro_rules! emit_value{
-    ($s:ident, $v:ident) => (
+macro_rules! emit_value {
+    ($s:ident, $v:ident) => {
         match mem::replace(&mut $s.state, Start) {
-            NextKey(ref s) => {
-                $s.keys[$s.keys.len()-1].set_value(s, &$v)
-                    .map_err(EncoderError::IoError)
-            },
-            Start => Err(EncoderError::NoFieldName)
+            NextKey(ref s) => $s.keys[$s.keys.len() - 1]
+                .set_value(s, &$v)
+                .map_err(EncoderError::IoError),
+            Start => Err(EncoderError::NoFieldName),
         }
-    )
+    };
 }
 
 macro_rules! no_impl {
-    ($e:expr) => (
+    ($e:expr) => {
         Err(EncoderError::EncodeNotImplemented($e.to_owned()))
-    )
+    };
 }
 
-#[cfg(feature = "serialization-serde")] mod serialization_serde;
+#[cfg(feature = "serialization-serde")]
+mod serialization_serde;
 
 #[derive(Debug)]
-pub enum EncoderError{
+pub enum EncoderError {
     EncodeNotImplemented(String),
     SerializerError(String),
     IoError(io::Error),
     NoFieldName,
+    KeyMustBeAString,
 }
 
 impl fmt::Display for EncoderError {
@@ -46,16 +47,7 @@ impl fmt::Display for EncoderError {
     }
 }
 
-impl Error for EncoderError {
-    fn description(&self) -> &str {
-        use self::EncoderError::*;
-        match *self {
-            EncodeNotImplemented(ref s) | SerializerError(ref s) => s,
-            IoError(ref e) => e.description(),
-            NoFieldName => "No field name"
-        }
-    }
-}
+impl Error for EncoderError {}
 
 pub type EncodeResult<T> = Result<T, EncoderError>;
 
@@ -79,11 +71,11 @@ pub struct Encoder {
     state: EncoderState,
 }
 
-const ENCODER_SAM: DWORD = KEY_CREATE_SUB_KEY|KEY_SET_VALUE;
+const ENCODER_SAM: DWORD = KEY_CREATE_SUB_KEY | KEY_SET_VALUE;
 
 impl Encoder {
     pub fn from_key(key: &RegKey) -> EncodeResult<Encoder> {
-        let tr = try!(Transaction::new());
+        let tr = Transaction::new()?;
         key.open_subkey_transacted_with_flags("", &tr, ENCODER_SAM)
             .map(|k| Encoder::new(k, tr))
             .map_err(EncoderError::IoError)
@@ -92,9 +84,9 @@ impl Encoder {
     fn new(key: RegKey, tr: Transaction) -> Encoder {
         let mut keys = Vec::with_capacity(5);
         keys.push(key);
-        Encoder{
-            keys: keys,
-            tr: tr,
+        Encoder {
+            keys,
+            tr,
             state: Start,
         }
     }

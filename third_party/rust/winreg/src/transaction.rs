@@ -17,7 +17,7 @@
 //!fn main() {
 //!    let t = Transaction::new().unwrap();
 //!    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-//!    let key = hkcu.create_subkey_transacted("Software\\RustTransaction", &t).unwrap();
+//!    let (key, _disp) = hkcu.create_subkey_transacted("Software\\RustTransaction", &t).unwrap();
 //!    key.set_value("TestQWORD", &1234567891011121314u64).unwrap();
 //!    key.set_value("TestDWORD", &1234567890u32).unwrap();
 //!
@@ -39,11 +39,11 @@
 //!}
 //!```
 #![cfg(feature = "transactions")]
-use std::ptr;
 use std::io;
-use winapi::um::winnt;
+use std::ptr;
 use winapi::um::handleapi;
 use winapi::um::ktmw32;
+use winapi::um::winnt;
 
 #[derive(Debug)]
 pub struct Transaction {
@@ -64,9 +64,9 @@ impl Transaction {
                 ptr::null_mut(),
             );
             if handle == handleapi::INVALID_HANDLE_VALUE {
-                return Err(io::Error::last_os_error())
+                return Err(io::Error::last_os_error());
             };
-            Ok(Transaction{ handle: handle })
+            Ok(Transaction { handle })
         }
     }
 
@@ -74,7 +74,7 @@ impl Transaction {
         unsafe {
             match ktmw32::CommitTransaction(self.handle) {
                 0 => Err(io::Error::last_os_error()),
-                _ => Ok(())
+                _ => Ok(()),
             }
         }
     }
@@ -83,7 +83,7 @@ impl Transaction {
         unsafe {
             match ktmw32::RollbackTransaction(self.handle) {
                 0 => Err(io::Error::last_os_error()),
-                _ => Ok(())
+                _ => Ok(()),
             }
         }
     }
@@ -92,7 +92,7 @@ impl Transaction {
         unsafe {
             match handleapi::CloseHandle(self.handle) {
                 0 => Err(io::Error::last_os_error()),
-                _ => Ok(())
+                _ => Ok(()),
             }
         }
     }
