@@ -99,7 +99,6 @@
 #include "nsISupportsUtils.h"
 #include "nsIURI.h"
 #include "nsIXPConnect.h"
-#include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsPIDOMWindow.h"
@@ -184,6 +183,11 @@ nsXULElement* nsXULElement::Construct(
     return new (nim) XULFrameElement(nodeInfo.forget());
   }
 
+  if (nodeInfo->Equals(nsGkAtoms::menubar)) {
+    auto* nim = nodeInfo->NodeInfoManager();
+    return new (nim) XULMenuParentElement(nodeInfo.forget());
+  }
+
   if (nodeInfo->Equals(nsGkAtoms::menu) ||
       nodeInfo->Equals(nsGkAtoms::menulist)) {
     auto* nim = nodeInfo->NodeInfoManager();
@@ -199,6 +203,7 @@ nsXULElement* nsXULElement::Construct(
       nodeInfo->Equals(nsGkAtoms::radio) ||
       nodeInfo->Equals(nsGkAtoms::thumb) ||
       nodeInfo->Equals(nsGkAtoms::button) ||
+      nodeInfo->Equals(nsGkAtoms::menuitem) ||
       nodeInfo->Equals(nsGkAtoms::toolbarbutton) ||
       nodeInfo->Equals(nsGkAtoms::toolbarpaletteitem) ||
       nodeInfo->Equals(nsGkAtoms::scrollbarbutton)) {
@@ -451,8 +456,10 @@ bool nsXULElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
 }
 
 bool nsXULElement::HasMenu() {
-  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
-  return !!menu;
+  if (auto* button = XULButtonElement::FromNode(this)) {
+    return button->IsMenu();
+  }
+  return false;
 }
 
 void nsXULElement::OpenMenu(bool aOpenFlag) {
@@ -462,14 +469,16 @@ void nsXULElement::OpenMenu(bool aOpenFlag) {
   }
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
-    if (aOpenFlag) {
-      // Nothing will happen if this element isn't a menu.
-      pm->ShowMenu(this, false);
-    } else {
-      // Nothing will happen if this element isn't a menu.
-      pm->HideMenu(this);
-    }
+  if (!pm) {
+    return;
+  }
+
+  if (aOpenFlag) {
+    // Nothing will happen if this element isn't a menu.
+    pm->ShowMenu(this, false);
+  } else {
+    // Nothing will happen if this element isn't a menu.
+    pm->HideMenu(this);
   }
 }
 
@@ -1039,6 +1048,9 @@ void nsXULElement::ClickWithInputSource(uint16_t aInputSource,
                                  WidgetMouseEvent::eReal);
       WidgetMouseEvent eventUp(aIsTrustedEvent, eMouseUp, nullptr,
                                WidgetMouseEvent::eReal);
+      // This helps to avoid commands being dispatched from
+      // XULButtonElement::PostHandleEventForMenu.
+      eventUp.mFlags.mMultipleActionsPrevented = true;
       WidgetMouseEvent eventClick(aIsTrustedEvent, eMouseClick, nullptr,
                                   WidgetMouseEvent::eReal);
       eventDown.mInputSource = eventUp.mInputSource = eventClick.mInputSource =

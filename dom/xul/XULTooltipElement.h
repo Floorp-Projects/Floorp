@@ -21,12 +21,10 @@ class XULTooltipElement final : public XULPopupElement {
       : XULPopupElement(std::move(aNodeInfo)) {}
   nsresult Init();
 
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
-  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
  protected:
   virtual ~XULTooltipElement() = default;

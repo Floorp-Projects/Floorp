@@ -4,18 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "XULMenuParentElement.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsMenuBarListener.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
 #include "nsView.h"
 #include "mozilla/AppUnits.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/XULPopupElement.h"
+#include "mozilla/dom/XULButtonElement.h"
+#include "mozilla/dom/XULMenuElement.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
 #ifdef MOZ_WAYLAND
 #  include "mozilla/WidgetUtilsGtk.h"
@@ -33,6 +38,12 @@ nsXULElement* NS_NewXULPopupElement(
 JSObject* XULPopupElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
   return XULPopupElement_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsMenuPopupFrame* XULPopupElement::GetFrame(FlushType aFlushType) {
+  nsIFrame* f = GetPrimaryFrame(aFlushType);
+  MOZ_ASSERT(!f || f->IsMenuPopupFrame());
+  return static_cast<nsMenuPopupFrame*>(f);
 }
 
 void XULPopupElement::OpenPopup(Element* aAnchorElement,
@@ -59,9 +70,8 @@ void XULPopupElement::OpenPopup(Element* aAnchorElement,
     // are specified, open the popup with ShowMenu instead of ShowPopup so that
     // the popup is aligned with the menu.
     if (!aAnchorElement && position.IsEmpty() && GetPrimaryFrame()) {
-      nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame()->GetParent());
-      if (menu) {
-        pm->ShowMenu(menu->GetContent(), false);
+      if (auto* menu = GetContainingMenu()) {
+        pm->ShowMenu(menu, false);
         return;
       }
     }
@@ -118,6 +128,36 @@ static Modifiers ConvertModifiers(const ActivateMenuItemOptions& aModifiers) {
   return modifiers;
 }
 
+XULButtonElement* XULPopupElement::GetContainingMenu() const {
+  auto* button = XULButtonElement::FromNodeOrNull(GetParent());
+  if (!button || !button->IsMenu()) {
+    return nullptr;
+  }
+  return button;
+}
+
+void XULPopupElement::PopupOpened(bool aSelectFirstItem) {
+  if (aSelectFirstItem) {
+    SelectFirstItem();
+  }
+  if (RefPtr button = GetContainingMenu()) {
+    if (RefPtr parent = button->GetMenuParent()) {
+      parent->SetActiveMenuChild(button);
+    }
+  }
+}
+
+void XULPopupElement::PopupClosed(bool aDeselectMenu) {
+  LockMenuUntilClosed(false);
+  SetActiveMenuChild(nullptr);
+  auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
+      this, u"DOMMenuInactive"_ns, CanBubble::eYes, ChromeOnlyDispatch::eNo);
+  dispatcher->PostDOMEvent();
+  if (RefPtr button = GetContainingMenu()) {
+    button->PopupClosed(aDeselectMenu);
+  }
+}
+
 void XULPopupElement::ActivateItem(Element& aItemElement,
                                    const ActivateMenuItemOptions& aOptions,
                                    ErrorResult& aRv) {
@@ -135,19 +175,29 @@ void XULPopupElement::ActivateItem(Element& aItemElement,
     }
   }
 
-  // Used only to flush frames.
-  GetPrimaryFrame(FlushType::Frames);
-
-  nsMenuFrame* itemFrame = do_QueryFrame(aItemElement.GetPrimaryFrame());
-  if (!itemFrame) {
-    return aRv.ThrowInvalidStateError("Menu item is not visible");
+  auto* item = XULButtonElement::FromNode(aItemElement);
+  if (!item || !item->IsMenu()) {
+    return aRv.ThrowInvalidStateError("Not a menu item");
   }
 
-  if (!itemFrame->GetMenuParent() || !itemFrame->GetMenuParent()->IsOpen()) {
-    return aRv.ThrowInvalidStateError("Menu is closed");
+  if (!item->GetPrimaryFrame(FlushType::Frames)) {
+    return aRv.ThrowInvalidStateError("Menu item is hidden");
   }
 
-  itemFrame->ActivateItem(modifiers, aOptions.mButton);
+  auto* popup = item->GetContainingPopupElement();
+  if (!popup) {
+    return aRv.ThrowInvalidStateError("No popup");
+  }
+
+  nsMenuPopupFrame* frame = popup->GetFrame(FlushType::None);
+  if (!frame || !frame->IsOpen()) {
+    return aRv.ThrowInvalidStateError("Popup is not open");
+  }
+
+  // This is a chrome-only API, so we're trusted.
+  const bool trusted = true;
+  // KnownLive because item is aItemElement.
+  MOZ_KnownLive(item)->ExecuteMenu(modifiers, aOptions.mButton, trusted);
 }
 
 void XULPopupElement::MoveTo(int32_t aLeft, int32_t aTop) {
@@ -160,7 +210,7 @@ void XULPopupElement::MoveTo(int32_t aLeft, int32_t aTop) {
 void XULPopupElement::MoveToAnchor(Element* aAnchorElement,
                                    const nsAString& aPosition, int32_t aXPos,
                                    int32_t aYPos, bool aAttributesOverride) {
-  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
+  nsMenuPopupFrame* menuPopupFrame = GetFrame(FlushType::None);
   if (menuPopupFrame && menuPopupFrame->IsVisibleOrShowing()) {
     menuPopupFrame->MoveToAnchor(aAnchorElement, aPosition, aXPos, aYPos,
                                  aAttributesOverride);

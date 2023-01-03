@@ -120,8 +120,7 @@ async function selectStandardOptions(itemToUse) {
     if (typeof item == "function") {
       item = item();
     }
-    item.click();
-    popup.hidePopup();
+    popup.activateItem(item);
     await popupHidden;
     return item;
   }

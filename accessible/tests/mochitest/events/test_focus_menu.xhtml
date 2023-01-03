@@ -19,7 +19,7 @@
           src="../events.js" />
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true; // debug stuff
+    // gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
     function doTests()
@@ -54,8 +54,8 @@
       //gQueue.push(new synthRightKey("apple",
       //                              [ new focusChecker("vehicle"),
       //                                new focusChecker("cycle")]));
-      gQueue.push(new synthClick("vehicle", new focusChecker("vehicle")));
-      gQueue.push(new synthDownKey("cycle", new focusChecker("cycle")));
+      gQueue.push(new synthMouseMove("vehicle", [ new focusChecker("vehicle"), new invokerChecker("popupshown", "vehiclePopup") ]));
+      gQueue.push(new synthDownKey("vehicle", new focusChecker("cycle")));
 
       // open submenu
       gQueue.push(new synthRightKey("cycle", new focusChecker("tricycle")));
@@ -100,7 +100,7 @@
           </menupopup>
         </menu>
         <menu id="vehicle" label="Vehicle">
-          <menupopup>
+          <menupopup id="vehiclePopup">
             <menu id="cycle" label="cycle">
               <menupopup>
                 <menuitem id="tricycle" label="tricycle"/>
