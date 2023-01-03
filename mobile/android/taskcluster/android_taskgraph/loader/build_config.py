@@ -9,7 +9,7 @@ from taskgraph.util.templates import merge
 from ..build_config import get_components
 
 
-def loader(kind, path, config, params, loaded_tasks):
+def components_loader(kind, path, config, params, loaded_tasks):
     not_for_components = config.get("not-for-components", [])
     tasks = {
         '{}{}'.format(
