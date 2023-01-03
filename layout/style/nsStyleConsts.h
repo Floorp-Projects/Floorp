@@ -345,11 +345,6 @@ enum class StyleFlexWrap : uint8_t {
 // (rather than an internal numerical representation of some keyword).
 #define NS_STYLE_ORDER_INITIAL 0
 
-#define NS_STYLE_MASONRY_PLACEMENT_PACK (1 << 0)
-#define NS_STYLE_MASONRY_ORDER_DEFINITE_FIRST (1 << 1)
-#define NS_STYLE_MASONRY_AUTO_FLOW_INITIAL_VALUE \
-  (NS_STYLE_MASONRY_PLACEMENT_PACK | NS_STYLE_MASONRY_ORDER_DEFINITE_FIRST)
-
 // 'subgrid' keyword in grid-template-{columns,rows}
 #define NS_STYLE_GRID_TEMPLATE_SUBGRID 0
 

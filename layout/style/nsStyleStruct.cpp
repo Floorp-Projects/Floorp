@@ -1080,7 +1080,8 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mFlexBasis(StyleFlexBasis::Size(StyleSize::Auto())),
       mAspectRatio(StyleAspectRatio::Auto()),
       mGridAutoFlow(StyleGridAutoFlow::ROW),
-      mMasonryAutoFlow(NS_STYLE_MASONRY_AUTO_FLOW_INITIAL_VALUE),
+      mMasonryAutoFlow(
+          {StyleMasonryPlacement::Pack, StyleMasonryItemOrder::DefiniteFirst}),
       mAlignContent({StyleAlignFlags::NORMAL}),
       mAlignItems({StyleAlignFlags::NORMAL}),
       mAlignSelf({StyleAlignFlags::AUTO}),
