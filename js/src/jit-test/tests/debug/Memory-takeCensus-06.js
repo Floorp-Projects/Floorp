@@ -35,9 +35,6 @@ Pattern({
           Object:         { count: Pattern.NATURAL },
           Debugger:       { count: Pattern.NATURAL },
           global:         { count: Pattern.NATURAL },
-
-          // The below are all Debugger prototype objects.
-          Memory:         { count: Pattern.NATURAL },
         })
   .assert(dbg.memory.takeCensus({ breakdown: { by: 'objectClass' } }));
 

@@ -6808,10 +6808,9 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
     return false;
   }
 
-  memoryProto =
-      InitClass(cx, debugCtor, &DebuggerMemory::class_, nullptr, "Memory",
-                DebuggerMemory::construct, 0, DebuggerMemory::properties,
-                DebuggerMemory::methods, nullptr, nullptr);
+  memoryProto = InitClass(
+      cx, debugCtor, nullptr, nullptr, "Memory", DebuggerMemory::construct, 0,
+      DebuggerMemory::properties, DebuggerMemory::methods, nullptr, nullptr);
   if (!memoryProto) {
     return false;
   }
