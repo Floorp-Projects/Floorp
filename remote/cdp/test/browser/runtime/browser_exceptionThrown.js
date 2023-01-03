@@ -67,6 +67,7 @@ add_task(async function eventsForScriptErrorWithException({ client }) {
   is(callFrames.length, 2, "Got expected amount of call frames");
 
   is(callFrames[0].functionName, "throwError", "Got expected function name");
+  is(typeof callFrames[0].scriptId, "string", "Got scriptId as string");
   is(callFrames[0].url, PAGE_CONSOLE_EVENTS, "Got expected url");
   is(callFrames[0].lineNumber, 9, "Got expected line number");
   is(callFrames[0].columnNumber, 11, "Got expected column number");
