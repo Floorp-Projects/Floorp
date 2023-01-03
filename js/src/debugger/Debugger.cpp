@@ -5087,16 +5087,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       DebuggerSource& debuggerSourceObj =
           debuggerSource.toObject().as<DebuggerSource>();
 
-      // The given source must have an owner. Otherwise, it's a
-      // Debugger.Source.prototype, which would match no scripts, and is
-      // probably a mistake.
-      if (!debuggerSourceObj.isInstance()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_DEBUG_PROTO, "Debugger.Source",
-                                  "Debugger.Source");
-        return false;
-      }
-
       // If it does have an owner, it should match the Debugger we're
       // calling findScripts on. It would work fine even if it didn't,
       // but mixing Debugger.Sources is probably a sign of confusion.
