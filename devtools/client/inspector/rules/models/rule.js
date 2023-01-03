@@ -503,7 +503,6 @@ class Rule {
    **@return {Promise}
    */
   previewPropertyValue(property, value, priority) {
-    this.elementStyle.ruleView.emitForTests("start-preview-property-value");
     const modifications = this.domRule.startModifyingProperties(
       this.cssProperties
     );

@@ -53,9 +53,7 @@ add_task(async function addWithSpecialCharacter() {
   newValue = "123";
   info(`Change the CSS declaration value to ${newValue}`);
   onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
-  // 2 preview requests to flush: one for the new value and one for the
-  // autocomplete popup suggestion (even if no suggestion is displayed here).
-  await setProperty(ruleView, prop, newValue, { flushCount: 2 });
+  await setProperty(ruleView, prop, newValue);
   await onTrackChange;
   await assertAddedDeclaration(doc, EXPECTED_PROPERTY_NAME, newValue);
 });
