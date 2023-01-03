@@ -164,7 +164,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // nsIWidget interface
-  void CaptureMouse(bool aCapture) override {}
   void CaptureRollupEvents(bool aDoCapture) override {}
   nsIWidgetListener* GetWidgetListener() const override;
   void SetWidgetListener(nsIWidgetListener* alistener) override;
