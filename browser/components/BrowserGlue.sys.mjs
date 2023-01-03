@@ -851,7 +851,7 @@ const listeners = {
       try {
         lazy[module].observe(subject, topic, data);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   },
@@ -1078,7 +1078,7 @@ BrowserGlue.prototype = {
             subject.QueryInterface(Ci.nsISupportsString).data
           );
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
         let win = lazy.BrowserWindowTracker.getTopWindow();
         lazy.BrowserSearchTelemetry.recordSearch(
@@ -1603,7 +1603,7 @@ BrowserGlue.prototype = {
         secondsSinceLastOSRestart
       );
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
@@ -2395,7 +2395,7 @@ BrowserGlue.prototype = {
           try {
             Services.logins;
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         },
         timeout: 3000,
@@ -2435,7 +2435,7 @@ BrowserGlue.prototype = {
               )
             );
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
 
           let classification;
@@ -2444,7 +2444,7 @@ BrowserGlue.prototype = {
             shortcut = Services.appinfo.processStartupShortcut;
             classification = shellService.classifyShortcut(shortcut);
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
 
           if (!classification) {
@@ -2597,7 +2597,7 @@ BrowserGlue.prototype = {
               ).isAppInDock
             );
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         },
       },
@@ -2774,9 +2774,9 @@ BrowserGlue.prototype = {
             try {
               await lazy.BackgroundUpdate.scheduleFirefoxMessagingSystemTargetingSnapshotting();
             } catch (e) {
-              Cu.reportError(
-                "There was an error scheduling Firefox Messaging System targeting snapshotting: " +
-                  e
+              console.error(
+                "There was an error scheduling Firefox Messaging System targeting snapshotting: ",
+                e
               );
             }
             await lazy.BackgroundUpdate.maybeScheduleBackgroundUpdateTask();
@@ -2876,7 +2876,7 @@ BrowserGlue.prototype = {
             try {
               task.task();
             } catch (ex) {
-              Cu.reportError(ex);
+              console.error(ex);
             } finally {
               ChromeUtils.addProfilerMarker(
                 "startupIdleTask",
@@ -2946,7 +2946,7 @@ BrowserGlue.prototype = {
 
       function CorroborateInit() {
         if (Services.prefs.getBoolPref("corroborator.enabled", false)) {
-          lazy.Corroborate.init().catch(Cu.reportError);
+          lazy.Corroborate.init().catch(console.error);
         }
       },
 
@@ -2989,7 +2989,7 @@ BrowserGlue.prototype = {
           try {
             await task();
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           } finally {
             ChromeUtils.addProfilerMarker(
               "startupLateIdleTask",
@@ -3328,7 +3328,7 @@ BrowserGlue.prototype = {
         try {
           await this._distributionCustomizer.applyBookmarks();
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
       } else {
         // An import operation is about to run.
@@ -3353,17 +3353,17 @@ BrowserGlue.prototype = {
               });
             }
           } catch (e) {
-            Cu.reportError("Bookmarks.html file could be corrupt. " + e);
+            console.error("Bookmarks.html file could be corrupt. ", e);
           }
           try {
             // Now apply distribution customized bookmarks.
             // This should always run after Places initialization.
             await this._distributionCustomizer.applyBookmarks();
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         } else {
-          Cu.reportError(new Error("Unable to find bookmarks.html file."));
+          console.error(new Error("Unable to find bookmarks.html file."));
         }
 
         // Reset preferences, so we won't try to import again at next run
@@ -3398,12 +3398,12 @@ BrowserGlue.prototype = {
           // in some cases.
           lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibility();
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
     })()
       .catch(ex => {
-        Cu.reportError(ex);
+        console.error(ex);
       })
       .then(() => {
         // NB: deliberately after the catch so that we always do this, even if
@@ -3898,7 +3898,7 @@ BrowserGlue.prototype = {
           "geckoprofiler@mozilla.com"
         );
       } catch (error) {
-        Cu.reportError(
+        console.error(
           "Could not access the AddonManager to upgrade the profile. This is most " +
             "likely because the upgrader is being run from an xpcshell test where " +
             "the AddonManager is not initialized."
@@ -3913,9 +3913,9 @@ BrowserGlue.prototype = {
         const wasAddonActive = addon.isActive;
         addon
           .uninstall()
-          .catch(Cu.reportError)
+          .catch(console.error)
           .then(() => enableProfilerButton(wasAddonActive))
-          .catch(Cu.reportError);
+          .catch(console.error);
       }, Cu.reportError);
     }
 
@@ -4239,7 +4239,7 @@ BrowserGlue.prototype = {
           );
         }
       } catch (ex) {
-        Cu.reportError("Failed to clear XULStore PiP values: " + ex);
+        console.error("Failed to clear XULStore PiP values: ", ex);
       }
     }
 
@@ -4297,7 +4297,7 @@ BrowserGlue.prototype = {
           );
         }
       } catch (ex) {
-        Cu.reportError(`Error migrating ${id}'s ${attr} value: ` + ex);
+        console.error(`Error migrating ${id}'s ${attr} value: `, ex);
       }
     }
 
@@ -4696,7 +4696,7 @@ BrowserGlue.prototype = {
         clickCallback
       );
     } catch (ex) {
-      Cu.reportError("Error displaying tab(s) received by Sync: " + ex);
+      console.error("Error displaying tab(s) received by Sync: ", ex);
     }
   },
 
@@ -4732,7 +4732,7 @@ BrowserGlue.prototype = {
         clickCallback
       );
     } catch (ex) {
-      Cu.reportError("Error notifying of a verify login event: " + ex);
+      console.error("Error notifying of a verify login event: ", ex);
     }
   },
 
@@ -4771,7 +4771,7 @@ BrowserGlue.prototype = {
         clickCallback
       );
     } catch (ex) {
-      Cu.reportError("Error notifying of a new Sync device: " + ex);
+      console.error("Error notifying of a new Sync device: ", ex);
     }
   },
 
@@ -5071,7 +5071,7 @@ var ContentBlockingCategoriesPrefs = {
             Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
           break;
         default:
-          Cu.reportError(`Error: Unknown rule observed ${item}`);
+          console.error(`Error: Unknown rule observed ${item}`);
       }
     }
   },
@@ -5298,7 +5298,7 @@ ContentPermissionPrompt.prototype = {
 
       permissionPrompt.prompt();
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       request.cancel();
       throw ex;
     }
@@ -5318,7 +5318,7 @@ ContentPermissionPrompt.prototype = {
       // the request has likely been cancelled before being shown to the
       // user. We shouldn't record this request.
       if (ex.result != Cr.NS_ERROR_FAILURE) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       return;
     }
