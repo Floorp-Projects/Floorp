@@ -23,21 +23,20 @@
 #include "nsIURIMutator.h"
 #include "nsXPCOM.h"
 
-#define FS_QUOTA_MANAGEMENT_ENABLED 0
-
 namespace mozilla::dom::fs::data {
 
 namespace {
 
+constexpr nsLiteralString kDatabaseFileName = u"metadata.sqlite"_ns;
+
 Result<nsCOMPtr<nsIFile>, QMResult> GetFileDestination(
-    nsIFile& aTopDirectory,  // non-const for nsIFile Clone
-    const EntryId& aEntryId) {
+    const nsCOMPtr<nsIFile>& aTopDirectory, const EntryId& aEntryId) {
   MOZ_ASSERT(32u == aEntryId.Length());
 
   nsCOMPtr<nsIFile> destination;
 
   // nsIFile Clone is not a constant method
-  QM_TRY(QM_TO_RESULT(aTopDirectory.Clone(getter_AddRefs(destination))));
+  QM_TRY(QM_TO_RESULT(aTopDirectory->Clone(getter_AddRefs(destination))));
 
   QM_TRY_UNWRAP(Name encoded, FileSystemHashSource::EncodeHash(aEntryId));
 
@@ -53,76 +52,145 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetFileDestination(
   return destination;
 }
 
-Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateEntry(
-    const nsAString& aDesiredFilePath, bool& aExists,
-    decltype(nsIFile::NORMAL_FILE_TYPE) aKind, uint32_t aPermissions) {
-  MOZ_ASSERT(!aDesiredFilePath.IsEmpty());
+Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFileImpl(
+    const nsAString& aFilePath) {
+  MOZ_ASSERT(!aFilePath.IsEmpty());
 
   nsCOMPtr<nsIFile> result;
-  QM_TRY(QM_TO_RESULT(NS_NewLocalFile(aDesiredFilePath,
+  QM_TRY(QM_TO_RESULT(NS_NewLocalFile(aFilePath,
                                       /* aFollowLinks */ false,
                                       getter_AddRefs(result))));
 
-  QM_TRY(QM_TO_RESULT(result->Exists(&aExists)));
-  if (aExists) {
+  bool exists = true;
+  QM_TRY(QM_TO_RESULT(result->Exists(&exists)));
+
+  if (!exists) {
+    QM_TRY(QM_TO_RESULT(result->Create(nsIFile::NORMAL_FILE_TYPE, 0644)));
+
     return result;
   }
 
-  QM_TRY(QM_TO_RESULT(result->Create(aKind, aPermissions)));
+  bool isDirectory = true;
+  QM_TRY(QM_TO_RESULT(result->IsDirectory(&isDirectory)));
+  QM_TRY(OkIf(!isDirectory), Err(QMResult(NS_ERROR_FILE_IS_DIRECTORY)));
 
   return result;
 }
 
-Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
-    const Origin& aOrigin) {
-  quota::QuotaManager* qm = quota::QuotaManager::Get();
-  MOZ_ASSERT(qm);
+Result<nsCOMPtr<nsIFile>, QMResult> GetFile(
+    const nsCOMPtr<nsIFile>& aTopDirectory, const EntryId& aEntryId) {
+  MOZ_ASSERT(!aEntryId.IsEmpty());
 
-#if FS_QUOTA_MANAGEMENT_ENABLED
-  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileSystemDirectory,
-                QM_TO_RESULT_TRANSFORM(qm->GetDirectoryForOrigin(
-                    quota::PERSISTENCE_TYPE_DEFAULT, aOrigin)));
-#else
-  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileSystemDirectory,
-                GetDirectoryForOrigin(*qm, aOrigin));
-#endif
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
+                GetFileDestination(aTopDirectory, aEntryId));
 
-  QM_TRY(QM_TO_RESULT(fileSystemDirectory->AppendRelativePath(u"fs"_ns)));
+  nsString desiredPath;
+  QM_TRY(QM_TO_RESULT(pathObject->GetPath(desiredPath)));
 
-  return fileSystemDirectory;
+  nsCOMPtr<nsIFile> result;
+  QM_TRY(QM_TO_RESULT(NS_NewLocalFile(desiredPath,
+                                      /* aFollowLinks */ false,
+                                      getter_AddRefs(result))));
+
+  return result;
 }
 
-Result<nsString, QMResult> GetFileSystemDatabaseFile(const Origin& aOrigin) {
-  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> directoryPath,
-                GetFileSystemDirectory(aOrigin));
+Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(
+    const nsCOMPtr<nsIFile>& aTopDirectory, const EntryId& aEntryId) {
+  MOZ_ASSERT(!aEntryId.IsEmpty());
 
-  QM_TRY(
-      QM_TO_RESULT(directoryPath->AppendRelativePath(u"metadata.sqlite"_ns)));
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
+                GetFileDestination(aTopDirectory, aEntryId));
 
-  nsString databaseFile;
-  QM_TRY(QM_TO_RESULT(directoryPath->GetPath(databaseFile)));
+  nsString desiredPath;
+  QM_TRY(QM_TO_RESULT(pathObject->GetPath(desiredPath)));
 
-  return databaseFile;
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> result, GetOrCreateFileImpl(desiredPath));
+
+  return result;
 }
 
 }  // namespace
 
-Result<nsCOMPtr<nsIFile>, QMResult> GetDatabasePath(const Origin& aOrigin,
-                                                    bool& aExists) {
-  QM_TRY_UNWRAP(nsString databaseFilePath, GetFileSystemDatabaseFile(aOrigin))
+Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
+    const Origin& aOrigin) {
+  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
-  MOZ_ASSERT(!databaseFilePath.IsEmpty());
+#if FS_QUOTA_MANAGEMENT_ENABLED
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileSystemDirectory,
+                QM_TO_RESULT_TRANSFORM(quotaManager->GetDirectoryForOrigin(
+                    quota::PERSISTENCE_TYPE_DEFAULT, aOrigin)));
+#else
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileSystemDirectory,
+                GetDirectoryForOrigin(*quotaManager, aOrigin));
+#endif
 
-  return GetOrCreateEntry(databaseFilePath, aExists, nsIFile::NORMAL_FILE_TYPE,
-                          0644);
+  QM_TRY(QM_TO_RESULT(fileSystemDirectory->AppendRelativePath(
+      NS_LITERAL_STRING_FROM_CSTRING(FILESYSTEM_DIRECTORY_NAME))));
+
+  return fileSystemDirectory;
+}
+
+nsresult EnsureFileSystemDirectory(
+    const quota::OriginMetadata& aOriginMetadata) {
+  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()));
+
+  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
+
+#if FS_QUOTA_MANAGEMENT_ENABLED
+  QM_TRY_INSPECT(const auto& fileSystemDirectory,
+                 quotaManager
+                     ->EnsureTemporaryOriginIsInitialized(
+                         quota::PERSISTENCE_TYPE_DEFAULT, aOriginMetadata)
+                     .map([](const auto& aPair) { return aPair.first; }));
+#else
+  QM_TRY_INSPECT(const auto& fileSystemDirectory,
+                 GetDirectoryForOrigin(*quotaManager, aOriginMetadata.mOrigin));
+#endif
+
+  QM_TRY(QM_TO_RESULT(fileSystemDirectory->AppendRelativePath(
+      NS_LITERAL_STRING_FROM_CSTRING(FILESYSTEM_DIRECTORY_NAME))));
+
+  bool exists = true;
+  QM_TRY(QM_TO_RESULT(fileSystemDirectory->Exists(&exists)));
+
+  if (!exists) {
+    QM_TRY(QM_TO_RESULT(
+        fileSystemDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755)));
+
+    return NS_OK;
+  }
+
+  bool isDirectory = true;
+  QM_TRY(QM_TO_RESULT(fileSystemDirectory->IsDirectory(&isDirectory)));
+  QM_TRY(OkIf(isDirectory), NS_ERROR_FILE_NOT_DIRECTORY);
+
+  return NS_OK;
+}
+
+Result<nsCOMPtr<nsIFile>, QMResult> GetDatabaseFile(const Origin& aOrigin) {
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> databaseFile,
+                GetFileSystemDirectory(aOrigin));
+
+  QM_TRY(QM_TO_RESULT(databaseFile->AppendRelativePath(kDatabaseFileName)));
+
+  return databaseFile;
 }
 
 /**
  * TODO: This is almost identical to the corresponding function of IndexedDB
  */
 Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
-    const nsCOMPtr<nsIFile>& aDatabaseFile, const int64_t aDirectoryLockId) {
+    const Origin& aOrigin, const int64_t aDirectoryLockId) {
   MOZ_ASSERT(aDirectoryLockId >= 0);
+
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> databaseFile, GetDatabaseFile(aOrigin));
 
   QM_TRY_INSPECT(
       const auto& protocolHandler,
@@ -138,7 +206,7 @@ Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
   QM_TRY_INSPECT(const auto& mutator,
                  QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                      nsCOMPtr<nsIURIMutator>, fileHandler, NewFileURIMutator,
-                     aDatabaseFile)));
+                     databaseFile)));
 
 #if FS_QUOTA_MANAGEMENT_ENABLED
   nsCString directoryLockIdClause = "&directoryLockId="_ns;
@@ -154,12 +222,14 @@ Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
   return result;
 }
 
+/* static */
 Result<FileSystemFileManager, QMResult>
 FileSystemFileManager::CreateFileSystemFileManager(
     nsCOMPtr<nsIFile>&& topDirectory) {
   return FileSystemFileManager(std::move(topDirectory));
 }
 
+/* static */
 Result<FileSystemFileManager, QMResult>
 FileSystemFileManager::CreateFileSystemFileManager(const Origin& aOrigin) {
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> topDirectory,
@@ -171,28 +241,20 @@ FileSystemFileManager::CreateFileSystemFileManager(const Origin& aOrigin) {
 FileSystemFileManager::FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory)
     : mTopDirectory(std::move(aTopDirectory)) {}
 
+Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetFile(
+    const EntryId& aEntryId) const {
+  return data::GetFile(mTopDirectory, aEntryId);
+}
+
 Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetOrCreateFile(
     const EntryId& aEntryId) {
-  MOZ_ASSERT(!aEntryId.IsEmpty());
-
-  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
-                GetFileDestination(*mTopDirectory, aEntryId));
-
-  nsString desiredPath;
-  QM_TRY(QM_TO_RESULT(pathObject->GetPath(desiredPath)));
-
-  bool exists = false;
-  QM_TRY_UNWRAP(
-      nsCOMPtr<nsIFile> result,
-      GetOrCreateEntry(desiredPath, exists, nsIFile::NORMAL_FILE_TYPE, 0644));
-
-  return result;
+  return data::GetOrCreateFile(mTopDirectory, aEntryId);
 }
 
 nsresult FileSystemFileManager::RemoveFile(const EntryId& aEntryId) {
   MOZ_ASSERT(!aEntryId.IsEmpty());
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
-                GetFileDestination(*mTopDirectory, aEntryId));
+                GetFileDestination(mTopDirectory, aEntryId));
 
   bool exists = false;
   QM_TRY(MOZ_TO_RESULT(pathObject->Exists(&exists)));
