@@ -9,7 +9,6 @@ GeckoSimplePrograms(
         "BadCertAndPinningServer",
         "DelegatedCredentialsServer",
         "EncryptedClientHelloServer",
-        "FaultyServer",
         "GenerateOCSPResponse",
         "OCSPStaplingServer",
         "SanctionsTestServer",
@@ -17,16 +16,30 @@ GeckoSimplePrograms(
     linkage=None,
 )
 
-DEFINES["NSS_USE_STATIC_LIBS"] = True
+if not CONFIG["MOZ_SYSTEM_NSS"]:
+    # Bug 1805371. See comment in ../lib/moz.build
+    GeckoSimplePrograms(
+        [
+            "FaultyServer",
+        ],
+        linkage=None,
+    )
 
-LOCAL_INCLUDES += [
-    "../../../../../../nss/lib/ssl",
-    "../lib",
-]
+    DEFINES["NSS_USE_STATIC_LIBS"] = True
 
-USE_LIBS += [
-    "tlsserver",
-]
+    LOCAL_INCLUDES += [
+        "../../../../../../nss/lib/ssl",
+        "../lib",
+    ]
+    USE_LIBS += [
+        "tlsserver",
+    ]
+else:
+    LOCAL_INCLUDES += [
+        "../lib",
+    ]
+    USE_LIBS += ["mozpkix", "nspr", "nss", "tlsserver"]
+
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
