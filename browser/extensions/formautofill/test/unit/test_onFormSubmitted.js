@@ -789,6 +789,10 @@ TESTCASES.forEach(testcase => {
         .creditCard) {
         delete ccRecord.flowId;
       }
+      for (let addrRecord of FormAutofillContent._onFormSubmit.args[0][0]
+        .address) {
+        delete addrRecord.flowId;
+      }
 
       Assert.deepEqual(
         FormAutofillContent._onFormSubmit.args[0][0],

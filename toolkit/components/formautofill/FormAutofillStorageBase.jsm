@@ -147,6 +147,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AutofillTelemetry: "resource://autofill/Autofilltelemetry.jsm",
   FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
   PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.jsm",
@@ -280,6 +281,8 @@ class AutofillRecords {
     this._schemaVersion = schemaVersion;
 
     this._initialize();
+
+    Services.obs.addObserver(this, "formautofill-storage-changed");
   }
 
   _initialize() {
@@ -293,6 +296,23 @@ class AutofillRecords {
         this._store.saveSoon();
       }
     });
+  }
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "formautofill-storage-changed":
+        let collectionName = subject.wrappedJSObject.collectionName;
+        if (collectionName != this._collectionName) {
+          return;
+        }
+        const telemetryType =
+          subject.wrappedJSObject.collectionName == "creditCards"
+            ? lazy.AutofillTelemetry.CREDIT_CARD
+            : lazy.AutofillTelemetry.ADDRESS;
+        const count = this._data.filter(entry => !entry.deleted).length;
+        lazy.AutofillTelemetry.recordAutofillProfileCount(telemetryType, count);
+        break;
+    }
   }
 
   /**
@@ -534,6 +554,7 @@ class AutofillRecords {
    *         Indicates which record to be notified.
    */
   notifyUsed(guid) {
+    dump("notifyUsed:" + guid + "\n");
     this.log.debug("notifyUsed:", guid);
 
     let recordFound = this._findByGUID(guid);
@@ -559,7 +580,14 @@ class AutofillRecords {
     );
   }
 
-  updateUseCountTelemetry() {}
+  updateUseCountTelemetry() {
+    const telemetryType =
+      this._collectionName == "creditCards"
+        ? lazy.AutofillTelemetry.CREDIT_CARD
+        : lazy.AutofillTelemetry.ADDRESS;
+    let records = this._data.filter(r => !r.deleted);
+    lazy.AutofillTelemetry.recordNumberOfUse(telemetryType, records);
+  }
 
   /**
    * Removes the specified record. No error occurs if the record isn't found.
@@ -1677,19 +1705,6 @@ class CreditCardsBase extends AutofillRecords {
       VALID_CREDIT_CARD_COMPUTED_FIELDS,
       CREDIT_CARD_SCHEMA_VERSION
     );
-    Services.obs.addObserver(this, "formautofill-storage-changed");
-  }
-
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "formautofill-storage-changed":
-        let count = this._data.filter(entry => !entry.deleted).length;
-        Services.telemetry.scalarSet(
-          "formautofill.creditCards.autofill_profiles_count",
-          count
-        );
-        break;
-    }
   }
 
   async computeFields(creditCard) {
@@ -1947,17 +1962,6 @@ class CreditCardsBase extends AutofillRecords {
    */
   async mergeIfPossible(guid, creditCard) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  updateUseCountTelemetry() {
-    let histogram = Services.telemetry.getHistogramById("CREDITCARD_NUM_USES");
-    histogram.clear();
-
-    let records = this._data.filter(r => !r.deleted);
-
-    for (let record of records) {
-      histogram.add(record.timesUsed);
-    }
   }
 }
 
