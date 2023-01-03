@@ -337,7 +337,11 @@ export class UrlbarInput {
     dueToSessionRestore = false,
     dontShowSearchTerms = false
   ) {
-    if (!dontShowSearchTerms && this.window.gBrowser.userTypedValue == null) {
+    if (
+      !dontShowSearchTerms &&
+      (this.window.gBrowser.userTypedValue == null ||
+        this.window.gBrowser.userTypedValue == "")
+    ) {
       this.window.gBrowser.selectedBrowser.showingSearchTerms = false;
       if (lazy.UrlbarPrefs.isPersistedSearchTermsEnabled()) {
         let term = lazy.UrlbarSearchUtils.getSearchTermIfDefaultSerpUri(
