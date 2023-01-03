@@ -150,10 +150,25 @@ const createExtensions = (
 const ensureMaximizedWindow = async win => {
   let resizeDone = Promise.resolve();
 
+  // Make sure we wait for window position to have settled
+  // to avoid unexpected failures.
+  let samePositionTimes = 0;
+  let lastScreenTop = win.screen.top;
+  let lastScreenLeft = win.screen.left;
   win.moveTo(0, 0);
+  await TestUtils.waitForCondition(() => {
+    let isSamePosition =
+      lastScreenTop === win.screen.top && lastScreenLeft === win.screen.left;
+    if (!isSamePosition) {
+      lastScreenTop = win.screen.top;
+      lastScreenLeft = win.screen.left;
+    }
+    samePositionTimes = isSamePosition ? samePositionTimes + 1 : 0;
+    return samePositionTimes === 10;
+  }, "Wait for the chrome window position to settle");
 
-  const widthDiff = win.screen.availWidth - win.outerWidth;
-  const heightDiff = win.screen.availHeight - win.outerHeight;
+  const widthDiff = Math.max(win.screen.availWidth - win.outerWidth, 0);
+  const heightDiff = Math.max(win.screen.availHeight - win.outerHeight, 0);
 
   if (widthDiff || heightDiff) {
     resizeDone = BrowserTestUtils.waitForEvent(win, "resize", false);
@@ -161,5 +176,20 @@ const ensureMaximizedWindow = async win => {
     win.resizeBy(widthDiff, heightDiff);
   }
 
-  return resizeDone;
+  await resizeDone;
+
+  // Make sure we wait for window size to have settled.
+  let lastOuterWidth = win.outerWidth;
+  let lastOuterHeight = win.outerHeight;
+  let sameSizeTimes = 0;
+  await TestUtils.waitForCondition(() => {
+    const isSameSize =
+      win.outerWidth === lastOuterWidth && win.outerHeight === lastOuterHeight;
+    if (!isSameSize) {
+      lastOuterWidth = win.outerWidth;
+      lastOuterHeight = win.outerHeight;
+    }
+    sameSizeTimes = isSameSize ? sameSizeTimes + 1 : 0;
+    return sameSizeTimes === 10;
+  }, "Wait for the chrome window size to settle");
 };
