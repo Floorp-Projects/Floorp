@@ -13,8 +13,12 @@ add_setup(async () => {
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
-const ADDRESS_SCHEMA_VERSION = 1;
-const CREDIT_CARD_SCHEMA_VERSION = 3;
+const { ADDRESS_SCHEMA_VERSION } = ChromeUtils.import(
+  "resource://autofill/FormAutofillStorageBase.jsm"
+);
+const { CREDIT_CARD_SCHEMA_VERSION } = ChromeUtils.import(
+  "resource://autofill/FormAutofillStorageBase.jsm"
+);
 
 const ADDRESS_TESTCASES = [
   {
