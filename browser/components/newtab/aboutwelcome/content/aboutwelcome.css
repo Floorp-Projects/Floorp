@@ -1141,7 +1141,6 @@ html {
   font-weight: 400;
   text-decoration: underline;
   color: var(--in-content-link-color);
-  background: none;
 }
 .onboardingContainer .mobile-downloads .email-link:hover {
   background: none;
