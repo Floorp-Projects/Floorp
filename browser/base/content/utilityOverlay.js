@@ -651,7 +651,7 @@ function openLinkIn(url, where, params) {
         w.isBlankPageURL(url) &&
         !AboutNewTab.willNotifyUser;
 
-      let tabUsedForLoad = w.gBrowser.loadOneTab(url, {
+      let tabUsedForLoad = w.gBrowser.addTab(url, {
         referrerInfo: aReferrerInfo,
         charset: aCharset,
         postData: aPostData,

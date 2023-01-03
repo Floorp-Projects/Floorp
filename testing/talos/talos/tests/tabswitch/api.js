@@ -304,14 +304,13 @@ async function test(window) {
   output += "</table></body></html>";
   dump("total tab switch time:" + time + "\n");
 
-  let resultsTab = win.gBrowser.loadOneTab(
+  win.gBrowser.addTab(
     "data:text/html;charset=utf-8," + encodeURIComponent(output),
     {
+      inBackground: false,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     }
   );
-
-  win.gBrowser.selectedTab = resultsTab;
 
   remotePage.sendAsyncMessage("tabswitch-test-results", {
     times,

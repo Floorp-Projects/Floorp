@@ -1718,10 +1718,6 @@
       return true;
     },
 
-    loadOneTab(uri, params) {
-      return this.addTab(uri, params);
-    },
-
     loadTabs(
       aURIs,
       {

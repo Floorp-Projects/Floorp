@@ -39,7 +39,7 @@ let openUrl = url => {
       ignoreFragment: "whenComparing",
     });
   } else {
-    window.gBrowser.loadOneTab(url, {
+    window.gBrowser.addTab(url, {
       inBackground: false,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });

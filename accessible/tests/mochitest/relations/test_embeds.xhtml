@@ -52,11 +52,11 @@
       }
     }
 
-    function loadOneTab(aURI)
+    function addTab(aURI)
     {
-      this.invoke = function loadOneTab_invoke()
+      this.invoke = function addTab_invoke()
       {
-        tabBrowser().loadOneTab(aURI, {
+        tabBrowser().addTab(aURI, {
           referrerURI: null,
           charset: null,
           postData: null,
@@ -75,7 +75,7 @@
                      getAccessible(currentTabDocument()));
       }
 
-      this.getID = function loadOneTab_getID()
+      this.getID = function addTab_getID()
       {
         return "load uri '" + aURI + "' in new tab";
       }
@@ -96,7 +96,7 @@
       gQueue = new eventQueue();
 
       gQueue.push(new loadURI("about:robots"));
-      gQueue.push(new loadOneTab("about:mozilla"));
+      gQueue.push(new addTab("about:mozilla"));
 
       gQueue.onFinish = function()
       {
