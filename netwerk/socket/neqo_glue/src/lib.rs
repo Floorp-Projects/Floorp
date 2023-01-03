@@ -120,9 +120,9 @@ impl NeqoHttp3Conn {
         };
 
         let version_list = if version_negotiation {
-             Version::all()
+            Version::all()
         } else {
-             vec![quic_version]
+            vec![quic_version]
         };
         #[allow(unused_mut)]
         let mut params = ConnectionParameters::default()
@@ -614,7 +614,10 @@ pub extern "C" fn neqo_http3conn_reset_stream(
     stream_id: u64,
     error: u64,
 ) -> nsresult {
-    match conn.conn.stream_reset_send(StreamId::from(stream_id), error) {
+    match conn
+        .conn
+        .stream_reset_send(StreamId::from(stream_id), error)
+    {
         Ok(()) => NS_OK,
         Err(_) => NS_ERROR_INVALID_ARG,
     }
@@ -626,7 +629,10 @@ pub extern "C" fn neqo_http3conn_stream_stop_sending(
     stream_id: u64,
     error: u64,
 ) -> nsresult {
-    match conn.conn.stream_stop_sending(StreamId::from(stream_id), error) {
+    match conn
+        .conn
+        .stream_stop_sending(StreamId::from(stream_id), error)
+    {
         Ok(()) => NS_OK,
         Err(_) => NS_ERROR_INVALID_ARG,
     }
@@ -741,12 +747,12 @@ impl WebTransportEventExternal {
             WebTransportEvent::Datagram {
                 session_id,
                 datagram,
-             } => {
+            } => {
                 data.extend_from_slice(datagram.as_ref());
                 WebTransportEventExternal::Datagram {
                     session_id: session_id.as_u64(),
                 }
-             }
+            }
         }
     }
 }
@@ -1279,7 +1285,7 @@ pub extern "C" fn neqo_http3conn_webtransport_send_datagram(
     conn: &mut NeqoHttp3Conn,
     session_id: u64,
     data: &mut ThinVec<u8>,
-    tracking_id: u64
+    tracking_id: u64,
 ) -> nsresult {
     let id = if tracking_id == 0 {
         None
@@ -1287,7 +1293,8 @@ pub extern "C" fn neqo_http3conn_webtransport_send_datagram(
         Some(tracking_id)
     };
     match conn
-        .conn.webtransport_send_datagram(StreamId::from(session_id), data, id)
+        .conn
+        .webtransport_send_datagram(StreamId::from(session_id), data, id)
     {
         Ok(()) => NS_OK,
         Err(Http3Error::TransportError(TransportError::TooMuchData)) => NS_ERROR_NOT_AVAILABLE,
