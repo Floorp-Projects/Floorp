@@ -46,7 +46,7 @@ function run_test() {
   Pattern({
     Function: { count: Pattern.NATURAL },
     Object: { count: Pattern.NATURAL },
-    Debugger: { count: Pattern.NATURAL },
+    DebuggerPrototype: { count: Pattern.NATURAL },
     Sandbox: { count: Pattern.NATURAL },
   }).assert(
     saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "objectClass" } })
@@ -93,7 +93,7 @@ function run_test() {
   Pattern({
     Function: { count: Pattern.NATURAL },
     Object: { count: Pattern.NATURAL },
-    Debugger: { count: Pattern.NATURAL },
+    DebuggerPrototype: { count: Pattern.NATURAL },
     Sandbox: { count: Pattern.NATURAL },
     other: coarseTypePattern,
   }).assert(
