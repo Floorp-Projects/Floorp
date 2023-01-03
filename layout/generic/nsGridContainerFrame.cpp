@@ -8026,7 +8026,8 @@ nscoord nsGridContainerFrame::MasonryLayout(GridReflowInput& aState,
     }
   }
   const auto masonryAutoFlow = aState.mGridStyle->mMasonryAutoFlow;
-  bool definiteFirst = masonryAutoFlow & NS_STYLE_MASONRY_ORDER_DEFINITE_FIRST;
+  const bool definiteFirst =
+      masonryAutoFlow.order == StyleMasonryItemOrder::DefiniteFirst;
   if (masonryAxis == eLogicalAxisBlock) {
     std::stable_sort(sortedItems.begin(), sortedItems.end(),
                      definiteFirst ? GridItemInfo::RowMasonryDefiniteFirst
@@ -8077,7 +8078,7 @@ nscoord nsGridContainerFrame::MasonryLayout(GridReflowInput& aState,
   uint32_t cursor = 0;
   const auto containerToMasonryBoxOffset =
       fragStartPos - aContentArea.Start(masonryAxis, wm);
-  const bool isPack = masonryAutoFlow & NS_STYLE_MASONRY_PLACEMENT_PACK;
+  const bool isPack = masonryAutoFlow.placement == StyleMasonryPlacement::Pack;
   bool didAlignStartAlignedFirstItems = false;
 
   // Return true if any of the lastItems in aRange are baseline-aligned in
