@@ -4,16 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/XULMenuElement.h"
-#include "mozilla/StaticAnalysisFunctions.h"
-#include "mozilla/dom/XULButtonElement.h"
-#include "mozilla/dom/XULMenuElementBinding.h"
-#include "mozilla/dom/XULPopupElement.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/dom/Element.h"
+#include "nsIFrame.h"
+#include "nsMenuBarFrame.h"
 #include "nsMenuBarListener.h"
-#include "nsXULPopupManager.h"
+#include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
+#include "mozilla/dom/XULMenuElement.h"
+#include "mozilla/dom/XULMenuElementBinding.h"
+#include "nsXULPopupManager.h"
 
 namespace mozilla::dom {
 
@@ -22,31 +23,25 @@ JSObject* XULMenuElement::WrapNode(JSContext* aCx,
   return XULMenuElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-Element* XULMenuElement::GetActiveMenuChild() {
-  RefPtr popup = GetMenuPopupContent();
-  return popup ? popup->GetActiveMenuChild() : nullptr;
+already_AddRefed<Element> XULMenuElement::GetActiveChild() {
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
+  if (menu) {
+    RefPtr<Element> el;
+    menu->GetActiveChild(getter_AddRefs(el));
+    return el.forget();
+  }
+  return nullptr;
 }
 
-void XULMenuElement::SetActiveMenuChild(Element* aChild) {
-  RefPtr popup = GetMenuPopupContent();
-  if (NS_WARN_IF(!popup)) {
-    return;
+void XULMenuElement::SetActiveChild(Element* arg) {
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
+  if (menu) {
+    menu->SetActiveChild(arg);
   }
-
-  if (!aChild) {
-    popup->SetActiveMenuChild(nullptr);
-    return;
-  }
-  auto* button = XULButtonElement::FromNode(aChild);
-  if (NS_WARN_IF(!button) || NS_WARN_IF(!button->IsMenu())) {
-    return;
-  }
-  // KnownLive because it's aChild.
-  popup->SetActiveMenuChild(MOZ_KnownLive(button));
 }
 
-bool XULButtonElement::HandleKeyPress(KeyboardEvent& keyEvent) {
-  RefPtr<nsXULPopupManager> pm = nsXULPopupManager::GetInstance();
+bool XULMenuElement::HandleKeyPress(KeyboardEvent& keyEvent) {
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
     return false;
   }
@@ -56,12 +51,15 @@ bool XULButtonElement::HandleKeyPress(KeyboardEvent& keyEvent) {
     return false;
   }
 
-  if (nsMenuBarListener::IsAccessKeyPressed(keyEvent)) {
+  if (nsMenuBarListener::IsAccessKeyPressed(&keyEvent)) return false;
+
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
+  if (!menu) {
     return false;
   }
 
-  nsMenuPopupFrame* popupFrame = GetMenuPopup(FlushType::Frames);
-  if (NS_WARN_IF(!popupFrame)) {
+  nsMenuPopupFrame* popupFrame = menu->GetPopup();
+  if (!popupFrame) {
     return false;
   }
 
@@ -76,8 +74,25 @@ bool XULButtonElement::HandleKeyPress(KeyboardEvent& keyEvent) {
       return pm->HandleKeyboardNavigationInPopup(popupFrame, theDirection);
     }
     default:
-      return pm->HandleShortcutNavigation(keyEvent, popupFrame);
+      return pm->HandleShortcutNavigation(&keyEvent, popupFrame);
   }
+}
+
+bool XULMenuElement::OpenedWithKey() {
+  nsMenuFrame* menuframe = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
+  if (!menuframe) {
+    return false;
+  }
+
+  nsIFrame* frame = menuframe->GetParent();
+  while (frame) {
+    nsMenuBarFrame* menubar = do_QueryFrame(frame);
+    if (menubar) {
+      return menubar->IsActiveByKeyboard();
+    }
+    frame = frame->GetParent();
+  }
+  return false;
 }
 
 }  // namespace mozilla::dom

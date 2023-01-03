@@ -39,7 +39,6 @@
 
 #label-box {
   min-width: 0;
-  pointer-events: none;
 }
 
 #label-box:not([native]) {
@@ -48,15 +47,11 @@
   font-weight: 600;
 }
 
-dropmarker {
-  pointer-events: none;
-}
-
 dropmarker:not([native]) {
   display: -moz-box;
   appearance: none;
   width: 12px;
-  height: unset;
+  height: 12px;
 }
 
 dropmarker:not([native])::part(icon) {

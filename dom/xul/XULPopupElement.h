@@ -7,15 +7,12 @@
 #ifndef XULPopupElement_h__
 #define XULPopupElement_h__
 
-#include "XULMenuParentElement.h"
 #include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsINode.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
 #include "nsXULElement.h"
 
-class nsMenuPopupFrame;
 struct JSContext;
 
 namespace mozilla {
@@ -32,13 +29,13 @@ struct ActivateMenuItemOptions;
 nsXULElement* NS_NewXULPopupElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-class XULPopupElement : public XULMenuParentElement {
+class XULPopupElement : public nsXULElement {
  private:
-  nsMenuPopupFrame* GetFrame(FlushType);
+  nsIFrame* GetFrame(bool aFlushLayout);
 
  public:
   explicit XULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : XULMenuParentElement(std::move(aNodeInfo)) {}
+      : nsXULElement(std::move(aNodeInfo)) {}
 
   void GetLabel(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::label, aValue);
@@ -69,16 +66,10 @@ class XULPopupElement : public XULMenuParentElement {
 
   void HidePopup(bool aCancel);
 
-  MOZ_CAN_RUN_SCRIPT void ActivateItem(Element& aItemElement,
-                                       const ActivateMenuItemOptions& aOptions,
-                                       ErrorResult& aRv);
+  void ActivateItem(Element& aItemElement,
+                    const ActivateMenuItemOptions& aOptions, ErrorResult& aRv);
 
   void GetState(nsString& aState);
-
-  MOZ_CAN_RUN_SCRIPT void PopupOpened(bool aSelectFirstItem);
-  MOZ_CAN_RUN_SCRIPT void PopupClosed(bool aDeselectMenu);
-
-  XULButtonElement* GetContainingMenu() const;
 
   nsINode* GetTriggerNode() const;
 
@@ -97,11 +88,6 @@ class XULPopupElement : public XULMenuParentElement {
 
   bool IsWaylandDragSource() const;
   bool IsWaylandPopup() const;
-
-  NS_IMPL_FROMNODE_HELPER(XULPopupElement,
-                          IsAnyOfXULElements(nsGkAtoms::menupopup,
-                                             nsGkAtoms::popup, nsGkAtoms::panel,
-                                             nsGkAtoms::tooltip));
 
  protected:
   virtual ~XULPopupElement() = default;

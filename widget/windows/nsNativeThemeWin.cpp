@@ -20,7 +20,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/WindowsVersion.h"
-#include "mozilla/dom/XULButtonElement.h"
 #include "nsColor.h"
 #include "nsComboboxControlFrame.h"
 #include "nsDeviceContext.h"
@@ -30,6 +29,7 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsLookAndFeel.h"
+#include "nsMenuFrame.h"
 #include "nsNameSpaceManager.h"
 #include "Theme.h"
 #include "nsPresContext.h"
@@ -132,8 +132,12 @@ static int32_t GetClassicWindowFrameButtonState(ElementState elementState) {
 }
 
 static bool IsTopLevelMenu(nsIFrame* aFrame) {
-  auto* menu = dom::XULButtonElement::FromNodeOrNull(aFrame->GetContent());
-  return menu && menu->IsOnMenuBar();
+  bool isTopLevel(false);
+  nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
+  if (menuFrame) {
+    isTopLevel = menuFrame->IsOnMenuBar();
+  }
+  return isTopLevel;
 }
 
 static MARGINS GetCheckboxMargins(HANDLE theme, HDC hdc) {
@@ -1163,12 +1167,14 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       return NS_OK;
     }
     case StyleAppearance::MozMenulistArrowButton: {
+      bool isHTML = IsHTMLContent(aFrame);
+      nsIFrame* parentFrame = aFrame->GetParent();
+      bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
       bool isOpen = false;
 
       // HTML select and XUL menulist dropdown buttons get state from the
       // parent.
-      nsIFrame* parentFrame = aFrame->GetParent();
-      aFrame = parentFrame;
+      if (isHTML || isMenulist) aFrame = parentFrame;
 
       ElementState elementState = GetContentState(aFrame, aAppearance);
       aPart = CBP_DROPMARKER_VISTA;
@@ -1176,18 +1182,22 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       // For HTML controls with author styling, we should fall
       // back to the old dropmarker style to avoid clashes with
       // author-specified backgrounds and borders (bug #441034)
-      if (IsWidgetStyled(aFrame->PresContext(), aFrame,
-                         StyleAppearance::Menulist)) {
+      if (isHTML && IsWidgetStyled(aFrame->PresContext(), aFrame,
+                                   StyleAppearance::Menulist))
         aPart = CBP_DROPMARKER;
-      }
 
       if (elementState.HasState(ElementState::DISABLED)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
 
-      if (nsComboboxControlFrame* ccf = do_QueryFrame(aFrame)) {
-        isOpen = ccf->IsDroppedDown();
+      if (isHTML) {
+        nsComboboxControlFrame* ccf = do_QueryFrame(aFrame);
+        isOpen = (ccf && ccf->IsDroppedDown());
+      } else
+        isOpen = IsOpenButton(aFrame);
+
+      if (isHTML) {
         if (isOpen) {
           /* Hover is propagated, but we need to know whether we're hovering
            * just the combobox frame, not the dropdown frame. But, we can't get
@@ -1204,7 +1214,6 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
          * hover effect. When the frame isn't isn't HTML content, we cheat and
          * force the dropdown state to be normal. (Bug 430434)
          */
-        isOpen = IsOpenButton(aFrame);
         aState = TS_NORMAL;
         return NS_OK;
       }
@@ -1213,7 +1222,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
 
       // Dropdown button active state doesn't need :hover.
       if (elementState.HasState(ElementState::ACTIVE)) {
-        if (isOpen) {
+        if (isOpen && (isHTML || isMenulist)) {
           // XXX Button should look active until the mouse is released, but
           //     without making it look active when the popup is clicked.
           return NS_OK;
@@ -1239,13 +1248,17 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Radiomenuitem: {
+      bool isTopLevel = false;
+      bool isOpen = false;
+      bool isHover = false;
+      nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
       ElementState elementState = GetContentState(aFrame, aAppearance);
 
-      auto* menu = dom::XULButtonElement::FromNodeOrNull(aFrame->GetContent());
+      isTopLevel = IsTopLevelMenu(aFrame);
 
-      const bool isTopLevel = IsTopLevelMenu(aFrame);
-      const bool isOpen = menu && menu->IsMenuPopupOpen();
-      const bool isHover = IsMenuActive(aFrame, aAppearance);
+      if (menuFrame) isOpen = menuFrame->IsOpen();
+
+      isHover = IsMenuActive(aFrame, aAppearance);
 
       if (isTopLevel) {
         aPart = MENU_BARITEM;
@@ -2781,12 +2794,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Radiomenuitem: {
+      bool isTopLevel = false;
+      bool isOpen = false;
+      nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
       ElementState elementState = GetContentState(aFrame, aAppearance);
-
-      auto* menu = dom::XULButtonElement::FromNodeOrNull(aFrame->GetContent());
-
-      const bool isTopLevel = IsTopLevelMenu(aFrame);
-      const bool isOpen = menu && menu->IsMenuPopupOpen();
 
       // We indicate top-level-ness using aPart. 0 is a normal menu item,
       // 1 is a top-level menu item. The state of the item is composed of
@@ -2794,20 +2805,24 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       aPart = 0;
       aState = 0;
 
+      if (menuFrame) {
+        // If this is a real menu item, we should check if it is part of the
+        // main menu bar or not, and if it is a container, as these affect
+        // rendering.
+        isTopLevel = menuFrame->IsOnMenuBar();
+        isOpen = menuFrame->IsOpen();
+      }
+
       if (elementState.HasState(ElementState::DISABLED)) {
         aState |= DFCS_INACTIVE;
       }
 
       if (isTopLevel) {
         aPart = 1;
-        if (isOpen) {
-          aState |= DFCS_PUSHED;
-        }
+        if (isOpen) aState |= DFCS_PUSHED;
       }
 
-      if (IsMenuActive(aFrame, aAppearance)) {
-        aState |= DFCS_HOT;
-      }
+      if (IsMenuActive(aFrame, aAppearance)) aState |= DFCS_HOT;
 
       return NS_OK;
     }
@@ -2858,9 +2873,13 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       aState = DFCS_SCROLLCOMBOBOX;
 
       nsIFrame* parentFrame = aFrame->GetParent();
+      bool isHTML = IsHTMLContent(aFrame);
+      bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
+      bool isOpen = false;
+
       // HTML select and XUL menulist dropdown buttons get state from the
       // parent.
-      aFrame = parentFrame;
+      if (isHTML || isMenulist) aFrame = parentFrame;
 
       ElementState elementState = GetContentState(aFrame, aAppearance);
 
@@ -2869,18 +2888,15 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
         return NS_OK;
       }
 
-      bool isOpen = false;
-      if (nsComboboxControlFrame* ccf = do_QueryFrame(aFrame)) {
-        isOpen = ccf->IsDroppedDown();
-      } else {
+      if (isHTML) {
+        nsComboboxControlFrame* ccf = do_QueryFrame(aFrame);
+        isOpen = (ccf && ccf->IsDroppedDown());
+      } else
         isOpen = IsOpenButton(aFrame);
-      }
 
       // XXX Button should look active until the mouse is released, but
       //     without making it look active when the popup is clicked.
-      if (isOpen) {
-        return NS_OK;
-      }
+      if (isOpen && (isHTML || isMenulist)) return NS_OK;
 
       // Dropdown button active state doesn't need :hover.
       if (elementState.HasState(ElementState::ACTIVE))

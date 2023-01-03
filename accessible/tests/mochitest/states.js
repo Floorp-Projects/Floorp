@@ -130,7 +130,7 @@ function testStates(
       state & STATE_FOCUSABLE,
       STATE_FOCUSABLE,
       false,
-      "Focused " + id + " must be focusable!"
+      "Focussed " + id + " must be focusable!"
     );
   }
 

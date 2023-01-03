@@ -5,13 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMenuBarListener.h"
-#include "XULButtonElement.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/XULButtonElement.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsPIWindowRoot.h"
-#include "nsISound.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -28,8 +24,6 @@
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
-#include "mozilla/dom/XULMenuParentElement.h"
-#include "nsXULPopupManager.h"
 
 using namespace mozilla;
 using mozilla::dom::Event;
@@ -49,13 +43,12 @@ Modifiers nsMenuBarListener::mAccessKeyMask = 0;
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBarFrame,
                                      nsIContent* aMenuBarContent)
     : mMenuBarFrame(aMenuBarFrame),
-      mContent(dom::XULMenuParentElement::FromNode(aMenuBarContent)),
-      mEventTarget(aMenuBarContent->GetComposedDoc()),
+      mEventTarget(aMenuBarContent ? aMenuBarContent->GetComposedDoc()
+                                   : nullptr),
       mTopWindowEventTarget(nullptr),
       mAccessKeyDown(false),
       mAccessKeyDownCanceled(false) {
   MOZ_ASSERT(mEventTarget);
-  MOZ_ASSERT(mContent);
 
   // Hook up the menubar as a key listener on the whole document.  This will
   // see every keypress that occurs, but after everyone else does.
@@ -159,12 +152,12 @@ void nsMenuBarListener::InitAccessKey() {
 }
 
 void nsMenuBarListener::ToggleMenuActiveState() {
-  if (mMenuBarFrame->IsActive()) {
-    mMenuBarFrame->SetActive(false);
-  } else {
-    RefPtr content = mContent;
-    mMenuBarFrame->SetActive(true);
-    content->SelectFirstItem();
+  nsMenuFrame* closemenu = mMenuBarFrame->ToggleMenuActiveState();
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm && closemenu) {
+    nsMenuPopupFrame* popupFrame = closemenu->GetPopup();
+    if (popupFrame)
+      pm->HidePopup(popupFrame->GetContent(), false, false, true, false);
   }
 }
 
@@ -206,7 +199,8 @@ nsresult nsMenuBarListener::KeyUp(Event* aKeyEvent) {
       // First, close all existing popups because other popups shouldn't
       // handle key events when menubar is active and IME should be
       // disabled.
-      if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+      nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+      if (pm) {
         pm->Rollup(0, false, nullptr, nullptr);
       }
       // If menubar active state is changed or the menubar is destroyed
@@ -266,7 +260,7 @@ nsresult nsMenuBarListener::KeyPress(Event* aKeyEvent) {
 #ifndef XP_MACOSX
     // Need to handle F10 specially on Non-Mac platform.
     if (nativeKeyEvent->mMessage == eKeyPress && keyCode == NS_VK_F10) {
-      if ((GetModifiersForAccessKey(*keyEvent) & ~MODIFIER_CONTROL) == 0) {
+      if ((GetModifiersForAccessKey(keyEvent) & ~MODIFIER_CONTROL) == 0) {
         // If the keyboard event should activate the menubar and will be
         // sent to a remote process, it should be executed with reply
         // event from the focused remote process.  Note that if the menubar
@@ -285,9 +279,8 @@ nsresult nsMenuBarListener::KeyPress(Event* aKeyEvent) {
 
         if (mMenuBarFrame->IsActive()) {
 #  ifdef MOZ_WIDGET_GTK
-          RefPtr child = mContent->GetActiveMenuChild();
           // In GTK, this also opens the first menu.
-          child->OpenMenuPopup(false);
+          mMenuBarFrame->GetCurrentMenuItem()->OpenMenu(false);
 #  endif
           aKeyEvent->StopPropagation();
           aKeyEvent->PreventDefault();
@@ -298,20 +291,8 @@ nsresult nsMenuBarListener::KeyPress(Event* aKeyEvent) {
     }
 #endif  // !XP_MACOSX
 
-    RefPtr menuForKey = GetMenuForKeyEvent(*keyEvent);
-    if (!menuForKey) {
-#ifdef XP_WIN
-      // Behavior on Windows - this item is on the menu bar, beep and deactivate
-      // the menu bar.
-      // TODO(emilio): This is rather odd, and I cannot get the beep to work,
-      // but this matches what old code was doing...
-      if (mMenuBarFrame->IsActive()) {
-        if (nsCOMPtr<nsISound> sound = do_GetService("@mozilla.org/sound;1")) {
-          sound->Beep();
-        }
-        mMenuBarFrame->SetActive(false);
-      }
-#endif
+    nsMenuFrame* menuFrameForKey = GetMenuForKeyEvent(keyEvent, false);
+    if (!menuFrameForKey) {
       return NS_OK;
     }
 
@@ -329,7 +310,7 @@ nsresult nsMenuBarListener::KeyPress(Event* aKeyEvent) {
 
     mMenuBarFrame->SetActiveByKeyboard();
     mMenuBarFrame->SetActive(true);
-    menuForKey->OpenMenuPopup(true);
+    menuFrameForKey->OpenMenu(true);
 
     // The opened menu will listen next keyup event.
     // Therefore, we should clear the keydown flags here.
@@ -342,7 +323,7 @@ nsresult nsMenuBarListener::KeyPress(Event* aKeyEvent) {
   return NS_OK;
 }
 
-bool nsMenuBarListener::IsAccessKeyPressed(KeyboardEvent& aKeyEvent) {
+bool nsMenuBarListener::IsAccessKeyPressed(KeyboardEvent* aKeyEvent) {
   InitAccessKey();
   // No other modifiers are allowed to be down except for Shift.
   uint32_t modifiers = GetModifiersForAccessKey(aKeyEvent);
@@ -352,39 +333,41 @@ bool nsMenuBarListener::IsAccessKeyPressed(KeyboardEvent& aKeyEvent) {
 }
 
 Modifiers nsMenuBarListener::GetModifiersForAccessKey(
-    KeyboardEvent& aKeyEvent) {
-  WidgetInputEvent* inputEvent = aKeyEvent.WidgetEventPtr()->AsInputEvent();
+    KeyboardEvent* aKeyEvent) {
+  WidgetInputEvent* inputEvent = aKeyEvent->WidgetEventPtr()->AsInputEvent();
   MOZ_ASSERT(inputEvent);
 
   static const Modifiers kPossibleModifiersForAccessKey =
       (MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META |
        MODIFIER_OS);
-  return inputEvent->mModifiers & kPossibleModifiersForAccessKey;
+  return (inputEvent->mModifiers & kPossibleModifiersForAccessKey);
 }
 
-dom::XULButtonElement* nsMenuBarListener::GetMenuForKeyEvent(
-    KeyboardEvent& aKeyEvent) {
+nsMenuFrame* nsMenuBarListener::GetMenuForKeyEvent(KeyboardEvent* aKeyEvent,
+                                                   bool aPeek) {
   if (!IsAccessKeyPressed(aKeyEvent)) {
     return nullptr;
   }
 
-  uint32_t charCode = aKeyEvent.CharCode();
+  uint32_t charCode = aKeyEvent->CharCode();
   bool hasAccessKeyCandidates = charCode != 0;
   if (!hasAccessKeyCandidates) {
     WidgetKeyboardEvent* nativeKeyEvent =
-        aKeyEvent.WidgetEventPtr()->AsKeyboardEvent();
+        aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
+
     AutoTArray<uint32_t, 10> keys;
     nativeKeyEvent->GetAccessKeyCandidates(keys);
     hasAccessKeyCandidates = !keys.IsEmpty();
   }
 
-  if (!hasAccessKeyCandidates) {
-    return nullptr;
+  if (hasAccessKeyCandidates) {
+    // Do shortcut navigation.
+    // A letter was pressed. We want to see if a shortcut gets matched. If
+    // so, we'll know the menu got activated.
+    return mMenuBarFrame->FindMenuWithShortcut(aKeyEvent, aPeek);
   }
-  // Do shortcut navigation.
-  // A letter was pressed. We want to see if a shortcut gets matched. If
-  // so, we'll know the menu got activated.
-  return mMenuBarFrame->MenubarElement().FindMenuWithShortcut(aKeyEvent);
+
+  return nullptr;
 }
 
 void nsMenuBarListener::ReserveKeyIfNeeded(Event* aKeyEvent) {
@@ -416,7 +399,7 @@ nsresult nsMenuBarListener::KeyDown(Event* aKeyEvent) {
 
 #ifndef XP_MACOSX
   if (capturing && !mAccessKeyDown && theChar == NS_VK_F10 &&
-      (GetModifiersForAccessKey(*keyEvent) & ~MODIFIER_CONTROL) == 0) {
+      (GetModifiersForAccessKey(keyEvent) & ~MODIFIER_CONTROL) == 0) {
     ReserveKeyIfNeeded(aKeyEvent);
   }
 #endif
@@ -429,7 +412,7 @@ nsresult nsMenuBarListener::KeyDown(Event* aKeyEvent) {
     // enhanced 102-key keyboards if we don't check this.
     bool isAccessKeyDownEvent =
         ((theChar == (uint32_t)mAccessKey) &&
-         (GetModifiersForAccessKey(*keyEvent) & ~mAccessKeyMask) == 0);
+         (GetModifiersForAccessKey(keyEvent) & ~mAccessKeyMask) == 0);
 
     if (!capturing && !mAccessKeyDown) {
       // If accesskey isn't being pressed and the key isn't the accesskey,
@@ -457,7 +440,8 @@ nsresult nsMenuBarListener::KeyDown(Event* aKeyEvent) {
   }
 
   if (capturing && mAccessKey) {
-    if (GetMenuForKeyEvent(*keyEvent)) {
+    nsMenuFrame* menuFrameForKey = GetMenuForKeyEvent(keyEvent, true);
+    if (menuFrameForKey) {
       ReserveKeyIfNeeded(aKeyEvent);
     }
   }
@@ -468,7 +452,7 @@ nsresult nsMenuBarListener::KeyDown(Event* aKeyEvent) {
 ////////////////////////////////////////////////////////////////////////
 
 nsresult nsMenuBarListener::Blur(Event* aEvent) {
-  if (!IsMenuOpen() && mMenuBarFrame->IsActive()) {
+  if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive()) {
     ToggleMenuActiveState();
     mAccessKeyDown = false;
     mAccessKeyDownCanceled = false;
@@ -484,11 +468,6 @@ nsresult nsMenuBarListener::OnWindowDeactivated(Event* aEvent) {
   mAccessKeyDown = false;
   mAccessKeyDownCanceled = false;
   return NS_OK;  // means I am NOT consuming event
-}
-
-bool nsMenuBarListener::IsMenuOpen() const {
-  auto* activeChild = mContent->GetActiveMenuChild();
-  return activeChild && activeChild->IsMenuPopupOpen();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -507,9 +486,8 @@ nsresult nsMenuBarListener::MouseDown(Event* aMouseEvent) {
     return NS_OK;
   }
 
-  if (!IsMenuOpen() && mMenuBarFrame->IsActive()) {
+  if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive())
     ToggleMenuActiveState();
-  }
 
   return NS_OK;  // means I am NOT consuming event
 }
@@ -524,8 +502,7 @@ nsresult nsMenuBarListener::Fullscreen(Event* aEvent) {
 }
 
 ////////////////////////////////////////////////////////////////////////
-MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-nsMenuBarListener::HandleEvent(Event* aEvent) {
+nsresult nsMenuBarListener::HandleEvent(Event* aEvent) {
   // If the menu bar is collapsed, don't do anything.
   if (!mMenuBarFrame->StyleVisibility()->IsVisible()) {
     return NS_OK;

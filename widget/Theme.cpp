@@ -1132,11 +1132,15 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
   const DocumentState docState = pc->Document()->GetDocumentState();
   ElementState elementState = GetContentState(aFrame, aAppearance);
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
+    bool isHTML = IsHTMLContent(aFrame);
+    nsIFrame* parentFrame = aFrame->GetParent();
+    bool isMenulist = !isHTML && parentFrame->IsMenuFrame();
     // HTML select and XUL menulist dropdown buttons get state from the
     // parent.
-    nsIFrame* parentFrame = aFrame->GetParent();
-    aFrame = parentFrame;
-    elementState = GetContentState(parentFrame, aAppearance);
+    if (isHTML || isMenulist) {
+      aFrame = parentFrame;
+      elementState = GetContentState(parentFrame, aAppearance);
+    }
   }
 
   // Paint the outline iff we're asked to draw overflow and we have

@@ -41,7 +41,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1197913
     synthesizeMouse(menuitem, -1, 0, { type: "mousemove" });
 
     setTimeout(() => {
-      ok(menuitem.getAttribute("_moz-menuactive"), "Should be active");
+      if (navigator.platform.toLowerCase().startsWith("win")) {
+        ok(menuitem.getAttribute("_moz-menuactive"));
+      } else {
+        ok(!menuitem.getAttribute("_moz-menuactive"));
+      }
+
       SimpleTest.finish();
     });
   }

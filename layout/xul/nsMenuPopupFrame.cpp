@@ -5,12 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMenuPopupFrame.h"
-#include "XULButtonElement.h"
-#include "XULPopupElement.h"
-#include "mozilla/dom/XULPopupElement.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsIFrameInlines.h"
 #include "nsAtom.h"
 #include "nsPresContext.h"
 #include "mozilla/ComputedStyle.h"
@@ -19,6 +15,7 @@
 #include "nsIFrameInlines.h"
 #include "nsViewManager.h"
 #include "nsWidgetsCID.h"
+#include "nsMenuFrame.h"
 #include "nsMenuBarFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsFrameManager.h"
@@ -67,7 +64,7 @@ using namespace mozilla;
 using mozilla::dom::Document;
 using mozilla::dom::Element;
 using mozilla::dom::Event;
-using mozilla::dom::XULButtonElement;
+using mozilla::dom::KeyboardEvent;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
@@ -105,6 +102,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext)
     : nsBoxFrame(aStyle, aPresContext, kClassID),
+      mCurrentMenu(nullptr),
       mView(nullptr),
       mPrefSize(-1, -1),
       mXPos(0),
@@ -120,6 +118,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
       mIsOpenChanged(false),
       mMenuCanOverlapOSBar(false),
       mInContentShell(true),
+      mIsMenuLocked(false),
       mIsOffset(false),
       mHFlip(false),
       mVFlip(false),
@@ -541,20 +540,6 @@ void nsMenuPopupFrame::Reflow(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
 }
 
-void nsMenuPopupFrame::EnsureActiveMenuListItemIsVisible() {
-  if (!IsMenuList() || !IsOpen()) {
-    return;
-  }
-  nsIFrame* frame = GetCurrentMenuItemFrame();
-  if (!frame) {
-    return;
-  }
-  RefPtr<mozilla::PresShell> presShell = PresShell();
-  presShell->ScrollFrameIntoView(
-      frame, Nothing(), ScrollAxis(), ScrollAxis(),
-      ScrollFlags::ScrollOverflowHidden | ScrollFlags::ScrollFirstAncestorOnly);
-}
-
 void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState) {
   if (IsNativeMenu()) {
     return;
@@ -722,7 +707,9 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState) {
     mIsOpenChanged = false;
 
     // Make sure the current selection in a menulist is visible.
-    EnsureActiveMenuListItemIsVisible();
+    if (IsMenuList() && mCurrentMenu) {
+      EnsureMenuItemIsVisible(mCurrentMenu);
+    }
 
     // If the animate attribute is set to open, check for a transition and wait
     // for it to finish before firing the popupshown event.
@@ -758,7 +745,8 @@ bool nsMenuPopupFrame::ReflowFinished() {
 void nsMenuPopupFrame::ReflowCallbackCanceled() { mReflowCallbackData.Clear(); }
 
 bool nsMenuPopupFrame::IsMenuList() const {
-  return PopupElement().IsInMenuList();
+  return mContent->GetParent() &&
+         mContent->GetParent()->IsXULElement(nsGkAtoms::menulist);
 }
 
 bool nsMenuPopupFrame::ShouldExpandToInflowParentOrAnchor() const {
@@ -774,19 +762,14 @@ nsIContent* nsMenuPopupFrame::GetTriggerContent(
       return aMenuPopupFrame->mTriggerContent;
     }
 
-    auto* button = XULButtonElement::FromNodeOrNull(
-        aMenuPopupFrame->GetContent()->GetParent());
-    if (!button || !button->IsMenu()) {
-      break;
-    }
-
-    auto* popup = button->GetContainingPopupElement();
-    if (!popup) {
-      break;
-    }
-
     // check up the menu hierarchy until a popup with a trigger node is found
-    aMenuPopupFrame = do_QueryFrame(popup->GetPrimaryFrame());
+    nsMenuFrame* menuFrame = do_QueryFrame(aMenuPopupFrame->GetParent());
+    if (!menuFrame) break;
+
+    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
+    if (!parentPopup || !parentPopup->IsMenu()) break;
+
+    aMenuPopupFrame = static_cast<nsMenuPopupFrame*>(parentPopup);
   }
 
   return nullptr;
@@ -1047,8 +1030,11 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
       PresShell::ReleaseCapturingContent();
     }
 
-    if (RefPtr menu = PopupElement().GetContainingMenu()) {
-      menu->PopupOpened();
+    nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
+    if (menuFrame) {
+      AutoWeakFrame weakFrame(this);
+      menuFrame->PopupOpened();
+      if (!weakFrame.IsAlive()) return;
     }
 
     // do we need an actual reflow here?
@@ -1082,8 +1068,7 @@ void nsMenuPopupFrame::ClearTriggerContentIncludingDocument() {
   mTriggerContent = nullptr;
 }
 
-void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
-                                 bool aFromFrameDestruction) {
+void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
   NS_ASSERTION(aNewState == ePopupClosed || aNewState == ePopupInvisible,
                "popup being set to unexpected state");
 
@@ -1091,9 +1076,8 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
 
   // don't hide the popup when it isn't open
   if (mPopupState == ePopupClosed || mPopupState == ePopupShowing ||
-      mPopupState == ePopupPositioning) {
+      mPopupState == ePopupPositioning)
     return;
-  }
 
   if (aNewState == ePopupClosed) {
     // clear the trigger content if the popup is being closed. But don't clear
@@ -1106,17 +1090,20 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
   // when invisible and about to be closed, HidePopup has already been called,
   // so just set the new state to closed and return
   if (mPopupState == ePopupInvisible) {
-    if (aNewState == ePopupClosed) {
-      mPopupState = ePopupClosed;
-    }
+    if (aNewState == ePopupClosed) mPopupState = ePopupClosed;
     return;
   }
 
   mPopupState = aNewState;
 
+  if (IsMenu()) SetCurrentMenuItem(nullptr);
+
   mIncrementalString.Truncate();
 
+  LockMenuUntilClosed(false);
+
   mIsOpenChanged = false;
+  mCurrentMenu = nullptr;  // make sure no current menu is set
   mHFlip = mVFlip = false;
 
   if (auto* widget = GetWidget()) {
@@ -1130,17 +1117,22 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
   nsViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
 
-  RefPtr popup = &PopupElement();
+  FireDOMEvent(u"DOMMenuInactive"_ns, mContent);
+
   // XXX, bug 137033, In Windows, if mouse is outside the window when the
   // menupopup closes, no mouse_enter/mouse_exit event will be fired to clear
   // current hover state, we should clear it manually. This code may not the
   // best solution, but we can leave it here until we find the better approach.
-  if (!aFromFrameDestruction &&
-      popup->State().HasState(dom::ElementState::HOVER)) {
+  NS_ASSERTION(mContent->IsElement(), "How do we have a non-element?");
+  if (mContent->AsElement()->State().HasState(dom::ElementState::HOVER)) {
     EventStateManager* esm = PresContext()->EventStateManager();
     esm->SetContentState(nullptr, dom::ElementState::HOVER);
   }
-  popup->PopupClosed(aDeselectMenu);
+
+  nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
+  if (menuFrame) {
+    menuFrame->PopupClosed(aDeselectMenu);
+  }
 }
 
 nsIFrame::ReflowChildFlags nsMenuPopupFrame::GetXULLayoutFlags() {
@@ -1794,6 +1786,9 @@ void nsMenuPopupFrame::WidgetPositionOrSizeDidChange() {
   }
 }
 
+/* virtual */
+nsMenuFrame* nsMenuPopupFrame::GetCurrentMenuItem() { return mCurrentMenu; }
+
 LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
     const LayoutDeviceIntRect& aAnchorRect,
     const LayoutDeviceIntRect& aRootScreenRect, nsPopupLevel aPopupLevel) {
@@ -1952,102 +1947,189 @@ nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart) {
   return nullptr;
 }
 
+void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem) {
+  if (aMenuItem) {
+    RefPtr<mozilla::PresShell> presShell = aMenuItem->PresShell();
+    presShell->ScrollFrameIntoView(aMenuItem, Nothing(), ScrollAxis(),
+                                   ScrollAxis(),
+                                   ScrollFlags::ScrollOverflowHidden |
+                                       ScrollFlags::ScrollFirstAncestorOnly);
+  }
+}
+
 void nsMenuPopupFrame::ChangeByPage(bool aIsUp) {
   // Only scroll by page within menulists.
   if (!IsMenuList()) {
     return;
   }
 
-  nsIScrollableFrame* scrollframe = GetScrollFrame(this);
-
-  RefPtr popup = &PopupElement();
-  XULButtonElement* currentMenu = popup->GetActiveMenuChild();
-  XULButtonElement* newMenu = nullptr;
+  nsMenuFrame* newMenu = nullptr;
+  nsIFrame* currentMenu = mCurrentMenu;
   if (!currentMenu) {
     // If there is no current menu item, get the first item. When moving up,
-    // just use this as the newMenu and leave currentMenu null so that no check
-    // for a later element is performed. When moving down, set currentMenu so
-    // that we look for one page down from the first item.
-    newMenu = popup->GetFirstMenuItem();
+    // just use this as the newMenu and leave currentMenu null so that no
+    // check for a later element is performed. When moving down, set currentMenu
+    // so that we look for one page down from the first item.
+    newMenu = nsXULPopupManager::GetNextMenuItem(this, nullptr, true, false);
     if (!aIsUp) {
       currentMenu = newMenu;
     }
   }
 
-  if (currentMenu && currentMenu->GetPrimaryFrame()) {
-    const nscoord scrollHeight =
-        scrollframe ? scrollframe->GetScrollPortRect().height : mRect.height;
-    const nsRect currentRect = currentMenu->GetPrimaryFrame()->GetRect();
-    const XULButtonElement* startMenu = currentMenu;
+  if (currentMenu) {
+    nscoord scrollHeight = mRect.height;
+    nsIScrollableFrame* scrollframe = GetScrollFrame(this);
+    if (scrollframe) {
+      scrollHeight = scrollframe->GetScrollPortRect().height;
+    }
 
     // Get the position of the current item and add or subtract one popup's
     // height to or from it.
-    const nscoord targetPos = aIsUp ? currentRect.YMost() - scrollHeight
-                                    : currentRect.y + scrollHeight;
+    nscoord targetPosition = aIsUp
+                                 ? currentMenu->GetRect().YMost() - scrollHeight
+                                 : currentMenu->GetRect().y + scrollHeight;
+
+    // Indicates that the last visible child was a valid menuitem.
+    bool lastWasValid = false;
+
     // Look for the next child which is just past the target position. This
     // child will need to be selected.
-    for (; currentMenu;
-         currentMenu = aIsUp ? popup->GetPrevMenuItemFrom(*currentMenu)
-                             : popup->GetNextMenuItemFrom(*currentMenu)) {
-      if (!currentMenu->GetPrimaryFrame()) {
-        continue;
-      }
-      const nsRect curRect = currentMenu->GetPrimaryFrame()->GetRect();
-      const nscoord curPos = aIsUp ? curRect.y : curRect.YMost();
-      // If the right position was found, break out. Otherwise, look for another
-      // item.
-      if (aIsUp ? (curPos < targetPos) : (curPos > targetPos)) {
-        if (!newMenu || newMenu == startMenu) {
-          newMenu = currentMenu;
+    while (currentMenu) {
+      // Only consider menu frames.
+      nsMenuFrame* menuFrame = do_QueryFrame(currentMenu);
+      if (menuFrame &&
+          nsXULPopupManager::IsValidMenuItem(menuFrame->GetContent(), true)) {
+        // If the right position was found, break out. Otherwise, look for
+        // another item.
+        if ((!aIsUp && currentMenu->GetRect().YMost() > targetPosition) ||
+            (aIsUp && currentMenu->GetRect().y < targetPosition)) {
+          // If the last visible child was not a valid menuitem or was disabled,
+          // use this as the menu to select, skipping over any non-valid items
+          // at the edge of the page.
+          if (!lastWasValid) {
+            newMenu = menuFrame;
+          }
+
+          break;
         }
-        break;
+
+        // Assign this item to newMenu. This item will be selected in case we
+        // don't find any more.
+        lastWasValid = true;
+        newMenu = menuFrame;
+      } else {
+        lastWasValid = false;
       }
 
-      // Assign this item to newMenu. This item will be selected in case we
-      // don't find any more.
-      newMenu = currentMenu;
+      currentMenu =
+          aIsUp ? currentMenu->GetPrevSibling() : currentMenu->GetNextSibling();
     }
   }
 
   // Select the new menuitem.
-  if (RefPtr newMenuRef = newMenu) {
-    popup->SetActiveMenuChild(newMenuRef);
+  if (newMenu) {
+    ChangeMenuItem(newMenu, false, true);
   }
 }
 
-dom::XULPopupElement& nsMenuPopupFrame::PopupElement() const {
-  auto* popup = dom::XULPopupElement::FromNode(GetContent());
-  MOZ_DIAGNOSTIC_ASSERT(popup);
-  return *popup;
+NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsMenuFrame* aMenuItem) {
+  if (mCurrentMenu == aMenuItem) return NS_OK;
+
+  if (mCurrentMenu) {
+    mCurrentMenu->SelectMenu(false);
+  }
+
+  if (aMenuItem) {
+    EnsureMenuItemIsVisible(aMenuItem);
+    aMenuItem->SelectMenu(true);
+  }
+
+  mCurrentMenu = aMenuItem;
+
+  return NS_OK;
 }
 
-XULButtonElement* nsMenuPopupFrame::GetCurrentMenuItem() const {
-  return PopupElement().GetActiveMenuChild();
+void nsMenuPopupFrame::CurrentMenuIsBeingDestroyed() { mCurrentMenu = nullptr; }
+
+NS_IMETHODIMP
+nsMenuPopupFrame::ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem,
+                                 bool aFromKey) {
+  if (mCurrentMenu == aMenuItem) return NS_OK;
+
+  // When a context menu is open, the current menu is locked, and no change
+  // to the menu is allowed.
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (!mIsContextMenu && pm && pm->HasContextMenu(this)) return NS_OK;
+
+  // Unset the current child.
+  if (mCurrentMenu) {
+    mCurrentMenu->SelectMenu(false);
+    nsMenuPopupFrame* popup = mCurrentMenu->GetPopup();
+    if (popup) {
+      if (mCurrentMenu->IsOpen()) {
+        if (pm) pm->HidePopupAfterDelay(popup);
+      }
+    }
+  }
+
+  // Set the new child.
+  if (aMenuItem) {
+    EnsureMenuItemIsVisible(aMenuItem);
+    aMenuItem->SelectMenu(true);
+
+    // On Windows, a menulist should update its value whenever navigation was
+    // done by the keyboard.
+#ifdef XP_WIN
+    if (aFromKey && IsOpen() && IsMenuList()) {
+      // Fire a command event as the new item, but we don't want to close
+      // the menu, blink it, or update any other state of the menuitem. The
+      // command event will cause the item to be selected.
+      nsCOMPtr<nsIContent> menuItemContent = aMenuItem->GetContent();
+      RefPtr<mozilla::PresShell> presShell = PresShell();
+      nsContentUtils::DispatchXULCommand(menuItemContent, /* aTrusted = */ true,
+                                         nullptr, presShell, false, false,
+                                         false, false);
+    }
+#endif
+  }
+
+  mCurrentMenu = aMenuItem;
+
+  return NS_OK;
 }
 
-nsIFrame* nsMenuPopupFrame::GetCurrentMenuItemFrame() const {
-  auto* child = GetCurrentMenuItem();
-  return child ? child->GetPrimaryFrame() : nullptr;
-}
-
-void nsMenuPopupFrame::HandleEnterKeyPress(WidgetEvent& aEvent) {
+nsMenuFrame* nsMenuPopupFrame::Enter(WidgetGUIEvent* aEvent) {
   mIncrementalString.Truncate();
-  if (RefPtr menu = GetCurrentMenuItem()) {
-    // Give it to the child.
-    menu->HandleEnterKeyPress(aEvent);
-  }
+
+  // Give it to the child.
+  if (mCurrentMenu) return mCurrentMenu->Enter(aEvent);
+
+  return nullptr;
 }
 
-XULButtonElement* nsMenuPopupFrame::FindMenuWithShortcut(
-    KeyboardEvent& aKeyEvent, bool& aDoAction) {
-  uint32_t charCode = aKeyEvent.CharCode();
-  uint32_t keyCode = aKeyEvent.KeyCode();
+nsMenuFrame* nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent,
+                                                    bool& doAction) {
+  uint32_t charCode = aKeyEvent->CharCode();
+  uint32_t keyCode = aKeyEvent->KeyCode();
 
-  aDoAction = false;
+  doAction = false;
 
   // Enumerate over our list of frames.
-  const bool isMenu = !IsMenuList();
-  TimeStamp keyTime = aKeyEvent.WidgetEventPtr()->mTimeStamp;
+  nsContainerFrame* immediateParent =
+      nsXULPopupManager::ImmediateParentFrame(this);
+  uint32_t matchCount = 0, matchShortcutCount = 0;
+  bool foundActive = false;
+  nsMenuFrame* frameBefore = nullptr;
+  nsMenuFrame* frameAfter = nullptr;
+  nsMenuFrame* frameShortcut = nullptr;
+
+  nsIContent* parentContent = mContent->GetParent();
+
+  bool isMenu = parentContent && !parentContent->NodeInfo()->Equals(
+                                     nsGkAtoms::menulist, kNameSpaceID_XUL);
+
+  TimeStamp keyTime = aKeyEvent->WidgetEventPtr()->mTimeStamp;
+
   if (charCode == 0) {
     if (keyCode == dom::KeyboardEvent_Binding::DOM_VK_BACK_SPACE) {
       if (!isMenu && !mIncrementalString.IsEmpty()) {
@@ -2055,9 +2137,8 @@ XULButtonElement* nsMenuPopupFrame::FindMenuWithShortcut(
         return nullptr;
       }
 #ifdef XP_WIN
-      if (nsCOMPtr<nsISound> sound = do_GetService("@mozilla.org/sound;1")) {
-        sound->Beep();
-      }
+      nsCOMPtr<nsISound> soundInterface = do_GetService("@mozilla.org/sound;1");
+      if (soundInterface) soundInterface->Beep();
 #endif  // #ifdef XP_WIN
     }
     return nullptr;
@@ -2088,11 +2169,93 @@ XULButtonElement* nsMenuPopupFrame::FindMenuWithShortcut(
 
   sLastKeyTime = keyTime;
 
-  auto* item =
-      PopupElement().FindMenuWithShortcut(incrementalString, aDoAction);
-  if (item) {
-    return item;
+  // NOTE: If you crashed here due to a bogus |immediateParent| it is
+  //       possible that the menu whose shortcut is being looked up has
+  //       been destroyed already.  One strategy would be to
+  //       setTimeout(<func>,0) as detailed in:
+  //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
+  nsIFrame* firstMenuItem =
+      nsXULPopupManager::GetNextMenuItem(immediateParent, nullptr, true, false);
+  nsIFrame* currFrame = firstMenuItem;
+
+  int32_t menuAccessKey = nsMenuBarListener::GetMenuAccessKey();
+
+  // We start searching from first child. This process is divided into two parts
+  //   -- before current and after current -- by the current item
+  while (currFrame) {
+    nsIContent* current = currFrame->GetContent();
+    nsAutoString textKey;
+    bool isShortcut = false;
+    if (current->IsElement()) {
+      if (menuAccessKey >= 0) {
+        // Get the shortcut attribute.
+        current->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
+                                      textKey);
+      }
+      isShortcut = !textKey.IsEmpty();
+      if (textKey.IsEmpty()) {  // No shortcut, try first letter
+        current->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label,
+                                      textKey);
+        if (textKey.IsEmpty())  // No label, try another attribute (value)
+          current->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                        textKey);
+      }
+    }
+
+    if (StringBeginsWith(
+            nsContentUtils::TrimWhitespace<
+                nsContentUtils::IsHTMLWhitespaceOrNBSP>(textKey, false),
+            incrementalString, nsCaseInsensitiveStringComparator)) {
+      // mIncrementalString is a prefix of textKey
+      nsMenuFrame* menu = do_QueryFrame(currFrame);
+      if (menu) {
+        // There is one match
+        matchCount++;
+        if (isShortcut) {
+          // There is one shortcut-key match
+          matchShortcutCount++;
+          // Record the matched item. If there is only one matched shortcut
+          // item, do it
+          frameShortcut = menu;
+        }
+        if (!foundActive) {
+          // It's a first candidate item located before/on the current item
+          if (!frameBefore) frameBefore = menu;
+        } else {
+          // It's a first candidate item located after the current item
+          if (!frameAfter) frameAfter = menu;
+        }
+      } else
+        return nullptr;
+    }
+
+    // Get the active status
+    if (current->IsElement() && current->AsElement()->AttrValueIs(
+                                    kNameSpaceID_None, nsGkAtoms::menuactive,
+                                    nsGkAtoms::_true, eCaseMatters)) {
+      foundActive = true;
+      if (stringLength > 1) {
+        // If there is more than one char typed, the current item has highest
+        // priority,
+        //   otherwise the item next to current has highest priority
+        if (currFrame == frameBefore) return frameBefore;
+      }
+    }
+
+    nsMenuFrame* menu = do_QueryFrame(currFrame);
+    currFrame =
+        nsXULPopupManager::GetNextMenuItem(immediateParent, menu, true, true);
+    if (currFrame == firstMenuItem) break;
   }
+
+  doAction = (isMenu && (matchCount == 1 || matchShortcutCount == 1));
+
+  if (matchShortcutCount == 1)  // We have one matched shortcut item
+    return frameShortcut;
+  if (frameAfter)  // If we have matched item after the current, use it
+    return frameAfter;
+  else if (frameBefore)  // If we haven't, use the item before the current
+    return frameBefore;
 
   // If we don't match anything, rollback the last typing
   mIncrementalString.SetLength(mIncrementalString.Length() - 1);
@@ -2102,13 +2265,25 @@ XULButtonElement* nsMenuPopupFrame::FindMenuWithShortcut(
   // behavior on Windows - this item is in a menu popup off of the
   // menu bar, so beep and do nothing else
   if (isMenu) {
-    if (nsCOMPtr<nsISound> sound = do_GetService("@mozilla.org/sound;1")) {
-      sound->Beep();
-    }
+    nsCOMPtr<nsISound> soundInterface = do_GetService("@mozilla.org/sound;1");
+    if (soundInterface) soundInterface->Beep();
   }
 #endif  // #ifdef XP_WIN
 
   return nullptr;
+}
+
+void nsMenuPopupFrame::LockMenuUntilClosed(bool aLock) {
+  mIsMenuLocked = aLock;
+
+  // Lock / unlock the parent, too.
+  nsMenuFrame* menu = do_QueryFrame(GetParent());
+  if (menu) {
+    nsMenuParent* parentParent = menu->GetMenuParent();
+    if (parentParent) {
+      parentParent->LockMenuUntilClosed(aLock);
+    }
+  }
 }
 
 nsIWidget* nsMenuPopupFrame::GetWidget() const {
@@ -2194,12 +2369,16 @@ void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,
     mReflowCallbackData.Clear();
   }
 
-  // XXX: Currently we don't fire popuphidden for these popups, that seems wrong
-  // but alas, also pre-existing.
-  HidePopup(/* aDeselectMenu = */ false, ePopupClosed,
-            /* aFromFrameDestruction = */ true);
+  nsMenuFrame* menu = do_QueryFrame(GetParent());
+  if (menu) {
+    // clear the open attribute on the parent menu
+    nsContentUtils::AddScriptRunner(new nsUnsetAttrRunnable(
+        menu->GetContent()->AsElement(), nsGkAtoms::open));
+  }
 
-  if (RefPtr<nsXULPopupManager> pm = nsXULPopupManager::GetInstance()) {
+  ClearPopupShownDispatcher();
+
+  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
     pm->PopupDestroyed(this);
   }
 
@@ -2476,4 +2655,15 @@ void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
     aRect = anchorRect;
     SetPopupPosition(true);
   }
+}
+
+nsIWidget* nsMenuPopupFrame::GetParentMenuWidget() {
+  nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
+  if (menuFrame) {
+    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
+    if (parentPopup && (parentPopup->IsMenu() || parentPopup->IsMenuBar())) {
+      return static_cast<nsMenuPopupFrame*>(parentPopup)->GetWidget();
+    }
+  }
+  return nullptr;
 }

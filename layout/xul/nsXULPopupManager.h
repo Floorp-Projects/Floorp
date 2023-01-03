@@ -54,8 +54,10 @@
  */
 
 class nsContainerFrame;
+class nsMenuFrame;
 class nsMenuPopupFrame;
 class nsMenuBarFrame;
+class nsMenuParent;
 class nsIDocShellTreeItem;
 class nsPIDOMWindowOuter;
 class nsRefreshDriver;
@@ -66,7 +68,6 @@ namespace dom {
 class Event;
 class KeyboardEvent;
 class UIEvent;
-class XULButtonElement;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -306,7 +307,8 @@ class nsXULPopupPositionedEvent : public mozilla::Runnable {
  public:
   explicit nsXULPopupPositionedEvent(nsIContent* aPopup)
       : mozilla::Runnable("nsXULPopupPositionedEvent"), mPopup(aPopup) {
-    MOZ_ASSERT(aPopup);
+    NS_ASSERTION(
+        aPopup, "null popup supplied to nsXULPopupPositionedEvent constructor");
   }
 
   NS_IMETHOD Run() override;
@@ -316,7 +318,7 @@ class nsXULPopupPositionedEvent : public mozilla::Runnable {
   static bool DispatchIfNeeded(nsIContent* aPopup);
 
  private:
-  const nsCOMPtr<nsIContent> mPopup;
+  nsCOMPtr<nsIContent> mPopup;
 };
 
 // this class is used for dispatching menu command events asynchronously.
@@ -387,7 +389,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   void OnNativeSubMenuWillOpen(mozilla::dom::Element* aPopupElement) override;
   void OnNativeSubMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
   void OnNativeSubMenuClosed(mozilla::dom::Element* aPopupElement) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void OnNativeMenuWillActivateItem(
+  void OnNativeMenuWillActivateItem(
       mozilla::dom::Element* aMenuItemElement) override;
 
   static nsXULPopupManager* sInstance;
@@ -400,10 +402,51 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // if a popup manager could not be allocated
   static nsXULPopupManager* GetInstance();
 
+  // Returns the immediate parent frame of inserted children of aFrame's
+  // content.
+  //
+  // FIXME(emilio): Or something like that, because this is kind of broken in a
+  // variety of situations like multiple insertion points.
+  static nsContainerFrame* ImmediateParentFrame(nsContainerFrame* aFrame);
+
   // This should be called when a window is moved or resized to adjust the
   // popups accordingly.
   void AdjustPopupsOnWindowChange(nsPIDOMWindowOuter* aWindow);
   void AdjustPopupsOnWindowChange(mozilla::PresShell* aPresShell);
+
+  // given a menu frame, find the prevous or next menu frame. If aPopup is
+  // true then navigate a menupopup, from one item on the menu to the previous
+  // or next one. This is used for cursor navigation between items in a popup
+  // menu. If aIsPopup is false, the navigation is on a menubar, so navigate
+  // between menus on the menubar. This is used for left/right cursor
+  // navigation.
+  //
+  // Items that are not valid, such as non-menu or non-menuitem elements are
+  // skipped, and the next or previous item after that is checked.
+  //
+  // If aStart is null, the first valid item is retrieved by GetNextMenuItem
+  // and the last valid item is retrieved by GetPreviousMenuItem.
+  //
+  // Both methods will loop around the beginning or end if needed.
+  //
+  // aParent - the parent menubar or menupopup
+  // aStart - the menu/menuitem to start navigation from. GetPreviousMenuItem
+  //          returns the item before it, while GetNextMenuItem returns the
+  //          item after it.
+  // aIsPopup - true for menupopups, false for menubars
+  // aWrap - true to wrap around to the beginning and continue searching if not
+  //         found. False to end at the beginning or end of the menu.
+  static nsMenuFrame* GetPreviousMenuItem(nsContainerFrame* aParent,
+                                          nsMenuFrame* aStart, bool aIsPopup,
+                                          bool aWrap);
+  static nsMenuFrame* GetNextMenuItem(nsContainerFrame* aParent,
+                                      nsMenuFrame* aStart, bool aIsPopup,
+                                      bool aWrap);
+
+  // returns true if the menu item aContent is a valid menuitem which may
+  // be navigated to. aIsPopup should be true for items on a popup, or false
+  // for items on a menubar.
+  static bool IsValidMenuItem(nsIContent* aContent, bool aOnPopup);
 
   // inform the popup manager that a menu bar has been activated or deactivated,
   // either because one of its menus has opened or closed, or that the menubar
@@ -416,12 +459,12 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   struct MayShowMenuResult {
     const bool mIsNative = false;
-    mozilla::dom::XULButtonElement* const mMenuButton = nullptr;
+    nsMenuFrame* const mMenuFrame = nullptr;
     nsMenuPopupFrame* const mMenuPopupFrame = nullptr;
 
     explicit operator bool() const {
-      MOZ_ASSERT(!!mMenuButton == !!mMenuPopupFrame);
-      return mIsNative || mMenuButton;
+      MOZ_ASSERT(!!mMenuFrame == !!mMenuPopupFrame);
+      return mIsNative || mMenuFrame;
     }
   };
 
@@ -522,13 +565,12 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * items. This timer is stored in mCloseTimer. The timer may be cancelled and
    * the popup closed by calling KillMenuTimer.
    */
-  void HidePopupAfterDelay(nsMenuPopupFrame* aPopup, int32_t aDelay);
+  void HidePopupAfterDelay(nsMenuPopupFrame* aPopup);
 
   /**
    * Hide all of the popups from a given docshell. This should be called when
    * the document is hidden.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide);
 
   /**
@@ -551,8 +593,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * aEvent - an nsXULMenuCommandEvent that contains all the info from the mouse
    *          event which triggered the menu to be executed, may not be null
    */
-  MOZ_CAN_RUN_SCRIPT void ExecuteMenu(nsIContent* aMenu,
-                                      nsXULMenuCommandEvent* aEvent);
+  void ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent);
 
   /**
    * If a native menu is open, and aItem is an item in the menu's subtree,
@@ -568,16 +609,16 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   bool IsPopupOpen(nsIContent* aPopup);
 
   /**
+   * Return true if the popup for the supplied menu parent is open.
+   */
+  bool IsPopupOpenForMenuParent(nsMenuParent* aMenuParent);
+
+  /**
    * Return the frame for the topmost open popup of a given type, or null if
    * no popup of that type is open. If aType is ePopupTypeAny, a menu of any
    * type is returned.
    */
   nsIFrame* GetTopPopup(nsPopupType aType);
-
-  /**
-   * Returns the topmost active menuitem that's currently visible, if any.
-   */
-  nsIContent* GetTopActiveMenuItemContent();
 
   /**
    * Return an array of all the open and visible popup frames for
@@ -624,7 +665,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * item and later popups from the list. No point going through HidePopup as
    * the frames have gone away.
    */
-  MOZ_CAN_RUN_SCRIPT void PopupDestroyed(nsMenuPopupFrame* aFrame);
+  void PopupDestroyed(nsMenuPopupFrame* aFrame);
 
   /**
    * Returns true if there is a context menu open. If aPopup is specified,
@@ -656,29 +697,29 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * submenu before the timer fires, we should instead cancel the timer. This
    * ensures that the user can move the mouse diagonally over a menu.
    */
-  void CancelMenuTimer(nsMenuPopupFrame*);
+  void CancelMenuTimer(nsMenuParent* aMenuParent);
 
   /**
    * Handles navigation for menu accelkeys. If aFrame is specified, then the
    * key is handled by that popup, otherwise if aFrame is null, the key is
    * handled by the active popup or menubar.
    */
-  MOZ_CAN_RUN_SCRIPT bool HandleShortcutNavigation(
-      mozilla::dom::KeyboardEvent& aKeyEvent, nsMenuPopupFrame* aFrame);
+  bool HandleShortcutNavigation(mozilla::dom::KeyboardEvent* aKeyEvent,
+                                nsMenuPopupFrame* aFrame);
 
   /**
    * Handles cursor navigation within a menu. Returns true if the key has
    * been handled.
    */
-  MOZ_CAN_RUN_SCRIPT bool HandleKeyboardNavigation(uint32_t aKeyCode);
+  bool HandleKeyboardNavigation(uint32_t aKeyCode);
 
   /**
    * Handle keyboard navigation within a menu popup specified by aFrame.
    * Returns true if the key was handled and other default handling
    * should not occur.
    */
-  MOZ_CAN_RUN_SCRIPT bool HandleKeyboardNavigationInPopup(
-      nsMenuPopupFrame* aFrame, nsNavigationDirection aDir) {
+  bool HandleKeyboardNavigationInPopup(nsMenuPopupFrame* aFrame,
+                                       nsNavigationDirection aDir) {
     return HandleKeyboardNavigationInPopup(nullptr, aFrame, aDir);
   }
 
@@ -686,9 +727,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * Handles the keyboard event with keyCode value. Returns true if the event
    * has been handled.
    */
-  MOZ_CAN_RUN_SCRIPT bool HandleKeyboardEventWithKeyCode(
-      mozilla::dom::KeyboardEvent* aKeyEvent,
-      nsMenuChainItem* aTopVisibleMenuItem);
+  bool HandleKeyboardEventWithKeyCode(mozilla::dom::KeyboardEvent* aKeyEvent,
+                                      nsMenuChainItem* aTopVisibleMenuItem);
 
   // Sets mIgnoreKeys of the Top Visible Menu Item
   nsresult UpdateIgnoreKeys(bool aIgnoreKeys);
@@ -699,9 +739,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
     return mPendingPopup->mEvent.get();
   }
 
-  MOZ_CAN_RUN_SCRIPT nsresult KeyUp(mozilla::dom::KeyboardEvent* aKeyEvent);
-  MOZ_CAN_RUN_SCRIPT nsresult KeyDown(mozilla::dom::KeyboardEvent* aKeyEvent);
-  MOZ_CAN_RUN_SCRIPT nsresult KeyPress(mozilla::dom::KeyboardEvent* aKeyEvent);
+  nsresult KeyUp(mozilla::dom::KeyboardEvent* aKeyEvent);
+  nsresult KeyDown(mozilla::dom::KeyboardEvent* aKeyEvent);
+  nsresult KeyPress(mozilla::dom::KeyboardEvent* aKeyEvent);
 
  protected:
   nsXULPopupManager();
@@ -720,19 +760,16 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   // Hide all of the visible popups from the given list. This function can
   // cause style changes and frame destruction.
-  MOZ_CAN_RUN_SCRIPT void HidePopupsInList(
-      const nsTArray<nsMenuPopupFrame*>& aFrames);
+  void HidePopupsInList(const nsTArray<nsMenuPopupFrame*>& aFrames);
 
   // Hide, but don't close, visible menus. Called before executing a menu item.
   // The caller promises to close the menus properly (with a call to HidePopup)
   // once the item has been executed.
-  MOZ_CAN_RUN_SCRIPT void HideOpenMenusBeforeExecutingMenu(CloseMenuMode aMode);
+  void HideOpenMenusBeforeExecutingMenu(CloseMenuMode aMode);
 
   // callbacks for ShowPopup and HidePopup as events may be done asynchronously
-  MOZ_CAN_RUN_SCRIPT void ShowPopupCallback(nsIContent* aPopup,
-                                            nsMenuPopupFrame* aPopupFrame,
-                                            bool aIsContextMenu,
-                                            bool aSelectFirstItem);
+  void ShowPopupCallback(nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame,
+                         bool aIsContextMenu, bool aSelectFirstItem);
   MOZ_CAN_RUN_SCRIPT void HidePopupCallback(
       nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame, nsIContent* aNextPopup,
       nsIContent* aLastPopup, nsPopupType aPopupType, bool aDeselectMenu);
@@ -779,7 +816,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   /**
    * Handle keyboard navigation within a menu popup specified by aItem.
    */
-  MOZ_CAN_RUN_SCRIPT
   bool HandleKeyboardNavigationInPopup(nsMenuChainItem* aItem,
                                        nsNavigationDirection aDir) {
     return HandleKeyboardNavigationInPopup(aItem, aItem->Frame(), aDir);
@@ -793,9 +829,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * an open submenu if one exists. Returns true if the key was
    * handled and other default handling should not occur.
    */
-  MOZ_CAN_RUN_SCRIPT bool HandleKeyboardNavigationInPopup(
-      nsMenuChainItem* aItem, nsMenuPopupFrame* aFrame,
-      nsNavigationDirection aDir);
+  bool HandleKeyboardNavigationInPopup(nsMenuChainItem* aItem,
+                                       nsMenuPopupFrame* aFrame,
+                                       nsNavigationDirection aDir);
 
  protected:
   already_AddRefed<nsINode> GetLastTriggerNode(
@@ -853,7 +889,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   // timer used for HidePopupAfterDelay
   nsCOMPtr<nsITimer> mCloseTimer;
-  nsMenuPopupFrame* mTimerMenu = nullptr;
+
+  // a popup that is waiting on the timer
+  nsMenuPopupFrame* mTimerMenu;
 
   // Information about the popup that is currently firing a popupshowing event.
   const PendingPopup* mPendingPopup;
