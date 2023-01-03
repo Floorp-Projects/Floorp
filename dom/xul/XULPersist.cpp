@@ -11,6 +11,7 @@
 #else
 #  include "nsIXULStore.h"
 #  include "nsIStringEnumerator.h"
+#  include "nsServiceManagerUtils.h"
 #endif
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Document.h"
