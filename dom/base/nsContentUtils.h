@@ -2081,8 +2081,7 @@ class nsContentUtils {
    * Hide any XUL popups associated with aDocument, including any documents
    * displayed in child frames. Does nothing if aDocument is null.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void HidePopupsInDocument(
-      Document* aDocument);
+  static void HidePopupsInDocument(Document* aDocument);
 
   /**
    * Retrieve the current drag session, or null if no drag is currently occuring

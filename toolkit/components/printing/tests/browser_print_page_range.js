@@ -4,7 +4,6 @@
 "use strict";
 
 async function changeRangeTo(helper, destination) {
-  info(`changeRangeTo(${destination})`);
   let rangeSelect = helper.get("range-picker");
   let options = getRangeOptions(helper);
   let numberMove =

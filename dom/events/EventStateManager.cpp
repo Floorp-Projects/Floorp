@@ -3128,12 +3128,20 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
       break;
     }
 
-    if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(current)) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(current);
+    if (scrollableFrame) {
       if (current->IsFrameOfType(nsIFrame::eXULBox)) {
         displayPanFeedback = true;
 
         nsRect scrollRange = scrollableFrame->GetScrollRange();
         bool canScrollHorizontally = scrollRange.width > 0;
+
+        if (targetFrame->IsMenuFrame()) {
+          // menu frames report horizontal scroll when they have submenus
+          // and we don't want that
+          canScrollHorizontally = false;
+          displayPanFeedback = false;
+        }
 
         // Vertical panning has priority over horizontal panning, so
         // when vertical movement is possible we can just finish the loop.

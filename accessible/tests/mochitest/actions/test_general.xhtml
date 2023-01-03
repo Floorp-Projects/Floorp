@@ -28,7 +28,11 @@
     //gA11yEventDumpToConsole = true;
     //enableLogging("tree,verbose"); // debug
 
-    SimpleTest.expectAssertions(0, 1);
+    if (navigator.platform.startsWith("Mac")) {
+      SimpleTest.expectAssertions(0, 1);
+    } else {
+      SimpleTest.expectAssertions(0, 1);
+    }
 
     function doTest()
     {
@@ -37,9 +41,10 @@
           ID: "menu",
           actionName: "click",
           events: CLICK_EVENTS,
-          // Wait for the submenu to show up.
+          // Wait for focus event, it guarantees us the submenu tree is created,
+          // that's necessary for next test.
           eventSeq: [
-            new invokerChecker(EVENT_SHOW, getNode("submenu"))
+            new invokerChecker(EVENT_FOCUS, getNode("menu"))
           ]
         },
         {

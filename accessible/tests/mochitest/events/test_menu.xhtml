@@ -14,12 +14,12 @@
   <script type="application/javascript"
           src="../events.js" />
 
-  <script><![CDATA[
+  <script type="application/javascript">
     function openFileMenu()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_MENU_START, "menubar"),
-        new invokerChecker("popupshown", "menupopup-file")
+        new invokerChecker(EVENT_MENU_START, getNode("menubar")),
+        new invokerChecker(EVENT_MENUPOPUP_START, getNode("menupopup-file"))
         // new invokerChecker(EVENT_FOCUS, getNode("menuitem-newtab")) intermitent failure
       ];
 
@@ -37,8 +37,8 @@
     function openEditMenu()
     {
       this.eventSeq = [
-        new invokerChecker("popuphidden", "menupopup-file"),
-        new invokerChecker("popupshown", "menupopup-edit"),
+        new invokerChecker(EVENT_MENUPOPUP_END, getNode("menupopup-file")),
+        new invokerChecker(EVENT_MENUPOPUP_START, getNode("menupopup-edit"))
         // new invokerChecker(EVENT_FOCUS, getNode("menuitem-undo")) intermitent failure
       ];
 
@@ -57,7 +57,8 @@
     {
       this.eventSeq = [
         //new invokerChecker(EVENT_FOCUS, document), intermitent failure
-        new invokerChecker("popuphidden", "menupopup-edit"),
+        new invokerChecker(EVENT_MENUPOPUP_END, getNode("menupopup-edit")),
+        new invokerChecker(EVENT_MENU_END, getNode("menubar"))
       ];
 
       this.invoke = function closeEditMenu_invoke()
@@ -67,7 +68,7 @@
 
       this.getID = function closeEditMenu_getID()
       {
-        return "close edit menu";
+        return "close edit menu, leave menubar";
       }
     }
 
@@ -110,7 +111,7 @@
     {
       this.eventSeq = [
         //new invokerChecker(EVENT_FOCUS, document), intermitent failure
-        new invokerChecker(EVENT_MENU_END, "menubar")
+        new invokerChecker(EVENT_MENU_END, getNode("menubar"))
       ];
 
       this.invoke = function leaveMenubar_invoke()
@@ -135,7 +136,7 @@
 
     function doTests()
     {
-      if (!WIN && !LINUX) {
+      if (!WIN) {
         todo(false, "Enable this test on other platforms.");
         SimpleTest.finish();
         return;
@@ -149,7 +150,6 @@
       gQueue.push(new openFileMenu());
       gQueue.push(new openEditMenu());
       gQueue.push(new closeEditMenu());
-      gQueue.push(new leaveMenubar());
 
       // Alt key is used to active menubar and focus menu item on Windows,
       // other platforms requires setting a ui.key.menuAccessKeyFocuses
@@ -165,7 +165,7 @@
 
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTests);
-  ]]></script>
+  </script>
 
   <hbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">

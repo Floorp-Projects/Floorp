@@ -64,6 +64,7 @@ FRAME_CLASSES = [
     Frame("nsMathMLsemanticsFrame", "None", NOT_LEAF),
     Frame("nsMathMLTokenFrame", "None", NOT_LEAF),
     Frame("nsMenuBarFrame", "Box", NOT_LEAF),
+    Frame("nsMenuFrame", "Menu", NOT_LEAF),
     Frame("nsMenuPopupFrame", "MenuPopup", NOT_LEAF),
     Frame("nsMeterFrame", "Meter", LEAF),
     Frame("nsNumberControlFrame", "TextInput", LEAF),

@@ -66,13 +66,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
       ok(contextmenu.querySelector("[command=cmd_delete]").hasAttribute("disabled"), "delete disabled");
       ok(!contextmenu.querySelector("[command=cmd_selectAll]").hasAttribute("disabled"), "select all enabled");
 
-      let popuphidden = new Promise(r => win.addEventListener("popuphidden", r, { once: true }));
-
-      contextmenu.activateItem(contextmenu.querySelector("[command=cmd_undo]"));
-
-      await popuphidden;
-
+      contextmenu.querySelector("[command=cmd_undo]").click();
       is(element.value, "", "undo worked");
+
+      // Close the context menu to avoid affecting next test
+      let popuphidden = new Promise(r => win.addEventListener("popuphidden", r, { once: true }));
+      contextmenu.hidePopup();
+      await popuphidden;
       contextmenu.remove();
     }
   </script>

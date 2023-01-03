@@ -79,7 +79,7 @@ add_task(async function() {
     ok(target, `tree item found in ${storeName}`);
     await waitForContextMenu(contextMenu, target, () => {
       info(`Opened tree context menu in ${storeName}`);
-      contextMenu.activateItem(menuDeleteAllItem);
+      menuDeleteAllItem.click();
     });
 
     await eventWait;

@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=632379
 <toolbox flex="1">
   <menubar>
     <menu label="MENU" accesskey="m" id="mainMenu">
-      <menupopup maxheight="100" onpopupshown="openSubmenu(this, event)">
+      <menupopup maxheight="100" onpopupshown="openSubmenu()">
         <menu label="menu1" accesskey="1" id="menu1">
           <menupopup onpopupshown="snapshot(this)">
             <menuitem label="item"/>
@@ -178,7 +178,7 @@ var count=0;
 
 function snapshot(elem)
 {
-    info(`snapshot(${elem.parentNode.id}) called`);
+    info("snapshot() called");
     pos[count] = elem.getBoundingClientRect().top;
     info(elem.querySelector("menuitem").getBoundingClientRect().height);
     ++count;
@@ -204,12 +204,11 @@ function doTest() {
     $("mainMenu").open = true;
 }
 
-function openSubmenu(mainMenu, e)
+function openSubmenu()
 {
-    if (e.originalTarget != mainMenu) {
-        return;
+    if (!gFinished) {
+        info("openSubmenu() called");
     }
-    info("openSubmenu() called");
     // open a submenu in the middle
     sendString("5");
 }
