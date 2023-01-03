@@ -3157,34 +3157,34 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
     ExpandInlineRubyBoxes(mRootSpan);
   }
 
-  PerFrameData* startFrame = psd->mFirstFrame;
-  MOZ_ASSERT(startFrame, "empty line?");
-  if (startFrame->mIsMarker) {
-    // ::marker shouldn't participate in bidi reordering nor text alignment.
-    startFrame = startFrame->mNext;
-    MOZ_ASSERT(startFrame, "no frame after ::marker?");
-    MOZ_ASSERT(!startFrame->mIsMarker, "multiple ::markers?");
-  }
-
-  const bool bidi = mPresContext->BidiEnabled() &&
-                    (!mPresContext->IsVisualMode() || lineWM.IsBidiRTL());
-  if (bidi) {
+  if (mPresContext->BidiEnabled() &&
+      (!mPresContext->IsVisualMode() || lineWM.IsBidiRTL())) {
+    PerFrameData* startFrame = psd->mFirstFrame;
+    MOZ_ASSERT(startFrame, "empty line?");
+    if (startFrame->mIsMarker) {
+      // ::marker shouldn't participate in bidi reordering.
+      startFrame = startFrame->mNext;
+      MOZ_ASSERT(startFrame, "no frame after ::marker?");
+      MOZ_ASSERT(!startFrame->mIsMarker, "multiple ::markers?");
+    }
     nsBidiPresUtils::ReorderFrames(startFrame->mFrame, aLine->GetChildCount(),
                                    lineWM, mContainerSize,
                                    psd->mIStart + mTextIndent + dx);
-  }
-
-  if (dx) {
-    // For the bidi case, if startFrame is a ::first-line frame, the mIStart and
-    // mTextIndent offsets will already have been applied to its position, but
-    // we still need to apply the text-align adjustment |dx| to its position.
-    const bool needToAdjustFrames = !bidi || startFrame->mFrame->IsLineFrame();
-    MOZ_ASSERT_IF(startFrame->mFrame->IsLineFrame(), !startFrame->mNext);
-    if (needToAdjustFrames) {
-      for (PerFrameData* pfd = startFrame; pfd; pfd = pfd->mNext) {
-        pfd->mBounds.IStart(lineWM) += dx;
-        pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerSizeForSpan(psd));
+    if (dx) {
+      if (startFrame->mFrame->IsLineFrame()) {
+        // If startFrame is a ::first-line frame, the mIStart and mTextIndent
+        // offsets will already have been applied to its position. But we still
+        // need to apply the text-align adjustment |dx| to its position.
+        startFrame->mBounds.IStart(lineWM) += dx;
+        startFrame->mFrame->SetRect(lineWM, startFrame->mBounds,
+                                    ContainerSizeForSpan(psd));
       }
+      aLine->IndentBy(dx, ContainerSize());
+    }
+  } else if (dx) {
+    for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
+      pfd->mBounds.IStart(lineWM) += dx;
+      pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerSizeForSpan(psd));
     }
     aLine->IndentBy(dx, ContainerSize());
   }
