@@ -39,6 +39,11 @@ private fun BiometricPromptContentPreview() {
     }
 }
 
+/**
+ * Content of the biometric authentication prompt.
+ * @param biometricErrorText Text for an authentication error
+ * @param showBiometricPrompt callback for displaying the OS biometric authentication prompt
+ */
 @Composable
 fun BiometricPromptContent(biometricErrorText: String, showBiometricPrompt: () -> Unit) {
     Column(

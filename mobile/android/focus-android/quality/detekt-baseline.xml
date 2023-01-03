@@ -76,7 +76,6 @@
     <ID>UndocumentedPublicClass:AutocompleteRemoveFragment.kt$AutocompleteRemoveFragment : AutocompleteListFragmentCoroutineScope</ID>
     <ID>UndocumentedPublicClass:BaseFragment.kt$BaseFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:BaseSettingsFragment.kt$BaseSettingsFragment : PreferenceFragmentCompatMenuProvider</ID>
-    <ID>UndocumentedPublicClass:BiometricAuthenticationFragment.kt$BiometricAuthenticationFragment : BaseFragmentAuthenticationDelegate</ID>
     <ID>UndocumentedPublicClass:BrowserMenuController.kt$BrowserMenuController</ID>
     <ID>UndocumentedPublicClass:BrowserToolbarIntegration.kt$BrowserToolbarIntegration : LifecycleAwareFeature</ID>
     <ID>UndocumentedPublicClass:Config.kt$Config</ID>
@@ -276,8 +275,6 @@
     <ID>UndocumentedPublicFunction:AutocompleteListFragment.kt$AutocompleteListFragment.DomainListAdapter$fun selection(): List&lt;String&gt;</ID>
     <ID>UndocumentedPublicFunction:BaseFragment.kt$BaseFragment$fun cancelAnimation()</ID>
     <ID>UndocumentedPublicFunction:BaseFragment.kt$fun Fragment.requestInPlacePermissions( permissionsToRequest: Array&lt;String&gt;, onResult: (Map&lt;String, Boolean&gt;) -&gt; Unit, )</ID>
-    <ID>UndocumentedPublicFunction:BiometricAuthenticationFragment.kt$BiometricAuthenticationFragment.Companion$fun createWithDestinationData(bundle: Bundle? = null): BiometricAuthenticationFragment</ID>
-    <ID>UndocumentedPublicFunction:BiometricAuthenticationFragmentCompose.kt$@Composable fun BiometricPromptContent(biometricErrorText: String, showBiometricPrompt: () -&gt; Unit)</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun crashReporterIsVisible(): Boolean</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun erase(shouldEraseAllTabs: Boolean = false)</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun handleTabCrash(crash: Crash)</ID>
