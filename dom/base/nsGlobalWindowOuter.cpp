@@ -2834,7 +2834,7 @@ bool nsGlobalWindowOuter::AreDialogsEnabled() {
 bool nsGlobalWindowOuter::ConfirmDialogIfNeeded() {
   NS_ENSURE_TRUE(mDocShell, false);
   nsCOMPtr<nsIPromptService> promptSvc =
-      do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+      do_GetService("@mozilla.org/prompter;1");
 
   if (!promptSvc) {
     return true;

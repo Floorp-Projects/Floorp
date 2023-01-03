@@ -39,6 +39,6 @@
  * want more control over the way prompts, alerts, and confirmation dialogs are
  * presented to the user.
  */
-#define NS_PROMPTSERVICE_CONTRACTID "@mozilla.org/embedcomp/prompt-service;1"
+#define NS_PROMPTSERVICE_CONTRACTID "@mozilla.org/prompter;1"
 
 #endif  // NSEMBEDCID_H

@@ -107,7 +107,7 @@ C++ Sync
 .. code-block:: c++
 
       nsCOMPtr<nsIPromptService> promptSvc =
-        do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+        do_GetService("@mozilla.org/prompter;1");
 
       if(!promptSvc) {
         // Error handling
@@ -138,7 +138,7 @@ C++ Async
 .. code-block:: c++
 
       nsCOMPtr<nsIPromptService> promptSvc =
-        do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+        do_GetService("@mozilla.org/prompter;1");
 
       if(!promptSvc) {
         // Error handling

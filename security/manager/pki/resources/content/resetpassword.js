@@ -18,12 +18,8 @@ function resetPassword() {
   } catch (e) {}
 
   let l10n = new Localization(["security/pippki/pippki.ftl"], true);
-  var promptService = Cc[
-    "@mozilla.org/embedcomp/prompt-service;1"
-  ].getService();
-  promptService = promptService.QueryInterface(Ci.nsIPromptService);
-  if (promptService && l10n) {
-    promptService.alert(
+  if (l10n) {
+    Services.prompt.alert(
       window,
       l10n.formatValueSync("pippki-reset-password-confirmation-title"),
       l10n.formatValueSync("pippki-reset-password-confirmation-message")

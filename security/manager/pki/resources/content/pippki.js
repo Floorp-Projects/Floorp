@@ -70,9 +70,7 @@ function alertPromptService(title, message) {
   // XXX Bug 1425832 - Using Services.prompt here causes tests to report memory
   // leaks.
   // eslint-disable-next-line mozilla/use-services
-  var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(
-    Ci.nsIPromptService
-  );
+  var ps = Cc["@mozilla.org/prompter;1"].getService(Ci.nsIPromptService);
   ps.alert(window, title, message);
 }
 

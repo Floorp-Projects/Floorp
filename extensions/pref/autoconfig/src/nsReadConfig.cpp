@@ -43,7 +43,7 @@ static nsresult DisplayError(void) {
   nsresult rv;
 
   nsCOMPtr<nsIPromptService> promptService =
-      do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+      do_GetService("@mozilla.org/prompter;1");
   if (!promptService) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundleService> bundleService =
