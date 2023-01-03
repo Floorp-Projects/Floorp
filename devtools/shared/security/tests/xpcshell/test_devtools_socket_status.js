@@ -3,9 +3,13 @@
 
 "use strict";
 
-const { DevToolsLoader } = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/Loader.sys.mjs"
+const {
+  useDistinctSystemPrincipalLoader,
+  releaseDistinctSystemPrincipalLoader,
+} = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
 );
+
 const { DevToolsSocketStatus } = ChromeUtils.importESModule(
   "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs"
 );
@@ -78,8 +82,10 @@ function checkSocketStatus(expectedExcludeFalse, expectedExcludeTrue) {
 }
 
 async function setupDevToolsServer({ fromBrowserToolbox }) {
-  info("Create a separate loader instance for the DevToolsServer.");
-  const loader = new DevToolsLoader();
+  info("Use the dedicated system principal loader for the DevToolsServer.");
+  const requester = {};
+  const loader = useDistinctSystemPrincipalLoader(requester);
+
   const { DevToolsServer } = loader.require(
     "resource://devtools/server/devtools-server.js"
   );
@@ -95,17 +101,37 @@ async function setupDevToolsServer({ fromBrowserToolbox }) {
 
   const listener = new SocketListener(DevToolsServer, socketOptions);
   ok(listener, "Socket listener created");
-  await listener.open();
-  equal(DevToolsServer.listeningSockets, 1, "1 listening socket");
 
-  return { DevToolsServer, listener };
+  // Note that useDistinctSystemPrincipalLoader will lead to reuse the same
+  // loader if we are creating several servers in a row. The DevToolsServer
+  // singleton might already have sockets opened.
+  const listeningSockets = DevToolsServer.listeningSockets;
+  await listener.open();
+  equal(
+    DevToolsServer.listeningSockets,
+    listeningSockets + 1,
+    "A new listening socket was created"
+  );
+
+  return { DevToolsServer, listener, requester };
 }
 
-function teardownDevToolsServer({ DevToolsServer, listener }) {
+function teardownDevToolsServer({ DevToolsServer, listener, requester }) {
   info("Close the listener socket");
+  const listeningSockets = DevToolsServer.listeningSockets;
   listener.close();
-  equal(DevToolsServer.listeningSockets, 0, "0 listening sockets");
+  equal(
+    DevToolsServer.listeningSockets,
+    listeningSockets - 1,
+    "A listening socket was closed"
+  );
 
-  info("Destroy the temporary devtools server");
-  DevToolsServer.destroy();
+  if (DevToolsServer.listeningSockets == 0) {
+    info("Destroy the temporary devtools server");
+    DevToolsServer.destroy();
+  }
+
+  if (requester) {
+    releaseDistinctSystemPrincipalLoader(requester);
+  }
 }
