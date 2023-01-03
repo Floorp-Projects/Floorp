@@ -51,7 +51,6 @@ function run_test() {
 
     // The below are all Debugger prototype objects.
     Memory: { count: Pattern.NATURAL },
-    Frame: { count: Pattern.NATURAL },
   }).assert(
     saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "objectClass" } })
   );
