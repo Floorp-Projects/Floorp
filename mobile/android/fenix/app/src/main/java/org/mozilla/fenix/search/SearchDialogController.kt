@@ -72,6 +72,7 @@ class SearchDialogController(
     private val clearToolbarFocus: () -> Unit,
     private val focusToolbar: () -> Unit,
     private val clearToolbar: () -> Unit,
+    private val dismissDialogAndGoBack: () -> Unit,
 ) : SearchController {
 
     override fun handleUrlCommitted(url: String, fromHomeScreen: Boolean) {
@@ -135,6 +136,7 @@ class SearchDialogController(
 
     override fun handleEditingCancelled() {
         clearToolbarFocus()
+        dismissDialogAndGoBack()
     }
 
     override fun handleTextChanged(text: String) {

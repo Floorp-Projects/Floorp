@@ -223,13 +223,18 @@ class SearchDialogControllerTest {
     @Test
     fun handleEditingCancelled() = runTest {
         var clearToolbarFocusInvoked = false
+        var dismissAndGoBack = false
         createController(
             clearToolbarFocus = {
                 clearToolbarFocusInvoked = true
             },
+            dismissDialogAndGoBack = {
+                dismissAndGoBack = true
+            },
         ).handleEditingCancelled()
 
         assertTrue(clearToolbarFocusInvoked)
+        assertTrue(dismissAndGoBack)
     }
 
     @Test
@@ -552,6 +557,7 @@ class SearchDialogControllerTest {
         focusToolbar: () -> Unit = { },
         clearToolbar: () -> Unit = { },
         dismissDialog: () -> Unit = { },
+        dismissDialogAndGoBack: () -> Unit = { },
     ): SearchDialogController {
         return SearchDialogController(
             activity = activity,
@@ -564,6 +570,7 @@ class SearchDialogControllerTest {
             clearToolbarFocus = clearToolbarFocus,
             focusToolbar = focusToolbar,
             clearToolbar = clearToolbar,
+            dismissDialogAndGoBack = dismissDialogAndGoBack,
         )
     }
 }
