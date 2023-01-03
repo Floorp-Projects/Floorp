@@ -8,6 +8,7 @@ FINAL_LIBRARY = "xul"
 
 UNIFIED_SOURCES += [
     "OwnedRustBuffer.cpp",
+    "UniFFICallbacks.cpp",
     "UniFFIGeneratedScaffolding.cpp",
     "UniFFIPointer.cpp",
     "UniFFIScaffolding.cpp",
@@ -23,6 +24,7 @@ EXPORTS.mozilla.dom += [
     "OwnedRustBuffer.h",
     "ScaffoldingCall.h",
     "ScaffoldingConverter.h",
+    "UniFFICallbacks.h",
     "UniFFIPointer.h",
     "UniFFIPointerType.h",
     "UniFFIRust.h",

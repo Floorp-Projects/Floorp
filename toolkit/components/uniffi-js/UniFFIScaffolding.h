@@ -20,23 +20,31 @@ using ScaffoldingType = OwningDoubleOrArrayBufferOrUniFFIPointer;
 class UniFFIScaffolding {
  public:
   static already_AddRefed<Promise> CallAsync(
-      const GlobalObject& aUniFFIGlobal, uint64_t aId,
-      const Sequence<ScaffoldingType>& aArgs, ErrorResult& aUniFFIErrorResult);
+      const GlobalObject& aGlobal, uint64_t aId,
+      const Sequence<ScaffoldingType>& aArgs, ErrorResult& aErrorResult);
 
   static void CallSync(
-      const GlobalObject& aUniFFIGlobal, uint64_t aId,
+      const GlobalObject& aGlobal, uint64_t aId,
       const Sequence<ScaffoldingType>& aArgs,
-      RootedDictionary<UniFFIScaffoldingCallResult>& aUniFFIReturnValue,
-      ErrorResult& aUniFFIErrorResult);
+      RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue,
+      ErrorResult& aErrorResult);
 
   static already_AddRefed<UniFFIPointer> ReadPointer(
-      const GlobalObject& aUniFFIGlobal, uint64_t aId,
-      const ArrayBuffer& aArrayBuff, long aPosition, ErrorResult& aError);
+      const GlobalObject& aGlobal, uint64_t aId, const ArrayBuffer& aArrayBuff,
+      long aPosition, ErrorResult& aError);
 
-  static void WritePointer(const GlobalObject& aUniFFIGlobal, uint64_t aId,
+  static void WritePointer(const GlobalObject& aGlobal, uint64_t aId,
                            const UniFFIPointer& aPtr,
                            const ArrayBuffer& aArrayBuff, long aPosition,
                            ErrorResult& aError);
+
+  static void RegisterCallbackHandler(GlobalObject& aGlobal,
+                                      uint64_t interfaceId,
+                                      UniFFICallbackHandler& aCallbackHandler,
+                                      ErrorResult& aError);
+  static void DeregisterCallbackHandler(GlobalObject& aGlobal,
+                                        uint64_t interfaceId,
+                                        ErrorResult& aError);
 };
 
 }  // namespace mozilla::dom

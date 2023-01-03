@@ -33,4 +33,3 @@ class {{ ffi_converter }} extends FfiConverterArrayBuffer {
         return 1 + {{ inner.ffi_converter() }}.computeSize(value)
     }
 }
-

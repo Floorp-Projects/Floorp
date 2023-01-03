@@ -14,7 +14,7 @@ class {{ object.nm() }} {
     }
 
     {%- for cons in object.constructors() %}
-    {%- if cons.is_async() %}
+    {%- if object.is_constructor_async(config) %}
     /**
      * An async constructor for {{ object.nm() }}.
      * 
@@ -29,13 +29,14 @@ class {{ object.nm() }} {
      */
     {%- endif %}
     static {{ cons.nm() }}({{cons.arg_names()}}) {
-        {%- call js::call_constructor(cons, type_) -%}
+        {%- call js::call_constructor(cons, type_, object.is_constructor_async(config)) -%}
     }
     {%- endfor %}
 
     {%- for meth in object.methods() %}
+
     {{ meth.nm() }}({{ meth.arg_names() }}) {
-        {%- call js::call_method(meth, type_, object) -%}
+        {%- call js::call_method(meth, type_, object.is_method_async(meth, config)) %}
     }
     {%- endfor %}
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! Manage the universe of ComponentInterfaces
+//! Manage the universe of ComponentInterfaces / Configs
 //!
 //! uniffi-bindgen-gecko-js is unique because it generates bindings over a set of UDL files rather
 //! than just one.  This is because we want to generate the WebIDL statically rather than generate
@@ -14,39 +14,43 @@
 //! This module manages the list of ComponentInterface and the object ids.
 
 use crate::render::cpp::ComponentInterfaceCppExt;
+use crate::{Config, ConfigMap};
 use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use uniffi_bindgen::interface::{ComponentInterface, FFIFunction, Object};
+use uniffi_bindgen::interface::{CallbackInterface, ComponentInterface, FFIFunction, Object};
 
-pub struct ComponentInterfaceUniverse {
-    ci_list: Vec<ComponentInterface>,
-    fixture_ci_list: Vec<ComponentInterface>,
+pub struct ComponentUniverse {
+    pub components: Vec<(ComponentInterface, Config)>,
+    pub fixture_components: Vec<(ComponentInterface, Config)>,
 }
 
-impl ComponentInterfaceUniverse {
-    pub fn new(udl_files: Vec<Utf8PathBuf>, fixture_udl_files: Vec<Utf8PathBuf>) -> Result<Self> {
-        let ci_list = udl_files
+impl ComponentUniverse {
+    pub fn new(
+        udl_files: Vec<Utf8PathBuf>,
+        fixture_udl_files: Vec<Utf8PathBuf>,
+        config_map: ConfigMap,
+    ) -> Result<Self> {
+        let components = udl_files
             .into_iter()
-            .map(parse_udl_file)
+            .map(|udl_file| parse_udl_file(udl_file, &config_map))
             .collect::<Result<Vec<_>>>()?;
-        let fixture_ci_list = fixture_udl_files
+        let fixture_components = fixture_udl_files
             .into_iter()
-            .map(parse_udl_file)
+            .map(|udl_file| parse_udl_file(udl_file, &config_map))
             .collect::<Result<Vec<_>>>()?;
-        Self::check_udl_namespaces_unique(&ci_list, &fixture_ci_list)?;
-        Ok(Self {
-            ci_list,
-            fixture_ci_list,
-        })
+        let universe = Self {
+            components,
+            fixture_components,
+        };
+        universe.check_udl_namespaces_unique()?;
+        universe.check_callback_interfaces()?;
+        Ok(universe)
     }
 
-    fn check_udl_namespaces_unique(
-        ci_list: &Vec<ComponentInterface>,
-        fixture_ci_list: &Vec<ComponentInterface>,
-    ) -> Result<()> {
+    fn check_udl_namespaces_unique(&self) -> Result<()> {
         let mut set = HashSet::new();
-        for ci in ci_list.iter().chain(fixture_ci_list.iter()) {
+        for ci in self.iter_cis() {
             if !set.insert(ci.namespace()) {
                 bail!("UDL files have duplicate namespace: {}", ci.namespace());
             }
@@ -54,22 +58,39 @@ impl ComponentInterfaceUniverse {
         Ok(())
     }
 
-    pub fn ci_list(&self) -> &Vec<ComponentInterface> {
-        &self.ci_list
+    fn check_callback_interfaces(&self) -> Result<()> {
+        // We don't currently support callback interfaces returning values or throwing errors.
+        for ci in self.iter_cis() {
+            for cbi in ci.callback_interface_definitions() {
+                for method in cbi.methods() {
+                    if method.return_type().is_some() {
+                        bail!("Callback interface method {}.{} throws an error, which is not yet supported", cbi.name(), method.name())
+                    }
+                    if method.throws_type().is_some() {
+                        bail!("Callback interface method {}.{} returns a value, which is not yet supported", cbi.name(), method.name())
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
-    pub fn fixture_ci_list(&self) -> &Vec<ComponentInterface> {
-        &self.fixture_ci_list
-    }
-
-    pub fn iter_all(&self) -> impl Iterator<Item = &ComponentInterface> {
-        self.ci_list.iter().chain(self.fixture_ci_list.iter())
+    pub fn iter_cis(&self) -> impl Iterator<Item = &ComponentInterface> {
+        self.components
+            .iter()
+            .chain(self.fixture_components.iter())
+            .map(|(ci, _)| ci)
     }
 }
 
-fn parse_udl_file(udl_file: Utf8PathBuf) -> Result<ComponentInterface> {
+fn parse_udl_file(
+    udl_file: Utf8PathBuf,
+    config_map: &ConfigMap,
+) -> Result<(ComponentInterface, Config)> {
     let udl = std::fs::read_to_string(&udl_file).context("Error reading UDL file")?;
-    ComponentInterface::from_webidl(&udl).context("Failed to parse UDL")
+    let ci = ComponentInterface::from_webidl(&udl).context("Failed to parse UDL")?;
+    let config = config_map.get(ci.namespace()).cloned().unwrap_or_default();
+    Ok((ci, config))
 }
 
 pub struct FunctionIds<'a> {
@@ -78,10 +99,10 @@ pub struct FunctionIds<'a> {
 }
 
 impl<'a> FunctionIds<'a> {
-    pub fn new(cis: &'a ComponentInterfaceUniverse) -> Self {
+    pub fn new(cis: &'a ComponentUniverse) -> Self {
         Self {
             map: cis
-                .iter_all()
+                .iter_cis()
                 .flat_map(|ci| {
                     ci.exposed_functions()
                         .into_iter()
@@ -111,10 +132,10 @@ pub struct ObjectIds<'a> {
 }
 
 impl<'a> ObjectIds<'a> {
-    pub fn new(cis: &'a ComponentInterfaceUniverse) -> Self {
+    pub fn new(cis: &'a ComponentUniverse) -> Self {
         Self {
             map: cis
-                .iter_all()
+                .iter_cis()
                 .flat_map(|ci| {
                     ci.object_definitions()
                         .iter()
@@ -135,5 +156,38 @@ impl<'a> ObjectIds<'a> {
 
     pub fn name(&self, ci: &ComponentInterface, obj: &Object) -> String {
         format!("{}:{}", ci.namespace(), obj.name())
+    }
+}
+
+pub struct CallbackIds<'a> {
+    // Map (CI namespace, callback name) -> Ids
+    map: HashMap<(&'a str, &'a str), usize>,
+}
+
+impl<'a> CallbackIds<'a> {
+    pub fn new(cis: &'a ComponentUniverse) -> Self {
+        Self {
+            map: cis
+                .iter_cis()
+                .flat_map(|ci| {
+                    ci.callback_interface_definitions()
+                        .iter()
+                        .map(move |cb| (ci.namespace(), cb.name()))
+                })
+                .enumerate()
+                .map(|(i, (namespace, name))| ((namespace, name), i))
+                // Sort using BTreeSet to guarantee the IDs remain stable across runs
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect(),
+        }
+    }
+
+    pub fn get(&self, ci: &ComponentInterface, cb: &CallbackInterface) -> usize {
+        return *self.map.get(&(ci.namespace(), cb.name())).unwrap();
+    }
+
+    pub fn name(&self, ci: &ComponentInterface, cb: &CallbackInterface) -> String {
+        format!("{}:{}", ci.namespace(), cb.name())
     }
 }
