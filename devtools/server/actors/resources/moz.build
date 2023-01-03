@@ -16,6 +16,7 @@ DevToolsModules(
     "error-messages.js",
     "extensions-backgroundscript-status.js",
     "index.js",
+    "last-private-context-exit.js",
     "network-events-content.js",
     "network-events-stacktraces.js",
     "network-events.js",
