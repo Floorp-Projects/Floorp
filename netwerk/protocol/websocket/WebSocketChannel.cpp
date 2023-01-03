@@ -2948,9 +2948,9 @@ nsresult WebSocketChannel::StartWebsocketData() {
                               &WebSocketChannel::NotifyOnStart),
             NS_DISPATCH_NORMAL);
 
-        nsresult rv = self->mConnection
-                          ? self->mConnection->StartReading()
-                          : self->mSocketIn->AsyncWait(self, 0, 0, nullptr);
+        nsresult rv = self->mConnection ? self->mConnection->StartReading()
+                                        : self->mSocketIn->AsyncWait(
+                                              self, 0, 0, self->mIOThread);
         if (NS_FAILED(rv)) {
           self->AbortSession(rv);
         }
@@ -4079,7 +4079,7 @@ WebSocketChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 NS_IMETHODIMP
 WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   LOG(("WebSocketChannel::OnInputStreamReady() %p\n", this));
-  MOZ_ASSERT(mIOThread->IsOnCurrentThread(), "not on right thread");
+  MOZ_DIAGNOSTIC_ASSERT(mIOThread->IsOnCurrentThread(), "not on right thread");
 
   if (!mSocketIn) {  // did we we clean up the socket after scheduling
                      // InputReady?
@@ -4130,7 +4130,7 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 NS_IMETHODIMP
 WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   LOG(("WebSocketChannel::OnOutputStreamReady() %p\n", this));
-  MOZ_ASSERT(mIOThread->IsOnCurrentThread(), "not on right thread");
+  MOZ_DIAGNOSTIC_ASSERT(mIOThread->IsOnCurrentThread(), "not on right thread");
   nsresult rv;
 
   if (!mCurrentOut) PrimeNewOutgoingMessage();
