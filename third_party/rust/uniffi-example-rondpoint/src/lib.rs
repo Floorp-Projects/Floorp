@@ -179,7 +179,7 @@ impl Stringifier {
         value.to_string()
     }
     fn well_known_string(&self, value: String) -> String {
-        format!("uniffi 💚 {}!", value)
+        format!("uniffi 💚 {value}!")
     }
 }
 

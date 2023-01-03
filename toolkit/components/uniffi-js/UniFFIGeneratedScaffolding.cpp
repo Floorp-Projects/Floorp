@@ -2,18 +2,23 @@
 
 #include "nsString.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/dom/UniFFICallbacks.h"
 #include "mozilla/dom/UniFFIScaffolding.h"
 #include "mozilla/dom/ScaffoldingCall.h"
 
 namespace mozilla::uniffi {
 
 using dom::ArrayBuffer;
+using dom::AutoEntryScript;
 using dom::GlobalObject;
 using dom::RootedDictionary;
 using dom::Promise;
 using dom::ScaffoldingType;
 using dom::Sequence;
+using dom::UniFFICallbackHandler;
 using dom::UniFFIPointer;
 using dom::UniFFIScaffoldingCallResult;
 
@@ -52,6 +57,17 @@ const static mozilla::uniffi::UniFFIPointerType kTabsTabsBridgedEnginePointerTyp
   "tabs::TabsBridgedEngine"_ns,
   ffi_tabs_edc9_TabsBridgedEngine_object_free
 };
+
+// Define the data we need per-callback interface
+
+// Define a lookup function for our callback interface info
+Maybe<CallbackInterfaceInfo> UniFFIGetCallbackInterfaceInfo(uint64_t aInterfaceId) {
+    switch(aInterfaceId) {
+
+        default:
+            return Nothing();
+    }
+}
 
 Maybe<already_AddRefed<Promise>> UniFFICallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
   switch (aId) {

@@ -102,7 +102,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/uniffi-rs.git"]
 git = "https://github.com/mozilla/uniffi-rs.git"
-rev = "bb2039f077a29dba0879372a67e764e6ace8e33f"
+rev = "846612a1d4fb5d11e246bf0682da4a499409424c"
 replace-with = "vendored-sources"
 
 [source."https://github.com/rust-minidump/minidump-writer.git"]

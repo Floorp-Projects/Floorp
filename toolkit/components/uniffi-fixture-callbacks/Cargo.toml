@@ -1,5 +1,5 @@
 [package]
-name = "uniffi-fixture-external-types"
+name = "uniffi-fixture-callbacks"
 edition = "2021"
 version = "0.21.0"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
@@ -7,7 +7,6 @@ license = "MPL-2.0"
 publish = false
 
 [dependencies]
-uniffi-example-geometry = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "846612a1d4fb5d11e246bf0682da4a499409424c" }
 uniffi_macros = "0.21"
 uniffi = "0.21"
 thiserror = "1.0"

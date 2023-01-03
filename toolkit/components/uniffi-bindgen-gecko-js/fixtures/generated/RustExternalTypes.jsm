@@ -5,7 +5,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [];
+// Objects intended to be used in the unit tests
+var UnitTestObjs = {};
+
+var EXPORTED_SYMBOLS = ["UnitTestObjs"];
 
 // Write/Read data to/from an ArrayBuffer
 class ArrayBufferDataStream {
@@ -103,7 +106,6 @@ class ArrayBufferDataStream {
         this.pos += 8;
     }
 
-
     readFloat32() {
         let rv = this.dataView.getFloat32(this.pos);
         this.pos += 4;
@@ -179,6 +181,10 @@ function handleRustResult(result, liftCallback, liftErrCallback) {
 class UniFFIError {
     constructor(message) {
         this.message = message;
+    }
+
+    toString() {
+        return `UniFFIError: ${this.message}`
     }
 }
 
@@ -324,20 +330,20 @@ EXPORTED_SYMBOLS.push("FfiConverterTypePoint");
 
 function gradient(value) {
     
-    const liftResult = (result) => FfiConverterF64.lift(result);
-    const liftError = null;
-    const functionCall = () => {
-        FfiConverterOptionalTypeLine.checkType("value", value);
-        return UniFFIScaffolding.callAsync(
-            108, // external_types:external_types_54cc_gradient
-            FfiConverterOptionalTypeLine.lower(value),
-        )
-    }
-    try {
-        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-    }  catch (error) {
-        return Promise.reject(error)
-    }
+        const liftResult = (result) => FfiConverterF64.lift(result);
+        const liftError = null;
+        const functionCall = () => {
+            FfiConverterOptionalTypeLine.checkType("value", value);
+            return UniFFIScaffolding.callAsync(
+                110, // external_types:external_types_54cc_gradient
+                FfiConverterOptionalTypeLine.lower(value),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
 }
 
 EXPORTED_SYMBOLS.push("gradient");
