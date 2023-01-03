@@ -518,7 +518,12 @@ You can set this by specifying --test-url URL
     def _download_and_extract_symbols(self):
         dirs = self.query_abs_dirs()
         if self.config.get("download_symbols") == "ondemand":
-            self.symbols_url = self.query_symbols_url()
+            self.symbols_url = self.retry(
+                action=self.query_symbols_url,
+                kwargs={"raise_on_failure": True},
+                sleeptime=10,
+                failure_status=None,
+            )
             self.symbols_path = self.symbols_url
             return
 
