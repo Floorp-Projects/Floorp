@@ -7,6 +7,7 @@
 TEST_DIRS += ["datamodel"]
 
 UNIFIED_SOURCES = [
+    "QuotaManagerDependencyFixture.cpp",
     "TestFileSystemHashSource.cpp",
 ]
 

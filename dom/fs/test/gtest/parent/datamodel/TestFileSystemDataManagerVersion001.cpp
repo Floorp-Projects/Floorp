@@ -9,6 +9,7 @@
 #include "FileSystemDatabaseManagerVersion001.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
+#include "QuotaManagerDependencyFixture.h"
 #include "ResultStatement.h"
 #include "SchemaVersion001.h"
 #include "TestHelpers.h"
@@ -193,8 +194,10 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
   dm->Close();
 }
 
-TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
-{
+class TestDataManagerVersion001EntryRemoval
+    : public QuotaManagerDependencyFixture {};
+
+TEST_F(TestDataManagerVersion001EntryRemoval, smokeTestCreateRemoveFiles) {
   nsresult rv = NS_OK;
   // Ensure that FileSystemDataManager lives for the lifetime of the test
   RefPtr<MockFileSystemDataManager> datamanager;
@@ -303,9 +306,11 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
   ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
 
   // If recursion is allowed, the new directory goes away.
-  TEST_TRY_UNWRAP(bool isDeleted,
-                  dm->RemoveDirectory(secondChildMeta, /* recursive */ true));
-  ASSERT_TRUE(isDeleted);
+  PerformOnIOThread([dmPtr = dm.get(), child = secondChildMeta]() {
+    TEST_TRY_UNWRAP(bool isDeleted,
+                    dmPtr->RemoveDirectory(child, /* recursive */ true));
+    ASSERT_TRUE(isDeleted);
+  });
 
   // The file under the removed directory is no longer accessible.
   TEST_TRY_UNWRAP_ERR(rv,
