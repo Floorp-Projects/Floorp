@@ -433,7 +433,7 @@ impl FirefoxOptions {
             rv.log = FirefoxOptions::load_log(options)?;
             rv.prefs = FirefoxOptions::load_prefs(options)?;
             if let Some(profile) = FirefoxOptions::load_profile(
-                settings.profile_root.as_ref().map(|x| x.as_path()),
+                settings.profile_root.as_deref(),
                 options,
             )? {
                 rv.profile = ProfileType::Path(profile);

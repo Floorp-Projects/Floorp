@@ -189,14 +189,14 @@ impl MarionetteHandler {
                 options,
                 marionette_port,
                 websocket_port,
-                self.settings.profile_root.as_ref().map(|x| x.as_path()),
+                self.settings.profile_root.as_deref(),
             )?)
         } else if !self.settings.connect_existing {
             Browser::Local(LocalBrowser::new(
                 options,
                 marionette_port,
                 self.settings.jsdebugger,
-                self.settings.profile_root.as_ref().map(|x| x.as_path()),
+                self.settings.profile_root.as_deref(),
             )?)
         } else {
             Browser::Existing(marionette_port)
@@ -296,7 +296,7 @@ struct MarionetteSession {
 
 impl MarionetteSession {
     fn new(session_id: Option<String>, capabilities: Map<String, Value>) -> MarionetteSession {
-        let initital_id = session_id.unwrap_or_else(|| "".to_string());
+        let initital_id = session_id.unwrap_or_default();
         MarionetteSession {
             session_id: initital_id,
             capabilities,
@@ -1273,7 +1273,7 @@ impl MarionetteConnection {
     }
 
     fn send(&mut self, data: String) -> WebDriverResult<String> {
-        if self.stream.write(&*data.as_bytes()).is_err() {
+        if self.stream.write(data.as_bytes()).is_err() {
             let mut err = WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Failed to write request to stream",
@@ -1354,7 +1354,7 @@ impl ToMarionette<Map<String, Value>> for AddonInstallParameters {
         if self.temporary.is_some() {
             data.insert(
                 "temporary".to_string(),
-                serde_json::to_value(&self.temporary)?,
+                serde_json::to_value(self.temporary)?,
             );
         }
         Ok(data)

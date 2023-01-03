@@ -291,7 +291,7 @@ impl AndroidHandler {
     {
         // To configure GeckoView, we use the automation techniques documented at
         // https://mozilla.github.io/geckoview/consumer/docs/automation.
-        #[derive(Serialize, Deserialize, PartialEq, Debug)]
+        #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
         pub struct Config {
             pub env: Mapping,
             pub args: Vec<String>,

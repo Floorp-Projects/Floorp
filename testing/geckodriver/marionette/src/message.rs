@@ -32,7 +32,7 @@ impl Command {
     }
 
     fn first_entry(&self) -> (String, serde_json::Value) {
-        match serde_json::to_value(&self).unwrap() {
+        match serde_json::to_value(self).unwrap() {
             Value::String(cmd) => (cmd, Value::Object(Map::new())),
             Value::Object(items) => {
                 let mut iter = items.iter();

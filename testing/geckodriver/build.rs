@@ -79,11 +79,11 @@ impl Hg {
 
 impl BuildInfo for Hg {
     fn hash(&self) -> Option<String> {
-        self.exec(&["log", "-r.", "-T{node|short}"])
+        self.exec(["log", "-r.", "-T{node|short}"])
     }
 
     fn date(&self) -> Option<String> {
-        self.exec(&["log", "-r.", "-T{date|isodate}"])
+        self.exec(["log", "-r.", "-T{date|isodate}"])
     }
 }
 
@@ -105,13 +105,13 @@ impl Git {
     }
 
     fn to_hg_sha(&self, git_sha: String) -> Option<String> {
-        self.exec(&["cinnabar", "git2hg", &git_sha])
+        self.exec(["cinnabar", "git2hg", &git_sha])
     }
 }
 
 impl BuildInfo for Git {
     fn hash(&self) -> Option<String> {
-        self.exec(&["rev-parse", "HEAD"])
+        self.exec(["rev-parse", "HEAD"])
             .and_then(|sha| self.to_hg_sha(sha))
             .map(|mut s| {
                 s.truncate(12);
@@ -120,7 +120,7 @@ impl BuildInfo for Git {
     }
 
     fn date(&self) -> Option<String> {
-        self.exec(&["log", "-1", "--date=short", "--pretty=format:%cd"])
+        self.exec(["log", "-1", "--date=short", "--pretty=format:%cd"])
     }
 }
 

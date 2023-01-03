@@ -17,6 +17,7 @@ use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 
 /// A running Gecko instance.
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum Browser {
     Local(LocalBrowser),
     Remote(RemoteBrowser),
@@ -482,7 +483,7 @@ mod tests {
         let prefs_path = initial_prefs.path.clone();
 
         let mut conflicting_backup_path = initial_prefs.path.clone();
-        conflicting_backup_path.set_extension("geckodriver_backup".to_string());
+        conflicting_backup_path.set_extension("geckodriver_backup");
         println!("{:?}", conflicting_backup_path);
         let mut file = File::create(&conflicting_backup_path).unwrap();
         file.write_all(b"test").unwrap();
@@ -501,7 +502,7 @@ mod tests {
 
         assert!(user_prefs.path.exists());
         let mut backup_path = user_prefs.path.clone();
-        backup_path.set_extension("geckodriver_backup_1".to_string());
+        backup_path.set_extension("geckodriver_backup_1");
 
         assert!(backup_path.exists());
 

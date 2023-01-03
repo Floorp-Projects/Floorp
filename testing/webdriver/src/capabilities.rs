@@ -319,10 +319,10 @@ impl SpecNewSessionParameters {
                 })?;
 
                 if url.username() != ""
-                    || url.password() != None
+                    || url.password().is_some()
                     || url.path() != "/"
-                    || url.query() != None
-                    || url.fragment() != None
+                    || url.query().is_some()
+                    || url.fragment().is_some()
                 {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
@@ -471,7 +471,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                             let version_cond = value.as_str().unwrap_or("");
                             if let Some(version) = browserValue {
                                 if !browser_capabilities
-                                    .compare_browser_version(&*version, version_cond)
+                                    .compare_browser_version(&version, version_cond)
                                     .unwrap_or(false)
                                 {
                                     return false;

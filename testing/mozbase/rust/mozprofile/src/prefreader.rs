@@ -294,7 +294,7 @@ impl<'a> PrefTokenizer<'a> {
                         break;
                     }
                 }
-                self.position.column = (self.pos - col_pos as usize) as u32;
+                self.position.column = (self.pos - col_pos) as u32;
             } else {
                 self.position.column -= 1;
             }
@@ -810,7 +810,7 @@ pub fn serialize_token<T: Write>(token: &PrefToken, output: &mut T) -> Result<()
             &*data_buf
         }
         PrefToken::Int(data, _) => {
-            data_buf.push_str(&*data.to_string());
+            data_buf.push_str(&data.to_string());
             &*data_buf
         }
         PrefToken::Bool(data, _) => {
