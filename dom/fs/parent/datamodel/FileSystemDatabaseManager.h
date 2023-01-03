@@ -43,6 +43,13 @@ class FileSystemDatabaseManager {
   virtual Result<int64_t, QMResult> GetUsage() const = 0;
 
   /**
+   * @brief Refreshes the stored file size.
+   *
+   * @param aEntry EntryId of the file whose size is refreshed.
+   */
+  virtual nsresult UpdateUsage(const EntryId& aEntry) = 0;
+
+  /**
    * @brief Returns directory identifier, optionally creating it if it doesn't
    * exist
    *

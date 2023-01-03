@@ -47,6 +47,8 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
 
   virtual Result<int64_t, QMResult> GetUsage() const override;
 
+  virtual nsresult UpdateUsage(const EntryId& aEntry) override;
+
   virtual Result<EntryId, QMResult> GetOrCreateDirectory(
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
 
