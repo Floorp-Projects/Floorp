@@ -524,12 +524,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
         if self.symbols_url:
             return self.symbols_url
 
-        # Use simple text substitution to determine the symbols_url from the
-        # installer_url. This will not always work: For signed builds, the
-        # installer_url is likely an artifact in a signing task, which may not
-        # have a symbols artifact. It might be better to use the test target
-        # preferentially, like query_prefixed_build_dir_url() does (for future
-        # consideration, if this code proves troublesome).
         symbols_url = None
         self.info("finding symbols_url based upon self.installer_url")
         if self.installer_url:
