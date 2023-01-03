@@ -4,6 +4,7 @@ file-perm:
     include:
         - .
     extensions:
+        - .build
         - .c
         - .cc
         - .cpp
@@ -19,7 +20,7 @@ file-perm:
         - .md
         - .mjs
         - .mm
-        - .build
+        - .mozbuild
         - .mp4
         - .png
         - .rs

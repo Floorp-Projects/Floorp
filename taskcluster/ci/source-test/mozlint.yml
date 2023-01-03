@@ -491,6 +491,7 @@ file-perm:
         mach: lint -v -l file-perm -f treeherder -f json:/builds/worker/mozlint.json *
     when:
         files-changed:
+            - '**/*.build'
             - '**/*.c'
             - '**/*.cc'
             - '**/*.cpp'
@@ -506,7 +507,7 @@ file-perm:
             - '**/*.md'
             - '**/*.mjs'
             - '**/*.mm'
-            - '**/*.build'
+            - '**/*.mozbuild'
             - '**/*.mp4'
             - '**/*.png'
             - '**/*.rs'
