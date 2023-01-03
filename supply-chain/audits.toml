@@ -2458,6 +2458,18 @@ also contains a small C file compiled at build-time. I audited all of it and it
 looks correct.
 """
 
+[[audits.winreg]]
+who = "Ray Kraesig <rkraesig@mozilla.com>"
+criteria = "safe-to-run"
+version = "0.10.1"
+notes = """
+This crate uses a lot of `unsafe`; not all of it is necessary, and not all of it
+is correct. (In particular, the alignment of data buffers does not seem to be
+correctly ensured at type-conversion time.) However, the code is not deceptive,
+and any more subtle issues do not appear to be exploitable -- certainly not from
+a test environment.
+"""
+
 [[audits.wpf-gpu-raster]]
 who = "Lee Salzman <lsalzman@mozilla.com>"
 criteria = "safe-to-deploy"
