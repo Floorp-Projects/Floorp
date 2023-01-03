@@ -11,10 +11,19 @@
 #include "nsWindow.h"
 #include "nsIGfxInfo.h"
 #include "mozilla/Components.h"
+#include "nsGtkKeyUtils.h"
 
 #include <gtk/gtk.h>
 #include <dlfcn.h>
 #include <glib.h>
+
+#ifdef MOZ_LOGGING
+#  include "mozilla/Logging.h"
+extern mozilla::LazyLogModule gWidgetLog;
+#  define LOGW(...) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#else
+#  define LOGW(...)
+#endif /* MOZ_LOGGING */
 
 namespace mozilla::widget {
 
@@ -192,5 +201,107 @@ nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {
   g_strfreev(uris);
   return result;
 }
+
+#ifdef MOZ_WAYLAND
+static gboolean token_failed(gpointer aData);
+
+class XDGTokenRequest {
+ public:
+  void SetTokenID(const char* aTokenID) {
+    mTransferPromise->Resolve(aTokenID, __func__);
+  }
+  void Cancel() {
+    mTransferPromise->Reject(false, __func__);
+    mActivationTimeoutID = 0;
+  }
+
+  XDGTokenRequest(xdg_activation_token_v1* aXdgToken,
+                  RefPtr<FocusRequestPromise::Private> aTransferPromise)
+      : mXdgToken(aXdgToken), mTransferPromise(std::move(aTransferPromise)) {
+    mActivationTimeoutID =
+        g_timeout_add(sActivationTimeout, token_failed, this);
+  }
+  ~XDGTokenRequest() {
+    MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy);
+    if (mActivationTimeoutID) {
+      g_source_remove(mActivationTimeoutID);
+    }
+  }
+
+ private:
+  xdg_activation_token_v1* mXdgToken;
+  RefPtr<FocusRequestPromise::Private> mTransferPromise;
+  guint mActivationTimeoutID;
+  // Reject FocusRequestPromise if we don't get XDG token in 0.5 sec.
+  static constexpr int sActivationTimeout = 500;
+};
+
+// Failed to get token in time
+static gboolean token_failed(gpointer data) {
+  UniquePtr<XDGTokenRequest> request(static_cast<XDGTokenRequest*>(data));
+  request->Cancel();
+  return false;
+}
+
+// We've got activation token from Wayland compositor so it's time to use it.
+static void token_done(gpointer data, struct xdg_activation_token_v1* provider,
+                       const char* tokenID) {
+  UniquePtr<XDGTokenRequest> request(static_cast<XDGTokenRequest*>(data));
+  request->SetTokenID(tokenID);
+}
+
+static const struct xdg_activation_token_v1_listener token_listener = {
+    token_done,
+};
+
+RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
+  if (!GdkIsWaylandDisplay() || !nsWindow::GetFocusedWindow() ||
+      nsWindow::GetFocusedWindow()->IsDestroyed()) {
+    return nullptr;
+  }
+
+  RefPtr<nsWindow> sourceWindow = nsWindow::GetFocusedWindow();
+  if (!sourceWindow) {
+    return nullptr;
+  }
+
+  RefPtr<nsWaylandDisplay> display = WaylandDisplayGet();
+  xdg_activation_v1* xdg_activation = display->GetXdgActivation();
+  if (!xdg_activation) {
+    return nullptr;
+  }
+
+  wl_surface* focusSurface;
+  uint32_t focusSerial;
+  KeymapWrapper::GetFocusInfo(&focusSurface, &focusSerial);
+  if (!focusSurface) {
+    return nullptr;
+  }
+
+  GdkWindow* gdkWindow = gtk_widget_get_window(sourceWindow->GetGtkWidget());
+  if (!gdkWindow) {
+    return nullptr;
+  }
+  wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWindow);
+  if (focusSurface != surface) {
+    return nullptr;
+  }
+
+  RefPtr<FocusRequestPromise::Private> transferPromise =
+      new FocusRequestPromise::Private(__func__);
+
+  xdg_activation_token_v1* aXdgToken =
+      xdg_activation_v1_get_activation_token(xdg_activation);
+  xdg_activation_token_v1_add_listener(
+      aXdgToken, &token_listener,
+      new XDGTokenRequest(aXdgToken, transferPromise));
+  xdg_activation_token_v1_set_serial(aXdgToken, focusSerial,
+                                     KeymapWrapper::GetSeat());
+  xdg_activation_token_v1_set_surface(aXdgToken, focusSurface);
+  xdg_activation_token_v1_commit(aXdgToken);
+
+  return transferPromise.forget();
+}
+#endif
 
 }  // namespace mozilla::widget
