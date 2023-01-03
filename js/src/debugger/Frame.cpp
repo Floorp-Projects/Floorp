@@ -227,8 +227,8 @@ bool DebuggerFrame::hasAnyHooks() const {
 NativeObject* DebuggerFrame::initClass(JSContext* cx,
                                        Handle<GlobalObject*> global,
                                        HandleObject dbgCtor) {
-  return InitClass(cx, dbgCtor, nullptr, &class_, construct, 0, properties_,
-                   methods_, nullptr, nullptr);
+  return InitClass(cx, dbgCtor, &class_, nullptr, "Frame", construct, 0,
+                   properties_, methods_, nullptr, nullptr);
 }
 
 /* static */
