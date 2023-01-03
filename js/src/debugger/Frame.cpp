@@ -171,7 +171,14 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, Handle<DebuggerFrame*> frame,
 
 size_t ScriptedOnPopHandler::allocSize() const { return sizeof(*this); }
 
+// The Debugger.Frame.prototype object also has a class of
+// DebuggerFrame::class_ so we differentiate instances from the prototype
+// based on the presence of an owner debugger.
+bool js::DebuggerFrame::isInstance() const {
+  return !getReservedSlot(OWNER_SLOT).isUndefined();
+}
 js::Debugger* js::DebuggerFrame::owner() const {
+  MOZ_ASSERT(isInstance());
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
   return Debugger::fromJSObject(dbgobj);
 }
@@ -220,8 +227,8 @@ bool DebuggerFrame::hasAnyHooks() const {
 NativeObject* DebuggerFrame::initClass(JSContext* cx,
                                        Handle<GlobalObject*> global,
                                        HandleObject dbgCtor) {
-  return InitClass(cx, dbgCtor, nullptr, nullptr, "Frame", construct, 0,
-                   properties_, methods_, nullptr, nullptr);
+  return InitClass(cx, dbgCtor, nullptr, &class_, construct, 0, properties_,
+                   methods_, nullptr, nullptr);
 }
 
 /* static */
@@ -1243,7 +1250,18 @@ DebuggerFrame* DebuggerFrame::check(JSContext* cx, HandleValue thisv) {
     return nullptr;
   }
 
-  return &thisobj->as<DebuggerFrame>();
+  Rooted<DebuggerFrame*> frame(cx, &thisobj->as<DebuggerFrame>());
+
+  // Forbid Debugger.Frame.prototype, which is of class DebuggerFrame::class_
+  // but isn't really a working Debugger.Frame object.
+  if (!frame->isInstance()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
+                              "method", "prototype object");
+    return nullptr;
+  }
+
+  return frame;
 }
 
 struct MOZ_STACK_CLASS DebuggerFrame::CallData {

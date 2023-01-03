@@ -67,7 +67,7 @@ static const JSFunctionSpec ptestFunctions[] = {
 static JSObject* initialize(JSContext* cx) {
   js::SetContextProfilingStack(cx, &profilingStack);
   JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-  return JS_InitClass(cx, global, nullptr, nullptr, "Prof", Prof, 0, nullptr,
+  return JS_InitClass(cx, global, nullptr, &ptestClass, Prof, 0, nullptr,
                       ptestFunctions, nullptr, nullptr);
 }
 

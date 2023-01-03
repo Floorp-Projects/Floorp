@@ -73,8 +73,8 @@ const JSClass DebuggerSource::class_ = {
 NativeObject* DebuggerSource::initClass(JSContext* cx,
                                         Handle<GlobalObject*> global,
                                         HandleObject debugCtor) {
-  return InitClass(cx, debugCtor, nullptr, nullptr, "Source", construct, 0,
-                   properties_, methods_, nullptr, nullptr);
+  return InitClass(cx, debugCtor, nullptr, &class_, construct, 0, properties_,
+                   methods_, nullptr, nullptr);
 }
 
 /* static */
@@ -95,6 +95,7 @@ DebuggerSource* DebuggerSource::create(JSContext* cx, HandleObject proto,
 }
 
 Debugger* DebuggerSource::owner() const {
+  MOZ_ASSERT(isInstance());
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
   return Debugger::fromJSObject(dbgobj);
 }
@@ -146,7 +147,16 @@ DebuggerSource* DebuggerSource::check(JSContext* cx, HandleValue thisv) {
     return nullptr;
   }
 
-  return &thisobj->as<DebuggerSource>();
+  DebuggerSource* thisSourceObj = &thisobj->as<DebuggerSource>();
+
+  if (!thisSourceObj->isInstance()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INCOMPATIBLE_PROTO, "Debugger.Source",
+                              "method", "prototype object");
+    return nullptr;
+  }
+
+  return thisSourceObj;
 }
 
 struct MOZ_STACK_CLASS DebuggerSource::CallData {
