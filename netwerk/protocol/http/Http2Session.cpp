@@ -1285,7 +1285,8 @@ void Http2Session::RemoveStreamFromQueues(Http2StreamBase* aStream) {
   RemoveStreamFromQueue(aStream, mSlowConsumersReadyForRead);
 }
 
-void Http2Session::CloseStream(Http2StreamBase* aStream, nsresult aResult) {
+void Http2Session::CloseStream(Http2StreamBase* aStream, nsresult aResult,
+                               bool aRemoveFromQueue) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG3(("Http2Session::CloseStream %p %p 0x%x %" PRIX32 "\n", this, aStream,
         aStream->StreamID(), static_cast<uint32_t>(aResult)));
@@ -1299,7 +1300,9 @@ void Http2Session::CloseStream(Http2StreamBase* aStream, nsresult aResult) {
     mInputFrameDataStream = nullptr;
   }
 
-  RemoveStreamFromQueues(aStream);
+  if (aRemoveFromQueue) {
+    RemoveStreamFromQueues(aStream);
+  }
 
   // Send the stream the close() indication
   aStream->CloseStream(aResult);
@@ -2189,7 +2192,7 @@ nsresult Http2Session::RecvGoAway(Http2Session* self) {
     if (self->mPeerGoAwayReason == HTTP_1_1_REQUIRED) {
       stream->DisableSpdy();
     }
-    self->CloseStream(stream, NS_ERROR_NET_RESET);
+    self->CloseStream(stream, NS_ERROR_NET_RESET, false);
     self->mStreamTransactionHash.Remove(stream->Transaction());
   }
   self->mQueuedStreams.Clear();
