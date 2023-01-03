@@ -2,7 +2,12 @@
 
 SCRIPT_DIR="dom/media/webrtc/third_party_build"
 
-CONFIG_PATH=~/config_env
+# Allow user to override default path to config_env
+if [ "x$CONFIG_PATH" = "x" ]; then
+  CONFIG_PATH=~/config_env
+  echo "Using default CONFIG_PATH=$CONFIG_PATH"
+fi
+
 if [ ! -f $CONFIG_PATH ]; then
   echo "Missing $CONFIG_PATH"
   echo "Please copy $SCRIPT_DIR/example_config_env"
