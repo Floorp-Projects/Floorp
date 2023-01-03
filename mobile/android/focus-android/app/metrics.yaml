@@ -1697,6 +1697,21 @@ notifications:
       - android-probes@mozilla.com
       - rtestard@mozilla.com
     expires: never
+  permission_granted:
+    type: boolean
+    description: |
+      True if notifications are allowed from OS settings, otherwise false.
+      Prior to Android 13, notifications were allowed by default;
+      starting with Android 13,the user must explicitly grant the permission.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803358
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/475
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 123
 
 app_shortcuts:
   just_erase_button_tapped:

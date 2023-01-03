@@ -6,7 +6,9 @@ package org.mozilla.focus.telemetry
 
 import android.content.Context
 import android.os.Build
+import android.os.RemoteException
 import androidx.annotation.VisibleForTesting
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.IO
@@ -17,6 +19,7 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.Glean
 import mozilla.telemetry.glean.config.Configuration
 import org.mozilla.focus.BuildConfig
@@ -26,6 +29,7 @@ import org.mozilla.focus.GleanMetrics.GleanBuildInfo
 import org.mozilla.focus.GleanMetrics.LegacyIds
 import org.mozilla.focus.GleanMetrics.Metrics
 import org.mozilla.focus.GleanMetrics.MozillaProducts
+import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.GleanMetrics.Pings
 import org.mozilla.focus.GleanMetrics.Preferences
 import org.mozilla.focus.GleanMetrics.Shortcuts
@@ -146,6 +150,14 @@ class GleanMetricsService(context: Context) : MetricsService {
             }
         if (currentTheme.isNotEmpty()) {
             Preferences.userTheme.set(currentTheme)
+        }
+
+        try {
+            Notifications.permissionGranted.set(
+                NotificationManagerCompat.from(context).areNotificationsEnabled(),
+            )
+        } catch (e: RemoteException) {
+            Logger.warn("Failed to check notifications state", e)
         }
     }
 
