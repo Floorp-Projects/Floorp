@@ -307,7 +307,7 @@ class AwsyTestCase(MarionetteTestCase):
         page_to_load = self.urls()[self._pages_loaded % len(self.urls())]
         tabs_loaded = len(self._tabs)
         open_tab_script = r"""
-            gBrowser.loadOneTab("about:blank", {
+            gBrowser.addTab("about:blank", {
                 inBackground: false,
                 triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
             });

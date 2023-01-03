@@ -1529,13 +1529,13 @@ class nsContextMenu {
       // We might also not have a tabBrowser reference (if this isn't in a
       // a tabbrowser scope) or might have a fake/stub tabbrowser reference
       // (in the sidebar). Deal with those cases:
-      if (!tabBrowser || !tabBrowser.loadOneTab || !window.toolbar.visible) {
+      if (!tabBrowser || !tabBrowser.addTab || !window.toolbar.visible) {
         // This returns only non-popup browser windows by default.
         let browserWindow = BrowserWindowTracker.getTopWindow();
         tabBrowser = browserWindow.gBrowser;
       }
       let relatedToCurrent = gBrowser && gBrowser.selectedBrowser == browser;
-      let tab = tabBrowser.loadOneTab("about:blank", {
+      let tab = tabBrowser.addTab("about:blank", {
         relatedToCurrent,
         inBackground: inNewWindow,
         skipAnimation: inNewWindow,

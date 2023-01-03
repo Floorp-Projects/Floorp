@@ -35,7 +35,7 @@ function promiseNewChannelResponse(uri) {
     "test-remote-troubleshooting-backchannel",
     uri
   );
-  let tab = gBrowser.loadOneTab(uri.spec, {
+  let tab = gBrowser.addTab(uri.spec, {
     inBackground: false,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });

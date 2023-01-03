@@ -61,7 +61,7 @@
         unexpected: [[EVENT_SCROLLING_START, matchesAnchorJumpInTabDocument(1)]],
       }, "Load background tab, don't dispatch scroll to anchor event");
 
-      tabBrowser().loadOneTab(URL, {
+      tabBrowser().addTab(URL, {
         referrerURI: null,
         charset: "",
         postData: null,
