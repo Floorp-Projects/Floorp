@@ -11,13 +11,10 @@
 #ifndef nsMenuBarFrame_h__
 #define nsMenuBarFrame_h__
 
-#include "mozilla/Attributes.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
-#include "nsMenuFrame.h"
 #include "nsMenuBarListener.h"
-#include "nsMenuParent.h"
 
 class nsIContent;
 
@@ -25,79 +22,42 @@ namespace mozilla {
 class PresShell;
 namespace dom {
 class KeyboardEvent;
+class XULMenuParentElement;
 }  // namespace dom
 }  // namespace mozilla
 
 nsIFrame* NS_NewMenuBarFrame(mozilla::PresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);
 
-class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent {
+class nsMenuBarFrame final : public nsBoxFrame {
  public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuBarFrame)
 
   explicit nsMenuBarFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
-  // nsMenuParent interface
-  virtual nsMenuFrame* GetCurrentMenuItem() override;
-  NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem) override;
-  virtual void CurrentMenuIsBeingDestroyed() override;
-  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem,
-                            bool aFromKey) override;
-
-  NS_IMETHOD SetActive(bool aActiveFlag) override;
-
-  virtual bool IsMenuBar() override { return true; }
-  virtual bool IsContextMenu() override { return false; }
-  virtual bool IsActive() override { return mIsActive; }
-  virtual bool IsMenu() override { return false; }
-  virtual bool IsOpen() override {
-    // menubars are considered always open
-    return true;
-  }
-
-  bool IsMenuOpen() { return mCurrentMenu && mCurrentMenu->IsOpen(); }
-
   void InstallKeyboardNavigator();
   void RemoveKeyboardNavigator();
+  MOZ_CAN_RUN_SCRIPT void MenuClosed();
 
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
-
-  virtual void LockMenuUntilClosed(bool aLock) override {}
-  virtual bool IsMenuLocked() override { return false; }
-
-  // Non-interface helpers
-
-  // The 'stay active' flag is set when navigating from one top-level menu
-  // to another, to prevent the menubar from deactivating and submenus from
-  // firing extra DOMMenuItemActive events.
-  bool GetStayActive() { return mStayActive; }
-  void SetStayActive(bool aStayActive) { mStayActive = aStayActive; }
-
-  // Called when a menu on the menu bar is clicked on. Returns a menu if one
-  // needs to be closed.
-  nsMenuFrame* ToggleMenuActiveState();
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   bool IsActiveByKeyboard() { return mActiveByKeyboard; }
   void SetActiveByKeyboard() { mActiveByKeyboard = true; }
+  MOZ_CAN_RUN_SCRIPT void SetActive(bool aActive);
+  bool IsActive() const { return mIsActive; }
 
-  // indicate that a menu on the menubar was closed. Returns true if the caller
-  // may deselect the menuitem.
-  virtual bool MenuClosed() override;
+  mozilla::dom::XULMenuParentElement& MenubarElement() const;
 
   // Called when Enter is pressed while the menubar is focused. If the current
   // menu is open, let the child handle the key.
-  nsMenuFrame* Enter(mozilla::WidgetGUIEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT void HandleEnterKeyPress(mozilla::WidgetEvent&);
 
-  // Used to handle ALT+key combos
-  nsMenuFrame* FindMenuWithShortcut(mozilla::dom::KeyboardEvent* aKeyEvent,
-                                    bool aPeek);
-
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     // Override bogus IsFrameOfType in nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
       return false;
@@ -105,7 +65,7 @@ class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent {
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"MenuBar"_ns, aResult);
   }
 #endif
@@ -114,19 +74,10 @@ class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent {
   RefPtr<nsMenuBarListener> mMenuBarListener;  // The listener that tells us
                                                // about key and mouse events.
 
-  // flag that is temporarily set when switching from one menu on the menubar to
-  // another to indicate that the menubar should not be deactivated.
-  bool mStayActive;
-
-  bool mIsActive;  // Whether or not the menu bar is active (a menu item is
-                   // highlighted or shown).
-
-  // whether the menubar was made active via the keyboard.
-  bool mActiveByKeyboard;
-
-  // The current menu that is active (highlighted), which may not be open. This
-  // will be null if no menu is active.
-  nsMenuFrame* mCurrentMenu;
+  bool mIsActive = false;  // Whether or not the menu bar is active (a menu item
+                           // is highlighted or shown).
+  // Whether the menubar was made active via the keyboard.
+  bool mActiveByKeyboard = false;
 };  // class nsMenuBarFrame
 
 #endif

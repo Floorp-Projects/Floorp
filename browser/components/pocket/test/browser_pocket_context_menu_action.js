@@ -32,7 +32,7 @@ add_task(async function() {
     "popupshown",
     true
   );
-  contextPocket.click();
+  contextMenu.activateItem(contextPocket);
   await pocketPanelShown;
   checkElements(true, ["customizationui-widget-panel"]);
 

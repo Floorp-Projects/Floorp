@@ -84,7 +84,7 @@ add_task(async function() {
     const cell = getRowCells(rowName)[cellToClick];
     await waitForContextMenu(contextMenu, cell, () => {
       info(`Opened context menu in ${storeName}, row '${rowName}'`);
-      menuDeleteAllItem.click();
+      contextMenu.activateItem(menuDeleteAllItem);
     });
 
     await eventWait;

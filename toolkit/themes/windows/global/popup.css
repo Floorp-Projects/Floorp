@@ -28,8 +28,6 @@ panel {
     appearance: auto;
     -moz-default-appearance: menupopup;
 
-    -moz-box-layout: legacy;
-
     /* Native menus are always light */
     color-scheme: light !important;
 

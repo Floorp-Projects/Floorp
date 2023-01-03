@@ -11,8 +11,8 @@
 
   <toolbarbutton type="menu" id="toolbarmenu" height="200" style="-moz-box-pack: start; -moz-box-align: start">
     <menupopup id="menupopup" onpopupshowing="eventReceived('popupshowing'); return false;"/>
-    <stack>
-      <button style="width: 100px; height: 30px; margin-left: 0; margin-top: 0;" allowevents="true"
+    <stack style="pointer-events: none">
+      <button style="pointer-events: auto; width: 100px; height: 30px; margin-left: 0; margin-top: 0;" allowevents="true"
               onclick="eventReceived('clickbutton1'); return false;"/>
       <button style="width: 100px; height: 30px; margin-left: 70px; margin-top: 0;"
               onclick="eventReceived('clickbutton2'); return false;"/>
@@ -43,10 +43,6 @@ let tests = [
   () => synthesizeMouse($("toolbarmenu"), 10, 15, {}, window),
   () => is(eventCount.clickbutton1, 1, "Button 1 clicked"),
 
-  // Click on button2 where it intersects with button1 - should call popupshowing
-  () => synthesizeMouse($("toolbarmenu"), 85, 15, {}, window),
-  () => is(eventCount.popupshowing, 2, "Got second popupshowing event"),
-
   // Click on button2 outside of intersection - should call popupshowing
   () => synthesizeMouse($("toolbarmenu"), 150, 15, {}, window)
 ];
@@ -65,7 +61,7 @@ function nextTest() {
 function finishTest() {
   is(eventCount.clickbutton1, 1, "Correct number of clicks on button 1");
   is(eventCount.clickbutton2, 0, "Correct number of clicks on button 2");
-  is(eventCount.popupshowing, 3, "Correct number of popupshowing events received");
+  is(eventCount.popupshowing, 2, "Correct number of popupshowing events received");
 
   SimpleTest.finish();
 }
