@@ -108,20 +108,13 @@ void RemoveFileSystemDataManager(const Origin& aOrigin) {
   }
 }
 
-/**
- * TODO: Maybe this and CreateStorageConnection from IndexedDB could be united?
- */
 Result<ResultConnection, QMResult> GetStorageConnection(
     const Origin& aOrigin, const int64_t aDirectoryLockId) {
   MOZ_ASSERT(aDirectoryLockId >= 0);
 
-  bool exists = false;
-  QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& databaseFile,
-                 GetDatabasePath(aOrigin, exists));
-  Unused << exists;
-
+  // Ensure that storage is initialized and file system folder exists!
   QM_TRY_INSPECT(const auto& dbFileUrl,
-                 GetDatabaseFileURL(databaseFile, aDirectoryLockId));
+                 GetDatabaseFileURL(aOrigin, aDirectoryLockId));
 
   QM_TRY_INSPECT(
       const auto& storageService,
@@ -413,23 +406,9 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                                                      __func__);
                }
 
-               quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-               QM_TRY(MOZ_TO_RESULT(quotaManager), CreateAndRejectBoolPromise);
-
-               QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()),
-                      CreateAndRejectBoolPromise);
-
                QM_TRY(MOZ_TO_RESULT(
-                          quotaManager->EnsureTemporaryStorageIsInitialized()),
+                          EnsureFileSystemDirectory(self->mOriginMetadata)),
                       CreateAndRejectBoolPromise);
-
-               QM_TRY_INSPECT(
-                   const auto& dirInfo,
-                   quotaManager->EnsureTemporaryOriginIsInitialized(
-                       quota::PERSISTENCE_TYPE_DEFAULT, self->mOriginMetadata),
-                   CreateAndRejectBoolPromise);
-
-               Unused << dirInfo;
 
                return BoolPromise::CreateAndResolve(true, __func__);
              })
