@@ -40,7 +40,7 @@ const gMockPromptService = {
 };
 
 var gMockPromptServiceCID = MockRegistrar.register(
-  "@mozilla.org/embedcomp/prompt-service;1",
+  "@mozilla.org/prompter;1",
   gMockPromptService
 );
 

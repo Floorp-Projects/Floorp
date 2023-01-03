@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=61098
 
 SimpleTest.waitForExplicitFinish();
 
-var mockPromptServiceRegisterer, mockPromptFactoryRegisterer;
+var mockPromptServiceRegisterer;
 
 var promptState;
 
@@ -218,14 +218,9 @@ function registerMockPromptService()
   };
 
   mockPromptServiceRegisterer =
-    new MockObjectRegisterer("@mozilla.org/embedcomp/prompt-service;1",
-                             MockPromptService);
-  mockPromptFactoryRegisterer =
     new MockObjectRegisterer("@mozilla.org/prompter;1",
                              MockPromptService);
-
   mockPromptServiceRegisterer.register();
-  mockPromptFactoryRegisterer.register();
 };
 
 var expectedState;
@@ -365,7 +360,6 @@ async function runtestsInner()
   SpecialPowers.DOMWindowUtils.enableDialogs();
   SpecialPowers.DOMWindowUtils.resetDialogAbuseState();
 
-  mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
 
   SimpleTest.finish();

@@ -24,7 +24,7 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "promptService",
-  "@mozilla.org/embedcomp/prompt-service;1",
+  "@mozilla.org/prompter;1",
   "nsIPromptService"
 );
 

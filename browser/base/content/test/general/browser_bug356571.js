@@ -7,7 +7,7 @@ var didFail = false;
 
 // Override Alert to avoid blocking the test due to unknown protocol error
 const kPromptServiceUUID = "{6cc9c9fe-bc0b-432b-a410-253ef8bcc699}";
-const kPromptServiceContractID = "@mozilla.org/embedcomp/prompt-service;1";
+const kPromptServiceContractID = "@mozilla.org/prompter;1";
 
 // Save original prompt service factory
 const kPromptServiceFactory = Cm.getClassObject(

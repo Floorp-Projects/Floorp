@@ -97,7 +97,7 @@ var gMockPKCS11CID = MockRegistrar.register(
   gMockPKCS11ModuleDB
 );
 var gMockPromptServiceCID = MockRegistrar.register(
-  "@mozilla.org/embedcomp/prompt-service;1",
+  "@mozilla.org/prompter;1",
   gMockPromptService
 );
 
