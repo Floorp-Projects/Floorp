@@ -11,6 +11,7 @@ file-perm:
         - .h
         - .html
         - .idl
+        - .js
         - .jsm
         - .jsx
         - .m
