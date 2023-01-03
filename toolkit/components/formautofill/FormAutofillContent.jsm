@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddressResult: "resource://autofill/ProfileAutoCompleteResult.jsm",
   ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
   CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.jsm",
-  AutofillTelemetry: "resource://autofill/Autofilltelemetry.jsm",
+  CreditCardTelemetry: "resource://autofill/FormAutofillTelemetryUtils.jsm",
   FormAutofill: "resource://autofill/FormAutofill.jsm",
   FormAutofillHandler: "resource://autofill/FormAutofillHandler.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
@@ -549,26 +549,10 @@ var FormAutofillContent = {
       return;
     }
 
-    [records.address, records.creditCard].forEach((rs, idx) => {
-      lazy.AutofillTelemetry.recordSubmittedSectionCount(
-        idx == 0
-          ? lazy.AutofillTelemetry.ADDRESS
-          : lazy.AutofillTelemetry.CREDIT_CARD,
-        rs?.length
-      );
-
-      rs?.forEach(r => {
-        lazy.AutofillTelemetry.recordFormInteractionEvent(
-          "submitted",
-          r.section,
-          {
-            record: r,
-            form: handler.form,
-          }
-        );
-        delete r.section;
-      });
-    });
+    lazy.CreditCardTelemetry.recordFormSubmitted(
+      records,
+      handler.form.elements
+    );
 
     this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
   },
@@ -778,10 +762,9 @@ var FormAutofillContent = {
 
     let fieldName = FormAutofillContent.activeFieldDetail?.fieldName;
     if (lazy.FormAutofillUtils.isCreditCardField(fieldName)) {
-      lazy.AutofillTelemetry.recordFormInteractionEvent(
-        "cleared",
-        this.activeSection,
-        { fieldName }
+      lazy.CreditCardTelemetry.recordFormCleared(
+        this.activeSection?.flowId,
+        fieldName
       );
     }
   },
@@ -858,10 +841,9 @@ var FormAutofillContent = {
 
     let fieldName = FormAutofillContent.activeFieldDetail?.fieldName;
     if (lazy.FormAutofillUtils.isCreditCardField(fieldName)) {
-      lazy.AutofillTelemetry.recordFormInteractionEvent(
-        "popup_shown",
-        this.activeSection,
-        { fieldName }
+      lazy.CreditCardTelemetry.recordPopupShown(
+        this.activeSection?.flowId,
+        fieldName
       );
     }
   },

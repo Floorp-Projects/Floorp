@@ -12,11 +12,6 @@ ChromeUtils.defineModuleGetter(
   "formAutofillStorage",
   "resource://autofill/FormAutofillStorage.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "AutofillTelemetry",
-  "resource://autofill/Autofilltelemetry.jsm"
-);
 
 class AutofillEditDialog {
   constructor(subStorageName, elements, record) {
@@ -153,21 +148,11 @@ class AutofillEditDialog {
 
   // An interface to be inherited.
   localizeDocument() {}
-
-  recordFormSubmit() {
-    let method = this._record?.guid ? "edit" : "add";
-    AutofillTelemetry.recordManageEvent(this.telemetryType, method);
-  }
 }
 
 class EditAddressDialog extends AutofillEditDialog {
-  telemetryType = AutofillTelemetry.ADDRESS;
-
   constructor(elements, record) {
     super("addresses", elements, record);
-    if (record) {
-      AutofillTelemetry.recordManageEvent(this.telemetryType, "show_entry");
-    }
   }
 
   localizeDocument() {
@@ -184,15 +169,11 @@ class EditAddressDialog extends AutofillEditDialog {
       this._elements.fieldContainer.buildFormObject(),
       this._record ? this._record.guid : null
     );
-    this.recordFormSubmit();
-
     window.close();
   }
 }
 
 class EditCreditCardDialog extends AutofillEditDialog {
-  telemetryType = AutofillTelemetry.CREDIT_CARD;
-
   constructor(elements, record) {
     elements.fieldContainer._elements.billingAddress.disabled = true;
     super("creditCards", elements, record);
@@ -201,7 +182,7 @@ class EditCreditCardDialog extends AutofillEditDialog {
       this._onCCNumberFieldBlur.bind(this)
     );
     if (record) {
-      AutofillTelemetry.recordManageEvent(this.telemetryType, "show_entry");
+      Services.telemetry.recordEvent("creditcard", "show_entry", "manage");
     }
   }
 
@@ -231,7 +212,11 @@ class EditCreditCardDialog extends AutofillEditDialog {
         this._record ? this._record.guid : null
       );
 
-      this.recordFormSubmit();
+      if (this._record?.guid) {
+        Services.telemetry.recordEvent("creditcard", "edit", "manage");
+      } else {
+        Services.telemetry.recordEvent("creditcard", "add", "manage");
+      }
 
       window.close();
     } catch (ex) {

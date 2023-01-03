@@ -718,8 +718,8 @@
     "toolkit/components/formautofill/FormAutofillStorageBase.jsm",
   "resource://autofill/FormAutofillSync.jsm":
     "toolkit/components/formautofill/FormAutofillSync.jsm",
-  "resource://autofill/Autofilltelemetry.jsm":
-    "toolkit/components/formautofill/Autofilltelemetry.jsm",
+  "resource://autofill/FormAutofillTelemetryUtils.jsm":
+    "toolkit/components/formautofill/FormAutofillTelemetryUtils.jsm",
   "resource://autofill/FormAutofillUtils.jsm":
     "toolkit/components/formautofill/FormAutofillUtils.jsm",
   "resource://autofill/ProfileAutoCompleteResult.jsm":
