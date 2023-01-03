@@ -320,7 +320,7 @@ export class Runtime extends ContentProcessDomain {
     ) {
       callFrames.push({
         functionName: stack.functionDisplayName,
-        scriptId: stack.sourceId,
+        scriptId: stack.sourceId.toString(),
         url: stack.source,
         lineNumber: stack.line,
         columnNumber: stack.column,
