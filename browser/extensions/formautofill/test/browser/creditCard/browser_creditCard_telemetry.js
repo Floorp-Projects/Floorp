@@ -4,7 +4,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 const { CreditCardTelemetry } = ChromeUtils.import(
-  "resource://autofill/FormAutofillTelemetryUtils.jsm"
+  "resource://autofill/Autofilltelemetry.jsm"
 );
 
 const CC_NUM_USES_HISTOGRAM = "CREDITCARD_NUM_USES";
