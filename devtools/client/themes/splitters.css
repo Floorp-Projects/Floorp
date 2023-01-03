@@ -56,9 +56,7 @@ splitter.devtools-horizontal-splitter,
 
   box-sizing: border-box;
 
-  /* Positive z-index positions the splitter on top of its siblings and makes
-     it clickable on both sides. */
-  z-index: 1;
+  z-index: var(--browser-stack-z-index-devtools-splitter, 1);
 }
 
 splitter.devtools-horizontal-splitter {
