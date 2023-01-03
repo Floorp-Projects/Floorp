@@ -132,7 +132,7 @@ pub enum Arg {
 
 impl Arg {
     pub fn new(name: &str) -> Arg {
-        match &*name {
+        match name {
             "foreground" => Arg::Foreground,
             "marionette" => Arg::Marionette,
             "no-remote" => Arg::NoRemote,

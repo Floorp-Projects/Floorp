@@ -10,7 +10,7 @@ use crate::error::WebDriverResult;
 use crate::Parameters;
 
 pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)> {
-    return vec![
+    vec![
         (Method::POST, "/session", Route::NewSession),
         (Method::DELETE, "/session/{sessionId}", Route::DeleteSession),
         (Method::POST, "/session/{sessionId}/url", Route::Get),
@@ -289,7 +289,7 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
         ),
         (Method::POST, "/session/{sessionId}/print", Route::Print),
         (Method::GET, "/status", Route::Status),
-    ];
+    ]
 }
 
 #[derive(Clone, Copy, Debug)]

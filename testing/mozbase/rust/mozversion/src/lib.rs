@@ -77,7 +77,7 @@ impl AppVersion {
     pub fn version(&self) -> Option<Version> {
         self.version_string
             .as_ref()
-            .and_then(|x| Version::from_str(&*x).ok())
+            .and_then(|x| Version::from_str(x).ok())
     }
 }
 
@@ -240,14 +240,14 @@ pub fn firefox_version(binary: &Path) -> VersionResult<AppVersion> {
 /// version string from the output
 pub fn firefox_binary_version(binary: &Path) -> VersionResult<Version> {
     let output = Command::new(binary)
-        .args(&["--version"])
+        .args(["--version"])
         .stdout(Stdio::piped())
         .spawn()
         .and_then(|child| child.wait_with_output())
         .ok();
 
     if let Some(x) = output {
-        let output_str = str::from_utf8(&*x.stdout)
+        let output_str = str::from_utf8(&x.stdout)
             .map_err(|_| Error::VersionError("Couldn't parse version output as UTF8".into()))?;
         parse_binary_version(output_str)
     } else {

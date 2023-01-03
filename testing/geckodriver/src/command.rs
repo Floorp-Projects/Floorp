@@ -16,7 +16,7 @@ use webdriver::httpapi::WebDriverExtensionRoute;
 use webdriver::Parameters;
 
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
-    return vec![
+    vec![
         (
             Method::GET,
             "/session/{sessionId}/moz/context",
@@ -42,10 +42,10 @@ pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
             "/session/{sessionId}/moz/screenshot/full",
             GeckoExtensionRoute::TakeFullScreenshot,
         ),
-    ];
+    ]
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum GeckoExtensionRoute {
     GetContext,
     SetContext,
@@ -104,7 +104,7 @@ impl WebDriverExtensionCommand for GeckoExtensionCommand {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct AddonInstallParameters {
     pub path: String,
     pub temporary: Option<bool>,
@@ -168,30 +168,30 @@ impl<'de> Deserialize<'de> for AddonInstallParameters {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AddonUninstallParameters {
     pub id: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum GeckoContext {
     Content,
     Chrome,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GeckoContextParameters {
     pub context: GeckoContext,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct XblLocatorParameters {
     pub name: String,
     pub value: String,
 }
 
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq, Eq)]
 pub struct LogOptions {
     pub level: Option<logging::Level>,
 }

@@ -397,7 +397,7 @@ mod tests {
         set_truncate(true);
         assert_eq!(
             truncate_message(&format_args!("{}", long_message)),
-            Some((part.to_owned(), part.to_owned()))
+            Some((part.to_owned(), part))
         );
     }
 }
