@@ -463,6 +463,11 @@ nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(int64_t aDelta) {
   return NS_OK;
 }
 
+nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(
+    const EntryId& /* aEntry */) {
+  return NS_OK;
+}
+
 Result<EntryId, QMResult>
 FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
     const FileSystemChildMetadata& aHandle, bool aCreate) {
