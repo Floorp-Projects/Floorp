@@ -38,6 +38,7 @@
 
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasksRunner.h"
+#  include "nsIBackgroundTasks.h"
 #endif
 
 // include files for ftruncate (or equivalent)
@@ -4088,6 +4089,18 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
   // If background tasks are disabled, then we should just bail out early.
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
+
+  if (nsCOMPtr<nsIBackgroundTasks> backgroundTaskService =
+          do_GetService("@mozilla.org/backgroundtasks;1")) {
+    bool isBackgroundTask = false;
+    backgroundTaskService->GetIsBackgroundTaskMode(&isBackgroundTask);
+    if (isBackgroundTask) {
+      // If we are already running in a background task, we
+      // don't want to spawn yet another one at shutdown.
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIFile> cacheDir;
   nsresult rv = mCacheDirectory->Clone(getter_AddRefs(cacheDir));
   NS_ENSURE_SUCCESS(rv, rv);
