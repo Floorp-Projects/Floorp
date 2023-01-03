@@ -18,6 +18,7 @@ file-perm:
         - .md
         - .mjs
         - .mm
+        - .build
         - .mp4
         - .png
         - .rs
