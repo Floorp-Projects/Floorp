@@ -16104,7 +16104,7 @@
   "FORM_FILLING_REQUIRED_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"],
+    "alert_emails": ["autofill@lists.mozilla.org", "jcheng@mozilla.com", "chsiang@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
     "high": 300000,
@@ -16755,23 +16755,6 @@
     "bug_numbers": [1627708, 1672576],
     "description": "Input device that triggered the zoom gesture (InputData::PinchGestureSource)",
     "releaseChannelCollection": "opt-out"
-  },
-  "AUTOFILL_PROFILE_NUM_USES": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets" : 50,
-    "description": "How many times each saved autofill profile(address or credit card) has ever been autofilled. Rewritten after each autofill; always contains one entry per each count of uses. Example: If user has 3 cards, and he used 2 of them 5 times, and one of them 3 times, the value will be: `{3: 1, 5: 2}.",
-    "alert_emails": ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"],
-    "bug_numbers": [1653073, 1656355],
-    "releaseChannelCollection": "opt-out",
-    "keyed": true,
-    "keys": [
-      "credit_card",
-      "address"
-    ]
   },
   "CREDITCARD_NUM_USES": {
     "record_in_processes": ["main"],

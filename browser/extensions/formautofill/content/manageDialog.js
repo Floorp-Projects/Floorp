@@ -19,9 +19,6 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
-const { AutofillTelemetry } = ChromeUtils.import(
-  "resource://autofill/Autofilltelemetry.jsm"
-);
 
 ChromeUtils.defineESModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
@@ -195,10 +192,6 @@ class ManageRecords {
     Services.obs.addObserver(this, "formautofill-storage-changed");
     // For testing only: notify record(s) has been removed
     this._elements.records.dispatchEvent(new CustomEvent("RecordsRemoved"));
-
-    for (let i = 0; i < options.length; i++) {
-      AutofillTelemetry.recordManageEvent(this.telemetryType, "delete");
-    }
   }
 
   /**
@@ -322,15 +315,12 @@ class ManageRecords {
 }
 
 class ManageAddresses extends ManageRecords {
-  telemetryType = AutofillTelemetry.ADDRESS;
-
   constructor(elements) {
     super("addresses", elements);
     elements.add.setAttribute(
       "search-l10n-ids",
       FormAutofillUtils.EDIT_ADDRESS_L10N_IDS.join(",")
     );
-    AutofillTelemetry.recordManageEvent(this.telemetryType, "show");
   }
 
   /**
@@ -353,8 +343,6 @@ class ManageAddresses extends ManageRecords {
 }
 
 class ManageCreditCards extends ManageRecords {
-  telemetryType = AutofillTelemetry.CREDIT_CARD;
-
   constructor(elements) {
     super("creditCards", elements);
     elements.add.setAttribute(
@@ -362,8 +350,9 @@ class ManageCreditCards extends ManageRecords {
       FormAutofillUtils.EDIT_CREDITCARD_L10N_IDS.join(",")
     );
 
+    Services.telemetry.recordEvent("creditcard", "show", "manage");
+
     this._isDecrypted = false;
-    AutofillTelemetry.recordManageEvent(this.telemetryType, "show");
   }
 
   /**
@@ -459,6 +448,13 @@ class ManageCreditCards extends ManageRecords {
       } else {
         option.removeAttribute("cc-type");
       }
+    }
+  }
+
+  async removeRecords(options) {
+    await super.removeRecords(options);
+    for (let i = 0; i < options.length; i++) {
+      Services.telemetry.recordEvent("creditcard", "delete", "manage");
     }
   }
 
