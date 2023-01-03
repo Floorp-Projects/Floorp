@@ -3969,16 +3969,13 @@ void nsWindow::CaptureMouse(bool aCapture) {
  *
  **************************************************************/
 
-void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
-                                   bool aDoCapture) {
+void nsWindow::CaptureRollupEvents(bool aDoCapture) {
   if (aDoCapture) {
-    gRollupListener = aListener;
     if (!sMsgFilterHook && !sCallProcHook && !sCallMouseHook) {
       RegisterSpecialDropdownHooks();
     }
     sProcessHook = true;
   } else {
-    gRollupListener = nullptr;
     sProcessHook = false;
     UnregisterSpecialDropdownHooks();
   }
@@ -7483,7 +7480,7 @@ void nsWindow::OnDestroy() {
   }
   if (this == rollupWidget) {
     if (rollupListener) rollupListener->Rollup(0, false, nullptr, nullptr);
-    CaptureRollupEvents(nullptr, false);
+    CaptureRollupEvents(false);
   }
 
   IMEHandler::OnDestroyWindow(this);
