@@ -289,7 +289,7 @@ TEST_SUITES = {
     "web-platform-tests-print-reftest": {
         "aliases": ("wpt",),
         "mach_command": "web-platform-tests",
-        "kwargs": {"include": []},
+        "kwargs": {"subsuite": "print-reftest"},
         "task_regex": [
             "web-platform-tests-print-reftest($|.*(-1|[^0-9])$)",
             "test-verify-wpt",
@@ -355,6 +355,13 @@ for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
         },
     }
 
+
+WPT_TYPES = set()
+for suite, data in TEST_SUITES.items():
+    if suite.startswith("web-platform-tests"):
+        WPT_TYPES.add(data["kwargs"]["subsuite"])
+
+
 _test_flavors = {
     "a11y": "mochitest-a11y",
     "browser-chrome": "mochitest-browser-chrome",
@@ -389,6 +396,7 @@ _test_subsuites = {
     ("mochitest", "webgpu"): "mochitest-webgpu",
     ("web-platform-tests", "testharness"): "web-platform-tests",
     ("web-platform-tests", "crashtest"): "web-platform-tests-crashtest",
+    ("web-platform-tests", "print-reftest"): "web-platform-tests-print-reftest",
     ("web-platform-tests", "reftest"): "web-platform-tests-reftest",
     ("web-platform-tests", "wdspec"): "web-platform-tests-wdspec",
 }
@@ -859,7 +867,7 @@ class TestResolver(MozbuildObject):
             for test_type, path, tests in manifest:
                 full_path = mozpath.join(tests_root, path)
                 src_path = mozpath.relpath(full_path, self.topsrcdir)
-                if test_type not in ["testharness", "reftest", "wdspec", "crashtest"]:
+                if test_type not in WPT_TYPES:
                     continue
 
                 full_path = mozpath.join(tests_root, path)  # absolute path on disk
