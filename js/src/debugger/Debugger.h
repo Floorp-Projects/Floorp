@@ -499,12 +499,6 @@ class MOZ_RAII DebuggerList {
                                            FireHookFun fireHook);
 };
 
-// The Debugger.prototype object.
-class DebuggerPrototypeObject : public NativeObject {
- public:
-  static const JSClass class_;
-};
-
 class DebuggerInstanceObject : public NativeObject {
  private:
   static const JSClassOps classOps_;
@@ -551,6 +545,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     HookCount
   };
   enum {
+    JSSLOT_DEBUG_DEBUGGER,
     JSSLOT_DEBUG_PROTO_START,
     JSSLOT_DEBUG_FRAME_PROTO = JSSLOT_DEBUG_PROTO_START,
     JSSLOT_DEBUG_ENV_PROTO,
@@ -559,8 +554,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     JSSLOT_DEBUG_SOURCE_PROTO,
     JSSLOT_DEBUG_MEMORY_PROTO,
     JSSLOT_DEBUG_PROTO_STOP,
-    JSSLOT_DEBUG_DEBUGGER = JSSLOT_DEBUG_PROTO_STOP,
-    JSSLOT_DEBUG_HOOK_START,
+    JSSLOT_DEBUG_HOOK_START = JSSLOT_DEBUG_PROTO_STOP,
     JSSLOT_DEBUG_HOOK_STOP = JSSLOT_DEBUG_HOOK_START + HookCount,
     JSSLOT_DEBUG_MEMORY_INSTANCE = JSSLOT_DEBUG_HOOK_STOP,
     JSSLOT_DEBUG_DEBUGGEE_LINK,

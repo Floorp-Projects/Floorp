@@ -104,8 +104,8 @@ void DebuggerScript::trace(JSTracer* trc) {
 NativeObject* DebuggerScript::initClass(JSContext* cx,
                                         Handle<GlobalObject*> global,
                                         HandleObject debugCtor) {
-  return InitClass(cx, debugCtor, nullptr, nullptr, "Script", construct, 0,
-                   properties_, methods_, nullptr, nullptr);
+  return InitClass(cx, debugCtor, nullptr, &class_, construct, 0, properties_,
+                   methods_, nullptr, nullptr);
 }
 
 /* static */
@@ -171,7 +171,18 @@ DebuggerScript* DebuggerScript::check(JSContext* cx, HandleValue v) {
     return nullptr;
   }
 
-  return &thisobj->as<DebuggerScript>();
+  DebuggerScript& scriptObj = thisobj->as<DebuggerScript>();
+
+  // Check for Debugger.Script.prototype, which is of class
+  // DebuggerScript::class.
+  if (!scriptObj.isInstance()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INCOMPATIBLE_PROTO, "Debugger.Script",
+                              "method", "prototype object");
+    return nullptr;
+  }
+
+  return &scriptObj;
 }
 
 struct MOZ_STACK_CLASS DebuggerScript::CallData {

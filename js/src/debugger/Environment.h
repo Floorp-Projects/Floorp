@@ -67,6 +67,7 @@ class DebuggerEnvironment : public NativeObject {
       JSContext* cx, Handle<DebuggerEnvironment*> environment, HandleId id,
       HandleValue value);
 
+  bool isInstance() const;
   Debugger* owner() const;
 
   Env* maybeReferent() const { return maybePtrFromReservedSlot<Env>(ENV_SLOT); }

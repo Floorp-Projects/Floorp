@@ -254,6 +254,7 @@ class DebuggerFrame : public NativeObject {
 
   bool hasAnyHooks() const;
 
+  bool isInstance() const;
   Debugger* owner() const;
 
  private:

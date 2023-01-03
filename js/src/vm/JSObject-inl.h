@@ -524,12 +524,14 @@ inline bool GetClassOfValue(JSContext* cx, HandleValue v, ESClass* cls) {
   return JS::GetBuiltinClass(cx, obj, cls);
 }
 
-extern NativeObject* InitClass(
-    JSContext* cx, HandleObject obj, const JSClass* protoClass,
-    HandleObject protoProto, const char* name, JSNative constructor,
-    unsigned nargs, const JSPropertySpec* ps, const JSFunctionSpec* fs,
-    const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
-    NativeObject** ctorp = nullptr);
+extern NativeObject* InitClass(JSContext* cx, HandleObject obj,
+                               HandleObject parent_proto, const JSClass* clasp,
+                               JSNative constructor, unsigned nargs,
+                               const JSPropertySpec* ps,
+                               const JSFunctionSpec* fs,
+                               const JSPropertySpec* static_ps,
+                               const JSFunctionSpec* static_fs,
+                               NativeObject** ctorp = nullptr);
 
 MOZ_ALWAYS_INLINE const char* GetObjectClassName(JSContext* cx,
                                                  HandleObject obj) {
