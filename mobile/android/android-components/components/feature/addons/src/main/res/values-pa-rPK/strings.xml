@@ -6,6 +6,22 @@
     <string name="mozac_feature_addons_permissions_all_urls_description">سریاں سائٹاں لئی تہاڈے ڈیٹے واسطے پہنچ</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
     <string name="mozac_feature_addons_permissions_one_site_description">%1$s سائٹ لئی تہاڈے ڈیٹے لئی پہنچ</string>
+    <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_sites_in_domain_description">%1$s دے وچ ڈیٹے نوں پہنچ جاؤ</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
+    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">1 ہورناں سائٹ دے وچ ڈیٹے نوں پہنچ جاؤ</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
+     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">%1$d ہورناں سائٹاں دے وچ ڈیٹے نوں پہنچ جاؤ</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+      then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">1 ہورناں ڈومین دے وچ ڈیٹے نوں پہنچ جاؤ</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
+     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">%1$d ہورناں ڈومیناں دے وچ ڈیٹے نوں پہنچ جاݨا</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">ایپ دیاں ٹیباں لئی پہنچ</string>
     <!-- Description for bookmarks permission. -->
@@ -18,12 +34,24 @@
     <string name="mozac_feature_addons_version">ورژن</string>
     <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">لکھاریاں</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">آخری بدلیا</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">مکھ صفحہ</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">اجازتاں بارے ہور سکھو</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">درجہ</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">سیٹنگاں</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">چالو</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">بند</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">نجی ڈھنگ چ اجازتب دیو</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">نجی ورتوں چ چالو ہو گیا</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">چالو اے</string>
     <!-- Indicates the add-on is disabled. -->
@@ -48,6 +76,8 @@
     <string name="mozac_feature_addons_permissions_dialog_add">پتہ پایو</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">رد کرو</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">وادھے والا اینسٹال کرو</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">رد کرو</string>
     <!-- This is the title of page where all the add-ons are listed-->
@@ -74,6 +104,8 @@
     <string name="mozac_feature_addons_unsupported_learn_more">ہور جاݨو</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">غلطی</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">نویں کرن والے دی جاݨکاری</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">ستتھی –</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
