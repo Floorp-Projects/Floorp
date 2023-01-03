@@ -187,6 +187,7 @@ bool Client::IsValidType(Type aType) {
     case Client::IDB:
     case Client::DOMCACHE:
     case Client::SDB:
+    case Client::FILESYSTEM:
       return true;
 
     case Client::LS:
