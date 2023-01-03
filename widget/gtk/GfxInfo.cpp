@@ -722,6 +722,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_LESS_THAN, V(460, 82, 0, 0),
         "FEATURE_FAILURE_WEBRENDER_OLD_NVIDIA", "460.82.0");
 
+    // Older generation NVIDIA devices do not perform well with WebRender.
+    APPEND_TO_DRIVER_BLOCKLIST(
+        OperatingSystem::Linux, DeviceFamily::NvidiaWebRenderBlocked,
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
+        "NVIDIA_EARLY_TESLA_AND_C67_C68", "");
+
     // Mesa baseline, chosen arbitrarily. Linux users are generally good about
     // updating their Mesa libraries so we don't want to arbitarily support
     // WebRender on old drivers with outstanding bugs to work around.
