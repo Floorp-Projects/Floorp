@@ -3311,10 +3311,17 @@ LayoutDeviceIntRect nsWindow::GetScreenBounds() {
   // with Resize.
   const LayoutDeviceIntRect rect(origin, mBounds.Size());
 #if MOZ_LOGGING
-  gint scale = GdkCeiledScaleFactor();
-  LOG("GetScreenBounds %d,%d -> %d x %d, unscaled %d,%d -> %d x %d\n", rect.x,
-      rect.y, rect.width, rect.height, rect.x / scale, rect.y / scale,
-      rect.width / scale, rect.height / scale);
+  if (MOZ_LOG_TEST(IsPopup() ? gWidgetPopupLog : gWidgetLog,
+                   LogLevel::Verbose)) {
+    gint scale = GdkCeiledScaleFactor();
+    if (mLastLoggedScale != scale || !(mLastLoggedBoundSize == rect)) {
+      mLastLoggedScale = scale;
+      mLastLoggedBoundSize = rect;
+      LOG("GetScreenBounds %d,%d -> %d x %d, unscaled %d,%d -> %d x %d\n",
+          rect.x, rect.y, rect.width, rect.height, rect.x / scale,
+          rect.y / scale, rect.width / scale, rect.height / scale);
+    }
+  }
 #endif
   return rect;
 }
@@ -3859,10 +3866,12 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   nsIWidgetListener* listener = GetListener();
   if (!listener) return FALSE;
 
-  LOG("received expose event %p 0x%lx (rects follow):\n", mGdkWindow,
+  LOG("nsWindow::OnExposeEvent GdkWindow [%p] XWindow [0x%lx]", mGdkWindow,
       GetX11Window());
+
   LayoutDeviceIntRegion exposeRegion;
   if (!ExtractExposeRegion(exposeRegion, cr)) {
+    LOG("  no rects, quit");
     return FALSE;
   }
 
