@@ -1916,10 +1916,7 @@ fn component_needs_revalidation(
         Component::FirstChild |
         Component::LastChild |
         Component::OnlyChild |
-        Component::NthChild(..) |
-        Component::NthLastChild(..) |
-        Component::NthOfType(..) |
-        Component::NthLastOfType(..) |
+        Component::Nth(..) |
         Component::FirstOfType |
         Component::LastOfType |
         Component::OnlyOfType => true,
