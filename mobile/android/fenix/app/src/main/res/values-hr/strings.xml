@@ -41,8 +41,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Nedavne zabilješke</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Nedavno spremljeno</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Prikaži sve spremljene zabilješke</string>
@@ -61,10 +59,10 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Dodaj prečac za otvaranje privatnih kartica s početnog ekrana.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Dodaj prečac za otvaranje privatnih kartica s početnog ekrana.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Dodaj prečac</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Dodaj prečac</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Ne, hvala</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -244,27 +242,6 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Postavke pretraživanja</string>
 
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Što je novo u %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Sada je lakše nastaviti pregledavati web.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">%1$s personalizirana početna stranica</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Skoči na svoje otvorene kartice, zabilješke i povijest pregledavanja.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Čiste, organizirane kartice</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Očisti nered među karticama pomoću poboljšanog rasporeda i automatskog zatvaranja kartica.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Nedavne pretrage</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Ponovno pregledaj svoja posljednja pretraživanja na početnoj stranici i karticama.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Tvoja personalizirana Firefoxova početna stranica sada ti olakšava da nastaviš pretraživati. Pronađi svoje nedavne kartice, zabilješke i rezultate pretraživanja.</string>
-
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Prijavi se</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
@@ -321,6 +298,7 @@
     <string name="preferences_add_private_browsing_shortcut">Dodaj prečac za privatno pregledavanje</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Način rada &quot;Samo HTTPS&quot;</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatski se pokušava povezati s web stranicama pomoću HTTPS protokola za šifriranje radi povećane sigurnosti.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1018,8 +996,6 @@
     <string name="share_copy_link_to_clipboard">Kopiraj u međuspremnik</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Kopirano u međuspremnik</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Prijavi se za sinkronizaciju</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Prijavi se za sinkronizaciju</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1179,21 +1155,11 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Grupa obrisana</string>
 
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Dobro došao, dobro došla u %s!</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sinkroniziraj Firefox između uređaja</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Registriraj se</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Prijavi se</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sinkronizacija je uključena</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Uvijek uključena privatnost</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standardno (zadano)</string>
     <!-- text for standard blocking option button description -->
@@ -1204,14 +1170,7 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Blokira više programa za praćenje pa se stranice učitavaju brže, ali neke funkcionalnosti stranica možda će se slomiti.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Odaberi položaj alatne trake</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Stavi alatnu traku na dohvat ruke. Zadrži ju na dnu ili premjesti na vrh.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Tvoja privatnost</string>
 
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s smo stvorili za jednostavno upravljanje podacima koje dijeliš na mreži i koje dijeliš s nama.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Pročitaj naša pravila privatnosti</string>
 
@@ -1807,6 +1766,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Automatsko zatvaranje omogućeno</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox prijedlozi</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Google pretraga</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s pretraga</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Postavi automatsko otvaranje poveznica web stranica, e-pošte i poruka u Firefoxu.</string>
 
@@ -1841,11 +1809,12 @@
 
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Idi u postavke</string>
-    <string name="firefox_suggest_header">Firefox prijedlozi</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
     <string name="a11y_action_label_collapse">sklopi</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">rasklopi</string>
-    </resources>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">pročitaj članak</string>
+</resources>

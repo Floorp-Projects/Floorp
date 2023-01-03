@@ -262,6 +262,9 @@
     <!-- Header text for the search selector menu -->
     <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Tokrat išči:</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Tokrat išči:</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Spoznajte svojo prilagojeno domačo stran. Tukaj bodo prikazani nedavni zavihki, zaznamki in zadetki iskanja.</string>
