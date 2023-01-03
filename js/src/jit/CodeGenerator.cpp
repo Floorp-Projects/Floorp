@@ -4240,7 +4240,7 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   Label bail, cacheHit;
   if (JitOptions.enableWatchtowerMegamorphic) {
     masm.emitMegamorphicCacheLookup(lir->mir()->name(), obj, temp0, temp1,
-                                    temp2, output, &bail, &cacheHit);
+                                    temp2, output, &cacheHit);
   }
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
@@ -4275,9 +4275,17 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   ValueOperand idVal = ToValue(lir, LMegamorphicLoadSlotByValue::IdIndex);
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
   ValueOperand output = ToOutValue(lir);
 
-  Label bail;
+  Label bail, cacheHit;
+  if (JitOptions.enableWatchtowerMegamorphic) {
+    masm.emitMegamorphicCacheLookupByValue(idVal, obj, temp0, temp1, temp2,
+                                           output, &cacheHit);
+  }
+
+  masm.branchIfNonNativeObj(obj, temp0, &bail);
+
   // idVal will be in vp[0], result will be stored in vp[1].
   masm.reserveStack(sizeof(Value));
   masm.Push(idVal);
@@ -4305,6 +4313,7 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.setFramePushed(framePushed);
   masm.Pop(output);
 
+  masm.bind(&cacheHit);
   bailoutFrom(&bail, lir->snapshot());
 }
 
@@ -4347,7 +4356,7 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   Label bail, cacheHit;
   if (JitOptions.enableWatchtowerMegamorphic) {
     masm.emitMegamorphicCacheLookupExists(idVal, obj, temp0, temp1, temp2,
-                                          output, &bail, &cacheHit,
+                                          output, &cacheHit,
                                           lir->mir()->hasOwn());
   }
 
