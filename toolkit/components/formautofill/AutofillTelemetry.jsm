@@ -207,6 +207,16 @@ class AutofillTelemetryBase {
 
 class AddressTelemetry extends AutofillTelemetryBase {
   EVENT_CATEGORY = "address";
+
+  SCALAR_DETECTED_SECTION_COUNT =
+    "formautofill.addresses.detected_sections_count";
+  SCALAR_SUBMITTED_SECTION_COUNT =
+    "formautofill.addresses.submitted_sections_count";
+  SCALAR_AUTOFILL_PROFILE_COUNT =
+    "formautofill.addresses.autofill_profiles_count";
+
+  HISTOGRAM_PROFILE_NUM_USES = "AUTOFILL_PROFILE_NUM_USES";
+  HISTOGRAM_PROFILE_NUM_USES_KEY = "address";
 }
 
 class CreditCardTelemetry extends AutofillTelemetryBase {
