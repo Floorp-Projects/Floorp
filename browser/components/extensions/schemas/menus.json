@@ -151,6 +151,7 @@
           },
           "bookmarkId": {
             "type": "string",
+            "optional": true,
             "description": "The id of the bookmark where the context menu was clicked, if it was on a bookmark."
           },
           "modifiers": {
