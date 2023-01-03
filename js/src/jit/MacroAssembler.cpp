@@ -2133,10 +2133,16 @@ void MacroAssembler::loadMegamorphicCache(Register dest) {
   movePtr(ImmPtr(runtime()->addressOfMegamorphicCache()), dest);
 }
 
+void MacroAssembler::loadStringToAtomCacheLastLookups(Register dest) {
+  uintptr_t cachePtr = uintptr_t(runtime()->addressOfStringToAtomCache());
+  void* offset = (void*)(cachePtr + StringToAtomCache::offsetOfLastLookups());
+  movePtr(ImmPtr(offset), dest);
+}
+
 void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
                                              Register outHash,
                                              Label* cacheMiss) {
-  Label isString, fatInline, done;
+  Label isString, fatInline, done, nonAtom, atom, lastLookupAtom;
 
   {
     ScratchTagScope tag(*this, value);
@@ -2153,8 +2159,9 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
   bind(&isString);
   unboxString(value, outId);
   branchTest32(Assembler::Zero, Address(outId, JSString::offsetOfFlags()),
-               Imm32(JSString::ATOM_BIT), cacheMiss);
+               Imm32(JSString::ATOM_BIT), &nonAtom);
 
+  bind(&atom);
   move32(Imm32(JSString::FAT_INLINE_MASK), outHash);
   and32(Address(outId, JSString::offsetOfFlags()), outHash);
 
@@ -2164,6 +2171,30 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
   jump(&done);
   bind(&fatInline);
   load32(Address(outId, FatInlineAtom::offsetOfHash()), outHash);
+  jump(&done);
+
+  bind(&nonAtom);
+  loadStringToAtomCacheLastLookups(outHash);
+
+  // Compare each entry in the StringToAtomCache's lastLookups_ array
+  size_t stringOffset = StringToAtomCache::LastLookup::offsetOfString();
+  branchPtr(Assembler::Equal, Address(outHash, stringOffset), outId,
+            &lastLookupAtom);
+  for (size_t i = 0; i < StringToAtomCache::NumLastLookups - 1; ++i) {
+    addPtr(Imm32(sizeof(StringToAtomCache::LastLookup)), outHash);
+    branchPtr(Assembler::Equal, Address(outHash, stringOffset), outId,
+              &lastLookupAtom);
+  }
+
+  // Couldn't find us in the cache, so fall back to the C++ call
+  jump(cacheMiss);
+
+  // We found a hit in the lastLookups_ array! Load the associated atom
+  // and jump back up to our usual atom handling code
+  bind(&lastLookupAtom);
+  size_t atomOffset = StringToAtomCache::LastLookup::offsetOfAtom();
+  loadPtr(Address(outHash, atomOffset), outId);
+  jump(&atom);
 
   bind(&done);
 }
