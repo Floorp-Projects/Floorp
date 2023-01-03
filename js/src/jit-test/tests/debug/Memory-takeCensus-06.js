@@ -31,10 +31,10 @@ assertEq('bytes' in census, true);
 // list to the object classes we're pretty sure are going to stick around for
 // the forseeable future.
 Pattern({
-          Function:       { count: Pattern.NATURAL },
-          Object:         { count: Pattern.NATURAL },
-          Debugger:       { count: Pattern.NATURAL },
-          global:         { count: Pattern.NATURAL },
+          Function:          { count: Pattern.NATURAL },
+          Object:            { count: Pattern.NATURAL },
+          DebuggerPrototype: { count: Pattern.NATURAL },
+          global:            { count: Pattern.NATURAL },
         })
   .assert(dbg.memory.takeCensus({ breakdown: { by: 'objectClass' } }));
 
@@ -77,11 +77,11 @@ Pattern({
   }));
 
 Pattern({
-          Function:       { count: Pattern.NATURAL },
-          Object:         { count: Pattern.NATURAL },
-          Debugger:       { count: Pattern.NATURAL },
-          global:         { count: Pattern.NATURAL },
-          other:          coarse_type_pattern
+          Function:          { count: Pattern.NATURAL },
+          Object:            { count: Pattern.NATURAL },
+          DebuggerPrototype: { count: Pattern.NATURAL },
+          global:            { count: Pattern.NATURAL },
+          other:             coarse_type_pattern
         })
   .assert(dbg.memory.takeCensus({
     breakdown: {
