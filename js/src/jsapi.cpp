@@ -1588,18 +1588,16 @@ JS_PUBLIC_API bool JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args,
   return false;
 }
 
-JS_PUBLIC_API JSObject* JS_InitClass(JSContext* cx, HandleObject obj,
-                                     HandleObject parent_proto,
-                                     const JSClass* clasp, JSNative constructor,
-                                     unsigned nargs, const JSPropertySpec* ps,
-                                     const JSFunctionSpec* fs,
-                                     const JSPropertySpec* static_ps,
-                                     const JSFunctionSpec* static_fs) {
+JS_PUBLIC_API JSObject* JS_InitClass(
+    JSContext* cx, HandleObject obj, const JSClass* protoClass,
+    HandleObject protoProto, const char* name, JSNative constructor,
+    unsigned nargs, const JSPropertySpec* ps, const JSFunctionSpec* fs,
+    const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(obj, parent_proto);
-  return InitClass(cx, obj, parent_proto, clasp, constructor, nargs, ps, fs,
-                   static_ps, static_fs);
+  cx->check(obj, protoProto);
+  return InitClass(cx, obj, protoClass, protoProto, name, constructor, nargs,
+                   ps, fs, static_ps, static_fs);
 }
 
 JS_PUBLIC_API bool JS_LinkConstructorAndPrototype(JSContext* cx,

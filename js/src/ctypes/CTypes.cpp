@@ -2081,8 +2081,9 @@ static JSObject* InitInt64Class(JSContext* cx, HandleObject parent,
                                 const JSFunctionSpec* fs,
                                 const JSFunctionSpec* static_fs) {
   // Init type class and constructor
-  RootedObject prototype(cx, JS_InitClass(cx, parent, nullptr, clasp, construct,
-                                          0, nullptr, fs, nullptr, static_fs));
+  RootedObject prototype(
+      cx, JS_InitClass(cx, parent, clasp, nullptr, clasp->name, construct, 0,
+                       nullptr, fs, nullptr, static_fs));
   if (!prototype) {
     return nullptr;
   }
