@@ -245,11 +245,11 @@ var TabCrashHandler = {
    */
   onSelectedBrowserCrash(browser, restartRequired) {
     if (!browser.isRemoteBrowser) {
-      Cu.reportError("Selected crashed browser is not remote.");
+      console.error("Selected crashed browser is not remote.");
       return;
     }
     if (!browser.frameLoader) {
-      Cu.reportError("Selected crashed browser has no frameloader.");
+      console.error("Selected crashed browser has no frameloader.");
       return;
     }
 
@@ -640,7 +640,7 @@ var TabCrashHandler = {
     lazy.CrashSubmit.submit(dumpID, lazy.CrashSubmit.SUBMITTED_FROM_CRASH_TAB, {
       recordSubmission: true,
       extraExtraKeyVals,
-    }).catch(Cu.reportError);
+    }).catch(console.error);
 
     this.prefs.setBoolPref("sendReport", true);
     this.prefs.setBoolPref("includeURL", includeURL);
@@ -718,7 +718,7 @@ var TabCrashHandler = {
 
   onAboutTabCrashedUnload(browser) {
     if (!this._crashedTabCount) {
-      Cu.reportError("Can not decrement crashed tab count to below 0");
+      console.error("Can not decrement crashed tab count to below 0");
       return;
     }
     this._crashedTabCount--;
@@ -897,7 +897,7 @@ var UnsubmittedCrashHandler = {
     try {
       reportIDs = await lazy.CrashSubmit.pendingIDs(dateLimit);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
       return null;
     }
 
@@ -1139,7 +1139,7 @@ var UnsubmittedCrashHandler = {
    */
   submitReports(reportIDs, submittedFrom) {
     for (let reportID of reportIDs) {
-      lazy.CrashSubmit.submit(reportID, submittedFrom).catch(Cu.reportError);
+      lazy.CrashSubmit.submit(reportID, submittedFrom).catch(console.error);
     }
   },
 };

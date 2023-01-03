@@ -135,7 +135,7 @@ var BrowserUIUtils = {
     }
     let numberOfInsertionPoints = msg.match(/%\d+\$S/g).length;
     if (numberOfInsertionPoints != nodesOrStrings.length) {
-      Cu.reportError(
+      console.error(
         `Message has ${numberOfInsertionPoints} insertion points, ` +
           `but got ${nodesOrStrings.length} replacement parameters!`
       );

@@ -114,7 +114,7 @@ export var PartnerLinkAttribution = {
 
     let searchUrlQueryParamName = engine.searchUrlQueryParamName;
     if (!searchUrlQueryParamName) {
-      Cu.reportError("makeSearchEngineRequest can't find search terms key");
+      console.error("makeSearchEngineRequest can't find search terms key");
       return;
     }
 
@@ -125,9 +125,7 @@ export var PartnerLinkAttribution = {
 
     let targetParams = new URLSearchParams(url.query);
     if (!targetParams.has(searchUrlQueryParamName)) {
-      Cu.reportError(
-        "makeSearchEngineRequest can't remove target search terms"
-      );
+      console.error("makeSearchEngineRequest can't remove target search terms");
       return;
     }
 
@@ -164,7 +162,7 @@ export var PartnerLinkAttribution = {
    */
   sendContextualServicesPing(payload, pingType) {
     if (!Object.values(CONTEXTUAL_SERVICES_PING_TYPES).includes(pingType)) {
-      Cu.reportError("Invalid Contextual Services ping type");
+      console.error("Invalid Contextual Services ping type");
       return;
     }
 

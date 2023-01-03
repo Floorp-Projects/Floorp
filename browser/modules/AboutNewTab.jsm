@@ -182,7 +182,7 @@ const AboutNewTab = {
       this.activityStream.init();
       this._subscribeToActivityStream();
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -209,7 +209,7 @@ const AboutNewTab = {
       try {
         unsubscribe();
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     };
   },

@@ -183,11 +183,10 @@ export var Sanitizer = {
         options.progress = { clearHonoringExceptions: true };
         await this.sanitize(itemsToClear, options);
       } catch (ex) {
-        Cu.reportError(
-          "A previously pending sanitization failed: " +
-            itemsToClear +
-            "\n" +
-            ex
+        console.error(
+          "A previously pending sanitization failed: ",
+          itemsToClear,
+          ex
         );
       }
     }
@@ -1147,7 +1146,7 @@ function safeGetPendingSanitizations() {
       Services.prefs.getStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS, "[]")
     );
   } catch (ex) {
-    Cu.reportError("Invalid JSON value for pending sanitizations: " + ex);
+    console.error("Invalid JSON value for pending sanitizations: ", ex);
     return [];
   }
 }

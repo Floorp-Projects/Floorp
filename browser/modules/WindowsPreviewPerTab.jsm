@@ -233,7 +233,7 @@ PreviewController.prototype = {
       {
         fullScale: aFullScale,
       }
-    ).catch(e => Cu.reportError(e));
+    ).catch(console.error);
     // If we're updating the canvas, then we're in the middle of a peek so
     // don't discard the cache of previews.
   },
