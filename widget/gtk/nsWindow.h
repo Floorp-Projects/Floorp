@@ -986,6 +986,10 @@ class nsWindow final : public nsBaseWidget {
   nsCString mWindowActivationTokenFromEnv;
   mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
   GdkDragContext* mSourceDragContext = nullptr;
+#if MOZ_LOGGING
+  LayoutDeviceIntRect mLastLoggedBoundSize;
+  int mLastLoggedScale = -1;
+#endif
 };
 
 #endif /* __nsWindow_h__ */
