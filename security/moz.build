@@ -60,10 +60,12 @@ elif not CONFIG["MOZ_SYSTEM_NSS"]:
     gyp_vars["nspr_libs"] = "nspr"
 else:
     gyp_vars["nspr_libs"] = "nspr"
-    if not CONFIG["ENABLE_TESTS"]:
-        # If we're not building tests, then we don't need a static copy
-        # of NSS. Build mozpkix only.
-        gyp_vars["mozpkix_only"] = 1
+    # Bug 1805371: We need a static copy of NSS for the tlsserver test
+    # binaries even when building with system NSS. But there's no good
+    # way to build NSS that does not pollute dist/bin with shared
+    # object files. For now, we have to build mozpkix only and disable
+    # the affected tests.
+    gyp_vars["mozpkix_only"] = 1
 
 # This disables building some NSS tools.
 gyp_vars["mozilla_client"] = 1
