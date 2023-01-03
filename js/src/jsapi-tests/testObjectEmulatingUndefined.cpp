@@ -20,8 +20,7 @@ static bool ObjectEmulatingUndefinedConstructor(JSContext* cx, unsigned argc,
 }
 
 BEGIN_TEST(testObjectEmulatingUndefined_truthy) {
-  CHECK(JS_InitClass(cx, global, &ObjectEmulatingUndefinedClass, nullptr,
-                     "ObjectEmulatingUndefined",
+  CHECK(JS_InitClass(cx, global, nullptr, nullptr, "ObjectEmulatingUndefined",
                      ObjectEmulatingUndefinedConstructor, 0, nullptr, nullptr,
                      nullptr, nullptr));
 
@@ -47,8 +46,7 @@ BEGIN_TEST(testObjectEmulatingUndefined_truthy) {
 END_TEST(testObjectEmulatingUndefined_truthy)
 
 BEGIN_TEST(testObjectEmulatingUndefined_equal) {
-  CHECK(JS_InitClass(cx, global, &ObjectEmulatingUndefinedClass, nullptr,
-                     "ObjectEmulatingUndefined",
+  CHECK(JS_InitClass(cx, global, nullptr, nullptr, "ObjectEmulatingUndefined",
                      ObjectEmulatingUndefinedConstructor, 0, nullptr, nullptr,
                      nullptr, nullptr));
 
