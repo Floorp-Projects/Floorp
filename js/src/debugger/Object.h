@@ -178,7 +178,6 @@ class DebuggerObject : public NativeObject {
   double promiseLifetime() const;
   double promiseTimeToResolution() const;
 
-  bool isInstance() const;
   Debugger* owner() const;
 
   JSObject* maybeReferent() const {

@@ -123,16 +123,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
     return nullptr;
   }
 
-  // Forbid Debugger.Object.prototype, which is of class DebuggerObject::class_
-  // but isn't a real working Debugger.Object.
-  DebuggerObject* nthisobj = &thisobj->as<DebuggerObject>();
-  if (!nthisobj->isInstance()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INCOMPATIBLE_PROTO, "Debugger.Object",
-                              "method", "prototype object");
-    return nullptr;
-  }
-  return nthisobj;
+  return &thisobj->as<DebuggerObject>();
 }
 
 /* static */
@@ -1539,7 +1530,7 @@ NativeObject* DebuggerObject::initClass(JSContext* cx,
                                         Handle<GlobalObject*> global,
                                         HandleObject debugCtor) {
   Rooted<NativeObject*> objectProto(
-      cx, InitClass(cx, debugCtor, &class_, nullptr, "Object", construct, 0,
+      cx, InitClass(cx, debugCtor, nullptr, nullptr, "Object", construct, 0,
                     properties_, methods_, nullptr, nullptr));
 
   if (!objectProto) {
