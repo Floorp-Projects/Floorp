@@ -80,6 +80,10 @@ const void* CompileRuntime::addressOfMegamorphicCache() {
   return &runtime()->caches().megamorphicCache;
 }
 
+const void* CompileRuntime::addressOfStringToAtomCache() {
+  return &runtime()->caches().stringToAtomCache;
+}
+
 const DOMCallbacks* CompileRuntime::DOMcallbacks() {
   return runtime()->DOMcallbacks;
 }

@@ -80,6 +80,7 @@ class CompileRuntime {
   const void* addressOfInterruptBits();
   const void* addressOfZone();
   const void* addressOfMegamorphicCache();
+  const void* addressOfStringToAtomCache();
 
 #ifdef DEBUG
   const void* addressOfIonBailAfterCounter();

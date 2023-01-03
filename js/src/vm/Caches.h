@@ -248,16 +248,26 @@ class MegamorphicCache {
 //
 // This cache is purged on minor and major GC.
 class StringToAtomCache {
+ public:
+  struct LastLookup {
+    JSLinearString* string = nullptr;
+    JSAtom* atom = nullptr;
+
+    static constexpr size_t offsetOfString() {
+      return offsetof(LastLookup, string);
+    }
+
+    static constexpr size_t offsetOfAtom() {
+      return offsetof(LastLookup, atom);
+    }
+  };
+  static constexpr size_t NumLastLookups = 2;
+
+ private:
   using Map = HashMap<JSLinearString*, JSAtom*, PointerHasher<JSLinearString*>,
                       SystemAllocPolicy>;
   Map map_;
-
-  struct LastEntry {
-    JSLinearString* string = nullptr;
-    JSAtom* atom = nullptr;
-  };
-  static constexpr size_t NumLastEntries = 2;
-  mozilla::Array<LastEntry, NumLastEntries> lastLookups_;
+  mozilla::Array<LastLookup, NumLastLookups> lastLookups_;
 
  public:
   // Don't use the HashMap for short strings. Hashing them is less expensive.
@@ -276,7 +286,7 @@ class StringToAtomCache {
   MOZ_ALWAYS_INLINE JSAtom* lookup(JSLinearString* s) const {
     MOZ_ASSERT(!s->isAtom());
 
-    for (const LastEntry& entry : lastLookups_) {
+    for (const LastLookup& entry : lastLookups_) {
       if (entry.string == s) {
         MOZ_ASSERT(EqualStrings(s, entry.atom));
         return entry.atom;
@@ -291,10 +301,14 @@ class StringToAtomCache {
     return lookupInMap(s);
   }
 
+  static constexpr size_t offsetOfLastLookups() {
+    return offsetof(StringToAtomCache, lastLookups_);
+  }
+
   void maybePut(JSLinearString* s, JSAtom* atom) {
     MOZ_ASSERT(!s->isAtom());
 
-    for (size_t i = NumLastEntries - 1; i > 0; i--) {
+    for (size_t i = NumLastLookups - 1; i > 0; i--) {
       lastLookups_[i] = lastLookups_[i - 1];
     }
     lastLookups_[0].string = s;
@@ -311,7 +325,7 @@ class StringToAtomCache {
 
   void purge() {
     map_.clearAndCompact();
-    for (LastEntry& entry : lastLookups_) {
+    for (LastLookup& entry : lastLookups_) {
       entry.string = nullptr;
       entry.atom = nullptr;
     }
