@@ -372,7 +372,19 @@ var setProperty = async function(
   info("Set property to: " + value);
   await focusEditableField(view, textProp.editor.valueSpan);
 
-  const onPreview = view.once("ruleview-changed");
+  // Because of the manual flush approach used for tests, we might have an
+  // unknown number of debounced "preview" requests . Each preview should
+  // synchronously emit "start-preview-property-value".
+  // Listen to both this event and "ruleview-changed" which is emitted at the
+  // end of a preview and make sure each preview completes successfully.
+  let previewStartedCounter = 0;
+  const onStartPreview = () => previewStartedCounter++;
+  view.on("start-preview-property-value", onStartPreview);
+
+  let previewCounter = 0;
+  const onPreviewApplied = () => previewCounter++;
+  view.on("ruleview-changed", onPreviewApplied);
+
   if (value === null) {
     const onPopupOpened = once(view.popup, "popup-opened");
     EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
@@ -381,19 +393,26 @@ var setProperty = async function(
     EventUtils.sendString(value, view.styleWindow);
   }
 
-  info("Waiting for ruleview-changed after updating property");
+  info(`Flush debounced ruleview methods (remaining: ${flushCount})`);
   view.debounce.flush();
+  await waitFor(() => previewCounter >= previewStartedCounter);
+
   flushCount--;
 
   while (flushCount > 0) {
     // Wait for some time before triggering a new flush to let new debounced
     // functions queue in-between.
     await wait(100);
+
+    info(`Flush debounced ruleview methods (remaining: ${flushCount})`);
     view.debounce.flush();
+    await waitFor(() => previewCounter >= previewStartedCounter);
+
     flushCount--;
   }
 
-  await onPreview;
+  view.off("start-preview-property-value", onStartPreview);
+  view.off("ruleview-changed", onPreviewApplied);
 
   const onValueDone = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
