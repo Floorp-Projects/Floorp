@@ -301,7 +301,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
   virtual WindowRenderer* GetWindowRenderer() override;
   virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
-  virtual void CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture) override;
+  virtual void CaptureRollupEvents(bool aDoCapture) override;
   [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override;
   virtual bool HasPendingInputEvent() override;
   virtual nsTransparencyMode GetTransparencyMode() override;

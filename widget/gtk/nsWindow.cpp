@@ -3692,8 +3692,7 @@ void nsWindow::CaptureMouse(bool aCapture) {
   }
 }
 
-void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
-                                   bool aDoCapture) {
+void nsWindow::CaptureRollupEvents(bool aDoCapture) {
   LOG("CaptureRollupEvents() %i\n", int(aDoCapture));
 
   if (mIsDestroyed) {
@@ -3701,7 +3700,6 @@ void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
   }
 
   if (aDoCapture) {
-    gRollupListener = aListener;
     // Don't add a grab if a drag is in progress, or if the widget is a drag
     // feedback popup. (panels with type="drag").
     if (!GdkIsWaylandDisplay() && !mIsDragPopup &&
@@ -3714,7 +3712,6 @@ void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
     // was not added to this widget.
     LOG("  remove mContainer grab [%p]\n", this);
     gtk_grab_remove(GTK_WIDGET(mContainer));
-    gRollupListener = nullptr;
   }
 }
 
@@ -7433,7 +7430,6 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
     rollupWidget = rollupListener->GetRollupWidget();
   }
   if (!rollupWidget) {
-    nsBaseWidget::gRollupListener = nullptr;
     return false;
   }
 

@@ -232,8 +232,7 @@ class nsWindow final : public nsBaseWidget {
                          nsEventStatus& aStatus) override;
   void EnableDragDrop(bool aEnable) override;
   void CaptureMouse(bool aCapture) override;
-  void CaptureRollupEvents(nsIRollupListener* aListener,
-                           bool aDoCapture) override;
+  void CaptureRollupEvents(bool aDoCapture) override;
   [[nodiscard]] nsresult GetAttention(int32_t aCycleCount) override;
   bool HasPendingInputEvent() override;
   WindowRenderer* GetWindowRenderer() override;
