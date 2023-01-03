@@ -14,6 +14,9 @@ var EXPORTED_SYMBOLS = ["FormAutofillPrompter"];
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
+const { AutofillTelemetry } = ChromeUtils.import(
+  "resource://autofill/Autofilltelemetry.jsm"
+);
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
@@ -377,8 +380,15 @@ let FormAutofillPrompter = {
     }
   },
 
-  async promptToSaveAddress(browser, type, description) {
-    return this._showCCorAddressCaptureDoorhanger(browser, type, description);
+  async promptToSaveAddress(browser, address, description) {
+    const state = this._showCCorAddressCaptureDoorhanger(
+      browser,
+      address,
+      address.guid ? "updateAddress" : "firstTimeUse",
+      description
+    );
+
+    return state;
   },
 
   async promptToSaveCreditCard(browser, creditCard, storage) {
@@ -389,30 +399,16 @@ let FormAutofillPrompter = {
     let type = lazy.CreditCard.getType(number);
     let maskedNumber = lazy.CreditCard.getMaskedNumber(number);
     let description = `${maskedNumber}, ${name}`;
-    const telemetryObject = creditCard.guid
-      ? "update_doorhanger"
-      : "capture_doorhanger";
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "show",
-      telemetryObject,
-      creditCard.flowId
-    );
 
     const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
       browser,
+      creditCard,
       creditCard.guid ? "updateCreditCard" : "addCreditCard",
       description,
       type
     );
 
     if (state == "cancel") {
-      Services.telemetry.recordEvent(
-        "creditcard",
-        "cancel",
-        telemetryObject,
-        creditCard.flowId
-      );
       return;
     }
 
@@ -420,12 +416,6 @@ let FormAutofillPrompter = {
       Services.prefs.setBoolPref(
         "extensions.formautofill.creditCards.enabled",
         false
-      );
-      Services.telemetry.recordEvent(
-        "creditcard",
-        "disable",
-        telemetryObject,
-        creditCard.flowId
       );
       return;
     }
@@ -438,12 +428,6 @@ let FormAutofillPrompter = {
     let changedGUIDs = [];
     if (creditCard.guid) {
       if (state == "update") {
-        Services.telemetry.recordEvent(
-          "creditcard",
-          "update",
-          telemetryObject,
-          creditCard.flowId
-        );
         await storage.creditCards.update(
           creditCard.guid,
           creditCard.record,
@@ -451,12 +435,6 @@ let FormAutofillPrompter = {
         );
         changedGUIDs.push(creditCard.guid);
       } else if ("create") {
-        Services.telemetry.recordEvent(
-          "creditcard",
-          "save",
-          telemetryObject,
-          creditCard.flowId
-        );
         changedGUIDs.push(await storage.creditCards.add(creditCard.record));
       }
     } else {
@@ -464,12 +442,6 @@ let FormAutofillPrompter = {
         ...(await storage.creditCards.mergeToStorage(creditCard.record))
       );
       if (!changedGUIDs.length) {
-        Services.telemetry.recordEvent(
-          "creditcard",
-          "save",
-          telemetryObject,
-          creditCard.flowId
-        );
         changedGUIDs.push(await storage.creditCards.add(creditCard.record));
       }
     }
@@ -483,18 +455,26 @@ let FormAutofillPrompter = {
   /**
    * Show different types of doorhanger by leveraging PopupNotifications.
    *
-   * @param  {XULElement} browser
-   *         Target browser element for showing doorhanger.
-   * @param  {string} type
-   *         The type of the doorhanger. There will have first time use/update/credit card.
-   * @param  {string} description
-   *         The message that provides more information on doorhanger.
-   * @param {string} network
-   *         The network type for credit card doorhangers.
-   * @returns {Promise}
-              Resolved with action type when action callback is triggered.
+   * @param  {XULElement} browser Target browser element for showing doorhanger.
+   * @param  {object} record The record being saved
+   * @param  {string} type The type of the doorhanger. There will have first time use/update/credit card.
+   * @param  {string} description The message that provides more information on doorhanger.
+   * @param  {string} network The network type for credit card doorhangers.
+   * @returns {Promise} Resolved with action type when action callback is triggered.
    */
-  async _showCCorAddressCaptureDoorhanger(browser, type, description, network) {
+  async _showCCorAddressCaptureDoorhanger(
+    browser,
+    record,
+    type,
+    description,
+    network
+  ) {
+    const telemetryType = ["updateCreditCard", "addCreditCard"].includes(type)
+      ? AutofillTelemetry.CREDIT_CARD
+      : AutofillTelemetry.ADDRESS;
+
+    AutofillTelemetry.recordDoorhangerShown(telemetryType, record);
+
     lazy.log.debug("show doorhanger with type:", type);
     return new Promise(resolve => {
       let {
@@ -564,6 +544,9 @@ let FormAutofillPrompter = {
         ...this._createActions(mainAction, secondaryActions, resolve),
         options
       );
+    }).then(state => {
+      AutofillTelemetry.recordDoorhangerClicked(telemetryType, state, record);
+      return state;
     });
   },
 };
