@@ -659,7 +659,7 @@ double GCHeapThreshold::computeBalancedHeapLimit(
   double g = allocationRate;
   double s = collectionRate;
   double f = d * sqrt((W + W0) * (g / s));
-  double M = W + std::min(f, MaxHeapGrowth) * W;
+  double M = W + std::min(f, MaxHeapGrowth * W);
   M = std::max({MinBalancedHeapLimitMB, W + MinBalancedHeadroomMB, M});
 
   return M * double(BytesPerMB);
