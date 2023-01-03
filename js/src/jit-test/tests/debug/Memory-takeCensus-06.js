@@ -38,7 +38,6 @@ Pattern({
 
           // The below are all Debugger prototype objects.
           Memory:         { count: Pattern.NATURAL },
-          Frame:          { count: Pattern.NATURAL }
         })
   .assert(dbg.memory.takeCensus({ breakdown: { by: 'objectClass' } }));
 
