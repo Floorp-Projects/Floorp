@@ -18,4 +18,5 @@ LOCAL_INCLUDES += [
     "/dom/fs/parent",
     "/dom/fs/parent/datamodel",
     "/dom/fs/test/gtest",
+    "/dom/fs/test/gtest/parent",
 ]
