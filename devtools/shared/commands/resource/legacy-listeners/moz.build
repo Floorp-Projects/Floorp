@@ -11,6 +11,7 @@ DevToolsModules(
     "error-messages.js",
     "extension-storage.js",
     "indexed-db.js",
+    "last-private-context-exit.js",
     "local-storage.js",
     "network-event-stacktraces.js",
     "network-events.js",
