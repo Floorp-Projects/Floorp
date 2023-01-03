@@ -392,6 +392,11 @@ add_task(async function test_list_active_extensions_only() {
 
     await openExtensionsPanel(aWin);
 
+    ok(
+      aWin.gUnifiedExtensions._button.open,
+      "Expected unified extension panel to be open"
+    );
+
     const hiddenAddonItem = getUnifiedExtensionsItem(aWin, extensions[0].id);
     is(hiddenAddonItem, null, "didn't expect an item for a hidden add-on");
 
