@@ -135,3 +135,25 @@ add_task(async function user_overwrites_search_term() {
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
 });
+
+// If a user clears the URL bar, and goes to a different tab,
+// the original tab should show the search term again.
+add_task(async function user_overwrites_search_term() {
+  let { tab: tab1 } = await searchWithTab(SEARCH_STRING);
+
+  gURLBar.focus();
+  gURLBar.select();
+  EventUtils.sendKey("delete");
+
+  Assert.equal(gURLBar.value, "", "Empty string should be in url bar.");
+
+  // Open a new tab, switch back to the first and check
+  // the blank string is replaced with the search string.
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+
+  assertSearchStringIsInUrlbar(SEARCH_STRING);
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+});
