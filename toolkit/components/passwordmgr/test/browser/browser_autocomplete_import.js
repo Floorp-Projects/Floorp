@@ -110,8 +110,10 @@ add_task(async function import_suggestion_wizard() {
         "Wait for migration wizard to open"
       );
 
-      // The modal window blocks execution, so avoid calling directly.
-      executeSoon(() => EventUtils.synthesizeMouseAtCenter(importableItem, {}));
+      executeSoon(() => {
+        EventUtils.synthesizeKey("KEY_ArrowDown");
+        EventUtils.synthesizeKey("KEY_Enter");
+      });
 
       wizard = await wizardPromise;
       Assert.ok(wizard, "Wizard opened");
@@ -157,7 +159,9 @@ add_task(async function import_suggestion_learn_more() {
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
           "password-import"
       );
-      EventUtils.synthesizeMouseAtCenter(learnMoreItem, {});
+      await EventUtils.synthesizeKey("KEY_ArrowDown");
+      await EventUtils.synthesizeKey("KEY_ArrowDown");
+      await EventUtils.synthesizeKey("KEY_Enter");
       supportTab = await supportTabPromise;
       Assert.ok(supportTab, "Support tab opened");
 
@@ -199,23 +203,24 @@ add_task(async function import_suggestion_migrate() {
         () => gTestMigrator.migrate.callCount,
         "Wait for direct migration attempt"
       );
-      EventUtils.synthesizeMouseAtCenter(importableItem, {});
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+      EventUtils.synthesizeKey("KEY_Enter");
 
       const callCount = await migratePromise;
       Assert.equal(callCount, 1, "Direct migrate used once");
 
-      const importedItem = await BrowserTestUtils.waitForCondition(
-        () => popup.querySelector(`[originaltype="loginWithOrigin"]`),
-        "Wait for imported login to show"
-      );
-      EventUtils.synthesizeMouseAtCenter(importedItem, {});
+      await SimpleTest.promiseFocus(browser);
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+      EventUtils.synthesizeKey("KEY_Enter");
 
-      const username = await SpecialPowers.spawn(
-        browser,
-        [],
-        () => content.document.getElementById("form-basic-username").value
-      );
-      Assert.equal(username, "import", "username from import filled in");
+      await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(() => {
+          return (
+            "import" ==
+            content.document.getElementById("form-basic-username").value
+          );
+        }, "username from import filled in");
+      });
 
       LoginTestUtils.clearData();
     }
