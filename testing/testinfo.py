@@ -9,6 +9,7 @@ import os
 import posixpath
 import re
 import subprocess
+from collections import defaultdict
 
 import mozpack.path as mozpath
 import requests
@@ -356,6 +357,108 @@ class TestInfoReport(TestInfo):
             return name_part.split()[-1]  # get just the test name, not extra words
         return None
 
+    def get_runcount_data(self, start, end):
+        # TODO: use start/end properly
+        runcounts = self.get_runcounts()
+        runcounts = self.squash_runcounts(runcounts, days=30)
+        runcounts = self.expand_runcounts(runcounts)
+        return runcounts
+
+    def get_testinfoall_index_url(self):
+        import taskcluster
+
+        queue = taskcluster.Queue()
+        index = taskcluster.Index(
+            {
+                "rootUrl": "https://firefox-ci-tc.services.mozilla.com",
+            }
+        )
+        route = "gecko.v2.mozilla-central.latest.source.test-info-all"
+
+        task_id = index.findTask(route)["taskId"]
+        artifacts = queue.listLatestArtifacts(task_id)["artifacts"]
+
+        url = ""
+        for artifact in artifacts:
+            if artifact["name"].endswith("test-run-info.json"):
+                url = queue.buildUrl("getLatestArtifact", task_id, artifact["name"])
+                break
+        return url
+
+    def get_runcounts(self):
+        testrundata = {}
+        # get historical data from test-info job artifact; if missing get fresh
+        try:
+            url = self.get_testinfoall_index_url()
+            r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
+            r.raise_for_status()
+            testrundata = r.json()
+        except Exception:
+            pass
+
+        # fill in any holes we have
+        endday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+            days=1
+        )
+        startday = endday - datetime.timedelta(days=30)
+        while startday < endday:
+            nextday = startday + datetime.timedelta(days=1)
+            if str(nextday) not in testrundata.keys():
+                url = "https://treeherder.mozilla.org/api/groupsummary/"
+                url += "?startday=%s&endday=%s" % (startday.date(), nextday.date())
+                r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
+                r.raise_for_status()
+                testrundata[str(nextday.date())] = r.json()
+            startday = nextday
+
+        return testrundata
+
+    def expand_runcounts(self, runcounts):
+        # take the job_type_name index and convert to the string
+        retVal = {}
+        jtn = runcounts["job_type_names"]
+        for m in runcounts["manifests"]:
+            mname = list(m.keys())[0]
+            retVal[mname] = [[jtn[x[0]]] + x[1:] for x in m[mname]]
+        return retVal
+
+    def squash_runcounts(self, runcounts, days=30):
+        # squash all testrundata together into 1 big happy family for the last X days
+        endday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+            days=1
+        )
+        oldest = endday - datetime.timedelta(days=days)
+
+        all_jtn = []
+        testgroup_runinfo = defaultdict(lambda: defaultdict(int))
+
+        for datekey in runcounts.keys():
+            # strip out older days
+            if datetime.date.fromisoformat(datekey) < oldest.date():
+                continue
+
+            # build master list of jtn + manifests
+            jtn = runcounts[datekey]["job_type_names"]
+            for m in runcounts[datekey]["manifests"]:
+                man_name = list(m.keys())[0]
+
+                for job_type_id, result, classification, count in m[man_name]:
+                    # format: job_type_name, result, classification, count
+                    # find matching jtn, result, classification and increment 'count'
+                    job_name = jtn[job_type_id]
+                    if job_name not in all_jtn:
+                        all_jtn.append(job_name)
+                    job_id = all_jtn.index(job_name)
+                    key = (job_id, result, classification)
+                    testgroup_runinfo[man_name][key] += count
+
+        # now that we have a structure with all counts, flatten this out
+        # manifest: key + count; key = job_type_id, result, classification
+        retVal = {"job_type_names": all_jtn, "manifests": []}
+        for manifest, val in testgroup_runinfo.items():
+            retVal["manifests"].append({manifest: [list(x) + [val[x]] for x in val]})
+        return retVal
+
     def get_intermittent_failure_data(self, start, end):
         retVal = {}
 
@@ -471,6 +574,7 @@ class TestInfoReport(TestInfo):
         display_keys = (filter_keys or []) + ["skip-if", "fail-if", "fails-if"]
         display_keys = set(display_keys)
         ifd = self.get_intermittent_failure_data(start, end)
+        runcount = self.get_runcount_data(start, end)
 
         print("Finding tests...")
         here = os.path.abspath(os.path.dirname(__file__))
@@ -628,11 +732,6 @@ class TestInfoReport(TestInfo):
                         if t.get("skip-if"):
                             skipped_count += 1
 
-                        # add in intermittent failure data
-                        if ifd.get(relpath):
-                            if_data = ifd.get(relpath)
-                            test_info["failure_count"] = if_data["count"]
-
                         if "manifest_relpath" in t and "manifest" in t:
                             if "web-platform" in t["manifest_relpath"]:
                                 test_info["manifest"] = [t["manifest"]]
@@ -645,6 +744,16 @@ class TestInfoReport(TestInfo):
                                     "%s:%s"
                                     % (t["ancestor_manifest"], test_info["manifest"][0])
                                 ]
+
+                        # add in intermittent failure data
+                        if ifd.get(relpath):
+                            if_data = ifd.get(relpath)
+                            test_info["failure_count"] = if_data["count"]
+                            total_runs = 0
+                            for m in test_info["manifest"]:
+                                total_runs += sum([x[3] for x in runcount[m]])
+                            if total_runs > 0:
+                                test_info["total_runs"] = total_runs
 
                         if show_tests:
                             rkey = key if show_components else "all"

@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 
+import requests
 from mach.decorators import Command, CommandArgument, SettingsProvider, SubCommand
 from mozbuild.base import BuildEnvironmentNotFoundException
 from mozbuild.base import MachCommandConditions as conditions
@@ -944,6 +945,30 @@ def test_report_diff(command_context, before, after, output_file, verbose):
 
 @SubCommand(
     "test-info",
+    "testrun-report",
+    description="Generate report of number of runs for each test group (manifest)",
+)
+@CommandArgument("--output-file", help="Path to report file.")
+def test_info_testrun_report(command_context, output_file):
+    import json
+
+    import testinfo
+
+    ti = testinfo.TestInfoReport(verbose=True)
+    runcounts = ti.get_runcounts()
+    if output_file:
+        output_file = os.path.abspath(output_file)
+        output_dir = os.path.dirname(output_file)
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
+        with open(output_file, "w") as f:
+            json.dump(runcounts, f)
+    else:
+        print(runcounts)
+
+
+@SubCommand(
+    "test-info",
     "failure-report",
     description="Display failure line groupings and frequencies for "
     "single tracking intermittent bugs.",
@@ -967,8 +992,6 @@ def test_info_failures(
     end,
     bugid,
 ):
-    import requests
-
     # bugid comes in as a string, we need an int:
     try:
         bugid = int(bugid)
