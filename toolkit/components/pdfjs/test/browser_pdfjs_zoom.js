@@ -119,8 +119,9 @@ add_task(async function test() {
 
         let initialWidth, previousWidth;
         initialWidth = previousWidth = parseInt(
-          content.document.querySelector("div.page[data-page-number='1']").style
-            .width
+          content.getComputedStyle(
+            content.document.querySelector("div.page[data-page-number='1']")
+          ).width
         );
 
         for (let subTest of contentTESTS) {
@@ -165,7 +166,9 @@ add_task(async function test() {
           let pageContainer = content.document.querySelector(
             "div.page[data-page-number='1']"
           );
-          let actualWidth = parseInt(pageContainer.style.width);
+          let actualWidth = parseInt(
+            content.getComputedStyle(pageContainer).width
+          );
 
           // the actual zoom of the PDF document
           let computedZoomValue =
@@ -224,8 +227,9 @@ async function waitForRenderAndGetWidth(newTabBrowser) {
     await waitForRender(content.document);
 
     return parseInt(
-      content.document.querySelector("div.page[data-page-number='1']").style
-        .width
+      content.getComputedStyle(
+        content.document.querySelector("div.page[data-page-number='1']")
+      ).width
     );
   });
 }

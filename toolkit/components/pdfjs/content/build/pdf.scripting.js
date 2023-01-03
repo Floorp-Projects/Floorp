@@ -573,6 +573,10 @@ class Field extends _pdf_object.PDFObject {
     return this._value;
   }
   set value(value) {
+    if (this._isChoice) {
+      this._setChoiceValue(value);
+      return;
+    }
     if (value === "") {
       this._value = "";
     } else if (typeof value === "string") {
@@ -591,25 +595,36 @@ class Field extends _pdf_object.PDFObject {
     } else {
       this._value = value;
     }
-    if (this._isChoice) {
-      if (this.multipleSelection) {
-        const values = new Set(value);
-        if (Array.isArray(this._currentValueIndices)) {
-          this._currentValueIndices.length = 0;
-        } else {
-          this._currentValueIndices = [];
-        }
-        this._items.forEach(({
-          displayValue
-        }, i) => {
-          if (values.has(displayValue)) {
-            this._currentValueIndices.push(i);
-          }
-        });
+  }
+  _setChoiceValue(value) {
+    if (this.multipleSelection) {
+      if (!Array.isArray(value)) {
+        value = [value];
+      }
+      const values = new Set(value);
+      if (Array.isArray(this._currentValueIndices)) {
+        this._currentValueIndices.length = 0;
+        this._value.length = 0;
       } else {
-        this._currentValueIndices = this._items.findIndex(({
-          displayValue
-        }) => value === displayValue);
+        this._currentValueIndices = [];
+        this._value = [];
+      }
+      this._items.forEach((item, i) => {
+        if (values.has(item.exportValue)) {
+          this._currentValueIndices.push(i);
+          this._value.push(item.exportValue);
+        }
+      });
+    } else {
+      if (Array.isArray(value)) {
+        value = value[0];
+      }
+      const index = this._items.findIndex(({
+        exportValue
+      }) => value === exportValue);
+      if (index !== -1) {
+        this._currentValueIndices = index;
+        this._value = this._items[index].exportValue;
       }
     }
   }
@@ -2252,6 +2267,7 @@ class EventDispatcher {
       if (id === "doc") {
         const eventName = event.name;
         if (eventName === "Open") {
+          this._document.obj._initActions();
           this.formatAll();
         }
         if (!["DidPrint", "DidSave", "WillPrint", "WillSave"].includes(eventName)) {
@@ -2286,6 +2302,7 @@ class EventDispatcher {
       case "Keystroke":
         savedChange = {
           value: event.value,
+          changeEx: event.changeEx,
           change: event.change,
           selStart: event.selStart,
           selEnd: event.selEnd
@@ -2316,6 +2333,15 @@ class EventDispatcher {
       if (event.willCommit) {
         this.runValidation(source, event);
       } else {
+        if (source.obj._isChoice) {
+          source.obj.value = savedChange.changeEx;
+          source.obj._send({
+            id: source.obj._id,
+            siblings: source.obj._siblings,
+            value: source.obj.value
+          });
+          return;
+        }
         const value = source.obj.value = this.mergeChange(event);
         let selStart, selEnd;
         if (event.selStart !== savedChange.selStart || event.selEnd !== savedChange.selEnd) {
@@ -2384,7 +2410,8 @@ class EventDispatcher {
         siblings: source.obj._siblings,
         value: "",
         formattedValue: null,
-        selRange: [0, 0]
+        selRange: [0, 0],
+        focus: true
       });
     }
   }
@@ -2537,15 +2564,20 @@ class Doc extends _pdf_object.PDFObject {
     this._disablePrinting = false;
     this._disableSaving = false;
   }
+  _initActions() {
+    const dontRun = new Set(["WillClose", "WillSave", "DidSave", "WillPrint", "DidPrint", "OpenAction"]);
+    this._disableSaving = true;
+    for (const actionName of this._actions.keys()) {
+      if (!dontRun.has(actionName)) {
+        this._runActions(actionName);
+      }
+    }
+    this._runActions("OpenAction");
+    this._disableSaving = false;
+  }
   _dispatchDocEvent(name) {
     if (name === "Open") {
-      const dontRun = new Set(["WillClose", "WillSave", "DidSave", "WillPrint", "DidPrint", "OpenAction"]);
       this._disableSaving = true;
-      for (const actionName of this._actions.keys()) {
-        if (!dontRun.has(actionName)) {
-          this._runActions(actionName);
-        }
-      }
       this._runActions("OpenAction");
       this._disableSaving = false;
     } else if (name === "WillPrint") {
@@ -4214,8 +4246,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.2.58';
-const pdfjsBuild = 'ba2fec989';
+const pdfjsVersion = '3.2.143';
+const pdfjsBuild = 'c791e01bf';
 })();
 
 /******/ 	return __webpack_exports__;

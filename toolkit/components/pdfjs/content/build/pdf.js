@@ -1123,7 +1123,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.2.58',
+    apiVersion: '3.2.143',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -1262,7 +1262,7 @@ class PDFDocumentProxy {
     return this._transport.stats;
   }
   get isPureXfa() {
-    return !!this._transport._htmlForXfa;
+    return (0, _util.shadow)(this, "isPureXfa", !!this._transport._htmlForXfa);
   }
   get allXfaHtml() {
     return this._transport._htmlForXfa;
@@ -1364,7 +1364,6 @@ class PDFPageProxy {
     this.cleanupAfterRender = false;
     this.pendingCleanup = false;
     this._intentStates = new Map();
-    this._annotationPromises = new Map();
     this.destroyed = false;
   }
   get pageNumber() {
@@ -1402,15 +1401,13 @@ class PDFPageProxy {
     intent = "display"
   } = {}) {
     const intentArgs = this._transport.getRenderingIntent(intent);
-    let promise = this._annotationPromises.get(intentArgs.cacheKey);
-    if (!promise) {
-      promise = this._transport.getAnnotations(this._pageIndex, intentArgs.renderingIntent);
-      this._annotationPromises.set(intentArgs.cacheKey, promise);
-    }
-    return promise;
+    return this._transport.getAnnotations(this._pageIndex, intentArgs.renderingIntent);
   }
   getJSActions() {
-    return this._jsActionsPromise ||= this._transport.getPageJSActions(this._pageIndex);
+    return this._transport.getPageJSActions(this._pageIndex);
+  }
+  get isPureXfa() {
+    return (0, _util.shadow)(this, "isPureXfa", !!this._transport._htmlForXfa);
   }
   async getXfa() {
     return this._transport._htmlForXfa?.children[this._pageIndex] || null;
@@ -1615,8 +1612,6 @@ class PDFPageProxy {
       bitmap.close();
     }
     this._bitmaps.clear();
-    this._annotationPromises.clear();
-    this._jsActionsPromise = null;
     this.pendingCleanup = false;
     return Promise.all(waitOn);
   }
@@ -1638,8 +1633,6 @@ class PDFPageProxy {
     }
     this._intentStates.clear();
     this.objs.clear();
-    this._annotationPromises.clear();
-    this._jsActionsPromise = null;
     if (resetStats && this._stats) {
       this._stats = new _display_utils.StatTimer();
     }
@@ -1731,19 +1724,27 @@ class PDFPageProxy {
     if (!intentState.streamReader) {
       return;
     }
+    if (intentState.streamReaderCancelTimeout) {
+      clearTimeout(intentState.streamReaderCancelTimeout);
+      intentState.streamReaderCancelTimeout = null;
+    }
     if (!force) {
       if (intentState.renderTasks.size > 0) {
         return;
       }
       if (reason instanceof _display_utils.RenderingCancelledException) {
+        let delay = RENDERING_CANCELLED_TIMEOUT;
+        if (reason.extraDelay > 0 && reason.extraDelay < 1000) {
+          delay += reason.extraDelay;
+        }
         intentState.streamReaderCancelTimeout = setTimeout(() => {
+          intentState.streamReaderCancelTimeout = null;
           this._abortOperatorList({
             intentState,
             reason,
             force: true
           });
-          intentState.streamReaderCancelTimeout = null;
-        }, RENDERING_CANCELLED_TIMEOUT);
+        }, delay);
         return;
       }
     }
@@ -2595,8 +2596,8 @@ class RenderTask {
   get promise() {
     return this.#internalRenderTask.capability.promise;
   }
-  cancel() {
-    this.#internalRenderTask.cancel();
+  cancel(extraDelay = 0) {
+    this.#internalRenderTask.cancel(null, extraDelay);
   }
   get separateAnnots() {
     const {
@@ -2691,14 +2692,14 @@ class InternalRenderTask {
     this.graphicsReady = true;
     this.graphicsReadyCallback?.();
   }
-  cancel(error = null) {
+  cancel(error = null, extraDelay = 0) {
     this.running = false;
     this.cancelled = true;
     this.gfx?.endDrawing();
     if (this._canvas) {
       InternalRenderTask.#canvasInUse.delete(this._canvas);
     }
-    this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this._pageIndex + 1}`, "canvas"));
+    this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this._pageIndex + 1}`, "canvas", extraDelay));
   }
   operatorListChanged() {
     if (!this.graphicsReady) {
@@ -2750,9 +2751,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.2.58';
+const version = '3.2.143';
 exports.version = version;
-const build = 'ba2fec989';
+const build = 'c791e01bf';
 exports.build = build;
 
 /***/ }),
@@ -2924,13 +2925,16 @@ class AnnotationEditor {
     this._uiManager = parameters.uiManager;
     const {
       rotation,
-      viewBox: [pageLLx, pageLLy, pageURx, pageURy]
+      rawDims: {
+        pageWidth,
+        pageHeight,
+        pageX,
+        pageY
+      }
     } = this.parent.viewport;
     this.rotation = rotation;
-    const pageWidth = pageURx - pageLLx;
-    const pageHeight = pageURy - pageLLy;
     this.pageDimensions = [pageWidth, pageHeight];
-    this.pageTranslation = [pageLLx, pageLLy];
+    this.pageTranslation = [pageX, pageY];
     const [width, height] = this.parentDimensions;
     this.x = parameters.x / width;
     this.y = parameters.y / height;
@@ -3916,6 +3920,7 @@ exports.isDataScheme = isDataScheme;
 exports.isPdfFile = isPdfFile;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
+exports.setLayerDimensions = setLayerDimensions;
 var _base_factory = __w_pdfjs_require__(7);
 var _util = __w_pdfjs_require__(1);
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -4042,6 +4047,17 @@ class PageViewport {
     this.width = width;
     this.height = height;
   }
+  get rawDims() {
+    const {
+      viewBox
+    } = this;
+    return (0, _util.shadow)(this, "rawDims", {
+      pageWidth: viewBox[2] - viewBox[0],
+      pageHeight: viewBox[3] - viewBox[1],
+      pageX: viewBox[0],
+      pageY: viewBox[1]
+    });
+  }
   clone({
     scale = this.scale,
     rotation = this.rotation,
@@ -4072,9 +4088,10 @@ class PageViewport {
 }
 exports.PageViewport = PageViewport;
 class RenderingCancelledException extends _util.BaseException {
-  constructor(msg, type) {
+  constructor(msg, type, extraDelay = 0) {
     super(msg, "RenderingCancelledException");
     this.type = type;
+    this.extraDelay = extraDelay;
   }
 }
 exports.RenderingCancelledException = RenderingCancelledException;
@@ -4286,6 +4303,29 @@ function getCurrentTransformInverse(ctx) {
     f
   } = ctx.getTransform().invertSelf();
   return [a, b, c, d, e, f];
+}
+function setLayerDimensions(div, viewport, mustFlip = false, mustRotate = true) {
+  if (viewport instanceof PageViewport) {
+    const {
+      pageWidth,
+      pageHeight
+    } = viewport.rawDims;
+    const {
+      style
+    } = div;
+    const widthStr = `calc(var(--scale-factor) * ${pageWidth}px)`;
+    const heightStr = `calc(var(--scale-factor) * ${pageHeight}px)`;
+    if (!mustFlip || viewport.rotation % 180 === 0) {
+      style.width = widthStr;
+      style.height = heightStr;
+    } else {
+      style.width = heightStr;
+      style.height = widthStr;
+    }
+  }
+  if (mustRotate) {
+    div.setAttribute("data-main-rotation", viewport.rotation);
+  }
 }
 
 /***/ }),
@@ -8703,11 +8743,16 @@ class TextLayerRenderTask {
       properties: null,
       ctx: getCtx(0, isOffscreenCanvasSupported)
     };
-    const [pageLLx, pageLLy, pageURx, pageURy] = viewport.viewBox;
-    this._transform = [1, 0, 0, -1, -pageLLx, pageURy];
-    this._pageWidth = pageURx - pageLLx;
-    this._pageHeight = pageURy - pageLLy;
-    setTextLayerDimensions(container, viewport);
+    const {
+      pageWidth,
+      pageHeight,
+      pageX,
+      pageY
+    } = viewport.rawDims;
+    this._transform = [1, 0, 0, -1, -pageX, pageY + pageHeight];
+    this._pageWidth = pageWidth;
+    this._pageHeight = pageHeight;
+    (0, _display_utils.setLayerDimensions)(container, viewport);
     this._capability.promise.finally(() => {
       this._layoutTextParams = null;
     }).catch(() => {});
@@ -8808,7 +8853,7 @@ function updateTextLayer({
   mustRescale = true
 }) {
   if (mustRotate) {
-    setTextLayerDimensions(container, {
+    (0, _display_utils.setLayerDimensions)(container, {
       rotation: viewport.rotation
     });
   }
@@ -8830,21 +8875,6 @@ function updateTextLayer({
     }
   }
 }
-function setTextLayerDimensions(div, viewport) {
-  if (!viewport.viewBox) {
-    div.setAttribute("data-main-rotation", viewport.rotation);
-    return;
-  }
-  const [pageLLx, pageLLy, pageURx, pageURy] = viewport.viewBox;
-  const pageWidth = pageURx - pageLLx;
-  const pageHeight = pageURy - pageLLy;
-  const {
-    style
-  } = div;
-  style.width = `calc(var(--scale-factor) * ${pageWidth}px)`;
-  style.height = `calc(var(--scale-factor) * ${pageHeight}px)`;
-  div.setAttribute("data-main-rotation", viewport.rotation);
-}
 
 /***/ }),
 /* 21 */
@@ -8860,6 +8890,7 @@ var _util = __w_pdfjs_require__(1);
 var _tools = __w_pdfjs_require__(5);
 var _freetext = __w_pdfjs_require__(22);
 var _ink = __w_pdfjs_require__(23);
+var _display_utils = __w_pdfjs_require__(6);
 class AnnotationEditorLayer {
   #accessibilityManager;
   #allowClick = false;
@@ -9156,39 +9187,33 @@ class AnnotationEditorLayer {
     }
     this.#isCleaningUp = false;
   }
-  render(parameters) {
-    this.viewport = parameters.viewport;
+  render({
+    viewport
+  }) {
+    this.viewport = viewport;
+    (0, _display_utils.setLayerDimensions)(this.div, viewport);
     (0, _tools.bindEvents)(this, this.div, ["dragover", "drop"]);
-    this.setDimensions();
     for (const editor of this.#uiManager.getEditors(this.pageIndex)) {
       this.add(editor);
     }
     this.updateMode();
   }
-  update(parameters) {
+  update({
+    viewport
+  }) {
     this.#uiManager.commitOrRemove();
-    this.viewport = parameters.viewport;
-    this.setDimensions();
+    this.viewport = viewport;
+    (0, _display_utils.setLayerDimensions)(this.div, {
+      rotation: viewport.rotation
+    });
     this.updateMode();
   }
   get pageDimensions() {
-    const [pageLLx, pageLLy, pageURx, pageURy] = this.viewport.viewBox;
-    const width = pageURx - pageLLx;
-    const height = pageURy - pageLLy;
-    return [width, height];
-  }
-  setDimensions() {
     const {
-      width,
-      height,
-      rotation
-    } = this.viewport;
-    const flipOrientation = rotation % 180 !== 0,
-      widthStr = Math.floor(width) + "px",
-      heightStr = Math.floor(height) + "px";
-    this.div.style.width = flipOrientation ? heightStr : widthStr;
-    this.div.style.height = flipOrientation ? widthStr : heightStr;
-    this.div.setAttribute("data-main-rotation", rotation);
+      pageWidth,
+      pageHeight
+    } = this.viewport.rawDims;
+    return [pageWidth, pageHeight];
   }
 }
 exports.AnnotationEditorLayer = AnnotationEditorLayer;
@@ -9341,9 +9366,9 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     this.editorDiv.removeEventListener("focus", this.#boundEditorDivFocus);
     this.editorDiv.removeEventListener("blur", this.#boundEditorDivBlur);
     this.editorDiv.removeEventListener("input", this.#boundEditorDivInput);
-    if (this.pageIndex === this._uiManager.currentPageIndex) {
-      this.div.focus();
-    }
+    this.div.focus({
+      preventScroll: true
+    });
     this.isEditing = false;
     this.parent.div.classList.add("freeTextEditing");
   }
@@ -9876,9 +9901,9 @@ class InkEditor extends _editor.AnnotationEditor {
     this.#fitToContent(true);
     this.parent.addInkEditorIfNeeded(true);
     this.parent.moveEditorInDOM(this);
-    if (this.pageIndex === this._uiManager.currentPageIndex) {
-      this.div.focus();
-    }
+    this.div.focus({
+      preventScroll: true
+    });
   }
   focusin(event) {
     super.focusin(event);
@@ -10629,7 +10654,6 @@ class AnnotationElement {
     this.enableScripting = parameters.enableScripting;
     this.hasJSActions = parameters.hasJSActions;
     this._fieldObjects = parameters.fieldObjects;
-    this._mouseState = parameters.mouseState;
     if (isRenderable) {
       this.container = this._createContainer(ignoreBorder);
     }
@@ -10638,18 +10662,23 @@ class AnnotationElement {
     }
   }
   _createContainer(ignoreBorder = false) {
-    const data = this.data,
-      page = this.page,
-      viewport = this.viewport;
+    const {
+      data,
+      page,
+      viewport
+    } = this;
     const container = document.createElement("section");
+    container.setAttribute("data-annotation-id", data.id);
+    const {
+      pageWidth,
+      pageHeight,
+      pageX,
+      pageY
+    } = viewport.rawDims;
     const {
       width,
       height
     } = getRectDims(data.rect);
-    const [pageLLx, pageLLy, pageURx, pageURy] = viewport.viewBox;
-    const pageWidth = pageURx - pageLLx;
-    const pageHeight = pageURy - pageLLy;
-    container.setAttribute("data-annotation-id", data.id);
     const rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
     if (!ignoreBorder && data.borderStyle.width > 0) {
       container.style.borderWidth = `${data.borderStyle.width}px`;
@@ -10688,8 +10717,8 @@ class AnnotationElement {
         container.style.borderWidth = 0;
       }
     }
-    container.style.left = `${100 * (rect[0] - pageLLx) / pageWidth}%`;
-    container.style.top = `${100 * (rect[1] - pageLLy) / pageHeight}%`;
+    container.style.left = `${100 * (rect[0] - pageX) / pageWidth}%`;
+    container.style.top = `${100 * (rect[1] - pageY) / pageHeight}%`;
     const {
       rotation
     } = data;
@@ -10702,9 +10731,10 @@ class AnnotationElement {
     return container;
   }
   setRotation(angle, container = this.container) {
-    const [pageLLx, pageLLy, pageURx, pageURy] = this.viewport.viewBox;
-    const pageWidth = pageURx - pageLLx;
-    const pageHeight = pageURy - pageLLy;
+    const {
+      pageWidth,
+      pageHeight
+    } = this.viewport.rawDims;
     const {
       width,
       height
@@ -11289,7 +11319,8 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       const elementData = {
         userValue: textContent,
         formattedValue: null,
-        lastCommittedValue: null
+        lastCommittedValue: null,
+        commitKey: 1
       };
       if (this.data.multiLine) {
         element = document.createElement("textarea");
@@ -11343,6 +11374,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
             target.value = elementData.userValue;
           }
           elementData.lastCommittedValue = target.value;
+          elementData.commitKey = 1;
         });
         element.addEventListener("updatefromsandbox", jsEvent => {
           const actions = {
@@ -11406,13 +11438,14 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           this._dispatchEventFromSandbox(actions, jsEvent);
         });
         element.addEventListener("keydown", event => {
+          elementData.commitKey = 1;
           let commitKey = -1;
           if (event.key === "Escape") {
             commitKey = 0;
           } else if (event.key === "Enter" && !this.data.multiLine) {
             commitKey = 2;
           } else if (event.key === "Tab") {
-            commitKey = 3;
+            elementData.commitKey = 3;
           }
           if (commitKey === -1) {
             return;
@@ -11441,11 +11474,14 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
         const _blurListener = blurListener;
         blurListener = null;
         element.addEventListener("blur", event => {
+          if (!event.relatedTarget) {
+            return;
+          }
           const {
             value
           } = event.target;
           elementData.userValue = value;
-          if (this._mouseState.isDown && elementData.lastCommittedValue !== value) {
+          if (elementData.lastCommittedValue !== value) {
             this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
               source: this,
               detail: {
@@ -11453,7 +11489,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
                 name: "Keystroke",
                 value,
                 willCommit: true,
-                commitKey: 1,
+                commitKey: elementData.commitKey,
                 selStart: event.target.selectionStart,
                 selEnd: event.target.selectionEnd
               }
@@ -11771,14 +11807,18 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       };
       selectElement.addEventListener("input", removeEmptyEntry);
     }
-    const getValue = (event, isExport) => {
+    const getValue = isExport => {
       const name = isExport ? "value" : "textContent";
-      const options = event.target.options;
-      if (!event.target.multiple) {
+      const {
+        options,
+        multiple
+      } = selectElement;
+      if (!multiple) {
         return options.selectedIndex === -1 ? null : options[options.selectedIndex][name];
       }
       return Array.prototype.filter.call(options, option => option.selected).map(option => option[name]);
     };
+    let selectedValues = getValue(false);
     const getItems = event => {
       const options = event.target.options;
       return Array.prototype.map.call(options, option => {
@@ -11799,8 +11839,9 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
               option.selected = values.has(option.value);
             }
             storage.setValue(id, {
-              value: getValue(event, true)
+              value: getValue(true)
             });
+            selectedValues = getValue(false);
           },
           multipleSelection(event) {
             selectElement.multiple = true;
@@ -11817,9 +11858,10 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
               }
             }
             storage.setValue(id, {
-              value: getValue(event, true),
+              value: getValue(true),
               items: getItems(event)
             });
+            selectedValues = getValue(false);
           },
           clear(event) {
             while (selectElement.length !== 0) {
@@ -11829,6 +11871,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
               value: null,
               items: []
             });
+            selectedValues = getValue(false);
           },
           insert(event) {
             const {
@@ -11846,9 +11889,10 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
               selectElement.append(optionElement);
             }
             storage.setValue(id, {
-              value: getValue(event, true),
+              value: getValue(true),
               items: getItems(event)
             });
+            selectedValues = getValue(false);
           },
           items(event) {
             const {
@@ -11871,9 +11915,10 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
               selectElement.options[0].selected = true;
             }
             storage.setValue(id, {
-              value: getValue(event, true),
+              value: getValue(true),
               items: getItems(event)
             });
+            selectedValues = getValue(false);
           },
           indices(event) {
             const indices = new Set(event.detail.indices);
@@ -11881,8 +11926,9 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
               option.selected = indices.has(option.index);
             }
             storage.setValue(id, {
-              value: getValue(event, true)
+              value: getValue(true)
             });
+            selectedValues = getValue(false);
           },
           editable(event) {
             event.target.disabled = !event.detail.editable;
@@ -11891,19 +11937,19 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
         this._dispatchEventFromSandbox(actions, jsEvent);
       });
       selectElement.addEventListener("input", event => {
-        const exportValue = getValue(event, true);
-        const value = getValue(event, false);
+        const exportValue = getValue(true);
         storage.setValue(id, {
           value: exportValue
         });
+        event.preventDefault();
         this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
           source: this,
           detail: {
             id,
             name: "Keystroke",
-            value,
+            value: selectedValues,
             changeEx: exportValue,
-            willCommit: true,
+            willCommit: false,
             commitKey: 1,
             keyDown: false
           }
@@ -11913,7 +11959,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     } else {
       selectElement.addEventListener("input", function (event) {
         storage.setValue(id, {
-          value: getValue(event, true)
+          value: getValue(true)
         });
       });
     }
@@ -11956,11 +12002,14 @@ class PopupAnnotationElement extends AnnotationElement {
     const rect = _util.Util.normalizeRect([this.data.parentRect[0], page.view[3] - this.data.parentRect[1] + page.view[1], this.data.parentRect[2], page.view[3] - this.data.parentRect[3] + page.view[1]]);
     const popupLeft = rect[0] + this.data.parentRect[2] - this.data.parentRect[0];
     const popupTop = rect[1];
-    const [pageLLx, pageLLy, pageURx, pageURy] = this.viewport.viewBox;
-    const pageWidth = pageURx - pageLLx;
-    const pageHeight = pageURy - pageLLy;
-    this.container.style.left = `${100 * (popupLeft - pageLLx) / pageWidth}%`;
-    this.container.style.top = `${100 * (popupTop - pageLLy) / pageHeight}%`;
+    const {
+      pageWidth,
+      pageHeight,
+      pageX,
+      pageY
+    } = this.viewport.rawDims;
+    this.container.style.left = `${100 * (popupLeft - pageX) / pageWidth}%`;
+    this.container.style.top = `${100 * (popupTop - pageY) / pageHeight}%`;
     this.container.append(popup.render());
     return this.container;
   }
@@ -12432,14 +12481,29 @@ class AnnotationLayer {
     div.append(element);
     accessibilityManager?.moveElementInDOM(div, element, contentElement, false);
   }
-  static render(parameters) {
+  static render(params) {
     const {
       annotations,
       div,
       viewport,
       accessibilityManager
-    } = parameters;
-    this.#setDimensions(div, viewport);
+    } = params;
+    (0, _display_utils.setLayerDimensions)(div, viewport);
+    const elementParams = {
+      data: null,
+      layer: div,
+      page: params.page,
+      viewport,
+      linkService: params.linkService,
+      downloadManager: params.downloadManager,
+      imageResourcesPath: params.imageResourcesPath || "",
+      renderForms: params.renderForms !== false,
+      svgFactory: new _display_utils.DOMSVGFactory(),
+      annotationStorage: params.annotationStorage || new _annotation_storage.AnnotationStorage(),
+      enableScripting: params.enableScripting === true,
+      hasJSActions: params.hasJSActions,
+      fieldObjects: params.fieldObjects
+    };
     let zIndex = 0;
     for (const data of annotations) {
       if (data.annotationType !== _util.AnnotationType.POPUP) {
@@ -12451,70 +12515,42 @@ class AnnotationLayer {
           continue;
         }
       }
-      const element = AnnotationElementFactory.create({
-        data,
-        layer: div,
-        page: parameters.page,
-        viewport,
-        linkService: parameters.linkService,
-        downloadManager: parameters.downloadManager,
-        imageResourcesPath: parameters.imageResourcesPath || "",
-        renderForms: parameters.renderForms !== false,
-        svgFactory: new _display_utils.DOMSVGFactory(),
-        annotationStorage: parameters.annotationStorage || new _annotation_storage.AnnotationStorage(),
-        enableScripting: parameters.enableScripting,
-        hasJSActions: parameters.hasJSActions,
-        fieldObjects: parameters.fieldObjects,
-        mouseState: parameters.mouseState || {
-          isDown: false
+      elementParams.data = data;
+      const element = AnnotationElementFactory.create(elementParams);
+      if (!element.isRenderable) {
+        continue;
+      }
+      const rendered = element.render();
+      if (data.hidden) {
+        rendered.style.visibility = "hidden";
+      }
+      if (Array.isArray(rendered)) {
+        for (const renderedElement of rendered) {
+          renderedElement.style.zIndex = zIndex++;
+          AnnotationLayer.#appendElement(renderedElement, data.id, div, accessibilityManager);
         }
-      });
-      if (element.isRenderable) {
-        const rendered = element.render();
-        if (data.hidden) {
-          rendered.style.visibility = "hidden";
-        }
-        if (Array.isArray(rendered)) {
-          for (const renderedElement of rendered) {
-            renderedElement.style.zIndex = zIndex++;
-            AnnotationLayer.#appendElement(renderedElement, data.id, div, accessibilityManager);
-          }
+      } else {
+        rendered.style.zIndex = zIndex++;
+        if (element instanceof PopupAnnotationElement) {
+          div.prepend(rendered);
         } else {
-          rendered.style.zIndex = zIndex++;
-          if (element instanceof PopupAnnotationElement) {
-            div.prepend(rendered);
-          } else {
-            AnnotationLayer.#appendElement(rendered, data.id, div, accessibilityManager);
-          }
+          AnnotationLayer.#appendElement(rendered, data.id, div, accessibilityManager);
         }
       }
     }
-    this.#setAnnotationCanvasMap(div, parameters.annotationCanvasMap);
+    this.#setAnnotationCanvasMap(div, params.annotationCanvasMap);
   }
-  static update(parameters) {
+  static update(params) {
     const {
       annotationCanvasMap,
       div,
       viewport
-    } = parameters;
-    this.#setDimensions(div, viewport);
+    } = params;
+    (0, _display_utils.setLayerDimensions)(div, {
+      rotation: viewport.rotation
+    });
     this.#setAnnotationCanvasMap(div, annotationCanvasMap);
     div.hidden = false;
-  }
-  static #setDimensions(div, {
-    width,
-    height,
-    rotation
-  }) {
-    const {
-      style
-    } = div;
-    const flipOrientation = rotation % 180 !== 0,
-      widthStr = Math.floor(width) + "px",
-      heightStr = Math.floor(height) + "px";
-    style.width = flipOrientation ? heightStr : widthStr;
-    style.height = flipOrientation ? widthStr : heightStr;
-    div.setAttribute("data-main-rotation", rotation);
   }
   static #setAnnotationCanvasMap(div, annotationCanvasMap) {
     if (!annotationCanvasMap) {
@@ -13081,6 +13117,12 @@ Object.defineProperty(exports, "renderTextLayer", ({
     return _text_layer.renderTextLayer;
   }
 }));
+Object.defineProperty(exports, "setLayerDimensions", ({
+  enumerable: true,
+  get: function () {
+    return _display_utils.setLayerDimensions;
+  }
+}));
 Object.defineProperty(exports, "shadow", ({
   enumerable: true,
   get: function () {
@@ -13110,8 +13152,8 @@ var _worker_options = __w_pdfjs_require__(14);
 var _is_node = __w_pdfjs_require__(10);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.2.58';
-const pdfjsBuild = 'ba2fec989';
+const pdfjsVersion = '3.2.143';
+const pdfjsBuild = 'c791e01bf';
 ;
 })();
 
