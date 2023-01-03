@@ -6971,6 +6971,10 @@ bool nsIFrame::HasSelectionInSubtree() {
   }
 
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  if (!frameSelection) {
+    return false;
+  }
+
   const Selection* selection =
       frameSelection->GetSelection(SelectionType::eNormal);
   if (!selection) {
