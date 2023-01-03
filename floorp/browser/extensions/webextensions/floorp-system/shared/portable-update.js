@@ -37,8 +37,8 @@
     }
 
     let main = async () => {
-        let isPortable = await browser.aboutConfigPrefs.getBoolPref("floorp.update.isPortable");
-        console.log(`floorp.update.isPortable: ${isPortable}`);
+        let isPortable = await browser.aboutConfigPrefs.getBoolPref("floorp.isPortable");
+        console.log(`floorp.isPortable: ${isPortable}`);
         if (!isPortable) return;
 
         let appdir = await browser.BrowserInfo.getAppExecutableDirPath();
