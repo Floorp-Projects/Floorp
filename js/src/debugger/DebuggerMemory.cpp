@@ -91,19 +91,6 @@ DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx, CallArgs& args) {
     return nullptr;
   }
 
-  // Check for Debugger.Memory.prototype, which has the same class as
-  // Debugger.Memory instances, however doesn't actually represent an instance
-  // of Debugger.Memory. It is the only object that is<DebuggerMemory>() but
-  // doesn't have a Debugger instance.
-  if (thisObject.as<DebuggerMemory>()
-          .getReservedSlot(JSSLOT_DEBUGGER)
-          .isUndefined()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INCOMPATIBLE_PROTO, class_.name, "method",
-                              "prototype object");
-    return nullptr;
-  }
-
   return &thisObject.as<DebuggerMemory>();
 }
 
