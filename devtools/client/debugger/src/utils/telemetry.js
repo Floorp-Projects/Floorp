@@ -42,11 +42,18 @@
  * );
  */
 
-const Telemetry = require("devtools/client/shared/telemetry");
-
 import { isNode } from "./environment";
 
-const telemetry = new Telemetry();
+let telemetry;
+
+if (isNode()) {
+  const Telemetry = require("devtools/client/shared/telemetry");
+  telemetry = new Telemetry();
+}
+
+export function setToolboxTelemetry(toolboxTelemetry) {
+  telemetry = toolboxTelemetry;
+}
 
 /**
  * @memberof utils/telemetry

@@ -6,6 +6,7 @@ import * as firefox from "./client/firefox";
 
 import { asyncStore, verifyPrefSchema, prefs } from "./utils/prefs";
 import { setupHelper } from "./utils/dbg";
+import { setToolboxTelemetry } from "./utils/telemetry";
 
 import {
   bootstrapApp,
@@ -111,6 +112,8 @@ export async function bootstrap({
     targetCommand: commands.targetCommand,
     client: firefox.clientCommands,
   });
+
+  setToolboxTelemetry(panel.toolbox.telemetry);
 
   bootstrapApp(store, panel.getToolboxStore(), {
     fluentBundles,
