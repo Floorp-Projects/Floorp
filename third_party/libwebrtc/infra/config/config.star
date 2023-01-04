@@ -58,6 +58,7 @@ def make_reclient_properties(instance, jobs = None):
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
 skipped_lkgr_bots = [
+    "Linux64 Release (reclient)",
 ]
 
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
