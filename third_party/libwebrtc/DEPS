@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '0d7bd6e740ade309615ec1173af83ec0b98d968b',
+  'chromium_revision': 'e18750131eccc130f025a82c4b8fb4bfdf43652c',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -32,24 +32,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@d31898643cb7bcda08e56a953c2f6e4e45e07d00',
+    'https://chromium.googlesource.com/chromium/src/base@158c2fafefa52207ca3b358016a4b8fe69290bfb',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@db4946beb00cd24aaa64c337578846d1022bda16',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@3fe17aa69414115874ce6681149852d566456199',
+    'https://chromium.googlesource.com/chromium/src/buildtools@11747ae48c238e7a2f51360e763d6a1c6a3b8e81',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@ece54dcf0a15a8da7839f71080036fc83033b180',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@6797cbd0e923bfc53da48c49c4f5fe34452f6f1a',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@e3056726ea0a112b9933d4083818c484aa9f17f2',
+    'https://chromium.googlesource.com/chromium/src/testing@6ae668e92b07caf9d1f1e6e86854e0e446d96176',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@0ef47e175fecdd657405e7440a8c94f993438ab0',
+    'https://chromium.googlesource.com/chromium/src/third_party@f3b3ee0323235b0f4ddf76eca042248047a87003',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -95,7 +95,7 @@ deps = {
   'src/buildtools/clang_format/script':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@8b525d2747f2584fc35d8c7e612e66f377858df7',
   'src/buildtools/third_party/libc++/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@60c266d87cfd8cd7c9a541ea7095ee44a235a3ec',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@aa3a6cd0f158bdc037268cbe06e2bfd8067fa951',
   'src/buildtools/third_party/libc++abi/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@48afced8aa251c4fb338fb906d70c1da6703d05d',
   'src/buildtools/third_party/libunwind/trunk':
@@ -144,7 +144,7 @@ deps = {
   },
 
   'src/third_party/boringssl/src':
-    'https://boringssl.googlesource.com/boringssl.git@adaa322b63d1bfbd1abcf4a308926a9a83a6acbe',
+    'https://boringssl.googlesource.com/boringssl.git@ebd8b8965c74ab06bb91f7a00b23822e1f1f26ca',
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@e085b3b50bde862d0cf3ce4594e3f391bcf5faec',
   'src/third_party/catapult':
@@ -191,7 +191,7 @@ deps = {
   'src/third_party/googletest/src':
     'https://chromium.googlesource.com/external/github.com/google/googletest.git@af29db7ec28d6df1c7f0f745186884091e602e07',
   'src/third_party/icu': {
-    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@31c77cbfff890d173237f51b3c5930416b3d5b24',
+    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@bbdc7d8936bd9b896ff9c9822b697554b73c1c9d',
   },
   'src/third_party/jdk': {
       'packages': [
@@ -261,7 +261,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/r8',
-              'version': '67dSHl38KOWsT791ovMUFl0ETdJP2RHkRpgr5STYS7sC',
+              'version': '_rv7EargK1mPOQPb7922ENB7-AaUTJZCxBWNBeLVsfQC',
           },
       ],
       'condition': 'checkout_android',
@@ -282,7 +282,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@54b275d8d59d5e5aa872ca2cc3599833faec1cb4',
+    'https://chromium.googlesource.com/chromium/src/tools@d2e30f02117286379f97b44bea69dac93c13fa9a',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
