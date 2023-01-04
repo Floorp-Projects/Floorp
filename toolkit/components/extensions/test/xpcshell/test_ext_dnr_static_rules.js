@@ -6,10 +6,16 @@
 ChromeUtils.defineESModuleGetters(this, {
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
+
+Services.scriptloader.loadSubScript(
+  Services.io.newFileURI(do_get_file("head_dnr.js")).spec,
+  this
+);
 
 function backgroundWithDNRAPICallHandlers() {
   browser.test.onMessage.addListener(async (msg, ...args) => {
@@ -54,27 +60,8 @@ function backgroundWithDNRAPICallHandlers() {
   browser.test.sendMessage("bgpage:ready");
 }
 
-function getDNRRule({
-  id = 1,
-  priority = 1,
-  action = {},
-  condition = {},
-} = {}) {
-  return {
-    id,
-    priority,
-    action: {
-      type: "block",
-      ...action,
-    },
-    condition: {
-      ...condition,
-    },
-  };
-}
-
 function getDNRExtension({
-  id = "test-dnr-static-rules@mochitest",
+  id = "test-dnr-static-rules@test-extension",
   version = "1.0",
   background = backgroundWithDNRAPICallHandlers,
   useAddonManager = "permanent",
@@ -106,44 +93,6 @@ function getDNRExtension({
     files,
   };
 }
-
-const getSchemaNormalizedRule = (extensionTestWrapper, value) => {
-  const { extension } = extensionTestWrapper;
-  const validationContext = {
-    url: extension.baseURI.spec,
-    principal: extension.principal,
-    logError: err => {
-      // We don't expect this test helper function to be called on invalid rules,
-      // and so we trigger an explicit test failure if we ever hit any.
-      Assert.ok(
-        false,
-        `Unexpected logError on normalizing DNR rule ${JSON.stringify(
-          value
-        )} - ${err}`
-      );
-    },
-    preprocessors: {},
-    manifestVersion: extension.manifestVersion,
-  };
-
-  return Schemas.normalize(
-    value,
-    "declarativeNetRequest.Rule",
-    validationContext
-  );
-};
-
-const getSchemaNormalizedRules = (extensionTestWrapper, rules) => {
-  return rules.map(rule => {
-    const normalized = getSchemaNormalizedRule(extensionTestWrapper, rule);
-    if (normalized.error) {
-      throw new Error(
-        `Unexpected DNR Rule normalization error: ${normalized.error}`
-      );
-    }
-    return normalized.value;
-  });
-};
 
 const assertDNRTestMatchOutcome = async (
   { extension, testRequest, expected },
@@ -182,116 +131,6 @@ const assertDNRGetEnabledRulesets = async (
     expectedRulesetIds,
     "Got the expected enabled ruleset ids from dnr.getEnabledRulesets API method"
   );
-};
-
-const assertDNRStoreData = async (
-  dnrStore,
-  extensionTestWrapper,
-  expectedRulesets,
-  { assertIndividualRules = true } = {}
-) => {
-  const extUUID = extensionTestWrapper.uuid;
-  const rule_resources =
-    extensionTestWrapper.extension.manifest.declarative_net_request
-      ?.rule_resources;
-  const expectedRulesetIds = Array.from(Object.keys(expectedRulesets));
-  const expectedRulesetIndexesMap = expectedRulesetIds.reduce((acc, rsId) => {
-    acc.set(
-      rsId,
-      rule_resources.findIndex(rr => rr.id === rsId)
-    );
-    return acc;
-  }, new Map());
-
-  ok(
-    dnrStore._dataPromises.has(extUUID),
-    "Got promise for the test extension DNR data being loaded"
-  );
-
-  await dnrStore._dataPromises.get(extUUID);
-
-  ok(dnrStore._data.has(extUUID), "Got data for the test extension");
-
-  const dnrExtData = dnrStore._data.get(extUUID);
-  Assert.deepEqual(
-    {
-      schemaVersion: dnrExtData.schemaVersion,
-      extVersion: dnrExtData.extVersion,
-    },
-    {
-      schemaVersion: dnrExtData.constructor.VERSION,
-      extVersion: extensionTestWrapper.extension.version,
-    },
-    "Got the expected data schema version and extension version in the store data"
-  );
-  Assert.deepEqual(
-    Array.from(dnrExtData.staticRulesets.keys()),
-    expectedRulesetIds,
-    "Got the enabled rulesets in the stored data staticRulesets Map"
-  );
-
-  for (const rulesetId of expectedRulesetIds) {
-    const expectedRulesetIdx = expectedRulesetIndexesMap.get(rulesetId);
-    const expectedRulesetRules = getSchemaNormalizedRules(
-      extensionTestWrapper,
-      expectedRulesets[rulesetId]
-    );
-    const actualData = dnrExtData.staticRulesets.get(rulesetId);
-    equal(
-      actualData.idx,
-      expectedRulesetIdx,
-      `Got the expected ruleset index for ruleset id ${rulesetId}`
-    );
-
-    // Asserting an entire array of rules all at once will produce
-    // a big enough output to don't be immediately useful to investigate
-    // failures, asserting each rule individually would produce more
-    // readable assertion failure logs.
-    const assertRuleAtIdx = ruleIdx =>
-      Assert.deepEqual(
-        actualData.rules[ruleIdx],
-        expectedRulesetRules[ruleIdx],
-        `Got the expected rule at index ${ruleIdx} for ruleset id "${rulesetId}"`
-      );
-
-    // Some tests may be using a big enough number of rules that
-    // the assertiongs would be producing a huge amount of log spam,
-    // and so for those tests we only explicitly assert the first
-    // and last rule and that the total amount of rules matches the
-    // expected number of rules (there are still other tests explicitly
-    // asserting all loaded rules).
-    if (assertIndividualRules) {
-      info(
-        `Verify the each individual rule loaded for ruleset id "${rulesetId}"`
-      );
-      for (let ruleIdx = 0; ruleIdx < expectedRulesetRules.length; ruleIdx++) {
-        assertRuleAtIdx(ruleIdx);
-      }
-    } else {
-      // NOTE: Only asserting the first and last rule also helps to speed up
-      // the test is some slower builds when the number of expected rules is
-      // big enough (e.g. the test task verifying the enforced rule count limits
-      // was timing out in tsan build because asserting all indidual rules was
-      // taking long enough and the event page was being suspended on the idle
-      // timeout by the time we did run all these assertion and proceeding with
-      // the rest of the test task assertions), we still confirm that the total
-      // number of expected vs actual rules also matches right after these
-      // assertions.
-      info(
-        `Verify the first and last rules loaded for ruleset id "${rulesetId}"`
-      );
-      const lastExpectedRuleIdx = expectedRulesetRules.length - 1;
-      for (const ruleIdx of [0, lastExpectedRuleIdx]) {
-        assertRuleAtIdx(ruleIdx);
-      }
-    }
-
-    equal(
-      actualData.rules.length,
-      expectedRulesetRules.length,
-      `Got the expected number of rules loaded for ruleset id "${rulesetId}"`
-    );
-  }
 };
 
 add_setup(async () => {
@@ -565,6 +404,137 @@ add_task(async function test_load_static_rules() {
     !(await IOUtils.exists(storeFile)),
     `DNR storeFile ${storeFile} removed on addon uninstalled`
   );
+});
+
+add_task(async function test_load_from_corrupted_data() {
+  const ruleset1Data = [
+    getDNRRule({
+      action: { type: "allow" },
+      condition: { resourceTypes: ["main_frame"] },
+    }),
+  ];
+
+  const rule_resources = [
+    {
+      id: "ruleset_1",
+      enabled: true,
+      path: "ruleset_1.json",
+    },
+  ];
+
+  const files = {
+    "ruleset_1.json": JSON.stringify(ruleset1Data),
+  };
+
+  const extension = ExtensionTestUtils.loadExtension(
+    getDNRExtension({ rule_resources, files })
+  );
+
+  await extension.startup();
+
+  const extUUID = extension.uuid;
+
+  await extension.awaitMessage("bgpage:ready");
+
+  const dnrStore = ExtensionDNRStore._getStoreForTesting();
+
+  info("Verify DNRStore data for the test extension");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
+
+  await assertDNRStoreData(dnrStore, extension, {
+    ruleset_1: getSchemaNormalizedRules(extension, ruleset1Data),
+  });
+
+  info("Verify DNRStore data after loading corrupted store data");
+  await dnrStore.save(extension.extension);
+
+  const { storeFile } = dnrStore.getFilePaths(extUUID);
+  ok(await IOUtils.exists(storeFile), `DNR storeFile ${storeFile} found`);
+
+  const nonCorruptedData = await IOUtils.readJSON(storeFile, {
+    decompress: true,
+  });
+
+  async function testLoadedRulesAfterDataCorruption({
+    name,
+    asyncWriteStoreFile,
+    expectedCorruptFile,
+  }) {
+    info(`Tempering DNR store data: ${name}`);
+
+    await extension.addon.disable();
+
+    ok(
+      !dnrStore._dataPromises.has(extUUID),
+      "DNR store read data promise cleared after the extension has been disabled"
+    );
+    ok(
+      !dnrStore._data.has(extUUID),
+      "DNR store data cleared from memory after the extension has been disabled"
+    );
+
+    await asyncWriteStoreFile();
+
+    await extension.addon.enable();
+    await extension.awaitMessage("bgpage:ready");
+
+    info("Verify DNRStore data for the test extension");
+    await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
+
+    await assertDNRStoreData(dnrStore, extension, {
+      ruleset_1: getSchemaNormalizedRules(extension, ruleset1Data),
+    });
+
+    await TestUtils.waitForCondition(
+      () => IOUtils.exists(`${expectedCorruptFile}`),
+      `Wait for the "${expectedCorruptFile}" file to have been created`
+    );
+
+    ok(
+      !(await IOUtils.exists(storeFile)),
+      "Corrupted store file expected to be removed"
+    );
+  }
+
+  await testLoadedRulesAfterDataCorruption({
+    name: "invalid lz4 header",
+    asyncWriteStoreFile: () =>
+      IOUtils.writeUTF8(storeFile, "not an lz4 compressed file", {
+        compress: false,
+      }),
+    expectedCorruptFile: `${storeFile}.corrupt`,
+  });
+
+  await testLoadedRulesAfterDataCorruption({
+    name: "invalid json data",
+    asyncWriteStoreFile: () =>
+      IOUtils.writeUTF8(storeFile, "invalid json data", { compress: true }),
+    expectedCorruptFile: `${storeFile}-1.corrupt`,
+  });
+
+  await testLoadedRulesAfterDataCorruption({
+    name: "empty json data",
+    asyncWriteStoreFile: () =>
+      IOUtils.writeUTF8(storeFile, "{}", { compress: true }),
+    expectedCorruptFile: `${storeFile}-2.corrupt`,
+  });
+
+  await testLoadedRulesAfterDataCorruption({
+    name: "invalid staticRulesets property type",
+    asyncWriteStoreFile: () =>
+      IOUtils.writeUTF8(
+        storeFile,
+        JSON.stringify({
+          schemaVersion: nonCorruptedData.schemaVersion,
+          extVersion: extension.extension.version,
+          staticRulesets: "Not an array",
+        }),
+        { compress: true }
+      ),
+    expectedCorruptFile: `${storeFile}-3.corrupt`,
+  });
+
+  await extension.unload();
 });
 
 add_task(async function test_ruleset_validation() {
@@ -1328,10 +1298,10 @@ add_task(async function test_tabId_conditions_invalid_in_static_rules() {
   AddonTestUtils.checkMessages(messages, {
     expected: [
       {
-        message: /ruleset1.json: tabIds and excludedTabIds can only be specified in session rules/,
+        message: /"ruleset1_with_tabId_condition": tabIds and excludedTabIds can only be specified in session rules/,
       },
       {
-        message: /ruleset2.json: tabIds and excludedTabIds can only be specified in session rules/,
+        message: /"ruleset2_with_excludeTabId_condition": tabIds and excludedTabIds can only be specified in session rules/,
       },
     ],
   });

@@ -1661,6 +1661,10 @@ class RuleManager {
     NetworkIntegration.maybeUpdateTabIdChecker();
   }
 
+  setDynamicRules(validatedDynamicRules) {
+    this.dynamicRules.rules = validatedDynamicRules;
+  }
+
   /**
    * Set the enabled static rulesets.
    *
@@ -1681,6 +1685,10 @@ class RuleManager {
 
   getSessionRules() {
     return this.sessionRules.rules;
+  }
+
+  getDynamicRules() {
+    return this.dynamicRules.rules;
   }
 }
 
@@ -1881,6 +1889,11 @@ async function updateEnabledStaticRulesets(extension, updateRulesetOptions) {
   );
 }
 
+async function updateDynamicRules(extension, updateRuleOptions) {
+  await ensureInitialized(extension);
+  await lazy.ExtensionDNRStore.updateDynamicRules(extension, updateRuleOptions);
+}
+
 // exports used by the DNR API implementation.
 export const ExtensionDNR = {
   RuleValidator,
@@ -1888,6 +1901,7 @@ export const ExtensionDNR = {
   ensureInitialized,
   getMatchedRulesForRequest,
   getRuleManager,
+  updateDynamicRules,
   updateEnabledStaticRulesets,
   validateManifestEntry,
   // TODO(Bug 1803370): consider allowing changing DNR limits through about:config prefs).

@@ -421,6 +421,42 @@
     ],
     "functions": [
       {
+        "name": "updateDynamicRules",
+        "type": "function",
+        "description": "Modifies the current set of dynamic rules for the extension. The rules with IDs listed in options.removeRuleIds are first removed, and then the rules given in options.addRules are added. These rules are persisted across browser sessions and extension updates.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "object",
+            "properties": {
+              "removeRuleIds": {
+                "type": "array",
+                "optional": true,
+                "description": "IDs of the rules to remove. Any invalid IDs will be ignored.",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "addRules": {
+                "type": "array",
+                "optional": true,
+                "description": "Rules to add.",
+                "items": {
+                  "$ref": "Rule"
+                }
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Called when the dynamic rules have been updated",
+            "parameters": []
+          }
+        ]
+      },
+      {
         "name": "updateSessionRules",
         "type": "function",
         "description": "Modifies the current set of session scoped rules for the extension. The rules with IDs listed in options.removeRuleIds are first removed, and then the rules given in options.addRules are added. These rules are not persisted across sessions and are backed in memory.",
@@ -525,6 +561,27 @@
         ]
       },
       {
+        "name": "getDynamicRules",
+        "type": "function",
+        "description": "Returns the current set of dynamic rules for the extension.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "dynamicRules",
+                "type": "array",
+                "items": {
+                  "$ref": "Rule"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "getSessionRules",
         "type": "function",
         "description": "Returns the current set of session scoped rules for the extension.",
@@ -535,6 +592,7 @@
             "type": "function",
             "parameters": [
               {
+                "name": "sessionRules",
                 "type": "array",
                 "items": {
                   "$ref": "Rule"
