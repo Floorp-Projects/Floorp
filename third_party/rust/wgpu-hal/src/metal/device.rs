@@ -358,13 +358,12 @@ impl crate::Device<super::Api> for super::Device {
             conv::map_texture_view_dimension(desc.dimension)
         };
 
-        let format_equal = raw_format == texture.raw_format;
-        let type_equal = raw_type == texture.raw_type;
-        let range_full_resource = desc
-            .range
-            .is_full_resource(texture.mip_levels, texture.array_layers);
-
-        let raw = if format_equal && type_equal && range_full_resource {
+        //Note: this doesn't check properly if the mipmap level count or array layer count
+        // is explicitly set to 1.
+        let raw = if raw_format == texture.raw_format
+            && raw_type == texture.raw_type
+            && desc.range == wgt::ImageSubresourceRange::default()
+        {
             // Some images are marked as framebuffer-only, and we can't create aliases of them.
             // Also helps working around Metal bugs with aliased array textures.
             texture.raw.to_owned()

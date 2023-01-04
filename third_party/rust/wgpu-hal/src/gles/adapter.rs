@@ -255,7 +255,6 @@ impl super::Adapter {
         } else {
             0
         };
-        let max_element_index = unsafe { gl.get_parameter_i32(glow::MAX_ELEMENT_INDEX) } as u32;
 
         // WORKAROUND: In order to work around an issue with GL on RPI4 and similar, we ignore a
         // zero vertex ssbo count if there are vertex sstos. (more info:
@@ -316,10 +315,6 @@ impl super::Adapter {
         downlevel_flags.set(
             wgt::DownlevelFlags::UNRESTRICTED_INDEX_BUFFER,
             !cfg!(target_arch = "wasm32"),
-        );
-        downlevel_flags.set(
-            wgt::DownlevelFlags::FULL_DRAW_INDEX_UINT32,
-            max_element_index == u32::MAX,
         );
 
         let mut features = wgt::Features::empty()
@@ -786,8 +781,8 @@ impl crate::Adapter<super::Api> for super::Adapter {
             Tf::Rgba32Uint => renderable | storage,
             Tf::Rgba32Sint => renderable | storage,
             Tf::Rgba32Float => unfilterable | storage | float_renderable | texture_float_linear,
-            Tf::Stencil8
-            | Tf::Depth16Unorm
+            //Tf::Stencil8 |
+            Tf::Depth16Unorm
             | Tf::Depth32Float
             | Tf::Depth32FloatStencil8
             | Tf::Depth24Plus
@@ -873,10 +868,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
         } else {
             None
         }
-    }
-
-    unsafe fn get_presentation_timestamp(&self) -> wgt::PresentationTimestamp {
-        wgt::PresentationTimestamp::INVALID_TIMESTAMP
     }
 }
 

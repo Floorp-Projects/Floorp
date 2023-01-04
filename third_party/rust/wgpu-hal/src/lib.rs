@@ -242,11 +242,6 @@ pub trait Adapter<A: Api>: Send + Sync {
     ///
     /// `None` means presentation is not supported for it.
     unsafe fn surface_capabilities(&self, surface: &A::Surface) -> Option<SurfaceCapabilities>;
-
-    /// Creates a [`PresentationTimestamp`] using the adapter's WSI.
-    ///
-    /// [`PresentationTimestamp`]: wgt::PresentationTimestamp
-    unsafe fn get_presentation_timestamp(&self) -> wgt::PresentationTimestamp;
 }
 
 pub trait Device<A: Api>: Send + Sync {
@@ -636,7 +631,7 @@ impl From<wgt::TextureAspect> for FormatAspects {
 impl From<wgt::TextureFormat> for FormatAspects {
     fn from(format: wgt::TextureFormat) -> Self {
         match format {
-            wgt::TextureFormat::Stencil8 => Self::STENCIL,
+            //wgt::TextureFormat::Stencil8 => Self::STENCIL,
             wgt::TextureFormat::Depth16Unorm => Self::DEPTH,
             wgt::TextureFormat::Depth32Float | wgt::TextureFormat::Depth24Plus => Self::DEPTH,
             wgt::TextureFormat::Depth32FloatStencil8 | wgt::TextureFormat::Depth24PlusStencil8 => {

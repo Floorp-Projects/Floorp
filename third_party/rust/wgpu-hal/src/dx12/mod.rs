@@ -39,7 +39,6 @@ mod conv;
 mod descriptor;
 mod device;
 mod instance;
-mod suballocation;
 mod view;
 
 use crate::auxil::{self, dxgi::result::HResult as _};
@@ -153,7 +152,6 @@ struct PrivateCapabilities {
     #[allow(unused)]
     heterogeneous_resource_heaps: bool,
     memory_architecture: MemoryArchitecture,
-    #[allow(unused)] // TODO: Exists until windows-rs is standard, then it can probably be removed?
     heap_create_not_zeroed: bool,
 }
 
@@ -169,7 +167,6 @@ pub struct Adapter {
     device: native::Device,
     library: Arc<native::D3D12Lib>,
     private_caps: PrivateCapabilities,
-    presentation_timer: auxil::dxgi::time::PresentationTimer,
     //Note: this isn't used right now, but we'll need it later.
     #[allow(unused)]
     workarounds: Workarounds,
@@ -240,7 +237,6 @@ pub struct Device {
     #[cfg(feature = "renderdoc")]
     render_doc: crate::auxil::renderdoc::RenderDoc,
     null_rtv_handle: descriptor::Handle,
-    mem_allocator: Option<Mutex<suballocation::GpuAllocatorWrapper>>,
 }
 
 unsafe impl Send for Device {}
@@ -376,7 +372,6 @@ unsafe impl Sync for CommandBuffer {}
 pub struct Buffer {
     resource: native::Resource,
     size: wgt::BufferAddress,
-    allocation: Option<suballocation::AllocationWrapper>,
 }
 
 unsafe impl Send for Buffer {}
@@ -403,7 +398,6 @@ pub struct Texture {
     size: wgt::Extent3d,
     mip_level_count: u32,
     sample_count: u32,
-    allocation: Option<suballocation::AllocationWrapper>,
 }
 
 unsafe impl Send for Texture {}
@@ -770,7 +764,6 @@ impl crate::Surface<Api> for Surface {
             size: sc.size,
             mip_level_count: 1,
             sample_count: 1,
-            allocation: None,
         };
         Ok(Some(crate::AcquiredSurfaceTexture {
             texture,

@@ -7,7 +7,6 @@ use crate::{
 };
 use bit_vec::BitVec;
 use std::{borrow::Cow, marker::PhantomData, mem};
-use wgt::strict_assert;
 
 /// A set of resources, holding a [`RefCount`] and epoch for each member.
 ///
