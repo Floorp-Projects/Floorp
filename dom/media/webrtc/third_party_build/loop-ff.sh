@@ -35,8 +35,8 @@ if [ "x$MOZ_LIBWEBRTC_COMMIT" = "x" ]; then
 fi
 
 if [ "x$MOZ_STOP_AFTER_COMMIT" = "x" ]; then
-  MOZ_STOP_AFTER_COMMIT=`cd $MOZ_LIBWEBRTC_SRC ; git show $MOZ_GIT_RELEASE_BRANCH --format='%h' --name-only | head -1`
-  echo "No MOZ_STOP_AFTER_COMMIT variable defined - stopping at $MOZ_GIT_RELEASE_BRANCH"
+  MOZ_STOP_AFTER_COMMIT=`cd $MOZ_LIBWEBRTC_SRC ; git show $MOZ_TARGET_UPSTREAM_BRANCH_HEAD --format='%h' --name-only | head -1`
+  echo "No MOZ_STOP_AFTER_COMMIT variable defined - stopping at $MOZ_TARGET_UPSTREAM_BRANCH_HEAD"
 fi
 
 if [ "x$SKIP_NEXT_REVERT_CHK" = "x" ]; then
