@@ -85,29 +85,6 @@ struct CreateSessionDescriptionMsg : public rtc::MessageData {
 };
 }  // namespace
 
-class WebRtcSessionDescriptionFactory::WebRtcCertificateGeneratorCallback
-    : public rtc::RTCCertificateGeneratorCallback {
- public:
-  explicit WebRtcCertificateGeneratorCallback(
-      rtc::WeakPtr<WebRtcSessionDescriptionFactory> ptr)
-      : weak_ptr_(std::move(ptr)) {}
-  // `rtc::RTCCertificateGeneratorCallback` overrides.
-  void OnSuccess(
-      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) override {
-    if (weak_ptr_) {
-      weak_ptr_->SetCertificate(certificate);
-    }
-  }
-  void OnFailure() override {
-    if (weak_ptr_) {
-      weak_ptr_->OnCertificateRequestFailed();
-    }
-  }
-
- private:
-  rtc::WeakPtr<WebRtcSessionDescriptionFactory> weak_ptr_;
-};
-
 // static
 void WebRtcSessionDescriptionFactory::CopyCandidatesFromSessionDescription(
     const SessionDescriptionInterface* source_desc,
@@ -145,7 +122,7 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     const std::string& session_id,
     bool dtls_enabled,
     std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
-    const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
+    rtc::scoped_refptr<rtc::RTCCertificate> certificate,
     std::function<void(const rtc::scoped_refptr<rtc::RTCCertificate>&)>
         on_certificate_ready,
     const FieldTrialsView& field_trials)
@@ -186,18 +163,26 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     // Generate certificate.
     certificate_request_state_ = CERTIFICATE_WAITING;
 
-    auto callback = rtc::make_ref_counted<WebRtcCertificateGeneratorCallback>(
-        weak_factory_.GetWeakPtr());
+    auto callback = [weak_ptr = weak_factory_.GetWeakPtr()](
+                        rtc::scoped_refptr<rtc::RTCCertificate> certificate) {
+      if (!weak_ptr) {
+        return;
+      }
+      if (certificate) {
+        weak_ptr->SetCertificate(std::move(certificate));
+      } else {
+        weak_ptr->OnCertificateRequestFailed();
+      }
+    };
 
     rtc::KeyParams key_params = rtc::KeyParams();
     RTC_LOG(LS_VERBOSE)
         << "DTLS-SRTP enabled; sending DTLS identity request (key type: "
         << key_params.type() << ").";
 
-    // Request certificate. This happens asynchronously, so that the caller gets
-    // a chance to connect to `SignalCertificateReady`.
+    // Request certificate. This happens asynchronously on a different thread.
     cert_generator_->GenerateCertificateAsync(key_params, absl::nullopt,
-                                              callback);
+                                              std::move(callback));
   }
 }
 
@@ -477,7 +462,7 @@ void WebRtcSessionDescriptionFactory::OnCertificateRequestFailed() {
 }
 
 void WebRtcSessionDescriptionFactory::SetCertificate(
-    const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
+    rtc::scoped_refptr<rtc::RTCCertificate> certificate) {
   RTC_DCHECK(certificate);
   RTC_LOG(LS_VERBOSE) << "Setting new certificate.";
 
@@ -485,7 +470,7 @@ void WebRtcSessionDescriptionFactory::SetCertificate(
 
   on_certificate_ready_(certificate);
 
-  transport_desc_factory_.set_certificate(certificate);
+  transport_desc_factory_.set_certificate(std::move(certificate));
   transport_desc_factory_.set_secure(cricket::SEC_ENABLED);
 
   while (!create_session_description_requests_.empty()) {

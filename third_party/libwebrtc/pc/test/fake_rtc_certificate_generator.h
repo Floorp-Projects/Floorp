@@ -135,11 +135,9 @@ class FakeRTCCertificateGenerator
   int generated_certificates() { return generated_certificates_; }
   int generated_failures() { return generated_failures_; }
 
-  void GenerateCertificateAsync(
-      const rtc::KeyParams& key_params,
-      const absl::optional<uint64_t>& expires_ms,
-      const rtc::scoped_refptr<rtc::RTCCertificateGeneratorCallback>& callback)
-      override {
+  void GenerateCertificateAsync(const rtc::KeyParams& key_params,
+                                const absl::optional<uint64_t>& expires_ms,
+                                Callback callback) override {
     // The certificates are created from constant PEM strings and use its coded
     // expiration time, we do not support modifying it.
     RTC_DCHECK(!expires_ms);
@@ -154,7 +152,7 @@ class FakeRTCCertificateGenerator
     }
     rtc::KeyType key_type = key_params.type();
     webrtc::TaskQueueBase::Current()->PostTask(
-        [this, key_type, callback]() mutable {
+        [this, key_type, callback = std::move(callback)]() mutable {
           GenerateCertificate(key_type, std::move(callback));
         });
   }
@@ -190,9 +188,7 @@ class FakeRTCCertificateGenerator
     return get_pem(key_type).certificate();
   }
 
-  void GenerateCertificate(
-      rtc::KeyType key_type,
-      rtc::scoped_refptr<rtc::RTCCertificateGeneratorCallback> callback) {
+  void GenerateCertificate(rtc::KeyType key_type, Callback callback) {
     // If the certificate generation should be stalled, re-post this same
     // message to the queue with a small delay so as to wait in a loop until
     // set_should_wait(false) is called.
@@ -206,13 +202,13 @@ class FakeRTCCertificateGenerator
     }
     if (should_fail_) {
       ++generated_failures_;
-      callback->OnFailure();
+      std::move(callback)(nullptr);
     } else {
       rtc::scoped_refptr<rtc::RTCCertificate> certificate =
           rtc::RTCCertificate::FromPEM(get_pem(key_type));
       RTC_DCHECK(certificate);
       ++generated_certificates_;
-      callback->OnSuccess(certificate);
+      std::move(callback)(std::move(certificate));
     }
   }
 
