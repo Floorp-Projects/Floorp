@@ -18,6 +18,7 @@
 #include "p2p/base/fake_packet_transport.h"
 #include "test/gtest.h"
 
+using ::testing::_;
 using ::testing::ByMove;
 using ::testing::DoAll;
 using ::testing::ElementsAre;
@@ -25,6 +26,7 @@ using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::NiceMock;
 using ::testing::Return;
+using ::testing::ReturnPointee;
 
 namespace webrtc {
 
@@ -112,6 +114,7 @@ TEST(DcSctpTransportTest, CloseSequence) {
   peer_a.sctp_transport_->Start(5000, 5000, 256 * 1024);
   peer_b.sctp_transport_->Start(5000, 5000, 256 * 1024);
   peer_a.sctp_transport_->OpenStream(1);
+  peer_b.sctp_transport_->OpenStream(1);
   peer_a.sctp_transport_->ResetStream(1);
 
   // Simulate the callbacks from the stream resets
@@ -153,6 +156,7 @@ TEST(DcSctpTransportTest, CloseSequenceSimultaneous) {
   peer_a.sctp_transport_->Start(5000, 5000, 256 * 1024);
   peer_b.sctp_transport_->Start(5000, 5000, 256 * 1024);
   peer_a.sctp_transport_->OpenStream(1);
+  peer_b.sctp_transport_->OpenStream(1);
   peer_a.sctp_transport_->ResetStream(1);
   peer_b.sctp_transport_->ResetStream(1);
 
@@ -166,6 +170,64 @@ TEST(DcSctpTransportTest, CloseSequenceSimultaneous) {
       ->OnIncomingStreamsReset(streams);
   static_cast<dcsctp::DcSctpSocketCallbacks*>(peer_b.sctp_transport_.get())
       ->OnIncomingStreamsReset(streams);
+}
+
+TEST(DcSctpTransportTest, DiscardMessageClosedChannel) {
+  rtc::AutoThread main_thread;
+  Peer peer_a;
+
+  EXPECT_CALL(*peer_a.socket_, Send(_, _)).Times(0);
+
+  peer_a.sctp_transport_->Start(5000, 5000, 256 * 1024);
+
+  cricket::SendDataResult result;
+  SendDataParams params;
+  rtc::CopyOnWriteBuffer payload;
+  bool send_data_return =
+      peer_a.sctp_transport_->SendData(1, params, payload, &result);
+  EXPECT_FALSE(send_data_return);
+  EXPECT_EQ(cricket::SDR_ERROR, result);
+}
+
+TEST(DcSctpTransportTest, DiscardMessageClosingChannel) {
+  rtc::AutoThread main_thread;
+  Peer peer_a;
+
+  EXPECT_CALL(*peer_a.socket_, Send(_, _)).Times(0);
+
+  peer_a.sctp_transport_->OpenStream(1);
+  peer_a.sctp_transport_->Start(5000, 5000, 256 * 1024);
+  peer_a.sctp_transport_->ResetStream(1);
+
+  cricket::SendDataResult result;
+  SendDataParams params;
+  rtc::CopyOnWriteBuffer payload;
+
+  bool send_data_return =
+      peer_a.sctp_transport_->SendData(1, params, payload, &result);
+  EXPECT_FALSE(send_data_return);
+  EXPECT_EQ(cricket::SDR_ERROR, result);
+}
+
+TEST(DcSctpTransportTest, SendDataOpenChannel) {
+  rtc::AutoThread main_thread;
+  Peer peer_a;
+  dcsctp::DcSctpOptions options;
+
+  EXPECT_CALL(*peer_a.socket_, Send(_, _)).Times(1);
+  EXPECT_CALL(*peer_a.socket_, options()).WillOnce(ReturnPointee(&options));
+
+  peer_a.sctp_transport_->OpenStream(1);
+  peer_a.sctp_transport_->Start(5000, 5000, 256 * 1024);
+
+  cricket::SendDataResult result;
+  SendDataParams params;
+  rtc::CopyOnWriteBuffer payload;
+
+  bool send_data_return =
+      peer_a.sctp_transport_->SendData(1, params, payload, &result);
+  EXPECT_TRUE(send_data_return);
+  EXPECT_EQ(cricket::SDR_SUCCESS, result);
 }
 
 }  // namespace webrtc
