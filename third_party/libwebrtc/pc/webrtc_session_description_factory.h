@@ -51,7 +51,7 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler {
       const std::string& session_id,
       bool dtls_enabled,
       std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
-      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
+      rtc::scoped_refptr<rtc::RTCCertificate> certificate,
       std::function<void(const rtc::scoped_refptr<rtc::RTCCertificate>&)>
           on_certificate_ready,
       const FieldTrialsView& field_trials);
@@ -98,9 +98,6 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler {
     CERTIFICATE_FAILED,
   };
 
-  // DTLS certificate request callback class.
-  class WebRtcCertificateGeneratorCallback;
-
   struct CreateSessionDescriptionRequest {
     enum Type {
       kOffer,
@@ -132,8 +129,7 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler {
       std::unique_ptr<SessionDescriptionInterface> description);
 
   void OnCertificateRequestFailed();
-  void SetCertificate(
-      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate);
+  void SetCertificate(rtc::scoped_refptr<rtc::RTCCertificate> certificate);
 
   std::queue<CreateSessionDescriptionRequest>
       create_session_description_requests_;
