@@ -36,12 +36,12 @@ FrameDelayDeltaKalmanFilter::FrameDelayDeltaKalmanFilter() {
 }
 
 void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
-    TimeDelta frame_delay_variation,
+    double frame_delay_variation_ms,
     double frame_size_variation_bytes,
-    DataSize max_frame_size,
+    double max_frame_size_bytes,
     double var_noise) {
   // Sanity checks.
-  if (max_frame_size < DataSize::Bytes(1)) {
+  if (max_frame_size_bytes < 1) {
     return;
   }
   if (var_noise <= 0.0) {
@@ -65,7 +65,7 @@ void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
   // This is the part of the measurement that cannot be explained by the current
   // estimate.
   double innovation =
-      frame_delay_variation.ms() -
+      frame_delay_variation_ms -
       GetFrameDelayVariationEstimateTotal(frame_size_variation_bytes);
 
   // 4) Innovation variance: `s = H*P*H' + r`.
@@ -76,7 +76,7 @@ void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
       estimate_cov_[1][0] * frame_size_variation_bytes + estimate_cov_[1][1];
   double observation_noise_stddev =
       (300.0 * exp(-fabs(frame_size_variation_bytes) /
-                   (1e0 * max_frame_size.bytes())) +
+                   (1e0 * max_frame_size_bytes)) +
        1) *
       sqrt(var_noise);
   if (observation_noise_stddev < 1.0) {

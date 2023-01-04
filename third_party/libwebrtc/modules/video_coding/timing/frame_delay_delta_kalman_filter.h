@@ -60,21 +60,25 @@ class FrameDelayDeltaKalmanFilter {
   // and frame size variation.
   //
   // Inputs:
-  // `frame_delay_variation`:
+  // `frame_delay_variation_ms`:
   //    Frame delay variation as calculated by the `InterFrameDelay` estimator.
   //
   // `frame_size_variation_bytes`:
   //    Frame size variation, i.e., the current frame size minus the previous
   //    frame size (in bytes). Note that this quantity may be negative.
   //
-  // `max_frame_size`:
+  // `max_frame_size_bytes`:
   //    Filtered largest frame size received since the last reset.
   //
   // `var_noise`:
   //    Variance of the estimated random jitter.
-  void PredictAndUpdate(TimeDelta frame_delay_variation,
+  //
+  // TODO(bugs.webrtc.org/14381): For now use doubles as input parameters as
+  // units defined in api/units have insufficient underlying precision for
+  // jitter estimation.
+  void PredictAndUpdate(double frame_delay_variation_ms,
                         double frame_size_variation_bytes,
-                        DataSize max_frame_size,
+                        double max_frame_size_bytes,
                         double var_noise);
 
   // Given a frame size variation, returns the estimated frame delay variation

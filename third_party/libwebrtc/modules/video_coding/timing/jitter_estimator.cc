@@ -33,6 +33,7 @@ static constexpr int64_t kFsAccuStartupSamples = 5;
 static constexpr Frequency kMaxFramerateEstimate = Frequency::Hertz(200);
 static constexpr TimeDelta kNackCountTimeout = TimeDelta::Seconds(60);
 static constexpr double kDefaultMaxTimestampDeviationInSigmas = 3.5;
+static constexpr double kDefaultAvgAndMaxFrameSize = 500;
 
 constexpr double kPhi = 0.97;
 constexpr double kPsi = 0.9999;
@@ -61,8 +62,8 @@ JitterEstimator::~JitterEstimator() = default;
 void JitterEstimator::Reset() {
   var_noise_ = 4.0;
 
-  avg_frame_size_ = kDefaultAvgAndMaxFrameSize;
-  max_frame_size_ = kDefaultAvgAndMaxFrameSize;
+  avg_frame_size_bytes_ = kDefaultAvgAndMaxFrameSize;
+  max_frame_size_bytes_ = kDefaultAvgAndMaxFrameSize;
   var_frame_size_ = 100;
   last_update_time_ = absl::nullopt;
   prev_estimate_ = absl::nullopt;
@@ -72,7 +73,7 @@ void JitterEstimator::Reset() {
   filter_jitter_estimate_ = TimeDelta::Zero();
   latest_nack_ = Timestamp::Zero();
   nack_count_ = 0;
-  frame_size_sum_ = DataSize::Zero();
+  frame_size_sum_bytes_ = 0;
   frame_size_count_ = 0;
   startup_count_ = 0;
   rtt_filter_.Reset();
@@ -91,27 +92,30 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   double delta_frame_bytes =
       frame_size.bytes() - prev_frame_size_.value_or(DataSize::Zero()).bytes();
   if (frame_size_count_ < kFsAccuStartupSamples) {
-    frame_size_sum_ += frame_size;
+    frame_size_sum_bytes_ += frame_size.bytes();
     frame_size_count_++;
   } else if (frame_size_count_ == kFsAccuStartupSamples) {
     // Give the frame size filter.
-    avg_frame_size_ = frame_size_sum_ / static_cast<double>(frame_size_count_);
+    avg_frame_size_bytes_ =
+        frame_size_sum_bytes_ / static_cast<double>(frame_size_count_);
     frame_size_count_++;
   }
 
-  DataSize avg_frame_size = kPhi * avg_frame_size_ + (1 - kPhi) * frame_size;
-  DataSize deviation_size = DataSize::Bytes(2 * sqrt(var_frame_size_));
-  if (frame_size < avg_frame_size_ + deviation_size) {
+  double avg_frame_size_bytes =
+      kPhi * avg_frame_size_bytes_ + (1 - kPhi) * frame_size.bytes();
+  double deviation_size_bytes = 2 * sqrt(var_frame_size_);
+  if (frame_size.bytes() < avg_frame_size_bytes_ + deviation_size_bytes) {
     // Only update the average frame size if this sample wasn't a key frame.
-    avg_frame_size_ = avg_frame_size;
+    avg_frame_size_bytes_ = avg_frame_size_bytes;
   }
 
-  double delta_bytes = frame_size.bytes() - avg_frame_size.bytes();
+  double delta_bytes = frame_size.bytes() - avg_frame_size_bytes;
   var_frame_size_ = std::max(
       kPhi * var_frame_size_ + (1 - kPhi) * (delta_bytes * delta_bytes), 1.0);
 
-  // Update max_frame_size_ estimate.
-  max_frame_size_ = std::max(kPsi * max_frame_size_, frame_size);
+  // Update max_frame_size_bytes_ estimate.
+  max_frame_size_bytes_ =
+      std::max<double>(kPsi * max_frame_size_bytes_, frame_size.bytes());
 
   if (!prev_frame_size_) {
     prev_frame_size_ = frame_size;
@@ -133,9 +137,8 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
       kalman_filter_.GetFrameDelayVariationEstimateTotal(delta_frame_bytes);
 
   if (fabs(deviation) < kNumStdDevDelayOutlier * sqrt(var_noise_) ||
-      frame_size.bytes() >
-          avg_frame_size_.bytes() +
-              kNumStdDevFrameSizeOutlier * sqrt(var_frame_size_)) {
+      frame_size.bytes() > avg_frame_size_bytes_ + kNumStdDevFrameSizeOutlier *
+                                                       sqrt(var_frame_size_)) {
     // Update the variance of the deviation from the line given by the Kalman
     // filter.
     EstimateRandomJitter(deviation);
@@ -145,10 +148,10 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
     // delayed. The next frame is of normal size (delta frame), and thus deltaFS
     // will be << 0. This removes all frame samples which arrives after a key
     // frame.
-    if (delta_frame_bytes > -0.25 * max_frame_size_.bytes()) {
+    if (delta_frame_bytes > -0.25 * max_frame_size_bytes_) {
       // Update the Kalman filter with the new data
-      kalman_filter_.PredictAndUpdate(frame_delay, delta_frame_bytes,
-                                      max_frame_size_, var_noise_);
+      kalman_filter_.PredictAndUpdate(frame_delay.ms(), delta_frame_bytes,
+                                      max_frame_size_bytes_, var_noise_);
     }
   } else {
     int nStdDev =
@@ -230,7 +233,7 @@ double JitterEstimator::NoiseThreshold() const {
 // Calculates the current jitter estimate from the filtered estimates.
 TimeDelta JitterEstimator::CalculateEstimate() {
   double retMs = kalman_filter_.GetFrameDelayVariationEstimateSizeBased(
-                     max_frame_size_.bytes() - avg_frame_size_.bytes()) +
+                     max_frame_size_bytes_ - avg_frame_size_bytes_) +
                  NoiseThreshold();
 
   TimeDelta ret = TimeDelta::Millis(retMs);
