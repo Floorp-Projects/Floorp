@@ -92,6 +92,11 @@ for (( ; ; )); do
 find_base_commit
 find_next_commit
 
+if [ $MOZ_LIBWEBRTC_BASE == $MOZ_LIBWEBRTC_NEXT_BASE ]; then
+  echo "===loop-ff=== Processing complete, already at upstream $MOZ_LIBWEBRTC_BASE"
+  exit
+fi
+
 echo "============ loop ff ============" 2>&1| tee -a $LOOP_OUTPUT_LOG
 
 ERROR_HELP=$"Some portion of the detection and/or fixing of upstream revert commits
