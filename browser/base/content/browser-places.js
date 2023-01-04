@@ -517,9 +517,7 @@ var PlacesCommandHook = {
     }
 
     let parentGuid = await PlacesUIUtils.defaultParentGuid;
-    let parentId = await PlacesUtils.promiseItemId(parentGuid);
     let defaultInsertionPoint = new PlacesInsertionPoint({
-      parentId,
       parentGuid,
     });
     await PlacesUIUtils.showBookmarkDialog(
@@ -1064,7 +1062,6 @@ var PlacesMenuDNDHandler = {
   onDragOver: function PMDH_onDragOver(event) {
     PlacesControllerDragHelper.currentDropTarget = event.target;
     let ip = new PlacesInsertionPoint({
-      parentId: PlacesUtils.bookmarksMenuFolderId,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
     });
     if (ip && PlacesControllerDragHelper.canDrop(ip, event.dataTransfer)) {
@@ -1082,7 +1079,6 @@ var PlacesMenuDNDHandler = {
   onDrop: function PMDH_onDrop(event) {
     // Put the item at the end of bookmark menu.
     let ip = new PlacesInsertionPoint({
-      parentId: PlacesUtils.bookmarksMenuFolderId,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
     });
     PlacesControllerDragHelper.onDrop(ip, event.dataTransfer);

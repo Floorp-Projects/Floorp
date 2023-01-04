@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AutofillTelemetry"];
+var EXPORTED_SYMBOLS = ["AutofillTelemetry", "AddressTelemetry"];
 
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
@@ -38,6 +38,10 @@ class AutofillTelemetryBase {
   }
 
   #setFormEventExtra(extra, key, value) {
+    if (!this.SUPPORTED_FIELDS[key]) {
+      return;
+    }
+
     extra[this.SUPPORTED_FIELDS[key]] = value;
   }
 
@@ -207,6 +211,8 @@ class AutofillTelemetryBase {
 
 class AddressTelemetry extends AutofillTelemetryBase {
   EVENT_CATEGORY = "address";
+  EVENT_OBJECT_FORM_INTERACTION = "address_form";
+  EVENT_OBJECT_FORM_INTERACTION_EXT = "address_form_ext";
 
   SCALAR_DETECTED_SECTION_COUNT =
     "formautofill.addresses.detected_sections_count";
@@ -217,6 +223,78 @@ class AddressTelemetry extends AutofillTelemetryBase {
 
   HISTOGRAM_PROFILE_NUM_USES = "AUTOFILL_PROFILE_NUM_USES";
   HISTOGRAM_PROFILE_NUM_USES_KEY = "address";
+
+  // Fields that are record in `address_form` and `address_form_ext` telemetry
+  SUPPORTED_FIELDS = {
+    "street-address": "street_address",
+    "address-line1": "address_line1",
+    "address-line2": "address_line2",
+    "address-line3": "address_line3",
+    "address-level1": "address_level1",
+    "address-level2": "address_level2",
+    "postal-code": "postal_code",
+    country: "country",
+    name: "name",
+    "given-name": "given_name",
+    "additional-name": "additional_name",
+    "family-name": "family_name",
+    email: "email",
+    organization: "organization",
+    tel: "tel",
+  };
+
+  // Fields that are record in `address_form` event telemetry extra_keys
+  static SUPPORTED_FIELDS_IN_FORM = [
+    "street_address",
+    "address_line1",
+    "address_line2",
+    "address_line3",
+    "address_level2",
+    "address_level1",
+    "postal_code",
+    "country",
+  ];
+
+  // Fields that are record in `address_form_ext` event telemetry extra_keys
+  static SUPPORTED_FIELDS_IN_FORM_EXT = [
+    "name",
+    "given_name",
+    "additional_name",
+    "family_name",
+    "email",
+    "organization",
+    "tel",
+  ];
+
+  recordFormEvent(method, flowId, extra) {
+    let extExtra = {};
+    if (["detected", "filled", "submitted"].includes(method)) {
+      for (const [key, value] of Object.entries(extra)) {
+        if (AddressTelemetry.SUPPORTED_FIELDS_IN_FORM_EXT.includes(key)) {
+          extExtra[key] = value;
+          delete extra[key];
+        }
+      }
+    }
+
+    Services.telemetry.recordEvent(
+      this.EVENT_CATEGORY,
+      method,
+      this.EVENT_OBJECT_FORM_INTERACTION,
+      flowId,
+      extra
+    );
+
+    if (Object.keys(extExtra).length) {
+      Services.telemetry.recordEvent(
+        this.EVENT_CATEGORY,
+        method,
+        this.EVENT_OBJECT_FORM_INTERACTION_EXT,
+        flowId,
+        extExtra
+      );
+    }
+  }
 }
 
 class CreditCardTelemetry extends AutofillTelemetryBase {

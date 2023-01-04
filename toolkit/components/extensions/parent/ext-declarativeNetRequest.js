@@ -28,6 +28,13 @@ this.declarativeNetRequest = class extends ExtensionAPI {
 
     return {
       declarativeNetRequest: {
+        updateDynamicRules({ removeRuleIds, addRules }) {
+          return ExtensionDNR.updateDynamicRules(extension, {
+            removeRuleIds,
+            addRules,
+          });
+        },
+
         updateSessionRules({ removeRuleIds, addRules }) {
           const ruleManager = ExtensionDNR.getRuleManager(extension);
           let ruleValidator = new ExtensionDNR.RuleValidator(
@@ -64,6 +71,11 @@ this.declarativeNetRequest = class extends ExtensionAPI {
             disableRulesetIds,
             enableRulesetIds,
           });
+        },
+
+        async getDynamicRules() {
+          await ExtensionDNR.ensureInitialized(extension);
+          return ExtensionDNR.getRuleManager(extension).getDynamicRules();
         },
 
         getSessionRules() {

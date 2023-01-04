@@ -306,7 +306,6 @@ function closingPopupEndsDrag(popup) {
       if (!elt._placesNode) {
         // If we are dragging over a non places node drop at the end.
         dropPoint.ip = new PlacesInsertionPoint({
-          parentId: PlacesUtils.getConcreteItemId(resultNode),
           parentGuid: PlacesUtils.getConcreteItemGuid(resultNode),
         });
         // We can set folderElt if we are dropping over a static menu that
@@ -337,7 +336,6 @@ function closingPopupEndsDrag(popup) {
         if (eventY - eltY < eltHeight * 0.2) {
           // If mouse is in the top part of the element, drop above folder.
           dropPoint.ip = new PlacesInsertionPoint({
-            parentId: PlacesUtils.getConcreteItemId(resultNode),
             parentGuid: PlacesUtils.getConcreteItemGuid(resultNode),
             orientation: Ci.nsITreeView.DROP_BEFORE,
             tagName,
@@ -347,7 +345,6 @@ function closingPopupEndsDrag(popup) {
         } else if (eventY - eltY < eltHeight * 0.8) {
           // If mouse is in the middle of the element, drop inside folder.
           dropPoint.ip = new PlacesInsertionPoint({
-            parentId: PlacesUtils.getConcreteItemId(elt._placesNode),
             parentGuid: PlacesUtils.getConcreteItemGuid(elt._placesNode),
             tagName,
           });
@@ -358,7 +355,6 @@ function closingPopupEndsDrag(popup) {
         // This is a non-folder node or a readonly folder.
         // If the mouse is above the middle, drop above this item.
         dropPoint.ip = new PlacesInsertionPoint({
-          parentId: PlacesUtils.getConcreteItemId(resultNode),
           parentGuid: PlacesUtils.getConcreteItemGuid(resultNode),
           orientation: Ci.nsITreeView.DROP_BEFORE,
           tagName,
@@ -369,7 +365,6 @@ function closingPopupEndsDrag(popup) {
 
       // Drop below the item.
       dropPoint.ip = new PlacesInsertionPoint({
-        parentId: PlacesUtils.getConcreteItemId(resultNode),
         parentGuid: PlacesUtils.getConcreteItemGuid(resultNode),
         orientation: Ci.nsITreeView.DROP_AFTER,
         tagName,

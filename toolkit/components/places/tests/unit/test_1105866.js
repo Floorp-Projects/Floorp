@@ -15,7 +15,7 @@ add_task(async function test_folder_shortcuts() {
   );
   Assert.strictEqual(
     PlacesUtils.asQuery(shortcutNode).folderItemId,
-    PlacesUtils.toolbarFolderId
+    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
   Assert.strictEqual(shortcutNode.bookmarkGuid, shortcutInfo.guid);
   Assert.strictEqual(
@@ -36,7 +36,7 @@ add_task(async function test_folder_shortcuts() {
   );
   Assert.strictEqual(
     PlacesUtils.asQuery(shortcutNode).folderItemId,
-    PlacesUtils.bookmarksMenuFolderId
+    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.menuGuid)
   );
   Assert.strictEqual(shortcutNode.bookmarkGuid, shortcutInfo.guid);
   Assert.strictEqual(

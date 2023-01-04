@@ -607,7 +607,6 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource = nullptr;
   }
   mWaylandVsyncDispatcher = nullptr;
-  MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy);
 #endif
 
   /** Need to clean our LayerManager up while still alive */
@@ -3047,7 +3046,8 @@ void nsWindow::SetUserTimeAndStartupTokenForActivatedWindow() {
       gtk_window_set_startup_id(GTK_WINDOW(mShell),
                                 mWindowActivationTokenFromEnv.get());
       // In the case of X11, the above call is all we need. For wayland we need
-      // to keep the token around until we take it in RequestFocusWaylandWindow.
+      // to keep the token around until we take it in
+      // TransferFocusToWaylandWindow.
       mWindowActivationTokenFromEnv.Truncate();
     }
   } else if (uint32_t timestamp = toolkit->GetFocusTimestamp()) {
@@ -3092,8 +3092,6 @@ guint32 nsWindow::GetLastUserInputTime() {
 #ifdef MOZ_WAYLAND
 void nsWindow::FocusWaylandWindow(const char* aTokenID) {
   MOZ_DIAGNOSTIC_ASSERT(aTokenID);
-  auto releaseToken = MakeScopeExit(
-      [&] { MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy); });
 
   LOG("nsWindow::FocusWaylandWindow(%s)", aTokenID);
   if (IsDestroyed()) {
@@ -3116,80 +3114,26 @@ void nsWindow::FocusWaylandWindow(const char* aTokenID) {
   xdg_activation_v1_activate(xdg_activation, aTokenID, surface);
 }
 
-// We've got activation token from Wayland compositor so it's time to use it.
-static void token_done(gpointer data, struct xdg_activation_token_v1* provider,
-                       const char* token) {
-  // Compensate aWindow->AddRef() from nsWindow::RequestFocusWaylandWindow().
-  RefPtr<nsWindow> window = dont_AddRef(static_cast<nsWindow*>(data));
-  window->FocusWaylandWindow(token);
-}
-
-static const struct xdg_activation_token_v1_listener token_listener = {
-    token_done,
-};
-
-void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
-  LOGW("nsWindow::RequestFocusWaylandWindow(%p) gFocusWindow %p", aWindow.get(),
+// Transfer focus from gFocusWindow to aWindow and use xdg_activation
+// protocol for it.
+void nsWindow::TransferFocusToWaylandWindow(nsWindow* aWindow) {
+  LOGW("nsWindow::TransferFocusToWaylandWindow(%p) gFocusWindow %p", aWindow,
        gFocusWindow);
-
-  auto existingToken = std::move(aWindow->mWindowActivationTokenFromEnv);
-  if (!existingToken.IsEmpty()) {
-    LOGW("  has existing activation token.");
-    aWindow->FocusWaylandWindow(existingToken.get());
+  auto promise = mozilla::widget::RequestWaylandFocusPromise();
+  if (NS_WARN_IF(!promise)) {
+    LOGW("  quit, failed to create TransferFocusToWaylandWindow [%p]", aWindow);
     return;
   }
-
-  if (!gFocusWindow || gFocusWindow->IsDestroyed()) {
-    LOGW("  missing gFocusWindow, quit.");
-    return;
-  }
-
-  RefPtr<nsWaylandDisplay> display = WaylandDisplayGet();
-  xdg_activation_v1* xdg_activation = display->GetXdgActivation();
-  if (!xdg_activation) {
-    LOGW("  xdg-activation is missing, quit.");
-    return;
-  }
-
-  wl_surface* focusSurface;
-  uint32_t focusSerial;
-  KeymapWrapper::GetFocusInfo(&focusSurface, &focusSerial);
-  if (!focusSurface) {
-    LOGW("  We're missing KeymapWrapper focused window, quit.");
-    return;
-  }
-
-  GdkWindow* gdkWindow = gtk_widget_get_window(gFocusWindow->mShell);
-  if (!gdkWindow) {
-    LOGW("  gFocusWindow is not mapped, quit.");
-    return;
-  }
-  wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWindow);
-  if (focusSurface != surface) {
-    LOGW("  focused surface %p and gFocusWindow surface %p don't match, quit.",
-         focusSurface, surface);
-    return;
-  }
-
-  LOGW(
-      "  requesting xdg-activation token, surface %p ID %d serial %d seat ID "
-      "%d",
-      focusSurface,
-      focusSurface ? wl_proxy_get_id((struct wl_proxy*)focusSurface) : 0,
-      focusSerial, wl_proxy_get_id((struct wl_proxy*)KeymapWrapper::GetSeat()));
-
-  // Store activation token at activated window for further release.
-  MozClearPointer(aWindow->mXdgToken, xdg_activation_token_v1_destroy);
-  aWindow->mXdgToken = xdg_activation_v1_get_activation_token(xdg_activation);
-
-  // Addref aWindow to avoid potential release untill we get token_done
-  // callback.
-  xdg_activation_token_v1_add_listener(aWindow->mXdgToken, &token_listener,
-                                       do_AddRef(aWindow).take());
-  xdg_activation_token_v1_set_serial(aWindow->mXdgToken, focusSerial,
-                                     KeymapWrapper::GetSeat());
-  xdg_activation_token_v1_set_surface(aWindow->mXdgToken, focusSurface);
-  xdg_activation_token_v1_commit(aWindow->mXdgToken);
+  promise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      /* resolve */
+      [window = RefPtr{aWindow}](nsCString token) {
+        window->FocusWaylandWindow(token.get());
+      },
+      /* reject */
+      [window = RefPtr{aWindow}](bool state) {
+        LOGW("TransferFocusToWaylandWindow [%p] failed", window.get());
+      });
 }
 #endif
 
@@ -3216,6 +3160,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       aRaise == Raise::Yes && toplevelWidget &&
       !gtk_widget_has_focus(toplevelWidget)) {
     if (gtk_widget_get_visible(mShell)) {
+      LOG("  toplevel is not focused");
       gdk_window_show_unraised(gtk_widget_get_window(mShell));
       // Unset the urgency hint if possible.
       SetUrgencyHint(mShell, false);
@@ -3236,7 +3181,8 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     if (StaticPrefs::mozilla_widget_raise_on_setfocus_AtStartup() &&
         toplevelWindow->mIsShown && toplevelWindow->mShell &&
         !gtk_window_is_active(GTK_WINDOW(toplevelWindow->mShell))) {
-      LOG("  requesting toplevel activation [%p]\n", toplevelWindow.get());
+      LOG("  toplevel is visible but not active, requesting activation [%p]",
+          toplevelWindow.get());
 
       // Take the time here explicitly for the call below.
       const uint32_t timestamp = [&] {
@@ -3255,7 +3201,16 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
 
 #ifdef MOZ_WAYLAND
       if (GdkIsWaylandDisplay()) {
-        RequestFocusWaylandWindow(toplevelWindow);
+        auto existingToken =
+            std::move(toplevelWindow->mWindowActivationTokenFromEnv);
+        if (!existingToken.IsEmpty()) {
+          LOG("  has existing activation token.");
+          toplevelWindow->FocusWaylandWindow(existingToken.get());
+        } else {
+          LOG("  missing activation token, try to transfer from focused "
+              "window");
+          TransferFocusToWaylandWindow(toplevelWindow);
+        }
       }
 #endif
     }
@@ -4428,7 +4383,8 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
   }
 
   GdkWindowEdge edge;
-  if (CheckResizerEdge(GetRefPoint(this, aEvent), edge)) {
+  const auto refPoint = GetRefPoint(this, aEvent);
+  if (CheckResizerEdge(refPoint, edge)) {
     nsCursor cursor = eCursor_none;
     switch (edge) {
       case GDK_WINDOW_EDGE_NORTH:
@@ -4466,9 +4422,11 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
   gdk_event_get_axis((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
   // Sometime gdk generate 0 pressure value between normal values
   // We have to ignore that and use last valid value
-  if (pressure) mLastMotionPressure = pressure;
+  if (pressure) {
+    mLastMotionPressure = pressure;
+  }
   event.mPressure = mLastMotionPressure;
-  event.mRefPoint = GetRefPoint(this, aEvent);
+  event.mRefPoint = refPoint;
   event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
   KeymapWrapper::InitInputEvent(event, aEvent->state);
@@ -4524,8 +4482,9 @@ void nsWindow::DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent) {
 }
 
 void nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
-                               GdkEventButton* aGdkEvent) {
-  aEvent.mRefPoint = GetRefPoint(this, aGdkEvent);
+                               GdkEventButton* aGdkEvent,
+                               const LayoutDeviceIntPoint& aRefPoint) {
+  aEvent.mRefPoint = aRefPoint;
 
   guint modifierState = aGdkEvent->state;
   // aEvent's state includes the button state from immediately before this
@@ -4570,12 +4529,13 @@ static guint ButtonMaskFromGDKButton(guint button) {
   return GDK_BUTTON1_MASK << (button - 1);
 }
 
-void nsWindow::DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
-                                                      GdkEventButton* aEvent) {
+void nsWindow::DispatchContextMenuEventFromMouseEvent(
+    uint16_t domButton, GdkEventButton* aEvent,
+    const LayoutDeviceIntPoint& aRefPoint) {
   if (domButton == MouseButton::eSecondary && MOZ_LIKELY(!mIsDestroyed)) {
     WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
                                       WidgetMouseEvent::eReal);
-    InitButtonEvent(contextMenuEvent, aEvent);
+    InitButtonEvent(contextMenuEvent, aEvent, aRefPoint);
     contextMenuEvent.mPressure = mLastMotionPressure;
     DispatchInputEvent(&contextMenuEvent);
   }
@@ -4611,10 +4571,11 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
     containerWindow->DispatchActivateEvent();
   }
 
+  const auto refPoint = GetRefPoint(this, aEvent);
+
   // check to see if we should rollup
   if (CheckForRollup(aEvent->x_root, aEvent->y_root, false, false)) {
-    if (aEvent->button == 3 &&
-        mDraggableRegion.Contains(GetRefPoint(this, aEvent))) {
+    if (aEvent->button == 3 && mDraggableRegion.Contains(refPoint)) {
       GUniquePtr<GdkEvent> eventCopy;
       if (aEvent->type != GDK_BUTTON_PRESS) {
         // If the user double-clicks too fast we'll get a 2BUTTON_PRESS event
@@ -4630,7 +4591,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   // Check to see if the event is within our window's resize region
   GdkWindowEdge edge;
-  if (CheckResizerEdge(GetRefPoint(this, aEvent), edge)) {
+  if (CheckResizerEdge(refPoint, edge)) {
     gdk_window_begin_resize_drag(gtk_widget_get_window(mShell), edge,
                                  aEvent->button, aEvent->x_root, aEvent->y_root,
                                  aEvent->time);
@@ -4678,13 +4639,11 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   WidgetMouseEvent event(true, eMouseDown, this, WidgetMouseEvent::eReal);
   event.mButton = domButton;
-  InitButtonEvent(event, aEvent);
+  InitButtonEvent(event, aEvent, refPoint);
   event.mPressure = mLastMotionPressure;
 
   nsIWidget::ContentAndAPZEventStatus eventStatus = DispatchInputEvent(&event);
 
-  LayoutDeviceIntPoint refPoint =
-      GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
   if ((mIsWaylandPanelWindow || mDraggableRegion.Contains(refPoint)) &&
       domButton == MouseButton::ePrimary &&
       eventStatus.mContentStatus != nsEventStatus_eConsumeNoDefault) {
@@ -4694,7 +4653,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
   // right menu click on linux should also pop up a context menu
   if (!StaticPrefs::ui_context_menus_after_mouseup() &&
       eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
-    DispatchContextMenuEventFromMouseEvent(domButton, aEvent);
+    DispatchContextMenuEventFromMouseEvent(domButton, aEvent, refPoint);
   }
 }
 
@@ -4728,9 +4687,11 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
 
   gButtonState &= ~ButtonMaskFromGDKButton(aEvent->button);
 
+  const auto refPoint = GetRefPoint(this, aEvent);
+
   WidgetMouseEvent event(true, eMouseUp, this, WidgetMouseEvent::eReal);
   event.mButton = domButton;
-  InitButtonEvent(event, aEvent);
+  InitButtonEvent(event, aEvent, refPoint);
   gdouble pressure = 0;
   gdk_event_get_axis((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
   event.mPressure = pressure ? (float)pressure : (float)mLastMotionPressure;
@@ -4759,7 +4720,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
   // right menu click on linux should also pop up a context menu
   if (StaticPrefs::ui_context_menus_after_mouseup() &&
       eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
-    DispatchContextMenuEventFromMouseEvent(domButton, aEvent);
+    DispatchContextMenuEventFromMouseEvent(domButton, aEvent, refPoint);
   }
 
   // Open window manager menu on PIP window to allow user
@@ -5502,7 +5463,7 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
       return FALSE;
   }
 
-  LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
+  const LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
 
   int32_t id;
   RefPtr<dom::Touch> touch;
@@ -5532,9 +5493,7 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
 
   // There's a chance that we are in drag area and the event is not consumed
   // by something on it.
-  LayoutDeviceIntPoint refPoint =
-      GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-  if (msg == eTouchStart && mDraggableRegion.Contains(refPoint) &&
+  if (msg == eTouchStart && mDraggableRegion.Contains(touchPoint) &&
       eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
     mWindowShouldStartDragging = true;
   }

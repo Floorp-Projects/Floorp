@@ -2028,7 +2028,7 @@ if (Services.prefs.getBoolPref(EXTENSION_STORAGE_ENABLED_PREF, false)) {
         }
 
         let { name, value } = item;
-        let isValueEditable = extensionStorageHelpers.isEditable(value);
+        const isValueEditable = extensionStorageHelpers.isEditable(value);
 
         // `JSON.stringify()` throws for `BigInt`, adds extra quotes to strings and `Date` strings,
         // and doesn't modify `undefined`.
@@ -2049,16 +2049,6 @@ if (Services.prefs.getBoolPref(EXTENSION_STORAGE_ENABLED_PREF, false)) {
             ) {
               value = JSON.parse(value);
             }
-        }
-
-        // FIXME: Bug 1318029 - Due to a bug that is thrown whenever a
-        // LongStringActor string reaches DevToolsServer.LONG_STRING_LENGTH we need
-        // to trim the value. When the bug is fixed we should stop trimming the
-        // string here.
-        const maxLength = DevToolsServer.LONG_STRING_LENGTH - 1;
-        if (value.length > maxLength) {
-          value = value.substr(0, maxLength);
-          isValueEditable = false;
         }
 
         return {
@@ -2703,16 +2693,7 @@ StorageActors.createActor(
         };
       }
 
-      let value = JSON.stringify(item.value);
-
-      // FIXME: Bug 1318029 - Due to a bug that is thrown whenever a
-      // LongStringActor string reaches DevToolsServer.LONG_STRING_LENGTH we need
-      // to trim the value. When the bug is fixed we should stop trimming the
-      // string here.
-      const maxLength = DevToolsServer.LONG_STRING_LENGTH - 1;
-      if (value.length > maxLength) {
-        value = value.substr(0, maxLength);
-      }
+      const value = JSON.stringify(item.value);
 
       // Indexed db entry
       return {

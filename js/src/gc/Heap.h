@@ -338,22 +338,24 @@ class alignas(ArenaSize) Arena {
   size_t countFreeCells() { return numFreeThings(getThingSize()); }
   size_t countUsedCells() { return getThingsPerArena() - countFreeCells(); }
 
+#ifdef DEBUG
   bool inFreeList(uintptr_t thing) {
     uintptr_t base = address();
     const FreeSpan* span = &firstFreeSpan;
     for (; !span->isEmpty(); span = span->nextSpan(this)) {
-      /* If the thing comes before the current span, it's not free. */
+      // If the thing comes before the current span, it's not free.
       if (thing < base + span->first) {
         return false;
       }
 
-      /* If we find it before the end of the span, it's free. */
+      // If we find it before the end of the span, it's free.
       if (thing <= base + span->last) {
         return true;
       }
     }
     return false;
   }
+#endif
 
   static bool isAligned(uintptr_t thing, size_t thingSize) {
     /* Things ends at the arena end. */
@@ -748,12 +750,6 @@ inline void Arena::checkAddress() const {
 
 inline TenuredChunk* Arena::chunk() const {
   return TenuredChunk::fromAddress(address());
-}
-
-inline bool InFreeList(Arena* arena, void* thing) {
-  uintptr_t addr = reinterpret_cast<uintptr_t>(thing);
-  MOZ_ASSERT(Arena::isAligned(addr, arena->getThingSize()));
-  return arena->inFreeList(addr);
 }
 
 static const int32_t ChunkStoreBufferOffsetFromLastByte =

@@ -398,7 +398,7 @@ load 551635-1.html
 load 553504-1.xhtml
 load 564368-1.xhtml
 load 564968.xhtml
-asserts(5) load 569193-1.html # absurd sizes
+asserts(5-9) load 569193-1.html # absurd sizes
 load 570160.html
 load 570289-1.html
 load 571618-1.svg

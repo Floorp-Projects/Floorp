@@ -1006,8 +1006,8 @@ export var PlacesUIUtils = {
     }
 
     return (
-      lazy.PlacesUtils.getConcreteItemId(placesNode) ==
-      lazy.PlacesUtils.placesRootId
+      lazy.PlacesUtils.getConcreteItemGuid(placesNode) ==
+      lazy.PlacesUtils.bookmarks.rootGuid
     );
   },
 
@@ -1837,8 +1837,9 @@ export var PlacesUIUtils = {
       async db => {
         let rows = await db.execute(
           `SELECT COUNT(*) as n FROM moz_bookmarks b
-           WHERE b.parent = :parentId`,
-          { parentId: lazy.PlacesUtils.toolbarFolderId }
+           JOIN moz_bookmarks p ON p.id = b.parent
+           WHERE p.guid = :guid`,
+          { guid: lazy.PlacesUtils.bookmarks.toolbarGuid }
         );
         return rows[0].getResultByName("n");
       }

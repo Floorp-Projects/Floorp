@@ -27,7 +27,11 @@ const FORM_URL = BASE_URL + "autocomplete_basic.html";
 const ADDRESS_FORM_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
-  "creditCard/autocomplete_address_basic.html";
+  "address/autocomplete_address_basic.html";
+const ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL =
+  "https://example.org" +
+  HTTP_TEST_PATH +
+  "address/without_autocomplete_address_basic.html";
 const CREDITCARD_FORM_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
@@ -40,10 +44,6 @@ const CREDITCARD_FORM_COMBINED_EXPIRY_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
   "creditCard/autocomplete_creditcard_cc_exp_field.html";
-const ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL =
-  "https://example.org" +
-  HTTP_TEST_PATH +
-  "creditCard/without_autocomplete_address_basic.html";
 const CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL =
   "https://example.org" +
   HTTP_TEST_PATH +

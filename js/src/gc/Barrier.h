@@ -972,6 +972,11 @@ class HeapSlot : public WriteBarriered<Value> {
 
   void destroy() { pre(); }
 
+  void setUndefinedUnchecked() {
+    pre();
+    value.setUndefined();
+  }
+
 #ifdef DEBUG
   bool preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot) const;
   void assertPreconditionForPostWriteBarrier(NativeObject* obj, Kind kind,
