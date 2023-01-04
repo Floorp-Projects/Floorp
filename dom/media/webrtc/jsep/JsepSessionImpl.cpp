@@ -1172,11 +1172,21 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
   NS_ENSURE_SUCCESS(rv, rv);
 
   transceiver->mSendTrack.SetActive(sending);
-  transceiver->mSendTrack.Negotiate(answer, remote, local);
+  rv = transceiver->mSendTrack.Negotiate(answer, remote, local);
+  if (NS_FAILED(rv)) {
+    JSEP_SET_ERROR("Answer had no codecs in common with offer in m-section "
+                   << local.GetLevel());
+    return rv;
+  }
 
   JsepTrack& recvTrack = transceiver->mRecvTrack;
   recvTrack.SetActive(receiving);
-  recvTrack.Negotiate(answer, remote, local);
+  rv = recvTrack.Negotiate(answer, remote, local);
+  if (NS_FAILED(rv)) {
+    JSEP_SET_ERROR("Answer had no codecs in common with offer in m-section "
+                   << local.GetLevel());
+    return rv;
+  }
 
   if (transceiver->HasBundleLevel() && recvTrack.GetSsrcs().empty() &&
       recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
