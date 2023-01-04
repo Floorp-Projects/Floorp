@@ -18,7 +18,7 @@ export MOZ_FASTFORWARD_BUG="1800920"
 # next fast-forward by grabbing all the Mozilla specific commits in the
 # prior branch and restacking them at the same base commit ready to
 # rebase onto the next upstream commit.
-export MOZ_PRIOR_GIT_BRANCH="moz-mods-chr105-for-rel109"
+export MOZ_PRIOR_LIBWEBRTC_BRANCH="moz-mods-chr105-for-rel109"
 
 # For Chromium release branches, see:
 # https://chromiumdash.appspot.com/branches
