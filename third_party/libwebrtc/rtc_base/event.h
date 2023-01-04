@@ -11,6 +11,7 @@
 #ifndef RTC_BASE_EVENT_H_
 #define RTC_BASE_EVENT_H_
 
+#include "api/units/time_delta.h"
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #elif defined(WEBRTC_POSIX)
@@ -23,7 +24,9 @@ namespace rtc {
 
 class Event {
  public:
-  static const int kForever = -1;
+  // TODO(bugs.webrtc.org/14366): Consider removing this redundant alias.
+  static constexpr webrtc::TimeDelta kForever =
+      webrtc::TimeDelta::PlusInfinity();
 
   Event();
   Event(bool manual_reset, bool initially_signaled);
@@ -35,22 +38,41 @@ class Event {
   void Reset();
 
   // Waits for the event to become signaled, but logs a warning if it takes more
-  // than `warn_after_ms` milliseconds, and gives up completely if it takes more
-  // than `give_up_after_ms` milliseconds. (If `warn_after_ms >=
-  // give_up_after_ms`, no warning will be logged.) Either or both may be
-  // `kForever`, which means wait indefinitely.
+  // than `warn_after`, and gives up completely if it takes more than
+  // `give_up_after`. (If `warn_after >= give_up_after`, no warning will be
+  // logged.) Either or both may be `kForever`, which means wait indefinitely.
+  //
+  // Care is taken so that the underlying OS wait call isn't requested to sleep
+  // shorter than `give_up_after`.
   //
   // Returns true if the event was signaled, false if there was a timeout or
   // some other error.
-  bool Wait(int give_up_after_ms, int warn_after_ms);
+  bool Wait(webrtc::TimeDelta give_up_after, webrtc::TimeDelta warn_after);
 
   // Waits with the given timeout and a reasonable default warning timeout.
-  bool Wait(int give_up_after_ms) {
-    return Wait(give_up_after_ms,
-                give_up_after_ms == kForever ? 3000 : kForever);
+  // TODO(bugs.webrtc.org/14366): De-template this after millisec-based Wait is
+  // removed.
+  template <class T>
+  bool Wait(T give_up_after) {
+    webrtc::TimeDelta duration = ToTimeDelta(give_up_after);
+    return Wait(duration, duration.IsPlusInfinity()
+                              ? webrtc::TimeDelta::Seconds(3)
+                              : kForever);
   }
 
  private:
+  // TODO(bugs.webrtc.org/14366): Remove after millisec-based Wait is removed.
+  static webrtc::TimeDelta ToTimeDelta(int duration) {
+    // SocketServer users can get here with SocketServer::kForever which is
+    // -1. Mirror the definition here to avoid dependence.
+    constexpr int kForeverMs = -1;
+    return duration == kForeverMs ? kForever
+                                  : webrtc::TimeDelta::Millis(duration);
+  }
+  static webrtc::TimeDelta ToTimeDelta(webrtc::TimeDelta duration) {
+    return duration;
+  }
+
 #if defined(WEBRTC_WIN)
   HANDLE event_handle_;
 #elif defined(WEBRTC_POSIX)

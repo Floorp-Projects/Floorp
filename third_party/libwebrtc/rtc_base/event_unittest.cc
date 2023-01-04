@@ -11,6 +11,7 @@
 #include "rtc_base/event.h"
 
 #include "rtc_base/platform_thread.h"
+#include "system_wrappers/include/clock.h"
 #include "test/gtest.h"
 
 namespace rtc {
@@ -64,6 +65,15 @@ class SignalerThread {
   Event* reader_;
   PlatformThread thread_;
 };
+
+TEST(EventTest, UnsignaledWaitDoesNotReturnBeforeTimeout) {
+  constexpr webrtc::TimeDelta kDuration = webrtc::TimeDelta::Micros(10'499);
+  Event event;
+  auto begin = webrtc::Clock::GetRealTimeClock()->CurrentTime();
+  EXPECT_FALSE(event.Wait(kDuration));
+  EXPECT_GE(webrtc::Clock::GetRealTimeClock()->CurrentTime(),
+            begin + kDuration);
+}
 
 // These tests are disabled by default and only intended to be run manually.
 TEST(EventTest, DISABLED_PerformanceSingleThread) {
