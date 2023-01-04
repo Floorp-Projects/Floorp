@@ -17,7 +17,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
-#include "nsMenuFrame.h"
+#include "nsXULPopupManager.h"
 #include "tree/nsTreeBodyFrame.h"
 #include "prlink.h"
 #include "nsGkAtoms.h"
@@ -31,6 +31,7 @@
 #include <gtk/gtk.h>
 
 #include "gfxContext.h"
+#include "mozilla/dom/XULButtonElement.h"
 #include "mozilla/gfx/BorrowedContext.h"
 #include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -246,14 +247,9 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
           aAppearance == StyleAppearance::Radiomenuitem ||
           aAppearance == StyleAppearance::Menuseparator ||
           aAppearance == StyleAppearance::Menuarrow) {
-        bool isTopLevel = false;
-        nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
-        if (menuFrame) {
-          isTopLevel = menuFrame->IsOnMenuBar();
-        }
-
-        if (isTopLevel) {
-          aState->inHover = menuFrame->IsOpen();
+        auto* item = dom::XULButtonElement::FromNode(aFrame->GetContent());
+        if (item && item->IsOnMenuBar()) {
+          aState->inHover = CheckBooleanAttr(aFrame, nsGkAtoms::open);
         } else {
           aState->inHover = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
         }
@@ -519,8 +515,8 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       aGtkWidgetType = MOZ_GTK_MENUBAR;
       break;
     case StyleAppearance::Menuitem: {
-      nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
-      if (menuFrame && menuFrame->IsOnMenuBar()) {
+      auto* item = dom::XULButtonElement::FromNode(aFrame->GetContent());
+      if (item && item->IsOnMenuBar()) {
         aGtkWidgetType = MOZ_GTK_MENUBARITEM;
         break;
       }

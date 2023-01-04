@@ -6,6 +6,7 @@
 
 #include "nsXULTooltipListener.h"
 
+#include "XULButtonElement.h"
 #include "nsXULElement.h"
 #include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
@@ -607,12 +608,12 @@ nsresult nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget,
   }
 
   // Submenus can't be used as tooltips, see bug 288763.
-  nsIContent* parent = tooltip->GetParent();
-  if (parent) {
-    nsMenuFrame* menu = do_QueryFrame(parent->GetPrimaryFrame());
-    if (menu) {
-      NS_WARNING("Menu cannot be used as a tooltip");
-      return NS_ERROR_FAILURE;
+  if (nsIContent* parent = tooltip->GetParent()) {
+    if (auto* button = XULButtonElement::FromNode(parent)) {
+      if (button->IsMenu()) {
+        NS_WARNING("Menu cannot be used as a tooltip");
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 

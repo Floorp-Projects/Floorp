@@ -7,27 +7,29 @@
 #ifndef mozilla_dom_XULMenuElement_h
 #define mozilla_dom_XULMenuElement_h
 
+#include "XULButtonElement.h"
+#include "nsINode.h"
 #include "nsXULElement.h"
 
 namespace mozilla::dom {
 
 class KeyboardEvent;
 
-class XULMenuElement final : public nsXULElement {
+class XULMenuElement final : public XULButtonElement {
  public:
   explicit XULMenuElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsXULElement(std::move(aNodeInfo)) {}
+      : XULButtonElement(std::move(aNodeInfo)) {}
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> GetActiveChild();
-  MOZ_CAN_RUN_SCRIPT void SetActiveChild(Element* arg);
-  MOZ_CAN_RUN_SCRIPT bool HandleKeyPress(KeyboardEvent& keyEvent);
-  MOZ_CAN_RUN_SCRIPT bool OpenedWithKey();
+  MOZ_CAN_RUN_SCRIPT void SetActiveMenuChild(Element*);
+  Element* GetActiveMenuChild();
+
+  NS_IMPL_FROMNODE_HELPER(XULMenuElement,
+                          IsAnyOfXULElements(nsGkAtoms::menu,
+                                             nsGkAtoms::menulist));
 
  private:
   virtual ~XULMenuElement() = default;
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
-
-  nsIFrame* GetFrame();
 };
 
 }  // namespace mozilla::dom

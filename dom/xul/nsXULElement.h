@@ -340,6 +340,11 @@ class nsXULElement : public nsStyledElement {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULElement, nsStyledElement)
 
+  // This doesn't work on XUL elements! You probably want
+  // GetXULBoolAttr(nsGkAtoms::disabled) or so.
+  // TODO(emilio): Maybe we should unify HTML and XUL here.
+  bool IsDisabled() const = delete;
+
   // nsINode
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

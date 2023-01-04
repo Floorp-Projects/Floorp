@@ -202,7 +202,6 @@ static FrameCtorDebugFlags gFlags[] = {
 #  define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 #endif
 
-#include "nsMenuFrame.h"
 #include "nsTreeColFrame.h"
 
 //------------------------------------------------------------------
@@ -4152,15 +4151,10 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
       SIMPLE_XUL_CREATE(image, NS_NewImageBoxFrame),
       SIMPLE_XUL_CREATE(treechildren, NS_NewTreeBodyFrame),
       SIMPLE_XUL_CREATE(treecol, NS_NewTreeColFrame),
-      SIMPLE_TAG_CHAIN(button, nsCSSFrameConstructor::FindXULButtonData),
-      SIMPLE_TAG_CHAIN(toolbarbutton, nsCSSFrameConstructor::FindXULButtonData),
       SIMPLE_TAG_CHAIN(label,
                        nsCSSFrameConstructor::FindXULLabelOrDescriptionData),
       SIMPLE_TAG_CHAIN(description,
                        nsCSSFrameConstructor::FindXULLabelOrDescriptionData),
-      SIMPLE_XUL_CREATE(menu, NS_NewMenuFrame),
-      SIMPLE_XUL_CREATE(menulist, NS_NewMenuFrame),
-      SIMPLE_XUL_CREATE(menuitem, NS_NewMenuItemFrame),
 #ifdef XP_MACOSX
       SIMPLE_TAG_CHAIN(menubar, nsCSSFrameConstructor::FindXULMenubarData),
 #else
@@ -4179,19 +4173,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
   };
 
   return FindDataByTag(aElement, aStyle, sXULTagData, ArrayLength(sXULTagData));
-}
-
-/* static */
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
-                                         ComputedStyle&) {
-  static constexpr FrameConstructionData sXULMenuData =
-      SIMPLE_XUL_FCDATA(NS_NewMenuFrame);
-  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::menu,
-                           eCaseMatters)) {
-    return &sXULMenuData;
-  }
-  return nullptr;
 }
 
 /* static */
@@ -5438,9 +5419,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     return;
   }
 
-  const bool isPopup =
-      (data->mBits & FCDATA_IS_POPUP) && (!aParentFrame ||  // Parent is inline
-                                          !aParentFrame->IsMenuFrame());
+  const bool isPopup = data->mBits & FCDATA_IS_POPUP;
 
   const uint32_t bits = data->mBits;
 
@@ -5932,17 +5911,13 @@ void nsCSSFrameConstructor::AppendFramesToParent(
 bool nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
                                            nsIContent* aContent,
                                            Maybe<StyleDisplay>& aDisplay) {
-  nsIFrame* parentFrame = aSibling->GetParent();
-  LayoutFrameType parentType = parentFrame->Type();
-
   StyleDisplay siblingDisplay = aSibling->GetDisplay();
   if (StyleDisplay::TableColumnGroup == siblingDisplay ||
       StyleDisplay::TableColumn == siblingDisplay ||
       StyleDisplay::TableCaption == siblingDisplay ||
       StyleDisplay::TableHeaderGroup == siblingDisplay ||
       StyleDisplay::TableRowGroup == siblingDisplay ||
-      StyleDisplay::TableFooterGroup == siblingDisplay ||
-      LayoutFrameType::Menu == parentType) {
+      StyleDisplay::TableFooterGroup == siblingDisplay) {
     // if we haven't already, resolve a style to find the display type of
     // aContent.
     if (aDisplay.isNothing()) {

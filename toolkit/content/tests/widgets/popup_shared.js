@@ -32,6 +32,7 @@ var gPopupTests = null;
 var gTestIndex = -1;
 var gTestStepIndex = 0;
 var gTestEventIndex = 0;
+var gActualEvents = [];
 var gAutoHide = false;
 var gExpectedEventDetails = null;
 var gExpectedTriggerNode = null;
@@ -75,6 +76,14 @@ function ok(condition, message) {
     window.opener.SimpleTest.ok(condition, message);
   } else {
     SimpleTest.ok(condition, message);
+  }
+}
+
+function info(message) {
+  if (window.opener) {
+    window.opener.SimpleTest.info(message);
+  } else {
+    SimpleTest.info(message);
   }
 }
 
@@ -122,6 +131,8 @@ function eventOccurred(event) {
       );
       return;
     }
+
+    gActualEvents.push(`${event.type} ${event.target.id}`);
 
     var eventitem = events[gTestEventIndex].split(" ");
     var matches;
@@ -205,6 +216,8 @@ function eventOccurred(event) {
       if (events.length <= gTestEventIndex) {
         setTimeout(checkResult, 0);
       }
+    } else {
+      info(`Actual events so far: ${JSON.stringify(gActualEvents)}`);
     }
   }
 }
@@ -230,7 +243,9 @@ async function checkResult() {
 }
 
 function goNextStep() {
+  info(`events: ${JSON.stringify(gActualEvents)}`);
   gTestEventIndex = 0;
+  gActualEvents = [];
 
   var step = null;
   var test = gPopupTests[gTestIndex];
@@ -270,6 +285,7 @@ function goNextStepSync() {
     var test = gPopupTests[gTestIndex];
     // Set the location hash so it's easy to see which test is running
     document.location.hash = test.testname;
+    info("Starting " + test.testname);
 
     // skip the test if the condition returns false
     if ("condition" in test && !test.condition()) {

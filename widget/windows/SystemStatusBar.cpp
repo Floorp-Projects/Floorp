@@ -14,10 +14,10 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/widget/IconLoader.h"
+#include "mozilla/dom/XULButtonElement.h"
 #include "nsComputedDOMStyle.h"
 #include "nsIContentPolicy.h"
 #include "nsISupports.h"
-#include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsXULPopupManager.h"
 #include "nsIDocShell.h"
@@ -109,8 +109,7 @@ nsresult StatusBarEntry::Init() {
 
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
-  bool hasImageAttr =
-      mMenu->GetAttr(kNameSpaceID_None, nsGkAtoms::image, imageURIString);
+  bool hasImageAttr = mMenu->GetAttr(nsGkAtoms::image, imageURIString);
 
   nsresult rv;
   nsCOMPtr<nsIURI> iconURI;
@@ -211,14 +210,13 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
   if (msg == WM_USER &&
       (LOWORD(lp) == NIN_SELECT || LOWORD(lp) == NIN_KEYSELECT ||
        LOWORD(lp) == WM_CONTEXTMENU)) {
-    nsMenuFrame* menu = do_QueryFrame(mMenu->GetPrimaryFrame());
+    auto* menu = dom::XULButtonElement::FromNode(mMenu);
     if (!menu) {
       return TRUE;
     }
 
-    nsMenuPopupFrame* popupFrame = menu->GetPopup();
-    MOZ_DIAGNOSTIC_ASSERT(popupFrame);
-    if (!popupFrame) {
+    nsMenuPopupFrame* popupFrame = menu->GetMenuPopup(FlushType::None);
+    if (NS_WARN_IF(!popupFrame)) {
       return TRUE;
     }
 
@@ -248,7 +246,7 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetMouseEvent event(true, eXULSystemStatusBarClick, nullptr,
                              WidgetMouseEvent::eReal);
-      RefPtr<nsPresContext> presContext = menu->PresContext();
+      RefPtr<nsPresContext> presContext = popupFrame->PresContext();
       EventDispatcher::Dispatch(mMenu, presContext, &event, nullptr, &status);
       return DefWindowProc(hWnd, msg, wp, lp);
     }

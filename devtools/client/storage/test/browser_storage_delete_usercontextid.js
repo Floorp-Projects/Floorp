@@ -211,7 +211,7 @@ add_task(async function() {
 
     await waitForContextMenu(contextMenu, row[cellToClick], () => {
       info(`Opened context menu in ${treeItemName}, row '${rowName}'`);
-      menuDeleteItem.click();
+      contextMenu.activateItem(menuDeleteItem);
       const truncatedRowName = String(rowName)
         .replace(SEPARATOR_GUID, "-")
         .substr(0, 16);
