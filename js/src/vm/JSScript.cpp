@@ -827,6 +827,15 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
   rt->addRefScriptPrivate(value);
 }
 
+void ScriptSourceObject::clearPrivate(JSRuntime* rt) {
+  // Clear the private value, calling release hook if necessary.
+  // |this| may be gray, be careful not to create edges to it.
+  JS::AutoSuppressGCAnalysis nogc;
+  Value prevValue = getReservedSlot(PRIVATE_SLOT);
+  rt->releaseScriptPrivate(prevValue);
+  getSlotRef(PRIVATE_SLOT).setUndefinedUnchecked();
+}
+
 class ScriptSource::LoadSourceMatcher {
   JSContext* const cx_;
   ScriptSource* const ss_;
