@@ -431,8 +431,7 @@ nsWindow::nsWindow()
       mMovedAfterMoveToRect(false),
       mResizedAfterMoveToRect(false),
       mConfiguredClearColor(false),
-      mGotNonBlankPaint(false),
-      mNeedsToRetryCapturingMouse(false) {
+      mGotNonBlankPaint(false) {
   mWindowType = eWindowType_child;
   mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
 
@@ -755,7 +754,11 @@ void nsWindow::SetParent(nsIWidget* aNewParent) {
   GdkWindow* parentWindow = newParent->GetToplevelGdkWindow();
   LOG("  child GdkWindow %p set parent GdkWindow %p", window, parentWindow);
   gdk_window_reparent(window, parentWindow, 0, 0);
-  SetHasMappedToplevel(newParent && newParent->mHasMappedToplevel);
+
+  bool parentHasMappedToplevel = newParent && newParent->mHasMappedToplevel;
+  if (mHasMappedToplevel != parentHasMappedToplevel) {
+    SetHasMappedToplevel(parentHasMappedToplevel);
+  }
 }
 
 bool nsWindow::WidgetTypeSupportsAcceleration() {
@@ -945,6 +948,12 @@ void nsWindow::Show(bool aState) {
     LOG("  closing Drag&Drop source window, D&D will be canceled!");
   }
 #endif
+
+  if (aState) {
+    // Now that this window is shown, mHasMappedToplevel needs to be
+    // tracked on viewable descendants.
+    SetHasMappedToplevel(mHasMappedToplevel);
+  }
 
   // Ok, someone called show on a window that isn't sized to a sane
   // value.  Mark this window as needing to have Show() called on it
@@ -3676,78 +3685,40 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   return GdkPointToDevicePixels({origin.x, origin.y});
 }
 
-void nsWindow::CaptureRollupEvents(bool aDoCapture) {
-  LOG("CaptureRollupEvents(%d)\n", aDoCapture);
+void nsWindow::CaptureMouse(bool aCapture) {
+  LOG("nsWindow::CaptureMouse()");
+
   if (mIsDestroyed) {
     return;
   }
 
-  static constexpr auto kCaptureEventsMask =
-      GdkEventMask(GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                   GDK_POINTER_MOTION_MASK | GDK_TOUCH_MASK);
+  if (aCapture) {
+    gtk_grab_add(GTK_WIDGET(mContainer));
+  } else {
+    gtk_grab_remove(GTK_WIDGET(mContainer));
+  }
+}
 
-  static bool sSystemNeedsPointerGrab = [&] {
-    if (GdkIsWaylandDisplay()) {
-      return false;
-    }
-    // We only need to grab the pointer for X servers that move the focus with
-    // the pointer (like twm, sawfish...). Since we roll up popups on focus out,
-    // not grabbing the pointer triggers rollup when the mouse enters the popup
-    // and leaves the main window, see bug 1807482.
-    //
-    // TODO: Can we do more accurate detection here? Maybe use "no window
-    // decorations" as a proxy for "may do this weird stuff"? If we see all the
-    // intermittent crashes from bug 1607713 we should definitely consider that,
-    // but there's a chance that that was due to capturing the
-    // enter/leave-notify events.
-    // return GetSystemGtkWindowDecoration() == GTK_DECORATION_NONE;
-    return true;
-  }();
+void nsWindow::CaptureRollupEvents(bool aDoCapture) {
+  LOG("CaptureRollupEvents() %i\n", int(aDoCapture));
 
-  const bool grabPointer = [] {
-    switch (StaticPrefs::widget_gtk_grab_pointer()) {
-      case 0:
-        return false;
-      case 1:
-        return true;
-      default:
-        return sSystemNeedsPointerGrab;
-    }
-  }();
-
-  if (!grabPointer) {
+  if (mIsDestroyed) {
     return;
   }
 
-  mNeedsToRetryCapturingMouse = false;
   if (aDoCapture) {
-    if (mIsDragPopup || DragInProgress()) {
-      // Don't add a grab if a drag is in progress, or if the widget is a drag
-      // feedback popup. (panels with type="drag").
-      return;
+    // Don't add a grab if a drag is in progress, or if the widget is a drag
+    // feedback popup. (panels with type="drag").
+    if (!GdkIsWaylandDisplay() && !mIsDragPopup &&
+        !nsWindow::DragInProgress()) {
+      gtk_grab_add(GTK_WIDGET(mContainer));
     }
-
-    if (!mHasMappedToplevel) {
-      // On X, capturing an unmapped window is pointless (returns
-      // GDK_GRAB_NOT_VIEWABLE). Avoid the X server round-trip and just retry
-      // when we're mapped.
-      mNeedsToRetryCapturingMouse = true;
-      return;
-    }
-
-    GdkGrabStatus status = gdk_device_grab(
-        GdkGetPointer(), GetToplevelGdkWindow(), GDK_OWNERSHIP_NONE,
-        /* owner_events = */ true, kCaptureEventsMask,
-        /* cursor = */ nullptr, GetLastUserInputTime());
-    Unused << NS_WARN_IF(status != GDK_GRAB_SUCCESS);
-    LOG(" > pointer grab with status %d", int(status));
-    gtk_grab_add(GTK_WIDGET(mContainer));
   } else {
     // There may not have been a drag in process when aDoCapture was set,
     // so make sure to remove any added grab.  This is a no-op if the grab
     // was not added to this widget.
+    LOG("  remove mContainer grab [%p]\n", this);
     gtk_grab_remove(GTK_WIDGET(mContainer));
-    gdk_device_ungrab(GdkGetPointer(), GetLastUserInputTime());
   }
 }
 
@@ -4457,8 +4428,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
   }
 
   GdkWindowEdge edge;
-  const auto refPoint = GetRefPoint(this, aEvent);
-  if (CheckResizerEdge(refPoint, edge)) {
+  if (CheckResizerEdge(GetRefPoint(this, aEvent), edge)) {
     nsCursor cursor = eCursor_none;
     switch (edge) {
       case GDK_WINDOW_EDGE_NORTH:
@@ -4496,11 +4466,9 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
   gdk_event_get_axis((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
   // Sometime gdk generate 0 pressure value between normal values
   // We have to ignore that and use last valid value
-  if (pressure) {
-    mLastMotionPressure = pressure;
-  }
+  if (pressure) mLastMotionPressure = pressure;
   event.mPressure = mLastMotionPressure;
-  event.mRefPoint = refPoint;
+  event.mRefPoint = GetRefPoint(this, aEvent);
   event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
   KeymapWrapper::InitInputEvent(event, aEvent->state);
@@ -4556,9 +4524,8 @@ void nsWindow::DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent) {
 }
 
 void nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
-                               GdkEventButton* aGdkEvent,
-                               const LayoutDeviceIntPoint& aRefPoint) {
-  aEvent.mRefPoint = aRefPoint;
+                               GdkEventButton* aGdkEvent) {
+  aEvent.mRefPoint = GetRefPoint(this, aGdkEvent);
 
   guint modifierState = aGdkEvent->state;
   // aEvent's state includes the button state from immediately before this
@@ -4603,13 +4570,12 @@ static guint ButtonMaskFromGDKButton(guint button) {
   return GDK_BUTTON1_MASK << (button - 1);
 }
 
-void nsWindow::DispatchContextMenuEventFromMouseEvent(
-    uint16_t domButton, GdkEventButton* aEvent,
-    const LayoutDeviceIntPoint& aRefPoint) {
+void nsWindow::DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
+                                                      GdkEventButton* aEvent) {
   if (domButton == MouseButton::eSecondary && MOZ_LIKELY(!mIsDestroyed)) {
     WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
                                       WidgetMouseEvent::eReal);
-    InitButtonEvent(contextMenuEvent, aEvent, aRefPoint);
+    InitButtonEvent(contextMenuEvent, aEvent);
     contextMenuEvent.mPressure = mLastMotionPressure;
     DispatchInputEvent(&contextMenuEvent);
   }
@@ -4645,11 +4611,10 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
     containerWindow->DispatchActivateEvent();
   }
 
-  const auto refPoint = GetRefPoint(this, aEvent);
-
   // check to see if we should rollup
   if (CheckForRollup(aEvent->x_root, aEvent->y_root, false, false)) {
-    if (aEvent->button == 3 && mDraggableRegion.Contains(refPoint)) {
+    if (aEvent->button == 3 &&
+        mDraggableRegion.Contains(GetRefPoint(this, aEvent))) {
       GUniquePtr<GdkEvent> eventCopy;
       if (aEvent->type != GDK_BUTTON_PRESS) {
         // If the user double-clicks too fast we'll get a 2BUTTON_PRESS event
@@ -4665,7 +4630,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   // Check to see if the event is within our window's resize region
   GdkWindowEdge edge;
-  if (CheckResizerEdge(refPoint, edge)) {
+  if (CheckResizerEdge(GetRefPoint(this, aEvent), edge)) {
     gdk_window_begin_resize_drag(gtk_widget_get_window(mShell), edge,
                                  aEvent->button, aEvent->x_root, aEvent->y_root,
                                  aEvent->time);
@@ -4713,11 +4678,13 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   WidgetMouseEvent event(true, eMouseDown, this, WidgetMouseEvent::eReal);
   event.mButton = domButton;
-  InitButtonEvent(event, aEvent, refPoint);
+  InitButtonEvent(event, aEvent);
   event.mPressure = mLastMotionPressure;
 
   nsIWidget::ContentAndAPZEventStatus eventStatus = DispatchInputEvent(&event);
 
+  LayoutDeviceIntPoint refPoint =
+      GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
   if ((mIsWaylandPanelWindow || mDraggableRegion.Contains(refPoint)) &&
       domButton == MouseButton::ePrimary &&
       eventStatus.mContentStatus != nsEventStatus_eConsumeNoDefault) {
@@ -4727,7 +4694,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
   // right menu click on linux should also pop up a context menu
   if (!StaticPrefs::ui_context_menus_after_mouseup() &&
       eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
-    DispatchContextMenuEventFromMouseEvent(domButton, aEvent, refPoint);
+    DispatchContextMenuEventFromMouseEvent(domButton, aEvent);
   }
 }
 
@@ -4761,11 +4728,9 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
 
   gButtonState &= ~ButtonMaskFromGDKButton(aEvent->button);
 
-  const auto refPoint = GetRefPoint(this, aEvent);
-
   WidgetMouseEvent event(true, eMouseUp, this, WidgetMouseEvent::eReal);
   event.mButton = domButton;
-  InitButtonEvent(event, aEvent, refPoint);
+  InitButtonEvent(event, aEvent);
   gdouble pressure = 0;
   gdk_event_get_axis((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
   event.mPressure = pressure ? (float)pressure : (float)mLastMotionPressure;
@@ -4794,7 +4759,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
   // right menu click on linux should also pop up a context menu
   if (StaticPrefs::ui_context_menus_after_mouseup() &&
       eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
-    DispatchContextMenuEventFromMouseEvent(domButton, aEvent, refPoint);
+    DispatchContextMenuEventFromMouseEvent(domButton, aEvent);
   }
 
   // Open window manager menu on PIP window to allow user
@@ -5163,7 +5128,9 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     // not get VisibilityNotify events.)
     bool mapped = !(aEvent->new_window_state &
                     (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_WITHDRAWN));
-    SetHasMappedToplevel(mapped);
+    if (mHasMappedToplevel != mapped) {
+      SetHasMappedToplevel(mapped);
+    }
     LOG("\tquick return because IS_MOZ_CONTAINER(aWidget) is true\n");
     return;
   }
@@ -5535,7 +5502,7 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
       return FALSE;
   }
 
-  const LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
+  LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
 
   int32_t id;
   RefPtr<dom::Touch> touch;
@@ -5565,7 +5532,9 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
 
   // There's a chance that we are in drag area and the event is not consumed
   // by something on it.
-  if (msg == eTouchStart && mDraggableRegion.Contains(touchPoint) &&
+  LayoutDeviceIntPoint refPoint =
+      GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
+  if (msg == eTouchStart && mDraggableRegion.Contains(refPoint) &&
       eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
     mWindowShouldStartDragging = true;
   }
@@ -6724,18 +6693,11 @@ void nsWindow::NativeShow(bool aAction) {
 }
 
 void nsWindow::SetHasMappedToplevel(bool aState) {
-  LOG("nsWindow::SetHasMappedToplevel(%d)", aState);
-  if (aState == mHasMappedToplevel) {
-    return;
-  }
+  LOG("nsWindow::SetHasMappedToplevel() state %d", aState);
   // Even when aState == mHasMappedToplevel (as when this method is called
   // from Show()), child windows need to have their state checked, so don't
   // return early.
   mHasMappedToplevel = aState;
-  if (aState && mNeedsToRetryCapturingMouse) {
-    CaptureRollupEvents(true);
-    MOZ_ASSERT(!mNeedsToRetryCapturingMouse);
-  }
 }
 
 LayoutDeviceIntSize nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize) {
@@ -7531,7 +7493,7 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
 }
 
 /* static */
-bool nsWindow::DragInProgress() {
+bool nsWindow::DragInProgress(void) {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!dragService) {
@@ -7540,7 +7502,8 @@ bool nsWindow::DragInProgress() {
 
   nsCOMPtr<nsIDragSession> currentDragSession;
   dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
-  return !!currentDragSession;
+
+  return currentDragSession != nullptr;
 }
 
 // This is an ugly workaround for
@@ -8985,8 +8948,6 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
     MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
     nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "mouseevent");
-  LOG("SynthesizeNativeMouseEvent(%d, %d, %d, %d, %d)", aPoint.x.value,
-      aPoint.y.value, aNativeMessage, aButton, aModifierFlags);
 
   if (!mGdkWindow) {
     return NS_OK;
