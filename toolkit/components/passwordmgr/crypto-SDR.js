@@ -77,7 +77,7 @@ LoginManagerCrypto_SDR.prototype = {
     let wasLoggedIn = this.isLoggedIn;
     let canceledMP = false;
 
-    this._uiBusy = true;
+    this._uiBusy = !wasLoggedIn;
     try {
       let plainOctet = this._utfConverter.ConvertFromUnicode(plainText);
       plainOctet += this._utfConverter.Finish();
@@ -131,7 +131,7 @@ LoginManagerCrypto_SDR.prototype = {
     let wasLoggedIn = this.isLoggedIn;
     let canceledMP = false;
 
-    this._uiBusy = true;
+    this._uiBusy = !wasLoggedIn;
     try {
       cipherTexts = await this._decoderRing.asyncEncryptStrings(plaintexts);
     } catch (e) {
@@ -176,7 +176,7 @@ LoginManagerCrypto_SDR.prototype = {
     let wasLoggedIn = this.isLoggedIn;
     let canceledMP = false;
 
-    this._uiBusy = true;
+    this._uiBusy = !wasLoggedIn;
     try {
       let plainOctet;
       plainOctet = this._decoderRing.decryptString(cipherText);
@@ -240,7 +240,7 @@ LoginManagerCrypto_SDR.prototype = {
     let wasLoggedIn = this.isLoggedIn;
     let canceledMP = false;
 
-    this._uiBusy = true;
+    this._uiBusy = !wasLoggedIn;
     try {
       plainTexts = await this._decoderRing.asyncDecryptStrings(cipherTexts);
     } catch (e) {
