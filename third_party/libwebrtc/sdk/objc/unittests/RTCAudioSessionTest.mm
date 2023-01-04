@@ -287,15 +287,15 @@ OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
 
   rtc::Event waitLock;
   rtc::Event waitCleanup;
-  constexpr int timeoutMs = 5000;
-  thread->PostTask([audioSession, &waitLock, &waitCleanup] {
+  constexpr webrtc::TimeDelta timeout = webrtc::TimeDelta::Seconds(5);
+  thread->PostTask([audioSession, &waitLock, &waitCleanup, timeout] {
     [audioSession lockForConfiguration];
     waitLock.Set();
-    waitCleanup.Wait(timeoutMs);
+    waitCleanup.Wait(timeout);
     [audioSession unlockForConfiguration];
   });
 
-  waitLock.Wait(timeoutMs);
+  waitLock.Wait(timeout);
   [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:0 error:&error];
   EXPECT_TRUE(error != nil);
   EXPECT_EQ(error.domain, kRTCAudioSessionErrorDomain);
