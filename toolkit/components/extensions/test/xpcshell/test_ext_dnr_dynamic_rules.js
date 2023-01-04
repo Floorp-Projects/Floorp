@@ -98,6 +98,11 @@ async function runAsDNRExtension({
   return { extension, testExtensionParams };
 }
 
+function callTestMessageHandler(extension, testMessage, ...args) {
+  extension.sendMessage(testMessage, ...args);
+  return extension.awaitMessage(`${testMessage}:done`);
+}
+
 add_task(async function test_dynamic_rule_registration() {
   await runAsDNRExtension({
     background: async () => {
@@ -272,6 +277,121 @@ add_task(async function test_dynamic_rules_count_limits() {
   });
 });
 
+add_task(async function test_stored_dynamic_rules_exceeding_limits() {
+  const { extension } = await runAsDNRExtension({
+    unloadTestAtEnd: false,
+    awaitFinish: false,
+    background: async () => {
+      const dnr = browser.declarativeNetRequest;
+
+      browser.test.onMessage.addListener(async (msg, ...args) => {
+        switch (msg) {
+          case "createDynamicRules": {
+            const [{ updateRuleOptions }] = args;
+            await dnr.updateDynamicRules(updateRuleOptions);
+            break;
+          }
+          case "assertGetDynamicRulesCount": {
+            const [{ expectedRulesCount }] = args;
+            browser.test.assertEq(
+              expectedRulesCount,
+              (await dnr.getDynamicRules()).length,
+              "getDynamicRules() resolves to the expected number of dynamic rules"
+            );
+            break;
+          }
+          default:
+            browser.test.fail(
+              `Got unexpected unhandled test message: "${msg}"`
+            );
+            break;
+        }
+        browser.test.sendMessage(`${msg}:done`);
+      });
+      browser.test.sendMessage("bgpage:ready");
+    },
+  });
+
+  const initialRules = [getDNRRule({ id: 1 })];
+  await extension.awaitMessage("bgpage:ready");
+  await callTestMessageHandler(extension, "createDynamicRules", {
+    updateRuleOptions: { addRules: initialRules },
+  });
+  await callTestMessageHandler(extension, "assertGetDynamicRulesCount", {
+    expectedRulesCount: 1,
+  });
+
+  const extUUID = extension.uuid;
+  const dnrStore = ExtensionDNRStore._getStoreForTesting();
+  await dnrStore._savePromises.get(extUUID);
+  const { storeFile } = dnrStore.getFilePaths(extUUID);
+
+  await extension.addon.disable();
+
+  ok(
+    !dnrStore._dataPromises.has(extUUID),
+    "DNR store read data promise cleared after the extension has been disabled"
+  );
+  ok(
+    !dnrStore._data.has(extUUID),
+    "DNR store data cleared from memory after the extension has been disabled"
+  );
+
+  ok(await IOUtils.exists(storeFile), `DNR storeFile ${storeFile} found`);
+  const dnrDataFromFile = await IOUtils.readJSON(storeFile, {
+    decompress: true,
+  });
+
+  const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = ExtensionDNR.limits;
+
+  const expectedDynamicRules = [];
+  const unexpectedDynamicRules = [];
+
+  for (let i = 0; i < MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 5; i++) {
+    const rule = getDNRRule({ id: i + 1 });
+    if (i < MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES) {
+      expectedDynamicRules.push(rule);
+    } else {
+      unexpectedDynamicRules.push(rule);
+    }
+  }
+
+  const tooManyDynamicRules = [
+    ...expectedDynamicRules,
+    ...unexpectedDynamicRules,
+  ];
+
+  const dnrDataNew = {
+    schemaVersion: dnrDataFromFile.schemaVersion,
+    extVersion: extension.extension.version,
+    staticRulesets: [],
+    dynamicRuleset: getSchemaNormalizedRules(extension, tooManyDynamicRules),
+  };
+
+  await IOUtils.writeJSON(storeFile, dnrDataNew, { compress: true });
+
+  const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
+    await extension.addon.enable();
+    await extension.awaitMessage("bgpage:ready");
+  });
+
+  await callTestMessageHandler(extension, "assertGetDynamicRulesCount", {
+    expectedRulesCount: expectedDynamicRules.length,
+  });
+
+  AddonTestUtils.checkMessages(messages, {
+    expected: [
+      {
+        message: new RegExp(
+          `Ignoring dynamic rules exceeding rule count limits while loading DNR store data for ${extension.id}`
+        ),
+      },
+    ],
+  });
+
+  await extension.unload();
+});
+
 add_task(async function test_save_and_load_dynamic_rules() {
   let { extension, testExtensionParams } = await runAsDNRExtension({
     unloadTestAtEnd: false,
@@ -341,11 +461,6 @@ add_task(async function test_save_and_load_dynamic_rules() {
       browser.test.sendMessage("bgpage:ready");
     },
   });
-
-  const callTestMessageHandler = async (extension, testMessage, ...args) => {
-    extension.sendMessage(testMessage, ...args);
-    await extension.awaitMessage(`${testMessage}:done`);
-  };
 
   await extension.awaitMessage("bgpage:ready");
   await callTestMessageHandler(extension, "assertGetDynamicRules", {
