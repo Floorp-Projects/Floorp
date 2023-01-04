@@ -10,11 +10,7 @@ this.IOFile = class extends ExtensionAPI {
   getAPI(context) {
     const EventManager = ExtensionCommon.EventManager;
 
-    const jsmScope = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
-    );
-    
-    const { IOUtils } = Cu.getGlobalForObject(jsmScope);
+    Cu.importGlobalProperties(["IOUtils"]);
 
     const { OS } = ChromeUtils.import(
       "resource://gre/modules/osfile.jsm"
