@@ -557,7 +557,11 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
 
 class ThreadQueueTest : public ::testing::Test, public Thread {
  public:
-  ThreadQueueTest() : Thread(CreateDefaultSocketServer(), true) {}
+  ThreadQueueTest() : Thread(CreateDefaultSocketServer(), true) {
+    RTC_DCHECK(Thread::Current() == nullptr);
+    ThreadManager::Instance()->SetCurrentThread(this);
+  }
+  ~ThreadQueueTest() { ThreadManager::Instance()->SetCurrentThread(nullptr); }
   bool IsLocked_Worker() {
     if (!CritForTest()->TryEnter()) {
       return true;
@@ -643,7 +647,7 @@ class DeletedMessageHandler : public MessageHandlerAutoCleanup {
   bool* deleted_;
 };
 
-TEST_F(ThreadQueueTest, DiposeHandlerWithPostedMessagePending) {
+TEST_F(ThreadQueueTest, DisposeHandlerWithPostedMessagePending) {
   bool deleted = false;
   DeletedMessageHandler* handler = new DeletedMessageHandler(&deleted);
   // First, post a dispose.
