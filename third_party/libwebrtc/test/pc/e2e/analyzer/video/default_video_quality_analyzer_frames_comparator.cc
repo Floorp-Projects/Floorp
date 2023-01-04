@@ -350,7 +350,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparisons() {
         comparison_available_event_.Set();
         return;
       }
-      comparison_available_event_.Wait(1000);
+      comparison_available_event_.Wait(TimeDelta::Seconds(1));
       continue;
     }
 

@@ -49,7 +49,7 @@ TEST_P(TaskQueueTest, PostAndCheckCurrent) {
     EXPECT_TRUE(queue->IsCurrent());
     event.Set();
   });
-  EXPECT_TRUE(event.Wait(1000));
+  EXPECT_TRUE(event.Wait(TimeDelta::Seconds(1)));
 }
 
 TEST_P(TaskQueueTest, PostCustomTask) {
@@ -68,7 +68,7 @@ TEST_P(TaskQueueTest, PostCustomTask) {
   } my_task(&ran);
 
   queue->PostTask(my_task);
-  EXPECT_TRUE(ran.Wait(1000));
+  EXPECT_TRUE(ran.Wait(TimeDelta::Seconds(1)));
 }
 
 TEST_P(TaskQueueTest, PostDelayedZero) {
@@ -77,7 +77,7 @@ TEST_P(TaskQueueTest, PostDelayedZero) {
   auto queue = CreateTaskQueue(factory, "PostDelayedZero");
 
   queue->PostDelayedTask([&event] { event.Set(); }, TimeDelta::Zero());
-  EXPECT_TRUE(event.Wait(1000));
+  EXPECT_TRUE(event.Wait(TimeDelta::Seconds(1)));
 }
 
 TEST_P(TaskQueueTest, PostFromQueue) {
@@ -87,7 +87,7 @@ TEST_P(TaskQueueTest, PostFromQueue) {
 
   queue->PostTask(
       [&event, &queue] { queue->PostTask([&event] { event.Set(); }); });
-  EXPECT_TRUE(event.Wait(1000));
+  EXPECT_TRUE(event.Wait(TimeDelta::Seconds(1)));
 }
 
 TEST_P(TaskQueueTest, PostDelayed) {
@@ -103,7 +103,7 @@ TEST_P(TaskQueueTest, PostDelayed) {
         event.Set();
       },
       TimeDelta::Millis(100));
-  EXPECT_TRUE(event.Wait(1000));
+  EXPECT_TRUE(event.Wait(TimeDelta::Seconds(1)));
   int64_t end = rtc::TimeMillis();
   // These tests are a little relaxed due to how "powerful" our test bots can
   // be.  Most recently we've seen windows bots fire the callback after 94-99ms,
@@ -128,7 +128,7 @@ TEST_P(TaskQueueTest, PostMultipleDelayed) {
   }
 
   for (rtc::Event& e : events)
-    EXPECT_TRUE(e.Wait(1000));
+    EXPECT_TRUE(e.Wait(TimeDelta::Seconds(1)));
 }
 
 TEST_P(TaskQueueTest, PostDelayedAfterDestruct) {
@@ -142,8 +142,8 @@ TEST_P(TaskQueueTest, PostDelayedAfterDestruct) {
   // Destroy the queue.
   queue = nullptr;
   // Task might outlive the TaskQueue, but still should be deleted.
-  EXPECT_TRUE(deleted.Wait(1000));
-  EXPECT_FALSE(run.Wait(0));  // and should not run.
+  EXPECT_TRUE(deleted.Wait(TimeDelta::Seconds(1)));
+  EXPECT_FALSE(run.Wait(TimeDelta::Zero()));  // and should not run.
 }
 
 TEST_P(TaskQueueTest, PostAndReuse) {
@@ -182,7 +182,7 @@ TEST_P(TaskQueueTest, PostAndReuse) {
 
   ReusedTask task(&call_count, reply_queue.get(), &event);
   post_queue->PostTask(std::move(task));
-  EXPECT_TRUE(event.Wait(1000));
+  EXPECT_TRUE(event.Wait(TimeDelta::Seconds(1)));
 }
 
 TEST_P(TaskQueueTest, PostALot) {
@@ -196,7 +196,7 @@ TEST_P(TaskQueueTest, PostALot) {
         event_.Set();
       }
     }
-    bool Wait(int give_up_after_ms) { return event_.Wait(give_up_after_ms); }
+    bool Wait(TimeDelta give_up_after) { return event_.Wait(give_up_after); }
 
    private:
     webrtc_impl::RefCounter count_;
@@ -232,7 +232,7 @@ TEST_P(TaskQueueTest, PostALot) {
   // Expect all tasks are destroyed eventually. In some task queue
   // implementations that might happen on a different thread after task queue is
   // destroyed.
-  EXPECT_TRUE(all_destroyed.Wait(60000));
+  EXPECT_TRUE(all_destroyed.Wait(TimeDelta::Minutes(1)));
   EXPECT_LE(tasks_executed, kTaskCount);
 }
 
@@ -266,7 +266,7 @@ TEST_P(TaskQueueTest, PostTwoWithSharedUnprotectedState) {
     // Check, that state changing tasks didn't start yet.
     EXPECT_EQ(state.state, 0);
   });
-  EXPECT_TRUE(done.Wait(1000));
+  EXPECT_TRUE(done.Wait(TimeDelta::Seconds(1)));
 }
 
 // TaskQueueTest is a set of tests for any implementation of the TaskQueueBase.

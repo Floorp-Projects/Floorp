@@ -33,9 +33,9 @@ namespace rtc {
 
 namespace {
 
-const int kLongTime = 10000;  // 10 seconds
-const int kNumThreads = 16;
-const int kOperationsToRun = 1000;
+constexpr webrtc::TimeDelta kLongTime = webrtc::TimeDelta::Seconds(10);
+constexpr int kNumThreads = 16;
+constexpr int kOperationsToRun = 1000;
 
 class UniqueValueVerifier {
  public:

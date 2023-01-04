@@ -10,8 +10,10 @@
 
 #include "rtc_base/null_socket_server.h"
 
+#include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
+#include "rtc_base/socket_server.h"
 
 namespace rtc {
 
@@ -25,7 +27,7 @@ bool NullSocketServer::Wait(int cms, bool process_io) {
   event_.Wait(/*give_up_after=*/cms == kForever
                   ? Event::kForever
                   : webrtc::TimeDelta::Millis(cms),
-              /*warn_after_ms=*/Event::kForever);
+              /*warn_after=*/Event::kForever);
   return true;
 }
 
