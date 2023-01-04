@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+name: Bugzilla Issue Linker
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    branches:
+      - main
+
+jobs:
+  bugzilla_linker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bugzilla Linker
+        uses: gabrielluong/bugzilla-linker@1.0.0
+        if: github.repository == 'mozilla-mobile/firefox-android'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          section: "### GitHub Automation"
