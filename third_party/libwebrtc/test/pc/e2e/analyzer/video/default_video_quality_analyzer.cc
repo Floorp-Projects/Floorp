@@ -614,6 +614,10 @@ void DefaultVideoQualityAnalyzer::UnregisterParticipantInCall(
         peer_index == stream_state.sender()) {
       continue;
     }
+
+    AddExistingFramesInFlightForStreamToComparator(stream_index, stream_state,
+                                                   *peer_index);
+
     stream_state.RemovePeer(*peer_index);
   }
 
@@ -660,7 +664,10 @@ void DefaultVideoQualityAnalyzer::Stop() {
     for (auto& state_entry : stream_states_) {
       const size_t stream_index = state_entry.first;
       StreamState& stream_state = state_entry.second;
-      for (size_t peer_index : peers_->GetPresentIndexes()) {
+
+      // Populate `last_rendered_frame_times` map for all peers that were met in
+      // call, not only for the currently presented ones.
+      for (size_t peer_index : peers_->GetAllIndexes()) {
         if (peer_index == stream_state.sender() &&
             !options_.enable_receive_own_stream) {
           continue;
@@ -679,25 +686,18 @@ void DefaultVideoQualityAnalyzer::Stop() {
               stats_key,
               stream_state.last_rendered_frame_time(peer_index).value());
         }
+      }
 
-        // Add frames in flight for this stream into frames comparator.
-        // Frames in flight were not rendered, so they won't affect stream's
-        // last rendered frame time.
-        while (!stream_state.IsEmpty(peer_index)) {
-          uint16_t frame_id = stream_state.PopFront(peer_index);
-          auto it = captured_frames_in_flight_.find(frame_id);
-          RTC_DCHECK(it != captured_frames_in_flight_.end());
-          FrameInFlight& frame = it->second;
-
-          frames_comparator_.AddComparison(
-              stats_key, /*captured=*/absl::nullopt,
-              /*rendered=*/absl::nullopt, FrameComparisonType::kFrameInFlight,
-              frame.GetStatsForPeer(peer_index));
-
-          if (frame.HaveAllPeersReceived()) {
-            captured_frames_in_flight_.erase(it);
-          }
+      // Push left frame in flight for analysis for the peers that are still in
+      // the call.
+      for (size_t peer_index : peers_->GetPresentIndexes()) {
+        if (peer_index == stream_state.sender() &&
+            !options_.enable_receive_own_stream) {
+          continue;
         }
+
+        AddExistingFramesInFlightForStreamToComparator(
+            stream_index, stream_state, peer_index);
       }
     }
   }
@@ -822,6 +822,28 @@ uint16_t DefaultVideoQualityAnalyzer::GetNextFrameId() {
     next_frame_id_ = 1;
   }
   return frame_id;
+}
+
+void DefaultVideoQualityAnalyzer::
+    AddExistingFramesInFlightForStreamToComparator(size_t stream_index,
+                                                   StreamState& stream_state,
+                                                   size_t peer_index) {
+  InternalStatsKey stats_key(stream_index, stream_state.sender(), peer_index);
+
+  // Add frames in flight for this stream into frames comparator.
+  // Frames in flight were not rendered, so they won't affect stream's
+  // last rendered frame time.
+  while (!stream_state.IsEmpty(peer_index)) {
+    uint16_t frame_id = stream_state.PopFront(peer_index);
+    auto it = captured_frames_in_flight_.find(frame_id);
+    RTC_DCHECK(it != captured_frames_in_flight_.end());
+    FrameInFlight& frame = it->second;
+
+    frames_comparator_.AddComparison(stats_key, /*captured=*/absl::nullopt,
+                                     /*rendered=*/absl::nullopt,
+                                     FrameComparisonType::kFrameInFlight,
+                                     frame.GetStatsForPeer(peer_index));
+  }
 }
 
 void DefaultVideoQualityAnalyzer::ReportResults() {
