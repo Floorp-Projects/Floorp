@@ -78,7 +78,7 @@ class Gatherer(object):
         the perfdocs_tree attribute.
         """
         exclude_dir = [
-            ".hg",
+            str(pathlib.Path(self.workspace_dir, ".hg")),
             str(pathlib.Path("tools", "lint")),
             str(pathlib.Path("testing", "perfdocs")),
         ]
