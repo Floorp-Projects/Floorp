@@ -13,7 +13,6 @@ DevToolsModules(
     "eager-ecma-allowlist.js",
     "eager-function-allowlist.js",
     "eval-with-debugger.js",
-    "message-manager-mock.js",
     "utils.js",
     "webidl-deprecated-list.js",
     "webidl-pure-allowlist.js",

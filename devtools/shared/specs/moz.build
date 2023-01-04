@@ -35,7 +35,6 @@ DevToolsModules(
     "memory.js",
     "network-content.js",
     "network-event.js",
-    "network-monitor.js",
     "network-parent.js",
     "node.js",
     "object.js",

@@ -46,20 +46,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "NetworkMonitorActor",
-  "resource://devtools/server/actors/network-monitor/network-monitor.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "ConsoleFileActivityListener",
   "resource://devtools/server/actors/webconsole/listeners/console-file-activity.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "StackTraceCollector",
-  "resource://devtools/server/actors/network-monitor/stack-trace-collector.js",
   true
 );
 loader.lazyRequireGetter(
@@ -77,12 +65,6 @@ loader.lazyRequireGetter(
   this,
   ["isCommand", "validCommands"],
   "resource://devtools/server/actors/webconsole/commands.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "createMessageManagerMocks",
-  "resource://devtools/server/actors/webconsole/message-manager-mock.js",
   true
 );
 loader.lazyRequireGetter(
@@ -638,80 +620,12 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           if (isWorker) {
             break;
           }
-          if (!this.netmonitors) {
-            // Instanciate fake message managers used for service worker's netmonitor
-            // when running in the content process, and for netmonitor running in the
-            // same process when running in the parent process.
-            // `createMessageManagerMocks` returns a couple of connected messages
-            // managers that pass messages to each other to simulate the process
-            // boundary. We will use the first one for the webconsole-actor and the
-            // second one will be used by the netmonitor-actor.
-            const [mmMockParent, mmMockChild] = createMessageManagerMocks();
-
-            // Maintain the list of message manager we should message to/listen from
-            // to support the netmonitor instances, also records actorID of each
-            // NetworkMonitorActor.
-            // Array of `{ messageManager, parentProcess }`.
-            // Where `parentProcess` is true for the netmonitor actor instanciated in the
-            // parent process.
-            this.netmonitors = [];
-
-            // Check if the actor is running in a content process
-            const isInContentProcess =
-              Services.appinfo.processType !=
-                Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT &&
-              this.parentActor.messageManager;
-            if (isInContentProcess) {
-              // Start a network monitor in the parent process to listen to
-              // most requests that happen in parent. This one will communicate through
-              // `messageManager`.
-              await this.conn.spawnActorInParentProcess(this.actorID, {
-                module:
-                  "devtools/server/actors/network-monitor/network-monitor",
-                constructor: "NetworkMonitorActor",
-                args: [{ browserId: this.parentActor.browserId }, this.actorID],
-              });
-              this.netmonitors.push({
-                messageManager: this.parentActor.messageManager,
-                parentProcess: true,
-              });
-            }
-
-            // When the console actor runs in the parent process, Netmonitor can be ran
-            // in the process and communicate through `messageManagerMock`.
-            // And while it runs in the content process, we also spawn one in the content
-            // to listen to requests that happen in the content process (for instance
-            // service workers requests)
-            new NetworkMonitorActor(
-              this.conn,
-              {
-                window: global,
-                matchExactWindow: this.parentActor.ignoreSubFrames,
-              },
-              this.actorID,
-              mmMockParent
-            );
-
-            this.netmonitors.push({
-              messageManager: mmMockChild,
-              parentProcess: !isInContentProcess,
-            });
-
-            // Create a StackTraceCollector that's going to be shared both by
-            // the NetworkMonitorActor running in the same process for service worker
-            // requests, as well with the NetworkMonitorActor running in the parent
-            // process. It will communicate via message manager for this one.
-            this.stackTraceCollector = new StackTraceCollector(
-              {
-                window: global,
-                matchExactWindow: this.parentActor.ignoreSubFrames,
-              },
-              this.netmonitors
-            );
-            this.stackTraceCollector.init();
-          }
-          startedListeners.push(event);
-          break;
+          // Bug 1807650 removed this in favor of the new Watcher/Resources APIs
+          const errorMessage =
+            "NetworkActivity is no longer supported. " +
+            "Instead use Watcher actor's watchResources and listen to NETWORK_EVENT resource";
+          dump(errorMessage + "\n");
+          throw new Error(errorMessage);
         case "FileActivity":
           // Workers don't support this message type
           if (isWorker) {
@@ -793,7 +707,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     const eventsToDetach = listeners || [
       "PageError",
       "ConsoleAPI",
-      "NetworkActivity",
       "FileActivity",
       "ReflowActivity",
       "DocumentEvents",
@@ -812,21 +725,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           if (this.consoleAPIListener) {
             this.consoleAPIListener.destroy();
             this.consoleAPIListener = null;
-          }
-          stoppedListeners.push(event);
-          break;
-        case "NetworkActivity":
-          if (this.netmonitors) {
-            for (const { messageManager } of this.netmonitors) {
-              messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
-                actorID: this.actorID,
-              });
-            }
-            this.netmonitors = null;
-          }
-          if (this.stackTraceCollector) {
-            this.stackTraceCollector.destroy();
-            this.stackTraceCollector = null;
           }
           stoppedListeners.push(event);
           break;
@@ -1521,22 +1419,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   setPreferences(preferences) {
     for (const key in preferences) {
       this._prefs[key] = preferences[key];
-
-      if (this.netmonitors) {
-        if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
-          for (const { messageManager } of this.netmonitors) {
-            messageManager.sendAsyncMessage("debug:netmonitor-preference", {
-              saveRequestAndResponseBodies: this._prefs[key],
-            });
-          }
-        } else if (key == "NetworkMonitor.throttleData") {
-          for (const { messageManager } of this.netmonitors) {
-            messageManager.sendAsyncMessage("debug:netmonitor-preference", {
-              throttleData: this._prefs[key],
-            });
-          }
-        }
-      }
     }
     return { updated: Object.keys(preferences) };
   },
@@ -1863,152 +1745,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     }
 
     lazy.NetUtil.asyncFetch(channel, () => {});
-
-    if (!this.netmonitors) {
-      return null;
-    }
-    const { channelId } = channel;
-    // Only query the NetworkMonitorActor running in the parent process, where the
-    // request will be done. There always is one listener running in the parent process,
-    // see startListeners.
-    const netmonitor = this.netmonitors.filter(
-      ({ parentProcess }) => parentProcess
-    )[0];
-    const { messageManager } = netmonitor;
-    return new Promise(resolve => {
-      const onMessage = ({ data }) => {
-        if (data.channelId == channelId) {
-          messageManager.removeMessageListener(
-            "debug:get-network-event-actor:response",
-            onMessage
-          );
-          resolve({
-            eventActor: data.actor,
-          });
-        }
-      };
-      messageManager.addMessageListener(
-        "debug:get-network-event-actor:response",
-        onMessage
-      );
-      messageManager.sendAsyncMessage("debug:get-network-event-actor:request", {
-        channelId,
-      });
-    });
-  },
-
-  /**
-   * Send a message to all the netmonitor message managers, and resolve when
-   * all of them replied with the expected responseName message.
-   *
-   * @param {String} messageName
-   *        Name of the message to send via the netmonitor message managers.
-   * @param {String} responseName
-   *        Name of the message that should be received when the message has
-   *        been processed by the netmonitor instance.
-   * @param {Object} args
-   *        argument object passed with the initial message.
-   */
-  async _sendMessageToNetmonitors(messageName, responseName, args) {
-    if (!this.netmonitors) {
-      return null;
-    }
-    const results = await Promise.all(
-      this.netmonitors.map(({ messageManager }) => {
-        const onResponseReceived = new Promise(resolve => {
-          messageManager.addMessageListener(responseName, function onResponse(
-            response
-          ) {
-            messageManager.removeMessageListener(responseName, onResponse);
-            resolve(response);
-          });
-        });
-        messageManager.sendAsyncMessage(messageName, args);
-        return onResponseReceived;
-      })
-    );
-
-    return results;
-  },
-
-  /**
-   * Block a request based on certain filtering options.
-   *
-   * Currently, an exact URL match is the only supported filter type.
-   * In the future, there may be other types of filters, such as domain.
-   * For now, ignore anything other than URL.
-   *
-   * @param object filter
-   *   An object containing a `url` key with a URL to block.
-   */
-  async blockRequest(filter) {
-    await this._sendMessageToNetmonitors(
-      "debug:block-request",
-      "debug:block-request:response",
-      { filter }
-    );
-
-    return {};
-  },
-
-  /**
-   * Unblock a request based on certain filtering options.
-   *
-   * Currently, an exact URL match is the only supported filter type.
-   * In the future, there may be other types of filters, such as domain.
-   * For now, ignore anything other than URL.
-   *
-   * @param object filter
-   *   An object containing a `url` key with a URL to unblock.
-   */
-  async unblockRequest(filter) {
-    await this._sendMessageToNetmonitors(
-      "debug:unblock-request",
-      "debug:unblock-request:response",
-      { filter }
-    );
-
-    return {};
-  },
-
-  /*
-   * Gets the list of blocked request urls as per the backend
-   */
-  async getBlockedUrls() {
-    const responses =
-      (await this._sendMessageToNetmonitors(
-        "debug:get-blocked-urls",
-        "debug:get-blocked-urls:response"
-      )) || [];
-    if (!responses || !responses.length) {
-      return [];
-    }
-
-    return Array.from(
-      new Set(
-        responses
-          .filter(response => response.data)
-          .map(response => response.data)
-      )
-    );
-  },
-
-  /**
-   * Sets the list of blocked request URLs as provided by the netmonitor frontend
-   *
-   * This match will be a (String).includes match, not an exact URL match
-   *
-   * @param object filter
-   *   An object containing a `url` key with a URL to unblock.
-   */
-  async setBlockedUrls(urls) {
-    await this._sendMessageToNetmonitors(
-      "debug:set-blocked-urls",
-      "debug:set-blocked-urls:response",
-      { urls }
-    );
-
-    return {};
   },
 
   /**
