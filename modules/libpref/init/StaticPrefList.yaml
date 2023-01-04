@@ -5285,6 +5285,12 @@
   value: true
   mirror: always
 
+# whether to prevent the top level widget from going fullscreen
+- name: full-screen-api.ignore-widgets
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "fuzzing.". It's important that these can only be
 # checked in fuzzing builds (when FUZZING is defined), otherwise you could
