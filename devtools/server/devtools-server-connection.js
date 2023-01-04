@@ -571,48 +571,4 @@ DevToolsServerConnection.prototype = {
       setupParent,
     });
   },
-
-  /**
-   * Instanciates a protocol.js actor in the parent process, from the content process
-   * module is the absolute path to protocol.js actor module
-   *
-   * @param spawnByActorID string
-   *        The actor ID of the actor that is requesting an actor to be created.
-   *        This is used as a prefix to compute the actor id of the actor created
-   *        in the parent process.
-   * @param module string
-   *        Absolute path for the actor module to load.
-   * @param constructor string
-   *        The symbol exported by this module that implements Actor.
-   * @param args array
-   *        Arguments to pass to its constructor
-   */
-  spawnActorInParentProcess(spawnedByActorID, { module, constructor, args }) {
-    if (!this.parentMessageManager) {
-      return null;
-    }
-
-    const mm = this.parentMessageManager;
-
-    const onResponse = new Promise(done => {
-      const listener = msg => {
-        if (msg.json.prefix != this.prefix) {
-          return;
-        }
-        mm.removeMessageListener("debug:spawn-actor-in-parent:actor", listener);
-        done(msg.json.actorID);
-      };
-      mm.addMessageListener("debug:spawn-actor-in-parent:actor", listener);
-    });
-
-    mm.sendAsyncMessage("debug:spawn-actor-in-parent", {
-      prefix: this.prefix,
-      module,
-      constructor,
-      args,
-      spawnedByActorID,
-    });
-
-    return onResponse;
-  },
 };

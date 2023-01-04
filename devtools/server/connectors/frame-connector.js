@@ -6,7 +6,6 @@
 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
-const { Pool } = require("devtools/shared/protocol/Pool");
 
 loader.lazyRequireGetter(
   this,
@@ -53,18 +52,8 @@ function connectToFrame(
     const mm = frame.messageManager || frame.frameLoader.messageManager;
     mm.loadFrameScript("resource://devtools/server/startup/frame.js", false);
 
-    const spawnInParentActorPool = new Pool(
-      connection,
-      "connectToFrame-spawnInParent"
-    );
-    connection.addActor(spawnInParentActorPool);
-
     const trackMessageManager = () => {
       mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
-      mm.addMessageListener(
-        "debug:spawn-actor-in-parent",
-        onSpawnActorInParent
-      );
       if (!actor) {
         mm.addMessageListener("debug:actor", onActorCreated);
       }
@@ -72,10 +61,6 @@ function connectToFrame(
 
     const untrackMessageManager = () => {
       mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
-      mm.removeMessageListener(
-        "debug:spawn-actor-in-parent",
-        onSpawnActorInParent
-      );
       if (!actor) {
         mm.removeMessageListener("debug:actor", onActorCreated);
       }
@@ -122,61 +107,6 @@ function connectToFrame(
       }
     };
 
-    const parentActors = [];
-    const onSpawnActorInParent = function(msg) {
-      // We may have multiple connectToFrame instance running for the same tab
-      // and need to filter the messages.
-      if (msg.json.prefix != connPrefix) {
-        return;
-      }
-
-      const { module, constructor, args, spawnedByActorID } = msg.json;
-      let m;
-
-      try {
-        m = require(module);
-
-        if (!(constructor in m)) {
-          dump(`ERROR: module '${module}' does not export '${constructor}'`);
-          return;
-        }
-
-        const Constructor = m[constructor];
-        // Bind the actor to parent process connection so that these actors
-        // directly communicates with the client as regular actors instanciated from
-        // parent process
-        const instance = new Constructor(connection, ...args, mm);
-        instance.conn = connection;
-        instance.parentID = spawnedByActorID;
-
-        // Manually set the actor ID in order to insert parent actorID as prefix
-        // in order to help identifying actor hierarchy via actor IDs.
-        // Remove `/` as it may confuse message forwarding between processes.
-        const contentPrefix = spawnedByActorID
-          .replace(connection.prefix, "")
-          .replace("/", "-");
-        instance.actorID = connection.allocID(
-          contentPrefix + "/" + instance.typeName
-        );
-        spawnInParentActorPool.manage(instance);
-
-        mm.sendAsyncMessage("debug:spawn-actor-in-parent:actor", {
-          prefix: connPrefix,
-          actorID: instance.actorID,
-        });
-
-        parentActors.push(instance);
-      } catch (e) {
-        const errorMessage =
-          "Exception during actor module setup running in the parent process: ";
-        DevToolsUtils.reportException(errorMessage + e + "\n" + e.stack);
-        dumpn(
-          `ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-            `constructor: '${constructor}'\n${DevToolsUtils.safeErrorString(e)}`
-        );
-      }
-    };
-
     const onActorCreated = DevToolsUtils.makeInfallible(function(msg) {
       if (msg.json.prefix != prefix) {
         return;
@@ -219,10 +149,6 @@ function connectToFrame(
         mm,
         prefix: connPrefix,
       });
-
-      // Destroy all actors created via spawnActorInParentProcess
-      // in case content wasn't able to destroy them via a message
-      spawnInParentActorPool.destroy();
 
       if (actor) {
         actor = null;
