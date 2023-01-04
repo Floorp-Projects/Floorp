@@ -31,6 +31,9 @@
 namespace webrtc {
 namespace {
 
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
+
 using StatsSample = ::webrtc::SamplesStatsCounter::StatsSample;
 
 constexpr int kAnalyzerMaxThreadsCount = 1;
@@ -115,7 +118,8 @@ void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
                                absl::string_view stream_label,
                                std::vector<absl::string_view> receivers,
                                int frames_count,
-                               test::FrameGeneratorInterface& frame_generator) {
+                               test::FrameGeneratorInterface& frame_generator,
+                               int interframe_delay_ms = 0) {
   for (int i = 0; i < frames_count; ++i) {
     VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
     uint16_t frame_id =
@@ -131,6 +135,9 @@ void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
       analyzer.OnFrameDecoded(receiver, received_frame,
                               VideoQualityAnalyzerInterface::DecoderStats());
       analyzer.OnFrameRendered(receiver, received_frame);
+    }
+    if (i < frames_count - 1 && interframe_delay_ms > 0) {
+      SleepMs(interframe_delay_ms);
     }
   }
 }
@@ -1975,6 +1982,77 @@ TEST(DefaultVideoQualityAnalyzerTest,
   EXPECT_EQ(alice_charlie_stream_conters.decoded, 12);
   EXPECT_EQ(alice_charlie_stream_conters.rendered, 12);
 }
+
+TEST(DefaultVideoQualityAnalyzerTest,
+     FramesInFlightAreAccountedForUnregisterPeers) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  // Add one frame in flight which has encode time >= 10ms.
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", frame);
+  SleepMs(10);
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  analyzer.UnregisterParticipantInCall("bob");
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  StreamStats stats = analyzer.GetStats().at(StatsKey("alice_video", "bob"));
+  ASSERT_EQ(stats.encode_time_ms.NumSamples(), 1);
+  EXPECT_GE(stats.encode_time_ms.GetAverage(), 10);
+}
+
+class DefaultVideoQualityAnalyzerTimeBetweenFreezesTest
+    : public TestWithParam<bool> {};
+
+TEST_P(DefaultVideoQualityAnalyzerTimeBetweenFreezesTest,
+       TimeBetweenFreezesIsEqualToStreamDurationWhenThereAreNoFeeezes) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+                            /*frames_count=*/5, *frame_generator,
+                            /*interframe_delay_ms=*/50);
+  if (GetParam()) {
+    analyzer.UnregisterParticipantInCall("bob");
+  }
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(50);
+  analyzer.Stop();
+
+  StreamStats stats = analyzer.GetStats().at(StatsKey("alice_video", "bob"));
+  ASSERT_EQ(stats.time_between_freezes_ms.NumSamples(), 1);
+  EXPECT_GE(stats.time_between_freezes_ms.GetAverage(), 200);
+}
+
+INSTANTIATE_TEST_SUITE_P(WithRegisteredAndUnregisteredPeerAtTheEndOfTheCall,
+                         DefaultVideoQualityAnalyzerTimeBetweenFreezesTest,
+                         ValuesIn({true, false}));
 
 }  // namespace
 }  // namespace webrtc

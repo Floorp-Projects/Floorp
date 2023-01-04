@@ -115,6 +115,11 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // because this value is reserved by `VideoFrame` as "ID not set".
   uint16_t GetNextFrameId() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
+  void AddExistingFramesInFlightForStreamToComparator(size_t stream_index,
+                                                      StreamState& stream_state,
+                                                      size_t peer_index)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
   // Report results for all metrics for all streams.
   void ReportResults();
   void ReportResults(const std::string& test_case_name,
