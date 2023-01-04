@@ -163,12 +163,15 @@ add_task(async function test_value_combo() {
     "bzBmk_______",
     "mozBmk______",
   ]);
+  let toolbarItemId = await PlacesUtils.promiseItemId(
+    PlacesUtils.bookmarks.toolbarGuid
+  );
   observer.check([
     {
       name: "bookmark-added",
       params: {
         itemId: localItemIds.get("fxBmk_______"),
-        parentId: PlacesUtils.toolbarFolderId,
+        parentId: toolbarItemId,
         index: 0,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         urlHref: "http://getfirefox.com/",
@@ -183,7 +186,7 @@ add_task(async function test_value_combo() {
       name: "bookmark-added",
       params: {
         itemId: localItemIds.get("tFolder_____"),
-        parentId: PlacesUtils.toolbarFolderId,
+        parentId: toolbarItemId,
         index: 1,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         urlHref: "",

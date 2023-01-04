@@ -1270,11 +1270,6 @@ export var PlacesUtils = {
     return (this.bookmarksMenuFolderId = this.bookmarks.bookmarksMenuFolder);
   },
 
-  get toolbarFolderId() {
-    delete this.toolbarFolderId;
-    return (this.toolbarFolderId = this.bookmarks.toolbarFolder);
-  },
-
   get tagsFolderId() {
     delete this.tagsFolderId;
     return (this.tagsFolderId = this.bookmarks.tagsFolder);
