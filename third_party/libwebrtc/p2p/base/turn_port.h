@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "api/async_dns_resolver.h"
 #include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/task_queue_base.h"
 #include "p2p/base/port.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "rtc_base/async_packet_socket.h"
@@ -204,7 +205,7 @@ class TurnPort : public Port {
   void CloseForTest() { Close(); }
 
  protected:
-  TurnPort(rtc::Thread* thread,
+  TurnPort(webrtc::TaskQueueBase* thread,
            rtc::PacketSocketFactory* factory,
            const rtc::Network* network,
            rtc::AsyncPacketSocket* socket,
@@ -219,7 +220,7 @@ class TurnPort : public Port {
            rtc::SSLCertificateVerifier* tls_cert_verifier = nullptr,
            const webrtc::FieldTrialsView* field_trials = nullptr);
 
-  TurnPort(rtc::Thread* thread,
+  TurnPort(webrtc::TaskQueueBase* thread,
            rtc::PacketSocketFactory* factory,
            const rtc::Network* network,
            uint16_t min_port,
@@ -249,21 +250,13 @@ class TurnPort : public Port {
   void Close();
 
  private:
-  enum {
-    MSG_ALLOCATE_ERROR = MSG_FIRST_AVAILABLE,
-    MSG_ALLOCATE_MISMATCH,
-    MSG_TRY_ALTERNATE_SERVER,
-    MSG_REFRESH_ERROR,
-    MSG_ALLOCATION_RELEASED
-  };
-
   typedef std::list<TurnEntry*> EntryList;
   typedef std::map<rtc::Socket::Option, int> SocketOptionsMap;
   typedef std::set<rtc::SocketAddress> AttemptedServerSet;
 
   static bool AllowedTurnPort(int port,
                               const webrtc::FieldTrialsView* field_trials);
-  void OnMessage(rtc::Message* pmsg) override;
+  void TryAlternateServer();
 
   bool CreateTurnClientSocket();
 
