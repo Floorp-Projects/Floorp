@@ -15,7 +15,12 @@
 
 namespace webrtc {
 
+VCMDecoderDataBase::VCMDecoderDataBase() {
+  decoder_sequence_checker_.Detach();
+}
+
 bool VCMDecoderDataBase::DeregisterExternalDecoder(uint8_t payload_type) {
+  RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   auto it = decoders_.find(payload_type);
   if (it == decoders_.end()) {
     // Not found.
@@ -37,6 +42,7 @@ bool VCMDecoderDataBase::DeregisterExternalDecoder(uint8_t payload_type) {
 void VCMDecoderDataBase::RegisterExternalDecoder(
     uint8_t payload_type,
     VideoDecoder* external_decoder) {
+  RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   // If payload value already exists, erase old and insert new.
   DeregisterExternalDecoder(payload_type);
   decoders_[payload_type] = external_decoder;
@@ -44,6 +50,7 @@ void VCMDecoderDataBase::RegisterExternalDecoder(
 
 bool VCMDecoderDataBase::IsExternalDecoderRegistered(
     uint8_t payload_type) const {
+  RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   return payload_type == current_payload_type_ ||
          decoders_.find(payload_type) != decoders_.end();
 }
@@ -72,6 +79,7 @@ bool VCMDecoderDataBase::DeregisterReceiveCodec(uint8_t payload_type) {
 VCMGenericDecoder* VCMDecoderDataBase::GetDecoder(
     const VCMEncodedFrame& frame,
     VCMDecodedFrameCallback* decoded_frame_callback) {
+  RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   RTC_DCHECK(decoded_frame_callback->UserReceiveCallback());
   uint8_t payload_type = frame.PayloadType();
   if (payload_type == current_payload_type_ || payload_type == 0) {

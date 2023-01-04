@@ -44,20 +44,7 @@ class VideoReceiver2 {
 
   int32_t Decode(const webrtc::VCMEncodedFrame* frame);
 
-  // Notification methods that are used to check our internal state and validate
-  // threading assumptions. These are called by VideoReceiveStreamInterface.
-  // See `IsDecoderThreadRunning()` for more details.
-  void DecoderThreadStarting();
-  void DecoderThreadStopped();
-
  private:
-  // Used for DCHECKing thread correctness.
-  // In build where DCHECKs are enabled, will return false before
-  // DecoderThreadStarting is called, then true until DecoderThreadStopped
-  // is called.
-  // In builds where DCHECKs aren't enabled, it will return true.
-  bool IsDecoderThreadRunning();
-
   SequenceChecker construction_sequence_checker_;
   SequenceChecker decoder_sequence_checker_;
   Clock* const clock_;
@@ -68,10 +55,6 @@ class VideoReceiver2 {
   // Once the decoder thread has been started, usage of `_codecDataBase` moves
   // over to the decoder thread.
   VCMDecoderDataBase codecDataBase_;
-
-#if RTC_DCHECK_IS_ON
-  bool decoder_thread_is_running_ = false;
-#endif
 };
 
 }  // namespace webrtc
