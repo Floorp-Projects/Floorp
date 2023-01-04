@@ -21,29 +21,63 @@
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "modules/pacing/pacing_controller.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 
 namespace webrtc {
 
-class PrioritizedPacketQueue : public PacingController::PacketQueue {
+class PrioritizedPacketQueue {
  public:
   explicit PrioritizedPacketQueue(Timestamp creation_time);
   PrioritizedPacketQueue(const PrioritizedPacketQueue&) = delete;
   PrioritizedPacketQueue& operator=(const PrioritizedPacketQueue&) = delete;
 
-  void Push(Timestamp enqueue_time,
-            std::unique_ptr<RtpPacketToSend> packet) override;
-  std::unique_ptr<RtpPacketToSend> Pop() override;
-  int SizeInPackets() const override;
-  DataSize SizeInPayloadBytes() const override;
+  // Add a packet to the queue. The enqueue time is used for queue time stats
+  // and to report the leading packet enqueue time per packet type.
+  void Push(Timestamp enqueue_time, std::unique_ptr<RtpPacketToSend> packet);
+
+  // Remove the next packet from the queue. Packets a prioritized first
+  // according to packet type, in the following order:
+  // - audio, retransmissions, video / fec, padding
+  // For each packet type, we use one FIFO-queue per SSRC and emit from
+  // those queues in a round-robin fashion.
+  std::unique_ptr<RtpPacketToSend> Pop();
+
+  // Number of packets in the queue.
+  int SizeInPackets() const;
+
+  // Sum of all payload bytes in the queue, where the payload is calculated
+  // as `packet->payload_size() + packet->padding_size()`.
+  DataSize SizeInPayloadBytes() const;
+
+  // Convenience method for `SizeInPackets() == 0`.
+  bool Empty() const;
+
+  // Total packets in the queue per media type (RtpPacketMediaType values are
+  // used as lookup index).
   const std::array<int, kNumMediaTypes>& SizeInPacketsPerRtpPacketMediaType()
-      const override;
-  Timestamp LeadingAudioPacketEnqueueTime() const override;
-  Timestamp OldestEnqueueTime() const override;
-  TimeDelta AverageQueueTime() const override;
-  void UpdateAverageQueueTime(Timestamp now) override;
-  void SetPauseState(bool paused, Timestamp now) override;
+      const;
+
+  // The enqueue time of the next audio packet this queue will return via the
+  // Pop() method. If queue has no audio packets, returns MinusInfinity().
+  Timestamp LeadingAudioPacketEnqueueTime() const;
+
+  // Enqueue time of the oldest packet in the queue,
+  // Timestamp::MinusInfinity() if queue is empty.
+  Timestamp OldestEnqueueTime() const;
+
+  // Average queue time for the packets currently in the queue.
+  // The queuing time is calculated from Push() to the last UpdateQueueTime()
+  // call - with any time spent in a paused state subtracted.
+  // Returns TimeDelta::Zero() for an empty queue.
+  TimeDelta AverageQueueTime() const;
+
+  // Called during packet processing or when pause stats changes. Since the
+  // AverageQueueTime() method does not look at the wall time, this method
+  // needs to be called before querying queue time.
+  void UpdateAverageQueueTime(Timestamp now);
+
+  // Set the pause state, while `paused` is true queuing time is not counted.
+  void SetPauseState(bool paused, Timestamp now);
 
  private:
   static constexpr int kNumPriorityLevels = 4;

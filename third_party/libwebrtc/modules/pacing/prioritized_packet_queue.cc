@@ -216,6 +216,10 @@ DataSize PrioritizedPacketQueue::SizeInPayloadBytes() const {
   return size_payload_;
 }
 
+bool PrioritizedPacketQueue::Empty() const {
+  return size_packets_ == 0;
+}
+
 const std::array<int, kNumMediaTypes>&
 PrioritizedPacketQueue::SizeInPacketsPerRtpPacketMediaType() const {
   return size_packets_per_media_type_;
