@@ -13,8 +13,10 @@
 #include <stddef.h>
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/decoder_database.h"
@@ -32,9 +34,8 @@ VideoReceiver2::VideoReceiver2(Clock* clock,
                                VCMTiming* timing,
                                const FieldTrialsView& field_trials)
     : clock_(clock),
-      timing_(timing),
-      decodedFrameCallback_(timing_, clock_, field_trials),
-      codecDataBase_() {
+      decoded_frame_callback_(timing, clock_, field_trials),
+      codec_database_() {
   decoder_sequence_checker_.Detach();
 }
 
@@ -45,29 +46,38 @@ VideoReceiver2::~VideoReceiver2() {
 // Register a receive callback. Will be called whenever there is a new frame
 // ready for rendering.
 int32_t VideoReceiver2::RegisterReceiveCallback(
-    VCMReceiveCallback* receiveCallback) {
+    VCMReceiveCallback* receive_callback) {
   RTC_DCHECK_RUN_ON(&construction_sequence_checker_);
   // This value is set before the decoder thread starts and unset after
   // the decoder thread has been stopped.
-  decodedFrameCallback_.SetUserReceiveCallback(receiveCallback);
+  decoded_frame_callback_.SetUserReceiveCallback(receive_callback);
   return VCM_OK;
 }
 
-void VideoReceiver2::RegisterExternalDecoder(VideoDecoder* externalDecoder,
-                                             uint8_t payloadType) {
+void VideoReceiver2::RegisterExternalDecoder(
+    std::unique_ptr<VideoDecoder> decoder,
+    uint8_t payload_type) {
   RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
-  RTC_DCHECK(decodedFrameCallback_.UserReceiveCallback());
+  RTC_DCHECK(decoded_frame_callback_.UserReceiveCallback());
 
-  if (externalDecoder == nullptr) {
-    codecDataBase_.DeregisterExternalDecoder(payloadType);
+  if (decoder) {
+    RTC_DCHECK(!codec_database_.IsExternalDecoderRegistered(payload_type));
+    codec_database_.RegisterExternalDecoder(payload_type, decoder.get());
+    video_decoders_.push_back(std::move(decoder));
   } else {
-    codecDataBase_.RegisterExternalDecoder(payloadType, externalDecoder);
+    VideoDecoder* registered =
+        codec_database_.DeregisterExternalDecoder(payload_type);
+    if (registered) {
+      video_decoders_.erase(absl::c_find_if(
+          video_decoders_,
+          [registered](const auto& d) { return d.get() == registered; }));
+    }
   }
 }
 
-bool VideoReceiver2::IsExternalDecoderRegistered(uint8_t payloadType) const {
+bool VideoReceiver2::IsExternalDecoderRegistered(uint8_t payload_type) const {
   RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
-  return codecDataBase_.IsExternalDecoderRegistered(payloadType);
+  return codec_database_.IsExternalDecoderRegistered(payload_type);
 }
 
 // Must be called from inside the receive side critical section.
@@ -76,7 +86,7 @@ int32_t VideoReceiver2::Decode(const VCMEncodedFrame* frame) {
   TRACE_EVENT0("webrtc", "VideoReceiver2::Decode");
   // Change decoder if payload type has changed.
   VCMGenericDecoder* decoder =
-      codecDataBase_.GetDecoder(*frame, &decodedFrameCallback_);
+      codec_database_.GetDecoder(*frame, &decoded_frame_callback_);
   if (decoder == nullptr) {
     return VCM_NO_CODEC_REGISTERED;
   }
@@ -89,7 +99,7 @@ void VideoReceiver2::RegisterReceiveCodec(
     uint8_t payload_type,
     const VideoDecoder::Settings& settings) {
   RTC_DCHECK_RUN_ON(&construction_sequence_checker_);
-  codecDataBase_.RegisterReceiveCodec(payload_type, settings);
+  codec_database_.RegisterReceiveCodec(payload_type, settings);
 }
 
 }  // namespace webrtc

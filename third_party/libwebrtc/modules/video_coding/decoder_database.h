@@ -30,7 +30,9 @@ class VCMDecoderDataBase {
   VCMDecoderDataBase& operator=(const VCMDecoderDataBase&) = delete;
   ~VCMDecoderDataBase() = default;
 
-  bool DeregisterExternalDecoder(uint8_t payload_type);
+  // Returns a pointer to the previously registered decoder or nullptr if none
+  // was registered for the `payload_type`.
+  VideoDecoder* DeregisterExternalDecoder(uint8_t payload_type);
   void RegisterExternalDecoder(uint8_t payload_type,
                                VideoDecoder* external_decoder);
   bool IsExternalDecoderRegistered(uint8_t payload_type) const;

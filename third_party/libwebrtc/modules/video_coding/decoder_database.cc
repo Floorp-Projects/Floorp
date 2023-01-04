@@ -19,13 +19,14 @@ VCMDecoderDataBase::VCMDecoderDataBase() {
   decoder_sequence_checker_.Detach();
 }
 
-bool VCMDecoderDataBase::DeregisterExternalDecoder(uint8_t payload_type) {
+VideoDecoder* VCMDecoderDataBase::DeregisterExternalDecoder(
+    uint8_t payload_type) {
   RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   auto it = decoders_.find(payload_type);
   if (it == decoders_.end()) {
-    // Not found.
-    return false;
+    return nullptr;
   }
+
   // We can't use payload_type to check if the decoder is currently in use,
   // because payload type may be out of date (e.g. before we decode the first
   // frame after RegisterReceiveCodec).
@@ -33,8 +34,9 @@ bool VCMDecoderDataBase::DeregisterExternalDecoder(uint8_t payload_type) {
     // Release it if it was registered and in use.
     current_decoder_ = absl::nullopt;
   }
+  VideoDecoder* ret = it->second;
   decoders_.erase(it);
-  return true;
+  return ret;
 }
 
 // Add the external decoder object to the list of external decoders.
