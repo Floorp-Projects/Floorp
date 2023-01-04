@@ -1525,10 +1525,9 @@ rtc_library("peer_connection_message_handler") {
     "../api:rtc_error",
     "../api:scoped_refptr",
     "../api:sequence_checker",
-    "../rtc_base",
+    "../api/task_queue",
+    "../api/task_queue:pending_task_safety_flag",
     "../rtc_base:checks",
-    "../rtc_base:location",
-    "../rtc_base:threading",
   ]
 }
 
