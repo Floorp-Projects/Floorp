@@ -18,6 +18,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
@@ -3891,12 +3892,23 @@ static sk_sp<const SkTextBlob> CreateTextBlob(
 static void GetTextIntercepts(const sk_sp<const SkTextBlob>& aBlob,
                               const SkScalar aBounds[],
                               nsTArray<SkScalar>& aIntercepts) {
-  // https://skia.org/user/api/SkTextBlob_Reference#Text_Blob_Text_Intercepts
-  int count = aBlob->getIntercepts(aBounds, nullptr);
-  if (count < 2) {
-    return;
+  // It's possible that we'll encounter a Windows exception deep inside
+  // Skia's DirectWrite code while trying to get the intercepts. To avoid
+  // crashing in this case, catch any such exception here and discard the
+  // newly-added (and incompletely filled in) elements.
+  int count = 0;
+  MOZ_SEH_TRY {
+    // https://skia.org/user/api/SkTextBlob_Reference#Text_Blob_Text_Intercepts
+    count = aBlob->getIntercepts(aBounds, nullptr);
+    if (count < 2) {
+      return;
+    }
+    aBlob->getIntercepts(aBounds, aIntercepts.AppendElements(count));
   }
-  aBlob->getIntercepts(aBounds, aIntercepts.AppendElements(count));
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    gfxCriticalNote << "Exception occurred getting text intercepts";
+    aIntercepts.TruncateLength(aIntercepts.Length() - count);
+  }
 }
 
 // This function, given a set of intercepts that represent each intersection
