@@ -18,8 +18,6 @@
 #include "absl/strings/match.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
-#include "modules/pacing/prioritized_packet_queue.h"
-#include "modules/pacing/round_robin_packet_queue.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
@@ -43,15 +41,6 @@ bool IsDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
 
 bool IsEnabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Enabled");
-}
-
-std::unique_ptr<PacingController::PacketQueue> CreatePacketQueue(
-    const FieldTrialsView& field_trials,
-    Timestamp creation_time) {
-  if (field_trials.IsDisabled("WebRTC-Pacer-UsePrioritizedPacketQueue")) {
-    return std::make_unique<RoundRobinPacketQueue>(creation_time);
-  }
-  return std::make_unique<PrioritizedPacketQueue>(creation_time);
 }
 
 }  // namespace
@@ -93,7 +82,7 @@ PacingController::PacingController(Clock* clock,
       last_process_time_(clock->CurrentTime()),
       last_send_time_(last_process_time_),
       seen_first_packet_(false),
-      packet_queue_(CreatePacketQueue(field_trials_, last_process_time_)),
+      packet_queue_(/*creation_time=*/last_process_time_),
       congested_(false),
       queue_time_limit_(kMaxExpectedQueueLength),
       account_for_audio_(false),
@@ -130,14 +119,14 @@ void PacingController::Pause() {
   if (!paused_)
     RTC_LOG(LS_INFO) << "PacedSender paused.";
   paused_ = true;
-  packet_queue_->SetPauseState(true, CurrentTime());
+  packet_queue_.SetPauseState(true, CurrentTime());
 }
 
 void PacingController::Resume() {
   if (paused_)
     RTC_LOG(LS_INFO) << "PacedSender resumed.";
   paused_ = false;
-  packet_queue_->SetPauseState(false, CurrentTime());
+  packet_queue_.SetPauseState(false, CurrentTime());
 }
 
 bool PacingController::IsPaused() const {
@@ -207,7 +196,7 @@ void PacingController::EnqueuePacket(std::unique_ptr<RtpPacketToSend> packet) {
   prober_.OnIncomingPacket(DataSize::Bytes(packet->payload_size()));
 
   const Timestamp now = CurrentTime();
-  if (packet_queue_->Empty()) {
+  if (packet_queue_.Empty()) {
     // If queue is empty, we need to "fast-forward" the last process time,
     // so that we don't use passed time as budget for sending the first new
     // packet.
@@ -220,7 +209,7 @@ void PacingController::EnqueuePacket(std::unique_ptr<RtpPacketToSend> packet) {
     }
     UpdateBudgetWithElapsedTime(UpdateTimeAndGetElapsed(target_process_time));
   }
-  packet_queue_->Push(now, std::move(packet));
+  packet_queue_.Push(now, std::move(packet));
   seen_first_packet_ = true;
 
   // Queue length has increased, check if we need to change the pacing rate.
@@ -251,18 +240,18 @@ TimeDelta PacingController::ExpectedQueueTime() const {
 }
 
 size_t PacingController::QueueSizePackets() const {
-  return rtc::checked_cast<size_t>(packet_queue_->SizeInPackets());
+  return rtc::checked_cast<size_t>(packet_queue_.SizeInPackets());
 }
 
 const std::array<int, kNumMediaTypes>&
 PacingController::SizeInPacketsPerRtpPacketMediaType() const {
-  return packet_queue_->SizeInPacketsPerRtpPacketMediaType();
+  return packet_queue_.SizeInPacketsPerRtpPacketMediaType();
 }
 
 DataSize PacingController::QueueSizeData() const {
-  DataSize size = packet_queue_->SizeInPayloadBytes();
+  DataSize size = packet_queue_.SizeInPayloadBytes();
   if (include_overhead_) {
-    size += static_cast<int64_t>(packet_queue_->SizeInPackets()) *
+    size += static_cast<int64_t>(packet_queue_.SizeInPackets()) *
             transport_overhead_per_packet_;
   }
   return size;
@@ -277,7 +266,7 @@ absl::optional<Timestamp> PacingController::FirstSentPacketTime() const {
 }
 
 Timestamp PacingController::OldestPacketEnqueueTime() const {
-  return packet_queue_->OldestEnqueueTime();
+  return packet_queue_.OldestEnqueueTime();
 }
 
 TimeDelta PacingController::UpdateTimeAndGetElapsed(Timestamp now) {
@@ -328,7 +317,7 @@ Timestamp PacingController::NextSendTime() const {
   // time is the time at which it was enqueued.
   Timestamp unpaced_audio_time =
       pace_audio_ ? Timestamp::PlusInfinity()
-                  : packet_queue_->LeadingAudioPacketEnqueueTime();
+                  : packet_queue_.LeadingAudioPacketEnqueueTime();
   if (unpaced_audio_time.IsFinite()) {
     return unpaced_audio_time;
   }
@@ -338,7 +327,7 @@ Timestamp PacingController::NextSendTime() const {
     return last_send_time_ + kCongestedPacketInterval;
   }
 
-  if (adjusted_media_rate_ > DataRate::Zero() && !packet_queue_->Empty()) {
+  if (adjusted_media_rate_ > DataRate::Zero() && !packet_queue_.Empty()) {
     // If packets are allowed to be sent in a burst, the
     // debt is allowed to grow up to one packet more than what can be sent
     // during 'send_burst_period_'.
@@ -346,7 +335,7 @@ Timestamp PacingController::NextSendTime() const {
     next_send_time =
         last_process_time_ +
         ((send_burst_interval_ > drain_time) ? TimeDelta::Zero() : drain_time);
-  } else if (padding_rate_ > DataRate::Zero() && packet_queue_->Empty()) {
+  } else if (padding_rate_ > DataRate::Zero() && packet_queue_.Empty()) {
     // If we _don't_ have pending packets, check how long until we have
     // bandwidth for padding packets. Both media and padding debts must
     // have been drained to do this.
@@ -539,7 +528,7 @@ void PacingController::ProcessPackets() {
 
 DataSize PacingController::PaddingToAdd(DataSize recommended_probe_size,
                                         DataSize data_sent) const {
-  if (!packet_queue_->Empty()) {
+  if (!packet_queue_.Empty()) {
     // Actual payload available, no need to add padding.
     return DataSize::Zero();
   }
@@ -588,7 +577,7 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
     }
   }
 
-  if (packet_queue_->Empty()) {
+  if (packet_queue_.Empty()) {
     return nullptr;
   }
 
@@ -596,7 +585,7 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
 
   // Unpaced audio packets and probes are exempted from send checks.
   bool unpaced_audio_packet =
-      !pace_audio_ && packet_queue_->LeadingAudioPacketEnqueueTime().IsFinite();
+      !pace_audio_ && packet_queue_.LeadingAudioPacketEnqueueTime().IsFinite();
   if (!unpaced_audio_packet && !is_probe) {
     if (congested_) {
       // Don't send anything if congested.
@@ -616,7 +605,7 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
     }
   }
 
-  return packet_queue_->Pop();
+  return packet_queue_.Pop();
 }
 
 void PacingController::OnPacketSent(RtpPacketMediaType packet_type,
@@ -665,10 +654,10 @@ void PacingController::MaybeUpdateMediaRateDueToLongQueue(Timestamp now) {
     // Assuming equal size packets and input/output rate, the average packet
     // has avg_time_left_ms left to get queue_size_bytes out of the queue, if
     // time constraint shall be met. Determine bitrate needed for that.
-    packet_queue_->UpdateAverageQueueTime(now);
+    packet_queue_.UpdateAverageQueueTime(now);
     TimeDelta avg_time_left =
         std::max(TimeDelta::Millis(1),
-                 queue_time_limit_ - packet_queue_->AverageQueueTime());
+                 queue_time_limit_ - packet_queue_.AverageQueueTime());
     DataRate min_rate_needed = queue_size_data / avg_time_left;
     if (min_rate_needed > pacing_rate_) {
       adjusted_media_rate_ = min_rate_needed;
