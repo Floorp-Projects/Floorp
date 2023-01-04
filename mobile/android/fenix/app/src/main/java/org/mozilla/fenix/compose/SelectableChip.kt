@@ -25,6 +25,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -74,8 +75,7 @@ fun SelectableChip(
 }
 
 @Composable
-@Preview(uiMode = UI_MODE_NIGHT_YES)
-@Preview(uiMode = UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun SelectableChipPreview() {
     FirefoxTheme {
         Row(

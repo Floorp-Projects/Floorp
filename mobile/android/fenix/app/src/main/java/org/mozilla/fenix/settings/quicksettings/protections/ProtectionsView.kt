@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings.quicksettings.protections
 
-import android.content.res.Configuration
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
@@ -24,10 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.databinding.QuicksettingsProtectionsPanelBinding
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.trackingprotection.ProtectionsState
@@ -168,8 +167,7 @@ private fun CookieBannerItem(
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun CookieBannerItemPreview() {
     FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {

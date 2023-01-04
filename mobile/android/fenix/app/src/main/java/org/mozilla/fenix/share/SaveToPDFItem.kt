@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.share
 
-import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -61,8 +61,7 @@ fun SaveToPDFItem(
 
 @Composable
 @Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun SaveToPDFItemPreview() {
     FirefoxTheme {
         SaveToPDFItem {}

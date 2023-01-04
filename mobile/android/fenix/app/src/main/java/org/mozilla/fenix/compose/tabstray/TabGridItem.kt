@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.compose.tabstray
 
-import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -38,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.BidiFormatter
@@ -49,6 +47,7 @@ import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.HorizontalFadingEdgeBox
 import org.mozilla.fenix.compose.ThumbnailCard
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -231,8 +230,7 @@ private fun Thumbnail(
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun TabGridItemPreview() {
     FirefoxTheme {
         TabGridItem(
@@ -249,8 +247,7 @@ private fun TabGridItemPreview() {
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun TabGridItemSelectedPreview() {
     FirefoxTheme {
         TabGridItem(
@@ -265,8 +262,7 @@ private fun TabGridItemSelectedPreview() {
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun TabGridItemMultiSelectedPreview() {
     FirefoxTheme {
         TabGridItem(

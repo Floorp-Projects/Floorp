@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.compose
 
-import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,9 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -167,8 +166,7 @@ fun ListItemTabSurface(
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun ListItemTabLargePreview() {
     FirefoxTheme {
         ListItemTabLarge(
@@ -180,8 +178,7 @@ private fun ListItemTabLargePreview() {
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun ListItemTabSurfacePreview() {
     FirefoxTheme {
         ListItemTabSurface(
@@ -197,8 +194,7 @@ private fun ListItemTabSurfacePreview() {
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
     FirefoxTheme {
         ListItemTabSurface(

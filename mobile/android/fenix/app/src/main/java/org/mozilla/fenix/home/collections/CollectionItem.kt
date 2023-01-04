@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.collections
 
 import android.content.Context
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,7 +34,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.recover.RecoverableTab
@@ -43,6 +41,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import org.mozilla.fenix.R.drawable
 import org.mozilla.fenix.R.string
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -191,8 +190,7 @@ private fun Modifier.clipTop() = this.then(
 )
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun TabInCollectionPreview() {
     FirefoxTheme {
         Column {

@@ -6,7 +6,6 @@
 
 package org.mozilla.fenix.home.recenttabs.view
 
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -49,7 +48,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.browser.icons.compose.Loader
@@ -62,6 +60,7 @@ import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.ThumbnailCard
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -357,8 +356,7 @@ private fun PlaceHolderTabIcon(modifier: Modifier) {
     )
 }
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 @Composable
 private fun RecentTabsPreview() {
     val tab = RecentTab.Tab(

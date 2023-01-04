@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.recentbookmarks.view
 
-import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,7 +42,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
@@ -51,6 +49,7 @@ import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -268,8 +267,7 @@ private fun RecentBookmarksMenu(
 }
 
 @Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+@LightDarkPreview
 private fun RecentBookmarksPreview() {
     FirefoxTheme {
         RecentBookmarks(
