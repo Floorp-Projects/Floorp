@@ -21,6 +21,8 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isXiaomi)
 
         assertFalse(ManufacturerCodes.isOnePlus)
+
+        assertFalse(ManufacturerCodes.isLG)
     }
 
     @Test
@@ -34,6 +36,8 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isXiaomi)
 
         assertFalse(ManufacturerCodes.isOnePlus)
+
+        assertFalse(ManufacturerCodes.isLG)
     }
 
     @Test
@@ -47,6 +51,8 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isOnePlus)
 
         assertTrue(ManufacturerCodes.isXiaomi)
+
+        assertFalse(ManufacturerCodes.isLG)
     }
 
     @Test
@@ -60,5 +66,22 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isXiaomi)
 
         assertTrue(ManufacturerCodes.isOnePlus)
+
+        assertFalse(ManufacturerCodes.isLG)
+    }
+
+    @Test
+    fun testIsLG() {
+        manufacturer = "LGE" // expected value for LG devices
+
+        assertFalse(ManufacturerCodes.isHuawei)
+
+        assertFalse(ManufacturerCodes.isSamsung)
+
+        assertFalse(ManufacturerCodes.isXiaomi)
+
+        assertFalse(ManufacturerCodes.isOnePlus)
+
+        assertTrue(ManufacturerCodes.isLG)
     }
 }
