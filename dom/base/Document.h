@@ -2771,15 +2771,15 @@ class Document : public nsINode,
   // will never be nullptr.
   PendingAnimationTracker* GetOrCreatePendingAnimationTracker();
 
-  // Gets the tracker for scroll-linked animations that are waiting to start.
-  // Returns nullptr if there is no scroll-linked animation tracker for this
-  // document which will be the case if there have never been any scroll-linked
+  // Gets the tracker for scroll-driven animations that are waiting to start.
+  // Returns nullptr if there is no scroll-driven animation tracker for this
+  // document which will be the case if there have never been any scroll-driven
   // animations in the document.
   ScrollTimelineAnimationTracker* GetScrollTimelineAnimationTracker() {
     return mScrollTimelineAnimationTracker;
   }
 
-  // Gets the tracker for scroll-linked animations that are waiting to start and
+  // Gets the tracker for scroll-driven animations that are waiting to start and
   // creates it if it doesn't already exist. As a result, the return value
   // will never be nullptr.
   ScrollTimelineAnimationTracker* GetOrCreateScrollTimelineAnimationTracker();
@@ -5180,7 +5180,7 @@ class Document : public nsINode,
   // nullptr until GetOrCreatePendingAnimationTracker is called.
   RefPtr<PendingAnimationTracker> mPendingAnimationTracker;
 
-  // Tracker for scroll-linked animations that are waiting to start.
+  // Tracker for scroll-driven animations that are waiting to start.
   // nullptr until GetOrCreateScrollTimelineAnimationTracker is called.
   RefPtr<ScrollTimelineAnimationTracker> mScrollTimelineAnimationTracker;
 

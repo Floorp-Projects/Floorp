@@ -139,7 +139,7 @@ addAsyncAnimTest(async function() {
   done_scroller();
 });
 
-// transform property with scroll-linked animations.
+// transform property with scroll-driven animations.
 addAsyncAnimTest(async function() {
   let scroller = new_scroller();
   new_div("animation: transform_anim 1s linear scroll_timeline;");
@@ -157,7 +157,7 @@ addAsyncAnimTest(async function() {
 });
 
 
-// The scroll-linked animation with an underlying value and make it go from the
+// The scroll-driven animation with an underlying value and make it go from the
 // active phase to the before phase.
 addAsyncAnimTest(async function() {
   let scroller = new_scroller();
@@ -206,7 +206,7 @@ addAsyncAnimTest(async function() {
   done_scroller();
 });
 
-// The scroll-linked animation without an underlying value and make it go from
+// The scroll-driven animation without an underlying value and make it go from
 // the active phase to the before phase.
 addAsyncAnimTest(async function() {
   let scroller = new_scroller();
@@ -245,7 +245,7 @@ addAsyncAnimTest(async function() {
   done_scroller();
 });
 
-// The scroll-linked animation is in delay, together with other runing
+// The scroll-driven animation is in delay, together with other runing
 // animations.
 addAsyncAnimTest(async function() {
   let scroller = new_scroller();

@@ -190,7 +190,7 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
         progressTimelinePosition);
 
     if (computedTiming.mProgress.IsNull()) {
-      // For the scroll-linked animations, it's possible to let it go between
+      // For the scroll-driven animations, it's possible to let it go between
       // the active phase and the before/after phase, and so its progress
       // becomes null. In this case, we shouldn't just skip this animation.
       // Instead, we have to reset the previous sampled result. Basically, we

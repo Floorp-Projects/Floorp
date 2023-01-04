@@ -6986,7 +6986,7 @@ void ScrollFrameHelper::UpdateSticky() {
 void ScrollFrameHelper::UpdatePrevScrolledRect() {
   // The layout scroll range is determinated by the scrolled rect and the scroll
   // port, so if the scrolled rect is updated, we may have to schedule the
-  // associated scroll-linked animations' restyles.
+  // associated scroll-driven animations' restyles.
   nsRect currScrolledRect = GetScrolledRect();
   if (!currScrolledRect.IsEqualEdges(mPrevScrolledRect)) {
     mMayScheduleScrollAnimations = true;

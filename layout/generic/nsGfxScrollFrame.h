@@ -421,7 +421,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // https://drafts.csswg.org/css-scroll-snap/#scroll-snapport
   nsSize GetSnapportSize() const;
 
-  // Schedule the scroll-linked animations.
+  // Schedule the scroll-driven animations.
   void ScheduleScrollAnimations();
   void TryScheduleScrollAnimations() {
     if (!mMayScheduleScrollAnimations) {
@@ -795,7 +795,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // Whether we need to reclamp the visual viewport offset in ReflowFinished.
   bool mReclampVVOffsetInReflowFinished : 1;
 
-  // Whether we need to schedule the scroll-linked animations.
+  // Whether we need to schedule the scroll-driven animations.
   bool mMayScheduleScrollAnimations : 1;
 
 #ifdef MOZ_WIDGET_ANDROID

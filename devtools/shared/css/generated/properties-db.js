@@ -12018,7 +12018,7 @@ exports.PREFERENCES = [
   ],
   [
     "animation-timeline",
-    "layout.css.scroll-linked-animations.enabled"
+    "layout.css.scroll-driven-animations.enabled"
   ],
   [
     "backdrop-filter",
@@ -12078,11 +12078,11 @@ exports.PREFERENCES = [
   ],
   [
     "scroll-timeline-axis",
-    "layout.css.scroll-linked-animations.enabled"
+    "layout.css.scroll-driven-animations.enabled"
   ],
   [
     "scroll-timeline-name",
-    "layout.css.scroll-linked-animations.enabled"
+    "layout.css.scroll-driven-animations.enabled"
   ],
   [
     "size",
@@ -12138,7 +12138,7 @@ exports.PREFERENCES = [
   ],
   [
     "scroll-timeline",
-    "layout.css.scroll-linked-animations.enabled"
+    "layout.css.scroll-driven-animations.enabled"
   ],
   [
     "-moz-transform",

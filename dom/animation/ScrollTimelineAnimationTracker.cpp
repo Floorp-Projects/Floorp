@@ -27,7 +27,7 @@ void ScrollTimelineAnimationTracker::TriggerPendingAnimations() {
     // synchronously.
     // Note: So, for now, we put the animation into the tracker, and trigger
     // them immediately until the frames are ready. Using TriggerOnNextTick()
-    // for scroll-linked animations may have issues because we don't tick if
+    // for scroll-driven animations may have issues because we don't tick if
     // no one does scroll.
     if (!animation->TryTriggerNowForFiniteTimeline()) {
       // Note: We keep this animation pending even if its timeline is always

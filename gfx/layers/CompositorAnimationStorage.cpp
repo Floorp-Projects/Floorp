@@ -328,7 +328,7 @@ bool CompositorAnimationStorage::SampleAnimations(
 
       if (!sampleResult.IsSampled()) {
         // Note: Checking new animations first. If new animations arrive and we
-        // scroll back to delay phase in the meantime for scroll-linked
+        // scroll back to delay phase in the meantime for scroll-driven
         // animations, removing the previous animated value is still the
         // preferable way because the newly animation case would probably more
         // often than the scroll timeline. Besides, we expect the display items
@@ -340,7 +340,7 @@ bool CompositorAnimationStorage::SampleAnimations(
           mAnimatedValues.Remove(iter.first);
         } else if (sampleResult.mReason ==
                    AnimationHelper::SampleResult::Reason::ScrollToDelayPhase) {
-          // For the scroll-linked animations, its animation effect phases may
+          // For the scroll-driven animations, its animation effect phases may
           // be changed between the active phase and the before/after phase.
           // Basically we don't produce any sampled animation value for
           // before/after phase (if we don't have fills). In this case, we have
