@@ -911,6 +911,7 @@ rtc_library("null_socket_server") {
     ":rtc_event",
     ":socket",
     ":socket_server",
+    "../api/units:time_delta",
     "system:rtc_export",
   ]
 }

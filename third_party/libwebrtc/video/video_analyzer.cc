@@ -44,11 +44,11 @@ namespace {
 constexpr TimeDelta kSendStatsPollingInterval = TimeDelta::Seconds(1);
 constexpr size_t kMaxComparisons = 10;
 // How often is keep alive message printed.
-constexpr int kKeepAliveIntervalSeconds = 30;
+constexpr TimeDelta kKeepAliveInterval = TimeDelta::Seconds(30);
 // Interval between checking that the test is over.
-constexpr int kProbingIntervalMs = 500;
+constexpr TimeDelta kProbingInterval = TimeDelta::Millis(500);
 constexpr int kKeepAliveIntervalIterations =
-    kKeepAliveIntervalSeconds * 1000 / kProbingIntervalMs;
+    kKeepAliveInterval.ms() / kProbingInterval.ms();
 
 bool IsFlexfec(int payload_type) {
   return payload_type == test::CallTest::kFlexfecPayloadType;
@@ -361,7 +361,7 @@ void VideoAnalyzer::Wait() {
   int last_frames_captured = -1;
   int iteration = 0;
 
-  while (!done_.Wait(kProbingIntervalMs)) {
+  while (!done_.Wait(kProbingInterval)) {
     int frames_processed;
     int frames_captured;
     {
@@ -545,7 +545,7 @@ bool VideoAnalyzer::CompareFrames() {
   if (!PopComparison(&comparison)) {
     // Wait until new comparison task is available, or test is done.
     // If done, wake up remaining threads waiting.
-    comparison_available_event_.Wait(1000);
+    comparison_available_event_.Wait(TimeDelta::Seconds(1));
     if (AllFramesRecorded()) {
       comparison_available_event_.Set();
       return false;

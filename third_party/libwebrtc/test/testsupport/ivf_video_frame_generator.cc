@@ -27,7 +27,7 @@ namespace webrtc {
 namespace test {
 namespace {
 
-constexpr int kMaxNextFrameWaitTemeoutMs = 1000;
+constexpr TimeDelta kMaxNextFrameWaitTimeout = TimeDelta::Seconds(1);
 
 }  // namespace
 
@@ -80,9 +80,9 @@ FrameGeneratorInterface::VideoFrameData IvfVideoFrameGenerator::NextFrame() {
   RTC_CHECK_EQ(WEBRTC_VIDEO_CODEC_OK,
                video_decoder_->Decode(*image, /*missing_frames=*/false,
                                       /*render_time_ms=*/0));
-  bool decoded = next_frame_decoded_.Wait(kMaxNextFrameWaitTemeoutMs);
+  bool decoded = next_frame_decoded_.Wait(kMaxNextFrameWaitTimeout);
   RTC_CHECK(decoded) << "Failed to decode next frame in "
-                     << kMaxNextFrameWaitTemeoutMs << "ms. Can't continue";
+                     << kMaxNextFrameWaitTimeout << ". Can't continue";
 
   MutexLock frame_lock(&frame_decode_lock_);
   rtc::scoped_refptr<VideoFrameBuffer> buffer =

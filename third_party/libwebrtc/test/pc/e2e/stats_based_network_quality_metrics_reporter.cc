@@ -39,7 +39,7 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
 
-constexpr int kStatsWaitTimeoutMs = 1000;
+constexpr TimeDelta kStatsWaitTimeout = TimeDelta::Seconds(1);
 
 // Field trial which controls whether to report standard-compliant bytes
 // sent/received per stream.  If enabled, padding and headers are not included
@@ -56,7 +56,7 @@ std::unique_ptr<EmulatedNetworkStats> PopulateStats(
                                 stats = std::move(s);
                                 stats_loaded.Set();
                               });
-  bool stats_received = stats_loaded.Wait(kStatsWaitTimeoutMs);
+  bool stats_received = stats_loaded.Wait(kStatsWaitTimeout);
   RTC_CHECK(stats_received);
   return stats;
 }

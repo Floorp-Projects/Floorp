@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "api/function_view.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/task_queue_for_test.h"
@@ -47,7 +48,7 @@ void RunOnDifferentThread(rtc::FunctionView<void()> run) {
         thread_has_run_event.Set();
       },
       "thread");
-  EXPECT_TRUE(thread_has_run_event.Wait(1000));
+  EXPECT_TRUE(thread_has_run_event.Wait(TimeDelta::Seconds(1)));
 }
 
 }  // namespace

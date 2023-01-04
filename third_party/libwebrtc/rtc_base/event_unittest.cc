@@ -10,6 +10,7 @@
 
 #include "rtc_base/event.h"
 
+#include "api/units/time_delta.h"
 #include "rtc_base/platform_thread.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"
@@ -18,28 +19,28 @@ namespace rtc {
 
 TEST(EventTest, InitiallySignaled) {
   Event event(false, true);
-  ASSERT_TRUE(event.Wait(0));
+  ASSERT_TRUE(event.Wait(webrtc::TimeDelta::Zero()));
 }
 
 TEST(EventTest, ManualReset) {
   Event event(true, false);
-  ASSERT_FALSE(event.Wait(0));
+  ASSERT_FALSE(event.Wait(webrtc::TimeDelta::Zero()));
 
   event.Set();
-  ASSERT_TRUE(event.Wait(0));
-  ASSERT_TRUE(event.Wait(0));
+  ASSERT_TRUE(event.Wait(webrtc::TimeDelta::Zero()));
+  ASSERT_TRUE(event.Wait(webrtc::TimeDelta::Zero()));
 
   event.Reset();
-  ASSERT_FALSE(event.Wait(0));
+  ASSERT_FALSE(event.Wait(webrtc::TimeDelta::Zero()));
 }
 
 TEST(EventTest, AutoReset) {
   Event event;
-  ASSERT_FALSE(event.Wait(0));
+  ASSERT_FALSE(event.Wait(webrtc::TimeDelta::Zero()));
 
   event.Set();
-  ASSERT_TRUE(event.Wait(0));
-  ASSERT_FALSE(event.Wait(0));
+  ASSERT_TRUE(event.Wait(webrtc::TimeDelta::Zero()));
+  ASSERT_FALSE(event.Wait(webrtc::TimeDelta::Zero()));
 }
 
 class SignalerThread {
@@ -49,7 +50,7 @@ class SignalerThread {
     reader_ = reader;
     thread_ = PlatformThread::SpawnJoinable(
         [this] {
-          while (!stop_event_.Wait(0)) {
+          while (!stop_event_.Wait(webrtc::TimeDelta::Zero())) {
             writer_->Set();
             reader_->Wait(Event::kForever);
           }
@@ -81,7 +82,7 @@ TEST(EventTest, DISABLED_PerformanceSingleThread) {
   Event event;
   for (int i = 0; i < kNumIterations; ++i) {
     event.Set();
-    event.Wait(0);
+    event.Wait(webrtc::TimeDelta::Zero());
   }
 }
 

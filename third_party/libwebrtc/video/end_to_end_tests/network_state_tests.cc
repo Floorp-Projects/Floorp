@@ -235,7 +235,7 @@ TEST_F(NetworkStateEndToEndTest, RespectsNetworkState) {
     }
 
     void PerformTest() override {
-      EXPECT_TRUE(encoded_frames_.Wait(kDefaultTimeout.ms()))
+      EXPECT_TRUE(encoded_frames_.Wait(kDefaultTimeout))
           << "No frames received by the encoder.";
 
       SendTask(task_queue_.get(), [this]() {
@@ -323,7 +323,7 @@ TEST_F(NetworkStateEndToEndTest, RespectsNetworkState) {
       bool sender_done = false;
       bool receiver_done = false;
       while (!sender_done || !receiver_done) {
-        packet_event_.Wait(kSilenceTimeoutMs);
+        packet_event_.Wait(TimeDelta::Millis(kSilenceTimeoutMs));
         int64_t time_now_ms = clock_->TimeInMilliseconds();
         MutexLock lock(&test_mutex_);
         if (sender_down) {

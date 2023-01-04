@@ -129,7 +129,7 @@ class LockRunner : public rtc::MessageHandlerAutoCleanup {
   }
 
  private:
-  static constexpr int kLongTime = 10000;  // 10 seconds
+  static constexpr TimeDelta kLongTime = TimeDelta::Seconds(10);
   static constexpr int kOperationsToRun = 1000;
 
   std::atomic<int> threads_active_;

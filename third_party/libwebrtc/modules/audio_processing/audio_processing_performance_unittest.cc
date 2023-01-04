@@ -426,7 +426,8 @@ class CallSimulator : public ::testing::TestWithParam<SimulationConfig> {
   static const float kCaptureInputFloatLevel;
   static const float kRenderInputFloatLevel;
   static const int kMinNumFramesToProcess = 150;
-  static const int32_t kTestTimeout = 3 * 10 * kMinNumFramesToProcess;
+  static constexpr TimeDelta kTestTimeout =
+      TimeDelta::Millis(3 * 10 * kMinNumFramesToProcess);
 
   // Stop all running threads.
   void StopThreads() {

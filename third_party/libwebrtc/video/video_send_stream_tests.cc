@@ -2036,7 +2036,7 @@ TEST_F(VideoSendStreamTest,
         }
       }
       EXPECT_TRUE(
-          init_encode_called_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
+          init_encode_called_.Wait(VideoSendStreamTest::kDefaultTimeout));
       {
         MutexLock lock(&mutex_);
         EXPECT_EQ(width, last_initialized_frame_width_);
@@ -2122,8 +2122,7 @@ TEST_F(VideoSendStreamTest, CanReconfigureToUseStartBitrateAbovePreviousMax) {
     }
 
     bool WaitForStartBitrate() {
-      return start_bitrate_changed_.Wait(
-          VideoSendStreamTest::kDefaultTimeout.ms());
+      return start_bitrate_changed_.Wait(VideoSendStreamTest::kDefaultTimeout);
     }
 
    private:
@@ -2201,7 +2200,7 @@ class StartStopBitrateObserver : public test::FakeEncoder {
   }
 
   bool WaitForEncoderInit() {
-    return encoder_init_.Wait(VideoSendStreamTest::kDefaultTimeout.ms());
+    return encoder_init_.Wait(VideoSendStreamTest::kDefaultTimeout);
   }
 
   bool WaitBitrateChanged(WaitUntil until) {
@@ -2218,7 +2217,7 @@ class StartStopBitrateObserver : public test::FakeEncoder {
           (until == WaitUntil::kZero && *bitrate_kbps == 0)) {
         return true;
       }
-    } while (bitrate_changed_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
+    } while (bitrate_changed_.Wait(VideoSendStreamTest::kDefaultTimeout));
     return false;
   }
 
@@ -2410,8 +2409,7 @@ class VideoCodecConfigObserver : public test::SendTest,
   GetEncoderSpecificSettings() const;
 
   void PerformTest() override {
-    EXPECT_TRUE(
-        init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
+    EXPECT_TRUE(init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout));
     ASSERT_EQ(1, FakeEncoder::GetNumInitializations())
         << "VideoEncoder not initialized.";
 
@@ -2421,8 +2419,7 @@ class VideoCodecConfigObserver : public test::SendTest,
     SendTask(task_queue_, [&]() {
       stream_->ReconfigureVideoEncoder(std::move(encoder_config_));
     });
-    ASSERT_TRUE(
-        init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
+    ASSERT_TRUE(init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout));
     EXPECT_EQ(2, FakeEncoder::GetNumInitializations())
         << "ReconfigureVideoEncoder did not reinitialize the encoder with "
            "new encoder settings.";
@@ -2785,8 +2782,9 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
           return;
         }
       } while (bitrate_changed_event_.Wait(
-          std::max(int64_t{1}, VideoSendStreamTest::kDefaultTimeout.ms() -
-                                   (rtc::TimeMillis() - start_time))));
+          std::max(TimeDelta::Millis(1),
+                   VideoSendStreamTest::kDefaultTimeout -
+                       TimeDelta::Millis(rtc::TimeMillis() - start_time))));
       MutexLock lock(&mutex_);
       EXPECT_EQ(target_bitrate_, expected_bitrate)
           << "Timed out while waiting encoder rate to be set.";
@@ -2826,10 +2824,9 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
 
     void PerformTest() override {
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
-          VideoSendStreamTest::kDefaultTimeout.ms()))
+          VideoSendStreamTest::kDefaultTimeout))
           << "Timed out while waiting for rate allocator to be created.";
-      ASSERT_TRUE(
-          init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()))
+      ASSERT_TRUE(init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout))
           << "Timed out while waiting for encoder to be configured.";
       WaitForSetRates(kStartBitrateKbps);
       BitrateConstraints bitrate_config;
@@ -2846,7 +2843,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       });
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
-          VideoSendStreamTest::kDefaultTimeout.ms()));
+          VideoSendStreamTest::kDefaultTimeout));
       EXPECT_EQ(2, num_rate_allocator_creations_)
           << "Rate allocator should have been recreated.";
 
@@ -2858,7 +2855,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       });
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
-          VideoSendStreamTest::kDefaultTimeout.ms()));
+          VideoSendStreamTest::kDefaultTimeout));
       EXPECT_EQ(3, num_rate_allocator_creations_)
           << "Rate allocator should have been recreated.";
 
@@ -3736,8 +3733,8 @@ TEST_F(VideoSendStreamTest, RemoveOverheadFromBandwidth) {
       // At a bitrate of 60kbps with a packet size of 1200B video and an
       // overhead of 40B per packet video produces 2240bps overhead.
       // So the encoder BW should be set to 57760bps.
-      EXPECT_TRUE(bitrate_changed_event_.Wait(
-          VideoSendStreamTest::kDefaultTimeout.ms()));
+      EXPECT_TRUE(
+          bitrate_changed_event_.Wait(VideoSendStreamTest::kDefaultTimeout));
       {
         MutexLock lock(&mutex_);
         EXPECT_LE(max_bitrate_bps_, 57760u);
@@ -3952,8 +3949,7 @@ class ContentSwitchTest : public test::SendTest {
 
   void PerformTest() override {
     while (GetStreamState() != StreamState::kAfterSwitchBack) {
-      ASSERT_TRUE(
-          content_switch_event_.Wait(test::CallTest::kDefaultTimeout.ms()));
+      ASSERT_TRUE(content_switch_event_.Wait(test::CallTest::kDefaultTimeout));
       (*stream_resetter_)(send_stream_config_, encoder_config_, this);
     }
 

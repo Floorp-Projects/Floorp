@@ -282,7 +282,7 @@ TEST(FakeClock, SettingTimeWakesThreads) {
   // Advance the fake clock, expecting the worker thread to wake up
   // and dispatch the message instantly.
   clock.AdvanceTime(webrtc::TimeDelta::Seconds(60u));
-  EXPECT_TRUE(message_handler_dispatched.Wait(0));
+  EXPECT_TRUE(message_handler_dispatched.Wait(webrtc::TimeDelta::Zero()));
   worker->Stop();
 
   SetClockForTesting(nullptr);

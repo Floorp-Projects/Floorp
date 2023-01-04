@@ -226,7 +226,7 @@ TEST(RepeatingTaskTest, CancelDelayedTaskBeforeItRuns) {
       task_queue.Get(), TimeDelta::Millis(100), MoveOnlyClosure(&mock));
   task_queue.PostTask(
       [handle = std::move(handle)]() mutable { handle.Stop(); });
-  EXPECT_TRUE(done.Wait(kTimeout.ms()));
+  EXPECT_TRUE(done.Wait(kTimeout));
 }
 
 TEST(RepeatingTaskTest, CancelTaskAfterItRuns) {
@@ -239,7 +239,7 @@ TEST(RepeatingTaskTest, CancelTaskAfterItRuns) {
       RepeatingTaskHandle::Start(task_queue.Get(), MoveOnlyClosure(&mock));
   task_queue.PostTask(
       [handle = std::move(handle)]() mutable { handle.Stop(); });
-  EXPECT_TRUE(done.Wait(kTimeout.ms()));
+  EXPECT_TRUE(done.Wait(kTimeout));
 }
 
 TEST(RepeatingTaskTest, TaskCanStopItself) {
@@ -282,7 +282,7 @@ TEST(RepeatingTaskTest, ZeroReturnValueRepostsTheTask) {
       }));
   TaskQueueForTest task_queue("queue");
   RepeatingTaskHandle::Start(task_queue.Get(), MoveOnlyClosure(&closure));
-  EXPECT_TRUE(done.Wait(kTimeout.ms()));
+  EXPECT_TRUE(done.Wait(kTimeout));
 }
 
 TEST(RepeatingTaskTest, StartPeriodicTask) {
@@ -297,7 +297,7 @@ TEST(RepeatingTaskTest, StartPeriodicTask) {
       }));
   TaskQueueForTest task_queue("queue");
   RepeatingTaskHandle::Start(task_queue.Get(), closure.AsStdFunction());
-  EXPECT_TRUE(done.Wait(kTimeout.ms()));
+  EXPECT_TRUE(done.Wait(kTimeout));
 }
 
 TEST(RepeatingTaskTest, Example) {

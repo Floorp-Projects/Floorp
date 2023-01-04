@@ -35,7 +35,7 @@ enum : int {  // The first valid value is 1.
 
 TEST(TransportFeedbackMultiStreamTest, AssignsTransportSequenceNumbers) {
   static constexpr int kSendRtxPayloadType = 98;
-  static constexpr int kDefaultTimeoutMs = 30 * 1000;
+  static constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(30);
   static constexpr int kNackRtpHistoryMs = 1000;
   static constexpr uint32_t kSendRtxSsrcs[MultiStreamTester::kNumStreams] = {
       0xBADCAFD, 0xBADCAFE, 0xBADCAFF};
@@ -146,7 +146,7 @@ TEST(TransportFeedbackMultiStreamTest, AssignsTransportSequenceNumbers) {
         MutexLock lock(&lock_);
         started_ = true;
       }
-      return done_.Wait(kDefaultTimeoutMs);
+      return done_.Wait(kDefaultTimeout);
     }
 
    private:
@@ -278,10 +278,9 @@ class TransportFeedbackTester : public test::EndToEndTest {
   void PerformTest() override {
     constexpr TimeDelta kDisabledFeedbackTimeout = TimeDelta::Seconds(5);
     EXPECT_EQ(feedback_enabled_,
-              observation_complete_.Wait((feedback_enabled_
-                                              ? test::CallTest::kDefaultTimeout
-                                              : kDisabledFeedbackTimeout)
-                                             .ms()));
+              observation_complete_.Wait(feedback_enabled_
+                                             ? test::CallTest::kDefaultTimeout
+                                             : kDisabledFeedbackTimeout));
   }
 
   void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
@@ -415,8 +414,8 @@ TEST_F(TransportFeedbackEndToEndTest,
     }
 
     void PerformTest() override {
-      const int64_t kFailureTimeoutMs = 10000;
-      EXPECT_TRUE(observation_complete_.Wait(kFailureTimeoutMs))
+      constexpr TimeDelta kFailureTimeout = TimeDelta::Seconds(10);
+      EXPECT_TRUE(observation_complete_.Wait(kFailureTimeout))
           << "Stream not continued after congestion window full.";
     }
 
