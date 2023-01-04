@@ -1011,8 +1011,11 @@ void GCRuntime::restoreSharedAtomsZone() {
 
 bool GCRuntime::setParameter(JSContext* cx, JSGCParamKey key, uint32_t value) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
+  AutoStopVerifyingBarriers pauseVerification(rt, false);
   FinishGC(cx);
   waitBackgroundSweepEnd();
+
   AutoLockGC lock(this);
   return setParameter(key, value, lock);
 }
@@ -1083,7 +1086,11 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
 
 void GCRuntime::resetParameter(JSContext* cx, JSGCParamKey key) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
+  AutoStopVerifyingBarriers pauseVerification(rt, false);
   FinishGC(cx);
+  waitBackgroundSweepEnd();
+
   AutoLockGC lock(this);
   resetParameter(key, lock);
 }
