@@ -71,7 +71,6 @@ static bool ValidMediaSessionOptions(
 enum {
   MSG_CREATE_SESSIONDESCRIPTION_SUCCESS,
   MSG_CREATE_SESSIONDESCRIPTION_FAILED,
-  MSG_USE_CONSTRUCTOR_CERTIFICATE
 };
 
 struct CreateSessionDescriptionMsg : public rtc::MessageData {
@@ -86,14 +85,28 @@ struct CreateSessionDescriptionMsg : public rtc::MessageData {
 };
 }  // namespace
 
-void WebRtcCertificateGeneratorCallback::OnFailure() {
-  SignalRequestFailed();
-}
+class WebRtcSessionDescriptionFactory::WebRtcCertificateGeneratorCallback
+    : public rtc::RTCCertificateGeneratorCallback {
+ public:
+  explicit WebRtcCertificateGeneratorCallback(
+      rtc::WeakPtr<WebRtcSessionDescriptionFactory> ptr)
+      : weak_ptr_(std::move(ptr)) {}
+  // `rtc::RTCCertificateGeneratorCallback` overrides.
+  void OnSuccess(
+      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) override {
+    if (weak_ptr_) {
+      weak_ptr_->SetCertificate(certificate);
+    }
+  }
+  void OnFailure() override {
+    if (weak_ptr_) {
+      weak_ptr_->OnCertificateRequestFailed();
+    }
+  }
 
-void WebRtcCertificateGeneratorCallback::OnSuccess(
-    const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
-  SignalCertificateReady(certificate);
-}
+ private:
+  rtc::WeakPtr<WebRtcSessionDescriptionFactory> weak_ptr_;
+};
 
 // static
 void WebRtcSessionDescriptionFactory::CopyCandidatesFromSessionDescription(
@@ -167,21 +180,14 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     certificate_request_state_ = CERTIFICATE_WAITING;
 
     RTC_LOG(LS_VERBOSE) << "DTLS-SRTP enabled; has certificate parameter.";
-    // We already have a certificate but we wait to do `SetIdentity`; if we do
-    // it in the constructor then the caller has not had a chance to connect to
-    // `SignalCertificateReady`.
-    signaling_thread_->Post(
-        RTC_FROM_HERE, this, MSG_USE_CONSTRUCTOR_CERTIFICATE,
-        new rtc::ScopedRefMessageData<rtc::RTCCertificate>(certificate.get()));
+    RTC_LOG(LS_INFO) << "Using certificate supplied to the constructor.";
+    SetCertificate(certificate);
   } else {
     // Generate certificate.
     certificate_request_state_ = CERTIFICATE_WAITING;
 
-    auto callback = rtc::make_ref_counted<WebRtcCertificateGeneratorCallback>();
-    callback->SignalRequestFailed.connect(
-        this, &WebRtcSessionDescriptionFactory::OnCertificateRequestFailed);
-    callback->SignalCertificateReady.connect(
-        this, &WebRtcSessionDescriptionFactory::SetCertificate);
+    auto callback = rtc::make_ref_counted<WebRtcCertificateGeneratorCallback>(
+        weak_factory_.GetWeakPtr());
 
     rtc::KeyParams key_params = rtc::KeyParams();
     RTC_LOG(LS_VERBOSE)
@@ -206,17 +212,7 @@ WebRtcSessionDescriptionFactory::~WebRtcSessionDescriptionFactory() {
   rtc::MessageList list;
   signaling_thread_->Clear(this, rtc::MQID_ANY, &list);
   for (auto& msg : list) {
-    if (msg.message_id != MSG_USE_CONSTRUCTOR_CERTIFICATE) {
-      OnMessage(&msg);
-    } else {
-      // Skip MSG_USE_CONSTRUCTOR_CERTIFICATE because we don't want to trigger
-      // SetIdentity-related callbacks in the destructor. This can be a problem
-      // when WebRtcSession listens to the callback but it was the WebRtcSession
-      // destructor that caused WebRtcSessionDescriptionFactory's destruction.
-      // The callback is then ignored, leaking memory allocated by OnMessage for
-      // MSG_USE_CONSTRUCTOR_CERTIFICATE.
-      delete msg.pdata;
-    }
+    OnMessage(&msg);
   }
 }
 
@@ -314,15 +310,6 @@ void WebRtcSessionDescriptionFactory::OnMessage(rtc::Message* msg) {
       CreateSessionDescriptionMsg* param =
           static_cast<CreateSessionDescriptionMsg*>(msg->pdata);
       param->observer->OnFailure(std::move(param->error));
-      delete param;
-      break;
-    }
-    case MSG_USE_CONSTRUCTOR_CERTIFICATE: {
-      rtc::ScopedRefMessageData<rtc::RTCCertificate>* param =
-          static_cast<rtc::ScopedRefMessageData<rtc::RTCCertificate>*>(
-              msg->pdata);
-      RTC_LOG(LS_INFO) << "Using certificate supplied to the constructor.";
-      SetCertificate(param->data());
       delete param;
       break;
     }

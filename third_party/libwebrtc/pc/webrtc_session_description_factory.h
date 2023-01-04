@@ -28,50 +28,18 @@
 #include "rtc_base/message_handler.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/rtc_certificate_generator.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_message.h"
 #include "rtc_base/unique_id_generator.h"
+#include "rtc_base/weak_ptr.h"
 
 namespace webrtc {
-
-// DTLS certificate request callback class.
-class WebRtcCertificateGeneratorCallback
-    : public rtc::RTCCertificateGeneratorCallback {
- public:
-  // `rtc::RTCCertificateGeneratorCallback` overrides.
-  void OnSuccess(
-      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) override;
-  void OnFailure() override;
-
-  sigslot::signal0<> SignalRequestFailed;
-  sigslot::signal1<const rtc::scoped_refptr<rtc::RTCCertificate>&>
-      SignalCertificateReady;
-};
-
-struct CreateSessionDescriptionRequest {
-  enum Type {
-    kOffer,
-    kAnswer,
-  };
-
-  CreateSessionDescriptionRequest(Type type,
-                                  CreateSessionDescriptionObserver* observer,
-                                  const cricket::MediaSessionOptions& options)
-      : type(type), observer(observer), options(options) {}
-
-  Type type;
-  rtc::scoped_refptr<CreateSessionDescriptionObserver> observer;
-  cricket::MediaSessionOptions options;
-};
-
 // This class is used to create offer/answer session description. Certificates
 // for WebRtcSession/DTLS are either supplied at construction or generated
 // asynchronously. It queues the create offer/answer request until the
 // certificate generation has completed, i.e. when OnCertificateRequestFailed or
 // OnCertificateReady is called.
-class WebRtcSessionDescriptionFactory : public rtc::MessageHandler,
-                                        public sigslot::has_slots<> {
+class WebRtcSessionDescriptionFactory : public rtc::MessageHandler {
  public:
   // Can specify either a `cert_generator` or `certificate` to enable DTLS. If
   // a certificate generator is given, starts generating the certificate
@@ -130,6 +98,25 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler,
     CERTIFICATE_FAILED,
   };
 
+  // DTLS certificate request callback class.
+  class WebRtcCertificateGeneratorCallback;
+
+  struct CreateSessionDescriptionRequest {
+    enum Type {
+      kOffer,
+      kAnswer,
+    };
+
+    CreateSessionDescriptionRequest(Type type,
+                                    CreateSessionDescriptionObserver* observer,
+                                    const cricket::MediaSessionOptions& options)
+        : type(type), observer(observer), options(options) {}
+
+    Type type;
+    rtc::scoped_refptr<CreateSessionDescriptionObserver> observer;
+    cricket::MediaSessionOptions options;
+  };
+
   // MessageHandler implementation.
   virtual void OnMessage(rtc::Message* msg);
 
@@ -161,6 +148,7 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler,
 
   std::function<void(const rtc::scoped_refptr<rtc::RTCCertificate>&)>
       on_certificate_ready_;
+  rtc::WeakPtrFactory<WebRtcSessionDescriptionFactory> weak_factory_{this};
 };
 }  // namespace webrtc
 
