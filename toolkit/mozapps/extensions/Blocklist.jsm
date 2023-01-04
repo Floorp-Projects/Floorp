@@ -1091,6 +1091,9 @@ const ExtensionBlocklistMLBF = {
     this._initialized = true;
     this._client = lazy.RemoteSettings("addons-bloomfilters", {
       bucketName: BLOCKLIST_BUCKET,
+      // Prevent the attachment for being pruned, since its ID does
+      // not match any record.
+      keepAttachmentsIds: [this.RS_ATTACHMENT_ID],
     });
     this._onUpdate = this._onUpdate.bind(this);
     this._client.on("sync", this._onUpdate);

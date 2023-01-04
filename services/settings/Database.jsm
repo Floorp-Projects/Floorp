@@ -262,6 +262,96 @@ class Database {
     }
   }
 
+  /**
+   * Delete all attachments which don't match any record.
+   *
+   * Attachments are linked to records, except when a fixed `attachmentId` is used.
+   * A record can be updated or deleted, potentially by deleting a record and restoring an updated version
+   * of the record with the same ID. Potentially leaving orphaned attachments in the database.
+   * Since we run the pruning logic after syncing, any attachment without a
+   * matching record can be discarded as they will be unreachable forever.
+   *
+   * @param {Array<String>} excludeIds List of attachments IDs to exclude from pruning.
+   */
+  async pruneAttachments(excludeIds) {
+    const _cid = this.identifier;
+    let deletedCount = 0;
+    try {
+      await executeIDB(
+        ["attachments", "records"],
+        async (stores, rejectTransaction) => {
+          const [attachmentsStore, recordsStore] = stores;
+
+          // List all stored attachments.
+          // All keys ≥ [_cid, ..] && < [_cid, []]. See comment in `importChanges()`
+          const rangeAllKeys = IDBKeyRange.bound(
+            [_cid],
+            [_cid, []],
+            false,
+            true
+          );
+          const allAttachments = await new Promise((resolve, reject) => {
+            const request = attachmentsStore.getAll(rangeAllKeys);
+            request.onsuccess = e => resolve(e.target.result);
+            request.onerror = e => reject(e);
+          });
+          if (!allAttachments.length) {
+            lazy.console.debug(
+              `${this.identifier} No attachments in IDB cache. Nothing to do.`
+            );
+            return;
+          }
+
+          // List all stored records.
+          const allRecords = await new Promise((resolve, reject) => {
+            const rangeAllIndexed = IDBKeyRange.only(_cid);
+            const request = recordsStore.index("cid").getAll(rangeAllIndexed);
+            request.onsuccess = e => resolve(e.target.result);
+            request.onerror = e => reject(e);
+          });
+
+          console.error("allRecords", allRecords);
+
+          // Compare known records IDs to those stored along the attachments.
+          const currentRecordsIDs = new Set(allRecords.map(r => r.id));
+          const attachmentsToDelete = allAttachments.reduce((acc, entry) => {
+            // Skip excluded attachments.
+            if (excludeIds.includes(entry.attachmentId)) {
+              return acc;
+            }
+            // Delete attachment if associated record does not exist.
+            if (!currentRecordsIDs.has(entry.attachment.record.id)) {
+              acc.push([_cid, entry.attachmentId]);
+            }
+            return acc;
+          }, []);
+
+          // Perform a bulk delete of all obsolete attachments.
+          lazy.console.debug(
+            `${this.identifier} Bulk delete ${attachmentsToDelete.length} obsolete attachments`
+          );
+          lazy.IDBHelpers.bulkOperationHelper(
+            attachmentsStore,
+            {
+              reject: rejectTransaction,
+            },
+            "delete",
+            attachmentsToDelete
+          );
+          deletedCount = attachmentsToDelete.length;
+        },
+        { desc: "pruneAttachments() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new lazy.IDBHelpers.IndexedDBError(
+        e,
+        "pruneAttachments()",
+        this.identifier
+      );
+    }
+    return deletedCount;
+  }
+
   async clear() {
     try {
       await this.importChanges(null, null, [], { clear: true });
