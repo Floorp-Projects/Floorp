@@ -16,6 +16,7 @@
 #include <map>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_decoder.h"
@@ -24,7 +25,7 @@ namespace webrtc {
 
 class VCMDecoderDataBase {
  public:
-  VCMDecoderDataBase() = default;
+  VCMDecoderDataBase();
   VCMDecoderDataBase(const VCMDecoderDataBase&) = delete;
   VCMDecoderDataBase& operator=(const VCMDecoderDataBase&) = delete;
   ~VCMDecoderDataBase() = default;
@@ -48,14 +49,19 @@ class VCMDecoderDataBase {
       VCMDecodedFrameCallback* decoded_frame_callback);
 
  private:
-  void CreateAndInitDecoder(const VCMEncodedFrame& frame);
+  void CreateAndInitDecoder(const VCMEncodedFrame& frame)
+      RTC_RUN_ON(decoder_sequence_checker_);
+
+  SequenceChecker decoder_sequence_checker_;
 
   absl::optional<uint8_t> current_payload_type_;
-  absl::optional<VCMGenericDecoder> current_decoder_;
+  absl::optional<VCMGenericDecoder> current_decoder_
+      RTC_GUARDED_BY(decoder_sequence_checker_);
   // Initialization paramaters for decoders keyed by payload type.
   std::map<uint8_t, VideoDecoder::Settings> decoder_settings_;
   // Decoders keyed by payload type.
-  std::map<uint8_t, VideoDecoder*> decoders_;
+  std::map<uint8_t, VideoDecoder*> decoders_
+      RTC_GUARDED_BY(decoder_sequence_checker_);
 };
 
 }  // namespace webrtc
