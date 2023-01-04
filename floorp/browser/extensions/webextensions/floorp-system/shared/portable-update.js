@@ -75,13 +75,6 @@
                         appdir_parent + "/floorp"
                 );
                 await browser.IOFile.removeFile(redirectorUpdateReadyFilePath);
-
-                browser.notifications.create({
-                    "type": "basic",
-                    "iconUrl": browser.runtime.getURL("icons/link-48-last.png"),
-                    "title": (await getL10nValue("update-portable-notification-success-title")),
-                    "message": (await getL10nValue("update-portable-notification-success-message"))
-                });
             } catch (e) {
                 console.error(e);
                 browser.notifications.create({
@@ -90,7 +83,15 @@
                     "title": (await getL10nValue("update-portable-notification-failed-title")),
                     "message": (await getL10nValue("update-portable-notification-failed-redirector-message"))
                 });
+                return;
             }
+
+            browser.notifications.create({
+                "type": "basic",
+                "iconUrl": browser.runtime.getURL("icons/link-48-last.png"),
+                "title": (await getL10nValue("update-portable-notification-success-title")),
+                "message": (await getL10nValue("update-portable-notification-success-message"))
+            });
         }
 
         if (await browser.IOFile.exists(updateTmpDirPath)) {
