@@ -26,7 +26,6 @@ const {
   getMessage,
   getAllNetworkMessagesUpdateById,
 } = require("resource://devtools/client/webconsole/selectors/messages.js");
-const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const App = createFactory(
@@ -95,7 +94,8 @@ class WebConsoleWrapper {
     this.queuedMessageUpdates = [];
     this.queuedRequestUpdates = [];
     this.throttledDispatchPromise = null;
-    this.telemetry = new Telemetry();
+
+    this.telemetry = this.hud.telemetry;
   }
 
   #serviceContainer;

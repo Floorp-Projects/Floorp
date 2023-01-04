@@ -5,8 +5,6 @@
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-const Telemetry = require("resource://devtools/client/shared/telemetry.js");
-
 loader.lazyRequireGetter(
   this,
   "AccessibilityProxy",
@@ -83,7 +81,7 @@ AccessibilityPanel.prototype = {
       resolver = resolve;
     });
 
-    this._telemetry = new Telemetry();
+    this._telemetry = this._toolbox.telemetry;
     this.panelWin.gTelemetry = this._telemetry;
 
     this._toolbox.on("select", this.onPanelVisibilityChange);
