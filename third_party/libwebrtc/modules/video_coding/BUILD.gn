@@ -1137,7 +1137,10 @@ if (rtc_include_tests) {
     if (is_android) {
       sources += [ "codecs/test/videocodec_test_mediacodec.cc" ]
 
-      deps += [ ":android_codec_factory_helper" ]
+      deps += [
+        ":android_codec_factory_helper",
+        "../../rtc_base:stringutils",
+      ]
     }
 
     if (is_ios || is_mac) {
