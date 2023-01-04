@@ -37,6 +37,23 @@ def make_goma_properties(enable_ats = True, jobs = None):
         goma_properties["jobs"] = jobs
     return {"$build/goma": goma_properties}
 
+def make_reclient_properties(instance, jobs = None):
+    """Makes a default reclient property with the specified argument.
+
+    Args:
+      instance: RBE insatnce name.
+      jobs: Number of jobs to be used by the builder.
+    Returns:
+      A dictonary with the reclient properties.
+    """
+    reclient_props = {
+        "instance": instance,
+        "metrics_project": "chromium-reclient-metrics",
+    }
+    if jobs:
+        reclient_props["jobs"] = jobs
+    return {"$build/reclient": reclient_props}
+
 # Add names of builders to remove from LKGR finder to this list. This is
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
@@ -388,7 +405,8 @@ luci.tree_closer(
         "compile",
         "gn",
     ],
-    failed_step_regexp_exclude = ".*\\(experimental\\).*",
+    # TODO(b/239908030, b/243594984): remove reclient builders after migration.
+    failed_step_regexp_exclude = ".*(\\(experimental\\)|\\(reclient\\)).*",
 )
 
 # Recipe definitions:
@@ -505,6 +523,7 @@ def ci_builder(
         perf_cat = None,
         prioritized = False,
         enabled = True,
+        use_reclient = False,
         **kwargs):
     """Add a post-submit builder.
 
@@ -516,6 +535,7 @@ def ci_builder(
       perf_cat: the category + name for the /perf/ console, or None to omit from the console.
       prioritized: True to make this builder have a higher priority and never batch builds.
       enabled: False to exclude this builder from consoles and failure notifications.
+      use_reclient: True to use reclient to build instead of goma.
       **kwargs: Pass on to webrtc_builder / luci.builder.
     Returns:
       A luci.builder.
@@ -536,7 +556,10 @@ def ci_builder(
     dimensions.update({"pool": "luci.webrtc.ci", "cpu": kwargs.pop("cpu", DEFAULT_CPU)})
     properties = properties or {}
     properties["builder_group"] = "client.webrtc"
-    properties.update(make_goma_properties())
+    if use_reclient:
+        properties.update(make_reclient_properties("rbe-webrtc-trusted"))
+    else:
+        properties.update(make_goma_properties())
     notifies = ["post_submit_failure_notifier", "infra_failure_notifier"]
     notifies += ["webrtc_tree_closer"] if name not in skipped_lkgr_bots else []
     return webrtc_builder(
@@ -724,6 +747,7 @@ linux_builder("Linux64 Debug", "Linux|x64|dbg")
 linux_try_job("linux_dbg", cq = None)
 linux_try_job("linux_compile_dbg")
 linux_builder("Linux64 Release", "Linux|x64|rel")
+linux_builder("Linux64 Release (reclient)", "Linux|x64|re", use_reclient = True)
 linux_try_job("linux_rel")
 linux_builder("Linux64 Builder", "Linux|x64|size", perf_cat = "Linux|x64|Builder|", prioritized = True)
 linux_try_job("linux_compile_rel")
