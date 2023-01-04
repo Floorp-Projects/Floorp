@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="iceTestUtils.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1683934",
+    title: "RTCPeerConnection check codec negotiation failure"
+  });
+
+  function makeWeirdCodecs(sdp) {
+    return sdp
+      .replaceAll('VP8', 'VEEEEEEEEP8')
+      .replaceAll('VP9', 'VEEEEEEEEP9')
+      .replaceAll('H264', 'HERP264');
+  }
+
+  const tests = [
+    async function offererWeirdCodecs() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      const offer = await pc1.createOffer();
+      offer.sdp = makeWeirdCodecs(offer.sdp);
+      // It is not an error to receive an offer with no codecs we support
+      await pc2.setRemoteDescription(offer);
+      await pc2.setLocalDescription();
+      await wait(2000);
+    },
+
+    async function answererWeirdCodecs() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await pc1.setLocalDescription();
+      await pc2.setRemoteDescription(pc1.localDescription);
+      const answer = await pc2.createAnswer();
+      answer.sdp = makeWeirdCodecs(answer.sdp);
+      try {
+        await pc1.setRemoteDescription(answer);
+        ok(false, "Should have thrown");
+      } catch (e) {
+        ok(true, "Should have thrown");
+      }
+    },
+
+    async function reoffererWeirdCodecs() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 32000, "Initial connection");
+
+      const offer = await pc1.createOffer();
+      offer.sdp = makeWeirdCodecs(offer.sdp);
+      // It is not an error to receive an offer with no codecs we support
+      await pc2.setRemoteDescription(offer);
+      await pc2.setLocalDescription();
+      await wait(2000);
+    },
+
+    async function reanswererWeirdCodecs() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 32000, "Initial connection");
+      await pc1.setLocalDescription();
+      await pc2.setRemoteDescription(pc1.localDescription);
+      const answer = await pc2.createAnswer();
+      answer.sdp = makeWeirdCodecs(answer.sdp);
+      try {
+        await pc1.setRemoteDescription(answer);
+        ok(false, "Should have thrown");
+      } catch (e) {
+        ok(true, "Should have thrown");
+      }
+    },
+
+  ];
+
+  runNetworkTest(async () => {
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      await test();
+      info(`Done running test: ${test.name}`);
+    }
+  });
+
+</script>
+</pre>
+</body>
+</html>

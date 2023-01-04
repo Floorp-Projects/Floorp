@@ -36,30 +36,27 @@ async function testAudioChannels(track, codec, channels, accepted, expectedChann
     is(matchesChannels(pc2.localDescription.sdp, codec, channels),
        accepted,
        `test pc2.localDescription`);
-    await pc1.setRemoteDescription(pc2.localDescription);
-
-    const [receiver] = pc2.getReceivers();
-    if (!expectedChannels) {
-      let unmuted = false;
-      receiver.track.onunmute = () => unmuted = true;
-      await new Promise(r => setTimeout(r, 200));
-      ok(!unmuted, "track should never unmute");
-      return;
+    try {
+      await pc1.setRemoteDescription(pc2.localDescription);
+      ok(expectedChannels, "SRD should succeed iff we're expecting channels");
+      const [receiver] = pc2.getReceivers();
+      await new Promise(r => receiver.track.onunmute = r);
+      let stats = await receiver.getStats();
+      let inboundStat = [...stats.values()].find(({type}) => type == "inbound-rtp");
+      if (!inboundStat) {
+        info("work around bug 1765215"); // TODO bug 1765215
+        await new Promise(r => setTimeout(r, 200));
+        stats = await receiver.getStats();
+        inboundStat = [...stats.values()].find(({type}) => type == "inbound-rtp");
+      }
+      ok(inboundStat, "has inbound-rtp stats after track unmute (w/workaround)");
+      const codecStat = stats.get(inboundStat.codecId);
+      ok(codecStat.mimeType.includes(codec), "correct codec");
+      is(codecStat.payloadType, payloadType, "correct payloadType");
+      is(codecStat.channels, expectedChannels, "expected channels");
+    } catch (e) {
+      ok(!expectedChannels, "SRD should fail iff we're not expecting channels");
     }
-    await new Promise(r => receiver.track.onunmute = r);
-    let stats = await receiver.getStats();
-    let inboundStat = [...stats.values()].find(({type}) => type == "inbound-rtp");
-    if (!inboundStat) {
-      info("work around bug 1765215"); // TODO bug 1765215
-      await new Promise(r => setTimeout(r, 200));
-      stats = await receiver.getStats();
-      inboundStat = [...stats.values()].find(({type}) => type == "inbound-rtp");
-    }
-    ok(inboundStat, "has inbound-rtp stats after track unmute (w/workaround)");
-    const codecStat = stats.get(inboundStat.codecId);
-    ok(codecStat.mimeType.includes(codec), "correct codec");
-    is(codecStat.payloadType, payloadType, "correct payloadType");
-    is(codecStat.channels, expectedChannels, "expected channels");
   } finally {
     pc1.close();
     pc2.close();
