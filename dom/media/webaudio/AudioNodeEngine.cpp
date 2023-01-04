@@ -9,12 +9,11 @@
 #include "mozilla/AbstractThread.h"
 #ifdef USE_NEON
 #  include "mozilla/arm.h"
-#  include "AudioNodeEngineNEON.h"
+#  include "AudioNodeEngineGeneric.h"
 #endif
 #ifdef USE_SSE2
 #  include "mozilla/SSE.h"
-#  include "AlignmentUtils.h"
-#  include "AudioNodeEngineSSE2.h"
+#  include "AudioNodeEngineGeneric.h"
 #endif
 #include "AudioBlock.h"
 #include "Tracing.h"
@@ -67,7 +66,8 @@ void AudioBufferAddWithScale(const float* aInput, float aScale, float* aOutput,
                              uint32_t aSize) {
 #ifdef USE_NEON
   if (mozilla::supports_neon()) {
-    AudioBufferAddWithScale_NEON(aInput, aScale, aOutput, aSize);
+    Engine<xsimd::neon>::AudioBufferAddWithScale(aInput, aScale, aOutput,
+                                                 aSize);
     return;
   }
 #endif
@@ -93,7 +93,8 @@ void AudioBufferAddWithScale(const float* aInput, float aScale, float* aOutput,
     // we need to round aSize down to the nearest multiple of 16
     uint32_t alignedSize = aSize & ~0x0F;
     if (alignedSize > 0) {
-      AudioBufferAddWithScale_SSE(aInput, aScale, aOutput, alignedSize);
+      Engine<xsimd::sse2>::AudioBufferAddWithScale(aInput, aScale, aOutput,
+                                                   alignedSize);
 
       // adjust parameters for use with scalar operations below
       aInput += alignedSize;
@@ -127,14 +128,16 @@ void AudioBlockCopyChannelWithScale(const float* aInput, float aScale,
   } else {
 #ifdef USE_NEON
     if (mozilla::supports_neon()) {
-      AudioBlockCopyChannelWithScale_NEON(aInput, aScale, aOutput);
+      Engine<xsimd::neon>::AudioBlockCopyChannelWithScale(aInput, aScale,
+                                                          aOutput);
       return;
     }
 #endif
 
 #ifdef USE_SSE2
     if (mozilla::supports_sse2()) {
-      AudioBlockCopyChannelWithScale_SSE(aInput, aScale, aOutput);
+      Engine<xsimd::sse2>::AudioBlockCopyChannelWithScale(aInput, aScale,
+                                                          aOutput);
       return;
     }
 #endif
@@ -149,7 +152,7 @@ void BufferComplexMultiply(const float* aInput, const float* aScale,
                            float* aOutput, uint32_t aSize) {
 #ifdef USE_SSE2
   if (mozilla::supports_sse()) {
-    BufferComplexMultiply_SSE(aInput, aScale, aOutput, aSize);
+    Engine<xsimd::sse2>::BufferComplexMultiply(aInput, aScale, aOutput, aSize);
     return;
   }
 #endif
@@ -182,14 +185,16 @@ void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                     float aOutput[WEBAUDIO_BLOCK_SIZE]) {
 #ifdef USE_NEON
   if (mozilla::supports_neon()) {
-    AudioBlockCopyChannelWithScale_NEON(aInput, aScale, aOutput);
+    Engine<xsimd::neon>::AudioBlockCopyChannelWithScale(aInput, aScale,
+                                                        aOutput);
     return;
   }
 #endif
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    AudioBlockCopyChannelWithScale_SSE(aInput, aScale, aOutput);
+    Engine<xsimd::sse2>::AudioBlockCopyChannelWithScale(aInput, aScale,
+                                                        aOutput);
     return;
   }
 #endif
@@ -214,14 +219,14 @@ void AudioBufferInPlaceScale(float* aBlock, float aScale, uint32_t aSize) {
   }
 #ifdef USE_NEON
   if (mozilla::supports_neon()) {
-    AudioBufferInPlaceScale_NEON(aBlock, aScale, aSize);
+    Engine<xsimd::neon>::AudioBufferInPlaceScale(aBlock, aScale, aSize);
     return;
   }
 #endif
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    AudioBufferInPlaceScale_SSE(aBlock, aScale, aSize);
+    Engine<xsimd::sse2>::AudioBufferInPlaceScale(aBlock, aScale, aSize);
     return;
   }
 #endif
@@ -234,14 +239,14 @@ void AudioBufferInPlaceScale(float* aBlock, float aScale, uint32_t aSize) {
 void AudioBufferInPlaceScale(float* aBlock, float* aScale, uint32_t aSize) {
 #ifdef USE_NEON
   if (mozilla::supports_neon()) {
-    AudioBufferInPlaceScale_NEON(aBlock, aScale, aSize);
+    Engine<xsimd::neon>::AudioBufferInPlaceScale(aBlock, aScale, aSize);
     return;
   }
 #endif
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    AudioBufferInPlaceScale_SSE(aBlock, aScale, aSize);
+    Engine<xsimd::sse2>::AudioBufferInPlaceScale(aBlock, aScale, aSize);
     return;
   }
 #endif
@@ -275,16 +280,16 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                  float aOutputR[WEBAUDIO_BLOCK_SIZE]) {
 #ifdef USE_NEON
   if (mozilla::supports_neon()) {
-    AudioBlockPanStereoToStereo_NEON(aInputL, aInputR, aGainL, aGainR,
-                                     aIsOnTheLeft, aOutputL, aOutputR);
+    Engine<xsimd::neon>::AudioBlockPanStereoToStereo(
+        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
     return;
   }
 #endif
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    AudioBlockPanStereoToStereo_SSE(aInputL, aInputR, aGainL, aGainR,
-                                    aIsOnTheLeft, aOutputL, aOutputR);
+    Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
+        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
     return;
   }
 #endif
@@ -313,8 +318,16 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                  float aOutputR[WEBAUDIO_BLOCK_SIZE]) {
 #ifdef USE_NEON
   if (mozilla::supports_neon()) {
-    AudioBlockPanStereoToStereo_NEON(aInputL, aInputR, aGainL, aGainR,
-                                     aIsOnTheLeft, aOutputL, aOutputR);
+    Engine<xsimd::neon>::AudioBlockPanStereoToStereo(
+        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    return;
+  }
+#endif
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
+        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
     return;
   }
 #endif
@@ -349,7 +362,7 @@ float AudioBufferSumOfSquares(const float* aInput, uint32_t aLength) {
     }
 
     uint32_t vLength = (aLength >> 4) << 4;
-    sum += AudioBufferSumOfSquares_SSE(alignedInput, vLength);
+    sum += Engine<xsimd::sse2>::AudioBufferSumOfSquares(alignedInput, vLength);
 
     // adjust aInput and aLength to use scalar operations for any
     // remaining values
@@ -368,7 +381,7 @@ float AudioBufferSumOfSquares(const float* aInput, uint32_t aLength) {
 void NaNToZeroInPlace(float* aSamples, size_t aCount) {
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    NaNToZeroInPlace_SSE(aSamples, aCount);
+    Engine<xsimd::sse2>::NaNToZeroInPlace(aSamples, aCount);
     return;
   }
 #endif
