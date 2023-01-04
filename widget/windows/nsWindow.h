@@ -231,7 +231,7 @@ class nsWindow final : public nsBaseWidget {
   nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus& aStatus) override;
   void EnableDragDrop(bool aEnable) override;
-  void CaptureMouse(bool aCapture) override;
+  void CaptureMouse(bool aCapture);
   void CaptureRollupEvents(bool aDoCapture) override;
   [[nodiscard]] nsresult GetAttention(int32_t aCycleCount) override;
   bool HasPendingInputEvent() override;
