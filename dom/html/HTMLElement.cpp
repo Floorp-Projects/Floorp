@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/HTMLElementBinding.h"
-#include "mozilla/EventDispatcher.h"
 #include "nsContentUtils.h"
 
 namespace mozilla::dom {
@@ -37,16 +36,6 @@ NS_IMPL_ELEMENT_CLONE(HTMLElement)
 JSObject* HTMLElement::WrapNode(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
   return dom::HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void HTMLElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
-  if (IsDisabledForEvents(aVisitor.mEvent)) {
-    // Do not process any DOM events if the element is disabled
-    aVisitor.mCanHandle = false;
-    return;
-  }
-
-  nsGenericHTMLFormElement::GetEventTargetParent(aVisitor);
 }
 
 nsresult HTMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
@@ -188,14 +177,6 @@ void HTMLElement::UpdateFormOwner() {
   UpdateFieldSet(true);
   UpdateDisabledState(true);
   UpdateBarredFromConstraintValidation();
-}
-
-bool HTMLElement::IsDisabledForEvents(WidgetEvent* aEvent) {
-  if (IsFormAssociatedElement()) {
-    return IsElementDisabledForEvents(aEvent, GetPrimaryFrame());
-  }
-
-  return false;
 }
 
 nsresult HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
