@@ -29,7 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835044
 SimpleTest.waitForExplicitFinish();
 
 let panel = document.getElementById('thepanel');
-let rect;
+let rect = null;
+
 
 function startTest() {
   // This first event is to ensure that the next event will have different
@@ -51,14 +52,21 @@ function sendMouseEvent() {
   synthesizeNativeMouseEvent({
     type: "mousemove",
     target: panel,
-    offsetX: 1,
-    offsetY: 2,
+    offsetX: 10,
+    offsetY: 20,
   });
 }
 
 function checkCoords(event) {
-  isfuzzy(event.clientX, rect.left + 1, window.devicePixelRatio, "Motion x coordinate");
-  isfuzzy(event.clientY, rect.top + 2, window.devicePixelRatio, "Motion y coordinate");
+  if (!rect) {
+    return;
+  }
+  isfuzzy(event.clientX, rect.left + 10, window.devicePixelRatio, "Motion x coordinate");
+  isfuzzy(event.clientY, rect.top + 20, window.devicePixelRatio, "Motion y coordinate");
+  info(`Event client: ${event.clientX}, ${event.clientY}, panel client: ${rect.left}, ${rect.top}`);
+  info(`Event screen: ${event.screenX}, ${event.screenY}, panel screen: ${panel.screenX}, ${panel.screenY}`);
+  info(`offset client: ${event.clientX - rect.left}, ${event.clientY - rect.top}`);
+  info(`offset screen: ${event.screenX - panel.screenX}, ${event.screenY - panel.screenY}`);
   done();
 }
 
