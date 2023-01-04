@@ -140,6 +140,138 @@ add_task(async function test_dynamic_rule_registration() {
   });
 });
 
+add_task(async function test_dynamic_rules_count_limits() {
+  await runAsDNRExtension({
+    unloadTestAtEnd: true,
+    awaitFinish: true,
+    background: async () => {
+      const dnr = browser.declarativeNetRequest;
+      const [dyamicRules, sessionRules] = await Promise.all([
+        dnr.getDynamicRules(),
+        dnr.getSessionRules(),
+      ]);
+
+      browser.test.assertDeepEq(
+        { session: [], dynamic: [] },
+        { session: sessionRules, dynamic: dyamicRules },
+        "Expect no session and no dynamic rules"
+      );
+
+      // TODO: consider exposing this as an api namespace property.
+      const MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES = 5000;
+      const DUMMY_RULE = {
+        action: { type: "block" },
+        condition: { resourceTypes: ["main_frame"] },
+      };
+      const rules = [];
+      for (let i = 0; i < MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES; i++) {
+        rules.push({ ...DUMMY_RULE, id: i + 1 });
+      }
+
+      await browser.test.assertRejects(
+        dnr.updateDynamicRules({
+          addRules: [
+            ...rules,
+            { ...DUMMY_RULE, id: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1 },
+          ],
+        }),
+        /updateDynamicRules request is exceeding MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES limit \(\d+\)/,
+        "Got the expected rejection of exceeding the number of dynamic rules allowed"
+      );
+
+      await dnr.updateDynamicRules({
+        addRules: rules,
+      });
+      browser.test.assertEq(
+        5000,
+        (await dnr.getDynamicRules()).length,
+        "Got the expected number of dynamic rules stored"
+      );
+
+      await dnr.updateDynamicRules({
+        removeRuleIds: rules.map(r => r.id),
+      });
+
+      browser.test.assertEq(
+        0,
+        (await dnr.getDynamicRules()).length,
+        "All dynamic rules should have been removed"
+      );
+
+      browser.test.log(
+        "Verify rules count limits with multiple async API calls"
+      );
+
+      const [
+        updateDynamicRulesSingle,
+        updateDynamicRulesTooMany,
+      ] = await Promise.allSettled([
+        dnr.updateDynamicRules({
+          addRules: [
+            { ...DUMMY_RULE, id: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1 },
+          ],
+        }),
+        dnr.updateDynamicRules({ addRules: rules }),
+      ]);
+
+      browser.test.assertDeepEq(
+        updateDynamicRulesSingle,
+        { status: "fulfilled", value: undefined },
+        "Expect the first updateDynamicRules call to be successful"
+      );
+
+      await browser.test.assertRejects(
+        updateDynamicRulesTooMany?.status === "rejected"
+          ? Promise.reject(updateDynamicRulesTooMany.reason)
+          : Promise.resolve(),
+        /updateDynamicRules request is exceeding MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES limit \(\d+\)/,
+        "Got the expected rejection on the second call exceeding the number of dynamic rules allowed"
+      );
+
+      browser.test.assertDeepEq(
+        (await dnr.getDynamicRules()).map(rule => rule.id),
+        [MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1],
+        "Got the expected dynamic rules"
+      );
+
+      await dnr.updateDynamicRules({
+        removeRuleIds: [MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1],
+      });
+
+      const [
+        updateSessionResult,
+        updateDynamicResult,
+      ] = await Promise.allSettled([
+        dnr.updateSessionRules({ addRules: rules }),
+        dnr.updateDynamicRules({ addRules: rules }),
+      ]);
+
+      browser.test.assertDeepEq(
+        updateDynamicResult,
+        { status: "fulfilled", value: undefined },
+        "Expect the number of dynamic rules to be still allowed, despite the session rule added"
+      );
+
+      browser.test.assertDeepEq(
+        updateSessionResult,
+        { status: "fulfilled", value: undefined },
+        "Got expected success from the updateSessionRules request"
+      );
+
+      browser.test.assertDeepEq(
+        { sessionRulesCount: 5000, dynamicRulesCount: 5000 },
+        {
+          sessionRulesCount: (await dnr.getSessionRules()).length,
+          dynamicRulesCount: (await dnr.getDynamicRules()).length,
+        },
+        "Got expected session and dynamic rules counts"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
 add_task(async function test_save_and_load_dynamic_rules() {
   let { extension, testExtensionParams } = await runAsDNRExtension({
     unloadTestAtEnd: false,
