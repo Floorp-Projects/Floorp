@@ -21,6 +21,12 @@ vars = {
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
   'fuchsia_version': 'version:9.20220822.3.1',
+
+  # By default, do not check out the re-client binaries.
+  'checkout_reclient': False,
+
+  # reclient CIPD package version
+  'reclient_version': 're_client_version:0.76.0.f4c4bc4-gomaip',
 }
 
 deps = {
@@ -74,6 +80,16 @@ deps = {
     ],
     'dep_type': 'cipd',
     'condition': 'checkout_win',
+  },
+  'src/buildtools/reclient': {
+    'packages': [
+      {
+        'package': 'infra/rbe/client/${{platform}}',
+        'version': Var('reclient_version'),
+      }
+    ],
+    'dep_type': 'cipd',
+    'condition': 'checkout_reclient',
   },
 
   'src/buildtools/clang_format/script':
