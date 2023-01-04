@@ -4536,15 +4536,22 @@ void nsGlobalWindowOuter::FullscreenWillChange(bool aIsFullscreen) {
     // If there is no in-process fullscreen request, the fullscreen state change
     // is triggered from the OS directly, e.g. user use built-in window button
     // to enter/exit fullscreen on macOS.
-    MOZ_ASSERT(mFullscreen.isSome() != aIsFullscreen,
-               "FullscreenWillChange should not be notified if the fullscreen "
-               "state isn't changed");
     mInProcessFullscreenRequest.emplace(FullscreenReason::ForFullscreenMode,
                                         aIsFullscreen);
-    if (aIsFullscreen) {
-      mFullscreen.emplace(FullscreenReason::ForFullscreenMode);
+    if (mFullscreen.isSome() != aIsFullscreen) {
+      if (aIsFullscreen) {
+        mFullscreen.emplace(FullscreenReason::ForFullscreenMode);
+      } else {
+        mFullscreen.reset();
+      }
     } else {
-      mFullscreen.reset();
+      // It is possible that FullscreenWillChange is notified with current
+      // fullscreen state, e.g. browser goes into fullscreen when widget
+      // fullscreen is prevented, and then user triggers fullscreen from the OS
+      // directly again.
+      MOZ_ASSERT(StaticPrefs::full_screen_api_ignore_widgets() ||
+                     mForceFullScreenInWidget,
+                 "This should only happen when widget fullscreen is prevented");
     }
   }
   if (aIsFullscreen) {
