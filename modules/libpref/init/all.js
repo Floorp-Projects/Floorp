@@ -4164,14 +4164,6 @@ pref("extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThresh
 // This is Only for testing! Set the confidence value (> 0 && <= 1) after a field is identified by fathom
 pref("extensions.formautofill.creditCards.heuristics.fathom.testConfidence", "0");
 
-// Pref for shield/heartbeat to recognize users who have used Credit Card
-// Autofill. The valid values can be:
-// 0: none
-// 1: submitted a manually-filled credit card form (but didn't see the doorhanger
-//    because of a duplicate profile in the storage)
-// 2: saw the doorhanger
-// 3: submitted an autofill'ed credit card form
-pref("extensions.formautofill.creditCards.used", 0);
 pref("extensions.formautofill.firstTimeUse", true);
 pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.section.enabled", true);
