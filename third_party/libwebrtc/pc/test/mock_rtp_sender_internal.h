@@ -46,9 +46,17 @@ class MockRtpSenderInternal : public RtpSenderInternal {
               (override));
   MOCK_METHOD(RtpParameters, GetParameters, (), (const, override));
   MOCK_METHOD(RtpParameters, GetParametersInternal, (), (const, override));
+  MOCK_METHOD(RtpParameters,
+              GetParametersInternalWithAllLayers,
+              (),
+              (const, override));
   MOCK_METHOD(RTCError, SetParameters, (const RtpParameters&), (override));
   MOCK_METHOD(RTCError,
               SetParametersInternal,
+              (const RtpParameters&),
+              (override));
+  MOCK_METHOD(RTCError,
+              SetParametersInternalWithAllLayers,
               (const RtpParameters&),
               (override));
   MOCK_METHOD(rtc::scoped_refptr<DtmfSenderInterface>,
