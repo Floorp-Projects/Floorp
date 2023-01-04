@@ -603,8 +603,7 @@ void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
         std::move(video_decoder), FileWrapper::OpenWriteOnly(ssb.str()));
   }
 
-  video_decoders_.push_back(std::move(video_decoder));
-  video_receiver_.RegisterExternalDecoder(video_decoders_.back().get(),
+  video_receiver_.RegisterExternalDecoder(std::move(video_decoder),
                                           decoder.payload_type);
 }
 

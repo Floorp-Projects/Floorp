@@ -11,6 +11,9 @@
 #ifndef MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 #define MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 
+#include <memory>
+#include <vector>
+
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/video_codecs/video_decoder.h"
@@ -37,24 +40,27 @@ class VideoReceiver2 {
   void RegisterReceiveCodec(uint8_t payload_type,
                             const VideoDecoder::Settings& decoder_settings);
 
-  void RegisterExternalDecoder(VideoDecoder* externalDecoder,
-                               uint8_t payloadType);
-  bool IsExternalDecoderRegistered(uint8_t payloadType) const;
-  int32_t RegisterReceiveCallback(VCMReceiveCallback* receiveCallback);
+  void RegisterExternalDecoder(std::unique_ptr<VideoDecoder> decoder,
+                               uint8_t payload_type);
 
-  int32_t Decode(const webrtc::VCMEncodedFrame* frame);
+  bool IsExternalDecoderRegistered(uint8_t payload_type) const;
+  int32_t RegisterReceiveCallback(VCMReceiveCallback* receive_callback);
+
+  int32_t Decode(const VCMEncodedFrame* frame);
 
  private:
   SequenceChecker construction_sequence_checker_;
   SequenceChecker decoder_sequence_checker_;
   Clock* const clock_;
-  VCMTiming* timing_;
-  VCMDecodedFrameCallback decodedFrameCallback_;
+  VCMDecodedFrameCallback decoded_frame_callback_;
+  // Holds/owns the decoder instances that are registered via
+  // `RegisterExternalDecoder` and referenced by `codec_database_`.
+  std::vector<std::unique_ptr<VideoDecoder>> video_decoders_;
 
   // Callbacks are set before the decoder thread starts.
   // Once the decoder thread has been started, usage of `_codecDataBase` moves
   // over to the decoder thread.
-  VCMDecoderDataBase codecDataBase_;
+  VCMDecoderDataBase codec_database_;
 };
 
 }  // namespace webrtc
