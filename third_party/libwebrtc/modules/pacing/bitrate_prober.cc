@@ -94,7 +94,7 @@ void BitrateProber::CreateProbeCluster(
   ProbeCluster cluster;
   cluster.requested_at = cluster_config.at_time;
   cluster.pace_info.probe_cluster_min_probes =
-      static_cast<int>(cluster_config.target_probe_count);
+      cluster_config.target_probe_count;
   cluster.pace_info.probe_cluster_min_bytes =
       (cluster_config.target_data_rate * cluster_config.target_duration)
           .bytes();
@@ -154,7 +154,7 @@ DataSize BitrateProber::RecommendedMinProbeSize() const {
   }
   DataRate send_rate =
       DataRate::BitsPerSec(clusters_.front().pace_info.send_bitrate_bps);
-  return 2 * send_rate * static_cast<TimeDelta>(config_.min_probe_delta);
+  return 2 * send_rate * config_.min_probe_delta;
 }
 
 void BitrateProber::ProbeSent(Timestamp now, DataSize size) {

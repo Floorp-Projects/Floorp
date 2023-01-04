@@ -462,8 +462,7 @@ void RtpTransportControllerSend::SetClientBitratePreferences(
 
 absl::optional<BitrateConstraints>
 RtpTransportControllerSend::ApplyOrLiftRelayCap(bool is_relayed) {
-  DataRate cap = is_relayed ? static_cast<DataRate>(relay_bandwidth_cap_)
-                            : DataRate::PlusInfinity();
+  DataRate cap = is_relayed ? relay_bandwidth_cap_ : DataRate::PlusInfinity();
   return bitrate_configurator_.UpdateWithRelayCap(cap);
 }
 

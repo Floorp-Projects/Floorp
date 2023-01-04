@@ -216,9 +216,8 @@ std::vector<ProbeClusterConfig> ProbeController::OnMaxTotalAllocatedBitrate(
       if (second_probe_rate > first_probe_rate)
         probes.push_back(second_probe_rate.bps());
     }
-    return InitiateProbing(
-        at_time_ms, probes,
-        static_cast<bool>(config_.allocation_allow_further_probing.Get()));
+    return InitiateProbing(at_time_ms, probes,
+                           config_.allocation_allow_further_probing.Get());
   }
   max_total_allocated_bitrate_ = max_total_allocated_bitrate;
   return std::vector<ProbeClusterConfig>();
@@ -247,8 +246,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateExponentialProbing(
   // When probing at 1.8 Mbps ( 6x 300), this represents a threshold of
   // 1.2 Mbps to continue probing.
   std::vector<int64_t> probes = {static_cast<int64_t>(
-      static_cast<double>(config_.first_exponential_probe_scale) *
-      start_bitrate_bps_)};
+      config_.first_exponential_probe_scale * start_bitrate_bps_)};
   if (config_.second_exponential_probe_scale) {
     probes.push_back(config_.second_exponential_probe_scale.Value() *
                      start_bitrate_bps_);
@@ -279,9 +277,8 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
         bitrate_bps > min_bitrate_to_probe_further_bps_) {
       pending_probes = InitiateProbing(
           at_time_ms,
-          {static_cast<int64_t>(
-              static_cast<double>(config_.further_exponential_probe_scale) *
-              bitrate_bps)},
+          {static_cast<int64_t>(config_.further_exponential_probe_scale *
+                                bitrate_bps)},
           true);
     }
   }
@@ -383,12 +380,10 @@ std::vector<ProbeClusterConfig> ProbeController::Process(int64_t at_time_ms) {
           std::max(*alr_start_time_ms_, time_last_probing_initiated_ms_) +
           config_.alr_probing_interval->ms();
       if (at_time_ms >= next_probe_time_ms) {
-        return InitiateProbing(
-            at_time_ms,
-            {static_cast<int64_t>(
-                estimated_bitrate_bps_ *
-                static_cast<double>(config_.alr_probe_scale))},
-            true);
+        return InitiateProbing(at_time_ms,
+                               {static_cast<int64_t>(estimated_bitrate_bps_ *
+                                                     config_.alr_probe_scale)},
+                               true);
       }
     }
   }
@@ -436,8 +431,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
   if (probe_further) {
     state_ = State::kWaitingForProbingResult;
     min_bitrate_to_probe_further_bps_ =
-        (*(bitrates_to_probe.end() - 1)) *
-        static_cast<double>(config_.further_probe_threshold);
+        (*(bitrates_to_probe.end() - 1)) * config_.further_probe_threshold;
   } else {
     state_ = State::kProbingComplete;
     min_bitrate_to_probe_further_bps_ = kExponentialProbingDisabled;
