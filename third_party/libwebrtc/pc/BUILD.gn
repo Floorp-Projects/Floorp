@@ -204,7 +204,6 @@ rtc_source_set("jsep_transport") {
     ":rtcp_mux_filter",
     ":rtp_transport",
     ":rtp_transport_internal",
-    ":sctp_data_channel_transport",
     ":sctp_transport",
     ":session_description",
     ":srtp_filter",
@@ -466,22 +465,6 @@ rtc_source_set("rtp_transport_internal") {
   ]
 }
 
-rtc_source_set("sctp_data_channel_transport") {
-  visibility = [ ":*" ]
-  sources = [
-    "sctp_data_channel_transport.cc",
-    "sctp_data_channel_transport.h",
-  ]
-  deps = [
-    "../api:rtc_error",
-    "../api/transport:datagram_transport_interface",
-    "../media:rtc_data_sctp_transport_internal",
-    "../media:rtc_media_base",
-    "../rtc_base:copy_on_write_buffer",
-    "../rtc_base/third_party/sigslot",
-  ]
-}
-
 rtc_source_set("sctp_transport") {
   visibility = [ ":*" ]
   sources = [
@@ -494,6 +477,7 @@ rtc_source_set("sctp_transport") {
     "../api:libjingle_peerconnection_api",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/transport:datagram_transport_interface",
     "../media:rtc_data_sctp_transport_internal",
     "../p2p:rtc_p2p",
     "../rtc_base",

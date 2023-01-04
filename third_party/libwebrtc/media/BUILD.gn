@@ -442,7 +442,6 @@ rtc_source_set("rtc_data_sctp_transport_internal") {
     "../p2p:rtc_p2p",
     "../rtc_base:copy_on_write_buffer",
     "../rtc_base:threading",
-    "../rtc_base/third_party/sigslot",
   ]
 }
 
@@ -468,6 +467,7 @@ if (rtc_build_dcsctp) {
       "../rtc_base:copy_on_write_buffer",
       "../rtc_base:event_tracer",
       "../rtc_base:logging",
+      "../rtc_base:macromagic",
       "../rtc_base:random",
       "../rtc_base:socket",
       "../rtc_base:stringutils",

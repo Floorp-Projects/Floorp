@@ -22,7 +22,6 @@
 #include "api/candidate.h"
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel.h"
-#include "pc/sctp_data_channel_transport.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
@@ -99,10 +98,6 @@ JsepTransport::JsepTransport(
                                ? rtc::make_ref_counted<webrtc::DtlsTransport>(
                                      std::move(rtcp_dtls_transport))
                                : nullptr),
-      sctp_data_channel_transport_(
-          sctp_transport ? std::make_unique<webrtc::SctpDataChannelTransport>(
-                               sctp_transport.get())
-                         : nullptr),
       sctp_transport_(sctp_transport
                           ? rtc::make_ref_counted<webrtc::SctpTransport>(
                                 std::move(sctp_transport))

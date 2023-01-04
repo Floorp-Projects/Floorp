@@ -28,9 +28,8 @@ SctpTransport::SctpTransport(
       info_(SctpTransportState::kNew),
       internal_sctp_transport_(std::move(internal)) {
   RTC_DCHECK(internal_sctp_transport_.get());
-  internal_sctp_transport_->SignalAssociationChangeCommunicationUp.connect(
-      this, &SctpTransport::OnAssociationChangeCommunicationUp);
-  // TODO(https://bugs.webrtc.org/10360): Add handlers for transport closing.
+  internal_sctp_transport_->SetOnConnectedCallback(
+      [this]() { OnAssociationChangeCommunicationUp(); });
 
   if (dtls_transport_) {
     UpdateInformation(SctpTransportState::kConnecting);
@@ -68,6 +67,54 @@ void SctpTransport::RegisterObserver(SctpTransportObserverInterface* observer) {
 void SctpTransport::UnregisterObserver() {
   RTC_DCHECK_RUN_ON(owner_thread_);
   observer_ = nullptr;
+}
+
+RTCError SctpTransport::OpenChannel(int channel_id) {
+  RTC_DCHECK_RUN_ON(owner_thread_);
+  RTC_DCHECK(internal_sctp_transport_);
+  internal_sctp_transport_->OpenStream(channel_id);
+  return RTCError::OK();
+}
+
+RTCError SctpTransport::SendData(int channel_id,
+                                 const SendDataParams& params,
+                                 const rtc::CopyOnWriteBuffer& buffer) {
+  RTC_DCHECK_RUN_ON(owner_thread_);
+  RTC_DCHECK(internal_sctp_transport_);
+  cricket::SendDataResult result;
+  internal_sctp_transport_->SendData(channel_id, params, buffer, &result);
+
+  // TODO(mellem):  See about changing the interfaces to not require mapping
+  // SendDataResult to RTCError and back again.
+  switch (result) {
+    case cricket::SendDataResult::SDR_SUCCESS:
+      return RTCError::OK();
+    case cricket::SendDataResult::SDR_BLOCK:
+      // Send buffer is full.
+      return RTCError(RTCErrorType::RESOURCE_EXHAUSTED);
+    case cricket::SendDataResult::SDR_ERROR:
+      return RTCError(RTCErrorType::NETWORK_ERROR);
+  }
+  return RTCError(RTCErrorType::NETWORK_ERROR);
+}
+
+RTCError SctpTransport::CloseChannel(int channel_id) {
+  RTC_DCHECK_RUN_ON(owner_thread_);
+  RTC_DCHECK(internal_sctp_transport_);
+  internal_sctp_transport_->ResetStream(channel_id);
+  return RTCError::OK();
+}
+
+void SctpTransport::SetDataSink(DataChannelSink* sink) {
+  RTC_DCHECK_RUN_ON(owner_thread_);
+  RTC_DCHECK(internal_sctp_transport_);
+  internal_sctp_transport_->SetDataChannelSink(sink);
+}
+
+bool SctpTransport::IsReadyToSend() const {
+  RTC_DCHECK_RUN_ON(owner_thread_);
+  RTC_DCHECK(internal_sctp_transport_);
+  return internal_sctp_transport_->ReadyToSendData();
 }
 
 rtc::scoped_refptr<DtlsTransportInterface> SctpTransport::dtls_transport()
