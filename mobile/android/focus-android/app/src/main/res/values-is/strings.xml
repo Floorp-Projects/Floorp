@@ -416,6 +416,9 @@
     <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
     <string name="external_app_prompt_no_app_title">Finndu forrit sem getur opnað tengil</string>
 
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Hætta í huliðsvafri?</string>
+
     <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
     <string name="download_snackbar_finished">%1$s lokið</string>
 
@@ -454,8 +457,21 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Sleppa</string>
 
+    <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Auktu friðhelgi þína</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Taktu huliðsvafur upp á næsta stig. Lokaðu fyrir auglýsingar og annað efni sem getur fylgst með þér á milli vefsvæða og eykur hleðslutíma á vefsíðum.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Leitin þín, á þinn hátt</string>
+
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Bættu flýtileiðum við upphafsskjáinn þinn</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Gerðu gagnaleynd að vana</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Stilltu %1$s sem sjálfgefinn vafra og fáðu ávinninginn af huliðsvafri þegar þú opnar vefsíður úr öðrum forritum.</string>
 
     <string name="firstrun_close_button">Í lagi, ég skil!</string>
     <string name="firstrun_skip_button">Sleppa</string>
@@ -474,13 +490,17 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NEI</string>
 
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Flýtileið mun opnast þegar aukin rakningarvernd er óvirk</string>
+
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
     * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
     -->
-    <string name="notification_browsing_session_channel_name">Huliðslota</string>
+    <string name="notification_browsing_session_channel_name">Huliðsvafurlota</string>
 
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
     <string name="tabs_tray_action_erase">Eyða vafurferli</string>
@@ -488,6 +508,20 @@
     <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
       item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
     <string name="download_firefox">Sækja Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s er frjáls og opinn hugbúnaður gerður af Mozilla og öðrum þátttakendum.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s er þér aðgengilegt samkvæmt skilmálum <a href="%2$s">Mozilla Public License</a> og annarra notkunarleyfa opins hugbúnaðar.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Þú hefur ekki réttindi á eða leyfi til að nota vörumerki eða hefur leyfi fyrir vörumerkjum frá Mozilla-stofnunni eða öðrum aðilum, innifelur það í sér án allra takmarkana nönf eða fyrirtækismerki Mozilla, Firefox eða %1$s . Meiri upplýsingar fást <a href="%2$s">hér</a>.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Notandanafn</string>
@@ -557,6 +591,12 @@
 
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Fækkun vefkökuborða</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Sjáðu færri borða með því að hafna sjálfkrafa beiðnum um vefkökur, þegar mögulegt er.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Fækka vefkökuborðum enn frekar</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Fækkun vefkökuborða</string>
@@ -675,6 +715,31 @@
     <!-- Title text for biometric prompt pop-up -->
     <string name="biometric_prompt_title">Staðfestu með því að nota fingrafar</string>
 
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Þú getur notað fingrafarið þitt til að halda áfram núverandi forritslotu.</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Opna tengil í nýrri lotu</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Fingrafarstákn</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Fingrafar ekki þekkt. Reyndu aftur.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Fingurinn hreyfðist of hratt. Reyndu aftur.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Sýna leitartillögur?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Til að fá tillögur, þarf %1$s að senda það sem þú skrifar í slóðina til leitarvélarinnar.</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Nei</string>
 
@@ -694,12 +759,17 @@
     <string name="tip_disable_tracking_protection">Vefsvæði hagar sér óvænt?\n
     Prófaðu að slökkva á rakningarvörn</string>
 
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Slökkva á ábendingum á upphafsskjánum</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nýr flipi opnaður</string>
 
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Skipta</string>
 
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Loka á hugsanlega hættuleg og villandi vefsvæði</string>
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Einungis-HTTPS-hamur</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
@@ -722,6 +792,8 @@
     <string name="tab_crash_report_title">Flipi hrundi</string>
     <!-- Headline for the tab crash report screen -->
     <string name="tab_crash_report_headline">Því miður. Við erum í vandræðum með þennan flipa.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Þar sem þetta er huliðsvafri, vistum við aldrei og getum ekki endurheimt þennan flipa.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">Loka flipa</string>
 
@@ -766,6 +838,10 @@
     <!-- Placeholder text for the input field of rename top site-->
     <string name="placeholder_rename_top_site">Nafn flýtileiðar</string>
 
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Vistuðum og deildum myndum &lt;b&gt;verður ekki&lt;/b&gt; eytt þegar þú eyðir ferli %1$s</string>
+
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
     <string name="preferences_theme">Þema</string>
@@ -773,6 +849,14 @@
     <string name="preference_light_theme">Ljóst</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Dökkt</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Stillt af rafhlöðusparnaðarkerfi</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Fylgja þema tækisins</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Vefsvæðið sem þú baðst um styður ekki HTTPS</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
@@ -810,11 +894,11 @@
     <string name="promote_search_widget_dialog_title">Vafurferill hreinsaður 🎉</string>
 
     <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
-    <string name="cfr_for_start_browsing">Byrjaðu einkavafralotuna þína og við lokum á rakningar og annað vont dót á meðan þú vafrar.</string>
+    <string name="cfr_for_start_browsing">Byrjaðu huliðsvafralotuna þína og við lokum á rakningar og annað vont dót á meðan þú vafrar.</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
-    <string name="promote_search_widget_dialog_subtitle">Við látum þig vera í einkavafrinu þínu, en byrjum hraðar næst með %1$s-viðmótshlutanum á upphafsskjánum þínum.</string>
+    <string name="promote_search_widget_dialog_subtitle">Við látum þig vera í huliðsvafrinu þínu, en byrjum hraðar næst með %1$s-viðmótshlutanum á upphafsskjánum þínum.</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;
