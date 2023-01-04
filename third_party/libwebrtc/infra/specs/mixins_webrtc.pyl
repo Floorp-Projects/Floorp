@@ -232,6 +232,13 @@
       ],
     },
   },
+  'win10-any': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Windows-10'
+      }
+    }
+  },
   'xcode_13_main': {
     '$mixin_append': {
       'args': ['--xcode-build-version', '13c100']
