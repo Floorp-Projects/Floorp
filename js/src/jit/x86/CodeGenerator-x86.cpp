@@ -942,7 +942,7 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     masm.storeFloat32(input, Operand(esp, 0));
 
     // Check exponent to avoid fp exceptions.
-    masm.branchDoubleNotInInt64Range(Address(esp, 0), output, &failPopFloat);
+    masm.branchFloat32NotInInt64Range(Address(esp, 0), output, &failPopFloat);
 
     // Load float, perform 32-bit truncation.
     masm.truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), output);
