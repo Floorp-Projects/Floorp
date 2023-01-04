@@ -8464,7 +8464,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8485,7 +8485,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8506,7 +8506,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8527,7 +8527,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8551,7 +8551,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8572,7 +8572,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ],
           "shards": 2
@@ -8594,7 +8594,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ],
           "shards": 6
@@ -8616,7 +8616,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ],
           "shards": 4
@@ -8638,7 +8638,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8659,7 +8659,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8680,7 +8680,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8701,7 +8701,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ],
           "shards": 6
@@ -8723,7 +8723,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8744,7 +8744,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8765,7 +8765,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8786,7 +8786,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8807,7 +8807,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8828,7 +8828,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042",
+              "os": "Windows-10",
               "pool": "WebRTC-baremetal"
             }
           ]
@@ -8850,7 +8850,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ],
           "shards": 4
@@ -8872,7 +8872,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },
@@ -8893,7 +8893,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10"
             }
           ]
         },

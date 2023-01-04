@@ -309,6 +309,13 @@
       }
     }
   },
+  'win10-any': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Windows-10'
+      }
+    }
+  },
   'x86-64': {
     'swarming': {
       'dimensions': {

@@ -184,7 +184,7 @@
       'Win32 Debug (Clang)': {},
       'Win32 Release (Clang)': {
         'os_type': 'win',
-        'mixins': ['win10', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['win10-any', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests_with_video_capture',
         },
@@ -309,7 +309,7 @@
         'os_type':
         'win',
         'mixins':
-        ['win10', 'perf-pool', 'timeout-3h', 'resultdb-gtest-json-format'],
+        ['win10-any', 'perf-pool', 'timeout-3h', 'resultdb-gtest-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_perf_tests',
         },
