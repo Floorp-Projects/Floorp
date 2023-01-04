@@ -155,7 +155,6 @@ function serializeNode(aNode) {
     if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
       data.type = PlacesUtils.TYPE_X_MOZ_PLACE;
       data.uri = aNode.uri;
-      data.concreteId = PlacesUtils.getConcreteItemId(aNode);
       data.concreteGuid = PlacesUtils.getConcreteItemGuid(aNode);
     } else {
       data.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;

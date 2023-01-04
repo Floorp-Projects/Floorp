@@ -1505,7 +1505,6 @@ PlacesTreeView.prototype = {
       : null;
 
     return new PlacesInsertionPoint({
-      parentId: PlacesUtils.getConcreteItemId(container),
       parentGuid: PlacesUtils.getConcreteItemGuid(container),
       index,
       orientation,

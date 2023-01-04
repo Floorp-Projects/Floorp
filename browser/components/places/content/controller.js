@@ -17,9 +17,7 @@ ChromeUtils.defineESModuleGetters(this, {
  * items.
  *
  * @param {object} options an object containing the following properties:
- * @param {number} options.parentId
- *     The identifier of the parent container
- * @param {*} options.parentGuid
+ * @param {string} options.parentGuid
  *     The unique identifier of the parent container
  * @param {number} [options.index]
  *     The index within the container where to insert, defaults to appending
@@ -34,14 +32,12 @@ ChromeUtils.defineESModuleGetters(this, {
  *     When defined index will be calculated based on this node
  */
 function PlacesInsertionPoint({
-  parentId,
   parentGuid,
   index = PlacesUtils.bookmarks.DEFAULT_INDEX,
   orientation = Ci.nsITreeView.DROP_ON,
   tagName = null,
   dropNearNode = null,
 }) {
-  this.itemId = parentId;
   this.guid = parentGuid;
   this._index = index;
   this.orientation = orientation;
