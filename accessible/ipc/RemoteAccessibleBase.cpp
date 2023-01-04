@@ -753,12 +753,17 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
       while (ancestor && ancestor->Role() != roles::FORM && ancestor != mDoc) {
         ancestor = ancestor->RemoteParent();
       }
-      Pivot p = Pivot(ancestor);
-      PivotRadioNameRule rule(name);
-      Accessible* match = p.Next(ancestor, rule);
-      while (match) {
-        rel.AppendTarget(match->AsRemote());
-        match = p.Next(match, rule);
+      if (ancestor) {
+        // Sometimes we end up with an unparented acc here, potentially
+        // because the acc is being moved. See bug 1807639.
+        // Pivot expects to be created with a non-null mRoot.
+        Pivot p = Pivot(ancestor);
+        PivotRadioNameRule rule(name);
+        Accessible* match = p.Next(ancestor, rule);
+        while (match) {
+          rel.AppendTarget(match->AsRemote());
+          match = p.Next(match, rule);
+        }
       }
       return rel;
     }
