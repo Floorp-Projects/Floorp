@@ -92,12 +92,17 @@ class JitterEstimator {
   // a linear Kalman filter.
   FrameDelayDeltaKalmanFilter kalman_filter_;
 
-  static constexpr DataSize kDefaultAvgAndMaxFrameSize = DataSize::Bytes(500);
-  DataSize avg_frame_size_ = kDefaultAvgAndMaxFrameSize;  // Average frame size
+  // TODO(bugs.webrtc.org/14381): Update `avg_frame_size_bytes_` to DataSize
+  // when api/units have sufficient precision.
+  double avg_frame_size_bytes_;  // Average frame size
   double var_frame_size_;  // Frame size variance. Unit is bytes^2.
   // Largest frame size received (descending with a factor kPsi)
-  DataSize max_frame_size_ = kDefaultAvgAndMaxFrameSize;
-  DataSize frame_size_sum_ = DataSize::Zero();
+  // TODO(bugs.webrtc.org/14381): Update `max_frame_size_bytes_` to DataSize
+  // when api/units have sufficient precision.
+  double max_frame_size_bytes_;
+  // TODO(bugs.webrtc.org/14381): Update `frame_size_sum_bytes_` to DataSize
+  // when api/units have sufficient precision.
+  double frame_size_sum_bytes_;
   uint32_t frame_size_count_;
 
   absl::optional<Timestamp> last_update_time_;
