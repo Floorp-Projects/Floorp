@@ -144,12 +144,17 @@ void ModuleScript::Shutdown() {
 }
 
 void ModuleScript::UnlinkModuleRecord() {
-  // Remove the module record's pointer to this object if present and
-  // decrement our reference count. The reference is added by
-  // SetModuleRecord() below.
+  // Remove the module record's pointer to this object if present and decrement
+  // our reference count. The reference is added by SetModuleRecord() below.
+  //
+  // This takes care not to trigger gray unmarking because this takes a lot of
+  // time when we're tearing down the entire page. This is safe because we are
+  // only writing undefined into the module private, so it won't create any
+  // black-gray edges.
   if (mModuleRecord) {
-    MOZ_ASSERT(JS::GetModulePrivate(mModuleRecord).toPrivate() == this);
-    JS::SetModulePrivate(mModuleRecord, JS::UndefinedValue());
+    JSObject* module = mModuleRecord.unbarrieredGet();
+    MOZ_ASSERT(JS::GetModulePrivate(module).toPrivate() == this);
+    JS::ClearModulePrivate(module);
     mModuleRecord = nullptr;
   }
 }

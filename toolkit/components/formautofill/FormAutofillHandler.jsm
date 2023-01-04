@@ -701,15 +701,13 @@ class FormAutofillSection {
 
         this._changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
 
-        if (isCreditCardField) {
-          lazy.AutofillTelemetry.recordFormInteractionEvent(
-            "filled_modified",
-            this,
-            {
-              fieldName: targetFieldDetail.fieldName,
-            }
-          );
-        }
+        lazy.AutofillTelemetry.recordFormInteractionEvent(
+          "filled_modified",
+          this,
+          {
+            fieldName: targetFieldDetail.fieldName,
+          }
+        );
 
         let isAutofilled = false;
         let dimFieldDetails = [];

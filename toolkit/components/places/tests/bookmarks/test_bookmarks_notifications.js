@@ -1060,8 +1060,11 @@ add_task(async function reorder_notification() {
 
 add_task(async function update_notitle_notification() {
   let toolbarBmURI = Services.io.newURI("https://example.com");
+  let toolbarItemId = await PlacesUtils.promiseItemId(
+    PlacesUtils.bookmarks.toolbarGuid
+  );
   let toolbarBmId = PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.toolbarFolderId,
+    toolbarItemId,
     toolbarBmURI,
     0,
     "Bookmark"

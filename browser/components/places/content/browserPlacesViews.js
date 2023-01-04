@@ -229,7 +229,6 @@ class PlacesViewBase {
     }
 
     return new PlacesInsertionPoint({
-      parentId: PlacesUtils.getConcreteItemId(container),
       parentGuid: PlacesUtils.getConcreteItemGuid(container),
       index,
       orientation,
@@ -1555,7 +1554,6 @@ class PlacesToolbar extends PlacesViewBase {
         ) {
           // Drop before this folder.
           dropPoint.ip = new PlacesInsertionPoint({
-            parentId: PlacesUtils.getConcreteItemId(this._resultNode),
             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
             index: eltIndex,
             orientation: Ci.nsITreeView.DROP_BEFORE,
@@ -1571,7 +1569,6 @@ class PlacesToolbar extends PlacesViewBase {
             ? elt._placesNode.title
             : null;
           dropPoint.ip = new PlacesInsertionPoint({
-            parentId: PlacesUtils.getConcreteItemId(elt._placesNode),
             parentGuid: PlacesUtils.getConcreteItemGuid(elt._placesNode),
             tagName,
           });
@@ -1583,7 +1580,6 @@ class PlacesToolbar extends PlacesViewBase {
             eltIndex == this._rootElt.children.length - 1 ? -1 : eltIndex + 1;
 
           dropPoint.ip = new PlacesInsertionPoint({
-            parentId: PlacesUtils.getConcreteItemId(this._resultNode),
             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
             index: beforeIndex,
             orientation: Ci.nsITreeView.DROP_BEFORE,
@@ -1601,7 +1597,6 @@ class PlacesToolbar extends PlacesViewBase {
         ) {
           // Drop before this bookmark.
           dropPoint.ip = new PlacesInsertionPoint({
-            parentId: PlacesUtils.getConcreteItemId(this._resultNode),
             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
             index: eltIndex,
             orientation: Ci.nsITreeView.DROP_BEFORE,
@@ -1612,7 +1607,6 @@ class PlacesToolbar extends PlacesViewBase {
           let beforeIndex =
             eltIndex == this._rootElt.children.length - 1 ? -1 : eltIndex + 1;
           dropPoint.ip = new PlacesInsertionPoint({
-            parentId: PlacesUtils.getConcreteItemId(this._resultNode),
             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
             index: beforeIndex,
             orientation: Ci.nsITreeView.DROP_BEFORE,
@@ -1624,7 +1618,6 @@ class PlacesToolbar extends PlacesViewBase {
       // We are most likely dragging on the empty area of the
       // toolbar, we should drop after the last node.
       dropPoint.ip = new PlacesInsertionPoint({
-        parentId: PlacesUtils.getConcreteItemId(this._resultNode),
         parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
         orientation: Ci.nsITreeView.DROP_BEFORE,
       });

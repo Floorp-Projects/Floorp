@@ -107,7 +107,7 @@ add_task(
         "c",
       ],
       nestedObj: {
-        a: [1, 2],
+        a: [1, 2, "long-".repeat(10000)],
         b: 3,
       },
     };
@@ -163,11 +163,120 @@ add_task(
     );
 
     await selectTreeItem(["extensionStorage", host]);
+    await waitForStorageData("str", "hi");
+
+    info("Verify that values are displayed as expected in the sidebar");
+    const expectedRenderedData = {
+      arr: {
+        sidebarItems: [
+          { name: "arr", value: "Array" },
+          { name: "arr.0", value: "1" },
+          { name: "arr.1", value: "2" },
+        ],
+        parsed: true,
+      },
+      arrBuffer: {
+        sidebarItems: [{ name: "arrBuffer", value: "Object" }],
+        parsed: true,
+      },
+      arrWithMap: {
+        sidebarItems: [
+          { name: "arrWithMap", value: "Array" },
+          { name: "arrWithMap.0", value: "1" },
+          { name: "arrWithMap.1", value: "Object" },
+        ],
+        parsed: true,
+      },
+      bigint: { sidebarItems: [{ name: "bigint", value: "1n" }] },
+      blob: { sidebarItems: [{ name: "blob", value: "Object" }], parsed: true },
+      bool: {
+        sidebarItems: [{ name: "bool", value: "true" }],
+      },
+      date: {
+        sidebarItems: [{ name: "date", value: "1970-01-01T00:00:00.000Z" }],
+      },
+      deepNestedArr: {
+        sidebarItems: [
+          { name: "deepNestedArr", value: "Array" },
+          { name: "deepNestedArr.0", value: "Array" },
+          { name: "deepNestedArr.1", value: "4" },
+          { name: "deepNestedArr.length", value: "2" },
+        ],
+        parsed: true,
+      },
+      deepNestedObj: {
+        sidebarItems: [
+          { name: "deepNestedObj", value: "Object" },
+          { name: "deepNestedObj.a", value: "Object" },
+        ],
+        parsed: true,
+      },
+      map: { sidebarItems: [{ name: "map", value: "Object" }], parsed: true },
+      nestedArr: {
+        sidebarItems: [
+          { name: "nestedArr", value: "Array" },
+          { name: "nestedArr.0", value: "Object" },
+          { name: "nestedArr.0.a", value: "b" },
+          { name: "nestedArr.1", value: "c" },
+        ],
+        parsed: true,
+      },
+      nestedObj: {
+        sidebarItems: [
+          { name: "nestedObj", value: "Object" },
+          { name: "nestedObj.a", value: "Array" },
+          { name: "nestedObj.a.0", value: "1" },
+          { name: "nestedObj.a.1", value: "2" },
+          { name: "nestedObj.a.2", value: "long-".repeat(10000) },
+          { name: "nestedObj.b", value: "3" },
+        ],
+        parsed: true,
+      },
+      null: {
+        sidebarItems: [{ name: "null", value: "null" }],
+      },
+      num: {
+        sidebarItems: [{ name: "num", value: itemsSupported.num }],
+      },
+      obj: {
+        sidebarItems: [
+          { name: "obj", value: "Object" },
+          { name: "obj.a", value: "123" },
+        ],
+        parsed: true,
+      },
+      objWithArrayBuffer: {
+        sidebarItems: [
+          { name: "objWithArrayBuffer", value: "Object" },
+          { name: "objWithArrayBuffer.a", value: "Object" },
+        ],
+        parsed: true,
+      },
+      regexp: {
+        sidebarItems: [{ name: "regexp", value: "Object" }],
+        parsed: true,
+      },
+      set: { sidebarItems: [{ name: "set", value: "Object" }], parsed: true },
+      str: {
+        sidebarItems: [{ name: "str", value: itemsSupported.str }],
+      },
+
+      undef: { sidebarItems: [{ name: "undef", value: "undefined" }] },
+    };
+
+    for (const [id, { sidebarItems, parsed }] of Object.entries(
+      expectedRenderedData
+    )) {
+      info(`Verify "${id}" entry`);
+      await selectTableItem(id);
+      await findVariableViewProperties(sidebarItems, parsed);
+    }
 
     info("Verify that value types supported by the storage actor are editable");
     let validate = true;
     const newValue = "anotherValue";
     const supportedIds = Object.keys(itemsSupported);
+
     for (const id of supportedIds) {
       startCellEdit(id, "value", newValue);
       await editCell(id, "value", newValue, validate);

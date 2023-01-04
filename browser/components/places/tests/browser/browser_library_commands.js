@@ -116,8 +116,8 @@ add_task(async function test_query_on_toolbar() {
   PO.selectLeftPaneBuiltIn("BookmarksToolbar");
   Assert.notEqual(PO._places.selectedNode, null, "We have a valid selection");
   Assert.equal(
-    PlacesUtils.getConcreteItemId(PO._places.selectedNode),
-    PlacesUtils.toolbarFolderId,
+    PlacesUtils.getConcreteItemGuid(PO._places.selectedNode),
+    PlacesUtils.bookmarks.toolbarGuid,
     "We have correctly selected bookmarks toolbar node."
   );
 
@@ -217,8 +217,8 @@ add_task(async function test_search_contents() {
   PO.selectLeftPaneBuiltIn("BookmarksToolbar");
   Assert.notEqual(PO._places.selectedNode, null, "We have a valid selection");
   Assert.equal(
-    PlacesUtils.getConcreteItemId(PO._places.selectedNode),
-    PlacesUtils.toolbarFolderId,
+    PlacesUtils.getConcreteItemGuid(PO._places.selectedNode),
+    PlacesUtils.bookmarks.toolbarGuid,
     "We have correctly selected bookmarks toolbar node."
   );
 

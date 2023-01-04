@@ -187,6 +187,13 @@ extern JS_PUBLIC_API JSObject* CompileModule(
  */
 extern JS_PUBLIC_API void SetModulePrivate(JSObject* module,
                                            const Value& value);
+/**
+ * Clear the private value associated with a source text module record.
+ *
+ * This is used during unlinking and can be called on a gray module, skipping
+ * the usual checks.
+ */
+extern JS_PUBLIC_API void ClearModulePrivate(JSObject* module);
 
 /**
  * Get the private value associated with a source text module record.

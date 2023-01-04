@@ -3718,14 +3718,6 @@
   value: false
   mirror: always
 
-# The Sanitizer implementation is currently being rewritten and
-# is known to be incomplete. Fuzzing and testing and this point
-# would be premature.
-- name: dom.security.sanitizer.rewrite_no_bounty
-  type: bool
-  value: false
-  mirror: always
-
 # Logs elements and attributes removed by the Sanitizer API to the console.
 - name: dom.security.sanitizer.logging
   type: bool
@@ -5291,6 +5283,12 @@
 - name: full-screen-api.pointer-lock.enabled
   type: bool
   value: true
+  mirror: always
+
+# whether to prevent the top level widget from going fullscreen
+- name: full-screen-api.ignore-widgets
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

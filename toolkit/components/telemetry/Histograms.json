@@ -12238,17 +12238,6 @@
     "bug_numbers": [1435713],
     "description": "Result of the content signature verification keyed by application (certificate fingerprint). 0=valid, 1=invalid, 2=noCertChain, 3=createContextFailedWithOtherError, 4=expiredCert, 5=certNotValidYet, 6=buildCertChainFailed, 7=eeCertForWrongHost, 8=extractKeyError, 9=vfyContextError"
   },
-  "COOKIE_TIME_MOVING_MS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["vgosu@mozilla.com", "necko@mozilla.com"],
-    "bug_numbers": [1454100],
-    "expires_in_version": "64",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 20,
-    "description": "Time spent moving the cookies from one memory location to another (ms)"
-  },
   "NTLM_MODULE_USED_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

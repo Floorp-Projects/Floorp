@@ -1627,10 +1627,6 @@ pref("network.proxy.no_proxies_on",         "");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
 
-// The interval in seconds to move the cookies in the child process.
-// Set to 0 to disable moving the cookies.
-pref("network.cookie.move.interval_sec",    0);
-
 // This pref contains the list of hostnames (such as
 // "mozilla.org,example.net"). For these hosts, firefox will treat
 // SameSite=None if nothing else is specified, even if
@@ -3402,8 +3398,6 @@ pref("alerts.showFavicons", false);
   // Whether to use macOS native full screen for Fullscreen API
   pref("full-screen-api.macos-native-full-screen", false);
 #endif
-// whether to prevent the top level widget from going fullscreen
-pref("full-screen-api.ignore-widgets", false);
 // transition duration of fade-to-black and fade-from-black, unit: ms
 #ifndef MOZ_WIDGET_GTK
   pref("full-screen-api.transition-duration.enter", "200 200");

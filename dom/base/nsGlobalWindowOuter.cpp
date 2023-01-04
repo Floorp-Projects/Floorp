@@ -111,6 +111,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -4367,7 +4368,7 @@ nsresult nsGlobalWindowOuter::ProcessWidgetFullscreenRequest(
   //   content to fill the entire client area of the emulator window.
   // - in FxR Desktop, we don't want fullscreen to take over the monitor, but
   //   instead we want fullscreen to fill the FxR window in the the headset.
-  if (!Preferences::GetBool("full-screen-api.ignore-widgets", false) &&
+  if (!StaticPrefs::full_screen_api_ignore_widgets() &&
       !mForceFullScreenInWidget) {
     if (MakeWidgetFullscreen(this, aReason, aFullscreen)) {
       // The rest of code for switching fullscreen is in nsGlobalWindowOuter::
@@ -4535,15 +4536,22 @@ void nsGlobalWindowOuter::FullscreenWillChange(bool aIsFullscreen) {
     // If there is no in-process fullscreen request, the fullscreen state change
     // is triggered from the OS directly, e.g. user use built-in window button
     // to enter/exit fullscreen on macOS.
-    MOZ_ASSERT(mFullscreen.isSome() != aIsFullscreen,
-               "FullscreenWillChange should not be notified if the fullscreen "
-               "state isn't changed");
     mInProcessFullscreenRequest.emplace(FullscreenReason::ForFullscreenMode,
                                         aIsFullscreen);
-    if (aIsFullscreen) {
-      mFullscreen.emplace(FullscreenReason::ForFullscreenMode);
+    if (mFullscreen.isSome() != aIsFullscreen) {
+      if (aIsFullscreen) {
+        mFullscreen.emplace(FullscreenReason::ForFullscreenMode);
+      } else {
+        mFullscreen.reset();
+      }
     } else {
-      mFullscreen.reset();
+      // It is possible that FullscreenWillChange is notified with current
+      // fullscreen state, e.g. browser goes into fullscreen when widget
+      // fullscreen is prevented, and then user triggers fullscreen from the OS
+      // directly again.
+      MOZ_ASSERT(StaticPrefs::full_screen_api_ignore_widgets() ||
+                     mForceFullScreenInWidget,
+                 "This should only happen when widget fullscreen is prevented");
     }
   }
   if (aIsFullscreen) {

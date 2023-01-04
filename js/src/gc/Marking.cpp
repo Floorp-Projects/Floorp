@@ -107,37 +107,6 @@ using mozilla::PodCopy;
 
 /*** Tracing Invariants *****************************************************/
 
-#if defined(DEBUG)
-template <typename T>
-static inline bool IsThingPoisoned(T* thing) {
-  const uint8_t poisonBytes[] = {
-      JS_FRESH_NURSERY_PATTERN,      JS_SWEPT_NURSERY_PATTERN,
-      JS_ALLOCATED_NURSERY_PATTERN,  JS_FRESH_TENURED_PATTERN,
-      JS_MOVED_TENURED_PATTERN,      JS_SWEPT_TENURED_PATTERN,
-      JS_ALLOCATED_TENURED_PATTERN,  JS_FREED_HEAP_PTR_PATTERN,
-      JS_FREED_CHUNK_PATTERN,        JS_FREED_ARENA_PATTERN,
-      JS_SWEPT_TI_PATTERN,           JS_SWEPT_CODE_PATTERN,
-      JS_RESET_VALUE_PATTERN,        JS_POISONED_JSSCRIPT_DATA_PATTERN,
-      JS_OOB_PARSE_NODE_PATTERN,     JS_LIFO_UNDEFINED_PATTERN,
-      JS_LIFO_UNINITIALIZED_PATTERN,
-  };
-  uint32_t* p =
-      reinterpret_cast<uint32_t*>(reinterpret_cast<FreeSpan*>(thing) + 1);
-  // Note: all free patterns are odd to make the common, not-poisoned case a
-  // single test.
-  if ((*p & 1) == 0) {
-    return false;
-  }
-  for (const uint8_t pb : poisonBytes) {
-    const uint32_t pw = pb | (pb << 8) | (pb << 16) | (pb << 24);
-    if (*p == pw) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
-
 template <typename T>
 static inline bool IsOwnedByOtherRuntime(JSRuntime* rt, T thing) {
   bool other = thing->runtimeFromAnyThread() != rt;
@@ -146,6 +115,13 @@ static inline bool IsOwnedByOtherRuntime(JSRuntime* rt, T thing) {
 }
 
 #ifdef DEBUG
+
+static inline bool IsInFreeList(TenuredCell* cell) {
+  Arena* arena = cell->arena();
+  uintptr_t addr = reinterpret_cast<uintptr_t>(cell);
+  MOZ_ASSERT(Arena::isAligned(addr, arena->getThingSize()));
+  return arena->inFreeList(addr);
+}
 
 template <typename T>
 void js::CheckTracedThing(JSTracer* trc, T* thing) {
@@ -199,23 +175,14 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
              thing->getTraceKind());
 
   /*
-   * Try to assert that the thing is allocated.
+   * Check that we only mark allocated cells.
    *
-   * We would like to assert that the thing is not in the free list, but this
-   * check is very slow. Instead we check whether the thing has been poisoned:
-   * if it has not then we assume it is allocated, but if it has then it is
-   * either free or uninitialized in which case we check the free list.
-   *
-   * Further complications are that background sweeping may be running and
-   * concurrently modifiying the free list and that tracing is done off
-   * thread during compacting GC and reading the contents of the thing by
-   * IsThingPoisoned would be racy in this case.
+   * This check is restricted to marking for two reasons: Firstly, if background
+   * sweeping is running and concurrently modifying the free list then it is not
+   * safe. Secondly, it was thought to be slow so this is a compromise so as to
+   * not affect test times too much.
    */
-  MOZ_ASSERT_IF(rt->heapState() != JS::HeapState::Idle &&
-                    !zone->isGCSweeping() && !zone->isGCFinished() &&
-                    !zone->isGCCompacting(),
-                !IsThingPoisoned(thing) ||
-                    !InFreeList(thing->asTenured().arena(), thing));
+  MOZ_ASSERT_IF(zone->isGCMarking(), !IsInFreeList(&thing->asTenured()));
 }
 
 template <typename T>

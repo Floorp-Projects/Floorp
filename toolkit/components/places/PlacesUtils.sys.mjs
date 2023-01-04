@@ -155,7 +155,6 @@ function serializeNode(aNode) {
     if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
       data.type = PlacesUtils.TYPE_X_MOZ_PLACE;
       data.uri = aNode.uri;
-      data.concreteId = PlacesUtils.getConcreteItemId(aNode);
       data.concreteGuid = PlacesUtils.getConcreteItemGuid(aNode);
     } else {
       data.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
@@ -941,16 +940,6 @@ export var PlacesUtils = {
   },
 
   /**
-   * Gets the concrete item-id for the given node. Generally, this is just
-   * node.itemId, but for folder-shortcuts that's node.folderItemId.
-   */
-  getConcreteItemId: function PU_getConcreteItemId(aNode) {
-    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT
-      ? asQuery(aNode).folderItemId
-      : aNode.itemId;
-  },
-
-  /**
    * Gets the concrete item-guid for the given node. For everything but folder
    * shortcuts, this is just node.bookmarkGuid.  For folder shortcuts, this is
    * node.targetFolderGuid (see nsINavHistoryService.idl for the semantics).
@@ -1271,21 +1260,6 @@ export var PlacesUtils = {
   // Identifier getters for special folders.
   // You should use these everywhere PlacesUtils is available to avoid XPCOM
   // traversal just to get roots' ids.
-  get placesRootId() {
-    delete this.placesRootId;
-    return (this.placesRootId = this.bookmarks.placesRoot);
-  },
-
-  get bookmarksMenuFolderId() {
-    delete this.bookmarksMenuFolderId;
-    return (this.bookmarksMenuFolderId = this.bookmarks.bookmarksMenuFolder);
-  },
-
-  get toolbarFolderId() {
-    delete this.toolbarFolderId;
-    return (this.toolbarFolderId = this.bookmarks.toolbarFolder);
-  },
-
   get tagsFolderId() {
     delete this.tagsFolderId;
     return (this.tagsFolderId = this.bookmarks.tagsFolder);

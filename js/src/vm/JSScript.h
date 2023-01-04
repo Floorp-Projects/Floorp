@@ -1110,6 +1110,7 @@ class ScriptSourceObject : public NativeObject {
   }
 
   void setPrivate(JSRuntime* rt, const Value& value);
+  void clearPrivate(JSRuntime* rt);
 
   void setIntroductionScript(const Value& introductionScript) {
     setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introductionScript);

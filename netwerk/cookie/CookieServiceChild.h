@@ -10,8 +10,6 @@
 #include "mozilla/net/PCookieServiceChild.h"
 #include "nsClassHashtable.h"
 #include "nsICookieService.h"
-#include "nsIObserver.h"
-#include "nsIPrefBranch.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsWeakReference.h"
 #include "nsThreadUtils.h"
@@ -27,18 +25,12 @@ class CookieStruct;
 
 class CookieServiceChild final : public PCookieServiceChild,
                                  public nsICookieService,
-                                 public nsIObserver,
-                                 public nsITimerCallback,
-                                 public nsINamed,
                                  public nsSupportsWeakReference {
   friend class PCookieServiceChild;
 
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIESERVICE
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
 
   typedef nsTArray<RefPtr<Cookie>> CookiesList;
   typedef nsClassHashtable<CookieKey, CookiesList> CookiesMap;
@@ -51,14 +43,11 @@ class CookieServiceChild final : public PCookieServiceChild,
 
  private:
   ~CookieServiceChild();
-  void MoveCookies();
 
   void RecordDocumentCookie(Cookie* aCookie, const OriginAttributes& aAttrs);
 
   uint32_t CountCookiesFromHashTable(const nsACString& aBaseDomain,
                                      const OriginAttributes& aOriginAttrs);
-
-  void PrefChanged(nsIPrefBranch* aPrefBranch);
 
   static bool RequireThirdPartyCheck(nsILoadInfo* aLoadInfo);
 
@@ -78,7 +67,6 @@ class CookieServiceChild final : public PCookieServiceChild,
                                         const OriginAttributes& aAttrs);
 
   CookiesMap mCookiesMap;
-  nsCOMPtr<nsITimer> mCookieTimer;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
 };

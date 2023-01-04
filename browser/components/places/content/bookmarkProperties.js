@@ -158,10 +158,9 @@ var BookmarkPropertiesPanel = {
       if ("defaultInsertionPoint" in dialogInfo) {
         this._defaultInsertionPoint = dialogInfo.defaultInsertionPoint;
       } else {
-        let guid = await PlacesUIUtils.defaultParentGuid;
+        let parentGuid = await PlacesUIUtils.defaultParentGuid;
         this._defaultInsertionPoint = new PlacesInsertionPoint({
-          parentId: await PlacesUtils.promiseItemId(guid),
-          parentGuid: guid,
+          parentGuid,
         });
       }
 
@@ -462,18 +461,13 @@ var BookmarkPropertiesPanel = {
    */
   async _getInsertionPointDetails() {
     return [
-      this._defaultInsertionPoint.itemId,
       await this._defaultInsertionPoint.getIndex(),
       this._defaultInsertionPoint.guid,
     ];
   },
 
   async _promiseNewItem() {
-    let [
-      containerId,
-      index,
-      parentGuid,
-    ] = await this._getInsertionPointDetails();
+    let [index, parentGuid] = await this._getInsertionPointDetails();
 
     let itemGuid;
     let info = { parentGuid, index, title: this._title };
@@ -510,6 +504,9 @@ var BookmarkPropertiesPanel = {
     const itemId = gEditItemOverlay.delayedApplyEnabled
       ? undefined
       : await PlacesUtils.promiseItemId(itemGuid);
+    const parentItemId = gEditItemOverlay.delayedApplyEnabled
+      ? undefined
+      : await PlacesUtils.promiseItemId(parentGuid);
     return Object.freeze({
       itemId,
       bookmarkGuid: itemGuid,
@@ -520,7 +517,7 @@ var BookmarkPropertiesPanel = {
           ? Ci.nsINavHistoryResultNode.RESULT_TYPE_URI
           : Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
       parent: {
-        itemId: containerId,
+        itemId: parentItemId,
         bookmarkGuid: parentGuid,
         type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
       },
