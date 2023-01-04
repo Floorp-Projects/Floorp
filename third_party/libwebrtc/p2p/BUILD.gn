@@ -117,7 +117,6 @@ rtc_library("rtc_p2p") {
     "../rtc_base:checks",
     "../rtc_base:event_tracer",
     "../rtc_base:ip_address",
-    "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:net_helpers",
