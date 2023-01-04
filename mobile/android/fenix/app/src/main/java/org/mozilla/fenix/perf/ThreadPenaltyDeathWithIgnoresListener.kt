@@ -9,7 +9,7 @@ import android.os.StrictMode
 import android.os.strictmode.Violation
 import androidx.annotation.RequiresApi
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.utils.ManufacturerCodes
+import mozilla.components.support.utils.ManufacturerCodes
 
 private const val FCQN_EDM_STORAGE_PROVIDER_BASE = "com.android.server.enterprise.storage.EdmStorageProviderBase"
 private const val INSTRUMENTED_HOOKS_CLASS = "com.android.tools.deploy.instrument.InstrumentationHooks"

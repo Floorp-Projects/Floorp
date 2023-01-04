@@ -13,11 +13,11 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mockk.verify
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.ManufacturerCodes
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.helpers.StackTraces
-import org.mozilla.fenix.utils.ManufacturerCodes
 
 class ThreadPenaltyDeathWithIgnoresListenerTest {
 
