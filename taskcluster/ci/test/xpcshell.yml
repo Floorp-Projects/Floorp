@@ -48,26 +48,22 @@ xpcshell:
         by-variant:
             conditioned_profile:
                 by-test-platform:
-                    linux1804-64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
+                    (linux1804-64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     default: []
             socketprocess_networking+no-fission:
                 by-test-platform:
-                    linux1804-64(-qr)?/debug: ['autoland', 'mozilla-central']
+                    linux1804-64.*: ['trunk']
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    macosx.*-64(-shippable|-devedition)?(-qr)?/.*: ['autoland', 'mozilla-central']
-                    linux1804-64(-qr)?/debug: ['autoland', 'mozilla-central']
-                    windows.*(-shippable|-devedition.*-qr)?/.*: ['autoland', 'mozilla-central']
-                    windows10-64-2004-asan-qr/opt: []  # No XPCShell on ASAN yet
+                    (linux1804-64|macosx).*: ['trunk']  # All Linux & Mac variants
+                    ^(?!.*asan).*windows.*: ['trunk']   # All Windows except ASAN
                     default: []
             no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64.*: ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -76,14 +72,11 @@ xpcshell:
                     default: built-projects
     chunks:
         by-test-platform:
+            .*-asan-qr/opt: 4
             .*-ccov.*/.*: 6
-            windows10-64-2004-ccov-qr/opt: 6
-            android-em-7.*: 2
-            macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: 2
-            linux1804-64(-qr)?/debug: 6
             .*-tsan-qr/opt: 8
-            windows.*(-shippable|-devedition|-asan|.*-qr)?/.*: 4
-            default: 5
+            (android-em-7.*|macosx.*|linux1804-64.*/opt): 2
+            default: 4
     max-run-time:
         by-test-platform:
             .*64-ccov(-qr)?/.*: 7200
