@@ -29,6 +29,7 @@
 #endif
 #include "absl/base/attributes.h"
 #include "absl/functional/any_invocable.h"
+#include "absl/memory/memory.h"
 #include "api/function_view.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
@@ -298,11 +299,11 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   }
 
   // Internally posts a message which causes the doomed object to be deleted
+  // TODO(bugs.webrtc.org/8324): Delete when unused by dependencies.
   template <class T>
   void Dispose(T* doomed) {
-    if (doomed) {
-      Post(RTC_FROM_HERE, nullptr, MQID_DISPOSE, new DisposeData<T>(doomed));
-    }
+    RTC_DCHECK(doomed);
+    PostTask([dommed = absl::WrapUnique(doomed)] {});
   }
 
   bool IsCurrent() const;

@@ -72,6 +72,8 @@ class ScopedAutoReleasePool {
 namespace rtc {
 namespace {
 
+using ::webrtc::TimeDelta;
+
 struct AnyInvocableMessage final : public MessageData {
   explicit AnyInvocableMessage(absl::AnyInvocable<void() &&> task)
       : task(std::move(task)) {}
@@ -216,19 +218,6 @@ void ThreadManager::ProcessAllMessageQueuesInternal() {
   // that came before it were also dispatched.
   std::atomic<int> queues_not_done(0);
 
-  // This class is used so that whether the posted message is processed, or the
-  // message queue is simply cleared, queues_not_done gets decremented.
-  class ScopedIncrement : public MessageData {
-   public:
-    ScopedIncrement(std::atomic<int>* value) : value_(value) {
-      value_->fetch_add(1);
-    }
-    ~ScopedIncrement() override { value_->fetch_sub(1); }
-
-   private:
-    std::atomic<int>* value_;
-  };
-
   {
     MarkProcessingCritScope cs(&crit_, &processing_);
     for (Thread* queue : message_queues_) {
@@ -238,8 +227,13 @@ void ThreadManager::ProcessAllMessageQueuesInternal() {
         // or ignored.
         continue;
       }
-      queue->PostDelayed(RTC_FROM_HERE, 0, nullptr, MQID_DISPOSE,
-                         new ScopedIncrement(&queues_not_done));
+      queues_not_done.fetch_add(1);
+      // Whether the task is processed, or the thread is simply cleared,
+      // queues_not_done gets decremented.
+      absl::Cleanup sub = [&queues_not_done] { queues_not_done.fetch_sub(1); };
+      // Post delayed task instead of regular task to wait for all delayed tasks
+      // that are ready for processing.
+      queue->PostDelayedTask([sub = std::move(sub)] {}, TimeDelta::Zero());
     }
   }
 
@@ -459,44 +453,27 @@ bool Thread::Get(Message* pmsg, int cmsWait, bool process_io) {
   while (true) {
     // Check for posted events
     int64_t cmsDelayNext = kForever;
-    bool first_pass = true;
-    while (true) {
+    {
       // All queue operations need to be locked, but nothing else in this loop
-      // (specifically handling disposed message) can happen inside the crit.
-      // Otherwise, disposed MessageHandlers will cause deadlocks.
-      {
-        CritScope cs(&crit_);
-        // On the first pass, check for delayed messages that have been
-        // triggered and calculate the next trigger time.
-        if (first_pass) {
-          first_pass = false;
-          while (!delayed_messages_.empty()) {
-            if (msCurrent < delayed_messages_.top().run_time_ms_) {
-              cmsDelayNext =
-                  TimeDiff(delayed_messages_.top().run_time_ms_, msCurrent);
-              break;
-            }
-            messages_.push_back(delayed_messages_.top().msg_);
-            delayed_messages_.pop();
-          }
-        }
-        // Pull a message off the message queue, if available.
-        if (messages_.empty()) {
+      // can happen inside the crit.
+      CritScope cs(&crit_);
+      // Check for delayed messages that have been triggered and calculate the
+      // next trigger time.
+      while (!delayed_messages_.empty()) {
+        if (msCurrent < delayed_messages_.top().run_time_ms_) {
+          cmsDelayNext =
+              TimeDiff(delayed_messages_.top().run_time_ms_, msCurrent);
           break;
-        } else {
-          *pmsg = messages_.front();
-          messages_.pop_front();
         }
-      }  // crit_ is released here.
-
-      // If this was a dispose message, delete it and skip it.
-      if (MQID_DISPOSE == pmsg->message_id) {
-        RTC_DCHECK(nullptr == pmsg->phandler);
-        delete pmsg->pdata;
-        *pmsg = Message();
-        continue;
+        messages_.push_back(delayed_messages_.top().msg_);
+        delayed_messages_.pop();
       }
-      return true;
+      // Pull a message off the message queue, if available.
+      if (!messages_.empty()) {
+        *pmsg = messages_.front();
+        messages_.pop_front();
+        return true;
+      }
     }
 
     if (IsQuitting())
