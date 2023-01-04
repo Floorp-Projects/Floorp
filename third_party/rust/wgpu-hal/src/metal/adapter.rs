@@ -166,13 +166,9 @@ impl crate::Adapter<super::Api> for super::Adapter {
                 };
                 flags
             }
-            /*Tf::Stencil8 => {
-                let mut flags = all_caps
-                    | Tfc::DEPTH_STENCIL_ATTACHMENT
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_apple3x_if;
-                flags
-            }*/
+            Tf::Stencil8 => {
+                all_caps | Tfc::DEPTH_STENCIL_ATTACHMENT | msaa_count | msaa_resolve_apple3x_if
+            }
             Tf::Depth16Unorm => {
                 let mut flags =
                     Tfc::DEPTH_STENCIL_ATTACHMENT | msaa_count | msaa_resolve_apple3x_if;
@@ -318,6 +314,12 @@ impl crate::Adapter<super::Api> for super::Adapter {
             },
             usage: crate::TextureUses::COLOR_TARGET | crate::TextureUses::COPY_DST, //TODO: expose more
         })
+    }
+
+    unsafe fn get_presentation_timestamp(&self) -> wgt::PresentationTimestamp {
+        let timestamp = self.shared.presentation_timer.get_timestamp_ns();
+
+        wgt::PresentationTimestamp(timestamp)
     }
 }
 
@@ -903,7 +905,7 @@ impl super::PrivateCapabilities {
             Tf::Rgba32Uint => RGBA32Uint,
             Tf::Rgba32Sint => RGBA32Sint,
             Tf::Rgba32Float => RGBA32Float,
-            //Tf::Stencil8 => R8Unorm,
+            Tf::Stencil8 => Stencil8,
             Tf::Depth16Unorm => Depth16Unorm,
             Tf::Depth32Float => Depth32Float,
             Tf::Depth32FloatStencil8 => Depth32Float_Stencil8,
