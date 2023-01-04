@@ -70,6 +70,27 @@ rtc::scoped_refptr<I420BufferInterface> ObjCFrameBuffer::ToI420() {
   return rtc::make_ref_counted<ObjCI420FrameBuffer>([frame_buffer_ toI420]);
 }
 
+rtc::scoped_refptr<VideoFrameBuffer> ObjCFrameBuffer::CropAndScale(int offset_x,
+                                                                   int offset_y,
+                                                                   int crop_width,
+                                                                   int crop_height,
+                                                                   int scaled_width,
+                                                                   int scaled_height) {
+  if ([frame_buffer_ respondsToSelector:@selector
+                     (cropAndScaleWith:offsetY:cropWidth:cropHeight:scaleWidth:scaleHeight:)]) {
+    return rtc::make_ref_counted<ObjCFrameBuffer>([frame_buffer_ cropAndScaleWith:offset_x
+                                                                          offsetY:offset_y
+                                                                        cropWidth:crop_width
+                                                                       cropHeight:crop_height
+                                                                       scaleWidth:scaled_width
+                                                                      scaleHeight:scaled_height]);
+  }
+
+  // Use the default implementation.
+  return VideoFrameBuffer::CropAndScale(
+      offset_x, offset_y, crop_width, crop_height, scaled_width, scaled_height);
+}
+
 id<RTC_OBJC_TYPE(RTCVideoFrameBuffer)> ObjCFrameBuffer::wrapped_frame_buffer() const {
   return frame_buffer_;
 }
