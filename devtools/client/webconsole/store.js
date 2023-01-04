@@ -109,7 +109,7 @@ function configureStore(webConsoleUI, options = {}) {
       ...options.thunkArgs,
     }),
     historyPersistence.bind(null, webConsoleUI),
-    eventTelemetry.bind(null, options.telemetry, sessionId)
+    eventTelemetry.bind(null, options.telemetry)
   );
 
   return createStore(

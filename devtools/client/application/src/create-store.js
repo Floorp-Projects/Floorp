@@ -30,7 +30,7 @@ const {
   UiState,
 } = require("resource://devtools/client/application/src/reducers/ui-state.js");
 
-function configureStore(telemetry, sessionId) {
+function configureStore(telemetry) {
   // Prepare initial state.
   const initialState = {
     manifest: new ManifestState(),
@@ -41,7 +41,7 @@ function configureStore(telemetry, sessionId) {
 
   const middleware = applyMiddleware(
     thunk(),
-    eventTelemetryMiddleware(telemetry, sessionId)
+    eventTelemetryMiddleware(telemetry)
   );
 
   return createStore(rootReducer, initialState, middleware);

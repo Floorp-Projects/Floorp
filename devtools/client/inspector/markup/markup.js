@@ -2044,7 +2044,6 @@ MarkupView.prototype = {
         this.telemetry.recordEvent("edit_html", "inspector", null, {
           made_changes: commit,
           time_open: end - start,
-          session_id: this.toolbox.sessionId,
         });
       });
 

@@ -1027,9 +1027,7 @@ TextPropertyEditor.prototype = {
   _onEnableChanged(event) {
     this.prop.setEnabled(this.enable.checked);
     event.stopPropagation();
-    this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      session_id: this.toolbox.sessionId,
-    });
+    this.telemetry.recordEvent("edit_rule", "ruleview");
   },
 
   /**
@@ -1102,9 +1100,7 @@ TextPropertyEditor.prototype = {
       return;
     }
 
-    this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      session_id: this.toolbox.sessionId,
-    });
+    this.telemetry.recordEvent("edit_rule", "ruleview");
 
     // Remove a property if the name is empty
     if (!value.trim()) {
@@ -1214,9 +1210,7 @@ TextPropertyEditor.prototype = {
       this._removeDraggingCapacity();
     }
 
-    this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      session_id: this.toolbox.sessionId,
-    });
+    this.telemetry.recordEvent("edit_rule", "ruleview");
 
     // First, set this property value (common case, only modified a property)
     this.prop.setValue(val.value, val.priority);

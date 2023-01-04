@@ -58,7 +58,7 @@ function setupStore(
   }
   const store = configureStore(webConsoleUI, {
     ...storeOptions,
-    thunkArgs: { toolbox: { sessionId: -1 } },
+    thunkArgs: { toolbox: {} },
     telemetry: new Telemetry(),
   });
 
@@ -146,9 +146,7 @@ function getWebConsoleUiMock(hud) {
     clearNetworkRequests: () => {},
     clearMessagesCache: () => {},
     inspectObjectActor: () => {},
-    toolbox: {
-      sessionId: 1,
-    },
+    toolbox: {},
     watchCssMessages: () => {},
   };
 }

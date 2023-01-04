@@ -10,10 +10,9 @@ const {
   UPDATE_SELECTED_PAGE,
 } = require("resource://devtools/client/application/src/constants.js");
 
-function eventTelemetryMiddleware(telemetry, sessionId) {
+function eventTelemetryMiddleware(telemetry) {
   function recordEvent(method, details = {}) {
-    const eventDetails = Object.assign({}, details, { session_id: sessionId });
-    telemetry.recordEvent(method, "application", null, eventDetails);
+    telemetry.recordEvent(method, "application", null, details);
   }
 
   return store => next => action => {
