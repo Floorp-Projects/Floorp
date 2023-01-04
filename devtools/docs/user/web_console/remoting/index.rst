@@ -42,7 +42,7 @@ The ``listeners`` argument is an array which specifies listeners you want to sta
 
 .. code-block:: javascript
 
-  ["PageError", "ConsoleAPI", "NetworkActivity", "FileActivity"]
+  ["PageError", "ConsoleAPI", "FileActivity"]
 
 
 .. note::
@@ -91,7 +91,6 @@ The new ``startListeners`` packet:
     "listeners": [
       "PageError",
       "ConsoleAPI",
-      "NetworkActivity",
       "FileActivity"
     ]
   }
@@ -104,7 +103,6 @@ The reply is:
     "startedListeners": [
       "PageError",
       "ConsoleAPI",
-      "NetworkActivity",
       "FileActivity"
     ],
     "from": "conn0.console9"

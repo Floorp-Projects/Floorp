@@ -13,29 +13,6 @@ const responsiveSpec = generateActorSpec({
   typeName: "responsive",
 
   methods: {
-    setNetworkThrottling: {
-      request: {
-        options: Arg(0, "json"),
-      },
-      response: {
-        valueChanged: RetVal("boolean"),
-      },
-    },
-
-    getNetworkThrottling: {
-      request: {},
-      response: {
-        state: RetVal("json"),
-      },
-    },
-
-    clearNetworkThrottling: {
-      request: {},
-      response: {
-        valueChanged: RetVal("boolean"),
-      },
-    },
-
     toggleTouchSimulator: {
       request: {
         options: Arg(0, "json"),

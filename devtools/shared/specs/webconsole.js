@@ -230,30 +230,6 @@ const webconsoleSpecPrototype = {
       },
       response: RetVal("json"),
     },
-
-    blockRequest: {
-      request: {
-        filter: Arg(0, "json"),
-      },
-    },
-
-    unblockRequest: {
-      request: {
-        filter: Arg(0, "json"),
-      },
-    },
-
-    setBlockedUrls: {
-      request: {
-        url: Arg(0, "json"),
-      },
-    },
-    getBlockedUrls: {
-      request: {},
-      response: {
-        blockedUrls: RetVal("array:string"),
-      },
-    },
   },
 };
 

@@ -10,7 +10,7 @@ const { ComponentUtils } = ChromeUtils.import(
 
 /**
  * This is a nsIChannelEventSink implementation that monitors channel redirects and
- * informs the registered StackTraceCollector about the old and new channels.
+ * informs the registered "collectors" about the old and new channels.
  */
 const SINK_CLASS_DESCRIPTION = "NetworkMonitor Channel Event Sink";
 const SINK_CLASS_ID = Components.ID("{e89fa076-c845-48a8-8c45-2604729eba1d}");
@@ -44,7 +44,7 @@ ChannelEventSink.prototype = {
         collector.onChannelRedirect(oldChannel, newChannel, flags);
       } catch (ex) {
         console.error(
-          "StackTraceCollector.onChannelRedirect threw an exception",
+          "ChannelEventSink collector's 'onChannelRedirect' threw an exception",
           ex
         );
       }

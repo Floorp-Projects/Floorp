@@ -9,9 +9,6 @@ DevToolsModules(
     "eventsource-actor.js",
     "network-content.js",
     "network-event-actor.js",
-    "network-event.js",
-    "network-monitor.js",
     "network-parent.js",
-    "stack-trace-collector.js",
     "websocket-actor.js",
 )
