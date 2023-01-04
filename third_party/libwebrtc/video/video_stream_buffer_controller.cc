@@ -383,8 +383,7 @@ void VideoStreamBufferController::UpdateTimingFrameInfo() {
 
 bool VideoStreamBufferController::IsTooManyFramesQueued() const
     RTC_RUN_ON(&worker_sequence_checker_) {
-  return buffer_->CurrentSize() >
-         static_cast<unsigned int>(zero_playout_delay_max_decode_queue_size_);
+  return buffer_->CurrentSize() > zero_playout_delay_max_decode_queue_size_;
 }
 
 void VideoStreamBufferController::ForceKeyFrameReleaseImmediately()

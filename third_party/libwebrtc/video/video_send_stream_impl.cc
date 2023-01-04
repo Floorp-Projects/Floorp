@@ -172,7 +172,7 @@ absl::optional<float> GetConfiguredPacingFactor(
   RateControlSettings rate_control_settings =
       RateControlSettings::ParseFromFieldTrials();
   return rate_control_settings.GetPacingFactor().value_or(
-      static_cast<double>(default_pacing_config.pacing_factor));
+      default_pacing_config.pacing_factor);
 }
 
 uint32_t GetInitialEncoderMaxBitrate(int initial_encoder_max_bitrate) {

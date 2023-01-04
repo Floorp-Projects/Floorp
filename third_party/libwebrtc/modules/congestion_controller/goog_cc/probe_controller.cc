@@ -420,8 +420,8 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     config.at_time = Timestamp::Millis(now_ms);
     config.target_data_rate =
         DataRate::BitsPerSec(rtc::dchecked_cast<int>(bitrate));
-    config.target_duration = static_cast<TimeDelta>(config_.min_probe_duration);
-    config.target_probe_count = static_cast<int32_t>(config_.min_probe_packets_sent);
+    config.target_duration = config_.min_probe_duration;
+    config.target_probe_count = config_.min_probe_packets_sent;
     config.id = next_probe_cluster_id_;
     next_probe_cluster_id_++;
     MaybeLogProbeClusterCreated(event_log_, config);
