@@ -12,8 +12,6 @@
 
 #include "sdk/objc/helpers/scoped_cftyperef.h"
 
-#include "test/gtest.h"
-
 namespace {
 struct TestType {
   TestType() : has_value(true) {}
@@ -50,62 +48,62 @@ using ScopedTestType = rtc::internal::ScopedTypeRef<TestTypeRef, TestTypeTraits>
 - (void)testShouldNotRetainByDefault {
   TestType a;
   ScopedTestType ref(&a);
-  EXPECT_EQ(0, a.retain_count);
+  XCTAssertEqual(0, a.retain_count);
 }
 
 - (void)testShouldRetainWithPolicy {
   TestType a;
   ScopedTestType ref(&a, rtc::RetainPolicy::RETAIN);
-  EXPECT_EQ(1, a.retain_count);
+  XCTAssertEqual(1, a.retain_count);
 }
 
 - (void)testShouldReleaseWhenLeavingScope {
   TestType a;
-  EXPECT_EQ(0, a.retain_count);
+  XCTAssertEqual(0, a.retain_count);
   {
     ScopedTestType ref(&a, rtc::RetainPolicy::RETAIN);
-    EXPECT_EQ(1, a.retain_count);
+    XCTAssertEqual(1, a.retain_count);
   }
-  EXPECT_EQ(0, a.retain_count);
+  XCTAssertEqual(0, a.retain_count);
 }
 
 - (void)testShouldBeCopyable {
   TestType a;
-  EXPECT_EQ(0, a.retain_count);
+  XCTAssertEqual(0, a.retain_count);
   {
     ScopedTestType ref1(&a, rtc::RetainPolicy::RETAIN);
-    EXPECT_EQ(1, a.retain_count);
+    XCTAssertEqual(1, a.retain_count);
     ScopedTestType ref2 = ref1;
-    EXPECT_EQ(2, a.retain_count);
+    XCTAssertEqual(2, a.retain_count);
   }
-  EXPECT_EQ(0, a.retain_count);
+  XCTAssertEqual(0, a.retain_count);
 }
 
 - (void)testCanReleaseOwnership {
   TestType a;
-  EXPECT_EQ(0, a.retain_count);
+  XCTAssertEqual(0, a.retain_count);
   {
     ScopedTestType ref(&a, rtc::RetainPolicy::RETAIN);
-    EXPECT_EQ(1, a.retain_count);
+    XCTAssertEqual(1, a.retain_count);
     TestTypeRef b = ref.release();
   }
-  EXPECT_EQ(1, a.retain_count);
+  XCTAssertEqual(1, a.retain_count);
 }
 
 - (void)testShouldBeTestableForTruthiness {
   ScopedTestType ref;
-  EXPECT_FALSE(ref);
+  XCTAssertFalse(ref);
   TestType a;
   ref = &a;
-  EXPECT_TRUE(ref);
+  XCTAssertTrue(ref);
   ref.release();
-  EXPECT_FALSE(ref);
+  XCTAssertFalse(ref);
 }
 
 - (void)testShouldProvideAccessToWrappedType {
   TestType a;
   ScopedTestType ref(&a);
-  EXPECT_EQ(&(a.retain_count), &(ref->retain_count));
+  XCTAssertEqual(&(a.retain_count), &(ref->retain_count));
 }
 
 @end
