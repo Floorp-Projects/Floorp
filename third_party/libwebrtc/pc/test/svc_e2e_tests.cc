@@ -46,8 +46,13 @@ using ScreenShareConfig = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::ScreenShareConfig;
 using VideoCodecConfig = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
+using ::cricket::kAv1CodecName;
+using ::cricket::kVp8CodecName;
+using ::cricket::kVp9CodecName;
+using ::testing::Combine;
 using ::testing::UnitTest;
 using ::testing::Values;
+using ::testing::ValuesIn;
 
 EmulatedNetworkNode* CreateEmulatedNodeWithConfig(
     NetworkEmulationManager* emulation,
@@ -97,6 +102,11 @@ std::string AppendFieldTrials(std::string new_trial_string) {
   return std::string(field_trial::GetFieldTrialString()) + new_trial_string;
 }
 
+enum class UseDependencyDescriptor {
+  Enabled,
+  Disabled,
+};
+
 struct SvcTestParameters {
   std::string codec_name;
   std::string scalability_mode;
@@ -104,9 +114,12 @@ struct SvcTestParameters {
   int expected_temporal_layers;
 };
 
-class SvcTest : public testing::TestWithParam<SvcTestParameters> {
+class SvcTest : public testing::TestWithParam<
+                    std::tuple<SvcTestParameters, UseDependencyDescriptor>> {
  public:
-  SvcTest() : video_codec_config(ToVideoCodecConfig(GetParam().codec_name)) {}
+  SvcTest()
+      : video_codec_config(ToVideoCodecConfig(SvcTestParameters().codec_name)) {
+  }
 
   static VideoCodecConfig ToVideoCodecConfig(absl::string_view codec) {
     if (codec == cricket::kVp9CodecName) {
@@ -118,13 +131,23 @@ class SvcTest : public testing::TestWithParam<SvcTestParameters> {
     return VideoCodecConfig(std::string(codec));
   }
 
+  const SvcTestParameters& SvcTestParameters() const {
+    return std::get<0>(GetParam());
+  }
+
+  bool UseDependencyDescriptor() const {
+    return std::get<1>(GetParam()) == UseDependencyDescriptor::Enabled;
+  }
+
  protected:
   VideoCodecConfig video_codec_config;
 };
 
 std::string SvcTestNameGenerator(
     const testing::TestParamInfo<SvcTest::ParamType>& info) {
-  return info.param.scalability_mode;
+  return std::get<0>(info.param).scalability_mode +
+         (std::get<1>(info.param) == UseDependencyDescriptor::Enabled ? "_DD"
+                                                                      : "");
 }
 
 }  // namespace
@@ -223,8 +246,11 @@ MATCHER_P2(HasSpatialAndTemporalLayers,
 TEST_P(SvcTest, ScalabilityModeSupported) {
   // Track frames using an RTP header instead of modifying the encoded data as
   // this doesn't seem to work for AV1.
-  webrtc::test::ScopedFieldTrials override_trials(
-      AppendFieldTrials("WebRTC-VideoFrameTrackingIdAdvertised/Enabled/"));
+  std::string trials = "WebRTC-VideoFrameTrackingIdAdvertised/Enabled/";
+  if (UseDependencyDescriptor()) {
+    trials += "WebRTC-DependencyDescriptorAdvertised/Enabled/";
+  }
+  webrtc::test::ScopedFieldTrials override_trials(AppendFieldTrials(trials));
   std::unique_ptr<NetworkEmulationManager> network_emulation_manager =
       CreateNetworkEmulationManager(webrtc::TimeMode::kSimulated);
   auto analyzer = std::make_unique<SvcVideoQualityAnalyzer>(
@@ -239,7 +265,7 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
         VideoConfig video(/*stream_label=*/"alice-video", /*width=*/1850,
                           /*height=*/1110, /*fps=*/30);
         RtpEncodingParameters parameters;
-        parameters.scalability_mode = GetParam().scalability_mode;
+        parameters.scalability_mode = SvcTestParameters().scalability_mode;
         video.encoding_params.push_back(parameters);
         alice->AddVideoConfig(
             std::move(video),
@@ -250,11 +276,13 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
       [](PeerConfigurer* bob) {}, std::move(analyzer));
   fixture->Run(RunParams(TimeDelta::Seconds(5)));
   EXPECT_THAT(analyzer_ptr->encoder_layers_seen(),
-              HasSpatialAndTemporalLayers(GetParam().expected_spatial_layers,
-                                          GetParam().expected_temporal_layers));
+              HasSpatialAndTemporalLayers(
+                  SvcTestParameters().expected_spatial_layers,
+                  SvcTestParameters().expected_temporal_layers));
   EXPECT_THAT(analyzer_ptr->decoder_layers_seen(),
-              HasSpatialAndTemporalLayers(GetParam().expected_spatial_layers,
-                                          GetParam().expected_temporal_layers));
+              HasSpatialAndTemporalLayers(
+                  SvcTestParameters().expected_spatial_layers,
+                  SvcTestParameters().expected_temporal_layers));
   RTC_LOG(LS_INFO) << "Encoder layers seen: "
                    << analyzer_ptr->encoder_layers_seen().size();
   for (auto& [spatial_index, temporal_layers] :
@@ -278,32 +306,109 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
 INSTANTIATE_TEST_SUITE_P(
     SvcTestVP8,
     SvcTest,
-    Values(SvcTestParameters{cricket::kVp8CodecName, "L1T1", 1, 1},
-           SvcTestParameters{cricket::kVp8CodecName, "L1T2", 1, 2},
-           SvcTestParameters{cricket::kVp8CodecName, "L1T3", 1, 3}),
+    Combine(Values(SvcTestParameters{kVp8CodecName, "L1T1", 1, 1},
+                   SvcTestParameters{kVp8CodecName, "L1T2", 1, 2},
+                   SvcTestParameters{kVp8CodecName, "L1T3", 1, 3}),
+            Values(UseDependencyDescriptor::Disabled,
+                   UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);
 #if RTC_ENABLE_VP9
 INSTANTIATE_TEST_SUITE_P(
     SvcTestVP9,
     SvcTest,
-    Values(SvcTestParameters{cricket::kVp9CodecName, "L1T1", 1, 1},
-           SvcTestParameters{cricket::kVp9CodecName, "L1T2", 1, 2},
-           SvcTestParameters{cricket::kVp9CodecName, "L1T3", 1, 3},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T1", 2, 1},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T1h", 2, 1},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T1_KEY", 2, 1},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T2", 2, 2},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T2_KEY", 2, 2},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T2_KEY_SHIFT", 2, 2},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T3", 2, 3},
-           SvcTestParameters{cricket::kVp9CodecName, "L2T3_KEY", 2, 3},
-           SvcTestParameters{cricket::kVp9CodecName, "L3T1", 3, 1},
-           SvcTestParameters{cricket::kVp9CodecName, "L3T3", 3, 3}),
+    Combine(
+        // TODO(bugs.webrtc.org/13960): Fix and enable remaining VP9 modes
+        ValuesIn({
+            SvcTestParameters{kVp9CodecName, "L1T1", 1, 1},
+            SvcTestParameters{kVp9CodecName, "L1T2", 1, 2},
+            // SvcTestParameters{kVp9CodecName, "L1T2h", 1, 2},
+            SvcTestParameters{kVp9CodecName, "L1T3", 1, 3},
+            // SvcTestParameters{kVp9CodecName, "L1T3h", 1, 3},
+            SvcTestParameters{kVp9CodecName, "L2T1", 2, 1},
+            SvcTestParameters{kVp9CodecName, "L2T1h", 2, 1},
+            SvcTestParameters{kVp9CodecName, "L2T1_KEY", 2, 1},
+            SvcTestParameters{kVp9CodecName, "L2T2", 2, 2},
+            // SvcTestParameters{kVp9CodecName, "L2T2h", 2, 2},
+            SvcTestParameters{kVp9CodecName, "L2T2_KEY", 2, 2},
+            SvcTestParameters{kVp9CodecName, "L2T2_KEY_SHIFT", 2, 2},
+            SvcTestParameters{kVp9CodecName, "L2T3", 2, 3},
+            // SvcTestParameters{kVp9CodecName, "L2T3h", 2, 3},
+            SvcTestParameters{kVp9CodecName, "L2T3_KEY", 2, 3},
+            // SvcTestParameters{kVp9CodecName, "L2T3_KEY_SHIFT", 2, 3},
+            SvcTestParameters{kVp9CodecName, "L3T1", 3, 1},
+            // SvcTestParameters{kVp9CodecName, "L3T1h", 3, 1},
+            // SvcTestParameters{kVp9CodecName, "L3T1_KEY", 3, 1},
+            // SvcTestParameters{kVp9CodecName, "L3T2", 3, 2},
+            // SvcTestParameters{kVp9CodecName, "L3T2h", 3, 2},
+            // SvcTestParameters{kVp9CodecName, "L3T2_KEY", 3, 2},
+            // SvcTestParameters{kVp9CodecName, "L3T2_KEY_SHIFT", 3, 2},
+            SvcTestParameters{kVp9CodecName, "L3T3", 3, 3},
+            // SvcTestParameters{kVp9CodecName, "L3T3h", 3, 3},
+            SvcTestParameters{kVp9CodecName, "L3T3_KEY", 3, 3},
+            // SvcTestParameters{kVp9CodecName, "L3T3_KEY_SHIFT", 3, 3},
+            // SvcTestParameters{kVp9CodecName, "S2T1", 2, 1},
+            // SvcTestParameters{kVp9CodecName, "S2T1h", 2, 1},
+            // SvcTestParameters{kVp9CodecName, "S2T2", 2, 2},
+            // SvcTestParameters{kVp9CodecName, "S2T2h", 2, 2},
+            SvcTestParameters{kVp9CodecName, "S2T3", 2, 3},
+            // SvcTestParameters{kVp9CodecName, "S2T3h", 2, 3},
+            // SvcTestParameters{kVp9CodecName, "S3T1", 3, 1},
+            // SvcTestParameters{kVp9CodecName, "S3T1h", 3, 1},
+            // SvcTestParameters{kVp9CodecName, "S3T2", 3, 2},
+            // SvcTestParameters{kVp9CodecName, "S3T2h", 3, 2},
+            // SvcTestParameters{kVp9CodecName, "S3T3", 3, 3},
+            // SvcTestParameters{kVp9CodecName, "S3T3h", 3, 3},
+        }),
+        Values(UseDependencyDescriptor::Disabled,
+               UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);
-// TODO(bugs.webrtc.org/11607): Fix and enable tests
-// SvcTestParameters{cricket::kVp9CodecName, "L3T3_KEY", 3, 3},
-// SvcTestParameters{cricket::kVp9CodecName, "S2T1", 2, 1},
-// SvcTestParameters{cricket::kVp9CodecName, "S3T3", 3, 3},
+
+INSTANTIATE_TEST_SUITE_P(
+    SvcTestAV1,
+    SvcTest,
+    Combine(ValuesIn({
+                SvcTestParameters{kAv1CodecName, "L1T1", 1, 1},
+                SvcTestParameters{kAv1CodecName, "L1T2", 1, 2},
+                // SvcTestParameters{kAv1CodecName, "L1T2h", 1, 2},
+                SvcTestParameters{kAv1CodecName, "L1T3", 1, 3},
+                // SvcTestParameters{kAv1CodecName, "L1T3h", 1, 3},
+                SvcTestParameters{kAv1CodecName, "L2T1", 2, 1},
+                SvcTestParameters{kAv1CodecName, "L2T1h", 2, 1},
+                SvcTestParameters{kAv1CodecName, "L2T1_KEY", 2, 1},
+                SvcTestParameters{kAv1CodecName, "L2T2", 2, 2},
+                // SvcTestParameters{kAv1CodecName, "L2T2h", 2, 2},
+                SvcTestParameters{kAv1CodecName, "L2T2_KEY", 2, 2},
+                SvcTestParameters{kAv1CodecName, "L2T2_KEY_SHIFT", 2, 2},
+                SvcTestParameters{kAv1CodecName, "L2T3", 2, 3},
+                // SvcTestParameters{kAv1CodecName, "L2T3h", 2, 3},
+                SvcTestParameters{kAv1CodecName, "L2T3_KEY", 2, 3},
+                // SvcTestParameters{kAv1CodecName, "L2T3_KEY_SHIFT", 2, 3},
+                SvcTestParameters{kAv1CodecName, "L3T1", 3, 1},
+                // SvcTestParameters{kAv1CodecName, "L3T1h", 3, 1},
+                // SvcTestParameters{kAv1CodecName, "L3T1_KEY", 3, 1},
+                // SvcTestParameters{kAv1CodecName, "L3T2", 3, 2},
+                // SvcTestParameters{kAv1CodecName, "L3T2h", 3, 2},
+                // SvcTestParameters{kAv1CodecName, "L3T2_KEY", 3, 2},
+                // SvcTestParameters{kAv1CodecName, "L3T2_KEY_SHIFT", 3, 2},
+                SvcTestParameters{kAv1CodecName, "L3T3", 3, 3},
+                // SvcTestParameters{kAv1CodecName, "L3T3h", 3, 3},
+                SvcTestParameters{kAv1CodecName, "L3T3_KEY", 3, 3},
+                // SvcTestParameters{kAv1CodecName, "L3T3_KEY_SHIFT", 3, 3},
+                // SvcTestParameters{kAv1CodecName, "S2T1", 2, 1},
+                // SvcTestParameters{kAv1CodecName, "S2T1h", 2, 1},
+                // SvcTestParameters{kAv1CodecName, "S2T2", 2, 2},
+                // SvcTestParameters{kAv1CodecName, "S2T2h", 2, 2},
+                // SvcTestParameters{kAv1CodecName, "S2T3", 2, 3},
+                // SvcTestParameters{kAv1CodecName, "S2T3h", 2, 3},
+                // SvcTestParameters{kAv1CodecName, "S3T1", 3, 1},
+                // SvcTestParameters{kAv1CodecName, "S3T1h", 3, 1},
+                // SvcTestParameters{kAv1CodecName, "S3T2", 3, 2},
+                // SvcTestParameters{kAv1CodecName, "S3T2h", 3, 2},
+                // SvcTestParameters{kAv1CodecName, "S3T3", 3, 3},
+                // SvcTestParameters{kAv1CodecName, "S3T3h", 3, 3},
+            }),
+            Values(UseDependencyDescriptor::Enabled)),
+    SvcTestNameGenerator);
 
 #endif
 
