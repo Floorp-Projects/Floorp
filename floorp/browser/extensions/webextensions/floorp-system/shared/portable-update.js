@@ -8,6 +8,10 @@
         return (await browser.browserL10n.getFloorpL10nValues({ file: ["browser/floorp.ftl"], text: [id] }))[0]
     }
 
+    function pathJoin(...args) {
+        return args.join(isWin ? "\\" : "/");
+    }
+
     async function checkUpdate() {
         let displayVersion = await browser.BrowserInfo.getDisplayVersion();
         let url = `${API_BASE_URL}/browser-portable/latest.json`;
@@ -46,22 +50,10 @@
             appdir.split(isWin ? "\\" : "/")
             .slice(0, -1)
             .join(isWin ? "\\" : "/");
-        let updateTmpDirPath =
-            isWin ?
-                appdir_parent + "\\update_tmp" :
-                appdir_parent + "/update_tmp";
-        let updateZipPath =
-            isWin ?
-                updateTmpDirPath + "\\update.zip" :
-                updateTmpDirPath + "/update.zip";
-        let coreUpdateReadyFilePath =
-            isWin ?
-                updateTmpDirPath + "\\CORE_UPDATE_READY" :
-                updateTmpDirPath + "/CORE_UPDATE_READY"
-        let redirectorUpdateReadyFilePath =
-            isWin ?
-                updateTmpDirPath + "\\REDIRECTOR_UPDATE_READY" :
-                updateTmpDirPath + "/REDIRECTOR_UPDATE_READY"
+        let updateTmpDirPath = pathJoin(appdir_parent, "update_tmp");
+        let updateZipPath = pathJoin(updateTmpDirPath, "update.zip");
+        let coreUpdateReadyFilePath = pathJoin(updateTmpDirPath, "CORE_UPDATE_READY");
+        let redirectorUpdateReadyFilePath = pathJoin(updateTmpDirPath, "REDIRECTOR_UPDATE_READY");
 
         if (await browser.IOFile.exists(coreUpdateReadyFilePath)) {
             return;
