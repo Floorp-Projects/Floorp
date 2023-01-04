@@ -124,7 +124,7 @@ void SetLastMousePressEvent(GdkEvent* aEvent) {
   sLastMousePressEvent = event.release();
 }
 
-bool IsRunningUnderSnap() { return g_getenv("SNAP_INSTANCE_NAME") != nullptr; }
+bool IsRunningUnderSnap() { return !!GetSnapInstanceName(); }
 
 bool IsRunningUnderFlatpak() {
   // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
@@ -136,12 +136,19 @@ bool IsRunningUnderFlatpak() {
 
 const char* GetSnapInstanceName() {
   static const char* sInstanceName = []() -> const char* {
+    const char* snapName = g_getenv("SNAP_NAME");
+    if (!snapName) {
+      return nullptr;
+    }
+    if (g_strcmp0(snapName, MOZ_APP_NAME)) {
+      return nullptr;
+    }
     // Intentionally leaked, as keeping a pointer to the environment forever is
     // a bit suspicious.
     if (const char* instanceName = g_getenv("SNAP_INSTANCE_NAME")) {
       return g_strdup(instanceName);
     }
-    // Compatibility for snapd <= 2.35:
+    // Instance name didn't exist for snapd <= 2.35:
     if (const char* instanceName = g_getenv("SNAP_NAME")) {
       return g_strdup(instanceName);
     }
