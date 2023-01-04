@@ -18,5 +18,6 @@ delink
 warmup
 aNumber
 falsy
+rduce
 complies
 
