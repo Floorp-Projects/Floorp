@@ -607,7 +607,6 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource = nullptr;
   }
   mWaylandVsyncDispatcher = nullptr;
-  MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy);
 #endif
 
   /** Need to clean our LayerManager up while still alive */
@@ -3047,7 +3046,8 @@ void nsWindow::SetUserTimeAndStartupTokenForActivatedWindow() {
       gtk_window_set_startup_id(GTK_WINDOW(mShell),
                                 mWindowActivationTokenFromEnv.get());
       // In the case of X11, the above call is all we need. For wayland we need
-      // to keep the token around until we take it in RequestFocusWaylandWindow.
+      // to keep the token around until we take it in
+      // TransferFocusToWaylandWindow.
       mWindowActivationTokenFromEnv.Truncate();
     }
   } else if (uint32_t timestamp = toolkit->GetFocusTimestamp()) {
@@ -3092,8 +3092,6 @@ guint32 nsWindow::GetLastUserInputTime() {
 #ifdef MOZ_WAYLAND
 void nsWindow::FocusWaylandWindow(const char* aTokenID) {
   MOZ_DIAGNOSTIC_ASSERT(aTokenID);
-  auto releaseToken = MakeScopeExit(
-      [&] { MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy); });
 
   LOG("nsWindow::FocusWaylandWindow(%s)", aTokenID);
   if (IsDestroyed()) {
@@ -3116,80 +3114,26 @@ void nsWindow::FocusWaylandWindow(const char* aTokenID) {
   xdg_activation_v1_activate(xdg_activation, aTokenID, surface);
 }
 
-// We've got activation token from Wayland compositor so it's time to use it.
-static void token_done(gpointer data, struct xdg_activation_token_v1* provider,
-                       const char* token) {
-  // Compensate aWindow->AddRef() from nsWindow::RequestFocusWaylandWindow().
-  RefPtr<nsWindow> window = dont_AddRef(static_cast<nsWindow*>(data));
-  window->FocusWaylandWindow(token);
-}
-
-static const struct xdg_activation_token_v1_listener token_listener = {
-    token_done,
-};
-
-void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
-  LOGW("nsWindow::RequestFocusWaylandWindow(%p) gFocusWindow %p", aWindow.get(),
+// Transfer focus from gFocusWindow to aWindow and use xdg_activation
+// protocol for it.
+void nsWindow::TransferFocusToWaylandWindow(nsWindow* aWindow) {
+  LOGW("nsWindow::TransferFocusToWaylandWindow(%p) gFocusWindow %p", aWindow,
        gFocusWindow);
-
-  auto existingToken = std::move(aWindow->mWindowActivationTokenFromEnv);
-  if (!existingToken.IsEmpty()) {
-    LOGW("  has existing activation token.");
-    aWindow->FocusWaylandWindow(existingToken.get());
+  auto promise = mozilla::widget::RequestWaylandFocusPromise();
+  if (NS_WARN_IF(!promise)) {
+    LOGW("  quit, failed to create TransferFocusToWaylandWindow [%p]", aWindow);
     return;
   }
-
-  if (!gFocusWindow || gFocusWindow->IsDestroyed()) {
-    LOGW("  missing gFocusWindow, quit.");
-    return;
-  }
-
-  RefPtr<nsWaylandDisplay> display = WaylandDisplayGet();
-  xdg_activation_v1* xdg_activation = display->GetXdgActivation();
-  if (!xdg_activation) {
-    LOGW("  xdg-activation is missing, quit.");
-    return;
-  }
-
-  wl_surface* focusSurface;
-  uint32_t focusSerial;
-  KeymapWrapper::GetFocusInfo(&focusSurface, &focusSerial);
-  if (!focusSurface) {
-    LOGW("  We're missing KeymapWrapper focused window, quit.");
-    return;
-  }
-
-  GdkWindow* gdkWindow = gtk_widget_get_window(gFocusWindow->mShell);
-  if (!gdkWindow) {
-    LOGW("  gFocusWindow is not mapped, quit.");
-    return;
-  }
-  wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWindow);
-  if (focusSurface != surface) {
-    LOGW("  focused surface %p and gFocusWindow surface %p don't match, quit.",
-         focusSurface, surface);
-    return;
-  }
-
-  LOGW(
-      "  requesting xdg-activation token, surface %p ID %d serial %d seat ID "
-      "%d",
-      focusSurface,
-      focusSurface ? wl_proxy_get_id((struct wl_proxy*)focusSurface) : 0,
-      focusSerial, wl_proxy_get_id((struct wl_proxy*)KeymapWrapper::GetSeat()));
-
-  // Store activation token at activated window for further release.
-  MozClearPointer(aWindow->mXdgToken, xdg_activation_token_v1_destroy);
-  aWindow->mXdgToken = xdg_activation_v1_get_activation_token(xdg_activation);
-
-  // Addref aWindow to avoid potential release untill we get token_done
-  // callback.
-  xdg_activation_token_v1_add_listener(aWindow->mXdgToken, &token_listener,
-                                       do_AddRef(aWindow).take());
-  xdg_activation_token_v1_set_serial(aWindow->mXdgToken, focusSerial,
-                                     KeymapWrapper::GetSeat());
-  xdg_activation_token_v1_set_surface(aWindow->mXdgToken, focusSurface);
-  xdg_activation_token_v1_commit(aWindow->mXdgToken);
+  promise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      /* resolve */
+      [window = RefPtr{aWindow}](nsCString token) {
+        window->FocusWaylandWindow(token.get());
+      },
+      /* reject */
+      [window = RefPtr{aWindow}](bool state) {
+        LOGW("TransferFocusToWaylandWindow [%p] failed", window.get());
+      });
 }
 #endif
 
@@ -3216,6 +3160,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       aRaise == Raise::Yes && toplevelWidget &&
       !gtk_widget_has_focus(toplevelWidget)) {
     if (gtk_widget_get_visible(mShell)) {
+      LOG("  toplevel is not focused");
       gdk_window_show_unraised(gtk_widget_get_window(mShell));
       // Unset the urgency hint if possible.
       SetUrgencyHint(mShell, false);
@@ -3236,7 +3181,8 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     if (StaticPrefs::mozilla_widget_raise_on_setfocus_AtStartup() &&
         toplevelWindow->mIsShown && toplevelWindow->mShell &&
         !gtk_window_is_active(GTK_WINDOW(toplevelWindow->mShell))) {
-      LOG("  requesting toplevel activation [%p]\n", toplevelWindow.get());
+      LOG("  toplevel is visible but not active, requesting activation [%p]",
+          toplevelWindow.get());
 
       // Take the time here explicitly for the call below.
       const uint32_t timestamp = [&] {
@@ -3255,7 +3201,16 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
 
 #ifdef MOZ_WAYLAND
       if (GdkIsWaylandDisplay()) {
-        RequestFocusWaylandWindow(toplevelWindow);
+        auto existingToken =
+            std::move(toplevelWindow->mWindowActivationTokenFromEnv);
+        if (!existingToken.IsEmpty()) {
+          LOG("  has existing activation token.");
+          toplevelWindow->FocusWaylandWindow(existingToken.get());
+        } else {
+          LOG("  missing activation token, try to transfer from focused "
+              "window");
+          TransferFocusToWaylandWindow(toplevelWindow);
+        }
       }
 #endif
     }
