@@ -262,6 +262,8 @@ class PeerConnectionE2EQualityTestFixture {
         absl::string_view stream_label,
         absl::string_view receiver) const;
 
+    std::string ToString() const;
+
    private:
     std::string output_directory_;
     int sampling_modulo_ = 1;
