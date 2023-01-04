@@ -4,7 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="Context nenu focus testing">
+        title="Context menu focus testing">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -43,8 +43,11 @@
       gQueue = new eventQueue();
 
       gQueue.push(new synthFocus("button"));
-      gQueue.push(new synthContextMenu("button",
-                                       new invokerChecker(EVENT_MENUPOPUP_START, "contextmenu")));
+      gQueue.push(new synthContextMenu("button", [
+        new invokerChecker(EVENT_MENUPOPUP_START, "contextmenu"),
+        new invokerChecker("popupshown", "contextmenu"),
+      ]));
+      gQueue.push(new synthDownKey("button", new focusChecker("item1")));
       gQueue.push(new synthEscapeKey("contextmenu", new focusChecker("button")));
 
       gQueue.push(new synthContextMenu("button",

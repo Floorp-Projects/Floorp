@@ -65,6 +65,7 @@ function runTests()
     keyCheck(list, "KEY_ArrowUp", 1, 1, "cursor up");
 
     // On Windows, wrapping doesn't occur.
+    expectCommandEvent = !iswin;
     keyCheck(list, "KEY_ArrowUp", iswin ? 1 : 4, 1, "cursor up wrap");
 
     list.selectedIndex = 4;
@@ -88,20 +89,13 @@ function runTests()
 
 function pressLetter()
 {
-  // A command event should be fired only if the menulist is closed, or on Windows,
-  // where items are selected immediately.
+  // A command event should be fired only if the menulist is closed.
   expectCommandEvent = !gOpenPhase || iswin;
 
   sendString("G");
   is(list.selectedItem, $("i1"), "letter pressed not found selectedItem");
 
   keyCheck(list, "T", 2, 1, "letter pressed");
-
-  if (!gOpenPhase) {
-    SpecialPowers.setIntPref("ui.menu.incremental_search.timeout", 0); // prevent to timeout
-    keyCheck(list, "T", 2, 1, "same letter pressed");
-    SpecialPowers.clearUserPref("ui.menu.incremental_search.timeout");
-  }
 
   setTimeout(pressedAgain, 1200);
 }
@@ -203,6 +197,7 @@ function tabAndScroll()
 
 function keyCheck(list, key, index, defaultindex, testname)
 {
+  info(`keyCheck(${index}, ${key}, ${index}, ${defaultindex}, ${testname}, ${expectCommandEvent})`);
   var item = $("i" + index);
   var defaultitem = $("i" + defaultindex || 1);
 
@@ -267,8 +262,8 @@ function checkCursorNavigation()
   is(commandEventsCount, iswin ? 1 : 0, "selectedIndex after cursor down command event");
   is(list.menupopup.state, "open", "cursor down popup state");
   synthesizeKey("KEY_PageDown");
-  is(list.selectedIndex, iswin ? 3 : 1, "selectedIndex after page down");
-  is(commandEventsCount, iswin ? 2 : 0, "selectedIndex after page down command event");
+  is(list.selectedIndex, iswin ? 2 : 1, "selectedIndex after page down");
+  is(commandEventsCount, iswin ? 1 : 0, "selectedIndex after page down command event");
   is(list.menupopup.state, "open", "page down popup state");
 
   // Check whether cursor up and down wraps.

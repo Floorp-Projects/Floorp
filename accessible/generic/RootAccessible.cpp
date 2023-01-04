@@ -7,6 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PresShell.h"  // for nsAccUtils::GetDocAccessibleFor()
+#include "nsXULPopupManager.h"
 
 #define CreateEvent CreateEventA
 
@@ -390,6 +391,31 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
       nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
                               accessible);
     }
+    if (auto* focus = FocusMgr()->FocusedLocalAccessible()) {
+      // Intentionally use the content tree, because Linux strips menupopups
+      // from the a11y tree so accessible might be an arbitrary ancestor.
+      if (focus->GetContent() &&
+          focus->GetContent()->IsShadowIncludingInclusiveDescendantOf(
+              aTarget)) {
+        // Move the focus to the topmost menu active content if any. The
+        // menu item in the parent menu will not fire a DOMMenuItemActive
+        // event if it's already active.
+        LocalAccessible* newActiveAccessible = nullptr;
+        if (auto* pm = nsXULPopupManager::GetInstance()) {
+          if (auto* content = pm->GetTopActiveMenuItemContent()) {
+            newActiveAccessible =
+                accessible->Document()->GetAccessible(content);
+          }
+        }
+        FocusMgr()->ActiveItemChanged(newActiveAccessible);
+#ifdef A11Y_LOG
+        if (logging::IsEnabled(logging::eFocus)) {
+          logging::ActiveItemChangeCausedBy("DOMMenuInactive",
+                                            newActiveAccessible);
+        }
+#endif
+      }
+    }
   } else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(accessible, states::ACTIVE, true);
@@ -546,7 +572,9 @@ void RootAccessible::HandlePopupShownEvent(LocalAccessible* aAccessible) {
 
 void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
   DocAccessible* document = nsAccUtils::GetDocAccessibleFor(aPopupNode);
-  if (!document) return;
+  if (!document) {
+    return;
+  }
 
   if (aPopupNode->IsAnyOfXULElements(nsGkAtoms::tooltip, nsGkAtoms::panel)) {
     document->ContentRemoved(aPopupNode->AsContent());
@@ -560,7 +588,9 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
   if (!popup) {
     LocalAccessible* popupContainer =
         document->GetContainerAccessible(aPopupNode);
-    if (!popupContainer) return;
+    if (!popupContainer) {
+      return;
+    }
 
     uint32_t childCount = popupContainer->ChildCount();
     for (uint32_t idx = 0; idx < childCount; idx++) {
@@ -573,19 +603,14 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
 
     // No popup no events. Focus is managed by DOM. This is a case for
     // menupopups of menus on Linux since there are no accessible for popups.
-    if (!popup) return;
+    if (!popup) {
+      return;
+    }
   }
 
   // In case of autocompletes and comboboxes fire state change event for
   // expanded state. Note, HTML form autocomplete isn't a subject of state
   // change event because they aren't autocompletes strictly speaking.
-  // When popup closes (except nested popups and menus) then fire focus event to
-  // where it was. The focus event is expected even if popup didn't take a
-  // focus.
-
-  static const uint32_t kNotifyOfFocus = 1;
-  static const uint32_t kNotifyOfState = 2;
-  uint32_t notifyOf = 0;
 
   // HTML select is target of popuphidding event. Otherwise get container
   // widget. No container widget means this is either tooltip or menupopup.
@@ -596,41 +621,15 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
   } else {
     widget = popup->ContainerWidget();
     if (!widget) {
-      if (!popup->IsMenuPopup()) return;
-
+      if (!popup->IsMenuPopup()) {
+        return;
+      }
       widget = popup;
     }
   }
 
-  if (widget->IsCombobox()) {
-    // Fire focus for active combobox, otherwise the focus is managed by DOM
-    // focus notifications. Always fire state change event.
-    if (widget->IsActiveWidget()) notifyOf = kNotifyOfFocus;
-    notifyOf |= kNotifyOfState;
-  } else if (widget->IsMenuButton()) {
-    // Autocomplete (like searchbar) can be inactive when popup hiddens
-    notifyOf |= kNotifyOfFocus;
-  } else if (widget == popup) {
-    // Top level context menus and alerts.
-    // Ignore submenus and menubar. When submenu is closed then sumbenu
-    // container menuitem takes a focus via DOMMenuItemActive notification.
-    // For menubars processing we listen DOMMenubarActive/Inactive
-    // notifications.
-    notifyOf = kNotifyOfFocus;
-  }
-
-  // Restore focus to where it was.
-  if (notifyOf & kNotifyOfFocus) {
-    FocusMgr()->ActiveItemChanged(nullptr);
-#ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus)) {
-      logging::ActiveItemChangeCausedBy("popuphiding", popup);
-    }
-#endif
-  }
-
   // Fire expanded state change event.
-  if (notifyOf & kNotifyOfState) {
+  if (widget->IsCombobox()) {
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(widget, states::EXPANDED, false);
     document->FireDelayedEvent(event);

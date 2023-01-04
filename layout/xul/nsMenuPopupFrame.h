@@ -18,10 +18,11 @@
 #include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
-#include "nsMenuFrame.h"
+#include "nsIDOMEventListener.h"
+#include "nsIReflowCallback.h"
+#include "nsXULPopupManager.h"
 
 #include "nsBoxFrame.h"
-#include "nsMenuParent.h"
 
 #include "Units.h"
 
@@ -31,6 +32,8 @@ namespace mozilla {
 class PresShell;
 namespace dom {
 class KeyboardEvent;
+class XULButtonElement;
+class XULPopupElement;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -124,9 +127,7 @@ class nsXULPopupShownEvent final : public mozilla::Runnable,
   const RefPtr<nsPresContext> mPresContext;
 };
 
-class nsMenuPopupFrame final : public nsBoxFrame,
-                               public nsMenuParent,
-                               public nsIReflowCallback {
+class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
  public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
@@ -134,26 +135,10 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   explicit nsMenuPopupFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   ~nsMenuPopupFrame();
 
-  // nsMenuParent interface
-  virtual nsMenuFrame* GetCurrentMenuItem() override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem) override;
-  virtual void CurrentMenuIsBeingDestroyed() override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem,
-                            bool aFromKey) override;
-
   // as popups are opened asynchronously, the popup pending state is used to
   // prevent multiple requests from attempting to open the same popup twice
   nsPopupState PopupState() { return mPopupState; }
   void SetPopupState(nsPopupState);
-
-  NS_IMETHOD SetActive(bool aActiveFlag) override {
-    // We don't care.
-    return NS_OK;
-  }
-  virtual bool IsActive() override { return false; }
-  virtual bool IsMenuBar() override { return false; }
 
   /*
    * When this popup is open, should clicks outside of it be consumed?
@@ -173,16 +158,11 @@ class nsMenuPopupFrame final : public nsBoxFrame,
    */
   ConsumeOutsideClicksResult ConsumeOutsideClicks();
 
+  mozilla::dom::XULPopupElement& PopupElement() const;
+
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
-
-  bool IsContextMenu() override { return mIsContextMenu; }
-
-  bool MenuClosed() override { return true; }
-
-  void LockMenuUntilClosed(bool aLock) override;
-  bool IsMenuLocked() override { return mIsMenuLocked; }
 
   nsIWidget* GetWidget() const;
 
@@ -193,8 +173,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  // FIXME: This shouldn't run script (this can end up calling HidePopup).
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DestroyFrom(
+      nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   bool HasRemoteContent() const;
 
@@ -215,6 +196,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // creates a new one, regardless of whether one has already been created.
   void PrepareWidget(bool aRecreate = false);
 
+  MOZ_CAN_RUN_SCRIPT void EnsureActiveMenuListItemIsVisible();
+
   nsresult CreateWidgetForView(nsView* aView);
   mozilla::StyleWindowShadow GetShadowStyle();
 
@@ -230,17 +213,28 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // popup is being moved, and should not be flipped.
   nsresult SetPopupPosition(bool aIsMove);
 
-  // called when the Enter key is pressed while the popup is open. This will
-  // just pass the call down to the current menu, if any. If a current menu
-  // should be opened as a result, this method should return the frame for
-  // that menu, or null if no menu should be opened. Also, calling Enter will
-  // reset the current incremental search string, calculated in
-  // FindMenuWithShortcut.
-  nsMenuFrame* Enter(mozilla::WidgetGUIEvent* aEvent);
+  // Called when the Enter key is pressed while the popup is open. This will
+  // just pass the call down to the current menu, if any.
+  // Also, calling Enter will reset the current incremental search string,
+  // calculated in FindMenuWithShortcut.
+  MOZ_CAN_RUN_SCRIPT void HandleEnterKeyPress(mozilla::WidgetEvent&);
+
+  // Locate and return the menu frame that should be activated for the supplied
+  // key event. If aDoAction is set to true by this method, then the menu's
+  // action should be carried out, as if the user had pressed the Enter key. If
+  // aDoAction is false, the menu should just be highlighted.
+  // This method also handles incremental searching in menus so the user can
+  // type the first few letters of an item/s name to select it.
+  mozilla::dom::XULButtonElement* FindMenuWithShortcut(
+      mozilla::dom::KeyboardEvent& aKeyEvent, bool& aDoAction);
+
+  mozilla::dom::XULButtonElement* GetCurrentMenuItem() const;
+  nsIFrame* GetCurrentMenuItemFrame() const;
 
   nsPopupType PopupType() const { return mPopupType; }
-  bool IsMenu() override { return mPopupType == ePopupTypeMenu; }
-  bool IsOpen() override {
+  bool IsContextMenu() const { return mIsContextMenu; }
+
+  bool IsOpen() const {
     return mPopupState == ePopupOpening || mPopupState == ePopupVisible ||
            mPopupState == ePopupShown;
   }
@@ -295,16 +289,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   void ShowPopup(bool aIsContextMenu);
   // indicate that the popup should be hidden. The new state should either be
   // ePopupClosed or ePopupInvisible.
-  void HidePopup(bool aDeselectMenu, nsPopupState aNewState);
-
-  // locate and return the menu frame that should be activated for the
-  // supplied key event. If doAction is set to true by this method,
-  // then the menu's action should be carried out, as if the user had pressed
-  // the Enter key. If doAction is false, the menu should just be highlighted.
-  // This method also handles incremental searching in menus so the user can
-  // type the first few letters of an item/s name to select it.
-  nsMenuFrame* FindMenuWithShortcut(mozilla::dom::KeyboardEvent* aKeyEvent,
-                                    bool& doAction);
+  MOZ_CAN_RUN_SCRIPT void HidePopup(bool aDeselectMenu, nsPopupState aNewState,
+                                    bool aFromFrameDestruction = false);
 
   void ClearIncrementalString() { mIncrementalString.Truncate(); }
   static bool IsWithinIncrementalTime(mozilla::TimeStamp time) {
@@ -319,9 +305,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   }
 #endif
 
-  MOZ_CAN_RUN_SCRIPT void EnsureMenuItemIsVisible(nsMenuFrame* aMenuFrame);
-
-  void ChangeByPage(bool aIsUp);
+  MOZ_CAN_RUN_SCRIPT void ChangeByPage(bool aIsUp);
 
   // Move the popup to the screen coordinate |aPos| in CSS pixels.
   // If aUpdateAttrs is true, and the popup already has left or top attributes,
@@ -543,7 +527,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // was clicked. It will be cleared when the popup is hidden.
   nsCOMPtr<nsIContent> mTriggerContent;
 
-  nsMenuFrame* mCurrentMenu;  // The current menu that is active.
   nsView* mView;
 
   RefPtr<nsXULPopupShownEvent> mPopupShownDispatcher;
@@ -614,7 +597,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   bool mMenuCanOverlapOSBar;  // can we appear over the taskbar/menubar?
   bool mInContentShell;       // True if the popup is in a content shell
-  bool mIsMenuLocked;         // Should events inside this menu be ignored?
 
   // True if this popup has been offset due to moving off / near the edge of the
   // screen. (This is useful for ensuring that a move, which can't offset the

@@ -61,7 +61,7 @@ function submenuOpened()
 
 function done()
 {
-  ok(!$("submenu").hasAttribute('_moz-menuactive'), "menu unhighlighted");
+  ok($("submenu").hasAttribute('_moz-menuactive'), "menu still highlighted");
   SimpleTest.finish();
 }
 

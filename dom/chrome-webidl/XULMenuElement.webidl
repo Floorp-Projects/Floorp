@@ -9,6 +9,7 @@
 interface XULMenuElement : XULElement {
   [HTMLConstructor] constructor();
 
+  [BinaryName="activeMenuChild"]
   attribute Element? activeChild;
 
   boolean handleKeyPress(KeyboardEvent keyEvent);

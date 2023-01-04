@@ -201,7 +201,9 @@ void FocusManager::ActiveItemChanged(LocalAccessible* aItem,
 #endif
 
   // Nothing changed, happens for XUL trees and HTML selects.
-  if (aItem && aItem == mActiveItem) return;
+  if (aItem && aItem == mActiveItem) {
+    return;
+  }
 
   mActiveItem = nullptr;
 

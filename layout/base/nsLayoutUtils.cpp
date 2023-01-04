@@ -822,18 +822,7 @@ FrameChildListID nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame) {
     }
   } else {
     LayoutFrameType childType = aChildFrame->Type();
-    if (LayoutFrameType::MenuPopup == childType) {
-      nsIFrame* parent = aChildFrame->GetParent();
-      MOZ_ASSERT(parent, "nsMenuPopupFrame can't be the root frame");
-      MOZ_ASSERT(parent->IsMenuFrame(),
-                 "nsMenuPopupFrame should be out of flow if not under a menu");
-      nsIFrame* firstPopup =
-          parent->GetChildList(FrameChildListID::Popup).FirstChild();
-      MOZ_ASSERT(!firstPopup || !firstPopup->GetNextSibling(),
-                 "We assume popupList only has one child, but it has more.");
-      id = firstPopup == aChildFrame ? FrameChildListID::Popup
-                                     : FrameChildListID::Principal;
-    } else if (LayoutFrameType::TableColGroup == childType) {
+    if (LayoutFrameType::TableColGroup == childType) {
       id = FrameChildListID::ColGroup;
     } else if (aChildFrame->IsTableCaption()) {
       id = FrameChildListID::Caption;

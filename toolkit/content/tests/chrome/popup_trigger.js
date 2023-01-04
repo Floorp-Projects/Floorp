@@ -604,7 +604,6 @@ var popupTests = [
       "command item3",
       "popuphiding thepopup",
       "popuphidden thepopup",
-      "DOMMenuItemInactive item3",
     ],
     test(testname, step) {
       var item3 = document.getElementById("item3");
@@ -658,7 +657,6 @@ var popupTests = [
       "command amenu",
       "popuphiding thepopup",
       "popuphidden thepopup",
-      "DOMMenuItemInactive amenu",
     ],
     test() {
       sendString("M");
@@ -756,7 +754,6 @@ var popupTests = [
       "popuphidden submenupopup",
       "DOMMenuItemInactive submenuitem",
       "DOMMenuInactive submenupopup",
-      "DOMMenuItemActive submenu",
     ],
     test() {
       synthesizeKey("KEY_ArrowLeft");
@@ -798,7 +795,6 @@ var popupTests = [
       "popuphidden submenupopup",
       "DOMMenuItemInactive submenuitem",
       "DOMMenuInactive submenupopup",
-      "DOMMenuItemActive submenu",
     ],
     test() {
       synthesizeKey("KEY_Escape");
@@ -862,7 +858,6 @@ var popupTests = [
       "command amenu",
       "popuphiding thepopup",
       "popuphidden thepopup",
-      "DOMMenuItemInactive amenu",
     ],
     test() {
       sendString("M");
@@ -926,7 +921,6 @@ var popupTests = [
       "popuphiding thepopup",
       "popuphidden thepopup",
       "DOMMenuInactive submenupopup",
-      "DOMMenuItemInactive submenu",
       "DOMMenuItemInactive submenu",
       "DOMMenuInactive thepopup",
     ],
@@ -1058,7 +1052,6 @@ var popupTests = [
       "command item1",
       "popuphiding thepopup",
       "popuphidden thepopup",
-      "DOMMenuItemInactive item1",
     ],
     test(testname, step) {
       synthesizeKey("KEY_ArrowDown");
@@ -1141,7 +1134,6 @@ var popupTests = [
     },
   },
   {
-    // openPopup using object as position argument with event
     testname: "openPopup with object argument with event",
     events: ["popupshowing thepopup 1000", "popupshown thepopup"],
     autohide: "thepopup",
@@ -1156,7 +1148,6 @@ var popupTests = [
     },
   },
   {
-    // openPopup with no arguments
     testname: "openPopup with no arguments",
     events: ["popupshowing thepopup", "popupshown thepopup"],
     autohide: "thepopup",

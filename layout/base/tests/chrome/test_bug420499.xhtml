@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
-  
+
 
     <menu id="menu" label="Menu">
       <menupopup id="file-popup">
@@ -37,10 +37,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
         <description value="This is a tooltip"/>
       </tooltip>
     </popupset>
-  
+
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" bgcolor="white">
-  
+
   <p id="par1">Paragraph 1</p>
   <p id="par2">Paragraph 2</p>
   <p id="par3">Paragraph 3</p>
@@ -55,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-    
+
     /** Test for Bug 420499 **/
     SimpleTest.waitForExplicitFinish();
 
@@ -73,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
         .QueryInterface(Ci.nsISelectionController);
       return selCon.caretVisible;
     }
-    
+
     function focusInput() {
       ok(!isCaretVisible(), "Caret shouldn't be visible");
       $("text-input").focus();
@@ -81,14 +81,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
       window.addEventListener("popupshown", popupMenuShownHandler);
       $("menu").open = true;
     }
-    
+
     function popupMenuShownHandler() {
       window.removeEventListener("popupshown", popupMenuShownHandler);
       ok(!isCaretVisible(), "Caret shouldn't be visible when menu open");
       window.addEventListener("popuphidden", ensureParagraphFocused);
       $("menu").open = false;
     }
-    
+
     function ensureParagraphFocused() {
       window.removeEventListener("popuphidden", ensureParagraphFocused);
       ok(isCaretVisible(), "Caret should have returned to previous focus");
