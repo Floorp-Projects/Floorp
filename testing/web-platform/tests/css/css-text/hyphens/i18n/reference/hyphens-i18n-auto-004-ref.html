@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Text Test: language specific hyphenation—Pinyin-hyphen</title>
+<style>
+div {
+  font-size: 3em;
+  color: orange;
+}
+.test {
+  color: blue;
+}
+</style>
+
+<p>Test passes if the blue text and orange text are identical (except for the color).
+<div lang=zh-Latn-pinyin class=test>àizēng&#x2010;<br>&#x2010;fēnmíng</div>
+<div lang=zh-Latn-pinyin>àizēng&#x2010;<br>&#x2010;fēnmíng</div>
