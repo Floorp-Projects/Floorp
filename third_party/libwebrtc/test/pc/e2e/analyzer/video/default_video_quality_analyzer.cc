@@ -1010,7 +1010,8 @@ StatsKey DefaultVideoQualityAnalyzer::ToStatsKey(
 std::string DefaultVideoQualityAnalyzer::ToMetricName(
     const InternalStatsKey& key) const {
   const std::string& stream_label = streams_.name(key.stream);
-  if (peers_->size() <= 2 && key.sender != key.receiver) {
+  if (peers_->GetKnownSize() <= 2 && key.sender != key.receiver) {
+    // TODO(titovartem): remove this special case.
     return stream_label;
   }
   rtc::StringBuilder out;
