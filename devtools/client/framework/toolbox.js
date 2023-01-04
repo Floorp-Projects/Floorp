@@ -223,18 +223,8 @@ const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
  * @param {string} frameId
  *        A unique identifier to differentiate toolbox documents from the
  *        chrome codebase when passing DOM messages
- * @param {Number} msSinceProcessStart
- *        the number of milliseconds since process start using monotonic
- *        timestamps (unaffected by system clock changes).
  */
-function Toolbox(
-  commands,
-  selectedTool,
-  hostType,
-  contentWindow,
-  frameId,
-  msSinceProcessStart
-) {
+function Toolbox(commands, selectedTool, hostType, contentWindow, frameId) {
   this._win = contentWindow;
   this.frameId = frameId;
   this.selection = new Selection();

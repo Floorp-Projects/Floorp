@@ -9,7 +9,6 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
-const Telemetry = require("resource://devtools/client/shared/telemetry.js");
 const { DOMHelpers } = require("resource://devtools/shared/dom-helpers.js");
 
 // The min-width of toolbox and browser toolbox.
@@ -81,7 +80,6 @@ function ToolboxHostManager(commands, hostType, hostOptions) {
   this.eventController = new AbortController();
   this.host = this.createHost(hostType, hostOptions);
   this.hostType = hostType;
-  this.telemetry = new Telemetry();
   this.setMinWidthWithZoom = this.setMinWidthWithZoom.bind(this);
   this._onToolboxUnload = this._onToolboxUnload.bind(this);
   this._onMessage = this._onMessage.bind(this);
@@ -102,17 +100,12 @@ ToolboxHostManager.prototype = {
       { signal: this.eventController.signal }
     );
 
-    const msSinceProcessStart = parseInt(
-      this.telemetry.msSinceProcessStart(),
-      10
-    );
     const toolbox = new Toolbox(
       this.commands,
       toolId,
       this.host.type,
       this.host.frame.contentWindow,
-      this.frameId,
-      msSinceProcessStart
+      this.frameId
     );
     toolbox.once("toolbox-unload", this._onToolboxUnload);
 
@@ -122,10 +115,6 @@ ToolboxHostManager.prototype = {
     if (!location.href.startsWith("about:devtools-toolbox")) {
       this.host.frame.setAttribute("src", "about:devtools-toolbox");
     }
-
-    // We set an attribute on the toolbox iframe so that apps do not need
-    // access to the toolbox internals in order to get the session ID.
-    this.host.frame.setAttribute("session_id", msSinceProcessStart);
 
     this.setMinWidthWithZoom();
     return toolbox;
