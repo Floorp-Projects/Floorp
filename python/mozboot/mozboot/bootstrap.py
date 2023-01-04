@@ -125,6 +125,13 @@ DEBIAN_DISTROS = (
     "tuxedo",
 )
 
+FEDORA_DISTROS = (
+    "centos",
+    "fedora",
+    "rocky",
+    "oracle",
+)
+
 ADD_GIT_CINNABAR_PATH = """
 To add git-cinnabar to the PATH, edit your shell initialization script, which
 may be called {prefix}/.bash_profile or {prefix}/.profile, and add the following
@@ -183,7 +190,7 @@ class Bootstrapper(object):
                 full_distribution_name=False
             )
 
-            if dist_id in ("centos", "fedora", "rocky"):
+            if dist_id in FEDORA_DISTROS:
                 cls = CentOSFedoraBootstrapper
                 args["distro"] = dist_id
             elif dist_id in DEBIAN_DISTROS:
