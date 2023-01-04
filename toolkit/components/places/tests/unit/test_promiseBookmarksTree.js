@@ -42,7 +42,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   compare_prop("dateAdded");
   compare_prop("lastModified");
 
-  if (aIsRootItem && aNode.itemId != PlacesUtils.placesRootId) {
+  if (aIsRootItem && aNode.bookmarkGuid != PlacesUtils.bookmarks.rootGuid) {
     Assert.ok("parentGuid" in aItem);
     await check_has_child(aItem.parentGuid, aItem.guid);
   } else {
