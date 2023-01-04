@@ -4,6 +4,9 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.RootMatchers
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -12,6 +15,7 @@ import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
+import org.mozilla.fenix.helpers.click
 
 class SettingsSubMenuAutofillRobot {
 
@@ -22,14 +26,10 @@ class SettingsSubMenuAutofillRobot {
         deleteAddressButton.waitForExists(waitingTime)
         deleteAddressButton.click()
     }
-    fun clickCancelDeleteAddressButton() {
-        cancelDeleteAddressButton.waitForExists(waitingTime)
-        cancelDeleteAddressButton.click()
-    }
-    fun clickConfirmDeleteAddressButton() {
-        confirmDeleteAddressButton.waitForExists(waitingTime)
-        confirmDeleteAddressButton.click()
-    }
+    fun clickCancelDeleteAddressButton() = cancelDeleteAddressButton.click()
+
+    fun clickConfirmDeleteAddressButton() = confirmDeleteAddressButton.click()
+
     fun clickSubRegionOption(subRegion: String) {
         subRegionOption(subRegion).waitForExists(waitingTime)
         subRegionOption(subRegion).click()
@@ -81,10 +81,7 @@ class SettingsSubMenuAutofillRobot {
         deleteCreditCardButton.click()
     }
 
-    fun clickConfirmDeleteCreditCardButton() {
-        confirmDeleteCreditCardButton.waitForExists(waitingTime)
-        confirmDeleteCreditCardButton.click()
-    }
+    fun clickConfirmDeleteCreditCardButton() = confirmDeleteCreditCardButton.click()
 
     fun clickExpiryMonthOption(expiryMonth: String) {
         expiryMonthOption(expiryMonth).waitForExists(waitingTime)
@@ -142,8 +139,8 @@ private val phoneTextInput = mDevice.findObject(UiSelector().resourceId("$packag
 private val emailTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/email_input"))
 private val saveButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/save_button"))
 private val deleteAddressButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/delete_address_button"))
-private val cancelDeleteAddressButton = mDevice.findObject(UiSelector().resourceId("android:id/button2"))
-private val confirmDeleteAddressButton = mDevice.findObject(UiSelector().resourceId("android:id/button1"))
+private val cancelDeleteAddressButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
+private val confirmDeleteAddressButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
 
 private val addCreditCardButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_add_credit_card)))
 private val manageSavedCardsButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_manage_saved_cards)))
@@ -153,8 +150,8 @@ private val expiryMonthDropDown = mDevice.findObject(UiSelector().resourceId("$p
 private val expiryYearDropDown = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_year_drop_down"))
 private val savedCreditCardNumber = mDevice.findObject(UiSelector().resourceId("$packageName:id/credit_card_logo"))
 private val deleteCreditCardButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/delete_credit_card_button"))
-private val confirmDeleteCreditCardButton = mDevice.findObject(UiSelector().resourceId("android:id/button1"))
-private val securedCreditCardsLaterButton = mDevice.findObject(UiSelector().resourceId("android:id/button2"))
+private val confirmDeleteCreditCardButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
+private val securedCreditCardsLaterButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
 
 private fun savedAddress(firstName: String) = mDevice.findObject(UiSelector().textContains(firstName))
 private fun subRegionOption(subRegion: String) = mDevice.findObject(UiSelector().textContains(subRegion))

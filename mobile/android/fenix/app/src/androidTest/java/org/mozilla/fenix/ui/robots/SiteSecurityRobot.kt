@@ -6,6 +6,11 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.junit.Assert.assertTrue
@@ -50,8 +55,8 @@ private fun assertSecureConnectionSubMenu(pageTitle: String = "", url: String = 
 
 private fun assertClearSiteDataPrompt(url: String) {
     assertTrue(clearSiteDataPrompt(url).waitForExists(waitingTime))
-    assertTrue(cancelClearSiteDataButton.waitForExists(waitingTime))
-    assertTrue(deleteSiteDataButton.waitForExists(waitingTime))
+    cancelClearSiteDataButton.check(matches(isDisplayed()))
+    deleteSiteDataButton.check(matches(isDisplayed()))
 }
 
 private fun quickActionSheet() =
@@ -145,5 +150,5 @@ private fun clearSiteDataPrompt(url: String) =
             .textContains(url),
     )
 
-private val cancelClearSiteDataButton = mDevice.findObject(UiSelector().resourceId("android:id/button2"))
-private val deleteSiteDataButton = mDevice.findObject(UiSelector().resourceId("android:id/button1"))
+private val cancelClearSiteDataButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
+private val deleteSiteDataButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())

@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.swipeRight
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
@@ -28,6 +30,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
+import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class CollectionRobot {
@@ -59,10 +62,7 @@ class CollectionRobot {
     fun typeCollectionNameAndSave(collectionName: String) {
         collectionNameTextField().text = collectionName
         addCollectionButtonPanel.waitForExists(waitingTime)
-        addCollectionOkButton.also {
-            it.waitForExists(waitingTime)
-            it.click()
-        }
+        addCollectionOkButton.click()
     }
 
     fun verifyTabsSelectedCounterText(numOfTabs: Int) {
@@ -297,5 +297,4 @@ private fun backButton() =
 private val addCollectionButtonPanel =
     itemWithResId("$packageName:id/buttonPanel")
 
-private val addCollectionOkButton =
-    itemWithResId("android:id/button1")
+private val addCollectionOkButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
