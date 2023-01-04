@@ -1146,7 +1146,6 @@ if (is_ios || is_mac) {
             "../rtc_base:rtc_event",
             "../rtc_base/system:unused",
             "../system_wrappers",
-            "../test:test_support",  # TODO(webrtc:8382): Remove use of gtest
             "//third_party/libyuv",
           ]
 
