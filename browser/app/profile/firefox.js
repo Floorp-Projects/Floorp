@@ -2143,17 +2143,10 @@ pref("browser.migrate.chromium-edge-beta.enabled", true);
 pref("browser.migrate.edge.enabled", true);
 pref("browser.migrate.firefox.enabled", true);
 pref("browser.migrate.ie.enabled", true);
-pref("browser.migrate.safari.enabled", true);
-
-#ifdef NIGHTLY_BUILD
 pref("browser.migrate.opera.enabled", true);
 pref("browser.migrate.opera-gx.enabled", true);
+pref("browser.migrate.safari.enabled", true);
 pref("browser.migrate.vivaldi.enabled", true);
-#else
-pref("browser.migrate.opera.enabled", false);
-pref("browser.migrate.opera-gx.enabled", false);
-pref("browser.migrate.vivaldi.enabled", false);
-#endif
 
 pref("browser.migrate.content-modal.enabled", false);
 
