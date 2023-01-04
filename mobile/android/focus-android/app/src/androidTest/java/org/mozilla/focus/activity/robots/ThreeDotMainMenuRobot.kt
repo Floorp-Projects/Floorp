@@ -131,6 +131,13 @@ class ThreeDotMainMenuRobot {
             return BrowserRobot.Transition()
         }
 
+        fun clickStopLoadingButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            stopLoadingButton.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun openFindInPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             findInPageButton.perform(click())
 
@@ -181,6 +188,11 @@ private val addShortcutButton =
 private val reloadButton = mDevice.findObject(
     UiSelector()
         .description("Reload website"),
+)
+
+private val stopLoadingButton = mDevice.findObject(
+    UiSelector()
+        .description("Stop loading website"),
 )
 
 private val addToHomeButton = mDevice.findObject(

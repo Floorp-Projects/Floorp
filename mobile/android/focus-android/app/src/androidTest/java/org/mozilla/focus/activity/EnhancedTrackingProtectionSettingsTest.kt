@@ -8,7 +8,6 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,7 +17,6 @@ import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
-import org.mozilla.focus.helpers.RetryTestRule
 import org.mozilla.focus.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.focus.helpers.TestHelper.exitToBrowser
@@ -34,10 +32,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @get: Rule
     var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
-
-    @Rule
-    @JvmField
-    val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {
@@ -73,7 +67,10 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
-    @Ignore
+    // Some workarounds are temp needed, because of https://bugzilla.mozilla.org/show_bug.cgi?id=1794130:
+    // going to the Settings screen,
+    // loading another page,
+    // or refreshing the page multiple times until ETP starts working.
     @SmokeTest
     @Test
     fun blockAdTrackersTest() {
@@ -84,6 +81,9 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage.url) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent(genericPage.content)
+        }.openMainMenu {
+        }.openSettings {
+            exitToBrowser()
             pressBack()
         }
         searchScreen {
@@ -118,7 +118,10 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
+    // Some workarounds are temp needed, because of https://bugzilla.mozilla.org/show_bug.cgi?id=1794130:
+    // going to the Settings screen,
+    // loading another page,
+    // or refreshing the page multiple times until ETP starts working.
     @SmokeTest
     @Test
     fun blockAnalyticsTrackersTest() {
@@ -129,6 +132,9 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage.url) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent(genericPage.content)
+        }.openMainMenu {
+        }.openSettings {
+            exitToBrowser()
             pressBack()
         }
         searchScreen {
@@ -163,7 +169,10 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
-    @Ignore("Permanent failure: https://github.com/mozilla-mobile/focus-android/issues/7816")
+    // Some workarounds are temp needed, because of https://bugzilla.mozilla.org/show_bug.cgi?id=1794130:
+    // going to the Settings screen,
+    // loading another page,
+    // or refreshing the page multiple times until ETP starts working.
     @SmokeTest
     @Test
     fun blockSocialTrackersTest() {
@@ -174,6 +183,9 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage.url) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent(genericPage.content)
+        }.openMainMenu {
+        }.openSettings {
+            exitToBrowser()
             pressBack()
         }
         searchScreen {
@@ -226,13 +238,22 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
-    @Ignore
+    // Some workarounds are temp needed, because of https://bugzilla.mozilla.org/show_bug.cgi?id=1794130:
+    // going to the Settings screen,
+    // loading another page,
+    // or refreshing the page multiple times until ETP starts working.
     @SmokeTest
     @Test
     fun blockOtherContentTrackersTest() {
         val genericPage = getGenericAsset(webServer)
         val trackingPage = getEnhancedTrackingProtectionAsset(webServer, "otherTrackers")
 
+        searchScreen {
+        }.loadPage(genericPage.url) {
+            // loading a generic page to allow GV to fully load on first run
+            verifyPageContent(genericPage.content)
+            pressBack()
+        }
         homeScreen {
         }.openMainMenu {
         }.openSettings {
@@ -240,12 +261,6 @@ class EnhancedTrackingProtectionSettingsTest {
             clickOtherContentTrackersBlockSwitch()
             verifyBlockOtherTrackersEnabled(true)
             exitToTop()
-        }
-        searchScreen {
-        }.loadPage(genericPage.url) {
-            // loading a generic page to allow GV to fully load on first run
-            verifyPageContent(genericPage.content)
-            pressBack()
         }
         searchScreen {
         }.loadPage(trackingPage.url) {

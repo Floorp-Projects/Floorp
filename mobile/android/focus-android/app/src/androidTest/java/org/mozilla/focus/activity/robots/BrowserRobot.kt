@@ -54,13 +54,45 @@ class BrowserRobot {
     }
 
     fun verifyTrackingProtectionAlert(expectedText: String) {
-        mDevice.wait(Until.findObject(By.textContains(expectedText)), waitingTime)
-        assertTrue(
-            mDevice.findObject(UiSelector().textContains(expectedText))
-                .waitForExists(waitingTime),
-        )
-        // close the JavaScript alert
-        mDevice.pressBack()
+        // Because of https://bugzilla.mozilla.org/show_bug.cgi?id=1794130,
+        // ETP has delays so we need to refresh the page multiple times until ETP starts working.
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(
+                    mDevice.findObject(UiSelector().textContains(expectedText))
+                        .waitForExists(pageLoadingTime),
+                )
+                // close the JavaScript alert
+                mDevice.pressBack()
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    refreshPageIfStillLoading(expectedText)
+                }
+            }
+        }
+    }
+
+    fun refreshPageIfStillLoading(pageContent: String) {
+        browserScreen {
+        }.openMainMenu {
+            when (mDevice.findObject(UiSelector().description("Reload website")).exists()) {
+                true -> ThreeDotMainMenuRobot.Transition().clickReloadButton {}
+                false -> {
+                    ThreeDotMainMenuRobot.Transition().clickStopLoadingButton {
+                        if (!mDevice.findObject(UiSelector().textContains(pageContent))
+                            .waitForExists(waitingTime)
+                        ) {
+                            browserScreen {
+                            }.openMainMenu {
+                            }.clickReloadButton {}
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun verifyPageURL(expectedText: String) {

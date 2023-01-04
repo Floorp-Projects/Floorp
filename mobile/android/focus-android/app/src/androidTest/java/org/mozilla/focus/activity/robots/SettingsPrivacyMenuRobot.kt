@@ -173,8 +173,8 @@ class SettingsPrivacyMenuRobot {
         }
     }
 
-    fun verifyBlockOtherTrackersEnabled(enabled: Boolean) {
-        if (enabled) {
+    fun verifyBlockOtherTrackersEnabled(shouldBeEnabled: Boolean) {
+        if (shouldBeEnabled) {
             otherContentTrackersBlockSwitch()
                 .check(
                     matches(
