@@ -7,7 +7,7 @@ Aborts the process in a nongraceful manner.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

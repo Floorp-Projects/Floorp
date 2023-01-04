@@ -7,7 +7,7 @@ Checks for an empty circular list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

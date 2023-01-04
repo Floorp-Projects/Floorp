@@ -7,7 +7,7 @@ Initializes the runtime.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 
@@ -39,6 +39,6 @@ specific initialization-sequencing requirements.
 
 Call :ref:`PR_Init` as follows:
 
-.. code:: eval
+.. code::
 
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);

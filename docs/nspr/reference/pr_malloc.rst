@@ -7,7 +7,7 @@ Allocates memory of a specified size from the heap.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmem.h>
 

@@ -9,7 +9,7 @@ destination buffer.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    char * PL_strcpy(char *dest, const char *src);
 

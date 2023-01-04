@@ -7,7 +7,7 @@ Inserts an element after another element in a circular list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

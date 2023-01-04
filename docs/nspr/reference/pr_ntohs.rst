@@ -7,7 +7,7 @@ Performs 16-bit conversion from network byte order to host byte order.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

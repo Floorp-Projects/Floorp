@@ -8,7 +8,7 @@ Functions <I_O_Functions#Directory_I.2FO_Functions>`__.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

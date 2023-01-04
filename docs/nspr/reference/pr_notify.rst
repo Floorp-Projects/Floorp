@@ -8,7 +8,7 @@ occurred.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmon.h>
 

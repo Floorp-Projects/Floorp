@@ -9,7 +9,7 @@ communication).
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

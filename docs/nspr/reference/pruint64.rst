@@ -7,7 +7,7 @@ Guaranteed to be an unsigned 64-bit integer on all platforms.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

@@ -7,7 +7,7 @@ Causes the current thread to yield for a specified amount of time.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

@@ -7,7 +7,7 @@ Clears the interrupt request for the calling thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

@@ -8,7 +8,7 @@ and write ends of the pipe.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

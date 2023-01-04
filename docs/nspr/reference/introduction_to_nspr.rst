@@ -298,7 +298,7 @@ within a monitor--the same monitor that protects the data being
 manipulated by the notifier. In pseudocode, the sequence looks like
 this:
 
-.. code:: eval
+.. code::
 
    enter(monitor);
    ... manipulate the monitored data
@@ -311,7 +311,7 @@ design of the code that waits on a condition must take these facts into
 account. Therefore, the pseudocode for the waiting thread might look
 like this:
 
-.. code:: eval
+.. code::
 
    enter(monitor)
    while (!expression) wait(condition);
@@ -334,7 +334,7 @@ wait until there is an object available and that it should return a
 reference to that object. Writing the code as follows could potentially
 return a null reference, violating the invariant of the function:
 
-.. code:: eval
+.. code::
 
    void *dequeue()
    {
@@ -351,7 +351,7 @@ return a null reference, violating the invariant of the function:
 
 The same function would be more appropriately written as follows:
 
-.. code:: eval
+.. code::
 
    void *dequeue()
    {

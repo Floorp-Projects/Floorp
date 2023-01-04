@@ -9,7 +9,7 @@ represent sockets.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

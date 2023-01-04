@@ -7,7 +7,7 @@ Type used in the ``ipv6.ip`` field of the :ref:`PRNetAddr` structure.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

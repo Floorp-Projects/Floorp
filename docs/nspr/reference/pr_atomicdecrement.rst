@@ -7,7 +7,7 @@ Atomically decrements a 32-bit value.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pratom.h>
 

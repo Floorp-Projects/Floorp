@@ -7,7 +7,7 @@ An NSPR thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

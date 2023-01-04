@@ -7,7 +7,7 @@ Looks up a protocol entry based on the protocol's name.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

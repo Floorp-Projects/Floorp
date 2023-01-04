@@ -7,7 +7,7 @@ Enters the lock associated with a specified monitor.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmon.h>
 

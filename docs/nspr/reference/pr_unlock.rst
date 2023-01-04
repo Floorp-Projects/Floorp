@@ -11,7 +11,7 @@ causes undefined behavior.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlock.h>
 

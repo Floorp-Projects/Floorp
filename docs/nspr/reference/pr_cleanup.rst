@@ -7,7 +7,7 @@ Coordinates a graceful shutdown of NSPR.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

@@ -7,7 +7,7 @@ Compares two character strings.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

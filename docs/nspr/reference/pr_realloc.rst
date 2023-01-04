@@ -8,7 +8,7 @@ Resizes allocated memory on the heap.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmem.h>
 

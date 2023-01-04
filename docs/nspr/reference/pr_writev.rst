@@ -7,7 +7,7 @@ Writes data to a socket from multiple buffers.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -64,7 +64,7 @@ specified interval, :ref:`PR_Writev` returns -1 with the error code
 
 This is the type definition for ``PRIOVec``:
 
-.. code:: eval
+.. code::
 
    typedef struct PRIOVec {
      char *iov_base;

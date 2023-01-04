@@ -7,7 +7,7 @@ Sets per-thread private data.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

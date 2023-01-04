@@ -10,7 +10,7 @@ bits). This types is never valid for fields of a structure.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

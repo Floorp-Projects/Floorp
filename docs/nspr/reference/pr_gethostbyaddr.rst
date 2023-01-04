@@ -7,7 +7,7 @@ Looks up a host entry by its network address.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

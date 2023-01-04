@@ -7,7 +7,7 @@ A thread's thread state is either joinable or unjoinable.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

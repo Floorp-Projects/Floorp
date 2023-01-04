@@ -7,7 +7,7 @@ Constructs a full library path name.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

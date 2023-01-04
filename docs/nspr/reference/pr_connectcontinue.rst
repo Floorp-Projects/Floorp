@@ -5,7 +5,7 @@ PR_ConnectContinue
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

@@ -8,7 +8,7 @@ of RFC 3493.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

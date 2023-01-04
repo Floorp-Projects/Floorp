@@ -7,7 +7,7 @@ Creates a process attributes structure.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

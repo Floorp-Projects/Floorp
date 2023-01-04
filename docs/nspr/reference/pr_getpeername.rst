@@ -7,7 +7,7 @@ Gets the network address of the connected peer.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

@@ -8,7 +8,7 @@ exported from a shared library.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

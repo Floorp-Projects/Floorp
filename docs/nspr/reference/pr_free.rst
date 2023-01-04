@@ -7,7 +7,7 @@ Frees allocated memory in the heap.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmem.h>
 

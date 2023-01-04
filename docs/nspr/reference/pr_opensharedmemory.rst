@@ -8,7 +8,7 @@ name doesn't exist, creates a new one.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prshm.h>
 

@@ -12,7 +12,7 @@ symbols can be treated in a consistent fashion.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

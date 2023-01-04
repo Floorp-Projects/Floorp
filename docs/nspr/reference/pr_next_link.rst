@@ -7,7 +7,7 @@ Returns the next element in a list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

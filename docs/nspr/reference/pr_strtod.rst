@@ -8,7 +8,7 @@ floating point number.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prdtoa.h>
 

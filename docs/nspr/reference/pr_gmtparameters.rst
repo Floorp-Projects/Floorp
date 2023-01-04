@@ -13,7 +13,7 @@ Returns the time zone offset information that maps the specified
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtime.h>
 

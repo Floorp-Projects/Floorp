@@ -8,7 +8,7 @@ both the symbol and the library in which it was found.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

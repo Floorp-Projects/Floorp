@@ -7,7 +7,7 @@ Performs 32-bit conversion from host byte order to network byte order.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

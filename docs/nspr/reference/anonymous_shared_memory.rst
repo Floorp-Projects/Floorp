@@ -54,7 +54,7 @@ First protocol
 
 **Server:**
 
-.. code:: eval
+.. code::
 
    fm = PR_OpenAnonFileMap(dirName, size, FilemapProt);
    addr = PR_MemMap(fm);
@@ -68,7 +68,7 @@ First protocol
 
 **Client:**
 
-.. code:: eval
+.. code::
 
    ... started by server via PR_CreateProcess()
    fm = PR_GetInheritedFileMap( shmname );
@@ -84,7 +84,7 @@ Second protocol
 
 **Server:**
 
-.. code:: eval
+.. code::
 
    fm = PR_OpenAnonFileMap(dirName, size, FilemapProt);
    fmstring = PR_ExportFileMapAsString( fm );
@@ -96,7 +96,7 @@ Second protocol
 
 **Client:**
 
-.. code:: eval
+.. code::
 
    ... started by server via his own magic
    ... application specific technique to find fmstring from parent

@@ -8,7 +8,7 @@ Moves the current read-write file pointer by an offset expressed as a
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

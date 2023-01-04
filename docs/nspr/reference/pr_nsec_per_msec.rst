@@ -9,7 +9,7 @@ nanoseconds in a millisecond.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prtime.h>
 

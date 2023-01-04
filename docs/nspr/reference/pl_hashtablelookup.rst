@@ -7,7 +7,7 @@ Looks up the entry with the specified key and return its value.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

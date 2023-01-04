@@ -7,7 +7,7 @@ Boolean value.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

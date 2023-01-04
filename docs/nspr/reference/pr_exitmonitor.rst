@@ -8,7 +8,7 @@ the entry count reaches zero, releases the monitor's lock.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmon.h>
 

@@ -9,7 +9,7 @@ Destroys the ``PRAddrInfo`` structure returned by
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

@@ -8,7 +8,7 @@ error stream.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -40,7 +40,7 @@ Description
 
 Type ``PRSpecialFD`` is defined as follows:
 
-.. code:: eval
+.. code::
 
    typedef enum PRSpecialFD{
       PR_StandardInput,

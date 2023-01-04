@@ -7,7 +7,7 @@ Promotes all threads waiting on a specified monitor to a ready state.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmon.h>
 

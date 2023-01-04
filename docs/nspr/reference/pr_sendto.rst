@@ -7,7 +7,7 @@ Sends bytes a socket to a specified destination.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

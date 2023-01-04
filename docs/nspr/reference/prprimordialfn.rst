@@ -8,7 +8,7 @@ follows:
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    typedef PRIntn (PR_CALLBACK *PRPrimordialFn)(PRIntn argc, char **argv);
 

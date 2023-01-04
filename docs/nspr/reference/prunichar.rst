@@ -9,7 +9,7 @@ JavaScript string defined in
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #if defined(NS_WIN32)
      typedef wchar_t PRUnichar;

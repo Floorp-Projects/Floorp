@@ -8,7 +8,7 @@ when needed and must destroy them when no longer needed.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmon.h>
 

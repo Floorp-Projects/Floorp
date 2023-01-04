@@ -8,7 +8,7 @@ as stored in the thread's context.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prerror.h>
 

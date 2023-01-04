@@ -212,7 +212,7 @@ polymorphically.
 
 NSPR defines three identities:
 
-.. code:: eval
+.. code::
 
    #define PR_INVALID_IO_LAYER (PRDescIdentity)-1
    #define PR_TOP_IO_LAYER (PRDescIdentity)-2

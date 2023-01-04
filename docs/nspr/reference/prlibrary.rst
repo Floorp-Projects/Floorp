@@ -7,7 +7,7 @@ An opaque structure identifying a library.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

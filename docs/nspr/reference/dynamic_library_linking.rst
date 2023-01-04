@@ -42,7 +42,7 @@ executable program. (This is admittedly an omission that should be
 fixed.) However, it is possible to look up symbols defined in the main
 executable program as follows.
 
-.. code:: eval
+.. code::
 
    PRLibrary *lib;
    void *funcPtr;
@@ -94,7 +94,7 @@ list of directories specified by an environment variable.
    ``chatr`` tool. For example, link your executable program a.out
    without the +s option, then execute the following:
 
-.. code:: eval
+.. code::
 
    chatr +s enable a.out
 

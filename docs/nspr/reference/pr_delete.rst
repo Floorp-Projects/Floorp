@@ -5,7 +5,7 @@ PR_Delete
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

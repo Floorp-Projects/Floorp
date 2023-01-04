@@ -8,7 +8,7 @@ The scope of an NSPR thread, specified as a parameter to
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

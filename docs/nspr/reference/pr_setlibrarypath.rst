@@ -7,7 +7,7 @@ Registers a default library pathname with a runtime.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

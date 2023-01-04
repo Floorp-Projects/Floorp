@@ -7,7 +7,7 @@ Closes the specified directory.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

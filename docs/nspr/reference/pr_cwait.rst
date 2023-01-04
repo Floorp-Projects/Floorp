@@ -7,7 +7,7 @@ Wait for a notification that a monitor's state has changed.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcmon.h>
 

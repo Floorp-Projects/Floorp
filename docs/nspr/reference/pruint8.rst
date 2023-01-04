@@ -8,7 +8,7 @@ type equivalent to a plain ``char``.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

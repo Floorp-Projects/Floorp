@@ -8,7 +8,7 @@ to form the name portion of a name-value pair.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

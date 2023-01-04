@@ -7,7 +7,7 @@ Decrement the entry count associated with a cached monitor.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcmon.h>
 

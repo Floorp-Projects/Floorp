@@ -8,7 +8,7 @@ Type returned by :ref:`PR_CreateFileMap` and passed to :ref:`PR_MemMap` and
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

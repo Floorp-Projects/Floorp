@@ -7,7 +7,7 @@ A general-purpose hash function for character strings.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

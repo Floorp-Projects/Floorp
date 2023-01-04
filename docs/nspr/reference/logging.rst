@@ -93,7 +93,7 @@ debugging aids.
 -  Before running the compiled program, set the environment variable
    NSPR_LOG_MODULES to userStuff:5
 
-.. code:: eval
+.. code::
 
    static void UserLogStuff( void )
    {

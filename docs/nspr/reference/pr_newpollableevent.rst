@@ -7,7 +7,7 @@ Create a pollable event file descriptor.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    NSPR_API(PRFileDesc *) PR_NewPollableEvent( void);
 

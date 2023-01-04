@@ -7,7 +7,7 @@ Create a new hash table.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

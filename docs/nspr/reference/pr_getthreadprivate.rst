@@ -7,7 +7,7 @@ Recovers the per-thread private data for the current thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

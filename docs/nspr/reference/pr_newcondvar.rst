@@ -7,7 +7,7 @@ Creates a new condition variable.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcvar.h>
 

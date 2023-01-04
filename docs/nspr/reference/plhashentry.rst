@@ -2,7 +2,7 @@
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 
@@ -16,7 +16,7 @@ Description
 table. An entry has a key and a value, represented by the following
 fields in the ``PLHashEntry`` structure.
 
-.. code:: eval
+.. code::
 
    const void *key;
    void *value;

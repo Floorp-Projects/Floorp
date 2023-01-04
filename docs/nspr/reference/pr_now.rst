@@ -7,7 +7,7 @@ Returns the current time.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtime.h>
 

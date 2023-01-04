@@ -8,7 +8,7 @@ File information structure used with :ref:`PR_GetFileInfo` and
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

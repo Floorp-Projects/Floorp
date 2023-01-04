@@ -8,7 +8,7 @@ pointer). This is the same as the corresponding type in ``libc``.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

@@ -7,7 +7,7 @@ Imports a native TCP socket into NSPR.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include "private/pprio.h"
 

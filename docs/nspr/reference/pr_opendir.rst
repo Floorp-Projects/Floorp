@@ -7,7 +7,7 @@ Opens the directory with the specified pathname.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

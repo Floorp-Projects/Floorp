@@ -7,7 +7,7 @@ Unloads a library loaded with :ref:`PR_LoadLibrary`.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

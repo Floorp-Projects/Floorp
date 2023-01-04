@@ -7,7 +7,7 @@ Appends an element to the end of a list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

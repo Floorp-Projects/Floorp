@@ -7,7 +7,7 @@ Causes an immediate, nongraceful, forced termination of the process.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

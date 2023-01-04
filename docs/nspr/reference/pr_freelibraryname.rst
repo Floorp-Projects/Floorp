@@ -7,7 +7,7 @@ Frees memory allocated by NSPR for library names and path names.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

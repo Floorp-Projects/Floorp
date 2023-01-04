@@ -9,7 +9,7 @@ responsibility of, the calling client.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 
@@ -57,7 +57,7 @@ indicates the version of the address being used.
 The special network address values are identified by the enum
 ``PRNetAddrValue``:
 
-.. code:: eval
+.. code::
 
    typedef enum PRNetAddrValue{
      PR_IpAddrNull,

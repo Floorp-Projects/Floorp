@@ -7,7 +7,7 @@ Determines the accessibility of a file.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

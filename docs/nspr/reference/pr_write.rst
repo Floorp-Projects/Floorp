@@ -7,7 +7,7 @@ Writes a buffer of data to a file or socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

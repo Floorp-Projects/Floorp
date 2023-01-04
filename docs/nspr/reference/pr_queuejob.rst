@@ -7,7 +7,7 @@ Queues a job to a thread pool for execution.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

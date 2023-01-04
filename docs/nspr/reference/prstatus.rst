@@ -7,7 +7,7 @@ Type for status code returned by some functions.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

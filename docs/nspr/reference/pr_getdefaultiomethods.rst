@@ -7,7 +7,7 @@ Gets the default I/O methods table.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

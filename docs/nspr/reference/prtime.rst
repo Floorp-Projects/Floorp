@@ -7,7 +7,7 @@ A representation of absolute times.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prtime.h>
 

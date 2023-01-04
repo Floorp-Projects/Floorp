@@ -7,7 +7,7 @@ Creates extra virtual processor threads. Generally used with MP systems.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

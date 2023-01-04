@@ -7,7 +7,7 @@ Enters the lock associated with a cached monitor.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcmon.h>
 

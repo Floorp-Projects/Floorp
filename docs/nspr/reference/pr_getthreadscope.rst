@@ -7,7 +7,7 @@ Gets the scoping of the current thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

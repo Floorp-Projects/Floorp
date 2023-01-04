@@ -9,7 +9,7 @@ socket if any data remain in the socket send buffer.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

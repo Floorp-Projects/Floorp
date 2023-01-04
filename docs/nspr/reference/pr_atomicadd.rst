@@ -5,7 +5,7 @@ PR_AtomicAdd
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pratom.h>
 

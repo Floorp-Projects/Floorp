@@ -9,7 +9,7 @@ index.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

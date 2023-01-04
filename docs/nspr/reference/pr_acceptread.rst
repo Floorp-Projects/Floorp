@@ -7,7 +7,7 @@ Accepts a new connection and receives a block of data.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

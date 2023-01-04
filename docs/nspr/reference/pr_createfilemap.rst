@@ -7,7 +7,7 @@ Creates a file mapping object.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -50,7 +50,7 @@ Description
 The ``PRFileMapProtect`` enumeration used in the ``prot`` parameter is
 defined as follows:
 
-.. code:: eval
+.. code::
 
    typedef enum PRFileMapProtect {
      PR_PROT_READONLY,

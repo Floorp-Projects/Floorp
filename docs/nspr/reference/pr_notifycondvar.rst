@@ -8,7 +8,7 @@ data.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcvar.h>
 

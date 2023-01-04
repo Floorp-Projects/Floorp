@@ -9,7 +9,7 @@ structure, acquired from :ref:`PR_GetAddrInfoByName`.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

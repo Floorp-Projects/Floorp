@@ -7,7 +7,7 @@ Retrieves the current default library path.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

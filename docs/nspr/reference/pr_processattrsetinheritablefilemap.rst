@@ -8,7 +8,7 @@ Prepare filemap for export to my children processes via
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prshma.h>
 

@@ -8,7 +8,7 @@ expressed as a 64-bit integer.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

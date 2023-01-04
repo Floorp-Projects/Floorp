@@ -7,7 +7,7 @@ Returns the preceding element in a list.
 Syntax
 ------
 
-.. code:: syntaxbox
+.. code::
 
    #include <prclist.h>
 

@@ -7,7 +7,7 @@ Atomically sets a 32-bit value and return its previous contents.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pratom.h>
 

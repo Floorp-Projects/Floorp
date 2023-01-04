@@ -7,7 +7,7 @@ Creates a new layer.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

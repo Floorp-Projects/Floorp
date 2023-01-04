@@ -7,7 +7,7 @@ Gets a pointer to the next entry in the directory.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -52,7 +52,7 @@ Description
 
 :ref:`PR_ReadDir` returns a pointer to a directory entry structure:
 
-.. code:: eval
+.. code::
 
    struct PRDirEntry {
      const char *name;
@@ -67,7 +67,7 @@ The structure has the following field:
 
 The ``flags`` parameter is an enum of type ``PRDirFlags``:
 
-.. code:: eval
+.. code::
 
    typedef enum PRDirFlags {
      PR_SKIP_NONE    = 0x0,

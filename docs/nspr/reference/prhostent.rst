@@ -10,7 +10,7 @@ the structure's fields.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

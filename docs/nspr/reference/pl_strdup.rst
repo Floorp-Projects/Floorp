@@ -8,7 +8,7 @@ copy of a specified string.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <plstr.h>
 

@@ -8,7 +8,7 @@ at compile time.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlog.h>
 

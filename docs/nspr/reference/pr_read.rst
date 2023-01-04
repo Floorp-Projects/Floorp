@@ -7,7 +7,7 @@ Reads bytes from a file or socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

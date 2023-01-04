@@ -7,7 +7,7 @@ Creates a new TCP socket of the specified address family.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

@@ -7,7 +7,7 @@ Inserts an element at the head of the list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

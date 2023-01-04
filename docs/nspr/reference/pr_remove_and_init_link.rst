@@ -7,7 +7,7 @@ Removes an element from a circular list and initializes the linkage.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

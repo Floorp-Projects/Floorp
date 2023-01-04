@@ -8,7 +8,7 @@ related resources.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    NSPR_API(PRStatus) PR_DestroyPollableEvent(PRFileDesc *event);
 

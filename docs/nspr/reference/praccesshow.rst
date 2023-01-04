@@ -4,7 +4,7 @@ PRAccessHow
 This is the declaration for the enumeration :ref:`PRAccessHow`, used in the
 ``how`` parameter of :ref:`PR_Access`:
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

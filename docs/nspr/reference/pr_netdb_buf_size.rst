@@ -9,7 +9,7 @@ Recommended size to use when specifying a scratch buffer for
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

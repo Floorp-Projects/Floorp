@@ -8,7 +8,7 @@ resources allocated to the thread pool.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

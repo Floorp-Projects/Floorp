@@ -7,7 +7,7 @@ The identity of a file descriptor's layer.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

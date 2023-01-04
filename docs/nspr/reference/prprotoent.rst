@@ -8,7 +8,7 @@ Protocol entry returned by :ref:`PR_GetProtoByName` and
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

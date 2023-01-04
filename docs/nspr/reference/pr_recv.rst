@@ -7,7 +7,7 @@ Receives bytes from a connected socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

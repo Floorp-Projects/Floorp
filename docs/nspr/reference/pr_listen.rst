@@ -7,7 +7,7 @@ Listens for connections on a specified socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

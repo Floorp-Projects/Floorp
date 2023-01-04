@@ -7,7 +7,7 @@ Disables timer signals used for preemptive scheduling.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

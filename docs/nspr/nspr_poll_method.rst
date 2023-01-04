@@ -18,7 +18,7 @@ bottom layer using another network transport API. The poll method is one
 of the functions in the PRIOMethods table. The prototype of the poll
 method is
 
-.. code:: eval
+.. code::
 
    PRInt16 poll_method(PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags);
 
@@ -95,21 +95,21 @@ method as follows.
 Declare two PRInt16 variables to receive the return value and the
 out_flags output argument of the poll method.
 
-.. code:: eval
+.. code::
 
    PRInt16 new_flags, out_flags;
 
 If you are going to call PR_Recv, pass PR_POLL_READ as the in_flags
 argument.
 
-.. code:: eval
+.. code::
 
    new_flags = fd->methods->poll(fd, PR_POLL_READ, &out_flags);
 
 If you are going to call PR_Send, pass PR_POLL_WRITE as the in_flags
 argument.
 
-.. code:: eval
+.. code::
 
    new_flags = fd->methods->poll(fd, PR_POLL_WRITE, &out_flags);
 

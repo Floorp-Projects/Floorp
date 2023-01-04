@@ -7,7 +7,7 @@ Unmap a memory region that is backed by a memory-mapped file.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

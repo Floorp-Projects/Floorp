@@ -8,7 +8,7 @@ function on each entry.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

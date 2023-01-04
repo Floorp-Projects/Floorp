@@ -8,7 +8,7 @@ client but called from a (different) shared library.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>type PR_CALLBACKimplementation
 
