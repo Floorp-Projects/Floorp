@@ -576,11 +576,15 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
   return negotiatedCodecs;
 }
 
-void JsepTrack::Negotiate(const SdpMediaSection& answer,
-                          const SdpMediaSection& remote,
-                          const SdpMediaSection& local) {
+nsresult JsepTrack::Negotiate(const SdpMediaSection& answer,
+                              const SdpMediaSection& remote,
+                              const SdpMediaSection& local) {
   std::vector<UniquePtr<JsepCodecDescription>> negotiatedCodecs =
       NegotiateCodecs(remote, &answer != &remote, SomeRef(local));
+
+  if (negotiatedCodecs.empty()) {
+    return NS_ERROR_FAILURE;
+  }
 
   UniquePtr<JsepTrackNegotiatedDetails> negotiatedDetails =
       MakeUnique<JsepTrackNegotiatedDetails>();
@@ -603,6 +607,7 @@ void JsepTrack::Negotiate(const SdpMediaSection& answer,
 
   mInHaveRemote = false;
   mNegotiatedDetails = std::move(negotiatedDetails);
+  return NS_OK;
 }
 
 // When doing bundle, if all else fails we can try to figure out which m-line a

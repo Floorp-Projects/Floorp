@@ -200,9 +200,9 @@ class JsepTrack {
                            SsrcGenerator& ssrcGenerator,
                            SdpMediaSection* answer);
 
-  virtual void Negotiate(const SdpMediaSection& answer,
-                         const SdpMediaSection& remote,
-                         const SdpMediaSection& local);
+  virtual nsresult Negotiate(const SdpMediaSection& answer,
+                             const SdpMediaSection& remote,
+                             const SdpMediaSection& local);
   static void SetUniquePayloadTypes(std::vector<JsepTrack*>& tracks);
   virtual void GetNegotiatedPayloadTypes(
       std::vector<uint16_t>* payloadTypes) const;
