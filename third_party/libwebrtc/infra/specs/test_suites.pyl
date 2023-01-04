@@ -177,36 +177,22 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'linux_video_capture_tests': {
-      'video_capture_tests': {
-        'remove_mixins': ['linux-bionic'],
-        'mixins': ['linux', 'baremetal-pool'],
-      }
-    },
-    'linux_video_capture_tests_tryserver': {
-      'video_capture_tests': {
-        'remove_mixins': ['linux-bionic'],
-        'mixins': ['linux', 'baremetal-try-pool'],
-      }
-    },
-    'mac_video_capture_tests': {
-      'video_capture_tests': {
-        'remove_mixins': ['mac11'],
-        'mixins': ['mac', 'baremetal-pool'],
-      }
-    },
-    'mac_video_capture_tests_tryserver': {
-      'video_capture_tests': {
-        'remove_mixins': ['mac11'],
-        'mixins': ['mac', 'baremetal-try-pool'],
-      }
-    },
     'more_configs_tests': {
       'peerconnection_unittests': {
         'swarming': {
           'shards': 4
         },
       },
+    },
+    'video_capture_tests': {
+      'video_capture_tests': {
+        'mixins': ['baremetal-pool'],
+      }
+    },
+    'video_capture_tests_tryserver': {
+      'video_capture_tests': {
+        'mixins': ['baremetal-try-pool'],
+      }
     },
     'webrtc_perf_tests': {
       'webrtc_perf_tests': {
@@ -218,48 +204,20 @@
         'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
       }
     },
-    'win_video_capture_tests': {
-      'video_capture_tests': {
-        'mixins': ['win', 'baremetal-pool'],
-      }
-    },
-    'win_video_capture_tests_tryserver': {
-      'video_capture_tests': {
-        'mixins': ['win', 'baremetal-try-pool'],
-      }
-    },
   },
   'compound_suites': {
     'android_tests_tryserver': [
       'android_tests',
       'android_webrtc_perf_tests_tryserver',
     ],
-    'linux_tests': [
+    'desktop_tests_tryserver': [
       'desktop_tests',
-      'linux_video_capture_tests',
-    ],
-    'linux_tests_tryserver': [
-      'desktop_tests',
-      'linux_video_capture_tests_tryserver',
+      'video_capture_tests_tryserver',
       'webrtc_perf_tests_tryserver',
     ],
-    'mac_tests': [
+    'desktop_tests_with_video_capture': [
       'desktop_tests',
-      'mac_video_capture_tests',
-    ],
-    'mac_tests_tryserver': [
-      'desktop_tests',
-      'mac_video_capture_tests_tryserver',
-      'webrtc_perf_tests_tryserver',
-    ],
-    'win_tests': [
-      'desktop_tests',
-      'win_video_capture_tests',
-    ],
-    'win_tests_tryserver': [
-      'desktop_tests',
-      'win_video_capture_tests_tryserver',
-      'webrtc_perf_tests_tryserver',
+      'video_capture_tests',
     ],
   },
 }

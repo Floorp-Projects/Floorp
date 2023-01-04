@@ -107,21 +107,6 @@
       },
     }
   },
-  'quick-perf-tests': {
-    '$mixin_append': {
-      'args': [
-        '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
-        '--nologs',
-      ],
-    }
-  },
-  'linux': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Ubuntu'
-      }
-    }
-  },
   'logdog-butler': {
     'swarming': {
       'cipd_packages': [
@@ -132,13 +117,6 @@
         },
       ],
     },
-  },
-  'mac': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Mac',
-      }
-    }
   },
   'mac-m1-cpu': {
     'swarming': {
@@ -151,13 +129,6 @@
     'swarming': {
       'dimensions': {
         'os': 'Mac-11'
-      }
-    }
-  },
-  'mac11_or_mac12': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Mac-11|Mac-12'
       }
     }
   },
@@ -194,6 +165,14 @@
       'args': ['--nologs']
     }
   },
+  'quick-perf-tests': {
+    '$mixin_append': {
+      'args': [
+        '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
+        '--nologs',
+      ],
+    }
+  },
   'resultdb-gtest-json-format': {
     '$mixin_append': {
       'args': [
@@ -210,6 +189,14 @@
       'result_format': 'json'
     }
   },
+  'shamu': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'shamu',
+        'os': 'Android',
+      },
+    },
+  },
   'shards-2': {
     'swarming': {
       'shards': 2,
@@ -223,14 +210,6 @@
   'shards-6': {
     'swarming': {
       'shards': 6,
-    },
-  },
-  'shamu': {
-    'swarming': {
-      'dimensions': {
-        'device_type': 'shamu',
-        'os': 'Android',
-      },
     },
   },
   'timeout-2h': {
@@ -253,11 +232,15 @@
       ],
     },
   },
-  'win': {
+  'xcode_13_main': {
+    '$mixin_append': {
+      'args': ['--xcode-build-version', '13c100']
+    },
     'swarming': {
-      'dimensions': {
-        'os': 'Windows'
-      }
+      'named_caches': [{
+        'name': 'xcode_ios_13c100',
+        'path': 'Xcode.app'
+      }]
     }
-  }
+  },
 }
