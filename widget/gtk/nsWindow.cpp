@@ -431,7 +431,8 @@ nsWindow::nsWindow()
       mMovedAfterMoveToRect(false),
       mResizedAfterMoveToRect(false),
       mConfiguredClearColor(false),
-      mGotNonBlankPaint(false) {
+      mGotNonBlankPaint(false),
+      mNeedsToRetryCapturingMouse(false) {
   mWindowType = eWindowType_child;
   mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
 
@@ -754,11 +755,7 @@ void nsWindow::SetParent(nsIWidget* aNewParent) {
   GdkWindow* parentWindow = newParent->GetToplevelGdkWindow();
   LOG("  child GdkWindow %p set parent GdkWindow %p", window, parentWindow);
   gdk_window_reparent(window, parentWindow, 0, 0);
-
-  bool parentHasMappedToplevel = newParent && newParent->mHasMappedToplevel;
-  if (mHasMappedToplevel != parentHasMappedToplevel) {
-    SetHasMappedToplevel(parentHasMappedToplevel);
-  }
+  SetHasMappedToplevel(newParent && newParent->mHasMappedToplevel);
 }
 
 bool nsWindow::WidgetTypeSupportsAcceleration() {
@@ -948,12 +945,6 @@ void nsWindow::Show(bool aState) {
     LOG("  closing Drag&Drop source window, D&D will be canceled!");
   }
 #endif
-
-  if (aState) {
-    // Now that this window is shown, mHasMappedToplevel needs to be
-    // tracked on viewable descendants.
-    SetHasMappedToplevel(mHasMappedToplevel);
-  }
 
   // Ok, someone called show on a window that isn't sized to a sane
   // value.  Mark this window as needing to have Show() called on it
@@ -2826,14 +2817,13 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mLastSizeModeRequest = aMode;
 }
 
-static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
+static bool GetWindowManagerName(GdkScreen* screen, nsACString& wmName) {
   if (!GdkIsX11Display()) {
     return false;
   }
 
 #ifdef MOZ_X11
   Display* xdisplay = gdk_x11_get_default_xdisplay();
-  GdkScreen* screen = gdk_window_get_screen(gdk_window);
   Window root_win = GDK_WINDOW_XID(gdk_screen_get_root_window(screen));
 
   int actual_format_return;
@@ -2893,10 +2883,10 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
 #endif
 }
 
-#define kDesktopMutterSchema "org.gnome.mutter"
-#define kDesktopDynamicWorkspacesKey "dynamic-workspaces"
+#define kDesktopMutterSchema "org.gnome.mutter"_ns
+#define kDesktopDynamicWorkspacesKey "dynamic-workspaces"_ns
 
-static bool WorkspaceManagementDisabled(GdkWindow* gdk_window) {
+static bool WorkspaceManagementDisabled(GdkScreen* screen) {
   if (Preferences::GetBool("widget.disable-workspace-management", false)) {
     return true;
   }
@@ -2913,13 +2903,11 @@ static bool WorkspaceManagementDisabled(GdkWindow* gdk_window) {
         do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
     if (gsettings) {
       nsCOMPtr<nsIGSettingsCollection> mutterSettings;
-      gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopMutterSchema),
+      gsettings->GetCollectionForSchema(kDesktopMutterSchema,
                                         getter_AddRefs(mutterSettings));
       if (mutterSettings) {
-        if (NS_SUCCEEDED(mutterSettings->GetBoolean(
-                nsLiteralCString(kDesktopDynamicWorkspacesKey),
-                &usesDynamicWorkspaces))) {
-        }
+        mutterSettings->GetBoolean(kDesktopDynamicWorkspacesKey,
+                                   &usesDynamicWorkspaces);
       }
     }
     return usesDynamicWorkspaces;
@@ -2928,7 +2916,7 @@ static bool WorkspaceManagementDisabled(GdkWindow* gdk_window) {
   // When XDG_CURRENT_DESKTOP is missing, try to get window manager name.
   if (!currentDesktop) {
     nsAutoCString wmName;
-    if (GetWindowManagerName(gdk_window, wmName)) {
+    if (GetWindowManagerName(screen, wmName)) {
       if (wmName.EqualsLiteral("bspwm")) {
         return true;
       }
@@ -2958,7 +2946,7 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
     return;
   }
 
-  if (WorkspaceManagementDisabled(gdk_window)) {
+  if (WorkspaceManagementDisabled(gdk_window_get_screen(gdk_window))) {
     LOG("  WorkspaceManagementDisabled, quit.");
     return;
   }
@@ -3678,40 +3666,84 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   return GdkPointToDevicePixels({origin.x, origin.y});
 }
 
-void nsWindow::CaptureMouse(bool aCapture) {
-  LOG("nsWindow::CaptureMouse()");
-
-  if (mIsDestroyed) {
-    return;
-  }
-
-  if (aCapture) {
-    gtk_grab_add(GTK_WIDGET(mContainer));
-  } else {
-    gtk_grab_remove(GTK_WIDGET(mContainer));
-  }
-}
-
 void nsWindow::CaptureRollupEvents(bool aDoCapture) {
-  LOG("CaptureRollupEvents() %i\n", int(aDoCapture));
-
+  LOG("CaptureRollupEvents(%d)\n", aDoCapture);
   if (mIsDestroyed) {
     return;
   }
 
-  if (aDoCapture) {
-    // Don't add a grab if a drag is in progress, or if the widget is a drag
-    // feedback popup. (panels with type="drag").
-    if (!GdkIsWaylandDisplay() && !mIsDragPopup &&
-        !nsWindow::DragInProgress()) {
-      gtk_grab_add(GTK_WIDGET(mContainer));
+  static constexpr auto kCaptureEventsMask =
+      GdkEventMask(GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                   GDK_POINTER_MOTION_MASK | GDK_TOUCH_MASK);
+
+  static bool sSystemNeedsPointerGrab = [&] {
+    if (GdkIsWaylandDisplay()) {
+      return false;
     }
+    // We only need to grab the pointer for X servers that move the focus with
+    // the pointer (like twm, sawfish...). Since we roll up popups on focus out,
+    // not grabbing the pointer triggers rollup when the mouse enters the popup
+    // and leaves the main window, see bug 1807482.
+    //
+    // We don't do it for most common desktops, if only because it causes X11
+    // crashes like bug 1607713.
+    if (const char* desktopSession = getenv("XDG_SESSION_DESKTOP")) {
+      if (!strcmp(desktopSession, "twm")) {
+        return true;
+      }
+    }
+
+    nsAutoCString wmName;
+    if (NS_WARN_IF(!GetWindowManagerName(gdk_screen_get_default(), wmName))) {
+      return false;
+    }
+    return wmName.EqualsLiteral("Sawfish");
+  }();
+
+  const bool grabPointer = [] {
+    switch (StaticPrefs::widget_gtk_grab_pointer()) {
+      case 0:
+        return false;
+      case 1:
+        return true;
+      default:
+        return sSystemNeedsPointerGrab;
+    }
+  }();
+
+  if (!grabPointer) {
+    return;
+  }
+
+  mNeedsToRetryCapturingMouse = false;
+  if (aDoCapture) {
+    if (mIsDragPopup || DragInProgress()) {
+      // Don't add a grab if a drag is in progress, or if the widget is a drag
+      // feedback popup. (panels with type="drag").
+      return;
+    }
+
+    if (!mHasMappedToplevel) {
+      // On X, capturing an unmapped window is pointless (returns
+      // GDK_GRAB_NOT_VIEWABLE). Avoid the X server round-trip and just retry
+      // when we're mapped.
+      mNeedsToRetryCapturingMouse = true;
+      return;
+    }
+
+    GdkGrabStatus status = gdk_device_grab(
+        GdkGetPointer(), GetToplevelGdkWindow(), GDK_OWNERSHIP_NONE,
+        /* owner_events = */ true, kCaptureEventsMask,
+        /* cursor = */ nullptr, GetLastUserInputTime());
+    Unused << NS_WARN_IF(status != GDK_GRAB_SUCCESS);
+    LOG(" > pointer grab with status %d", int(status));
+    gtk_grab_add(GTK_WIDGET(mContainer));
   } else {
     // There may not have been a drag in process when aDoCapture was set,
     // so make sure to remove any added grab.  This is a no-op if the grab
     // was not added to this widget.
-    LOG("  remove mContainer grab [%p]\n", this);
     gtk_grab_remove(GTK_WIDGET(mContainer));
+    gdk_device_ungrab(GdkGetPointer(), GetLastUserInputTime());
   }
 }
 
@@ -5125,9 +5157,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     // not get VisibilityNotify events.)
     bool mapped = !(aEvent->new_window_state &
                     (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_WITHDRAWN));
-    if (mHasMappedToplevel != mapped) {
-      SetHasMappedToplevel(mapped);
-    }
+    SetHasMappedToplevel(mapped);
     LOG("\tquick return because IS_MOZ_CONTAINER(aWidget) is true\n");
     return;
   }
@@ -6685,11 +6715,18 @@ void nsWindow::NativeShow(bool aAction) {
 }
 
 void nsWindow::SetHasMappedToplevel(bool aState) {
-  LOG("nsWindow::SetHasMappedToplevel() state %d", aState);
+  LOG("nsWindow::SetHasMappedToplevel(%d)", aState);
+  if (aState == mHasMappedToplevel) {
+    return;
+  }
   // Even when aState == mHasMappedToplevel (as when this method is called
   // from Show()), child windows need to have their state checked, so don't
   // return early.
   mHasMappedToplevel = aState;
+  if (aState && mNeedsToRetryCapturingMouse) {
+    CaptureRollupEvents(true);
+    MOZ_ASSERT(!mNeedsToRetryCapturingMouse);
+  }
 }
 
 LayoutDeviceIntSize nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize) {
@@ -7489,7 +7526,7 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
 }
 
 /* static */
-bool nsWindow::DragInProgress(void) {
+bool nsWindow::DragInProgress() {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!dragService) {
@@ -7498,8 +7535,7 @@ bool nsWindow::DragInProgress(void) {
 
   nsCOMPtr<nsIDragSession> currentDragSession;
   dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
-
-  return currentDragSession != nullptr;
+  return !!currentDragSession;
 }
 
 // This is an ugly workaround for
@@ -8460,9 +8496,8 @@ static nsresult initialize_prefs(void) {
   if (Preferences::HasUserValue("widget.use-aspect-ratio")) {
     gUseAspectRatio = Preferences::GetBool("widget.use-aspect-ratio", true);
   } else {
-    static const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    gUseAspectRatio =
-        currentDesktop ? (strstr(currentDesktop, "GNOME") != nullptr) : false;
+    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+    gUseAspectRatio = currentDesktop && strstr(currentDesktop, "GNOME");
   }
 
   return NS_OK;
@@ -8994,6 +9029,9 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
     LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
     MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
     nsIObserver* aObserver) {
+  LOG("SynthesizeNativeMouseEvent(%d, %d, %d, %d, %d)", aPoint.x.value,
+      aPoint.y.value, int(aNativeMessage), int(aButton), int(aModifierFlags));
+
   AutoObserverNotifier notifier(aObserver, "mouseevent");
 
   if (!mGdkWindow) {
@@ -9350,9 +9388,9 @@ bool nsWindow::TitlebarUseShapeMask() {
     // window there (Bug 1530252).
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
     if (currentDesktop) {
-      if (strstr(currentDesktop, "GNOME") != nullptr) {
+      if (strstr(currentDesktop, "GNOME")) {
         const char* sessionType = getenv("XDG_SESSION_TYPE");
-        if (sessionType && strstr(sessionType, "x11") != nullptr) {
+        if (sessionType && strstr(sessionType, "x11")) {
           return false;
         }
       }
