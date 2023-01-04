@@ -17,6 +17,10 @@ add_task(async function setup_storage() {
 // Verify that form fillin works in a remote iframe, and that changing
 // a field updates storage.
 add_task(async function test_iframe_autocomplete() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     IFRAME_URL_PATH,
@@ -101,6 +105,10 @@ add_task(async function test_iframe_autocomplete() {
 
 // Choose preferences from the autocomplete dropdown within an iframe.
 add_task(async function test_iframe_autocomplete_preferences() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     IFRAME_URL_PATH,

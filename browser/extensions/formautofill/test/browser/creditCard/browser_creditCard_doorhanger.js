@@ -5,6 +5,9 @@
   that the UI won't be ready and we will get an invalid test result.
 */
 add_task(async function test_submit_creditCard_cancel_saving() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -31,9 +34,19 @@ add_task(async function test_submit_creditCard_cancel_saving() {
   await sleep(1000);
   let creditCards = await getCreditCards();
   is(creditCards.length, 0, "No credit card saved");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
 });
 
 add_task(async function test_submit_creditCard_saved() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
+
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
@@ -61,6 +74,12 @@ add_task(async function test_submit_creditCard_saved() {
   is(creditCards.length, 1, "1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
   is(creditCards[0]["cc-type"], "mastercard", "Verify the cc-type field");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -73,6 +92,9 @@ add_task(async function test_submit_untouched_creditCard_form() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -104,6 +126,12 @@ add_task(async function test_submit_untouched_creditCard_form() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
   is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -116,6 +144,9 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -166,10 +197,19 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
     EXPECTED_ON_USED_COUNT,
     "timesUsed field set to 2"
   );
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_iframe_unload_save_card() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
@@ -207,10 +247,19 @@ add_task(async function test_iframe_unload_save_card() {
   is(creditCards.length, 1, "1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
   is(creditCards[0]["cc-type"], "visa", "Verify the cc-type field");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_submit_changed_subset_creditCard_form() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -239,10 +288,19 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
   is(creditCards[0]["cc-name"], "Mark Smith", "name field got updated");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_submit_duplicate_creditCard_form() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -276,6 +334,12 @@ add_task(async function test_submit_duplicate_creditCard_form() {
     "Verify the name field"
   );
   is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    1,
+    "User neither sees the doorhanger nor uses autofill but somehow has a record in the storage"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -317,6 +381,9 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
 });
 
 add_task(async function test_submit_creditCard_never_save() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -341,6 +408,12 @@ add_task(async function test_submit_creditCard_never_save() {
   );
   is(creditCards.length, 0, "No credit card in storage");
   is(creditCardPref, false, "Credit card is disabled");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
 });
 
@@ -461,6 +534,9 @@ add_task(async function test_submit_creditCard_with_synced_already() {
 });
 
 add_task(async function test_submit_manual_mergeable_creditCard_form() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_3);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -489,6 +565,12 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 3", "Verify the name field");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -501,6 +583,9 @@ add_task(async function test_update_autofill_form_name() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -541,6 +626,12 @@ add_task(async function test_update_autofill_form_name() {
     "************1111",
     "Verify the card number field"
   );
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -553,6 +644,9 @@ add_task(async function test_update_autofill_form_exp_date() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -591,6 +685,12 @@ add_task(async function test_update_autofill_form_exp_date() {
     "************1111",
     "Verify the card number field"
   );
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -603,6 +703,9 @@ add_task(async function test_create_new_autofill_form() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
@@ -641,6 +744,12 @@ add_task(async function test_create_new_autofill_form() {
     "Original record's cc-name field is unchanged"
   );
   is(creditCards[1]["cc-name"], "User 1", "cc-name field in the new record");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -653,6 +762,9 @@ add_task(async function test_update_duplicate_autofill_form() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
+  });
   await setStorage(
     { "cc-number": "6387060366272981" },
     { "cc-number": "5038146897157463" }
@@ -688,6 +800,12 @@ add_task(async function test_update_duplicate_autofill_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 2, "Still 2 credit card");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    1,
+    "User neither sees the doorhanger nor uses autofill but somehow has a record in the storage"
+  );
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
@@ -723,6 +841,7 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
     "Invalid network/cc-type was not saved"
   );
 
+  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 

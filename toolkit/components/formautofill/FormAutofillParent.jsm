@@ -608,12 +608,28 @@ class FormAutofillParent extends JSWindowActorParent {
   }
 
   async _onCreditCardSubmit(creditCard, browser, timeStartedFillingMS) {
-    // Let's delete type from the credit card, and then network auto-detect will
+    // Updates the used status for shield/heartbeat to recognize users who have
+    // used Credit Card Autofill.
+    let setUsedStatus = status => {
+      if (FormAutofill.AutofillCreditCardsUsedStatus < status) {
+        Services.prefs.setIntPref(
+          FormAutofill.CREDITCARDS_USED_STATUS_PREF,
+          status
+        );
+      }
+    };
+
+    // Remove cc-type values
+    // Let's reset the credit card to empty, and then network auto-detect will
     // pick it up.
+    //creditCard.record["cc-type"] = "";
     delete creditCard.record["cc-type"];
 
     // If `guid` is present, the form has been autofilled.
     if (creditCard.guid) {
+      // Indicate that the user has used Credit Card Autofill to fill in a form.
+      setUsedStatus(3);
+
       let originalCCData = await lazy.gFormAutofillStorage.creditCards.get(
         creditCard.guid
       );
@@ -678,11 +694,18 @@ class FormAutofillParent extends JSWindowActorParent {
         }
 
         if (recordUnchanged) {
+          // Indicate that the user neither sees the doorhanger nor uses Autofill
+          // but somehow has a duplicate record in the storage. Will be reset to 2
+          // if the doorhanger actually shows below.
+          setUsedStatus(1);
           lazy.gFormAutofillStorage.creditCards.notifyUsed(creditCard.guid);
           return false;
         }
       }
     }
+
+    // Indicate that the user has seen the doorhanger.
+    setUsedStatus(2);
 
     return async () => {
       // Suppress the pending doorhanger from showing up if user disabled credit card in previous doorhanger.
