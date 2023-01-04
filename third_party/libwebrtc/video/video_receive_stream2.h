@@ -205,11 +205,6 @@ class VideoReceiveStream2
   void CreateAndRegisterExternalDecoder(const Decoder& decoder);
 
   struct DecodeFrameResult {
-    DecodeFrameResult(const DecodeFrameResult&) = delete;
-    DecodeFrameResult& operator=(const DecodeFrameResult&) = delete;
-    DecodeFrameResult(DecodeFrameResult&&) = default;
-    DecodeFrameResult& operator=(DecodeFrameResult&&) = default;
-
     // True if the decoder returned code WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME,
     // or if the decoder failed and a keyframe is required. When true, a
     // keyframe request should be sent even if a keyframe request was sent
