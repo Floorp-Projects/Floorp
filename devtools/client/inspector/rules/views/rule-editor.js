@@ -703,9 +703,7 @@ RuleEditor.prototype = {
     // the field gets destroyed (see _newPropertyDestroy)
     this.editor.input.blur();
 
-    this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      session_id: this.toolbox.sessionId,
-    });
+    this.telemetry.recordEvent("edit_rule", "ruleview");
   },
 
   /**

@@ -69,7 +69,7 @@ window.Application = {
     this._commands = commands;
     this.client = commands.client;
 
-    this.store = configureStore(toolbox.telemetry, toolbox.sessionId);
+    this.store = configureStore(toolbox.telemetry);
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
     services.init(this.toolbox);

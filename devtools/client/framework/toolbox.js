@@ -2832,13 +2832,11 @@ Toolbox.prototype = {
         panel_name: prevPanelName,
         next_panel: panelName,
         reason,
-        session_id: this.sessionId,
       });
     }
 
     this.telemetry.addEventProperties(this.topWindow, "open", "tools", null, {
       width,
-      session_id: this.sessionId,
     });
 
     if (id === "webconsole") {
@@ -2852,7 +2850,6 @@ Toolbox.prototype = {
       start_state: reason,
       panel_name: panelName,
       cold,
-      session_id: this.sessionId,
     });
 
     if (reason !== "initial_panel") {
@@ -2982,7 +2979,6 @@ Toolbox.prototype = {
       this.telemetry.recordEvent("activate", "split_console", null, {
         host: this._getTelemetryHostString(),
         width: Math.ceil(this.win.outerWidth / 50) * 50,
-        session_id: this.sessionId,
       });
       this.emit("split-console");
       this.focusConsoleInput();
@@ -3004,7 +3000,6 @@ Toolbox.prototype = {
     this.telemetry.recordEvent("deactivate", "split_console", null, {
       host: this._getTelemetryHostString(),
       width: Math.ceil(this.win.outerWidth / 50) * 50,
-      session_id: this.sessionId,
     });
 
     this.emit("split-console");
@@ -4117,12 +4112,10 @@ Toolbox.prototype = {
       panel_name: this.getTelemetryPanelNameOrOther(this.currentToolId),
       next_panel: "none",
       reason: "toolbox_close",
-      session_id: this.sessionId,
     });
     this.telemetry.recordEvent("close", "tools", null, {
       host,
       width,
-      session_id: this.sessionId,
     });
 
     // Wait for the preferences to be reset before destroying the target descriptor (which will destroy the preference front)

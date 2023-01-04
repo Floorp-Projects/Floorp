@@ -161,7 +161,6 @@ class ResponsiveUIManager {
     this.telemetry.recordEvent("activate", "responsive_design", null, {
       host: hostType,
       width: Math.ceil(window.outerWidth / 50) * 50,
-      session_id: toolbox ? toolbox.sessionId : -1,
     });
 
     // Track opens keyed by the UI entry point used.
@@ -226,7 +225,6 @@ class ResponsiveUIManager {
     this.telemetry.recordEvent("deactivate", "responsive_design", null, {
       host: hostType,
       width: Math.ceil(window.outerWidth / 50) * 50,
-      session_id: toolbox ? toolbox.sessionId : -1,
     });
   }
 
