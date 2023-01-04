@@ -8,7 +8,7 @@ associated with the resulting thread private index.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

@@ -9,7 +9,7 @@ representation of the symbol in question.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

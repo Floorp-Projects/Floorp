@@ -7,7 +7,7 @@ Retrieves the socket options set for a specified socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

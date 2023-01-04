@@ -7,7 +7,7 @@ Gets the string associated with a layer's unique identity.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

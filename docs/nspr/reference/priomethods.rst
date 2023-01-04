@@ -7,7 +7,7 @@ The table of I/O methods used in a file descriptor.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

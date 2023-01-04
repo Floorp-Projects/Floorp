@@ -37,7 +37,7 @@ Here are some simple examples of the use of these types:
 
    In dowhim.h:
 
-   .. code:: eval
+   .. code::
 
       PR_EXTERN( void ) DoWhatIMean( void );
 
@@ -47,7 +47,7 @@ Here are some simple examples of the use of these types:
 
    In dowhim.c:
 
-   .. code:: eval
+   .. code::
 
       PR_IMPLEMENT( void ) DoWhatIMean( void ) { return; };
 

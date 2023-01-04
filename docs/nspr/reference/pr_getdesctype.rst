@@ -8,7 +8,7 @@ descriptor.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -37,7 +37,7 @@ Description
 
 The ``PRDescType`` enumeration is defined as follows:
 
-.. code:: eval
+.. code::
 
    typedef enum PRDescType {
      PR_DESC_FILE       = 1,

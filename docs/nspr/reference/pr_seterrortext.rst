@@ -7,7 +7,7 @@ Sets the text associated with an error.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prerror.h>
 

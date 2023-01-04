@@ -7,7 +7,7 @@ Adds a layer onto the stack.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

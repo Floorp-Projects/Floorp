@@ -7,7 +7,7 @@ Increments the value of a specified semaphore.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pripcsem.h>
 

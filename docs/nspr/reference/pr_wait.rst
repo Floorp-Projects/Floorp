@@ -7,7 +7,7 @@ Waits for an application-defined state of the monitored data to exist.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmon.h>
 

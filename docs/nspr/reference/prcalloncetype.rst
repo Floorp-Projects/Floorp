@@ -7,7 +7,7 @@ Structure for tracking initialization.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

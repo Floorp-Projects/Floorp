@@ -7,7 +7,7 @@ Converts platform-dependent intervals to standard clock microseconds.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prinrval.h>
 

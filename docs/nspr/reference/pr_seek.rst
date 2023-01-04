@@ -22,7 +22,7 @@ Deprecated in favor of :ref:`PR_Seek64`.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

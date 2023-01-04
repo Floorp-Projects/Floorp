@@ -7,7 +7,7 @@ Creates a new lock.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlock.h>
 

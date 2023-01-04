@@ -7,7 +7,7 @@ Compares two ``void *`` values numerically.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

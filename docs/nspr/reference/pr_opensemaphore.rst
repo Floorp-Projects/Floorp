@@ -7,7 +7,7 @@ Creates or opens a named semaphore with the specified name.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pripcsem.h>
 

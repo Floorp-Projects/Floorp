@@ -8,7 +8,7 @@ Returns the length of a specified string (not including the trailing
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    PRUint32 PL_strlen(const char *str);
 

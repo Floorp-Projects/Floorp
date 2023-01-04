@@ -8,7 +8,7 @@ value of :ref:`PRIntervalTime`.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prinrval.h>
 

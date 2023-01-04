@@ -7,7 +7,7 @@ Removes the entry with the specified key from the hash table.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

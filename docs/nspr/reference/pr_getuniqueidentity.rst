@@ -8,7 +8,7 @@ the layer's name.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

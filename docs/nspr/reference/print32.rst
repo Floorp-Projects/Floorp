@@ -7,7 +7,7 @@ Guaranteed to be a signed 32-bit integer on all platforms.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

@@ -7,7 +7,7 @@ Notifies all threads in a thread pool to terminate.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

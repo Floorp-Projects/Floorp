@@ -7,7 +7,7 @@ Removes a directory with a specified name.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

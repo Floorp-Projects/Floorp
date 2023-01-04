@@ -7,7 +7,7 @@ Converts an IPv4 address into an (IPv4-mapped) IPv6 address.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

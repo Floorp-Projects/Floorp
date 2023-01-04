@@ -7,7 +7,7 @@ Creates a :ref:`PRFileMap` from an identifying string.
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    #include <prshma.h>
 

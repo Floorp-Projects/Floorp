@@ -7,7 +7,7 @@ Receives bytes from a socket and stores the sending peer's address.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

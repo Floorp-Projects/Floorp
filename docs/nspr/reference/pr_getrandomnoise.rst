@@ -8,7 +8,7 @@ number generator.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prrng.h>
 

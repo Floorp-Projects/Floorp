@@ -7,7 +7,7 @@ Maps a section of a file to memory.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

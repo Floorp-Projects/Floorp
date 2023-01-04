@@ -7,7 +7,7 @@ Ensures that subsystem initialization occurs only once.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    PRStatus PR_CallOnce(
      PRCallOnceType *once,

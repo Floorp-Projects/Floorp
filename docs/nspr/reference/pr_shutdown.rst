@@ -7,7 +7,7 @@ Shuts down part of a full-duplex connection on a specified socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -48,7 +48,7 @@ Description
 
 The ``PRShutdownHow`` enumeration is defined as follows:
 
-.. code:: eval
+.. code::
 
    typedef enum PRShutdownHow{
      PR_SHUTDOWN_RCV = 0,

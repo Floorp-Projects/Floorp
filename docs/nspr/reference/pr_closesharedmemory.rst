@@ -7,7 +7,7 @@ Closes a shared memory segment identified by name.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prshm.h>
 

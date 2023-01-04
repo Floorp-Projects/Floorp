@@ -7,7 +7,7 @@ Converts an absolute time to a clock/calendar time.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtime.h>
 

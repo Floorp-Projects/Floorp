@@ -8,7 +8,7 @@ using a callback function.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtime.h>
 

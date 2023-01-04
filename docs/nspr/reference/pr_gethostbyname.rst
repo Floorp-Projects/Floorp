@@ -7,7 +7,7 @@ Looks up a host by name.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

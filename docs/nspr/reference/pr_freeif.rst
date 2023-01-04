@@ -7,7 +7,7 @@ Conditionally frees allocated memory.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmem.h>
 

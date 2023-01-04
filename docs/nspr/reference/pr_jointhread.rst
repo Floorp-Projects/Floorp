@@ -7,7 +7,7 @@ Blocks the calling thread until a specified thread terminates.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

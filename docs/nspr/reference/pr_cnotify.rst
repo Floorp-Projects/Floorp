@@ -7,7 +7,7 @@ Notify a thread waiting on a change in the state of monitored data.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcmon.h>
 

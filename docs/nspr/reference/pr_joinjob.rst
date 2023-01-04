@@ -7,7 +7,7 @@ Blocks the current thread until a job has completed.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

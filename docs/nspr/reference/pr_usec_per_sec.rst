@@ -9,7 +9,7 @@ microseconds in a second.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prtime.h>
 

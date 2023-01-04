@@ -7,7 +7,7 @@ Returns the value of the environment variable.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pripcsem.h>
 

@@ -19,7 +19,7 @@ The '``stack``' argument is now obsolete and ignored by
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

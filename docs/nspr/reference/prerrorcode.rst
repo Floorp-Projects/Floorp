@@ -9,7 +9,7 @@ also set your own errors using :ref:`PR_SetError`.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prerror.h>
 

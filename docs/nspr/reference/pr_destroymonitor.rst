@@ -7,7 +7,7 @@ Destroys a monitor object.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmon.h>
 

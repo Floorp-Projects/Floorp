@@ -7,7 +7,7 @@ Creates a new UDP socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

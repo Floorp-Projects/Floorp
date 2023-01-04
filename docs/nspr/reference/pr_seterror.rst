@@ -7,7 +7,7 @@ Sets error information within a thread context.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prerror.h>
 

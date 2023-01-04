@@ -7,7 +7,7 @@ Converts a floating point number to a string.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prdtoa.h>
 

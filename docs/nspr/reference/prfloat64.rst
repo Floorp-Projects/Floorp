@@ -8,7 +8,7 @@ The NSPR floating-point type is always 64 bits.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

@@ -5,7 +5,7 @@ PRJobFn
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

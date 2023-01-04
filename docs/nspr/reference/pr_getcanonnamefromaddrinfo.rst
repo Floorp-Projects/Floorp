@@ -8,7 +8,7 @@ Extracts the canonical name of the hostname passed to
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

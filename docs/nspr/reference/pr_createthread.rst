@@ -7,7 +7,7 @@ Creates a new thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

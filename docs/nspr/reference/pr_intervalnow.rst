@@ -7,7 +7,7 @@ Returns the value of NSPR's free-running interval timer.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prinrval.h>
 
@@ -33,7 +33,7 @@ The most common use for ``PR_IntervalNow()`` is to establish an epoch
 and test for the expiration of intervals. In this case, you typically
 call ``PR_IntervalNow()`` in a sequence that looks like this:
 
-.. code:: eval
+.. code::
 
     PRUint32 interval = ... ; // milliseconds
     // ...

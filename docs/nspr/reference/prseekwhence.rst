@@ -9,7 +9,7 @@ pointer associated with the ``fd`` parameter for the :ref:`PR_Seek` and
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

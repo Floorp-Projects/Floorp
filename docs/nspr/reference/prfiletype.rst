@@ -9,7 +9,7 @@ Type for enumerators used in the type field of the :ref:`PRFileInfo` and
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

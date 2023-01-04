@@ -7,7 +7,7 @@ Sends a complete file across a connected socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -68,7 +68,7 @@ before sending the file.
 The enumeration ``PRTransmitFileFlags``, used in the ``flags``
 parameter, is defined as follows:
 
-.. code:: eval
+.. code::
 
    typedef enum PRTransmitFileFlags {
      PR_TRANSMITFILE_KEEP_OPEN = 0,

@@ -7,7 +7,7 @@ Causes a job to be queued when a socket has a pending connection.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

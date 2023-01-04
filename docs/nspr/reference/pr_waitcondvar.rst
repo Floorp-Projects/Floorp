@@ -7,7 +7,7 @@ Waits on a condition.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcvar.h>
 

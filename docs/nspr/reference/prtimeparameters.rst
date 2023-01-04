@@ -7,7 +7,7 @@ A representation of time zone information.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prtime.h>
 

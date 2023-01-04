@@ -5,7 +5,7 @@ PR_VERSION
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

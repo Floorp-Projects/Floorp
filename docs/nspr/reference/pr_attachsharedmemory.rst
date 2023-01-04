@@ -8,11 +8,11 @@ and maps it into the process memory space.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prshm.h>
 
-.. code:: eval
+.. code::
 
    NSPR_API( void * )
      PR_AttachSharedMemory(

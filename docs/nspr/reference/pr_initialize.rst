@@ -9,7 +9,7 @@ calls :ref:`PR_Cleanup` on exiting the primordial function.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

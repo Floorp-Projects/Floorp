@@ -7,7 +7,7 @@ Returns the tail of a circular list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

@@ -7,7 +7,7 @@ Loads a referenced library.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlink.h>
 

@@ -7,7 +7,7 @@ Returns the current thread object for the currently running code.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

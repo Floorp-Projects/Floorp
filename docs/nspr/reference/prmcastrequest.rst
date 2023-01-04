@@ -9,7 +9,7 @@ or leave a multicast group.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

@@ -7,7 +7,7 @@ Converts a character string to a network address.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

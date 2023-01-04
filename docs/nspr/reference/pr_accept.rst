@@ -7,7 +7,7 @@ Accepts a connection on a specified socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

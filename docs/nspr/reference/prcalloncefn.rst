@@ -7,7 +7,7 @@ Defines the signature of the function a client must implement.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

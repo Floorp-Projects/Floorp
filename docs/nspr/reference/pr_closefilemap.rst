@@ -7,7 +7,7 @@ Closes a file mapping.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

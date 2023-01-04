@@ -7,7 +7,7 @@ A clock/calendar representation of times.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prtime.h>
 

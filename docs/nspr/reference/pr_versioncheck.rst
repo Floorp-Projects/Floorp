@@ -9,7 +9,7 @@ version).
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

@@ -13,7 +13,7 @@ To run the test suite, run the shell script
 ``mozilla/nsprpub/pr/tests/runtests.sh`` in the directory where the test
 program binaries reside, for example,
 
-.. code:: eval
+.. code::
 
     cvs -q co -r NSPR_4_6_6_RTM mozilla/nsprpub
     mkdir linux.debug
@@ -26,7 +26,7 @@ program binaries reside, for example,
 
 The output of the test suite looks like this:
 
-.. code:: eval
+.. code::
 
     NSPR Test Results - tests
 

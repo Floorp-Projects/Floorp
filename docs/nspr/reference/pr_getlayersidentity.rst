@@ -7,7 +7,7 @@ Gets the unique identity for the layer of the specified file descriptor.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

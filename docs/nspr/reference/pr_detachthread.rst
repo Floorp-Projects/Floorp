@@ -14,7 +14,7 @@ Disassociates a PRThread object from a native thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pprthread.h>
 

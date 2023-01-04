@@ -123,7 +123,7 @@ The tests were built above, in the ``pr/tests`` directory.
 
 On Mac OS X, they can be executed with the following:
 
-.. code:: eval
+.. code::
 
     /bin/sh:
 

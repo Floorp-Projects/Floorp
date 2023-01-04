@@ -7,7 +7,7 @@ Returns the current thread's last set OS-specific error code.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prerror.h>
 

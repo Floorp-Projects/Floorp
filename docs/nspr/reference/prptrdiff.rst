@@ -7,7 +7,7 @@ Signed pointer difference type.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtypes.h>
 

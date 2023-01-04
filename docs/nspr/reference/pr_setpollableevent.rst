@@ -7,7 +7,7 @@ Set a pollable event.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    NSPR_API(PRStatus) PR_SetPollableEvent(PRFileDesc *event);
 

@@ -7,7 +7,7 @@ Notifies all of the threads waiting on a specified condition variable.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcvar.h>
 

@@ -7,7 +7,7 @@ Statically initializes a circular list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

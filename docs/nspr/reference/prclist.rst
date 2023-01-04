@@ -7,7 +7,7 @@ A circular linked list.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prclist.h>
 

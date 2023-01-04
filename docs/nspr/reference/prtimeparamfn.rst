@@ -8,7 +8,7 @@ parameter offsets from a calendar time object in GMT.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prtime.h>
 

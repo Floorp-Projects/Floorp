@@ -7,7 +7,7 @@ Structure for a condition variable.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prcvar.h>
 

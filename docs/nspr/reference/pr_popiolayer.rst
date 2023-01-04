@@ -7,7 +7,7 @@ Removes a layer from the stack.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

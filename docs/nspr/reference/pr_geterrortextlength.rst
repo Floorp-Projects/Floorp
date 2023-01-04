@@ -7,7 +7,7 @@ Gets the length of the error text.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prerror.h>
 

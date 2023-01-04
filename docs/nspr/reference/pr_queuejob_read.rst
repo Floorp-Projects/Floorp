@@ -7,7 +7,7 @@ Causes a job to be queued when a socket becomes readable.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

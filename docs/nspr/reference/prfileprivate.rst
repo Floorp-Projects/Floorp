@@ -8,7 +8,7 @@ Layer-dependent implementation data.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

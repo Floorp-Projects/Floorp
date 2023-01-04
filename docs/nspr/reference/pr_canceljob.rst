@@ -7,7 +7,7 @@ Causes a previously queued job to be canceled.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prtpool.h>
 

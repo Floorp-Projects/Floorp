@@ -7,7 +7,7 @@ Frees memory allocated by :ref:`PL_strdup`
 Syntax
 ~~~~~~
 
-.. code:: eval
+.. code::
 
    void PL_strfree(char *s);
 

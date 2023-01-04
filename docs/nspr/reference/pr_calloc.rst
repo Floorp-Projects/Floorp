@@ -8,7 +8,7 @@ size.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prmem.h>
 

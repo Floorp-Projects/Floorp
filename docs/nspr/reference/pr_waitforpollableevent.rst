@@ -8,7 +8,7 @@ atomically unsetting the event before returning.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    NSPR_API(PRStatus) PR_WaitForPollableEvent(PRFileDesc *event);
 

@@ -8,7 +8,7 @@ acquired from :ref:`PR_GetHostByName` or :ref:`PR_GetHostByAddr`.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

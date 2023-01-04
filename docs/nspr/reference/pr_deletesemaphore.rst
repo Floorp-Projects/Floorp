@@ -7,7 +7,7 @@ Removes a semaphore specified by name from the system.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pripcsem.h>
 

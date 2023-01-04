@@ -7,7 +7,7 @@ Opens a file for reading, writing, or both. Also used to create a file.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

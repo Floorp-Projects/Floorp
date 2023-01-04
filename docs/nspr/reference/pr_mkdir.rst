@@ -7,7 +7,7 @@ Creates a directory with a specified name and access mode.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

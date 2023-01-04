@@ -7,7 +7,7 @@ Checks whether the runtime has been initialized.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

@@ -8,7 +8,7 @@ integer--the NSPR runtime clock.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
     #include <prinrval.h>
 
@@ -52,7 +52,7 @@ sampling of the counter used to define an arbitrary epoch may have any
 32-bit value, some care must be taken in the use of interval times. The
 proper coding style to test the expiration of an interval is as follows:
 
-.. code:: eval
+.. code::
 
     if ((PRIntervalTime)(now - epoch) > interval)
     <... interval has expired ...>

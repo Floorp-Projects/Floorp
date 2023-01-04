@@ -7,7 +7,7 @@ Sets the priority of a specified thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prthread.h>
 

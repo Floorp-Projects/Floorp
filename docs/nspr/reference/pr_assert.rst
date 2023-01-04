@@ -7,7 +7,7 @@ Terminates execution when a given expression is ``FALSE``.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlog.h>
 

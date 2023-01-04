@@ -8,7 +8,7 @@ Imports a :ref:`PRFileMap` previously exported by my parent process via
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prshma.h>
 

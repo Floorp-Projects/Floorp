@@ -14,7 +14,7 @@ Associates a :ref:`PRThread` object with an existing native thread.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pprthread.h>
 

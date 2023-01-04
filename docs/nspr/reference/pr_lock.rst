@@ -7,7 +7,7 @@ Locks a specified lock object.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlock.h>
 

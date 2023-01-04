@@ -7,7 +7,7 @@ A mutual exclusion lock.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prlock.h>
 

@@ -2,7 +2,7 @@
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

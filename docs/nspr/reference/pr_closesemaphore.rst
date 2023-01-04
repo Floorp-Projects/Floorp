@@ -7,7 +7,7 @@ Closes a specified semaphore.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <pripcsem.h>
 

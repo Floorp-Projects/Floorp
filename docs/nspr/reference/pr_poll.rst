@@ -7,7 +7,7 @@ Detects when I/O is ready for a set of socket file descriptors.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 
@@ -64,7 +64,7 @@ not contain meaningful values and must not be used.
 
 The ``PRPollDesc`` structure is defined as follows:
 
-.. code:: eval
+.. code::
 
    struct PRPollDesc {
      PRFileDesc* fd;

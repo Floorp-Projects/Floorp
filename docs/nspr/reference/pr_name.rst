@@ -5,7 +5,7 @@ PR_NAME
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prinit.h>
 

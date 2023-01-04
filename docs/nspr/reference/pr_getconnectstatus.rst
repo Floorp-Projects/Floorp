@@ -7,7 +7,7 @@ Get the completion status of a nonblocking connection.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    PRStatus PR_GetConnectStatus(const PRPollDesc *pd);
 

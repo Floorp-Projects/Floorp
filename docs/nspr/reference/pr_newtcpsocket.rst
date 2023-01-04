@@ -7,7 +7,7 @@ Creates a new IPv4 TCP socket.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prio.h>
 

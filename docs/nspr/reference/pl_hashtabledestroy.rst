@@ -7,7 +7,7 @@ Frees the table and all the entries.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 

@@ -7,7 +7,7 @@ Gets the value of the address family for Internet Protocol.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <prnetdb.h>
 

@@ -7,7 +7,7 @@ Add a new entry with the specified key and value to the hash table.
 Syntax
 ------
 
-.. code:: eval
+.. code::
 
    #include <plhash.h>
 
