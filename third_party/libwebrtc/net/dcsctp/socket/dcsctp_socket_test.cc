@@ -2668,5 +2668,29 @@ TEST(DcSctpSocketTest, LifecycleEventsForExpiredMessageWithLifetimeLimit) {
   EXPECT_THAT(GetReceivedMessagePpids(z), IsEmpty());
 }
 
+TEST_P(DcSctpSocketParametrizedTest, ExposesTheNumberOfNegotiatedStreams) {
+  DcSctpOptions options_a = {
+      .announced_maximum_incoming_streams = 12,
+      .announced_maximum_outgoing_streams = 45,
+  };
+  SocketUnderTest a("A", options_a);
+
+  DcSctpOptions options_z = {
+      .announced_maximum_incoming_streams = 23,
+      .announced_maximum_outgoing_streams = 34,
+  };
+  auto z = std::make_unique<SocketUnderTest>("Z", options_z);
+
+  ConnectSockets(a, *z);
+  z = MaybeHandoverSocket(std::move(z));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(Metrics metrics_a, a.socket.GetMetrics());
+  EXPECT_EQ(metrics_a.negotiated_maximum_incoming_streams, 12);
+  EXPECT_EQ(metrics_a.negotiated_maximum_outgoing_streams, 23);
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(Metrics metrics_z, z->socket.GetMetrics());
+  EXPECT_EQ(metrics_z.negotiated_maximum_incoming_streams, 23);
+  EXPECT_EQ(metrics_z.negotiated_maximum_outgoing_streams, 12);
+}
 }  // namespace
 }  // namespace dcsctp

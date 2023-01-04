@@ -90,8 +90,10 @@ constexpr uint32_t kMaxVerificationTag = std::numeric_limits<uint32_t>::max();
 constexpr uint32_t kMinInitialTsn = 0;
 constexpr uint32_t kMaxInitialTsn = std::numeric_limits<uint32_t>::max();
 
-Capabilities GetCapabilities(const DcSctpOptions& options,
-                             const Parameters& parameters) {
+Capabilities ComputeCapabilities(const DcSctpOptions& options,
+                                 uint16_t peer_nbr_outbound_streams,
+                                 uint16_t peer_nbr_inbound_streams,
+                                 const Parameters& parameters) {
   Capabilities capabilities;
   absl::optional<SupportedExtensionsParameter> supported_extensions =
       parameters.get<SupportedExtensionsParameter>();
@@ -114,6 +116,12 @@ Capabilities GetCapabilities(const DcSctpOptions& options,
       supported_extensions->supports(ReConfigChunk::kType)) {
     capabilities.reconfig = true;
   }
+
+  capabilities.negotiated_maximum_incoming_streams = std::min(
+      options.announced_maximum_incoming_streams, peer_nbr_outbound_streams);
+  capabilities.negotiated_maximum_outgoing_streams = std::min(
+      options.announced_maximum_outgoing_streams, peer_nbr_inbound_streams);
+
   return capabilities;
 }
 
@@ -312,6 +320,10 @@ void DcSctpSocket::CreateTransmissionControlBlock(
     size_t a_rwnd,
     TieTag tie_tag) {
   metrics_.uses_message_interleaving = capabilities.message_interleaving;
+  metrics_.negotiated_maximum_incoming_streams =
+      capabilities.negotiated_maximum_incoming_streams;
+  metrics_.negotiated_maximum_outgoing_streams =
+      capabilities.negotiated_maximum_outgoing_streams;
   tcb_ = std::make_unique<TransmissionControlBlock>(
       timer_manager_, log_prefix_, options_, capabilities, callbacks_,
       send_queue_, my_verification_tag, my_initial_tsn, peer_verification_tag,
@@ -339,6 +351,10 @@ void DcSctpSocket::RestoreFromState(const DcSctpSocketHandoverState& state) {
       capabilities.message_interleaving =
           state.capabilities.message_interleaving;
       capabilities.reconfig = state.capabilities.reconfig;
+      capabilities.negotiated_maximum_incoming_streams =
+          state.capabilities.negotiated_maximum_incoming_streams;
+      capabilities.negotiated_maximum_outgoing_streams =
+          state.capabilities.negotiated_maximum_outgoing_streams;
 
       send_queue_.RestoreFromState(state);
 
@@ -578,6 +594,10 @@ absl::optional<Metrics> DcSctpSocket::GetMetrics() const {
       (send_queue_.total_buffered_amount() + packet_payload_size - 1) /
           packet_payload_size;
   metrics.peer_rwnd_bytes = tcb_->retransmission_queue().rwnd();
+  metrics.negotiated_maximum_incoming_streams =
+      tcb_->capabilities().negotiated_maximum_incoming_streams;
+  metrics.negotiated_maximum_incoming_streams =
+      tcb_->capabilities().negotiated_maximum_incoming_streams;
 
   return metrics;
 }
@@ -1172,7 +1192,9 @@ void DcSctpSocket::HandleInit(const CommonHeader& header,
              *connect_params_.verification_tag, *connect_params_.initial_tsn,
              *chunk->initiate_tag(), *chunk->initial_tsn());
 
-  Capabilities capabilities = GetCapabilities(options_, chunk->parameters());
+  Capabilities capabilities =
+      ComputeCapabilities(options_, chunk->nbr_outbound_streams(),
+                          chunk->nbr_inbound_streams(), chunk->parameters());
 
   SctpPacket::Builder b(chunk->initiate_tag(), options_);
   Parameters::Builder params_builder =
@@ -1221,7 +1243,9 @@ void DcSctpSocket::HandleInitAck(
                   "InitAck chunk doesn't contain a cookie");
     return;
   }
-  Capabilities capabilities = GetCapabilities(options_, chunk->parameters());
+  Capabilities capabilities =
+      ComputeCapabilities(options_, chunk->nbr_outbound_streams(),
+                          chunk->nbr_inbound_streams(), chunk->parameters());
   t1_init_->Stop();
 
   metrics_.peer_implementation = DeterminePeerImplementation(cookie->data());
