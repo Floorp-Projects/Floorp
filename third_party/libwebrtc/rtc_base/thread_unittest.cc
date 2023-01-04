@@ -19,6 +19,7 @@
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
+#include "rtc_base/fake_clock.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/null_socket_server.h"
@@ -26,6 +27,7 @@
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
+#include "test/gmock.h"
 #include "test/testsupport/rtc_expect_death.h"
 
 #if defined(WEBRTC_WIN)
@@ -36,6 +38,7 @@
 namespace rtc {
 namespace {
 
+using ::testing::ElementsAre;
 using ::webrtc::TimeDelta;
 
 // Generates a sequence of numbers (collaboratively).
@@ -584,32 +587,39 @@ struct DeletedLockChecker {
   bool* deleted;
 };
 
-static void DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(Thread* q) {
-  EXPECT_TRUE(q != nullptr);
+static void DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(
+    FakeClock& clock,
+    Thread& q) {
+  std::vector<int> run_order;
+
+  Event done;
   int64_t now = TimeMillis();
-  q->PostAt(RTC_FROM_HERE, now, nullptr, 3);
-  q->PostAt(RTC_FROM_HERE, now - 2, nullptr, 0);
-  q->PostAt(RTC_FROM_HERE, now - 1, nullptr, 1);
-  q->PostAt(RTC_FROM_HERE, now, nullptr, 4);
-  q->PostAt(RTC_FROM_HERE, now - 1, nullptr, 2);
+  q.PostDelayedTask([&] { run_order.push_back(3); }, TimeDelta::Millis(3));
+  q.PostDelayedTask([&] { run_order.push_back(0); }, TimeDelta::Millis(1));
+  q.PostDelayedTask([&] { run_order.push_back(1); }, TimeDelta::Millis(2));
+  q.PostDelayedTask([&] { run_order.push_back(4); }, TimeDelta::Millis(3));
+  q.PostDelayedTask([&] { run_order.push_back(2); }, TimeDelta::Millis(2));
+  q.PostDelayedTask([&] { done.Set(); }, TimeDelta::Millis(4));
+  // Validate time was frozen while tasks were posted.
+  RTC_DCHECK_EQ(TimeMillis(), now);
 
-  Message msg;
-  for (size_t i = 0; i < 5; ++i) {
-    memset(&msg, 0, sizeof(msg));
-    EXPECT_TRUE(q->Get(&msg, 0));
-    EXPECT_EQ(i, msg.message_id);
-  }
+  // Change time to make all tasks ready to run and wait for them.
+  clock.AdvanceTime(TimeDelta::Millis(4));
+  ASSERT_TRUE(done.Wait(TimeDelta::Seconds(1)));
 
-  EXPECT_FALSE(q->Get(&msg, 0));  // No more messages
+  EXPECT_THAT(run_order, ElementsAre(0, 1, 2, 3, 4));
 }
 
 TEST_F(ThreadQueueTest, DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder) {
+  ScopedBaseFakeClock clock;
   Thread q(CreateDefaultSocketServer(), true);
-  DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(&q);
+  q.Start();
+  DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(clock, q);
 
   NullSocketServer nullss;
   Thread q_nullss(&nullss, true);
-  DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(&q_nullss);
+  q_nullss.Start();
+  DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(clock, q_nullss);
 }
 
 TEST_F(ThreadQueueTest, DisposeNotLocked) {
@@ -618,7 +628,7 @@ TEST_F(ThreadQueueTest, DisposeNotLocked) {
   DeletedLockChecker* d = new DeletedLockChecker(this, &was_locked, &deleted);
   Dispose(d);
   Message msg;
-  EXPECT_FALSE(Get(&msg, 0));
+  ProcessMessages(0);
   EXPECT_TRUE(deleted);
   EXPECT_FALSE(was_locked);
 }
@@ -641,7 +651,7 @@ TEST_F(ThreadQueueTest, DiposeHandlerWithPostedMessagePending) {
   // Now, post a message, which should *not* be returned by Get().
   Post(RTC_FROM_HERE, handler, 1);
   Message msg;
-  EXPECT_FALSE(Get(&msg, 0));
+  ProcessMessages(0);
   EXPECT_TRUE(deleted);
 }
 

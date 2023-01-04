@@ -380,8 +380,7 @@ Thread::Thread(std::unique_ptr<SocketServer> ss)
     : Thread(std::move(ss), /*do_init=*/true) {}
 
 Thread::Thread(SocketServer* ss, bool do_init)
-    : fPeekKeep_(false),
-      delayed_next_num_(0),
+    : delayed_next_num_(0),
       fInitialized_(false),
       fDestroyed_(false),
       stop_(0),
@@ -450,28 +449,7 @@ void Thread::Restart() {
   stop_.store(0, std::memory_order_release);
 }
 
-bool Thread::Peek(Message* pmsg, int cmsWait) {
-  if (fPeekKeep_) {
-    *pmsg = msgPeek_;
-    return true;
-  }
-  if (!Get(pmsg, cmsWait))
-    return false;
-  msgPeek_ = *pmsg;
-  fPeekKeep_ = true;
-  return true;
-}
-
 bool Thread::Get(Message* pmsg, int cmsWait, bool process_io) {
-  // Return and clear peek if present
-  // Always return the peek if it exists so there is Peek/Get symmetry
-
-  if (fPeekKeep_) {
-    *pmsg = msgPeek_;
-    fPeekKeep_ = false;
-    return true;
-  }
-
   // Get w/wait + timer scan / dispatch + socket / event multiplexer dispatch
 
   int64_t cmsTotal = cmsWait;
@@ -650,17 +628,6 @@ int Thread::GetDelay() {
 void Thread::ClearInternal(MessageHandler* phandler,
                            uint32_t id,
                            MessageList* removed) {
-  // Remove messages with phandler
-
-  if (fPeekKeep_ && msgPeek_.Match(phandler, id)) {
-    if (removed) {
-      removed->push_back(msgPeek_);
-    } else {
-      delete msgPeek_.pdata;
-    }
-    fPeekKeep_ = false;
-  }
-
   // Remove from ordered message queue
 
   for (auto it = messages_.begin(); it != messages_.end();) {
