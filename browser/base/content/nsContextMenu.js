@@ -1635,7 +1635,7 @@ class nsContextMenu {
           referrerInfo,
           triggeringPrincipal: systemPrincipal,
         });
-      }, Cu.reportError);
+      }, console.error);
     } else {
       urlSecurityCheck(
         this.mediaURL,
@@ -2034,7 +2034,7 @@ class nsContextMenu {
           isPrivate,
           document.nodePrincipal /* system, because blob: */
         );
-      }, Cu.reportError);
+      }, console.error);
     } else if (this.onImage) {
       urlSecurityCheck(this.mediaURL, this.principal);
       internalSave(
