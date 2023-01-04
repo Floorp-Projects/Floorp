@@ -4,6 +4,7 @@
 
 #include <algorithm>
 
+#include <dlfcn.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -11,8 +12,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
-
-#include "InterposerHelper.h"
 
 using mozilla::DebugOnly;
 
@@ -84,12 +83,30 @@ void* set_alt_signal_stack_and_start(PthreadCreateParams* params) {
   return thread_rv;
 }
 
+using pthread_create_func_t = int (*)(pthread_t*, const pthread_attr_t*,
+                                      void* (*)(void*), void*);
+
 extern "C" {
 // This interposer replaces libpthread's pthread_create() so that we can
 // inject an alternate signal stack in every new thread.
-MFBT_API int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
-                            void* (*start_routine)(void*), void* arg) {
-  static const auto real_pthread_create = GET_REAL_SYMBOL(pthread_create);
+__attribute__((visibility("default"))) int pthread_create(
+    pthread_t* thread, const pthread_attr_t* attr,
+    void* (*start_routine)(void*), void* arg) {
+  // static const pthread_create_func_t real_pthread_create =
+  static const pthread_create_func_t real_pthread_create =
+      (pthread_create_func_t)dlsym(RTLD_NEXT, "pthread_create");
+
+  if (real_pthread_create == nullptr) {
+    MOZ_CRASH(
+        "pthread_create() interposition failed but the interposer function is "
+        "still being called, this won't work!");
+  }
+
+  if (real_pthread_create == pthread_create) {
+    MOZ_CRASH(
+        "We could not obtain the real pthread_create(). Calling the symbol we "
+        "got would make us enter an infinte loop so stop here instead.");
+  }
 
   PthreadCreateParams* params =
       (PthreadCreateParams*)malloc(sizeof(PthreadCreateParams));
