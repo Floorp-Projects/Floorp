@@ -947,11 +947,27 @@ class RulesetsStore {
       // data stored by a different Firefox version from the one that stored the
       // data on disk, e.g. in case validation or normalization logic may have been
       // different in the two Firefox version).
-      data.dynamicRuleset = this.#getValidatedRules(
+      const validatedDynamicRules = this.#getValidatedRules(
         extension,
         "_dynamic" /* rulesetId */,
         data.dynamicRuleset
       );
+
+      const {
+        MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+      } = lazy.ExtensionDNR.limits;
+
+      if (
+        validatedDynamicRules.length > MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES
+      ) {
+        Cu.reportError(
+          `Ignoring dynamic rules exceeding rule count limits while loading DNR store data for ${extension.id}`
+        );
+        data.dynamicRuleset = validatedDynamicRules.slice(
+          0,
+          MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES
+        );
+      }
     }
     return new StoreData(data);
   }
