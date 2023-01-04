@@ -4006,15 +4006,21 @@ void EventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext) {
   if (presContext) {
     IMEStateManager::OnDestroyPresContext(*presContext);
   }
-  if (mHoverContent) {
-    // Bug 70855: Presentation is going away, possibly for a reframe.
-    // Reset the hover state so that if we're recreating the presentation,
-    // we won't have the old hover state still set in the new presentation,
-    // as if the new presentation is resized, a new element may be hovered.
-    SetContentState(nullptr, ElementState::HOVER);
-  }
+
+  // Bug 70855: Presentation is going away, possibly for a reframe.
+  // Reset the hover state so that if we're recreating the presentation,
+  // we won't have the old hover state still set in the new presentation,
+  // as if the new presentation is resized, a new element may be hovered.
+  ResetHoverState();
+
   mPointersEnterLeaveHelper.Clear();
   PointerEventHandler::NotifyDestroyPresContext(presContext);
+}
+
+void EventStateManager::ResetHoverState() {
+  if (mHoverContent) {
+    SetContentState(nullptr, ElementState::HOVER);
+  }
 }
 
 void EventStateManager::SetPresContext(nsPresContext* aPresContext) {

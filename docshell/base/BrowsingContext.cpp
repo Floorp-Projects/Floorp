@@ -64,6 +64,7 @@
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/URLQueryStringStripper.h"
+#include "mozilla/EventStateManager.h"
 #include "nsIURIFixup.h"
 #include "nsIXULRuntime.h"
 
@@ -2988,6 +2989,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
       nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
       if (shell) {
         nsDocShell::Cast(shell)->ThawFreezeNonRecursive(false);
+        if (nsPresContext* pc = shell->GetPresContext()) {
+          pc->EventStateManager()->ResetHoverState();
+        }
       }
       aContext->mIsInBFCache = true;
       Document* doc = aContext->GetDocument();
