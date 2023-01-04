@@ -27,8 +27,13 @@ dictionary MLContextOptions {
 
 [SecureContext, Exposed=(Window, DedicatedWorker)]
 interface ML {
-  MLContext createContext(optional MLContextOptions options = {});
-  MLContext createContext(GPUDevice gpuDevice);
+  Promise<MLContext> createContext(optional MLContextOptions options = {});
+  Promise<MLContext> createContext(GPUDevice gpuDevice);
+
+  [Exposed=(DedicatedWorker)]
+  MLContext createContextSync(optional MLContextOptions options = {});
+  [Exposed=(DedicatedWorker)]
+  MLContext createContextSync(GPUDevice gpuDevice);
 };
 
 typedef record<DOMString, ArrayBufferView> MLNamedArrayBufferViews;
@@ -38,12 +43,12 @@ interface MLContext {};
 
 partial interface MLContext {
   [Exposed=(DedicatedWorker)]
-  undefined compute(
+  undefined computeSync(
       MLGraph graph, MLNamedArrayBufferViews inputs, MLNamedArrayBufferViews outputs);
 };
 
 partial interface MLContext {
-  Promise<undefined> computeAsync(
+  Promise<undefined> compute(
       MLGraph graph, MLNamedArrayBufferViews inputs, MLNamedArrayBufferViews outputs);
 };
 
@@ -103,12 +108,12 @@ interface MLGraphBuilder {
   // Create a single-value operand from the specified number of the specified type.
   MLOperand constant(double value, optional MLOperandType type = "float32");
 
+  // Compile the graph up to the specified output operands asynchronously.
+  Promise<MLGraph> build(MLNamedOperands outputs);
+
   // Compile the graph up to the specified output operands synchronously.
   [Exposed=(DedicatedWorker)]
-  MLGraph build(MLNamedOperands outputs);
-
-  // Compile the graph up to the specified output operands asynchronously.
-  Promise<MLGraph> buildAsync(MLNamedOperands outputs);
+  MLGraph buildSync(MLNamedOperands outputs);
 };
 
 dictionary MLBatchNormalizationOptions {
