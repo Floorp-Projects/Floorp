@@ -66,6 +66,19 @@ promise_test(async () => {
   assert_equals(received.timestamp, 40);
 }, 'Verify frames can be passed back and forth between main and sharedworker');
 
+promise_test(async () => {
+  navigator.serviceWorker.register('videoFrame-serialization.crossAgentCluster.serviceworker.js');
+  navigator.serviceWorker.ready.then((registration) => {
+    let frame = createVideoFrame(50);
+    registration.active.postMessage(frame);
+    registration.active.postMessage({'id': 50});
+  });
+  const received = await new Promise(resolve => navigator.serviceWorker.onmessage = (e) => {
+    resolve(e.data);
+  });
+  assert_equals(received, 'NOT_RECEIVED');
+}, 'Verify frames cannot be passed to serviceworker');
+
 function appendIframe(src) {
   const frame = document.createElement('iframe');
   document.body.appendChild(frame);
