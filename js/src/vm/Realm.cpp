@@ -29,6 +29,7 @@
 #include "vm/DateTime.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
+#include "vm/PIC.h"
 
 #include "gc/Marking-inl.h"
 #include "vm/JSObject-inl.h"
@@ -352,6 +353,19 @@ void Realm::purge() {
   objects_.iteratorCache.clearAndCompact();
   arraySpeciesLookup.purge();
   promiseLookup.purge();
+
+  if (zone()->isGCPreparing()) {
+    purgeForOfPicChain();
+  }
+}
+
+void Realm::purgeForOfPicChain() {
+  if (GlobalObject* global = global_.unbarrieredGet()) {
+    if (NativeObject* object = global->getForOfPICObject()) {
+      ForOfPIC::Chain* chain = ForOfPIC::fromJSObject(object);
+      chain->freeAllStubs(runtime_->gcContext());
+    }
+  }
 }
 
 // Check to see if this individual realm is recording allocations. Debuggers or

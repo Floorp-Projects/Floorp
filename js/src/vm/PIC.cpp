@@ -288,11 +288,13 @@ void js::ForOfPIC::Chain::trace(JSTracer* trc) {
   TraceEdge(trc, &canonicalNextFunc_,
             "ForOfPIC ArrayIterator.prototype.next builtin.");
 
-  JS::GCContext* gcx = TlsGCContext.get();
-  if (trc->isMarkingTracer()) {
-    // Free all the stubs in the chain.
-    freeAllStubs(gcx);
+  for (Stub* stub = stubs_; stub; stub = stub->next()) {
+    stub->trace(trc);
   }
+}
+
+void js::ForOfPIC::Stub::trace(JSTracer* trc) {
+  TraceEdge(trc, &shape_, "ForOfPIC::Stub::shape_");
 }
 
 static void ForOfPIC_finalize(JS::GCContext* gcx, JSObject* obj) {

@@ -105,7 +105,7 @@ struct ForOfPIC {
   class Stub : public BaseStub {
    private:
     // Shape of matching array object.
-    Shape* shape_;
+    const HeapPtr<Shape*> shape_;
 
    public:
     explicit Stub(Shape* shape) : BaseStub(), shape_(shape) {
@@ -113,6 +113,8 @@ struct ForOfPIC {
     }
 
     Shape* shape() { return shape_; }
+
+    void trace(JSTracer* trc);
   };
 
   /*
@@ -198,6 +200,8 @@ struct ForOfPIC {
     void trace(JSTracer* trc);
     void finalize(JS::GCContext* gcx, JSObject* obj);
 
+    void freeAllStubs(JS::GCContext* gcx);
+
    private:
     // Check if the global array-related objects have not been messed with
     // in a way that would disable this PIC.
@@ -218,8 +222,6 @@ struct ForOfPIC {
 
     // Erase the stub chain.
     void eraseChain(JSContext* cx);
-
-    void freeAllStubs(JS::GCContext* gcx);
   };
 
   static NativeObject* createForOfPICObject(JSContext* cx,
