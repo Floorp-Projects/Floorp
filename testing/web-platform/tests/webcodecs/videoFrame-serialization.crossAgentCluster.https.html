@@ -21,8 +21,8 @@
 <body>
 <script>
 const HELPER = '/webcodecs/videoFrame-serialization.crossAgentCluster.helper.html';
-const SAMEORIGIN_BASE = get_host_info().HTTP_ORIGIN;
-const CROSSORIGIN_BASE = get_host_info().HTTP_NOTSAMESITE_ORIGIN;
+const SAMEORIGIN_BASE = get_host_info().HTTPS_ORIGIN;
+const CROSSORIGIN_BASE = get_host_info().HTTPS_NOTSAMESITE_ORIGIN;
 const SAMEORIGIN_HELPER = SAMEORIGIN_BASE + HELPER;
 const CROSSORIGIN_HELPER = CROSSORIGIN_BASE + HELPER;
 
