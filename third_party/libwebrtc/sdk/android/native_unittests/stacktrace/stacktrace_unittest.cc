@@ -263,7 +263,7 @@ TEST(Stacktrace, TestRtcEventDeadlockDetection) {
 
   // The message should appear after 3 sec. We'll wait up to 10 sec in an
   // attempt to not be flaky.
-  EXPECT_TRUE(sink.WhenFound().Wait(10000));
+  EXPECT_TRUE(sink.WhenFound().Wait(TimeDelta::Seconds(10)));
 
   // Unblock the thread and shut it down.
   ev.Set();
