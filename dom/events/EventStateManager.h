@@ -133,6 +133,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyDestroyPresContext(
       nsPresContext* aPresContext);
+
+  void ResetHoverState();
+
   void SetPresContext(nsPresContext* aPresContext);
   void ClearFrameRefs(nsIFrame* aFrame);
 
