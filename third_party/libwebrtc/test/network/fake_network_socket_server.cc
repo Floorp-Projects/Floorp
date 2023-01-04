@@ -304,12 +304,12 @@ void FakeNetworkSocketServer::SetMessageQueue(rtc::Thread* thread) {
 }
 
 // Always returns true (if return false, it won't be invoked again...)
-bool FakeNetworkSocketServer::Wait(int cms, bool process_io) {
+bool FakeNetworkSocketServer::Wait(webrtc::TimeDelta max_wait_duration,
+                                   bool process_io) {
   RTC_DCHECK(thread_ == rtc::Thread::Current());
-  if (cms != 0) {
-    wakeup_.Wait(cms == kForever ? rtc::Event::kForever
-                                 : TimeDelta::Millis(cms));
-  }
+  if (!max_wait_duration.IsZero())
+    wakeup_.Wait(max_wait_duration);
+
   return true;
 }
 

@@ -24,8 +24,8 @@ class DummySocketServer : public rtc::SocketServer {
     RTC_DCHECK_NOTREACHED();
     return nullptr;
   }
-  bool Wait(int cms, bool process_io) override {
-    RTC_CHECK_EQ(cms, 0);
+  bool Wait(TimeDelta max_wait_duration, bool process_io) override {
+    RTC_CHECK(max_wait_duration.IsZero());
     return true;
   }
   void WakeUp() override {}

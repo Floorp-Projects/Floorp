@@ -14,6 +14,7 @@
 
 #include <memory>
 
+#include "api/units/time_delta.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/location.h"
 #include "rtc_base/message_handler.h"
@@ -44,7 +45,7 @@ TEST_F(NullSocketServerTest, WaitAndSet) {
 
 TEST_F(NullSocketServerTest, TestWait) {
   int64_t start = TimeMillis();
-  ss_.Wait(200, true);
+  ss_.Wait(webrtc::TimeDelta::Millis(200), true);
   // The actual wait time is dependent on the resolution of the timer used by
   // the Event class. Allow for the event to signal ~20ms early.
   EXPECT_GE(TimeSince(start), 180);

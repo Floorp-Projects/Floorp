@@ -613,7 +613,8 @@ void VirtualSocketServer::SetMessageQueue(Thread* msg_queue) {
   msg_queue_ = msg_queue;
 }
 
-bool VirtualSocketServer::Wait(int cmsWait, bool process_io) {
+bool VirtualSocketServer::Wait(webrtc::TimeDelta max_wait_duration,
+                               bool process_io) {
   RTC_DCHECK_RUN_ON(msg_queue_);
   if (stop_on_idle_ && Thread::Current()->empty()) {
     return false;
@@ -622,8 +623,7 @@ bool VirtualSocketServer::Wait(int cmsWait, bool process_io) {
   // any real I/O. Received packets come in the form of queued messages, so
   // Thread will ensure WakeUp is called if another thread sends a
   // packet.
-  wakeup_.Wait(cmsWait == kForever ? Event::kForever
-                                   : webrtc::TimeDelta::Millis(cmsWait));
+  wakeup_.Wait(max_wait_duration);
   return true;
 }
 

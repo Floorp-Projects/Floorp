@@ -918,7 +918,11 @@ rtc_library("null_socket_server") {
 
 rtc_source_set("socket_server") {
   sources = [ "socket_server.h" ]
-  deps = [ ":socket_factory" ]
+  deps = [
+    ":rtc_event",
+    ":socket_factory",
+    "../api/units:time_delta",
+  ]
 }
 
 rtc_library("threading") {
@@ -1573,6 +1577,7 @@ if (rtc_include_tests) {
         ":testclient",
         ":threading",
         ":timeutils",
+        "../api/units:time_delta",
         "../system_wrappers",
         "../test:fileutils",
         "../test:test_main",
