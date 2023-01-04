@@ -159,7 +159,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this.conn = connection;
     this.parentActor = parentActor;
 
-    this._prefs = {};
     this.dbg = this.parentActor.dbg;
 
     this._gripDepth = 0;
@@ -202,13 +201,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @type number
    */
   _gripDepth: null,
-
-  /**
-   * Web Console-related preferences.
-   * @private
-   * @type object
-   */
-  _prefs: null,
 
   /**
    * Holds a set of all currently registered listeners.
@@ -1392,35 +1384,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         Services.console.resetWindow(id)
       );
     }
-  },
-
-  /**
-   * The "getPreferences" request handler.
-   *
-   * @param array preferences
-   *        The preferences that need to be retrieved.
-   * @return object
-   *         The response message - a { key: value } object map.
-   */
-  getPreferences(preferences) {
-    const prefs = Object.create(null);
-    for (const key of preferences) {
-      prefs[key] = this._prefs[key];
-    }
-    return { preferences: prefs };
-  },
-
-  /**
-   * The "setPreferences" request handler.
-   *
-   * @param object preferences
-   *        The preferences that need to be updated.
-   */
-  setPreferences(preferences) {
-    for (const key in preferences) {
-      this._prefs[key] = preferences[key];
-    }
-    return { updated: Object.keys(preferences) };
   },
 
   // End of request handlers.

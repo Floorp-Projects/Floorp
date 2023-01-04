@@ -195,30 +195,6 @@ const webconsoleSpecPrototype = {
     },
 
     /**
-     * Get Web Console-related preferences on the server.
-     *
-     * @Arg array preferences
-     *        An array with the preferences you want to retrieve.
-     */
-    getPreferences: {
-      request: {
-        preferences: Arg(0, "array:string"),
-      },
-      response: RetVal("json"),
-    },
-    /**
-     * Set Web Console-related preferences on the server.
-     *
-     * @Arg object preferences
-     *        An object with the preferences you want to change.
-     */
-    setPreferences: {
-      request: {
-        preferences: Arg(0, "json"),
-      },
-      response: RetVal("json"),
-    },
-    /**
      * Send a HTTP request with the given data.
      *
      * @Arg object data
