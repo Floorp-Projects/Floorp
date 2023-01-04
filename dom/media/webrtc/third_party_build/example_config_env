@@ -30,7 +30,7 @@ export MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM="5195"
 
 # New target release branch for v106 is branch-heads/5249.  This is used
 # to calculate the next upstream commit.
-export MOZ_GIT_RELEASE_BRANCH="branch-heads/5249"
+export MOZ_TARGET_UPSTREAM_BRANCH_HEAD="branch-heads/5249"
 
 # For local development 'mozpatches' is fine for a branch name, but when
 # pushing the patch stack to github, it should be named something like
