@@ -811,7 +811,9 @@ class PageAction {
 
     if (
       content.alt_anchor_id &&
-      lazy.CustomizableUI.getWidget(content.anchor_id).areaType === "menu-panel"
+      lazy.CustomizableUI.getWidget(content.anchor_id).areaType.includes(
+        "panel"
+      )
     ) {
       anchor = this.window.document.getElementById(content.alt_anchor_id);
     } else {
@@ -819,7 +821,6 @@ class PageAction {
         this.window.document.getElementById(content.anchor_id) ||
         this.container;
     }
-
     browser.cfrpopupnotificationanchor = anchor;
 
     await this._renderPopup(message, browser);
