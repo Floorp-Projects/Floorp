@@ -19,7 +19,6 @@
 #include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/net/DNS.h"
-#include "prenv.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -217,8 +216,7 @@ nsGIOMimeApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval) {
   return NS_OK;
 }
 
-static RefPtr<GAppLaunchContext> GetLaunchContext(
-    const char* aXDGToken = nullptr) {
+static RefPtr<GAppLaunchContext> GetLaunchContext() {
   RefPtr<GAppLaunchContext> context = dont_AddRef(g_app_launch_context_new());
   // Unset this before launching third-party MIME handlers. Otherwise, if
   // Thunderbird sets this in its startup script (as it does in Debian and
@@ -226,9 +224,6 @@ static RefPtr<GAppLaunchContext> GetLaunchContext(
   // Debian), then Firefox will think it is part of Thunderbird and try to make
   // Thunderbird the default browser. See bug 1494436.
   g_app_launch_context_unsetenv(context, "MOZ_APP_LAUNCHER");
-  if (aXDGToken) {
-    g_app_launch_context_setenv(context, "XDG_ACTIVATION_TOKEN", aXDGToken);
-  }
   return context;
 }
 
@@ -285,8 +280,9 @@ gboolean g_app_info_launch_default_for_uri_openbsd(const char* uri,
 }
 #endif
 
-static NS_IMETHODIMP LaunchWithURIImpl(RefPtr<GAppInfo> aInfo, nsIURI* aUri,
-                                       const char* aXDGToken = nullptr) {
+NS_IMETHODIMP
+nsGIOMimeApp::LaunchWithURI(nsIURI* aUri,
+                            mozilla::dom::BrowsingContext* aBrowsingContext) {
   GList uris = {0};
   nsCString spec;
   aUri->GetSpec(spec);
@@ -296,37 +292,16 @@ static NS_IMETHODIMP LaunchWithURIImpl(RefPtr<GAppInfo> aInfo, nsIURI* aUri,
   GUniquePtr<GError> error;
 #ifdef __OpenBSD__
   gboolean result = g_app_info_launch_uris_openbsd(
-      aInfo, spec.get(), GetLaunchContext(aXDGToken).get(),
-      getter_Transfers(error));
+      mApp, spec.get(), GetLaunchContext().get(), getter_Transfers(error));
 #else
   gboolean result = g_app_info_launch_uris(
-      aInfo, &uris, GetLaunchContext(aXDGToken).get(), getter_Transfers(error));
+      mApp, &uris, GetLaunchContext().get(), getter_Transfers(error));
 #endif
   if (!result) {
     g_warning("Cannot launch application: %s", error->message);
     return NS_ERROR_FAILURE;
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGIOMimeApp::LaunchWithURI(nsIURI* aUri,
-                            mozilla::dom::BrowsingContext* aBrowsingContext) {
-  auto promise = mozilla::widget::RequestWaylandFocusPromise();
-  if (!promise) {
-    return LaunchWithURIImpl(mApp, aUri);
-  }
-  promise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      /* resolve */
-      [app = RefPtr{mApp}, uri = RefPtr{aUri}](nsCString token) {
-        LaunchWithURIImpl(app, uri, token.get());
-      },
-      /* reject */
-      [app = RefPtr{mApp}, uri = RefPtr{aUri}](bool state) {
-        LaunchWithURIImpl(app, uri);
-      });
   return NS_OK;
 }
 
@@ -618,18 +593,17 @@ nsGIOService::GetDescriptionForMimeType(const nsACString& aMimeType,
   return NS_OK;
 }
 
-static nsresult ShowURIImpl(nsIURI* aURI, const char* aXDGToken = nullptr) {
+nsresult nsGIOService::ShowURI(nsIURI* aURI) {
   nsAutoCString spec;
   MOZ_TRY(aURI->GetSpec(spec));
   GUniquePtr<GError> error;
 #ifdef __OpenBSD__
-  if (!g_app_info_launch_default_for_uri_openbsd(
-          spec.get(), GetLaunchContext(aXDGToken).get(),
+  if (!g_app_info_launch_default_for_uri_openbsd(spec.get(),
+                                                 GetLaunchContext().get(),
 #else
-  if (!g_app_info_launch_default_for_uri(spec.get(),
-                                         GetLaunchContext(aXDGToken).get(),
+  if (!g_app_info_launch_default_for_uri(spec.get(), GetLaunchContext().get(),
 #endif
-          getter_Transfers(error))) {
+                                                 getter_Transfers(error))) {
     g_warning("Could not launch default application for URI: %s",
               error->message);
     return NS_ERROR_FAILURE;
@@ -637,54 +611,22 @@ static nsresult ShowURIImpl(nsIURI* aURI, const char* aXDGToken = nullptr) {
   return NS_OK;
 }
 
-nsresult nsGIOService::ShowURI(nsIURI* aURI) {
-  auto promise = mozilla::widget::RequestWaylandFocusPromise();
-  if (!promise) {
-    return ShowURIImpl(aURI);
-  }
-  promise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      /* resolve */
-      [uri = RefPtr{aURI}](nsCString token) { ShowURIImpl(uri, token.get()); },
-      /* reject */
-      [uri = RefPtr{aURI}](bool state) { ShowURIImpl(uri); });
-  return NS_OK;
-}
-
-static nsresult LaunchPathImpl(const nsACString& aPath,
-                               const char* aXDGToken = nullptr) {
+static nsresult LaunchPath(const nsACString& aPath) {
   RefPtr<GFile> file = dont_AddRef(
       g_file_new_for_commandline_arg(PromiseFlatCString(aPath).get()));
   GUniquePtr<char> spec(g_file_get_uri(file));
   GUniquePtr<GError> error;
 #ifdef __OpenBSD__
   g_app_info_launch_default_for_uri_openbsd(spec.get(),
-                                            GetLaunchContext(aXDGToken).get(),
+                                            GetLaunchContext().get(),
 #else
-  g_app_info_launch_default_for_uri(spec.get(),
-                                    GetLaunchContext(aXDGToken).get(),
+  g_app_info_launch_default_for_uri(spec.get(), GetLaunchContext().get(),
 #endif
                                             getter_Transfers(error));
   if (error) {
     g_warning("Cannot launch default application: %s", error->message);
     return NS_ERROR_FAILURE;
   }
-  return NS_OK;
-}
-
-static nsresult LaunchPath(const nsACString& aPath) {
-  auto promise = mozilla::widget::RequestWaylandFocusPromise();
-  if (!promise) {
-    return LaunchPathImpl(aPath);
-  }
-  promise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      /* resolve */
-      [path = nsCString{aPath}](nsCString token) {
-        LaunchPathImpl(path, token.get());
-      },
-      /* reject */
-      [path = nsCString{aPath}](bool state) { LaunchPathImpl(path); });
   return NS_OK;
 }
 
