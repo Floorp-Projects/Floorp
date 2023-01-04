@@ -64,7 +64,7 @@ ShellService.register();
 let gIsLegacy = false;
 
 function simulateSnapEnvironment() {
-  Services.env.set("SNAP_INSTANCE_NAME", AppConstants.MOZ_APP_NAME);
+  Services.env.set("SNAP_NAME", AppConstants.MOZ_APP_NAME);
 
   gIsLegacy = true;
 }
