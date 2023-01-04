@@ -74,8 +74,8 @@ XPCOMUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
   }
 
   if (lazy.gServerURL != AppConstants.REMOTE_SETTINGS_SERVER_URL) {
-    log.warning("Ignoring preference override of remote settings server");
-    log.warning(
+    log.warn("Ignoring preference override of remote settings server");
+    log.warn(
       "Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment"
     );
   }
