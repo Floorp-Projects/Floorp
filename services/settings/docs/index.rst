@@ -222,10 +222,13 @@ To package an attachment for consumers of the `download()` method:
 .. note::
 
    ``<attachment id>`` is used to derive the file names of the packaged attachment dump, and as the
-   key for the (optional) cache where attachment updates from the network are saved. If the cache
-   is enabled, the attachment identifier is expected to be fixed across client application updates.
+   key for the cache where attachment updates from the network are saved.
+   The attachment identifier is expected to be fixed across client application updates.
    If that expectation cannot be met, the ``attachmentId`` option of the ``download`` method of the
    attachment downloader should be used to override the attachment ID with a custom (stable) value.
+   In order to keep track of the cached attachment, and prevent it from being pruned automatically,
+   the attachment identifier will have to be explicitly listed in the ``keepAttachmentsIds = [<attachment id>]``
+   option of the RemoteSettings client constructor.
 
 .. note::
 

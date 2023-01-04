@@ -283,6 +283,15 @@ class Downloader {
   }
 
   /**
+   * Clear the cache from obsolete downloaded attachments.
+   *
+   * @param {Array<String>} excludeIds List of attachments IDs to exclude from pruning.
+   */
+  async prune(excludeIds) {
+    return this.cacheImpl.prune(excludeIds);
+  }
+
+  /**
    * @deprecated See https://bugzilla.mozilla.org/show_bug.cgi?id=1634127
    *
    * Download the record attachment into the local profile directory

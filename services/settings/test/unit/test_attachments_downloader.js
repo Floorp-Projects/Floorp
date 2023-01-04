@@ -623,3 +623,84 @@ add_task(async function test_download_from_dump() {
 // Not really needed because the last test doesn't modify the main collection,
 // but added for consistency with other tests tasks around here.
 add_task(clear_state);
+
+add_task(async function test_obsolete_attachments_are_pruned() {
+  const RECORD2 = {
+    ...RECORD,
+    id: "another-id",
+  };
+  const client = RemoteSettings("some-collection");
+  // Store records and related attachments directly in the cache.
+  await client.db.importChanges({}, 42, [RECORD, RECORD2], { clear: true });
+  await client.db.saveAttachment(RECORD.id, {
+    record: RECORD,
+    blob: new Blob(["123"]),
+  });
+  await client.db.saveAttachment("custom-id", {
+    record: RECORD2,
+    blob: new Blob(["456"]),
+  });
+  // Store an extraneous cached attachment.
+  await client.db.saveAttachment("bar", {
+    record: { id: "bar" },
+    blob: new Blob(["789"]),
+  });
+
+  const recordAttachment = await client.attachments.cacheImpl.get(RECORD.id);
+  Assert.equal(
+    await recordAttachment.blob.text(),
+    "123",
+    "Record has a cached attachment"
+  );
+  const record2Attachment = await client.attachments.cacheImpl.get("custom-id");
+  Assert.equal(
+    await record2Attachment.blob.text(),
+    "456",
+    "Record 2 has a cached attachment"
+  );
+  const { blob: cachedExtra } = await client.attachments.cacheImpl.get("bar");
+  Assert.equal(await cachedExtra.text(), "789", "There is an extra attachment");
+
+  await client.attachments.prune([]);
+
+  Assert.ok(
+    await client.attachments.cacheImpl.get(RECORD.id),
+    "Record attachment was kept"
+  );
+  Assert.ok(
+    await client.attachments.cacheImpl.get("custom-id"),
+    "Record 2 attachment was kept"
+  );
+  Assert.ok(
+    !(await client.attachments.cacheImpl.get("bar")),
+    "Extra was deleted"
+  );
+});
+add_task(clear_state);
+
+add_task(
+  async function test_obsolete_attachments_listed_as_excluded_are_not_pruned() {
+    const client = RemoteSettings("some-collection");
+    // Store records and related attachments directly in the cache.
+    await client.db.importChanges({}, 42, [], { clear: true });
+    await client.db.saveAttachment(RECORD.id, {
+      record: RECORD,
+      blob: new Blob(["123"]),
+    });
+
+    const recordAttachment = await client.attachments.cacheImpl.get(RECORD.id);
+    Assert.equal(
+      await recordAttachment.blob.text(),
+      "123",
+      "Record has a cached attachment"
+    );
+
+    await client.attachments.prune([RECORD.id]);
+
+    Assert.ok(
+      await client.attachments.cacheImpl.get(RECORD.id),
+      "Record attachment was kept"
+    );
+  }
+);
+add_task(clear_state);
