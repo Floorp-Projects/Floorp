@@ -353,15 +353,20 @@ class WebConsoleUI {
       }
     );
 
-    const networkFront = await commands.watcherFront.getNetworkParentActor();
-    // There is no way to view response bodies from the Browser Console, so do
-    // not waste the memory.
-    const saveBodies =
-      !this.isBrowserConsole &&
-      Services.prefs.getBoolPref(
-        "devtools.netmonitor.saveRequestAndResponseBodies"
-      );
-    await networkFront.setSaveRequestAndResponseBodies(saveBodies);
+    // When opening a worker toolbox from about:debugging,
+    // we do not instantiate any Watcher actor yet and would throw here.
+    // But even once we do, we wouldn't support network inspection anyway.
+    if (commands.targetCommand.hasTargetWatcherSupport()) {
+      const networkFront = await commands.watcherFront.getNetworkParentActor();
+      // There is no way to view response bodies from the Browser Console, so do
+      // not waste the memory.
+      const saveBodies =
+        !this.isBrowserConsole &&
+        Services.prefs.getBoolPref(
+          "devtools.netmonitor.saveRequestAndResponseBodies"
+        );
+      await networkFront.setSaveRequestAndResponseBodies(saveBodies);
+    }
   }
 
   async stopWatchingNetworkResources() {

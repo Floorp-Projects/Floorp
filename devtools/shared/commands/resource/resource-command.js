@@ -1054,6 +1054,20 @@ class ResourceCommand {
       return;
     }
 
+    // All workers target types are still not supported by the watcher
+    // so that we have to spawn legacy listener for all their resources.
+    // But some resources are irrelevant to workers, like network events.
+    // And we removed the related legacy listener as they are no longer used.
+    if (
+      targetFront.targetType.endsWith("worker") &&
+      [
+        ResourceCommand.TYPES.NETWORK_EVENT,
+        ResourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+      ].includes(resourceType)
+    ) {
+      return;
+    }
+
     if (targetFront.isDestroyed()) {
       return;
     }
@@ -1270,11 +1284,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   LegacyListeners,
-  ResourceCommand.TYPES.NETWORK_EVENT,
-  "resource://devtools/shared/commands/resource/legacy-listeners/network-events.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
   ResourceCommand.TYPES.WEBSOCKET,
   "resource://devtools/shared/commands/resource/legacy-listeners/websocket.js"
 );
@@ -1307,11 +1316,6 @@ loader.lazyRequireGetter(
   LegacyListeners,
   ResourceCommand.TYPES.INDEXED_DB,
   "resource://devtools/shared/commands/resource/legacy-listeners/indexed-db.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-  "resource://devtools/shared/commands/resource/legacy-listeners/network-event-stacktraces.js"
 );
 loader.lazyRequireGetter(
   LegacyListeners,
