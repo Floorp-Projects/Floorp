@@ -337,10 +337,7 @@ add_task(async function test_submit_creditCard_new() {
     expectChanged = undefined
   ) {
     await SpecialPowers.pushPrefEnv({
-      set: [
-        [CREDITCARDS_USED_STATUS_PREF, 0],
-        [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
-      ],
+      set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
     });
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
@@ -445,10 +442,7 @@ add_task(async function test_submit_creditCard_autofill() {
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
-    ],
+    set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
   });
 
   await setStorage(TEST_CREDIT_CARD_1);
@@ -461,7 +455,6 @@ add_task(async function test_submit_creditCard_autofill() {
     1: 1,
   });
 
-  SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
 
   await assertTelemetry(
@@ -508,10 +501,7 @@ add_task(async function test_submit_creditCard_update() {
     expectChanged = undefined
   ) {
     await SpecialPowers.pushPrefEnv({
-      set: [
-        [CREDITCARDS_USED_STATUS_PREF, 0],
-        [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
-      ],
+      set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
     });
 
     await setStorage(TEST_CREDIT_CARD_1);
@@ -556,7 +546,6 @@ add_task(async function test_submit_creditCard_update() {
 
     assertHistogram("CREDITCARD_NUM_USES", useCount);
 
-    SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
     SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
 
     await removeAllRecords();
@@ -791,10 +780,7 @@ add_task(async function test_clear_creditCard_autofill() {
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
-    ],
+    set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
   });
 
   await setStorage(TEST_CREDIT_CARD_1);

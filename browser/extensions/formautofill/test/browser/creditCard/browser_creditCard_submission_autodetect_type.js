@@ -4,9 +4,6 @@
 "use strict";
 
 add_task(async function test_autodetect_credit_not_set() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
-  });
   const testCard = {
     "cc-name": "John Doe",
     "cc-number": "4012888888881881",
@@ -56,9 +53,6 @@ add_task(async function test_autodetect_credit_not_set() {
 });
 
 add_task(async function test_autodetect_credit_overwrite() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
-  });
   const testCard = {
     "cc-name": "John Doe",
     "cc-number": "4012888888881881",
