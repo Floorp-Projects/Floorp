@@ -112,6 +112,14 @@ luci.project(
                 "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
             ],
         ),
+        luci.binding(
+            roles = "role/weetbix.queryUser",
+            groups = "googlers",
+        ),
+        luci.binding(
+            roles = "role/weetbix.editor",
+            groups = "googlers",
+        ),
     ],
 )
 
