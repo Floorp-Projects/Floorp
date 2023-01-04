@@ -1,3 +1,26 @@
 pdfjs.jar:
 % resource pdf.js %content/
- content/	(content/*)
+ content/ (content/*.jsm)
+ content/build/	(content/build/*)
+ content/web/cmaps/	(content/web/cmaps/*)
+ content/web/standard_fonts/	(content/web/standard_fonts/*)
+ content/web/images/	(content/web/images/annotation-*.svg)
+ content/web/images/loading-icon.gif	(content/web/images/loading-icon.gif)
+ content/web/images/shadow.png	(content/web/images/shadow.png)
+#ifdef ANDROID
+ content/web/viewer.html (content/web/viewer-geckoview.html)
+ content/web/viewer.css (content/web/viewer-geckoview.css)
+ content/web/viewer.js (content/web/viewer-geckoview.js)
+#else
+ content/web/viewer.html (content/web/viewer.html)
+ content/web/viewer.css (content/web/viewer.css)
+ content/web/viewer.js (content/web/viewer.js)
+ content/web/debugger.css (content/web/debugger.css)
+ content/web/debugger.js (content/web/debugger.js)
+ content/web/images/	(content/web/images/secondaryToolbarButton*.svg)
+ content/web/images/	(content/web/images/toolbarButton*.svg)
+ content/web/images/	(content/web/images/treeitem*.svg)
+ content/web/images/	(content/web/images/cursor*.svg)
+ content/web/images/	(content/web/images/findBar*.svg)
+ content/web/images/	(content/web/images/loading*.svg)
+#endif
