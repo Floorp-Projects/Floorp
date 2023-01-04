@@ -76,7 +76,9 @@
 
     CheckUpdate();
 
-    browser.browserAction.onClicked.addListener(function(){
-        CheckUpdate({isBrowserActionClicked: true});
-    });
+    if (browser.browserAction) {
+        browser.browserAction.onClicked.addListener(function(){
+            CheckUpdate({isBrowserActionClicked: true});
+        });
+    }
 }
