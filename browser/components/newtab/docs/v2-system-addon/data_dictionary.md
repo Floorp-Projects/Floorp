@@ -1,6 +1,7 @@
 # Activity Stream Pings
 
 The Activity Stream system add-on sends various types of pings to the backend (HTTPS POST) [Onyx server](https://github.com/mozilla/onyx) :
+
 - a `health` ping that reports whether or not a user has a custom about:home or about:newtab page
 - a `session` ping that describes the ending of an Activity Stream session (a new tab is closed or refreshed), and
 - an `event` ping that records specific data about individual user interactions while interacting with Activity Stream
@@ -44,7 +45,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
   "user_prefs": 7
 
   // These fields are generated on the server
-  "date": "2016-03-07",
+ "date": "2016-03-07",
   "ip": "10.192.171.13",
   "ua": "python-requests/2.9.1",
   "receive_at": 1457396660000
@@ -298,11 +299,10 @@ Schema definitions/validations that can be used for tests can be found in `syste
 
 **Where:**
 
-* :one: Firefox data
-* :two: HTTP protocol data
-* :three: server augmented data
-* :four: User preferences encoding table
-
+- :one: Firefox data
+- :two: HTTP protocol data
+- :three: server augmented data
+- :four: User preferences encoding table
 
 Note: the following session-related fields are not yet implemented in the system-addon,
 but will likely be added in future versions:
@@ -347,14 +347,14 @@ Each item above could be combined with other items through bitwise OR (`|`) oper
 
 Examples:
 
-* Everything is on, `user_prefs = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 = 511`
-* Everything is off, `user_prefs = 0`
-* Only show search and Top Stories, `user_prefs = 1 | 4 = 5`
-* Everything except Highlights, `user_prefs = 1 | 2 | 4 | 16 | 32 | 64 | 128 | 256 = 503`
+- Everything is on, `user_prefs = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 = 511`
+- Everything is off, `user_prefs = 0`
+- Only show search and Top Stories, `user_prefs = 1 | 4 = 5`
+- Everything except Highlights, `user_prefs = 1 | 2 | 4 | 16 | 32 | 64 | 128 | 256 = 503`
 
 Likewise, one can use bitwise AND (`&`) for decoding.
 
-* Check if everything is shown, `user_prefs & (1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256)` or `user_prefs == 511`
-* Check if everything is off, `user_prefs == 0`
-* Check if search is shown, `user_prefs & 1`
-* Check if both Top Sites and Top Stories are shown, `(user_prefs & 2) && (user_prefs & 4)`, or  `(user_prefs & (2 | 4)) == (2 | 4)`
+- Check if everything is shown, `user_prefs & (1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256)` or `user_prefs == 511`
+- Check if everything is off, `user_prefs == 0`
+- Check if search is shown, `user_prefs & 1`
+- Check if both Top Sites and Top Stories are shown, `(user_prefs & 2) && (user_prefs & 4)`, or `(user_prefs & (2 | 4)) == (2 | 4)`
