@@ -449,16 +449,13 @@ void SendSideBandwidthEstimation::UpdateRtt(TimeDelta rtt, Timestamp at_time) {
 }
 
 void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
-  if (rtt_backoff_.CorrectedRtt(at_time) >
-      static_cast<TimeDelta>(rtt_backoff_.rtt_limit_)) {
-    if (at_time - time_last_decrease_ >=
-            static_cast<TimeDelta>(rtt_backoff_.drop_interval_) &&
-        current_target_ >
-            static_cast<DataRate>(rtt_backoff_.bandwidth_floor_)) {
+  if (rtt_backoff_.CorrectedRtt(at_time) > rtt_backoff_.rtt_limit_) {
+    if (at_time - time_last_decrease_ >= rtt_backoff_.drop_interval_ &&
+        current_target_ > rtt_backoff_.bandwidth_floor_) {
       time_last_decrease_ = at_time;
-      DataRate new_bitrate = std::max(
-          current_target_ * static_cast<double>(rtt_backoff_.drop_fraction_),
-          rtt_backoff_.bandwidth_floor_.Get());
+      DataRate new_bitrate =
+          std::max(current_target_ * rtt_backoff_.drop_fraction_,
+                   rtt_backoff_.bandwidth_floor_.Get());
       link_capacity_.OnRttBackoff(new_bitrate, at_time);
       UpdateTargetBitrate(new_bitrate, at_time);
       return;

@@ -43,10 +43,8 @@ BitrateEstimator::BitrateEstimator(const FieldTrialsView* key_value_config)
                             kMinRateWindowMs,
                             kMaxRateWindowMs),
       uncertainty_scale_("scale", 10.0),
-      uncertainty_scale_in_alr_("scale_alr",
-                                static_cast<double>(uncertainty_scale_)),
-      small_sample_uncertainty_scale_("scale_small",
-                                      static_cast<double>(uncertainty_scale_)),
+      uncertainty_scale_in_alr_("scale_alr", uncertainty_scale_),
+      small_sample_uncertainty_scale_("scale_small", uncertainty_scale_),
       small_sample_threshold_("small_thresh", DataSize::Zero()),
       uncertainty_symmetry_cap_("symmetry_cap", DataRate::Zero()),
       estimate_floor_("floor", DataRate::Zero()),
@@ -82,12 +80,12 @@ void BitrateEstimator::Update(Timestamp at_time, DataSize amount, bool in_alr) {
   }
   // Optionally use higher uncertainty for very small samples to avoid dropping
   // estimate and for samples obtained in ALR.
-  float scale = static_cast<double>(uncertainty_scale_);
+  float scale = uncertainty_scale_;
   if (is_small_sample && bitrate_sample_kbps < bitrate_estimate_kbps_) {
-    scale = static_cast<double>(small_sample_uncertainty_scale_);
+    scale = small_sample_uncertainty_scale_;
   } else if (in_alr && bitrate_sample_kbps < bitrate_estimate_kbps_) {
     // Optionally use higher uncertainty for samples obtained during ALR.
-    scale = static_cast<double>(uncertainty_scale_in_alr_);
+    scale = uncertainty_scale_in_alr_;
   }
   // Define the sample uncertainty as a function of how far away it is from the
   // current estimate. With low values of uncertainty_symmetry_cap_ we add more

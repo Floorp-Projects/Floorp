@@ -81,7 +81,7 @@ class FieldTrialParameter : public FieldTrialParameterInterface {
   FieldTrialParameter(absl::string_view key, T default_value)
       : FieldTrialParameterInterface(key), value_(default_value) {}
   T Get() const { return value_; }
-  explicit operator T() const { return Get(); }
+  operator T() const { return Get(); }
   const T* operator->() const { return &value_; }
 
   void SetForTest(T value) { value_ = value; }
