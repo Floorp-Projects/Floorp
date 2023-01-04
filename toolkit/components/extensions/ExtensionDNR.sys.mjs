@@ -103,6 +103,15 @@ const MAX_NUMBER_OF_STATIC_RULESETS = 50;
  */
 const MAX_NUMBER_OF_ENABLED_STATIC_RULESETS = 10;
 
+/**
+ * The maximum number of dynamic and session rules an extension can add.
+ * NOTE: in the Firefox we are enforcing this limit to the session and dynamic rules count separately,
+ * instead of enforcing it to the rules count for both combined as the Chrome implementation does.
+ *
+ * NOTE: this limit may be increased in the future, see https://github.com/w3c/webextensions/issues/319
+ */
+const MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES = 5000;
+
 // TODO(Bug 1803370): allow extension to exceed the GUARANTEED_MINIMUM_STATIC_RULES limit.
 //
 // The maximum number of static rules exceeding the per-extension
@@ -1909,6 +1918,7 @@ export const ExtensionDNR = {
     GUARANTEED_MINIMUM_STATIC_RULES,
     MAX_NUMBER_OF_STATIC_RULESETS,
     MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
+    MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
   },
 
   beforeWebRequestEvent,

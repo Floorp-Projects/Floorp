@@ -1059,9 +1059,19 @@ class RulesetsStore {
     if (failures.length) {
       throw new ExtensionError(failures[0].message);
     }
-    this._data
-      .get(extension.uuid)
-      .setDynamicRuleset(ruleValidator.getValidatedRules());
+
+    const {
+      MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+    } = lazy.ExtensionDNR.limits;
+    const validatedRules = ruleValidator.getValidatedRules();
+
+    if (validatedRules.length > MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES) {
+      throw new ExtensionError(
+        `updateDynamicRules request is exceeding MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES limit (${MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES})`
+      );
+    }
+
+    this._data.get(extension.uuid).setDynamicRuleset(validatedRules);
     await this.save(extension);
     // updateRulesetManager calls ruleManager.setDynamicRules using the
     // validated rules assigned above to this._data.
