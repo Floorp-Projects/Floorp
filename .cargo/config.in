@@ -27,7 +27,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "186a29c34d54d8628bbebb998a537210ac565b71"
+rev = "f14bee67"
 replace-with = "vendored-sources"
 
 [source."https://github.com/hsivonen/chardetng"]

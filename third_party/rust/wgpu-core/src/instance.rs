@@ -176,19 +176,7 @@ pub struct Adapter<A: hal::Api> {
 }
 
 impl<A: HalApi> Adapter<A> {
-    fn new(mut raw: hal::ExposedAdapter<A>) -> Self {
-        // WebGPU requires this offset alignment as lower bound on all adapters.
-        const MIN_BUFFER_OFFSET_ALIGNMENT_LOWER_BOUND: u32 = 32;
-
-        let limits = &mut raw.capabilities.limits;
-
-        limits.min_uniform_buffer_offset_alignment = limits
-            .min_uniform_buffer_offset_alignment
-            .max(MIN_BUFFER_OFFSET_ALIGNMENT_LOWER_BOUND);
-        limits.min_storage_buffer_offset_alignment = limits
-            .min_storage_buffer_offset_alignment
-            .max(MIN_BUFFER_OFFSET_ALIGNMENT_LOWER_BOUND);
-
+    fn new(raw: hal::ExposedAdapter<A>) -> Self {
         Self {
             raw,
             life_guard: LifeGuard::new("<Adapter>"),
@@ -943,18 +931,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             .get(adapter_id)
             .map(|adapter| adapter.raw.capabilities.downlevel.clone())
             .map_err(|_| InvalidAdapter)
-    }
-
-    pub fn adapter_get_presentation_timestamp<A: HalApi>(
-        &self,
-        adapter_id: AdapterId,
-    ) -> Result<wgt::PresentationTimestamp, InvalidAdapter> {
-        let hub = A::hub(self);
-        let mut token = Token::root();
-        let (adapter_guard, _) = hub.adapters.read(&mut token);
-        let adapter = adapter_guard.get(adapter_id).map_err(|_| InvalidAdapter)?;
-
-        Ok(unsafe { adapter.raw.adapter.get_presentation_timestamp() })
     }
 
     pub fn adapter_drop<A: HalApi>(&self, adapter_id: AdapterId) {
