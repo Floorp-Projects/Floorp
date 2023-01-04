@@ -138,8 +138,8 @@ treeherder:
         ui-widgets: ui-widgets
 
         # These ones are too long to fit in 25 chars
-        lib-fetch-httpurlconnect: lib-fetch-httpurlconnection
-        feature-webcompat-report: feature-webcompat-reporter
+        lib-fetch-httpurlconnecti: lib-fetch-httpurlconnection
+        feature-webcompat-reporte: feature-webcompat-reporter
 
         # Groups aren't generated off buildconfig.yml:
         samples-browser: samples-browser

@@ -115,9 +115,9 @@ task-defaults:
         kind: build
         symbol:
             by-build-type:
-                release: '{component}(BR)'
-                nightly: '{component}(BN)'
-                default: '{component}(B)'
+                release: '{treeherder_group}(BR)'
+                nightly: '{treeherder_group}(BN)'
+                default: '{treeherder_group}(B)'
         platform: AC-android-all/opt
         tier: 1
     worker-type: b-android-large
@@ -125,26 +125,3 @@ task-defaults:
         chain-of-trust: true
         docker-image: {in-tree: base}
         max-run-time: 1200
-
-
-overriden-tasks:
-    # Treeherder group names are too long to fit in 25 chars
-    lib-fetch-httpurlconnection:
-        treeherder:
-            symbol: 'lib-fetch-httpurlconnect(B)'
-    nightly-lib-fetch-httpurlconnection:
-        treeherder:
-            symbol: 'lib-fetch-httpurlconnect(BN)'
-    release-lib-fetch-httpurlconnection:
-        treeherder:
-            symbol: 'lib-fetch-httpurlconnect(BR)'
-
-    feature-webcompat-reporter:
-        treeherder:
-            symbol: 'feature-webcompat-report(B)'
-    nightly-feature-webcompat-reporter:
-        treeherder:
-            symbol: 'feature-webcompat-report(BN)'
-    release-feature-webcompat-reporter:
-        treeherder:
-            symbol: 'feature-webcompat-report(BR)'

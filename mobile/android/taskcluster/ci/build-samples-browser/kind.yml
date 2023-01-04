@@ -20,6 +20,7 @@ task-defaults:
         build-type: regular
         code-review: true
         component: samples-browser
+        treeherder-group: samples-browser
     description: Execute Gradle tasks for component "{component}"
     fetches:
         toolchain:
@@ -39,6 +40,7 @@ task-defaults:
         kind: build
         platform: AC-android-all/opt
         tier: 1
+        symbol: '{treeherder_group}(B)'
     worker-type: b-android-large
     worker:
         chain-of-trust: true
@@ -52,11 +54,9 @@ tasks:
                 - ':samples-browser:assembleGecko'
                 - ':samples-browser:testGeckoDebugUnitTest'
                 - ':samples-browser:lintGecko'
-        treeherder:
-            symbol: 'samples-browser(B)'
 
     system:
+        attributes:
+            treeherder-group: samples-browser-system
         run:
             gradlew: [':samples-browser:assembleSystem']
-        treeherder:
-            symbol: 'samples-browser-system(B)'
