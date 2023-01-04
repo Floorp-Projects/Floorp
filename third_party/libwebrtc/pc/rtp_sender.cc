@@ -169,6 +169,20 @@ RtpParameters RtpSenderBase::GetParametersInternal() const {
   });
 }
 
+RtpParameters RtpSenderBase::GetParametersInternalWithAllLayers() const {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  if (stopped_) {
+    return RtpParameters();
+  }
+  if (!media_channel_ || !ssrc_) {
+    return init_parameters_;
+  }
+  return worker_thread_->Invoke<RtpParameters>(RTC_FROM_HERE, [&] {
+    RtpParameters result = media_channel_->GetRtpSendParameters(ssrc_);
+    return result;
+  });
+}
+
 RtpParameters RtpSenderBase::GetParameters() const {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RtpParameters result = GetParametersInternal();
@@ -203,6 +217,30 @@ RTCError RtpSenderBase::SetParametersInternal(const RtpParameters& parameters) {
       rtp_parameters = RestoreEncodingLayers(parameters, disabled_rids_,
                                              old_parameters.encodings);
     }
+    return media_channel_->SetRtpSendParameters(ssrc_, rtp_parameters);
+  });
+}
+
+RTCError RtpSenderBase::SetParametersInternalWithAllLayers(
+    const RtpParameters& parameters) {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK(!stopped_);
+
+  if (UnimplementedRtpParameterHasValue(parameters)) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::UNSUPPORTED_PARAMETER,
+        "Attempted to set an unimplemented parameter of RtpParameters.");
+  }
+  if (!media_channel_ || !ssrc_) {
+    auto result = cricket::CheckRtpParametersInvalidModificationAndValues(
+        init_parameters_, parameters);
+    if (result.ok()) {
+      init_parameters_ = parameters;
+    }
+    return result;
+  }
+  return worker_thread_->Invoke<RTCError>(RTC_FROM_HERE, [&] {
+    RtpParameters rtp_parameters = parameters;
     return media_channel_->SetRtpSendParameters(ssrc_, rtp_parameters);
   });
 }
@@ -377,7 +415,7 @@ RTCError RtpSenderBase::DisableEncodingLayers(
   }
 
   // Check that all the specified layers exist and disable them in the channel.
-  RtpParameters parameters = GetParametersInternal();
+  RtpParameters parameters = GetParametersInternalWithAllLayers();
   for (const std::string& rid : rids) {
     if (absl::c_none_of(parameters.encodings,
                         [&rid](const RtpEncodingParameters& encoding) {
@@ -402,7 +440,7 @@ RTCError RtpSenderBase::DisableEncodingLayers(
         [&encoding](const std::string& rid) { return encoding.rid == rid; });
   }
 
-  RTCError result = SetParametersInternal(parameters);
+  RTCError result = SetParametersInternalWithAllLayers(parameters);
   if (result.ok()) {
     disabled_rids_.insert(disabled_rids_.end(), rids.begin(), rids.end());
     // Invalidate any transaction upon success.
