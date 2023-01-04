@@ -3364,23 +3364,15 @@ INSTANTIATE_TEST_SUITE_P(
              {"L2T1_KEY", 2, 1, InterLayerPredMode::kOnKeyPic},
              {"L2T2", 2, 2, InterLayerPredMode::kOn},
              {"L2T2_KEY", 2, 2, InterLayerPredMode::kOnKeyPic},
+             {"L2T3", 2, 3, InterLayerPredMode::kOn},
              {"L2T3_KEY", 2, 3, InterLayerPredMode::kOnKeyPic},
              {"L3T1", 3, 1, InterLayerPredMode::kOn},
              {"L3T3", 3, 3, InterLayerPredMode::kOn},
              {"L3T3_KEY", 3, 3, InterLayerPredMode::kOnKeyPic},
              {"S2T1", 2, 1, InterLayerPredMode::kOff},
+             {"S2T3", 2, 3, InterLayerPredMode::kOff},
              {"S3T3", 3, 3, InterLayerPredMode::kOff}}),
         ::testing::Values(false, true)),  // use_scalability_mode_identifier
-    ParamInfoToStr);
-
-INSTANTIATE_TEST_SUITE_P(
-    ScalabilityModeOff,
-    Vp9Test,
-    ::testing::Combine(
-        ::testing::ValuesIn<Vp9TestParams>(
-            {{"L2T3", 2, 3, InterLayerPredMode::kOn},
-             {"S2T3", 2, 3, InterLayerPredMode::kOff}}),
-        ::testing::Values(false)),  // use_scalability_mode_identifier
     ParamInfoToStr);
 
 INSTANTIATE_TEST_SUITE_P(
