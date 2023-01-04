@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '495a0d30bfbc8586cccefd0a90ac03ec14b63101',
+  'chromium_revision': '36307074a546485e40ad2295e546e3a681596689',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,7 +20,7 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:9.20220824.1.1',
+  'fuchsia_version': 'version:9.20220824.2.1',
 
   # By default, do not check out the re-client binaries.
   'checkout_reclient': False,
@@ -32,24 +32,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@33f03a2a7e7c46a5d66fad1c730d7c83d992c56c',
+    'https://chromium.googlesource.com/chromium/src/base@5cd110505605eb95b2a16644ed622fbbb220694f',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@ce2b5175a9a7c798d5c4943c8db6c34f4df3f576',
+    'https://chromium.googlesource.com/chromium/src/build@c384292cf5250d2d929be24d04f902919511927a',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@dbde006685de56293b98deda3130a5bcf73c354b',
+    'https://chromium.googlesource.com/chromium/src/buildtools@3fe17aa69414115874ce6681149852d566456199',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@1f059b0ddd1b103d0cda0ced31c1d64a367e8c69',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@3f4af0531af4bbe366892cc6c66e193d0af44362',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@f109f2c52726c99e30a12581791e7a48b17a061e',
+    'https://chromium.googlesource.com/chromium/src/testing@8572d384f1444122f438c63075786b7f2c29d56f',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@232e1372c18c4d057b1863fb19d6b6a844463aed',
+    'https://chromium.googlesource.com/chromium/src/third_party@f19ff6c721e8a3a5247ae087bd55053e3ca7c5a1',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -95,9 +95,9 @@ deps = {
   'src/buildtools/clang_format/script':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@8b525d2747f2584fc35d8c7e612e66f377858df7',
   'src/buildtools/third_party/libc++/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@f30089a416b02dda7b0ee0bdeaa5d608cdd3034a',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@60c266d87cfd8cd7c9a541ea7095ee44a235a3ec',
   'src/buildtools/third_party/libc++abi/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@3dc2f80d342002ebd8ddf12fb15db460a54dae6c',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@48afced8aa251c4fb338fb906d70c1da6703d05d',
   'src/buildtools/third_party/libunwind/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@42aa6de5544ec1ccc27da640a044bd3f474ee75a',
 
@@ -148,7 +148,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@e085b3b50bde862d0cf3ce4594e3f391bcf5faec',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@9bfc1aede5c2b3c736e89ae1af93660807a16654',
+    'https://chromium.googlesource.com/catapult.git@5571576cd66841e89180820e062e6b93c4d11c63',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -282,7 +282,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@2bbabdc2b0d9fb85db7de2deb78c85f8a86e7692',
+    'https://chromium.googlesource.com/chromium/src/tools@e4855bb9dd42abf889e0a1fdf98523815ae96950',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
