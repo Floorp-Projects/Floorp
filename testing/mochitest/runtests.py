@@ -939,7 +939,6 @@ class MochitestDesktop(object):
         self.server = None
         self.wsserver = None
         self.websocketProcessBridge = None
-        self.gstForV4l2loopbackProcess = None
         self.sslTunnel = None
         self.manifest = None
         self.tests_by_manifest = defaultdict(list)
@@ -1398,7 +1397,7 @@ class MochitestDesktop(object):
             except Exception:
                 self.log.critical("Exception stopping websocket/process bridge")
 
-        if self.gstForV4l2loopbackProcess is not None:
+        if hasattr(self, "gstForV4l2loopbackProcess"):
             try:
                 self.gstForV4l2loopbackProcess.kill()
                 self.gstForV4l2loopbackProcess.wait()
