@@ -8,14 +8,12 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
-#include "mozilla/MozPromise.h"
 
 #include <stdint.h>
 
 typedef struct _GdkDisplay GdkDisplay;
 typedef struct _GdkDevice GdkDevice;
 typedef union _GdkEvent GdkEvent;
-class nsWindow;
 
 namespace mozilla::widget {
 
@@ -60,11 +58,6 @@ bool ShouldUsePortal(PortalKind);
 
 // Parse text/uri-list
 nsTArray<nsCString> ParseTextURIList(const nsACString& data);
-
-#ifdef MOZ_WAYLAND
-using FocusRequestPromise = MozPromise<nsCString, bool, false>;
-RefPtr<FocusRequestPromise> RequestWaylandFocusPromise();
-#endif
 
 }  // namespace mozilla::widget
 
