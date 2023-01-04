@@ -1126,18 +1126,21 @@ export var PlacesDBUtils = {
         histogram: "PLACES_SORTED_BOOKMARKS_PERC",
         query: `SELECT IFNULL(ROUND((
                       SELECT count(*) FROM moz_bookmarks b
-                      JOIN moz_bookmarks t ON t.id = b.parent
-                      AND t.parent <> :tags_folder AND t.parent > :places_root
-                      WHERE b.type  = :type_bookmark
+                      JOIN moz_bookmarks p ON p.id = b.parent
+                      JOIN moz_bookmarks g ON g.id = p.parent
+                      WHERE g.guid <> :root_guid
+                        AND g.guid <> :tags_guid
+                        AND b.type  = :type_bookmark
                       ) * 100 / (
                       SELECT count(*) FROM moz_bookmarks b
-                      JOIN moz_bookmarks t ON t.id = b.parent
-                      AND t.parent <> :tags_folder
+                      JOIN moz_bookmarks p ON p.id = b.parent
+                      JOIN moz_bookmarks g ON g.id = p.parent
+                      AND g.guid <> :tags_guid
                       WHERE b.type = :type_bookmark
                     )), 0)`,
         params: {
-          places_root: lazy.PlacesUtils.placesRootId,
-          tags_folder: lazy.PlacesUtils.tagsFolderId,
+          root_guid: lazy.PlacesUtils.bookmarks.rootGuid,
+          tags_guid: lazy.PlacesUtils.bookmarks.tagsGuid,
           type_bookmark: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
         },
       },
