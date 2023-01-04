@@ -2116,10 +2116,9 @@ export var Policies = {
       let pkcs11db = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
         Ci.nsIPKCS11ModuleDB
       );
-      let moduleList = pkcs11db.listModules();
       for (let deviceName in securityDevices) {
         let foundModule = false;
-        for (let module of moduleList) {
+        for (let module of pkcs11db.listModules()) {
           if (module && module.libName === securityDevices[deviceName]) {
             foundModule = true;
             break;
