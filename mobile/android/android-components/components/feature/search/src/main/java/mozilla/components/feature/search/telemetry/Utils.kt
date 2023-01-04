@@ -19,8 +19,8 @@ private val validCodeSet = setOf(
     "firefox-b-1-m", "firefox-b-o", "firefox-b-1-o", "firefox-b-lm", "firefox-b-1-lm",
     "firefox-b-lg", "firefox-b-huawei-h1611", "firefox-b-is-oem1", "firefox-b-oem1",
     "firefox-b-oem2", "firefox-b-tinno", "firefox-b-pn-wt", "firefox-b-pn-wt-us", "ubuntu",
-    "ffab", "ffcm", "ffhp", "ffip", "ffit", "ffnt", "ffocus", "ffos", "ffsb", "fpas", "fpsa",
-    "ftas", "ftsa", "newext", "1000969a", null,
+    "ffab", "ffcm", "ffhp", "ffip", "ffit", "ffnt", "ffocus", "ffsb", "fpas",
+    "newext", "1000969a", null,
 )
 private val validChannelSet = setOf("ts")
 
