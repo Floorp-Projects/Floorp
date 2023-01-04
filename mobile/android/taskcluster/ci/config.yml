@@ -11,6 +11,7 @@ treeherder:
         ktlint: ktlint linter
         lint: gradle lint linter
 
+        focus: Focus general tasks no matter the variant
         focus-beta: Focus beta-related tasks
         focus-debug: Focus builds made for testing
         focus-nightly: Focus nightly-related tasks

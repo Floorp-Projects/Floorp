@@ -11,15 +11,19 @@ transforms:
 
 kind-dependencies:
     - toolchain
+    - external-gradle-dependencies
 
 task-defaults:
     attributes:
         retrigger: true
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-focus
     description: Focus unit tests
     fetches:
         toolchain:
             - android-sdk-linux
-            - external-gradle-dependencies
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
     optimization:
         skip-unless-changed: [] # Paths are dynamically added by transforms
     run-on-tasks-for:

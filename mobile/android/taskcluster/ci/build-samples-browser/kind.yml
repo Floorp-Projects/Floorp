@@ -12,6 +12,7 @@ transforms:
 
 kind-dependencies:
     - toolchain
+    - external-gradle-dependencies
 
 
 task-defaults:
@@ -20,11 +21,14 @@ task-defaults:
         code-review: true
         component: samples-browser
         treeherder-group: samples-browser
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-samples-browser
     description: Execute Gradle tasks for component "{component}"
     fetches:
         toolchain:
             - android-sdk-linux
-            - external-gradle-dependencies
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
     include-coverage: true
     run:
         pre-gradlew:

@@ -1,0 +1,74 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: android_taskgraph.loader.build_config:components_and_apks_loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - android_taskgraph.transforms.external_gradle_dependencies:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.cached_tasks:transforms
+    - taskgraph.transforms.task:transforms
+
+
+task-defaults:
+    attributes:
+        code-review: true
+    description: "External Gradle dependencies toolchain task"
+    fetches:
+        toolchain:
+            - android-sdk-linux
+    run:
+        script: external-gradle-dependencies.sh
+        sparse-profile: null
+        resources:
+            - taskcluster/scripts/toolchain/external-gradle-dependencies.sh
+            - taskcluster/scripts/toolchain/external-gradle-dependencies/**
+            - android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt
+            - android-components/build.gradle
+            - android-components/gradle/wrapper/gradle-wrapper.properties
+            - focus-android/buildSrc/src/main/java/FocusDependencies.kt
+        toolchain-artifact: public/build/external-gradle-dependencies.tar.xz
+        using: toolchain-script
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        tier: 1
+    worker:
+        docker-image: {in-tree: android-build}
+        env:
+            # TODO do no hardcode
+            ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
+        max-run-time: 14400
+        artifacts:
+            - type: directory
+              name: public/logs/nexus
+              path: /opt/sonatype/nexus/logs
+        retry-exit-status: [1]
+    worker-type: b-android-large
+
+tasks:
+    lint-components:
+        attributes:
+            treeherder-group: lint
+        run:
+            arguments:
+                - android-components/
+                - lint
+                - githubLintAndroidDetails
+                - ktlint
+                - detekt
+                - githubLintDetektDetails
+
+    test-components:
+        attributes:
+            treeherder-group: TL
+        run:
+            arguments:
+                - android-components/
+                - assembleGecko
+                - assembleAndroidTest
+                - assembleDebug

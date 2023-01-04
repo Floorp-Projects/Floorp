@@ -9,6 +9,7 @@ kind-dependencies:
     - build-components
     - build-samples-browser
     - docker-image
+    - external-gradle-dependencies
     - lint
     - test-focus
     - ui-test-focus

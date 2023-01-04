@@ -15,6 +15,7 @@ not-for-components:
 
 kind-dependencies:
     - toolchain
+    - external-gradle-dependencies
 
 task-defaults:
     artifact-template:
@@ -52,7 +53,8 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-            - external-gradle-dependencies
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
     include-coverage:
         by-build-type:
             release: false

@@ -12,6 +12,7 @@ transforms:
 
 kind-dependencies:
     - toolchain
+    - external-gradle-dependencies
 
 task-defaults:
     apk-artifact-template:
@@ -19,10 +20,13 @@ task-defaults:
         name: 'public/build/{gradle_build}/{abi}/target.apk'
         github-name: '{gradle_build}-{version}-{abi}.apk'
         path: '/builds/worker/checkouts/vcs/{source_project_name}/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-focus
     fetches:
         toolchain:
             - android-sdk-linux
-            - external-gradle-dependencies
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
     optimization:
         by-tasks-for:
             github-pu(sh|ll-request.*):

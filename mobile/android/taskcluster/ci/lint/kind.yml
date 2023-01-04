@@ -11,16 +11,20 @@ transforms:
 
 kind-dependencies:
     - toolchain
+    - external-gradle-dependencies
 
 
 task-defaults:
     attributes:
         code-review: true
         retrigger: true
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-components
     fetches:
         toolchain:
             - android-sdk-linux
-            - external-gradle-dependencies
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
     run:
         use-caches: false
     run-on-tasks-for:

@@ -30,37 +30,3 @@ linux64-android-sdk-linux-repack:
         docker-image: {in-tree: base}
         max-run-time: 600
     worker-type: b-android
-
-
-linux64-external-gradle-dependencies:
-    description: "Android Gradle dependencies toolchain task"
-    fetches:
-        toolchain:
-            # Aliases aren't allowed for toolchains depending on toolchains.
-            - linux64-android-sdk-linux-repack
-    run:
-        script: external-gradle-dependencies.sh
-        sparse-profile: null
-        resources:
-            - taskcluster/scripts/toolchain/external-gradle-dependencies.sh
-            - taskcluster/scripts/toolchain/external-gradle-dependencies/**
-            - android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt
-            - android-components/build.gradle
-            - android-components/gradle/wrapper/gradle-wrapper.properties
-            - focus-android/buildSrc/src/main/java/FocusDependencies.kt
-        toolchain-artifact: public/build/external-gradle-dependencies.tar.xz
-        toolchain-alias: external-gradle-dependencies
-    treeherder:
-        symbol: TL(gradle-dependencies)
-    worker:
-        docker-image: {in-tree: android-build}
-        env:
-            # TODO do no hardcode
-            ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
-        max-run-time: 14400
-        artifacts:
-            - type: directory
-              name: public/logs/nexus
-              path: /opt/sonatype/nexus/logs
-        retry-exit-status: [1]
-    worker-type: b-android-large
