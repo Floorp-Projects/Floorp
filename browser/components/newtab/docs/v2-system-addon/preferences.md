@@ -36,6 +36,7 @@ disable it for tests in Mozilla Central.
 
 You should create a bug in Bugzilla and a patch that adds lines to turn off your
 pref in the following files:
+
 - layout/tools/reftest/reftest-preferences.js
 - testing/profiles/prefs_general.js
 - testing/talos/talos/config.py
@@ -48,8 +49,11 @@ To read/set/observe Activity Stream preferences, construct a `Prefs` instance fo
 
 ```js
 // Import Prefs
-XPCOMUtils.defineLazyModuleGetter(this, "Prefs",
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm");
+XPCOMUtils.defineLazyModuleGetter(
+  this,
+  "Prefs",
+  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
+);
 
 // Create an instance
 const prefs = new Prefs();
@@ -65,7 +69,7 @@ const prefs = new Prefs();
 prefs.get("foo");
 
 // This will set the value of browser.newtabpage.activity-stream.foo to true
-prefs.set("foo", true)
+prefs.set("foo", true);
 
 // This will call aCallback when browser.newtabpage.activity-stream.foo is changed
 prefs.observe("foo", aCallback);
@@ -101,15 +105,15 @@ Not intended for user configuration, but is programmatically updated. Used for t
 
 - Type `string (JSON)`
 - Default:
-  ```
+  ```json
   {
-     "api_key_pref": "extensions.pocket.oAuthConsumerKey",
-     "collapsible": true,
-     "enabled": true,
-     "show_spocs": true,
-     "hardcoded_layout": true,
-     "personalized": true,
-     "layout_endpoint": "https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"
+    "api_key_pref": "extensions.pocket.oAuthConsumerKey",
+    "collapsible": true,
+    "enabled": true,
+    "show_spocs": true,
+    "hardcoded_layout": true,
+    "personalized": true,
+    "layout_endpoint": "https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"
   }
   ```
   - `api_key_pref` (string): The name of a variable containing the key for the Pocket API.
