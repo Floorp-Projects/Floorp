@@ -114,12 +114,10 @@
                     updateInfo["url"],
                     updateZipPath
                 );
-    
                 await browser.decompressZip.decompress(
                     updateZipPath,
                     updateTmpDirPath
                 );
-    
                 await browser.IOFile.createEmptyFile(coreUpdateReadyFilePath);
             } catch (e) {
                 console.error(e);
