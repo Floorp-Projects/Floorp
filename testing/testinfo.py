@@ -533,6 +533,7 @@ class TestInfoReport(TestInfo):
         output_file,
         start,
         end,
+        show_testruns,
     ):
         def matches_filters(test):
             """
@@ -574,7 +575,9 @@ class TestInfoReport(TestInfo):
         display_keys = (filter_keys or []) + ["skip-if", "fail-if", "fails-if"]
         display_keys = set(display_keys)
         ifd = self.get_intermittent_failure_data(start, end)
-        runcount = self.get_runcount_data(start, end)
+
+        if show_testruns:
+            runcount = self.get_runcount_data(start, end)
 
         print("Finding tests...")
         here = os.path.abspath(os.path.dirname(__file__))
@@ -749,11 +752,12 @@ class TestInfoReport(TestInfo):
                         if ifd.get(relpath):
                             if_data = ifd.get(relpath)
                             test_info["failure_count"] = if_data["count"]
-                            total_runs = 0
-                            for m in test_info["manifest"]:
-                                total_runs += sum([x[3] for x in runcount[m]])
-                            if total_runs > 0:
-                                test_info["total_runs"] = total_runs
+                            if show_testruns:
+                                total_runs = 0
+                                for m in test_info["manifest"]:
+                                    total_runs += sum([x[3] for x in runcount[m]])
+                                if total_runs > 0:
+                                    test_info["total_runs"] = total_runs
 
                         if show_tests:
                             rkey = key if show_components else "all"
