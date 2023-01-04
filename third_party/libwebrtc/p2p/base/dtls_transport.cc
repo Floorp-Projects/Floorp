@@ -227,6 +227,34 @@ bool DtlsTransport::GetSslCipherSuite(int* cipher) {
   return dtls_->GetSslCipherSuite(cipher);
 }
 
+webrtc::RTCError DtlsTransport::SetRemoteParameters(
+    absl::string_view digest_alg,
+    const uint8_t* digest,
+    size_t digest_len,
+    absl::optional<rtc::SSLRole> role) {
+  rtc::Buffer remote_fingerprint_value(digest, digest_len);
+  bool is_dtls_restart =
+      dtls_active_ && remote_fingerprint_value_ != remote_fingerprint_value;
+  // Set SSL role. Role must be set before fingerprint is applied, which
+  // initiates DTLS setup.
+  if (role) {
+    if (is_dtls_restart) {
+      dtls_role_ = *role;
+    } else {
+      if (!SetDtlsRole(*role)) {
+        return webrtc::RTCError(webrtc::RTCErrorType::INVALID_PARAMETER,
+                                "Failed to set SSL role for the transport.");
+      }
+    }
+  }
+  // Apply remote fingerprint.
+  if (!SetRemoteFingerprint(digest_alg, digest, digest_len)) {
+    return webrtc::RTCError(webrtc::RTCErrorType::INVALID_PARAMETER,
+                            "Failed to apply remote fingerprint.");
+  }
+  return webrtc::RTCError::OK();
+}
+
 bool DtlsTransport::SetRemoteFingerprint(absl::string_view digest_alg,
                                          const uint8_t* digest,
                                          size_t digest_len) {
