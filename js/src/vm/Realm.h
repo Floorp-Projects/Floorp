@@ -763,6 +763,9 @@ class JS::Realm : public JS::shadow::Realm {
                   "JIT code assumes field is pointer-sized");
     return offsetof(JS::Realm, global_);
   }
+
+ private:
+  void purgeForOfPicChain();
 };
 
 inline js::Handle<js::GlobalObject*> JSContext::global() const {
