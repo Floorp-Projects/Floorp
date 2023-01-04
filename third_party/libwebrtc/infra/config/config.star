@@ -477,9 +477,6 @@ def webrtc_builder(
       A luci.builder.
     """
     properties = properties or {}
-    properties["$recipe_engine/isolated"] = {
-        "server": "https://isolateserver.appspot.com",
-    }
     resultdb_bq_table = "webrtc-ci.resultdb." + bucket + "_test_results"
     return luci.builder(
         name = name,
