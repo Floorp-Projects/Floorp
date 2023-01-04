@@ -237,10 +237,9 @@ void LossBasedBandwidthEstimation::Initialize(DataRate bitrate) {
 }
 
 double LossBasedBandwidthEstimation::loss_reset_threshold() const {
-  return LossFromBitrate(
-      loss_based_bitrate_,
-	  static_cast<DataRate>(config_.loss_bandwidth_balance_reset),
-	  static_cast<double>(config_.loss_bandwidth_balance_exponent));
+  return LossFromBitrate(loss_based_bitrate_,
+                         config_.loss_bandwidth_balance_reset,
+                         config_.loss_bandwidth_balance_exponent);
 }
 
 double LossBasedBandwidthEstimation::loss_increase_threshold() const {
