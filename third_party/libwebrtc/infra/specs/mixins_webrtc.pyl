@@ -134,7 +134,7 @@
   },
   'perf-low-bandwidth-audio-perf-test': {
     'merge': {
-      'script': '//tools_webrtc/perf/process_perf_results_py2.py',
+      'script': '//tools_webrtc/perf/process_perf_results.py',
       'args': ['--test-suite', 'low_bandwidth_audio_perf_test'],
     },
   },
@@ -158,7 +158,7 @@
   },
   'perf-webrtc-perf-tests': {
     'merge': {
-      'script': '//tools_webrtc/perf/process_perf_results_py2.py',
+      'script': '//tools_webrtc/perf/process_perf_results.py',
       'args': ['--test-suite', 'webrtc_perf_tests'],
     },
     '$mixin_append': {
