@@ -109,4 +109,4 @@ redirects:
     xpcom/xpcom: xpcom
 
 fatal warnings:
-    - "WARNING: '([^']*)' reference target not found:"
+    - "WARNING: '([^']*)' reference target not found:((?!.rst).)*$"
