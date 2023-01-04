@@ -35,4 +35,4 @@ export MOZ_TARGET_UPSTREAM_BRANCH_HEAD="branch-heads/5249"
 # For local development 'mozpatches' is fine for a branch name, but when
 # pushing the patch stack to github, it should be named something like
 # 'moz-mods-chr106-for-rel110'.
-export MOZ_LIBWEBRTC_COMMIT="mozpatches"
+export MOZ_LIBWEBRTC_BRANCH="mozpatches"

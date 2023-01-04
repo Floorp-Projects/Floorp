@@ -29,8 +29,8 @@ if [ ! -d $MOZ_LIBWEBRTC_SRC ]; then
   exit
 fi
 
-if [ "x$MOZ_LIBWEBRTC_COMMIT" = "x" ]; then
-  echo "MOZ_LIBWEBRTC_COMMIT is not defined, see README.md"
+if [ "x$MOZ_LIBWEBRTC_BRANCH" = "x" ]; then
+  echo "MOZ_LIBWEBRTC_BRANCH is not defined, see README.md"
   exit
 fi
 
