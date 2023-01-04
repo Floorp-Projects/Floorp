@@ -124,13 +124,6 @@
       }
     }
   },
-  'linux': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Ubuntu'
-      }
-    }
-  },
   'linux-bionic': {
     'swarming': {
       'dimensions': {
@@ -150,13 +143,6 @@
       }]
     }
   },
-  'mac': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Mac'
-      }
-    }
-  },
   'mac-m1-cpu': {
     'swarming': {
       'dimensions': {
@@ -171,17 +157,18 @@
       }
     }
   },
-  'mac11_or_mac12': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Mac-11|Mac-12'
-      }
-    }
-  },
-  'mac_12_beta_arm64': {
+  'mac_12_arm64': {
     'swarming': {
       'dimensions': {
         'cpu': 'arm64',
+        'os': 'Mac-12'
+      }
+    }
+  },
+  'mac_12_x64': {
+    'swarming': {
+      'dimensions': {
+        'cpu': 'x86-64',
         'os': 'Mac-12'
       }
     }
@@ -313,13 +300,6 @@
   'webrtc-xctest': {
     '$mixin_append': {
       'args': ['--xctest', '--undefok=enable-run-ios-unittests-with-xctest']
-    }
-  },
-  'win': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Windows'
-      }
     }
   },
   'win10': {
