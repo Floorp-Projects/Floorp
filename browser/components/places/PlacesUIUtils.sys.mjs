@@ -1006,8 +1006,8 @@ export var PlacesUIUtils = {
     }
 
     return (
-      lazy.PlacesUtils.getConcreteItemId(placesNode) ==
-      lazy.PlacesUtils.placesRootId
+      lazy.PlacesUtils.getConcreteItemGuid(placesNode) ==
+      lazy.PlacesUtils.bookmarks.rootGuid
     );
   },
 
