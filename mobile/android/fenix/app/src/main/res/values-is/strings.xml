@@ -3,15 +3,15 @@
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Huliðs %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="app_name_private_4">%s (Huliðs)</string>
+    <string name="app_name_private_4">%s (hulið)</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Fleiri stillingar</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">Virkja huliðsvöfrun</string>
+    <string name="content_description_private_browsing_button">Virkja huliðsvafur</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">Afvirkja huliðsvöfrun</string>
+    <string name="content_description_disable_private_browsing_button">Gera huliðsvafur óvirkt</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Leitaðu eða sláðu inn vistfang</string>
     <!-- Placeholder text shown in search bar when using history search -->
@@ -60,9 +60,9 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
- · %1$s hreinsar leitar- og vafraferilinn þinn þegar þú lokar forritinu eða lokar öllum huliðsflipum og gluggum. Þó að þetta sé ekki nafnlaust gagnvart vefsíðum eða þjónustuveitanda þínum, þá gerir þetta þér auðveldara að halda því sem þú gerir á netinu huldu gagnvart einkaaðilum sem nota þetta tæki.</string>
+ · %1$s hreinsar leitar- og vafraferilinn þinn þegar þú lokar forritinu eða lokar öllum huliðsflipum og gluggum. Þó að þetta sé ekki nafnlaust gagnvart vefsíðum eða þjónustuveitanda þínum, þá gerir þetta þér auðveldara að halda því sem þú gerir á netinu huldu gagnvart öðrum þeim sem nota þetta tæki.</string>
     <string name="private_browsing_common_myths">
-      Algengar mýtur um huliðsleit</string>
+      Algengar mýtur um huliðsvafur</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -74,7 +74,7 @@
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Bæta við á upphafsskjá</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
-    <string name="cfr_neg_button_text">Nei takk</string>
+    <string name="cfr_neg_button_text">Nei, takk</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. The first parameter is the name of the application.-->
@@ -245,7 +245,7 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Ekki leyfa</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">Leyfa uppástungur fyrir leit í huliðsham?</string>
+    <string name="search_suggestions_onboarding_title">Leyfa leitartillögur í huliðslotum?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s mun deila öllu sem þú skrifar í leitarslánni með sjálfgefnu leitarvél þinni.</string>
 
@@ -330,11 +330,11 @@
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Opna tengla í huliðsflipa</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">Leyfa skjáskot í huliðsstillingu</string>
+    <string name="preferences_allow_screenshots_in_private_mode">Leyfa skjámyndatöku í huliðsvafri</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">Ef leyft er, verða huliðsflipar einnig sýnilegir þegar mörg forrit eru opin</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Bæta við flýtileið fyrir huliðsglugga</string>
+    <string name="preferences_add_private_browsing_shortcut">Bæta við flýtileið fyrir huliðsvafur</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Einungis-HTTPS-hamur</string>
 
