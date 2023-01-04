@@ -165,8 +165,7 @@ TEST_P(SimulatedRealTimeControllerConformanceTest,
     execution_order.Executed(2);
     event.Set();
   });
-  EXPECT_TRUE(event.Wait(/*give_up_after_ms=*/100,
-                         /*warn_after_ms=*/10'000));
+  EXPECT_TRUE(event.Wait(/*give_up_after_ms=*/100));
   time_controller->AdvanceTime(TimeDelta::Millis(100));
   EXPECT_THAT(execution_order.order(), ElementsAreArray({1, 2}));
   // Destroy `task_queue` before `execution_order` to be sure `execution_order`

@@ -392,6 +392,8 @@ rtc_library("rtc_event") {
     ]
     deps = [
       ":checks",
+      ":timeutils",
+      "../api/units:time_delta",
       "synchronization:yield_policy",
       "system:warn_current_thread_is_deadlocked",
     ]

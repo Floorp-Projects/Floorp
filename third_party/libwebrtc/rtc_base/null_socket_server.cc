@@ -11,6 +11,7 @@
 #include "rtc_base/null_socket_server.h"
 
 #include "rtc_base/checks.h"
+#include "rtc_base/event.h"
 
 namespace rtc {
 
@@ -21,7 +22,10 @@ bool NullSocketServer::Wait(int cms, bool process_io) {
   // Wait with the given timeout. Do not log a warning if we end up waiting for
   // a long time; that just means no one has any work for us, which is perfectly
   // legitimate.
-  event_.Wait(/*give_up_after_ms=*/cms, /*warn_after_ms=*/Event::kForever);
+  event_.Wait(/*give_up_after=*/cms == kForever
+                  ? Event::kForever
+                  : webrtc::TimeDelta::Millis(cms),
+              /*warn_after_ms=*/Event::kForever);
   return true;
 }
 
