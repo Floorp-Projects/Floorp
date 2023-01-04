@@ -353,24 +353,15 @@ class WebConsoleUI {
       }
     );
 
-    // Until we enable NETWORK_EVENT server watcher in the browser toolbox
-    // we still have to support the console actor codepath.
-    const hasNetworkResourceCommandSupport = resourceCommand.hasResourceCommandSupport(
-      resourceCommand.TYPES.NETWORK_EVENT
-    );
-    const supportsWatcherRequest = commands.targetCommand.hasTargetWatcherSupport();
-    if (hasNetworkResourceCommandSupport && supportsWatcherRequest) {
-      const networkFront = await commands.watcherFront.getNetworkParentActor();
-      //
-      // There is no way to view response bodies from the Browser Console, so do
-      // not waste the memory.
-      const saveBodies =
-        !this.isBrowserConsole &&
-        Services.prefs.getBoolPref(
-          "devtools.netmonitor.saveRequestAndResponseBodies"
-        );
-      await networkFront.setSaveRequestAndResponseBodies(saveBodies);
-    }
+    const networkFront = await commands.watcherFront.getNetworkParentActor();
+    // There is no way to view response bodies from the Browser Console, so do
+    // not waste the memory.
+    const saveBodies =
+      !this.isBrowserConsole &&
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.saveRequestAndResponseBodies"
+      );
+    await networkFront.setSaveRequestAndResponseBodies(saveBodies);
   }
 
   async stopWatchingNetworkResources() {
@@ -525,32 +516,8 @@ class WebConsoleUI {
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront }) {
-    if (this._destroyed) {
-      return;
-    }
-
-    // Once we support only server watcher for NETWORK_EVENT, we will be able to drop this.
-    // We have to wait for the fully enabling of NETWORK_EVENT watchers, especially on the Browser Toolbox.
-    const { targetCommand, resourceCommand } = this.hud.commands;
-    const hasNetworkResourceCommandSupport = resourceCommand.hasResourceCommandSupport(
-      resourceCommand.TYPES.NETWORK_EVENT
-    );
-    const supportsWatcherRequest = targetCommand.hasTargetWatcherSupport();
-    if (!hasNetworkResourceCommandSupport || !supportsWatcherRequest) {
-      // There is no way to view response bodies from the Browser Console, so do
-      // not waste the memory.
-      const saveBodies =
-        !this.isBrowserConsole &&
-        Services.prefs.getBoolPref(
-          "devtools.netmonitor.saveRequestAndResponseBodies"
-        );
-
-      const front = await targetFront.getFront("console");
-      // Make sure the web console client connection is established first.
-      await front.setPreferences({
-        "NetworkMonitor.saveRequestAndResponseBodies": saveBodies,
-      });
-    }
+    // onTargetAvailable is a mandatory argument for watchTargets,
+    // we still define it solely for being able to use onTargetDestroyed.
   }
 
   _onTargetDestroyed({ targetFront, isModeSwitching }) {

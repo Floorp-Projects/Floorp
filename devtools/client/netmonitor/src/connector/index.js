@@ -47,7 +47,6 @@ class Connector {
 
     // Internals
     this.getLongString = this.getLongString.bind(this);
-    this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
     this.onResourceUpdated = this.onResourceUpdated.bind(this);
     this.updatePersist = this.updatePersist.bind(this);
@@ -66,16 +65,6 @@ class Connector {
     return this.commands.targetCommand.targetFront;
   }
 
-  get hasResourceCommandSupport() {
-    return this.toolbox.resourceCommand.hasResourceCommandSupport(
-      this.toolbox.resourceCommand.TYPES.NETWORK_EVENT
-    );
-  }
-
-  get watcherFront() {
-    return this.toolbox.resourceCommand.watcherFront;
-  }
-
   /**
    * Connect to the backend.
    *
@@ -92,19 +81,12 @@ class Connector {
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
-    if (this.hasResourceCommandSupport) {
-      this.networkFront = await this.watcherFront.getNetworkParentActor();
-    }
+    this.networkFront = await this.commands.watcherFront.getNetworkParentActor();
 
     this.dataProvider = new FirefoxDataProvider({
       commands: this.commands,
       actions: this.actions,
       owner: this.owner,
-    });
-
-    await this.commands.targetCommand.watchTargets({
-      types: [this.commands.targetCommand.TYPES.FRAME],
-      onAvailable: this.onTargetAvailable,
     });
 
     await this.toolbox.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
@@ -132,11 +114,6 @@ class Connector {
 
     this._destroyed = true;
 
-    this.commands.targetCommand.unwatchTargets({
-      types: [this.commands.targetCommand.TYPES.FRAME],
-      onAvailable: this.onTargetAvailable,
-    });
-
     this.toolbox.resourceCommand.unwatchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
     });
@@ -151,8 +128,6 @@ class Connector {
     if (this.actions) {
       this.actions.batchReset();
     }
-
-    this.webConsoleFront = null;
 
     this.dataProvider.destroy();
     this.dataProvider = null;
@@ -188,20 +163,6 @@ class Connector {
         ignoreExistingResources,
       }
     );
-  }
-
-  async onTargetAvailable({ targetFront, isTargetSwitching }) {
-    if (!targetFront.isTopLevel) {
-      return;
-    }
-
-    this.webConsoleFront = await this.currentTarget.getFront("console");
-
-    // Initialize Responsive Emulation front for network throttling,
-    // only for toolboxes using Watcher and non-legacy Resources.
-    if (!this.hasResourceCommandSupport) {
-      this.responsiveFront = await this.currentTarget.getFront("responsive");
-    }
   }
 
   async onResourceAvailable(resources, { areExistingResources }) {
@@ -390,45 +351,18 @@ class Connector {
    * @param {object} data data payload would like to sent to backend
    */
   async sendHTTPRequest(data) {
-    if (this.hasResourceCommandSupport && this.currentTarget) {
-      const networkContentFront = await this.currentTarget.getFront(
-        "networkContent"
-      );
-      const { channelId } = await networkContentFront.sendHTTPRequest(data);
-      return { channelId };
-    }
-    const {
-      eventActor: { actor },
-    } = await this.webConsoleFront.sendHTTPRequest(data);
-    return { actor };
-  }
-
-  /**
-   * Block future requests matching a filter.
-   *
-   * @param {object} filter request filter specifying what to block
-   */
-  blockRequest(filter) {
-    return this.webConsoleFront.blockRequest(filter);
-  }
-
-  /**
-   * Unblock future requests matching a filter.
-   *
-   * @param {object} filter request filter specifying what to unblock
-   */
-  unblockRequest(filter) {
-    return this.webConsoleFront.unblockRequest(filter);
+    const networkContentFront = await this.currentTarget.getFront(
+      "networkContent"
+    );
+    const { channelId } = await networkContentFront.sendHTTPRequest(data);
+    return { channelId };
   }
 
   /*
    * Get the list of blocked URLs
    */
   async getBlockedUrls() {
-    if (this.hasResourceCommandSupport && this.networkFront) {
-      return this.networkFront.getBlockedUrls();
-    }
-    return this.webConsoleFront.getBlockedUrls();
+    return this.networkFront.getBlockedUrls();
   }
 
   async updatePersist() {
@@ -436,15 +370,7 @@ class Connector {
       DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF
     );
 
-    // Lets keep these checks until we stop using legacy listeners entirely. (bug 1689459)
-    const hasServerSupport = this.commands.targetCommand.hasTargetWatcherSupport();
-    if (
-      hasServerSupport &&
-      this.hasResourceCommandSupport &&
-      this.networkFront
-    ) {
-      await this.networkFront.setPersist(enabled);
-    }
+    await this.networkFront.setPersist(enabled);
 
     this.emitForTests(TEST_EVENTS.PERSIST_CHANGED, enabled);
   }
@@ -455,10 +381,7 @@ class Connector {
    * @param {object} urls An array of URL strings
    */
   async setBlockedUrls(urls) {
-    if (this.hasResourceCommandSupport && this.networkFront) {
-      return this.networkFront.setBlockedUrls(urls);
-    }
-    return this.webConsoleFront.setBlockedUrls(urls);
+    return this.networkFront.setBlockedUrls(urls);
   }
 
   /**
@@ -604,13 +527,8 @@ class Connector {
   }
 
   async updateNetworkThrottling(enabled, profile) {
-    const throttlingFront =
-      this.hasResourceCommandSupport && this.networkFront
-        ? this.networkFront
-        : this.responsiveFront;
-
     if (!enabled) {
-      throttlingFront.clearNetworkThrottling();
+      this.networkFront.clearNetworkThrottling();
     } else {
       // The profile can be either a profile id which is used to
       // search the predefined throttle profiles or a profile object
@@ -619,7 +537,7 @@ class Connector {
         profile = throttlingProfiles.find(({ id }) => id == profile);
       }
       const { download, upload, latency } = profile;
-      await throttlingFront.setNetworkThrottling({
+      await this.networkFront.setNetworkThrottling({
         downloadThroughput: download,
         uploadThroughput: upload,
         latency,
