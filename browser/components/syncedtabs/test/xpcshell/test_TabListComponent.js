@@ -102,7 +102,6 @@ add_task(async function testActions() {
           return Promise.resolve();
         },
       },
-      PlacesUtils: { bookmarksMenuFolderId: "id" },
     },
     openDialog() {},
     openTrustedLinkIn() {},

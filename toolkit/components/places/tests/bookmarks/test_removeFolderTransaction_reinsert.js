@@ -60,7 +60,9 @@ add_task(async function test_removeFolderTransaction_reinsert() {
   let tbId = await PlacesUtils.promiseItemId(tb.guid);
 
   await transaction.transact();
-
+  let bookmarksMenuItemId = await PlacesUtils.promiseItemId(
+    PlacesUtils.bookmarks.menuGuid
+  );
   checkNotifications(
     [
       ["bookmark-removed", tbId, folderId, tb.guid, folder.guid],
@@ -68,7 +70,7 @@ add_task(async function test_removeFolderTransaction_reinsert() {
       [
         "bookmark-removed",
         folderId,
-        PlacesUtils.bookmarksMenuFolderId,
+        bookmarksMenuItemId,
         folder.guid,
         PlacesUtils.bookmarks.menuGuid,
       ],
@@ -87,7 +89,7 @@ add_task(async function test_removeFolderTransaction_reinsert() {
       [
         "bookmark-added",
         folderId,
-        PlacesUtils.bookmarksMenuFolderId,
+        bookmarksMenuItemId,
         folder.guid,
         PlacesUtils.bookmarks.menuGuid,
       ],
@@ -106,7 +108,7 @@ add_task(async function test_removeFolderTransaction_reinsert() {
       [
         "bookmark-removed",
         folderId,
-        PlacesUtils.bookmarksMenuFolderId,
+        bookmarksMenuItemId,
         folder.guid,
         PlacesUtils.bookmarks.menuGuid,
       ],

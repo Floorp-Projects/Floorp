@@ -431,14 +431,14 @@ add_task(async function test_apply_then_revert() {
     "folderAAAAAA",
     "bookmarkCCCC",
     "bookmarkBBBB",
+    PlacesUtils.bookmarks.menuGuid,
   ]);
-
   observer.check([
     {
       name: "bookmark-removed",
       params: {
         itemId: localIdForD,
-        parentId: PlacesUtils.bookmarksMenuFolderId,
+        parentId: localItemIds.get(PlacesUtils.bookmarks.menuGuid),
         index: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         urlHref: "http://example.com/d",
@@ -464,7 +464,7 @@ add_task(async function test_apply_then_revert() {
       name: "bookmark-added",
       params: {
         itemId: localItemIds.get("bookmarkFFFF"),
-        parentId: PlacesUtils.bookmarksMenuFolderId,
+        parentId: localItemIds.get(PlacesUtils.bookmarks.menuGuid),
         index: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         urlHref: "http://example.com/f",

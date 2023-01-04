@@ -1260,11 +1260,6 @@ export var PlacesUtils = {
   // Identifier getters for special folders.
   // You should use these everywhere PlacesUtils is available to avoid XPCOM
   // traversal just to get roots' ids.
-  get bookmarksMenuFolderId() {
-    delete this.bookmarksMenuFolderId;
-    return (this.bookmarksMenuFolderId = this.bookmarks.bookmarksMenuFolder);
-  },
-
   get tagsFolderId() {
     delete this.tagsFolderId;
     return (this.tagsFolderId = this.bookmarks.tagsFolder);

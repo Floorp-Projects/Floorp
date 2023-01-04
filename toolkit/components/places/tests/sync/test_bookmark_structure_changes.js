@@ -700,13 +700,14 @@ add_task(async function test_move_into_parent_sibling() {
     "folderCCCCCC",
     "bookmarkBBBB",
     "folderAAAAAA",
+    PlacesUtils.bookmarks.menuGuid,
   ]);
   observer.check([
     {
       name: "bookmark-added",
       params: {
         itemId: localItemIds.get("folderCCCCCC"),
-        parentId: PlacesUtils.bookmarksMenuFolderId,
+        parentId: localItemIds.get(PlacesUtils.bookmarks.menuGuid),
         index: 1,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         urlHref: "",
