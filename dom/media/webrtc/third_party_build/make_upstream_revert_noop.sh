@@ -47,8 +47,8 @@ else
   exit
 fi
 
-if [ "x$MOZ_LIBWEBRTC_COMMIT" = "x" ]; then
-  echo "MOZ_LIBWEBRTC_COMMIT is not defined, see README.md"
+if [ "x$MOZ_LIBWEBRTC_BRANCH" = "x" ]; then
+  echo "MOZ_LIBWEBRTC_BRANCH is not defined, see README.md"
   exit
 fi
 
@@ -93,7 +93,7 @@ sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_NEXT_BASE)/" 0001*.patch
 sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_REVERT_SHA)/" 0002*.patch
 sed -i.bak -e 's/^Subject: /Subject: (tmp-cherry-pick) /' *.patch
 git am *.patch
-git checkout $MOZ_LIBWEBRTC_COMMIT
+git checkout $MOZ_LIBWEBRTC_BRANCH
 git rebase moz-cherry-pick
 git branch -d moz-cherry-pick
 
