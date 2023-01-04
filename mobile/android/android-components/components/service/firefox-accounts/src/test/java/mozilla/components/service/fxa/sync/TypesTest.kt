@@ -6,9 +6,8 @@ package mozilla.components.service.fxa.sync
 
 import mozilla.components.service.fxa.SyncEngine
 import org.junit.Assert.assertEquals
-import org.junit.Rule
+import org.junit.Assert.assertThrows
 import org.junit.Test
-import org.junit.rules.ExpectedException
 
 class TypesTest {
 
@@ -69,13 +68,10 @@ class TypesTest {
         assertEquals("engine_change", SyncReason.EngineChange.asString())
     }
 
-    @Rule @JvmField
-    val exceptionRule: ExpectedException = ExpectedException.none()
-
     @Test
     fun `invalid sync reason raw strings throw IllegalStateException when mapped`() {
-        exceptionRule.expect(IllegalStateException::class.java)
-        exceptionRule.expectMessage("Invalid SyncReason: some_reason")
-        "some_reason".toSyncReason()
+        assertThrows("Invalid SyncReason: some_reason", IllegalStateException::class.java) {
+            "some_reason".toSyncReason()
+        }
     }
 }

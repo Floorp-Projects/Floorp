@@ -48,9 +48,10 @@ object FocusVersions {
 
     object Testing {
         const val androidx_core = "1.5.0"
-        const val androidx_espresso = "3.5.0"
-        const val androidx_ext_junit = "1.1.4"
+        const val androidx_espresso = "3.5.1"
+        const val androidx_ext_junit = "1.1.5"
         const val androidx_orchestrator = "1.4.2"
+        const val androidx_runner = "1.5.2"
         const val androidx_uiautomator = "2.2.0"
         const val falcon = "2.2.0"
         const val fastlane = "2.1.1"
@@ -124,7 +125,7 @@ object FocusDependencies {
     const val androidx_test_core = "androidx.test:core:${FocusVersions.Testing.androidx_core}"
     const val androidx_test_core_ktx = "androidx.test:core-ktx:${FocusVersions.Testing.androidx_core}"
     const val androidx_test_rules = "androidx.test:rules:${FocusVersions.Testing.androidx_core}"
-    const val androidx_test_runner = "androidx.test:runner:${FocusVersions.Testing.androidx_core}"
+    const val androidx_test_runner = "androidx.test:runner:${FocusVersions.Testing.androidx_runner}"
     const val androidx_uiautomator = "androidx.test.uiautomator:uiautomator:${FocusVersions.Testing.androidx_uiautomator}"
     const val espresso_contrib = "androidx.test.espresso:espresso-contrib:${FocusVersions.Testing.androidx_espresso}"
     const val espresso_core = "androidx.test.espresso:espresso-core:${FocusVersions.Testing.androidx_espresso}"
