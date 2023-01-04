@@ -84,4 +84,4 @@ pref(layout.css.marker.restricted,false) == marker-reframe-and-animation-starts-
 == background-color-on-html.html background-color-on-html-ref.html
 skip-if(Android) == replace-with-new-positive-delay-animation.html replace-with-new-positive-delay-animation-ref.html # bug 1787682 for Android
 
-pref(layout.css.scroll-linked-animations.enabled,true) skip-if(!asyncPan) == scroll-timeline-in-delay-omta.html scroll-timeline-in-delay-omta-ref.html
+pref(layout.css.scroll-driven-animations.enabled,true) skip-if(!asyncPan) == scroll-timeline-in-delay-omta.html scroll-timeline-in-delay-omta-ref.html

@@ -54,7 +54,7 @@ struct PropertyAnimation {
   dom::IterationCompositeOperation mIterationComposite;
   bool mIsNotPlaying;
 
-  // The information for scroll-linked animations.
+  // The information for scroll-driven animations.
   Maybe<ScrollTimelineOptions> mScrollTimelineOptions;
 
   void ResetLastCompositionValues() {

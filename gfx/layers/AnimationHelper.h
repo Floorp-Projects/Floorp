@@ -64,7 +64,7 @@ class AnimationHelper {
    * call of this function,
    * SampleResult::Sampled if the animation output was updated.
    *
-   * The only exception is the scroll-linked animation. When the user move the
+   * The only exception is the scroll-driven animation. When the user move the
    * scrollbar to make the animations go from active phase to delay phase, this
    * returns SampleResult::None but sets its |mReason| to
    * Reason::ScrollToDelayPhase. The caller can check this flag so we can store

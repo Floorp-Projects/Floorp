@@ -13599,7 +13599,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.animation-composition.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
   // Basically, web-platform-tests should cover most cases, so here we only
   // put some basic test cases.
   gCSSProperties["animation"].subproperties.push("animation-timeline");

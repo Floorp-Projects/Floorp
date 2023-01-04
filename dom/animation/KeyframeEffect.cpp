@@ -579,7 +579,7 @@ void KeyframeEffect::EnsureBaseStyle(
     return false;
   };
 
-  // Note: Check base style for compositor (i.e. for scroll-linked animations)
+  // Note: Check base style for compositor (i.e. for scroll-driven animations)
   // first because it is much cleaper.
   const bool needBaseStyle =
       needBaseStyleForScrollTimeline(aProperty, aTimeline) ||

@@ -53,7 +53,7 @@ class Element;
  * | ScrollTimeline |
  * ------------------
  *   ^
- *   | Try schedule the scroll-linked animations, if there are any scroll
+ *   | Try schedule the scroll-driven animations, if there are any scroll
  *   | offsets changed or the scroll range changed [1].
  *   |
  * ----------------------
@@ -69,7 +69,7 @@ class ScrollTimeline final : public AnimationTimeline {
   struct Scroller {
     // FIXME: Once we support <custom-ident> for <scroller>, we can use
     // StyleScroller here.
-    // https://drafts.csswg.org/scroll-animations-1/rewrite#typedef-scroller
+    // https://drafts.csswg.org/scroll-animations-1/#typedef-scroller
     enum class Type : uint8_t {
       Root,
       Nearest,
