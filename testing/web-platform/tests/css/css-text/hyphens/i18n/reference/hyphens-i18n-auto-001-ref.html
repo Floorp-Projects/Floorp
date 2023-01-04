@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS Text Test: language specific hyphenation—Dutch</title>
+<link rel="author" title="Florian Rivoal" href="http://florian.rivoal.net/">
+<style>
+div {
+  font-size: 3em;
+  color: orange;
+}
+.test {
+  color: blue;
+}
+</style>
+
+<p>Test passes if the blue text and orange text are identical (except for the color).
+<div lang=nl class=test>café&#x2010;<br>tje</div>
+<div lang=nl>café&#x2010;<br>tje</div>
