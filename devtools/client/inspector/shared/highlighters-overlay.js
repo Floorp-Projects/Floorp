@@ -270,11 +270,7 @@ class HighlightersOverlay {
       case TYPES.GRID:
         const toolID = TELEMETRY_TOOL_IDS[type];
         if (toolID) {
-          this.telemetry.toolOpened(
-            toolID,
-            this.inspector.toolbox.sessionId,
-            this
-          );
+          this.telemetry.toolOpened(toolID, this);
         }
 
         const scalar = TELEMETRY_SCALARS[type]?.[options?.trigger];
@@ -393,11 +389,7 @@ class HighlightersOverlay {
         };
 
         if (toolID && conditions[type].call(this)) {
-          this.telemetry.toolClosed(
-            toolID,
-            this.inspector.toolbox.sessionId,
-            this
-          );
+          this.telemetry.toolClosed(toolID, this);
         }
 
         break;
