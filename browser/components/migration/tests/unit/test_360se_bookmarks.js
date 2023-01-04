@@ -21,7 +21,7 @@ add_task(async function() {
           ? "folders"
           : "bookmarks"
       ]++;
-      if (event.parentId == PlacesUtils.toolbarFolderId) {
+      if (event.parentGuid == PlacesUtils.bookmarks.toolbarGuid) {
         importedToBookmarksToolbar = true;
       }
     }
