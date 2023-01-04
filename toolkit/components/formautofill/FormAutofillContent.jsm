@@ -857,13 +857,11 @@ var FormAutofillContent = {
     );
 
     let fieldName = FormAutofillContent.activeFieldDetail?.fieldName;
-    if (lazy.FormAutofillUtils.isCreditCardField(fieldName)) {
-      lazy.AutofillTelemetry.recordFormInteractionEvent(
-        "popup_shown",
-        this.activeSection,
-        { fieldName }
-      );
-    }
+    lazy.AutofillTelemetry.recordFormInteractionEvent(
+      "popup_shown",
+      this.activeSection,
+      { fieldName }
+    );
   },
 
   _markAsAutofillField(field) {

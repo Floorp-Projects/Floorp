@@ -1,7 +1,11 @@
 "use strict";
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
+const { AddressTelemetry } = ChromeUtils.import(
+  "resource://autofill/AutofillTelemetry.jsm"
 );
 
 // Preference definitions
@@ -23,27 +27,98 @@ const HISTOGRAM_PROFILE_NUM_USES = "AUTOFILL_PROFILE_NUM_USES";
 const HISTOGRAM_PROFILE_NUM_USES_KEY = "address";
 
 // Autofill UI
-const MANAGE_DIALOG_URL = MANAGE_ADDRESSES_DIALOG_URL; // MANAGE_CREDIT_CARDS_DIALOG_URL
-const EDIT_DIALOG_URL = EDIT_ADDRESS_DIALOG_URL; // MANAGE_CREDIT_CARDS_DIALOG_URL
+const MANAGE_DIALOG_URL = MANAGE_ADDRESSES_DIALOG_URL;
+const EDIT_DIALOG_URL = EDIT_ADDRESS_DIALOG_URL;
 const DIALOG_SIZE = "width=600,height=400";
-const MANAGE_RECORD_SELECTOR = "#addresses"; // "#credit-cards";
+const MANAGE_RECORD_SELECTOR = "#addresses";
 
 // Test specific definitions
-const TEST_PROFILE = TEST_ADDRESS_1; // TEST_CREDIT_CARD_1
-const TEST_PROFILE_1 = TEST_ADDRESS_1; // TEST_CREDIT_CARD_1
-const TEST_PROFILE_2 = TEST_ADDRESS_2; // TEST_CREDIT_CARD_1
-const TEST_PROFILE_3 = TEST_ADDRESS_3; // TEST_CREDIT_CARD_1
-const TEST_BASIC_AUTOFILL_FORM_URL = ADDRESS_FORM_URL; // CREDITCARD_FORM_URL
-const TEST_WITHOUT_AUTOCOMPLETE_URL = ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL;
-const TEST_FOCUS_FIELD = "given-name";
-const TEST_FOCUS_SELECTOR = "#" + TEST_FOCUS_FIELD; // "#cc-number"
+const TEST_PROFILE = TEST_ADDRESS_1;
+const TEST_PROFILE_1 = TEST_ADDRESS_1;
+const TEST_PROFILE_2 = TEST_ADDRESS_2;
+const TEST_PROFILE_3 = TEST_ADDRESS_3;
 
+const TEST_FOCUS_NAME_FIELD = "given-name";
+const TEST_FOCUS_NAME_FIELD_SELECTOR = "#" + TEST_FOCUS_NAME_FIELD;
+
+// Used for tests that update address fields after filling
 const TEST_NEW_VALUES = {
   "#given-name": "Test User",
   "#organization": "Sesame Street",
   "#street-address": "123 Sesame Street",
   "#tel": "1-345-345-3456",
 };
+
+const TEST_BASIC_ADDRESS_FORM_URL = ADDRESS_FORM_URL;
+const TEST_BASIC_ADDRESS_FORM_WITHOUT_AC_URL = ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL;
+// This should be sync with the address fields that appear in TEST_BASIC_ADDRESS_FORM
+const TEST_BASIC_ADDRESS_FORM_FIELDS = [
+  "street_address",
+  "address_level1",
+  "address_level2",
+  "postal_code",
+  "country",
+  "given_name",
+  "family_name",
+  "organization",
+  "email",
+  "tel",
+];
+
+function buildFormExtra(list, fields, fieldValue, defaultValue, aExtra = {}) {
+  let extra = {};
+  for (const field of list) {
+    if (aExtra[field]) {
+      extra[field] = aExtra[field];
+    } else {
+      extra[field] = fields.includes(field) ? fieldValue : defaultValue;
+    }
+  }
+  return extra;
+}
+
+/**
+ * Utility function to generate expected value for `address_form` and `address_form_ext`
+ * telemetry event.
+ *
+ * @param {string} method see `methods` in `address_form` event telemetry
+ * @param {object} defaultExtra default extra object, this will not be overwritten
+ * @param {object} fields address fields that will be set to `value` param
+ * @param {string} value value to set for fields list in `fields` argument
+ * @param {string} defaultValue value to set for address fields that are not listed in `fields` argument`
+ */
+function formArgs(
+  method,
+  defaultExtra,
+  fields = [],
+  value = undefined,
+  defaultValue = null
+) {
+  if (["popup_shown", "filled_modified"].includes(method)) {
+    return [["address", method, "address_form", undefined, defaultExtra]];
+  }
+  let extra = buildFormExtra(
+    AddressTelemetry.SUPPORTED_FIELDS_IN_FORM,
+    fields,
+    value,
+    defaultValue,
+    defaultExtra
+  );
+
+  let extraExt = buildFormExtra(
+    AddressTelemetry.SUPPORTED_FIELDS_IN_FORM_EXT,
+    fields,
+    value,
+    defaultValue,
+    defaultExtra
+  );
+
+  // The order here should sync with AutofillTelemetry.
+  return [
+    ["address", method, "address_form", undefined, extra],
+    ["address", method, "address_form_ext", undefined, extraExt],
+  ];
+}
 
 function getProfiles() {
   return getAddresses();
@@ -145,11 +220,11 @@ async function openTabAndUseAutofillProfile(
 ) {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    TEST_BASIC_AUTOFILL_FORM_URL
+    TEST_BASIC_ADDRESS_FORM_URL
   );
   let browser = tab.linkedBrowser;
 
-  await openPopupOn(browser, "form " + TEST_FOCUS_SELECTOR);
+  await openPopupOn(browser, "form " + TEST_FOCUS_NAME_FIELD_SELECTOR);
 
   for (let i = 0; i <= idx; i++) {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -158,13 +233,13 @@ async function openTabAndUseAutofillProfile(
   await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
   await waitForAutofill(
     browser,
-    TEST_FOCUS_SELECTOR,
-    profile[TEST_FOCUS_FIELD]
+    TEST_FOCUS_NAME_FIELD_SELECTOR,
+    profile[TEST_FOCUS_NAME_FIELD]
   );
   await focusUpdateSubmitForm(
     browser,
     {
-      focusSelector: TEST_FOCUS_SELECTOR,
+      focusSelector: TEST_FOCUS_NAME_FIELD_SELECTOR,
       newValues: {},
     },
     submitForm
@@ -201,9 +276,9 @@ add_task(async function test_popup_opened() {
   await setStorage(TEST_PROFILE);
 
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: TEST_BASIC_AUTOFILL_FORM_URL },
+    { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
     async function(browser) {
-      const focusInput = TEST_FOCUS_SELECTOR;
+      const focusInput = TEST_FOCUS_NAME_FIELD_SELECTOR;
 
       await openPopupOn(browser, focusInput);
 
@@ -212,8 +287,10 @@ add_task(async function test_popup_opened() {
     }
   );
 
+  const fields = TEST_BASIC_ADDRESS_FORM_FIELDS;
   await assertTelemetry([
-    // TODO: Implement form interaction event telemetry
+    ...formArgs("detected", {}, fields, "true", "false"),
+    ...formArgs("popup_shown", { field_name: TEST_FOCUS_NAME_FIELD }),
   ]);
 
   TelemetryTestUtils.assertScalar(
@@ -237,16 +314,18 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
   await setStorage(TEST_PROFILE);
 
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: TEST_WITHOUT_AUTOCOMPLETE_URL },
+    { gBrowser, url: TEST_BASIC_ADDRESS_FORM_WITHOUT_AC_URL },
     async function(browser) {
-      const focusInput = TEST_FOCUS_SELECTOR;
+      const focusInput = TEST_FOCUS_NAME_FIELD_SELECTOR;
       await openPopupOn(browser, focusInput);
       await closePopup(browser);
     }
   );
 
+  const fields = TEST_BASIC_ADDRESS_FORM_FIELDS;
   await assertTelemetry([
-    //TODO: Implement form interaction event telemetry
+    ...formArgs("detected", {}, fields, "0", "false"),
+    ...formArgs("popup_shown", { field_name: TEST_FOCUS_NAME_FIELD }),
   ]);
 
   TelemetryTestUtils.assertScalar(
@@ -276,7 +355,7 @@ add_task(async function test_submit_autofill_profile_new() {
     expectChanged = undefined
   ) {
     await BrowserTestUtils.withNewTab(
-      { gBrowser, url: TEST_BASIC_AUTOFILL_FORM_URL },
+      { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
       async function(browser) {
         let onPopupShown = waitForPopupShown();
         let onChanged;
@@ -285,7 +364,7 @@ add_task(async function test_submit_autofill_profile_new() {
         }
 
         await focusUpdateSubmitForm(browser, {
-          focusSelector: TEST_FOCUS_SELECTOR,
+          focusSelector: TEST_FOCUS_NAME_FIELD_SELECTOR,
           newValues: TEST_NEW_VALUES,
         });
 
@@ -316,8 +395,10 @@ add_task(async function test_submit_autofill_profile_new() {
   Services.telemetry.clearScalars();
   Services.telemetry.getKeyedHistogramById(HISTOGRAM_PROFILE_NUM_USES).clear();
 
+  const fields = TEST_BASIC_ADDRESS_FORM_FIELDS;
   let expected_content = [
-    // TODO: Implement form interaction event telemetry
+    ...formArgs("detected", {}, fields, "true", "false"),
+    ...formArgs("submitted", {}, fields, "user_filled", "unavailable"),
   ];
 
   // FTU
@@ -360,7 +441,7 @@ add_task(async function test_submit_autofill_profile_update() {
     Assert.equal(profiles.length, 1, "1 entry in storage");
 
     await BrowserTestUtils.withNewTab(
-      { gBrowser, url: TEST_BASIC_AUTOFILL_FORM_URL },
+      { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
       async function(browser) {
         let onPopupShown = waitForPopupShown();
         let onChanged;
@@ -368,17 +449,17 @@ add_task(async function test_submit_autofill_profile_update() {
           onChanged = TestUtils.topicObserved("formautofill-storage-changed");
         }
 
-        await openPopupOn(browser, TEST_FOCUS_SELECTOR);
+        await openPopupOn(browser, TEST_FOCUS_NAME_FIELD_SELECTOR);
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
         await waitForAutofill(
           browser,
-          TEST_FOCUS_SELECTOR,
-          TEST_PROFILE[TEST_FOCUS_FIELD]
+          TEST_FOCUS_NAME_FIELD_SELECTOR,
+          TEST_PROFILE[TEST_FOCUS_NAME_FIELD]
         );
         await focusUpdateSubmitForm(browser, {
-          focusSelector: TEST_FOCUS_SELECTOR,
+          focusSelector: TEST_FOCUS_NAME_FIELD_SELECTOR,
           newValues: TEST_NEW_VALUES,
         });
         await onPopupShown;
@@ -409,7 +490,28 @@ add_task(async function test_submit_autofill_profile_update() {
   Services.telemetry.clearScalars();
   Services.telemetry.getKeyedHistogramById(HISTOGRAM_PROFILE_NUM_USES).clear();
 
-  let expected_content = [];
+  const fields = TEST_BASIC_ADDRESS_FORM_FIELDS;
+  let expected_content = [
+    ...formArgs("detected", {}, fields, "true", "false"),
+    ...formArgs("popup_shown", { field_name: TEST_FOCUS_NAME_FIELD }),
+    ...formArgs("filled", {}, fields, "filled", "unavailable"),
+    ...formArgs("filled_modified", { field_name: "given-name" }),
+    ...formArgs("filled_modified", { field_name: "organization" }),
+    ...formArgs("filled_modified", { field_name: "street-address" }),
+    ...formArgs("filled_modified", { field_name: "tel" }),
+    ...formArgs(
+      "submitted",
+      {
+        given_name: "user_filled",
+        organization: "user_filled",
+        street_address: "user_filled",
+        tel: "user_filled",
+      },
+      fields,
+      "autofilled",
+      "unavailable"
+    ),
+  ];
 
   await test_per_command(MAIN_BUTTON, undefined, { 1: 1 }, 1);
   await assertTelemetry(expected_content, [
@@ -573,6 +675,7 @@ add_task(async function test_histogram() {
 });
 
 add_task(async function test_clear_autofill_profile_autofill() {
-  // TODO: Support field detection telemetry
+  // Address does not have clear pref. Keep the test so we know we should implement
+  // the test if we support clearing address via autocomplete.
   Assert.ok(true);
 });
