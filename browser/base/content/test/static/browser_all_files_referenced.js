@@ -211,10 +211,6 @@ var whitelist = [
   // Files from upstream library
   { file: "resource://pdf.js/web/debugger.js" },
   { file: "resource://pdf.js/web/debugger.css" },
-  // A platform must be added here (see bug 1807983).
-  { file: "resource://pdf.js/web/viewer-geckoview.css" },
-  { file: "resource://pdf.js/web/viewer-geckoview.html" },
-  { file: "resource://pdf.js/web/viewer-geckoview.js" },
 
   // resource://app/modules/translation/TranslationContentHandler.jsm
   { file: "resource://app/modules/translation/BingTranslator.jsm" },
