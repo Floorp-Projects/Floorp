@@ -24,12 +24,42 @@
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">%1$d ہورناں ڈومیناں دے وچ ڈیٹے نوں پہنچ جاݨا</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">ایپ دیاں ٹیباں لئی پہنچ</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">بے حد دا ڈیٹا رکھݨا</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">اتے پتے پڑھن تے بدلݨ</string>
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">ایپ سیٹنگاں پڑھن تے بدلݨ</string>
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">حالیہ ورتوں دی تاریخ، کوکیاں تے متعلقہ ڈیٹا صاف کرو</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">کاپی پیسٹ کرن توں ڈیٹا لیݨا</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">کاپی پیسٹ کرن لئی ڈیٹا پاوݨا</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">کسے وی صفحے توں سمگری تے روک لاوݨا</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">فائلاں ڈاؤں‌لوڈ کرنا، تے اوہدی تاریخ نوں پڑھنا تے بدلݨا</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">ڈاؤں‌لوڈ کیتیاں فائلاں کھولھݨا</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">ساریاں کھولھیاں ٹیباں دیاں وچ لکھتاں نوں پڑھنا</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">تہاڈی ستھتی نوں پہنچ جاݨا</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">ورتوں دی تاریخ نوں پہنچ جاݨا</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">پھیلاؤ دی ورتوں نوں وکھݨا تے رنگ ڈھنگ انتظام کرنا</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ہورناں ایپاں نوں سنیہے بھیجݨے</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">حالیہ بند کیتیاں ٹیباں نوں پہنچ جاݨا</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">ٹیباں لکاوݨا تے ویکھاوݨا</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">ورتوں دی تاریخ نوں پہنچ جاݨا</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">کھولھویاں ٹیباں چ تہاڈے ڈیٹے پہنچݨ لئی سنداں توں ودھݨا</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ورژن</string>
     <!-- The authors of an add-on. -->
@@ -72,6 +102,10 @@
     <string name="mozac_feature_addons_permissions">اجازتاں</string>
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">ہٹاؤ</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s رکھ لیو؟</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">ایس لئی اجازت دی لوڑ اے –</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">پتہ پایو</string>
     <!-- This is a button to cancel the add-on installation . -->
@@ -80,6 +114,8 @@
     <string name="mozac_feature_addons_install_addon_content_description">وادھے والا اینسٹال کرو</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">رد کرو</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
+    <string name="mozac_feature_addons_user_rating_count_2">پڑتالاں – %1$s</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">وادھیاں والے</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
@@ -100,6 +136,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_channel">وادھے والے سہارا</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">نویں وادھے والے دستیاب اے</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">۱ وادھے والا</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">ہور جاݨو</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->

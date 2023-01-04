@@ -87,9 +87,9 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Óvirk</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Leyfa í huliðsstillingu</string>
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Leyfa í huliðsvafri</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">Keyra í huliðsstillingu</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Keyra í huliðsvafri</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Virk</string>
     <!-- Indicates the add-on is disabled. -->
