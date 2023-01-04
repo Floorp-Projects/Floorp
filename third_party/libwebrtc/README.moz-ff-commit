@@ -17088,3 +17088,6 @@ bc8a62b244
 # MOZ_LIBWEBRTC_SRC=/Users/danielbaker/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 0385618a56
+# MOZ_LIBWEBRTC_SRC=/Users/danielbaker/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+99d7d6b4f6

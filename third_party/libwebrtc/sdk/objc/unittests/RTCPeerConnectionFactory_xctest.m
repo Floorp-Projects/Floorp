@@ -131,11 +131,10 @@
   XCTAssertTrue(true, "Expect test does not crash");
 }
 
-// TODO(crbug.com/webrtc/13989): Remove call to CreateSender in senderWithKind.
-#if !TARGET_IPHONE_SIMULATOR
 - (void)testRTCRtpSenderLifetime {
   @autoreleasepool {
     RTC_OBJC_TYPE(RTCConfiguration) *config = [[RTC_OBJC_TYPE(RTCConfiguration) alloc] init];
+    config.sdpSemantics = RTCSdpSemanticsPlanB;
     RTC_OBJC_TYPE(RTCMediaConstraints) *constraints =
         [[RTC_OBJC_TYPE(RTCMediaConstraints) alloc] initWithMandatoryConstraints:@{}
                                                              optionalConstraints:nil];
@@ -163,6 +162,7 @@
 - (void)testRTCRtpReceiverLifetime {
   @autoreleasepool {
     RTC_OBJC_TYPE(RTCConfiguration) *config = [[RTC_OBJC_TYPE(RTCConfiguration) alloc] init];
+    config.sdpSemantics = RTCSdpSemanticsPlanB;
     RTC_OBJC_TYPE(RTCMediaConstraints) *constraints =
         [[RTC_OBJC_TYPE(RTCMediaConstraints) alloc] initWithMandatoryConstraints:@{}
                                                              optionalConstraints:nil];
@@ -206,7 +206,6 @@
 
   XCTAssertTrue(true, "Expect test does not crash");
 }
-#endif
 
 - (void)testAudioSourceLifetime {
   @autoreleasepool {
