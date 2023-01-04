@@ -114,10 +114,10 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
   std::string debug_name_ = "DcSctpTransport";
   rtc::CopyOnWriteBuffer receive_buffer_;
 
-  // Used to keep track of the closing state of the data channel.
+  // Used to keep track of the state of data channels.
   // Reset needs to happen both ways before signaling the transport
   // is closed.
-  struct StreamClosingState {
+  struct StreamState {
     // True when the local connection has initiated the reset.
     // If a connection receives a reset for a stream that isn't
     // already being reset locally, it needs to fire the signal
@@ -129,7 +129,9 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
     bool outgoing_reset_done = false;
   };
 
-  flat_map<dcsctp::StreamID, StreamClosingState> closing_states_;
+  // Map of all currently open or closing data channels
+  flat_map<dcsctp::StreamID, StreamState> stream_states_
+      RTC_GUARDED_BY(network_thread_);
   bool ready_to_send_data_ = false;
   std::function<void()> on_connected_callback_ RTC_GUARDED_BY(network_thread_);
   DataChannelSink* data_channel_sink_ RTC_GUARDED_BY(network_thread_) = nullptr;
