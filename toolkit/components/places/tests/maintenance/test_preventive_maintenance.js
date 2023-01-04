@@ -2871,11 +2871,31 @@ add_task(async function test_preventive_maintenance() {
   }
 
   // Sanity check: all roots should be intact
-  Assert.equal(bs.getFolderIdForItem(bs.placesRoot), 0);
-  Assert.equal(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
-  Assert.equal(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
-  Assert.equal(bs.getFolderIdForItem(gUnfiledFolderId), bs.placesRoot);
-  Assert.equal(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
+  Assert.deepEqual(
+    (await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.rootGuid))
+      .parentGuid,
+    undefined
+  );
+  Assert.deepEqual(
+    (await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.menuGuid))
+      .parentGuid,
+    PlacesUtils.bookmarks.rootGuid
+  );
+  Assert.deepEqual(
+    (await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.tagsGuid))
+      .parentGuid,
+    PlacesUtils.bookmarks.rootGuid
+  );
+  Assert.deepEqual(
+    (await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.unfiledGuid))
+      .parentGuid,
+    PlacesUtils.bookmarks.rootGuid
+  );
+  Assert.deepEqual(
+    (await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.toolbarGuid))
+      .parentGuid,
+    PlacesUtils.bookmarks.rootGuid
+  );
 });
 
 // ------------------------------------------------------------------------------

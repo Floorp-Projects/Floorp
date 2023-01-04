@@ -1687,22 +1687,6 @@ nsresult nsNavBookmarks::FetchFolderInfo(int64_t aFolderId,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavBookmarks::GetFolderIdForItem(int64_t aItemId, int64_t* _parentId) {
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_parentId);
-
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // this should not happen, but see bug #400448 for details
-  NS_ENSURE_TRUE(bookmark.id != bookmark.parentId, NS_ERROR_UNEXPECTED);
-
-  *_parentId = bookmark.parentId;
-  return NS_OK;
-}
-
 nsresult nsNavBookmarks::GetBookmarksForURI(
     nsIURI* aURI, nsTArray<BookmarkData>& aBookmarks) {
   NS_ENSURE_ARG(aURI);
