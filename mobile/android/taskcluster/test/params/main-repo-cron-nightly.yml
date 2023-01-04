@@ -20,6 +20,7 @@ project: firefox-android
 pull_request_number: null
 pushdate: 0
 pushlog_id: '0'
+release_type: ''
 repository_type: git
 target_tasks_method: nightly
 tasks_for: cron
