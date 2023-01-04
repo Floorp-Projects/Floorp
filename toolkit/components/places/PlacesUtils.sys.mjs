@@ -940,16 +940,6 @@ export var PlacesUtils = {
   },
 
   /**
-   * Gets the concrete item-id for the given node. Generally, this is just
-   * node.itemId, but for folder-shortcuts that's node.folderItemId.
-   */
-  getConcreteItemId: function PU_getConcreteItemId(aNode) {
-    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT
-      ? asQuery(aNode).folderItemId
-      : aNode.itemId;
-  },
-
-  /**
    * Gets the concrete item-guid for the given node. For everything but folder
    * shortcuts, this is just node.bookmarkGuid.  For folder shortcuts, this is
    * node.targetFolderGuid (see nsINavHistoryService.idl for the semantics).
