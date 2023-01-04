@@ -647,10 +647,7 @@ bool VirtualSocketServer::ProcessMessagesUntilIdle() {
       fake_clock_->AdvanceTime(webrtc::TimeDelta::Millis(1));
     } else {
       // Otherwise, run a normal message loop.
-      Message msg;
-      if (msg_queue_->Get(&msg, Thread::kForever)) {
-        msg_queue_->Dispatch(&msg);
-      }
+      msg_queue_->ProcessMessages(Thread::kForever);
     }
   }
   stop_on_idle_ = false;

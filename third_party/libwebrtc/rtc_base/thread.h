@@ -268,14 +268,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // Processed.  Normally, this would be true until IsQuitting() is true.
   virtual bool IsProcessingMessagesForTesting();
 
-  // Get() will process I/O until:
-  //  1) A message is available (returns true)
-  //  2) cmsWait seconds have elapsed (returns false)
-  //  3) Stop() is called (returns false)
-  virtual bool Get(Message* pmsg,
-                   int cmsWait = kForever,
-                   bool process_io = true);
-  virtual bool Peek(Message* pmsg, int cmsWait = 0);
   // `time_sensitive` is deprecated and should always be false.
   virtual void Post(const Location& posted_from,
                     MessageHandler* phandler,
@@ -295,7 +287,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   virtual void Clear(MessageHandler* phandler,
                      uint32_t id = MQID_ANY,
                      MessageList* removed = nullptr);
-  virtual void Dispatch(Message* pmsg);
 
   // Amount of time until the next message can be retrieved
   virtual int GetDelay();
@@ -303,7 +294,7 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   bool empty() const { return size() == 0u; }
   size_t size() const {
     CritScope cs(&crit_);
-    return messages_.size() + delayed_messages_.size() + (fPeekKeep_ ? 1u : 0u);
+    return messages_.size() + delayed_messages_.size();
   }
 
   // Internally posts a message which causes the doomed object to be deleted
@@ -522,6 +513,21 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
  private:
   static const int kSlowDispatchLoggingThreshold = 50;  // 50 ms
 
+  // TODO(bugs.webrtc.org/9702): Delete when chromium stops overriding it.
+  // chromium's ThreadWrapper overrides it just to check it is never called.
+  virtual bool Peek(Message* pmsg, int cms_wait) {
+    RTC_DCHECK_NOTREACHED();
+    return false;
+  }
+  // Get() will process I/O until:
+  //  1) A message is available (returns true)
+  //  2) cmsWait seconds have elapsed (returns false)
+  //  3) Stop() is called (returns false)
+  virtual bool Get(Message* pmsg,
+                   int cmsWait = kForever,
+                   bool process_io = true);
+  virtual void Dispatch(Message* pmsg);
+
   // Sets the per-thread allow-blocking-calls flag and returns the previous
   // value. Must be called on this thread.
   bool SetAllowBlockingCalls(bool allow);
@@ -552,8 +558,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // Called by the ThreadManager when being unset as the current thread.
   void ClearCurrentTaskQueue();
 
-  bool fPeekKeep_;
-  Message msgPeek_;
   MessageList messages_ RTC_GUARDED_BY(crit_);
   PriorityQueue delayed_messages_ RTC_GUARDED_BY(crit_);
   uint32_t delayed_next_num_ RTC_GUARDED_BY(crit_);
