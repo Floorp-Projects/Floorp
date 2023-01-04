@@ -152,19 +152,22 @@ let Telemetry = require("devtools/client/shared/telemetry");
 Create a telemetry instance on the tool constructor:
 
 ```js
-this._telemetry = new Telemetry();
+this._telemetry = new Telemetry({ useSessionId: true });
 ```
+`useSessionId` allows to aggregate all records behind a randomly unique "session_id"
+extra attribute. For example, this helps aggregate all data recorded for one precise
+toolbox instance.
 
 And use the instance to report e.g. tool opening...
 
 ```js
-this._telemetry.toolOpened("mytoolname", sessionId, this);
+this._telemetry.toolOpened("mytoolname", this);
 ```
 
 ... or closing:
 
 ```js
-this._telemetry.toolClosed("mytoolname", sessionId, this);
+this._telemetry.toolClosed("mytoolname", this);
 ```
 
 Note that `mytoolname` is the id we declared in the `telemetry.js` module.
@@ -201,7 +204,7 @@ this._telemetry = new Telemetry();
 And use the instance to report e.g. tool opening...
 
 ```js
-this._telemetry.toolOpened("mytoolname", sessionId, this);
+this._telemetry.toolOpened("mytoolname", this);
 ```
 
 Notes:
@@ -248,7 +251,6 @@ this._telemetry.recordEvent("open", "tools", null, {
   "host": "bottom",
   "splitconsole": false,
   "width": 1024,
-  "session_id": this.toolbox.sessionId
 });
 
 // If your "extra" properties are in different code paths you will need to
@@ -315,7 +317,7 @@ To see these warnings, you need to have the `browser.dom.window.dump.enabled` br
 Then, try doing things that trigger telemetry calls (e.g. opening a tool). Imagine we had a typo when reporting the tool was opened:
 
 ```js
-this._telemetry.toolOpened('mytoolnmae', sessionId, this);
+this._telemetry.toolOpened('mytoolnmae', this);
                                   ^^^^ typo, should be *mytoolname*
 ```
 

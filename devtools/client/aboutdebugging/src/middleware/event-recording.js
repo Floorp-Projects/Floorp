@@ -5,10 +5,10 @@
 "use strict";
 
 const Telemetry = require("resource://devtools/client/shared/telemetry.js");
-loader.lazyGetter(this, "telemetry", () => new Telemetry());
-// This is a unique id that should be submitted with all about:debugging events.
-loader.lazyGetter(this, "sessionId", () =>
-  parseInt(telemetry.msSinceProcessStart(), 10)
+loader.lazyGetter(
+  this,
+  "telemetry",
+  () => new Telemetry({ useSessionId: true })
 );
 
 const {
@@ -33,19 +33,17 @@ const {
 } = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
 
 function recordEvent(method, details) {
-  // Add the session id to the event details.
-  const eventDetails = Object.assign({}, details, { session_id: sessionId });
-  telemetry.recordEvent(method, "aboutdebugging", null, eventDetails);
+  telemetry.recordEvent(method, "aboutdebugging", null, details);
 
   // For close and open events, also ping the regular telemetry helpers used
   // for all DevTools UIs.
   if (method === "open_adbg") {
-    telemetry.toolOpened("aboutdebugging", sessionId, window.AboutDebugging);
+    telemetry.toolOpened("aboutdebugging", window.AboutDebugging);
   } else if (method === "close_adbg") {
     // XXX: Note that aboutdebugging has no histogram created for
     // TIME_ACTIVE_SECOND, so calling toolClosed will not actually
     // record anything.
-    telemetry.toolClosed("aboutdebugging", sessionId, window.AboutDebugging);
+    telemetry.toolClosed("aboutdebugging", window.AboutDebugging);
   }
 }
 

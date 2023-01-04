@@ -230,22 +230,19 @@ ToolSidebar.prototype = {
       return;
     }
 
-    const sessionId = this._toolPanel._toolbox.sessionId;
-
     currentToolId = this.getTelemetryPanelNameOrOther(currentToolId);
 
     if (previousToolId) {
       previousToolId = this.getTelemetryPanelNameOrOther(previousToolId);
-      this._telemetry.toolClosed(previousToolId, sessionId, this);
+      this._telemetry.toolClosed(previousToolId, this);
 
       this._telemetry.recordEvent("sidepanel_changed", "inspector", null, {
         oldpanel: previousToolId,
         newpanel: currentToolId,
         os: this._telemetry.osNameAndVersion,
-        session_id: sessionId,
       });
     }
-    this._telemetry.toolOpened(currentToolId, sessionId, this);
+    this._telemetry.toolOpened(currentToolId, this);
   },
 
   /**
@@ -313,8 +310,7 @@ ToolSidebar.prototype = {
     this.emit("destroy");
 
     if (this._currentTool && this._telemetry) {
-      const sessionId = this._toolPanel._toolbox.sessionId;
-      this._telemetry.toolClosed(this._currentTool, sessionId, this);
+      this._telemetry.toolClosed(this._currentTool, this);
     }
 
     this._toolPanel.emit("sidebar-destroyed", this);

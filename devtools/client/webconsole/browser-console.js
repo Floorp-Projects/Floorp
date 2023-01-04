@@ -65,9 +65,7 @@ class BrowserConsole extends WebConsole {
       // Only add the shutdown observer if we've opened a Browser Console window.
       ShutdownObserver.init();
 
-      // browserconsole is not connected with a toolbox so we pass -1 as the
-      // toolbox session id.
-      this.#telemetry.toolOpened("browserconsole", -1, this);
+      this.#telemetry.toolOpened("browserconsole", this);
 
       await super.init(false);
 
@@ -91,9 +89,7 @@ class BrowserConsole extends WebConsole {
     }
 
     this.#bcDestroyer = (async () => {
-      // browserconsole is not connected with a toolbox so we pass -1 as the
-      // toolbox session id.
-      this.#telemetry.toolClosed("browserconsole", -1, this);
+      this.#telemetry.toolClosed("browserconsole", this);
 
       this.commands.targetCommand.destroy();
       await super.destroy();

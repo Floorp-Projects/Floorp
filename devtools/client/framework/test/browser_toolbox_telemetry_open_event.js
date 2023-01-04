@@ -17,9 +17,12 @@ add_task(async function() {
   await onToolboxReady;
 
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
+  // The telemetry is sent by DevToolsStartup and so isn't flaged against any session id
   const events = snapshot.parent.filter(
     event =>
-      event[1] === "devtools.main" && event[2] === "open" && event[4] === null
+      event[1] === "devtools.main" &&
+      event[2] === "open" &&
+      event[5].session_id == -1
   );
 
   is(events.length, 1, "Telemetry open event was logged");

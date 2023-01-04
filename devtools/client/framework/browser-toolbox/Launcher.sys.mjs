@@ -367,9 +367,7 @@ export class BrowserToolboxLauncher extends EventEmitter {
       proc => {
         this.#dbgProcess = proc;
 
-        // jsbrowserdebugger is not connected with a toolbox so we pass -1 as the
-        // toolbox session id.
-        this.#telemetry.toolOpened("jsbrowserdebugger", -1, this);
+        this.#telemetry.toolOpened("jsbrowserdebugger", this);
 
         dumpn("Chrome toolbox is now running...");
         this.emit("run", this, proc, this.#dbgProfilePath);
@@ -436,9 +434,7 @@ export class BrowserToolboxLauncher extends EventEmitter {
     this.#dbgProcess.stdout.close();
     await this.#dbgProcess.kill();
 
-    // jsbrowserdebugger is not connected with a toolbox so we pass -1 as the
-    // toolbox session id.
-    this.#telemetry.toolClosed("jsbrowserdebugger", -1, this);
+    this.#telemetry.toolClosed("jsbrowserdebugger", this);
 
     dumpn("Chrome toolbox is now closed...");
     processes.delete(this);
