@@ -1726,10 +1726,9 @@ nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
 nsresult HTMLEditor::BlobReader::OnError(const nsAString& aError) {
   AutoTArray<nsString, 1> error;
   error.AppendElement(aError);
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Editor"_ns,
-                                  mPointToInsert.GetContainer()->OwnerDoc(),
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  "EditorFileDropFailed", error);
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, "Editor"_ns, mHTMLEditor->GetDocument(),
+      nsContentUtils::eDOM_PROPERTIES, "EditorFileDropFailed", error);
   return NS_OK;
 }
 
