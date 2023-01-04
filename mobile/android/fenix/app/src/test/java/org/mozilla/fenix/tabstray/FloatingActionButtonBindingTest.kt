@@ -28,7 +28,7 @@ class FloatingActionButtonBindingTest {
     val coroutinesTestRule = MainCoroutineRule()
 
     private val actionButton: ExtendedFloatingActionButton = mockk(relaxed = true)
-    private val browserTrayInteractor: BrowserTrayInteractor = mockk(relaxed = true)
+    private val interactor: BrowserTrayInteractor = mockk(relaxed = true)
 
     @Before
     fun setup() {
@@ -47,7 +47,7 @@ class FloatingActionButtonBindingTest {
         val fabBinding = FloatingActionButtonBinding(
             tabsTrayStore,
             actionButton,
-            browserTrayInteractor,
+            interactor,
         )
 
         fabBinding.start()
@@ -64,7 +64,7 @@ class FloatingActionButtonBindingTest {
         val fabBinding = FloatingActionButtonBinding(
             tabsTrayStore,
             actionButton,
-            browserTrayInteractor,
+            interactor,
         )
 
         fabBinding.start()
@@ -81,7 +81,7 @@ class FloatingActionButtonBindingTest {
         val fabBinding = FloatingActionButtonBinding(
             tabsTrayStore,
             actionButton,
-            browserTrayInteractor,
+            interactor,
         )
 
         fabBinding.start()
@@ -98,7 +98,7 @@ class FloatingActionButtonBindingTest {
         val fabBinding = FloatingActionButtonBinding(
             tabsTrayStore,
             actionButton,
-            browserTrayInteractor,
+            interactor,
         )
 
         fabBinding.start()

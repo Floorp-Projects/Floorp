@@ -332,7 +332,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             feature = FloatingActionButtonBinding(
                 store = tabsTrayStore,
                 actionButton = fabButtonBinding.newTabButton,
-                browserTrayInteractor = browserTrayInteractor,
+                interactor = browserTrayInteractor,
             ),
             owner = this,
             view = view,

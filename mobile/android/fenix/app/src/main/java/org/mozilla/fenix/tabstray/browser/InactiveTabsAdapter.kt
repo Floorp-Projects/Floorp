@@ -35,7 +35,7 @@ class InactiveTabsAdapter(
             composeView = ComposeView(parent.context),
             lifecycleOwner = lifecycleOwner,
             tabsTrayStore = tabsTrayStore,
-            inactiveTabsInteractor = inactiveTabsInteractor,
+            interactor = inactiveTabsInteractor,
         )
     }
 

@@ -64,7 +64,7 @@ class BrowserTabsAdapterTest {
         val holder = spyk(
             BrowserTabViewHolder.ListViewHolder(
                 imageLoader = mockk(),
-                browserTrayInteractor = interactor,
+                interactor = interactor,
                 store = store,
                 selectionHolder = null,
                 itemView = binding.root,

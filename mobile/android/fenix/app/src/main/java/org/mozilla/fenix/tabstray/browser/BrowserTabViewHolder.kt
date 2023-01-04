@@ -25,7 +25,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      * A RecyclerView ViewHolder implementation for "tab" items with grid layout.
      *
      * @param imageLoader [ImageLoader] used to load tab thumbnails.
-     * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
+     * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
      * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
      * @param selectionHolder [SelectionHolder]<[TabSessionState]> for helping with selecting
      * any number of displayed [TabSessionState]s.
@@ -34,7 +34,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      */
     class GridViewHolder(
         imageLoader: ImageLoader,
-        override val browserTrayInteractor: BrowserTrayInteractor,
+        override val interactor: BrowserTrayInteractor,
         store: TabsTrayStore,
         selectionHolder: SelectionHolder<TabSessionState>? = null,
         itemView: View,
@@ -79,7 +79,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      * A RecyclerView ViewHolder implementation for "tab" items with list layout.
      *
      * @param imageLoader [ImageLoader] used to load tab thumbnails.
-     * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
+     * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
      * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
      * @param selectionHolder [SelectionHolder]<[TabSessionState]> for helping with selecting
      * any number of displayed [TabSessionState]s.
@@ -88,7 +88,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      */
     class ListViewHolder(
         imageLoader: ImageLoader,
-        override val browserTrayInteractor: BrowserTrayInteractor,
+        override val interactor: BrowserTrayInteractor,
         store: TabsTrayStore,
         selectionHolder: SelectionHolder<TabSessionState>? = null,
         itemView: View,

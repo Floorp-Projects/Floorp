@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
@@ -21,7 +20,7 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 class FloatingActionButtonBinding(
     private val store: TabsTrayStore,
     private val actionButton: ExtendedFloatingActionButton,
-    private val browserTrayInteractor: BrowserTrayInteractor,
+    private val interactor: BrowserTrayInteractor,
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
@@ -46,7 +45,7 @@ class FloatingActionButtonBinding(
                     contentDescription = context.getString(R.string.add_tab)
                     setIconResource(R.drawable.ic_new)
                     setOnClickListener {
-                        browserTrayInteractor.onFabClicked(false)
+                        interactor.onFabClicked(false)
                     }
                 }
             }
@@ -58,7 +57,7 @@ class FloatingActionButtonBinding(
                     contentDescription = context.getString(R.string.add_private_tab)
                     setIconResource(R.drawable.ic_new)
                     setOnClickListener {
-                        browserTrayInteractor.onFabClicked(true)
+                        interactor.onFabClicked(true)
                     }
                 }
             }

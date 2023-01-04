@@ -165,7 +165,7 @@ class AbstractBrowserTabViewHolderTest {
         trayStore: TabsTrayStore,
         selectionHolder: SelectionHolder<TabSessionState>?,
         store: BrowserStore,
-        override val browserTrayInteractor: BrowserTrayInteractor,
+        override val interactor: BrowserTrayInteractor,
         featureName: String = "Test",
     ) : AbstractBrowserTabViewHolder(itemView, imageLoader, trayStore, selectionHolder, featureName, store) {
         override val thumbnailSize: Int

@@ -73,7 +73,7 @@ abstract class AbstractBrowserTabViewHolder(
     internal val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val playPauseButtonView: ImageButton = itemView.findViewById(R.id.play_pause_button)
 
-    abstract val browserTrayInteractor: BrowserTrayInteractor
+    abstract val interactor: BrowserTrayInteractor
     abstract val thumbnailSize: Int
 
     override var tab: TabSessionState? = null
@@ -102,10 +102,10 @@ abstract class AbstractBrowserTabViewHolder(
         updateMediaState(tab)
 
         if (selectionHolder != null) {
-            setSelectionInteractor(tab, selectionHolder, browserTrayInteractor)
+            setSelectionInteractor(tab, selectionHolder, interactor)
         } else {
             itemView.setOnClickListener {
-                browserTrayInteractor.onTabSelected(tab, featureName)
+                interactor.onTabSelected(tab, featureName)
             }
         }
 

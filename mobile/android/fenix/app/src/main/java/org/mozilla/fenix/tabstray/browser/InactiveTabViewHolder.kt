@@ -19,7 +19,6 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.tabstray.TabsTrayFragment
-import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
@@ -32,8 +31,7 @@ import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param lifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState.inactiveTabs].
- * @param tabsTrayInteractor  [TabsTrayInteractor] used to handle deleting all inactive tabs.
- * @param inactiveTabsInteractor [InactiveTabsInteractor] used to respond to interactions with the inactive tabs header
+ * @param interactor [InactiveTabsInteractor] used to respond to interactions with the inactive tabs header
  * and the auto close dialog.
  */
 @Suppress("LongParameterList")
@@ -41,7 +39,7 @@ class InactiveTabViewHolder(
     composeView: ComposeView,
     lifecycleOwner: LifecycleOwner,
     private val tabsTrayStore: TabsTrayStore,
-    private val inactiveTabsInteractor: InactiveTabsInteractor,
+    private val interactor: InactiveTabsInteractor,
 ) : ComposeViewHolder(composeView, lifecycleOwner) {
 
     @Composable
@@ -63,19 +61,19 @@ class InactiveTabViewHolder(
                 inactiveTabs = inactiveTabs,
                 expanded = expanded,
                 showAutoCloseDialog = showAutoClosePrompt,
-                onHeaderClick = { inactiveTabsInteractor.onHeaderClicked(!expanded) },
-                onDeleteAllButtonClick = inactiveTabsInteractor::onDeleteAllInactiveTabsClicked,
+                onHeaderClick = { interactor.onHeaderClicked(!expanded) },
+                onDeleteAllButtonClick = interactor::onDeleteAllInactiveTabsClicked,
                 onAutoCloseDismissClick = {
-                    inactiveTabsInteractor.onCloseClicked()
+                    interactor.onCloseClicked()
                     showAutoClosePrompt = !showAutoClosePrompt
                 },
                 onEnableAutoCloseClick = {
-                    inactiveTabsInteractor.onEnabledAutoCloseClicked()
+                    interactor.onEnabledAutoCloseClicked()
                     showAutoClosePrompt = !showAutoClosePrompt
                     showConfirmationSnackbar()
                 },
-                onTabClick = inactiveTabsInteractor::onTabClicked,
-                onTabCloseClick = inactiveTabsInteractor::onTabClosed,
+                onTabClick = interactor::onTabClicked,
+                onTabCloseClick = interactor::onTabClosed,
             )
         }
     }
