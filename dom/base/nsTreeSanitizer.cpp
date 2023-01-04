@@ -2511,10 +2511,6 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
     }
   }
 
-  if (!StaticPrefs::dom_security_sanitizer_rewrite_no_bounty()) {
-    return;
-  }
-
   mIsForSanitizerAPI = true;
 
   if (aOptions.mAllowComments.WasPassed()) {
