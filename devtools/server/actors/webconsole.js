@@ -31,13 +31,6 @@ const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const ErrorDocs = require("resource://devtools/server/actors/errordocs.js");
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkUtils:
-    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
-});
-
 loader.lazyRequireGetter(
   this,
   "evalWithDebugger",
@@ -55,11 +48,6 @@ loader.lazyRequireGetter(
   "JSPropertyProvider",
   "resource://devtools/shared/webconsole/js-property-provider.js",
   true
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -1649,65 +1637,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       time,
       hasNativeConsoleAPI,
     });
-  },
-
-  /**
-   * Send a new HTTP request from the target's window.
-   *
-   * @param object request
-   *        The details of the HTTP request.
-   */
-  async sendHTTPRequest(request) {
-    const { url, method, headers, body, cause } = request;
-    // Set the loadingNode and loadGroup to the target document - otherwise the
-    // request won't show up in the opened netmonitor.
-    const doc = this.global.document;
-
-    const channel = lazy.NetUtil.newChannel({
-      uri: lazy.NetUtil.newURI(url),
-      loadingNode: doc,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-      contentPolicyType:
-        lazy.NetworkUtils.stringToCauseType(cause.type) ||
-        Ci.nsIContentPolicy.TYPE_OTHER,
-    });
-
-    channel.QueryInterface(Ci.nsIHttpChannel);
-
-    channel.loadGroup = doc.documentLoadGroup;
-    channel.loadFlags |=
-      Ci.nsIRequest.LOAD_BYPASS_CACHE |
-      Ci.nsIRequest.INHIBIT_CACHING |
-      Ci.nsIRequest.LOAD_ANONYMOUS;
-
-    channel.requestMethod = method;
-    if (headers) {
-      for (const { name, value } of headers) {
-        if (name.toLowerCase() == "referer") {
-          // The referer header and referrerInfo object should always match. So
-          // if we want to set the header from privileged context, we should set
-          // referrerInfo. The referrer header will get set internally.
-          channel.setNewReferrerInfo(
-            value,
-            Ci.nsIReferrerInfo.UNSAFE_URL,
-            true
-          );
-        } else {
-          channel.setRequestHeader(name, value, false);
-        }
-      }
-    }
-
-    if (body) {
-      channel.QueryInterface(Ci.nsIUploadChannel2);
-      const bodyStream = Cc[
-        "@mozilla.org/io/string-input-stream;1"
-      ].createInstance(Ci.nsIStringInputStream);
-      bodyStream.setData(body, body.length);
-      channel.explicitSetUploadStream(bodyStream, null, -1, method, false);
-    }
-
-    lazy.NetUtil.asyncFetch(channel, () => {});
   },
 
   /**

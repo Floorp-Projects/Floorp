@@ -192,50 +192,6 @@ This notification is sent only when your client is attached to the global consol
 .. note::
   This notification has been introduced in Firefox 24.
 
-
-Send HTTP requests
-------------------
-
-Starting with Firefox 25 you can send an HTTP request using the console actor:
-
-.. code-block:: javascript
-
-  {
-    "to": "conn0.console9",
-    "type": "sendHTTPRequest",
-    "request": {
-      "url": "http://localhost",
-      "method": "GET",
-      "headers": [
-        {
-          name: "Header-name",
-          value: "header value",
-        },
-        // ...
-      ],
-    },
-  }
-
-
-The response packet is a network event actor grip:
-
-.. code-block:: json
-
-  {
-    "to": "conn0.console9",
-    "eventActor": {
-      "actor": "conn0.netEvent14",
-      "startedDateTime": "2013-08-26T19:50:03.699Z",
-      "url": "http://localhost",
-      "method": "GET"
-      "isXHR": true,
-      "private": false
-    }
-  }
-
-
-You can also use the ``webConsoleClient.sendHTTPRequest(request, onResponse)`` method. The ``request`` argument is the same as the ``request`` object in the above example request packet.
-
 Page errors
 ***********
 
@@ -700,7 +656,6 @@ Protocol changes by Firefox version:
 - Firefox 24: new ``isXHR`` flag for the ``networkEvent`` notification, `bug <https://bugzilla.mozilla.org/show_bug.cgi?id=859046>`_.
 - Firefox 24: removed the ``message`` property from the ``pageError`` packet notification, `bug <https://bugzilla.mozilla.org/show_bug.cgi?id=877773>`_. The ``lineText`` and ``errorMessage`` properties can be long string actors now.
 - Firefox 25: added the ``url`` option to the ``evaluateJS`` request packet.
-- Firefox 25: added the ``getPreferences`` and ``sendHTTPRequest`` request packets to the console actor, `bug <https://bugzilla.mozilla.org/show_bug.cgi?id=886067>`_ and `bug <https://bugzilla.mozilla.org/show_bug.cgi?id=731311>`_.
 
 
 Conclusions
