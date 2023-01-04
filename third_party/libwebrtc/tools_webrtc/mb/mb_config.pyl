@@ -71,6 +71,7 @@
       'Linux64 Release': 'release_bot_x64',
       'Linux64 Release (ARM)': 'release_bot_arm64',
       'Linux64 Release (Libfuzzer)': 'libfuzzer_asan_release_bot_x64',
+      'Linux64 Release (reclient)': 'release_bot_x64_reclient',
 
       # Mac
       'Mac Asan': 'mac_asan_clang_release_bot_x64',
@@ -291,6 +292,9 @@
     'release_bot_arm': ['openh264', 'release_bot', 'arm'],
     'release_bot_arm64': ['openh264', 'release_bot', 'arm64'],
     'release_bot_x64': ['openh264', 'release_bot', 'x64'],
+    'release_bot_x64_reclient': [
+      'openh264', 'release_bot_reclient', 'x64',
+    ],
     'release_bot_x86': ['openh264', 'release_bot', 'x86'],
     'rtti_no_sctp_android_arm': [
       'android', 'debug_static_bot', 'arm', 'rtti', 'no_sctp'
@@ -430,11 +434,20 @@
     'pure_release_bot': {
       'mixins': ['release', 'goma', 'dcheck_off'],
     },
+    'pure_release_bot_reclient': {
+      'mixins': ['release', 'reclient', 'dcheck_off'],
+    },
+    'reclient': {
+      'gn_args': 'use_remoteexec=true',
+    },
     'release': {
       'gn_args': 'is_debug=false',
     },
     'release_bot': {
       'mixins': ['pure_release_bot', 'dcheck_always_on'],
+    },
+    'release_bot_reclient': {
+      'mixins': ['pure_release_bot_reclient', 'dcheck_always_on'],
     },
     'rtti': {
       'gn_args': 'use_rtti=true',
