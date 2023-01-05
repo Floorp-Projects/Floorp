@@ -94,7 +94,7 @@ addMessageListener("unregister", async function() {
     await dl.refresh();
     if (dl.target.exists || dl.target.partFileExists) {
       dump("Finalizing download.\n");
-      await dl.finalize(true).catch(Cu.reportError);
+      await dl.finalize(true).catch(console.error);
     }
   }
   await list.removeFinished();

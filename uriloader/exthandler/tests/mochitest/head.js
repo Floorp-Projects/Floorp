@@ -123,7 +123,7 @@ async function openHelperAppDialog(launcher) {
       false,
       "Trying to show unknownContentType.xhtml failed with exception: " + ex
     );
-    Cu.reportError(ex);
+    console.error(ex);
   }
   let dlg = await helperAppDialogShownPromise;
 
@@ -293,7 +293,7 @@ async function setDownloadDir() {
     try {
       await IOUtils.remove(tmpDir, { recursive: true });
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   });
   Services.prefs.setIntPref("browser.download.folderList", 2);
