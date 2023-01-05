@@ -698,6 +698,7 @@ class Raptor(
         self.raptor_json_config = self.config.get("raptor_json_config")
         self.repo_path = self.config.get("repo_path")
         self.obj_path = self.config.get("obj_path")
+        self.mozbuild_path = self.config.get("mozbuild_path")
         self.test = None
         self.gecko_profile = self.config.get(
             "gecko_profile"
@@ -959,6 +960,8 @@ class Raptor(
             kw_options["symbolsPath"] = self.symbols_path
         if self.config.get("obj_path", None) is not None:
             kw_options["obj-path"] = self.config["obj_path"]
+        if self.config.get("mozbuild_path", None) is not None:
+            kw_options["mozbuild-path"] = self.config["mozbuild_path"]
         if self.test_url_params:
             kw_options["test-url-params"] = self.test_url_params
         if self.config.get("device_name") is not None:
@@ -1271,6 +1274,8 @@ class Raptor(
             env["MOZ_DEVELOPER_REPO_DIR"] = self.repo_path
         if self.obj_path is not None:
             env["MOZ_DEVELOPER_OBJ_DIR"] = self.obj_path
+        if self.mozbuild_path is not None:
+            env["MOZ_MOZBUILD_DIR"] = self.mozbuild_path
 
         # Sets a timeout for how long Raptor should run without output
         output_timeout = self.config.get("raptor_output_timeout", 3600)

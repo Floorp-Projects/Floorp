@@ -130,6 +130,18 @@ def validate_test_ini(test_details):
         # and also remove duplicates if any, by converting valid_alerts to a 'set' first
         test_details["alert_on"] = sorted(set(valid_alerts))
 
+    # if repository is defined, then a revision also needs to be defined
+    # the path is optional and we'll default to the root of the repo
+    if test_details.get("repository", None) is not None:
+        if test_details.get("repository_revision", None) is None:
+            LOG.error(
+                "`repository_revision` is required when a `repository` is defined."
+            )
+            valid_settings = False
+        elif test_details.get("type") not in ("benchmark"):
+            LOG.error("`repository` is only available for benchmark test types.")
+            valid_settings = False
+
     return valid_settings
 
 

@@ -243,14 +243,16 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **fetch task**: assorted-dom
    * **gecko profile entries**: 2000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/assorted-dom
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
    * **screen capture**: true
-   * **test url**: `<http://\<host\>:\<port\>/assorted-dom/assorted/driver.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/assorted/driver.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -437,15 +439,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **fetch task**: jetstream2
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 4
    * **page timeout**: 2000000
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/JetStream2
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
    * **subtest lower is better**: false
    * **subtest unit**: score
-   * **test url**: `<http://\<host\>:\<port\>/JetStream2/index.html?raptor>`__
+   * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -632,15 +636,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
-   * **fetch task**: matrix-react-bench
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 30
    * **page timeout**: 2000000
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/matrix-react-bench
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
    * **subtest lower is better**: true
    * **subtest unit**: ms
-   * **test url**: `<http://\<host\>:\<port\>/matrix-react-bench/matrix_demo.html>`__
+   * **test url**: `<http://\<host\>:\<port\>/matrix_demo.html>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -2335,16 +2341,18 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **fetch task**: twitch-animation
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 2000000
    * **perfstats**: true
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/twitch-animation
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
    * **subtest lower is better**: true
    * **subtest unit**: ms
-   * **test url**: `<http://\<host\>:\<port\>/twitch-animation/index.html>`__
+   * **test url**: `<http://\<host\>:\<port\>/index.html>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -2486,13 +2494,15 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: geckoview, refbrow, fenix, chrome-m
    * **expected**: pass
-   * **fetch task**: unity-webgl
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 1
    * **page timeout**: 420000
-   * **test url**: `<http://\<host\>:\<port\>/unity-webgl/index.html?raptor>`__
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/unity-webgl
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -2769,13 +2779,15 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **fetch task**: unity-webgl
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 420000
-   * **test url**: `<http://\<host\>:\<port\>/unity-webgl/index.html?raptor>`__
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/unity-webgl
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -3542,13 +3554,15 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
-   * **fetch task**: wasm-misc
    * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 1200000
-   * **test url**: `<http://\<host\>:\<port\>/wasm-misc/index.html?raptor>`__
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/wasm-misc
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -3730,14 +3744,16 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **fetch task**: wasm-misc
    * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 1200000
    * **preferences**: {"javascript.options.wasm_baselinejit": true, "javascript.options.wasm_optimizingjit": false}
-   * **test url**: `<http://\<host\>:\<port\>/wasm-misc/index.html?raptor>`__
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/wasm-misc
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:
@@ -3879,14 +3895,16 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **fetch task**: wasm-misc
    * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **page cycles**: 5
    * **page timeout**: 1200000
    * **preferences**: {"javascript.options.wasm_baselinejit": false, "javascript.options.wasm_optimizingjit": true}
-   * **test url**: `<http://\<host\>:\<port\>/wasm-misc/index.html?raptor>`__
+   * **repository**: https://github.com/mozilla/perf-automation
+   * **repository path**: benchmarks/wasm-misc
+   * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+   * **test url**: `<http://\<host\>:\<port\>/index.html?raptor>`__
    * **type**: benchmark
    * **unit**: ms
    * **Test Task**:

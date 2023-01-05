@@ -339,6 +339,12 @@ def create_parser(mach_interface=False):
             default=None,
             help="Browser-build obj_path (received when running in production)",
         )
+        add_arg(
+            "--mozbuild-path",
+            dest="mozbuild_path",
+            default=None,
+            help="This contains the path to mozbuild.",
+        )
     add_arg(
         "--noinstall",
         dest="noinstall",
