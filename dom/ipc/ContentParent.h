@@ -1660,6 +1660,7 @@ class ContentParent final : public PContentParent,
   static uint32_t sPageLoadEventCounter;
   static Maybe<TimeStamp> sLastContentProcessLaunch;
 
+  bool mIsSignaledImpendingShutdown = false;
   bool mIsNotifiedShutdownSuccess = false;
 };
 

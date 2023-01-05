@@ -3723,10 +3723,12 @@ class RequestContentJSInterruptRunnable final : public Runnable {
 };
 
 void ContentParent::SignalImpendingShutdownToContentJS() {
-  if (!AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+  if (!mIsSignaledImpendingShutdown &&
+      !AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
     MaybeLogBlockShutdownDiagnostics(
         this, "BlockShutdown: NotifyImpendingShutdown.", __FILE__, __LINE__);
     NotifyImpendingShutdown();
+    mIsSignaledImpendingShutdown = true;
     if (mHangMonitorActor &&
         StaticPrefs::dom_abort_script_on_child_shutdown()) {
       MaybeLogBlockShutdownDiagnostics(
