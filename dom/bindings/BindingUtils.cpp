@@ -1632,7 +1632,7 @@ static bool XrayResolveProperty(
   switch (propertyInfo.type) {
     case eStaticMethod:
     case eStaticAttribute:
-      if (type != eInterface) {
+      if (type != eInterface && type != eNamespace) {
         return true;
       }
       break;
@@ -1814,6 +1814,18 @@ static bool ResolvePrototypeOrConstructor(
         return true;
       }
     }
+  } else if (type == eNamespace) {
+    if (id.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
+      JS::Rooted<JSString*> nameStr(
+          cx, JS_AtomizeString(cx, JS::GetClass(obj)->name));
+      if (!nameStr) {
+        return false;
+      }
+
+      desc.set(Some(JS::PropertyDescriptor::Data(
+          JS::StringValue(nameStr), {JS::PropertyAttribute::Configurable})));
+      return true;
+    }
   } else {
     MOZ_ASSERT(IsInterfacePrototype(type));
 
@@ -1954,7 +1966,7 @@ bool XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
     }
   } else {
     MOZ_ASSERT(type != eGlobalInterfacePrototype);
-    if (type == eInterface) {
+    if (type == eInterface || type == eNamespace) {
       ADD_KEYS_IF_DEFINED(StaticMethod);
       ADD_KEYS_IF_DEFINED(StaticAttribute);
     } else {
