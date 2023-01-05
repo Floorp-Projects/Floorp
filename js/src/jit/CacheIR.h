@@ -221,6 +221,11 @@ static_assert(sizeof(CacheIROpInfo) == 1);
 extern const CacheIROpInfo CacheIROpInfos[];
 
 extern const char* const CacheIROpNames[];
+
+inline const char* CacheIRCodeName(CacheOp op) {
+  return CacheIROpNames[static_cast<size_t>(op)];
+}
+
 extern const uint32_t CacheIROpHealth[];
 
 class StubField {
