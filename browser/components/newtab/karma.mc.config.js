@@ -261,13 +261,13 @@ module.exports = function(config) {
                   plugins: [
                     // Converts .jsm files into common-js modules
                     [
-                      "jsm-to-commonjs",
+                      "./tools/babel-jsm-to-commonjs.js",
                       {
                         basePath: PATHS.resourcePathRegEx,
                         removeOtherImports: true,
                         replace: true,
                       },
-                    ], // require("babel-plugin-jsm-to-commonjs")
+                    ],
                     "@babel/plugin-proposal-nullish-coalescing-operator",
                     "@babel/plugin-proposal-optional-chaining",
                     "@babel/plugin-proposal-class-properties",

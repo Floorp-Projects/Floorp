@@ -44,7 +44,7 @@ module.exports = (env = {}) => ({
         options: {
           plugins: [
             [
-              "jsm-to-esmodules",
+              "./tools/babel-jsm-to-commonjs.js",
               {
                 basePath: resourcePathRegEx,
                 removeOtherImports: true,
