@@ -89,8 +89,6 @@ class DisposeData : public MessageData {
 };
 
 const uint32_t MQID_ANY = static_cast<uint32_t>(-1);
-// TODO(bugs.webrtc.org/8324): Delete when unused by dependencies.
-const uint32_t MQID_DISPOSE = static_cast<uint32_t>(-2);
 
 // No destructor
 

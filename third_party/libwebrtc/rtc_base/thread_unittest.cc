@@ -555,42 +555,6 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
   EXPECT_TRUE_WAIT(thread_a_called.Get(), 2000);
 }
 
-class ThreadQueueTest : public ::testing::Test, public Thread {
- public:
-  ThreadQueueTest() : Thread(CreateDefaultSocketServer(), true) {
-    RTC_DCHECK(Thread::Current() == nullptr);
-    ThreadManager::Instance()->SetCurrentThread(this);
-  }
-  ~ThreadQueueTest() { ThreadManager::Instance()->SetCurrentThread(nullptr); }
-  bool IsLocked_Worker() {
-    if (!CritForTest()->TryEnter()) {
-      return true;
-    }
-    CritForTest()->Leave();
-    return false;
-  }
-  bool IsLocked() {
-    // We have to do this on a worker thread, or else the TryEnter will
-    // succeed, since our critical sections are reentrant.
-    std::unique_ptr<Thread> worker(Thread::CreateWithSocketServer());
-    worker->Start();
-    return worker->Invoke<bool>(RTC_FROM_HERE,
-                                [this] { return IsLocked_Worker(); });
-  }
-};
-
-struct DeletedLockChecker {
-  DeletedLockChecker(ThreadQueueTest* test, bool* was_locked, bool* deleted)
-      : test(test), was_locked(was_locked), deleted(deleted) {}
-  ~DeletedLockChecker() {
-    *deleted = true;
-    *was_locked = test->IsLocked();
-  }
-  ThreadQueueTest* test;
-  bool* was_locked;
-  bool* deleted;
-};
-
 static void DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(
     FakeClock& clock,
     Thread& q) {
@@ -614,7 +578,7 @@ static void DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(
   EXPECT_THAT(run_order, ElementsAre(0, 1, 2, 3, 4));
 }
 
-TEST_F(ThreadQueueTest, DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder) {
+TEST(ThreadTest, DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder) {
   ScopedBaseFakeClock clock;
   Thread q(CreateDefaultSocketServer(), true);
   q.Start();
@@ -624,39 +588,6 @@ TEST_F(ThreadQueueTest, DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder) {
   Thread q_nullss(&nullss, true);
   q_nullss.Start();
   DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(clock, q_nullss);
-}
-
-TEST_F(ThreadQueueTest, DisposeNotLocked) {
-  bool was_locked = true;
-  bool deleted = false;
-  DeletedLockChecker* d = new DeletedLockChecker(this, &was_locked, &deleted);
-  Dispose(d);
-  Message msg;
-  ProcessMessages(0);
-  EXPECT_TRUE(deleted);
-  EXPECT_FALSE(was_locked);
-}
-
-class DeletedMessageHandler : public MessageHandlerAutoCleanup {
- public:
-  explicit DeletedMessageHandler(bool* deleted) : deleted_(deleted) {}
-  ~DeletedMessageHandler() override { *deleted_ = true; }
-  void OnMessage(Message* msg) override {}
-
- private:
-  bool* deleted_;
-};
-
-TEST_F(ThreadQueueTest, DisposeHandlerWithPostedMessagePending) {
-  bool deleted = false;
-  DeletedMessageHandler* handler = new DeletedMessageHandler(&deleted);
-  // First, post a dispose.
-  Dispose(handler);
-  // Now, post a message, which should *not* be returned by Get().
-  Post(RTC_FROM_HERE, handler, 1);
-  Message msg;
-  ProcessMessages(0);
-  EXPECT_TRUE(deleted);
 }
 
 // Ensure that ProcessAllMessageQueues does its essential function; process
