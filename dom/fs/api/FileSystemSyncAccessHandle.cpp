@@ -247,12 +247,12 @@ RefPtr<BoolPromise> FileSystemSyncAccessHandle::BeginClose() {
 
                 return BoolPromise::CreateAndResolve(true, __func__);
               })
-      ->Then(GetCurrentSerialEventTarget(), __func__,
+      ->Then(mWorkerRef->Private()->ControlEventTarget(), __func__,
              [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
                return self->mIOTaskQueue->BeginShutdown();
              })
       ->Then(
-          GetCurrentSerialEventTarget(), __func__,
+          mWorkerRef->Private()->ControlEventTarget(), __func__,
           [self = RefPtr(this)](const ShutdownPromise::ResolveOrRejectValue&) {
             if (self->mActor) {
               self->mActor->SendClose();
