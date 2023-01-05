@@ -21,6 +21,9 @@ def _resolve_command_site_names():
         if not child.is_file():
             continue
 
+        if child.suffix != ".txt":
+            continue
+
         if child.name == "mach.txt":
             continue
 
