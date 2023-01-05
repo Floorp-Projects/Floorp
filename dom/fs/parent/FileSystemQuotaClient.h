@@ -7,8 +7,7 @@
 #ifndef DOM_FS_PARENT_FILESYSTEMQUOTACLIENT_H_
 #define DOM_FS_PARENT_FILESYSTEMQUOTACLIENT_H_
 
-template <class T>
-struct already_AddRefed;
+#include "mozilla/AlreadyAddRefed.h"
 
 namespace mozilla::dom {
 
