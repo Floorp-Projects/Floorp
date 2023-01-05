@@ -5334,9 +5334,6 @@ static const JSFunctionSpec WebAssembly_static_methods[] = {
           JSPROP_ENUMERATE),
     JS_FS_END};
 
-static const JSPropertySpec WebAssembly_static_properties[] = {
-    JS_STRING_SYM_PS(toStringTag, "WebAssembly", JSPROP_READONLY), JS_PS_END};
-
 static JSObject* CreateWebAssemblyObject(JSContext* cx, JSProtoKey key) {
   MOZ_RELEASE_ASSERT(HasSupport(cx));
 
@@ -5417,10 +5414,13 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
   return true;
 }
 
-static const ClassSpec WebAssemblyClassSpec = {
-    CreateWebAssemblyObject,       nullptr, WebAssembly_static_methods,
-    WebAssembly_static_properties, nullptr, nullptr,
-    WebAssemblyClassFinish};
+static const ClassSpec WebAssemblyClassSpec = {CreateWebAssemblyObject,
+                                               nullptr,
+                                               WebAssembly_static_methods,
+                                               nullptr,
+                                               nullptr,
+                                               nullptr,
+                                               WebAssemblyClassFinish};
 
 const JSClass js::WasmNamespaceObject::class_ = {
     js_WebAssembly_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly),
