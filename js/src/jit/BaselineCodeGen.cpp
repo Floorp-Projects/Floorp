@@ -322,7 +322,7 @@ MethodStatus BaselineCompiler::compile() {
 
   script->jitScript()->setBaselineScript(script, baselineScript.release());
 
-  perfSpewer_.saveProfile(script, code);
+  perfSpewer_.saveProfile(cx, script, code);
 
 #ifdef MOZ_VTUNE
   vtune::MarkScript(code, script, "baseline");
