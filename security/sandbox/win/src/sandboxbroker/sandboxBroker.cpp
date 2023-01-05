@@ -468,7 +468,8 @@ static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
 
   return sDependentModules;
 #else
-  return Nothing();
+  static const Maybe<Vector<const wchar_t*>> sNothing = Nothing();
+  return sNothing;
 #endif
 }
 
