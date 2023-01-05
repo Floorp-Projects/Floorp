@@ -370,7 +370,7 @@ add_task(async function setup() {
 
   Services.prefs.setStringPref(
     "services.settings.server",
-    `data:text/html,test`
+    `data:,#remote-settings-dummy/v1`
   );
 
   Services.prefs.setBoolPref("network.http.http2.enabled", true);

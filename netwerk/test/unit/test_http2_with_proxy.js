@@ -49,7 +49,7 @@ add_setup(async function setup() {
 
   Services.prefs.setStringPref(
     "services.settings.server",
-    `data:text/html,test`
+    `data:,#remote-settings-dummy/v1`
   );
 
   proxy = new NodeHTTP2ProxyServer();

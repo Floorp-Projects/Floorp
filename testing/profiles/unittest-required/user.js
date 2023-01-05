@@ -199,7 +199,7 @@ user_pref("security.default_personal_cert", "Select Automatically"); // Need to 
 // Existing tests don't wait for the notification button security delay
 user_pref("security.notification_enable_delay", 0);
 // Ensure blocklist updates don't hit the network
-user_pref("services.settings.server", "http://{server}/dummy-kinto/v1");
+user_pref("services.settings.server", "data:,#remote-settings-dummy/v1");
 user_pref("shell.checkDefaultClient", false);
 // Disable password capture, so that mochitests that include forms aren't
 // influenced by the presence of the persistent doorhanger notification.
