@@ -286,14 +286,14 @@ class DebugTargetInfo extends PureComponent {
 
   renderAlwaysOnTopButton() {
     // This is only displayed for local web extension debugging
-    if (
-      this.props.debugTargetData.descriptorType !==
-        DESCRIPTOR_TYPES.EXTENSION &&
-      this.props.debugTargetData.connectionType ===
-        CONNECTION_TYPES.THIS_FIREFOX
-    ) {
+    const { descriptorType, connectionType } = this.props.debugTargetData;
+    const isLocalWebExtension =
+      descriptorType === DESCRIPTOR_TYPES.EXTENSION &&
+      connectionType === CONNECTION_TYPES.THIS_FIREFOX;
+    if (!isLocalWebExtension) {
       return [];
     }
+
     const checked = this.props.alwaysOnTop;
     const toolboxFocused = this.props.focusedState;
     return [
