@@ -120,7 +120,7 @@ browser {
   background-repeat: no-repeat;
 }
 
-#controls .control-item:focus::after,
+.control-item:focus-visible::after,
 .control-item:hover::after {
   content: attr(tooltip);
   display: inline-block;
@@ -135,73 +135,73 @@ browser {
 
 /* Set the tooltip position for different playback controls */
 
-#controls .tooltip-under-controls:focus::after,
-#controls .tooltip-under-controls:hover::after {
+.tooltip-under-controls:focus-visible::after,
+.tooltip-under-controls:hover::after {
   bottom: -3em;
 }
 
-#controls #close:focus::after,
-#controls #close:hover::after {
+#close:focus-visible::after,
+#close:hover::after {
   float: right;
   transform: translateX(1em);
 }
 
-#controls #close[mac="true"]:focus::after,
-#controls #close[mac="true"]:hover::after {
+#close[mac="true"]:focus-visible::after,
+#close[mac="true"]:hover::after {
   float: left;
   transform: translateX(-1em);
 }
 
-#controls .tooltip-over-controls:focus::after,
-#controls .tooltip-over-controls:hover::after {
+.tooltip-over-controls:focus-visible::after,
+.tooltip-over-controls:hover::after {
   bottom: 3em;
 }
 
-#controls .inline-end-tooltip:focus::after,
-#controls .inline-end-tooltip:hover::after {
+.inline-end-tooltip:focus-visible::after,
+.inline-end-tooltip:hover::after {
   float: inline-end;
   inset-inline-end: -1em;
 }
 
-#controls .inline-start-tooltip:focus::after,
-#controls .inline-start-tooltip:hover::after {
+.inline-start-tooltip:focus-visible::after,
+.inline-start-tooltip:hover::after {
   float: inline-start;
   inset-inline-start: -1em;
 }
 
-#controls .center-tooltip:focus::after,
-#controls .center-tooltip:hover::after {
+.center-tooltip:focus-visible::after,
+.center-tooltip:hover::after {
   inset-inline-end: 0.8em;
   translate: calc(-50% + var(--player-control-item-half-width));
 }
 
-#controls .center-tooltip:dir(rtl):focus::after,
-#controls .center-tooltip:dir(rtl):hover::after {
+.center-tooltip:dir(rtl):focus-visible::after,
+.center-tooltip:dir(rtl):hover::after {
   translate: calc(50% - var(--player-control-item-half-width));
 }
 
 /* Since the unpip button icon is reversed for RTL locales,
  * re-position the tooltip so that the tooltip is right aligned with the button. */
-#controls #unpip:dir(rtl):focus::after,
-#controls #unpip:dir(rtl):hover::after {
+#unpip:dir(rtl):focus-visible::after,
+#unpip:dir(rtl):hover::after {
   float: inline-end;
   inset-inline-start: 1em;
 }
 
 /* Since the closed caption icon is reversed for RTL locales,
  * re-position the tooltip so that the tooltip is left aligned with the button. */
-#controls .closed-caption.inline-end-tooltip:dir(rtl):focus::after,
-#controls .closed-caption.inline-end-tooltip:dir(rtl):hover::after {
+.closed-caption.inline-end-tooltip:dir(rtl):focus-visible::after,
+.closed-caption.inline-end-tooltip:dir(rtl):hover::after {
   float: inline-start;
   inset-inline-end: 1em;
 }
 
 /* Since the unpip and closed caption icons are reversed for RTL locales,
  * flip the tooltips back */
-#unpip:dir(rtl):focus::after,
-#controls #unpip:dir(rtl):hover::after,
-#controls .closed-caption:dir(rtl):focus::after,
-#controls .closed-caption:dir(rtl):hover::after {
+#unpip:dir(rtl):focus-visible::after,
+#unpip:dir(rtl):hover::after,
+.closed-caption:dir(rtl):focus-visible::after,
+.closed-caption:dir(rtl):hover::after {
   scale: -1 1;
 }
 
