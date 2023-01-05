@@ -288,7 +288,7 @@ var AddonTestUtils = {
     );
     Services.prefs.setCharPref(
       "services.settings.server",
-      "http://localhost/dummy-kinto/v1"
+      "data:,#remote-settings-dummy/v1"
     );
 
     // By default ignore bundled add-ons

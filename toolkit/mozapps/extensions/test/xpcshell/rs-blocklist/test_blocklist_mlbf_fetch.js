@@ -33,7 +33,7 @@ add_task(async function fetch_invalid_mlbf_record() {
   Downloader._RESOURCE_BASE_URL = "invalid://bogus";
   // NetworkError is expected here. The JSON.parse error could be triggered via
   // _baseAttachmentsURL < downloadAsBytes < download < download < _fetchMLBF if
-  // the request to  services.settings.server (http://localhost/dummy-kinto/v1)
+  // the request to  services.settings.server ("data:,#remote-settings-dummy/v1")
   // is fulfilled (but with invalid JSON). That request is not expected to be
   // fulfilled in the first place, but that is not a concern of this test.
   // This test passes if _fetchMLBF() rejects when given an invalid record.
