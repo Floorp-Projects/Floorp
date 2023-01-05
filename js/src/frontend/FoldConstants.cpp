@@ -33,7 +33,6 @@ using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
 
 struct FoldInfo {
-  JSContext* cx;
   FrontendContext* fc;
   JS::NativeStackLimit stackLimit;
   ParserAtomsTable& parserAtoms;
@@ -1315,20 +1314,17 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
 class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   using Base = RewritingParseNodeVisitor;
 
-  JSContext* cx;
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
 
   FoldInfo info() const {
-    return FoldInfo{cx, fc_, stackLimit_, parserAtoms, handler};
+    return FoldInfo{fc_, stackLimit_, parserAtoms, handler};
   }
 
  public:
-  FoldVisitor(JSContext* cx, FrontendContext* fc,
-              JS::NativeStackLimit stackLimit, ParserAtomsTable& parserAtoms,
-              FullParseHandler* handler)
+  FoldVisitor(FrontendContext* fc, JS::NativeStackLimit stackLimit,
+              ParserAtomsTable& parserAtoms, FullParseHandler* handler)
       : RewritingParseNodeVisitor(fc, stackLimit),
-        cx(cx),
         parserAtoms(parserAtoms),
         handler(handler) {}
 
@@ -1575,20 +1571,19 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 };
 
-static bool Fold(JSContext* cx, FrontendContext* fc,
-                 JS::NativeStackLimit stackLimit, ParserAtomsTable& parserAtoms,
-                 FullParseHandler* handler, ParseNode** pnp) {
-  FoldVisitor visitor(cx, fc, stackLimit, parserAtoms, handler);
+static bool Fold(FrontendContext* fc, JS::NativeStackLimit stackLimit,
+                 ParserAtomsTable& parserAtoms, FullParseHandler* handler,
+                 ParseNode** pnp) {
+  FoldVisitor visitor(fc, stackLimit, parserAtoms, handler);
   return visitor.visit(*pnp);
 }
 static bool Fold(FoldInfo info, ParseNode** pnp) {
-  return Fold(info.cx, info.fc, info.stackLimit, info.parserAtoms, info.handler,
-              pnp);
+  return Fold(info.fc, info.stackLimit, info.parserAtoms, info.handler, pnp);
 }
 
-bool frontend::FoldConstants(JSContext* cx, FrontendContext* fc,
+bool frontend::FoldConstants(FrontendContext* fc,
                              JS::NativeStackLimit stackLimit,
                              ParserAtomsTable& parserAtoms, ParseNode** pnp,
                              FullParseHandler* handler) {
-  return Fold(cx, fc, stackLimit, parserAtoms, handler, pnp);
+  return Fold(fc, stackLimit, parserAtoms, handler, pnp);
 }
