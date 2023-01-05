@@ -1,0 +1,68 @@
+.. _mozilla_projects_nss_nss_3_87_release_notes:
+
+NSS 3.87 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.87 was released on **5 January 2023**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_87_RTM. NSS 3.87 requires NSPR 4.35 or newer.
+
+   NSS 3.87 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_87_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.87:
+
+`Changes in NSS 3.87 <#changes_in_nss_3.87>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1803226 - NULL password encoding incorrect.
+   - Bug 1804071 - Fix rng stub signature for fuzzing builds.
+   - Bug 1803595 - Updating the compiler parsing for build.
+   - Bug 1749030 - Modification of supported compilers.
+   - Bug 1774654 tstclnt crashes when accessing gnutls server without a user cert in the database.
+   - Bug 1751707 - Add configuration option to enable source-based coverage sanitizer.
+   - Bug 1751705 - Update ECCKiila generated files.
+   - Bug 1730353 - Add support for the LoongArch 64-bit architecture.
+   - Bug 1798823 - add checks for zero-length RSA modulus to avoid memory errors and failed assertions later.
+   - Bug 1798823 - Additional zero-length RSA modulus checks.
+
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.87 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
