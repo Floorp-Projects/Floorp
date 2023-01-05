@@ -838,11 +838,15 @@ EventSourceImpl::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   //  (...) the cancelation of the fetch algorithm by the user agent (e.g. in
   //  response to window.stop() or the user canceling the network connection
   //  manually) must cause the user agent to fail the connection.
-
+  // There could be additional network errors that are not covered in the above
+  // checks
+  //  See Bug 1808511
   if (NS_FAILED(aStatusCode) && aStatusCode != NS_ERROR_CONNECTION_REFUSED &&
       aStatusCode != NS_ERROR_NET_TIMEOUT &&
       aStatusCode != NS_ERROR_NET_RESET &&
       aStatusCode != NS_ERROR_NET_INTERRUPT &&
+      aStatusCode != NS_ERROR_NET_PARTIAL_TRANSFER &&
+      aStatusCode != NS_ERROR_NET_TIMEOUT_EXTERNAL &&
       aStatusCode != NS_ERROR_PROXY_CONNECTION_REFUSED &&
       aStatusCode != NS_ERROR_DNS_LOOKUP_QUEUE_FULL) {
     DispatchFailConnection();
