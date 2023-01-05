@@ -91,9 +91,12 @@ function inspectDebugTarget(type, id) {
       gDevTools.showToolboxForWebExtension(id);
     } else {
       const urlParams = {
-        id,
         type,
       };
+      // Main process may not provide any ID.
+      if (id) {
+        urlParams.id = id;
+      }
 
       if (runtime.id !== RUNTIMES.THIS_FIREFOX) {
         urlParams.remoteId = remoteClientManager.getRemoteId(

@@ -69,8 +69,8 @@ add_task(async function() {
   );
 
   const url = new window.URL(devtoolsWindow.location.href);
-  const processID = url.searchParams.get("id");
-  is(processID, "0", "Correct process id");
+  const type = url.searchParams.get("type");
+  is(type, "process", "Correct type argument");
   const remoteID = url.searchParams.get("remoteId");
   is(remoteID, `${RUNTIME_ID}-usb`, "Correct remote runtime id");
 

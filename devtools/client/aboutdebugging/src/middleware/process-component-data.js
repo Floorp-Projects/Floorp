@@ -33,7 +33,6 @@ const processComponentDataMiddleware = store => next => action => {
 
 function toMainProcessComponentData(process) {
   const type = DEBUG_TARGETS.PROCESS;
-  const id = process.id;
   const icon = "chrome://devtools/skin/images/aboutdebugging-process-icon.svg";
 
   // For now, we assume there is only one process and this is the main process
@@ -46,7 +45,6 @@ function toMainProcessComponentData(process) {
   return {
     name,
     icon,
-    id,
     type,
     details: {
       description,
