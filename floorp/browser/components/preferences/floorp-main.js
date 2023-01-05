@@ -126,3 +126,9 @@ window.addEventListener("load", function() {
     window.location.href = "about:preferences#bSB";
   });
 }, { once: true });
+
+// Optimize for portable version
+if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
+  // https://searchfox.org/mozilla-esr102/source/browser/components/preferences/main.js#1306-1311
+  getShellService = function() {};
+}

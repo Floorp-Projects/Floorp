@@ -19,6 +19,18 @@ this.BrowserInfo = class extends ExtensionAPI {
         async getDisplayVersion() {
           return AppConstants.MOZ_APP_VERSION_DISPLAY;
         },
+        async getAppExecutablePath() {
+          return Services.dirsvc.get(
+            "XREExeF",
+            Ci.nsIFile
+          ).path;
+        },
+        async getAppExecutableDirPath() {
+          return Services.dirsvc.get(
+            "XREExeF",
+            Ci.nsIFile
+          ).parent.path;
+        },
       },
     };
   }

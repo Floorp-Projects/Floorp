@@ -16,14 +16,14 @@
     "<all_urls>"
   ],
   "content_scripts": [
-      {
-            "matches": [
-                "moz-extension://*/views/options/*"
-            ],
-            "js": [
-                "gesturefy/gesturefy.js"
-            ]
-      }
+    {
+      "matches": [
+          "moz-extension://*/views/options/*"
+      ],
+      "js": [
+          "gesturefy/gesturefy.js"
+      ]
+    }
   ],
   "experiment_apis": {
     "aboutConfigPrefs": {
@@ -55,6 +55,30 @@
           ]
         ]
       }
+    },
+    "decompressZip": {
+      "schema": "API/decompressZip.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "API/decompressZip.js",
+        "paths": [["decompressZip"]]
+      }
+    },
+    "downloadFile": {
+      "schema": "API/downloadFile.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "API/downloadFile.js",
+        "paths": [["downloadFile"]]
+      }
+    },
+    "IOFile": {
+      "schema": "API/IOFile.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "API/IOFile.js",
+        "paths": [["IOFile"]]
+      }
     }
   },
   "page_action": {
@@ -70,6 +94,7 @@
       "gesturefy/background.js",
       "webcompat.js",
       "update.js",
+      "portable-update.js",
       "download-notification.js"
     ]
   },
