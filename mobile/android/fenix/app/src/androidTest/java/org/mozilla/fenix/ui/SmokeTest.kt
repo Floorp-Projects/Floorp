@@ -105,36 +105,6 @@ class SmokeTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    // Verifies the first run onboarding screen
-    @Test
-    fun firstRunScreenTest() {
-        homeScreen {
-            verifyHomeScreenAppBarItems()
-            verifyHomeScreenWelcomeItems()
-            verifyChooseYourThemeCard(
-                isDarkThemeChecked = false,
-                isLightThemeChecked = false,
-                isAutomaticThemeChecked = true,
-            )
-            verifyToolbarPlacementCard(isBottomChecked = true, isTopChecked = false)
-            verifySignInToSyncCard()
-            verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
-            verifyPrivacyNoticeCard()
-            verifyStartBrowsingSection()
-            verifyNavigationToolbarItems("0")
-        }
-    }
-
-    // Verifies the functionality of the onboarding Start Browsing button
-    @Test
-    fun startBrowsingButtonTest() {
-        homeScreen {
-            verifyStartBrowsingButton()
-        }.clickStartBrowsingButton {
-            verifySearchView()
-        }
-    }
-
     /* Verifies the nav bar:
      - opening a web page
      - the existence of nav bar items
