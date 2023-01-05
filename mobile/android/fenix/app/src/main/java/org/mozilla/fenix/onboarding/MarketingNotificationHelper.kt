@@ -11,6 +11,7 @@ import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import org.mozilla.fenix.GleanMetrics.Events.marketingNotificationAllowed
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 
 // Channel ID was not updated when it was renamed to marketing.  Thus, we'll have to continue
 // to use this ID as the marketing channel ID
@@ -47,12 +48,7 @@ fun ensureMarketingChannelExists(context: Context): String {
         channelEnabled = channel.importance != NotificationManager.IMPORTANCE_NONE
     }
 
-    @Suppress("TooGenericExceptionCaught")
-    val notificationsEnabled = try {
-        NotificationManagerCompat.from(context).areNotificationsEnabled()
-    } catch (e: Exception) {
-        false
-    }
+    val notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabledSafe()
 
     marketingNotificationAllowed.set(notificationsEnabled && channelEnabled)
 
