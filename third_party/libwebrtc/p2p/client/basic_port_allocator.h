@@ -39,17 +39,21 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
   BasicPortAllocator(rtc::NetworkManager* network_manager,
                      rtc::PacketSocketFactory* socket_factory,
                      webrtc::TurnCustomizer* customizer = nullptr,
-                     RelayPortFactoryInterface* relay_port_factory = nullptr);
-  BasicPortAllocator(
-      rtc::NetworkManager* network_manager,
-      std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory);
+                     RelayPortFactoryInterface* relay_port_factory = nullptr,
+                     const webrtc::FieldTrialsView* field_trials = nullptr);
   BasicPortAllocator(
       rtc::NetworkManager* network_manager,
       std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory,
-      const ServerAddresses& stun_servers);
+      const webrtc::FieldTrialsView* field_trials = nullptr);
+  BasicPortAllocator(
+      rtc::NetworkManager* network_manager,
+      std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory,
+      const ServerAddresses& stun_servers,
+      const webrtc::FieldTrialsView* field_trials = nullptr);
   BasicPortAllocator(rtc::NetworkManager* network_manager,
                      rtc::PacketSocketFactory* socket_factory,
-                     const ServerAddresses& stun_servers);
+                     const ServerAddresses& stun_servers,
+                     const webrtc::FieldTrialsView* field_trials = nullptr);
   ~BasicPortAllocator() override;
 
   // Set to kDefaultNetworkIgnoreMask by default.
@@ -84,21 +88,22 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
 
   void SetVpnList(const std::vector<rtc::NetworkMask>& vpn_list) override;
 
-  const webrtc::FieldTrialsView* field_trials() const { return field_trials_; }
+  const webrtc::FieldTrialsView* field_trials() const {
+    return field_trials_.get();
+  }
 
  private:
   void OnIceRegathering(PortAllocatorSession* session,
                         IceRegatheringReason reason);
 
-  // This function makes sure that relay_port_factory_ and field_trials_ is set
-  // properly.
-  void Init(RelayPortFactoryInterface* relay_port_factory,
-            const webrtc::FieldTrialsView* field_trials);
+  // This function makes sure that relay_port_factory_ is set properly.
+  void Init(RelayPortFactoryInterface* relay_port_factory);
 
   bool MdnsObfuscationEnabled() const override;
 
-  const webrtc::FieldTrialsView* field_trials_;
-  std::unique_ptr<webrtc::FieldTrialsView> owned_field_trials_;
+  webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
+                             webrtc::FieldTrialBasedConfig>
+      field_trials_;
   rtc::NetworkManager* network_manager_;
   const webrtc::AlwaysValidPointerNoDefault<rtc::PacketSocketFactory>
       socket_factory_;
@@ -163,6 +168,9 @@ class RTC_EXPORT BasicPortAllocatorSession : public PortAllocatorSession {
   void SetStunKeepaliveIntervalForReadyPorts(
       const absl::optional<int>& stun_keepalive_interval) override;
   void PruneAllPorts() override;
+  static std::vector<const rtc::Network*> SelectIPv6Networks(
+      std::vector<const rtc::Network*>& all_ipv6_networks,
+      int max_ipv6_networks);
 
  protected:
   void UpdateIceParametersInternal() override;

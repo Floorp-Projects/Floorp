@@ -212,9 +212,11 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
                                                        network_thread());
   }
   if (!dependencies.allocator) {
+    const FieldTrialsView* trials =
+        dependencies.trials ? dependencies.trials.get() : &field_trials();
     dependencies.allocator = std::make_unique<cricket::BasicPortAllocator>(
         context_->default_network_manager(), context_->default_socket_factory(),
-        configuration.turn_customizer);
+        configuration.turn_customizer, /*relay_port_factory=*/nullptr, trials);
     dependencies.allocator->SetPortRange(
         configuration.port_allocator_config.min_port,
         configuration.port_allocator_config.max_port);

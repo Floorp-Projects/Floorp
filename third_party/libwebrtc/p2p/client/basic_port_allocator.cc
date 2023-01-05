@@ -31,8 +31,10 @@
 #include "p2p/base/turn_port.h"
 #include "p2p/base/udp_port.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/network_constants.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
@@ -152,6 +154,21 @@ std::string NetworksToString(const std::vector<const rtc::Network*>& networks) {
   return ost.Release();
 }
 
+bool IsDiversifyIpv6InterfacesEnabled(
+    const webrtc::FieldTrialsView* field_trials) {
+  // webrtc:14334: Improve IPv6 network resolution and candidate creation
+  if (field_trials &&
+      field_trials->IsEnabled("WebRTC-IPv6NetworkResolutionFixes")) {
+    webrtc::FieldTrialParameter<bool> diversify_ipv6_interfaces(
+        "DiversifyIpv6Interfaces", false);
+    webrtc::ParseFieldTrial(
+        {&diversify_ipv6_interfaces},
+        field_trials->Lookup("WebRTC-IPv6NetworkResolutionFixes"));
+    return diversify_ipv6_interfaces;
+  }
+  return false;
+}
+
 }  // namespace
 
 const uint32_t DISABLE_ALL_PHASES =
@@ -163,9 +180,12 @@ BasicPortAllocator::BasicPortAllocator(
     rtc::NetworkManager* network_manager,
     rtc::PacketSocketFactory* socket_factory,
     webrtc::TurnCustomizer* customizer,
-    RelayPortFactoryInterface* relay_port_factory)
-    : network_manager_(network_manager), socket_factory_(socket_factory) {
-  Init(relay_port_factory, nullptr);
+    RelayPortFactoryInterface* relay_port_factory,
+    const webrtc::FieldTrialsView* field_trials)
+    : field_trials_(field_trials),
+      network_manager_(network_manager),
+      socket_factory_(socket_factory) {
+  Init(relay_port_factory);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
   RTC_CHECK(socket_factory_ != nullptr);
@@ -175,10 +195,12 @@ BasicPortAllocator::BasicPortAllocator(
 
 BasicPortAllocator::BasicPortAllocator(
     rtc::NetworkManager* network_manager,
-    std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory)
-    : network_manager_(network_manager),
+    std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory,
+    const webrtc::FieldTrialsView* field_trials)
+    : field_trials_(field_trials),
+      network_manager_(network_manager),
       socket_factory_(std::move(owned_socket_factory)) {
-  Init(nullptr, nullptr);
+  Init(nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
   RTC_CHECK(socket_factory_ != nullptr);
@@ -187,10 +209,12 @@ BasicPortAllocator::BasicPortAllocator(
 BasicPortAllocator::BasicPortAllocator(
     rtc::NetworkManager* network_manager,
     std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory,
-    const ServerAddresses& stun_servers)
-    : network_manager_(network_manager),
+    const ServerAddresses& stun_servers,
+    const webrtc::FieldTrialsView* field_trials)
+    : field_trials_(field_trials),
+      network_manager_(network_manager),
       socket_factory_(std::move(owned_socket_factory)) {
-  Init(nullptr, nullptr);
+  Init(nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
   RTC_CHECK(socket_factory_ != nullptr);
@@ -198,11 +222,15 @@ BasicPortAllocator::BasicPortAllocator(
                    webrtc::NO_PRUNE, nullptr);
 }
 
-BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager,
-                                       rtc::PacketSocketFactory* socket_factory,
-                                       const ServerAddresses& stun_servers)
-    : network_manager_(network_manager), socket_factory_(socket_factory) {
-  Init(nullptr, nullptr);
+BasicPortAllocator::BasicPortAllocator(
+    rtc::NetworkManager* network_manager,
+    rtc::PacketSocketFactory* socket_factory,
+    const ServerAddresses& stun_servers,
+    const webrtc::FieldTrialsView* field_trials)
+    : field_trials_(field_trials),
+      network_manager_(network_manager),
+      socket_factory_(socket_factory) {
+  Init(nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
   RTC_CHECK(socket_factory_ != nullptr);
@@ -278,20 +306,12 @@ void BasicPortAllocator::AddTurnServer(const RelayServerConfig& turn_server) {
                    turn_port_prune_policy(), turn_customizer());
 }
 
-void BasicPortAllocator::Init(RelayPortFactoryInterface* relay_port_factory,
-                              const webrtc::FieldTrialsView* field_trials) {
+void BasicPortAllocator::Init(RelayPortFactoryInterface* relay_port_factory) {
   if (relay_port_factory != nullptr) {
     relay_port_factory_ = relay_port_factory;
   } else {
     default_relay_port_factory_.reset(new TurnPortFactory());
     relay_port_factory_ = default_relay_port_factory_.get();
-  }
-
-  if (field_trials != nullptr) {
-    field_trials_ = field_trials;
-  } else {
-    owned_field_trials_ = std::make_unique<webrtc::FieldTrialBasedConfig>();
-    field_trials_ = owned_field_trials_.get();
   }
 }
 
@@ -795,19 +815,73 @@ std::vector<const rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
   // hard to define what that means though; it's not just "lowest cost".
   // Alternatively, we could just focus on making our ICE pinging logic smarter
   // such that this filtering isn't necessary in the first place.
-  int ipv6_networks = 0;
-  for (auto it = networks.begin(); it != networks.end();) {
-    if ((*it)->prefix().family() == AF_INET6) {
-      if (ipv6_networks >= allocator_->max_ipv6_networks()) {
+  const webrtc::FieldTrialsView* field_trials = allocator_->field_trials();
+  if (IsDiversifyIpv6InterfacesEnabled(field_trials)) {
+    std::vector<const rtc::Network*> ipv6_networks;
+    for (auto it = networks.begin(); it != networks.end();) {
+      if ((*it)->prefix().family() == AF_INET6) {
+        ipv6_networks.push_back(*it);
         it = networks.erase(it);
         continue;
-      } else {
-        ++ipv6_networks;
       }
+      ++it;
     }
-    ++it;
+    ipv6_networks =
+        SelectIPv6Networks(ipv6_networks, allocator_->max_ipv6_networks());
+    networks.insert(networks.end(), ipv6_networks.begin(), ipv6_networks.end());
+  } else {
+    int ipv6_networks = 0;
+    for (auto it = networks.begin(); it != networks.end();) {
+      if ((*it)->prefix().family() == AF_INET6) {
+        if (ipv6_networks >= allocator_->max_ipv6_networks()) {
+          it = networks.erase(it);
+          continue;
+        } else {
+          ++ipv6_networks;
+        }
+      }
+      ++it;
+    }
   }
   return networks;
+}
+
+std::vector<const rtc::Network*> BasicPortAllocatorSession::SelectIPv6Networks(
+    std::vector<const rtc::Network*>& all_ipv6_networks,
+    int max_ipv6_networks) {
+  if (static_cast<int>(all_ipv6_networks.size()) <= max_ipv6_networks) {
+    return all_ipv6_networks;
+  }
+  // Adapter types are placed in priority order. Cellular type is an alias of
+  // cellular, 2G..5G types.
+  std::vector<rtc::AdapterType> adapter_types = {
+      rtc::ADAPTER_TYPE_ETHERNET, rtc::ADAPTER_TYPE_LOOPBACK,
+      rtc::ADAPTER_TYPE_WIFI,     rtc::ADAPTER_TYPE_CELLULAR,
+      rtc::ADAPTER_TYPE_VPN,      rtc::ADAPTER_TYPE_UNKNOWN,
+      rtc::ADAPTER_TYPE_ANY};
+  int adapter_types_cnt = adapter_types.size();
+  std::vector<const rtc::Network*> selected_networks;
+  int adapter_types_pos = 0;
+
+  while (static_cast<int>(selected_networks.size()) < max_ipv6_networks &&
+         adapter_types_pos < adapter_types_cnt * max_ipv6_networks) {
+    int network_pos = 0;
+    while (network_pos < static_cast<int>(all_ipv6_networks.size())) {
+      if (adapter_types[adapter_types_pos % adapter_types_cnt] ==
+              all_ipv6_networks[network_pos]->type() ||
+          (adapter_types[adapter_types_pos % adapter_types_cnt] ==
+               rtc::ADAPTER_TYPE_CELLULAR &&
+           all_ipv6_networks[network_pos]->IsCellular())) {
+        selected_networks.push_back(all_ipv6_networks[network_pos]);
+        all_ipv6_networks.erase(all_ipv6_networks.begin() + network_pos);
+        break;
+      }
+      network_pos++;
+    }
+    adapter_types_pos++;
+  }
+
+  return selected_networks;
 }
 
 // For each network, see if we have a sequence that covers it already.  If not,
