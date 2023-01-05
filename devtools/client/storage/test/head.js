@@ -151,58 +151,21 @@ async function openTabAndSetupStorage(url, options = {}) {
 }
 
 /**
- * Open the toolbox, with the storage tool visible.
+ * Open a toolbox with the storage panel opened by default
+ * for a given Web Extension.
  *
- * @param tab {XULTab} Optional, the tab for the toolbox; defaults to selected tab
- * @param commands {Object} Optional, the commands for the toolbox; defaults to a tab commands
- * @param hostType {Toolbox.HostType} Optional, type of host that will host the toolbox
- *
- * @return {Promise} a promise that resolves when the storage inspector is ready
+ * @param {String} addonId
+ *        The ID of the Web Extension to debug.
  */
-var openStoragePanel = async function({ tab, commands, hostType } = {}) {
-  info("Opening the storage inspector");
-  if (!commands) {
-    commands = await LocalTabCommandsFactory.createCommandsForTab(
-      tab || gBrowser.selectedTab
-    );
-  }
-
-  let storage, toolbox;
-
-  // Checking if the toolbox and the storage are already loaded
-  // The storage-updated event should only be waited for if the storage
-  // isn't loaded yet
-  toolbox = gDevTools.getToolboxForCommands(commands);
-  if (toolbox) {
-    storage = toolbox.getPanel("storage");
-    if (storage) {
-      gPanelWindow = storage.panelWindow;
-      gUI = storage.UI;
-      gToolbox = toolbox;
-      info("Toolbox and storage already open");
-
-      return {
-        toolbox,
-        storage,
-      };
-    }
-  }
-
-  info("Opening the toolbox");
-  toolbox = await gDevTools.showToolbox(commands, {
+var openStoragePanelForAddon = async function(addonId) {
+  const toolbox = await gDevTools.showToolboxForWebExtension(addonId, {
     toolId: "storage",
-    hostType,
   });
-  storage = toolbox.getPanel("storage");
-  gPanelWindow = storage.panelWindow;
-  gUI = storage.UI;
-  gToolbox = toolbox;
 
-  // The table animation flash causes some timeouts on Linux debug tests,
-  // so we disable it
-  gUI.animationsEnabled = false;
+  info("Making sure that the toolbox's frame is focused");
+  await SimpleTest.promiseFocus(toolbox.win);
 
-  await waitForToolboxFrameFocus(toolbox);
+  const storage = _setupStoragePanelForTest(toolbox);
 
   return {
     toolbox,
@@ -211,18 +174,46 @@ var openStoragePanel = async function({ tab, commands, hostType } = {}) {
 };
 
 /**
- * Wait for the toolbox frame to receive focus after it loads
+ * Open the toolbox, with the storage tool visible.
+ *
+ * @param tab {XULTab} Optional, the tab for the toolbox; defaults to selected tab
+ * @param commands {Object} Optional, the commands for the toolbox; defaults to a tab commands
+ * @param hostType {Toolbox.HostType} Optional, type of host that will host the toolbox
+ *
+ * @return {Promise} a promise that resolves when the storage inspector is ready
+ */
+var openStoragePanel = async function({ tab, hostType } = {}) {
+  const toolbox = await openToolboxForTab(
+    tab || gBrowser.selectedTab,
+    "storage",
+    hostType
+  );
+
+  const storage = _setupStoragePanelForTest(toolbox);
+
+  return {
+    toolbox,
+    storage,
+  };
+};
+
+/**
+ * Set global variables needed in helper functions
  *
  * @param toolbox {Toolbox}
- *
- * @return a promise that resolves when focus has been received
+ * @return {StoragePanel}
  */
-function waitForToolboxFrameFocus(toolbox) {
-  info("Making sure that the toolbox's frame is focused");
+function _setupStoragePanelForTest(toolbox) {
+  const storage = toolbox.getPanel("storage");
+  gPanelWindow = storage.panelWindow;
+  gUI = storage.UI;
+  gToolbox = toolbox;
 
-  return new Promise(resolve => {
-    waitForFocus(resolve, toolbox.win);
-  });
+  // The table animation flash causes some timeouts on Linux debug tests,
+  // so we disable it
+  gUI.animationsEnabled = false;
+
+  return storage;
 }
 
 /**
