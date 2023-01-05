@@ -33,6 +33,7 @@
       # Android
       'Android32 (M Nexus5X)': 'android_release_bot_arm',
       'Android32 (M Nexus5X)(dbg)': 'android_debug_static_bot_arm',
+      'Android32 (M Nexus5X)(reclient)': 'android_release_bot_arm_reclient',
       'Android32 (more configs)': {
         'bwe_test_logging': 'bwe_test_logging_android_arm',
         'dummy_audio_file_devices_no_protobuf':
@@ -78,6 +79,7 @@
       'Mac64 Builder': 'pure_release_bot_x64',
       'Mac64 Debug': 'debug_bot_x64',
       'Mac64 Release': 'release_bot_x64',
+      'Mac64 Release (reclient)': 'release_bot_x64_reclient',
       'MacARM64 M1 Release': 'release_bot_arm64',
       'MacArm64 Builder': 'release_bot_arm64',
 
@@ -94,10 +96,12 @@
       'Win64 ASan': 'win_asan_clang_release_bot_x64',
       'Win64 Debug (Clang)': 'win_clang_debug_bot_x64',
       'Win64 Release (Clang)': 'win_clang_release_bot_x64',
+      'Win64 Release (Clang)(reclient)': 'win_clang_release_bot_x64_reclient',
 
       # iOS
       'iOS64 Debug': 'ios_debug_bot_arm64',
       'iOS64 Release': 'ios_release_bot_arm64',
+      'iOS64 Release (reclient)': 'ios_release_bot_arm64_reclient',
       'iOS64 Sim Debug (iOS 12)': 'ios_debug_bot_x64',
       'iOS64 Sim Debug (iOS 13)': 'ios_debug_bot_x64',
       'iOS64 Sim Debug (iOS 14)': 'ios_debug_bot_x64',
@@ -234,6 +238,7 @@
     'android_pure_release_bot_arm64': ['android', 'pure_release_bot', 'arm64'],
     'android_release_bot_arm': ['android', 'release_bot', 'arm'],
     'android_release_bot_arm64': ['android', 'release_bot', 'arm64'],
+    'android_release_bot_arm_reclient': ['android', 'release_bot_reclient', 'arm'],
     'android_release_bot_x64': ['android', 'release_bot', 'x64'],
     'android_release_bot_x86': ['android', 'release_bot', 'x86'],
     'asan_lsan_clang_release_bot_x64':
@@ -271,8 +276,12 @@
       'ios', 'release_bot', 'arm64', 'ios_code_signing_identity_description',
       'xctest'
     ],
-    'ios_release_bot_arm64':
-    ['ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'xctest'],
+    'ios_release_bot_arm64': [
+      'ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'xctest',
+    ],
+    'ios_release_bot_arm64_reclient': [
+      'ios', 'release_bot_reclient', 'arm64', 'no_ios_code_signing', 'xctest',
+    ],
     'libfuzzer_asan_release_bot_x64': [
       'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
       'pure_release_bot', 'x64'
@@ -339,6 +348,12 @@
       'clang',
       'openh264',
       'release_bot',
+      'x64',
+    ],
+    'win_clang_release_bot_x64_reclient': [
+      'clang',
+      'openh264',
+      'release_bot_reclient',
       'x64',
     ],
     'win_clang_release_bot_x86': [
