@@ -289,21 +289,25 @@ bool ModuleNamespaceObject::isInstance(HandleValue value) {
 
 /* static */
 ModuleNamespaceObject* ModuleNamespaceObject::create(
-    JSContext* cx, Handle<ModuleObject*> module, Handle<ArrayObject*> exports,
-    UniquePtr<IndirectBindingMap> bindings) {
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<UniquePtr<ExportNameVector>> exports,
+    MutableHandle<UniquePtr<IndirectBindingMap>> bindings) {
   RootedValue priv(cx, ObjectValue(*module));
   ProxyOptions options;
   options.setLazyProto(true);
-  Rooted<UniquePtr<IndirectBindingMap>> rootedBindings(cx, std::move(bindings));
+
   RootedObject object(
       cx, NewProxyObject(cx, &proxyHandler, priv, nullptr, options));
   if (!object) {
     return nullptr;
   }
 
-  SetProxyReservedSlot(object, ExportsSlot, ObjectValue(*exports));
+  SetProxyReservedSlot(object, ExportsSlot,
+                       PrivateValue(exports.get().release()));
+  AddCellMemory(object, sizeof(ExportNameVector), MemoryUse::ModuleExports);
+
   SetProxyReservedSlot(object, BindingsSlot,
-                       PrivateValue(rootedBindings.release()));
+                       PrivateValue(bindings.get().release()));
   AddCellMemory(object, sizeof(IndirectBindingMap),
                 MemoryUse::ModuleBindingMap);
 
@@ -314,8 +318,17 @@ ModuleObject& ModuleNamespaceObject::module() {
   return GetProxyPrivate(this).toObject().as<ModuleObject>();
 }
 
-ArrayObject& ModuleNamespaceObject::exports() {
-  return GetProxyReservedSlot(this, ExportsSlot).toObject().as<ArrayObject>();
+const ExportNameVector& ModuleNamespaceObject::exports() const {
+  Value value = GetProxyReservedSlot(this, ExportsSlot);
+  auto* exports = static_cast<ExportNameVector*>(value.toPrivate());
+  MOZ_ASSERT(exports);
+  return *exports;
+}
+
+ExportNameVector& ModuleNamespaceObject::mutableExports() {
+  // Get a non-const reference for tracing/destruction. Do not actually mutate
+  // this vector!  This would be incorrect without adding barriers.
+  return const_cast<ExportNameVector&>(exports());
 }
 
 IndirectBindingMap& ModuleNamespaceObject::bindings() {
@@ -323,6 +336,11 @@ IndirectBindingMap& ModuleNamespaceObject::bindings() {
   auto* bindings = static_cast<IndirectBindingMap*>(value.toPrivate());
   MOZ_ASSERT(bindings);
   return *bindings;
+}
+
+bool ModuleNamespaceObject::hasExports() const {
+  // Exports may not be present if we hit OOM in initialization.
+  return !GetProxyReservedSlot(this, ExportsSlot).isUndefined();
 }
 
 bool ModuleNamespaceObject::hasBindings() const {
@@ -556,21 +574,14 @@ bool ModuleNamespaceObject::ProxyHandler::delete_(
 bool ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(
     JSContext* cx, HandleObject proxy, MutableHandleIdVector props) const {
   Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
-  Rooted<ArrayObject*> exports(cx, &ns->exports());
-  uint32_t count = exports->length();
+  uint32_t count = ns->exports().length();
   if (!props.reserve(props.length() + count + 1)) {
     return false;
   }
 
-  Rooted<ValueVector> names(cx, ValueVector(cx));
-  if (!names.resize(count) || !GetElements(cx, exports, count, names.begin())) {
-    return false;
+  for (JSAtom* atom : ns->exports()) {
+    props.infallibleAppend(AtomToId(atom));
   }
-
-  for (uint32_t i = 0; i < count; i++) {
-    props.infallibleAppend(AtomToId(&names[i].toString()->asAtom()));
-  }
-
   props.infallibleAppend(
       PropertyKey::Symbol(cx->wellKnownSymbols().toStringTag));
 
@@ -581,6 +592,13 @@ void ModuleNamespaceObject::ProxyHandler::trace(JSTracer* trc,
                                                 JSObject* proxy) const {
   auto& self = proxy->as<ModuleNamespaceObject>();
 
+  if (self.hasExports()) {
+    for (JSAtom*& name : self.mutableExports()) {
+      TraceManuallyBarrieredEdge(trc, &name,
+                                 "ModuleNamespaceObject export name");
+    }
+  }
+
   if (self.hasBindings()) {
     self.bindings().trace(trc);
   }
@@ -589,6 +607,10 @@ void ModuleNamespaceObject::ProxyHandler::trace(JSTracer* trc,
 void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
                                                    JSObject* proxy) const {
   auto& self = proxy->as<ModuleNamespaceObject>();
+
+  if (self.hasExports()) {
+    gcx->delete_(proxy, &self.mutableExports(), MemoryUse::ModuleExports);
+  }
 
   if (self.hasBindings()) {
     gcx->delete_(proxy, &self.bindings(), MemoryUse::ModuleBindingMap);
@@ -1239,19 +1261,18 @@ void ModuleObject::onTopLevelEvaluationFinished(ModuleObject* module) {
 }
 
 /* static */
-ModuleNamespaceObject* ModuleObject::createNamespace(JSContext* cx,
-                                                     Handle<ModuleObject*> self,
-                                                     HandleObject exports) {
+ModuleNamespaceObject* ModuleObject::createNamespace(
+    JSContext* cx, Handle<ModuleObject*> self,
+    MutableHandle<UniquePtr<ExportNameVector>> exports) {
   MOZ_ASSERT(!self->namespace_());
-  MOZ_ASSERT(exports->is<ArrayObject>());
 
-  auto bindings = cx->make_unique<IndirectBindingMap>();
+  Rooted<UniquePtr<IndirectBindingMap>> bindings(cx);
+  bindings = cx->make_unique<IndirectBindingMap>();
   if (!bindings) {
     return nullptr;
   }
 
-  auto* ns = ModuleNamespaceObject::create(cx, self, exports.as<ArrayObject>(),
-                                           std::move(bindings));
+  auto* ns = ModuleNamespaceObject::create(cx, self, exports, &bindings);
   if (!ns) {
     return nullptr;
   }
