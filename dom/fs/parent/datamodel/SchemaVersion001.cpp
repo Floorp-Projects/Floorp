@@ -58,6 +58,19 @@ nsresult CreateFiles(ResultConnection& aConn) {
       ";"_ns);
 }
 
+nsresult CreateUsages(ResultConnection& aConn) {
+  return aConn->ExecuteSimpleSQL(
+      "CREATE TABLE IF NOT EXISTS Usages ( "
+      "handle BLOB PRIMARY KEY, "
+      "usage INTEGER NOT NULL DEFAULT 0, "
+      "tracked BOOLEAN NOT NULL DEFAULT 0 CHECK (tracked IN (0, 1)), "
+      "CONSTRAINT handles_are_files "
+      "FOREIGN KEY (handle) "
+      "REFERENCES Files (handle) "
+      "ON DELETE CASCADE ) "
+      ";"_ns);
+}
+
 class KeepForeignKeysOffUntilScopeExit final {
  public:
   explicit KeepForeignKeysOffUntilScopeExit(const ResultConnection& aConn)
@@ -120,15 +133,6 @@ nsresult CreateRootEntry(ResultConnection& aConn, const Origin& aOrigin) {
   }
 
   return transaction.Commit();
-}
-
-nsresult CreateUsages(ResultConnection& aConn) {
-  return aConn->ExecuteSimpleSQL(
-      "CREATE TABLE IF NOT EXISTS Usages ( "
-      "usage INTEGER NOT NULL, "
-      "aggregated BOOLEAN DEFAULT FALSE "
-      ") "
-      ";"_ns);
 }
 
 Result<bool, QMResult> CheckIfEmpty(ResultConnection& aConn) {
