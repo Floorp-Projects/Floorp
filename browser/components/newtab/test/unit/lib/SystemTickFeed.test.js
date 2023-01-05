@@ -1,5 +1,5 @@
 import { SYSTEM_TICK_INTERVAL, SystemTickFeed } from "lib/SystemTickFeed.jsm";
-import { actionTypes as at } from "common/Actions.jsm";
+import { actionTypes as at } from "common/Actions.sys.mjs";
 
 describe("System Tick Feed", () => {
   let instance;

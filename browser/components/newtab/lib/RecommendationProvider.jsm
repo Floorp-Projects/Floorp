@@ -27,8 +27,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm",
 });
 
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
+const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Actions.sys.mjs"
 );
 const PREF_PERSONALIZATION_MODEL_KEYS =
   "discoverystream.personalization.modelKeys";

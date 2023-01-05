@@ -12,7 +12,7 @@ const {
   Search,
   ASRouter,
 } = reducers;
-import { actionTypes as at } from "common/Actions.jsm";
+import { actionTypes as at } from "common/Actions.sys.mjs";
 
 describe("Reducers", () => {
   describe("App", () => {

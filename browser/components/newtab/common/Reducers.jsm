@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
+const { actionTypes: at } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Actions.sys.mjs"
 );
-const { Dedupe } = ChromeUtils.import(
-  "resource://activity-stream/common/Dedupe.jsm"
+const { Dedupe } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Dedupe.sys.mjs"
 );
 
 const TOP_SITES_DEFAULT_ROWS = 1;

@@ -1,5 +1,5 @@
 import { combineReducers, createStore } from "redux";
-import { actionTypes as at } from "common/Actions.jsm";
+import { actionTypes as at } from "common/Actions.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 import { reducers } from "common/Reducers.jsm";
 import { selectLayoutRender } from "content-src/lib/selectLayoutRender";

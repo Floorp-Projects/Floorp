@@ -7,7 +7,10 @@ import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
 import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "common/Actions.sys.mjs";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { connect, useSelector } from "react-redux";
 const WIDGET_IDS = {

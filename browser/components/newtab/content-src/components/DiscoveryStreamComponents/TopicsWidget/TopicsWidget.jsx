@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import { actionCreators as ac } from "common/Actions.jsm";
+import { actionCreators as ac } from "common/Actions.sys.mjs";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import { connect } from "react-redux";

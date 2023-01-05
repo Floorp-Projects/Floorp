@@ -9,7 +9,9 @@ const EXPORTED_SYMBOLS = ["ASRouterParent", "ASRouterTabs"];
 
 const {
   MESSAGE_TYPE_HASH: { BLOCK_MESSAGE_BY_ID },
-} = ChromeUtils.import("resource://activity-stream/common/ActorConstants.jsm");
+} = ChromeUtils.importESModule(
+  "resource://activity-stream/common/ActorConstants.sys.mjs"
+);
 const { ASRouterNewTabHook } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterNewTabHook.jsm"
 );

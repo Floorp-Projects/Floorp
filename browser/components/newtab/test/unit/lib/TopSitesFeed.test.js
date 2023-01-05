@@ -1,6 +1,9 @@
 "use strict";
 
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "common/Actions.sys.mjs";
 import { FakePrefs, GlobalOverrider } from "test/unit/utils";
 import {
   insertPinned,

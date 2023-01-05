@@ -6,7 +6,10 @@ import {
   TopicsWidget,
 } from "content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "common/Actions.sys.mjs";
 import { mount } from "enzyme";
 import React from "react";
 

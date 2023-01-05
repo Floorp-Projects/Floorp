@@ -7,8 +7,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
+const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Actions.sys.mjs"
 );
 const { TippyTopProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/TippyTopProvider.jsm"
@@ -16,8 +16,8 @@ const { TippyTopProvider } = ChromeUtils.import(
 const { insertPinned, TOP_SITES_MAX_SITES_PER_ROW } = ChromeUtils.import(
   "resource://activity-stream/common/Reducers.jsm"
 );
-const { Dedupe } = ChromeUtils.import(
-  "resource://activity-stream/common/Dedupe.jsm"
+const { Dedupe } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Dedupe.sys.mjs"
 );
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"

@@ -1,4 +1,7 @@
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "common/Actions.sys.mjs";
 import { addNumberReducer, GlobalOverrider } from "test/unit/utils";
 import {
   EARLY_QUEUED_ACTIONS,

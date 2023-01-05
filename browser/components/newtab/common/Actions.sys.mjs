@@ -3,18 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
-const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
-const PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
-const UI_CODE = 1;
-const BACKGROUND_PROCESS = 2;
+export const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
+export const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
+export const PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
+export const UI_CODE = 1;
+export const BACKGROUND_PROCESS = 2;
 
 /**
  * globalImportContext - Are we in UI code (i.e. react, a dom) or some kind of background process?
  *                       Use this in action creators if you need different logic
  *                       for ui/background processes.
  */
-const globalImportContext =
+export const globalImportContext =
   typeof Window === "undefined" ? BACKGROUND_PROCESS : UI_CODE;
 
 // Create an object that avoids accidental differing key/value pairs:
@@ -22,7 +22,8 @@ const globalImportContext =
 //   INIT: "INIT",
 //   UNINIT: "UNINIT"
 // }
-const actionTypes = {};
+export const actionTypes = {};
+
 for (const type of [
   "ABOUT_SPONSORED_TOP_SITES",
   "ADDONS_INFO_REQUEST",
@@ -385,7 +386,7 @@ function WebExtEvent(type, data, importContext = globalImportContext) {
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
-const actionCreators = {
+export const actionCreators = {
   BroadcastToContent,
   UserEvent,
   DiscoveryStreamUserEvent,
@@ -403,7 +404,7 @@ const actionCreators = {
 };
 
 // These are helpers to test for certain kinds of actions
-const actionUtils = {
+export const actionUtils = {
   isSendToMain(action) {
     if (!action.meta) {
       return false;
@@ -454,15 +455,3 @@ const actionUtils = {
   },
   _RouteMessage,
 };
-
-const EXPORTED_SYMBOLS = [
-  "actionTypes",
-  "actionCreators",
-  "actionUtils",
-  "globalImportContext",
-  "UI_CODE",
-  "BACKGROUND_PROCESS",
-  "MAIN_MESSAGE_TYPE",
-  "CONTENT_MESSAGE_TYPE",
-  "PRELOAD_MESSAGE_TYPE",
-];

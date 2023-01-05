@@ -2,8 +2,1513 @@
 var NewtabRenderUtils;
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	// The require scope
-/******/ 	var __webpack_require__ = {};
+/******/ 	var __webpack_modules__ = ([
+/* 0 */,
+/* 1 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "MAIN_MESSAGE_TYPE": () => (/* binding */ MAIN_MESSAGE_TYPE),
+/* harmony export */   "CONTENT_MESSAGE_TYPE": () => (/* binding */ CONTENT_MESSAGE_TYPE),
+/* harmony export */   "PRELOAD_MESSAGE_TYPE": () => (/* binding */ PRELOAD_MESSAGE_TYPE),
+/* harmony export */   "UI_CODE": () => (/* binding */ UI_CODE),
+/* harmony export */   "BACKGROUND_PROCESS": () => (/* binding */ BACKGROUND_PROCESS),
+/* harmony export */   "globalImportContext": () => (/* binding */ globalImportContext),
+/* harmony export */   "actionTypes": () => (/* binding */ actionTypes),
+/* harmony export */   "actionCreators": () => (/* binding */ actionCreators),
+/* harmony export */   "actionUtils": () => (/* binding */ actionUtils)
+/* harmony export */ });
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
+const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
+const PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
+const UI_CODE = 1;
+const BACKGROUND_PROCESS = 2;
+
+/**
+ * globalImportContext - Are we in UI code (i.e. react, a dom) or some kind of background process?
+ *                       Use this in action creators if you need different logic
+ *                       for ui/background processes.
+ */
+const globalImportContext =
+  typeof Window === "undefined" ? BACKGROUND_PROCESS : UI_CODE;
+
+// Create an object that avoids accidental differing key/value pairs:
+// {
+//   INIT: "INIT",
+//   UNINIT: "UNINIT"
+// }
+const actionTypes = {};
+
+for (const type of [
+  "ABOUT_SPONSORED_TOP_SITES",
+  "ADDONS_INFO_REQUEST",
+  "ADDONS_INFO_RESPONSE",
+  "ARCHIVE_FROM_POCKET",
+  "AS_ROUTER_INITIALIZED",
+  "AS_ROUTER_PREF_CHANGED",
+  "AS_ROUTER_TARGETING_UPDATE",
+  "AS_ROUTER_TELEMETRY_USER_EVENT",
+  "BLOCK_URL",
+  "BOOKMARK_URL",
+  "CLEAR_PREF",
+  "COPY_DOWNLOAD_LINK",
+  "DELETE_BOOKMARK_BY_ID",
+  "DELETE_FROM_POCKET",
+  "DELETE_HISTORY_URL",
+  "DIALOG_CANCEL",
+  "DIALOG_OPEN",
+  "DISABLE_SEARCH",
+  "DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE",
+  "DISCOVERY_STREAM_CONFIG_CHANGE",
+  "DISCOVERY_STREAM_CONFIG_RESET",
+  "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS",
+  "DISCOVERY_STREAM_CONFIG_SETUP",
+  "DISCOVERY_STREAM_CONFIG_SET_VALUE",
+  "DISCOVERY_STREAM_DEV_EXPIRE_CACHE",
+  "DISCOVERY_STREAM_DEV_IDLE_DAILY",
+  "DISCOVERY_STREAM_DEV_SYNC_RS",
+  "DISCOVERY_STREAM_DEV_SYSTEM_TICK",
+  "DISCOVERY_STREAM_EXPERIMENT_DATA",
+  "DISCOVERY_STREAM_FEEDS_UPDATE",
+  "DISCOVERY_STREAM_FEED_UPDATE",
+  "DISCOVERY_STREAM_IMPRESSION_STATS",
+  "DISCOVERY_STREAM_LAYOUT_RESET",
+  "DISCOVERY_STREAM_LAYOUT_UPDATE",
+  "DISCOVERY_STREAM_LINK_BLOCKED",
+  "DISCOVERY_STREAM_LOADED_CONTENT",
+  "DISCOVERY_STREAM_PERSONALIZATION_INIT",
+  "DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED",
+  "DISCOVERY_STREAM_PERSONALIZATION_TOGGLE",
+  "DISCOVERY_STREAM_POCKET_STATE_INIT",
+  "DISCOVERY_STREAM_POCKET_STATE_SET",
+  "DISCOVERY_STREAM_PREFS_SETUP",
+  "DISCOVERY_STREAM_RECENT_SAVES",
+  "DISCOVERY_STREAM_RETRY_FEED",
+  "DISCOVERY_STREAM_SPOCS_CAPS",
+  "DISCOVERY_STREAM_SPOCS_ENDPOINT",
+  "DISCOVERY_STREAM_SPOCS_PLACEMENTS",
+  "DISCOVERY_STREAM_SPOCS_UPDATE",
+  "DISCOVERY_STREAM_SPOC_BLOCKED",
+  "DISCOVERY_STREAM_SPOC_IMPRESSION",
+  "DISCOVERY_STREAM_USER_EVENT",
+  "DOWNLOAD_CHANGED",
+  "FAKE_FOCUS_SEARCH",
+  "FILL_SEARCH_TERM",
+  "HANDOFF_SEARCH_TO_AWESOMEBAR",
+  "HIDE_PRIVACY_INFO",
+  "INIT",
+  "NEW_TAB_INIT",
+  "NEW_TAB_INITIAL_STATE",
+  "NEW_TAB_LOAD",
+  "NEW_TAB_REHYDRATED",
+  "NEW_TAB_STATE_REQUEST",
+  "NEW_TAB_UNLOAD",
+  "OPEN_DOWNLOAD_FILE",
+  "OPEN_LINK",
+  "OPEN_NEW_WINDOW",
+  "OPEN_PRIVATE_WINDOW",
+  "OPEN_WEBEXT_SETTINGS",
+  "PARTNER_LINK_ATTRIBUTION",
+  "PLACES_BOOKMARKS_REMOVED",
+  "PLACES_BOOKMARK_ADDED",
+  "PLACES_HISTORY_CLEARED",
+  "PLACES_LINKS_CHANGED",
+  "PLACES_LINKS_DELETED",
+  "PLACES_LINK_BLOCKED",
+  "PLACES_SAVED_TO_POCKET",
+  "POCKET_CTA",
+  "POCKET_LINK_DELETED_OR_ARCHIVED",
+  "POCKET_LOGGED_IN",
+  "POCKET_WAITING_FOR_SPOC",
+  "PREFS_INITIAL_VALUES",
+  "PREF_CHANGED",
+  "PREVIEW_REQUEST",
+  "PREVIEW_REQUEST_CANCEL",
+  "PREVIEW_RESPONSE",
+  "REMOVE_DOWNLOAD_FILE",
+  "RICH_ICON_MISSING",
+  "SAVE_SESSION_PERF_DATA",
+  "SAVE_TO_POCKET",
+  "SCREENSHOT_UPDATED",
+  "SECTION_DEREGISTER",
+  "SECTION_DISABLE",
+  "SECTION_ENABLE",
+  "SECTION_MOVE",
+  "SECTION_OPTIONS_CHANGED",
+  "SECTION_REGISTER",
+  "SECTION_UPDATE",
+  "SECTION_UPDATE_CARD",
+  "SETTINGS_CLOSE",
+  "SETTINGS_OPEN",
+  "SET_PREF",
+  "SHOW_DOWNLOAD_FILE",
+  "SHOW_FIREFOX_ACCOUNTS",
+  "SHOW_PRIVACY_INFO",
+  "SHOW_SEARCH",
+  "SKIPPED_SIGNIN",
+  "SNIPPETS_BLOCKLIST_CLEARED",
+  "SNIPPETS_BLOCKLIST_UPDATED",
+  "SNIPPETS_DATA",
+  "SNIPPETS_PREVIEW_MODE",
+  "SNIPPETS_RESET",
+  "SNIPPET_BLOCKED",
+  "SUBMIT_EMAIL",
+  "SUBMIT_SIGNIN",
+  "SYSTEM_TICK",
+  "TELEMETRY_IMPRESSION_STATS",
+  "TELEMETRY_USER_EVENT",
+  "TOP_SITES_CANCEL_EDIT",
+  "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL",
+  "TOP_SITES_EDIT",
+  "TOP_SITES_IMPRESSION_STATS",
+  "TOP_SITES_INSERT",
+  "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL",
+  "TOP_SITES_PIN",
+  "TOP_SITES_PREFS_UPDATED",
+  "TOP_SITES_UNPIN",
+  "TOP_SITES_UPDATED",
+  "TOTAL_BOOKMARKS_REQUEST",
+  "TOTAL_BOOKMARKS_RESPONSE",
+  "UNINIT",
+  "UPDATE_PINNED_SEARCH_SHORTCUTS",
+  "UPDATE_SEARCH_SHORTCUTS",
+  "UPDATE_SECTION_PREFS",
+  "WEBEXT_CLICK",
+  "WEBEXT_DISMISS",
+]) {
+  actionTypes[type] = type;
+}
+
+// Helper function for creating routed actions between content and main
+// Not intended to be used by consumers
+function _RouteMessage(action, options) {
+  const meta = action.meta ? { ...action.meta } : {};
+  if (!options || !options.from || !options.to) {
+    throw new Error(
+      "Routed Messages must have options as the second parameter, and must at least include a .from and .to property."
+    );
+  }
+  // For each of these fields, if they are passed as an option,
+  // add them to the action. If they are not defined, remove them.
+  ["from", "to", "toTarget", "fromTarget", "skipMain", "skipLocal"].forEach(
+    o => {
+      if (typeof options[o] !== "undefined") {
+        meta[o] = options[o];
+      } else if (meta[o]) {
+        delete meta[o];
+      }
+    }
+  );
+  return { ...action, meta };
+}
+
+/**
+ * AlsoToMain - Creates a message that will be dispatched locally and also sent to the Main process.
+ *
+ * @param  {object} action Any redux action (required)
+ * @param  {object} options
+ * @param  {bool}   skipLocal Used by OnlyToMain to skip the main reducer
+ * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
+ * @return {object} An action with added .meta properties
+ */
+function AlsoToMain(action, fromTarget, skipLocal) {
+  return _RouteMessage(action, {
+    from: CONTENT_MESSAGE_TYPE,
+    to: MAIN_MESSAGE_TYPE,
+    fromTarget,
+    skipLocal,
+  });
+}
+
+/**
+ * OnlyToMain - Creates a message that will be sent to the Main process and skip the local reducer.
+ *
+ * @param  {object} action Any redux action (required)
+ * @param  {object} options
+ * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
+ * @return {object} An action with added .meta properties
+ */
+function OnlyToMain(action, fromTarget) {
+  return AlsoToMain(action, fromTarget, true);
+}
+
+/**
+ * BroadcastToContent - Creates a message that will be dispatched to main and sent to ALL content processes.
+ *
+ * @param  {object} action Any redux action (required)
+ * @return {object} An action with added .meta properties
+ */
+function BroadcastToContent(action) {
+  return _RouteMessage(action, {
+    from: MAIN_MESSAGE_TYPE,
+    to: CONTENT_MESSAGE_TYPE,
+  });
+}
+
+/**
+ * AlsoToOneContent - Creates a message that will be will be dispatched to the main store
+ *                    and also sent to a particular Content process.
+ *
+ * @param  {object} action Any redux action (required)
+ * @param  {string} target The id of a content port
+ * @param  {bool} skipMain Used by OnlyToOneContent to skip the main process
+ * @return {object} An action with added .meta properties
+ */
+function AlsoToOneContent(action, target, skipMain) {
+  if (!target) {
+    throw new Error(
+      "You must provide a target ID as the second parameter of AlsoToOneContent. If you want to send to all content processes, use BroadcastToContent"
+    );
+  }
+  return _RouteMessage(action, {
+    from: MAIN_MESSAGE_TYPE,
+    to: CONTENT_MESSAGE_TYPE,
+    toTarget: target,
+    skipMain,
+  });
+}
+
+/**
+ * OnlyToOneContent - Creates a message that will be sent to a particular Content process
+ *                    and skip the main reducer.
+ *
+ * @param  {object} action Any redux action (required)
+ * @param  {string} target The id of a content port
+ * @return {object} An action with added .meta properties
+ */
+function OnlyToOneContent(action, target) {
+  return AlsoToOneContent(action, target, true);
+}
+
+/**
+ * AlsoToPreloaded - Creates a message that dispatched to the main reducer and also sent to the preloaded tab.
+ *
+ * @param  {object} action Any redux action (required)
+ * @return {object} An action with added .meta properties
+ */
+function AlsoToPreloaded(action) {
+  return _RouteMessage(action, {
+    from: MAIN_MESSAGE_TYPE,
+    to: PRELOAD_MESSAGE_TYPE,
+  });
+}
+
+/**
+ * UserEvent - A telemetry ping indicating a user action. This should only
+ *                   be sent from the UI during a user session.
+ *
+ * @param  {object} data Fields to include in the ping (source, etc.)
+ * @return {object} An AlsoToMain action
+ */
+function UserEvent(data) {
+  return AlsoToMain({
+    type: actionTypes.TELEMETRY_USER_EVENT,
+    data,
+  });
+}
+
+/**
+ * DiscoveryStreamUserEvent - A telemetry ping indicating a user action from Discovery Stream. This should only
+ *                     be sent from the UI during a user session.
+ *
+ * @param  {object} data Fields to include in the ping (source, etc.)
+ * @return {object} An AlsoToMain action
+ */
+function DiscoveryStreamUserEvent(data) {
+  return AlsoToMain({
+    type: actionTypes.DISCOVERY_STREAM_USER_EVENT,
+    data,
+  });
+}
+
+/**
+ * ASRouterUserEvent - A telemetry ping indicating a user action from AS router. This should only
+ *                     be sent from the UI during a user session.
+ *
+ * @param  {object} data Fields to include in the ping (source, etc.)
+ * @return {object} An AlsoToMain action
+ */
+function ASRouterUserEvent(data) {
+  return AlsoToMain({
+    type: actionTypes.AS_ROUTER_TELEMETRY_USER_EVENT,
+    data,
+  });
+}
+
+/**
+ * ImpressionStats - A telemetry ping indicating an impression stats.
+ *
+ * @param  {object} data Fields to include in the ping
+ * @param  {int} importContext (For testing) Override the import context for testing.
+ * #return {object} An action. For UI code, a AlsoToMain action.
+ */
+function ImpressionStats(data, importContext = globalImportContext) {
+  const action = {
+    type: actionTypes.TELEMETRY_IMPRESSION_STATS,
+    data,
+  };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
+/**
+ * DiscoveryStreamImpressionStats - A telemetry ping indicating an impression stats in Discovery Stream.
+ *
+ * @param  {object} data Fields to include in the ping
+ * @param  {int} importContext (For testing) Override the import context for testing.
+ * #return {object} An action. For UI code, a AlsoToMain action.
+ */
+function DiscoveryStreamImpressionStats(
+  data,
+  importContext = globalImportContext
+) {
+  const action = {
+    type: actionTypes.DISCOVERY_STREAM_IMPRESSION_STATS,
+    data,
+  };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
+/**
+ * DiscoveryStreamLoadedContent - A telemetry ping indicating a content gets loaded in Discovery Stream.
+ *
+ * @param  {object} data Fields to include in the ping
+ * @param  {int} importContext (For testing) Override the import context for testing.
+ * #return {object} An action. For UI code, a AlsoToMain action.
+ */
+function DiscoveryStreamLoadedContent(
+  data,
+  importContext = globalImportContext
+) {
+  const action = {
+    type: actionTypes.DISCOVERY_STREAM_LOADED_CONTENT,
+    data,
+  };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
+function SetPref(name, value, importContext = globalImportContext) {
+  const action = { type: actionTypes.SET_PREF, data: { name, value } };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
+function WebExtEvent(type, data, importContext = globalImportContext) {
+  if (!data || !data.source) {
+    throw new Error(
+      'WebExtEvent actions should include a property "source", the id of the webextension that should receive the event.'
+    );
+  }
+  const action = { type, data };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
+const actionCreators = {
+  BroadcastToContent,
+  UserEvent,
+  DiscoveryStreamUserEvent,
+  ASRouterUserEvent,
+  ImpressionStats,
+  AlsoToOneContent,
+  OnlyToOneContent,
+  AlsoToMain,
+  OnlyToMain,
+  AlsoToPreloaded,
+  SetPref,
+  WebExtEvent,
+  DiscoveryStreamImpressionStats,
+  DiscoveryStreamLoadedContent,
+};
+
+// These are helpers to test for certain kinds of actions
+const actionUtils = {
+  isSendToMain(action) {
+    if (!action.meta) {
+      return false;
+    }
+    return (
+      action.meta.to === MAIN_MESSAGE_TYPE &&
+      action.meta.from === CONTENT_MESSAGE_TYPE
+    );
+  },
+  isBroadcastToContent(action) {
+    if (!action.meta) {
+      return false;
+    }
+    if (action.meta.to === CONTENT_MESSAGE_TYPE && !action.meta.toTarget) {
+      return true;
+    }
+    return false;
+  },
+  isSendToOneContent(action) {
+    if (!action.meta) {
+      return false;
+    }
+    if (action.meta.to === CONTENT_MESSAGE_TYPE && action.meta.toTarget) {
+      return true;
+    }
+    return false;
+  },
+  isSendToPreloaded(action) {
+    if (!action.meta) {
+      return false;
+    }
+    return (
+      action.meta.to === PRELOAD_MESSAGE_TYPE &&
+      action.meta.from === MAIN_MESSAGE_TYPE
+    );
+  },
+  isFromMain(action) {
+    if (!action.meta) {
+      return false;
+    }
+    return (
+      action.meta.from === MAIN_MESSAGE_TYPE &&
+      action.meta.to === CONTENT_MESSAGE_TYPE
+    );
+  },
+  getPortIdOfSender(action) {
+    return (action.meta && action.meta.fromTarget) || null;
+  },
+  _RouteMessage,
+};
+
+
+/***/ }),
+/* 2 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+const {
+  actionTypes: at
+} = __webpack_require__(1);
+
+const {
+  Dedupe
+} = __webpack_require__(3);
+
+const TOP_SITES_DEFAULT_ROWS = 1;
+const TOP_SITES_MAX_SITES_PER_ROW = 8;
+const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
+const dedupe = new Dedupe(site => site && site.url);
+const INITIAL_STATE = {
+  App: {
+    // Have we received real data from the app yet?
+    initialized: false,
+    locale: ""
+  },
+  ASRouter: {
+    initialized: false
+  },
+  Snippets: {
+    initialized: false
+  },
+  TopSites: {
+    // Have we received real data from history yet?
+    initialized: false,
+    // The history (and possibly default) links
+    rows: [],
+    // Used in content only to dispatch action to TopSiteForm.
+    editForm: null,
+    // Used in content only to open the SearchShortcutsForm modal.
+    showSearchShortcutsForm: false,
+    // The list of available search shortcuts.
+    searchShortcuts: []
+  },
+  Prefs: {
+    initialized: false,
+    values: {
+      featureConfig: {}
+    }
+  },
+  Dialog: {
+    visible: false,
+    data: {}
+  },
+  Sections: [],
+  Pocket: {
+    isUserLoggedIn: null,
+    pocketCta: {},
+    waitingForSpoc: true
+  },
+  // This is the new pocket configurable layout state.
+  DiscoveryStream: {
+    // This is a JSON-parsed copy of the discoverystream.config pref value.
+    config: {
+      enabled: false,
+      layout_endpoint: ""
+    },
+    layout: [],
+    lastUpdated: null,
+    isPrivacyInfoModalVisible: false,
+    isCollectionDismissible: false,
+    feeds: {
+      data: {// "https://foo.com/feed1": {lastUpdated: 123, data: []}
+      },
+      loaded: false
+    },
+    spocs: {
+      spocs_endpoint: "",
+      lastUpdated: null,
+      data: {// "spocs": {title: "", context: "", items: []},
+        // "placement1": {title: "", context: "", items: []},
+      },
+      loaded: false,
+      frequency_caps: [],
+      blocked: [],
+      placements: []
+    },
+    experimentData: {
+      utmSource: "pocket-newtab",
+      utmCampaign: undefined,
+      utmContent: undefined
+    },
+    recentSavesData: [],
+    isUserLoggedIn: false,
+    recentSavesEnabled: false
+  },
+  Personalization: {
+    lastUpdated: null,
+    initialized: false
+  },
+  Search: {
+    // When search hand-off is enabled, we render a big button that is styled to
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
+    fakeFocus: false,
+    // Hide the search box after handing off to AwesomeBar and user starts typing.
+    hide: false
+  }
+};
+
+function App(prevState = INITIAL_STATE.App, action) {
+  switch (action.type) {
+    case at.INIT:
+      return Object.assign({}, prevState, action.data || {}, {
+        initialized: true
+      });
+
+    default:
+      return prevState;
+  }
+}
+
+function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
+  switch (action.type) {
+    case at.AS_ROUTER_INITIALIZED:
+      return { ...action.data,
+        initialized: true
+      };
+
+    default:
+      return prevState;
+  }
+}
+/**
+ * insertPinned - Inserts pinned links in their specified slots
+ *
+ * @param {array} a list of links
+ * @param {array} a list of pinned links
+ * @return {array} resulting list of links with pinned links inserted
+ */
+
+
+function insertPinned(links, pinned) {
+  // Remove any pinned links
+  const pinnedUrls = pinned.map(link => link && link.url);
+  let newLinks = links.filter(link => link ? !pinnedUrls.includes(link.url) : false);
+  newLinks = newLinks.map(link => {
+    if (link && link.isPinned) {
+      delete link.isPinned;
+      delete link.pinIndex;
+    }
+
+    return link;
+  }); // Then insert them in their specified location
+
+  pinned.forEach((val, index) => {
+    if (!val) {
+      return;
+    }
+
+    let link = Object.assign({}, val, {
+      isPinned: true,
+      pinIndex: index
+    });
+
+    if (index > newLinks.length) {
+      newLinks[index] = link;
+    } else {
+      newLinks.splice(index, 0, link);
+    }
+  });
+  return newLinks;
+}
+
+function TopSites(prevState = INITIAL_STATE.TopSites, action) {
+  let hasMatch;
+  let newRows;
+
+  switch (action.type) {
+    case at.TOP_SITES_UPDATED:
+      if (!action.data || !action.data.links) {
+        return prevState;
+      }
+
+      return Object.assign({}, prevState, {
+        initialized: true,
+        rows: action.data.links
+      }, action.data.pref ? {
+        pref: action.data.pref
+      } : {});
+
+    case at.TOP_SITES_PREFS_UPDATED:
+      return Object.assign({}, prevState, {
+        pref: action.data.pref
+      });
+
+    case at.TOP_SITES_EDIT:
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: action.data.index,
+          previewResponse: null
+        }
+      });
+
+    case at.TOP_SITES_CANCEL_EDIT:
+      return Object.assign({}, prevState, {
+        editForm: null
+      });
+
+    case at.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL:
+      return Object.assign({}, prevState, {
+        showSearchShortcutsForm: true
+      });
+
+    case at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL:
+      return Object.assign({}, prevState, {
+        showSearchShortcutsForm: false
+      });
+
+    case at.PREVIEW_RESPONSE:
+      if (!prevState.editForm || action.data.url !== prevState.editForm.previewUrl) {
+        return prevState;
+      }
+
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: prevState.editForm.index,
+          previewResponse: action.data.preview,
+          previewUrl: action.data.url
+        }
+      });
+
+    case at.PREVIEW_REQUEST:
+      if (!prevState.editForm) {
+        return prevState;
+      }
+
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: prevState.editForm.index,
+          previewResponse: null,
+          previewUrl: action.data.url
+        }
+      });
+
+    case at.PREVIEW_REQUEST_CANCEL:
+      if (!prevState.editForm) {
+        return prevState;
+      }
+
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: prevState.editForm.index,
+          previewResponse: null
+        }
+      });
+
+    case at.SCREENSHOT_UPDATED:
+      newRows = prevState.rows.map(row => {
+        if (row && row.url === action.data.url) {
+          hasMatch = true;
+          return Object.assign({}, row, {
+            screenshot: action.data.screenshot
+          });
+        }
+
+        return row;
+      });
+      return hasMatch ? Object.assign({}, prevState, {
+        rows: newRows
+      }) : prevState;
+
+    case at.PLACES_BOOKMARK_ADDED:
+      if (!action.data) {
+        return prevState;
+      }
+
+      newRows = prevState.rows.map(site => {
+        if (site && site.url === action.data.url) {
+          const {
+            bookmarkGuid,
+            bookmarkTitle,
+            dateAdded
+          } = action.data;
+          return Object.assign({}, site, {
+            bookmarkGuid,
+            bookmarkTitle,
+            bookmarkDateCreated: dateAdded
+          });
+        }
+
+        return site;
+      });
+      return Object.assign({}, prevState, {
+        rows: newRows
+      });
+
+    case at.PLACES_BOOKMARKS_REMOVED:
+      if (!action.data) {
+        return prevState;
+      }
+
+      newRows = prevState.rows.map(site => {
+        if (site && action.data.urls.includes(site.url)) {
+          const newSite = Object.assign({}, site);
+          delete newSite.bookmarkGuid;
+          delete newSite.bookmarkTitle;
+          delete newSite.bookmarkDateCreated;
+          return newSite;
+        }
+
+        return site;
+      });
+      return Object.assign({}, prevState, {
+        rows: newRows
+      });
+
+    case at.PLACES_LINKS_DELETED:
+      if (!action.data) {
+        return prevState;
+      }
+
+      newRows = prevState.rows.filter(site => !action.data.urls.includes(site.url));
+      return Object.assign({}, prevState, {
+        rows: newRows
+      });
+
+    case at.UPDATE_SEARCH_SHORTCUTS:
+      return { ...prevState,
+        searchShortcuts: action.data.searchShortcuts
+      };
+
+    case at.SNIPPETS_PREVIEW_MODE:
+      return { ...prevState,
+        rows: []
+      };
+
+    default:
+      return prevState;
+  }
+}
+
+function Dialog(prevState = INITIAL_STATE.Dialog, action) {
+  switch (action.type) {
+    case at.DIALOG_OPEN:
+      return Object.assign({}, prevState, {
+        visible: true,
+        data: action.data
+      });
+
+    case at.DIALOG_CANCEL:
+      return Object.assign({}, prevState, {
+        visible: false
+      });
+
+    case at.DELETE_HISTORY_URL:
+      return Object.assign({}, INITIAL_STATE.Dialog);
+
+    default:
+      return prevState;
+  }
+}
+
+function Prefs(prevState = INITIAL_STATE.Prefs, action) {
+  let newValues;
+
+  switch (action.type) {
+    case at.PREFS_INITIAL_VALUES:
+      return Object.assign({}, prevState, {
+        initialized: true,
+        values: action.data
+      });
+
+    case at.PREF_CHANGED:
+      newValues = Object.assign({}, prevState.values);
+      newValues[action.data.name] = action.data.value;
+      return Object.assign({}, prevState, {
+        values: newValues
+      });
+
+    default:
+      return prevState;
+  }
+}
+
+function Sections(prevState = INITIAL_STATE.Sections, action) {
+  let hasMatch;
+  let newState;
+
+  switch (action.type) {
+    case at.SECTION_DEREGISTER:
+      return prevState.filter(section => section.id !== action.data);
+
+    case at.SECTION_REGISTER:
+      // If section exists in prevState, update it
+      newState = prevState.map(section => {
+        if (section && section.id === action.data.id) {
+          hasMatch = true;
+          return Object.assign({}, section, action.data);
+        }
+
+        return section;
+      }); // Otherwise, append it
+
+      if (!hasMatch) {
+        const initialized = !!(action.data.rows && !!action.data.rows.length);
+        const section = Object.assign({
+          title: "",
+          rows: [],
+          enabled: false
+        }, action.data, {
+          initialized
+        });
+        newState.push(section);
+      }
+
+      return newState;
+
+    case at.SECTION_UPDATE:
+      newState = prevState.map(section => {
+        if (section && section.id === action.data.id) {
+          // If the action is updating rows, we should consider initialized to be true.
+          // This can be overridden if initialized is defined in the action.data
+          const initialized = action.data.rows ? {
+            initialized: true
+          } : {}; // Make sure pinned cards stay at their current position when rows are updated.
+          // Disabling a section (SECTION_UPDATE with empty rows) does not retain pinned cards.
+
+          if (action.data.rows && !!action.data.rows.length && section.rows.find(card => card.pinned)) {
+            const rows = Array.from(action.data.rows);
+            section.rows.forEach((card, index) => {
+              if (card.pinned) {
+                // Only add it if it's not already there.
+                if (rows[index].guid !== card.guid) {
+                  rows.splice(index, 0, card);
+                }
+              }
+            });
+            return Object.assign({}, section, initialized, Object.assign({}, action.data, {
+              rows
+            }));
+          }
+
+          return Object.assign({}, section, initialized, action.data);
+        }
+
+        return section;
+      });
+
+      if (!action.data.dedupeConfigurations) {
+        return newState;
+      }
+
+      action.data.dedupeConfigurations.forEach(dedupeConf => {
+        newState = newState.map(section => {
+          if (section.id === dedupeConf.id) {
+            const dedupedRows = dedupeConf.dedupeFrom.reduce((rows, dedupeSectionId) => {
+              const dedupeSection = newState.find(s => s.id === dedupeSectionId);
+              const [, newRows] = dedupe.group(dedupeSection.rows, rows);
+              return newRows;
+            }, section.rows);
+            return Object.assign({}, section, {
+              rows: dedupedRows
+            });
+          }
+
+          return section;
+        });
+      });
+      return newState;
+
+    case at.SECTION_UPDATE_CARD:
+      return prevState.map(section => {
+        if (section && section.id === action.data.id && section.rows) {
+          const newRows = section.rows.map(card => {
+            if (card.url === action.data.url) {
+              return Object.assign({}, card, action.data.options);
+            }
+
+            return card;
+          });
+          return Object.assign({}, section, {
+            rows: newRows
+          });
+        }
+
+        return section;
+      });
+
+    case at.PLACES_BOOKMARK_ADDED:
+      if (!action.data) {
+        return prevState;
+      }
+
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.map(item => {
+          // find the item within the rows that is attempted to be bookmarked
+          if (item.url === action.data.url) {
+            const {
+              bookmarkGuid,
+              bookmarkTitle,
+              dateAdded
+            } = action.data;
+            return Object.assign({}, item, {
+              bookmarkGuid,
+              bookmarkTitle,
+              bookmarkDateCreated: dateAdded,
+              type: "bookmark"
+            });
+          }
+
+          return item;
+        })
+      }));
+
+    case at.PLACES_SAVED_TO_POCKET:
+      if (!action.data) {
+        return prevState;
+      }
+
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.map(item => {
+          if (item.url === action.data.url) {
+            return Object.assign({}, item, {
+              open_url: action.data.open_url,
+              pocket_id: action.data.pocket_id,
+              title: action.data.title,
+              type: "pocket"
+            });
+          }
+
+          return item;
+        })
+      }));
+
+    case at.PLACES_BOOKMARKS_REMOVED:
+      if (!action.data) {
+        return prevState;
+      }
+
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.map(item => {
+          // find the bookmark within the rows that is attempted to be removed
+          if (action.data.urls.includes(item.url)) {
+            const newSite = Object.assign({}, item);
+            delete newSite.bookmarkGuid;
+            delete newSite.bookmarkTitle;
+            delete newSite.bookmarkDateCreated;
+
+            if (!newSite.type || newSite.type === "bookmark") {
+              newSite.type = "history";
+            }
+
+            return newSite;
+          }
+
+          return item;
+        })
+      }));
+
+    case at.PLACES_LINKS_DELETED:
+      if (!action.data) {
+        return prevState;
+      }
+
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.filter(site => !action.data.urls.includes(site.url))
+      }));
+
+    case at.PLACES_LINK_BLOCKED:
+      if (!action.data) {
+        return prevState;
+      }
+
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.filter(site => site.url !== action.data.url)
+      }));
+
+    case at.DELETE_FROM_POCKET:
+    case at.ARCHIVE_FROM_POCKET:
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.filter(site => site.pocket_id !== action.data.pocket_id)
+      }));
+
+    case at.SNIPPETS_PREVIEW_MODE:
+      return prevState.map(section => ({ ...section,
+        rows: []
+      }));
+
+    default:
+      return prevState;
+  }
+}
+
+function Snippets(prevState = INITIAL_STATE.Snippets, action) {
+  switch (action.type) {
+    case at.SNIPPETS_DATA:
+      return Object.assign({}, prevState, {
+        initialized: true
+      }, action.data);
+
+    case at.SNIPPET_BLOCKED:
+      return Object.assign({}, prevState, {
+        blockList: prevState.blockList.concat(action.data)
+      });
+
+    case at.SNIPPETS_BLOCKLIST_CLEARED:
+      return Object.assign({}, prevState, {
+        blockList: []
+      });
+
+    case at.SNIPPETS_RESET:
+      return INITIAL_STATE.Snippets;
+
+    default:
+      return prevState;
+  }
+}
+
+function Pocket(prevState = INITIAL_STATE.Pocket, action) {
+  switch (action.type) {
+    case at.POCKET_WAITING_FOR_SPOC:
+      return { ...prevState,
+        waitingForSpoc: action.data
+      };
+
+    case at.POCKET_LOGGED_IN:
+      return { ...prevState,
+        isUserLoggedIn: !!action.data
+      };
+
+    case at.POCKET_CTA:
+      return { ...prevState,
+        pocketCta: {
+          ctaButton: action.data.cta_button,
+          ctaText: action.data.cta_text,
+          ctaUrl: action.data.cta_url,
+          useCta: action.data.use_cta
+        }
+      };
+
+    default:
+      return prevState;
+  }
+}
+
+function Personalization(prevState = INITIAL_STATE.Personalization, action) {
+  switch (action.type) {
+    case at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
+      return { ...prevState,
+        lastUpdated: action.data.lastUpdated
+      };
+
+    case at.DISCOVERY_STREAM_PERSONALIZATION_INIT:
+      return { ...prevState,
+        initialized: true
+      };
+
+    default:
+      return prevState;
+  }
+} // eslint-disable-next-line complexity
+
+
+function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
+  // Return if action data is empty, or spocs or feeds data is not loaded
+  const isNotReady = () => !action.data || !prevState.spocs.loaded || !prevState.feeds.loaded;
+
+  const handlePlacements = handleSites => {
+    const {
+      data,
+      placements
+    } = prevState.spocs;
+    const result = {};
+
+    const forPlacement = placement => {
+      const placementSpocs = data[placement.name];
+
+      if (!placementSpocs || !placementSpocs.items || !placementSpocs.items.length) {
+        return;
+      }
+
+      result[placement.name] = { ...placementSpocs,
+        items: handleSites(placementSpocs.items)
+      };
+    };
+
+    if (!placements || !placements.length) {
+      [{
+        name: "spocs"
+      }].forEach(forPlacement);
+    } else {
+      placements.forEach(forPlacement);
+    }
+
+    return result;
+  };
+
+  const nextState = handleSites => ({ ...prevState,
+    spocs: { ...prevState.spocs,
+      data: handlePlacements(handleSites)
+    },
+    feeds: { ...prevState.feeds,
+      data: Object.keys(prevState.feeds.data).reduce((accumulator, feed_url) => {
+        accumulator[feed_url] = {
+          data: { ...prevState.feeds.data[feed_url].data,
+            recommendations: handleSites(prevState.feeds.data[feed_url].data.recommendations)
+          }
+        };
+        return accumulator;
+      }, {})
+    }
+  });
+
+  switch (action.type) {
+    case at.DISCOVERY_STREAM_CONFIG_CHANGE: // Fall through to a separate action is so it doesn't trigger a listener update on init
+
+    case at.DISCOVERY_STREAM_CONFIG_SETUP:
+      return { ...prevState,
+        config: action.data || {}
+      };
+
+    case at.DISCOVERY_STREAM_EXPERIMENT_DATA:
+      return { ...prevState,
+        experimentData: action.data || {}
+      };
+
+    case at.DISCOVERY_STREAM_LAYOUT_UPDATE:
+      return { ...prevState,
+        lastUpdated: action.data.lastUpdated || null,
+        layout: action.data.layout || []
+      };
+
+    case at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
+      return { ...prevState,
+        isCollectionDismissible: action.data.value
+      };
+
+    case at.DISCOVERY_STREAM_PREFS_SETUP:
+      return { ...prevState,
+        recentSavesEnabled: action.data.recentSavesEnabled,
+        pocketButtonEnabled: action.data.pocketButtonEnabled,
+        saveToPocketCard: action.data.saveToPocketCard,
+        hideDescriptions: action.data.hideDescriptions,
+        compactImages: action.data.compactImages,
+        imageGradient: action.data.imageGradient,
+        newSponsoredLabel: action.data.newSponsoredLabel,
+        titleLines: action.data.titleLines,
+        descLines: action.data.descLines,
+        readTime: action.data.readTime
+      };
+
+    case at.DISCOVERY_STREAM_RECENT_SAVES:
+      return { ...prevState,
+        recentSavesData: action.data.recentSaves
+      };
+
+    case at.DISCOVERY_STREAM_POCKET_STATE_SET:
+      return { ...prevState,
+        isUserLoggedIn: action.data.isUserLoggedIn
+      };
+
+    case at.HIDE_PRIVACY_INFO:
+      return { ...prevState,
+        isPrivacyInfoModalVisible: false
+      };
+
+    case at.SHOW_PRIVACY_INFO:
+      return { ...prevState,
+        isPrivacyInfoModalVisible: true
+      };
+
+    case at.DISCOVERY_STREAM_LAYOUT_RESET:
+      return { ...INITIAL_STATE.DiscoveryStream,
+        config: prevState.config
+      };
+
+    case at.DISCOVERY_STREAM_FEEDS_UPDATE:
+      return { ...prevState,
+        feeds: { ...prevState.feeds,
+          loaded: true
+        }
+      };
+
+    case at.DISCOVERY_STREAM_FEED_UPDATE:
+      const newData = {};
+      newData[action.data.url] = action.data.feed;
+      return { ...prevState,
+        feeds: { ...prevState.feeds,
+          data: { ...prevState.feeds.data,
+            ...newData
+          }
+        }
+      };
+
+    case at.DISCOVERY_STREAM_SPOCS_CAPS:
+      return { ...prevState,
+        spocs: { ...prevState.spocs,
+          frequency_caps: [...prevState.spocs.frequency_caps, ...action.data]
+        }
+      };
+
+    case at.DISCOVERY_STREAM_SPOCS_ENDPOINT:
+      return { ...prevState,
+        spocs: { ...INITIAL_STATE.DiscoveryStream.spocs,
+          spocs_endpoint: action.data.url || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint
+        }
+      };
+
+    case at.DISCOVERY_STREAM_SPOCS_PLACEMENTS:
+      return { ...prevState,
+        spocs: { ...prevState.spocs,
+          placements: action.data.placements || INITIAL_STATE.DiscoveryStream.spocs.placements
+        }
+      };
+
+    case at.DISCOVERY_STREAM_SPOCS_UPDATE:
+      if (action.data) {
+        return { ...prevState,
+          spocs: { ...prevState.spocs,
+            lastUpdated: action.data.lastUpdated,
+            data: action.data.spocs,
+            loaded: true
+          }
+        };
+      }
+
+      return prevState;
+
+    case at.DISCOVERY_STREAM_SPOC_BLOCKED:
+      return { ...prevState,
+        spocs: { ...prevState.spocs,
+          blocked: [...prevState.spocs.blocked, action.data.url]
+        }
+      };
+
+    case at.DISCOVERY_STREAM_LINK_BLOCKED:
+      return isNotReady() ? prevState : nextState(items => items.filter(item => item.url !== action.data.url));
+
+    case at.PLACES_SAVED_TO_POCKET:
+      const addPocketInfo = item => {
+        if (item.url === action.data.url) {
+          return Object.assign({}, item, {
+            open_url: action.data.open_url,
+            pocket_id: action.data.pocket_id,
+            context_type: "pocket"
+          });
+        }
+
+        return item;
+      };
+
+      return isNotReady() ? prevState : nextState(items => items.map(addPocketInfo));
+
+    case at.DELETE_FROM_POCKET:
+    case at.ARCHIVE_FROM_POCKET:
+      return isNotReady() ? prevState : nextState(items => items.filter(item => item.pocket_id !== action.data.pocket_id));
+
+    case at.PLACES_BOOKMARK_ADDED:
+      const updateBookmarkInfo = item => {
+        if (item.url === action.data.url) {
+          const {
+            bookmarkGuid,
+            bookmarkTitle,
+            dateAdded
+          } = action.data;
+          return Object.assign({}, item, {
+            bookmarkGuid,
+            bookmarkTitle,
+            bookmarkDateCreated: dateAdded,
+            context_type: "bookmark"
+          });
+        }
+
+        return item;
+      };
+
+      return isNotReady() ? prevState : nextState(items => items.map(updateBookmarkInfo));
+
+    case at.PLACES_BOOKMARKS_REMOVED:
+      const removeBookmarkInfo = item => {
+        if (action.data.urls.includes(item.url)) {
+          const newSite = Object.assign({}, item);
+          delete newSite.bookmarkGuid;
+          delete newSite.bookmarkTitle;
+          delete newSite.bookmarkDateCreated;
+
+          if (!newSite.context_type || newSite.context_type === "bookmark") {
+            newSite.context_type = "removedBookmark";
+          }
+
+          return newSite;
+        }
+
+        return item;
+      };
+
+      return isNotReady() ? prevState : nextState(items => items.map(removeBookmarkInfo));
+
+    case at.PREF_CHANGED:
+      if (action.data.name === PREF_COLLECTION_DISMISSIBLE) {
+        return { ...prevState,
+          isCollectionDismissible: action.data.value
+        };
+      }
+
+      return prevState;
+
+    default:
+      return prevState;
+  }
+}
+
+function Search(prevState = INITIAL_STATE.Search, action) {
+  switch (action.type) {
+    case at.DISABLE_SEARCH:
+      return Object.assign({ ...prevState,
+        disable: true
+      });
+
+    case at.FAKE_FOCUS_SEARCH:
+      return Object.assign({ ...prevState,
+        fakeFocus: true
+      });
+
+    case at.SHOW_SEARCH:
+      return Object.assign({ ...prevState,
+        disable: false,
+        fakeFocus: false
+      });
+
+    default:
+      return prevState;
+  }
+}
+
+const reducers = {
+  TopSites,
+  App,
+  ASRouter,
+  Snippets,
+  Prefs,
+  Dialog,
+  Sections,
+  Pocket,
+  Personalization,
+  DiscoveryStream,
+  Search
+};
+module.exports = {
+  reducers,
+  INITIAL_STATE,
+  insertPinned,
+  TOP_SITES_DEFAULT_ROWS,
+  TOP_SITES_MAX_SITES_PER_ROW
+};
+
+/***/ }),
+/* 3 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Dedupe": () => (/* binding */ Dedupe)
+/* harmony export */ });
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+class Dedupe {
+  constructor(createKey) {
+    this.createKey = createKey || this.defaultCreateKey;
+  }
+
+  defaultCreateKey(item) {
+    return item;
+  }
+
+  /**
+   * Dedupe any number of grouped elements favoring those from earlier groups.
+   *
+   * @param {Array} groups Contains an arbitrary number of arrays of elements.
+   * @returns {Array} A matching array of each provided group deduped.
+   */
+  group(...groups) {
+    const globalKeys = new Set();
+    const result = [];
+    for (const values of groups) {
+      const valueMap = new Map();
+      for (const value of values) {
+        const key = this.createKey(value);
+        if (!globalKeys.has(key) && !valueMap.has(key)) {
+          valueMap.set(key, value);
+        }
+      }
+      result.push(valueMap);
+      valueMap.forEach((value, key) => globalKeys.add(key));
+    }
+    return result.map(m => Array.from(m.values()));
+  }
+}
+
+
+/***/ })
+/******/ 	]);
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
@@ -60,6 +1565,8 @@ var NewtabRenderUtils;
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
 // ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__);
 
@@ -78,358 +1585,58 @@ __webpack_require__.d(builtins_namespaceObject, {
   "NUMBER": () => (NUMBER)
 });
 
-;// CONCATENATED MODULE: ./common/Actions.jsm
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
-const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
-const PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
-const UI_CODE = 1;
-const BACKGROUND_PROCESS = 2;
-/**
- * globalImportContext - Are we in UI code (i.e. react, a dom) or some kind of background process?
- *                       Use this in action creators if you need different logic
- *                       for ui/background processes.
- */
-
-const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS : UI_CODE; // Create an object that avoids accidental differing key/value pairs:
-// {
-//   INIT: "INIT",
-//   UNINIT: "UNINIT"
-// }
-
-const actionTypes = {};
-
-for (const type of ["ABOUT_SPONSORED_TOP_SITES", "ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "CLEAR_PREF", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_SEARCH", "DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_RESET", "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_DEV_EXPIRE_CACHE", "DISCOVERY_STREAM_DEV_IDLE_DAILY", "DISCOVERY_STREAM_DEV_SYNC_RS", "DISCOVERY_STREAM_DEV_SYSTEM_TICK", "DISCOVERY_STREAM_EXPERIMENT_DATA", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_PERSONALIZATION_INIT", "DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED", "DISCOVERY_STREAM_PERSONALIZATION_TOGGLE", "DISCOVERY_STREAM_POCKET_STATE_INIT", "DISCOVERY_STREAM_POCKET_STATE_SET", "DISCOVERY_STREAM_PREFS_SETUP", "DISCOVERY_STREAM_RECENT_SAVES", "DISCOVERY_STREAM_RETRY_FEED", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_PLACEMENTS", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_BLOCKED", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DISCOVERY_STREAM_USER_EVENT", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_PRIVACY_INFO", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PARTNER_LINK_ATTRIBUTION", "PLACES_BOOKMARKS_REMOVED", "PLACES_BOOKMARK_ADDED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_PRIVACY_INFO", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SUBMIT_SIGNIN", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_IMPRESSION_STATS", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
-  actionTypes[type] = type;
-} // Helper function for creating routed actions between content and main
-// Not intended to be used by consumers
-
-
-function _RouteMessage(action, options) {
-  const meta = action.meta ? { ...action.meta
-  } : {};
-
-  if (!options || !options.from || !options.to) {
-    throw new Error("Routed Messages must have options as the second parameter, and must at least include a .from and .to property.");
-  } // For each of these fields, if they are passed as an option,
-  // add them to the action. If they are not defined, remove them.
-
-
-  ["from", "to", "toTarget", "fromTarget", "skipMain", "skipLocal"].forEach(o => {
-    if (typeof options[o] !== "undefined") {
-      meta[o] = options[o];
-    } else if (meta[o]) {
-      delete meta[o];
-    }
-  });
-  return { ...action,
-    meta
-  };
-}
-/**
- * AlsoToMain - Creates a message that will be dispatched locally and also sent to the Main process.
- *
- * @param  {object} action Any redux action (required)
- * @param  {object} options
- * @param  {bool}   skipLocal Used by OnlyToMain to skip the main reducer
- * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
- * @return {object} An action with added .meta properties
- */
-
-
-function AlsoToMain(action, fromTarget, skipLocal) {
-  return _RouteMessage(action, {
-    from: CONTENT_MESSAGE_TYPE,
-    to: MAIN_MESSAGE_TYPE,
-    fromTarget,
-    skipLocal
-  });
-}
-/**
- * OnlyToMain - Creates a message that will be sent to the Main process and skip the local reducer.
- *
- * @param  {object} action Any redux action (required)
- * @param  {object} options
- * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
- * @return {object} An action with added .meta properties
- */
-
-
-function OnlyToMain(action, fromTarget) {
-  return AlsoToMain(action, fromTarget, true);
-}
-/**
- * BroadcastToContent - Creates a message that will be dispatched to main and sent to ALL content processes.
- *
- * @param  {object} action Any redux action (required)
- * @return {object} An action with added .meta properties
- */
-
-
-function BroadcastToContent(action) {
-  return _RouteMessage(action, {
-    from: MAIN_MESSAGE_TYPE,
-    to: CONTENT_MESSAGE_TYPE
-  });
-}
-/**
- * AlsoToOneContent - Creates a message that will be will be dispatched to the main store
- *                    and also sent to a particular Content process.
- *
- * @param  {object} action Any redux action (required)
- * @param  {string} target The id of a content port
- * @param  {bool} skipMain Used by OnlyToOneContent to skip the main process
- * @return {object} An action with added .meta properties
- */
-
-
-function AlsoToOneContent(action, target, skipMain) {
-  if (!target) {
-    throw new Error("You must provide a target ID as the second parameter of AlsoToOneContent. If you want to send to all content processes, use BroadcastToContent");
-  }
-
-  return _RouteMessage(action, {
-    from: MAIN_MESSAGE_TYPE,
-    to: CONTENT_MESSAGE_TYPE,
-    toTarget: target,
-    skipMain
-  });
-}
-/**
- * OnlyToOneContent - Creates a message that will be sent to a particular Content process
- *                    and skip the main reducer.
- *
- * @param  {object} action Any redux action (required)
- * @param  {string} target The id of a content port
- * @return {object} An action with added .meta properties
- */
-
-
-function OnlyToOneContent(action, target) {
-  return AlsoToOneContent(action, target, true);
-}
-/**
- * AlsoToPreloaded - Creates a message that dispatched to the main reducer and also sent to the preloaded tab.
- *
- * @param  {object} action Any redux action (required)
- * @return {object} An action with added .meta properties
- */
-
-
-function AlsoToPreloaded(action) {
-  return _RouteMessage(action, {
-    from: MAIN_MESSAGE_TYPE,
-    to: PRELOAD_MESSAGE_TYPE
-  });
-}
-/**
- * UserEvent - A telemetry ping indicating a user action. This should only
- *                   be sent from the UI during a user session.
- *
- * @param  {object} data Fields to include in the ping (source, etc.)
- * @return {object} An AlsoToMain action
- */
-
-
-function UserEvent(data) {
-  return AlsoToMain({
-    type: actionTypes.TELEMETRY_USER_EVENT,
-    data
-  });
-}
-/**
- * DiscoveryStreamUserEvent - A telemetry ping indicating a user action from Discovery Stream. This should only
- *                     be sent from the UI during a user session.
- *
- * @param  {object} data Fields to include in the ping (source, etc.)
- * @return {object} An AlsoToMain action
- */
-
-
-function DiscoveryStreamUserEvent(data) {
-  return AlsoToMain({
-    type: actionTypes.DISCOVERY_STREAM_USER_EVENT,
-    data
-  });
-}
-/**
- * ASRouterUserEvent - A telemetry ping indicating a user action from AS router. This should only
- *                     be sent from the UI during a user session.
- *
- * @param  {object} data Fields to include in the ping (source, etc.)
- * @return {object} An AlsoToMain action
- */
-
-
-function ASRouterUserEvent(data) {
-  return AlsoToMain({
-    type: actionTypes.AS_ROUTER_TELEMETRY_USER_EVENT,
-    data
-  });
-}
-/**
- * ImpressionStats - A telemetry ping indicating an impression stats.
- *
- * @param  {object} data Fields to include in the ping
- * @param  {int} importContext (For testing) Override the import context for testing.
- * #return {object} An action. For UI code, a AlsoToMain action.
- */
-
-
-function ImpressionStats(data, importContext = globalImportContext) {
-  const action = {
-    type: actionTypes.TELEMETRY_IMPRESSION_STATS,
-    data
-  };
-  return importContext === UI_CODE ? AlsoToMain(action) : action;
-}
-/**
- * DiscoveryStreamImpressionStats - A telemetry ping indicating an impression stats in Discovery Stream.
- *
- * @param  {object} data Fields to include in the ping
- * @param  {int} importContext (For testing) Override the import context for testing.
- * #return {object} An action. For UI code, a AlsoToMain action.
- */
-
-
-function DiscoveryStreamImpressionStats(data, importContext = globalImportContext) {
-  const action = {
-    type: actionTypes.DISCOVERY_STREAM_IMPRESSION_STATS,
-    data
-  };
-  return importContext === UI_CODE ? AlsoToMain(action) : action;
-}
-/**
- * DiscoveryStreamLoadedContent - A telemetry ping indicating a content gets loaded in Discovery Stream.
- *
- * @param  {object} data Fields to include in the ping
- * @param  {int} importContext (For testing) Override the import context for testing.
- * #return {object} An action. For UI code, a AlsoToMain action.
- */
-
-
-function DiscoveryStreamLoadedContent(data, importContext = globalImportContext) {
-  const action = {
-    type: actionTypes.DISCOVERY_STREAM_LOADED_CONTENT,
-    data
-  };
-  return importContext === UI_CODE ? AlsoToMain(action) : action;
-}
-
-function SetPref(name, value, importContext = globalImportContext) {
-  const action = {
-    type: actionTypes.SET_PREF,
-    data: {
-      name,
-      value
-    }
-  };
-  return importContext === UI_CODE ? AlsoToMain(action) : action;
-}
-
-function WebExtEvent(type, data, importContext = globalImportContext) {
-  if (!data || !data.source) {
-    throw new Error('WebExtEvent actions should include a property "source", the id of the webextension that should receive the event.');
-  }
-
-  const action = {
-    type,
-    data
-  };
-  return importContext === UI_CODE ? AlsoToMain(action) : action;
-}
-
-const actionCreators = {
-  BroadcastToContent,
-  UserEvent,
-  DiscoveryStreamUserEvent,
-  ASRouterUserEvent,
-  ImpressionStats,
-  AlsoToOneContent,
-  OnlyToOneContent,
-  AlsoToMain,
-  OnlyToMain,
-  AlsoToPreloaded,
-  SetPref,
-  WebExtEvent,
-  DiscoveryStreamImpressionStats,
-  DiscoveryStreamLoadedContent
-}; // These are helpers to test for certain kinds of actions
-
-const actionUtils = {
-  isSendToMain(action) {
-    if (!action.meta) {
-      return false;
-    }
-
-    return action.meta.to === MAIN_MESSAGE_TYPE && action.meta.from === CONTENT_MESSAGE_TYPE;
-  },
-
-  isBroadcastToContent(action) {
-    if (!action.meta) {
-      return false;
-    }
-
-    if (action.meta.to === CONTENT_MESSAGE_TYPE && !action.meta.toTarget) {
-      return true;
-    }
-
-    return false;
-  },
-
-  isSendToOneContent(action) {
-    if (!action.meta) {
-      return false;
-    }
-
-    if (action.meta.to === CONTENT_MESSAGE_TYPE && action.meta.toTarget) {
-      return true;
-    }
-
-    return false;
-  },
-
-  isSendToPreloaded(action) {
-    if (!action.meta) {
-      return false;
-    }
-
-    return action.meta.to === PRELOAD_MESSAGE_TYPE && action.meta.from === MAIN_MESSAGE_TYPE;
-  },
-
-  isFromMain(action) {
-    if (!action.meta) {
-      return false;
-    }
-
-    return action.meta.from === MAIN_MESSAGE_TYPE && action.meta.to === CONTENT_MESSAGE_TYPE;
-  },
-
-  getPortIdOfSender(action) {
-    return action.meta && action.meta.fromTarget || null;
-  },
-
-  _RouteMessage
-};
-;// CONCATENATED MODULE: ./common/ActorConstants.jsm
+// EXTERNAL MODULE: ./common/Actions.sys.mjs
+var Actions_sys = __webpack_require__(1);
+;// CONCATENATED MODULE: ./common/ActorConstants.sys.mjs
 /* vim: set ts=2 sw=2 sts=2 et tw=80: */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const MESSAGE_TYPE_LIST = ["BLOCK_MESSAGE_BY_ID", "USER_ACTION", "IMPRESSION", "TRIGGER", "NEWTAB_MESSAGE_REQUEST", // PB is Private Browsing
-"PBNEWTAB_MESSAGE_REQUEST", "DOORHANGER_TELEMETRY", "TOOLBAR_BADGE_TELEMETRY", "TOOLBAR_PANEL_TELEMETRY", "MOMENTS_PAGE_TELEMETRY", "INFOBAR_TELEMETRY", "SPOTLIGHT_TELEMETRY", "TOAST_NOTIFICATION_TELEMETRY", "AS_ROUTER_TELEMETRY_USER_EVENT", // Admin types
-"ADMIN_CONNECT_STATE", "UNBLOCK_MESSAGE_BY_ID", "UNBLOCK_ALL", "BLOCK_BUNDLE", "UNBLOCK_BUNDLE", "DISABLE_PROVIDER", "ENABLE_PROVIDER", "EVALUATE_JEXL_EXPRESSION", "EXPIRE_QUERY_CACHE", "FORCE_ATTRIBUTION", "FORCE_WHATSNEW_PANEL", "FORCE_PRIVATE_BROWSING_WINDOW", "CLOSE_WHATSNEW_PANEL", "OVERRIDE_MESSAGE", "MODIFY_MESSAGE_JSON", "RESET_PROVIDER_PREF", "SET_PROVIDER_USER_PREF", "RESET_GROUPS_STATE"];
+const MESSAGE_TYPE_LIST = [
+  "BLOCK_MESSAGE_BY_ID",
+  "USER_ACTION",
+  "IMPRESSION",
+  "TRIGGER",
+  "NEWTAB_MESSAGE_REQUEST",
+  // PB is Private Browsing
+  "PBNEWTAB_MESSAGE_REQUEST",
+  "DOORHANGER_TELEMETRY",
+  "TOOLBAR_BADGE_TELEMETRY",
+  "TOOLBAR_PANEL_TELEMETRY",
+  "MOMENTS_PAGE_TELEMETRY",
+  "INFOBAR_TELEMETRY",
+  "SPOTLIGHT_TELEMETRY",
+  "TOAST_NOTIFICATION_TELEMETRY",
+  "AS_ROUTER_TELEMETRY_USER_EVENT",
+
+  // Admin types
+  "ADMIN_CONNECT_STATE",
+  "UNBLOCK_MESSAGE_BY_ID",
+  "UNBLOCK_ALL",
+  "BLOCK_BUNDLE",
+  "UNBLOCK_BUNDLE",
+  "DISABLE_PROVIDER",
+  "ENABLE_PROVIDER",
+  "EVALUATE_JEXL_EXPRESSION",
+  "EXPIRE_QUERY_CACHE",
+  "FORCE_ATTRIBUTION",
+  "FORCE_WHATSNEW_PANEL",
+  "FORCE_PRIVATE_BROWSING_WINDOW",
+  "CLOSE_WHATSNEW_PANEL",
+  "OVERRIDE_MESSAGE",
+  "MODIFY_MESSAGE_JSON",
+  "RESET_PROVIDER_PREF",
+  "SET_PROVIDER_USER_PREF",
+  "RESET_GROUPS_STATE",
+];
+
 const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
   hash[value] = value;
   return hash;
 }, {});
+
 ;// CONCATENATED MODULE: ./content-src/asrouter/asrouter-utils.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -520,7 +1727,7 @@ const ASRouterUtils = {
   },
 
   sendTelemetry(ping) {
-    return ASRouterUtils.sendMessage(actionCreators.ASRouterUserEvent(ping));
+    return ASRouterUtils.sendMessage(Actions_sys.actionCreators.ASRouterUserEvent(ping));
   },
 
   getPreviewEndpoint() {
@@ -702,8 +1909,8 @@ class Personalization extends (external_React_default()).PureComponent {
   }
 
   togglePersonalization() {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.DISCOVERY_STREAM_PERSONALIZATION_TOGGLE
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.DISCOVERY_STREAM_PERSONALIZATION_TOGGLE
     }));
   }
 
@@ -744,8 +1951,8 @@ class DiscoveryStreamAdmin extends (external_React_default()).PureComponent {
   }
 
   setConfigValue(name, value) {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.DISCOVERY_STREAM_CONFIG_SET_VALUE,
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.DISCOVERY_STREAM_CONFIG_SET_VALUE,
       data: {
         name,
         value
@@ -754,8 +1961,8 @@ class DiscoveryStreamAdmin extends (external_React_default()).PureComponent {
   }
 
   restorePrefDefaults(event) {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS
     }));
   }
 
@@ -763,32 +1970,32 @@ class DiscoveryStreamAdmin extends (external_React_default()).PureComponent {
     const {
       config
     } = this.props.state.DiscoveryStream;
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE,
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE,
       data: config
     }));
   }
 
   dispatchSimpleAction(type) {
-    this.props.dispatch(actionCreators.OnlyToMain({
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
       type
     }));
   }
 
   systemTick() {
-    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_SYSTEM_TICK);
+    this.dispatchSimpleAction(Actions_sys.actionTypes.DISCOVERY_STREAM_DEV_SYSTEM_TICK);
   }
 
   expireCache() {
-    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_EXPIRE_CACHE);
+    this.dispatchSimpleAction(Actions_sys.actionTypes.DISCOVERY_STREAM_DEV_EXPIRE_CACHE);
   }
 
   idleDaily() {
-    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_IDLE_DAILY);
+    this.dispatchSimpleAction(Actions_sys.actionTypes.DISCOVERY_STREAM_DEV_IDLE_DAILY);
   }
 
   syncRemoteSettings() {
-    this.dispatchSimpleAction(actionTypes.DISCOVERY_STREAM_DEV_SYNC_RS);
+    this.dispatchSimpleAction(Actions_sys.actionTypes.DISCOVERY_STREAM_DEV_SYNC_RS);
   }
 
   changeEndpointVariant(event) {
@@ -5829,7 +7036,7 @@ class ASRouterUISurface extends (external_React_default()).PureComponent {
       case "EnterSnippetsPreviewMode":
         {
           this.props.dispatch({
-            type: actionTypes.SNIPPETS_PREVIEW_MODE
+            type: Actions_sys.actionTypes.SNIPPETS_PREVIEW_MODE
           });
           break;
         }
@@ -6031,10 +7238,10 @@ class _ConfirmDialog extends (external_React_default()).PureComponent {
 
   _handleCancelBtn() {
     this.props.dispatch({
-      type: actionTypes.DIALOG_CANCEL
+      type: Actions_sys.actionTypes.DIALOG_CANCEL
     });
-    this.props.dispatch(actionCreators.UserEvent({
-      event: actionTypes.DIALOG_CANCEL,
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
+      event: Actions_sys.actionTypes.DIALOG_CANCEL,
       source: this.props.data.eventSource
     }));
   }
@@ -6513,8 +7720,8 @@ const ContextMenuItem = (0,external_ReactRedux_namespaceObject.connect)(state =>
 const _OpenInPrivateWindow = site => ({
   id: "newtab-menu-open-new-private-window",
   icon: "new-window-private",
-  action: actionCreators.OnlyToMain({
-    type: actionTypes.OPEN_PRIVATE_WINDOW,
+  action: Actions_sys.actionCreators.OnlyToMain({
+    type: Actions_sys.actionTypes.OPEN_PRIVATE_WINDOW,
     data: {
       url: site.url,
       referrer: site.referrer
@@ -6540,23 +7747,23 @@ const LinkMenuOptions = {
     id: "newtab-menu-show-privacy-info",
     icon: "info",
     action: {
-      type: actionTypes.SHOW_PRIVACY_INFO
+      type: Actions_sys.actionTypes.SHOW_PRIVACY_INFO
     },
     userEvent: "SHOW_PRIVACY_INFO"
   }),
   AboutSponsored: site => ({
     id: "newtab-menu-show-privacy-info",
     icon: "info",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.ABOUT_SPONSORED_TOP_SITES
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.ABOUT_SPONSORED_TOP_SITES
     }),
     userEvent: "TOPSITE_SPONSOR_INFO"
   }),
   RemoveBookmark: site => ({
     id: "newtab-menu-remove-bookmark",
     icon: "bookmark-added",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.DELETE_BOOKMARK_BY_ID,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.DELETE_BOOKMARK_BY_ID,
       data: site.bookmarkGuid
     }),
     userEvent: "BOOKMARK_DELETE"
@@ -6564,8 +7771,8 @@ const LinkMenuOptions = {
   AddBookmark: site => ({
     id: "newtab-menu-bookmark",
     icon: "bookmark-hollow",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.BOOKMARK_URL,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.BOOKMARK_URL,
       data: {
         url: site.url,
         title: site.title,
@@ -6577,8 +7784,8 @@ const LinkMenuOptions = {
   OpenInNewWindow: site => ({
     id: "newtab-menu-open-new-window",
     icon: "new-window",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.OPEN_NEW_WINDOW,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.OPEN_NEW_WINDOW,
       data: {
         referrer: site.referrer,
         typedBonus: site.typedBonus,
@@ -6599,8 +7806,8 @@ const LinkMenuOptions = {
   BlockUrls: (tiles, pos, eventSource) => ({
     id: "newtab-menu-dismiss",
     icon: "dismiss",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.BLOCK_URL,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.BLOCK_URL,
       data: tiles.map(site => ({
         url: site.original_url || site.open_url || site.url,
         // pocket_id is only for pocket stories being in highlights, and then dismissed.
@@ -6612,7 +7819,7 @@ const LinkMenuOptions = {
         } : {})
       }))
     }),
-    impression: actionCreators.ImpressionStats({
+    impression: Actions_sys.actionCreators.ImpressionStats({
       source: eventSource,
       block: 0,
       tiles: tiles.map((site, index) => ({
@@ -6631,7 +7838,7 @@ const LinkMenuOptions = {
     id: "menu_action_webext_dismiss",
     string_id: "newtab-menu-dismiss",
     icon: "dismiss",
-    action: actionCreators.WebExtEvent(actionTypes.WEBEXT_DISMISS, {
+    action: Actions_sys.actionCreators.WebExtEvent(Actions_sys.actionTypes.WEBEXT_DISMISS, {
       source: eventSource,
       url: site.url,
       action_position: index
@@ -6641,16 +7848,16 @@ const LinkMenuOptions = {
     id: "newtab-menu-delete-history",
     icon: "delete",
     action: {
-      type: actionTypes.DIALOG_OPEN,
+      type: Actions_sys.actionTypes.DIALOG_OPEN,
       data: {
-        onConfirm: [actionCreators.AlsoToMain({
-          type: actionTypes.DELETE_HISTORY_URL,
+        onConfirm: [Actions_sys.actionCreators.AlsoToMain({
+          type: Actions_sys.actionTypes.DELETE_HISTORY_URL,
           data: {
             url: site.url,
             pocket_id: site.pocket_id,
             forceBlock: site.bookmarkGuid
           }
-        }), actionCreators.UserEvent(Object.assign({
+        }), Actions_sys.actionCreators.UserEvent(Object.assign({
           event: "DELETE",
           source: eventSource,
           action_position: index
@@ -6667,8 +7874,8 @@ const LinkMenuOptions = {
   ShowFile: site => ({
     id: "newtab-menu-show-file",
     icon: "search",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.SHOW_DOWNLOAD_FILE,
+    action: Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.SHOW_DOWNLOAD_FILE,
       data: {
         url: site.url
       }
@@ -6677,8 +7884,8 @@ const LinkMenuOptions = {
   OpenFile: site => ({
     id: "newtab-menu-open-file",
     icon: "open-file",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.OPEN_DOWNLOAD_FILE,
+    action: Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.OPEN_DOWNLOAD_FILE,
       data: {
         url: site.url
       }
@@ -6687,8 +7894,8 @@ const LinkMenuOptions = {
   CopyDownloadLink: site => ({
     id: "newtab-menu-copy-download-link",
     icon: "copy",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.COPY_DOWNLOAD_LINK,
+    action: Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.COPY_DOWNLOAD_LINK,
       data: {
         url: site.url
       }
@@ -6697,8 +7904,8 @@ const LinkMenuOptions = {
   GoToDownloadPage: site => ({
     id: "newtab-menu-go-to-download-page",
     icon: "download",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.OPEN_LINK,
+    action: Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.OPEN_LINK,
       data: {
         url: site.referrer
       }
@@ -6708,8 +7915,8 @@ const LinkMenuOptions = {
   RemoveDownload: site => ({
     id: "newtab-menu-remove-download",
     icon: "delete",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.REMOVE_DOWNLOAD_FILE,
+    action: Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.REMOVE_DOWNLOAD_FILE,
       data: {
         url: site.url
       }
@@ -6718,8 +7925,8 @@ const LinkMenuOptions = {
   PinTopSite: (site, index) => ({
     id: "newtab-menu-pin",
     icon: "pin",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.TOP_SITES_PIN,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.TOP_SITES_PIN,
       data: {
         site,
         index
@@ -6730,8 +7937,8 @@ const LinkMenuOptions = {
   UnpinTopSite: site => ({
     id: "newtab-menu-unpin",
     icon: "unpin",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.TOP_SITES_UNPIN,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.TOP_SITES_UNPIN,
       data: {
         site: {
           url: site.url
@@ -6743,8 +7950,8 @@ const LinkMenuOptions = {
   SaveToPocket: (site, index, eventSource = "CARDGRID") => ({
     id: "newtab-menu-save-to-pocket",
     icon: "pocket-save",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.SAVE_TO_POCKET,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.SAVE_TO_POCKET,
       data: {
         site: {
           url: site.url,
@@ -6752,7 +7959,7 @@ const LinkMenuOptions = {
         }
       }
     }),
-    impression: actionCreators.ImpressionStats({
+    impression: Actions_sys.actionCreators.ImpressionStats({
       source: eventSource,
       pocket: 0,
       tiles: [{
@@ -6768,8 +7975,8 @@ const LinkMenuOptions = {
   DeleteFromPocket: site => ({
     id: "newtab-menu-delete-pocket",
     icon: "pocket-delete",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.DELETE_FROM_POCKET,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.DELETE_FROM_POCKET,
       data: {
         pocket_id: site.pocket_id
       }
@@ -6779,8 +7986,8 @@ const LinkMenuOptions = {
   ArchiveFromPocket: site => ({
     id: "newtab-menu-archive-pocket",
     icon: "pocket-archive",
-    action: actionCreators.AlsoToMain({
-      type: actionTypes.ARCHIVE_FROM_POCKET,
+    action: Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.ARCHIVE_FROM_POCKET,
       data: {
         pocket_id: site.pocket_id
       }
@@ -6791,7 +7998,7 @@ const LinkMenuOptions = {
     id: "newtab-menu-edit-topsites",
     icon: "edit",
     action: {
-      type: actionTypes.TOP_SITES_EDIT,
+      type: Actions_sys.actionTypes.TOP_SITES_EDIT,
       data: {
         index
       }
@@ -6827,7 +8034,7 @@ class _LinkMenu extends (external_React_default()).PureComponent {
       isPrivateBrowsingEnabled,
       siteInfo,
       platform,
-      userEvent = actionCreators.UserEvent
+      userEvent = Actions_sys.actionCreators.UserEvent
     } = props; // Handle special case of default site
 
     const propOptions = site.isDefault && !site.searchTopSite && !site.sponsored_position ? DEFAULT_SITE_MENU_OPTIONS : props.options;
@@ -7025,7 +8232,7 @@ class DSLinkMenu extends (external_React_default()).PureComponent {
       onShow: this.props.onMenuShow,
       options: TOP_STORIES_CONTEXT_MENU_OPTIONS,
       shouldSendImpressionStats: true,
-      userEvent: actionCreators.DiscoveryStreamUserEvent,
+      userEvent: Actions_sys.actionCreators.DiscoveryStreamUserEvent,
       site: {
         referrer: "https://getpocket.com/recommendations",
         title: this.props.title,
@@ -7087,7 +8294,7 @@ const INTERSECTION_RATIO = 0.5;
  *     impression pings separately
  */
 
-class ImpressionStats_ImpressionStats extends (external_React_default()).PureComponent {
+class ImpressionStats extends (external_React_default()).PureComponent {
   // This checks if the given cards are the same as those in the last impression ping.
   // If so, it should not send the same impression ping again.
   _needsImpressionStats(cards) {
@@ -7111,8 +8318,8 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
     const cards = props.rows;
 
     if (this.props.flightId) {
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.DISCOVERY_STREAM_SPOC_IMPRESSION,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.DISCOVERY_STREAM_SPOC_IMPRESSION,
         data: {
           flightId: this.props.flightId
         }
@@ -7120,8 +8327,8 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
 
       if (this.props.source === TOP_SITES_SOURCE) {
         for (const card of cards) {
-          this.props.dispatch(actionCreators.OnlyToMain({
-            type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+          this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+            type: Actions_sys.actionTypes.TOP_SITES_IMPRESSION_STATS,
             data: {
               type: "impression",
               tile_id: card.id,
@@ -7136,7 +8343,7 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
     }
 
     if (this._needsImpressionStats(cards)) {
-      props.dispatch(actionCreators.DiscoveryStreamImpressionStats({
+      props.dispatch(Actions_sys.actionCreators.DiscoveryStreamImpressionStats({
         source: props.source.toUpperCase(),
         window_inner_width: window.innerWidth,
         window_inner_height: window.innerHeight,
@@ -7176,7 +8383,7 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
     const cards = props.rows;
 
     if (this._needsLoadedContent(cards)) {
-      props.dispatch(actionCreators.DiscoveryStreamLoadedContent({
+      props.dispatch(Actions_sys.actionCreators.DiscoveryStreamLoadedContent({
         source: props.source.toUpperCase(),
         tiles: cards.map(link => ({
           id: link.id,
@@ -7279,7 +8486,7 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
   }
 
 }
-ImpressionStats_ImpressionStats.defaultProps = {
+ImpressionStats.defaultProps = {
   IntersectionObserver: __webpack_require__.g.IntersectionObserver,
   document: __webpack_require__.g.document,
   rows: [],
@@ -7308,8 +8515,8 @@ class SafeAnchor extends (external_React_default()).PureComponent {
         metaKey,
         shiftKey
       } = event;
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.OPEN_LINK,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.OPEN_LINK,
         data: {
           event: {
             altKey,
@@ -7716,7 +8923,7 @@ class _DSCard extends (external_React_default()).PureComponent {
 
   onLinkClick(event) {
     if (this.props.dispatch) {
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
         action_position: this.props.pos,
@@ -7724,7 +8931,7 @@ class _DSCard extends (external_React_default()).PureComponent {
           card_type: this.props.flightId ? "spoc" : "organic"
         }
       }));
-      this.props.dispatch(actionCreators.ImpressionStats({
+      this.props.dispatch(Actions_sys.actionCreators.ImpressionStats({
         source: this.props.type.toUpperCase(),
         click: 0,
         window_inner_width: this.props.windowObj.innerWidth,
@@ -7743,8 +8950,8 @@ class _DSCard extends (external_React_default()).PureComponent {
 
   onSaveClick(event) {
     if (this.props.dispatch) {
-      this.props.dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.SAVE_TO_POCKET,
+      this.props.dispatch(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.SAVE_TO_POCKET,
         data: {
           site: {
             url: this.props.url,
@@ -7752,7 +8959,7 @@ class _DSCard extends (external_React_default()).PureComponent {
           }
         }
       }));
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: "SAVE_TO_POCKET",
         source: "CARDGRID_HOVER",
         action_position: this.props.pos,
@@ -7760,7 +8967,7 @@ class _DSCard extends (external_React_default()).PureComponent {
           card_type: this.props.flightId ? "spoc" : "organic"
         }
       }));
-      this.props.dispatch(actionCreators.ImpressionStats({
+      this.props.dispatch(Actions_sys.actionCreators.ImpressionStats({
         source: "CARDGRID_HOVER",
         pocket: 0,
         tiles: [{
@@ -7927,7 +9134,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       sponsor: this.props.sponsor,
       sponsored_by_override: this.props.sponsored_by_override,
       saveToPocketCard: saveToPocketCard
-    }), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+    }), /*#__PURE__*/external_React_default().createElement(ImpressionStats, {
       flightId: this.props.flightId,
       rows: [{
         id: this.props.id,
@@ -8021,7 +9228,7 @@ class DSEmptyState extends (external_React_default()).PureComponent {
         url
       } = feed;
       this.props.dispatch({
-        type: actionTypes.DISCOVERY_STREAM_FEED_UPDATE,
+        type: Actions_sys.actionTypes.DISCOVERY_STREAM_FEED_UPDATE,
         data: {
           feed: { ...feed,
             data: { ...feed.data,
@@ -8040,8 +9247,8 @@ class DSEmptyState extends (external_React_default()).PureComponent {
           waiting: false
         });
       }, 300);
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.DISCOVERY_STREAM_RETRY_FEED,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.DISCOVERY_STREAM_RETRY_FEED,
         data: {
           feed
         }
@@ -8147,7 +9354,7 @@ function _TopicsWidget(props) {
 
   function onLinkClick(topic, positionInCard) {
     if (dispatch) {
-      dispatch(actionCreators.DiscoveryStreamUserEvent({
+      dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: "CLICK",
         source,
         action_position: position,
@@ -8159,7 +9366,7 @@ function _TopicsWidget(props) {
           } : {})
         }
       }));
-      dispatch(actionCreators.ImpressionStats({
+      dispatch(Actions_sys.actionCreators.ImpressionStats({
         source,
         click: 0,
         window_inner_width: props.windowObj.innerWidth,
@@ -8194,7 +9401,7 @@ function _TopicsWidget(props) {
     url: `https://getpocket.com/${queryParams}`,
     dispatch: dispatch,
     onLinkClick: () => onLinkClick("more-topics")
-  }, "More Topics"), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+  }, "More Topics"), /*#__PURE__*/external_React_default().createElement(ImpressionStats, {
     dispatch: dispatch,
     rows: [{
       id,
@@ -8290,8 +9497,8 @@ function RecentSavesContainer({
   const onIntersecting = (0,external_React_namespaceObject.useCallback)(() => setVisible(true), []);
   (0,external_React_namespaceObject.useEffect)(() => {
     if (visible) {
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.DISCOVERY_STREAM_POCKET_STATE_INIT
+      dispatch(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.DISCOVERY_STREAM_POCKET_STATE_INIT
       }));
     }
   }, [visible, dispatch]); // The user has not yet scrolled to this section,
@@ -8346,7 +9553,7 @@ function RecentSavesContainer({
   }
 
   function onMyListClicked() {
-    dispatch(actionCreators.DiscoveryStreamUserEvent({
+    dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
       event: "CLICK",
       source: `${source}_VIEW_LIST`
     }));
@@ -8663,7 +9870,7 @@ class CollectionCardGrid extends (external_React_default()).PureComponent {
         userEvent
       } = blockUrlOption;
       this.props.dispatch(action);
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: userEvent,
         source,
         action_position: pos
@@ -9096,15 +10303,15 @@ class DSPrivacyModal extends (external_React_default()).PureComponent {
   }
 
   onLearnLinkClick(event) {
-    this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
       event: "CLICK_PRIVACY_INFO",
       source: "DS_PRIVACY_MODAL"
     }));
   }
 
   onManageLinkClick(event) {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.SETTINGS_OPEN
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.SETTINGS_OPEN
     }));
   }
 
@@ -9206,12 +10413,12 @@ class DSSignup extends (external_React_default()).PureComponent {
       const source = this.props.type.toUpperCase(); // Grab the first item in the array as we only have 1 spoc position.
 
       const [spoc] = data.spocs;
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: "CLICK",
         source,
         action_position: 0
       }));
-      this.props.dispatch(actionCreators.ImpressionStats({
+      this.props.dispatch(Actions_sys.actionCreators.ImpressionStats({
         source,
         click: 0,
         tiles: [{
@@ -9259,7 +10466,7 @@ class DSSignup extends (external_React_default()).PureComponent {
       dispatch: dispatch,
       onLinkClick: this.onLinkClick,
       url: url
-    }, excerpt)), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+    }, excerpt)), /*#__PURE__*/external_React_default().createElement(ImpressionStats, {
       flightId: flight_id,
       rows: [{
         id,
@@ -9281,7 +10488,7 @@ class DSSignup extends (external_React_default()).PureComponent {
       onShow: this.onMenuShow,
       options: SIGNUP_CONTEXT_MENU_OPTIONS,
       shouldSendImpressionStats: true,
-      userEvent: actionCreators.DiscoveryStreamUserEvent,
+      userEvent: Actions_sys.actionCreators.DiscoveryStreamUserEvent,
       site: {
         referrer: "https://getpocket.com/recommendations",
         title,
@@ -9326,12 +10533,12 @@ class DSTextPromo extends (external_React_default()).PureComponent {
       const source = this.props.type.toUpperCase(); // Grab the first item in the array as we only have 1 spoc position.
 
       const [spoc] = data.spocs;
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: "CLICK",
         source,
         action_position: 0
       }));
-      this.props.dispatch(actionCreators.ImpressionStats({
+      this.props.dispatch(Actions_sys.actionCreators.ImpressionStats({
         source,
         click: 0,
         tiles: [{
@@ -9367,7 +10574,7 @@ class DSTextPromo extends (external_React_default()).PureComponent {
         userEvent
       } = blockUrlOption;
       this.props.dispatch(action);
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: userEvent,
         source,
         action_position: index
@@ -9420,7 +10627,7 @@ class DSTextPromo extends (external_React_default()).PureComponent {
       url: url
     }, cta)), /*#__PURE__*/external_React_default().createElement("p", {
       className: "subtitle"
-    }, context)), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+    }, context)), /*#__PURE__*/external_React_default().createElement(ImpressionStats, {
       flightId: flight_id,
       rows: [{
         id,
@@ -9652,8 +10859,8 @@ class _Card extends (external_React_default()).PureComponent {
     } = event;
 
     if (this.props.link.type === "download") {
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.OPEN_DOWNLOAD_FILE,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.OPEN_DOWNLOAD_FILE,
         data: Object.assign(this.props.link, {
           event: {
             button,
@@ -9664,8 +10871,8 @@ class _Card extends (external_React_default()).PureComponent {
         })
       }));
     } else {
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.OPEN_LINK,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.OPEN_LINK,
         data: Object.assign(this.props.link, {
           event: {
             altKey,
@@ -9679,20 +10886,20 @@ class _Card extends (external_React_default()).PureComponent {
     }
 
     if (this.props.isWebExtension) {
-      this.props.dispatch(actionCreators.WebExtEvent(actionTypes.WEBEXT_CLICK, {
+      this.props.dispatch(Actions_sys.actionCreators.WebExtEvent(Actions_sys.actionTypes.WEBEXT_CLICK, {
         source: this.props.eventSource,
         url: this.props.link.url,
         action_position: this.props.index
       }));
     } else {
-      this.props.dispatch(actionCreators.UserEvent(Object.assign({
+      this.props.dispatch(Actions_sys.actionCreators.UserEvent(Object.assign({
         event: "CLICK",
         source: this.props.eventSource,
         action_position: this.props.index
       }, this._getTelemetryInfo())));
 
       if (this.props.shouldSendImpressionStats) {
-        this.props.dispatch(actionCreators.ImpressionStats({
+        this.props.dispatch(Actions_sys.actionCreators.ImpressionStats({
           source: this.props.eventSource,
           click: 0,
           tiles: [{
@@ -10059,8 +11266,8 @@ class ComponentPerfTimer extends (external_React_default()).Component {
       const firstRenderKey = `${this.props.id}_first_render_ts`; // value has to be Int32.
 
       const value = parseInt(this.perfSvc.getMostRecentAbsMarkStartByName(dataReadyKey) - this.perfSvc.getMostRecentAbsMarkStartByName(firstRenderKey), 10);
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.SAVE_SESSION_PERF_DATA,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.SAVE_SESSION_PERF_DATA,
         // highlights_data_late_by_ms, topsites_data_late_by_ms.
         data: {
           [`${this.props.id}_data_late_by_ms`]: value
@@ -10084,8 +11291,8 @@ class ComponentPerfTimer extends (external_React_default()).Component {
     try {
       const data = {};
       data[key] = this.perfSvc.getMostRecentAbsMarkStartByName(key);
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.SAVE_SESSION_PERF_DATA,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.SAVE_SESSION_PERF_DATA,
         data
       }));
     } catch (ex) {// If this failed, it's likely because the `privacy.resistFingerprinting`
@@ -10306,8 +11513,8 @@ class SearchShortcutsForm extends (external_React_default()).PureComponent {
       }
     }); // Tell the feed to do the work.
 
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.UPDATE_PINNED_SEARCH_SHORTCUTS,
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.UPDATE_PINNED_SEARCH_SHORTCUTS,
       data: {
         addedShortcuts: pinQueue,
         deletedShortcuts: unpinQueue
@@ -10315,7 +11522,7 @@ class SearchShortcutsForm extends (external_React_default()).PureComponent {
     })); // Send the Telemetry pings.
 
     pinQueue.forEach(shortcut => {
-      this.props.dispatch(actionCreators.UserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "SEARCH_EDIT_ADD",
         value: {
@@ -10324,7 +11531,7 @@ class SearchShortcutsForm extends (external_React_default()).PureComponent {
       }));
     });
     unpinQueue.forEach(shortcut => {
-      this.props.dispatch(actionCreators.UserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "SEARCH_EDIT_DELETE",
         value: {
@@ -10373,991 +11580,8 @@ class SearchShortcutsForm extends (external_React_default()).PureComponent {
   }
 
 }
-;// CONCATENATED MODULE: ./common/Dedupe.jsm
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-class Dedupe {
-  constructor(createKey) {
-    this.createKey = createKey || this.defaultCreateKey;
-  }
-
-  defaultCreateKey(item) {
-    return item;
-  }
-  /**
-   * Dedupe any number of grouped elements favoring those from earlier groups.
-   *
-   * @param {Array} groups Contains an arbitrary number of arrays of elements.
-   * @returns {Array} A matching array of each provided group deduped.
-   */
-
-
-  group(...groups) {
-    const globalKeys = new Set();
-    const result = [];
-
-    for (const values of groups) {
-      const valueMap = new Map();
-
-      for (const value of values) {
-        const key = this.createKey(value);
-
-        if (!globalKeys.has(key) && !valueMap.has(key)) {
-          valueMap.set(key, value);
-        }
-      }
-
-      result.push(valueMap);
-      valueMap.forEach((value, key) => globalKeys.add(key));
-    }
-
-    return result.map(m => Array.from(m.values()));
-  }
-
-}
-;// CONCATENATED MODULE: ./common/Reducers.jsm
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-
-const TOP_SITES_DEFAULT_ROWS = 1;
-const TOP_SITES_MAX_SITES_PER_ROW = 8;
-const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
-const dedupe = new Dedupe(site => site && site.url);
-const INITIAL_STATE = {
-  App: {
-    // Have we received real data from the app yet?
-    initialized: false,
-    locale: ""
-  },
-  ASRouter: {
-    initialized: false
-  },
-  Snippets: {
-    initialized: false
-  },
-  TopSites: {
-    // Have we received real data from history yet?
-    initialized: false,
-    // The history (and possibly default) links
-    rows: [],
-    // Used in content only to dispatch action to TopSiteForm.
-    editForm: null,
-    // Used in content only to open the SearchShortcutsForm modal.
-    showSearchShortcutsForm: false,
-    // The list of available search shortcuts.
-    searchShortcuts: []
-  },
-  Prefs: {
-    initialized: false,
-    values: {
-      featureConfig: {}
-    }
-  },
-  Dialog: {
-    visible: false,
-    data: {}
-  },
-  Sections: [],
-  Pocket: {
-    isUserLoggedIn: null,
-    pocketCta: {},
-    waitingForSpoc: true
-  },
-  // This is the new pocket configurable layout state.
-  DiscoveryStream: {
-    // This is a JSON-parsed copy of the discoverystream.config pref value.
-    config: {
-      enabled: false,
-      layout_endpoint: ""
-    },
-    layout: [],
-    lastUpdated: null,
-    isPrivacyInfoModalVisible: false,
-    isCollectionDismissible: false,
-    feeds: {
-      data: {// "https://foo.com/feed1": {lastUpdated: 123, data: []}
-      },
-      loaded: false
-    },
-    spocs: {
-      spocs_endpoint: "",
-      lastUpdated: null,
-      data: {// "spocs": {title: "", context: "", items: []},
-        // "placement1": {title: "", context: "", items: []},
-      },
-      loaded: false,
-      frequency_caps: [],
-      blocked: [],
-      placements: []
-    },
-    experimentData: {
-      utmSource: "pocket-newtab",
-      utmCampaign: undefined,
-      utmContent: undefined
-    },
-    recentSavesData: [],
-    isUserLoggedIn: false,
-    recentSavesEnabled: false
-  },
-  Personalization: {
-    lastUpdated: null,
-    initialized: false
-  },
-  Search: {
-    // When search hand-off is enabled, we render a big button that is styled to
-    // look like a search textbox. If the button is clicked, we style
-    // the button as if it was a focused search box and show a fake cursor but
-    // really focus the awesomebar without the focus styles ("hidden focus").
-    fakeFocus: false,
-    // Hide the search box after handing off to AwesomeBar and user starts typing.
-    hide: false
-  }
-};
-
-function App(prevState = INITIAL_STATE.App, action) {
-  switch (action.type) {
-    case actionTypes.INIT:
-      return Object.assign({}, prevState, action.data || {}, {
-        initialized: true
-      });
-
-    default:
-      return prevState;
-  }
-}
-
-function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
-  switch (action.type) {
-    case actionTypes.AS_ROUTER_INITIALIZED:
-      return { ...action.data,
-        initialized: true
-      };
-
-    default:
-      return prevState;
-  }
-}
-/**
- * insertPinned - Inserts pinned links in their specified slots
- *
- * @param {array} a list of links
- * @param {array} a list of pinned links
- * @return {array} resulting list of links with pinned links inserted
- */
-
-
-function insertPinned(links, pinned) {
-  // Remove any pinned links
-  const pinnedUrls = pinned.map(link => link && link.url);
-  let newLinks = links.filter(link => link ? !pinnedUrls.includes(link.url) : false);
-  newLinks = newLinks.map(link => {
-    if (link && link.isPinned) {
-      delete link.isPinned;
-      delete link.pinIndex;
-    }
-
-    return link;
-  }); // Then insert them in their specified location
-
-  pinned.forEach((val, index) => {
-    if (!val) {
-      return;
-    }
-
-    let link = Object.assign({}, val, {
-      isPinned: true,
-      pinIndex: index
-    });
-
-    if (index > newLinks.length) {
-      newLinks[index] = link;
-    } else {
-      newLinks.splice(index, 0, link);
-    }
-  });
-  return newLinks;
-}
-
-function TopSites(prevState = INITIAL_STATE.TopSites, action) {
-  let hasMatch;
-  let newRows;
-
-  switch (action.type) {
-    case actionTypes.TOP_SITES_UPDATED:
-      if (!action.data || !action.data.links) {
-        return prevState;
-      }
-
-      return Object.assign({}, prevState, {
-        initialized: true,
-        rows: action.data.links
-      }, action.data.pref ? {
-        pref: action.data.pref
-      } : {});
-
-    case actionTypes.TOP_SITES_PREFS_UPDATED:
-      return Object.assign({}, prevState, {
-        pref: action.data.pref
-      });
-
-    case actionTypes.TOP_SITES_EDIT:
-      return Object.assign({}, prevState, {
-        editForm: {
-          index: action.data.index,
-          previewResponse: null
-        }
-      });
-
-    case actionTypes.TOP_SITES_CANCEL_EDIT:
-      return Object.assign({}, prevState, {
-        editForm: null
-      });
-
-    case actionTypes.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL:
-      return Object.assign({}, prevState, {
-        showSearchShortcutsForm: true
-      });
-
-    case actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL:
-      return Object.assign({}, prevState, {
-        showSearchShortcutsForm: false
-      });
-
-    case actionTypes.PREVIEW_RESPONSE:
-      if (!prevState.editForm || action.data.url !== prevState.editForm.previewUrl) {
-        return prevState;
-      }
-
-      return Object.assign({}, prevState, {
-        editForm: {
-          index: prevState.editForm.index,
-          previewResponse: action.data.preview,
-          previewUrl: action.data.url
-        }
-      });
-
-    case actionTypes.PREVIEW_REQUEST:
-      if (!prevState.editForm) {
-        return prevState;
-      }
-
-      return Object.assign({}, prevState, {
-        editForm: {
-          index: prevState.editForm.index,
-          previewResponse: null,
-          previewUrl: action.data.url
-        }
-      });
-
-    case actionTypes.PREVIEW_REQUEST_CANCEL:
-      if (!prevState.editForm) {
-        return prevState;
-      }
-
-      return Object.assign({}, prevState, {
-        editForm: {
-          index: prevState.editForm.index,
-          previewResponse: null
-        }
-      });
-
-    case actionTypes.SCREENSHOT_UPDATED:
-      newRows = prevState.rows.map(row => {
-        if (row && row.url === action.data.url) {
-          hasMatch = true;
-          return Object.assign({}, row, {
-            screenshot: action.data.screenshot
-          });
-        }
-
-        return row;
-      });
-      return hasMatch ? Object.assign({}, prevState, {
-        rows: newRows
-      }) : prevState;
-
-    case actionTypes.PLACES_BOOKMARK_ADDED:
-      if (!action.data) {
-        return prevState;
-      }
-
-      newRows = prevState.rows.map(site => {
-        if (site && site.url === action.data.url) {
-          const {
-            bookmarkGuid,
-            bookmarkTitle,
-            dateAdded
-          } = action.data;
-          return Object.assign({}, site, {
-            bookmarkGuid,
-            bookmarkTitle,
-            bookmarkDateCreated: dateAdded
-          });
-        }
-
-        return site;
-      });
-      return Object.assign({}, prevState, {
-        rows: newRows
-      });
-
-    case actionTypes.PLACES_BOOKMARKS_REMOVED:
-      if (!action.data) {
-        return prevState;
-      }
-
-      newRows = prevState.rows.map(site => {
-        if (site && action.data.urls.includes(site.url)) {
-          const newSite = Object.assign({}, site);
-          delete newSite.bookmarkGuid;
-          delete newSite.bookmarkTitle;
-          delete newSite.bookmarkDateCreated;
-          return newSite;
-        }
-
-        return site;
-      });
-      return Object.assign({}, prevState, {
-        rows: newRows
-      });
-
-    case actionTypes.PLACES_LINKS_DELETED:
-      if (!action.data) {
-        return prevState;
-      }
-
-      newRows = prevState.rows.filter(site => !action.data.urls.includes(site.url));
-      return Object.assign({}, prevState, {
-        rows: newRows
-      });
-
-    case actionTypes.UPDATE_SEARCH_SHORTCUTS:
-      return { ...prevState,
-        searchShortcuts: action.data.searchShortcuts
-      };
-
-    case actionTypes.SNIPPETS_PREVIEW_MODE:
-      return { ...prevState,
-        rows: []
-      };
-
-    default:
-      return prevState;
-  }
-}
-
-function Dialog(prevState = INITIAL_STATE.Dialog, action) {
-  switch (action.type) {
-    case actionTypes.DIALOG_OPEN:
-      return Object.assign({}, prevState, {
-        visible: true,
-        data: action.data
-      });
-
-    case actionTypes.DIALOG_CANCEL:
-      return Object.assign({}, prevState, {
-        visible: false
-      });
-
-    case actionTypes.DELETE_HISTORY_URL:
-      return Object.assign({}, INITIAL_STATE.Dialog);
-
-    default:
-      return prevState;
-  }
-}
-
-function Prefs(prevState = INITIAL_STATE.Prefs, action) {
-  let newValues;
-
-  switch (action.type) {
-    case actionTypes.PREFS_INITIAL_VALUES:
-      return Object.assign({}, prevState, {
-        initialized: true,
-        values: action.data
-      });
-
-    case actionTypes.PREF_CHANGED:
-      newValues = Object.assign({}, prevState.values);
-      newValues[action.data.name] = action.data.value;
-      return Object.assign({}, prevState, {
-        values: newValues
-      });
-
-    default:
-      return prevState;
-  }
-}
-
-function Sections(prevState = INITIAL_STATE.Sections, action) {
-  let hasMatch;
-  let newState;
-
-  switch (action.type) {
-    case actionTypes.SECTION_DEREGISTER:
-      return prevState.filter(section => section.id !== action.data);
-
-    case actionTypes.SECTION_REGISTER:
-      // If section exists in prevState, update it
-      newState = prevState.map(section => {
-        if (section && section.id === action.data.id) {
-          hasMatch = true;
-          return Object.assign({}, section, action.data);
-        }
-
-        return section;
-      }); // Otherwise, append it
-
-      if (!hasMatch) {
-        const initialized = !!(action.data.rows && !!action.data.rows.length);
-        const section = Object.assign({
-          title: "",
-          rows: [],
-          enabled: false
-        }, action.data, {
-          initialized
-        });
-        newState.push(section);
-      }
-
-      return newState;
-
-    case actionTypes.SECTION_UPDATE:
-      newState = prevState.map(section => {
-        if (section && section.id === action.data.id) {
-          // If the action is updating rows, we should consider initialized to be true.
-          // This can be overridden if initialized is defined in the action.data
-          const initialized = action.data.rows ? {
-            initialized: true
-          } : {}; // Make sure pinned cards stay at their current position when rows are updated.
-          // Disabling a section (SECTION_UPDATE with empty rows) does not retain pinned cards.
-
-          if (action.data.rows && !!action.data.rows.length && section.rows.find(card => card.pinned)) {
-            const rows = Array.from(action.data.rows);
-            section.rows.forEach((card, index) => {
-              if (card.pinned) {
-                // Only add it if it's not already there.
-                if (rows[index].guid !== card.guid) {
-                  rows.splice(index, 0, card);
-                }
-              }
-            });
-            return Object.assign({}, section, initialized, Object.assign({}, action.data, {
-              rows
-            }));
-          }
-
-          return Object.assign({}, section, initialized, action.data);
-        }
-
-        return section;
-      });
-
-      if (!action.data.dedupeConfigurations) {
-        return newState;
-      }
-
-      action.data.dedupeConfigurations.forEach(dedupeConf => {
-        newState = newState.map(section => {
-          if (section.id === dedupeConf.id) {
-            const dedupedRows = dedupeConf.dedupeFrom.reduce((rows, dedupeSectionId) => {
-              const dedupeSection = newState.find(s => s.id === dedupeSectionId);
-              const [, newRows] = dedupe.group(dedupeSection.rows, rows);
-              return newRows;
-            }, section.rows);
-            return Object.assign({}, section, {
-              rows: dedupedRows
-            });
-          }
-
-          return section;
-        });
-      });
-      return newState;
-
-    case actionTypes.SECTION_UPDATE_CARD:
-      return prevState.map(section => {
-        if (section && section.id === action.data.id && section.rows) {
-          const newRows = section.rows.map(card => {
-            if (card.url === action.data.url) {
-              return Object.assign({}, card, action.data.options);
-            }
-
-            return card;
-          });
-          return Object.assign({}, section, {
-            rows: newRows
-          });
-        }
-
-        return section;
-      });
-
-    case actionTypes.PLACES_BOOKMARK_ADDED:
-      if (!action.data) {
-        return prevState;
-      }
-
-      return prevState.map(section => Object.assign({}, section, {
-        rows: section.rows.map(item => {
-          // find the item within the rows that is attempted to be bookmarked
-          if (item.url === action.data.url) {
-            const {
-              bookmarkGuid,
-              bookmarkTitle,
-              dateAdded
-            } = action.data;
-            return Object.assign({}, item, {
-              bookmarkGuid,
-              bookmarkTitle,
-              bookmarkDateCreated: dateAdded,
-              type: "bookmark"
-            });
-          }
-
-          return item;
-        })
-      }));
-
-    case actionTypes.PLACES_SAVED_TO_POCKET:
-      if (!action.data) {
-        return prevState;
-      }
-
-      return prevState.map(section => Object.assign({}, section, {
-        rows: section.rows.map(item => {
-          if (item.url === action.data.url) {
-            return Object.assign({}, item, {
-              open_url: action.data.open_url,
-              pocket_id: action.data.pocket_id,
-              title: action.data.title,
-              type: "pocket"
-            });
-          }
-
-          return item;
-        })
-      }));
-
-    case actionTypes.PLACES_BOOKMARKS_REMOVED:
-      if (!action.data) {
-        return prevState;
-      }
-
-      return prevState.map(section => Object.assign({}, section, {
-        rows: section.rows.map(item => {
-          // find the bookmark within the rows that is attempted to be removed
-          if (action.data.urls.includes(item.url)) {
-            const newSite = Object.assign({}, item);
-            delete newSite.bookmarkGuid;
-            delete newSite.bookmarkTitle;
-            delete newSite.bookmarkDateCreated;
-
-            if (!newSite.type || newSite.type === "bookmark") {
-              newSite.type = "history";
-            }
-
-            return newSite;
-          }
-
-          return item;
-        })
-      }));
-
-    case actionTypes.PLACES_LINKS_DELETED:
-      if (!action.data) {
-        return prevState;
-      }
-
-      return prevState.map(section => Object.assign({}, section, {
-        rows: section.rows.filter(site => !action.data.urls.includes(site.url))
-      }));
-
-    case actionTypes.PLACES_LINK_BLOCKED:
-      if (!action.data) {
-        return prevState;
-      }
-
-      return prevState.map(section => Object.assign({}, section, {
-        rows: section.rows.filter(site => site.url !== action.data.url)
-      }));
-
-    case actionTypes.DELETE_FROM_POCKET:
-    case actionTypes.ARCHIVE_FROM_POCKET:
-      return prevState.map(section => Object.assign({}, section, {
-        rows: section.rows.filter(site => site.pocket_id !== action.data.pocket_id)
-      }));
-
-    case actionTypes.SNIPPETS_PREVIEW_MODE:
-      return prevState.map(section => ({ ...section,
-        rows: []
-      }));
-
-    default:
-      return prevState;
-  }
-}
-
-function Snippets(prevState = INITIAL_STATE.Snippets, action) {
-  switch (action.type) {
-    case actionTypes.SNIPPETS_DATA:
-      return Object.assign({}, prevState, {
-        initialized: true
-      }, action.data);
-
-    case actionTypes.SNIPPET_BLOCKED:
-      return Object.assign({}, prevState, {
-        blockList: prevState.blockList.concat(action.data)
-      });
-
-    case actionTypes.SNIPPETS_BLOCKLIST_CLEARED:
-      return Object.assign({}, prevState, {
-        blockList: []
-      });
-
-    case actionTypes.SNIPPETS_RESET:
-      return INITIAL_STATE.Snippets;
-
-    default:
-      return prevState;
-  }
-}
-
-function Pocket(prevState = INITIAL_STATE.Pocket, action) {
-  switch (action.type) {
-    case actionTypes.POCKET_WAITING_FOR_SPOC:
-      return { ...prevState,
-        waitingForSpoc: action.data
-      };
-
-    case actionTypes.POCKET_LOGGED_IN:
-      return { ...prevState,
-        isUserLoggedIn: !!action.data
-      };
-
-    case actionTypes.POCKET_CTA:
-      return { ...prevState,
-        pocketCta: {
-          ctaButton: action.data.cta_button,
-          ctaText: action.data.cta_text,
-          ctaUrl: action.data.cta_url,
-          useCta: action.data.use_cta
-        }
-      };
-
-    default:
-      return prevState;
-  }
-}
-
-function Reducers_Personalization(prevState = INITIAL_STATE.Personalization, action) {
-  switch (action.type) {
-    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
-      return { ...prevState,
-        lastUpdated: action.data.lastUpdated
-      };
-
-    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_INIT:
-      return { ...prevState,
-        initialized: true
-      };
-
-    default:
-      return prevState;
-  }
-} // eslint-disable-next-line complexity
-
-
-function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
-  // Return if action data is empty, or spocs or feeds data is not loaded
-  const isNotReady = () => !action.data || !prevState.spocs.loaded || !prevState.feeds.loaded;
-
-  const handlePlacements = handleSites => {
-    const {
-      data,
-      placements
-    } = prevState.spocs;
-    const result = {};
-
-    const forPlacement = placement => {
-      const placementSpocs = data[placement.name];
-
-      if (!placementSpocs || !placementSpocs.items || !placementSpocs.items.length) {
-        return;
-      }
-
-      result[placement.name] = { ...placementSpocs,
-        items: handleSites(placementSpocs.items)
-      };
-    };
-
-    if (!placements || !placements.length) {
-      [{
-        name: "spocs"
-      }].forEach(forPlacement);
-    } else {
-      placements.forEach(forPlacement);
-    }
-
-    return result;
-  };
-
-  const nextState = handleSites => ({ ...prevState,
-    spocs: { ...prevState.spocs,
-      data: handlePlacements(handleSites)
-    },
-    feeds: { ...prevState.feeds,
-      data: Object.keys(prevState.feeds.data).reduce((accumulator, feed_url) => {
-        accumulator[feed_url] = {
-          data: { ...prevState.feeds.data[feed_url].data,
-            recommendations: handleSites(prevState.feeds.data[feed_url].data.recommendations)
-          }
-        };
-        return accumulator;
-      }, {})
-    }
-  });
-
-  switch (action.type) {
-    case actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE: // Fall through to a separate action is so it doesn't trigger a listener update on init
-
-    case actionTypes.DISCOVERY_STREAM_CONFIG_SETUP:
-      return { ...prevState,
-        config: action.data || {}
-      };
-
-    case actionTypes.DISCOVERY_STREAM_EXPERIMENT_DATA:
-      return { ...prevState,
-        experimentData: action.data || {}
-      };
-
-    case actionTypes.DISCOVERY_STREAM_LAYOUT_UPDATE:
-      return { ...prevState,
-        lastUpdated: action.data.lastUpdated || null,
-        layout: action.data.layout || []
-      };
-
-    case actionTypes.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
-      return { ...prevState,
-        isCollectionDismissible: action.data.value
-      };
-
-    case actionTypes.DISCOVERY_STREAM_PREFS_SETUP:
-      return { ...prevState,
-        recentSavesEnabled: action.data.recentSavesEnabled,
-        pocketButtonEnabled: action.data.pocketButtonEnabled,
-        saveToPocketCard: action.data.saveToPocketCard,
-        hideDescriptions: action.data.hideDescriptions,
-        compactImages: action.data.compactImages,
-        imageGradient: action.data.imageGradient,
-        newSponsoredLabel: action.data.newSponsoredLabel,
-        titleLines: action.data.titleLines,
-        descLines: action.data.descLines,
-        readTime: action.data.readTime
-      };
-
-    case actionTypes.DISCOVERY_STREAM_RECENT_SAVES:
-      return { ...prevState,
-        recentSavesData: action.data.recentSaves
-      };
-
-    case actionTypes.DISCOVERY_STREAM_POCKET_STATE_SET:
-      return { ...prevState,
-        isUserLoggedIn: action.data.isUserLoggedIn
-      };
-
-    case actionTypes.HIDE_PRIVACY_INFO:
-      return { ...prevState,
-        isPrivacyInfoModalVisible: false
-      };
-
-    case actionTypes.SHOW_PRIVACY_INFO:
-      return { ...prevState,
-        isPrivacyInfoModalVisible: true
-      };
-
-    case actionTypes.DISCOVERY_STREAM_LAYOUT_RESET:
-      return { ...INITIAL_STATE.DiscoveryStream,
-        config: prevState.config
-      };
-
-    case actionTypes.DISCOVERY_STREAM_FEEDS_UPDATE:
-      return { ...prevState,
-        feeds: { ...prevState.feeds,
-          loaded: true
-        }
-      };
-
-    case actionTypes.DISCOVERY_STREAM_FEED_UPDATE:
-      const newData = {};
-      newData[action.data.url] = action.data.feed;
-      return { ...prevState,
-        feeds: { ...prevState.feeds,
-          data: { ...prevState.feeds.data,
-            ...newData
-          }
-        }
-      };
-
-    case actionTypes.DISCOVERY_STREAM_SPOCS_CAPS:
-      return { ...prevState,
-        spocs: { ...prevState.spocs,
-          frequency_caps: [...prevState.spocs.frequency_caps, ...action.data]
-        }
-      };
-
-    case actionTypes.DISCOVERY_STREAM_SPOCS_ENDPOINT:
-      return { ...prevState,
-        spocs: { ...INITIAL_STATE.DiscoveryStream.spocs,
-          spocs_endpoint: action.data.url || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint
-        }
-      };
-
-    case actionTypes.DISCOVERY_STREAM_SPOCS_PLACEMENTS:
-      return { ...prevState,
-        spocs: { ...prevState.spocs,
-          placements: action.data.placements || INITIAL_STATE.DiscoveryStream.spocs.placements
-        }
-      };
-
-    case actionTypes.DISCOVERY_STREAM_SPOCS_UPDATE:
-      if (action.data) {
-        return { ...prevState,
-          spocs: { ...prevState.spocs,
-            lastUpdated: action.data.lastUpdated,
-            data: action.data.spocs,
-            loaded: true
-          }
-        };
-      }
-
-      return prevState;
-
-    case actionTypes.DISCOVERY_STREAM_SPOC_BLOCKED:
-      return { ...prevState,
-        spocs: { ...prevState.spocs,
-          blocked: [...prevState.spocs.blocked, action.data.url]
-        }
-      };
-
-    case actionTypes.DISCOVERY_STREAM_LINK_BLOCKED:
-      return isNotReady() ? prevState : nextState(items => items.filter(item => item.url !== action.data.url));
-
-    case actionTypes.PLACES_SAVED_TO_POCKET:
-      const addPocketInfo = item => {
-        if (item.url === action.data.url) {
-          return Object.assign({}, item, {
-            open_url: action.data.open_url,
-            pocket_id: action.data.pocket_id,
-            context_type: "pocket"
-          });
-        }
-
-        return item;
-      };
-
-      return isNotReady() ? prevState : nextState(items => items.map(addPocketInfo));
-
-    case actionTypes.DELETE_FROM_POCKET:
-    case actionTypes.ARCHIVE_FROM_POCKET:
-      return isNotReady() ? prevState : nextState(items => items.filter(item => item.pocket_id !== action.data.pocket_id));
-
-    case actionTypes.PLACES_BOOKMARK_ADDED:
-      const updateBookmarkInfo = item => {
-        if (item.url === action.data.url) {
-          const {
-            bookmarkGuid,
-            bookmarkTitle,
-            dateAdded
-          } = action.data;
-          return Object.assign({}, item, {
-            bookmarkGuid,
-            bookmarkTitle,
-            bookmarkDateCreated: dateAdded,
-            context_type: "bookmark"
-          });
-        }
-
-        return item;
-      };
-
-      return isNotReady() ? prevState : nextState(items => items.map(updateBookmarkInfo));
-
-    case actionTypes.PLACES_BOOKMARKS_REMOVED:
-      const removeBookmarkInfo = item => {
-        if (action.data.urls.includes(item.url)) {
-          const newSite = Object.assign({}, item);
-          delete newSite.bookmarkGuid;
-          delete newSite.bookmarkTitle;
-          delete newSite.bookmarkDateCreated;
-
-          if (!newSite.context_type || newSite.context_type === "bookmark") {
-            newSite.context_type = "removedBookmark";
-          }
-
-          return newSite;
-        }
-
-        return item;
-      };
-
-      return isNotReady() ? prevState : nextState(items => items.map(removeBookmarkInfo));
-
-    case actionTypes.PREF_CHANGED:
-      if (action.data.name === PREF_COLLECTION_DISMISSIBLE) {
-        return { ...prevState,
-          isCollectionDismissible: action.data.value
-        };
-      }
-
-      return prevState;
-
-    default:
-      return prevState;
-  }
-}
-
-function Search(prevState = INITIAL_STATE.Search, action) {
-  switch (action.type) {
-    case actionTypes.DISABLE_SEARCH:
-      return Object.assign({ ...prevState,
-        disable: true
-      });
-
-    case actionTypes.FAKE_FOCUS_SEARCH:
-      return Object.assign({ ...prevState,
-        fakeFocus: true
-      });
-
-    case actionTypes.SHOW_SEARCH:
-      return Object.assign({ ...prevState,
-        disable: false,
-        fakeFocus: false
-      });
-
-    default:
-      return prevState;
-  }
-}
-
-const reducers = {
-  TopSites,
-  App,
-  ASRouter,
-  Snippets,
-  Prefs,
-  Dialog,
-  Sections,
-  Pocket,
-  Personalization: Reducers_Personalization,
-  DiscoveryStream,
-  Search
-};
+// EXTERNAL MODULE: ./common/Reducers.jsm
+var Reducers = __webpack_require__(2);
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteFormInput.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -11497,8 +11721,8 @@ class TopSiteImpressionWrapper extends (external_React_default()).PureComponent 
     const {
       tile
     } = this.props;
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.TOP_SITES_IMPRESSION_STATS,
       data: {
         type: "impression",
         ...tile
@@ -11925,7 +12149,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
     }), title || /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("span", {
       className: "sponsored-label",
       "data-l10n-id": "newtab-topsite-sponsored"
-    })))), children, link.type === SPOC_TYPE ? /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+    })))), children, link.type === SPOC_TYPE ? /*#__PURE__*/external_React_default().createElement(ImpressionStats, {
       flightId: link.flightId,
       rows: [{
         id: link.id,
@@ -11992,7 +12216,7 @@ class TopSite extends (external_React_default()).PureComponent {
   }
 
   userEvent(event) {
-    this.props.dispatch(actionCreators.UserEvent(Object.assign({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent(Object.assign({
       event,
       source: TOP_SITES_SOURCE,
       action_position: this.props.index
@@ -12013,8 +12237,8 @@ class TopSite extends (external_React_default()).PureComponent {
     } = event;
 
     if (!this.props.link.searchTopSite) {
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.OPEN_LINK,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.OPEN_LINK,
         data: Object.assign(this.props.link, {
           event: {
             altKey,
@@ -12028,7 +12252,7 @@ class TopSite extends (external_React_default()).PureComponent {
 
       if (this.props.link.type === SPOC_TYPE) {
         // Record a Pocket click.
-        this.props.dispatch(actionCreators.ImpressionStats({
+        this.props.dispatch(Actions_sys.actionCreators.ImpressionStats({
           source: TOP_SITES_SOURCE,
           click: 0,
           tiles: [{
@@ -12039,8 +12263,8 @@ class TopSite extends (external_React_default()).PureComponent {
         })); // Record a click for sponsored topsites.
 
         const title = this.props.link.label || this.props.link.hostname;
-        this.props.dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+        this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+          type: Actions_sys.actionTypes.TOP_SITES_IMPRESSION_STATS,
           data: {
             type: "click",
             position: this.props.link.pos + 1,
@@ -12052,8 +12276,8 @@ class TopSite extends (external_React_default()).PureComponent {
       }
 
       if (this.props.link.sendAttributionRequest) {
-        this.props.dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.PARTNER_LINK_ATTRIBUTION,
+        this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+          type: Actions_sys.actionTypes.PARTNER_LINK_ATTRIBUTION,
           data: {
             targetURL: this.props.link.url,
             source: "newtab"
@@ -12063,8 +12287,8 @@ class TopSite extends (external_React_default()).PureComponent {
 
       if (this.props.link.sponsored_position) {
         const title = this.props.link.label || this.props.link.hostname;
-        this.props.dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+        this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+          type: Actions_sys.actionTypes.TOP_SITES_IMPRESSION_STATS,
           data: {
             type: "click",
             position: this.props.index + 1,
@@ -12076,8 +12300,8 @@ class TopSite extends (external_React_default()).PureComponent {
         }));
       }
     } else {
-      this.props.dispatch(actionCreators.OnlyToMain({
-        type: actionTypes.FILL_SEARCH_TERM,
+      this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+        type: Actions_sys.actionTypes.FILL_SEARCH_TERM,
         data: {
           label: this.props.link.label
         }
@@ -12152,7 +12376,7 @@ class TopSitePlaceholder extends (external_React_default()).PureComponent {
 
   onEditButtonClick() {
     this.props.dispatch({
-      type: actionTypes.TOP_SITES_EDIT,
+      type: Actions_sys.actionTypes.TOP_SITES_EDIT,
       data: {
         index: this.props.index
       }
@@ -12203,7 +12427,7 @@ class TopSiteList extends (external_React_default()).PureComponent {
   }
 
   userEvent(event, index) {
-    this.props.dispatch(actionCreators.UserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
       event,
       source: TOP_SITES_SOURCE,
       action_position: index
@@ -12247,8 +12471,8 @@ class TopSiteList extends (external_React_default()).PureComponent {
       case "drop":
         if (index !== this.state.draggedIndex) {
           this.dropped = true;
-          this.props.dispatch(actionCreators.AlsoToMain({
-            type: actionTypes.TOP_SITES_INSERT,
+          this.props.dispatch(Actions_sys.actionCreators.AlsoToMain({
+            type: Actions_sys.actionTypes.TOP_SITES_INSERT,
             data: {
               site: {
                 url: this.state.draggedSite.url,
@@ -12273,7 +12497,7 @@ class TopSiteList extends (external_React_default()).PureComponent {
   _getTopSites() {
     // Make a copy of the sites to truncate or extend to desired length
     let topSites = this.props.TopSites.rows.slice();
-    topSites.length = this.props.TopSitesRows * TOP_SITES_MAX_SITES_PER_ROW;
+    topSites.length = this.props.TopSitesRows * Reducers.TOP_SITES_MAX_SITES_PER_ROW;
     return topSites;
   }
   /**
@@ -12454,7 +12678,7 @@ class TopSiteForm extends (external_React_default()).PureComponent {
       validationError: false
     });
     this.props.dispatch({
-      type: actionTypes.PREVIEW_REQUEST_CANCEL
+      type: Actions_sys.actionTypes.PREVIEW_REQUEST_CANCEL
     });
   }
 
@@ -12493,14 +12717,14 @@ class TopSiteForm extends (external_React_default()).PureComponent {
         site.customScreenshotURL = null;
       }
 
-      this.props.dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.TOP_SITES_PIN,
+      this.props.dispatch(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.TOP_SITES_PIN,
         data: {
           site,
           index
         }
       }));
-      this.props.dispatch(actionCreators.UserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "TOP_SITES_EDIT",
         action_position: index
@@ -12513,13 +12737,13 @@ class TopSiteForm extends (external_React_default()).PureComponent {
     event.preventDefault();
 
     if (this.validateForm()) {
-      this.props.dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.PREVIEW_REQUEST,
+      this.props.dispatch(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.PREVIEW_REQUEST,
         data: {
           url: this.cleanUrl(this.state.customScreenshotUrl)
         }
       }));
-      this.props.dispatch(actionCreators.UserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "PREVIEW_REQUEST"
       }));
@@ -12758,8 +12982,8 @@ class _TopSites extends (external_React_default()).PureComponent {
     const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
     const searchShortcuts = topSites.filter(site => !!site.searchTopSite).length; // Dispatch telemetry event with the count of TopSites images types.
 
-    this.props.dispatch(actionCreators.AlsoToMain({
-      type: actionTypes.SAVE_SESSION_PERF_DATA,
+    this.props.dispatch(Actions_sys.actionCreators.AlsoToMain({
+      type: Actions_sys.actionTypes.SAVE_SESSION_PERF_DATA,
       data: {
         topsites_icon_stats: topSitesIconsStats,
         topsites_pinned: topSitesPinned,
@@ -12774,7 +12998,7 @@ class _TopSites extends (external_React_default()).PureComponent {
 
   _getVisibleTopSites() {
     // We hide 2 sites per row when not in the wide layout.
-    let sitesPerRow = TOP_SITES_MAX_SITES_PER_ROW; // $break-point-widest = 1072px (from _variables.scss)
+    let sitesPerRow = Reducers.TOP_SITES_MAX_SITES_PER_ROW; // $break-point-widest = 1072px (from _variables.scss)
 
     if (!__webpack_require__.g.matchMedia(`(min-width: 1072px)`).matches) {
       sitesPerRow -= 2;
@@ -12792,22 +13016,22 @@ class _TopSites extends (external_React_default()).PureComponent {
   }
 
   onEditFormClose() {
-    this.props.dispatch(actionCreators.UserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
       source: TOP_SITES_SOURCE,
       event: "TOP_SITES_EDIT_CLOSE"
     }));
     this.props.dispatch({
-      type: actionTypes.TOP_SITES_CANCEL_EDIT
+      type: Actions_sys.actionTypes.TOP_SITES_CANCEL_EDIT
     });
   }
 
   onSearchShortcutsFormClose() {
-    this.props.dispatch(actionCreators.UserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
       source: TOP_SITES_SOURCE,
       event: "SEARCH_EDIT_CLOSE"
     }));
     this.props.dispatch({
-      type: actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL
+      type: Actions_sys.actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL
     });
   }
 
@@ -12931,7 +13155,7 @@ class Section extends (external_React_default()).PureComponent {
     const cards = props.rows.slice(0, maxCards);
 
     if (this.needsImpressionStats(cards)) {
-      props.dispatch(actionCreators.ImpressionStats({
+      props.dispatch(Actions_sys.actionCreators.ImpressionStats({
         source: props.eventSource,
         tiles: cards.map(link => ({
           id: link.guid
@@ -13032,8 +13256,8 @@ class Section extends (external_React_default()).PureComponent {
 
   sendNewTabRehydrated(initialized) {
     if (initialized && !this.renderNotified) {
-      this.props.dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.NEW_TAB_REHYDRATED,
+      this.props.dispatch(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.NEW_TAB_REHYDRATED,
         data: {}
       }));
       this.renderNotified = true;
@@ -13217,7 +13441,7 @@ class _Sections extends (external_React_default()).PureComponent {
   }
 
 }
-const Sections_Sections = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+const Sections = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Sections: state.Sections,
   Prefs: state.Prefs
 }))(_Sections);
@@ -13278,7 +13502,7 @@ class Navigation_Topic extends (external_React_default()).PureComponent {
 
   onLinkClick(event) {
     if (this.props.dispatch) {
-      this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.DiscoveryStreamUserEvent({
         event: "CLICK",
         source: "POPULAR_TOPICS",
         action_position: 0,
@@ -13709,7 +13933,7 @@ class TopSites_TopSites_TopSites extends (external_React_default()).PureComponen
   }
 
 }
-const DiscoveryStreamComponents_TopSites_TopSites_TopSites = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+const TopSites = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   TopSites: state.TopSites
 }))(TopSites_TopSites_TopSites);
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamBase/DiscoveryStreamBase.jsx
@@ -13817,7 +14041,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           positions = component.spocs.positions;
         }
 
-        return /*#__PURE__*/external_React_default().createElement(DiscoveryStreamComponents_TopSites_TopSites_TopSites, {
+        return /*#__PURE__*/external_React_default().createElement(TopSites, {
           header: component.header,
           data: component.data,
           promoPositions: positions
@@ -14091,7 +14315,7 @@ class ContentSection extends (external_React_default()).PureComponent {
   }
 
   inputUserEvent(eventSource, status) {
-    this.props.dispatch(actionCreators.UserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
       event: "PREF_CHANGED",
       source: eventSource,
       value: {
@@ -14455,7 +14679,7 @@ class _Search extends (external_React_default()).PureComponent {
   handleEvent(event) {
     // Also track search events with our own telemetry
     if (event.detail.type === "Search") {
-      this.props.dispatch(actionCreators.UserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.UserEvent({
         event: "SEARCH"
       }));
     }
@@ -14466,22 +14690,22 @@ class _Search extends (external_React_default()).PureComponent {
   }
 
   doSearchHandoff(text) {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.HANDOFF_SEARCH_TO_AWESOMEBAR,
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.HANDOFF_SEARCH_TO_AWESOMEBAR,
       data: {
         text
       }
     }));
     this.props.dispatch({
-      type: actionTypes.FAKE_FOCUS_SEARCH
+      type: Actions_sys.actionTypes.FAKE_FOCUS_SEARCH
     });
-    this.props.dispatch(actionCreators.UserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
       event: "SEARCH_HANDOFF"
     }));
 
     if (text) {
       this.props.dispatch({
-        type: actionTypes.DISABLE_SEARCH
+        type: Actions_sys.actionTypes.DISABLE_SEARCH
       });
     }
   }
@@ -14629,7 +14853,7 @@ class _Search extends (external_React_default()).PureComponent {
   }
 
 }
-const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+const Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs
 }))(_Search);
 ;// CONCATENATED MODULE: ./content-src/components/Base/Base.jsx
@@ -14769,10 +14993,10 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
 
   openPreferences() {
-    this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.SETTINGS_OPEN
+    this.props.dispatch(Actions_sys.actionCreators.OnlyToMain({
+      type: Actions_sys.actionTypes.SETTINGS_OPEN
     }));
-    this.props.dispatch(actionCreators.UserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
       event: "OPEN_NEWTAB_PREFS"
     }));
   }
@@ -14781,7 +15005,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.setState({
       customizeMenuVisible: true
     });
-    this.props.dispatch(actionCreators.UserEvent({
+    this.props.dispatch(Actions_sys.actionCreators.UserEvent({
       event: "SHOW_PERSONALIZE"
     }));
   }
@@ -14791,7 +15015,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       this.setState({
         customizeMenuVisible: false
       });
-      this.props.dispatch(actionCreators.UserEvent({
+      this.props.dispatch(Actions_sys.actionCreators.UserEvent({
         event: "HIDE_PERSONALIZE"
       }));
     }
@@ -14804,7 +15028,7 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
 
   setPref(pref, value) {
-    this.props.dispatch(actionCreators.SetPref(pref, value));
+    this.props.dispatch(Actions_sys.actionCreators.SetPref(pref, value));
   }
 
   render() {
@@ -14855,7 +15079,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       className: hasSnippet ? "has-snippet" : ""
     }, prefs.showSearch && /*#__PURE__*/external_React_default().createElement("div", {
       className: "non-collapsible-section"
-    }, /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Search_Search, Base_extends({
+    }, /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Search, Base_extends({
       showLogo: noSectionsEnabled || prefs["logowordmark.alwaysVisible"],
       handoffEnabled: searchHandoffEnabled
     }, props.Search)))), /*#__PURE__*/external_React_default().createElement(ASRouterUISurface, {
@@ -14869,7 +15093,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       className: "borderless-error"
     }, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamBase, {
       locale: props.App.locale
-    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))));
+    })) : /*#__PURE__*/external_React_default().createElement(Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))));
   }
 
 }
@@ -14927,8 +15151,8 @@ class DetectUserSessionStart {
     try {
       let visibility_event_rcvd_ts = this._perfService.getMostRecentAbsMarkStartByName("visibility_event_rcvd_ts");
 
-      this._store.dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.SAVE_SESSION_PERF_DATA,
+      this._store.dispatch(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.SAVE_SESSION_PERF_DATA,
         data: {
           visibility_event_rcvd_ts
         }
@@ -14965,7 +15189,7 @@ const external_Redux_namespaceObject = Redux;
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
 const OUTGOING_MESSAGE_NAME = "ActivityStream:ContentToMain";
 const INCOMING_MESSAGE_NAME = "ActivityStream:MainToContent";
-const EARLY_QUEUED_ACTIONS = [actionTypes.SAVE_SESSION_PERF_DATA];
+const EARLY_QUEUED_ACTIONS = [Actions_sys.actionTypes.SAVE_SESSION_PERF_DATA];
 /**
  * A higher-order function which returns a reducer that, on MERGE_STORE action,
  * will return the action.data object merged into the previous state.
@@ -15002,7 +15226,7 @@ function mergeStateReducer(mainReducer) {
 const messageMiddleware = store => next => action => {
   const skipLocal = action.meta && action.meta.skipLocal;
 
-  if (actionUtils.isSendToMain(action)) {
+  if (Actions_sys.actionUtils.isSendToMain(action)) {
     RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
   }
 
@@ -15030,7 +15254,7 @@ const rehydrationMiddleware = ({
     }
 
     const isMergeStoreAction = action.type === MERGE_STORE_ACTION;
-    const isRehydrationRequest = action.type === actionTypes.NEW_TAB_STATE_REQUEST;
+    const isRehydrationRequest = action.type === Actions_sys.actionTypes.NEW_TAB_STATE_REQUEST;
 
     if (isRehydrationRequest) {
       getState.didRequestInitialState = true;
@@ -15043,13 +15267,13 @@ const rehydrationMiddleware = ({
     } // If init happened after our request was made, we need to re-request
 
 
-    if (getState.didRequestInitialState && action.type === actionTypes.INIT) {
-      return next(actionCreators.AlsoToMain({
-        type: actionTypes.NEW_TAB_STATE_REQUEST
+    if (getState.didRequestInitialState && action.type === Actions_sys.actionTypes.INIT) {
+      return next(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.NEW_TAB_STATE_REQUEST
       }));
     }
 
-    if (actionUtils.isBroadcastToContent(action) || actionUtils.isSendToOneContent(action) || actionUtils.isSendToPreloaded(action)) {
+    if (Actions_sys.actionUtils.isBroadcastToContent(action) || Actions_sys.actionUtils.isSendToOneContent(action) || Actions_sys.actionUtils.isSendToPreloaded(action)) {
       // Note that actions received before didRehydrate will not be dispatched
       // because this could negatively affect preloading and the the state
       // will be replaced by rehydration anyway.
@@ -15077,7 +15301,7 @@ const queueEarlyMessageMiddleware = ({
   return next => action => {
     if (getState.receivedFromMain) {
       next(action);
-    } else if (actionUtils.isFromMain(action)) {
+    } else if (Actions_sys.actionUtils.isFromMain(action)) {
       next(action);
       getState.receivedFromMain = true; // Sending out all the early actions as main is ready now
 
@@ -15133,7 +15357,7 @@ const NewTab = ({
   store: store
 }, /*#__PURE__*/external_React_default().createElement(Base, null));
 function renderWithoutState() {
-  const store = initStore(reducers);
+  const store = initStore(Reducers.reducers);
   new DetectUserSessionStart(store).sendEventOrAddListener(); // If this document has already gone into the background by the time we've reached
   // here, we can deprioritize requesting the initial state until the event loop
   // frees up. If, however, the visibility changes, we then send the request.
@@ -15148,8 +15372,8 @@ function renderWithoutState() {
       }
 
       didRequest = true;
-      store.dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.NEW_TAB_STATE_REQUEST
+      store.dispatch(Actions_sys.actionCreators.AlsoToMain({
+        type: Actions_sys.actionTypes.NEW_TAB_STATE_REQUEST
       }));
     }
   }
@@ -15168,12 +15392,14 @@ function renderWithoutState() {
   }), document.getElementById("root"));
 }
 function renderCache(initialState) {
-  const store = initStore(reducers, initialState);
+  const store = initStore(Reducers.reducers, initialState);
   new DetectUserSessionStart(store).sendEventOrAddListener();
   external_ReactDOM_default().hydrate( /*#__PURE__*/external_React_default().createElement(NewTab, {
     store: store
   }), document.getElementById("root"));
 }
+})();
+
 NewtabRenderUtils = __webpack_exports__;
 /******/ })()
 ;

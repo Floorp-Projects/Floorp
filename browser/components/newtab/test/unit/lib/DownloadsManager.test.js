@@ -1,4 +1,4 @@
-import { actionTypes as at } from "common/Actions.jsm";
+import { actionTypes as at } from "common/Actions.sys.mjs";
 import { DownloadsManager } from "lib/DownloadsManager.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 

@@ -10,7 +10,10 @@ import {
   StatusMessage,
   SponsorLabel,
 } from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "common/Actions.sys.mjs";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
 import { INITIAL_STATE } from "common/Reducers.jsm";

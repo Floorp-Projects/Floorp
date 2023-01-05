@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.jsm";
-import { actionTypes as at } from "common/Actions.jsm";
+import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.sys.mjs";
+import { actionTypes as at } from "common/Actions.sys.mjs";
 import { ASRouterUtils } from "./asrouter-utils";
 import { generateBundles } from "./rich-text-strings";
 import { ImpressionsWrapper } from "./components/ImpressionsWrapper/ImpressionsWrapper";

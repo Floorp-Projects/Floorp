@@ -11,7 +11,9 @@ const {
   actionCreators: ac,
   actionTypes: at,
   actionUtils: au,
-} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+} = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Actions.sys.mjs"
+);
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"
 );

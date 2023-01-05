@@ -1,4 +1,4 @@
-import { Dedupe } from "common/Dedupe.jsm";
+import { Dedupe } from "common/Dedupe.sys.mjs";
 
 describe("Dedupe", () => {
   let instance;
