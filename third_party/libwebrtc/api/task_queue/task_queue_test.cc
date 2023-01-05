@@ -13,6 +13,7 @@
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/strings/string_view.h"
+#include "api/task_queue/default_task_queue_factory.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/event.h"
 #include "rtc_base/ref_counter.h"
@@ -29,13 +30,13 @@ std::unique_ptr<TaskQueueBase, TaskQueueDeleter> CreateTaskQueue(
 }
 
 TEST_P(TaskQueueTest, Construct) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   auto queue = CreateTaskQueue(factory, "Construct");
   EXPECT_FALSE(queue->IsCurrent());
 }
 
 TEST_P(TaskQueueTest, PostAndCheckCurrent) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   rtc::Event event;
   auto queue = CreateTaskQueue(factory, "PostAndCheckCurrent");
 
@@ -53,7 +54,7 @@ TEST_P(TaskQueueTest, PostAndCheckCurrent) {
 }
 
 TEST_P(TaskQueueTest, PostCustomTask) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   rtc::Event ran;
   auto queue = CreateTaskQueue(factory, "PostCustomImplementation");
 
@@ -72,7 +73,7 @@ TEST_P(TaskQueueTest, PostCustomTask) {
 }
 
 TEST_P(TaskQueueTest, PostDelayedZero) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   rtc::Event event;
   auto queue = CreateTaskQueue(factory, "PostDelayedZero");
 
@@ -81,7 +82,7 @@ TEST_P(TaskQueueTest, PostDelayedZero) {
 }
 
 TEST_P(TaskQueueTest, PostFromQueue) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   rtc::Event event;
   auto queue = CreateTaskQueue(factory, "PostFromQueue");
 
@@ -91,7 +92,7 @@ TEST_P(TaskQueueTest, PostFromQueue) {
 }
 
 TEST_P(TaskQueueTest, PostDelayed) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   rtc::Event event;
   auto queue =
       CreateTaskQueue(factory, "PostDelayed", TaskQueueFactory::Priority::HIGH);
@@ -113,7 +114,7 @@ TEST_P(TaskQueueTest, PostDelayed) {
 }
 
 TEST_P(TaskQueueTest, PostMultipleDelayed) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   auto queue = CreateTaskQueue(factory, "PostMultipleDelayed");
 
   std::vector<rtc::Event> events(100);
@@ -132,7 +133,7 @@ TEST_P(TaskQueueTest, PostMultipleDelayed) {
 }
 
 TEST_P(TaskQueueTest, PostDelayedAfterDestruct) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   rtc::Event run;
   rtc::Event deleted;
   auto queue = CreateTaskQueue(factory, "PostDelayedAfterDestruct");
@@ -147,7 +148,7 @@ TEST_P(TaskQueueTest, PostDelayedAfterDestruct) {
 }
 
 TEST_P(TaskQueueTest, PostAndReuse) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   rtc::Event event;
   auto post_queue = CreateTaskQueue(factory, "PostQueue");
   auto reply_queue = CreateTaskQueue(factory, "ReplyQueue");
@@ -203,7 +204,7 @@ TEST_P(TaskQueueTest, PostALot) {
     rtc::Event event_;
   };
 
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   static constexpr int kTaskCount = 0xffff;
   rtc::Event posting_done;
   BlockingCounter all_destroyed(kTaskCount);
@@ -247,7 +248,7 @@ TEST_P(TaskQueueTest, PostALot) {
 // unit test, run it under TSan or some other tool that is able to
 // directly detect data races.
 TEST_P(TaskQueueTest, PostTwoWithSharedUnprotectedState) {
-  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()();
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
   struct SharedState {
     // First task will set this value to 1 and second will assert it.
     int state = 0;

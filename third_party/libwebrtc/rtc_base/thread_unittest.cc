@@ -12,6 +12,7 @@
 
 #include <memory>
 
+#include "api/field_trials_view.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/task_queue/task_queue_test.h"
 #include "api/units/time_delta.h"
@@ -1083,11 +1084,16 @@ class ThreadFactory : public webrtc::TaskQueueFactory {
   }
 };
 
+std::unique_ptr<webrtc::TaskQueueFactory> CreateDefaultThreadFactory(
+    const webrtc::FieldTrialsView*) {
+  return std::make_unique<ThreadFactory>();
+}
+
 using ::webrtc::TaskQueueTest;
 
 INSTANTIATE_TEST_SUITE_P(RtcThread,
                          TaskQueueTest,
-                         ::testing::Values(std::make_unique<ThreadFactory>));
+                         ::testing::Values(CreateDefaultThreadFactory));
 
 }  // namespace
 }  // namespace rtc

@@ -173,8 +173,9 @@
     if (webrtc::field_trial::IsEnabled("WebRTC-Network-UseNWPathMonitor")) {
       dependencies.network_monitor_factory = webrtc::CreateNetworkMonitorFactory();
     }
-    dependencies.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
     dependencies.trials = std::make_unique<webrtc::FieldTrialBasedConfig>();
+    dependencies.task_queue_factory =
+        webrtc::CreateDefaultTaskQueueFactory(dependencies.trials.get());
     cricket::MediaEngineDependencies media_deps;
     media_deps.adm = std::move(audioDeviceModule);
     media_deps.task_queue_factory = dependencies.task_queue_factory.get();

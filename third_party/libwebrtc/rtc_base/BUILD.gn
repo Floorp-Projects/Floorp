@@ -1827,6 +1827,7 @@ if (rtc_include_tests) {
         ":threading",
         ":timeutils",
         "../api:array_view",
+        "../api:field_trials_view",
         "../api:make_ref_counted",
         "../api/task_queue",
         "../api/task_queue:pending_task_safety_flag",
