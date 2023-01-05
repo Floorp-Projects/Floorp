@@ -67,6 +67,8 @@ PacingController::PacingController(Clock* clock,
       pace_audio_(IsEnabled(field_trials_, "WebRTC-Pacer-BlockAudio")),
       ignore_transport_overhead_(
           IsEnabled(field_trials_, "WebRTC-Pacer-IgnoreTransportOverhead")),
+      fast_retransmissions_(
+          IsEnabled(field_trials_, "WebRTC-Pacer-FastRetransmissions")),
       min_packet_limit_(kDefaultMinPacketLimit),
       transport_overhead_per_packet_(DataSize::Zero()),
       send_burst_interval_(TimeDelta::Zero()),
@@ -313,13 +315,11 @@ Timestamp PacingController::NextSendTime() const {
     }
   }
 
-  // Not pacing audio, if leading packet is audio its target send
-  // time is the time at which it was enqueued.
-  Timestamp unpaced_audio_time =
-      pace_audio_ ? Timestamp::PlusInfinity()
-                  : packet_queue_.LeadingAudioPacketEnqueueTime();
-  if (unpaced_audio_time.IsFinite()) {
-    return unpaced_audio_time;
+  // If queue contains a packet which should not be paced, its target send time
+  // is the time at which it was enqueued.
+  Timestamp unpaced_send_time = NextUnpacedSendTime();
+  if (unpaced_send_time.IsFinite()) {
+    return unpaced_send_time;
   }
 
   if (congested_ || !seen_first_packet_) {
@@ -582,11 +582,8 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
   }
 
   // First, check if there is any reason _not_ to send the next queued packet.
-
-  // Unpaced audio packets and probes are exempted from send checks.
-  bool unpaced_audio_packet =
-      !pace_audio_ && packet_queue_.LeadingAudioPacketEnqueueTime().IsFinite();
-  if (!unpaced_audio_packet && !is_probe) {
+  // Unpaced packets and probes are exempted from send checks.
+  if (NextUnpacedSendTime().IsInfinite() && !is_probe) {
     if (congested_) {
       // Don't send anything if congested.
       return nullptr;
@@ -665,6 +662,25 @@ void PacingController::MaybeUpdateMediaRateDueToLongQueue(Timestamp now) {
                           << pacing_rate_.kbps();
     }
   }
+}
+
+Timestamp PacingController::NextUnpacedSendTime() const {
+  if (!pace_audio_) {
+    Timestamp leading_audio_send_time =
+        packet_queue_.LeadingPacketEnqueueTime(RtpPacketMediaType::kAudio);
+    if (leading_audio_send_time.IsFinite()) {
+      return leading_audio_send_time;
+    }
+  }
+  if (fast_retransmissions_) {
+    Timestamp leading_retransmission_send_time =
+        packet_queue_.LeadingPacketEnqueueTime(
+            RtpPacketMediaType::kRetransmission);
+    if (leading_retransmission_send_time.IsFinite()) {
+      return leading_retransmission_send_time;
+    }
+  }
+  return Timestamp::MinusInfinity();
 }
 
 }  // namespace webrtc

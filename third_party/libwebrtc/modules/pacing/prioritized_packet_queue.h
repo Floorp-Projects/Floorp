@@ -57,9 +57,10 @@ class PrioritizedPacketQueue {
   const std::array<int, kNumMediaTypes>& SizeInPacketsPerRtpPacketMediaType()
       const;
 
-  // The enqueue time of the next audio packet this queue will return via the
-  // Pop() method. If queue has no audio packets, returns MinusInfinity().
-  Timestamp LeadingAudioPacketEnqueueTime() const;
+  // The enqueue time of the next packet this queue will return via the Pop()
+  // method, for the given packet type. If queue has no packets, of that type,
+  // returns Timestamp::MinusInfinity().
+  Timestamp LeadingPacketEnqueueTime(RtpPacketMediaType type) const;
 
   // Enqueue time of the oldest packet in the queue,
   // Timestamp::MinusInfinity() if queue is empty.
@@ -110,7 +111,7 @@ class PrioritizedPacketQueue {
 
     bool HasPacketsAtPrio(int priority_level) const;
     bool IsEmpty() const;
-    Timestamp LeadingAudioPacketEnqueueTime() const;
+    Timestamp LeadingPacketEnqueueTime(int priority_level) const;
     Timestamp LastEnqueueTime() const;
 
    private:
