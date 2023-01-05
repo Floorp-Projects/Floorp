@@ -1,5 +1,5 @@
 /**
- * Tests that the title of a bookmark can be changed from the bookmark star, toolbar, and sidebar.
+ * Tests that the title of a bookmark can be changed from the bookmark star, toolbar, sidebar, and library.
  */
 "use strict";
 
@@ -231,4 +231,40 @@ add_task(async function test_change_title_from_Sidebar() {
       }
     );
   });
+});
+
+async function test_change_title_from_Library(delayedApply) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
+  });
+
+  info("Open library and select the bookmark.");
+  const library = await promiseLibrary("UnfiledBookmarks");
+  registerCleanupFunction(async function() {
+    await promiseLibraryClosed(library);
+  });
+  library.ContentTree.view.selectNode(
+    library.ContentTree.view.view.nodeForTreeIndex(0)
+  );
+  const newTitle = delayedApply
+    ? "Library Delayed Apply"
+    : "Library Instant Apply";
+  const promiseTitleChange = PlacesTestUtils.waitForNotification(
+    "bookmark-title-changed",
+    events => events.some(e => e.title === newTitle),
+    "places"
+  );
+  info("Update the bookmark's title.");
+  fillBookmarkTextField("editBMPanel_namePicker", newTitle, library);
+  await promiseTitleChange;
+  info("The bookmark's title was updated.");
+  await promiseLibraryClosed(library);
+}
+
+add_task(async function test_change_title_from_Library_instant_apply() {
+  await test_change_title_from_Library(false);
+});
+
+add_task(async function test_change_title_from_Library_delayed_apply() {
+  await test_change_title_from_Library(true);
 });

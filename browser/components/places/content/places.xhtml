@@ -41,7 +41,13 @@
   <script src="chrome://global/content/editMenuOverlay.js"/>
 #ifndef XP_MACOSX
   <!-- On Mac, this is included via macWindow.inc.xhtml -> global-scripts.inc -> browser.js -> defineLazyScriptGetter -->
-  <script src="chrome://browser/content/places/instantEditBookmark.js"/>
+  <script>
+    if (Services.prefs.getBoolPref("browser.bookmarks.editDialog.delayedApply.enabled", false)) {
+      Services.scriptloader.loadSubScript("chrome://browser/content/places/editBookmark.js", this);
+    } else {
+      Services.scriptloader.loadSubScript("chrome://browser/content/places/instantEditBookmark.js", this);
+    }
+  </script>
   <!-- On Mac, thes are included via macWindow.inc.xhtml -> global-scripts.inc -->
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://browser/content/utilityOverlay.js"/>
