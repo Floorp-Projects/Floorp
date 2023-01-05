@@ -637,8 +637,11 @@ DevTools.prototype = {
    *
    * @param {String} extensionId
    *        ID of the extension to debug.
+   * @param {Object} (optional)
+   *        - {String} toolId
+   *          The id of the tool to show
    */
-  async showToolboxForWebExtension(extensionId) {
+  async showToolboxForWebExtension(extensionId, { toolId } = {}) {
     // Ensure spawning only one commands instance per extension at a time by caching its commands.
     // showToolbox will later reopen the previously opened toolbox if called with the same
     // commands.
@@ -659,6 +662,7 @@ DevTools.prototype = {
         // the DevTools visible while interacting with the Firefox window.
         alwaysOnTop: Services.prefs.getBoolPref(DEVTOOLS_ALWAYS_ON_TOP, false),
       },
+      toolId,
     });
   },
 

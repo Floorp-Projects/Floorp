@@ -6,33 +6,12 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
-
-/**
- * Set up and optionally open the `about:debugging` toolbox for a given extension.
- *
- * @param {String} id
- *        The id for the extension to be targeted by the toolbox.
- * @return {Promise} Resolves with a web extension actor target object and the
- *         toolbox and storage objects when the toolbox has been setup
- */
-async function setupExtensionDebuggingToolbox(id) {
-  const commands = await CommandsFactory.forAddon(id);
-
-  const { toolbox, storage } = await openStoragePanel({
-    commands,
-    hostType: Toolbox.HostType.WINDOW,
-  });
-
-  const target = toolbox.target;
-
-  return { target, toolbox, storage };
-}
-
 add_task(async function set_enable_extensionStorage_pref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["devtools.storage.extensionStorage.enabled", true]],
-  });
+  await pushPref("devtools.storage.extensionStorage.enabled", true);
+
+  // Always on top mode mess up with toolbox focus and openStoragePanelForAddon would timeout
+  // waiting for toolbox focus.
+  await pushPref("devtools.toolbox.alwaysOnTop", false);
 });
 
 /**
@@ -158,9 +137,7 @@ add_task(
     await extension.awaitMessage("storage-local-onChanged");
 
     info("Open the addon toolbox storage panel");
-    const { target, toolbox } = await setupExtensionDebuggingToolbox(
-      extension.id
-    );
+    const { toolbox } = await openStoragePanelForAddon(extension.id);
 
     await selectTreeItem(["extensionStorage", host]);
     await waitForStorageData("str", "hi");
@@ -317,6 +294,5 @@ add_task(
     info("Shut down the test");
     await toolbox.destroy();
     await extension.unload();
-    await target.destroy();
   }
 );
