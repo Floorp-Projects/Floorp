@@ -394,6 +394,20 @@ if (is_ios || is_mac) {
       }
     }
 
+    rtc_library("audio_device_objc") {
+      visibility = [ "*" ]
+
+      sources = [
+        "objc/native/src/objc_audio_device.h",
+        "objc/native/src/objc_audio_device.mm",
+      ]
+
+      deps = [
+        "../modules/audio_device:audio_device_api",
+        "../rtc_base:logging",
+      ]
+    }
+
     if (!build_with_mozilla) {
     rtc_library("videosource_objc") {
       sources = [
