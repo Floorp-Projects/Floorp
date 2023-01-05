@@ -63,7 +63,7 @@ char16_t* StringBuffer::stealChars() {
 bool StringBuffer::inflateChars() {
   MOZ_ASSERT(isLatin1());
 
-  TwoByteCharBuffer twoByte(StringBufferAllocPolicy{fc_, arenaId_});
+  TwoByteCharBuffer twoByte(latin1Chars().allocPolicy());
 
   /*
    * Note: we don't use Vector::capacity() because it always returns a

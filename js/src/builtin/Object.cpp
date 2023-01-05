@@ -759,8 +759,7 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 17.
-  AutoReportFrontendContext fc(cx);
-  StringBuffer sb(cx, &fc);
+  StringBuffer sb(cx);
   if (!sb.append("[object ") || !sb.append(tag.toString()) || !sb.append(']')) {
     return false;
   }

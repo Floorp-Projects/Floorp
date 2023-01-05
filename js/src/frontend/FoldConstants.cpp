@@ -1244,7 +1244,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
         }
 
         if (!accum) {
-          accum.emplace(info.cx, info.fc);
+          accum.emplace(info.fc);
           if (!accum->append(info.parserAtoms, firstAtom)) {
             return false;
           }

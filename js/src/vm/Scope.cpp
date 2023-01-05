@@ -697,18 +697,14 @@ template <size_t ArrayLength>
 static JSAtom* GenerateWasmName(JSContext* cx,
                                 const char (&prefix)[ArrayLength],
                                 uint32_t index) {
-  ManualReportFrontendContext fc(cx);
-  StringBuffer sb(cx, &fc);
+  StringBuffer sb(cx);
   if (!sb.append(prefix)) {
-    fc.failure();
     return nullptr;
   }
   if (!NumberValueToStringBuffer(NumberValue(index), sb)) {
-    fc.failure();
     return nullptr;
   }
 
-  fc.ok();
   return sb.finishAtom();
 }
 

@@ -914,8 +914,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     }
   }
 
-  AutoReportFrontendContext fc(cx);
-  StringBuffer gap(cx, &fc);
+  StringBuffer gap(cx);
 
   if (space.isNumber()) {
     /* Step 6. */

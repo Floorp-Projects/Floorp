@@ -16,8 +16,7 @@ BEGIN_TEST(testStringBuffer_finishString) {
   JS::Rooted<JSAtom*> atom(cx, js::AtomizeString(cx, str));
   CHECK(atom);
 
-  js::AutoReportFrontendContext fc(cx);
-  js::StringBuffer buffer(cx, &fc);
+  js::StringBuffer buffer(cx);
   CHECK(buffer.append("foopy"));
 
   JS::Rooted<JSAtom*> finishedAtom(cx, buffer.finishAtom());

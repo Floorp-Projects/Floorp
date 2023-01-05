@@ -216,7 +216,7 @@ class FunctionCompiler {
 
  public:
   explicit FunctionCompiler(JSContext* cx, FrontendContext* fc)
-      : cx_(cx), nameAtom_(cx), funStr_(cx, fc) {
+      : cx_(cx), nameAtom_(cx), funStr_(fc) {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
