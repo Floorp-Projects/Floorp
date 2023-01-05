@@ -13440,7 +13440,7 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   ionScript->setInvalidationEpilogueOffset(invalidate_.offset());
 
   if (PerfEnabled()) {
-    perfSpewer_.saveProfile(cx, script, code);
+    perfSpewer_.saveProfile(script, code);
   }
 
 #ifdef MOZ_VTUNE
