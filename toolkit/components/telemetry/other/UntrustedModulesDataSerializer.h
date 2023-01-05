@@ -18,7 +18,7 @@ namespace Telemetry {
 
 // This class owns a JS object and serializes a given UntrustedModulesData
 // into it.  Because this class uses JSAPI, an AutoJSAPI instance must be
-// on the stack before instanciating the class.
+// on the stack before instantiating the class.
 class MOZ_RAII UntrustedModulesDataSerializer final {
   using IndexMap = nsTHashMap<nsStringHashKey, uint32_t>;
 
@@ -26,11 +26,13 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
   JSContext* mCx;
   JS::Rooted<JSObject*> mMainObj;
   JS::Rooted<JSObject*> mModulesArray;
+  JS::Rooted<JSObject*> mBlockedModulesArray;
   JS::Rooted<JSObject*> mPerProcObjContainer;
 
   IndexMap mIndexMap;
   const uint32_t mMaxModulesArrayLen;
   uint32_t mCurModulesArrayIdx;
+  uint32_t mCurBlockedModulesArrayIdx;
 
   // Combinations of the flags defined under nsITelemetry.
   // (See "Flags for getUntrustedModuleLoadEvents" in nsITelemetry.idl)
@@ -71,6 +73,9 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
    * @return nsresult
    */
   nsresult Add(const UntrustedModulesBackupData& aData);
+
+  nsresult AddBlockedModules(
+      const nsTArray<nsDependentSubstring>& blockedModules);
 };
 
 }  // namespace Telemetry

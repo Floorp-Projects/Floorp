@@ -15,7 +15,9 @@ were loaded into Firefox processes.
       "environment": { ... },
       "payload": {
         "structVersion": 1,
-        "modules" [
+        // List of DLL filenames that are on the dynamic blocklist
+        "blockedModules": [<string>],
+        "modules": [
           {
             // The sanitized name of the module as resolved by the Windows loader.
             "resolvedDllName": <string>,
@@ -122,6 +124,7 @@ Notes
 
 Version History
 ~~~~~~~~~~~~~~~
+- Firefox 110: Added ``blockedModules`` (`bug 1808158 <https://bugzilla.mozilla.org/show_bug.cgi?id=1808158>`_).
 - Firefox 77: Added ``isDependent`` (`bug 1620118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1620118>`_).
 - Firefox 71: Renamed from untrustedModules to third-party-modules with a revised schema (`bug 1542830 <https://bugzilla.mozilla.org/show_bug.cgi?id=1542830>`_).
 - Firefox 70: Added ``%SystemRoot%`` as an exemption to path sanitization (`bug 1573275 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573275>`_).
