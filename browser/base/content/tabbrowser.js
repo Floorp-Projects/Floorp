@@ -611,6 +611,10 @@
       this._visibleTabs = null;
     },
 
+    _invalidateCachedVisibleTabs() {
+      this._visibleTabs = null;
+    },
+
     _setFindbarData() {
       // Ensure we know what the find bar key is in the content process:
       let { sharedData } = Services.ppmm;
@@ -4654,7 +4658,7 @@
         return;
       }
       aTab.removeAttribute("hidden");
-      this._invalidateCachedTabs();
+      this._invalidateCachedVisibleTabs();
 
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
@@ -4679,7 +4683,7 @@
         return;
       }
       aTab.setAttribute("hidden", "true");
-      this._invalidateCachedTabs();
+      this._invalidateCachedVisibleTabs();
 
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
