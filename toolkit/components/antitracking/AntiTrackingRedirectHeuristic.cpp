@@ -24,6 +24,7 @@
 #include "nsIRedirectHistoryEntry.h"
 #include "nsIScriptError.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsScriptSecurityManager.h"
 
@@ -61,7 +62,7 @@ bool ShouldCheckRedirectHeuristicETP(nsIChannel* aOldChannel, nsIURI* aOldURI,
   // We will skip this check if we have granted storage access before so that we
   // can grant the storage access to the rest of the chain.
   if (!net::UrlClassifierCommon::IsTrackingClassificationFlag(
-          oldClassificationFlags) &&
+          oldClassificationFlags, NS_UsePrivateBrowsing(aOldChannel)) &&
       !allowedByPreviousRedirect) {
     // This is not a tracking -> non-tracking redirect.
     LOG_SPEC(("Ignoring the redirect from %s because it's not tracking to "
@@ -102,7 +103,7 @@ bool ShouldRedirectHeuristicApplyETP(nsIChannel* aNewChannel, nsIURI* aNewURI) {
       newClassifiedChannel->GetFirstPartyClassificationFlags();
 
   if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
-          newClassificationFlags)) {
+          newClassificationFlags, NS_UsePrivateBrowsing(aNewChannel))) {
     // This is not a tracking -> non-tracking redirect.
     LOG_SPEC(("Ignoring the redirect to %s because it's not tracking to "
               "non-tracking.",

@@ -1704,7 +1704,8 @@ HttpBaseChannel::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
   MOZ_ASSERT(
       !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
   *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
-      mThirdPartyClassificationFlags);
+      mThirdPartyClassificationFlags,
+      mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0);
   return NS_OK;
 }
 

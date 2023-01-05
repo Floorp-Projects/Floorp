@@ -21,6 +21,7 @@
 #include "nsIScriptError.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
 #include "nsToolkitCompsCID.h"
 
@@ -175,7 +176,7 @@ bool ShouldRedirectHeuristicApplyTrackingResource(nsIChannel* aOldChannel,
       classifiedOldChannel->GetFirstPartyClassificationFlags();
 
   if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
-          oldClassificationFlags)) {
+          oldClassificationFlags, NS_UsePrivateBrowsing(aOldChannel))) {
     // This is a redirect from tracking.
     LOG_SPEC2(("Ignoring redirect for %s to %s because it's from tracking ",
                _spec1, _spec2),
