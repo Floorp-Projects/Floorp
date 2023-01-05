@@ -6,6 +6,8 @@ Cu.importGlobalProperties(["btoa"]);
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
 const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";

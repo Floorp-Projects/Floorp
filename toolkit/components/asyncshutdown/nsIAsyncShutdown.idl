@@ -73,6 +73,13 @@ interface nsIAsyncShutdownClient: nsISupports {
   readonly attribute AString name;
 
   /**
+   * Whether the client is still open for new blockers.
+   * When this is true it is too late to add new blockers and addBlocker will
+   * throw an exception.
+   */
+  readonly attribute boolean isClosed;
+
+  /**
    * Add a blocker.
    *
    * After a `blocker` has been added with `addBlocker`, if it is not
@@ -90,6 +97,8 @@ interface nsIAsyncShutdownClient: nsISupports {
    * @param aLineNumber The linenumber of the callsite, as given by `__LINE__`.
    * @param aStack Information on the stack that lead to this call. Generally
    * empty when called from C++.
+   * @throws If it's too late to add a blocker.
+   * @see isClosed.
    */
   void addBlocker(in nsIAsyncShutdownBlocker aBlocker,
                   in AString aFileName,

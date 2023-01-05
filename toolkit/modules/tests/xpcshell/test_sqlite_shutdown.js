@@ -3,11 +3,6 @@
 
 "use strict";
 
-do_get_profile();
-
-const { Sqlite } = ChromeUtils.importESModule(
-  "resource://gre/modules/Sqlite.sys.mjs"
-);
 const { AsyncShutdown } = ChromeUtils.importESModule(
   "resource://gre/modules/AsyncShutdown.sys.mjs"
 );
@@ -98,12 +93,23 @@ add_task(async function test_shutdown_clients() {
 
   info("Now shutdown Sqlite.sys.mjs synchronously");
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
-  AsyncShutdown.profileBeforeChange._trigger();
+  // Check opening a connection during shutdown fails.
+  let deferred = PromiseUtils.defer();
+  let conn = Sqlite.openConnection({
+    path: PathUtils.join(PathUtils.profileDir, "test_shutdown.sqlite"),
+    testDelayedOpenPromise: deferred.promise,
+  });
+  await AsyncShutdown.profileBeforeChange._trigger();
+  deferred.resolve();
+  await Assert.rejects(
+    conn,
+    /has been shutdown/,
+    "Should close the connection and not block"
+  );
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 
   for (let { name, value } of assertions) {
-    info("Checking: " + name);
-    Assert.ok(value());
+    Assert.ok(value(), "Checking: " + name);
   }
 
   info("Ensure that we cannot open databases anymore");
@@ -113,6 +119,6 @@ add_task(async function test_shutdown_clients() {
   } catch (ex) {
     exn = ex;
   }
-  Assert.ok(!!exn);
+  Assert.ok(!!exn, `exception: ${exn.message}`);
   Assert.ok(exn.message.includes("Sqlite.sys.mjs has been shutdown"));
 });

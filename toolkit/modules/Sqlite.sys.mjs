@@ -38,7 +38,19 @@ var wrappedConnections = new Set();
 /**
  * Once `true`, reject any attempt to open or close a database.
  */
-var isClosed = false;
+function isClosed() {
+  // If Barriers have not been initialized yet, just trust AppStartup.
+  if (
+    typeof Object.getOwnPropertyDescriptor(lazy, "Barriers").get == "function"
+  ) {
+    // It's still possible to open new connections at profile-before-change, so
+    // use the next phase here, as a fallback.
+    return Services.startup.isInOrBeyondShutdownPhase(
+      Ci.nsIAppStartup.SHUTDOWN_PHASE_XPCOMWILLSHUTDOWN
+    );
+  }
+  return lazy.Barriers.shutdown.client.isClosed;
+}
 
 var Debugging = {
   // Tests should fail if a connection auto closes.  The exception is
@@ -161,8 +173,8 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
 
     /**
      * Private barrier blocked by connections that are still open.
-     * Triggered after Barriers.shutdown is lifted and `isClosed` is
-     * set to `true`.
+     * Triggered after Barriers.shutdown is lifted and `isClosed()` returns
+     * `true`.
      */
     connections: new lazy.AsyncShutdown.Barrier(
       "Sqlite.sys.mjs: wait until all connections are closed"
@@ -211,11 +223,6 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
       // At this stage, all clients have had a chance to open (and close)
       // their databases. Some previous close operations may still be pending,
       // so we need to wait until they are complete before proceeding.
-
-      // Prevent any new opening.
-      isClosed = true;
-
-      // Now, wait until all databases are closed
       await Barriers.connections.wait();
 
       // Everything closed, no finalization events to catch
@@ -226,7 +233,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
     },
 
     function status() {
-      if (isClosed) {
+      if (isClosed()) {
         // We are waiting for the connections to close. The interesting
         // status is therefore the list of connections still pending.
         return {
@@ -1075,6 +1082,8 @@ ConnectionData.prototype = Object.freeze({
  *       USE WITH EXTREME CAUTION. This mode WILL produce incorrect results or
  *       return "false positive" corruption errors if other connections write
  *       to the DB at the same time.
+ *   testDelayedOpenPromise -- (promise) Used by tests to delay the open
+ *       callback handling and execute code between asyncOpen and its callback.
  *
  * FUTURE options to control:
  *
@@ -1099,7 +1108,7 @@ function openConnection(options) {
     throw new Error("path not specified in connection options.");
   }
 
-  if (isClosed) {
+  if (isClosed()) {
     throw new Error(
       "Sqlite.sys.mjs has been shutdown. Cannot open connection to: " +
         options.path
@@ -1177,7 +1186,7 @@ function openConnection(options) {
       file,
       dbOpenOptions,
       dbConnectionOptions,
-      (status, connection) => {
+      async (status, connection) => {
         if (!connection) {
           log.error(`Could not open connection to ${path}: ${status}`);
           let error = new Components.Exception(
@@ -1188,6 +1197,22 @@ function openConnection(options) {
           return;
         }
         log.debug("Connection opened");
+
+        if (options.testDelayedOpenPromise) {
+          await options.testDelayedOpenPromise;
+        }
+
+        if (isClosed()) {
+          connection.QueryInterface(Ci.mozIStorageAsyncConnection).asyncClose();
+          reject(
+            new Error(
+              "Sqlite.sys.mjs has been shutdown. Cannot open connection to: " +
+                options.path
+            )
+          );
+          return;
+        }
+
         try {
           resolve(
             new OpenedConnection(
@@ -1250,7 +1275,7 @@ function cloneStorageConnection(options) {
     throw new TypeError("Connection must be a valid Storage connection.");
   }
 
-  if (isClosed) {
+  if (isClosed()) {
     throw new Error(
       "Sqlite.sys.mjs has been shutdown. Cannot clone connection to: " +
         source.databaseFile.path
@@ -1284,6 +1309,18 @@ function cloneStorageConnection(options) {
         return;
       }
       log.debug("Connection cloned");
+
+      if (isClosed()) {
+        connection.QueryInterface(Ci.mozIStorageAsyncConnection).asyncClose();
+        reject(
+          new Error(
+            "Sqlite.sys.mjs has been shutdown. Cannot open connection to: " +
+              options.path
+          )
+        );
+        return;
+      }
+
       try {
         let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);
         resolve(new OpenedConnection(conn, identifier, openedOptions));
@@ -1326,7 +1363,7 @@ function wrapStorageConnection(options) {
     throw new TypeError("connection not specified or invalid.");
   }
 
-  if (isClosed) {
+  if (isClosed()) {
     throw new Error(
       "Sqlite.sys.mjs has been shutdown. Cannot wrap connection to: " +
         connection.databaseFile.path
