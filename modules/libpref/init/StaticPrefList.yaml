@@ -12413,6 +12413,13 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Annotate trackers using the strict list in the private browsing mode. If set
+# to false, the basic list will be used instead.
+- name: privacy.annotate_channels.strict_list.pbmode.enabled
+  type: bool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 # Enable the clearing of cache data using the clear-site-data header. If enabled,
 # header values of "cache" and "*" will clear cached data from the site
 - name: privacy.clearsitedata.cache.enabled
