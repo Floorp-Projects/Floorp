@@ -65,24 +65,6 @@
       "last_modified": 1672403271331
     },
     {
-      "schema": 1671705903859,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "euconsent-v2",
-            "value": "CPkVv0APkVv0AAHABBENCuCgAAAAAAAAAAAAAAAAAAEEoAMAAQSXDQAYAAgkuKgAwABBJcpABgACCS46ADAAEElyEAGAAIJLhIAMAAQSXGQAYAAgkuAA.YAAAAAAAAAAA"
-          }
-        ]
-      },
-      "domains": [
-        "iprima.cz",
-        "elmundo.es",
-        "marca.com"
-      ],
-      "id": "ec47c90f-8e92-469b-9a6d-311715557805",
-      "last_modified": 1672403271327
-    },
-    {
       "click": {
         "optIn": "button.js_cookieBannerPermissionButton",
         "optOut": "span.js_cookieBannerProhibitionButton",
@@ -7631,5 +7613,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1672403271331
+  "timestamp": 1672845043589
 }
