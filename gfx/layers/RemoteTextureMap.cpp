@@ -747,7 +747,7 @@ std::shared_ptr<gl::SharedSurface> RemoteTextureMap::GetRecycledSharedSurface(
     }
 
     if (!owner->mRecycledSharedSurfaces.empty()) {
-      sharedSurface = owner->mRecycledSharedSurfaces.top();
+      sharedSurface = owner->mRecycledSharedSurfaces.front();
       owner->mRecycledSharedSurfaces.pop();
     }
   }
