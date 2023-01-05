@@ -8,6 +8,7 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_87.rst
    nss_3_86.rst
    nss_3_85.rst
    nss_3_84.rst
@@ -45,8 +46,8 @@ Releases
 
 .. note::
 
-   **NSS 3.86** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_86_release_notes`
+   **NSS 3.87** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_87_release_notes`
 
    **NSS 3.79.2** is the latest ESR version of NSS.
    Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_2_release_notes`
@@ -54,20 +55,15 @@ Releases
 
 .. container::
 
-   Changes in 3.86 included in this release:
+   Changes in 3.87 included in this release:
 
-   - Bug 1803190 - conscious language removal in NSS.
-   - Bug 1794506 - Set nssckbi version number to 2.60.
-   - Bug 1803453 - Set CKA_NSS_SERVER_DISTRUST_AFTER and CKA_NSS_EMAIL_DISTRUST_AFTER for 3 TrustCor Root Certificates.
-   - Bug 1799038 - Remove Staat der Nederlanden EV Root CA from NSS.
-   - Bug 1797559 - Remove EC-ACC root cert from NSS.
-   - Bug 1794507 - Remove SwissSign Platinum CA - G2 from NSS.
-   - Bug 1794495 - Remove Network Solutions Certificate Authority.
-   - Bug 1802331 - compress docker image artifact with zstd.
-   - Bug 1799315 - Migrate nss from AWS to GCP.
-   - Bug 1800989 - Enable static builds in the CI.
-   - Bug 1765759 - Removing SAW docker from the NSS build system.
-   - Bug 1783231 - Initialising variables in the rsa blinding code.
-   - Bug 320582 - Implementation of the double-signing of the message for ECDSA.
-   - Bug 1783231 - Adding exponent blinding for RSA.
-
+   - Bug 1803226 - NULL password encoding incorrect.
+   - Bug 1804071 - Fix rng stub signature for fuzzing builds.
+   - Bug 1803595 - Updating the compiler parsing for build.
+   - Bug 1749030 - Modification of supported compilers.
+   - Bug 1774654 tstclnt crashes when accessing gnutls server without a user cert in the database.
+   - Bug 1751707 - Add configuration option to enable source-based coverage sanitizer.
+   - Bug 1751705 - Update ECCKiila generated files.
+   - Bug 1730353 - Add support for the LoongArch 64-bit architecture.
+   - Bug 1798823 - add checks for zero-length RSA modulus to avoid memory errors and failed assertions later.
+   - Bug 1798823 - Additional zero-length RSA modulus checks.
