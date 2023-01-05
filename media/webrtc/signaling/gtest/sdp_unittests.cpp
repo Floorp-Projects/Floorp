@@ -3734,7 +3734,7 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchSendRid) {
   ParseSdp("v=0" CRLF "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=video 56436 RTP/SAVPF 120" CRLF "a=rtpmap:120 VP8/90000" CRLF
-           "a=sendrecv" CRLF "a=simulcast: send rid=9" CRLF
+           "a=sendrecv" CRLF "a=simulcast:send 9" CRLF
            "a=rid:9 recv max-width=800;max-height=600" CRLF,
            false);
   ASSERT_NE(0U, ParseErrorCount());
@@ -3744,28 +3744,28 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchRecvRid) {
   ParseSdp("v=0" CRLF "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=video 56436 RTP/SAVPF 120" CRLF "a=rtpmap:120 VP8/90000" CRLF
-           "a=sendrecv" CRLF "a=simulcast: recv rid=9" CRLF
+           "a=sendrecv" CRLF "a=simulcast:recv 9" CRLF
            "a=rid:9 send max-width=800;max-height=600" CRLF,
            false);
   ASSERT_NE(0U, ParseErrorCount());
 }
 
-TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
+TEST_P(NewSdpTest, ParseSimulcastNotSending) {
   ParseSdp("v=0" CRLF "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=video 56436 RTP/SAVPF 120" CRLF "a=rtpmap:120 VP8/90000" CRLF
-           "a=recvonly" CRLF "a=simulcast: send rid=120" CRLF,
+           "a=recvonly" CRLF "a=simulcast:send 120" CRLF "a=rid:120 send" CRLF,
            false);
-  ASSERT_NE(0U, ParseErrorCount());
+  ASSERT_EQ(0U, ParseErrorCount());
 }
 
-TEST_P(NewSdpTest, ParseInvalidSimulcastNotReceiving) {
+TEST_P(NewSdpTest, ParseSimulcastNotReceiving) {
   ParseSdp("v=0" CRLF "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=video 56436 RTP/SAVPF 120" CRLF "a=rtpmap:120 VP8/90000" CRLF
-           "a=sendonly" CRLF "a=simulcast: recv rid=120" CRLF,
+           "a=sendonly" CRLF "a=simulcast:recv 120" CRLF "a=rid:120 recv" CRLF,
            false);
-  ASSERT_NE(0U, ParseErrorCount());
+  ASSERT_EQ(0U, ParseErrorCount());
 }
 
 TEST_P(NewSdpTest, ParseInvalidRidNoSuchPt) {
@@ -3773,7 +3773,7 @@ TEST_P(NewSdpTest, ParseInvalidRidNoSuchPt) {
   ParseSdp("v=0" CRLF "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=video 56436 RTP/SAVPF 120" CRLF "a=rtpmap:120 VP8/90000" CRLF
-           "a=sendrecv" CRLF "a=simulcast: recv rid=9" CRLF
+           "a=sendrecv" CRLF "a=simulcast:recv rid=9" CRLF
            "a=rid:9 recv pt=101;max-width=800;max-height=600" CRLF,
            false);
   ASSERT_NE(0U, ParseErrorCount());
