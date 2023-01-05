@@ -240,6 +240,6 @@ exports.viewSource = async function(toolbox, sourceURL, sourceLine) {
   const utils = toolbox.gViewSourceUtils;
   utils.viewSource({
     URL: sourceURL,
-    lineNumber: sourceLine || 0,
+    lineNumber: sourceLine || -1,
   });
 };

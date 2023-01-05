@@ -222,7 +222,7 @@ class WebConsole {
   viewSource(sourceURL, sourceLine) {
     this.gViewSourceUtils.viewSource({
       URL: sourceURL,
-      lineNumber: sourceLine || 0,
+      lineNumber: sourceLine || -1,
     });
   }
 
