@@ -67,10 +67,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Dodaj skrót, aby otwierać prywatne karty z ekranu głównego.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Dodaj skrót, aby otwierać prywatne karty z ekranu głównego.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Otwieraj kolejne prywatne karty jednym stuknięciem.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Dodaj skrót</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Dodaj skrót</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Dodaj do ekranu głównego</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Nie, dziękuję</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -342,6 +346,20 @@
     <string name="reduce_cookie_banner_option">Ogranicz informacje o ciasteczkach</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox automatycznie próbuje odrzucać prośby o akceptację ciasteczek. Jeśli nie ma możliwości odrzucenia, Firefox może zaakceptować wszystkie ciasteczka, aby zamknąć prośbę.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Wyłączone na tej witrynie</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Włączone na tej witrynie</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Włączyć ograniczanie informacji o ciasteczkach na witrynie %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Wyłączyć ograniczanie informacji o ciasteczkach na witrynie %1$s?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s usunie ciasteczka tej witryny i odświeży stronę. Usunięcie wszystkich ciasteczek może spowodować wylogowanie ze strony lub opróżnienie koszyka w sklepie.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s może próbować automatycznie odrzucać prośby o akceptację ciasteczek. Jeśli nie ma możliwości odrzucenia, %2$s może zaakceptować wszystkie ciasteczka, aby zamknąć prośbę.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatycznie próbuje łączyć się ze stronami za pomocą protokołu szyfrowania HTTPS w celu zwiększenia bezpieczeństwa.</string>
@@ -1073,8 +1091,6 @@
     <string name="share_copy_link_to_clipboard">Kopiuj do schowka</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Skopiowano do schowka</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Zaloguj się do synchronizacji</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Zaloguj się do synchronizacji</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1888,6 +1904,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Włączono automatyczne zamykanie</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Podpowiedzi Firefoksa</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Szukaj w Google</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Szukaj w %s</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Ustaw automatyczne otwieranie odnośników z witryn, wiadomości e-mail i SMS-ów w Firefoksie.</string>
 
@@ -1926,7 +1951,6 @@
     <string name="experiments_snackbar">Włącz telemetrię, aby wysyłać dane.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Przejdź do ustawień</string>
-    <string name="firefox_suggest_header">Podpowiedzi Firefoksa</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
