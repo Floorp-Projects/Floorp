@@ -25,14 +25,14 @@ class DefaultInactiveTabsInteractorTest {
 
     @Test
     fun `WHEN the inactive tabs auto close dialog's close button is clicked THEN dismiss the dialog`() {
-        createInteractor().onCloseClicked()
+        createInteractor().onAutoCloseDialogCloseButtonClicked()
 
         verify { controller.dismissAutoCloseDialog() }
     }
 
     @Test
     fun `WHEN the enable inactive tabs auto close button is clicked THEN turn on the auto close feature`() {
-        createInteractor().onEnabledAutoCloseClicked()
+        createInteractor().onEnableAutoCloseClicked()
 
         verify { controller.enableInactiveTabsAutoClose() }
     }

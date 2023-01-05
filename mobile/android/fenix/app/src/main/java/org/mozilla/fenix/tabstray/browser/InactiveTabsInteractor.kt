@@ -10,7 +10,7 @@ import org.mozilla.fenix.tabstray.TrayPagerAdapter
 /**
  * Interactor for all things related to inactive tabs in the tabs tray.
  */
-interface InactiveTabsInteractor : InactiveTabsAutoCloseDialogInteractor {
+interface InactiveTabsInteractor {
     /**
      * Invoked when the header is clicked.
      *
@@ -36,29 +36,25 @@ interface InactiveTabsInteractor : InactiveTabsAutoCloseDialogInteractor {
      * Invoked when the user clicks on the delete all inactive tabs button.
      */
     fun onDeleteAllInactiveTabsClicked()
-}
-
-/**
- * Interactor for the auto-close dialog in the inactive tabs section.
- */
-interface InactiveTabsAutoCloseDialogInteractor {
 
     /**
-     * Invoked when the close button is clicked.
+     * Invoked when the user clicks the close button in the auto close dialog.
      */
-    fun onCloseClicked()
+    fun onAutoCloseDialogCloseButtonClicked()
 
     /**
-     * Invoked when the dialog is clicked.
+     * Enable the auto-close feature with the "after a month" setting.
      */
-    fun onEnabledAutoCloseClicked()
+    fun onEnableAutoCloseClicked()
 }
 
 /**
  * Interactor to be called for any user interactions with the Inactive Tabs feature.
  *
- * @param controller [InactiveTabsController] todo.
- * @param browserInteractor [BrowserTrayInteractor] used to respond to interactions with specific inactive tabs.
+ * @param controller An instance of [InactiveTabsController] which will be delegated for all
+ * user interactions.
+ * @param browserInteractor [BrowserTrayInteractor] used to respond to interactions with specific
+ * inactive tabs.
  */
 class DefaultInactiveTabsInteractor(
     private val controller: InactiveTabsController,
@@ -73,16 +69,16 @@ class DefaultInactiveTabsInteractor(
     }
 
     /**
-     * See [InactiveTabsAutoCloseDialogInteractor.onCloseClicked].
+     * See [InactiveTabsInteractor.onAutoCloseDialogCloseButtonClicked].
      */
-    override fun onCloseClicked() {
+    override fun onAutoCloseDialogCloseButtonClicked() {
         controller.dismissAutoCloseDialog()
     }
 
     /**
-     * See [InactiveTabsAutoCloseDialogInteractor.onEnabledAutoCloseClicked].
+     * See [InactiveTabsInteractor.onEnableAutoCloseClicked].
      */
-    override fun onEnabledAutoCloseClicked() {
+    override fun onEnableAutoCloseClicked() {
         controller.enableInactiveTabsAutoClose()
     }
 
