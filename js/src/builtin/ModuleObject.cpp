@@ -2067,23 +2067,6 @@ void ModuleBuilder::markUsedByStencil(frontend::TaggedParserAtomIndex name) {
       name, frontend::ParserAtom::Atomize::Yes);
 }
 
-template <typename T>
-ArrayObject* js::CreateArray(JSContext* cx,
-                             const JS::Rooted<GCVector<T>>& vector) {
-  uint32_t length = vector.length();
-  Rooted<ArrayObject*> array(cx, NewDenseFullyAllocatedArray(cx, length));
-  if (!array) {
-    return nullptr;
-  }
-
-  array->setDenseInitializedLength(length);
-  for (uint32_t i = 0; i < length; i++) {
-    array->initDenseElement(i, ObjectValue(*vector[i]));
-  }
-
-  return array;
-}
-
 JSObject* js::GetOrCreateModuleMetaObject(JSContext* cx,
                                           HandleObject moduleArg) {
   Handle<ModuleObject*> module = moduleArg.as<ModuleObject>();

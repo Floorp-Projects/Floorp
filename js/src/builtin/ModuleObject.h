@@ -406,10 +406,6 @@ class ModuleObject : public NativeObject {
   void initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
                       Handle<ListObject*> asyncParentModules);
 
-  static bool GatherAsyncParentCompletions(
-      JSContext* cx, Handle<ModuleObject*> module,
-      MutableHandle<ArrayObject*> execList);
-
  private:
   static const JSClassOps classOps_;
 
