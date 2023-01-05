@@ -171,26 +171,6 @@ exports.CommandsFactory = {
   },
 
   /**
-   * Create commands for a given process
-   *
-   * @param {String} id: The process PID. Pass 0 if you want to debug the main process.
-   *        But ideally, CommandsFactory.forMainProcess should be used instead.
-   * @param {Object} options
-   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
-   *        a new one will be created.
-   * @returns {Object} Commands
-   */
-  async forProcess(osPid, { client } = {}) {
-    if (!client) {
-      client = await createLocalClient();
-    }
-
-    const descriptor = await client.mainRoot.getProcess(osPid);
-    const commands = await createCommandsDictionary(descriptor);
-    return commands;
-  },
-
-  /**
    * This method will spawn a special `DevToolsClient`
    * which is meant to debug the same Firefox instance
    * and especially be able to debug chrome code.

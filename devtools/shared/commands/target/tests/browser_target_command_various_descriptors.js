@@ -23,7 +23,6 @@ add_task(async function() {
   await testLocalTab();
   await testRemoteTab();
   await testParentProcess();
-  await testContentProcess();
   await testWorker();
   await testWebExtension();
 });
@@ -217,56 +216,6 @@ async function testWebExtension() {
   targetCommand.destroy();
 
   await extension.unload();
-
-  await commands.destroy();
-}
-
-async function testContentProcess() {
-  info("Test TargetCommand against content process descriptor");
-
-  const tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    url: "data:text/html,foo",
-    forceNewProcess: true,
-  });
-
-  const { osPid } = tab.linkedBrowser.browsingContext.currentWindowGlobal;
-
-  const commands = await CommandsFactory.forProcess(osPid);
-  const { descriptorFront } = commands;
-  is(
-    descriptorFront.descriptorType,
-    DESCRIPTOR_TYPES.PROCESS,
-    "The descriptor type is correct"
-  );
-  is(
-    descriptorFront.isProcessDescriptor,
-    true,
-    "Descriptor front isProcessDescriptor is correct"
-  );
-  is(
-    descriptorFront.isParentProcessDescriptor,
-    false,
-    "Descriptor front isParentProcessDescriptor is false for content processes"
-  );
-
-  const targetCommand = commands.targetCommand;
-  await targetCommand.startListening();
-
-  const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
-  is(targets.length, 1, "Got a unique target");
-  const targetFront = targets[0];
-  is(targetFront, targetCommand.targetFront, "The first is the top level one");
-  is(
-    targetFront.targetType,
-    targetCommand.TYPES.PROCESS,
-    "the content process target is of process type"
-  );
-  is(targetFront.isTopLevel, true, "This is flagged as top level");
-
-  targetCommand.destroy();
-
-  BrowserTestUtils.removeTab(tab);
 
   await commands.destroy();
 }
