@@ -11,6 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
@@ -136,6 +137,63 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
         }.openSettings {
             verifySettingsView()
+        }
+    }
+
+    @Test
+    fun setDesktopSiteBeforePageLoadTest() {
+        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 4)
+
+        homeScreen {
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(false)
+        }.switchDesktopSiteMode {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(true)
+        }.closeBrowserMenuToBrowser {
+            clickLinkMatchingText("Link 1")
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(true)
+        }.closeBrowserMenuToBrowser {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+            longClickLink("Link 2")
+            clickContextOpenLinkInNewTab()
+            snackBarButtonClick()
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(false)
+        }
+    }
+
+    @Test
+    fun privateBrowsingSetDesktopSiteBeforePageLoadTest() {
+        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 4)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        homeScreen {
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(false)
+        }.switchDesktopSiteMode {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(true)
+        }.closeBrowserMenuToBrowser {
+            clickLinkMatchingText("Link 1")
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(true)
+        }.closeBrowserMenuToBrowser {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+            longClickLink("Link 2")
+            clickContextOpenLinkInPrivateTab()
+            snackBarButtonClick()
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(false)
         }
     }
 }

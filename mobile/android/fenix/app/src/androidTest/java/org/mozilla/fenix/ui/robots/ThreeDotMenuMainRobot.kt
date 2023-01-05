@@ -274,14 +274,6 @@ class ThreeDotMenuMainRobot {
             return ShareOverlayRobot.Transition()
         }
 
-        fun close(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            // Close three dot
-            mDevice.pressBack()
-
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
-        }
-
         fun closeBrowserMenuToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             // Close three dot
             mDevice.pressBack()

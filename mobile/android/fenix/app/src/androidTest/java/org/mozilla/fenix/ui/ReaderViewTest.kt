@@ -141,7 +141,7 @@ class ReaderViewTest {
             verifyReaderViewDetected(true)
         }.openThreeDotMenu {
             verifyReaderViewAppearance(false)
-        }.close { }
+        }.closeBrowserMenuToBrowser { }
     }
 
     @Test
