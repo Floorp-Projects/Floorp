@@ -120,10 +120,7 @@ async function fetchData() {
     return b.loadingOnMain - a.loadingOnMain;
   });
 
-  const loadedModuleNames = data.modules.map(module => module.moduleName);
-  let blockedModuleNames = {};
-  AboutThirdParty.getBlockedModuleNames(loadedModuleNames, blockedModuleNames);
-  return { modules: data.modules, blocked: blockedModuleNames.value };
+  return { modules: data.modules, blocked: data.blockedModules };
 }
 
 function setContent(element, text, l10n) {
@@ -370,7 +367,16 @@ function visualizeData(aData) {
 
   const mainContentFragment = new DocumentFragment();
 
+  // Blocklist entries are case-insensitive
+  let lowercaseModuleNames = new Set(
+    aData.modules.map(module => module.moduleName.toLowerCase())
+  );
   for (const blockedName of aData.blocked) {
+    if (lowercaseModuleNames.has(blockedName.toLowerCase())) {
+      // Only show entries that we haven't already tried to load,
+      // because those will already show up in the page
+      continue;
+    }
     const newCard = templateBlockedCard.content.cloneNode(true);
     setContent(newCard.querySelector(".module-name"), blockedName);
     // Referred by the button click handlers

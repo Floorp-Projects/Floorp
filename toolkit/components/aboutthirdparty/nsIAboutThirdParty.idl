@@ -36,12 +36,6 @@ interface nsIAboutThirdParty : nsISupports
   nsIInstalledApplication lookupApplication(in AString aModulePath);
 
   /**
-   * Gets the list of modules that have been blocklisted but have not
-   * attempted to load.
-   */
-  void getBlockedModuleNames(in Array<AString> aLoadedModuleNames, out Array<AString> aBlockedModuleNames);
-
-  /**
    * Returns true if DynamicBlocklist is available.
    */
   readonly attribute bool isDynamicBlocklistAvailable;
