@@ -15,6 +15,10 @@
 #  include "mozilla/SSE.h"
 #  include "AudioNodeEngineGeneric.h"
 #endif
+#if defined(USE_SSE42) && defined(USE_FMA3)
+#  include "mozilla/SSE.h"
+#  include "AudioNodeEngineGeneric.h"
+#endif
 #include "AudioBlock.h"
 #include "Tracing.h"
 
@@ -93,8 +97,16 @@ void AudioBufferAddWithScale(const float* aInput, float aScale, float* aOutput,
     // we need to round aSize down to the nearest multiple of 16
     uint32_t alignedSize = aSize & ~0x0F;
     if (alignedSize > 0) {
-      Engine<xsimd::sse2>::AudioBufferAddWithScale(aInput, aScale, aOutput,
-                                                   alignedSize);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+      if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+        Engine<xsimd::fma3<xsimd::sse4_2>>::AudioBufferAddWithScale(
+            aInput, aScale, aOutput, alignedSize);
+      } else
+#  endif
+      {
+        Engine<xsimd::sse2>::AudioBufferAddWithScale(aInput, aScale, aOutput,
+                                                     alignedSize);
+      }
 
       // adjust parameters for use with scalar operations below
       aInput += alignedSize;
@@ -152,7 +164,16 @@ void BufferComplexMultiply(const float* aInput, const float* aScale,
                            float* aOutput, uint32_t aSize) {
 #ifdef USE_SSE2
   if (mozilla::supports_sse()) {
-    Engine<xsimd::sse2>::BufferComplexMultiply(aInput, aScale, aOutput, aSize);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      Engine<xsimd::fma3<xsimd::sse4_2>>::BufferComplexMultiply(aInput, aScale,
+                                                                aOutput, aSize);
+    } else
+#  endif
+    {
+      Engine<xsimd::sse2>::BufferComplexMultiply(aInput, aScale, aOutput,
+                                                 aSize);
+    }
     return;
   }
 #endif
@@ -288,8 +309,16 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
-        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      Engine<xsimd::fma3<xsimd::sse4_2>>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    } else
+#  endif
+    {
+      Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    }
     return;
   }
 #endif
@@ -326,8 +355,16 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
-        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      Engine<xsimd::fma3<xsimd::sse2>>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    } else
+#  endif
+    {
+      Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    }
     return;
   }
 #endif
@@ -362,7 +399,16 @@ float AudioBufferSumOfSquares(const float* aInput, uint32_t aLength) {
     }
 
     uint32_t vLength = (aLength >> 4) << 4;
-    sum += Engine<xsimd::sse2>::AudioBufferSumOfSquares(alignedInput, vLength);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      sum += Engine<xsimd::fma3<xsimd::sse4_2>>::AudioBufferSumOfSquares(
+          alignedInput, vLength);
+    } else
+#  endif
+    {
+      sum +=
+          Engine<xsimd::sse2>::AudioBufferSumOfSquares(alignedInput, vLength);
+    }
 
     // adjust aInput and aLength to use scalar operations for any
     // remaining values
