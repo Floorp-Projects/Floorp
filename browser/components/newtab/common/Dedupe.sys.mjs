@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class Dedupe {
+export class Dedupe {
   constructor(createKey) {
     this.createKey = createKey || this.defaultCreateKey;
   }
@@ -34,5 +34,3 @@ class Dedupe {
     return result.map(m => Array.from(m.values()));
   }
 }
-
-const EXPORTED_SYMBOLS = ["Dedupe"];

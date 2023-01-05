@@ -3,7 +3,7 @@ import {
   actionCreators as ac,
   actionTypes as at,
   actionUtils as au,
-} from "common/Actions.jsm";
+} from "common/Actions.sys.mjs";
 import {
   ASRouterEventPing,
   BasePing,
@@ -14,7 +14,7 @@ import {
 import { FakePrefs, GlobalOverrider } from "test/unit/utils";
 import { ASRouterPreferences } from "lib/ASRouterPreferences.jsm";
 import injector from "inject!lib/TelemetryFeed.jsm";
-import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.jsm";
+import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.sys.mjs";
 
 const FAKE_UUID = "{foo-123-foo}";
 const FAKE_ROUTER_MESSAGE_PROVIDER = [{ id: "cfr", enabled: true }];

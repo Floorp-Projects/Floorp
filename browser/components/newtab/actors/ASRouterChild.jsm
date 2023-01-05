@@ -6,8 +6,11 @@
 
 const EXPORTED_SYMBOLS = ["ASRouterChild"];
 
-const { MESSAGE_TYPE_LIST, MESSAGE_TYPE_HASH: msg } = ChromeUtils.import(
-  "resource://activity-stream/common/ActorConstants.jsm"
+const {
+  MESSAGE_TYPE_LIST,
+  MESSAGE_TYPE_HASH: msg,
+} = ChromeUtils.importESModule(
+  "resource://activity-stream/common/ActorConstants.sys.mjs"
 );
 const VALID_TYPES = new Set(MESSAGE_TYPE_LIST);
 

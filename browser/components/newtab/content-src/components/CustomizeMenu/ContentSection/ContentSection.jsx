@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import { actionCreators as ac } from "common/Actions.jsm";
+import { actionCreators as ac } from "common/Actions.sys.mjs";
 
 export class ContentSection extends React.PureComponent {
   constructor(props) {

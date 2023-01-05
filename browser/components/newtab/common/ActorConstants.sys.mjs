@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const MESSAGE_TYPE_LIST = [
+export const MESSAGE_TYPE_LIST = [
   "BLOCK_MESSAGE_BY_ID",
   "USER_ACTION",
   "IMPRESSION",
@@ -42,9 +42,7 @@ const MESSAGE_TYPE_LIST = [
   "RESET_GROUPS_STATE",
 ];
 
-const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
+export const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
   hash[value] = value;
   return hash;
 }, {});
-
-const EXPORTED_SYMBOLS = ["MESSAGE_TYPE_LIST", "MESSAGE_TYPE_HASH"];

@@ -11,8 +11,8 @@ const { ASRouterPreferences } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterPreferences.jsm"
 );
 
-const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.import(
-  "resource://activity-stream/common/ActorConstants.jsm"
+const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/ActorConstants.sys.mjs"
 );
 
 class ASRouterParentProcessMessageHandler {

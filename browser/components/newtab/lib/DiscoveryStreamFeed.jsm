@@ -21,8 +21,8 @@ ChromeUtils.defineModuleGetter(
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
+const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Actions.sys.mjs"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

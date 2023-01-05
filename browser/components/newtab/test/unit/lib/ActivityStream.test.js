@@ -1,4 +1,4 @@
-import { CONTENT_MESSAGE_TYPE } from "common/Actions.jsm";
+import { CONTENT_MESSAGE_TYPE } from "common/Actions.sys.mjs";
 import { ActivityStream, PREFS_CONFIG } from "lib/ActivityStream.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 

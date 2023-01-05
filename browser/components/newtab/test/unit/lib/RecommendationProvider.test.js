@@ -1,4 +1,7 @@
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "common/Actions.sys.mjs";
 import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
 import { combineReducers, createStore } from "redux";
 import { reducers } from "common/Reducers.jsm";

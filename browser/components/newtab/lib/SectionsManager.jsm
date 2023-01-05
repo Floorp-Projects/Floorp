@@ -9,8 +9,8 @@ const { EventEmitter } = ChromeUtils.importESModule(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
+const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Actions.sys.mjs"
 );
 const { getDefaultOptions } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStreamStorage.jsm"

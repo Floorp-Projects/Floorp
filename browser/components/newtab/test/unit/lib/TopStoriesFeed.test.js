@@ -1,5 +1,5 @@
 import { FakePrefs, GlobalOverrider } from "test/unit/utils";
-import { actionTypes as at } from "common/Actions.jsm";
+import { actionTypes as at } from "common/Actions.sys.mjs";
 import injector from "inject!lib/TopStoriesFeed.jsm";
 
 describe("Top Stories Feed", () => {

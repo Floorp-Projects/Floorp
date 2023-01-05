@@ -3,7 +3,10 @@ import {
   AboutPreferences,
   PREFERENCES_LOADED_EVENT,
 } from "lib/AboutPreferences.jsm";
-import { actionTypes as at, actionCreators as ac } from "common/Actions.jsm";
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "common/Actions.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("AboutPreferences Feed", () => {
