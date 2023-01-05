@@ -61,11 +61,11 @@ class UrlClassifierCommon final {
 
   static bool IsAllowListed(nsIChannel* aChannel);
 
-  static bool IsTrackingClassificationFlag(uint32_t aFlag);
+  static bool IsTrackingClassificationFlag(uint32_t aFlag, bool aIsPrivate);
 
   static bool IsSocialTrackingClassificationFlag(uint32_t aFlag);
 
-  static bool IsCryptominingClassificationFlag(uint32_t aFlag);
+  static bool IsCryptominingClassificationFlag(uint32_t aFlag, bool aIsPrivate);
 
   // Join the table names in 1 single string.
   static void TablesToString(const nsTArray<nsCString>& aList,
