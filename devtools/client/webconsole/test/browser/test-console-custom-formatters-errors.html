@@ -9,19 +9,6 @@
     <script>
       "use strict";
 
-      const variables = [
-        {},
-        {bodyNotAFunction: true},
-        {bodyReturnsNull: true},
-        {bodyNoJsonMl: true},
-        {bodyNoElementType: true},
-        {bodyThrows: true},
-        /*
-          Custom formatters can currently cause side effects.
-          {bodyHasSideEffects: true},
-        */
-      ];
-
       window.devtoolsFormatters = [
         {
           // this header is invalid because it is not a function
@@ -39,37 +26,43 @@
           // this header is invalid because it throws an exception
           header: () => { throw new Error("ERROR"); },
         },
-        /*
-          Custom formatters can currently cause side effects.
-          {
-            // this header shouldn't execute as it has side effects.
-            header: (obj) => {
-              globalThis.localStorage.setItem("custom-formatters-test", "header");
-              return ["span", {}, "COULD EXECUTE HEADER WITH SIDE EFFECTS"];
-            },
-          },
-        */
         {
-          header: () => ["div", "hasBody not a function"],
+          // this header shouldn't execute as it has side effects.
+          header: (obj) => {
+            globalThis.localStorage.setItem("custom-formatters-test", "header");
+            return ["span", {}, "COULD EXECUTE HEADER WITH SIDE EFFECTS"];
+          },
+        },
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("hasBodyNotAFunction") ?
+              ["div", "hasBody not a function"] :
+              null;
+          },
           // this hasBody is invalid because it is not a function
           hasBody: 1,
         },
         {
-          header: () => ["div", "hasBody throws"],
+          header: (obj) => {
+            return obj.hasOwnProperty("hasBodyThrows") ?
+              ["div", "hasBody throws"] :
+              null;
+          },
           // this hasBody throws an exception
           hasBody: () => { throw new Error("ERROR"); },
         },
-        /*
-          Custom formatters can currently cause side effects.
-          {
-            header: () => ["div", "hasBody has side effects"],
-            // this hasBody shouldn't execute as it has side effects.
-            hasBody: (obj) => {
-              globalThis.localStorage.setItem("custom-formatters-test", "hasBody");
-              return ["span", {}, "COULD EXECUTE HASBODY WITH SIDE EFFECTS"];
-            },
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("hasBodyHasSideEffects") ?
+              ["div", "hasBody has side effects"] :
+              null;
           },
-        */
+          // this hasBody shouldn't execute as it has side effects.
+          hasBody: (obj) => {
+            globalThis.localStorage.setItem("custom-formatters-test", "hasBody");
+            return ["span", {}, "COULD EXECUTE HASBODY WITH SIDE EFFECTS"];
+          },
+        },
         {
           header: (obj) => {
             return obj.hasOwnProperty("bodyNotAFunction") ?
@@ -120,22 +113,19 @@
           // this body is invalid because it throws an exception
           body: () => { throw new Error("ERROR"); },
         },
-        /*
-          Custom formatters can currently cause side effects.
-          {
-            header: (obj) => {
-              return obj.hasOwnProperty("bodyHasSideEffects") ?
-                ["div", "body has side effects"] :
-                null;
-            },
-            hasBody: () => true,
-            // this body shouldn't execute as it has side effects.
-            body: (obj) => {
-              globalThis.localStorage.setItem("custom-formatters-test", "body");
-              return ["span", {}, "COULD EXECUTE BODY WITH SIDE EFFECTS"];
-            },
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("bodyHasSideEffects") ?
+              ["div", "body has side effects"] :
+              null;
           },
-        */
+          hasBody: () => true,
+          // this body shouldn't execute as it has side effects.
+          body: (obj) => {
+            globalThis.localStorage.setItem("custom-formatters-test", "body");
+            return ["span", {}, "COULD EXECUTE BODY WITH SIDE EFFECTS"];
+          },
+        },
         {
           header: (obj) => {
             if (obj.hasOwnProperty("customFormatHeader")) {
@@ -157,7 +147,18 @@
         },
       ];
 
-      variables.forEach(variable => console.log(variable));
+      [
+        {},
+        {hasBodyNotAFunction: true},
+        {hasBodyThrows: true},
+        {hasBodyHasSideEffects: true},
+        {bodyNotAFunction: true},
+        {bodyReturnsNull: true},
+        {bodyNoJsonMl: true},
+        {bodyNoElementType: true},
+        {bodyThrows: true},
+        {bodyHasSideEffects: true},
+      ].forEach(variable => console.log(variable));
     </script>
   </body>
 </html>

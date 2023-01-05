@@ -854,7 +854,16 @@ const proto = {
               );
               hasBody = formatterHasBodyDbgValue.call(dbgGlobal, debuggeeValue);
 
-              if ("throw" in hasBody) {
+              if (hasBody == null) {
+                _invalidCustomFormatterHooks.add(formatter);
+
+                this._logCustomFormatterError(
+                  `devtoolsFormatters[${index}].hasBody was not run because it has side effects`,
+                  formatterHasBodyDbgValue?.script
+                );
+
+                continue;
+              } else if ("throw" in hasBody) {
                 _invalidCustomFormatterHooks.add(formatter);
 
                 this._logCustomFormatterError(
@@ -891,7 +900,9 @@ const proto = {
           }
 
           _invalidCustomFormatterHooks.add(formatter);
-          if ("return" in header) {
+          if (header == null) {
+            errorMsg = `devtoolsFormatters[${index}].header was not run because it has side effects`;
+          } else if ("return" in header) {
             let type = typeof header.return;
             if (type === "object") {
               type = header.return?.class;
@@ -901,9 +912,8 @@ const proto = {
             errorMsg = `devtoolsFormatters[${index}].header threw: ${
               header.throw.getProperty("message")?.return
             }`;
-          } else {
-            errorMsg = `devtoolsFormatters[${index}].header was not run because it has side effects`;
           }
+
           this._logCustomFormatterError(
             errorMsg,
             formatterHeaderDbgValue?.script
@@ -990,7 +1000,9 @@ const proto = {
 
       _invalidCustomFormatterHooks.add(formatter);
       let errorMsg = "";
-      if ("return" in body) {
+      if (body == null) {
+        errorMsg = `devtoolsFormatters[${customFormatterIndex}].body was not run because it has side effects`;
+      } else if ("return" in body) {
         let type = body.return === null ? "null" : typeof body.return;
         if (type === "object") {
           type = body.return?.class;
@@ -1000,9 +1012,8 @@ const proto = {
         errorMsg = `devtoolsFormatters[${customFormatterIndex}].body threw: ${
           body.throw.getProperty("message")?.return
         }`;
-      } else {
-        errorMsg = `devtoolsFormatters[${customFormatterIndex}].body was not run because it has side effects`;
       }
+
       this._logCustomFormatterError(errorMsg, formatterBodyDbgValue?.script);
     } catch (e) {
       this._logCustomFormatterError(
