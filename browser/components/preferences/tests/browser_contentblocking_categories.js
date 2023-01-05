@@ -16,6 +16,7 @@ const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const STP_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const LEVEL2_PREF = "privacy.annotate_channels.strict_list.enabled";
+const LEVEL2_PBM_PREF = "privacy.annotate_channels.strict_list.pbmode.enabled";
 const REFERRER_PREF = "network.http.referer.disallowCrossSiteRelaxingDefault";
 const REFERRER_TOP_PREF =
   "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation";
@@ -69,6 +70,10 @@ add_task(async function testContentBlockingStandardDefinition() {
     `${LEVEL2_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(LEVEL2_PBM_PREF),
+    `${LEVEL2_PBM_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(REFERRER_PREF),
     `${REFERRER_PREF} pref has the default value`
   );
@@ -98,6 +103,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   let originalNCB = defaults.getIntPref(NCB_PREF);
   let originalNCBP = defaults.getIntPref(NCBP_PREF);
   let originalLEVEL2 = defaults.getBoolPref(LEVEL2_PREF);
+  let originalLEVEL2PBM = defaults.getBoolPref(LEVEL2_PBM_PREF);
   let originalREFERRER = defaults.getBoolPref(REFERRER_PREF);
   let originalREFERRERTOP = defaults.getBoolPref(REFERRER_TOP_PREF);
   let originalOCSP = defaults.getBoolPref(OCSP_PREF);
@@ -133,6 +139,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   defaults.setBoolPref(CM_PREF, !originalSTP);
   defaults.setIntPref(NCB_PREF, !originalNCB);
   defaults.setBoolPref(LEVEL2_PREF, !originalLEVEL2);
+  defaults.setBoolPref(LEVEL2_PBM_PREF, !originalLEVEL2PBM);
   defaults.setBoolPref(REFERRER_PREF, !originalREFERRER);
   defaults.setBoolPref(REFERRER_TOP_PREF, !originalREFERRERTOP);
   defaults.setBoolPref(OCSP_PREF, !originalOCSP);
@@ -172,6 +179,10 @@ add_task(async function testContentBlockingStandardDefinition() {
     `${LEVEL2_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(LEVEL2_PBM_PREF),
+    `${LEVEL2_PBM_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(REFERRER_PREF),
     `${REFERRER_PREF} pref has the default value`
   );
@@ -202,6 +213,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   defaults.setIntPref(NCB_PREF, originalNCB);
   defaults.setIntPref(NCBP_PREF, originalNCBP);
   defaults.setBoolPref(LEVEL2_PREF, originalLEVEL2);
+  defaults.setBoolPref(LEVEL2_PBM_PREF, originalLEVEL2PBM);
   defaults.setBoolPref(REFERRER_PREF, originalREFERRER);
   defaults.setBoolPref(REFERRER_TOP_PREF, originalREFERRERTOP);
   defaults.setBoolPref(OCSP_PREF, originalOCSP);
@@ -217,7 +229,7 @@ add_task(async function testContentBlockingStrictDefinition() {
   let originalStrictPref = defaults.getStringPref(STRICT_DEF_PREF);
   defaults.setStringPref(
     STRICT_DEF_PREF,
-    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,lvl2,rp,rpTop,ocsp,qps,qpsPBM"
+    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,lvl2,lvl2PBM,rp,rpTop,ocsp,qps,qpsPBM"
   );
   Services.prefs.setStringPref(CAT_PREF, "strict");
   is(
@@ -232,7 +244,7 @@ add_task(async function testContentBlockingStrictDefinition() {
   );
   is(
     Services.prefs.getStringPref(STRICT_DEF_PREF),
-    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,lvl2,rp,rpTop,ocsp,qps,qpsPBM",
+    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,lvl2,lvl2PBM,rp,rpTop,ocsp,qps,qpsPBM",
     `${STRICT_DEF_PREF} changed to what we set.`
   );
 
@@ -275,6 +287,11 @@ add_task(async function testContentBlockingStrictDefinition() {
     Services.prefs.getBoolPref(LEVEL2_PREF),
     true,
     `${LEVEL2_PREF} pref has been set to true`
+  );
+  is(
+    Services.prefs.getBoolPref(LEVEL2_PBM_PREF),
+    true,
+    `${LEVEL2_PBM_PREF} pref has been set to true`
   );
   is(
     Services.prefs.getBoolPref(REFERRER_PREF),
@@ -338,6 +355,10 @@ add_task(async function testContentBlockingStrictDefinition() {
     `${LEVEL2_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(LEVEL2_PBM_PREF),
+    `${LEVEL2_PBM_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(REFERRER_PREF),
     `${REFERRER_PREF} pref has the default value`
   );
@@ -360,7 +381,7 @@ add_task(async function testContentBlockingStrictDefinition() {
 
   defaults.setStringPref(
     STRICT_DEF_PREF,
-    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3,cookieBehaviorPBM2,-stp,-lvl2,-rp,-ocsp,-qps,-qpsPBM"
+    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3,cookieBehaviorPBM2,-stp,-lvl2,-lvl2PBM,-rp,-ocsp,-qps,-qpsPBM"
   );
   is(
     Services.prefs.getBoolPref(TP_PREF),
@@ -401,6 +422,11 @@ add_task(async function testContentBlockingStrictDefinition() {
     Services.prefs.getBoolPref(LEVEL2_PREF),
     false,
     `${LEVEL2_PREF} pref has been set to false`
+  );
+  is(
+    Services.prefs.getBoolPref(LEVEL2_PBM_PREF),
+    false,
+    `${LEVEL2_PBM_PREF} pref has been set to false`
   );
   is(
     Services.prefs.getBoolPref(REFERRER_PREF),
