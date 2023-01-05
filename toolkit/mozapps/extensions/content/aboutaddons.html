@@ -86,13 +86,13 @@
       <panel-list>
         <panel-item action="check-for-updates" data-l10n-id="addon-updates-check-for-updates" data-l10n-attrs="accesskey"></panel-item>
         <panel-item action="view-recent-updates" data-l10n-id="addon-updates-view-updates" data-l10n-attrs="accesskey"></panel-item>
-        <panel-item-separator></panel-item-separator>
+        <hr>
         <panel-item action="install-from-file" data-l10n-id="addon-install-from-file" data-l10n-attrs="accesskey"></panel-item>
         <panel-item action="debug-addons" data-l10n-id="addon-open-about-debugging" data-l10n-attrs="accesskey"></panel-item>
-        <panel-item-separator></panel-item-separator>
+        <hr>
         <panel-item action="set-update-automatically" data-l10n-id="addon-updates-update-addons-automatically" data-l10n-attrs="accesskey"></panel-item>
         <panel-item action="reset-update-states" data-l10n-attrs="accesskey"></panel-item>
-        <panel-item-separator></panel-item-separator>
+        <hr>
         <panel-item action="manage-shortcuts" data-l10n-id="addon-manage-extensions-shortcuts" data-l10n-attrs="accesskey"></panel-item>
       </panel-list>
     </template>
@@ -102,9 +102,9 @@
         <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
         <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
         <panel-item data-l10n-id="preferences-addon-button" action="preferences"></panel-item>
-        <panel-item-separator></panel-item-separator>
+        <hr>
         <panel-item data-l10n-id="report-addon-button" action="report"></panel-item>
-        <panel-item-separator></panel-item-separator>
+        <hr>
         <panel-item data-l10n-id="manage-addon-button" action="expand"></panel-item>
       </panel-list>
     </template>
@@ -113,9 +113,9 @@
       <panel-list>
         <panel-item data-l10n-id="always-activate-button" action="always-activate"></panel-item>
         <panel-item data-l10n-id="never-activate-button" action="never-activate"></panel-item>
-        <panel-item-separator></panel-item-separator>
+        <hr>
         <panel-item data-l10n-id="preferences-addon-button" action="preferences"></panel-item>
-        <panel-item-separator></panel-item-separator>
+        <hr>
         <panel-item data-l10n-id="manage-addon-button" action="expand"></panel-item>
       </panel-list>
     </template>
@@ -338,13 +338,6 @@
       <span class="rating-star"></span>
       <span class="rating-star"></span>
       <span class="rating-star"></span>
-    </template>
-
-    <template name="panel-list">
-      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-list.css">
-      <div class="list" role="presentation">
-        <slot></slot>
-      </div>
     </template>
 
     <template name="taar-notice">

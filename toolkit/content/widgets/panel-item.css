@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:host {
+:host(:not([hidden])) {
   display: flex;
   align-items: center;
 }
@@ -11,16 +11,18 @@
   margin-inline-end: 12px;
 }
 
-:host([checked]) {
-  --icon: url("chrome://global/skin/icons/check.svg");
+:host button {
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+:host([checked]) button {
+  background-image: url("chrome://global/skin/icons/check.svg");
 }
 
 button {
   background-color: transparent;
   color: inherit;
-  background-image: var(--icon);
   background-position: 8px center;
   background-repeat: no-repeat;
   background-size: 16px;
@@ -47,7 +49,7 @@ button:dir(rtl) {
   background-color: var(--in-content-accent-color);
   position: absolute;
   top: 4px;
-  inset-inline-start: 28px;
+  inset-inline-start: 24px;
 }
 
 button:enabled:hover {
