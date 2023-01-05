@@ -127,8 +127,14 @@ bool FrameInFlight::HasReceivedTime(size_t peer) const {
 
 void FrameInFlight::OnFrameDecoded(size_t peer,
                                    webrtc::Timestamp time,
-                                   StreamCodecInfo used_decoder) {
+                                   const StreamCodecInfo& used_decoder) {
   receiver_stats_[peer].decode_end_time = time;
+  receiver_stats_[peer].used_decoder = used_decoder;
+}
+
+void FrameInFlight::OnDecoderError(size_t peer,
+                                   const StreamCodecInfo& used_decoder) {
+  receiver_stats_[peer].decoder_failed = true;
   receiver_stats_[peer].used_decoder = used_decoder;
 }
 
@@ -187,6 +193,7 @@ FrameStats FrameInFlight::GetStatsForPeer(size_t peer) const {
     stats.used_decoder = receiver_stats->used_decoder;
     stats.pre_decoded_frame_type = receiver_stats->frame_type;
     stats.pre_decoded_image_size = receiver_stats->encoded_image_size;
+    stats.decoder_failed = receiver_stats->decoder_failed;
   }
   return stats;
 }

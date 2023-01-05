@@ -78,7 +78,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
                       int32_t error_code) override;
   void OnDecoderError(absl::string_view peer_name,
                       uint16_t frame_id,
-                      int32_t error_code) override;
+                      int32_t error_code,
+                      const DecoderStats& stats) override;
 
   void RegisterParticipantInCall(absl::string_view peer_name) override;
   void UnregisterParticipantInCall(absl::string_view peer_name) override;
