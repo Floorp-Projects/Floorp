@@ -11,6 +11,7 @@
 #ifndef SDK_OBJC_NATIVE_SRC_OBJC_AUDIO_DEVICE_H_
 #define SDK_OBJC_NATIVE_SRC_OBJC_AUDIO_DEVICE_H_
 
+#import "components/audio/RTCAudioDevice.h"
 #include "modules/audio_device/include/audio_device.h"
 
 namespace webrtc {
@@ -19,7 +20,8 @@ namespace objc_adm {
 
 class ObjCAudioDeviceModule : public AudioDeviceModule {
  public:
-  ObjCAudioDeviceModule();
+  explicit ObjCAudioDeviceModule(
+      id<RTC_OBJC_TYPE(RTCAudioDevice)> audio_device);
   ~ObjCAudioDeviceModule() override;
 
   // Retrieve the currently utilized audio layer
@@ -123,6 +125,9 @@ class ObjCAudioDeviceModule : public AudioDeviceModule {
   int GetPlayoutAudioParameters(AudioParameters* params) const override;
   int GetRecordAudioParameters(AudioParameters* params) const override;
 #endif  // WEBRTC_IOS
+
+ private:
+  id<RTC_OBJC_TYPE(RTCAudioDevice)> audio_device_;
 };
 
 }  // namespace objc_adm
