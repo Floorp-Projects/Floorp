@@ -1251,34 +1251,19 @@ richlistitem .text-link:hover {
   background-position-x: right;
 }
 
-#moreFromMozillaCategory .description {
-  display: inline flow-root;
-  color: var(--in-content-text-color);
+#moreFromMozillaCategory .product-description-box {
   padding-inline-start: 30px;
   margin: 2px 0;
   line-height: 1.4em;
 }
 
+#moreFromMozillaCategory .description {
+  display: inline;
+}
+
 #moreFromMozillaCategory .small-button {
   margin-block: 14px 2px;
   margin-inline: 30px 0;
-}
-
-#moreFromMozillaCategory .text-link {
-  line-height: 1.4em;
-
-  margin-block: 2px 0;
-  margin-inline: 6px 0;
-}
-
-#moreFromMozillaCategory .simple .text-link {
-  display: inline flow-root;
-  margin-inline-start: 4px;
-}
-
-#moreFromMozillaCategory .text-link.hidden,
-#moreFromMozillaCategory .text-link[hidden] {
-  display: none;
 }
 
 #firefox-mobile {
@@ -1357,8 +1342,6 @@ richlistitem .text-link:hover {
 #moreFromMozillaCategory .qr-code-link {
   font-size: .87em;
   line-height: 1.42em;
-  margin-block-start: 0;
-  margin-inline: 0; /* make sure we're correctly centered by overriding button rule */
 }
 
 @media (prefers-color-scheme: dark) {
