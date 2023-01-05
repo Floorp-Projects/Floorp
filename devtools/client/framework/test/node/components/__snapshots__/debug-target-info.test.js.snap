@@ -93,9 +93,6 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
       />
     </form>
   </span>
-  <button
-    className="toolbox-always-on-top"
-  />
 </header>
 `;
 
@@ -152,9 +149,6 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       http://some.target/url
     </span>
   </span>
-  <button
-    className="toolbox-always-on-top"
-  />
 </header>
 `;
 
@@ -251,9 +245,6 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       />
     </form>
   </span>
-  <button
-    className="toolbox-always-on-top"
-  />
 </header>
 `;
 
@@ -310,9 +301,6 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       http://some.target/url
     </span>
   </span>
-  <button
-    className="toolbox-always-on-top"
-  />
 </header>
 `;
 
@@ -347,6 +335,49 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       usbDeviceName
     </span>
   </span>
+  <span
+    className="iconized-label debug-target-title"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.extension"
+      src="chrome://devtools/skin/images/debugging-addons.svg"
+    />
+    <b
+      className="devtools-ellipsis-text qa-target-title"
+    >
+      Test Tab Name
+    </b>
+  </span>
+  <div
+    className="debug-target-navigation"
+  >
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://global/skin/icons/reload.svg"
+      />
+    </button>
+  </div>
+  <span
+    className="debug-target-url"
+  >
+    <span
+      className="debug-target-url-readonly devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for an local extension target 1`] = `
+<header
+  className="debug-target-info qa-debug-target-info"
+>
   <span
     className="iconized-label debug-target-title"
   >

@@ -31,6 +31,12 @@ const findByClassName = (testInstance, className) => {
   });
 };
 
+function buildProps(base, extraDebugTargetData) {
+  const props = Object.assign({}, base);
+  Object.assign(props.debugTargetData, extraDebugTargetData);
+  return props;
+}
+
 const TEST_TOOLBOX = {
   target: {
     name: "Test Tab Name",
@@ -164,12 +170,6 @@ describe("DebugTargetInfo component", () => {
   });
 
   describe("Target icon", () => {
-    const buildProps = (base, extraDebugTargetData) => {
-      const props = Object.assign({}, base);
-      Object.assign(props.debugTargetData, extraDebugTargetData);
-      return props;
-    };
-
     it("renders the expected snapshot for a tab target", () => {
       const props = buildProps(USB_TARGET_INFO, {
         descriptorType: DESCRIPTOR_TYPES.TAB,
@@ -194,12 +194,126 @@ describe("DebugTargetInfo component", () => {
       expect(component.toJSON()).toMatchSnapshot();
     });
 
+    it("renders the expected snapshot for an local extension target", () => {
+      const props = buildProps(THIS_FIREFOX_TARGET_INFO, {
+        descriptorType: DESCRIPTOR_TYPES.EXTENSION,
+      });
+      const component = renderer.create(DebugTargetInfo(props));
+      expect(component.toJSON()).toMatchSnapshot();
+    });
+
     it("renders the expected snapshot for a process target", () => {
       const props = buildProps(USB_TARGET_INFO, {
         descriptorType: DESCRIPTOR_TYPES.PROCESS,
       });
       const component = renderer.create(DebugTargetInfo(props));
       expect(component.toJSON()).toMatchSnapshot();
+    });
+  });
+
+  describe("Always on top button", () => {
+    it("displays always on top button for local webextension target", () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(THIS_FIREFOX_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.EXTENSION,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(1);
+    });
+
+    it(`does not display "Always on top" button for remote webextension toolbox`, () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(USB_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.EXTENSION,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(0);
+    });
+
+    it(`does not display "Always on top" button for local tab toolbox`, () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(THIS_FIREFOX_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.TAB,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(0);
+    });
+
+    it(`does not display "Always on top" button for remote tab toolbox`, () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(USB_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.TAB,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(0);
+    });
+
+    it(`does not display "Always on top" button for local worker toolbox`, () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(THIS_FIREFOX_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.WORKER,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(0);
+    });
+
+    it(`does not display "Always on top" button for remote worker toolbox`, () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(USB_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.WORKER,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(0);
+    });
+
+    it(`does not display "Always on top" button for local process toolbox`, () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(THIS_FIREFOX_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.PROCESS,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(0);
+    });
+
+    it(`does not display "Always on top" button for remote process toolbox`, () => {
+      const component = renderer.create(
+        DebugTargetInfo(
+          buildProps(USB_TARGET_INFO, {
+            descriptorType: DESCRIPTOR_TYPES.PROCESS,
+          })
+        )
+      );
+      expect(
+        findByClassName(component.root, "toolbox-always-on-top").length
+      ).toEqual(0);
     });
   });
 });
