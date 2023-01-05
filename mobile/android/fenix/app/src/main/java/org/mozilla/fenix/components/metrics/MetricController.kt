@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
+import mozilla.components.browser.toolbar.facts.ToolbarFacts
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
@@ -42,6 +43,7 @@ import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
@@ -146,6 +148,9 @@ internal class ReleaseMetricController(
                 Action.PAUSE -> MediaNotification.pause.record(NoExtras())
                 else -> Unit
             }
+        }
+        Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
+            Events.toolbarMenuVisible.record(NoExtras())
         }
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
             metadata?.get("item")?.let { item ->
