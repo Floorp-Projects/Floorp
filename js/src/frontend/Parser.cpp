@@ -2585,7 +2585,7 @@ bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
 
 TaggedParserAtomIndex ParserBase::prefixAccessorName(
     PropertyType propType, TaggedParserAtomIndex propAtom) {
-  StringBuffer prefixed(cx_, fc_);
+  StringBuffer prefixed(fc_);
   if (propType == PropertyType::Setter) {
     if (!prefixed.append("set ")) {
       return TaggedParserAtomIndex::null();
@@ -9043,7 +9043,7 @@ GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
 
   // Synthesize a name for the lexical variable that will store the
   // accessor body.
-  StringBuffer storedMethodName(cx_, fc_);
+  StringBuffer storedMethodName(fc_);
   if (!storedMethodName.append(this->parserAtoms(), propAtom)) {
     return null();
   }

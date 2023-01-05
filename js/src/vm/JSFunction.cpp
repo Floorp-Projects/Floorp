@@ -1273,13 +1273,10 @@ static JSAtom* AppendBoundFunctionPrefix(JSContext* cx, JSString* str) {
   MOZ_ASSERT(
       StringEqualsAscii(cx->names().boundWithSpace, boundWithSpaceChars));
 
-  ManualReportFrontendContext fc(cx);
-  StringBuffer sb(cx, &fc);
+  StringBuffer sb(cx);
   if (!sb.append(boundWithSpaceChars) || !sb.append(str)) {
-    fc.failure();
     return nullptr;
   }
-  fc.ok();
   return sb.finishAtom();
 }
 
@@ -2118,16 +2115,13 @@ static JSAtom* SymbolToFunctionName(JSContext* cx, JS::Symbol* symbol,
   }
 
   // Step 5 (reordered).
-  ManualReportFrontendContext fc(cx);
-  StringBuffer sb(cx, &fc);
+  StringBuffer sb(cx);
   if (prefixKind == FunctionPrefixKind::Get) {
     if (!sb.append("get ")) {
-      fc.failure();
       return nullptr;
     }
   } else if (prefixKind == FunctionPrefixKind::Set) {
     if (!sb.append("set ")) {
-      fc.failure();
       return nullptr;
     }
   }
@@ -2140,18 +2134,15 @@ static JSAtom* SymbolToFunctionName(JSContext* cx, JS::Symbol* symbol,
     // they don't use the symbol naming, but rather property naming.
     if (symbol->isPrivateName()) {
       if (!sb.append(desc)) {
-        fc.failure();
         return nullptr;
       }
     } else {
       // Step 4.c.
       if (!sb.append('[') || !sb.append(desc) || !sb.append(']')) {
-        fc.failure();
         return nullptr;
       }
     }
   }
-  fc.ok();
   return sb.finishAtom();
 }
 
@@ -2168,24 +2159,19 @@ static JSAtom* NameToFunctionName(JSContext* cx, HandleValue name,
     return nullptr;
   }
 
-  ManualReportFrontendContext fc(cx);
-  StringBuffer sb(cx, &fc);
+  StringBuffer sb(cx);
   if (prefixKind == FunctionPrefixKind::Get) {
     if (!sb.append("get ")) {
-      fc.failure();
       return nullptr;
     }
   } else {
     if (!sb.append("set ")) {
-      fc.failure();
       return nullptr;
     }
   }
   if (!sb.append(nameStr)) {
-    fc.failure();
     return nullptr;
   }
-  fc.ok();
   return sb.finishAtom();
 }
 
