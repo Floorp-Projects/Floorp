@@ -134,9 +134,6 @@ def build_docs(
         + os.pathsep
         + os.environ["PATH"]
     )
-    command_context.virtualenv_manager.install_pip_requirements(
-        os.path.join(here, "requirements.txt")
-    )
 
     import webbrowser
 
