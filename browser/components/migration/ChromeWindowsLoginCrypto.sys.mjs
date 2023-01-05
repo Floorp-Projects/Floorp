@@ -9,7 +9,9 @@
 
 import { ChromeMigrationUtils } from "resource:///modules/ChromeMigrationUtils.sys.mjs";
 
-const { OSCrypto } = ChromeUtils.import("resource://gre/modules/OSCrypto.jsm");
+const { OSCrypto } = ChromeUtils.import(
+  "resource://gre/modules/OSCrypto_win.jsm"
+);
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 /**

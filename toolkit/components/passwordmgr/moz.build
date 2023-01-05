@@ -46,7 +46,6 @@ EXTRA_JS_MODULES += [
     "LoginRecipes.jsm",
     "LoginRelatedRealms.jsm",
     "NewPasswordModel.jsm",
-    "OSCrypto.jsm",
     "PasswordGenerator.jsm",
     "PasswordRulesManager.jsm",
     "PasswordRulesParser.jsm",
