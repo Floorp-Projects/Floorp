@@ -100,17 +100,6 @@ class ResultStatement {
     return value;
   }
 
-  inline Result<DatabaseVersion, QMResult> GetDatabaseVersion() {
-    bool hasEntries = false;
-    QM_TRY(QM_TO_RESULT(mStmt->ExecuteStep(&hasEntries)));
-    MOZ_ALWAYS_TRUE(hasEntries);
-
-    DatabaseVersion value = 0;
-    QM_TRY(QM_TO_RESULT(mStmt->GetInt32(0u, &value)));
-
-    return value;
-  }
-
   inline Result<EntryId, QMResult> GetEntryIdByColumn(Column aColumn) {
     EntryId value;
     QM_TRY(QM_TO_RESULT(mStmt->GetBlobAsUTF8String(aColumn, value)));

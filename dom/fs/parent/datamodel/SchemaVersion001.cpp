@@ -143,51 +143,39 @@ Result<bool, QMResult> CheckIfEmpty(ResultConnection& aConn) {
   return stmt.YesOrNoQuery();
 };
 
-Result<DatabaseVersion, QMResult> GetDatabaseVersion(ResultConnection& aConn) {
-  const nsLiteralCString getUserVersionQuery = "PRAGMA USER_VERSION;"_ns;
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConn, getUserVersionQuery));
-
-  return stmt.GetDatabaseVersion();
-}
-
-nsresult SetDatabaseVersion(ResultConnection& aConn) {
-  // Unfortunately bind does not work.
-  nsCString setUserVersionQuery = "PRAGMA USER_VERSION = "_ns;
-  setUserVersionQuery.AppendInt(SchemaVersion001::sVersion);
-  setUserVersionQuery.Append(" ;"_ns);
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConn, setUserVersionQuery));
-  QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
-
-  return NS_OK;
-}
-
 }  // namespace
 
 Result<DatabaseVersion, QMResult> SchemaVersion001::InitializeConnection(
     ResultConnection& aConn, const Origin& aOrigin) {
   QM_TRY_UNWRAP(bool isEmpty, CheckIfEmpty(aConn));
 
-  DatabaseVersion previous = 0;
+  DatabaseVersion currentVersion = 0;
 
   if (isEmpty) {
     QM_TRY(QM_TO_RESULT(SetEncoding(aConn)));
   } else {
-    QM_TRY_UNWRAP(previous, GetDatabaseVersion(aConn));
+    QM_TRY(QM_TO_RESULT(aConn->GetSchemaVersion(&currentVersion)));
   }
 
-  if (previous < sVersion) {
+  if (currentVersion < sVersion) {
+    mozStorageTransaction transaction(
+        aConn.get(),
+        /* commit on complete */ false,
+        mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
     QM_TRY(QM_TO_RESULT(CreateEntries(aConn)));
     QM_TRY(QM_TO_RESULT(CreateDirectories(aConn)));
     QM_TRY(QM_TO_RESULT(CreateFiles(aConn)));
     QM_TRY(QM_TO_RESULT(CreateUsages(aConn)));
     QM_TRY(QM_TO_RESULT(CreateRootEntry(aConn, aOrigin)));
-    QM_TRY(QM_TO_RESULT(SetDatabaseVersion(aConn)));
+    QM_TRY(QM_TO_RESULT(aConn->SetSchemaVersion(sVersion)));
+
+    QM_TRY(QM_TO_RESULT(transaction.Commit()));
   }
 
-  return GetDatabaseVersion(aConn);
+  QM_TRY(QM_TO_RESULT(aConn->GetSchemaVersion(&currentVersion)));
+
+  return currentVersion;
 }
 
 }  // namespace mozilla::dom::fs
