@@ -617,7 +617,6 @@ partial interface Document {
 
 Document includes XPathEvaluatorMixin;
 Document includes GlobalEventHandlers;
-Document includes DocumentAndElementEventHandlers;
 Document includes TouchEventHandlers;
 Document includes ParentNode;
 Document includes OnErrorEventHandlerForNodes;
