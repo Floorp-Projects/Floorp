@@ -40,10 +40,18 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
     // about:debugging is only using this API when debugging its own firefox instance,
     // so for now, there is no chance of calling this on Android.
     if (openDevTools) {
+      // This module is typically loaded in the loader spawn by DevToolsStartup,
+      // in a distinct compartment thanks to useDistinctSystemPrincipalLoader and loadInDevToolsLoader flag.
+      // But here we want to reuse the shared module loader.
+      // We do not want to load devtools.js in the server's distinct module loader.
+      const loader = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs",
+        { loadInDevToolsLoader: false }
+      );
       const {
         gDevTools,
         // eslint-disable-next-line mozilla/reject-some-requires
-      } = require("resource://devtools/client/framework/devtools.js");
+      } = loader.require("resource://devtools/client/framework/devtools.js");
       gDevTools.showToolboxForWebExtension(addon.id);
     }
 
