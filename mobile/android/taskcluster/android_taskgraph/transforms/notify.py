@@ -22,3 +22,29 @@ def resolve_keys(config, tasks):
                 }
             )
         yield task
+
+
+@transforms.add
+def add_notify_email(config, tasks):
+    for task in tasks:
+        notify = task.pop("notify", {})
+        email_config = notify.get("email")
+        if email_config:
+            extra = task.setdefault("extra", {})
+            notify = extra.setdefault("notify", {})
+            notify["email"] = {
+                "content": email_config["content"],
+                "subject": email_config["subject"],
+                "link": email_config.get("link", None),
+            }
+
+            routes = task.setdefault("routes", [])
+            routes.extend(
+                [
+                    "notify.email.{}.on-{}".format(address, reason)
+                    for address in email_config["to-addresses"]
+                    for reason in email_config["on-reasons"]
+                ]
+            )
+
+        yield task

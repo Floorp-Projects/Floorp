@@ -9,6 +9,7 @@ transforms:
     - android_taskgraph.transforms.signing_apk:transforms
     - android_taskgraph.transforms.treeherder:transforms
     - android_taskgraph.transforms.clean_multi_dep:transforms
+    - android_taskgraph.transforms.notify:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -21,19 +22,27 @@ group-by: build-type
 task-template:
     description: Sign Android APKs
     worker: {}
-    # TODO: Support Fenix
-    signing-format: autograph_focus
+    signing-format:
+        by-build-type:
+            (focus-.*|klar-.*): autograph_focus
+            beta-mozillaonline: autograph_apk_mozillaonline
+            release-mozillaonline: autograph_apk_mozillaonline
+            default: autograph_apk
     index:
         by-tasks-for:
             (action|cron|github-release):
                 by-build-type:
-                    (focus-nightly|focus-release|klar-release|focus-beta):
+                    (focus-nightly|focus-release|klar-release|focus-beta|fenix-nightly|fenix-debug|fenix-nightly-simulation|fenix-beta|fenix-beta-mozillaonline|fenix-release|fenix-release-mozillaonline):
                         type: signing
                     default: {}
             default: {}
     run-on-tasks-for:
         by-build-type:
             (focus-debug|android-test-debug|nightly-firebase|android-test-nightly|beta-firebase|android-test-beta): [github-push]
+            # No test job runs on push against this build type. Although we do want nightly-simulation
+            # signed to use it in the gecko trees.
+            # We want beta on push so that we detect problem before shipping it
+            (fenix-nightly-simulation|fenix-beta-firebase|fenix-android-test-beta|fenix-android-test-mozillaonline|fenix-nightly-firebase|fenix-android-test-nightly): [github-push]
             default: []
     treeherder:
         job-symbol:
@@ -43,6 +52,28 @@ task-template:
                 focus-(nightly|beta)-firebase$: Bffs
                 focus-android-test-(debug|nightly|beta)$: Bats
                 klar-.*: Bkls
+                fenix-android-test.+: Bats
+                fenix-android-test-mozillaonline: Bats-mo
+                fenix-beta-firebase: Bfs
+                fenix-nightly-firebase: Bfs
+                fenix-beta-mozillaonline: Bmos
+                fenix-release-mozillaonline: Bmos
         kind: build
+        # TODO: split focus/fenix platform by build type
         platform: focus-android-all/opt
         tier: 1
+    notify:
+        by-build-type:
+            .*(fenix-beta|fenix-release)-mozillaonline:
+                by-level:
+                    '3':
+                        email:
+                            content: The Mozilla Online Fenix {version} APKs are now available
+                            link:
+                                text: Taskcluster Task
+                                href: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}'
+                            on-reasons: [completed]
+                            subject: Mozilla Online Fenix {version} APKs are now available
+                            to-addresses: [mozillaonline-fenix@mozilla.com]
+                    default: {}
+            default: {}

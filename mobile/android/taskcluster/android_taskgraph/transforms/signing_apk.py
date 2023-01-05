@@ -19,18 +19,26 @@ PRODUCTION_SIGNING_BUILD_TYPES = [
     "klar-release",
     "android-test-nightly",
     "android-test-beta"
+    "fenix-nightly",
+    "fenix-beta",
+    "fenix-release",
+    "fenix-android-test-nightly",
+    "fenix-beta-mozillaonline",
+    "fenix-release-mozillaonline",
 ]
 
 SIGNING_BUILD_TYPES = PRODUCTION_SIGNING_BUILD_TYPES + [
     "focus-debug",
     "klar-debug",
+    "fenix-debug",
+    "fenix-nightly-simulation",
 ]
 
 
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("run-on-tasks-for",):
+        for key in ("run-on-tasks-for", "signing-format", "notify"):
             resolve_keyed_by(
                 task,
                 key,
@@ -66,7 +74,9 @@ def set_signing_type(config, tasks):
             str(config.params["level"]) == "3"
             and config.params["tasks_for"] in ("cron", "github-release", "action")
         ):
-            if task["attributes"]["build-type"] in PRODUCTION_SIGNING_BUILD_TYPES:
+            if task["attributes"]["build-type"] in ("fenix-beta", "fenix-release"):
+                signing_type = "fennec-production-signing"
+            elif task["attributes"]["build-type"] in PRODUCTION_SIGNING_BUILD_TYPES:
                 signing_type = "production-signing"
         task.setdefault("worker", {})["signing-type"] = signing_type
         yield task
@@ -98,4 +108,18 @@ def set_signing_format(config, tasks):
         signing_format = task.pop("signing-format")
         for upstream_artifact in task["worker"]["upstream-artifacts"]:
             upstream_artifact["formats"] = [signing_format]
+        yield task
+
+
+@transforms.add
+def format_email(config, tasks):
+    version = config.params["version"]
+
+    for task in tasks:
+        if "notify" in task:
+            email = task["notify"].get("email")
+            if email:
+                email["subject"] = email["subject"].format(version=version)
+                email["content"] = email["content"].format(version=version)
+
         yield task
