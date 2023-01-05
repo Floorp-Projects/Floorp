@@ -24,7 +24,7 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetDirectoryForOrigin(
   QM_TRY_UNWRAP(auto directory, QM_TO_RESULT_TRANSFORM(quota::QM_NewLocalFile(
                                     aQuotaManager.GetBasePath())));
 
-  QM_TRY(QM_TO_RESULT(directory->Append(u"opfs-storage"_ns)));
+  QM_TRY(QM_TO_RESULT(directory->Append(u"opfs-storage2"_ns)));
 
   QM_TRY_UNWRAP(auto originHash,
                 data::FileSystemHashSource::GenerateHash(
