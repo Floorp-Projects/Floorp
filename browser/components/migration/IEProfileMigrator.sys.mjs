@@ -25,7 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 ChromeUtils.defineModuleGetter(
   lazy,
   "OSCrypto",
-  "resource://gre/modules/OSCrypto.jsm"
+  "resource://gre/modules/OSCrypto_win.jsm"
 );
 
 // Resources

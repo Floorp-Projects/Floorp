@@ -7,7 +7,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 ChromeUtils.defineModuleGetter(
   this,
   "OSCrypto",
-  "resource://gre/modules/OSCrypto.jsm"
+  "resource://gre/modules/OSCrypto_win.jsm"
 );
 
 const IE7_FORM_PASSWORDS_MIGRATOR_NAME = "IE7FormPasswords";
