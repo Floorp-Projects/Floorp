@@ -167,8 +167,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         val cookieBannersStorage = requireComponents.core.cookieBannersStorage
         requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
             lifecycleScope.launch(Dispatchers.IO) {
-                val hasException =
+                val hasException = if (requireContext().settings().shouldUseCookieBanner) {
                     cookieBannersStorage.hasException(tab.content.url, tab.content.private)
+                } else {
+                    false
+                }
                 withContext(Dispatchers.Main) {
                     runIfFragmentIsAttached {
                         val directions = ExternalAppBrowserFragmentDirections

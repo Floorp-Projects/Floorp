@@ -26,6 +26,7 @@ import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.trackingprotection.ProtectionsAction
 import org.mozilla.fenix.trackingprotection.ProtectionsStore
 
@@ -72,8 +73,11 @@ class DefaultCookieBannerDetailsController(
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
                 ioScope.launch {
-                    val hasException =
+                    val hasException = if (context.settings().shouldUseCookieBanner) {
                         cookieBannersStorage.hasException(tab.content.url, tab.content.private)
+                    } else {
+                        false
+                    }
                     withContext(Dispatchers.Main) {
                         fragment.runIfFragmentIsAttached {
                             navController().popBackStack()

@@ -11,12 +11,14 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.navigation.findNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.transformWhile
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.lib.state.ext.flowScoped
@@ -29,6 +31,7 @@ import org.mozilla.fenix.compose.cfr.CFRPopupProperties
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.TOTAL_COOKIE_PROTECTION
+import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialogUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -111,6 +114,7 @@ class BrowserToolbarCFRPresenter(
                     true -> TrackingProtection.tcpCfrExplicitDismissal.record(NoExtras())
                     false -> TrackingProtection.tcpCfrImplicitDismissal.record(NoExtras())
                 }
+                tryToShowCookieBannerDialogIfNeeded()
             },
         ) {
             Text(
@@ -135,6 +139,17 @@ class BrowserToolbarCFRPresenter(
             tcpCfrPopup = this
             show()
             TrackingProtection.tcpCfrShown.record(NoExtras())
+        }
+    }
+
+    @VisibleForTesting
+    internal fun tryToShowCookieBannerDialogIfNeeded() {
+        browserStore.state.selectedTab?.let { tab ->
+            CookieBannerReEngagementDialogUtils.tryToShowReEngagementDialog(
+                settings = settings,
+                status = tab.cookieBanner,
+                navController = toolbar.findNavController(),
+            )
         }
     }
 }

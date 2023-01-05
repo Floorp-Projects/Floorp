@@ -544,11 +544,43 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var shouldUseCookieBanner by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_cookie_banner_v1),
         featureFlag = true,
-        default = { cookieBannersSection[CookieBannersSection.FEATURE_SETTING_VALUE] == true },
+        default = { cookieBannersSection[CookieBannersSection.FEATURE_SETTING_VALUE] == 1 },
+    )
+
+    var userOptOutOfReEngageCookieBannerDialog by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_cookie_banner_re_engage_dialog_dismissed),
+        default = false,
+    )
+
+    var cookieBannerDetectedPreviously by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_cookie_banner_first_banner_detected),
+        default = false,
     )
 
     val shouldShowCookieBannerUI: Boolean
-        get() = cookieBannersSection[CookieBannersSection.FEATURE_UI] == true
+        get() = cookieBannersSection[CookieBannersSection.FEATURE_UI] == 1
+
+    /**
+     * Indicates after how many hours a cookie banner dialog should be shown again
+     */
+    @VisibleForTesting
+    internal val timerForCookieBannerDialog: Long
+        get() = 60 * 60 * 1000L *
+            (cookieBannersSection[CookieBannersSection.DIALOG_RE_ENGAGE_TIME] ?: 4)
+
+    /**
+     * Indicates if we should should show the cookie banner dialog that invites the user to turn-on
+     * the setting.
+     */
+    fun shouldCookieBannerReEngagementDialog(): Boolean {
+        val shouldShowDialog =
+            shouldShowCookieBannerUI && !userOptOutOfReEngageCookieBannerDialog && !shouldUseCookieBanner
+        return if (!shouldShowTotalCookieProtectionCFR && shouldShowDialog) {
+            !cookieBannerDetectedPreviously || timeNowInMillis() - lastBrowseActivity >= timerForCookieBannerDialog
+        } else {
+            false
+        }
+    }
 
     /**
      * Declared as a function for performance purposes. This could be declared as a variable using
@@ -1293,7 +1325,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         get() =
             FxNimbus.features.mr2022.value().sectionsEnabled
 
-    private val cookieBannersSection: Map<CookieBannersSection, Boolean>
+    private val cookieBannersSection: Map<CookieBannersSection, Int>
         get() =
             FxNimbus.features.cookieBanners.value().sectionsEnabled
 
@@ -1458,7 +1490,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     fun getCookieBannerHandling(): CookieBannerHandlingMode {
         return when (shouldUseCookieBanner) {
             true -> CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL
-            false -> CookieBannerHandlingMode.DISABLED
+            false -> if (shouldShowCookieBannerUI && !userOptOutOfReEngageCookieBannerDialog) {
+                CookieBannerHandlingMode.DETECT_ONLY
+            } else {
+                CookieBannerHandlingMode.DISABLED
+            }
         }
     }
 

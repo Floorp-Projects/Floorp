@@ -27,6 +27,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -87,6 +88,8 @@ class DefaultConnectionDetailsControllerTest {
 
     @Test
     fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() {
+        every { context.settings().shouldUseCookieBanner } returns true
+
         controller.handleBackPressed()
 
         verify {

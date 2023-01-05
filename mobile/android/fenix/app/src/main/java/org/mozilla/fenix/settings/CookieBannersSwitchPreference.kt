@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.util.AttributeSet
+import org.mozilla.fenix.ext.settings
 
 /**
  * Cookie banners switch preference with a learn more link.
@@ -17,5 +18,9 @@ class CookieBannersSwitchPreference(context: Context, attrs: AttributeSet?) :
         return SupportUtils.getGenericSumoURLForTopic(
             SupportUtils.SumoTopic.COOKIE_BANNER,
         )
+    }
+
+    override fun getSwitchValue(): Boolean {
+        return context.settings().shouldUseCookieBanner
     }
 }

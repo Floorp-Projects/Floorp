@@ -221,6 +221,7 @@ class BrowserToolbarCFRPresenterTest {
         val presenter = createPresenter(
             anchor = mockk(relaxed = true),
         )
+        every { presenter.tryToShowCookieBannerDialogIfNeeded() } just Runs
 
         presenter.showTcpCfr()
 
@@ -231,6 +232,9 @@ class BrowserToolbarCFRPresenterTest {
         assertNull(TrackingProtection.tcpCfrImplicitDismissal.testGetValue())
         presenter.tcpCfrPopup!!.onDismiss.invoke(false)
         assertNotNull(TrackingProtection.tcpCfrImplicitDismissal.testGetValue())
+        verify {
+            presenter.tryToShowCookieBannerDialogIfNeeded()
+        }
     }
 
     /**
@@ -260,12 +264,14 @@ class BrowserToolbarCFRPresenterTest {
             every { findViewById<View>(R.id.mozac_browser_toolbar_security_indicator) } returns anchor
         },
         sessionId: String? = null,
-    ) = BrowserToolbarCFRPresenter(
-        context = context,
-        browserStore = browserStore,
-        settings = settings,
-        toolbar = toolbar,
-        sessionId = sessionId,
+    ) = spyk(
+        BrowserToolbarCFRPresenter(
+            context = context,
+            browserStore = browserStore,
+            settings = settings,
+            toolbar = toolbar,
+            sessionId = sessionId,
+        ),
     )
 
     private fun createBrowserStore(

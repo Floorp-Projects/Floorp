@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.ext.settings
 
 /**
  * [ConnectionDetailsController] controller.
@@ -50,8 +51,11 @@ class DefaultConnectionDetailsController(
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
                 ioScope.launch {
-                    val hasException =
+                    val hasException = if (context.settings().shouldUseCookieBanner) {
                         cookieBannersStorage.hasException(tab.content.url, tab.content.private)
+                    } else {
+                        false
+                    }
                     withContext(Dispatchers.Main) {
                         fragment.runIfFragmentIsAttached {
                             navController().popBackStack()

@@ -259,6 +259,9 @@
         <action
             android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
             app:destination="@id/quickSettingsSheetDialogFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_cookieBannerDialogFragment"
+            app:destination="@id/cookieBannerDialogFragment" />
     </fragment>
 
     <fragment
@@ -960,6 +963,9 @@
             android:name="isCookieHandlingEnabled"
             app:argType="boolean" />
     </dialog>
+    <dialog
+        android:id="@+id/cookieBannerDialogFragment"
+        android:name="org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialog" />
     <fragment
         android:id="@+id/accountProblemFragment"
         android:name="org.mozilla.fenix.settings.account.AccountProblemFragment">

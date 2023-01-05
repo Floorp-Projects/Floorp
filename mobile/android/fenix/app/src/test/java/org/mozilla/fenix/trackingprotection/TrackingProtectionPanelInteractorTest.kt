@@ -30,6 +30,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -139,6 +140,8 @@ class TrackingProtectionPanelInteractorTest {
 
     @Test
     fun `WHEN onBackPressed is called THEN call popBackStack and navigate`() = runTestOnMain {
+        every { context.settings().shouldUseCookieBanner } returns true
+
         interactor.onBackPressed()
 
         coVerify {

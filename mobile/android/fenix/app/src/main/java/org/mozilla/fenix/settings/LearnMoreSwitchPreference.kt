@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isVisible
 import androidx.preference.PreferenceViewHolder
 import androidx.preference.SwitchPreferenceCompat
@@ -27,6 +28,12 @@ abstract class LearnMoreSwitchPreference(context: Context, attrs: AttributeSet?)
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
+
+        val switch = holder.findViewById(R.id.learn_more_switch) as SwitchCompat
+
+        switch.run {
+            isChecked = getSwitchValue()
+        }
 
         getDescription()?.let {
             val summaryView = holder.findViewById(android.R.id.summary) as TextView
@@ -62,4 +69,9 @@ abstract class LearnMoreSwitchPreference(context: Context, attrs: AttributeSet?)
      *  Returns the URL that should be used when the learn more link is clicked.
      */
     abstract fun getLearnMoreUrl(): String
+
+    /**
+     *  Indicates the value which the switch widget should show.
+     */
+    abstract fun getSwitchValue(): Boolean
 }

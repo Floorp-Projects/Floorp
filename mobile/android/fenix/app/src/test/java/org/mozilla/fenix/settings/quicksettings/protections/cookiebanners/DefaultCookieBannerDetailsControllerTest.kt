@@ -43,6 +43,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.trackingprotection.ProtectionsAction
 import org.mozilla.fenix.trackingprotection.ProtectionsStore
@@ -131,6 +132,8 @@ internal class DefaultCookieBannerDetailsControllerTest {
 
     @Test
     fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() {
+        every { context.settings().shouldUseCookieBanner } returns true
+
         controller.handleBackPressed()
 
         verify {

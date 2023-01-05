@@ -6932,6 +6932,72 @@ cookie_banners:
     metadata:
       tags:
         - Privacy&Security
+  visited_re_engagement_dialog:
+    type: event
+    description: An user visited the cookie banner re-engagement dialog
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28405#issuecomment-1372489596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
+  opt_out_re_engagement_dialog:
+    type: event
+    description: |
+      An user opt out the cookie banner re-engagement
+      dialog by clicking the X button
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28405#issuecomment-1372489596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
+  not_now_re_engagement_dialog:
+    type: event
+    description: |
+      An user clicked the not now button on
+      the cookie banner re-engagement dialog
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28405#issuecomment-1372489596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
+  allow_re_engagement_dialog:
+    type: event
+    description: |
+      An user clicked the dismiss banner button
+      on the cookie banner re-engagement dialog
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28405#issuecomment-1372489596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
 site_permissions:
   prompt_shown:
     type: event

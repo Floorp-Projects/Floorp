@@ -55,12 +55,14 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <LinearLayout
-        android:id="@android:id/widget_frame"
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/learn_more_switch"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:gravity="end|center_vertical"
         android:minWidth="58dp"
-        android:orientation="vertical" />
+        android:minHeight="48dp"
+        android:textColor="@color/state_list_text_color"
+        android:textOff="@string/studies_off"
+        android:textOn="@string/studies_on" />
 
 </LinearLayout>
