@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MigrationWizard } from "browser/components/migration/content/migration-wizard.mjs";
+// Imported for side-effects.
+// eslint-disable-next-line import/no-unassigned-import
+import "browser/components/migration/content/migration-wizard.mjs";
+import { MigrationWizardConstants } from "chrome://browser/content/migration/migration-wizard-constants.mjs";
 
 // Imported for side-effects.
 // eslint-disable-next-line import/no-unassigned-import
@@ -32,29 +35,29 @@ const Template = state => {
 
 export const MainSelectorVariant1 = Template.bind({});
 MainSelectorVariant1.args = {
-  page: MigrationWizard.PAGES.SELECTION,
+  page: MigrationWizardConstants.PAGES.SELECTION,
   migrators: FAKE_BROWSER_LIST,
   withImportAll: false,
 };
 
 export const MainSelectorVariant2 = Template.bind({});
 MainSelectorVariant2.args = {
-  page: MigrationWizard.PAGES.SELECTION,
+  page: MigrationWizardConstants.PAGES.SELECTION,
   migrators: FAKE_BROWSER_LIST,
   withImportAll: true,
 };
 
 export const Progress = Template.bind({});
 Progress.args = {
-  page: MigrationWizard.PAGES.PROGRESS,
+  page: MigrationWizardConstants.PAGES.PROGRESS,
 };
 
 export const Success = Template.bind({});
 Success.args = {
-  page: MigrationWizard.PAGES.PROGRESS,
+  page: MigrationWizardConstants.PAGES.PROGRESS,
 };
 
 export const SafariPermissions = Template.bind({});
 SafariPermissions.args = {
-  page: MigrationWizard.PAGES.SAFARI_PERMISSION,
+  page: MigrationWizardConstants.PAGES.SAFARI_PERMISSION,
 };

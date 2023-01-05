@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { MigrationWizardConstants } from "chrome://browser/content/migration/migration-wizard-constants.mjs";
+
 /**
  * This component contains the UI that steps users through migrating their
  * data from other browsers to this one. This component only contains very
@@ -10,11 +12,6 @@
  */
 export class MigrationWizard extends HTMLElement {
   static #template = null;
-  static #PAGES = Object.freeze({
-    SELECTION: "selection",
-    PROGRESS: "progress",
-    SAFARI_PERMISSION: "safari-permission",
-  });
 
   #deck = null;
   #browserProfileSelector = null;
@@ -80,10 +77,6 @@ export class MigrationWizard extends HTMLElement {
     return fragment;
   }
 
-  static get PAGES() {
-    return this.#PAGES;
-  }
-
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "closed" });
@@ -115,10 +108,10 @@ export class MigrationWizard extends HTMLElement {
    *
    * @param {object} state The state to be represented by the component.
    * @param {string} state.page The page of the wizard to display. This should
-   *   be one of the MigrationWizard.PAGES constants.
+   *   be one of the MigrationWizardConstants.PAGES constants.
    */
   setState(state) {
-    if (state.page == MigrationWizard.PAGES.SELECTION) {
+    if (state.page == MigrationWizardConstants.PAGES.SELECTION) {
       this.#onShowingSelection(state);
     }
 
