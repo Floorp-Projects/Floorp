@@ -425,7 +425,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.
     if (!pc_->useAsmOrInsideUseAsm()) {
-      if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
+      if (!FoldConstants(this->fc_, this->stackLimit_, this->parserAtoms(),
                          &node, &handler_)) {
         return null();
       }
@@ -1783,8 +1783,8 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
-                       &node, &handler_)) {
+    if (!FoldConstants(this->fc_, this->stackLimit_, this->parserAtoms(), &node,
+                       &handler_)) {
       return null();
     }
   }
@@ -1851,8 +1851,8 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
-                       &node, &handler_)) {
+    if (!FoldConstants(this->fc_, this->stackLimit_, this->parserAtoms(), &node,
+                       &handler_)) {
       return null();
     }
   }
@@ -1989,8 +1989,8 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
-                       &node, &handler_)) {
+    if (!FoldConstants(this->fc_, this->stackLimit_, this->parserAtoms(), &node,
+                       &handler_)) {
       return null();
     }
   }
@@ -2388,8 +2388,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
-                       &node, &handler_)) {
+    if (!FoldConstants(this->fc_, this->stackLimit_, this->parserAtoms(), &node,
+                       &handler_)) {
       return null();
     }
   }
@@ -3440,8 +3440,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
-                       &node, &handler_)) {
+    if (!FoldConstants(this->fc_, this->stackLimit_, this->parserAtoms(), &node,
+                       &handler_)) {
       return null();
     }
   }

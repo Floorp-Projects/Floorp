@@ -33,16 +33,16 @@ class ParserAtomsTable;
 //    if (!pn) {
 //        return false;
 //    }
-//    if (!FoldConstants(cx, parserAtoms, &pn, parser)) {
+//    if (!FoldConstants(fc, stackLimit, parserAtoms, &pn, parser)) {
 //        return false;
 //    }
-[[nodiscard]] extern bool FoldConstants(JSContext* cx, FrontendContext* fc,
+[[nodiscard]] extern bool FoldConstants(FrontendContext* fc,
                                         JS::NativeStackLimit stackLimit,
                                         ParserAtomsTable& parserAtoms,
                                         ParseNode** pnp,
                                         FullParseHandler* handler);
 
-[[nodiscard]] inline bool FoldConstants(JSContext* cx, FrontendContext* fc,
+[[nodiscard]] inline bool FoldConstants(FrontendContext* fc,
                                         JS::NativeStackLimit stackLimit,
                                         ParserAtomsTable& parserAtoms,
                                         typename SyntaxParseHandler::Node* pnp,
