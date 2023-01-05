@@ -124,7 +124,7 @@ HandlerService.prototype = {
         this._store.saveSoon();
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
@@ -300,7 +300,7 @@ HandlerService.prototype = {
       try {
         kMigrations[migration]();
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 
@@ -316,7 +316,7 @@ HandlerService.prototype = {
       }
       this.__store = null;
       this.__storeInitialized = false;
-    })().catch(Cu.reportError);
+    })().catch(console.error);
   },
 
   // nsIObserver
@@ -348,7 +348,7 @@ HandlerService.prototype = {
             this._ensureStoreInitialized();
           }
         })
-        .catch(Cu.reportError);
+        .catch(console.error);
     }
   },
 
