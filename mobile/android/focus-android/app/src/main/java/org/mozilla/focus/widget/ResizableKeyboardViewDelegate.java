@@ -116,6 +116,10 @@ import org.mozilla.focus.R;
 
         decorView.getWindowVisibleDisplayFrame(rect);
 
-        return delegateView.getResources().getDisplayMetrics().heightPixels - rect.bottom;
+        if (rect.height() >= rect.width()) {
+            return delegateView.getResources().getDisplayMetrics().heightPixels - rect.bottom;
+        } else {
+            return delegateView.getResources().getDisplayMetrics().widthPixels - rect.right;
+        }
     }
 }
