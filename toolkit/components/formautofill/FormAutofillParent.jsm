@@ -545,11 +545,6 @@ class FormAutofillParent extends JSWindowActorParent {
             lazy.gFormAutofillStorage.addresses.notifyUsed(guid)
           );
         };
-        // Address should be updated
-        Services.telemetry.scalarAdd(
-          "formautofill.addresses.fill_type_autofill_update",
-          1
-        );
       } else {
         this._recordFormFillingTime(
           "address",
@@ -557,11 +552,6 @@ class FormAutofillParent extends JSWindowActorParent {
           timeStartedFillingMS
         );
         lazy.gFormAutofillStorage.addresses.notifyUsed(address.guid);
-        // Address is merged successfully
-        Services.telemetry.scalarAdd(
-          "formautofill.addresses.fill_type_autofill",
-          1
-        );
       }
     } else {
       let changedGUIDs = await lazy.gFormAutofillStorage.addresses.mergeToStorage(
@@ -596,12 +586,6 @@ class FormAutofillParent extends JSWindowActorParent {
 
           browser.ownerGlobal.openPreferences("privacy-address-autofill");
         };
-      } else {
-        // We want to exclude the first time form filling.
-        Services.telemetry.scalarAdd(
-          "formautofill.addresses.fill_type_manual",
-          1
-        );
       }
     }
     return showDoorhanger;
