@@ -23,7 +23,6 @@
     "@babel/preset-react": "7.16.0",
     "acorn": "8.5.0",
     "babel-loader": "8.2.3",
-    "babel-plugin-jsm-to-commonjs": "0.5.0",
     "babel-plugin-jsm-to-esmodules": "0.6.0",
     "buffer": "6.0.3",
     "chai": "4.3.4",
