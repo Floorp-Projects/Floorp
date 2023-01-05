@@ -92,6 +92,13 @@ constexpr ScalableVideoController::StreamLayersConfig kConfigL3T1 = {
     {1, 1, 1},
     {4, 2, 1}};
 
+constexpr ScalableVideoController::StreamLayersConfig kConfigL3T2 = {
+    /*num_spatial_layers=*/3,
+    /*num_temporal_layers=*/2,
+    /*uses_reference_scaling=*/true,
+    {1, 1, 1},
+    {4, 2, 1}};
+
 constexpr ScalableVideoController::StreamLayersConfig kConfigL3T3 = {
     /*num_spatial_layers=*/3,
     /*num_temporal_layers=*/3,
@@ -138,6 +145,11 @@ constexpr NamedStructureFactory kFactories[] = {
     {ScalabilityMode::kL2T3_KEY, Create<ScalabilityStructureL2T3Key>,
      kConfigL2T3},
     {ScalabilityMode::kL3T1, Create<ScalabilityStructureL3T1>, kConfigL3T1},
+    {ScalabilityMode::kL3T1_KEY, Create<ScalabilityStructureL3T1Key>,
+     kConfigL3T1},
+    {ScalabilityMode::kL3T2, Create<ScalabilityStructureL3T2>, kConfigL3T2},
+    {ScalabilityMode::kL3T2_KEY, Create<ScalabilityStructureL3T2Key>,
+     kConfigL3T2},
     {ScalabilityMode::kL3T3, Create<ScalabilityStructureL3T3>, kConfigL3T3},
     {ScalabilityMode::kL3T3_KEY, Create<ScalabilityStructureL3T3Key>,
      kConfigL3T3},
