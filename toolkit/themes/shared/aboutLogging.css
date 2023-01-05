@@ -40,6 +40,7 @@ div.page-section > div.radio-entry {
   font-family: monospace;
   padding-inline-start: 8px;
   margin-bottom: 1em;
+  word-break: break-word;
 }
 
 #current-log-file,
