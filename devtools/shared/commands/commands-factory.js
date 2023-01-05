@@ -128,30 +128,6 @@ exports.CommandsFactory = {
   },
 
   /**
-   * Create commands for a worker in a local tab.
-   *
-   * @param {Tab} tab: The local tab into which the worker runs.
-   * @param {String} workerUrl: The URL of the worker to debug.
-   * @returns {Object} Commands
-   */
-  async forLocalTabWorker(tab, workerUrl) {
-    // For now, the root actor doesn't support instantiating a worker descriptor
-    // for a worker running in a content process (it supports only for parent process workers).
-    // So that we have to first instantiate a commands for the related tab.
-    // Then we can fetch the worker descriptor via the top level target front.
-    const tabCommands = await this.forTab(tab);
-    await tabCommands.targetCommand.startListening();
-    const {
-      workers,
-    } = await tabCommands.targetCommand.targetFront.listWorkers();
-
-    const workerDescriptor = workers.find(worker => worker.url == workerUrl);
-
-    const commands = await createCommandsDictionary(workerDescriptor);
-    return commands;
-  },
-
-  /**
    * Create commands for a Web Extension.
    *
    * @param {String} id The Web Extension ID to debug.

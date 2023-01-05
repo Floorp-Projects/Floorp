@@ -9,13 +9,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-// Import helpers for the workers
-/* import-globals-from helper_workers.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
-  this
-);
-
 var TAB_URL = EXAMPLE_URL + "doc_listworkers-tab.html";
 var WORKER1_URL = "code_listworkers-worker1.js";
 var WORKER2_URL = "code_listworkers-worker2.js";
@@ -27,38 +20,42 @@ add_task(async function test() {
   let { workers } = await listWorkers(target);
   is(workers.length, 0);
 
-  executeSoon(() => {
-    evalInTab(tab, "var worker1 = new Worker('" + WORKER1_URL + "');");
+  let onWorkerListChanged = waitForWorkerListChanged(target);
+  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER1_URL], workerUrl => {
+    content.worker1 = new content.Worker(workerUrl);
   });
-  await waitForWorkerListChanged(target);
+  await onWorkerListChanged;
 
   ({ workers } = await listWorkers(target));
   is(workers.length, 1);
   is(workers[0].url, WORKER1_URL);
 
-  executeSoon(() => {
-    evalInTab(tab, "var worker2 = new Worker('" + WORKER2_URL + "');");
+  onWorkerListChanged = waitForWorkerListChanged(target);
+  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER2_URL], workerUrl => {
+    content.worker2 = new content.Worker(workerUrl);
   });
-  await waitForWorkerListChanged(target);
+  await onWorkerListChanged;
 
   ({ workers } = await listWorkers(target));
   is(workers.length, 2);
   is(workers[0].url, WORKER1_URL);
   is(workers[1].url, WORKER2_URL);
 
-  executeSoon(() => {
-    evalInTab(tab, "worker1.terminate()");
+  onWorkerListChanged = waitForWorkerListChanged(target);
+  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER2_URL], workerUrl => {
+    content.worker1.terminate();
   });
-  await waitForWorkerListChanged(target);
+  await onWorkerListChanged;
 
   ({ workers } = await listWorkers(target));
   is(workers.length, 1);
   is(workers[0].url, WORKER2_URL);
 
-  executeSoon(() => {
-    evalInTab(tab, "worker2.terminate()");
+  onWorkerListChanged = waitForWorkerListChanged(target);
+  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER2_URL], workerUrl => {
+    content.worker2.terminate();
   });
-  await waitForWorkerListChanged(target);
+  await onWorkerListChanged;
 
   ({ workers } = await listWorkers(target));
   is(workers.length, 0);
@@ -66,3 +63,13 @@ add_task(async function test() {
   await target.destroy();
   finish();
 });
+
+function listWorkers(targetFront) {
+  info("Listing workers.");
+  return targetFront.listWorkers();
+}
+
+function waitForWorkerListChanged(targetFront) {
+  info("Waiting for worker list to change.");
+  return targetFront.once("workerListChanged");
+}
