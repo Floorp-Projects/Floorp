@@ -10,19 +10,11 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/StackWalk.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
-#include "nsContentUtils.h"
 #include "nsTArray.h"
-#include "nsString.h"
 
 #include <cstddef>
 #include <type_traits>
 #include <utility>
-
-#if defined(DEBUG) || defined(FUZZING) || defined(MOZ_ASAN) || defined(MOZ_TSAN)
-#  define MOZ_RECORD_STACKS
-#endif
 
 namespace mozilla {
 enum class CheckingSupport {
@@ -34,20 +26,6 @@ template <typename T>
 class CheckedUnsafePtr;
 
 namespace detail {
-
-static inline void CheckedUnsafePtrStackCallback(uint32_t aFrameNumber,
-                                                 void* aPC, void* aSP,
-                                                 void* aClosure) {
-  auto* stack = static_cast<nsCString*>(aClosure);
-  MozCodeAddressDetails details;
-  MozDescribeCodeAddress(aPC, &details);
-  char buf[1025];
-  Unused << MozFormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC,
-                                        &details);
-  stack->Append(buf);
-  stack->Append("\n");
-}
-
 class CheckedUnsafePtrBaseCheckingEnabled;
 
 struct CheckedUnsafePtrCheckData {
@@ -60,12 +38,9 @@ class CheckedUnsafePtrBaseCheckingEnabled {
   friend class CheckedUnsafePtrBaseAccess;
 
  protected:
-  CheckedUnsafePtrBaseCheckingEnabled() = delete;
+  constexpr CheckedUnsafePtrBaseCheckingEnabled() = default;
   CheckedUnsafePtrBaseCheckingEnabled(
       const CheckedUnsafePtrBaseCheckingEnabled& aOther) = default;
-  CheckedUnsafePtrBaseCheckingEnabled(const char* aFunction, const char* aFile,
-                                      const int aLine)
-      : mFunctionName(aFunction), mSourceFile(aFile), mLineNo(aLine) {}
 
   // When copying an CheckedUnsafePtr, its mIsDangling member must be copied as
   // well; otherwise the new copy might try to dereference a dangling pointer
@@ -95,27 +70,6 @@ class CheckedUnsafePtrBaseCheckingEnabled {
     }
   }
 
-  void DumpDebugMsg() {
-    fprintf(stderr, "CheckedUnsafePtr [%p]\n", this);
-    fprintf(stderr, "Location of creation: %s, %s:%d\n", mFunctionName.get(),
-            mozilla::dom::quota::detail::MakeSourceFileRelativePath(mSourceFile)
-                .BeginReading(),
-            mLineNo);
-#ifdef MOZ_RECORD_STACKS
-    fprintf(stderr, "Stack of creation:\n%s\n", mCreationStack.get());
-    fprintf(stderr, "Stack of last assignment\n%s\n\n",
-            mLastAssignmentStack.get());
-#endif
-  }
-
-  nsCString mFunctionName{EmptyCString()};
-  nsCString mSourceFile{EmptyCString()};
-  int32_t mLineNo{-1};
-#ifdef MOZ_RECORD_STACKS
-  nsCString mCreationStack{EmptyCString()};
-  nsCString mLastAssignmentStack{EmptyCString()};
-#endif
-
  private:
   bool mIsDangling = false;
 };
@@ -124,7 +78,6 @@ class CheckedUnsafePtrBaseAccess {
  protected:
   static void SetDanglingFlag(CheckedUnsafePtrBaseCheckingEnabled& aBase) {
     aBase.mIsDangling = true;
-    aBase.DumpDebugMsg();
   }
 };
 
@@ -141,69 +94,32 @@ template <typename T>
 class CheckedUnsafePtrBase<T, CheckingSupport::Enabled>
     : detail::CheckedUnsafePtrBaseCheckingEnabled {
  public:
-  MOZ_IMPLICIT constexpr CheckedUnsafePtrBase(
-      const std::nullptr_t = nullptr,
-      const char* aFunction = __builtin_FUNCTION(),
-      const char* aFile = __builtin_FILE(),
-      const int32_t aLine = __builtin_LINE())
-      : detail::CheckedUnsafePtrBaseCheckingEnabled(aFunction, aFile, aLine),
-        mRawPtr(nullptr) {
-#ifdef MOZ_RECORD_STACKS
-    MozStackWalk(CheckedUnsafePtrStackCallback, CallerPC(), 0, &mCreationStack);
-#endif
-  }
+  MOZ_IMPLICIT constexpr CheckedUnsafePtrBase(const std::nullptr_t = nullptr)
+      : mRawPtr(nullptr) {}
 
   template <typename U, typename = EnableIfCompatible<T, U>>
-  MOZ_IMPLICIT CheckedUnsafePtrBase(
-      const U& aPtr, const char* aFunction = __builtin_FUNCTION(),
-      const char* aFile = __builtin_FILE(),
-      const int32_t aLine = __builtin_LINE())
-      : detail::CheckedUnsafePtrBaseCheckingEnabled(aFunction, aFile, aLine) {
-#ifdef MOZ_RECORD_STACKS
-    MozStackWalk(CheckedUnsafePtrStackCallback, CallerPC(), 0, &mCreationStack);
-#endif
+  MOZ_IMPLICIT CheckedUnsafePtrBase(const U& aPtr) {
     Set(aPtr);
   }
 
-  CheckedUnsafePtrBase(const CheckedUnsafePtrBase& aOther,
-                       const char* aFunction = __builtin_FUNCTION(),
-                       const char* aFile = __builtin_FILE(),
-                       const int32_t aLine = __builtin_LINE())
-      : detail::CheckedUnsafePtrBaseCheckingEnabled(aFunction, aFile, aLine) {
-#ifdef MOZ_RECORD_STACKS
-    MozStackWalk(CheckedUnsafePtrStackCallback, CallerPC(), 0, &mCreationStack);
-#endif
+  CheckedUnsafePtrBase(const CheckedUnsafePtrBase& aOther) {
     Set(aOther.Downcast());
   }
 
   ~CheckedUnsafePtrBase() { Reset(); }
 
   CheckedUnsafePtr<T>& operator=(const std::nullptr_t) {
-    // Assign to nullptr, no need to record the last assignment stack.
-#ifdef MOZ_RECORD_STACKS
-    mLastAssignmentStack.Truncate();
-#endif
     Reset();
     return Downcast();
   }
 
   template <typename U>
   EnableIfCompatible<T, U, CheckedUnsafePtr<T>&> operator=(const U& aPtr) {
-#ifdef MOZ_RECORD_STACKS
-    mLastAssignmentStack.Truncate();
-    MozStackWalk(CheckedUnsafePtrStackCallback, CallerPC(), 0,
-                 &mLastAssignmentStack);
-#endif
     Replace(aPtr);
     return Downcast();
   }
 
   CheckedUnsafePtrBase& operator=(const CheckedUnsafePtrBase& aOther) {
-#ifdef MOZ_RECORD_STACKS
-    mLastAssignmentStack.Truncate();
-    MozStackWalk(CheckedUnsafePtrStackCallback, CallerPC(), 0,
-                 &mLastAssignmentStack);
-#endif
     if (&aOther != this) {
       Replace(aOther.Downcast());
     }
