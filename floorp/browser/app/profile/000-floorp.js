@@ -135,10 +135,9 @@ pref("app.normandy.enabled", true);
 //backdropfilterを既定で有効化します。
 pref("layout.css.backdrop-filter.enabled", true);
 
-//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように
+//SVG avif 画像ファイルをの互換性向上または、既定で開けるように
 pref("svg.context-properties.content.enabled", true, locked);
 pref("image.avif.enabled", true, locked);
-pref("image.jxl.enabled", true, locked);
 
 // Add-On のブラックリストをFloorpが参照する際の情報漏洩削減
 pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
