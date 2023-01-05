@@ -1,6 +1,53 @@
 {
   "data": [
     {
+      "schema": 1672245404849,
+      "taggedCodes": [
+        "firefox-a",
+        "firefox-b",
+        "firefox-b-1",
+        "firefox-b-ab",
+        "firefox-b-1-ab",
+        "firefox-b-d",
+        "firefox-b-1-d",
+        "firefox-b-e",
+        "firefox-b-1-e",
+        "firefox-b-m",
+        "firefox-b-1-m",
+        "firefox-b-o",
+        "firefox-b-1-o",
+        "firefox-b-lm",
+        "firefox-b-1-lm",
+        "firefox-b-lg",
+        "firefox-b-huawei-h1611",
+        "firefox-b-is-oem1",
+        "firefox-b-oem1",
+        "firefox-b-oem2",
+        "firefox-b-tinno",
+        "firefox-b-pn-wt",
+        "firefox-b-pn-wt-us",
+        "ubuntu"
+      ],
+      "telemetryId": "google",
+      "organicCodes": [],
+      "codeParamName": "client",
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://www\\.google\\.(?:.+)/search",
+      "adServerAttributes": [
+        "rw"
+      ],
+      "followOnParamNames": [
+        "oq",
+        "ved",
+        "ei"
+      ],
+      "extraAdServersRegexps": [
+        "^https://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
+      ],
+      "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
+      "last_modified": 1672778125399
+    },
+    {
       "schema": 1671479978127,
       "taggedCodes": [
         "mzl",
@@ -103,50 +150,6 @@
       "last_modified": 1661199890666
     },
     {
-      "schema": 1643100256547,
-      "taggedCodes": [
-        "firefox-a",
-        "firefox-b",
-        "firefox-b-1",
-        "firefox-b-ab",
-        "firefox-b-1-ab",
-        "firefox-b-d",
-        "firefox-b-1-d",
-        "firefox-b-e",
-        "firefox-b-1-e",
-        "firefox-b-m",
-        "firefox-b-1-m",
-        "firefox-b-o",
-        "firefox-b-1-o",
-        "firefox-b-lm",
-        "firefox-b-1-lm",
-        "firefox-b-lg",
-        "firefox-b-huawei-h1611",
-        "firefox-b-is-oem1",
-        "firefox-b-oem1",
-        "firefox-b-oem2",
-        "firefox-b-tinno",
-        "firefox-b-pn-wt",
-        "firefox-b-pn-wt-us",
-        "ubuntu"
-      ],
-      "telemetryId": "google",
-      "organicCodes": [],
-      "codeParamName": "client",
-      "queryParamName": "q",
-      "searchPageRegexp": "^https://www\\.google\\.(?:.+)/search",
-      "followOnParamNames": [
-        "oq",
-        "ved",
-        "ei"
-      ],
-      "extraAdServersRegexps": [
-        "^https://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
-      ],
-      "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
-      "last_modified": 1643136933998
-    },
-    {
       "schema": 1643107838909,
       "taggedCodes": [
         "monline_dg",
@@ -169,5 +172,5 @@
       "last_modified": 1643136933989
     }
   ],
-  "timestamp": 1671565418576
+  "timestamp": 1672778125399
 }
