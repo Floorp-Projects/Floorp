@@ -719,31 +719,6 @@ void AboutThirdParty::BackgroundThread() {
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 }
 
-NS_IMETHODIMP AboutThirdParty::GetBlockedModuleNames(
-    const nsTArray<nsString>& aLoadedModuleNames,
-    nsTArray<nsString>& aBlockedModuleNames) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aBlockedModuleNames.SetLength(0);
-#if defined(MOZ_LAUNCHER_PROCESS)
-  if (mWorkerState != WorkerState::Done) {
-    return NS_OK;
-  }
-  // Blocklist entries are case-insensitive
-  nsTHashSet<nsStringCaseInsensitiveHashKey> loadedModuleNameSet;
-  for (const nsString& loadedModuleName : aLoadedModuleNames) {
-    loadedModuleNameSet.Insert(loadedModuleName);
-  }
-  for (const auto& blocklistEntry : mDynamicBlocklist) {
-    // Only return entries that we haven't already tried to load,
-    // because those will already show up in the page
-    if (!loadedModuleNameSet.Contains(blocklistEntry)) {
-      aBlockedModuleNames.AppendElement(blocklistEntry);
-    }
-  }
-#endif  // defined(MOZ_LAUNCHER_PROCESS)
-  return NS_OK;
-}
-
 NS_IMETHODIMP AboutThirdParty::LookupModuleType(const nsAString& aLeafName,
                                                 uint32_t* aResult) {
   static_assert(static_cast<uint32_t>(KnownModuleType::Last) <= 32,
