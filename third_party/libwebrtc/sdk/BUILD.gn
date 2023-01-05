@@ -394,6 +394,18 @@ if (is_ios || is_mac) {
       }
     }
 
+    rtc_source_set("audio_device_api_objc") {
+      visibility = [ "*" ]
+
+      sources = [ "objc/components/audio/RTCAudioDevice.h" ]
+
+      public_configs = [ ":common_config_objc" ]
+
+      frameworks = [ "AudioToolbox.framework" ]
+
+      deps = [ ":base_objc" ]
+    }
+
     rtc_library("audio_device_objc") {
       visibility = [ "*" ]
 
@@ -403,6 +415,24 @@ if (is_ios || is_mac) {
       ]
 
       deps = [
+        ":audio_device_api_objc",
+        "../modules/audio_device:audio_device_api",
+        "../rtc_base:logging",
+      ]
+    }
+
+    rtc_library("objc_audio_device_module") {
+      visibility = [ "*" ]
+
+      sources = [
+        "objc/native/api/objc_audio_device_module.h",
+        "objc/native/api/objc_audio_device_module.mm",
+      ]
+
+      deps = [
+        ":audio_device_api_objc",
+        ":audio_device_objc",
+        "../api:make_ref_counted",
         "../modules/audio_device:audio_device_api",
         "../rtc_base:logging",
       ]
@@ -1015,6 +1045,7 @@ if (is_ios || is_mac) {
       public_configs = [ ":common_config_objc" ]
 
       deps = [
+        ":audio_device_api_objc",
         ":base_native_additions_objc",
         ":base_objc",
         ":file_logger_objc",
@@ -1023,6 +1054,7 @@ if (is_ios || is_mac) {
         ":mediasource_objc",
         ":native_api",
         ":native_video",
+        ":objc_audio_device_module",
         ":videoframebuffer_objc",
         ":videorendereradapter_objc",
         ":videosource_objc",
@@ -1250,6 +1282,7 @@ if (is_ios || is_mac) {
           "objc/base/RTCVideoFrameBuffer.h",
           "objc/base/RTCVideoRenderer.h",
           "objc/base/RTCYUVPlanarBuffer.h",
+          "objc/components/audio/RTCAudioDevice.h",
           "objc/components/audio/RTCAudioSession.h",
           "objc/components/audio/RTCAudioSessionConfiguration.h",
           "objc/components/capturer/RTCCameraVideoCapturer.h",

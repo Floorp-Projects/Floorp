@@ -15,8 +15,10 @@
 namespace webrtc {
 namespace objc_adm {
 
-ObjCAudioDeviceModule::ObjCAudioDeviceModule() {
+ObjCAudioDeviceModule::ObjCAudioDeviceModule(id<RTC_OBJC_TYPE(RTCAudioDevice)> audio_device)
+    : audio_device_(audio_device) {
   RTC_DLOG_F(LS_VERBOSE) << "";
+  RTC_DCHECK(audio_device_);
 }
 
 ObjCAudioDeviceModule::~ObjCAudioDeviceModule() {
