@@ -35,8 +35,9 @@ async function receiveMessage(event) {
 
   // Once the button was clicked we know the tast has finished
   ok(data.button, "button is clicked");
-  ok(data.result == "#foo", "location (hash) is correct");
+  is(data.result, EXPECT_URL + "#foo", "location (hash) is correct");
   ok(data.info == "scrolled-to-foo","Scrolled successfully without reloading!");
+  is(data.documentURI, EXPECT_URL + "#foo", "Document URI is correct");
   window.removeEventListener("message",receiveMessage);
   winTest.close();
   SimpleTest.finish();
