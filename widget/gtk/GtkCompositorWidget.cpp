@@ -35,24 +35,12 @@ GtkCompositorWidget::GtkCompositorWidget(
     const layers::CompositorOptions& aOptions, RefPtr<nsWindow> aWindow)
     : CompositorWidget(aOptions),
       mWidget(std::move(aWindow)),
-      mClientSize("GtkCompositorWidget::mClientSize"),
-      mIsRenderingSuspended(true) {
-#if defined(MOZ_WAYLAND)
-  if (GdkIsWaylandDisplay()) {
-    ConfigureWaylandBackend(mWidget);
-  }
-#endif
+      mClientSize(LayoutDeviceIntSize(aInitData.InitialClientSize()),
+                  "GtkCompositorWidget::mClientSize") {
 #if defined(MOZ_X11)
   if (GdkIsX11Display()) {
     mXWindow = (Window)aInitData.XWindow();
     ConfigureX11Backend(mXWindow, aInitData.Shaped());
-  }
-#endif
-  auto size = mClientSize.Lock();
-  *size = aInitData.InitialClientSize();
-
-#if defined(MOZ_X11)
-  if (GdkIsX11Display()) {
     LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mXWindow %p "
         "mIsRenderingSuspended %d\n",
         (void*)mWidget.get(), (void*)mXWindow, !!mIsRenderingSuspended);
@@ -60,6 +48,7 @@ GtkCompositorWidget::GtkCompositorWidget(
 #endif
 #if defined(MOZ_WAYLAND)
   if (GdkIsWaylandDisplay()) {
+    ConfigureWaylandBackend(mWidget);
     LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mWidget %p "
         "mIsRenderingSuspended %d\n",
         (void*)mWidget.get(), (void*)mWidget, !!mIsRenderingSuspended);

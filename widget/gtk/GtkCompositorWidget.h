@@ -128,7 +128,7 @@ class GtkCompositorWidget : public CompositorWidget,
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::layers::NativeLayerRootWayland> mNativeLayerRoot;
 #endif
-  Atomic<bool> mIsRenderingSuspended;
+  Atomic<bool> mIsRenderingSuspended{true};
 };
 
 }  // namespace widget
