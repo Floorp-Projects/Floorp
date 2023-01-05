@@ -146,7 +146,8 @@ UsageInfo OriginInfo::LockedGetUsageForClient(Client::Type aClientType) {
   // which only use DatabaseUsage. If this assertion is lifted, the logic below
   // must be adapted.
   MOZ_ASSERT(aClientType == Client::Type::DOMCACHE ||
-             aClientType == Client::Type::LS);
+             aClientType == Client::Type::LS ||
+             aClientType == Client::Type::FILESYSTEM);
 
   return UsageInfo{DatabaseUsageType{mClientUsages[aClientType]}};
 }
