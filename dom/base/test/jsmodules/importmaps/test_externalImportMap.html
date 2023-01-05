@@ -3,12 +3,32 @@
 <title>Test an external import map</title>
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
+<script>
+let gotMsg = false;
+let console = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+let listener = {
+  QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
+  observe(msg) {
+    info("console message:" + msg);
+    ok(msg.logLevel == Ci.nsIConsoleMessage.warn, "log level should be 'warn'.");
+    // The message will be localized, so we just test the strings won't be
+    // localized.
+    ok(msg.message.match(/<script type='importmap'>.*src/),
+       "The error message should contain \"<script type='importmap'>\"");
+    console.unregisterListener(this);
+    gotMsg = true;
+  }
+};
+console.registerListener(listener);
+</script>
+
 <!--Import maps spec doesn't clearly define the format of an external import map script.-->
 <script src="external_importMap.js" type="importmap" onload="scriptLoaded()" onerror="scriptError()"></script>
 
 <script>
 function testLoaded() {
   SimpleTest.waitForExplicitFinish();
+  ok(gotMsg, "Should have got the console warning.");
   SimpleTest.finish();
 }
 
