@@ -11,6 +11,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <queue>
 #include <stack>
 #include <unordered_set>
 #include <utility>
@@ -187,7 +188,7 @@ class RemoteTextureMap {
     RemoteTextureId mLatestTextureId = {0};
     CompositableTextureHostRef mLatestTextureHost;
     std::stack<UniquePtr<TextureData>> mRecycledTextures;
-    std::stack<std::shared_ptr<gl::SharedSurface>> mRecycledSharedSurfaces;
+    std::queue<std::shared_ptr<gl::SharedSurface>> mRecycledSharedSurfaces;
   };
 
   // Holds data related to remote texture wrapper
