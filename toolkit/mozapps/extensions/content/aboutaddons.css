@@ -619,16 +619,29 @@ button.addon-detail-description-toggle {
   background-color: var(--in-content-accent-color);;
 }
 
-panel-item[action="remove"]::part(button) {
-  background-image: url("chrome://global/skin/icons/delete.svg");
+panel-item {
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
-panel-item[action="install-update"]::part(button) {
-  background-image: url("chrome://global/skin/icons/update-icon.svg");
+panel-item[action="remove"] {
+  --icon: url("chrome://global/skin/icons/delete.svg");
 }
 
-panel-item[action="report"]::part(button) {
-  background-image: url(chrome://global/skin/icons/warning.svg);
+panel-item[action="install-update"] {
+  --icon: url("chrome://global/skin/icons/update-icon.svg");
+}
+
+panel-item[action="report"] {
+  --icon: url(chrome://global/skin/icons/warning.svg);
+}
+
+panel-item-separator {
+  display: block;
+  height: 1px;
+  background: var(--in-content-box-border-color);
+  padding: 0;
+  margin: 6px 0;
 }
 
 .hide-amo-link .amo-link-container {
@@ -753,6 +766,10 @@ button.tab-button:-moz-focusring {
 .tab-group[last-input-type="mouse"] > button.tab-button:-moz-focusring {
   outline: none;
   box-shadow: none;
+}
+
+panel-list {
+  font: menu;
 }
 
 section:not(:empty) ~ #empty-addons-message {

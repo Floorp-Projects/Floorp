@@ -1,30 +1,30 @@
-<!DOCTYPE HTML>
-<!-- Any copyright is dedicated to the Public Domain.
-     http://creativecommons.org/publicdomain/zero/1.0/ -->
-<html>
-<head>
-  <title>Test Panel Item Accesskey Support</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
-</head>
-<body>
-<p id="display"></p>
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
-<div id="content">
-  <panel-list>
-    <panel-item accesskey="F">First item</panel-item>
-    <panel-item accesskey="S">Second item</panel-item>
-    <panel-item>Third item</panel-item>
-  </panel-list>
-</div>
+"use strict";
 
-<pre id="test">
-<script class="testbody" type="application/javascript">
-const {BrowserTestUtils} = ChromeUtils.importESModule("resource://testing-common/BrowserTestUtils.sys.mjs");
+add_task(async function testPanelItemWithAccesskey() {
+  let win = await loadInitialView("extension");
+  let doc = win.document;
 
-add_task(async function testAccessKey() {
+  let panelList = doc.createElement("panel-list");
+  let items = [
+    { textContent: "First Item", accessKey: "F" },
+    { textContent: "Second Item", accessKey: "S" },
+    { textContent: "Third Item" },
+  ];
+
+  let panelItems = items.map(details => {
+    let item = doc.createElement("panel-item");
+    for (let [attr, value] of Object.entries(details)) {
+      item[attr] = value;
+    }
+    panelList.appendChild(item);
+    return item;
+  });
+
+  doc.body.appendChild(panelList);
+
   function assertAccessKeys(items, keys, { checkLabels = false } = {}) {
     is(items.length, keys.length, "Got the same number of items and keys");
     for (let i = 0; i < items.length; i++) {
@@ -35,9 +35,6 @@ add_task(async function testAccessKey() {
       }
     }
   }
-
-  let panelList = document.querySelector("panel-list");
-  let panelItems = [...panelList.children];
 
   info("Accesskeys should be removed when closed");
   assertAccessKeys(panelItems, ["", "", ""]);
@@ -76,14 +73,14 @@ add_task(async function testAccessKey() {
   panelItems[0].focus();
 
   panelHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
-  synthesizeKey("c", {});
+  EventUtils.synthesizeKey("c", {}, win);
   await panelHidden;
 
   is(secondClickCount, 1, "The accesskey worked unmodified");
   is(thirdClickCount, 0, "The other listener wasn't fired");
 
-  synthesizeKey("c", {});
-  synthesizeKey("t", {});
+  EventUtils.synthesizeKey("c", {}, win);
+  EventUtils.synthesizeKey("t", {}, win);
 
   is(secondClickCount, 1, "The key doesn't trigger when closed");
   is(thirdClickCount, 0, "The key doesn't trigger when closed");
@@ -93,13 +90,11 @@ add_task(async function testAccessKey() {
   await panelShown;
 
   panelHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
-  synthesizeKey("t", {});
+  EventUtils.synthesizeKey("t", {}, win);
   await panelHidden;
 
   is(secondClickCount, 1, "The other listener wasn't fired");
   is(thirdClickCount, 1, "The accesskey worked unmodified");
+
+  await closeView(win);
 });
-</script>
-</pre>
-</body>
-</html>
