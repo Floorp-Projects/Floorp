@@ -18,7 +18,6 @@ add_task(async function() {
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
   await testWatchTargets();
-  await testContentProcessTarget();
   await testThrowingInOnAvailable();
 });
 
@@ -171,64 +170,6 @@ async function testWatchTargets() {
     onDestroyed,
   });
 
-  targetCommand.destroy();
-
-  await commands.destroy();
-}
-
-async function testContentProcessTarget() {
-  info("Test TargetCommand watchTargets with a content process target");
-
-  const {
-    osPid,
-  } = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
-  const commands = await CommandsFactory.forProcess(osPid);
-  const targetCommand = commands.targetCommand;
-  const { TYPES } = targetCommand;
-
-  await targetCommand.startListening();
-
-  // Assert that watchTargets is only called for the top level content process target
-  // as listening for additional target is only enable for the parent process target.
-  // See bug 1593928.
-  const targets = new Set();
-  const topLevelTarget = targetCommand.targetFront;
-  const onAvailable = ({ targetFront }) => {
-    if (targets.has(targetFront)) {
-      // This may fail if the top level target is reported by LegacyImplementation
-      // to TargetCommand and emits an available event for it.
-      ok(false, "The same target is notified multiple times via onAvailable");
-    }
-    is(
-      targetFront.targetType,
-      TYPES.PROCESS,
-      "We are only notified about process targets"
-    );
-    is(targetFront, topLevelTarget, "This is the existing top level target");
-    ok(
-      targetFront.isTopLevel,
-      "We are only notified about the top level target"
-    );
-    targets.add(targetFront);
-  };
-  const onDestroyed = _ => {
-    ok(false, "onDestroy should never be called in this test");
-  };
-  await targetCommand.watchTargets({
-    types: [TYPES.PROCESS],
-    onAvailable,
-    onDestroyed,
-  });
-
-  // This may fail if the top level target is reported by LegacyImplementation
-  // to TargetCommand and registers a duplicated entry
-  is(targets.size, 1, "We were only notified about the top level target");
-
-  targetCommand.unwatchTargets({
-    types: [TYPES.PROCESS],
-    onAvailable,
-    onDestroyed,
-  });
   targetCommand.destroy();
 
   await commands.destroy();

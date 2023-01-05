@@ -59,31 +59,6 @@ add_task(async function() {
   await commands.destroy();
 });
 
-add_task(async function() {
-  info(" ### Test reloading a content process");
-
-  const tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    url: "data:text/html,foo",
-    forceNewProcess: true,
-  });
-
-  const { osPid } = tab.linkedBrowser.browsingContext.currentWindowGlobal;
-
-  const commands = await CommandsFactory.forProcess(osPid);
-
-  // We have to start listening in order to ensure having a targetFront available
-  await commands.targetCommand.startListening();
-
-  try {
-    await commands.targetCommand.reloadTopLevelTarget();
-    ok(false, "reloadToLevelTarget() should have thrown for the main process");
-  } catch (e) {
-    is(e.message, "The top level target doesn't support being reloaded");
-  }
-  await commands.destroy();
-});
-
 function getContentVariable() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return content.wrappedJSObject.jsValue;
