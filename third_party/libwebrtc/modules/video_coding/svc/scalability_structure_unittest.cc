@@ -371,6 +371,7 @@ INSTANTIATE_TEST_SUITE_P(
            SvcTestParam{"L2T1", /*num_temporal_units=*/3},
            SvcTestParam{"L2T1_KEY", /*num_temporal_units=*/3},
            SvcTestParam{"L3T1", /*num_temporal_units=*/3},
+           SvcTestParam{"L3T1_KEY", /*num_temporal_units=*/3},
            SvcTestParam{"L3T3", /*num_temporal_units=*/8},
            SvcTestParam{"S2T1", /*num_temporal_units=*/3},
            SvcTestParam{"S2T3", /*num_temporal_units=*/8},
@@ -380,6 +381,8 @@ INSTANTIATE_TEST_SUITE_P(
            SvcTestParam{"L2T2_KEY_SHIFT", /*num_temporal_units=*/4},
            SvcTestParam{"L2T3", /*num_temporal_units=*/8},
            SvcTestParam{"L2T3_KEY", /*num_temporal_units=*/8},
+           SvcTestParam{"L3T2", /*num_temporal_units=*/4},
+           SvcTestParam{"L3T2_KEY", /*num_temporal_units=*/4},
            SvcTestParam{"L3T3_KEY", /*num_temporal_units=*/8}),
     [](const testing::TestParamInfo<SvcTestParam>& info) {
       return info.param.name;
