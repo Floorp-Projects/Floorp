@@ -38,8 +38,6 @@ using mozilla::Utf8Unit;
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
 
-using NameList = GCVector<JSAtom*, 0, SystemAllocPolicy>;
-
 JS_PUBLIC_API void JS::SetSupportedImportAssertions(
     JSRuntime* rt, const ImportAssertionVector& assertions) {
   AssertHeapIsIdle();
@@ -326,7 +324,8 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
                                 MutableHandle<ResolveSet> resolveSet,
                                 MutableHandle<Value> result);
 static ModuleNamespaceObject* ModuleNamespaceCreate(
-    JSContext* cx, Handle<ModuleObject*> module, Handle<ArrayObject*> exports);
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<UniquePtr<ExportNameVector>> exports);
 static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
                                MutableHandle<ModuleVector> stack, size_t index,
                                size_t* indexOut);
@@ -357,13 +356,7 @@ static const char* ModuleStatusName(ModuleStatus status) {
   }
 }
 
-static ArrayObject* NewList(JSContext* cx) {
-  // Note that this creates an ArrayObject, not a ListObject (see vm/List.h).
-  // Self hosted code currently depends on the length property being present.
-  return NewArrayWithNullProto(cx);
-}
-
-static bool ContainsElement(Handle<NameList> list, JSAtom* atom) {
+static bool ContainsElement(Handle<ExportNameVector> list, JSAtom* atom) {
   for (JSAtom* a : list) {
     if (a == atom) {
       return true;
@@ -398,9 +391,10 @@ static size_t CountElements(Handle<ModuleVector> stack, ModuleObject* module) {
 
 // https://tc39.es/ecma262/#sec-getexportednames
 // ES2023 16.2.1.6.2 GetExportedNames
-static bool ModuleGetExportedNames(JSContext* cx, Handle<ModuleObject*> module,
-                                   MutableHandle<ModuleSet> exportStarSet,
-                                   MutableHandle<NameList> exportedNames) {
+static bool ModuleGetExportedNames(
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<ModuleSet> exportStarSet,
+    MutableHandle<ExportNameVector> exportedNames) {
   // Step 4. Let exportedNames be a new empty List.
   MOZ_ASSERT(exportedNames.empty());
 
@@ -441,7 +435,6 @@ static bool ModuleGetExportedNames(JSContext* cx, Handle<ModuleObject*> module,
   // Step 7. For each ExportEntry Record e of module.[[StarExportEntries]], do:
   Rooted<ModuleRequestObject*> moduleRequest(cx);
   Rooted<ModuleObject*> requestedModule(cx);
-  Rooted<ArrayObject*> starNames(cx);
   Rooted<JSAtom*> name(cx);
   for (const ExportEntry& e : module->starExportEntries()) {
     // Step 7.a. Let requestedModule be ? HostResolveImportedModule(module,
@@ -455,7 +448,7 @@ static bool ModuleGetExportedNames(JSContext* cx, Handle<ModuleObject*> module,
 
     // Step 7.b. Let starNames be ?
     //           requestedModule.GetExportedNames(exportStarSet).
-    Rooted<NameList> starNames(cx);
+    Rooted<ExportNameVector> starNames(cx);
     if (!ModuleGetExportedNames(cx, requestedModule, exportStarSet,
                                 &starNames)) {
       return false;
@@ -716,13 +709,14 @@ ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
   if (!ns) {
     // Step 3.a. Let exportedNames be ? module.GetExportedNames().
     Rooted<ModuleSet> exportStarSet(cx);
-    Rooted<NameList> exportedNames(cx);
+    Rooted<ExportNameVector> exportedNames(cx);
     if (!ModuleGetExportedNames(cx, module, &exportStarSet, &exportedNames)) {
       return nullptr;
     }
 
     // Step 3.b. Let unambiguousNames be a new empty List.
-    Rooted<ArrayObject*> unambiguousNames(cx, NewList(cx));
+    Rooted<UniquePtr<ExportNameVector>> unambiguousNames(
+        cx, cx->make_unique<ExportNameVector>());
     if (!unambiguousNames) {
       return nullptr;
     }
@@ -740,15 +734,15 @@ ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
 
       // Step 3.c.ii. If resolution is a ResolvedBinding Record, append name to
       //              unambiguousNames.
-      if (resolution.isObject() &&
-          !NewbornArrayPush(cx, unambiguousNames, StringValue(name))) {
+      if (resolution.isObject() && !unambiguousNames->append(name)) {
+        ReportOutOfMemory(cx);
         return nullptr;
       }
     }
 
     // Step 3.d. Set namespace to ModuleNamespaceCreate(module,
     //           unambiguousNames).
-    ns = ModuleNamespaceCreate(cx, module, unambiguousNames);
+    ns = ModuleNamespaceCreate(cx, module, &unambiguousNames);
   }
 
   // Step 4. Return namespace.
@@ -773,24 +767,37 @@ static void InitNamespaceBinding(JSContext* cx,
   env->setSlot(prop->slot(), ObjectValue(*ns));
 }
 
+struct AtomComparator {
+  bool operator()(JSAtom* a, JSAtom* b, bool* lessOrEqualp) {
+    int32_t result = CompareStrings(a, b);
+    *lessOrEqualp = (result <= 0);
+    return true;
+  }
+};
+
 // https://tc39.es/ecma262/#sec-modulenamespacecreate
 // ES2023 10.4.6.12 ModuleNamespaceCreate
 static ModuleNamespaceObject* ModuleNamespaceCreate(
-    JSContext* cx, Handle<ModuleObject*> module, Handle<ArrayObject*> exports) {
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<UniquePtr<ExportNameVector>> exports) {
   // Step 1. Assert: module.[[Namespace]] is empty.
   MOZ_ASSERT(!module->namespace_());
+
+  // Step 6. Let sortedExports be a List whose elements are the elements of
+  //         exports ordered as if an Array of the same values had been sorted
+  //         using %Array.prototype.sort% using undefined as comparefn.
+  ExportNameVector scratch;
+  if (!scratch.resize(exports->length())) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+  MOZ_ALWAYS_TRUE(MergeSort(exports->begin(), exports->length(),
+                            scratch.begin(), AtomComparator()));
 
   // Steps 2 - 5.
   Rooted<ModuleNamespaceObject*> ns(
       cx, ModuleObject::createNamespace(cx, module, exports));
   if (!ns) {
-    return nullptr;
-  }
-
-  // Step 6. Let sortedExports be a List whose elements are the elements of
-  //         exports ordered as if an Array of the same values had been sorted
-  //         using %Array.prototype.sort% using undefined as comparefn.
-  if (!ArrayNativeSort(cx, exports)) {
     return nullptr;
   }
 
@@ -804,8 +811,8 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
   Rooted<ModuleObject*> importedModule(cx);
   Rooted<ModuleNamespaceObject*> importedNamespace(cx);
   Rooted<JSAtom*> bindingName(cx);
-  for (uint32_t i = 0; i != exports->length(); i++) {
-    name = &exports->getDenseElement(i).toString()->asAtom();
+  for (JSAtom* atom : ns->exports()) {
+    name = atom;
 
     if (!ModuleResolveExport(cx, module, name, &resolution)) {
       return nullptr;

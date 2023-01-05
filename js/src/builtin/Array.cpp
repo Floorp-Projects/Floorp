@@ -2099,10 +2099,6 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::ArrayNativeSort(JSContext* cx, Handle<JSObject*> obj) {
-  return ArrayNativeSortImpl(cx, obj, UndefinedHandleValue, Match_None);
-}
-
 static bool ArrayNativeSortImpl(JSContext* cx, Handle<JSObject*> obj,
                                 Handle<Value> fval,
                                 ComparatorMatchResult comp) {

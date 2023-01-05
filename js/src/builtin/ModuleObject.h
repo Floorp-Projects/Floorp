@@ -185,18 +185,25 @@ class IndirectBindingMap {
   mozilla::Maybe<Map> map_;
 };
 
+// Vector of atoms representing the names exported from a module namespace.
+//
+// Barriers are not required because this is either used as a root, or a
+// non-mutable field of ModuleNamespaceObject. Don't change this without adding
+// barriers.
+using ExportNameVector = GCVector<JSAtom*, 0, SystemAllocPolicy>;
+
 class ModuleNamespaceObject : public ProxyObject {
  public:
   enum ModuleNamespaceSlot { ExportsSlot = 0, BindingsSlot };
 
   static bool isInstance(HandleValue value);
-  static ModuleNamespaceObject* create(JSContext* cx,
-                                       Handle<ModuleObject*> module,
-                                       Handle<ArrayObject*> exports,
-                                       UniquePtr<IndirectBindingMap> bindings);
+  static ModuleNamespaceObject* create(
+      JSContext* cx, Handle<ModuleObject*> module,
+      MutableHandle<UniquePtr<ExportNameVector>> exports,
+      MutableHandle<UniquePtr<IndirectBindingMap>> bindings);
 
   ModuleObject& module();
-  ArrayObject& exports();
+  const ExportNameVector& exports() const;
   IndirectBindingMap& bindings();
 
   bool addBinding(JSContext* cx, Handle<JSAtom*> exportedName,
@@ -245,6 +252,9 @@ class ModuleNamespaceObject : public ProxyObject {
   };
 
   bool hasBindings() const;
+  bool hasExports() const;
+
+  ExportNameVector& mutableExports();
 
  public:
   static const ProxyHandler proxyHandler;
@@ -387,9 +397,9 @@ class ModuleObject : public NativeObject {
 
   static bool execute(JSContext* cx, Handle<ModuleObject*> self);
 
-  static ModuleNamespaceObject* createNamespace(JSContext* cx,
-                                                Handle<ModuleObject*> self,
-                                                HandleObject exports);
+  static ModuleNamespaceObject* createNamespace(
+      JSContext* cx, Handle<ModuleObject*> self,
+      MutableHandle<UniquePtr<ExportNameVector>> exports);
 
   static bool createEnvironment(JSContext* cx, Handle<ModuleObject*> self);
 
