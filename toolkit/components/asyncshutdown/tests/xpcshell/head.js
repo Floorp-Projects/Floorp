@@ -45,6 +45,9 @@ function makeLock(kind) {
         Services.obs.notifyObservers(null, topic);
         return Promise.resolve();
       },
+      get isClosed() {
+        return phase.isClosed;
+      },
     };
   } else if (kind == "barrier") {
     let name = "test-Barrier-" + ++makeLock.counter;
@@ -54,6 +57,9 @@ function makeLock(kind) {
       removeBlocker: barrier.client.removeBlocker,
       wait() {
         return barrier.wait();
+      },
+      get isClosed() {
+        return barrier.client.isClosed;
       },
     };
   } else if (kind == "xpcom-barrier") {
@@ -104,6 +110,9 @@ function makeLock(kind) {
           barrier.wait(resolve);
         });
       },
+      get isClosed() {
+        return barrier.client.isClosed;
+      },
     };
   } else if ("unwrapped-xpcom-barrier") {
     let name = "unwrapped-xpcom-barrier-" + ++makeLock.counter;
@@ -116,6 +125,9 @@ function makeLock(kind) {
         return new Promise(resolve => {
           barrier.wait(resolve);
         });
+      },
+      get isClosed() {
+        return client.isClosed;
       },
     };
   }

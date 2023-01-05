@@ -45,8 +45,10 @@ add_task(async function test_phase_various_failures() {
     }
 
     // Attempting to add a blocker after we are done waiting
+    Assert.ok(!lock.isClosed, "Barrier is open");
     await lock.wait();
     Assert.throws(() => lock.addBlocker("Test 3", () => true), /is finished/);
+    Assert.ok(lock.isClosed, "Barrier is closed");
   }
 });
 

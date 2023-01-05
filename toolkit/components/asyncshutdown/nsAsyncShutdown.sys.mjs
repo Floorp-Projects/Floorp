@@ -153,6 +153,9 @@ nsAsyncShutdownClient.prototype = {
   get name() {
     return this._moduleClient.name;
   },
+  get isClosed() {
+    return this._moduleClient.isClosed;
+  },
   addBlocker(
     /* nsIAsyncShutdownBlocker*/ xpcomBlocker,
     fileName,
@@ -200,7 +203,7 @@ nsAsyncShutdownClient.prototype = {
     return this._moduleClient.removeBlocker(moduleBlocker);
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIAsyncShutdownBarrier"]),
+  QueryInterface: ChromeUtils.generateQI(["nsIAsyncShutdownClient"]),
 };
 
 /**

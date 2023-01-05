@@ -110,16 +110,18 @@ PromiseSet.prototype = {
    *
    * Note that calling `wait()` causes Promise to be removed from the
    * Set once they are resolved.
-   *
+   * @param {function} onDoneCb invoked synchronously once all the entries
+   * have been handled and no new entries will be accepted.
    * @return {Promise} Resolved once all Promise have been resolved or removed,
    * or rejected after at least one Promise has rejected.
    */
-  wait() {
+  wait(onDoneCb) {
     // Pick an arbitrary element in the map, if any exists.
     let entry = this._indirections.entries().next();
     if (entry.done) {
       // No indirections left, we are done.
       this._done = true;
+      onDoneCb();
       return Promise.resolve();
     }
 
@@ -127,7 +129,7 @@ PromiseSet.prototype = {
     let promise = indirection.promise;
     promise = promise.then(() =>
       // At this stage, the entry has been cleaned up.
-      this.wait()
+      this.wait(onDoneCb)
     );
     return promise;
   },
@@ -475,6 +477,10 @@ function getPhase(topic) {
       return spinner.name;
     },
 
+    get isClosed() {
+      return spinner.isClosed;
+    },
+
     /**
      * Trigger the phase without having to broadcast a
      * notification. For testing purposes only.
@@ -533,6 +539,10 @@ Spinner.prototype = {
 
   get name() {
     return this._barrier.client.name;
+  },
+
+  get isClosed() {
+    return this._barrier.client.isClosed;
   },
 
   // nsIObserver.observe
@@ -647,6 +657,11 @@ function Barrier(name) {
    * `true` once we have started waiting.
    */
   this._isStarted = false;
+
+  /**
+   * `true` once we're done and won't accept any new blockers.
+   */
+  this._isClosed = false;
 
   /**
    * The capability of adding blockers. This object may safely be returned
@@ -823,6 +838,15 @@ function Barrier(name) {
       return this._removeBlocker(condition);
     },
   };
+
+  /**
+   * Whether this client still accepts new blockers.
+   */
+  Object.defineProperty(this.client, "isClosed", {
+    get: () => {
+      return this._isClosed;
+    },
+  });
 }
 Barrier.prototype = Object.freeze({
   /**
@@ -903,7 +927,9 @@ Barrier.prototype = Object.freeze({
     this._isStarted = true;
 
     // Now, wait
-    let promise = this._waitForMe.wait();
+    let promise = this._waitForMe.wait(() => {
+      this._isClosed = true;
+    });
 
     promise = promise.catch(function onError(error) {
       // I don't think that this can happen.
