@@ -227,6 +227,29 @@ void MultiGetUntrustedModulesData::Serialize(RefPtr<dom::Promise>&& aPromise) {
     }
   }
 
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  nt::SharedSection* sharedSection = dllSvc->GetSharedSection();
+  if (sharedSection) {
+    auto dynamicBlocklist = sharedSection->GetDynamicBlocklist();
+
+    nsTArray<nsDependentSubstring> blockedModules;
+    for (const auto& blockedEntry : dynamicBlocklist) {
+      if (!blockedEntry.IsValidDynamicBlocklistEntry()) {
+        break;
+      }
+      blockedModules.AppendElement(
+          nsDependentSubstring(blockedEntry.mName.Buffer,
+                               blockedEntry.mName.Length / sizeof(wchar_t)));
+    }
+    rv = serializer.AddBlockedModules(blockedModules);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aPromise->MaybeReject(rv);
+      return;
+    }
+  }
+#endif
+
   JS::Rooted<JS::Value> jsval(cx);
   serializer.GetObject(&jsval);
   aPromise->MaybeResolve(jsval);
