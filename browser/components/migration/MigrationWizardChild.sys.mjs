@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MigrationWizard } from "chrome://browser/content/migration/migration-wizard.mjs";
+import { MigrationWizardConstants } from "chrome://browser/content/migration/migration-wizard-constants.mjs";
 
 /**
  * This class is responsible for updating the state of a <migration-wizard>
@@ -26,7 +26,7 @@ export class MigrationWizardChild extends JSWindowActorChild {
       let migrators = await this.sendQuery("GetAvailableMigrators");
       this.setComponentState({
         migrators,
-        page: MigrationWizard.PAGES.SELECTION,
+        page: MigrationWizardConstants.PAGES.SELECTION,
       });
     }
   }

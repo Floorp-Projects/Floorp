@@ -20,14 +20,16 @@ The following diagram tries to illustrate how the pieces of the migration wizard
 ``MigrationWizard`` reusable component
 ======================================
 
-The ``MigrationWizard`` reusable component (``<migration-wizard>``) is a custom element that can be imported from ``migration-wizard.mjs``. If the module is imported into a DOM window context, then the custom element is also automatically registered for that document.
+The ``MigrationWizard`` reusable component (``<migration-wizard>``) is a custom element that can be imported from ``migration-wizard.mjs``. The module is expected to load in a DOM window context, whereupon the custom element is automatically registered for that document.
 
 After binding to the document, the ``MigrationWizard`` dispatches a ``MigrationWizard:Init`` custom event, which causes a ``MigrationWizardChild`` to instantiate and be associated with it.
 
 Notably, the ``MigrationWizard`` does not contain any internal logic or privileged code to perform any migrations or to directly interact with the migration mechanisms. Its sole function is to accept input from the user and emit that input as events. The associated ``MigrationWizardChild`` will listen for those events, and take care of calling into the ``MigrationWizard`` to update the state of the reusable component. This means that the reusable component can be embedded in unprivileged contexts and have its states presented in a tool like Storybook.
 
-.. js:autoclass:: MigrationWizard
-  :members:
+``MigrationWizardConstants``
+============================
+
+The ``MigrationWizardConstants`` module exports a single object of the same name. The properties of that object are constants that can be used to set the state of a ``MigrationWizard`` instance using ``MigrationWizard.setState``.
 
 ``MigrationWizardChild``
 =========================

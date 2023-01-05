@@ -8,3 +8,4 @@ browser.jar:
    content/browser/aboutWelcomeBack.xhtml                     (content/aboutWelcomeBack.xhtml)
    content/browser/migration/migration-dialog.html            (content/migration-dialog.html)
    content/browser/migration/migration-wizard.mjs             (content/migration-wizard.mjs)
+   content/browser/migration/migration-wizard-constants.mjs   (content/migration-wizard-constants.mjs)
