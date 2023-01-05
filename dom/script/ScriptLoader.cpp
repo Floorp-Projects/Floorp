@@ -942,6 +942,9 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     NS_DispatchToCurrentThread(
         NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
                           &nsIScriptElement::FireErrorEvent));
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, "Script Loader"_ns, mDocument,
+        nsContentUtils::eDOM_PROPERTIES, "ImportMapExternalNotSupported");
     return false;
   }
 
