@@ -600,6 +600,8 @@ gf-floorp-toggle-statusbar-description = Show or Hide Status Bar
 
 update-portable-notification-found-title = Updates found!
 update-portable-notification-found-message = Downloading updates...
+update-portable-notification-ready-title = Ready to update!
+update-portable-notification-ready-message = The next time the browser is launched, the update will begin.
 update-portable-notification-success-title = Update succeeded!
 update-portable-notification-success-message = Update succeeded! Hope you enjoy the new version of Floorp!
 update-portable-notification-failed-title = Update failed.

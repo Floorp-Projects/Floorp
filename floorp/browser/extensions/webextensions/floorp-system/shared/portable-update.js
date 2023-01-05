@@ -127,7 +127,15 @@
                     "title": (await getL10nValue("update-portable-notification-failed-title")),
                     "message": (await getL10nValue("update-portable-notification-failed-prepare-message"))
                 });
+                return;
             }
+
+            browser.notifications.create({
+                "type": "basic",
+                "iconUrl": browser.runtime.getURL("icons/link-48.png"),
+                "title": (await getL10nValue("update-portable-notification-ready-title")),
+                "message": (await getL10nValue("update-portable-notification-ready-message"))
+            });
         } else {
             console.log("No updates found.");
         }
