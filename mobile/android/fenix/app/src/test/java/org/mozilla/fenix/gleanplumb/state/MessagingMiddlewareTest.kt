@@ -63,6 +63,7 @@ class MessagingMiddlewareTest {
         middleware = MessagingMiddleware(
             messagingStorage,
             coroutineScope,
+            clock = { 0L },
         )
     }
 
@@ -144,7 +145,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `GIEN a expiring message WHEN MessageDisplayed THEN update storage`() = runTestOnMain {
+    fun `GIVEN a expiring message WHEN MessageDisplayed THEN update storage`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -157,7 +158,6 @@ class MessagingMiddlewareTest {
         val messagingState: MessagingState = mockk(relaxed = true)
         val spiedMiddleware = spyk(middleware)
 
-        every { spiedMiddleware.now() } returns 0L
         every { messagingState.messages } returns emptyList()
         every { appState.messaging } returns messagingState
         every { middlewareContext.state } returns appState
@@ -291,7 +291,6 @@ class MessagingMiddlewareTest {
         val updatedMessage = oldMessage.copy(metadata = oldMessage.metadata.copy(displayCount = 1))
         val spiedMiddleware = spyk(middleware)
 
-        every { spiedMiddleware.now() } returns 0
         every { style.maxDisplayCount } returns 2
         every {
             spiedMiddleware.updateMessage(
@@ -323,7 +322,6 @@ class MessagingMiddlewareTest {
         val updatedMessage = oldMessage.copy(metadata = oldMessage.metadata.copy(displayCount = 1))
         val spiedMiddleware = spyk(middleware)
 
-        every { spiedMiddleware.now() } returns 0
         every { style.maxDisplayCount } returns 1
         every {
             spiedMiddleware.consumeMessageToShowIfNeeded(

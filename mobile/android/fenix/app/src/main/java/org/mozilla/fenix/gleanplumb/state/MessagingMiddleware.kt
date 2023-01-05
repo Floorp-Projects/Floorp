@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
-import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.ConsumeMessageToShow
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Evaluate
@@ -26,9 +25,10 @@ import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
 typealias AppStoreMiddlewareContext = MiddlewareContext<AppState, AppAction>
 
 class MessagingMiddleware(
-    private val messagingStorage: NimbusMessagingStorage,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-) : Middleware<AppState, AppAction> {
+    messagingStorage: NimbusMessagingStorage,
+    coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    clock: () -> Long = { System.currentTimeMillis() },
+) : NimbusMessagingController(messagingStorage, coroutineScope, clock), Middleware<AppState, AppAction> {
 
     override fun invoke(
         context: AppStoreMiddlewareContext,
@@ -72,35 +72,14 @@ class MessagingMiddleware(
         oldMessage: Message,
         context: AppStoreMiddlewareContext,
     ) {
-        sendShownMessageTelemetry(oldMessage.id)
-        val newMetadata = oldMessage.metadata.copy(
-            displayCount = oldMessage.metadata.displayCount + 1,
-            lastTimeShown = now(),
-        )
-        val newMessage = oldMessage.copy(
-            metadata = newMetadata,
-        )
-        val newMessages = if (newMetadata.displayCount < oldMessage.maxDisplayCount) {
+        val newMessage = onMessageDisplayed(oldMessage)
+        val newMessages = if (!newMessage.isExpired) {
             updateMessage(context, oldMessage, newMessage)
         } else {
-            sendExpiredMessageTelemetry(newMessage.id)
             consumeMessageToShowIfNeeded(context, oldMessage)
             removeMessage(context, oldMessage)
         }
         context.dispatch(UpdateMessages(newMessages))
-        coroutineScope.launch {
-            messagingStorage.updateMetadata(newMetadata)
-        }
-    }
-
-    @VisibleForTesting
-    internal fun sendShownMessageTelemetry(messageId: String) {
-        Messaging.messageShown.record(Messaging.MessageShownExtra(messageId))
-    }
-
-    @VisibleForTesting
-    internal fun sendExpiredMessageTelemetry(messageId: String) {
-        Messaging.messageExpired.record(Messaging.MessageExpiredExtra(messageId))
     }
 
     @VisibleForTesting
@@ -111,10 +90,7 @@ class MessagingMiddleware(
         val newMessages = removeMessage(context, message)
         context.dispatch(UpdateMessages(newMessages))
         consumeMessageToShowIfNeeded(context, message)
-        coroutineScope.launch {
-            val updatedMetadata = message.metadata.copy(dismissed = true)
-            messagingStorage.updateMetadata(updatedMetadata)
-        }
+        onMessageDismissed(message)
     }
 
     @VisibleForTesting
@@ -123,10 +99,7 @@ class MessagingMiddleware(
         context: AppStoreMiddlewareContext,
     ) {
         // Update Nimbus storage.
-        coroutineScope.launch {
-            val updatedMetadata = message.metadata.copy(pressed = true)
-            messagingStorage.updateMetadata(updatedMetadata)
-        }
+        onMessageClicked(message)
         // Update app state.
         val newMessages = removeMessage(context, message)
         context.dispatch(UpdateMessages(newMessages))
@@ -166,6 +139,4 @@ class MessagingMiddleware(
         return removeMessage(context, oldMessage) + updatedMessage
     }
 
-    @VisibleForTesting
-    internal fun now(): Long = System.currentTimeMillis()
 }

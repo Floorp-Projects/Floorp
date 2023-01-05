@@ -37,6 +37,9 @@ data class Message(
     val surface: MessageSurfaceId
         get() = data.surface
 
+    val isExpired: Boolean
+        get() = metadata.displayCount >= maxDisplayCount
+
     /**
      * A data class that holds metadata that help to identify if a message should shown.
      *
