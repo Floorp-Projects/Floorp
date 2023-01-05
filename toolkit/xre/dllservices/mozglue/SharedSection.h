@@ -18,6 +18,8 @@ namespace mozilla::nt {
 // through DllServices.
 struct NS_NO_VTABLE SharedSection {
   virtual Span<const wchar_t> GetDependentModules() = 0;
+  // Returns a span of the whole space for dynamic blocklist entries.
+  // Use IsValidDynamicBlocklistEntry() to determine the end of the list.
   virtual Span<const DllBlockInfoT<UNICODE_STRING>> GetDynamicBlocklist() = 0;
 };
 

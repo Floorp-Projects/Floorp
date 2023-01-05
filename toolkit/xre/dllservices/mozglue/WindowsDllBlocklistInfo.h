@@ -53,6 +53,8 @@ struct DllBlockInfoT {
     return aOther <= mMaxVersion;
   }
 
+  bool IsValidDynamicBlocklistEntry() const;
+
   static const uint64_t ALL_VERSIONS = (uint64_t)-1LL;
 
   // DLLs sometimes ship without a version number, particularly early
