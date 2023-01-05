@@ -13,6 +13,7 @@
 
 #include <map>
 #include <memory>
+#include <ostream>
 #include <set>
 #include <string>
 #include <utility>
@@ -21,6 +22,7 @@
 #include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/units/timestamp.h"
+#include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
@@ -77,7 +79,13 @@ struct StreamCodecInfo {
   Timestamp switched_on_at = Timestamp::PlusInfinity();
   // Timestamp when this codec was used last time.
   Timestamp switched_from_at = Timestamp::PlusInfinity();
+
+  std::string ToString() const;
 };
+
+std::ostream& operator<<(std::ostream& os, const StreamCodecInfo& state);
+rtc::StringBuilder& operator<<(rtc::StringBuilder& sb,
+                               const StreamCodecInfo& state);
 
 // Represents phases where video frame can be dropped and such drop will be
 // detected by analyzer.
@@ -89,6 +97,10 @@ enum class FrameDropPhase : int {
   // kLastValue must be the last value in this enumeration.
   kLastValue
 };
+
+std::string ToString(FrameDropPhase phase);
+std::ostream& operator<<(std::ostream& os, FrameDropPhase phase);
+rtc::StringBuilder& operator<<(rtc::StringBuilder& sb, FrameDropPhase phase);
 
 struct StreamStats {
   explicit StreamStats(Timestamp stream_started_time);
