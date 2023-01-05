@@ -176,6 +176,12 @@ class PacingController {
 
   Timestamp CurrentTime() const;
 
+  // Helper methods for packet that may not be paced. Returns a finite Timestamp
+  // if a packet type is configured to not be paced and the packet queue has at
+  // least one packet of that type. Otherwise returns
+  // Timestamp::MinusInfinity().
+  Timestamp NextUnpacedSendTime() const;
+
   Clock* const clock_;
   PacketSender* const packet_sender_;
   const FieldTrialsView& field_trials_;
@@ -184,6 +190,7 @@ class PacingController {
   const bool send_padding_if_silent_;
   const bool pace_audio_;
   const bool ignore_transport_overhead_;
+  const bool fast_retransmissions_;
 
   TimeDelta min_packet_limit_;
   DataSize transport_overhead_per_packet_;

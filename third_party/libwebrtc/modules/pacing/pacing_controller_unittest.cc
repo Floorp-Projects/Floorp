@@ -2061,5 +2061,31 @@ TEST_F(PacingControllerTest, RespectsQueueTimeLimit) {
   EXPECT_EQ(pacer.pacing_rate(), kNominalPacingRate);
 }
 
+TEST_F(PacingControllerTest, BudgetDoesNotAffectRetransmissionInsTrial) {
+  const DataSize kPacketSize = DataSize::Bytes(1000);
+
+  EXPECT_CALL(callback_, SendPadding).Times(0);
+  const test::ExplicitKeyValueConfig trials(
+      "WebRTC-Pacer-FastRetransmissions/Enabled/");
+  PacingController pacer(&clock_, &callback_, trials);
+  pacer.SetPacingRates(kTargetRate, /*padding_rate=*/DataRate::Zero());
+
+  // Send a video packet so that we have a bit debt.
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kVideoSsrc,
+                                  /*sequence_number=*/1,
+                                  /*capture_time=*/1, kPacketSize.bytes()));
+  EXPECT_CALL(callback_, SendPacket);
+  pacer.ProcessPackets();
+  EXPECT_GT(pacer.NextSendTime(), clock_.CurrentTime());
+
+  // A retransmission packet should still be immediately processed.
+  EXPECT_CALL(callback_, SendPacket);
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kRetransmission,
+                                  kVideoSsrc,
+                                  /*sequence_number=*/1,
+                                  /*capture_time=*/1, kPacketSize.bytes()));
+  pacer.ProcessPackets();
+}
+
 }  // namespace
 }  // namespace webrtc

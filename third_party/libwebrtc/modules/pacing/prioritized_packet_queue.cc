@@ -81,10 +81,10 @@ bool PrioritizedPacketQueue::StreamQueue::IsEmpty() const {
   return true;
 }
 
-Timestamp PrioritizedPacketQueue::StreamQueue::LeadingAudioPacketEnqueueTime()
-    const {
-  RTC_DCHECK(!packets_[kAudioPrioLevel].empty());
-  return packets_[kAudioPrioLevel].begin()->enqueue_time;
+Timestamp PrioritizedPacketQueue::StreamQueue::LeadingPacketEnqueueTime(
+    int priority_level) const {
+  RTC_DCHECK(!packets_[priority_level].empty());
+  return packets_[priority_level].begin()->enqueue_time;
 }
 
 Timestamp PrioritizedPacketQueue::StreamQueue::LastEnqueueTime() const {
@@ -225,13 +225,14 @@ PrioritizedPacketQueue::SizeInPacketsPerRtpPacketMediaType() const {
   return size_packets_per_media_type_;
 }
 
-Timestamp PrioritizedPacketQueue::LeadingAudioPacketEnqueueTime() const {
-  if (streams_by_prio_[kAudioPrioLevel].empty()) {
+Timestamp PrioritizedPacketQueue::LeadingPacketEnqueueTime(
+    RtpPacketMediaType type) const {
+  const int priority_level = GetPriorityForType(type);
+  if (streams_by_prio_[priority_level].empty()) {
     return Timestamp::MinusInfinity();
   }
-  return streams_by_prio_[kAudioPrioLevel]
-      .front()
-      ->LeadingAudioPacketEnqueueTime();
+  return streams_by_prio_[priority_level].front()->LeadingPacketEnqueueTime(
+      priority_level);
 }
 
 Timestamp PrioritizedPacketQueue::OldestEnqueueTime() const {
