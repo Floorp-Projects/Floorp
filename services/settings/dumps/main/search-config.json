@@ -4,146 +4,6 @@
       "params": {
         "searchUrlGetParams": [
           {
-            "name": "tn",
-            "value": "monline_7_dg"
-          },
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
-        ],
-        "suggestUrlGetParams": [
-          {
-            "name": "tn",
-            "value": "monline_7_dg"
-          },
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "action",
-            "value": "opensearch"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
-        ]
-      },
-      "schema": 1670360576036,
-      "appliesTo": [
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ],
-            "suggestUrlGetParams": [
-              {
-                "name": "tn",
-                "value": "monline_4_dg"
-              },
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "action",
-                "value": "opensearch"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "orderHint": 3000,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "tn",
-              "value": "monline_4_dg",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            },
-            {
-              "name": "tn",
-              "value": "monline_3_dg",
-              "purpose": "homepage",
-              "condition": "purpose"
-            },
-            {
-              "name": "tn",
-              "value": "monline_3_dg",
-              "purpose": "newtab",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            }
-          }
-        },
-        {
-          "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
-          }
-        },
-        {
-          "default": "no",
-          "override": true,
-          "application": {
-            "distributions": [
-              "acer-001",
-              "acer-002",
-              "acer-g-003",
-              "acer-003",
-              "acer-004"
-            ]
-          }
-        }
-      ],
-      "telemetryId": "baidu",
-      "webExtension": {
-        "id": "baidu@search.mozilla.org"
-      },
-      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
-      "last_modified": 1671479975574
-    },
-    {
-      "params": {
-        "searchUrlGetParams": [
-          {
             "name": "pc",
             "value": "MOZI"
           },
@@ -153,7 +13,7 @@
           }
         ]
       },
-      "schema": 1671122204682,
+      "schema": 1672351882248,
       "appliesTo": [
         {
           "included": {
@@ -414,52 +274,8 @@
           },
           "application": {
             "distributions": [
-              "acer-001",
-              "acer-002",
-              "acer-g-003",
               "acer-003",
               "acer-004"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "pc",
-                "value": "MOZD"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "acer-001",
-              "acer-002"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "pc",
-                "value": "MOZE"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "acer-g-003"
             ]
           }
         },
@@ -587,7 +403,144 @@
         "id": "bing@search.mozilla.org"
       },
       "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
-      "last_modified": 1671479975571
+      "last_modified": 1672778333687
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "tn",
+            "value": "monline_7_dg"
+          },
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ],
+        "suggestUrlGetParams": [
+          {
+            "name": "tn",
+            "value": "monline_7_dg"
+          },
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "action",
+            "value": "opensearch"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1672159002777,
+      "appliesTo": [
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ],
+            "suggestUrlGetParams": [
+              {
+                "name": "tn",
+                "value": "monline_4_dg"
+              },
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "action",
+                "value": "opensearch"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "orderHint": 3000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "tn",
+              "value": "monline_4_dg",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            },
+            {
+              "name": "tn",
+              "value": "monline_3_dg",
+              "purpose": "homepage",
+              "condition": "purpose"
+            },
+            {
+              "name": "tn",
+              "value": "monline_3_dg",
+              "purpose": "newtab",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            }
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          }
+        },
+        {
+          "default": "no",
+          "override": true,
+          "application": {
+            "distributions": [
+              "acer-003",
+              "acer-004"
+            ]
+          }
+        }
+      ],
+      "telemetryId": "baidu",
+      "webExtension": {
+        "id": "baidu@search.mozilla.org"
+      },
+      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
+      "last_modified": 1672778333684
     },
     {
       "params": {
@@ -3029,5 +2982,5 @@
       "last_modified": 1583937832210
     }
   ],
-  "timestamp": 1671479975574
+  "timestamp": 1672778333687
 }
