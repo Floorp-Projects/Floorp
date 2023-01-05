@@ -176,7 +176,8 @@ module.exports = function plugin(babel) {
             t.isObjectPattern(path.parentPath.node.id) &&
             // Check if actually Components.utils.import
             path.get("callee").isMemberExpression() &&
-            path.get("callee.property").node.name === "import"
+            (path.get("callee.property").node.name === "import" ||
+              path.get("callee.property").node.name === "importESModule")
           ) {
             const callee = path.get("callee");
             if (callee.get("object").isMemberExpression()) {
