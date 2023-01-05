@@ -13,38 +13,81 @@ For more information about Hunspell or the affix file format, you can check
 Requesting to add new words to the en-US dictionary
 ===================================================
 
-If you’d like to add new words to the dictionary, you can `file a bug`_. Try to
-provide information on the terms you want to add, in particular references to
-external sources that confirm the usage of the term.
+If you’d like to add new words to the dictionary, you can `file a bug`_:
+
+* Try to provide information on the terms you want to add, in particular
+  references to external sources that confirm the usage of the term (e.g.
+  Merriam-Webster or Oxford online dictionaries).
+* Include all possible forms, e.g. plural for nouns, different tenses for verbs.
 
 Adding new words to the en-US dictionary
 ========================================
 
-This section describes the process for adding a word to the dictionary:
+This section describes the process for adding new words to the dictionary:
 
 #. Get a clone of mozilla-central (see :ref:`Firefox Contributors' Quick
    Reference`), if you don’t already have one, and make sure you can build it
    successfully.
-#. Get into the dictionary sources directory using this command:
-   ``cd extensions/spellcheck/locales/en-US/hunspell/dictionary-sources``
+#. Move in the dictionary sources directory using this command:
+   ``cd extensions/spellcheck/locales/en-US/hunspell/dictionary-sources``.
+#. Identify the current version of SCOWL by checking the file
+   ``README_en_US.txt`` (at the beginning of the file there is a line similar to
+   ``Generated from SCOWL Version 2020.12.07``, where ``2020.12.07`` is the
+   SCOWL version).
+#. Download the same version of the dictionary from the `SCOWL`_ homepage or
+   `SourceForce`_ as a tarball (tag.gz) and unpack it in the working directory.
+   Rename the resulting folder from ``scowl-YYYY.MM.DD`` to ``scowl``.
 #. There’s a special script used for editing dictionaries. The script
    only works if you have the environment variable ``EDITOR`` set to the
    executable of an editor program; if you don’t have it set, you can use
    ``EDITOR=vim sh edit-dictionary.sh`` to edit using ``vim`` (or you can
    substitute it with another editor), or you can just type
    ``sh edit-dictionary.sh`` if you have an ``EDITOR`` already specified.
-#. Add and remove words in the dictionary file, then quit the editor.
+
+   Copy and paste the full list of words, then save and quit the editor. It’s
+   not necessary to put the words in alphabetical order, as it will be corrected
+   by the script.
+#. Run the script ``sh make-new-dict.sh`` to generate a new dictionary and make
+   sure it runs without errors. For more details on this script, see the
+   `make-new-dict.sh`_ section.
+#. Do a sanity check on the resulting dictionary file ``en_US-mozilla.dic``. For
+   example, make sure that the size is about the same as the original dictionary
+   (or slightly larger).
+#. If everything looks correct, use ``sh install-new-dict.sh`` to copy the
+   generated file in the right position.
 #. Build Firefox and test your updated dictionary. Once you’re
    satisfied, use the process described in :ref:`write_a_patch` to create a
    patch.
 
-Note that the update script will modify 2 files, and both need to be committed:
+Note that the update script will modify 2 versions of the dictionary, and both
+need to be committed:
 
-* ``en-US.dic``: the dictionary actually shipping in the build and uses
+* ``en-US.dic``: the dictionary actually shipping in the build, it uses
   ISO-8859-1 encoding.
 * ``utf8/en-US.dic``: a version of the same dictionary with UTF-8 encoding. This
   is used to work around issues with Phabricator, and it allows to display
   actual changes in the diff.
+
+Exclude words from suggestions
+==============================
+
+It’s possible to completely exclude words from suggested alternatives by adding
+an affix rule ``!`` at the end of the definition in the ``.dic`` file. For
+example:
+
+* ``bum`` would be changed to ``bum/!`` (note the additional forward slash).
+* ``bum/MS`` would be changed to ``bum/MS!``.
+
+In order to exclude a word from suggestions, follow the instructions available
+in `Adding new words to the en-US dictionary`_. Instead of running the
+``edit-dictionary.sh`` script (point 5), use a text editor to edit the file
+``en-US.dic`` directly, then proceed with the remaining instructions.
+
+.. warning::
+
+  Make sure to open ``en-US.dic`` with the correct encoding. For example, Visual
+  Studio Code will try to open it as ``UTF-8``, and it needs to be reopened with
+  encoding ``Western (ISO 8859-1)``.
 
 Upgrading dictionary to a new upstream version of SCOWL
 =======================================================
@@ -56,11 +99,11 @@ used to generate the files for the en-US dictionary.
 The working directory for this process is
 ``extensions/spellcheck/locales/en-US/hunspell/dictionary-sources``.
 
-#. Download the latest version of the dictionary from `SCOWL`_ homepage or
+#. Download the latest version of the dictionary from the `SCOWL`_ homepage or
    `SourceForce`_ as a tarball (tag.gz) and unpack it in the working directory.
    Rename the resulting folder from ``scowl-YYYY.MM.DD`` to ``scowl``.
 #. Run the script ``sh make-new-dict.sh`` to generate a new dictionary and make
-   sure it runs without any errors. For more details on this script, see the
+   sure it runs without errors. For more details on this script, see the
    `make-new-dict.sh`_ section.
 #. Do a sanity check on the resulting dictionary file ``en_US-mozilla.dic``. For
    example, make sure that the size is about the same as the original dictionary
@@ -71,16 +114,6 @@ The working directory for this process is
 
 Info about the file structure
 =============================
-
-mozilla-exclusions.txt
-----------------------
-
-``mozilla-exclusions.txt`` is used to explicitly exclude some words from
-suggestions. The ``make-new-dict.sh`` script will add them to the dictionary file
-with the ``/!`` flag.
-
-Terms should be added to this file with exactly the same format used in the .dic
-file, including affix rules if available.
 
 mozilla-specific.txt
 --------------------
@@ -153,6 +186,6 @@ The script:
 
 
 .. _SCOWL: http://wordlist.aspell.net
-.. _file a bug: https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Spelling%20checker
+.. _file a bug: https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Spelling%20Checker%3A%20en-US%20Dictionary
 .. _SourceForce: https://sourceforge.net/projects/wordlist/files/SCOWL/
 .. _bug 237921: https://bugzilla.mozilla.org/show_bug.cgi?id=237921

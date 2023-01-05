@@ -10,14 +10,19 @@
 set -e
 
 WKDIR="`pwd`"
-export SCOWL="$WKDIR/scowl/"
-SUPPORT_DIR="$WKDIR/support_files/"
-SPELLER="$SCOWL/speller"
+SUPPORT_DIR="$WKDIR/support_files"
+SPELLER="$WKDIR/scowl/speller"
 
-if [ -e "$SUPPORT_DIR/orig-bk" ]; then
-    echo "$0: directory '$SUPPORT_DIR/orig-bk' exists." 1>&2
-    exit 0
-fi
+# Stop if backup folders already exist, because it means that this script
+# has already been run once.
+FOLDERS=( "orig-bk" "mozilla-bk")
+for f in ${FOLDERS[@]}; do
+  if [ -d "$SUPPORT_DIR/$f" ]; then
+    echo "Backup folder already present: $f"
+    echo "Run make-new-dict.sh before running this script."
+    exit 1
+  fi
+done
 
 mv orig "$SUPPORT_DIR/orig-bk"
 mkdir orig
@@ -26,12 +31,13 @@ cp $SPELLER/en_US-custom.dic $SPELLER/en_US-custom.aff $SPELLER/README_en_US-cus
 mkdir "$SUPPORT_DIR/mozilla-bk"
 mv ../en-US.dic ../en-US.aff ../README_en_US.txt "$SUPPORT_DIR/mozilla-bk"
 
-# Convert the affix file to ISO-8859-1
+# The affix file is ISO-8859-1, but still need to change the character set to
+# ISO-8859-1 and remove conversion rules.
 cp en_US-mozilla.aff utf8/en-US-utf8.aff
 sed -i "" -e '/^ICONV/d' -e 's/^SET UTF-8$/SET ISO8859-1/' en_US-mozilla.aff
 
 # Convert the dictionary to ISO-8859-1
-mv en_US-mozilla.dic utf8/en-US-utf8.dic
+cp en_US-mozilla.dic utf8/en-US-utf8.dic
 iconv -f utf-8 -t iso-8859-1 < utf8/en-US-utf8.dic > en_US-mozilla.dic
 
 cp en_US-mozilla.aff ../en-US.aff

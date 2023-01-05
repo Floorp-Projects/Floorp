@@ -21,16 +21,22 @@ export LC_CTYPE=C
 export LC_COLLATE=C
 
 WKDIR="`pwd`"
+ORIG="$WKDIR/orig"
+SUPPORT_DIR="$WKDIR/support_files"
+SPELLER="$WKDIR/scowl/speller"
 
+# This is required by scowl scripts
 export SCOWL="$WKDIR/scowl/"
-
-ORIG="$WKDIR/orig/"
-SUPPORT_DIR="$WKDIR/support_files/"
-SPELLER="$SCOWL/speller"
 
 expand() {
   grep -v '^[0-9]\+$' | $SPELLER/munch-list expand $1 | sort -u
 }
+
+if [ ! -d "$SPELLER" ]; then
+  echo "The 'scowl' folder is missing. Check the documentation at"
+  echo "https://firefox-source-docs.mozilla.org/extensions/spellcheck/index.html"
+  exit 1
+fi
 
 mkdir -p $SUPPORT_DIR
 cd $SPELLER
@@ -49,8 +55,16 @@ expand $SPELLER/en.aff < $SPELLER/en.dic.supp > $SUPPORT_DIR/0-special.txt
 # Input is UTF-8, expand expects ISO-8859-1 so use iconv
 iconv -f utf-8 -t iso-8859-1 $ORIG/en_US-custom.dic | expand $ORIG/en_US-custom.aff > $SUPPORT_DIR/1-base.txt
 
-# The existing Mozilla dictionary is already in ISO-8859-1
-expand ../en-US.aff < ../en-US.dic > $SUPPORT_DIR/2-mozilla.txt
+# Store suggestion exclusions (ending with !) defined in current Mozilla dictionary.
+# Save both the compressed (munched) and expanded version.
+grep '!$' ../en-US.dic > $SUPPORT_DIR/2-mozilla-nosug-munched.txt
+expand ../en-US.aff < $SUPPORT_DIR/2-mozilla-nosug-munched.txt > $SUPPORT_DIR/2-mozilla-nosug.txt
+
+# Remove suggestion exclusions and expand the existing Mozilla dictionary.
+# The existing Mozilla dictionary is already in ISO-8859-1.
+grep -v '!$' < ../en-US.dic > $SUPPORT_DIR/en-US-nosug.dic
+expand ../en-US.aff < $SUPPORT_DIR/en-US-nosug.dic > $SUPPORT_DIR/2-mozilla.txt
+rm $SUPPORT_DIR/en-US-nosug.dic
 
 # Input is UTF-8, expand expects ISO-8859-1 so use iconv
 iconv -f utf-8 -t iso-8859-1 $SPELLER/en_US-custom.dic | expand $SPELLER/en_US-custom.aff > $SUPPORT_DIR/3-upstream.txt
@@ -72,16 +86,13 @@ comm -23 $SUPPORT_DIR/3-upstream.txt $SUPPORT_DIR/2-mozilla-removed.txt | cat - 
 # Note: the output of make-hunspell-dict is UTF-8
 cat $SUPPORT_DIR/4-patched.txt | comm -23 - $SUPPORT_DIR/0-special.txt | $SPELLER/make-hunspell-dict -one en_US-mozilla /dev/null
 
-# Exclude specific words from suggestions
-while IFS= read -r line
-do
-  # If the string already contains an affix, just add !, otherwise add /!
-  if [[ "$line" == *"/"* ]]; then
-    sed -i "" "s|^$line$|$line!|" en_US-mozilla.dic
-  else
-    sed -i "" "s|^$line$|$line/!|" en_US-mozilla.dic
-  fi
-done < "mozilla-exclusions.txt"
+# Add back Mozilla suggestion exclusions. Need to convert the file from
+# ISO-8859-1 to UTF-8 first, then add back the line count and reorder.
+tail -n +2 en_US-mozilla.dic > en_US-mozilla-complete.dic
+iconv -f iso-8859-1 -t utf-8 $SUPPORT_DIR/2-mozilla-nosug-munched.txt >> en_US-mozilla-complete.dic
+wc -l < en_US-mozilla-complete.dic | tr -d '[:blank:]' > en_US-mozilla.dic
+LC_ALL=C sort en_US-mozilla-complete.dic >> en_US-mozilla.dic
+rm -f en_US-mozilla-complete.dic
 
 # Sanity check should yield identical results
 #comm -23 $SUPPORT_DIR/1-base.txt $SUPPORT_DIR/3-upstream.txt > $SUPPORT_DIR/3-upstream-remover.txt
@@ -91,12 +102,27 @@ done < "mozilla-exclusions.txt"
 expand ../en-US.aff < mozilla-specific.txt > 5-mozilla-specific.txt
 
 # Update Mozilla removed and added wordlists based on the new upstream
-# dictionary, save them as UTF-8 and not ISO-8951-1
-comm -12 $SUPPORT_DIR/3-upstream.txt $SUPPORT_DIR/2-mozilla-removed.txt > $SUPPORT_DIR/5-mozilla-removed.txt
+# dictionary, save them as UTF-8 and not ISO-8951-1.
+# Ignore words excluded from suggestions for both files.
+comm -12 $SUPPORT_DIR/3-upstream.txt $SUPPORT_DIR/2-mozilla-removed.txt > $SUPPORT_DIR/5-mozilla-removed-tmp.txt
+comm -23 $SUPPORT_DIR/5-mozilla-removed-tmp.txt $SUPPORT_DIR/2-mozilla-nosug.txt > $SUPPORT_DIR/5-mozilla-removed.txt
+rm $SUPPORT_DIR/5-mozilla-removed-tmp.txt
 iconv -f iso-8859-1 -t utf-8 $SUPPORT_DIR/5-mozilla-removed.txt > 5-mozilla-removed.txt
-comm -13 $SUPPORT_DIR/3-upstream.txt $SUPPORT_DIR/2-mozilla-added.txt > $SUPPORT_DIR/5-mozilla-added.txt
+
+comm -13 $SUPPORT_DIR/3-upstream.txt $SUPPORT_DIR/2-mozilla-added.txt > $SUPPORT_DIR/5-mozilla-added-tmp.txt
+comm -23 $SUPPORT_DIR/5-mozilla-added-tmp.txt $SUPPORT_DIR/2-mozilla-nosug.txt > $SUPPORT_DIR/5-mozilla-added.txt
+rm $SUPPORT_DIR/5-mozilla-added-tmp.txt
 iconv -f iso-8859-1 -t utf-8 $SUPPORT_DIR/5-mozilla-added.txt > 5-mozilla-added.txt
 
 # Clean up some files
 rm hunspell-en_US-mozilla.zip
 rm nosug
+
+# Remove backup folders in preparation for the install-new-dict script
+FOLDERS=( "orig-bk" "mozilla-bk")
+for f in ${FOLDERS[@]}; do
+  if [ -d "$SUPPORT_DIR/$f" ]; then
+    echo "Removing backup folder $f"
+    rm -rf "$SUPPORT_DIR/$f"
+  fi
+done
