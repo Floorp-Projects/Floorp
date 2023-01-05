@@ -21,7 +21,11 @@ module.exports = {
     `${projectRoot}/toolkit/content/widgets/`,
     `${projectRoot}/browser/themes/shared/`,
   ],
-  addons: ["@storybook/addon-links", "@storybook/addon-essentials"],
+  addons: [
+    "@storybook/addon-links",
+    "@storybook/addon-essentials",
+    "@storybook/addon-a11y",
+  ],
   framework: "@storybook/web-components",
   webpackFinal: async (config, { configType }) => {
     // `configType` has a value of 'DEVELOPMENT' or 'PRODUCTION'
