@@ -316,6 +316,20 @@ class RemoteSettingsClient extends EventEmitter {
       lastCheckTimePref,
     } = {}
   ) {
+    // Remote Settings cannot be used in child processes (no access to disk,
+    // easily killed, isolated observer notifications etc.).
+    // Since our goal here is to prevent consumers to instantiate while developing their
+    // feature, throwing in Nightly only is enough, and prevents unexpected crashes
+    // in release or beta.
+    if (
+      !AppConstants.RELEASE_OR_BETA &&
+      Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT
+    ) {
+      throw new Error(
+        "Cannot instantiate Remote Settings client in child processes."
+      );
+    }
+
     super(["sync"]); // emitted events
 
     this.collectionName = collectionName;
