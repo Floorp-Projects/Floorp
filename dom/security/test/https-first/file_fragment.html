@@ -5,7 +5,7 @@
 function beforeunload(){
   window.opener.postMessage({
     info: "before-unload",
-    result: window.location.hash,
+    result: window.location.href,
     button: false,
   }, "*");
 }
@@ -26,8 +26,9 @@ window.onload = function (){
 window.onscroll = function(){
   window.opener.postMessage({
     info: "scrolled-to-foo",
-    result: window.location.hash,
+    result: window.location.href,
     button: true,
+    documentURI: document.documentURI,
   }, "*");
  }
 

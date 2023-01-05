@@ -8746,6 +8746,15 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
           if (!docLoadInfo->GetLoadErrorPage()) {
             if (nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
                     currentExposableURI, aLoadState->URI(), docLoadInfo)) {
+              // At this point the requested URI is for sure a fragment
+              // navigation via HTTP and HTTPS-Only mode or HTTPS-First is
+              // enabled. Since we are on an HTTPS site the fragment
+              // navigation should also be an HTTPS.
+              // For that reason we upgrade the URI to HTTPS.
+              nsCOMPtr<nsIURI> upgradedURI;
+              NS_GetSecureUpgradedURI(aLoadState->URI(),
+                                      getter_AddRefs(upgradedURI));
+              aLoadState->SetURI(upgradedURI);
               aState.mSameExceptHashes = true;
             }
           }
