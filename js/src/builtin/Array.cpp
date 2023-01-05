@@ -1065,26 +1065,17 @@ JSString* js::ArrayToSource(JSContext* cx, HandleObject obj) {
 
   if (detector.foundCycle()) {
     if (!sb.append("[]")) {
-      sb.failure();
       return nullptr;
     }
-    auto* result = sb.finishString();
-    if (!result) {
-      sb.failure();
-      return nullptr;
-    }
-    sb.ok();
-    return result;
+    return sb.finishString();
   }
 
   if (!sb.append('[')) {
-    sb.failure();
     return nullptr;
   }
 
   uint64_t length;
   if (!GetLengthPropertyInlined(cx, obj, &length)) {
-    sb.failure();
     return nullptr;
   }
 
@@ -1093,7 +1084,6 @@ JSString* js::ArrayToSource(JSContext* cx, HandleObject obj) {
     bool hole;
     if (!CheckForInterrupt(cx) ||
         !HasAndGetElement(cx, obj, index, &hole, &elt)) {
-      sb.failure();
       return nullptr;
     }
 
@@ -1104,24 +1094,20 @@ JSString* js::ArrayToSource(JSContext* cx, HandleObject obj) {
     } else {
       str = ValueToSource(cx, elt);
       if (!str) {
-        sb.failure();
         return nullptr;
       }
     }
 
     /* Append element to buffer. */
     if (!sb.append(str)) {
-      sb.failure();
       return nullptr;
     }
     if (index + 1 != length) {
       if (!sb.append(", ")) {
-        sb.failure();
         return nullptr;
       }
     } else if (hole) {
       if (!sb.append(',')) {
-        sb.failure();
         return nullptr;
       }
     }
@@ -1129,17 +1115,10 @@ JSString* js::ArrayToSource(JSContext* cx, HandleObject obj) {
 
   /* Finalize the buffer. */
   if (!sb.append(']')) {
-    sb.failure();
     return nullptr;
   }
 
-  auto* result = sb.finishString();
-  if (!result) {
-    sb.failure();
-    return nullptr;
-  }
-  sb.ok();
-  return result;
+  return sb.finishString();
 }
 
 static bool array_toSource(JSContext* cx, unsigned argc, Value* vp) {
@@ -1334,7 +1313,6 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
   // Step 5.
   JSStringBuilder sb(cx);
   if (sepstr->hasTwoByteChars() && !sb.ensureTwoByteChars()) {
-    sb.failure();
     return false;
   }
 
@@ -1344,19 +1322,16 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
   if (seplen > 0) {
     if (length > UINT32_MAX) {
       ReportAllocationOverflow(cx);
-      sb.failure();
       return false;
     }
     CheckedInt<uint32_t> res =
         CheckedInt<uint32_t>(seplen) * (uint32_t(length) - 1);
     if (!res.isValid()) {
       ReportAllocationOverflow(cx);
-      sb.failure();
       return false;
     }
 
     if (!sb.reserve(res.value())) {
-      sb.failure();
       return false;
     }
   }
@@ -1365,7 +1340,6 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
   if (seplen == 0) {
     auto sepOp = [](StringBuffer&) { return true; };
     if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
-      sb.failure();
       return false;
     }
   } else if (seplen == 1) {
@@ -1374,13 +1348,11 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
       Latin1Char l1char = Latin1Char(c);
       auto sepOp = [l1char](StringBuffer& sb) { return sb.append(l1char); };
       if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
-        sb.failure();
         return false;
       }
     } else {
       auto sepOp = [c](StringBuffer& sb) { return sb.append(c); };
       if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
-        sb.failure();
         return false;
       }
     }
@@ -1388,7 +1360,6 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
     Handle<JSLinearString*> sepHandle = sepstr;
     auto sepOp = [sepHandle](StringBuffer& sb) { return sb.append(sepHandle); };
     if (!ArrayJoinKernel(cx, sepOp, obj, length, sb)) {
-      sb.failure();
       return false;
     }
   }
@@ -1396,11 +1367,9 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
   // Step 8.
   JSString* str = sb.finishString();
   if (!str) {
-    sb.failure();
     return false;
   }
 
-  sb.ok();
   args.rval().setString(str);
   return true;
 }

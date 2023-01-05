@@ -759,51 +759,38 @@ JSString* js::ErrorToSource(JSContext* cx, HandleObject obj) {
 
   JSStringBuilder sb(cx);
   if (!sb.append("(new ") || !sb.append(name) || !sb.append("(")) {
-    sb.failure();
     return nullptr;
   }
 
   if (!sb.append(message)) {
-    sb.failure();
     return nullptr;
   }
 
   if (!filename->empty()) {
     if (!sb.append(", ") || !sb.append(filename)) {
-      sb.failure();
       return nullptr;
     }
   }
   if (lineno != 0) {
     /* We have a line, but no filename, add empty string */
     if (filename->empty() && !sb.append(", \"\"")) {
-      sb.failure();
       return nullptr;
     }
 
     JSString* linenumber = ToString<CanGC>(cx, linenoVal);
     if (!linenumber) {
-      sb.failure();
       return nullptr;
     }
     if (!sb.append(", ") || !sb.append(linenumber)) {
-      sb.failure();
       return nullptr;
     }
   }
 
   if (!sb.append("))")) {
-    sb.failure();
     return nullptr;
   }
 
-  auto* result = sb.finishString();
-  if (!result) {
-    sb.failure();
-    return nullptr;
-  }
-  sb.ok();
-  return result;
+  return sb.finishString();
 }
 
 /*

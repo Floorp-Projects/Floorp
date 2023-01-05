@@ -763,14 +763,12 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
   JSStringBuilder out(cx);
   if (addParentheses) {
     if (!out.append('(')) {
-      out.failure();
       return nullptr;
     }
   }
 
   if (haveSource) {
     if (!fun->baseScript()->appendSourceDataForToString(cx, out)) {
-      out.failure();
       return nullptr;
     }
   } else if (!isToSource) {
@@ -800,7 +798,6 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
     };
 
     if (!out.append("function")) {
-      out.failure();
       return nullptr;
     }
 
@@ -812,7 +809,6 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
          fun->kind() == FunctionFlags::Wasm ||
          fun->kind() == FunctionFlags::ClassConstructor)) {
       if (!out.append(' ')) {
-        out.failure();
         return nullptr;
       }
 
@@ -821,32 +817,27 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
       JSAtom* name = fun->explicitName();
       size_t offset = hasGetterOrSetterPrefix(name) ? 4 : 0;
       if (!out.appendSubstring(name, offset, name->length() - offset)) {
-        out.failure();
         return nullptr;
       }
     }
 
     if (!out.append("() {\n    [native code]\n}")) {
-      out.failure();
       return nullptr;
     }
   } else {
     if (fun->isAsync()) {
       if (!out.append("async ")) {
-        out.failure();
         return nullptr;
       }
     }
 
     if (!fun->isArrow()) {
       if (!out.append("function")) {
-        out.failure();
         return nullptr;
       }
 
       if (fun->isGenerator()) {
         if (!out.append('*')) {
-          out.failure();
           return nullptr;
         }
       }
@@ -854,44 +845,33 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
 
     if (fun->explicitName()) {
       if (!out.append(' ')) {
-        out.failure();
         return nullptr;
       }
 
       if (fun->isBoundFunction()) {
         JSLinearString* boundName = JSFunction::getBoundFunctionName(cx, fun);
         if (!boundName || !out.append(boundName)) {
-          out.failure();
           return nullptr;
         }
       } else {
         if (!out.append(fun->explicitName())) {
-          out.failure();
           return nullptr;
         }
       }
     }
 
     if (!out.append("() {\n    [native code]\n}")) {
-      out.failure();
       return nullptr;
     }
   }
 
   if (addParentheses) {
     if (!out.append(')')) {
-      out.failure();
       return nullptr;
     }
   }
 
-  auto* result = out.finishString();
-  if (!result) {
-    out.failure();
-    return nullptr;
-  }
-  out.ok();
-  return result;
+  return out.finishString();
 }
 
 JSString* fun_toStringHelper(JSContext* cx, HandleObject obj, bool isToSource) {
@@ -1203,7 +1183,6 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
 
   JSStringBuilder sb(cx);
   if (name->hasTwoByteChars() && !sb.ensureTwoByteChars()) {
-    sb.failure();
     return nullptr;
   }
 
@@ -1211,12 +1190,10 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
   len *= boundWithSpaceCharsLength;
   len += name->length();
   if (!len.isValid()) {
-    sb.failure();
     ReportAllocationOverflow(cx);
     return nullptr;
   }
   if (!sb.reserve(len.value())) {
-    sb.failure();
     return nullptr;
   }
 
@@ -1225,13 +1202,7 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
   }
   sb.infallibleAppendSubstring(name, 0, name->length());
 
-  auto* result = sb.finishString();
-  if (!result) {
-    sb.failure();
-    return nullptr;
-  }
-  sb.ok();
-  return result;
+  return sb.finishString();
 }
 
 static const js::Value& BoundFunctionEnvironmentSlotValue(const JSFunction* fun,
@@ -1570,23 +1541,19 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   if (isAsync) {
     if (!sb.append("async ")) {
-      sb.failure();
       return false;
     }
   }
   if (!sb.append("function")) {
-    sb.failure();
     return false;
   }
   if (isGenerator) {
     if (!sb.append('*')) {
-      sb.failure();
       return false;
     }
   }
 
   if (!sb.append(" anonymous(")) {
-    sb.failure();
     return false;
   }
 
@@ -1600,20 +1567,17 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
       // Steps 14.a-b, 14.d.i-ii.
       str = ToString<CanGC>(cx, args[i]);
       if (!str) {
-        sb.failure();
         return false;
       }
 
       // Steps 14.b, 14.d.iii.
       if (!sb.append(str)) {
-        sb.failure();
         return false;
       }
 
       if (i < args.length() - 2) {
         // Step 14.d.iii.
         if (!sb.append(',')) {
-          sb.failure();
           return false;
         }
       }
@@ -1621,7 +1585,6 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
   }
 
   if (!sb.append('\n')) {
-    sb.failure();
     return false;
   }
 
@@ -1631,7 +1594,6 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   if (!sb.append(FunctionConstructorMedialSigils.data(),
                  FunctionConstructorMedialSigils.length())) {
-    sb.failure();
     return false;
   }
 
@@ -1639,29 +1601,24 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     // Steps 13, 14.e, 15.
     RootedString body(cx, ToString<CanGC>(cx, args[args.length() - 1]));
     if (!body || !sb.append(body)) {
-      sb.failure();
       return false;
     }
   }
 
   if (!sb.append(FunctionConstructorFinalBrace.data(),
                  FunctionConstructorFinalBrace.length())) {
-    sb.failure();
     return false;
   }
 
   // The parser only accepts two byte strings.
   if (!sb.ensureTwoByteChars()) {
-    sb.failure();
     return false;
   }
 
   RootedString functionText(cx, sb.finishString());
   if (!functionText) {
-    sb.failure();
     return false;
   }
-  sb.ok();
 
   // Block this call if security callbacks forbid it.
   if (!cx->isRuntimeCodeGenEnabled(JS::RuntimeCode::JS, functionText)) {

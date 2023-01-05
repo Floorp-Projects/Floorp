@@ -2516,7 +2516,6 @@ JSString* Instance::createDisplayURL(JSContext* cx) {
 
   JSStringBuilder result(cx);
   if (!result.append("wasm:")) {
-    result.failure();
     return nullptr;
   }
 
@@ -2526,25 +2525,21 @@ JSString* Instance::createDisplayURL(JSContext* cx) {
     JSString* filenamePrefix = EncodeURI(cx, filename, strlen(filename));
     if (!filenamePrefix) {
       if (cx->isThrowingOutOfMemory()) {
-        result.failure();
         return nullptr;
       }
 
-      result.failure();
       MOZ_ASSERT(!cx->isThrowingOverRecursed());
       cx->clearPendingException();
       return nullptr;
     }
 
     if (!result.append(filenamePrefix)) {
-      result.failure();
       return nullptr;
     }
   }
 
   if (metadata().debugEnabled) {
     if (!result.append(":")) {
-      result.failure();
       return nullptr;
     }
 
@@ -2553,24 +2548,16 @@ JSString* Instance::createDisplayURL(JSContext* cx) {
       unsigned char digit1 = byte / 16, digit2 = byte % 16;
       if (!result.append(
               (char)(digit1 < 10 ? digit1 + '0' : digit1 + 'a' - 10))) {
-        result.failure();
         return nullptr;
       }
       if (!result.append(
               (char)(digit2 < 10 ? digit2 + '0' : digit2 + 'a' - 10))) {
-        result.failure();
         return nullptr;
       }
     }
   }
 
-  auto* resultString = result.finishString();
-  if (!resultString) {
-    result.failure();
-    return nullptr;
-  }
-  result.ok();
-  return resultString;
+  return result.finishString();
 }
 
 WasmBreakpointSite* Instance::getOrCreateBreakpointSite(JSContext* cx,

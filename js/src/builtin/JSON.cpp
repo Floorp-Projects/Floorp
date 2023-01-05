@@ -1340,7 +1340,6 @@ bool json_stringify(JSContext* cx, unsigned argc, Value* vp) {
 
   JSStringBuilder sb(cx);
   if (!Stringify(cx, &value, replacer, space, sb, StringifyBehavior::Normal)) {
-    sb.failure();
     return false;
   }
 
@@ -1350,16 +1349,13 @@ bool json_stringify(JSContext* cx, unsigned argc, Value* vp) {
   if (!sb.empty()) {
     JSString* str = sb.finishString();
     if (!str) {
-      sb.failure();
       return false;
     }
     args.rval().setString(str);
   } else {
-    sb.failure();
     args.rval().setUndefined();
   }
 
-  sb.ok();
   return true;
 }
 

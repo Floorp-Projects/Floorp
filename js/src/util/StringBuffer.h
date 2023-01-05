@@ -378,42 +378,11 @@ class StringBuffer {
   char16_t* stealChars();
 };
 
-/*
- * String builder that requires explicitly reporting any pending exception
- * before leaving the scope.
- *
- * Before an instance of this class leaves the scope, you must call one of these
- * 'completion' functions:
- *
- * - failure() if there are exceptions to report
- * - ok() if there are no exceptions to report
- *
- * Additional errors from operating on the StringBuffer after calling these
- * functions won't be reported unless you call one of the 'completion' functions
- * again.
- */
+// Like StringBuffer, but uses StringBufferArena for the characters.
 class JSStringBuilder : public StringBuffer {
-#ifdef DEBUG
-  bool handled_ = false;
-#endif
-
  public:
   explicit JSStringBuilder(JSContext* cx)
       : StringBuffer(cx, js::StringBufferArena) {}
-
-  ~JSStringBuilder() { MOZ_ASSERT(handled_); }
-
-  void failure() {
-#ifdef DEBUG
-    handled_ = true;
-#endif /* DEBUG */
-  }
-
-  void ok() {
-#ifdef DEBUG
-    handled_ = true;
-#endif /* DEBUG */
-  }
 
   /*
    * Creates a string from the characters in this buffer, then (regardless
