@@ -52,21 +52,6 @@ void LogFrameCounters(const std::string& name, const FrameCounters& counters) {
   RTC_LOG(LS_INFO) << "[" << name << "] Dropped     : " << counters.dropped;
 }
 
-absl::string_view ToString(FrameDropPhase phase) {
-  switch (phase) {
-    case FrameDropPhase::kBeforeEncoder:
-      return "kBeforeEncoder";
-    case FrameDropPhase::kByEncoder:
-      return "kByEncoder";
-    case FrameDropPhase::kTransport:
-      return "kTransport";
-    case FrameDropPhase::kAfterDecoder:
-      return "kAfterDecoder";
-    case FrameDropPhase::kLastValue:
-      RTC_CHECK(false) << "FrameDropPhase::kLastValue mustn't be used";
-  }
-}
-
 void LogStreamInternalStats(const std::string& name,
                             const StreamStats& stats,
                             Timestamp start_time) {
