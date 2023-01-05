@@ -40,10 +40,6 @@ const known_scripts = {
     "resource://gre/actors/ContentMetaChild.jsm",
     "resource://gre/modules/Readerable.jsm",
 
-    // Browser front-end, the blocklist is loaded from the child.
-    "resource:///actors/InteractionsChild.sys.mjs",
-    "resource:///modules/InteractionsBlocklist.sys.mjs",
-
     // Telemetry
     "resource://gre/modules/TelemetryControllerBase.sys.mjs", // bug 1470339
     "resource://gre/modules/TelemetryControllerContent.sys.mjs", // bug 1470339
@@ -65,6 +61,14 @@ const known_scripts = {
 if (!gFissionBrowser) {
   known_scripts.modules.add(
     "resource:///modules/sessionstore/ContentSessionStore.sys.mjs"
+  );
+}
+
+if (AppConstants.NIGHTLY_BUILD) {
+  // Browser front-end, the blocklist is loaded from the child.
+  known_scripts.modules.add("resource:///actors/InteractionsChild.sys.mjs");
+  known_scripts.modules.add(
+    "resource:///modules/InteractionsBlocklist.sys.mjs"
   );
 }
 
