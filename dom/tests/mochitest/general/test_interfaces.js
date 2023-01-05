@@ -1550,11 +1550,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "oncontextmenu", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "oncopy", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "oncuechange", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "oncut", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ondblclick", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1651,8 +1647,6 @@ let interfaceNamesInGlobalScope = [
   { name: "onpagehide", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onpageshow", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "onpaste", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onpause", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

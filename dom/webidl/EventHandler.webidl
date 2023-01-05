@@ -39,9 +39,7 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onclick;
            attribute EventHandler onclose;
            attribute EventHandler oncontextmenu;
-           attribute EventHandler oncopy;
            attribute EventHandler oncuechange;
-           attribute EventHandler oncut;
            attribute EventHandler ondblclick;
            attribute EventHandler ondrag;
            attribute EventHandler ondragend;
@@ -73,7 +71,6 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onmouseover;
            attribute EventHandler onmouseup;
            attribute EventHandler onwheel;
-           attribute EventHandler onpaste;
            attribute EventHandler onpause;
            attribute EventHandler onplay;
            attribute EventHandler onplaying;
@@ -166,6 +163,12 @@ interface mixin WindowEventHandlers {
 partial interface mixin WindowEventHandlers {
   attribute EventHandler ongamepadconnected;
   attribute EventHandler ongamepaddisconnected;
+};
+
+interface mixin DocumentAndElementEventHandlers {
+  attribute EventHandler oncopy;
+  attribute EventHandler oncut;
+  attribute EventHandler onpaste;
 };
 
 // The spec has |attribute OnErrorEventHandler onerror;| on
