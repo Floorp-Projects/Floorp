@@ -431,9 +431,9 @@ static void AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
 // (e.g. when the launcher process is disabled), so the process should not
 // enable pre-spawn CIG.
 static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
-  // We enable pre-spawn CIG only in early Beta or earlier for now
+  // We enable pre-spawn CIG only in Nightly for now
   // because it caused a compat issue (bug 1682304 and 1704373).
-#if defined(EARLY_BETA_OR_EARLIER)
+#if defined(NIGHTLY)
   // The shared section contains a list of dependent modules as a
   // null-delimited string.  We convert it to a string vector and
   // cache it to avoid converting the same data every time.
