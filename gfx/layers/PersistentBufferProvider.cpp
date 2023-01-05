@@ -656,10 +656,11 @@ void PersistentBufferProviderShared::Destroy() {
 bool PersistentBufferProviderShared::IsAccelerated() const {
 #ifdef XP_WIN
   // Detect if we're using D2D canvas.
-  if (mWillReadFrequently || mTextures.empty()) {
+  if (mWillReadFrequently || mTextures.empty() || !mTextures[0]) {
     return false;
   }
-  if (mTextures[0]->GetInternalData()->AsD3D11TextureData()) {
+  auto* data = mTextures[0]->GetInternalData();
+  if (data && data->AsD3D11TextureData()) {
     return true;
   }
 #endif
