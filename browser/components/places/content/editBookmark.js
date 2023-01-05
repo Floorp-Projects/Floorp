@@ -33,7 +33,7 @@ var gEditItemOverlay = {
   // to either confirm or discard them.
   _bookmarkState: null,
   _allTags: null,
-
+  _tagsUpdatePromise: null,
   _paneInfo: null,
   _setPaneInfo(aInitInfo) {
     if (!aInitInfo) {
@@ -228,10 +228,13 @@ var gEditItemOverlay = {
       }
     }
   },
+
   async _initAllTags() {
     this._allTags = new Map();
-    let fetchedTags = await PlacesUtils.bookmarks.fetchTags();
-    fetchedTags.map(tag => this._allTags.set(tag.name.toLowerCase(), tag.name));
+    const fetchedTags = await PlacesUtils.bookmarks.fetchTags();
+    for (const tag of fetchedTags) {
+      this._allTags?.set(tag.name.toLowerCase(), tag.name);
+    }
   },
 
   /**
@@ -374,9 +377,6 @@ var gEditItemOverlay = {
         [uris.length]
       );
     }
-    if (this._paneInfo.isBookmark) {
-      this._initAllTags().catch(Cu.reportError);
-    }
 
     let focusElement = () => {
       // The focusedElement possible values are:
@@ -407,7 +407,16 @@ var gEditItemOverlay = {
     } else {
       focusElement();
     }
+
+    if (this._tagsUpdatePromise) {
+      await this._tagsUpdatePromise;
+    }
+
     this._bookmarkState = this.makeNewStateObject();
+    if (isBookmark || bulkTagging) {
+      await this._initAllTags();
+      await this._rebuildTagsSelectorList();
+    }
   },
 
   /**
@@ -596,8 +605,15 @@ var gEditItemOverlay = {
   },
 
   makeNewStateObject() {
-    if (this._paneInfo.isItem || this._paneInfo.isTag) {
-      const options = { info: this._paneInfo };
+    if (
+      this._paneInfo.isItem ||
+      this._paneInfo.isTag ||
+      this._paneInfo.bulkTagging
+    ) {
+      const isLibraryWindow =
+        document.documentElement.getAttribute("windowtype") ===
+        "Places:Organizer";
+      const options = { autosave: isLibraryWindow, info: this._paneInfo };
 
       if (this._paneInfo.isBookmark) {
         options.tags = this._element("tagsField").value;
@@ -608,6 +624,10 @@ var gEditItemOverlay = {
       if (typeof dialogInfo === "object" && dialogInfo.type === "folder") {
         options.isFolder = true;
         options.children = dialogInfo.URIList;
+      }
+
+      if (this._paneInfo.bulkTagging) {
+        options.tags = this._element("tagsField").value;
       }
 
       return new PlacesUIUtils.BookmarkState(options);
@@ -622,9 +642,9 @@ var gEditItemOverlay = {
       this._paneInfo &&
       (this._paneInfo.isURI || this._paneInfo.bulkTagging)
     ) {
-      this._updateTags().then(anyChanges => {
+      this._updateTags().then(() => {
         // Check _paneInfo here as we might be closing the dialog.
-        if (anyChanges && this._paneInfo) {
+        if (this._paneInfo) {
           this._mayUpdateFirstEditField("tagsField");
         }
       }, Cu.reportError);
@@ -632,68 +652,21 @@ var gEditItemOverlay = {
   },
 
   /**
-   * Works out the necessary changes for a given array of currently-set tags and
-   * the tags-input-field value.
-   *
-   * @param {string[]} aCurrentTags
-   *   The tags to compare.
-   * @returns {object}
-   *   Returns which tags should be removed and which should be added in
-   *   the form of an object: `{ removedTags: [...], newTags: [...] }`.
+   * Handle tag list updates from the input field or selector box.
    */
-  _getTagsChanges(aCurrentTags) {
-    let inputTags = this._getTagsArrayFromTagsInputField();
-
-    // Optimize the trivial cases (which are actually the most common).
-    if (!inputTags.length && !aCurrentTags.length) {
-      return (inputTags = []);
-    }
-    if (!inputTags.length) {
-      return (inputTags = aCurrentTags);
-    }
-    return inputTags;
-  },
-
-  // Adds and removes tags for one or more uris.
-  _setTagsFromTagsInputField(aCurrentTags, aURIs) {
-    let inputTags = this._getTagsChanges(aCurrentTags);
-    if (!inputTags) {
-      return false;
-    }
-    inputTags.map(tag => this._allTags.set(tag.toLowerCase(), tag));
-    let setTags = () => this._bookmarkState._tagsChanged(inputTags);
-    // Only in the library info-pane it's safe (and necessary) to batch these.
-    // TODO bug 1093030: cleanup this mess when the bookmarksProperties dialog
-    // and star UI code don't "run a batch in the background".
-
-    setTags();
-    return true;
-  },
-
   async _updateTags() {
-    let uris = this._paneInfo.bulkTagging
-      ? this._paneInfo.uris
-      : [this._paneInfo.uri];
-    let currentTags = this._paneInfo.bulkTagging
-      ? await this._getCommonTags()
-      : this._bookmarkState._originalState.tags;
-    let anyChanges = this._setTagsFromTagsInputField(currentTags, uris);
-    if (!anyChanges) {
-      return false;
-    }
+    this._tagsUpdatePromise = (async () => {
+      const inputTags = this._getTagsArrayFromTagsInputField();
+      await this._bookmarkState._tagsChanged(inputTags);
 
-    // The panel could have been closed in the meanwhile.
-    if (!this._paneInfo) {
-      return false;
-    }
-    await this._rebuildTagsSelectorList();
+      // Ensure the tagsField is in sync, clean it up from empty tags
+      this._initTextField(this._tagsField, inputTags.sort().join(", "), false);
 
-    // Ensure the tagsField is in sync, clean it up from empty tags
-    currentTags = this._paneInfo.bulkTagging
-      ? this._getCommonTags()
-      : this._bookmarkState._newState.tags;
-    this._initTextField(this._tagsField, currentTags.join(", "), false);
-    return true;
+      await this._initAllTags();
+      await this._rebuildTagsSelectorList();
+    })().catch(console.error);
+    await this._tagsUpdatePromise;
+    this._tagsUpdatePromise = null;
   },
 
   /**
@@ -962,7 +935,7 @@ var gEditItemOverlay = {
     let tagsInField = this._getTagsArrayFromTagsInputField();
 
     let fragment = document.createDocumentFragment();
-    let sortedTags = [...this._allTags.values()].sort();
+    let sortedTags = this._allTags ? [...this._allTags.values()].sort() : [];
 
     for (let i = 0; i < sortedTags.length; i++) {
       let tag = sortedTags[i];

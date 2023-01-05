@@ -278,6 +278,10 @@ class BookmarkState {
    *   If the item is a folder.
    * @param {Array.<nsIURI>} [options.children]
    *   The list of child URIs to bookmark within the folder.
+   * @param {boolean} [options.autosave]
+   *   If changes to bookmark fields should be saved immediately after calling
+   *   its respective "changed" method, rather than waiting for save() to be
+   *   called.
    */
   constructor({
     info,
@@ -285,12 +289,15 @@ class BookmarkState {
     keyword = "",
     isFolder = false,
     children = [],
+    autosave = false,
   }) {
     this._guid = info.itemGuid;
     this._postData = info.postData;
     this._isTagContainer = info.isTag;
+    this._bulkTaggingUrls = info.uris?.map(uri => uri.spec);
     this._isFolder = isFolder;
     this._children = children;
+    this._autosave = autosave;
 
     // Original Bookmark
     this._originalState = {
@@ -314,8 +321,9 @@ class BookmarkState {
    * @param {string} title
    *   The title of the bookmark
    */
-  _titleChanged(title) {
+  async _titleChanged(title) {
     this._newState.title = title;
+    await this._maybeSave();
   }
 
   /**
@@ -324,8 +332,9 @@ class BookmarkState {
    * @param {string} location
    *   The location of the bookmark
    */
-  _locationChanged(location) {
+  async _locationChanged(location) {
     this._newState.uri = location;
+    await this._maybeSave();
   }
 
   /**
@@ -334,8 +343,9 @@ class BookmarkState {
    * @param {string} tags
    *    Comma separated list of tags
    */
-  _tagsChanged(tags) {
+  async _tagsChanged(tags) {
     this._newState.tags = tags;
+    await this._maybeSave();
   }
 
   /**
@@ -344,8 +354,9 @@ class BookmarkState {
    * @param {string} keyword
    *   The keyword of the bookmark
    */
-  _keywordChanged(keyword) {
+  async _keywordChanged(keyword) {
     this._newState.keyword = keyword;
+    await this._maybeSave();
   }
 
   /**
@@ -354,8 +365,18 @@ class BookmarkState {
    * @param {string} parentGuid
    *   The parentGuid of the bookmark
    */
-  _parentGuidChanged(parentGuid) {
+  async _parentGuidChanged(parentGuid) {
     this._newState.parentGuid = parentGuid;
+    await this._maybeSave();
+  }
+
+  /**
+   * Save changes if autosave is enabled.
+   */
+  async _maybeSave() {
+    if (this._autosave) {
+      await this.save();
+    }
   }
 
   /**
@@ -446,22 +467,16 @@ class BookmarkState {
           );
           break;
         case "tags":
-          let newTags = [];
-          let removedTags = [];
-          value.filter(element => {
-            if (!this._originalState.tags.includes(element)) {
-              newTags.push(element);
-            }
-          });
-          this._originalState.tags.filter(el => {
-            if (!value.includes(el)) {
-              removedTags.push(el);
-            }
-          });
+          const newTags = value.filter(
+            tag => !this._originalState.tags.includes(tag)
+          );
+          const removedTags = this._originalState.tags.filter(
+            tag => !value.includes(tag)
+          );
           if (newTags.length) {
             transactions.push(
               lazy.PlacesTransactions.Tag({
-                urls: [url],
+                urls: this._bulkTaggingUrls || [url],
                 tags: newTags,
               })
             );
@@ -469,7 +484,7 @@ class BookmarkState {
           if (removedTags.length) {
             transactions.push(
               lazy.PlacesTransactions.Untag({
-                urls: [url],
+                urls: this._bulkTaggingUrls || [url],
                 tags: removedTags,
               })
             );
@@ -499,6 +514,8 @@ class BookmarkState {
       await lazy.PlacesTransactions.batch(transactions);
     }
 
+    this._originalState = { ...this._originalState, ...this._newState };
+    this._newState = {};
     return this._guid;
   }
 }
