@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-button-group.mjs";
 import { MigrationWizardConstants } from "chrome://browser/content/migration/migration-wizard-constants.mjs";
 
 /**
@@ -40,10 +42,10 @@ export class MigrationWizard extends HTMLElement {
                 <input type="checkbox" id="form-autofill"/><span data-l10n-id="migration-form-autofill-option-label"></span>
               </label>
             </fieldset>
-            <div class="buttons">
+            <moz-button-group class="buttons">
               <button data-l10n-id="migration-cancel-button-label"></button>
               <button class="primary" data-l10n-id="migration-import-button-label"></button>
-            </div>
+            </moz-button-group>
           </div>
 
           <div name="page-progress">
