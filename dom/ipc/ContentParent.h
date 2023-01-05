@@ -338,8 +338,6 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvCreateGMPService();
 
-  mozilla::ipc::IPCResult RecvUngrabPointer(const uint32_t& aTime);
-
   mozilla::ipc::IPCResult RecvRemovePermission(
       nsIPrincipal* aPrincipal, const nsACString& aPermissionType,
       nsresult* aRv);
