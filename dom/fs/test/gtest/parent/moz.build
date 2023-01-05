@@ -9,6 +9,7 @@ TEST_DIRS += ["datamodel"]
 UNIFIED_SOURCES = [
     "QuotaManagerDependencyFixture.cpp",
     "TestFileSystemHashSource.cpp",
+    "TestFileSystemQuotaClient.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
