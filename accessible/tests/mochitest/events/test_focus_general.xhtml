@@ -53,9 +53,15 @@
       gQueue.push(new synthEnterKey("menubutton", new nofocusChecker()));
       // select second menu item ("item 2"), focus on menu item
       gQueue.push(new synthUpKey("menubutton", new focusChecker("mb_item2")));
+      // close the popup
+      gQueue.push(new synthEscapeKey("menubutton", new focusChecker("menubutton")));
 
-      // clicking on button having associated popup doesn't change a focus
-      gQueue.push(new synthClick("popupbutton", new nofocusChecker()));
+      // clicking on button having associated popup doesn't change focus
+      gQueue.push(new synthClick("popupbutton", [
+        new nofocusChecker(),
+        new invokerChecker("popupshown", "backpopup")
+      ]));
+
       // select first menu item ("item 1"), focus on menu item
       gQueue.push(new synthDownKey("popupbutton", new focusChecker("bp_item1")));
       // choose select menu item, focus gets back to menubutton
