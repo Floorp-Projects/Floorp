@@ -113,6 +113,10 @@ features:
         type: ControlMessageBehavior
         description: What should be displayed when a control message is selected.
         default: show-next-message
+      notification-config:
+        description: Configuration of the notification worker for all notification messages.
+        type: NotificationConfig
+        default: {}
     defaults:
       - value:
           triggers:
@@ -181,6 +185,9 @@ features:
             EXPIRES_QUICKLY:
               priority: 100
               max-display-count: 1
+          notification-config:
+            polling-interval: 180 # 3 minutes
+
   mr2022:
     description: Features for MR 2022.
     variables:
@@ -330,6 +337,15 @@ types:
             How many sessions will this message be shown to the user
             before it is expired.
           default: 5
+    NotificationConfig:
+      description: Attributes controlling the global configuration of notification messages.
+      fields:
+        polling-interval:
+          type: Int
+          description: >
+            How often, in seconds, the notification message worker will wake up and check for new
+            messages.
+          default: 3600
 
   enums:
     ControlMessageBehavior:

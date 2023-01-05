@@ -37,6 +37,9 @@ messaging:
     messages:
       type: json
       description: A growable collection of messages
+    notification-config:
+      type: json
+      description: Configuration of the notification worker for all notification messages.
     on-control:
       type: string
       description: What should be displayed when a control message is selected.
