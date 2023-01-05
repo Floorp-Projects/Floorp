@@ -68,6 +68,8 @@ struct FrameStats {
   absl::optional<StreamCodecInfo> used_encoder = absl::nullopt;
   // Can be not set if frame was dropped in the network.
   absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
+
+  bool decoder_failed = false;
 };
 
 // Describes why comparison was done in overloaded mode (without calculating

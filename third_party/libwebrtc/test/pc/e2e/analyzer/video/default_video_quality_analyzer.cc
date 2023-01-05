@@ -43,13 +43,22 @@ constexpr absl::string_view kSkipRenderedFrameReasonDropped =
     "considered dropped";
 
 void LogFrameCounters(const std::string& name, const FrameCounters& counters) {
-  RTC_LOG(LS_INFO) << "[" << name << "] Captured    : " << counters.captured;
-  RTC_LOG(LS_INFO) << "[" << name << "] Pre encoded : " << counters.pre_encoded;
-  RTC_LOG(LS_INFO) << "[" << name << "] Encoded     : " << counters.encoded;
-  RTC_LOG(LS_INFO) << "[" << name << "] Received    : " << counters.received;
-  RTC_LOG(LS_INFO) << "[" << name << "] Decoded     : " << counters.decoded;
-  RTC_LOG(LS_INFO) << "[" << name << "] Rendered    : " << counters.rendered;
-  RTC_LOG(LS_INFO) << "[" << name << "] Dropped     : " << counters.dropped;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Captured         : " << counters.captured;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Pre encoded      : " << counters.pre_encoded;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Encoded          : " << counters.encoded;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Received         : " << counters.received;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Decoded          : " << counters.decoded;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Rendered         : " << counters.rendered;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Dropped          : " << counters.dropped;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Failed to decode : " << counters.failed_to_decode;
 }
 
 void LogStreamInternalStats(const std::string& name,
@@ -392,7 +401,7 @@ void DefaultVideoQualityAnalyzer::OnFrameDecoded(
       it->second.HasDecodeEndTime(peer_index)) {
     // It means this frame was decoded before, so we can skip it. It may happen
     // when we have multiple simulcast streams in one track and received
-    // the same picture from two different streams because SFU can't reliably
+    // the same frame from two different streams because SFU can't reliably
     // correlate two simulcast streams and started relaying the second stream
     // from the same frame it has relayed right before for the first stream.
     return;
@@ -529,9 +538,45 @@ void DefaultVideoQualityAnalyzer::OnEncoderError(
 
 void DefaultVideoQualityAnalyzer::OnDecoderError(absl::string_view peer_name,
                                                  uint16_t frame_id,
-                                                 int32_t error_code) {
+                                                 int32_t error_code,
+                                                 const DecoderStats& stats) {
   RTC_LOG(LS_ERROR) << "Decoder error for frame_id=" << frame_id
                     << ", code=" << error_code;
+
+  MutexLock lock(&mutex_);
+  RTC_CHECK_EQ(state_, State::kActive)
+      << "DefaultVideoQualityAnalyzer has to be started before use";
+
+  size_t peer_index = peers_->index(peer_name);
+
+  if (frame_id == VideoFrame::kNotSetId) {
+    frame_counters_.failed_to_decode++;
+    unknown_sender_frame_counters_[std::string(peer_name)].failed_to_decode++;
+    return;
+  }
+
+  auto it = captured_frames_in_flight_.find(frame_id);
+  if (it == captured_frames_in_flight_.end() ||
+      it->second.HasDecodeEndTime(peer_index)) {
+    // It means this frame was decoded before, so we can skip it. It may happen
+    // when we have multiple simulcast streams in one track and received
+    // the same frame from two different streams because SFU can't reliably
+    // correlate two simulcast streams and started relaying the second stream
+    // from the same frame it has relayed right before for the first stream.
+    return;
+  }
+  frame_counters_.failed_to_decode++;
+  InternalStatsKey key(it->second.stream(),
+                       stream_to_sender_.at(it->second.stream()), peer_index);
+  stream_frame_counters_.at(key).failed_to_decode++;
+  Timestamp now = Now();
+  StreamCodecInfo used_decoder;
+  used_decoder.codec_name = stats.decoder_name;
+  used_decoder.first_frame_id = frame_id;
+  used_decoder.last_frame_id = frame_id;
+  used_decoder.switched_on_at = now;
+  used_decoder.switched_from_at = now;
+  it->second.OnDecoderError(peer_index, used_decoder);
 }
 
 void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(

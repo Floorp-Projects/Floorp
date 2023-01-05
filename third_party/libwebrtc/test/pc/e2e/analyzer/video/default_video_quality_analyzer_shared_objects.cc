@@ -43,6 +43,13 @@ rtc::StringBuilder& operator<<(rtc::StringBuilder& sb,
   return sb << state.ToString();
 }
 
+bool operator==(const StreamCodecInfo& a, const StreamCodecInfo& b) {
+  return a.codec_name == b.codec_name && a.first_frame_id == b.first_frame_id &&
+         a.last_frame_id == b.last_frame_id &&
+         a.switched_on_at == b.switched_on_at &&
+         a.switched_from_at == b.switched_from_at;
+}
+
 std::string ToString(FrameDropPhase phase) {
   switch (phase) {
     case FrameDropPhase::kBeforeEncoder:
@@ -51,6 +58,8 @@ std::string ToString(FrameDropPhase phase) {
       return "kByEncoder";
     case FrameDropPhase::kTransport:
       return "kTransport";
+    case FrameDropPhase::kByDecoder:
+      return "kByDecoder";
     case FrameDropPhase::kAfterDecoder:
       return "kAfterDecoder";
     case FrameDropPhase::kLastValue:
