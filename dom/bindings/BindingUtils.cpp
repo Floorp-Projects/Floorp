@@ -819,14 +819,6 @@ static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
   return DefineConstructor(cx, global, nameKey, constructor);
 }
 
-static bool DefineToStringTag(JSContext* cx, JS::Handle<JSObject*> obj,
-                              JS::Handle<JSString*> class_name) {
-  JS::Rooted<jsid> toStringTagId(
-      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
-  return JS_DefinePropertyById(cx, obj, toStringTagId, class_name,
-                               JSPROP_READONLY);
-}
-
 // name must be an atom (or JS::PropertyKey::NonIntAtom will assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
@@ -913,10 +905,6 @@ static JSObject* CreateInterfaceObject(
     }
   }
 
-  if (isNamespace && !DefineToStringTag(cx, constructor, name)) {
-    return nullptr;
-  }
-
   if (proto && !JS_LinkConstructorAndPrototype(cx, constructor, proto)) {
     return nullptr;
   }
@@ -998,7 +986,10 @@ static JSObject* CreateInterfacePrototypeObject(
     }
   }
 
-  if (!DefineToStringTag(cx, ourProto, name)) {
+  JS::Rooted<jsid> toStringTagId(
+      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
+  if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, name,
+                             JSPROP_READONLY)) {
     return nullptr;
   }
 
@@ -1632,7 +1623,7 @@ static bool XrayResolveProperty(
   switch (propertyInfo.type) {
     case eStaticMethod:
     case eStaticAttribute:
-      if (type != eInterface && type != eNamespace) {
+      if (type != eInterface) {
         return true;
       }
       break;
@@ -1814,18 +1805,6 @@ static bool ResolvePrototypeOrConstructor(
         return true;
       }
     }
-  } else if (type == eNamespace) {
-    if (id.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
-      JS::Rooted<JSString*> nameStr(
-          cx, JS_AtomizeString(cx, JS::GetClass(obj)->name));
-      if (!nameStr) {
-        return false;
-      }
-
-      desc.set(Some(JS::PropertyDescriptor::Data(
-          JS::StringValue(nameStr), {JS::PropertyAttribute::Configurable})));
-      return true;
-    }
   } else {
     MOZ_ASSERT(IsInterfacePrototype(type));
 
@@ -1966,7 +1945,7 @@ bool XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
     }
   } else {
     MOZ_ASSERT(type != eGlobalInterfacePrototype);
-    if (type == eInterface || type == eNamespace) {
+    if (type == eInterface) {
       ADD_KEYS_IF_DEFINED(StaticMethod);
       ADD_KEYS_IF_DEFINED(StaticAttribute);
     } else {

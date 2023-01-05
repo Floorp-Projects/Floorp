@@ -318,15 +318,6 @@ function test() {
   checkXrayProperty(win.Image, Symbol.hasInstance,
                     [undefined, win.Function.prototype[Symbol.hasInstance]]);
 
-  // toString/@@toStringTag
-  let imageConstructor = win.Image;
-  is(win.Function.prototype.toString.apply(imageConstructor),
-     Function.prototype.toString.apply(Image),
-     "Applying Function.prototype.toString through an Xray should give the same result as applying it directly");
-  isDeeply(Object.getOwnPropertyDescriptor(win.CSS, Symbol.toStringTag),
-           Object.getOwnPropertyDescriptor(CSS, Symbol.toStringTag),
-           "Getting @@toStringTag on a namespace object through an Xray should give the same result as getting it directly");
-
   SimpleTest.finish();
 }
 

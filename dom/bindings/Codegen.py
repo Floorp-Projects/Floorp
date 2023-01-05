@@ -973,7 +973,7 @@ class CGInterfaceObjectJSClass(CGThing):
         if self.descriptor.interface.isNamespace():
             classString = self.descriptor.interface.getExtendedAttribute("ClassString")
             if classString is None:
-                classString = self.descriptor.interface.identifier.name
+                classString = "Object"
             else:
                 classString = classString[0]
             funToString = "nullptr"
@@ -999,7 +999,7 @@ class CGInterfaceObjectJSClass(CGThing):
                 JS_NULL_CLASS_EXT,
                 ${objectOps}
               },
-              ${type},
+              eInterface,
               ${needsHasInstance},
               ${prototypeID},
               ${depth},
@@ -1013,9 +1013,6 @@ class CGInterfaceObjectJSClass(CGThing):
             classOpsPtr=classOpsPtr,
             hooks=NativePropertyHooks(self.descriptor),
             objectOps=objectOps,
-            type="eNamespace"
-            if self.descriptor.interface.isNamespace()
-            else "eInterface",
             needsHasInstance=toStringBool(needsHasInstance),
             prototypeID=prototypeID,
             depth=depth,
