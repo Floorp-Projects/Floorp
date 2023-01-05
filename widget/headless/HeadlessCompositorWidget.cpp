@@ -13,9 +13,10 @@ namespace widget {
 HeadlessCompositorWidget::HeadlessCompositorWidget(
     const HeadlessCompositorWidgetInitData& aInitData,
     const layers::CompositorOptions& aOptions, HeadlessWidget* aWindow)
-    : CompositorWidget(aOptions), mWidget(aWindow) {
-  mClientSize = aInitData.InitialClientSize();
-}
+    : CompositorWidget(aOptions),
+      mWidget(aWindow),
+      mClientSize(LayoutDeviceIntSize(aInitData.InitialClientSize()),
+                  "HeadlessCompositorWidget::mClientSize") {}
 
 void HeadlessCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
   if (RefPtr<CompositorVsyncDispatcher> cvd =
@@ -28,11 +29,13 @@ nsIWidget* HeadlessCompositorWidget::RealWidget() { return mWidget; }
 
 void HeadlessCompositorWidget::NotifyClientSizeChanged(
     const LayoutDeviceIntSize& aClientSize) {
-  mClientSize = aClientSize;
+  auto size = mClientSize.Lock();
+  *size = aClientSize;
 }
 
 LayoutDeviceIntSize HeadlessCompositorWidget::GetClientSize() {
-  return mClientSize;
+  auto size = mClientSize.Lock();
+  return *size;
 }
 
 uintptr_t HeadlessCompositorWidget::GetWidgetKey() {

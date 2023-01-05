@@ -44,7 +44,8 @@ class HeadlessCompositorWidget final : public CompositorWidget,
  private:
   HeadlessWidget* mWidget;
 
-  LayoutDeviceIntSize mClientSize;
+  // See GtkCompositorWidget for the justification for this mutex.
+  DataMutex<LayoutDeviceIntSize> mClientSize;
 };
 
 }  // namespace widget
