@@ -25,10 +25,12 @@ import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
 typealias AppStoreMiddlewareContext = MiddlewareContext<AppState, AppAction>
 
 class MessagingMiddleware(
-    messagingStorage: NimbusMessagingStorage,
-    coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    private val messagingStorage: NimbusMessagingStorage,
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     clock: () -> Long = { System.currentTimeMillis() },
-) : NimbusMessagingController(messagingStorage, coroutineScope, clock), Middleware<AppState, AppAction> {
+) : Middleware<AppState, AppAction> {
+
+    private val controller = NimbusMessagingController(messagingStorage, coroutineScope, clock)
 
     override fun invoke(
         context: AppStoreMiddlewareContext,
@@ -72,7 +74,7 @@ class MessagingMiddleware(
         oldMessage: Message,
         context: AppStoreMiddlewareContext,
     ) {
-        val newMessage = onMessageDisplayed(oldMessage)
+        val newMessage = controller.onMessageDisplayed(oldMessage)
         val newMessages = if (!newMessage.isExpired) {
             updateMessage(context, oldMessage, newMessage)
         } else {
@@ -90,7 +92,7 @@ class MessagingMiddleware(
         val newMessages = removeMessage(context, message)
         context.dispatch(UpdateMessages(newMessages))
         consumeMessageToShowIfNeeded(context, message)
-        onMessageDismissed(message)
+        controller.onMessageDismissed(message)
     }
 
     @VisibleForTesting
@@ -99,7 +101,7 @@ class MessagingMiddleware(
         context: AppStoreMiddlewareContext,
     ) {
         // Update Nimbus storage.
-        onMessageClicked(message)
+        controller.onMessageClicked(message)
         // Update app state.
         val newMessages = removeMessage(context, message)
         context.dispatch(UpdateMessages(newMessages))
