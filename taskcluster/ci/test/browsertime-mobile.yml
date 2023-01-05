@@ -331,9 +331,6 @@ browsertime-unity-webgl-mobile:
     mozharness:
         extra-options:
             - --test=unity-webgl
-    fetches:
-        fetch:
-            - unity-webgl
 
 browsertime-power:
     description: Browsertime Power Usage Tests on Android

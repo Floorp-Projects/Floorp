@@ -9,12 +9,10 @@
 import json
 import logging
 import os
-import shutil
 import socket
 import subprocess
 import sys
 
-import mozfile
 from mach.decorators import Command
 from mach.util import get_state_dir
 from mozbuild.base import BinaryNotFoundException
@@ -22,9 +20,6 @@ from mozbuild.base import MachCommandConditions as Conditions
 from mozbuild.base import MozbuildObject
 
 HERE = os.path.dirname(os.path.realpath(__file__))
-
-BENCHMARK_REPOSITORY = "https://github.com/mozilla/perf-automation"
-BENCHMARK_REVISION = "61332db584026b73e37066d717a162825408c36b"
 
 ANDROID_BROWSERS = ["geckoview", "refbrow", "fenix", "chrome-m"]
 
@@ -45,7 +40,6 @@ class RaptorRunner(MozbuildObject):
                 "Please downgrade your Python version as Raptor does not yet support Python 3.10"
             )
         self.init_variables(raptor_args, kwargs)
-        self.setup_benchmarks()
         self.make_config()
         self.write_config()
         self.make_args()
@@ -87,63 +81,6 @@ class RaptorRunner(MozbuildObject):
             self.topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
         )
         self.virtualenv_path = os.path.join(self._topobjdir, "testing", "raptor-venv")
-
-    def setup_benchmarks(self):
-        """Make sure benchmarks are linked to the proper location in the objdir.
-
-        Benchmarks can either live in-tree or in an external repository. In the latter
-        case also clone/update the repository if necessary.
-        """
-        external_repo_path = os.path.join(get_state_dir(), "performance-tests")
-
-        print("Updating external benchmarks from {}".format(BENCHMARK_REPOSITORY))
-
-        try:
-            subprocess.check_output(["git", "--version"])
-        except Exception as ex:
-            print(
-                "Git is not available! Please install git and "
-                "ensure it is included in the terminal path"
-            )
-            raise ex
-
-        if not os.path.isdir(external_repo_path):
-            print("Cloning the benchmarks to {}".format(external_repo_path))
-            subprocess.check_call(
-                ["git", "clone", BENCHMARK_REPOSITORY, external_repo_path]
-            )
-        else:
-            subprocess.check_call(["git", "checkout", "master"], cwd=external_repo_path)
-            subprocess.check_call(["git", "pull"], cwd=external_repo_path)
-
-        subprocess.check_call(
-            ["git", "checkout", BENCHMARK_REVISION], cwd=external_repo_path
-        )
-
-        # Link or copy benchmarks to the objdir
-        benchmark_paths = (
-            os.path.join(external_repo_path, "benchmarks"),
-            os.path.join(self.topsrcdir, "third_party", "webkit", "PerformanceTests"),
-        )
-
-        benchmark_dest = os.path.join(self.topobjdir, "testing", "raptor", "benchmarks")
-        if not os.path.isdir(benchmark_dest):
-            os.makedirs(benchmark_dest)
-
-        for benchmark_path in benchmark_paths:
-            for name in os.listdir(benchmark_path):
-                path = os.path.join(benchmark_path, name)
-                dest = os.path.join(benchmark_dest, name)
-                if not os.path.isdir(path) or name.startswith("."):
-                    continue
-
-                if hasattr(os, "symlink") and os.name != "nt":
-                    if not os.path.exists(dest):
-                        os.symlink(path, dest)
-                else:
-                    # Clobber the benchmark in case a recent update removed any files.
-                    mozfile.remove(dest)
-                    shutil.copytree(path, dest)
 
     def make_config(self):
         default_actions = [
