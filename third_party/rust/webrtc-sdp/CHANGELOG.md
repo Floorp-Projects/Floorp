@@ -1,4 +1,6 @@
 # Changelog
+## [0.3.10] - 2023-01-05
+- Permit inconsistent simulcast directions
 ## [0.3.9] - 2022-01-12
 - Add support for RFC8858 rtcp-mux-only
 - Correct seperation of tokens in FMTP parameters

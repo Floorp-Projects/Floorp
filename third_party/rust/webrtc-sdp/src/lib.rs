@@ -543,7 +543,7 @@ fn parse_timing(value: &str) -> Result<SdpType, SdpParserInternalError> {
     Ok(SdpType::Timing(t))
 }
 
-fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserError> {
+pub fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserError> {
     if line.find('=') == None {
         return Err(SdpParserError::Line {
             error: SdpParserInternalError::Generic("missing = character in line".to_string()),
@@ -697,29 +697,6 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
     }
 
     for msection in &session.media {
-        if msection.get_attribute(SdpAttributeType::Sendonly).is_some() {
-            if let Some(&SdpAttribute::Simulcast(ref x)) =
-                msection.get_attribute(SdpAttributeType::Simulcast)
-            {
-                if !x.receive.is_empty() {
-                    return Err(make_seq_error(
-                        "Simulcast can't define receive parameters for sendonly",
-                    ));
-                }
-            }
-        }
-        if msection.get_attribute(SdpAttributeType::Recvonly).is_some() {
-            if let Some(&SdpAttribute::Simulcast(ref x)) =
-                msection.get_attribute(SdpAttributeType::Simulcast)
-            {
-                if !x.send.is_empty() {
-                    return Err(make_seq_error(
-                        "Simulcast can't define send parameters for recvonly",
-                    ));
-                }
-            }
-        }
-
         if msection
             .get_attribute(SdpAttributeType::RtcpMuxOnly)
             .is_some()

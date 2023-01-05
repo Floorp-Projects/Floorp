@@ -11,14 +11,25 @@
 
 [package]
 name = "webrtc-sdp"
-version = "0.3.9"
-authors = ["Nicolas Grunbaum <na-g+github@nostrum.com>", "Nils Ohlmeier <github@ohlmeier.org>"]
+version = "0.3.10"
+authors = [
+    "Nicolas Grunbaum <na-g+github@nostrum.com>",
+    "Nils Ohlmeier <github@ohlmeier.org>",
+]
 description = "webrtc-sdp parses strings in the format of the Session Description Protocol according to RFC4566. It specifically supports the subset of features required to support WebRTC according to the JSEP draft."
 readme = "README.md"
-keywords = ["webrtc", "sdp", "jsep"]
-categories = ["parsing", "network-programming"]
+keywords = [
+    "webrtc",
+    "sdp",
+    "jsep",
+]
+categories = [
+    "parsing",
+    "network-programming",
+]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/webrtc-sdp"
+
 [dependencies.log]
 version = "0.4"
 
@@ -32,13 +43,18 @@ optional = true
 
 [dependencies.url]
 version = "2.1.0"
+
 [dev-dependencies.serde_json]
 version = "1.0"
 
 [features]
 default = ["enhanced_debug"]
 enhanced_debug = []
-serialize = ["serde", "serde_derive"]
+serialize = [
+    "serde",
+    "serde_derive",
+]
+
 [badges.codecov]
 branch = "master"
 repository = "mozilla/webrtc-sdp"

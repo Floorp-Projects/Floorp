@@ -2367,6 +2367,11 @@ criteria = "safe-to-deploy"
 version = "0.46.0"
 notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 
+[[audits.webrtc-sdp]]
+who = "Byron Campen <docfaraday@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.9 -> 0.3.10"
+
 [[audits.weedle2]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
