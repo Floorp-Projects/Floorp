@@ -740,16 +740,13 @@ static bool num_toSource(JSContext* cx, unsigned argc, Value* vp) {
   JSStringBuilder sb(cx);
   if (!sb.append("(new Number(") ||
       !NumberValueToStringBuffer(NumberValue(d), sb) || !sb.append("))")) {
-    sb.failure();
     return false;
   }
 
   JSString* str = sb.finishString();
   if (!str) {
-    sb.failure();
     return false;
   }
-  sb.ok();
   args.rval().setString(str);
   return true;
 }
