@@ -33,11 +33,12 @@ DynamicBlocklistWriter::DynamicBlocklistWriter(
   bool hasTestEntry = false;
   for (const nsAString& name : aBlocklist) {
     if (ShouldWriteEntry(name)) {
-      hasTestEntry = true;
       payloadSize += name.Length() * sizeof(char16_t);
-    }
-    if (!payloadSize.isValid()) {
-      return;
+      if (!payloadSize.isValid()) {
+        return;
+      }
+    } else {
+      hasTestEntry = true;
     }
   }
 
