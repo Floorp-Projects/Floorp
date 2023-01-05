@@ -6,14 +6,9 @@
   visibility: hidden;
 }
 
-:host(:not([open])) {
-  display: none;
-}
-
 :host {
   position: absolute;
-  font: menu;
-  background-color: var(--in-content-box-background);
+  background: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 4px;
   padding: 6px 0;
@@ -28,13 +23,4 @@
 .list {
   margin: 0;
   padding: 0;
-}
-
-::slotted(hr) {
-  display: block !important;
-  height: 1px !important;
-  background: var(--in-content-box-border-color) !important;
-  padding: 0 !important;
-  margin: 6px 0 !important;
-  border: none !important;
 }
