@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test Panel List Accessibility</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <button id="anchor-button">Open</button>
+  <panel-list id="panel-list">
+    <panel-item>one</panel-item>
+    <panel-item>two</panel-item>
+    <panel-item>three</panel-item>
+  </panel-list>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+const {BrowserTestUtils} = ChromeUtils.importESModule("resource://testing-common/BrowserTestUtils.sys.mjs");
+let anchorButton, panelList, panelItems;
+
+
+add_setup(function setup() {
+  // Clear out the other elements so only our test content is on the page.
+  panelList = document.getElementById("panel-list");
+  panelItems = [...panelList.children];
+  anchorButton = document.getElementById("anchor-button");
+  anchorButton.addEventListener("click", e => panelList.toggle(e));
+});
+
+add_task(async function testItemFocusOnOpen() {
+  ok(document.activeElement, "There is an active element");
+  ok(!document.activeElement.closest("panel-list"), "Focus isn't in the list");
+
+  let shown = BrowserTestUtils.waitForEvent(panelList, "shown");
+  synthesizeMouseAtCenter(anchorButton, {});
+  await shown;
+
+  let hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+  synthesizeKey("Escape", {});
+  await hidden;
+
+  // Focus shouldn't enter the list on a click.
+  ok(!document.activeElement.closest("panel-list"), "Focus isn't in the list");
+
+  shown = BrowserTestUtils.waitForEvent(panelList, "shown");
+  anchorButton.focus();
+  synthesizeKey(" ", {});
+  await shown;
+
+  // Focus enters list with keyboard interaction.
+  is(document.activeElement, panelItems[0], "The first item is focused");
+
+  hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+  synthesizeKey("Escape", {});
+  await hidden;
+
+  is(document.activeElement, anchorButton, "The anchor is focused again on close");
+});
+
+add_task(async function testAriaAttributes() {
+  is(panelList.getAttribute("role"), "menu", "The panel is a menu");
+
+  is(panelItems.length, 3, "There are 3 items");
+  for (let item of panelItems) {
+    is(item.button.getAttribute("role"), "menuitem", "button is a menuitem");
+  }
+});
+</script>
+</pre>
+</body>
+</html>

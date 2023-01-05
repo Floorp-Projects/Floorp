@@ -830,6 +830,7 @@
       ["message-bar", "chrome://global/content/elements/message-bar.js"],
       ["named-deck", "chrome://global/content/elements/named-deck.js"],
       ["named-deck-button", "chrome://global/content/elements/named-deck.js"],
+      ["panel-list", "chrome://global/content/elements/panel-list.js"],
       ["search-textbox", "chrome://global/content/elements/search-textbox.js"],
       ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
       [
