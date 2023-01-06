@@ -66,8 +66,14 @@ absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode) {
       return "L3T3_KEY";
     case ScalabilityMode::kS2T1:
       return "S2T1";
+    case ScalabilityMode::kS2T2:
+      return "S2T2";
     case ScalabilityMode::kS2T3:
       return "S2T3";
+    case ScalabilityMode::kS3T1:
+      return "S3T1";
+    case ScalabilityMode::kS3T2:
+      return "S3T2";
     case ScalabilityMode::kS3T3:
       return "S3T3";
   }

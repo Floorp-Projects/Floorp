@@ -3373,7 +3373,10 @@ INSTANTIATE_TEST_SUITE_P(
              {"L3T3", 3, 3, InterLayerPredMode::kOn},
              {"L3T3_KEY", 3, 3, InterLayerPredMode::kOnKeyPic},
              {"S2T1", 2, 1, InterLayerPredMode::kOff},
+             {"S2T2", 2, 2, InterLayerPredMode::kOff},
              {"S2T3", 2, 3, InterLayerPredMode::kOff},
+             {"S3T1", 3, 1, InterLayerPredMode::kOff},
+             {"S3T2", 3, 2, InterLayerPredMode::kOff},
              {"S3T3", 3, 3, InterLayerPredMode::kOff}}),
         ::testing::Values(false, true)),  // use_scalability_mode_identifier
     ParamInfoToStr);

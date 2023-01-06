@@ -76,6 +76,14 @@ class ScalabilityStructureS2T1 : public ScalabilityStructureSimulcast {
   FrameDependencyStructure DependencyStructure() const override;
 };
 
+class ScalabilityStructureS2T2 : public ScalabilityStructureSimulcast {
+ public:
+  ScalabilityStructureS2T2() : ScalabilityStructureSimulcast(2, 2) {}
+  ~ScalabilityStructureS2T2() override = default;
+
+  FrameDependencyStructure DependencyStructure() const override;
+};
+
 // S1T2       3   7
 //            |  /
 // S1T1       / 5
@@ -92,6 +100,22 @@ class ScalabilityStructureS2T3 : public ScalabilityStructureSimulcast {
  public:
   ScalabilityStructureS2T3() : ScalabilityStructureSimulcast(2, 3) {}
   ~ScalabilityStructureS2T3() override = default;
+
+  FrameDependencyStructure DependencyStructure() const override;
+};
+
+class ScalabilityStructureS3T1 : public ScalabilityStructureSimulcast {
+ public:
+  ScalabilityStructureS3T1() : ScalabilityStructureSimulcast(3, 1) {}
+  ~ScalabilityStructureS3T1() override = default;
+
+  FrameDependencyStructure DependencyStructure() const override;
+};
+
+class ScalabilityStructureS3T2 : public ScalabilityStructureSimulcast {
+ public:
+  ScalabilityStructureS3T2() : ScalabilityStructureSimulcast(3, 2) {}
+  ~ScalabilityStructureS3T2() override = default;
 
   FrameDependencyStructure DependencyStructure() const override;
 };

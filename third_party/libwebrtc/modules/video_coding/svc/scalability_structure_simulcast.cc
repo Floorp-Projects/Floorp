@@ -242,6 +242,22 @@ FrameDependencyStructure ScalabilityStructureS2T1::DependencyStructure() const {
   return structure;
 }
 
+FrameDependencyStructure ScalabilityStructureS2T2::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 4;
+  structure.num_chains = 2;
+  structure.decode_target_protected_by_chain = {0, 0, 1, 1};
+  auto& t = structure.templates;
+  t.resize(6);
+  t[1].S(0).T(0).Dtis("SS--").ChainDiffs({0, 0});
+  t[4].S(1).T(0).Dtis("--SS").ChainDiffs({1, 0});
+  t[2].S(0).T(1).Dtis("-D--").ChainDiffs({2, 1}).FrameDiffs({2});
+  t[5].S(1).T(1).Dtis("---D").ChainDiffs({3, 2}).FrameDiffs({2});
+  t[0].S(0).T(0).Dtis("SS--").ChainDiffs({4, 3}).FrameDiffs({4});
+  t[3].S(1).T(0).Dtis("--SS").ChainDiffs({1, 4}).FrameDiffs({4});
+  return structure;
+}
+
 FrameDependencyStructure ScalabilityStructureS2T3::DependencyStructure() const {
   FrameDependencyStructure structure;
   structure.num_decode_targets = 6;
@@ -259,6 +275,45 @@ FrameDependencyStructure ScalabilityStructureS2T3::DependencyStructure() const {
   t[9].S(1).T(2).Dtis("-----D").ChainDiffs({7, 6}).FrameDiffs({2});
   t[0].S(0).T(0).Dtis("SSS---").ChainDiffs({8, 7}).FrameDiffs({8});
   t[5].S(1).T(0).Dtis("---SSS").ChainDiffs({1, 8}).FrameDiffs({8});
+  return structure;
+}
+
+FrameDependencyStructure ScalabilityStructureS3T1::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 3;
+  structure.num_chains = 3;
+  structure.decode_target_protected_by_chain = {0, 1, 2};
+  auto& t = structure.templates;
+  t.resize(6);
+  t[1].S(0).T(0).Dtis("S--").ChainDiffs({0, 0, 0});
+  t[3].S(1).T(0).Dtis("-S-").ChainDiffs({1, 0, 0});
+  t[5].S(2).T(0).Dtis("--S").ChainDiffs({2, 1, 0});
+  t[0].S(0).T(0).Dtis("S--").ChainDiffs({3, 2, 1}).FrameDiffs({3});
+  t[2].S(1).T(0).Dtis("-S-").ChainDiffs({1, 3, 2}).FrameDiffs({3});
+  t[4].S(2).T(0).Dtis("--S").ChainDiffs({2, 1, 3}).FrameDiffs({3});
+  return structure;
+}
+
+FrameDependencyStructure ScalabilityStructureS3T2::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 6;
+  structure.num_chains = 3;
+  structure.decode_target_protected_by_chain = {0, 0, 1, 1, 2, 2};
+  auto& t = structure.templates;
+  t.resize(9);
+  // Templates are shown in the order frames following them appear in the
+  // stream, but in `structure.templates` array templates are sorted by
+  // (`spatial_id`, `temporal_id`) since that is a dependency descriptor
+  // requirement.
+  t[1].S(0).T(0).Dtis("SS----").ChainDiffs({0, 0, 0});
+  t[4].S(1).T(0).Dtis("--SS--").ChainDiffs({1, 0, 0});
+  t[7].S(2).T(0).Dtis("----SS").ChainDiffs({2, 1, 0});
+  t[2].S(0).T(1).Dtis("-D----").ChainDiffs({3, 2, 1}).FrameDiffs({3});
+  t[5].S(1).T(1).Dtis("---D--").ChainDiffs({4, 3, 2}).FrameDiffs({3});
+  t[8].S(2).T(1).Dtis("-----D").ChainDiffs({5, 4, 3}).FrameDiffs({3});
+  t[0].S(0).T(0).Dtis("SS----").ChainDiffs({6, 5, 4}).FrameDiffs({6});
+  t[3].S(1).T(0).Dtis("--SS--").ChainDiffs({1, 6, 5}).FrameDiffs({6});
+  t[6].S(2).T(0).Dtis("----SS").ChainDiffs({2, 1, 6}).FrameDiffs({6});
   return structure;
 }
 
