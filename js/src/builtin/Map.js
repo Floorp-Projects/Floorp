@@ -53,10 +53,7 @@ function MapForEach(callbackfn, thisArg = undefined) {
   var entries = callFunction(std_Map_entries, M);
 
   // Inlined: MapIteratorNext
-  var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
-  if (!mapIterationResultPair) {
-    mapIterationResultPair = iteratorTemp.mapIterationResultPair = CreateMapIterationResultPair();
-  }
+  var mapIterationResultPair = globalMapIterationResultPair;
 
   while (true) {
     var done = GetNextMapEntryForIterator(entries, mapIterationResultPair);
@@ -73,7 +70,7 @@ function MapForEach(callbackfn, thisArg = undefined) {
   }
 }
 
-var iteratorTemp = { mapIterationResultPair: null };
+var globalMapIterationResultPair = CreateMapIterationResultPair();
 
 function MapIteratorNext() {
   // Step 1.
@@ -91,10 +88,7 @@ function MapIteratorNext() {
   // Steps 4-5 (implemented in GetNextMapEntryForIterator).
   // Steps 8-9 (omitted).
 
-  var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
-  if (!mapIterationResultPair) {
-    mapIterationResultPair = iteratorTemp.mapIterationResultPair = CreateMapIterationResultPair();
-  }
+  var mapIterationResultPair = globalMapIterationResultPair;
 
   var retVal = { value: undefined, done: true };
 
