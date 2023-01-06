@@ -140,7 +140,7 @@ class ToastNotificationHandler final
       const ComPtr<IToastNotification> toast, const nsAString& key,
       nsAString& value);
   static ComPtr<IToastNotification> FindNotificationByTag(
-      const nsAString& aWindowsTag, const nsAString& nsAumid);
+      const nsAString& aWindowsTag, const nsAString& aAumid);
 };
 
 }  // namespace widget

@@ -269,7 +269,7 @@ ToastNotificationHandler::~ToastNotificationHandler() {
 }
 
 void ToastNotificationHandler::UnregisterHandler() {
-  if (mNotification && mNotifier) {
+  if (mNotification) {
     mNotification->remove_Dismissed(mDismissedToken);
     mNotification->remove_Activated(mActivatedToken);
     mNotification->remove_Failed(mFailedToken);
@@ -346,6 +346,7 @@ nsresult ToastNotificationHandler::InitWindowsTag() {
 ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   ComPtr<IToastNotificationManagerStatics> toastNotificationManagerStatics =
       GetToastNotificationManagerStatics();
+  NS_ENSURE_TRUE(toastNotificationManagerStatics, nullptr);
 
   ToastTemplateType toastTemplate;
   if (mHostPort.IsEmpty()) {
@@ -670,7 +671,7 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
 
   ComPtr<IToastNotificationManagerStatics> toastNotificationManagerStatics =
       GetToastNotificationManagerStatics();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  NS_ENSURE_TRUE(toastNotificationManagerStatics, false);
 
   HString aumid;
   hr = aumid.Set(mAumid.get());
@@ -777,7 +778,7 @@ ToastNotificationHandler::OnActivate(
 // Returns `nullptr` if no such toast exists.
 /* static */ ComPtr<IToastNotification>
 ToastNotificationHandler::FindNotificationByTag(const nsAString& aWindowsTag,
-                                                const nsAString& nsAumid) {
+                                                const nsAString& aAumid) {
   HRESULT hr = S_OK;
 
   HString current_id;
@@ -785,9 +786,7 @@ ToastNotificationHandler::FindNotificationByTag(const nsAString& aWindowsTag,
 
   ComPtr<IToastNotificationManagerStatics> manager =
       GetToastNotificationManagerStatics();
-  if (!manager) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(manager, nullptr);
 
   ComPtr<IToastNotificationManagerStatics2> manager2;
   hr = manager.As(&manager2);
@@ -800,12 +799,9 @@ ToastNotificationHandler::FindNotificationByTag(const nsAString& aWindowsTag,
   hr = history.As(&history2);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  HString aumid;
-  hr = aumid.Set(PromiseFlatString(nsAumid).get());
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
   ComPtr<IVectorView_ToastNotification> toasts;
-  hr = history2->GetHistoryWithId(aumid.Get(), &toasts);
+  hr = history2->GetHistoryWithId(
+      HStringReference(PromiseFlatString(aAumid).get()).Get(), &toasts);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   unsigned int hist_size;
@@ -896,10 +892,7 @@ ToastNotificationHandler::FindLaunchURLAndPrivilegedNameForWindowsTag(
   ComPtr<IToastNotification> toast =
       ToastNotificationHandler::FindNotificationByTag(aWindowsTag, aAumid);
   MOZ_LOG(sWASLog, LogLevel::Debug, ("Found toast [%p]", toast.Get()));
-
-  if (!toast) {
-    return NS_OK;
-  }
+  NS_ENSURE_TRUE(toast, NS_OK);
 
   aFoundTag = true;
 
