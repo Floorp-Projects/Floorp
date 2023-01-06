@@ -11,9 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "nsWindowsHelpers.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
-#include "mozilla/UniquePtr.h"
 
 #define NOTIFICATION_SERVER_EVENT_TIMEOUT_MS (10 * 1000)
 
@@ -39,81 +37,46 @@ NotificationCallback::QueryInterface(REFIID riid, void** ppvObject) {
 HRESULT STDMETHODCALLTYPE NotificationCallback::Activate(
     LPCWSTR appUserModelId, LPCWSTR invokedArgs,
     const NOTIFICATION_USER_INPUT_DATA* data, ULONG dataCount) {
-  std::wstring program;
-  std::wstring profile;
-  std::wstring windowsTag;
+  HandleActivation(invokedArgs);
 
-  LOG_ERROR_MESSAGE((L"Invoked with arguments: '%s'"), invokedArgs);
+  // Windows 8 style callbacks are not called and notifications are not removed
+  // from the Action Center unless we return `S_OK`, so always do so even if
+  // we're unable to handle the notification properly.
+  return S_OK;
+}
 
-  std::wistringstream args(invokedArgs);
-  for (std::wstring key, value;
-       std::getline(args, key) && std::getline(args, value);) {
-    if (key == L"program") {
-      // Check executable name to prevent running arbitrary executables.
-      if (value == L"" MOZ_APP_NAME) {
-        program = value;
-      }
-    } else if (key == L"profile") {
-      profile = value;
-    } else if (key == L"windowsTag") {
-      windowsTag = value;
-    } else if (key == L"action") {
-      // Remainder of args are from the Web Notification action, don't parse.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1781929.
-      break;
-    }
+void NotificationCallback::HandleActivation(LPCWSTR invokedArgs) {
+  LOG_ERROR_MESSAGE(L"Invoked with arguments: '%s'", invokedArgs);
+
+  auto maybeArgs = ParseToastArguments(invokedArgs);
+  if (!maybeArgs) {
+    LOG_ERROR_MESSAGE(L"COM server disabled for toast");
+    return;
   }
-
-  if (program.empty()) {
-    LOG_ERROR_MESSAGE((L"No program; not invoking!"));
-    return S_OK;
-  }
-
-  path programPath = installDir / program;
-  programPath += L".exe";
-
-  std::vector<const wchar_t*> childArgv;
-  childArgv.push_back(programPath.c_str());
-
-  if (!profile.empty()) {
-    childArgv.push_back(L"--profile");
-    childArgv.push_back(profile.c_str());
-  } else {
-    LOG_ERROR_MESSAGE((L"No profile; invocation will choose default profile"));
-  }
-
-  if (!windowsTag.empty()) {
-    childArgv.push_back(L"--notification-windowsTag");
-    childArgv.push_back(windowsTag.c_str());
-  } else {
-    LOG_ERROR_MESSAGE((L"No windowsTag; invoking anyway"));
-  }
-
-  mozilla::UniquePtr<wchar_t[]> cmdLine(
-      mozilla::MakeCommandLine(childArgv.size(), childArgv.data()));
+  const auto& args = maybeArgs.value();
+  auto [programPath, cmdLine] = BuildRunCommand(args);
 
   // This event object will let Firefox notify us when it has handled the
   // notification.
-  std::wstring eventName(windowsTag);
+  std::wstring eventName(args.windowsTag);
   nsAutoHandle event;
   if (!eventName.empty()) {
     event.own(CreateEventW(nullptr, TRUE, FALSE, eventName.c_str()));
   }
 
-  STARTUPINFOW si = {0};
-  si.cb = sizeof(STARTUPINFOW);
-  PROCESS_INFORMATION pi = {0};
+  // Run the application.
 
-  // Runs `{program path} [--profile {profile path}]`.
+  STARTUPINFOW si = {};
+  si.cb = sizeof(STARTUPINFOW);
+  PROCESS_INFORMATION pi = {};
+
+  // Runs `{program path} [--profile {profile path}] [--notification-windowsTag
+  // {tag}]`.
   CreateProcessW(programPath.c_str(), cmdLine.get(), nullptr, nullptr, false,
                  DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr, nullptr,
                  &si, &pi);
 
-  LOG_ERROR_MESSAGE((L"Invoked %s"), cmdLine.get());
-
-  if (windowsTag.empty()) {
-    return S_OK;
-  }
+  LOG_ERROR_MESSAGE(L"Invoked %s", cmdLine.get());
 
   if (event.get()) {
     LOG_ERROR_MESSAGE((L"Waiting on event with name '%s'"), eventName.c_str());
@@ -122,21 +85,69 @@ HRESULT STDMETHODCALLTYPE NotificationCallback::Activate(
         WaitForSingleObject(event, NOTIFICATION_SERVER_EVENT_TIMEOUT_MS);
     if (result == WAIT_TIMEOUT) {
       LOG_ERROR_MESSAGE(L"Wait timed out");
-      return S_OK;
     } else if (result == WAIT_FAILED) {
       LOG_ERROR_MESSAGE((L"Wait failed: %#X"), GetLastError());
-      return S_OK;
     } else if (result == WAIT_ABANDONED) {
       LOG_ERROR_MESSAGE((L"Wait abandoned"));
-      return S_OK;
     } else {
       LOG_ERROR_MESSAGE((L"Wait succeeded!"));
-      return S_OK;
     }
   } else {
     LOG_ERROR_MESSAGE((L"Failed to create event with name '%s'"),
                       eventName.c_str());
   }
+}
 
-  return S_OK;
+mozilla::Maybe<ToastArgs> NotificationCallback::ParseToastArguments(
+    LPCWSTR invokedArgs) {
+  ToastArgs parsedArgs;
+  std::wistringstream args(invokedArgs);
+  bool serverDisabled = true;
+
+  for (std::wstring key, value;
+       std::getline(args, key) && std::getline(args, value);) {
+    if (key == L"program") {
+      serverDisabled = false;
+    } else if (key == L"profile") {
+      parsedArgs.profile = value;
+    } else if (key == L"windowsTag") {
+      parsedArgs.windowsTag = value;
+    } else if (key == L"action") {
+      // Remainder of args are from the Web Notification action, don't parse.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1781929.
+      break;
+    }
+  }
+
+  if (serverDisabled) {
+    return mozilla::Nothing();
+  }
+
+  return mozilla::Some(parsedArgs);
+}
+
+std::tuple<path, mozilla::UniquePtr<wchar_t[]>>
+NotificationCallback::BuildRunCommand(const ToastArgs& args) {
+  path programPath = installDir / L"" MOZ_APP_NAME;
+  programPath += L".exe";
+
+  std::vector<const wchar_t*> childArgv;
+  childArgv.push_back(programPath.c_str());
+
+  if (!args.profile.empty()) {
+    childArgv.push_back(L"--profile");
+    childArgv.push_back(args.profile.c_str());
+  } else {
+    LOG_ERROR_MESSAGE(L"No profile; invocation will choose default profile");
+  }
+
+  if (!args.windowsTag.empty()) {
+    childArgv.push_back(L"--notification-windowsTag");
+    childArgv.push_back(args.windowsTag.c_str());
+  } else {
+    LOG_ERROR_MESSAGE(L"No windowsTag; invoking anyway");
+  }
+
+  return {programPath,
+          mozilla::MakeCommandLine(childArgv.size(), childArgv.data())};
 }
