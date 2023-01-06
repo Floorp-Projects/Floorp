@@ -38,6 +38,11 @@
 
       this.baseConnect();
 
+      this._firstTab = null;
+      this._lastTab = null;
+      this._beforeSelectedTab = null;
+      this._beforeHoveredTab = null;
+      this._afterHoveredTab = null;
       this._hoveredTab = null;
       this._blockDblClick = false;
       this._tabDropIndicator = this.querySelector(".tab-drop-indicator");
@@ -1207,7 +1212,35 @@
       if (!visibleTabs.length) {
         return;
       }
+      let selectedTab = this.selectedItem;
+      let selectedIndex = visibleTabs.indexOf(selectedTab);
+      if (this._beforeSelectedTab) {
+        this._beforeSelectedTab.removeAttribute("beforeselected-visible");
+      }
 
+      if (selectedTab.closing || selectedIndex <= 0) {
+        this._beforeSelectedTab = null;
+      } else {
+        let beforeSelectedTab = visibleTabs[selectedIndex - 1];
+        let separatedByScrollButton =
+          this.getAttribute("overflow") == "true" &&
+          beforeSelectedTab.pinned &&
+          !selectedTab.pinned;
+        if (!separatedByScrollButton) {
+          this._beforeSelectedTab = beforeSelectedTab;
+          this._beforeSelectedTab.setAttribute(
+            "beforeselected-visible",
+            "true"
+          );
+        }
+      }
+
+      this._firstTab?.removeAttribute("first-visible-tab");
+      this._firstTab = visibleTabs[0];
+      this._firstTab.setAttribute("first-visible-tab", "true");
+      this._lastTab?.removeAttribute("last-visible-tab");
+      this._lastTab = visibleTabs[visibleTabs.length - 1];
+      this._lastTab.setAttribute("last-visible-tab", "true");
       this._firstUnpinnedTab?.removeAttribute("first-visible-unpinned-tab");
       this._firstUnpinnedTab = visibleTabs.find(t => !t.pinned);
       this._firstUnpinnedTab?.setAttribute(
@@ -1222,6 +1255,17 @@
       hoveredTab = this.querySelector("tab:hover");
       if (hoveredTab) {
         hoveredTab._mouseenter();
+      }
+
+      // Update before-multiselected attributes.
+      // gBrowser may not be initialized yet, so avoid using it
+      for (let i = 0; i < visibleTabs.length - 1; i++) {
+        let tab = visibleTabs[i];
+        let nextTab = visibleTabs[i + 1];
+        tab.removeAttribute("before-multiselected");
+        if (nextTab.multiselected) {
+          tab.setAttribute("before-multiselected", "true");
+        }
       }
     }
 

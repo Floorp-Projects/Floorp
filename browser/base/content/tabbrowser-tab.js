@@ -79,7 +79,8 @@
     static get inheritedAttributes() {
       return {
         ".tab-background": "selected=visuallyselected,fadein,multiselected",
-        ".tab-line": "selected=visuallyselected,multiselected",
+        ".tab-line":
+          "selected=visuallyselected,multiselected,before-multiselected",
         ".tab-loading-burst": "pinned,bursting,notselectedsinceload",
         ".tab-content":
           "pinned,selected=visuallyselected,titlechanged,attention",
@@ -187,6 +188,10 @@
 
     get multiselected() {
       return this.getAttribute("multiselected") == "true";
+    }
+
+    get beforeMultiselected() {
+      return this.getAttribute("before-multiselected") == "true";
     }
 
     get userContextId() {
@@ -490,9 +495,35 @@
       }
 
       let tabContainer = this.container;
+      let visibleTabs = tabContainer._getVisibleTabs();
+      let tabIndex = visibleTabs.indexOf(this);
 
       if (this.selected) {
         tabContainer._handleTabSelect();
+      }
+
+      if (tabIndex == 0) {
+        tabContainer._beforeHoveredTab = null;
+      } else {
+        let candidate = visibleTabs[tabIndex - 1];
+        let separatedByScrollButton =
+          tabContainer.getAttribute("overflow") == "true" &&
+          candidate.pinned &&
+          !this.pinned;
+        if (!candidate.selected && !separatedByScrollButton) {
+          tabContainer._beforeHoveredTab = candidate;
+          candidate.setAttribute("beforehovered", "true");
+        }
+      }
+
+      if (tabIndex == visibleTabs.length - 1) {
+        tabContainer._afterHoveredTab = null;
+      } else {
+        let candidate = visibleTabs[tabIndex + 1];
+        if (!candidate.selected) {
+          tabContainer._afterHoveredTab = candidate;
+          candidate.setAttribute("afterhovered", "true");
+        }
       }
 
       tabContainer._hoveredTab = this;
@@ -512,7 +543,17 @@
     }
 
     _mouseleave() {
-      this.container._hoveredTab = null;
+      let tabContainer = this.container;
+      if (tabContainer._beforeHoveredTab) {
+        tabContainer._beforeHoveredTab.removeAttribute("beforehovered");
+        tabContainer._beforeHoveredTab = null;
+      }
+      if (tabContainer._afterHoveredTab) {
+        tabContainer._afterHoveredTab.removeAttribute("afterhovered");
+        tabContainer._afterHoveredTab = null;
+      }
+
+      tabContainer._hoveredTab = null;
       if (this.linkedPanel && !this.selected) {
         this.linkedBrowser.unselectedTabHover(false);
         this.cancelUnselectedTabHoverTimer();
