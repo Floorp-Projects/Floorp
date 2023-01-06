@@ -61,7 +61,7 @@ class InactiveTabViewHolder(
                 inactiveTabs = inactiveTabs,
                 expanded = expanded,
                 showAutoCloseDialog = showAutoClosePrompt,
-                onHeaderClick = { interactor.onHeaderClicked(!expanded) },
+                onHeaderClick = { interactor.onInactiveTabsHeaderClicked(!expanded) },
                 onDeleteAllButtonClick = interactor::onDeleteAllInactiveTabsClicked,
                 onAutoCloseDismissClick = {
                     interactor.onAutoCloseDialogCloseButtonClicked()
@@ -72,8 +72,8 @@ class InactiveTabViewHolder(
                     showAutoClosePrompt = !showAutoClosePrompt
                     showConfirmationSnackbar()
                 },
-                onTabClick = interactor::onTabClicked,
-                onTabCloseClick = interactor::onTabClosed,
+                onTabClick = interactor::onInactiveTabClicked,
+                onTabCloseClick = interactor::onInactiveTabClosed,
             )
         }
     }
