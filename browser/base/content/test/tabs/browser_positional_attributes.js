@@ -43,40 +43,23 @@ add_task(async function test() {
   testAttrib(0, "first-visible-tab", true);
   testAttrib(4, "last-visible-tab", true);
   testAttrib(0, "visuallyselected", true);
-  testAttrib(0, "beforeselected-visible", false);
 
   await switchTab(2);
 
   testAttrib(2, "visuallyselected", true);
-  testAttrib(1, "beforeselected-visible", true);
-
-  gBrowser.hideTab(gBrowser.tabs[1]);
-
-  testAttrib(0, "beforeselected-visible", true);
-
-  gBrowser.showTab(gBrowser.tabs[1]);
-
-  testAttrib(1, "beforeselected-visible", true);
-  testAttrib(0, "beforeselected-visible", false);
 
   await switchTab(1);
-
-  testAttrib(0, "beforeselected-visible", true);
 
   gBrowser.hideTab(gBrowser.tabs[0]);
 
   testAttrib(0, "first-visible-tab", false);
   testAttrib(1, "first-visible-tab", true);
-  testAttrib(0, "beforeselected-visible", false);
 
   gBrowser.showTab(gBrowser.tabs[0]);
 
   testAttrib(0, "first-visible-tab", true);
-  testAttrib(0, "beforeselected-visible", true);
 
   gBrowser.moveTabTo(gBrowser.selectedTab, 3);
-
-  testAttrib(2, "beforeselected-visible", true);
 });
 
 add_task(async function test_hoverOne() {
@@ -124,15 +107,11 @@ add_task(async function test_hoverStatePersistence() {
 add_task(async function test_pinning() {
   testAttrib(3, "last-visible-tab", true);
   testAttrib(3, "visuallyselected", true);
-  testAttrib(2, "beforeselected-visible", true);
   // Causes gBrowser.tabs to change indices
   gBrowser.pinTab(gBrowser.tabs[3]);
   testAttrib(3, "last-visible-tab", true);
   testAttrib(0, "first-visible-tab", true);
-  testAttrib(2, "beforeselected-visible", false);
   testAttrib(0, "visuallyselected", true);
-  await switchTab(1);
-  testAttrib(0, "beforeselected-visible", true);
 });
 
 add_task(function cleanup() {
