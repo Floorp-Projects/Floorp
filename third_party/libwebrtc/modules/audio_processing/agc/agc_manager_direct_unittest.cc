@@ -201,7 +201,7 @@ constexpr AnalogAgcConfig GetAnalogAgcTestConfig() {
   config.clipped_wait_frames = kClippedWaitFrames;
   config.clipping_predictor = kDefaultAnalogConfig.clipping_predictor;
   return config;
-};
+}
 
 class AgcManagerDirectTestHelper {
  public:
