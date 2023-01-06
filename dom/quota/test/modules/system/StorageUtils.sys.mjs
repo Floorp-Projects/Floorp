@@ -13,10 +13,7 @@ class RequestError extends Error {
 }
 
 export function setStoragePrefs(optionalPrefsToSet) {
-  const prefsToSet = [
-    // Not needed right now, but might be needed in future.
-    // ["dom.quotaManager.testing", true],
-  ];
+  const prefsToSet = [["dom.quotaManager.testing", true]];
 
   if (Services.appinfo.OS === "WINNT") {
     prefsToSet.push(["dom.quotaManager.useDOSDevicePathSyntax", true]);
