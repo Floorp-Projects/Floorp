@@ -58,7 +58,10 @@ def make_reclient_properties(instance, jobs = None):
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
 skipped_lkgr_bots = [
+    "Android32 (M Nexus5X)(reclient)",
     "Linux64 Release (reclient)",
+    "Mac64 Release (reclient)",
+    "iOS64 Release (reclient)",
 ]
 
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
@@ -556,6 +559,7 @@ def ci_builder(
             lkgr_builders.append(name)
     dimensions.update({"pool": "luci.webrtc.ci", "cpu": kwargs.pop("cpu", DEFAULT_CPU)})
     properties = properties or {}
+    properties = dict(properties)  # Avoid mutating the original dict.
     properties["builder_group"] = "client.webrtc"
     if use_reclient:
         properties.update(make_reclient_properties("rbe-webrtc-trusted"))
@@ -703,6 +707,7 @@ android_builder("Android32 (M Nexus5X)(dbg)", "Android|arm|dbg")
 android_try_job("android_compile_arm_dbg", cq = None)
 android_try_job("android_arm_dbg")
 android_builder("Android32 (M Nexus5X)", "Android|arm|rel")
+android_builder("Android32 (M Nexus5X)(reclient)", "Android|arm|re", use_reclient = True)
 android_try_job("android_arm_rel")
 android_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android|arm|Builder|", prioritized = True)
 android_try_job("android_compile_arm_rel")
@@ -730,6 +735,7 @@ android_try_job("android_chromium_compile", recipe = "chromium_trybot", branch_c
 ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
 ios_builder("iOS64 Release", "iOS|arm64|rel")
+ios_builder("iOS64 Release (reclient)", "iOS|arm64|re", use_reclient = True)
 ios_try_job("ios_compile_arm64_rel")
 ios_builder("iOS64 Sim Debug (iOS 14)", "iOS|x64|14")
 ios_try_job("ios_sim_x64_dbg_ios14")
@@ -782,6 +788,7 @@ mac_builder("Mac64 Debug", "Mac|x64|dbg")
 mac_try_job("mac_dbg", cq = None)
 mac_try_job("mac_compile_dbg")
 mac_builder("Mac64 Release", "Mac|x64|rel")
+mac_builder("Mac64 Release (reclient)", "Mac|x64|re", use_reclient = True)
 mac_try_job("mac_rel")
 mac_try_job("mac_compile_rel", cq = None)
 mac_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
