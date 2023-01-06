@@ -12,6 +12,17 @@
   );
 
   class MozDialog extends MozXULElement {
+    constructor() {
+      super();
+
+      /**
+       * Gets populated by elements that are passed to document.l10n.setAttributes
+       * to localize the dialog buttons. Needed to properly size the dialog after
+       * the asynchronous translation.
+       */
+      this._l10nButtons = [];
+    }
+
     static get observedAttributes() {
       return super.observedAttributes.concat("subdialog");
     }
@@ -94,13 +105,6 @@
         MozXULElement.parseXULToFragment(this._markup)
       );
       this.initializeAttributeInheritance();
-
-      /**
-       * Gets populated by elements that are passed to document.l10n.setAttributes
-       * to localize the dialog buttons. Needed to properly size the dialog after
-       * the asynchronous translation.
-       */
-      this._l10nButtons = [];
 
       this._configureButtons(this.buttons);
 
