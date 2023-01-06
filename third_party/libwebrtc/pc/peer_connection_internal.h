@@ -125,6 +125,8 @@ class PeerConnectionSdpMethods {
   virtual void ResetSctpDataMid() = 0;
 
   virtual const FieldTrialsView& trials() const = 0;
+
+  virtual void ClearStatsCache() = 0;
 };
 
 // Functions defined in this class are called by other objects,

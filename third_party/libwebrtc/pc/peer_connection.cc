@@ -2985,6 +2985,9 @@ CryptoOptions PeerConnection::GetCryptoOptions() {
 
 void PeerConnection::ClearStatsCache() {
   RTC_DCHECK_RUN_ON(signaling_thread());
+  if (legacy_stats_) {
+    legacy_stats_->InvalidateCache();
+  }
   if (stats_collector_) {
     stats_collector_->ClearCachedStatsReport();
   }

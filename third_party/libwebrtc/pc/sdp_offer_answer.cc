@@ -1488,10 +1488,10 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(desc);
 
-  // Invalidate the legacy stats cache to make sure that it gets updated next
-  // time getStats() gets called, as updating the session description affects
-  // the stats.
-  pc_->legacy_stats()->InvalidateCache();
+  // Invalidate the stats caches to make sure that they get
+  // updated the next time getStats() gets called, as updating the session
+  // description affects the stats.
+  pc_->ClearStatsCache();
 
   // Take a reference to the old local description since it's used below to
   // compare against the new local description. When setting the new local
@@ -1823,10 +1823,10 @@ void SdpOfferAnswerHandler::ApplyRemoteDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(operation->description());
 
-  // Invalidate the [legacy] stats cache to make sure that it gets updated next
-  // time getStats() gets called, as updating the session description affects
-  // the stats.
-  pc_->legacy_stats()->InvalidateCache();
+  // Invalidate the stats caches to make sure that they get
+  // updated next time getStats() gets called, as updating the session
+  // description affects the stats.
+  pc_->ClearStatsCache();
 
   if (!operation->ReplaceRemoteDescriptionAndCheckEror())
     return;
