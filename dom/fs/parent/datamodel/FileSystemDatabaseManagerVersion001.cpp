@@ -61,38 +61,6 @@ Result<bool, QMResult> IsDirectoryEmpty(FileSystemConnection& mConnection,
   return !childrenExist;
 }
 
-// TODO: Running two aggregations simultaneously leads to
-// undefined outcomes and should be prevented.
-// However, appending new values while
-// one aggreration is ongoing should work if the aggregation is only
-// done up to a row which is fixed in the beginning.
-nsresult AggregateUsages(FileSystemConnection& mConnection) {
-  bool rollbackOnScopeExit{false};  // We roll back unless explicitly committed
-  mozStorageTransaction transaction(
-      mConnection.get(), rollbackOnScopeExit,
-      mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-  QM_TRY(MOZ_TO_RESULT(mConnection->ExecuteSimpleSQL(
-      "INSERT INTO Usages "
-      "( usage, aggregated ) "
-      "SELECT SUM(usage) OVER (ROWS UNBOUNDED PRECEDING), TRUE "
-      "FROM Usages "
-      "WHERE aggregated = FALSE "
-      ";"_ns)));
-
-  QM_TRY(
-      MOZ_TO_RESULT(mConnection->ExecuteSimpleSQL("DELETE FROM Usages "
-                                                  "WHERE aggregated = FALSE "
-                                                  ";"_ns)));
-
-  QM_TRY(MOZ_TO_RESULT(
-      mConnection->ExecuteSimpleSQL("UPDATE Usages "
-                                    "SET aggregated = NOT aggregated "
-                                    ";"_ns)));
-
-  return transaction.Commit();
-}
-
 Result<bool, QMResult> DoesDirectoryExist(
     const FileSystemConnection& mConnection,
     const FileSystemChildMetadata& aHandle) {
@@ -431,40 +399,41 @@ nsresult PerformRenameFile(const FileSystemConnection& aConnection,
 
 }  // namespace
 
-Result<Usage, QMResult> FileSystemDatabaseManagerVersion001::GetUsage() const {
-  const nsLiteralCString sumUsagesQuery =
-      "SELECT sum(deltas) FROM Usages WHERE aggregated = FALSE;"_ns;
+/* static */
+Result<Usage, QMResult> FileSystemDatabaseManagerVersion001::GetFileUsage(
+    const FileSystemConnection& aConnection) {
+  const nsLiteralCString sumUsagesQuery = "SELECT sum(usage) FROM Usages;"_ns;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(mConnection, sumUsagesQuery));
-  QM_TRY_UNWRAP(Usage total, stmt.GetUsageByColumn(/* Column */ 0u));
+                ResultStatement::Create(aConnection, sumUsagesQuery));
 
-  return total;
-}
-
-nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(int64_t aDelta) {
-  const nsLiteralCString addUsageQuery =
-      "INSERT INTO Usages "
-      "( usage ) "
-      "VALUES "
-      "( :usage ) "
-      ";"_ns;
-
-  {
-    QM_TRY_UNWRAP(ResultStatement stmt,
-                  ResultStatement::Create(mConnection, addUsageQuery));
-    QM_TRY(MOZ_TO_RESULT(stmt.BindUsageByName("usage"_ns, aDelta)));
-    QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
+  QM_TRY_UNWRAP(const bool moreResults, stmt.ExecuteStep());
+  if (!moreResults) {
+    return Err(QMResult(NS_ERROR_DOM_FILE_NOT_READABLE_ERR));
   }
 
-  // Try again later, no harm done;
-  QM_WARNONLY_TRY(MOZ_TO_RESULT(AggregateUsages(mConnection)));
+  QM_TRY_UNWRAP(Usage totalFiles, stmt.GetUsageByColumn(/* Column */ 0u));
 
-  return NS_OK;
+  return totalFiles;
 }
 
-nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(
-    const EntryId& /* aEntry */) {
+nsresult FileSystemDatabaseManagerVersion001::UpdateUsageInDatabase(
+    const EntryId& aEntry, int64_t aNewDiskUsage) {
+  const nsLiteralCString updateUsageQuery =
+      "INSERT INTO Usages "
+      "( handle, usage ) "
+      "VALUES "
+      "( :handle, :usage ) "
+      "ON CONFLICT(handle) DO "
+      "UPDATE SET usage = excluded.usage "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(mConnection, updateUsageQuery));
+  QM_TRY(MOZ_TO_RESULT(stmt.BindUsageByName("usage"_ns, aNewDiskUsage)));
+  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntry)));
+  QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
+
   return NS_OK;
 }
 
@@ -535,8 +504,6 @@ FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
     QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, name)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
-
-  QM_TRY(QM_TO_RESULT(UpdateUsage(name.Length())));
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
@@ -612,8 +579,6 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
 
-  QM_TRY(QM_TO_RESULT(UpdateUsage(name.Length())));
-
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
   return entryId;
@@ -679,6 +644,35 @@ nsresult FileSystemDatabaseManagerVersion001::GetFile(
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
   aPath.Reverse();
+
+  return NS_OK;
+}
+
+nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(
+    const EntryId& aEntry) {
+  auto toNSResult = [](const auto& aRv) { return ToNSResult(aRv); };
+
+  // We don't track directories or non-existent files.
+  QM_TRY_UNWRAP(bool fileExists,
+                DoesFileExist(mConnection, aEntry).mapErr(toNSResult));
+  if (!fileExists) {
+    return NS_OK;  // May be deleted before update, no assert
+  }
+
+  QM_TRY_UNWRAP(bool isFolder,
+                DoesDirectoryExist(mConnection, aEntry).mapErr(toNSResult));
+  if (isFolder) {
+    return NS_OK;  // May be deleted and replaced by a folder, no assert
+  }
+
+  nsCOMPtr<nsIFile> file;
+  QM_TRY_UNWRAP(file, mFileManager->GetOrCreateFile(aEntry));
+  MOZ_ASSERT(file);
+
+  int64_t fileSize = 0;
+  QM_TRY(MOZ_TO_RESULT(file->GetFileSize(&fileSize)));
+
+  QM_TRY(MOZ_TO_RESULT(UpdateUsageInDatabase(aEntry, fileSize)));
 
   return NS_OK;
 }
@@ -755,9 +749,6 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
 
-  QM_TRY(QM_TO_RESULT(
-      UpdateUsage(static_cast<int64_t>(aHandle.childName().Length()))));
-
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
   for (const auto& child : descendants) {
@@ -809,9 +800,6 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
-
-  QM_TRY(QM_TO_RESULT(
-      UpdateUsage(static_cast<int64_t>(aHandle.childName().Length()))));
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
@@ -873,13 +861,6 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
   } else {
     QM_TRY(
         QM_TO_RESULT(PerformRenameDirectory(mConnection, aHandle, aNewName)));
-  }
-
-  // This block will go away when fs::QuotaClient::InitOrigin is implemented
-  const auto usageDelta = static_cast<int64_t>(aNewName.Length()) -
-                          static_cast<int64_t>(aHandle.entryName().Length());
-  if (0 != usageDelta) {
-    QM_TRY(QM_TO_RESULT(UpdateUsage(usageDelta)));
   }
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
@@ -973,13 +954,6 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
     QM_TRY(QM_TO_RESULT(PerformRenameFile(mConnection, aHandle, newName)));
   } else {
     QM_TRY(QM_TO_RESULT(PerformRenameDirectory(mConnection, aHandle, newName)));
-  }
-
-  // This block will go away when fs::QuotaClient::InitOrigin is implemented
-  const auto usageDelta = static_cast<int64_t>(newName.Length()) -
-                          static_cast<int64_t>(aHandle.entryName().Length());
-  if (0 != usageDelta) {
-    QM_TRY(QM_TO_RESULT(UpdateUsage(usageDelta)));
   }
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
