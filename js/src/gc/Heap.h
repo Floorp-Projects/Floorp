@@ -752,9 +752,6 @@ inline TenuredChunk* Arena::chunk() const {
   return TenuredChunk::fromAddress(address());
 }
 
-static const int32_t ChunkStoreBufferOffsetFromLastByte =
-    int32_t(gc::ChunkStoreBufferOffset) - int32_t(gc::ChunkMask);
-
 // Cell header stored before all nursery cells.
 struct alignas(gc::CellAlignBytes) NurseryCellHeader {
   // Store zone pointer with the trace kind in the lowest three bits.
