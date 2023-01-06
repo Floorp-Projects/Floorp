@@ -18,6 +18,7 @@
 #include "api/video/video_codec_type.h"
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/include/video_error_codes.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -80,23 +81,30 @@ int32_t QualityAnalyzingVideoEncoder::InitEncode(
   MutexLock lock(&mutex_);
   codec_settings_ = *codec_settings;
   mode_ = SimulcastMode::kNormal;
-  if (codec_settings->codecType == kVideoCodecVP9) {
+  absl::optional<InterLayerPredMode> inter_layer_pred_mode;
+  if (codec_settings->GetScalabilityMode().has_value()) {
+    inter_layer_pred_mode = ScalabilityModeToInterLayerPredMode(
+        *codec_settings->GetScalabilityMode());
+  } else if (codec_settings->codecType == kVideoCodecVP9) {
     if (codec_settings->VP9().numberOfSpatialLayers > 1) {
-      switch (codec_settings->VP9().interLayerPred) {
-        case InterLayerPredMode::kOn:
-          mode_ = SimulcastMode::kSVC;
-          break;
-        case InterLayerPredMode::kOnKeyPic:
-          mode_ = SimulcastMode::kKSVC;
-          break;
-        case InterLayerPredMode::kOff:
-          mode_ = SimulcastMode::kSimulcast;
-          break;
-        default:
-          RTC_DCHECK_NOTREACHED()
-              << "Unknown codec_settings->VP9().interLayerPred";
-          break;
-      }
+      inter_layer_pred_mode = codec_settings->VP9().interLayerPred;
+    }
+  }
+  if (inter_layer_pred_mode.has_value()) {
+    switch (*inter_layer_pred_mode) {
+      case InterLayerPredMode::kOn:
+        mode_ = SimulcastMode::kSVC;
+        break;
+      case InterLayerPredMode::kOnKeyPic:
+        mode_ = SimulcastMode::kKSVC;
+        break;
+      case InterLayerPredMode::kOff:
+        mode_ = SimulcastMode::kSimulcast;
+        break;
+      default:
+        RTC_DCHECK_NOTREACHED()
+            << "Unknown InterLayerPredMode value " << *inter_layer_pred_mode;
+        break;
     }
   }
   if (codec_settings->numberOfSimulcastStreams > 1) {

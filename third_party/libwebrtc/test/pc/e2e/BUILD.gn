@@ -165,6 +165,7 @@ if (!build_with_chromium) {
       "../../../api/video:video_rtp_headers",
       "../../../api/video_codecs:video_codecs_api",
       "../../../modules/video_coding:video_codec_interface",
+      "../../../modules/video_coding/svc:scalability_mode_util",
       "../../../rtc_base:criticalsection",
       "../../../rtc_base:logging",
       "../../../rtc_base/synchronization:mutex",
