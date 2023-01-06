@@ -1,7 +1,7 @@
 diff --git a/fdlibm.h b/fdlibm.h
 --- a/fdlibm.h
 +++ b/fdlibm.h
-@@ -12,504 +12,66 @@
+@@ -12,504 +12,51 @@
  /*
   * from: @(#)fdlibm.h 5.1 93/09/24
   * $FreeBSD$
@@ -130,7 +130,7 @@ diff --git a/fdlibm.h b/fdlibm.h
 -#define	M_LN2		0.69314718055994530942	/* log e2 */
 -#define	M_LN10		2.30258509299404568402	/* log e10 */
 -#define	M_PI		3.14159265358979323846	/* pi */
- #define	M_PI_2		1.57079632679489661923	/* pi/2 */
+-#define	M_PI_2		1.57079632679489661923	/* pi/2 */
 -#define	M_PI_4		0.78539816339744830962	/* pi/4 */
 -#define	M_1_PI		0.31830988618379067154	/* 1/pi */
 -#define	M_2_PI		0.63661977236758134308	/* 2/pi */
@@ -256,7 +256,7 @@ diff --git a/fdlibm.h b/fdlibm.h
  double	cbrt(double);
 -double	erf(double);
 -double	erfc(double);
- double	exp2(double);
+-double	exp2(double);
  double	expm1(double);
 -double	fma(double, double, double);
  double	hypot(double, double);
@@ -330,20 +330,20 @@ diff --git a/fdlibm.h b/fdlibm.h
 -
 -/* float versions of ANSI/POSIX functions */
 -#if __ISO_C_VISIBLE >= 1999
- float	acosf(float);
- float	asinf(float);
- float	atanf(float);
+-float	acosf(float);
+-float	asinf(float);
+-float	atanf(float);
 -float	atan2f(float, float);
- float	cosf(float);
- float	sinf(float);
- float	tanf(float);
+-float	cosf(float);
+-float	sinf(float);
+-float	tanf(float);
 -
 -float	coshf(float);
 -float	sinhf(float);
 -float	tanhf(float);
 -
- float	exp2f(float);
- float	expf(float);
+-float	exp2f(float);
+-float	expf(float);
 -float	expm1f(float);
 -float	frexpf(float, int *);	/* fundamentally !__pure2 */
 -int	ilogbf(float) __pure2;
@@ -351,15 +351,14 @@ diff --git a/fdlibm.h b/fdlibm.h
 -float	log10f(float);
 -float	log1pf(float);
 -float	log2f(float);
- float	logf(float);
+-float	logf(float);
 -float	modff(float, float *);	/* fundamentally !__pure2 */
 -
- float	powf(float, float);
- float	sqrtf(float);
+-float	powf(float, float);
+-float	sqrtf(float);
  
  float	ceilf(float);
 -float	fabsf(float) __pure2;
-+float	fabsf(float);
  float	floorf(float);
 -float	fmodf(float, float);
 -float	roundf(float);
@@ -387,7 +386,7 @@ diff --git a/fdlibm.h b/fdlibm.h
 -float	remquof(float, float, int *);
  float	rintf(float);
 -float	scalblnf(float, long);
- float	scalbnf(float, int);
+-float	scalbnf(float, int);
  float	truncf(float);
  
 -float	fdimf(float, float);
