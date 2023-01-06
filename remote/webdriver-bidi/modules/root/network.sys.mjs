@@ -123,11 +123,10 @@ class NetworkModule extends Module {
     // specific redirectCount.
     this.#beforeRequestSentMap = new Map();
 
-    this.#networkListener = new lazy.NetworkListener(messageHandler);
-
     // Set of event names which have active subscriptions
     this.#subscribedEvents = new Set();
 
+    this.#networkListener = new lazy.NetworkListener();
     this.#networkListener.on("before-request-sent", this.#onBeforeRequestSent);
   }
 
