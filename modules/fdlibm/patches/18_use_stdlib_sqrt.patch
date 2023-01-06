@@ -251,3 +251,39 @@ diff --git a/s_asinh.cpp b/s_asinh.cpp
  	}
  	if(hx>0) return w; else return -w;
  }
+--- a/e_asinf.cpp	2022-12-13 14:45:17.953154257 -0500
++++ b/e_asinf.cpp	2022-12-13 14:45:03.425091710 -0500
+@@ -11,16 +11,18 @@
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+ //#include <sys/cdefs.h>
+ //__FBSDID("$FreeBSD$");
+ 
++#include <cmath>
++
+ #include "math_private.h"
+ 
+ static const float
+ one =  1.0000000000e+00, /* 0x3F800000 */
+ huge =  1.000e+30,
+ 	/* coefficient for R(x^2) */
+ pS0 =  1.6666586697e-01,
+ pS1 = -4.2743422091e-02,
+@@ -52,13 +54,13 @@
+ 	    w = p/q;
+ 	    return x+x*w;
+ 	}
+ 	/* 1> |x|>= 0.5 */
+ 	w = one-fabsf(x);
+ 	t = w*(float)0.5;
+ 	p = t*(pS0+t*(pS1+t*pS2));
+ 	q = one+t*qS1;
+-	s = sqrt(t);
++	s = std::sqrt(t);
+ 	w = p/q;
+ 	t = pio2-2.0*(s+s*w);
+ 	if(hx>0) return t; else return -t;
+ }
