@@ -11,6 +11,7 @@
 #include "rtc_base/network.h"
 
 #include "absl/strings/string_view.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 
 #if defined(WEBRTC_POSIX)
 #include <net/if.h>
@@ -178,6 +179,21 @@ bool ShouldAdapterChangeTriggerNetworkChange(rtc::AdapterType old_type,
   if (Network::IsCellular(old_type) && Network::IsCellular(new_type))
     return false;
   return true;
+}
+
+bool PreferGlobalIPv6Address(const webrtc::FieldTrialsView* field_trials) {
+  // Bug fix to prefer global IPv6 address over link local.
+  // Field trial key reserved in bugs.webrtc.org/14334
+  if (field_trials &&
+      field_trials->IsEnabled("WebRTC-IPv6NetworkResolutionFixes")) {
+    webrtc::FieldTrialParameter<bool> prefer_global_ipv6_address_enabled(
+        "PreferGlobalIPv6Address", false);
+    webrtc::ParseFieldTrial(
+        {&prefer_global_ipv6_address_enabled},
+        field_trials->Lookup("WebRTC-IPv6NetworkResolutionFixes"));
+    return prefer_global_ipv6_address_enabled;
+  }
+  return false;
 }
 
 }  // namespace
@@ -1111,12 +1127,9 @@ IPAddress Network::GetBestIP() const {
   }
 
   InterfaceAddress selected_ip, link_local_ip, ula_ip;
-  // Bug fix to prefer global IPv6 address over link local.
-  // Field trial key reserved in bugs.webrtc.org/14334
   const bool prefer_global_ipv6_to_link_local =
-      field_trials_
-          ? field_trials_->IsEnabled("WebRTC-IPv6NetworkResolutionFixes")
-          : false;
+      PreferGlobalIPv6Address(field_trials_);
+
   for (const InterfaceAddress& ip : ips_) {
     // Ignore any address which has been deprecated already.
     if (ip.ipv6_flags() & IPV6_ADDRESS_FLAG_DEPRECATED)

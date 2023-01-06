@@ -1124,6 +1124,7 @@ rtc_library("rtc_base") {
     "../api/task_queue:pending_task_safety_flag",
     "../api/transport:field_trial_based_config",
     "../api/units:time_delta",
+    "../rtc_base/experiments:field_trial_parser",
     "../system_wrappers:field_trial",
     "memory:always_valid_pointer",
     "network:sent_packet",
