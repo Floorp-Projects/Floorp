@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '9009f2728152aece4e9db63f55753c4790cf0dd4',
+  'chromium_revision': 'dca55c6128808fbd31df4756802c7a1e75ad7586',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -32,9 +32,9 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@fc03a1ce91724b430852eea2dc1d858372c6114d',
+    'https://chromium.googlesource.com/chromium/src/base@b2a14655ab198a179a2c91cfa70a8449f25da043',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@6ff45c799e4f786b852eee7b527303868f7d3d11',
+    'https://chromium.googlesource.com/chromium/src/build@0d770d19844c60dfb45d7ac339b1f4465124da67',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@c24a0d5e7d5343d90663847e5b568b3a71691a3a',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -43,13 +43,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@8f89cb91ebd8d46af1ebd1db43da55030fb34f7a',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@85db71872d1aa61daffc377c55370a206978bd97',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@fc8d74a5a29e3619699236803c52f5ea84a05221',
+    'https://chromium.googlesource.com/chromium/src/testing@822fdb25cd8e02d92e4f37f2061267d0a2b34fbe',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@ad14daf0cbe11824fc04b3b34f72bc9807c6553f',
+    'https://chromium.googlesource.com/chromium/src/third_party@148967e6da3931628cf1e67a3ba7b4404fd29c53',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -148,7 +148,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@e085b3b50bde862d0cf3ce4594e3f391bcf5faec',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@638d30eac631145d3d1bfcfb95aa96a9b4a5450f',
+    'https://chromium.googlesource.com/catapult.git@94fe26f9d5ab1009c0cc716314d3d92a4f56e056',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -157,9 +157,9 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@b0fb8d570df94ed4e457adaa827d1ce9b51ade00',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@5084800dc3cea44a6e135ccee721034ec7951fa7',
   'src/third_party/ffmpeg':
-    'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@b71ecd02b47939e530e620d9d0d101463db0f688',
+    'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@64d7d8d0e5035087ebe24a65845b36f78e7fad92',
   'src/third_party/grpc/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/grpc/grpc.git@dd77c67217b10ffeaf766e25eb8b46d2d59de4ff',
   },
@@ -282,7 +282,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@237b64cdefba611f6756f4793a5862deda4cea25',
+    'https://chromium.googlesource.com/chromium/src/tools@b37ad79dd9b26e107af3e73de9d25e5ba79ac32c',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -370,7 +370,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': '7LibE0MLJMFS99X0RgfGxaihptFBes7DCeHNQU_qJGMC',
+          'version': 'vqYWBuNeaF85CGvaKzQtC7wXNdb5Yy-R-KFqxDNbyBkC',
       },
     ],
     'condition': 'checkout_android',
@@ -2138,17 +2138,6 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/org_robolectric_shadows_framework',
-              'version': 'version:2@4.8.1.cr1',
-          },
-      ],
-      'condition': 'checkout_android',
-      'dep_type': 'cipd',
-  },
-
-  'src/third_party/android_deps/libs/org_robolectric_shadows_multidex': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/android_deps/libs/org_robolectric_shadows_multidex',
               'version': 'version:2@4.8.1.cr1',
           },
       ],
