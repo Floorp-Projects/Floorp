@@ -381,6 +381,10 @@ class PeerConnectionE2EQualityTestFixture {
     // According to bugs.webrtc.org/4762 WebRTC supports synchronization only
     // for pair of single audio and single video stream.
     absl::optional<std::string> sync_group;
+    // If specified, it will be set into RtpParameters of corresponding
+    // RtpSenderInterface for this video stream.
+    // Note that this setting takes precedence over `content_hint`.
+    absl::optional<DegradationPreference> degradation_preference;
   };
 
   // Contains properties for audio in the call.
