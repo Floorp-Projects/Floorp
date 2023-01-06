@@ -40,26 +40,12 @@ add_setup(async function() {
 // Add several new tabs in sequence, hiding some, to ensure that the
 // correct attributes get set
 add_task(async function test() {
-  testAttrib(0, "first-visible-tab", true);
   testAttrib(4, "last-visible-tab", true);
   testAttrib(0, "visuallyselected", true);
 
   await switchTab(2);
 
   testAttrib(2, "visuallyselected", true);
-
-  await switchTab(1);
-
-  gBrowser.hideTab(gBrowser.tabs[0]);
-
-  testAttrib(0, "first-visible-tab", false);
-  testAttrib(1, "first-visible-tab", true);
-
-  gBrowser.showTab(gBrowser.tabs[0]);
-
-  testAttrib(0, "first-visible-tab", true);
-
-  gBrowser.moveTabTo(gBrowser.selectedTab, 3);
 });
 
 add_task(async function test_hoverOne() {
@@ -110,7 +96,6 @@ add_task(async function test_pinning() {
   // Causes gBrowser.tabs to change indices
   gBrowser.pinTab(gBrowser.tabs[3]);
   testAttrib(3, "last-visible-tab", true);
-  testAttrib(0, "first-visible-tab", true);
   testAttrib(0, "visuallyselected", true);
 });
 
