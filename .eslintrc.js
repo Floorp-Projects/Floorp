@@ -211,7 +211,6 @@ module.exports = {
         "browser/components/**",
         "browser/extensions/report-site-issue/**",
         "browser/extensions/search-detection/**",
-        "devtools/**",
         "dom/push/test/mockpushserviceparent.js",
         "toolkit/**",
       ],

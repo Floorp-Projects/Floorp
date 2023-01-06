@@ -292,7 +292,7 @@ function exportData(win, headers) {
       writable: true,
     });
   } catch (error) {
-    Cu.reportError(error);
+    console.error(error);
   }
   return { json };
 }

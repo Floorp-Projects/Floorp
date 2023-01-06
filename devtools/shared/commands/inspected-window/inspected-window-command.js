@@ -134,7 +134,7 @@ class InspectedWindowCommand {
       return result;
     } catch (e) {
       this._reloadPending = false;
-      Cu.reportError(e);
+      console.error(e);
       return Promise.reject({
         message: "An unexpected error occurred",
       });

@@ -236,7 +236,7 @@ DevToolsServerConnection.prototype = {
     const errorString = prefix + ": " + DevToolsUtils.safeErrorString(error);
     // On worker threads we don't have access to Cu.
     if (!isWorker) {
-      Cu.reportError(errorString);
+      console.error(errorString);
     }
     dumpn(errorString);
     return {

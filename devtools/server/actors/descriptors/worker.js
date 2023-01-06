@@ -151,7 +151,7 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
     },
 
     _onWorkerError(filename, lineno, message) {
-      Cu.reportError("ERROR:" + filename + ":" + lineno + ":" + message + "\n");
+      console.error("ERROR:", filename, ":", lineno, ":", message);
     },
 
     _getServiceWorkerRegistrationInfo() {

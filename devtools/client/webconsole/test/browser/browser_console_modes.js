@@ -87,21 +87,30 @@ add_task(async function() {
     evaluationContextSelectorButton.classList.contains("checked")
   );
 
+  // We can't directly throw in the script as it would be treated as an evaluation result
+  // and wouldn't be hidden when switching modes.
+  // Here we use an async-iife in which we throw so this will trigger the proper error
+  // reporting path.
   await executeAndWaitForResultMessage(
     hud,
-    `Cu.reportError("${FILTER_PREFIX}Content Cu.reportError");21+21`,
+    `(async function(){
+        throw new Error("${FILTER_PREFIX}Content error")
+      })();
+      21+21`,
     42
   );
 
-  // Since we run the non-fission test in second, and given we don't retrieve cached messages
-  // in such case, it's okay to just cause the message to appear in this function.
-  Cu.reportError(FILTER_PREFIX + "Parent Cu.reportError");
+  await waitFor(() => findErrorMessage(hud, "Content error"));
+  ok(true, "Error message from content process is displayed");
 
-  await waitFor(() => findErrorMessage(hud, "Parent Cu.reportError"));
+  // Emit an error message from the parent process
+  executeSoon(() => {
+    expectUncaughtException();
+    throw new Error(`${FILTER_PREFIX}Parent error`);
+  });
+
+  await waitFor(() => findErrorMessage(hud, "Parent error"));
   ok(true, "Parent process message is displayed");
-
-  await waitFor(() => findErrorMessage(hud, "Content Cu.reportError"));
-  ok(true, "reportError message from content process is displayed");
 
   const suffix = ` Object { hello: "world" }`;
   const expectedMessages = [
@@ -190,7 +199,7 @@ add_task(async function() {
     "Check that message from parent process is still visible in the Browser Console"
   );
   ok(
-    !!findErrorMessage(hud, "Parent Cu.reportError"),
+    !!findErrorMessage(hud, "Parent error"),
     "Parent process message is still displayed"
   );
 
@@ -223,9 +232,9 @@ add_task(async function() {
   }
 
   is(
-    findErrorMessages(hud, "Content Cu.reportError").length,
+    findErrorMessages(hud, "Content error").length,
     1,
-    "reportError message from content process is only displayed once"
+    "error message from content process is only displayed once"
   );
 
   is(

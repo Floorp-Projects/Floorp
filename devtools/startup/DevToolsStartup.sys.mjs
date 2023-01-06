@@ -1243,7 +1243,7 @@ const JsonView = {
         !message.data.startsWith("blob:null") ||
         !browser.contentPrincipal.isNullPrincipal
       ) {
-        Cu.reportError("Got invalid request to save JSON data");
+        console.error("Got invalid request to save JSON data");
         return;
       }
       // The following code emulates saveBrowser, but:
