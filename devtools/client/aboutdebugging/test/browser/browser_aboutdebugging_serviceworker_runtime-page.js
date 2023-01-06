@@ -14,8 +14,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const SW_TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
-const SW_URL = URL_ROOT + "resources/service-workers/push-sw.js";
+const SW_TAB_URL = URL_ROOT_SSL + "resources/service-workers/push-sw.html";
+const SW_URL = URL_ROOT_SSL + "resources/service-workers/push-sw.js";
 
 /**
  * Test that service workers appear and dissapear from the runtime page when they

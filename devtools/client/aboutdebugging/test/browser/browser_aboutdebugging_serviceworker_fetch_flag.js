@@ -9,11 +9,11 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const FETCH_SW_JS = URL_ROOT + "resources/service-workers/fetch-sw.js";
-const FETCH_SW_HTML = URL_ROOT + "resources/service-workers/fetch-sw.html";
+const FETCH_SW_JS = URL_ROOT_SSL + "resources/service-workers/fetch-sw.js";
+const FETCH_SW_HTML = URL_ROOT_SSL + "resources/service-workers/fetch-sw.html";
 
-const EMPTY_SW_JS = URL_ROOT + "resources/service-workers/empty-sw.js";
-const EMPTY_SW_HTML = URL_ROOT + "resources/service-workers/empty-sw.html";
+const EMPTY_SW_JS = URL_ROOT_SSL + "resources/service-workers/empty-sw.js";
+const EMPTY_SW_HTML = URL_ROOT_SSL + "resources/service-workers/empty-sw.html";
 
 /**
  * Test that the appropriate fetch flag is displayed for service workers.
