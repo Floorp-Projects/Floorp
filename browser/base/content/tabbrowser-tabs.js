@@ -38,7 +38,6 @@
 
       this.baseConnect();
 
-      this._lastTab = null;
       this._beforeHoveredTab = null;
       this._afterHoveredTab = null;
       this._hoveredTab = null;
@@ -1211,9 +1210,6 @@
         return;
       }
 
-      this._lastTab?.removeAttribute("last-visible-tab");
-      this._lastTab = visibleTabs[visibleTabs.length - 1];
-      this._lastTab.setAttribute("last-visible-tab", "true");
       this._firstUnpinnedTab?.removeAttribute("first-visible-unpinned-tab");
       this._firstUnpinnedTab = visibleTabs.find(t => !t.pinned);
       this._firstUnpinnedTab?.setAttribute(
