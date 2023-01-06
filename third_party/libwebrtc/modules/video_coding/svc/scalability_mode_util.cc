@@ -23,12 +23,8 @@ absl::optional<ScalabilityMode> ScalabilityModeFromString(
     return ScalabilityMode::kL1T1;
   if (mode_string == "L1T2")
     return ScalabilityMode::kL1T2;
-  if (mode_string == "L1T2h")
-    return ScalabilityMode::kL1T2h;
   if (mode_string == "L1T3")
     return ScalabilityMode::kL1T3;
-  if (mode_string == "L1T3h")
-    return ScalabilityMode::kL1T3h;
 
   if (mode_string == "L2T1")
     return ScalabilityMode::kL2T1;
@@ -94,9 +90,7 @@ InterLayerPredMode ScalabilityModeToInterLayerPredMode(
   switch (scalability_mode) {
     case ScalabilityMode::kL1T1:
     case ScalabilityMode::kL1T2:
-    case ScalabilityMode::kL1T2h:
     case ScalabilityMode::kL1T3:
-    case ScalabilityMode::kL1T3h:
     case ScalabilityMode::kL2T1:
     case ScalabilityMode::kL2T1h:
       return InterLayerPredMode::kOn;
@@ -143,9 +137,7 @@ int ScalabilityModeToNumSpatialLayers(ScalabilityMode scalability_mode) {
   switch (scalability_mode) {
     case ScalabilityMode::kL1T1:
     case ScalabilityMode::kL1T2:
-    case ScalabilityMode::kL1T2h:
     case ScalabilityMode::kL1T3:
-    case ScalabilityMode::kL1T3h:
       return 1;
     case ScalabilityMode::kL2T1:
     case ScalabilityMode::kL2T1h:
@@ -185,10 +177,8 @@ int ScalabilityModeToNumTemporalLayers(ScalabilityMode scalability_mode) {
     case ScalabilityMode::kL1T1:
       return 1;
     case ScalabilityMode::kL1T2:
-    case ScalabilityMode::kL1T2h:
       return 2;
     case ScalabilityMode::kL1T3:
-    case ScalabilityMode::kL1T3h:
       return 3;
     case ScalabilityMode::kL2T1:
     case ScalabilityMode::kL2T1h:
@@ -233,9 +223,7 @@ absl::optional<ScalabilityModeResolutionRatio> ScalabilityModeToResolutionRatio(
   switch (scalability_mode) {
     case ScalabilityMode::kL1T1:
     case ScalabilityMode::kL1T2:
-    case ScalabilityMode::kL1T2h:
     case ScalabilityMode::kL1T3:
-    case ScalabilityMode::kL1T3h:
       return absl::nullopt;
     case ScalabilityMode::kL2T1:
     case ScalabilityMode::kL2T1_KEY:

@@ -20,12 +20,8 @@ absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode) {
       return "L1T1";
     case ScalabilityMode::kL1T2:
       return "L1T2";
-    case ScalabilityMode::kL1T2h:
-      return "L1T2h";
     case ScalabilityMode::kL1T3:
       return "L1T3";
-    case ScalabilityMode::kL1T3h:
-      return "L1T3h";
     case ScalabilityMode::kL2T1:
       return "L2T1";
     case ScalabilityMode::kL2T1h:

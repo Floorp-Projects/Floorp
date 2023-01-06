@@ -319,9 +319,7 @@ INSTANTIATE_TEST_SUITE_P(
         ValuesIn({
             SvcTestParameters{kVp9CodecName, "L1T1", 1, 1},
             SvcTestParameters{kVp9CodecName, "L1T2", 1, 2},
-            // SvcTestParameters{kVp9CodecName, "L1T2h", 1, 2},
             SvcTestParameters{kVp9CodecName, "L1T3", 1, 3},
-            // SvcTestParameters{kVp9CodecName, "L1T3h", 1, 3},
             SvcTestParameters{kVp9CodecName, "L2T1", 2, 1},
             SvcTestParameters{kVp9CodecName, "L2T1h", 2, 1},
             SvcTestParameters{kVp9CodecName, "L2T1_KEY", 2, 1},
@@ -367,9 +365,7 @@ INSTANTIATE_TEST_SUITE_P(
     Combine(ValuesIn({
                 SvcTestParameters{kAv1CodecName, "L1T1", 1, 1},
                 SvcTestParameters{kAv1CodecName, "L1T2", 1, 2},
-                // SvcTestParameters{kAv1CodecName, "L1T2h", 1, 2},
                 SvcTestParameters{kAv1CodecName, "L1T3", 1, 3},
-                // SvcTestParameters{kAv1CodecName, "L1T3h", 1, 3},
                 SvcTestParameters{kAv1CodecName, "L2T1", 2, 1},
                 SvcTestParameters{kAv1CodecName, "L2T1h", 2, 1},
                 SvcTestParameters{kAv1CodecName, "L2T1_KEY", 2, 1},

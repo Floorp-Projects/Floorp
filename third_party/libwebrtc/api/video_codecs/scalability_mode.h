@@ -27,9 +27,7 @@ namespace webrtc {
 enum class ScalabilityMode : uint8_t {
   kL1T1,
   kL1T2,
-  kL1T2h,
   kL1T3,
-  kL1T3h,
   kL2T1,
   kL2T1h,
   kL2T1_KEY,
@@ -61,9 +59,7 @@ inline constexpr ScalabilityMode kAllScalabilityModes[] = {
     // clang-format off
     ScalabilityMode::kL1T1,
     ScalabilityMode::kL1T2,
-    ScalabilityMode::kL1T2h,
     ScalabilityMode::kL1T3,
-    ScalabilityMode::kL1T3h,
     ScalabilityMode::kL2T1,
     ScalabilityMode::kL2T1h,
     ScalabilityMode::kL2T1_KEY,
