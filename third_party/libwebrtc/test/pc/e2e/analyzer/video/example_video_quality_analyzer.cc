@@ -105,7 +105,8 @@ void ExampleVideoQualityAnalyzer::OnEncoderError(
 
 void ExampleVideoQualityAnalyzer::OnDecoderError(absl::string_view peer_name,
                                                  uint16_t frame_id,
-                                                 int32_t error_code) {
+                                                 int32_t error_code,
+                                                 const DecoderStats& stats) {
   RTC_LOG(LS_ERROR) << "Failed to decode frame " << frame_id
                     << ". Code: " << error_code;
 }
