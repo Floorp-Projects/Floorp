@@ -483,6 +483,8 @@ AgcManagerDirect::AgcManagerDirect(int num_capture_channels,
                    << " (overridden: "
                    << (min_mic_level_override_.has_value() ? "yes" : "no")
                    << ")";
+  RTC_LOG(LS_INFO) << "[agc] Startup min volume: "
+                   << analog_config.startup_min_volume;
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
     ApmDataDumper* data_dumper_ch = ch == 0 ? data_dumper_.get() : nullptr;
 
