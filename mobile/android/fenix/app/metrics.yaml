@@ -141,15 +141,15 @@ events:
           include:
           add_to_homescreen, add_to_top_sites, addons_manager, back, bookmark,
           bookmarks, desktop_view_off, desktop_view_on, downloads,
-          find_in_page, forward, help, history, library, new_private_tab,
-          new_tab, open_in_app, open_in_fenix, quit, reader_mode_appearance,
-          reader_mode_off, reader_mode_on, reload, remove_from_top_sites,
-          save_to_collection, set_default_browser, settings, share, stop,
-          sync_account, and sync_tabs.
+          find_in_page, forward, history, new_tab, open_in_app, open_in_fenix,
+          quit, reader_mode_appearance, reload, remove_from_top_sites,
+          save_to_collection, set_default_browser, settings, share, stop, and
+          sync_account.
         type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1024
       - https://github.com/mozilla-mobile/fenix/issues/19923
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1808689
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
       - https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996
