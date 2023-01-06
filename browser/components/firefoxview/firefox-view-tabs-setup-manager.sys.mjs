@@ -48,6 +48,8 @@ const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
 const NETWORK_STATUS_CHANGED = "network:offline-status-changed";
 const SYNC_SERVICE_ERROR = "weave:service:sync:error";
 const FXA_ENABLED = "identity.fxaccounts.enabled";
+const FXA_DEVICE_CONNECTED = "fxaccounts:device_connected";
+const FXA_DEVICE_DISCONNECTED = "fxaccounts:device_disconnected";
 const SYNC_SERVICE_FINISHED = "weave:service:sync:finish";
 const PRIMARY_PASSWORD_UNLOCKED = "passwordmgr-crypto-login";
 const TAB_PICKUP_OPEN_STATE_PREF =
@@ -133,6 +135,8 @@ export const TabsSetupFlowManager = new (class {
     Services.obs.addObserver(this, SYNC_SERVICE_FINISHED);
     Services.obs.addObserver(this, TOPIC_TABS_CHANGED);
     Services.obs.addObserver(this, PRIMARY_PASSWORD_UNLOCKED);
+    Services.obs.addObserver(this, FXA_DEVICE_CONNECTED);
+    Services.obs.addObserver(this, FXA_DEVICE_DISCONNECTED);
 
     // this.syncTabsPrefEnabled will track the value of the tabs pref
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -211,6 +215,8 @@ export const TabsSetupFlowManager = new (class {
     Services.obs.removeObserver(this, SYNC_SERVICE_FINISHED);
     Services.obs.removeObserver(this, TOPIC_TABS_CHANGED);
     Services.obs.removeObserver(this, PRIMARY_PASSWORD_UNLOCKED);
+    Services.obs.removeObserver(this, FXA_DEVICE_CONNECTED);
+    Services.obs.removeObserver(this, FXA_DEVICE_DISCONNECTED);
   }
   get currentSetupState() {
     return this.setupState.get(this._currentSetupStateName);
@@ -293,16 +299,16 @@ export const TabsSetupFlowManager = new (class {
         break;
       case TOPIC_DEVICELIST_UPDATED:
         this.logger.debug("Handling observer notification:", topic, data);
-        if (this.refreshDevices()) {
+        if (await this.refreshDevices()) {
           this.logger.debug(
             "refreshDevices made changes, calling maybeUpdateUI"
           );
           this.maybeUpdateUI(true);
         }
         break;
-      case "fxaccounts:device_connected":
-      case "fxaccounts:device_disconnected":
-        await lazy.fxAccounts.device.refreshDeviceList();
+      case FXA_DEVICE_CONNECTED:
+      case FXA_DEVICE_DISCONNECTED:
+        await lazy.fxAccounts.device.refreshDeviceList({ ignoreCached: true });
         this.maybeUpdateUI(true);
         break;
       case SYNC_SERVICE_ERROR:
@@ -385,7 +391,7 @@ export const TabsSetupFlowManager = new (class {
 
     // When SyncedTabs has resolved the getRecentTabs promise,
     // we also know we can update devices-related internal state
-    if (this.refreshDevices()) {
+    if (await this.refreshDevices()) {
       this.logger.debug(
         "onSignedInChange, after refreshDevices, calling maybeUpdateUI"
       );
@@ -421,7 +427,16 @@ export const TabsSetupFlowManager = new (class {
     }
   }
 
-  refreshDevices() {
+  async refreshDevices() {
+    // If current device not found in recent device list, refresh device list
+    if (
+      !lazy.fxAccounts.device.recentDeviceList?.some(
+        device => device.isCurrentDevice
+      )
+    ) {
+      await lazy.fxAccounts.device.refreshDeviceList({ ignoreCached: true });
+    }
+
     // compare new values to the previous values
     const mobileDeviceConnected = this.mobileDeviceConnected;
     const secondaryDeviceConnected = this.secondaryDeviceConnected;
