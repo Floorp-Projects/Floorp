@@ -10,6 +10,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.feature.media.service.MediaSessionServiceDelegate
@@ -57,7 +58,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -87,7 +89,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -117,7 +120,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -147,7 +151,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -187,7 +192,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -227,7 +233,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -261,7 +268,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -288,7 +296,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 
@@ -321,7 +330,8 @@ class AudioFocusTest {
         )
         val store = BrowserStore(initialState)
         val service: AbstractMediaSessionService = mock()
-        val delegate = MediaSessionServiceDelegate(testContext, service, store)
+        val crashReporter: CrashReporting = mock()
+        val delegate = MediaSessionServiceDelegate(testContext, service, store, crashReporter)
 
         delegate.onCreate()
 

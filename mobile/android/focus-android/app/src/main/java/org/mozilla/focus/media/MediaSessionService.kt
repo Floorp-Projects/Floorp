@@ -5,6 +5,7 @@
 package org.mozilla.focus.media
 
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import org.mozilla.focus.ext.components
 
@@ -12,5 +13,6 @@ import org.mozilla.focus.ext.components
  * [AbstractMediaSessionService] implementation for injecting [BrowserStore] singleton.
  */
 class MediaSessionService : AbstractMediaSessionService() {
+    override val crashReporter: CrashReporting? by lazy { components.crashReporter }
     override val store: BrowserStore by lazy { components.store }
 }

@@ -160,6 +160,7 @@
         <service android:name=".downloads.DownloadService" />
 
         <service android:name=".media.MediaSessionService"
+            android:foregroundServiceType="mediaPlayback"
             android:exported="false" />
 
     </application>

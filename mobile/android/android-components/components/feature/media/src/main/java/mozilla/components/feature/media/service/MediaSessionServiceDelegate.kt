@@ -4,11 +4,13 @@
 
 package mozilla.components.feature.media.service
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.os.Build
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.VisibleForTesting
@@ -19,6 +21,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.feature.media.ext.getTitleOrUrl
 import mozilla.components.feature.media.ext.nonPrivateUrl
@@ -34,6 +37,8 @@ import mozilla.components.feature.media.session.MediaSessionCallback
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.ext.stopForegroundCompat
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 @VisibleForTesting
 internal class BecomingNoisyReceiver(private val controller: MediaSession.Controller?) : BroadcastReceiver() {
@@ -59,6 +64,7 @@ internal class MediaSessionServiceDelegate(
     @get:VisibleForTesting internal var context: Context,
     @get:VisibleForTesting internal val service: AbstractMediaSessionService,
     @get:VisibleForTesting internal val store: BrowserStore,
+    @get:VisibleForTesting internal val crashReporter: CrashReporting?,
 ) : MediaSessionDelegate {
     private val logger = Logger("MediaSessionService")
 
@@ -180,10 +186,32 @@ internal class MediaSessionServiceDelegate(
     }
 
     @VisibleForTesting
-    internal fun startForeground(sessionState: SessionState) {
-        notificationScope?.launch {
+    @Suppress("TooGenericExceptionCaught")
+    internal fun startForeground(
+        sessionState: SessionState,
+        coroutineContext: CoroutineContext = EmptyCoroutineContext,
+    ) {
+        notificationScope?.launch(coroutineContext) {
             val notification = notificationHelper.create(sessionState, mediaSession)
-            service.startForeground(notificationId, notification)
+            try {
+                service.startForeground(notificationId, notification)
+            } catch (e: Exception) {
+                if (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    e is ForegroundServiceStartNotAllowedException
+                ) {
+                    // We should not encounter this exception if `android:foregroundServiceType="mediaPlayback"`
+                    // is added to the service. The crash reporter loses the stack trace for this
+                    // exception so we want to be able to track this crash independently to ensure
+                    // this case is fixed and be able to determine if there are other cases where we
+                    // might be trying to start foreground services from the background.
+                    // https://bugzilla.mozilla.org/show_bug.cgi?id=1802620
+                    crashReporter?.submitCaughtException(e)
+                } else {
+                    throw e
+                }
+            }
+
             isForegroundService = true
         }
     }

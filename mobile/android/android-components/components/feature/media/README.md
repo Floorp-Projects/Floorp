@@ -4,6 +4,22 @@ Feature component for website media related features.
 
 ## Usage
 
+Add the push service for controlling the media session:
+
+```kotlin
+class MediaSessionService(
+    override val store: BrowserStore,
+    override val crashReporter: CrashReporting
+) : AbstractMediaSessionService()
+```
+
+Expose the service in the `AndroidManifest.xml`:
+```xml
+<service android:name=".media.MediaSessionService"
+    android:foregroundServiceType="mediaPlayback"
+    android:exported="false" />
+```
+
 ### Setting up the dependency
 
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
