@@ -67,6 +67,24 @@ void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
           source_id_, screencast_portal->RestoreToken());
     }
   }
+
+  if (!delegated_source_list_observer_)
+    return;
+
+  switch (result) {
+    case RequestResponse::kUnknown:
+      RTC_DCHECK_NOTREACHED();
+      break;
+    case RequestResponse::kSuccess:
+      delegated_source_list_observer_->OnSelection();
+      break;
+    case RequestResponse::kUserCancelled:
+      delegated_source_list_observer_->OnCancelled();
+      break;
+    case RequestResponse::kError:
+      delegated_source_list_observer_->OnError();
+      break;
+  }
 }
 
 void BaseCapturerPipeWire::OnScreenCastSessionClosed() {
@@ -155,6 +173,11 @@ bool BaseCapturerPipeWire::SelectSource(SourceId id) {
 DelegatedSourceListController*
 BaseCapturerPipeWire::GetDelegatedSourceListController() {
   return this;
+}
+
+void BaseCapturerPipeWire::Observe(Observer* observer) {
+  RTC_DCHECK(!delegated_source_list_observer_ || !observer);
+  delegated_source_list_observer_ = observer;
 }
 
 void BaseCapturerPipeWire::EnsureVisible() {
