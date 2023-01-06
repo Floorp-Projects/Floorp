@@ -611,6 +611,8 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
   TimeDelta round_trip_time = bandwidth_estimation_->round_trip_time();
   DataRate loss_based_target_rate = bandwidth_estimation_->target_rate();
   bool bwe_limited_due_to_packet_loss =
+      loss_based_target_rate.IsFinite() &&
+      bandwidth_estimation_->delay_based_limit().IsFinite() &&
       loss_based_target_rate < bandwidth_estimation_->delay_based_limit();
   DataRate pushback_target_rate = loss_based_target_rate;
 
