@@ -866,3 +866,327 @@ diff --git a/s_truncf.cpp b/s_truncf.cpp
  truncf(float x)
  {
  	int32_t i0,j0;
+--- a/e_acosf.cpp	2022-12-11 21:15:50.058431053 -0500
++++ b/e_acosf.cpp_new	2022-12-11 21:13:10.532515637 -0500
+@@ -12,15 +12,14 @@
+  * is preserved.
+  * ====================================================
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float
+ one =  1.0000000000e+00, /* 0x3F800000 */
+ pi =  3.1415925026e+00, /* 0x40490fda */
+ pio2_hi =  1.5707962513e+00; /* 0x3fc90fda */
+ static volatile float
+--- a/e_asinf.cpp	2022-12-11 21:15:50.486437124 -0500
++++ b/e_asinf.cpp_new	2022-12-11 21:13:07.876498396 -0500
+@@ -12,15 +12,14 @@
+  * is preserved.
+  * ====================================================
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float
+ one =  1.0000000000e+00, /* 0x3F800000 */
+ huge =  1.000e+30,
+ 	/* coefficient for R(x^2) */
+ pS0 =  1.6666586697e-01,
+--- a/e_expf.cpp	2022-12-11 21:15:51.250447960 -0500
++++ b/e_expf.cpp_new	2022-12-11 21:13:05.212481099 -0500
+@@ -14,15 +14,14 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float
+ one	= 1.0,
+ halF[2]	= {0.5,-0.5,},
+ o_threshold=  8.8721679688e+01,  /* 0x42b17180 */
+ u_threshold= -1.0397208405e+02,  /* 0xc2cff1b5 */
+--- a/e_logf.cpp	2022-12-11 21:15:51.978458278 -0500
++++ b/e_logf.cpp_new	2022-12-11 21:13:02.644464418 -0500
+@@ -12,15 +12,14 @@
+  * is preserved.
+  * ====================================================
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float
+ ln2_hi =   6.9313812256e-01,	/* 0x3f317180 */
+ ln2_lo =   9.0580006145e-06,	/* 0x3717f7d1 */
+ two25 =    3.355443200e+07,	/* 0x4c000000 */
+ /* |(log(1+s)-log(1-s))/s - Lg(s)| < 2**-34.24 (~[-4.95e-11, 4.97e-11]). */
+--- a/e_powf.cpp	2022-12-11 21:15:52.242462016 -0500
++++ b/e_powf.cpp_new	2022-12-11 21:13:00.164448306 -0500
+@@ -12,15 +12,14 @@
+  * is preserved.
+  * ====================================================
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float
+ bp[] = {1.0, 1.5,},
+ dp_h[] = { 0.0, 5.84960938e-01,}, /* 0x3f15c000 */
+ dp_l[] = { 0.0, 1.56322085e-06,}, /* 0x35d1cfdc */
+ zero    =  0.0,
+--- a/e_rem_pio2f.cpp	2022-12-11 21:15:52.626467454 -0500
++++ b/e_rem_pio2f.cpp_new	2022-12-11 21:12:57.300429693 -0500
+@@ -22,15 +22,14 @@
+  * return the remainder of x rem pi/2 in *y
+  * use double precision for everything except passing x
+  * use __kernel_rem_pio2() for large x
+  */
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ /*
+  * invpio2:  53 bits of 2/pi
+  * pio2_1:   first 25 bits of pi/2
+  * pio2_1t:  pi/2 - pio2_1
+  */
+--- a/e_sqrtf.cpp	2022-12-11 21:15:52.922471645 -0500
++++ b/e_sqrtf.cpp_new	2022-12-11 21:12:54.596412113 -0500
+@@ -13,15 +13,14 @@
+  * ====================================================
+  */
+ 
+ #ifndef lint
+ static char rcsid[] = "$FreeBSD$";
+ #endif
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ #ifdef USE_BUILTIN_SQRTF
+ float
+ __ieee754_sqrtf(float x)
+ {
+ 	return (__builtin_sqrtf(x));
+--- a/k_cosf.cpp	2022-12-11 21:15:53.178475268 -0500
++++ b/k_cosf.cpp_new	2022-12-11 21:12:52.012395309 -0500
+@@ -15,15 +15,14 @@
+  */
+ 
+ #ifndef INLINE_KERNEL_COSDF
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ #endif
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ /* |cos(x) - c(x)| < 2**-34.1 (~[-5.37e-11, 5.295e-11]). */
+ static const double
+ one =  1.0,
+ C0  = -0x1ffffffd0c5e81.0p-54,	/* -0.499999997251031003120 */
+ C1  =  0x155553e1053a42.0p-57,	/*  0.0416666233237390631894 */
+--- a/k_expf.cpp	2022-12-11 21:15:53.434478888 -0500
++++ b/k_expf.cpp_new	2022-12-11 21:12:49.012375792 -0500
+@@ -27,15 +27,14 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <complex.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const uint32_t k = 235;			/* constant for reduction */
+ static const float kln2 =  162.88958740F;	/* k * ln2 */
+ 
+ /*
+  * See k_exp.c for details.
+--- a/k_sinf.cpp	2022-12-11 21:15:53.946486130 -0500
++++ b/k_sinf.cpp_new	2022-12-11 21:12:46.020356322 -0500
+@@ -15,15 +15,14 @@
+  */
+ 
+ #ifndef INLINE_KERNEL_SINDF
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ #endif
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ /* |sin(x)/x - s(x)| < 2**-37.5 (~[-4.89e-12, 4.824e-12]). */
+ static const double
+ S1 = -0x15555554cbac77.0p-55,	/* -0.166666666416265235595 */
+ S2 =  0x111110896efbb2.0p-59,	/*  0.0083333293858894631756 */
+ S3 = -0x1a00f9e2cae774.0p-65,	/* -0.000198393348360966317347 */
+--- a/k_tanf.cpp	2022-12-11 21:15:54.254490484 -0500
++++ b/k_tanf.cpp_new	2022-12-11 21:12:42.972336479 -0500
+@@ -14,15 +14,14 @@
+  */
+ 
+ #ifndef INLINE_KERNEL_TANDF
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ #endif
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ /* |tan(x)/x - t(x)| < 2**-25.5 (~[-2e-08, 2e-08]). */
+ static const double
+ T[] =  {
+   0x15554d3418c99f.0p-54,	/* 0.333331395030791399758 */
+   0x1112fd38999f72.0p-55,	/* 0.133392002712976742718 */
+--- a/s_atanf.cpp	2022-12-11 21:15:54.670496364 -0500
++++ b/s_atanf.cpp_new	2022-12-11 21:12:39.940316733 -0500
+@@ -12,15 +12,14 @@
+  * is preserved.
+  * ====================================================
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float atanhi[] = {
+   4.6364760399e-01, /* atan(0.5)hi 0x3eed6338 */
+   7.8539812565e-01, /* atan(1.0)hi 0x3f490fda */
+   9.8279368877e-01, /* atan(1.5)hi 0x3f7b985e */
+   1.5707962513e+00, /* atan(inf)hi 0x3fc90fda */
+--- a/s_cosf.cpp	2022-12-11 21:15:55.494508001 -0500
++++ b/s_cosf.cpp_new	2022-12-11 21:12:37.396300160 -0500
+@@ -15,15 +15,14 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #define	INLINE_KERNEL_COSDF
+ #define	INLINE_KERNEL_SINDF
+ #define INLINE_REM_PIO2F
+ #include "math_private.h"
+ #include "e_rem_pio2f.c"
+ #include "k_cosf.c"
+ #include "k_sinf.c"
+--- a/s_exp2.cpp	2022-12-11 21:15:55.790512181 -0500
++++ b/s_exp2.cpp_new	2022-12-11 21:12:34.476281131 -0500
+@@ -27,15 +27,14 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ #define	TBLBITS	8
+ #define	TBLSIZE	(1 << TBLBITS)
+ 
+ static const double
+     redux    = 0x1.8p52 / TBLSIZE,
+--- a/s_exp2f.cpp	2022-12-11 21:15:55.926514101 -0500
++++ b/s_exp2f.cpp_new	2022-12-11 21:12:30.644256149 -0500
+@@ -27,15 +27,14 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ #define	TBLBITS	4
+ #define	TBLSIZE	(1 << TBLBITS)
+ 
+ static const float
+     redux   = 0x1.8p23f / TBLSIZE,
+--- a/s_fabsf.cpp	2022-12-11 21:15:56.202517995 -0500
++++ b/s_fabsf.cpp_new	2022-12-11 21:12:27.244233973 -0500
+@@ -16,15 +16,14 @@
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ /*
+  * fabsf(x) returns the absolute value of x.
+  */
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ float
+ fabsf(float x)
+ {
+ 	u_int32_t ix;
+ 	GET_FLOAT_WORD(ix,x);
+--- a/s_sinf.cpp	2022-12-11 21:15:57.618537960 -0500
++++ b/s_sinf.cpp_new	2022-12-11 21:12:24.684217270 -0500
+@@ -15,15 +15,14 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #define	INLINE_KERNEL_COSDF
+ #define	INLINE_KERNEL_SINDF
+ #define INLINE_REM_PIO2F
+ #include "math_private.h"
+ #include "e_rem_pio2f.c"
+ #include "k_cosf.c"
+ #include "k_sinf.c"
+--- a/s_tanf.cpp	2022-12-11 21:15:57.930542357 -0500
++++ b/s_tanf.cpp_new	2022-12-11 21:12:20.420189437 -0500
+@@ -15,15 +15,14 @@
+  */
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+-#include "math.h"
+ #define	INLINE_KERNEL_TANDF
+ #define INLINE_REM_PIO2F
+ #include "math_private.h"
+ #include "e_rem_pio2f.c"
+ #include "k_tanf.c"
+ 
+ /* Small multiples of pi/2 rounded to double precision. */
