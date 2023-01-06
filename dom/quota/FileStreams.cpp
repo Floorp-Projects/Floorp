@@ -93,6 +93,7 @@ NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
     if (!FileQuotaStreamWithWrite::mQuotaObject->MaybeUpdateSize(
             offset + int64_t(aCount),
             /* aTruncate */ false)) {
+      *_retval = 0;
       return NS_ERROR_FILE_NO_DEVICE_SPACE;
     }
   }
