@@ -28,17 +28,22 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
+#include "nsIWindowMediator.h"
+#include "nsPIDOMWindow.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
 #include "nsXREDirProvider.h"
 #include "prenv.h"
 #include "ToastNotificationHandler.h"
+#include "ToastNotificationHeaderOnlyUtils.h"
 #include "WinTaskbar.h"
 #include "WinUtils.h"
 
 namespace mozilla {
 namespace widget {
+
+using namespace toastnotification;
 
 using namespace ABI::Windows::Foundation;
 using namespace Microsoft::WRL;
@@ -619,25 +624,89 @@ RefPtr<ToastHandledPromise> ToastNotification::VerifyTagPresentOrFallback(
   return fallbackPromise;
 }
 
+// Send our window's PID to the notification server so that it can grant us
+// `SetForegroundWindow` permissions. PID 0 is sent to signal no window PID.
+// Absense of PID which may occur when we are yet unable to retrieve the
+// window during startup, which is not a problem in practice as new windows
+// receive focus by default.
 void ToastNotification::SignalComNotificationHandled(
     const nsAString& aWindowsTag) {
-  nsString eventName(aWindowsTag);
-  nsAutoHandle event(OpenEventW(EVENT_MODIFY_STATE, FALSE, eventName.get()));
-  if (event.get()) {
-    if (SetEvent(event)) {
-      MOZ_LOG(sWASLog, LogLevel::Info,
-              ("Set event for event named '%s'",
-               NS_ConvertUTF16toUTF8(eventName).get()));
+  DWORD pid = 0;
+
+  nsCOMPtr<nsIWindowMediator> winMediator(
+      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
+  if (winMediator) {
+    nsCOMPtr<mozIDOMWindowProxy> navWin;
+    winMediator->GetMostRecentWindow(u"navigator:browser",
+                                     getter_AddRefs(navWin));
+    if (navWin) {
+      nsCOMPtr<nsIWidget> widget =
+          WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(navWin));
+      if (widget) {
+        HWND hwnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
+        GetWindowThreadProcessId(hwnd, &pid);
+      } else {
+        MOZ_LOG(sWASLog, LogLevel::Debug, ("Failed to get widget"));
+      }
     } else {
-      MOZ_LOG(sWASLog, LogLevel::Error,
-              ("Failed to set event for event named '%s' (GetLastError=%lu)",
-               NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
+      MOZ_LOG(sWASLog, LogLevel::Debug, ("Failed to get navWin"));
     }
   } else {
-    MOZ_LOG(sWASLog, LogLevel::Error,
-            ("Failed to open event named '%s' (GetLastError=%lu)",
-             NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
+    MOZ_LOG(sWASLog, LogLevel::Debug, ("Failed to get WinMediator"));
   }
+
+  // Run pipe communication off the main thread to prevent UI jank from
+  // blocking. Nothing relies on the COM server's response or that it has
+  // responded at time of commit.
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "SignalComNotificationHandled background task",
+          [pid, aWindowsTag = nsString{aWindowsTag}]() mutable {
+            std::wstring pipeName = GetNotificationPipeName(aWindowsTag.get());
+
+            nsAutoHandle pipe;
+            pipe.own(CreateFileW(pipeName.c_str(), GENERIC_READ | GENERIC_WRITE,
+                                 0, nullptr, OPEN_EXISTING,
+                                 FILE_FLAG_OVERLAPPED, nullptr));
+            if (pipe.get() == INVALID_HANDLE_VALUE) {
+              MOZ_LOG(sWASLog, LogLevel::Error,
+                      ("Unable to open notification server pipe."));
+              return;
+            }
+
+            DWORD pipeFlags = PIPE_READMODE_MESSAGE;
+            if (!SetNamedPipeHandleState(pipe.get(), &pipeFlags, nullptr,
+                                         nullptr)) {
+              MOZ_LOG(sWASLog, LogLevel::Error,
+                      ("Error setting pipe handle state, error %lu",
+                       GetLastError()));
+              return;
+            }
+
+            // Pass our window's PID to the COM server receive
+            // `SetForegroundWindow` permissions, and wait for a message
+            // acknowledging the permission has been granted.
+            ToastNotificationPidMessage in{};
+            in.pid = pid;
+            ToastNotificationPermissionMessage out{};
+            auto transact = [&](OVERLAPPED& overlapped) {
+              return TransactNamedPipe(pipe.get(), &in, sizeof(in), &out,
+                                       sizeof(out), nullptr, &overlapped);
+            };
+            bool result =
+                SyncDoOverlappedIOWithTimeout(pipe, sizeof(out), transact);
+
+            if (result && out.setForegroundPermissionGranted && pid != 0) {
+              MOZ_LOG(
+                  sWASLog, LogLevel::Info,
+                  ("SetForegroundWindow permission granted to our window."));
+            } else {
+              MOZ_LOG(sWASLog, LogLevel::Error,
+                      ("SetForegroundWindow permission not granted to our "
+                       "window."));
+            }
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
 }
 
 NS_IMETHODIMP

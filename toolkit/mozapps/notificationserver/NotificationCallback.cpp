@@ -14,7 +14,6 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/ToastNotificationHeaderOnlyUtils.h"
 
-#define NOTIFICATION_SERVER_EVENT_TIMEOUT_MS (10 * 1000)
 using namespace mozilla::widget::toastnotification;
 
 HRESULT STDMETHODCALLTYPE
@@ -58,13 +57,10 @@ void NotificationCallback::HandleActivation(LPCWSTR invokedArgs) {
   const auto& args = maybeArgs.value();
   auto [programPath, cmdLine] = BuildRunCommand(args);
 
-  // This event object will let Firefox notify us when it has handled the
-  // notification.
-  std::wstring eventName(args.windowsTag);
-  nsAutoHandle event;
-  if (!eventName.empty()) {
-    event.own(CreateEventW(nullptr, TRUE, FALSE, eventName.c_str()));
-  }
+  // This pipe object will let Firefox notify us when it has handled the
+  // notification. Create this before interacting with the application so the
+  // application can rely on it existing.
+  auto maybePipe = CreatePipe(args.windowsTag);
 
   // Run the application.
 
@@ -80,24 +76,13 @@ void NotificationCallback::HandleActivation(LPCWSTR invokedArgs) {
 
   LOG_ERROR_MESSAGE(L"Invoked %s", cmdLine.get());
 
-  if (event.get()) {
-    LOG_ERROR_MESSAGE((L"Waiting on event with name '%s'"), eventName.c_str());
+  // Transfer `SetForegroundWindow` permission to the launched application.
 
-    DWORD result =
-        WaitForSingleObject(event, NOTIFICATION_SERVER_EVENT_TIMEOUT_MS);
-    if (result == WAIT_TIMEOUT) {
-      LOG_ERROR_MESSAGE(L"Wait timed out");
-    } else if (result == WAIT_FAILED) {
-      LOG_ERROR_MESSAGE((L"Wait failed: %#X"), GetLastError());
-    } else if (result == WAIT_ABANDONED) {
-      LOG_ERROR_MESSAGE((L"Wait abandoned"));
-    } else {
-      LOG_ERROR_MESSAGE((L"Wait succeeded!"));
+  maybePipe.apply([](const auto& pipe) {
+    if (ConnectPipeWithTimeout(pipe)) {
+      HandlePipeMessages(pipe);
     }
-  } else {
-    LOG_ERROR_MESSAGE((L"Failed to create event with name '%s'"),
-                      eventName.c_str());
-  }
+  });
 }
 
 mozilla::Maybe<ToastArgs> NotificationCallback::ParseToastArguments(
@@ -152,4 +137,128 @@ NotificationCallback::BuildRunCommand(const ToastArgs& args) {
 
   return {programPath,
           mozilla::MakeCommandLine(childArgv.size(), childArgv.data())};
+}
+
+mozilla::Maybe<nsAutoHandle> NotificationCallback::CreatePipe(
+    const std::wstring& tag) {
+  if (tag.empty()) {
+    return mozilla::Nothing();
+  }
+
+  // Prefix required by pipe API.
+  std::wstring pipeName = GetNotificationPipeName(tag.c_str());
+
+  nsAutoHandle pipe(CreateNamedPipeW(
+      pipeName.c_str(), PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+      PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT |
+          PIPE_REJECT_REMOTE_CLIENTS,
+      1, sizeof(ToastNotificationPermissionMessage),
+      sizeof(ToastNotificationPidMessage), 0, nullptr));
+  if (pipe.get() == INVALID_HANDLE_VALUE) {
+    LOG_ERROR_MESSAGE(L"Error creating pipe %s, error %lu", pipeName.c_str(),
+                      GetLastError());
+    return mozilla::Nothing();
+  }
+
+  return mozilla::Some(pipe.out());
+}
+
+bool NotificationCallback::ConnectPipeWithTimeout(const nsAutoHandle& pipe) {
+  nsAutoHandle overlappedEvent(CreateEventW(nullptr, TRUE, FALSE, nullptr));
+  if (!overlappedEvent) {
+    LOG_ERROR_MESSAGE(L"Error creating pipe connect event, error %lu",
+                      GetLastError());
+    return false;
+  }
+
+  OVERLAPPED overlappedConnect{};
+  overlappedConnect.hEvent = overlappedEvent.get();
+
+  BOOL result = ConnectNamedPipe(pipe.get(), &overlappedConnect);
+  DWORD lastError = GetLastError();
+  if (lastError == ERROR_IO_PENDING) {
+    LOG_ERROR_MESSAGE(L"Waiting on pipe connection");
+
+    if (!WaitEventWithTimeout(overlappedEvent)) {
+      LOG_ERROR_MESSAGE(
+          L"Pipe connect wait failed, cancelling (connection may still "
+          L"succeed)");
+
+      CancelIo(pipe.get());
+      DWORD undefined;
+      BOOL overlappedResult =
+          GetOverlappedResult(pipe.get(), &overlappedConnect, &undefined, TRUE);
+      if (!overlappedResult || GetLastError() != ERROR_PIPE_CONNECTED) {
+        LOG_ERROR_MESSAGE(L"Pipe connect failed, error %lu", GetLastError());
+        return false;
+      }
+
+      // Pipe connected before cancellation, fall through.
+    }
+  } else if (result) {
+    // Overlapped `ConnectNamedPipe` should return 0.
+    LOG_ERROR_MESSAGE(L"Error connecting pipe, error %lu", lastError);
+    return false;
+  } else if (lastError != ERROR_PIPE_CONNECTED) {
+    LOG_ERROR_MESSAGE(L"Error connecting pipe, error %lu", lastError);
+    return false;
+  }
+
+  LOG_ERROR_MESSAGE(L"Pipe connected!");
+  return true;
+}
+
+void NotificationCallback::HandlePipeMessages(const nsAutoHandle& pipe) {
+  ToastNotificationPidMessage in{};
+  auto read = [&](OVERLAPPED& overlapped) {
+    return ReadFile(pipe.get(), &in, sizeof(in), nullptr, &overlapped);
+  };
+  if (!SyncDoOverlappedIOWithTimeout(pipe, sizeof(in), read)) {
+    LOG_ERROR_MESSAGE(L"Pipe read failed");
+    return;
+  }
+
+  ToastNotificationPermissionMessage out{};
+  out.setForegroundPermissionGranted = TransferForegroundPermission(in.pid);
+  auto write = [&](OVERLAPPED& overlapped) {
+    return WriteFile(pipe.get(), &out, sizeof(out), nullptr, &overlapped);
+  };
+  if (!SyncDoOverlappedIOWithTimeout(pipe, sizeof(out), write)) {
+    LOG_ERROR_MESSAGE(L"Pipe write failed");
+    return;
+  }
+
+  LOG_ERROR_MESSAGE(L"Pipe write succeeded!");
+}
+
+DWORD NotificationCallback::TransferForegroundPermission(DWORD pid) {
+  // When the instance of Firefox is still running we need to grant it
+  // foreground permission to bring itself to the foreground. We're able to do
+  // this even though the COM server is not the foreground process likely due to
+  // Windows granting permission to the COM object via
+  // `CoAllowSetForegroundWindow`.
+  //
+  // Note that issues surrounding `SetForegroundWindow` permissions are obscured
+  // when builds are run with a debugger, whereupon Windows grants
+  // `SetForegroundWindow` permission in all instances.
+  //
+  // We can not rely on granting this permission to the process created above
+  // because remote server clients do not meet the criteria to receive
+  // `SetForegroundWindow` permissions without unsupported hacks.
+  if (!pid) {
+    LOG_ERROR_MESSAGE(
+        L"`pid` received from pipe was 0, no process to grant "
+        L"`SetForegroundWindow` permission to");
+    return FALSE;
+  }
+  // When this call succeeds, the COM process loses the `SetForegroundWindow`
+  // permission.
+  if (!AllowSetForegroundWindow(pid)) {
+    LOG_ERROR_MESSAGE(
+        L"Failed to grant `SetForegroundWindow` permission, error %lu",
+        GetLastError());
+    return FALSE;
+  }
+
+  return TRUE;
 }
