@@ -318,8 +318,26 @@ UniquePtr<ImportMap> ImportMap::ParseString(
   // input.
   JS::Rooted<JS::Value> parsedVal(aCx);
   if (!JS_ParseJSON(aCx, aInput.get(), aInput.length(), &parsedVal)) {
-    // If JS_ParseJSON fail it will throw SyntaxError.
     NS_WARNING("Parsing Import map string failed");
+
+    // If JS_ParseJSON fails we check if it throws a SyntaxError.
+    // If so we update the error message from JSON parser to make it more clear
+    // that the parsing of import map has failed.
+    MOZ_ASSERT(JS_IsExceptionPending(aCx));
+    JS::Rooted<JS::Value> exn(aCx);
+    if (!JS_GetPendingException(aCx, &exn)) {
+      return nullptr;
+    }
+    MOZ_ASSERT(exn.isObject());
+    JS::Rooted<JSObject*> obj(aCx, &exn.toObject());
+    JSErrorReport* err = JS_ErrorFromException(aCx, obj);
+    if (err->exnType == JSEXN_SYNTAXERR) {
+      JS_ClearPendingException(aCx);
+      JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                                JSMSG_IMPORT_MAPS_PARSE_FAILED,
+                                err->message().c_str());
+    }
+
     return nullptr;
   }
 
