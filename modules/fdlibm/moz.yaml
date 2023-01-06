@@ -17,7 +17,7 @@ origin:
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 369ea0520a3061c07400d7cd32172efb6af39815
+  revision: bd5e624a861433dee76fe00a8acedc9564425332
 
   license: "BSD-2-Clause"
   license-file: LICENSE
