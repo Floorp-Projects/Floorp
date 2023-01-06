@@ -11,6 +11,7 @@
 #ifndef PC_TEST_MOCK_RTP_SENDER_INTERNAL_H_
 #define PC_TEST_MOCK_RTP_SENDER_INTERNAL_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -71,6 +72,14 @@ class MockRtpSenderInternal : public RtpSenderInternal {
               GetFrameEncryptor,
               (),
               (const, override));
+  MOCK_METHOD(void,
+              SetEncoderToPacketizerFrameTransformer,
+              (rtc::scoped_refptr<FrameTransformerInterface>),
+              (override));
+  MOCK_METHOD(void,
+              SetEncoderSelector,
+              (std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>),
+              (override));
 
   // RtpSenderInternal methods.
   MOCK_METHOD1(SetMediaChannel, void(cricket::MediaChannel*));
