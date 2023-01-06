@@ -38,8 +38,6 @@
 
       this.baseConnect();
 
-      this._beforeHoveredTab = null;
-      this._afterHoveredTab = null;
       this._hoveredTab = null;
       this._blockDblClick = false;
       this._tabDropIndicator = this.querySelector(".tab-drop-indicator");
