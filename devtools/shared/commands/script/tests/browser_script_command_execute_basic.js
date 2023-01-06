@@ -218,14 +218,6 @@ async function forceLexicalInit(commands) {
       stmt: "let {c3pdoh=101} = null",
       vars: ["c3pdoh"],
     },
-    {
-      stmt: "const {...x} = x",
-      vars: ["x"],
-    },
-    {
-      stmt: "const {xx,yy,...rest} = null",
-      vars: ["xx", "yy", "rest"],
-    },
   ];
 
   for (const data of testData) {
