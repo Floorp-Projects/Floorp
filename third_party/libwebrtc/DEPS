@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'c29d1550aec779748a8b76c72285a317a99b5cf4',
+  'chromium_revision': 'a4f984ee737e1689d39a4bcf7f3272ef8e6197e7',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,7 +20,7 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:9.20220826.3.1',
+  'fuchsia_version': 'version:9.20220830.0.1',
 
   # By default, do not check out the re-client binaries.
   'checkout_reclient': False,
@@ -32,24 +32,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@a630d2c8b0ad1774421fbbee5391e183a15e0a5c',
+    'https://chromium.googlesource.com/chromium/src/base@f2c46e62148419d8691417909375b826a427830b',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@adc338f326ca8046c5e1b8c1bfe3b0110de52776',
+    'https://chromium.googlesource.com/chromium/src/build@a611acf0ed08c0c9641f91f7290e9eb07bd8df14',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@cf8185c5cb6943ba1d172d0bb1e8e1ef021cd184',
+    'https://chromium.googlesource.com/chromium/src/buildtools@c9954b6fc9b9bc8d1a3b30f28cdd5f72240874c8',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@cf8dbb15c8b6a7f1490b5b429cef01a61bb0dd64',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@a63162087193dfbeef301350936a9148355b58d8',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@548d3c6ae2e3dc525290c2e31e8b73088b5a36a0',
+    'https://chromium.googlesource.com/chromium/src/testing@ab8b7acfeb090542cca9c1762f7cc2469214ff55',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@24f9481c36aec72ee54f70dbc18cc9df5abea523',
+    'https://chromium.googlesource.com/chromium/src/third_party@16732b6aec1dbc0bbff7caaf5dac00f010cb699e',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -157,7 +157,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@f41670fdadc9eca7fff99ab8563190dd41d27ee8',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@3528d4d3c501d6585641a19ee5e3c692556498a9',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@b71ecd02b47939e530e620d9d0d101463db0f688',
   'src/third_party/grpc/src': {
@@ -236,7 +236,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@437f4431c5225df1e2debd6309ae8096f63c6eda',
+    'https://android.googlesource.com/platform/external/perfetto.git@55013a0f8dd066206aa43497599033cfdf5bb362',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@8786aee5821801fe6b5a285be009ba67ea7f4e63',
   'src/third_party/libyuv':
@@ -282,7 +282,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@844646463fde5ee75a802c79cd27173534b107dd',
+    'https://chromium.googlesource.com/chromium/src/tools@d0e990f325c187dd1e6cc9419f5d251f69cfefa1',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
