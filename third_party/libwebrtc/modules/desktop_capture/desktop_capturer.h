@@ -19,6 +19,9 @@
 #include <type_traits>
 #include <vector>
 
+// TODO(alcooper): Update include usage in downstream consumers and then change
+// this to a forward declaration.
+#include "modules/desktop_capture/delegated_source_list_controller.h"
 #if defined(WEBRTC_USE_GIO)
 #include "modules/desktop_capture/desktop_capture_metadata.h"
 #endif  // defined(WEBRTC_USE_GIO)
@@ -31,31 +34,6 @@ namespace webrtc {
 
 class DesktopCaptureOptions;
 class DesktopFrame;
-
-// A controller to be implemented and returned by
-// GetDelegatedSourceListController in capturers that require showing their own
-// source list and managing user selection there. Apart from ensuring the
-// visibility of the source list, these capturers should largely be interacted
-// with the same as a normal capturer, though there may be some caveats for
-// some DesktopCapturer methods. See GetDelegatedSourceListController for more
-// information.
-class RTC_EXPORT DelegatedSourceListController {
- public:
-  // Used to prompt the capturer to show the delegated source list. If the
-  // source list is already visible, this will be a no-op. Must be called after
-  // starting the DesktopCapturer.
-  //
-  // Note that any selection from a previous invocation of the source list may
-  // be cleared when this method is called.
-  virtual void EnsureVisible() = 0;
-
-  // Used to prompt the capturer to hide the delegated source list. If the
-  // source list is already hidden, this will be a no-op.
-  virtual void EnsureHidden() = 0;
-
- protected:
-  virtual ~DelegatedSourceListController() {}
-};
 
 // Abstract interface for screen and window capturers.
 class RTC_EXPORT DesktopCapturer {
