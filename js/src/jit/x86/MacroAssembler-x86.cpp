@@ -888,8 +888,8 @@ void MacroAssembler::loadStoreBuffer(Register ptr, Register buffer) {
   if (ptr != buffer) {
     movePtr(ptr, buffer);
   }
-  orPtr(Imm32(gc::ChunkMask), buffer);
-  loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
+  andPtr(Imm32(~gc::ChunkMask), buffer);
+  loadPtr(Address(buffer, gc::ChunkStoreBufferOffset), buffer);
 }
 
 void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
@@ -912,10 +912,9 @@ void MacroAssembler::branchPtrInNurseryChunkImpl(Condition cond, Register ptr,
                                                  Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
-  orPtr(Imm32(gc::ChunkMask), ptr);
-  branchPtr(InvertCondition(cond),
-            Address(ptr, gc::ChunkStoreBufferOffsetFromLastByte), ImmWord(0),
-            label);
+  andPtr(Imm32(~gc::ChunkMask), ptr);
+  branchPtr(InvertCondition(cond), Address(ptr, gc::ChunkStoreBufferOffset),
+            ImmWord(0), label);
 }
 
 void MacroAssembler::branchValueIsNurseryCell(Condition cond,

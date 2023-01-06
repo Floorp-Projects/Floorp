@@ -1669,11 +1669,9 @@ void MacroAssembler::moveValue(const Value& src, const ValueOperand& dest) {
 // Branch functions
 
 void MacroAssembler::loadStoreBuffer(Register ptr, Register buffer) {
-  if (ptr != buffer) {
-    movePtr(ptr, buffer);
-  }
-  orPtr(Imm32(gc::ChunkMask), buffer);
-  loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
+  And(ARMRegister(buffer, 64), ARMRegister(ptr, 64),
+      Operand(int32_t(~gc::ChunkMask)));
+  loadPtr(Address(buffer, gc::ChunkStoreBufferOffset), buffer);
 }
 
 void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
@@ -1684,11 +1682,10 @@ void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
              ptr != ScratchReg2);  // Both may be used internally.
   MOZ_ASSERT(temp != ScratchReg && temp != ScratchReg2);
 
-  movePtr(ptr, temp);
-  orPtr(Imm32(gc::ChunkMask), temp);
-  branchPtr(InvertCondition(cond),
-            Address(temp, gc::ChunkStoreBufferOffsetFromLastByte), ImmWord(0),
-            label);
+  And(ARMRegister(temp, 64), ARMRegister(ptr, 64),
+      Operand(int32_t(~gc::ChunkMask)));
+  branchPtr(InvertCondition(cond), Address(temp, gc::ChunkStoreBufferOffset),
+            ImmWord(0), label);
 }
 
 void MacroAssembler::branchValueIsNurseryCell(Condition cond,
