@@ -202,7 +202,6 @@ static constexpr uint32_t WasmTrapInstructionLength = 2;
 // the tail offset 3, but I have opted for 4 as that results in a better-aligned
 // branch target.)
 static constexpr uint32_t WasmCheckedCallEntryOffset = 0u;
-static constexpr uint32_t WasmCheckedTailEntryOffset = 4u;
 
 struct ImmTag : public Imm32 {
   explicit ImmTag(JSValueTag mask) : Imm32(int32_t(mask)) {}

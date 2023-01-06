@@ -154,8 +154,21 @@ const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,
   return &codeRanges[match];
 }
 
+CallIndirectId CallIndirectId::forAsmJSFunc() {
+  return CallIndirectId(CallIndirectIdKind::AsmJS, 0);
+}
+
 CallIndirectId CallIndirectId::forFunc(const ModuleEnvironment& moduleEnv,
                                        uint32_t funcIndex) {
+  // asm.js tables are homogenous and don't require a signature check
+  if (moduleEnv.isAsmJS()) {
+    return CallIndirectId::forAsmJSFunc();
+  }
+
+  FuncDesc func = moduleEnv.funcs[funcIndex];
+  if (!func.canRefFunc()) {
+    return CallIndirectId();
+  }
   return CallIndirectId::forFuncType(moduleEnv,
                                      moduleEnv.funcs[funcIndex].typeIndex);
 }
@@ -164,7 +177,7 @@ CallIndirectId CallIndirectId::forFuncType(const ModuleEnvironment& moduleEnv,
                                            uint32_t funcTypeIndex) {
   // asm.js tables are homogenous and don't require a signature check
   if (moduleEnv.isAsmJS()) {
-    return CallIndirectId();
+    return CallIndirectId::forAsmJSFunc();
   }
 
   const FuncType& funcType = moduleEnv.types->type(funcTypeIndex).funcType();
