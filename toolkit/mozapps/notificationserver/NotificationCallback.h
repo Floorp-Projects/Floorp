@@ -8,11 +8,15 @@
 #define NotificationCallback_h__
 
 #include <filesystem>
+#include <tuple>
 #include <unknwn.h>
 #include <wrl.h>
 
-using namespace std::filesystem;
+#include "mozilla/Maybe.h"
+#include "nsWindowsHelpers.h"
+
 using namespace Microsoft::WRL;
+using namespace std::filesystem;
 
 // Windows 10+ declarations.
 // TODO remove declarations and add `#include
@@ -28,6 +32,11 @@ INotificationActivationCallback : public IUnknown {
   virtual HRESULT STDMETHODCALLTYPE Activate(
       LPCWSTR appUserModelId, LPCWSTR invokedArgs,
       const NOTIFICATION_USER_INPUT_DATA* data, ULONG count) = 0;
+};
+
+struct ToastArgs {
+  std::wstring profile;
+  std::wstring windowsTag;
 };
 
 class NotificationCallback final
@@ -48,6 +57,11 @@ class NotificationCallback final
  private:
   const GUID guid = {};
   const path installDir = {};
+
+  void HandleActivation(LPCWSTR invokedArgs);
+  mozilla::Maybe<ToastArgs> ParseToastArguments(LPCWSTR invokedArgs);
+  std::tuple<path, mozilla::UniquePtr<wchar_t[]>> BuildRunCommand(
+      const ToastArgs& args);
 };
 
 #endif
