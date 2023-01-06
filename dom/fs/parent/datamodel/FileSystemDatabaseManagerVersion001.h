@@ -14,6 +14,7 @@ namespace mozilla::dom::fs::data {
 
 class FileSystemDataManager;
 class FileSystemFileManager;
+using FileSystemConnection = fs::ResultConnection;
 
 /**
  * @brief Versioned implementation of database interface enables backwards
@@ -36,8 +37,7 @@ class FileSystemFileManager;
 class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
  public:
   FileSystemDatabaseManagerVersion001(
-      FileSystemDataManager* aDataManager,
-      fs::data::FileSystemConnection&& aConnection,
+      FileSystemDataManager* aDataManager, FileSystemConnection&& aConnection,
       UniquePtr<FileSystemFileManager>&& aFileManager,
       const EntryId& aRootEntry)
       : mDataManager(aDataManager),
@@ -45,7 +45,8 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
         mFileManager(std::move(aFileManager)),
         mRootEntry(aRootEntry) {}
 
-  virtual Result<int64_t, QMResult> GetUsage() const override;
+  static Result<Usage, QMResult> GetFileUsage(
+      const FileSystemConnection& aConnection);
 
   virtual nsresult UpdateUsage(const EntryId& aEntry) override;
 
@@ -83,7 +84,7 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   virtual ~FileSystemDatabaseManagerVersion001() = default;
 
  private:
-  nsresult UpdateUsage(int64_t aDelta);
+  nsresult UpdateUsageInDatabase(const EntryId& aEntry, int64_t aNewDiskUsage);
 
   // This is a raw pointer since we're owned by the FileSystemDataManager.
   FileSystemDataManager* MOZ_NON_OWNING_REF mDataManager;

@@ -10,6 +10,7 @@
 #include "ResultConnection.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
+#include "mozilla/dom/quota/UsageInfo.h"
 #include "nsStringFwd.h"
 
 template <class T>
@@ -31,16 +32,20 @@ class FileSystemEntryPair;
 
 namespace data {
 
-using FileSystemConnection = fs::ResultConnection;
-
 class FileSystemDatabaseManager {
  public:
   /**
-   * @brief Returns current total usage
+   * @brief Obtains the current total usage for origin and connection.
    *
-   * @return Result<int64_t, QMResult> Usage or error
+   * @return Result<quota::UsageInfo, QMResult> On success,
+   *  - field UsageInfo::DatabaseUsage contains the sum of current
+   *    total database and file usage,
+   *  - field UsageInfo::FileUsage is not used and should be equal to Nothing.
+   *
+   * If the disk is inaccessible, various IO related errors may be returned.
    */
-  virtual Result<int64_t, QMResult> GetUsage() const = 0;
+  static Result<quota::UsageInfo, QMResult> GetUsage(
+      const ResultConnection& aConnection, const Origin& aOrigin);
 
   /**
    * @brief Refreshes the stored file size.
