@@ -16090,18 +16090,6 @@
     "bug_numbers": [1265472, 1558870, 1630155, 1689269, 1754650],
     "description": "Time in milliseconds to complete a WebAuthn get assertion."
   },
-  "FORM_FILLING_REQUIRED_TIME_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 300000,
-    "n_buckets": 22,
-    "keyed": true,
-    "bug_numbers": [1341569],
-    "description": "Milliseconds between starting to fill an autofill-eligible form field and submitting the form, keyed by the combination of form type and filling type."
-  },
   "GFX_OMTP_PAINT_TIME": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec"],
