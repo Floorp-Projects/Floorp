@@ -428,23 +428,33 @@ html {
               }
             }
 
-            &.dual-action-buttons {
+            .additional-cta {
+              margin: 8px 0;
 
-              button {
-                padding: 8px 16px;
-              }
+              &.cta-link {
+                color: var(--in-content-link-color);
+                background: none;
+                padding: 0;
+                font-weight: normal;
+                text-decoration: underline;
+                cursor: pointer;
 
-              .secondary-cta {
-                display: block;
-                position: relative;
-                bottom: unset;
-                margin-block: 5px 0;
-
-                .secondary {
-                  margin-inline: 0;
-                  font-size: 13px;
+                &:hover {
+                  color: var(--in-content-link-color-hover);
                 }
               }
+
+              &.secondary {
+                &:hover {
+                  background-color: var(--in-content-button-background-hover);
+                }
+              }
+            }
+
+            &.additional-cta-container {
+              display: flex;
+              flex-direction: column;
+              align-items: start;
             }
 
             .secondary-cta {
@@ -717,6 +727,12 @@ html {
               &.progress-bar {
                 margin-inline: 0;
               }
+            }
+          }
+
+          .additional-cta {
+            &.cta-link {
+              align-self: center;
             }
           }
 
@@ -1311,7 +1327,8 @@ html {
   }
 
   .primary,
-  .secondary {
+  .secondary,
+  .additional-cta {
     font-size: 13px;
     line-height: 16px;
     padding: 11px 15px;
@@ -1537,7 +1554,8 @@ html {
     .primary,
     .secondary,
     .secondary-cta,
-    .steps {
+    .steps,
+    .cta-link {
       transition-delay: 1s;
     }
   }
@@ -1551,7 +1569,8 @@ html {
 
     .primary,
     .secondary,
-    .secondary-cta {
+    .secondary-cta,
+    .cta-link {
       transition-delay: 0.4s;
     }
   }
@@ -1645,7 +1664,8 @@ html {
       .primary,
       .checkbox-container,
       .secondary,
-      .secondary-cta:not(.top) {
+      .secondary-cta:not(.top),
+      .cta-link {
         opacity: 0;
         translate: 0 calc(-1 * var(--translate));
       }
@@ -1706,7 +1726,8 @@ html {
       .primary,
       .checkbox-container,
       .secondary,
-      .secondary-cta:not(.top) {
+      .secondary-cta:not(.top),
+      .cta-link {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.3s;

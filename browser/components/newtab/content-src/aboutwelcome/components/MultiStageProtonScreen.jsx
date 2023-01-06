@@ -17,6 +17,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { CTAParagraph } from "./CTAParagraph";
 import { HeroImage } from "./HeroImage";
 import { OnboardingVideo } from "./OnboardingVideo";
+import { AdditionalCTA } from "./AdditionalCTA";
 
 export const MultiStageProtonScreen = props => {
   const { autoAdvance, handleAction, order } = props;
@@ -67,14 +68,18 @@ export const ProtonScreenActionButtons = props => {
 
   const [isChecked, setIsChecked] = useState(defaultValue || false);
 
-  if (!content.primary_button && !content.secondary_button) {
+  if (
+    !content.primary_button &&
+    !content.secondary_button &&
+    !content.additional_button
+  ) {
     return null;
   }
 
   return (
     <div
       className={`action-buttons ${
-        content.dual_action_buttons ? "dual-action-buttons" : ""
+        content.additional_button ? "additional-cta-container" : ""
       }`}
     >
       <Localized text={content.primary_button?.label}>
@@ -96,6 +101,9 @@ export const ProtonScreenActionButtons = props => {
           }
         />
       </Localized>
+      {content.additional_button ? (
+        <AdditionalCTA content={content} handleAction={props.handleAction} />
+      ) : null}
       {content.checkbox ? (
         <div className="checkbox-container">
           <input

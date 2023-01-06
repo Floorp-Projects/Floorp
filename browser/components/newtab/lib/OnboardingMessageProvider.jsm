@@ -379,7 +379,6 @@ const BASE_MESSAGES = () => [
               string_id: "mr2022-onboarding-privacy-segmentation-image-alt",
             },
             progress_bar: "true",
-            dual_action_buttons: true,
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-privacysegmentation.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
@@ -410,11 +409,12 @@ const BASE_MESSAGES = () => [
                 navigate: true,
               },
             },
-            secondary_button: {
+            additional_button: {
               label: {
                 string_id:
                   "mr2022-onboarding-privacy-segmentation-button-secondary-label",
               },
+              style: "secondary",
               action: {
                 type: "SET_PREF",
                 data: {
