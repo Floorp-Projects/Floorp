@@ -247,10 +247,10 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
 }
 
 add_task(async () => {
-  Services.prefs.deleteBranch(
+  Services.prefs.clearUserPref(
     "alerts.useSystemBackend.windows.notificationserver.enabled"
   );
-  testAlert("when notification server pref is unset", {
+  testAlert("when notification server pref is unset (i.e., default)", {
     profD: gProfD,
   });
 
