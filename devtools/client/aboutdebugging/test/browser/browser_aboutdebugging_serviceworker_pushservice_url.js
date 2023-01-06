@@ -9,8 +9,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const SERVICE_WORKER = URL_ROOT + "resources/service-workers/push-sw.js";
-const TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
+const SERVICE_WORKER = URL_ROOT_SSL + "resources/service-workers/push-sw.js";
+const TAB_URL = URL_ROOT_SSL + "resources/service-workers/push-sw.html";
 
 const FAKE_ENDPOINT = "https://fake/endpoint";
 
