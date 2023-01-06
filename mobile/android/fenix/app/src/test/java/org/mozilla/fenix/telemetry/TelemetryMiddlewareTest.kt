@@ -350,6 +350,17 @@ class TelemetryMiddlewareTest {
         assertNull(EngineMetrics.killForegroundAge.testGetValue())
         assertEquals(600_000_000, EngineMetrics.killBackgroundAge.testGetValue()!!.sum)
     }
+
+    @Test
+    fun `GIVEN the request to check for form data WHEN it fails THEN telemetry is sent`() {
+        assertNull(Events.formDataFailure.testGetValue())
+
+        store.dispatch(
+            ContentAction.CheckForFormDataExceptionAction("1", RuntimeException("session form data request failed")),
+        ).joinBlocking()
+
+        assertNotNull(Events.formDataFailure.testGetValue())
+    }
 }
 
 internal class FakeClock : Clock.Delegate {

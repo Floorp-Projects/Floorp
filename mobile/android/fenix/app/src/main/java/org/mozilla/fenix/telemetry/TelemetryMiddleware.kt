@@ -19,6 +19,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.android.Clock
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.metrics.MetricController
@@ -58,6 +59,9 @@ class TelemetryMiddleware(
             is EngineAction.KillEngineSessionAction -> {
                 val tab = context.state.findTabOrCustomTab(action.tabId)
                 onEngineSessionKilled(context.state, tab)
+            }
+            is ContentAction.CheckForFormDataExceptionAction -> {
+                Events.formDataFailure.record(NoExtras())
             }
             else -> {
                 // no-op

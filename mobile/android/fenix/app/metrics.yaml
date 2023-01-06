@@ -540,6 +540,22 @@ events:
     metadata:
       tags:
         - Sharing
+  form_data_failure:
+    type: event
+    description: |
+      Form data retrieval from a tab failed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/28280
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/28280#issuecomment-1376040252
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - technical
+    expires: 121
+    metadata:
+      tags:
+        - Sharing
 
 onboarding:
   syn_cfr_shown:
