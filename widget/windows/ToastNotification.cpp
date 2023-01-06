@@ -15,8 +15,11 @@
 #include "ErrorList.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Buffer.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/mscom/COMWrappers.h"
+#include "mozilla/mscom/Utils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 #include "mozilla/WidgetUtils.h"
@@ -537,13 +540,10 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   return handler->CreateToastXmlString(imageURL, aString);
 }
 
-NS_IMETHODIMP
-ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
-                                    nsIUnknownWindowsTagListener* aListener,
-                                    bool* aRetVal) {
-  *aRetVal = false;
-  NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
-
+// Verifies that the tag recieved associates to a notification created during
+// this application's session, or handles fallback behavior.
+RefPtr<ToastHandledPromise> ToastNotification::VerifyTagPresentOrFallback(
+    const nsAString& aWindowsTag) {
   MOZ_LOG(sWASLog, LogLevel::Debug,
           ("Iterating %d handlers", mActiveHandlers.Count()));
 
@@ -561,29 +561,8 @@ ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
         MOZ_LOG(sWASLog, LogLevel::Debug,
                 ("External windowsTag '%s' is handled by handler [%p]",
                  NS_ConvertUTF16toUTF8(aWindowsTag).get(), handler.get()));
-        *aRetVal = true;
-
-        nsString eventName(aWindowsTag);
-        nsAutoHandle event(
-            OpenEventW(EVENT_MODIFY_STATE, FALSE, eventName.get()));
-        if (event.get()) {
-          if (SetEvent(event)) {
-            MOZ_LOG(sWASLog, LogLevel::Info,
-                    ("Set event for event named '%s'",
-                     NS_ConvertUTF16toUTF8(eventName).get()));
-          } else {
-            MOZ_LOG(
-                sWASLog, LogLevel::Error,
-                ("Failed to set event for event named '%s' (GetLastError=%lu)",
-                 NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
-          }
-        } else {
-          MOZ_LOG(sWASLog, LogLevel::Error,
-                  ("Failed to open event named '%s' (GetLastError=%lu)",
-                   NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
-        }
-
-        return NS_OK;
+        ToastHandledResolve handled{u""_ns, u""_ns};
+        return ToastHandledPromise::CreateAndResolve(handled, __func__);
       }
     } else {
       MOZ_LOG(sWASLog, LogLevel::Debug,
@@ -591,20 +570,135 @@ ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
     }
   }
 
-  MOZ_LOG(sWASLog, LogLevel::Debug, ("aListener [%p]", aListener));
-  if (aListener) {
-    bool foundTag;
-    nsAutoString launchUrl;
-    nsAutoString privilegedName;
-    MOZ_TRY(
-        ToastNotificationHandler::FindLaunchURLAndPrivilegedNameForWindowsTag(
-            aWindowsTag, mAumid.ref(), foundTag, launchUrl, privilegedName));
+  // Fallback handling
 
-    // The tag should always be found, so invoke the callback (even just for
-    // logging).
-    aListener->HandleUnknownWindowsTag(aWindowsTag, launchUrl, privilegedName);
+  RefPtr<ToastHandledPromise::Private> fallbackPromise =
+      new ToastHandledPromise::Private(__func__);
+
+  // TODO: Bug 1806005 - At time of writing this function is called in a call
+  // stack containing `WndProc` callback on an STA thread. As a result attempts
+  // to create a `ToastNotificationManager` instance results an an
+  // `RPC_E_CANTCALLOUT_ININPUTSYNCCALL` error. We can simplify the the XPCOM
+  // interface and synchronize the COM interactions if notification fallback
+  // handling were no longer handled in a `WndProc` context.
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+      "VerifyTagPresentOrFallback fallback background task",
+      [fallbackPromise, aWindowsTag = nsString(aWindowsTag),
+       aAumid = nsString(mAumid.ref())]() {
+        MOZ_ASSERT(mscom::IsCOMInitializedOnCurrentThread());
+
+        bool foundTag;
+        nsAutoString launchUrl;
+        nsAutoString privilegedName;
+
+        nsresult rv = ToastNotificationHandler::
+            FindLaunchURLAndPrivilegedNameForWindowsTag(
+                aWindowsTag, aAumid, foundTag, launchUrl, privilegedName);
+
+        if (NS_FAILED(rv) || !foundTag) {
+          MOZ_LOG(sWASLog, LogLevel::Error,
+                  ("Failed to get launch URL and privileged name for "
+                   "notification tag '%s'",
+                   NS_ConvertUTF16toUTF8(aWindowsTag).get()));
+
+          fallbackPromise->Reject(false, __func__);
+          return;
+        }
+
+        MOZ_LOG(sWASLog, LogLevel::Debug,
+                ("Found launch URL '%s' and privileged name '%s' for "
+                 "windowsTag '%s'",
+                 NS_ConvertUTF16toUTF8(launchUrl).get(),
+                 NS_ConvertUTF16toUTF8(privilegedName).get(),
+                 NS_ConvertUTF16toUTF8(aWindowsTag).get()));
+
+        ToastHandledResolve handled{launchUrl, privilegedName};
+        fallbackPromise->Resolve(handled, __func__);
+      }));
+
+  return fallbackPromise;
+}
+
+void ToastNotification::SignalComNotificationHandled(
+    const nsAString& aWindowsTag) {
+  nsString eventName(aWindowsTag);
+  nsAutoHandle event(OpenEventW(EVENT_MODIFY_STATE, FALSE, eventName.get()));
+  if (event.get()) {
+    if (SetEvent(event)) {
+      MOZ_LOG(sWASLog, LogLevel::Info,
+              ("Set event for event named '%s'",
+               NS_ConvertUTF16toUTF8(eventName).get()));
+    } else {
+      MOZ_LOG(sWASLog, LogLevel::Error,
+              ("Failed to set event for event named '%s' (GetLastError=%lu)",
+               NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
+    }
+  } else {
+    MOZ_LOG(sWASLog, LogLevel::Error,
+            ("Failed to open event named '%s' (GetLastError=%lu)",
+             NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
   }
+}
 
+NS_IMETHODIMP
+ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
+                                    JSContext* aCx, dom::Promise** aPromise) {
+  NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
+
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  ENSURE_SUCCESS(rv, rv.StealNSResult());
+
+  this->VerifyTagPresentOrFallback(aWindowsTag)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [aWindowsTag = nsString(aWindowsTag),
+           promise](const ToastHandledResolve& aResolved) {
+            // We no longer need to query toast information from OS and can
+            // allow the COM server to proceed (toast information is lost once
+            // the COM server's `Activate` callback returns).
+            SignalComNotificationHandled(aWindowsTag);
+
+            dom::AutoJSAPI js;
+            if (NS_WARN_IF(!js.Init(promise->GetGlobalObject()))) {
+              promise->MaybeReject(NS_ERROR_FAILURE);
+              return;
+            }
+
+            // Resolve the DOM Promise with a JS object. Set `launchUrl` and/or
+            // `privilegedName` properties if fallback handling is necessary.
+
+            JSContext* cx = js.cx();
+            JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
+
+            auto setProperty = [&](const char* name, const nsString& value) {
+              JS::Rooted<JSString*> title(cx,
+                                          JS_NewUCStringCopyZ(cx, value.get()));
+              JS::Rooted<JS::Value> attVal(cx, JS::StringValue(title));
+              Unused << NS_WARN_IF(!JS_SetProperty(cx, obj, name, attVal));
+            };
+
+            if (!aResolved.launchUrl.IsEmpty()) {
+              setProperty("launchUrl", aResolved.launchUrl);
+            }
+            if (!aResolved.privilegedName.IsEmpty()) {
+              setProperty("privilegedName", aResolved.privilegedName);
+            }
+
+            promise->MaybeResolve(obj);
+          },
+          [aWindowsTag = nsString(aWindowsTag), promise]() {
+            // We no longer need to query toast information from OS and can
+            // allow the COM server to proceed (toast information is lost once
+            // the COM server's `Activate` callback returns).
+            SignalComNotificationHandled(aWindowsTag);
+
+            promise->MaybeReject(NS_ERROR_FAILURE);
+          });
+
+  promise.forget(aPromise);
   return NS_OK;
 }
 
