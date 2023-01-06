@@ -57,7 +57,6 @@ export class NetworkListener {
 
   destroy() {
     this.stopListening();
-    this.#devtoolsNetworkObserver.destroy();
   }
 
   startListening() {
@@ -98,7 +97,7 @@ export class NetworkListener {
     return false;
   };
 
-  #onNetworkEvent = (networkEvent, httpActivity) => {
-    return new lazy.NetworkEventRecord(networkEvent, httpActivity, this);
+  #onNetworkEvent = (networkEvent, channel) => {
+    return new lazy.NetworkEventRecord(networkEvent, channel, this);
   };
 }
