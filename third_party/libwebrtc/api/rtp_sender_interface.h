@@ -43,8 +43,7 @@ class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
   // The dtlsTransport attribute exposes the DTLS transport on which the
   // media is sent. It may be null.
   // https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-transport
-  // TODO(https://bugs.webrtc.org/907849) remove default implementation
-  virtual rtc::scoped_refptr<DtlsTransportInterface> dtls_transport() const;
+  virtual rtc::scoped_refptr<DtlsTransportInterface> dtls_transport() const = 0;
 
   // Returns primary SSRC used by this sender for sending media.
   // Returns 0 if not yet determined.
@@ -67,13 +66,13 @@ class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
   // Sets the IDs of the media streams associated with this sender's track.
   // These are signalled in the SDP so that the remote side can associate
   // tracks.
-  virtual void SetStreams(const std::vector<std::string>& stream_ids) {}
+  virtual void SetStreams(const std::vector<std::string>& stream_ids) = 0;
 
   // Returns the list of encoding parameters that will be applied when the SDP
   // local description is set. These initial encoding parameters can be set by
   // PeerConnection::AddTransceiver, and later updated with Get/SetParameters.
   // TODO(orphis): Make it pure virtual once Chrome has updated
-  virtual std::vector<RtpEncodingParameters> init_send_encodings() const;
+  virtual std::vector<RtpEncodingParameters> init_send_encodings() const = 0;
 
   virtual RtpParameters GetParameters() const = 0;
   // Note that only a subset of the parameters can currently be changed. See
@@ -89,20 +88,21 @@ class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
   // using the user provided encryption mechanism regardless of whether SRTP is
   // enabled or not.
   virtual void SetFrameEncryptor(
-      rtc::scoped_refptr<FrameEncryptorInterface> frame_encryptor);
+      rtc::scoped_refptr<FrameEncryptorInterface> frame_encryptor) = 0;
 
   // Returns a pointer to the frame encryptor set previously by the
   // user. This can be used to update the state of the object.
-  virtual rtc::scoped_refptr<FrameEncryptorInterface> GetFrameEncryptor() const;
+  virtual rtc::scoped_refptr<FrameEncryptorInterface> GetFrameEncryptor()
+      const = 0;
 
   virtual void SetEncoderToPacketizerFrameTransformer(
-      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
+      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) = 0;
 
   // Sets a user defined encoder selector.
   // Overrides selector that is (optionally) provided by VideoEncoderFactory.
   virtual void SetEncoderSelector(
       std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
-          encoder_selector) {}
+          encoder_selector) = 0;
 
  protected:
   ~RtpSenderInterface() override = default;
