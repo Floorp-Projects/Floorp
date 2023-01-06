@@ -47,48 +47,6 @@ add_task(async function test() {
   testAttrib(2, "visuallyselected", true);
 });
 
-add_task(async function test_hoverOne() {
-  await switchTab(0);
-  EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[4], { type: "mousemove" });
-  testAttrib(3, "beforehovered", true);
-  EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[3], { type: "mousemove" });
-  testAttrib(2, "beforehovered", true);
-  testAttrib(2, "afterhovered", false);
-  testAttrib(4, "afterhovered", true);
-  testAttrib(4, "beforehovered", false);
-  testAttrib(0, "beforehovered", false);
-  testAttrib(0, "afterhovered", false);
-  testAttrib(1, "beforehovered", false);
-  testAttrib(1, "afterhovered", false);
-  testAttrib(3, "beforehovered", false);
-  testAttrib(3, "afterhovered", false);
-});
-
-// Test that the afterhovered and beforehovered attributes are still there when
-// a tab is selected and then unselected again. See bug 856107.
-add_task(async function test_hoverStatePersistence() {
-  gBrowser.removeTab(tabs.pop());
-
-  function assertState() {
-    testAttrib(0, "beforehovered", true);
-    testAttrib(0, "afterhovered", false);
-    testAttrib(2, "afterhovered", true);
-    testAttrib(2, "beforehovered", false);
-    testAttrib(1, "beforehovered", false);
-    testAttrib(1, "afterhovered", false);
-    testAttrib(3, "beforehovered", false);
-    testAttrib(3, "afterhovered", false);
-  }
-
-  await switchTab(3);
-  EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[1], { type: "mousemove" });
-  assertState();
-  await switchTab(1);
-  assertState();
-  await switchTab(3);
-  assertState();
-});
-
 add_task(async function test_pinning() {
   testAttrib(3, "visuallyselected", true);
   // Causes gBrowser.tabs to change indices

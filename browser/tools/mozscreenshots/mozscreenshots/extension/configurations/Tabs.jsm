@@ -64,9 +64,6 @@ var Tabs = {
         // also hover the new tab button
         let newTabButton = browserWindow.gBrowser.tabContainer.newTabButton;
         hoverTab(newTabButton);
-        browserWindow.gBrowser.tabs[
-          browserWindow.gBrowser.tabs.length - 1
-        ].setAttribute("beforehovered", true);
 
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
@@ -224,12 +221,5 @@ function hoverTab(tab, hover = true) {
     InspectorUtils.addPseudoClassLock(tab, ":hover");
   } else {
     InspectorUtils.clearPseudoClassLocks(tab);
-  }
-  // XXX TODO: this isn't necessarily testing what we ship
-  if (tab.nextElementSibling) {
-    tab.nextElementSibling.setAttribute("afterhovered", hover || null);
-  }
-  if (tab.previousElementSibling) {
-    tab.previousElementSibling.setAttribute("beforehovered", hover || null);
   }
 }
