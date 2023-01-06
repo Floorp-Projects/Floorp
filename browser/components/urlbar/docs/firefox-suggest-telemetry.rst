@@ -356,6 +356,23 @@ Changelog
 
 .. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
 
+contextual.services.quicksuggest.exposure_weather
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar records weather suggestion exposures. It is incremented each
+time the user is shown a weather suggestion. It can be compared to the
+``urlbar.zeroprefix.exposure`` scalar (see :doc:`telemetry`) to determine the
+percentage of zero-prefix exposures that included weather suggestions.
+
+Each key is the index at which a suggestion appeared in the results (1-based),
+and the corresponding value is the number of exposures at that index.
+
+Changelog
+  Firefox 110.0
+    Introduced. [Bug 1806765_]
+
+.. _1806765: https://bugzilla.mozilla.org/show_bug.cgi?id=1806765
+
 contextual.services.quicksuggest.help
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
