@@ -52,8 +52,6 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
     return this;
   }
 
-  void UpdateTexImageIfNecessary();
-
   mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
   const gfx::SurfaceFormat mFormat;

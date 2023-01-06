@@ -64,7 +64,17 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHost::Lock(uint8_t aChannelIndex,
     return InvalidToWrExternalImage();
   }
 
-  UpdateTexImageIfNecessary();
+  if (mContinuousUpdate) {
+    MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
+    mSurfTex->UpdateTexImage();
+  } else if (mPrepareStatus == STATUS_UPDATE_TEX_IMAGE_NEEDED) {
+    MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
+    // When SurfaceTexture is not single buffer mode, call UpdateTexImage() once
+    // just before rendering. During playing video, one SurfaceTexture is used
+    // for all RenderAndroidSurfaceTextureHosts of video.
+    mSurfTex->UpdateTexImage();
+    mPrepareStatus = STATUS_PREPARED;
+  }
 
   const auto uvs = GetUvCoords(mSize);
   return NativeTextureToWrExternalImage(mSurfTex->GetTexName(), uvs.first.x,
@@ -175,20 +185,6 @@ void RenderAndroidSurfaceTextureHost::NotifyNotUsed() {
   mPrepareStatus = STATUS_NONE;
 }
 
-void RenderAndroidSurfaceTextureHost::UpdateTexImageIfNecessary() {
-  if (mContinuousUpdate) {
-    MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
-    mSurfTex->UpdateTexImage();
-  } else if (mPrepareStatus == STATUS_UPDATE_TEX_IMAGE_NEEDED) {
-    MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
-    // When SurfaceTexture is not single buffer mode, call UpdateTexImage() once
-    // just before rendering. During playing video, one SurfaceTexture is used
-    // for all RenderAndroidSurfaceTextureHosts of video.
-    mSurfTex->UpdateTexImage();
-    mPrepareStatus = STATUS_PREPARED;
-  }
-}
-
 gfx::SurfaceFormat RenderAndroidSurfaceTextureHost::GetFormat() const {
   MOZ_ASSERT(mFormat == gfx::SurfaceFormat::R8G8B8A8 ||
              mFormat == gfx::SurfaceFormat::R8G8B8X8);
@@ -241,8 +237,6 @@ RenderAndroidSurfaceTextureHost::ReadTexImage() {
 bool RenderAndroidSurfaceTextureHost::MapPlane(RenderCompositor* aCompositor,
                                                uint8_t aChannelIndex,
                                                PlaneInfo& aPlaneInfo) {
-  UpdateTexImageIfNecessary();
-
   RefPtr<gfx::DataSourceSurface> readback = ReadTexImage();
   if (!readback) {
     return false;
