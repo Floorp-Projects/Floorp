@@ -49,6 +49,16 @@ void HTMLElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   nsGenericHTMLFormElement::GetEventTargetParent(aVisitor);
 }
 
+nsINode* HTMLElement::GetScopeChainParent() const {
+  if (IsFormAssociatedCustomElements()) {
+    auto* form = GetFormInternal();
+    if (form) {
+      return form;
+    }
+  }
+  return nsGenericHTMLFormElement::GetScopeChainParent();
+}
+
 nsresult HTMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);

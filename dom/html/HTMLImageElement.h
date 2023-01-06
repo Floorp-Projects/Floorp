@@ -69,6 +69,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
       const override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+  nsINode* GetScopeChainParent() const override;
 
   bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                        int32_t* aTabIndex) override;

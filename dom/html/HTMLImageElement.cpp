@@ -502,6 +502,13 @@ void HTMLImageElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
+nsINode* HTMLImageElement::GetScopeChainParent() const {
+  if (mForm) {
+    return mForm;
+  }
+  return nsGenericHTMLElement::GetScopeChainParent();
+}
+
 bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                        int32_t* aTabIndex) {
   int32_t tabIndex = TabIndex();
