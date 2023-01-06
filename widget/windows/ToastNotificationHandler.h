@@ -56,7 +56,8 @@ class ToastNotificationHandler final
 
   void OnWriteBitmapFinished(nsresult rv);
 
-  void HideIfPrivate();
+  void HideAlert();
+  bool IsPrivate();
 
   void UnregisterHandler();
 
@@ -120,7 +121,6 @@ class ToastNotificationHandler final
 
   nsresult TryShowAlert();
   bool ShowAlert();
-  void HideAlert();
   nsresult AsyncSaveImage(imgIRequest* aRequest);
   nsresult OnWriteBitmapSuccess();
   void SendFinished();
