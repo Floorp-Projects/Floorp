@@ -68,11 +68,6 @@ skipped_lkgr_bots = [
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
 lucicfg.enable_experiment("crbug.com/1182002")
 
-luci.builder.defaults.experiments.set(
-    {
-        "luci.recipes.use_python3": 100,
-    },
-)
 luci.builder.defaults.test_presentation.set(
     resultdb.test_presentation(grouping_keys = ["status", "v.test_suite"]),
 )
