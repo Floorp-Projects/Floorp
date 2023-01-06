@@ -356,9 +356,8 @@ ToastNotification::Observe(nsISupports* aSubject, const char* aTopic,
 
   for (auto iter = mActiveHandlers.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ToastNotificationHandler> handler = iter.UserData();
-    if (topic == "last-pb-context-exited"_ns) {
-      handler->HideIfPrivate();
-    } else if (topic == "quit-application"_ns) {
+
+    auto removeNotification = [&]() {
       // The handlers' destructors will do the right thing (de-register with
       // Windows).
       iter.Remove();
@@ -366,6 +365,15 @@ ToastNotification::Observe(nsISupports* aSubject, const char* aTopic,
       // Break the cycle between the handler and the MSCOM notification so the
       // handler's destructor will be called.
       handler->UnregisterHandler();
+    };
+
+    if (topic == "last-pb-context-exited"_ns) {
+      if (handler->IsPrivate()) {
+        handler->HideAlert();
+        removeNotification();
+      }
+    } else if (topic == "quit-application"_ns) {
+      removeNotification();
     }
   }
 

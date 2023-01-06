@@ -607,18 +607,11 @@ bool ToastNotificationHandler::ShowAlert() {
   return CreateWindowsNotificationFromXml(toastXml);
 }
 
-void ToastNotificationHandler::HideIfPrivate() {
-  if (mInPrivateBrowsing) {
-    HideAlert();
-  }
-}
+bool ToastNotificationHandler::IsPrivate() { return mInPrivateBrowsing; }
 
 void ToastNotificationHandler::HideAlert() {
   if (mNotifier && mNotification) {
     mNotifier->Hide(mNotification.Get());
-
-    SendFinished();
-    mBackend->RemoveHandler(mName, this);
   }
 }
 
