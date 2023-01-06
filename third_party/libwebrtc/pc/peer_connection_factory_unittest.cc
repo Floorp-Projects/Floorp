@@ -222,11 +222,17 @@ class PeerConnectionFactoryTest : public ::testing::Test {
                 webrtc::ScalabilityMode::kL3T3h,
                 webrtc::ScalabilityMode::kL3T3_KEY,
                 webrtc::ScalabilityMode::kS2T1,
+                webrtc::ScalabilityMode::kS2T1h,
                 webrtc::ScalabilityMode::kS2T2,
+                webrtc::ScalabilityMode::kS2T2h,
                 webrtc::ScalabilityMode::kS2T3,
+                webrtc::ScalabilityMode::kS2T3h,
                 webrtc::ScalabilityMode::kS3T1,
+                webrtc::ScalabilityMode::kS3T1h,
                 webrtc::ScalabilityMode::kS3T2,
-                webrtc::ScalabilityMode::kS3T3)
+                webrtc::ScalabilityMode::kS3T2h,
+                webrtc::ScalabilityMode::kS3T3,
+                webrtc::ScalabilityMode::kS3T3h)
             // clang-format on
             )
             << "Codec: " << codec.name;

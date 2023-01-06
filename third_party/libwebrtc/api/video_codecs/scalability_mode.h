@@ -48,11 +48,17 @@ enum class ScalabilityMode : uint8_t {
   kL3T3h,
   kL3T3_KEY,
   kS2T1,
+  kS2T1h,
   kS2T2,
+  kS2T2h,
   kS2T3,
+  kS2T3h,
   kS3T1,
+  kS3T1h,
   kS3T2,
+  kS3T2h,
   kS3T3,
+  kS3T3h,
 };
 
 inline constexpr ScalabilityMode kAllScalabilityModes[] = {
@@ -80,11 +86,17 @@ inline constexpr ScalabilityMode kAllScalabilityModes[] = {
     ScalabilityMode::kL3T3h,
     ScalabilityMode::kL3T3_KEY,
     ScalabilityMode::kS2T1,
+    ScalabilityMode::kS2T1h,
     ScalabilityMode::kS2T2,
+    ScalabilityMode::kS2T2h,
     ScalabilityMode::kS2T3,
+    ScalabilityMode::kS2T3h,
     ScalabilityMode::kS3T1,
+    ScalabilityMode::kS3T1h,
     ScalabilityMode::kS3T2,
+    ScalabilityMode::kS3T2h,
     ScalabilityMode::kS3T3,
+    ScalabilityMode::kS3T3h,
     // clang-format on
 };
 

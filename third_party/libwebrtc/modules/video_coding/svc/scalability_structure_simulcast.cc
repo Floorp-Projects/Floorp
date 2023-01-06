@@ -43,9 +43,11 @@ constexpr int ScalabilityStructureSimulcast::kMaxNumTemporalLayers;
 
 ScalabilityStructureSimulcast::ScalabilityStructureSimulcast(
     int num_spatial_layers,
-    int num_temporal_layers)
+    int num_temporal_layers,
+    ScalingFactor resolution_factor)
     : num_spatial_layers_(num_spatial_layers),
       num_temporal_layers_(num_temporal_layers),
+      resolution_factor_(resolution_factor),
       active_decode_targets_(
           (uint32_t{1} << (num_spatial_layers * num_temporal_layers)) - 1) {
   RTC_DCHECK_LE(num_spatial_layers, kMaxNumSpatialLayers);
@@ -62,8 +64,10 @@ ScalabilityStructureSimulcast::StreamConfig() const {
   result.scaling_factor_num[num_spatial_layers_ - 1] = 1;
   result.scaling_factor_den[num_spatial_layers_ - 1] = 1;
   for (int sid = num_spatial_layers_ - 1; sid > 0; --sid) {
-    result.scaling_factor_num[sid - 1] = 1;
-    result.scaling_factor_den[sid - 1] = 2 * result.scaling_factor_den[sid];
+    result.scaling_factor_num[sid - 1] =
+        resolution_factor_.num * result.scaling_factor_num[sid];
+    result.scaling_factor_den[sid - 1] =
+        resolution_factor_.den * result.scaling_factor_den[sid];
   }
   result.uses_reference_scaling = false;
   return result;

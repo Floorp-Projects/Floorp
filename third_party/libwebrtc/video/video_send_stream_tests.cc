@@ -3392,7 +3392,13 @@ INSTANTIATE_TEST_SUITE_P(
              {"L2T2_KEY_SHIFT", 2, 2, InterLayerPredMode::kOnKeyPic},
              {"L3T1h", 3, 1, InterLayerPredMode::kOn},
              {"L3T2h", 3, 2, InterLayerPredMode::kOn},
-             {"L3T3h", 3, 3, InterLayerPredMode::kOn}}),
+             {"L3T3h", 3, 3, InterLayerPredMode::kOn},
+             {"S2T1h", 2, 1, InterLayerPredMode::kOff},
+             {"S2T2h", 2, 2, InterLayerPredMode::kOff},
+             {"S2T3h", 2, 3, InterLayerPredMode::kOff},
+             {"S3T1h", 3, 1, InterLayerPredMode::kOff},
+             {"S3T2h", 3, 2, InterLayerPredMode::kOff},
+             {"S3T3h", 3, 3, InterLayerPredMode::kOff}}),
         ::testing::Values(true)),  // use_scalability_mode_identifier
     ParamInfoToStr);
 

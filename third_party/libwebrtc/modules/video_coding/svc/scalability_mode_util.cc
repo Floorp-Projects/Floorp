@@ -71,16 +71,28 @@ absl::optional<ScalabilityMode> ScalabilityModeFromString(
 
   if (mode_string == "S2T1")
     return ScalabilityMode::kS2T1;
+  if (mode_string == "S2T1h")
+    return ScalabilityMode::kS2T1h;
   if (mode_string == "S2T2")
     return ScalabilityMode::kS2T2;
+  if (mode_string == "S2T2h")
+    return ScalabilityMode::kS2T2h;
   if (mode_string == "S2T3")
     return ScalabilityMode::kS2T3;
+  if (mode_string == "S2T3h")
+    return ScalabilityMode::kS2T3h;
   if (mode_string == "S3T1")
     return ScalabilityMode::kS3T1;
+  if (mode_string == "S3T1h")
+    return ScalabilityMode::kS3T1h;
   if (mode_string == "S3T2")
     return ScalabilityMode::kS3T2;
+  if (mode_string == "S3T2h")
+    return ScalabilityMode::kS3T2h;
   if (mode_string == "S3T3")
     return ScalabilityMode::kS3T3;
+  if (mode_string == "S3T3h")
+    return ScalabilityMode::kS3T3h;
 
   return absl::nullopt;
 }
@@ -123,11 +135,17 @@ InterLayerPredMode ScalabilityModeToInterLayerPredMode(
     case ScalabilityMode::kL3T3_KEY:
       return InterLayerPredMode::kOnKeyPic;
     case ScalabilityMode::kS2T1:
+    case ScalabilityMode::kS2T1h:
     case ScalabilityMode::kS2T2:
+    case ScalabilityMode::kS2T2h:
     case ScalabilityMode::kS2T3:
+    case ScalabilityMode::kS2T3h:
     case ScalabilityMode::kS3T1:
+    case ScalabilityMode::kS3T1h:
     case ScalabilityMode::kS3T2:
+    case ScalabilityMode::kS3T2h:
     case ScalabilityMode::kS3T3:
+    case ScalabilityMode::kS3T3h:
       return InterLayerPredMode::kOff;
   }
   RTC_CHECK_NOTREACHED();
@@ -161,12 +179,18 @@ int ScalabilityModeToNumSpatialLayers(ScalabilityMode scalability_mode) {
     case ScalabilityMode::kL3T3_KEY:
       return 3;
     case ScalabilityMode::kS2T1:
+    case ScalabilityMode::kS2T1h:
     case ScalabilityMode::kS2T2:
+    case ScalabilityMode::kS2T2h:
     case ScalabilityMode::kS2T3:
+    case ScalabilityMode::kS2T3h:
       return 2;
     case ScalabilityMode::kS3T1:
+    case ScalabilityMode::kS3T1h:
     case ScalabilityMode::kS3T2:
+    case ScalabilityMode::kS3T2h:
     case ScalabilityMode::kS3T3:
+    case ScalabilityMode::kS3T3h:
       return 3;
   }
   RTC_CHECK_NOTREACHED();
@@ -206,13 +230,19 @@ int ScalabilityModeToNumTemporalLayers(ScalabilityMode scalability_mode) {
     case ScalabilityMode::kL3T3_KEY:
       return 3;
     case ScalabilityMode::kS2T1:
+    case ScalabilityMode::kS2T1h:
     case ScalabilityMode::kS3T1:
+    case ScalabilityMode::kS3T1h:
       return 1;
     case ScalabilityMode::kS2T2:
+    case ScalabilityMode::kS2T2h:
     case ScalabilityMode::kS3T2:
+    case ScalabilityMode::kS3T2h:
       return 2;
     case ScalabilityMode::kS2T3:
+    case ScalabilityMode::kS2T3h:
     case ScalabilityMode::kS3T3:
+    case ScalabilityMode::kS3T3h:
       return 3;
   }
   RTC_CHECK_NOTREACHED();
@@ -251,6 +281,12 @@ absl::optional<ScalabilityModeResolutionRatio> ScalabilityModeToResolutionRatio(
     case ScalabilityMode::kL3T1h:
     case ScalabilityMode::kL3T2h:
     case ScalabilityMode::kL3T3h:
+    case ScalabilityMode::kS2T1h:
+    case ScalabilityMode::kS2T2h:
+    case ScalabilityMode::kS2T3h:
+    case ScalabilityMode::kS3T1h:
+    case ScalabilityMode::kS3T2h:
+    case ScalabilityMode::kS3T3h:
       return ScalabilityModeResolutionRatio::kThreeToTwo;
   }
   RTC_CHECK_NOTREACHED();
