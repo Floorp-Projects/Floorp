@@ -45,24 +45,3 @@ diff --git a/s_expm1.cpp b/s_expm1.cpp
  	        SET_HIGH_WORD(t,0x3ff00000 - (0x200000>>k));  /* t=1-2^-k */
  	       	y = t-(e-x);
  		y = y*twopk;
---- a/s_exp2.cpp	2022-12-11 21:26:36.045643147 -0500
-+++ b/s_exp2.cpp_new	2022-12-11 21:28:42.058769925 -0500
-@@ -381,14 +381,16 @@
- 		INSERT_WORDS(twopk, 0x3ff00000 + k, 0);
- 	else
- 		INSERT_WORDS(twopkp1000, 0x3ff00000 + k + (1000 << 20), 0);
- 	r = t + t * z * (P1 + z * (P2 + z * (P3 + z * (P4 + z * P5))));
- 
- 	/* Scale by 2**(k>>20). */
- 	if(k >= -(1021 << 20)) {
--		if (k == 1024 << 20)
--			return (r * 2.0 * 0x1p1023);
-+		if (k == 1024 << 20) {
-+			double const_0x1p1023 = pow(2, 1023);
-+			return (r * 2.0 * const_0x1p1023);
-+		}
- 		return (r * twopk);
- 	} else {
- 		return (r * twopkp1000 * twom1000);
- 	}
- }
