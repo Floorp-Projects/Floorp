@@ -196,9 +196,6 @@ void RenderCompositorOGLSWGL::HandleExternalImage(
   GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
 
   auto* host = aExternalImage->AsRenderAndroidSurfaceTextureHost();
-
-  host->UpdateTexImageIfNecessary();
-
   // We need to hold the texture source separately from the effect,
   // since the effect doesn't hold a strong reference.
   RefPtr<SurfaceTextureSource> layer = new SurfaceTextureSource(
