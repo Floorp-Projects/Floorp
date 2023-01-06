@@ -38,7 +38,6 @@
 
       this.baseConnect();
 
-      this._firstTab = null;
       this._lastTab = null;
       this._beforeHoveredTab = null;
       this._afterHoveredTab = null;
@@ -1212,9 +1211,6 @@
         return;
       }
 
-      this._firstTab?.removeAttribute("first-visible-tab");
-      this._firstTab = visibleTabs[0];
-      this._firstTab.setAttribute("first-visible-tab", "true");
       this._lastTab?.removeAttribute("last-visible-tab");
       this._lastTab = visibleTabs[visibleTabs.length - 1];
       this._lastTab.setAttribute("last-visible-tab", "true");
