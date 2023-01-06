@@ -185,7 +185,10 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   // since they may now be stuck in an "initializing" state due to the
   // error. Already-initialized bindings will be ignored.
   if (!frame && result && "throw" in result) {
-    parseErrorOutput(dbgGlobal, string);
+    forceLexicalInitForVariableDeclarationsInThrowingExpression(
+      dbgGlobal,
+      string
+    );
   }
 
   const { helperResult } = helpers;
@@ -256,7 +259,23 @@ function getEvalResult(
   return result;
 }
 
-function parseErrorOutput(dbgGlobal, string) {
+/**
+ * Force lexical initialization for let/const variables declared in a throwing expression.
+ * By spec, a lexical declaration is added to the *page-visible* global lexical environment
+ * for those variables, meaning they can't be redeclared (See Bug 1246215).
+ *
+ * This function gets the AST of the throwing expression to collect all the let/const
+ * declarations and call `forceLexicalInitializationByName`, which will initialize them
+ * to undefined, making it possible for them to be redeclared.
+ *
+ * @param {DebuggerObject} dbgGlobal
+ * @param {String} string: The expression that was evaluated and threw
+ * @returns
+ */
+function forceLexicalInitForVariableDeclarationsInThrowingExpression(
+  dbgGlobal,
+  string
+) {
   // Reflect is not usable in workers, so return early to avoid logging an error
   // to the console when loading it.
   if (isWorker) {
@@ -269,57 +288,67 @@ function parseErrorOutput(dbgGlobal, string) {
   // in initializing bindings.
   try {
     ast = lazy.Reflect.parse(string);
-  } catch (ex) {
+  } catch (e) {
     return;
   }
-  for (const line of ast.body) {
-    // Only let and const declarations put bindings into an
-    // "initializing" state.
-    if (!(line.kind == "let" || line.kind == "const")) {
-      continue;
-    }
 
-    const identifiers = [];
-    for (const decl of line.declarations) {
-      switch (decl.id.type) {
-        case "Identifier":
-          // let foo = bar;
-          identifiers.push(decl.id.name);
-          break;
-        case "ArrayPattern":
-          // let [foo, bar]    = [1, 2];
-          // let [foo=99, bar] = [1, 2];
-          for (const e of decl.id.elements) {
-            if (e.type == "Identifier") {
-              identifiers.push(e.name);
-            } else if (e.type == "AssignmentExpression") {
-              identifiers.push(e.left.name);
+  try {
+    for (const line of ast.body) {
+      // Only let and const declarations put bindings into an
+      // "initializing" state.
+      if (!(line.kind == "let" || line.kind == "const")) {
+        continue;
+      }
+
+      const identifiers = [];
+      for (const decl of line.declarations) {
+        switch (decl.id.type) {
+          case "Identifier":
+            // let foo = bar;
+            identifiers.push(decl.id.name);
+            break;
+          case "ArrayPattern":
+            // let [foo, bar]    = [1, 2];
+            // let [foo=99, bar] = [1, 2];
+            for (const e of decl.id.elements) {
+              if (e.type == "Identifier") {
+                identifiers.push(e.name);
+              } else if (e.type == "AssignmentExpression") {
+                identifiers.push(e.left.name);
+              }
             }
-          }
-          break;
-        case "ObjectPattern":
-          // let {bilbo, my}    = {bilbo: "baggins", my: "precious"};
-          // let {blah: foo}    = {blah: yabba()}
-          // let {blah: foo=99} = {blah: yabba()}
-          for (const prop of decl.id.properties) {
-            // key
-            if (prop.key.type == "Identifier") {
-              identifiers.push(prop.key.name);
+            break;
+          case "ObjectPattern":
+            // let {bilbo, my}    = {bilbo: "baggins", my: "precious"};
+            // let {blah: foo}    = {blah: yabba()}
+            // let {blah: foo=99} = {blah: yabba()}
+            for (const prop of decl.id.properties) {
+              // key
+              if (prop.key?.type == "Identifier") {
+                identifiers.push(prop.key.name);
+              }
+              // value
+              if (prop.value?.type == "Identifier") {
+                identifiers.push(prop.value.name);
+              } else if (prop.value?.type == "AssignmentExpression") {
+                identifiers.push(prop.value.left.name);
+              } else if (prop.type === "SpreadExpression") {
+                identifiers.push(prop.expression.name);
+              }
             }
-            // value
-            if (prop.value.type == "Identifier") {
-              identifiers.push(prop.value.name);
-            } else if (prop.value.type == "AssignmentExpression") {
-              identifiers.push(prop.value.left.name);
-            }
-          }
-          break;
+            break;
+        }
+      }
+
+      for (const name of identifiers) {
+        dbgGlobal.forceLexicalInitializationByName(name);
       }
     }
-
-    for (const name of identifiers) {
-      dbgGlobal.forceLexicalInitializationByName(name);
-    }
+  } catch (ex) {
+    console.error(
+      "Error in forceLexicalInitForVariableDeclarationsInThrowingExpression:",
+      ex
+    );
   }
 }
 
