@@ -1863,7 +1863,7 @@
     <string name="synced_tabs_connect_another_device">Падключыць іншую прыладу.</string>
 
     <!-- Text displayed asking user to re-authenticate -->
-    <string name="synced_tabs_reauth">Паўтарыце аўтэнтыфікацыю.</string>
+    <string name="synced_tabs_reauth">Калі ласка, аўтарызуйцеся яшчэ раз.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Калі ласка, уключыце сінхранізацыю картак.</string>
     <!-- Text displayed when user has no tabs that have been synced -->

@@ -591,7 +591,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Sync and save your data preference view -->
-    <string name="preferences_sync_2">Samstilltu og vistaðu gögnin þín</string>
+    <string name="preferences_sync_2">Samstilla og vista gögn</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Skráðu þig inn til að tengjast aftur</string>
     <!-- Preference for removing FxA account -->
@@ -1085,7 +1085,7 @@
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Skráðu þig inn til að samstilla</string>
      <!-- An option from the three dot menu to sync and save data -->
-    <string name="sync_menu_sync_and_save_data">Samstilltu og vistaðu gögn</string>
+    <string name="sync_menu_sync_and_save_data">Samstilla og vista gögn</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Senda í öll tæki</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1300,7 +1300,7 @@
     <!-- Summary of automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_summary">Aðlagast að stillingum tækis þíns</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Dökkur þema</string>
+    <string name="onboarding_theme_dark_title">Dökkt þema</string>
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Ljós þema</string>
 
@@ -1568,7 +1568,7 @@
     <string name="preference_accessibility_force_enable_zoom">Aðdráttur á öllum vefsvæðum</string>
 
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Virkja til að leyfa klemmu og aðdrátt, jafnvel á vefsíðum sem koma í veg fyrir þessa virkni.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Virkja til að leyfa að klípa og aðdrátt, jafnvel á vefsíðum sem koma í veg fyrir þessa virkni.</string>
 
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Nafn (A-Z)</string>
