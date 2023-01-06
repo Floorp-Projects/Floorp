@@ -2267,6 +2267,7 @@ class EventDispatcher {
       if (id === "doc") {
         const eventName = event.name;
         if (eventName === "Open") {
+          this.userActivation();
           this._document.obj._initActions();
           this.formatAll();
         }
@@ -4246,8 +4247,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.2.143';
-const pdfjsBuild = 'c791e01bf';
+const pdfjsVersion = '3.3.21';
+const pdfjsBuild = '8a0ca0439';
 })();
 
 /******/ 	return __webpack_exports__;

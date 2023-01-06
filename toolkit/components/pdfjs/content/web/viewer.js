@@ -1315,6 +1315,9 @@ class DefaultExternalServices {
   static createScripting(options) {
     throw new Error("Not implemented: createScripting");
   }
+  static get supportsPinchToZoom() {
+    return (0, _pdfjsLib.shadow)(this, "supportsPinchToZoom", true);
+  }
   static get supportsIntegratedFind() {
     return (0, _pdfjsLib.shadow)(this, "supportsIntegratedFind", false);
   }
@@ -1379,10 +1382,12 @@ const PDFViewerApplication = {
   _contentLength: null,
   _saveInProgress: false,
   _wheelUnusedTicks: 0,
+  _touchUnusedTicks: 0,
   _PDFBug: null,
   _hasAnnotationEditors: false,
   _title: document.title,
   _printAnnotationStoragePromise: null,
+  _touchInfo: null,
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
     this.appConfig = appConfig;
@@ -1676,20 +1681,24 @@ const PDFViewerApplication = {
   get initializedPromise() {
     return this._initializedCapability.promise;
   },
-  zoomIn(steps) {
+  zoomIn(steps, scaleFactor) {
     if (this.pdfViewer.isInPresentationMode) {
       return;
     }
-    this.pdfViewer.increaseScale(steps, {
-      drawingDelay: _app_options.AppOptions.get("defaultZoomDelay")
+    this.pdfViewer.increaseScale({
+      drawingDelay: _app_options.AppOptions.get("defaultZoomDelay"),
+      steps,
+      scaleFactor
     });
   },
-  zoomOut(steps) {
+  zoomOut(steps, scaleFactor) {
     if (this.pdfViewer.isInPresentationMode) {
       return;
     }
-    this.pdfViewer.decreaseScale(steps, {
-      drawingDelay: _app_options.AppOptions.get("defaultZoomDelay")
+    this.pdfViewer.decreaseScale({
+      drawingDelay: _app_options.AppOptions.get("defaultZoomDelay"),
+      steps,
+      scaleFactor
     });
   },
   zoomReset() {
@@ -1712,6 +1721,9 @@ const PDFViewerApplication = {
   },
   get supportsFullscreen() {
     return (0, _pdfjsLib.shadow)(this, "supportsFullscreen", document.fullscreenEnabled);
+  },
+  get supportsPinchToZoom() {
+    return this.externalServices.supportsPinchToZoom;
   },
   get supportsIntegratedFind() {
     return this.externalServices.supportsIntegratedFind;
@@ -2582,6 +2594,12 @@ const PDFViewerApplication = {
     window.addEventListener("touchstart", webViewerTouchStart, {
       passive: false
     });
+    window.addEventListener("touchmove", webViewerTouchMove, {
+      passive: false
+    });
+    window.addEventListener("touchend", webViewerTouchEnd, {
+      passive: false
+    });
     window.addEventListener("click", webViewerClick);
     window.addEventListener("keydown", webViewerKeyDown);
     window.addEventListener("resize", _boundEvents.windowResize);
@@ -2596,13 +2614,13 @@ const PDFViewerApplication = {
   unbindWindowEvents() {
     throw new Error("Not implemented: unbindWindowEvents");
   },
-  accumulateWheelTicks(ticks) {
-    if (this._wheelUnusedTicks > 0 && ticks < 0 || this._wheelUnusedTicks < 0 && ticks > 0) {
-      this._wheelUnusedTicks = 0;
+  _accumulateTicks(ticks, prop) {
+    if (this[prop] > 0 && ticks < 0 || this[prop] < 0 && ticks > 0) {
+      this[prop] = 0;
     }
-    this._wheelUnusedTicks += ticks;
-    const wholeTicks = Math.trunc(this._wheelUnusedTicks);
-    this._wheelUnusedTicks -= wholeTicks;
+    this[prop] += ticks;
+    const wholeTicks = Math.trunc(this[prop]);
+    this[prop] -= wholeTicks;
     return wholeTicks;
   },
   _unblockDocumentLoadEvent() {
@@ -2986,11 +3004,11 @@ function webViewerWheel(evt) {
       if (Math.abs(delta) >= 1) {
         ticks = Math.sign(delta);
       } else {
-        ticks = PDFViewerApplication.accumulateWheelTicks(delta);
+        ticks = PDFViewerApplication._accumulateTicks(delta, "_wheelUnusedTicks");
       }
     } else {
       const PIXELS_PER_LINE_SCALE = 30;
-      ticks = PDFViewerApplication.accumulateWheelTicks(delta / PIXELS_PER_LINE_SCALE);
+      ticks = PDFViewerApplication._accumulateTicks(delta / PIXELS_PER_LINE_SCALE, "_wheelUnusedTicks");
     }
     if (ticks < 0) {
       PDFViewerApplication.zoomOut(-ticks);
@@ -3011,9 +3029,97 @@ function webViewerWheel(evt) {
   }
 }
 function webViewerTouchStart(evt) {
-  if (evt.touches.length > 1) {
-    evt.preventDefault();
+  if (PDFViewerApplication.pdfViewer.isInPresentationMode || evt.touches.length < 2) {
+    return;
   }
+  evt.preventDefault();
+  if (evt.touches.length !== 2) {
+    PDFViewerApplication._touchInfo = null;
+    return;
+  }
+  const [touch0, touch1] = evt.touches;
+  PDFViewerApplication._touchInfo = {
+    centerX: (touch0.pageX + touch1.pageX) / 2,
+    centerY: (touch0.pageY + touch1.pageY) / 2,
+    distance: Math.hypot(touch0.pageX - touch1.pageX, touch0.pageY - touch1.pageY) || 1
+  };
+}
+function webViewerTouchMove(evt) {
+  if (!PDFViewerApplication._touchInfo || evt.touches.length !== 2) {
+    return;
+  }
+  const {
+    pdfViewer,
+    _touchInfo,
+    supportsPinchToZoom
+  } = PDFViewerApplication;
+  const [touch0, touch1] = evt.touches;
+  const {
+    pageX: page0X,
+    pageY: page0Y
+  } = touch0;
+  const {
+    pageX: page1X,
+    pageY: page1Y
+  } = touch1;
+  const distance = Math.hypot(page0X - page1X, page0Y - page1Y) || 1;
+  const {
+    distance: previousDistance
+  } = _touchInfo;
+  const scaleFactor = distance / previousDistance;
+  if (supportsPinchToZoom && Math.abs(scaleFactor - 1) <= 1e-2) {
+    return;
+  }
+  const {
+    centerX,
+    centerY
+  } = _touchInfo;
+  const diff0X = page0X - centerX;
+  const diff1X = page1X - centerX;
+  const diff0Y = page0Y - centerY;
+  const diff1Y = page1Y - centerY;
+  const dotProduct = diff0X * diff1X + diff0Y * diff1Y;
+  if (dotProduct >= 0) {
+    return;
+  }
+  evt.preventDefault();
+  const previousScale = pdfViewer.currentScale;
+  if (supportsPinchToZoom) {
+    if (scaleFactor < 1) {
+      PDFViewerApplication.zoomOut(null, scaleFactor);
+    } else {
+      PDFViewerApplication.zoomIn(null, scaleFactor);
+    }
+  } else {
+    const PIXELS_PER_LINE_SCALE = 30;
+    const ticks = PDFViewerApplication._accumulateTicks((distance - previousDistance) / PIXELS_PER_LINE_SCALE, "_touchUnusedTicks");
+    if (ticks < 0) {
+      PDFViewerApplication.zoomOut(-ticks);
+    } else if (ticks > 0) {
+      PDFViewerApplication.zoomIn(ticks);
+    }
+  }
+  const currentScale = pdfViewer.currentScale;
+  if (previousScale !== currentScale) {
+    const scaleCorrectionFactor = currentScale / previousScale - 1;
+    const newCenterX = _touchInfo.centerX = (page0X + page1X) / 2;
+    const newCenterY = _touchInfo.centerY = (page0Y + page1Y) / 2;
+    _touchInfo.distance = distance;
+    const [top, left] = pdfViewer.containerTopLeft;
+    const dx = newCenterX - left;
+    const dy = newCenterY - top;
+    pdfViewer.container.scrollLeft += dx * scaleCorrectionFactor;
+    pdfViewer.container.scrollTop += dy * scaleCorrectionFactor;
+  }
+}
+function webViewerTouchEnd(evt) {
+  if (!PDFViewerApplication._touchInfo) {
+    return;
+  }
+  evt.preventDefault();
+  PDFViewerApplication._touchInfo = null;
+  PDFViewerApplication.pdfViewer.refresh();
+  PDFViewerApplication._touchUnusedTicks = 0;
 }
 function webViewerClick(evt) {
   if (!PDFViewerApplication.secondaryToolbar?.isOpen) {
@@ -4877,8 +4983,11 @@ class PDFFindController {
     return true;
   }
   #calculateRegExpMatch(query, entireWord, pageIndex, pageContent) {
-    const matches = [],
-      matchesLength = [];
+    const matches = this._pageMatches[pageIndex] = [];
+    const matchesLength = this._pageMatchesLength[pageIndex] = [];
+    if (!query) {
+      return;
+    }
     const diffs = this._pageDiffs[pageIndex];
     let match;
     while ((match = query.exec(pageContent)) !== null) {
@@ -4891,8 +5000,6 @@ class PDFFindController {
         matchesLength.push(matchLen);
       }
     }
-    this._pageMatches[pageIndex] = matches;
-    this._pageMatchesLength[pageIndex] = matchesLength;
   }
   #convertToRegExpString(query, hasDiacritics) {
     const {
@@ -4936,7 +5043,7 @@ class PDFFindController {
   }
   #calculateMatch(pageIndex) {
     let query = this.#query;
-    if (query.length === 0) {
+    if (!query) {
       return;
     }
     const {
@@ -4960,7 +5067,7 @@ class PDFFindController {
       }
     }
     const flags = `g${isUnicode ? "u" : ""}${caseSensitive ? "" : "i"}`;
-    query = new RegExp(query, flags);
+    query = query ? new RegExp(query, flags) : null;
     this.#calculateRegExpMatch(query, entireWord, pageIndex, pageContent);
     if (this._state.highlightAll) {
       this.#updatePage(pageIndex);
@@ -5048,7 +5155,7 @@ class PDFFindController {
         });
       }
     }
-    if (this.#query === "") {
+    if (!this.#query) {
       this.#updateUIState(FindState.FOUND);
       return;
     }
@@ -8001,13 +8108,13 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.2.143';
+    const viewerVersion = '3.3.21';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
     this.container = options.container;
-    this.#resizeObserver.observe(this.container);
     this.viewer = options.viewer || options.container.firstElementChild;
+    this.#resizeObserver.observe(this.container);
     this.eventBus = options.eventBus;
     this.linkService = options.linkService || new _pdf_link_service.SimpleLinkService();
     this.downloadManager = options.downloadManager || null;
@@ -9238,25 +9345,41 @@ class PDFViewer {
     this.currentPageNumber = Math.max(currentPageNumber - advance, 1);
     return true;
   }
-  increaseScale(steps = 1, options = null) {
-    let newScale = this._currentScale;
-    do {
-      newScale = (newScale * _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
-      newScale = Math.ceil(newScale * 10) / 10;
-      newScale = Math.min(_ui_utils.MAX_SCALE, newScale);
-    } while (--steps > 0 && newScale < _ui_utils.MAX_SCALE);
+  increaseScale(options = null) {
+    if (!this.pdfDocument) {
+      return;
+    }
     options ||= Object.create(null);
+    let newScale = this._currentScale;
+    if (options.scaleFactor > 1) {
+      newScale = Math.min(_ui_utils.MAX_SCALE, Math.round(newScale * options.scaleFactor * 100) / 100);
+    } else {
+      let steps = options.steps ?? 1;
+      do {
+        newScale = (newScale * _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
+        newScale = Math.ceil(newScale * 10) / 10;
+        newScale = Math.min(_ui_utils.MAX_SCALE, newScale);
+      } while (--steps > 0 && newScale < _ui_utils.MAX_SCALE);
+    }
     options.noScroll = false;
     this._setScale(newScale, options);
   }
-  decreaseScale(steps = 1, options = null) {
-    let newScale = this._currentScale;
-    do {
-      newScale = (newScale / _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
-      newScale = Math.floor(newScale * 10) / 10;
-      newScale = Math.max(_ui_utils.MIN_SCALE, newScale);
-    } while (--steps > 0 && newScale > _ui_utils.MIN_SCALE);
+  decreaseScale(options = null) {
+    if (!this.pdfDocument) {
+      return;
+    }
     options ||= Object.create(null);
+    let newScale = this._currentScale;
+    if (options.scaleFactor > 0 && options.scaleFactor < 1) {
+      newScale = Math.max(_ui_utils.MIN_SCALE, Math.round(newScale * options.scaleFactor * 100) / 100);
+    } else {
+      let steps = options.steps ?? 1;
+      do {
+        newScale = (newScale / _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
+        newScale = Math.floor(newScale * 10) / 10;
+        newScale = Math.max(_ui_utils.MIN_SCALE, newScale);
+      } while (--steps > 0 && newScale > _ui_utils.MIN_SCALE);
+    }
     options.noScroll = false;
     this._setScale(newScale, options);
   }
@@ -12116,6 +12239,10 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
   static createScripting(options) {
     return FirefoxScripting;
   }
+  static get supportsPinchToZoom() {
+    const support = FirefoxCom.requestSync("supportsPinchToZoom");
+    return (0, _pdfjsLib.shadow)(this, "supportsPinchToZoom", support);
+  }
   static get supportsIntegratedFind() {
     const support = FirefoxCom.requestSync("supportsIntegratedFind");
     return (0, _pdfjsLib.shadow)(this, "supportsIntegratedFind", support);
@@ -12564,8 +12691,8 @@ var _ui_utils = __webpack_require__(1);
 var _app_options = __webpack_require__(2);
 var _pdf_link_service = __webpack_require__(3);
 var _app = __webpack_require__(4);
-const pdfjsVersion = '3.2.143';
-const pdfjsBuild = 'c791e01bf';
+const pdfjsVersion = '3.3.21';
+const pdfjsBuild = '8a0ca0439';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

@@ -42,7 +42,7 @@ return /******/ (() => { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
@@ -267,34 +267,6 @@ const PageActionEventType = {
   C: "PageClose"
 };
 exports.PageActionEventType = PageActionEventType;
-const StreamType = {
-  UNKNOWN: "UNKNOWN",
-  FLATE: "FLATE",
-  LZW: "LZW",
-  DCT: "DCT",
-  JPX: "JPX",
-  JBIG: "JBIG",
-  A85: "A85",
-  AHX: "AHX",
-  CCF: "CCF",
-  RLX: "RLX"
-};
-exports.StreamType = StreamType;
-const FontType = {
-  UNKNOWN: "UNKNOWN",
-  TYPE1: "TYPE1",
-  TYPE1STANDARD: "TYPE1STANDARD",
-  TYPE1C: "TYPE1C",
-  CIDFONTTYPE0: "CIDFONTTYPE0",
-  CIDFONTTYPE0C: "CIDFONTTYPE0C",
-  TRUETYPE: "TRUETYPE",
-  CIDFONTTYPE2: "CIDFONTTYPE2",
-  TYPE3: "TYPE3",
-  OPENTYPE: "OPENTYPE",
-  TYPE0: "TYPE0",
-  MMTYPE1: "MMTYPE1"
-};
-exports.FontType = FontType;
 const VerbosityLevel = {
   ERRORS: 0,
   WARNINGS: 1,
@@ -397,28 +369,7 @@ const OPS = {
   constructPath: 91
 };
 exports.OPS = OPS;
-const UNSUPPORTED_FEATURES = {
-  forms: "forms",
-  javaScript: "javaScript",
-  signatures: "signatures",
-  smask: "smask",
-  shadingPattern: "shadingPattern",
-  errorTilingPattern: "errorTilingPattern",
-  errorExtGState: "errorExtGState",
-  errorXObject: "errorXObject",
-  errorFontLoadType3: "errorFontLoadType3",
-  errorFontState: "errorFontState",
-  errorFontMissing: "errorFontMissing",
-  errorFontTranslate: "errorFontTranslate",
-  errorColorSpace: "errorColorSpace",
-  errorOperatorList: "errorOperatorList",
-  errorFontToUnicode: "errorFontToUnicode",
-  errorFontLoadNative: "errorFontLoadNative",
-  errorFontBuildPath: "errorFontBuildPath",
-  errorFontGetPath: "errorFontGetPath",
-  errorMarkedContent: "errorMarkedContent",
-  errorContentSubStream: "errorContentSubStream"
-};
+const UNSUPPORTED_FEATURES = null;
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 const PasswordResponses = {
   NEED_PASSWORD: 1,
@@ -1123,7 +1074,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.2.143',
+    apiVersion: '3.3.21',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -1166,10 +1117,7 @@ class PDFDocumentLoadingTask {
   get onUnsupportedFeature() {
     return this.#onUnsupportedFeature;
   }
-  set onUnsupportedFeature(callback) {
-    (0, _display_utils.deprecated)("The PDFDocumentLoadingTask onUnsupportedFeature property will be removed in the future.");
-    this.#onUnsupportedFeature = callback;
-  }
+  set onUnsupportedFeature(callback) {}
   get promise() {
     return this._capability.promise;
   }
@@ -1256,10 +1204,6 @@ class PDFDocumentProxy {
   }
   get fingerprints() {
     return this._pdfInfo.fingerprints;
-  }
-  get stats() {
-    (0, _display_utils.deprecated)("The PDFDocumentProxy stats property will be removed in the future.");
-    return this._transport.stats;
   }
   get isPureXfa() {
     return (0, _util.shadow)(this, "isPureXfa", !!this._transport._htmlForXfa);
@@ -1982,7 +1926,6 @@ class PDFWorker {
 }
 exports.PDFWorker = PDFWorker;
 class WorkerTransport {
-  #docStats = null;
   #pageCache = new Map();
   #pagePromises = new Map();
   #metadataPromise = null;
@@ -2016,9 +1959,6 @@ class WorkerTransport {
   }
   get annotationStorage() {
     return (0, _util.shadow)(this, "annotationStorage", new _annotation_storage.AnnotationStorage());
-  }
-  get stats() {
-    return this.#docStats;
   }
   getRenderingIntent(intent, annotationMode = _util.AnnotationMode.ENABLE, printAnnotationStorage = null, isOpList = false) {
     let renderingIntent = _util.RenderingIntentFlag.DISPLAY;
@@ -2355,16 +2295,6 @@ class WorkerTransport {
         total: data.total
       });
     });
-    messageHandler.on("DocStats", data => {
-      if (this.destroyed) {
-        return;
-      }
-      this.#docStats = Object.freeze({
-        streamTypes: Object.freeze(data.streamTypes),
-        fontTypes: Object.freeze(data.fontTypes)
-      });
-    });
-    messageHandler.on("UnsupportedFeature", this._onUnsupportedFeature.bind(this));
     messageHandler.on("FetchBuiltInCMap", data => {
       if (this.destroyed) {
         return Promise.reject(new Error("Worker was destroyed."));
@@ -2386,12 +2316,7 @@ class WorkerTransport {
   }
   _onUnsupportedFeature({
     featureId
-  }) {
-    if (this.destroyed) {
-      return;
-    }
-    this.loadingTask.onUnsupportedFeature?.(featureId);
-  }
+  }) {}
   getData() {
     return this.messageHandler.sendWithPromise("GetData", null);
   }
@@ -2751,9 +2676,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.2.143';
+const version = '3.3.21';
 exports.version = version;
-const build = 'c791e01bf';
+const build = '8a0ca0439';
 exports.build = build;
 
 /***/ }),
@@ -4592,7 +4517,6 @@ class FontLoader {
     ownerDocument = globalThis.document,
     styleElement = null
   }) {
-    this._onUnsupportedFeature = onUnsupportedFeature;
     this._document = ownerDocument;
     this.nativeFontFaces = [];
     this.styleElement = null;
@@ -4631,9 +4555,6 @@ class FontLoader {
         try {
           await nativeFontFace.loaded;
         } catch (ex) {
-          this._onUnsupportedFeature({
-            featureId: _util.UNSUPPORTED_FEATURES.errorFontLoadNative
-          });
           (0, _util.warn)(`Failed to load font '${nativeFontFace.family}': '${ex}'.`);
           font.disableFontFace = true;
           throw ex;
@@ -4683,7 +4604,6 @@ class FontFaceObject {
     this.isEvalSupported = isEvalSupported !== false;
     this.disableFontFace = disableFontFace === true;
     this.ignoreErrors = ignoreErrors === true;
-    this._onUnsupportedFeature = onUnsupportedFeature;
     this.fontRegistry = fontRegistry;
   }
   createNativeFontFace() {
@@ -4735,9 +4655,6 @@ class FontFaceObject {
       if (!this.ignoreErrors) {
         throw ex;
       }
-      this._onUnsupportedFeature({
-        featureId: _util.UNSUPPORTED_FEATURES.errorFontGetPath
-      });
       (0, _util.warn)(`getPathGenerator - ignoring character: "${ex}".`);
       return this.compiledGlyphs[character] = function (c, size) {};
     }
@@ -13152,8 +13069,8 @@ var _worker_options = __w_pdfjs_require__(14);
 var _is_node = __w_pdfjs_require__(10);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.2.143';
-const pdfjsBuild = 'c791e01bf';
+const pdfjsVersion = '3.3.21';
+const pdfjsBuild = '8a0ca0439';
 ;
 })();
 
