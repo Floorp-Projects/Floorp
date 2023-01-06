@@ -850,7 +850,8 @@ SharedScreenCastStream::~SharedScreenCastStream() {}
 rtc::scoped_refptr<SharedScreenCastStream>
 SharedScreenCastStream::CreateDefault() {
   // Explicit new, to access non-public constructor.
-  return rtc::scoped_refptr(new SharedScreenCastStream());
+  return rtc::scoped_refptr<SharedScreenCastStream>(
+      new SharedScreenCastStream());
 }
 
 bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id) {
