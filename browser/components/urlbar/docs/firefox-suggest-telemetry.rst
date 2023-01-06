@@ -35,6 +35,20 @@ Changelog
 
 .. _1727799: https://bugzilla.mozilla.org/show_bug.cgi?id=1727799
 
+FX_URLBAR_MERINO_LATENCY_WEATHER_MS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This histogram records the latency in milliseconds of weather suggestions from
+Merino. It is updated in addition to ``FX_URLBAR_MERINO_LATENCY_MS`` and has the
+same properties. It is an exponential histogram with 50 buckets and values
+between 0 and 30000 (0s and 30s).
+
+Changelog
+  Firefox 110.0
+    Introduced. [Bug 1804536_]
+
+.. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
+
 FX_URLBAR_MERINO_RESPONSE
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -42,7 +56,10 @@ This categorical histogram records a summary of each fetch from the Merino
 server. It has the following categories:
 
 :0 "success":
-   The fetch completed without any error before the timeout elapsed.
+   The fetch completed without any error before the timeout elapsed and it
+   included at least one suggestion. (Before Firefox 110.0, this category meant
+   simply that the fetch completed without any error before the timeout elapsed
+   regardless of whether it included any suggestions.)
 :1 "timeout":
    The timeout elapsed before the fetch completed or otherwise failed.
 :2 "network_error":
@@ -51,12 +68,50 @@ server. It has the following categories:
 :3 "http_error":
    The fetch completed before the timeout elapsed but the server returned an
    error.
+:4 "no_suggestion":
+   The fetch completed without any error before the timeout elapsed and it did
+   not include any suggestions.
 
 Changelog
   Firefox 94.0.2
     Introduced. [Bug 1737923_]
 
+  Firefox 110.0
+    Added the ``no_suggestion`` category. The meaning of the ``success``
+    category was changed from "The fetch completed without any error before the
+    timeout elapsed" to "The fetch completed without any error before the
+    timeout elapsed and it included at least one suggestion." [Bug 1804536_]
+
 .. _1737923: https://bugzilla.mozilla.org/show_bug.cgi?id=1737923
+.. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
+
+FX_URLBAR_MERINO_RESPONSE_WEATHER
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This categorical histogram records a summary of each fetch for weather
+suggestions from the Merino server. It is updated in addition to
+``FX_URLBAR_MERINO_RESPONSE`` and has the same categories.
+
+:0 "success":
+   The fetch completed without any error before the timeout elapsed and it
+   included at least one suggestion.
+:1 "timeout":
+   The timeout elapsed before the fetch completed or otherwise failed.
+:2 "network_error":
+   The fetch failed due to a network error before the timeout elapsed. e.g., the
+   user's network or the Merino server was down.
+:3 "http_error":
+   The fetch completed before the timeout elapsed but the server returned an
+   error.
+:4 "no_suggestion":
+   The fetch completed without any error before the timeout elapsed and it did
+   not include any suggestions.
+
+Changelog
+  Firefox 110.0
+    Introduced. [Bug 1804536_]
+
+.. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
 
 FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -190,6 +245,20 @@ Changelog
 
 .. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
 
+contextual.services.quicksuggest.block_weather
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user dismisses ("blocks") a
+Firefox Suggest weather suggestion. Each key is the index at which a suggestion
+appeared in the results (1-based), and the corresponding value is the number of
+dismissals at that index.
+
+Changelog
+  Firefox 110.0
+    Introduced. [Bug 1804536_]
+
+.. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
+
 contextual.services.quicksuggest.click
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -273,6 +342,19 @@ Changelog
     Introduced. [Bug 1752953_]
 
 .. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+
+contextual.services.quicksuggest.click_weather
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user picks a weather suggestion.
+Each key is the index at which a suggestion appeared in the results (1-based),
+and the corresponding value is the number of clicks at that index.
+
+Changelog
+  Firefox 110.0
+    Introduced. [Bug 1804536_]
+
+.. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
 
 contextual.services.quicksuggest.help
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -361,6 +443,20 @@ Changelog
     Introduced. [Bug 1752953_]
 
 .. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+
+contextual.services.quicksuggest.help_weather
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user picks the help button in a
+weather suggestion. Each key is the index at which a suggestion appeared in the
+results (1-based), and the corresponding value is the number of help button
+clicks at that index.
+
+Changelog
+  Firefox 110.0
+    Introduced. [Bug 1804536_]
+
+.. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
 
 contextual.services.quicksuggest.impression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -488,6 +584,27 @@ Changelog
     Introduced. [Bug 1752953_]
 
 .. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+
+contextual.services.quicksuggest.impression_weather
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar records weather suggestion impressions. It is incremented each
+time the user is shown a weather suggestion and the following two conditions
+hold:
+
+- The user has completed an engagement with the address bar by picking a result
+  in it or by pressing the Enter key.
+- At the time the user completed the engagement, a weather suggestion was
+  present in the results.
+
+Each key is the index at which a suggestion appeared in the results (1-based),
+and the corresponding value is the number of impressions at that index.
+
+Changelog
+  Firefox 110.0
+    Introduced. [Bug 1804536_]
+
+.. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
 
 Events
 ------

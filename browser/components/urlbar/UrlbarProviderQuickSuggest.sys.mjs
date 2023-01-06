@@ -20,6 +20,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
+const MERINO_PROVIDER_WEATHER = "accuweather";
+
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 
 const TELEMETRY_SCALARS = {
@@ -28,21 +30,25 @@ const TELEMETRY_SCALARS = {
   BLOCK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.block_dynamic_wikipedia`,
   BLOCK_NONSPONSORED: `${TELEMETRY_PREFIX}.block_nonsponsored`,
   BLOCK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.block_nonsponsored_bestmatch`,
+  BLOCK_WEATHER: `${TELEMETRY_PREFIX}.block_weather`,
   CLICK_SPONSORED: `${TELEMETRY_PREFIX}.click_sponsored`,
   CLICK_NONSPONSORED: `${TELEMETRY_PREFIX}.click_nonsponsored`,
   CLICK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_nonsponsored_bestmatch`,
   CLICK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_sponsored_bestmatch`,
   CLICK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.click_dynamic_wikipedia`,
+  CLICK_WEATHER: `${TELEMETRY_PREFIX}.click_weather`,
   HELP_SPONSORED: `${TELEMETRY_PREFIX}.help_sponsored`,
   HELP_NONSPONSORED: `${TELEMETRY_PREFIX}.help_nonsponsored`,
   HELP_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_nonsponsored_bestmatch`,
   HELP_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_sponsored_bestmatch`,
   HELP_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.help_dynamic_wikipedia`,
+  HELP_WEATHER: `${TELEMETRY_PREFIX}.help_weather`,
   IMPRESSION_SPONSORED: `${TELEMETRY_PREFIX}.impression_sponsored`,
   IMPRESSION_NONSPONSORED: `${TELEMETRY_PREFIX}.impression_nonsponsored`,
   IMPRESSION_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_nonsponsored_bestmatch`,
   IMPRESSION_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_sponsored_bestmatch`,
   IMPRESSION_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.impression_dynamic_wikipedia`,
+  IMPRESSION_WEATHER: `${TELEMETRY_PREFIX}.impression_weather`,
 };
 
 /**
@@ -316,9 +322,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   Whether the result was blocked.
    */
   blockResult(queryContext, result) {
-    if (result.payload.merinoProvider == "accuweather") {
+    if (result.payload.merinoProvider == MERINO_PROVIDER_WEATHER) {
       this.logger.info("Blocking weather result");
       lazy.UrlbarPrefs.set("suggest.weather", false);
+      this._recordEngagementTelemetry(result, queryContext.isPrivate, "block");
       return true;
     }
 
@@ -441,6 +448,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let telemetryResultIndex = result.rowIndex + 1;
     let isDynamicWikipedia =
       result.payload.sponsoredAdvertiser == "dynamic-wikipedia";
+    let isWeather = result.payload.merinoProvider == MERINO_PROVIDER_WEATHER;
 
     // impression scalars
     Services.telemetry.keyedScalarAdd(
@@ -458,7 +466,13 @@ class ProviderQuickSuggest extends UrlbarProvider {
         1
       );
     }
-
+    if (isWeather) {
+      Services.telemetry.keyedScalarAdd(
+        TELEMETRY_SCALARS.IMPRESSION_WEATHER,
+        telemetryResultIndex,
+        1
+      );
+    }
     if (result.isBestMatch) {
       Services.telemetry.keyedScalarAdd(
         result.payload.isSponsored
@@ -481,6 +495,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
         if (isDynamicWikipedia) {
           clickScalars.push(TELEMETRY_SCALARS.CLICK_DYNAMIC_WIKIPEDIA);
         }
+        if (isWeather) {
+          clickScalars.push(TELEMETRY_SCALARS.CLICK_WEATHER);
+        }
         if (result.isBestMatch) {
           clickScalars.push(
             result.payload.isSponsored
@@ -498,6 +515,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
         if (isDynamicWikipedia) {
           clickScalars.push(TELEMETRY_SCALARS.HELP_DYNAMIC_WIKIPEDIA);
         }
+        if (isWeather) {
+          clickScalars.push(TELEMETRY_SCALARS.HELP_WEATHER);
+        }
         if (result.isBestMatch) {
           clickScalars.push(
             result.payload.isSponsored
@@ -514,6 +534,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
         );
         if (isDynamicWikipedia) {
           clickScalars.push(TELEMETRY_SCALARS.BLOCK_DYNAMIC_WIKIPEDIA);
+        }
+        if (isWeather) {
+          clickScalars.push(TELEMETRY_SCALARS.BLOCK_WEATHER);
         }
         if (result.isBestMatch) {
           clickScalars.push(
@@ -537,11 +560,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // engagement event
     let match_type = result.isBestMatch ? "best-match" : "firefox-suggest";
-    let suggestion_type = result.payload.isSponsored
-      ? "sponsored"
-      : "nonsponsored";
+    let suggestion_type;
     if (isDynamicWikipedia) {
       suggestion_type = "dynamic-wikipedia";
+    } else if (isWeather) {
+      suggestion_type = "weather";
+    } else {
+      suggestion_type = result.payload.isSponsored
+        ? "sponsored"
+        : "nonsponsored";
     }
     Services.telemetry.recordEvent(
       lazy.QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -557,7 +584,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     );
 
     // custom pings
-    if (!isPrivate) {
+    if (!isPrivate && !isWeather) {
       // `is_clicked` is whether the user clicked the suggestion. `selType` will
       // be "quicksuggest" in that case. See this method's JSDoc for all
       // possible `selType` values.

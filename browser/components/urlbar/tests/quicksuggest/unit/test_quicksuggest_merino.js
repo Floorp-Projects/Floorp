@@ -359,7 +359,7 @@ add_task(async function noSuggestion_merino() {
 
   MerinoTestUtils.checkAndClearHistograms({
     histograms,
-    response: "success",
+    response: "no_suggestion",
     latencyRecorded: true,
     client: gClient,
   });

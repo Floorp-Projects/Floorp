@@ -114,6 +114,12 @@ export class MerinoClient {
    *   Timeout in milliseconds. This method will return once the timeout
    *   elapses, a response is received, or an error occurs, whichever happens
    *   first.
+   * @param {string} options.extraLatencyHistogram
+   *   If specified, the fetch's latency will be recorded in this histogram in
+   *   addition to the usual Merino latency histogram.
+   * @param {string} options.extraResponseHistogram
+   *   If specified, the fetch's response will be recorded in this histogram in
+   *   addition to the usual Merino response histogram.
    * @returns {Array}
    *   The Merino suggestions or null if there's an error or unexpected
    *   response.
@@ -122,6 +128,8 @@ export class MerinoClient {
     query,
     providers = null,
     timeoutMs = lazy.UrlbarPrefs.get("merinoTimeoutMs"),
+    extraLatencyHistogram = null,
+    extraResponseHistogram = null,
   }) {
     this.logger.info(`Fetch starting with query: "${query}"`);
 
@@ -193,6 +201,11 @@ export class MerinoClient {
     let recordResponse = category => {
       this.logger.info("Fetch done with status: " + category);
       Services.telemetry.getHistogramById(HISTOGRAM_RESPONSE).add(category);
+      if (extraResponseHistogram) {
+        Services.telemetry
+          .getHistogramById(extraResponseHistogram)
+          .add(category);
+      }
       this.#lastFetchStatus = category;
       recordResponse = null;
     };
@@ -223,6 +236,9 @@ export class MerinoClient {
     let controller = (this.#fetchController = new AbortController());
     let stopwatchInstance = (this.#latencyStopwatchInstance = {});
     TelemetryStopwatch.start(HISTOGRAM_LATENCY, stopwatchInstance);
+    if (extraLatencyHistogram) {
+      TelemetryStopwatch.start(extraLatencyHistogram, stopwatchInstance);
+    }
     await Promise.race([
       timer.promise,
       (async () => {
@@ -237,13 +253,21 @@ export class MerinoClient {
           // returned by `Promise.race`.
           response = await fetch(url, { signal: controller.signal });
           TelemetryStopwatch.finish(HISTOGRAM_LATENCY, stopwatchInstance);
+          if (extraLatencyHistogram) {
+            TelemetryStopwatch.finish(extraLatencyHistogram, stopwatchInstance);
+          }
           this.logger.debug(
             "Got response: " +
               JSON.stringify({ "response.status": response.status, ...details })
           );
-          recordResponse?.(response.ok ? "success" : "http_error");
+          if (!response.ok) {
+            recordResponse?.("http_error");
+          }
         } catch (error) {
           TelemetryStopwatch.cancel(HISTOGRAM_LATENCY, stopwatchInstance);
+          if (extraLatencyHistogram) {
+            TelemetryStopwatch.cancel(extraLatencyHistogram, stopwatchInstance);
+          }
           if (error.name != "AbortError") {
             this.logger.error("Fetch error: " + error);
             recordResponse?.("network_error");
@@ -278,15 +302,18 @@ export class MerinoClient {
     }
 
     if (!body?.suggestions?.length) {
+      recordResponse?.("no_suggestion");
       return [];
     }
 
     let { suggestions, request_id } = body;
     if (!Array.isArray(suggestions)) {
       this.logger.error("Unexpected response: " + JSON.stringify(body));
+      recordResponse?.("no_suggestion");
       return [];
     }
 
+    recordResponse?.("success");
     return suggestions.map(suggestion => ({
       ...suggestion,
       request_id,
