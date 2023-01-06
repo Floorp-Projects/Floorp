@@ -61,6 +61,7 @@ skipped_lkgr_bots = [
     "Android32 (M Nexus5X)(reclient)",
     "Linux64 Release (reclient)",
     "Mac64 Release (reclient)",
+    "Win64 Release (Clang)(reclient)",
     "iOS64 Release (reclient)",
 ]
 
@@ -816,6 +817,7 @@ win_try_job("win_x64_clang_dbg", cq = None)
 win_try_job("win_x64_clang_dbg_win10", cq = None)
 win_try_job("win_compile_x64_clang_dbg")
 win_builder("Win64 Release (Clang)", "Win Clang|x64|rel")
+win_builder("Win64 Release (Clang)(reclient)", "Win Clang|x64|re", use_reclient = True)
 win_try_job("win_x64_clang_rel", cq = None)
 win_try_job("win_compile_x64_clang_rel")
 win_builder("Win64 ASan", "Win Clang|x64|asan")
