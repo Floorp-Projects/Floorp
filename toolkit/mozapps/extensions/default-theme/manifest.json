@@ -10,7 +10,7 @@
   "name": "System theme — auto",
   "description": "Follow the operating system setting for buttons, menus, and windows.",
   "author": "Mozilla",
-  "version": "1.4",
+  "version": "1.3",
 
   "icons": {"32": "icon.svg"},
 
@@ -20,7 +20,7 @@
   "dark_theme": {
     "colors": {
       "tab_background_text": "#fbfbfe",
-      "tab_selected": "rgb(82,82,94)",
+      "tab_selected": "rgb(66,65,77)",
       "tab_text": "rgb(251,251,254)",
       "icons": "rgb(251,251,254)",
       "frame": "#1c1b22",
@@ -29,13 +29,13 @@
       "popup_border": "rgb(82,82,94)",
       "popup_highlight": "rgb(43,42,51)",
       "tab_line": "transparent",
-      "toolbar": "rgb(82,82,94)",
+      "toolbar": "#2b2a33",
       "toolbar_top_separator": "transparent",
       "toolbar_bottom_separator": "hsl(240, 5%, 5%)",
-      "toolbar_field": "rgb(74,74,85)",
+      "toolbar_field": "rgb(28,27,34)",
       "toolbar_field_border": "transparent",
       "toolbar_field_text": "rgb(251,251,254)",
-      "toolbar_field_focus": "black",
+      "toolbar_field_focus": "rgb(66,65,77)",
       "toolbar_text": "rgb(251, 251, 254)",
       "ntp_background": "rgb(43, 42, 51)",
       "ntp_text": "rgb(251, 251, 254)",
@@ -43,6 +43,8 @@
       "sidebar_text": "rgb(249, 249, 250)",
       "sidebar_border": "rgba(255, 255, 255, 0.1)",
       "button": "rgb(43,42,51)",
+      "button_hover": "rgb(82,82,94)",
+      "button_active": "rgb(91,91,102)",
       "button_primary": "rgb(0, 221, 255)",
       "button_primary_hover": "rgb(128, 235, 255)",
       "button_primary_active": "rgb(170, 242, 255)",
@@ -68,6 +70,8 @@
   "theme_experiment": {
     "colors": {
       "button": "--button-bgcolor",
+      "button_hover": "--button-hover-bgcolor",
+      "button_active": "--button-active-bgcolor",
       "button_primary": "--button-primary-bgcolor",
       "button_primary_hover": "--button-primary-hover-bgcolor",
       "button_primary_active": "--button-primary-active-bgcolor",

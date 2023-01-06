@@ -9,8 +9,9 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
+  --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
+  --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
 
   --panel-separator-color: ThreeDLightShadow;
 
@@ -19,7 +20,7 @@
 
 @media (-moz-windows-default-theme) {
   :root {
-    --toolbar-non-lwt-bgcolor: -moz-dialog;
+    --toolbar-non-lwt-bgimage: none;
 
     --panel-separator-color: hsla(210,4%,10%,.14);
   }
@@ -89,6 +90,7 @@
 
 .browser-toolbar:not(.titlebar-color) {
   background-color: var(--toolbar-bgcolor);
+  background-image: var(--toolbar-bgimage);
   background-clip: padding-box;
   color: var(--toolbar-color);
 }
