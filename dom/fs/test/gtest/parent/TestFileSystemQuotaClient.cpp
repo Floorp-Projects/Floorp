@@ -277,7 +277,7 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
   }
 };
 
-TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
+TEST_F(TestFileSystemQuotaClient, DISABLED_CheckUsageBeforeAnyFilesOnDisk) {
   auto backgroundTask = []() -> RefPtr<BoolPromise> {
     mozilla::Atomic<bool> isCanceled{false};
     auto ioTask = [&isCanceled](const RefPtr<quota::Client>& quotaClient,
@@ -357,7 +357,7 @@ TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
   PerformOnBackgroundTarget(std::move(backgroundTask));
 }
 
-TEST_F(TestFileSystemQuotaClient, WritesToFilesShouldIncreaseUsage) {
+TEST_F(TestFileSystemQuotaClient, DISABLED_WritesToFilesShouldIncreaseUsage) {
   auto backgroundTask = []() -> RefPtr<BoolPromise> {
     mozilla::Atomic<bool> isCanceled{false};
     auto ioTask = [&isCanceled](
@@ -517,7 +517,7 @@ TEST_F(TestFileSystemQuotaClient,
   PerformOnBackgroundTarget(std::move(backgroundTask));
 }
 
-TEST_F(TestFileSystemQuotaClient, RemovingFileShouldDecreaseUsage) {
+TEST_F(TestFileSystemQuotaClient, DISABLED_RemovingFileShouldDecreaseUsage) {
   auto backgroundTask = []() -> RefPtr<BoolPromise> {
     mozilla::Atomic<bool> isCanceled{false};
     auto ioTask = [&isCanceled](

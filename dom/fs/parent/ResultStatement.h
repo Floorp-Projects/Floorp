@@ -86,11 +86,7 @@ class ResultStatement {
     return mStmt->BindInt64ByName(aField, aValue);
   }
 
-  inline nsresult BindBooleanByName(const nsACString& aField, bool aValue) {
-    return mStmt->BindInt32ByName(aField, aValue ? 1 : 0);
-  }
-
-  inline Result<bool, QMResult> GetBooleanByColumn(Column aColumn) {
+  inline Result<bool, QMResult> GetBoolByColumn(Column aColumn) {
     int32_t value = 0;
     QM_TRY(QM_TO_RESULT(mStmt->GetInt32(aColumn, &value)));
 
@@ -144,7 +140,7 @@ class ResultStatement {
     bool hasEntries = false;
     QM_TRY(QM_TO_RESULT(mStmt->ExecuteStep(&hasEntries)));
     MOZ_ALWAYS_TRUE(hasEntries);
-    return GetBooleanByColumn(0u);
+    return GetBoolByColumn(0u);
   }
 
  private:

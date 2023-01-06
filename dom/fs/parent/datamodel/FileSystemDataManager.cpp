@@ -10,7 +10,6 @@
 #include "FileSystemDatabaseManagerVersion001.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
-#include "ResultStatement.h"
 #include "SchemaVersion001.h"
 #include "fs/FileSystemConstants.h"
 #include "mozIStorageService.h"
@@ -24,7 +23,6 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
@@ -344,8 +342,6 @@ void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
 
   LOG_VERBOSE(("ExclusiveUnlock"));
   mExclusiveLocks.Remove(aEntryId);
-
-  QM_WARNONLY_TRY(MOZ_TO_RESULT(mDatabaseManager->UpdateUsage(aEntryId)));
 }
 
 bool FileSystemDataManager::LockShared(const EntryId& aEntryId) {
