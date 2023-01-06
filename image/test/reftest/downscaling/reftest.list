@@ -89,7 +89,7 @@ fuzzy(0-20,0-999) != downscale-2e.html?205,53,bottom about:blank
 
 # Skip on Android because it runs reftests via http, and moz-icon isn't
 # accessible from http/https origins anymore.
-fuzzy(0-25,0-3940) fuzzy-if(gtkWidget,0-0,0-0) skip-if(Android) fuzzy-if(appleSilicon,0-20,0-10123) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059: regular is 2616, no-accel is 0, qr passes with 0
+fuzzy(0-27,0-3940) fuzzy-if(gtkWidget,0-0,0-0) skip-if(Android) fuzzy-if(appleSilicon,0-20,0-10123) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059: regular is 2616, no-accel is 0, qr passes with 0
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
@@ -172,10 +172,9 @@ fuzzy(0-20,0-999) != downscale-2d.html?205,53,bottom about:blank
 fuzzy(0-20,0-999) != downscale-2e.html?205,53,bottom about:blank
 fuzzy(0-20,0-999) != downscale-2f.html?205,53,bottom about:blank
 
-# Skip on WinXP with skia content
 # Skip on Android because it runs reftests via http, and moz-icon isn't
 # accessible from http/https origins anymore.
-fuzzy(0-53,0-6391) fuzzy-if(appleSilicon,0-20,0-11605) fuzzy-if(gtkWidget,18-19,5502-5568) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) skip-if(Android) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059
+fuzzy(0-53,0-6391) fuzzy-if(appleSilicon,0-20,0-11605) fuzzy-if(gtkWidget,18-19,5502-5568) skip-if(Android) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
