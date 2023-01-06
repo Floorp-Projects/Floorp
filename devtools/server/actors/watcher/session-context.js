@@ -184,7 +184,7 @@ function getWatcherSupportedResources(type) {
     [Resources.TYPES.CONSOLE_MESSAGE]: true,
     [Resources.TYPES.CSS_CHANGE]: isTabOrWebExtensionToolbox,
     [Resources.TYPES.CSS_MESSAGE]: true,
-    [Resources.TYPES.DOCUMENT_EVENT]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.DOCUMENT_EVENT]: true,
     [Resources.TYPES.CACHE_STORAGE]: isTabOrWebExtensionToolbox,
     [Resources.TYPES.COOKIE]: isTabOrWebExtensionToolbox,
     [Resources.TYPES.ERROR_MESSAGE]: true,
