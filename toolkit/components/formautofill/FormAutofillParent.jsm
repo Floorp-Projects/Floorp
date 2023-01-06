@@ -475,7 +475,7 @@ class FormAutofillParent extends JSWindowActorParent {
     return records;
   }
 
-  async _onAddressSubmit(address, browser, timeStartedFillingMS) {
+  async _onAddressSubmit(address, browser) {
     let showDoorhanger = null;
 
     // Bug 1808176 - We should always ecord used count in this function regardless
@@ -501,12 +501,6 @@ class FormAutofillParent extends JSWindowActorParent {
           true
         ))
       ) {
-        this._recordFormFillingTime(
-          "address",
-          "autofill-update",
-          timeStartedFillingMS
-        );
-
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
           const state = await lazy.FormAutofillPrompter.promptToSaveAddress(
@@ -546,11 +540,6 @@ class FormAutofillParent extends JSWindowActorParent {
           );
         };
       } else {
-        this._recordFormFillingTime(
-          "address",
-          "autofill",
-          timeStartedFillingMS
-        );
         lazy.gFormAutofillStorage.addresses.notifyUsed(address.guid);
       }
     } else {
@@ -565,7 +554,6 @@ class FormAutofillParent extends JSWindowActorParent {
       changedGUIDs.forEach(guid =>
         lazy.gFormAutofillStorage.addresses.notifyUsed(guid)
       );
-      this._recordFormFillingTime("address", "manual", timeStartedFillingMS);
 
       // Show first time use doorhanger
       if (FormAutofill.isAutofillAddressesFirstTimeUse) {
@@ -591,8 +579,8 @@ class FormAutofillParent extends JSWindowActorParent {
     return showDoorhanger;
   }
 
-  async _onCreditCardSubmit(creditCard, browser, timeStartedFillingMS) {
-    // Let's delete type from the credit card, and then network auto-detect will
+  async _onCreditCardSubmit(creditCard, browser) {
+    // Let's reset the credit card to empty, and then network auto-detect will
     // pick it up.
     delete creditCard.record["cc-type"];
 
@@ -618,21 +606,9 @@ class FormAutofillParent extends JSWindowActorParent {
 
       if (recordUnchanged) {
         lazy.gFormAutofillStorage.creditCards.notifyUsed(creditCard.guid);
-        this._recordFormFillingTime(
-          "creditCard",
-          "autofill",
-          timeStartedFillingMS
-        );
         return false;
       }
-      this._recordFormFillingTime(
-        "creditCard",
-        "autofill-update",
-        timeStartedFillingMS
-      );
     } else {
-      this._recordFormFillingTime("creditCard", "manual", timeStartedFillingMS);
-
       let existingGuid = await lazy.gFormAutofillStorage.creditCards.getDuplicateGuid(
         creditCard.record
       );
@@ -683,19 +659,7 @@ class FormAutofillParent extends JSWindowActorParent {
   }
 
   async _onFormSubmit(data) {
-    let {
-      profile: { address, creditCard },
-      timeStartedFillingMS,
-    } = data;
-
-    // Don't record filling time if any type of records has more than one section being
-    // populated. We've been recording the filling time, so the other cases that aren't
-    // recorded on the same basis should be out of the data samples. E.g. Filling time of
-    // populating one profile is different from populating two sections, therefore, we
-    // shouldn't record the later to regress the representation of existing statistics.
-    if (address.length > 1 || creditCard.length > 1) {
-      timeStartedFillingMS = null;
-    }
+    let { address, creditCard } = data;
 
     let browser = this.manager.browsingContext.top.embedderElement;
 
@@ -704,13 +668,11 @@ class FormAutofillParent extends JSWindowActorParent {
     await Promise.all(
       [
         await Promise.all(
-          address.map(addrRecord =>
-            this._onAddressSubmit(addrRecord, browser, timeStartedFillingMS)
-          )
+          address.map(addrRecord => this._onAddressSubmit(addrRecord, browser))
         ),
         await Promise.all(
           creditCard.map(ccRecord =>
-            this._onCreditCardSubmit(ccRecord, browser, timeStartedFillingMS)
+            this._onCreditCardSubmit(ccRecord, browser)
           )
         ),
       ]
@@ -728,26 +690,5 @@ class FormAutofillParent extends JSWindowActorParent {
           })()
         )
     );
-  }
-
-  /**
-   * Set the probes for the filling time with specific filling type and form type.
-   *
-   * @private
-   * @param  {string} formType
-   *         3 type of form (address/creditcard/address-creditcard).
-   * @param  {string} fillingType
-   *         3 filling type (manual/autofill/autofill-update).
-   * @param  {int|null} startedFillingMS
-   *         Time that form started to filling in ms. Early return if start time is null.
-   */
-  _recordFormFillingTime(formType, fillingType, startedFillingMS) {
-    if (!startedFillingMS) {
-      return;
-    }
-    let histogram = Services.telemetry.getKeyedHistogramById(
-      "FORM_FILLING_REQUIRED_TIME_MS"
-    );
-    histogram.add(`${formType}-${fillingType}`, Date.now() - startedFillingMS);
   }
 }

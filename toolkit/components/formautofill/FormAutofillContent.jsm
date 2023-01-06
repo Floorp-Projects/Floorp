@@ -499,14 +499,10 @@ var FormAutofillContent = {
    *
    * @param {object} profile Submitted form's address/creditcard guid and record.
    * @param {object} domWin Current content window.
-   * @param {int} timeStartedFillingMS Time of form filling started.
    */
-  _onFormSubmit(profile, domWin, timeStartedFillingMS) {
+  _onFormSubmit(profile, domWin) {
     let actor = getActorFromWindow(domWin);
-    actor.sendAsyncMessage("FormAutofill:OnFormSubmit", {
-      profile,
-      timeStartedFillingMS,
-    });
+    actor.sendAsyncMessage("FormAutofill:OnFormSubmit", profile);
   },
 
   /**
@@ -570,7 +566,7 @@ var FormAutofillContent = {
       });
     });
 
-    this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
+    this._onFormSubmit(records, domWin);
   },
 
   handleEvent(evt) {
