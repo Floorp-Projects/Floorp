@@ -7729,6 +7729,23 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  impression_weather:
+    bug_numbers:
+      - 1804536
+    description: >
+      A keyed uint recording how many times the user has viewed Firefox Suggest
+      (a.k.a. Quick Suggest) weather result in the urlbar. The key is the
+      1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   click_dynamic_wikipedia:
     bug_numbers:
       - 1800993
@@ -7805,6 +7822,24 @@ contextual.services.quicksuggest:
       A keyed uint recording how many times the user has clicked on sponsored
       Firefox Suggest best match (a.k.a. top pick) results in the urlbar (not
       including the help button). The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  click_weather:
+    bug_numbers:
+      - 1804536
+    description: >
+      A keyed uint recording how many times the user has clicked on Firefox
+      Suggests (a.k.a. Quick Suggest) weather results in the urlbar (not
+      including the help and dismiss buttons). The key is the 1-based index of
+      each result.
     expires: never
     kind: uint
     keyed: true
@@ -7903,6 +7938,23 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  help_weather:
+    bug_numbers:
+      - 1804536
+    description: >
+      A keyed uint recording how many times the user has clicked on the help
+      button in Firefox Suggests (a.k.a. Quick Suggest) weather results in the
+      urlbar. The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   block_dynamic_wikipedia:
     bug_numbers:
       - 1800993
@@ -7978,6 +8030,23 @@ contextual.services.quicksuggest:
       A keyed uint recording how many times the user has blocked/dismissed
       sponsored Firefox Suggest best match (a.k.a. top pick) results in the
       urlbar. The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  block_weather:
+    bug_numbers:
+      - 1804536
+    description: >
+      A keyed uint recording how many times the user has blocked/dismissed
+      Firefox Suggest weather results in the urlbar. The key is the 1-based
+      index of each result.
     expires: never
     kind: uint
     keyed: true

@@ -18,6 +18,9 @@ const FETCH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 const MERINO_PROVIDER = "accuweather";
 const MERINO_TIMEOUT_MS = 5000; // 5s
 
+const HISTOGRAM_LATENCY = "FX_URLBAR_MERINO_LATENCY_WEATHER_MS";
+const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE_WEATHER";
+
 /**
  * A feature that periodically fetches weather suggestions from Merino.
  */
@@ -98,7 +101,9 @@ export class Weather extends BaseFeature {
       suggestions = await merino.fetch({
         query: "",
         providers: [MERINO_PROVIDER],
-        timeoutMs: MERINO_TIMEOUT_MS,
+        timeoutMs: this.#timeoutMs,
+        extraLatencyHistogram: HISTOGRAM_LATENCY,
+        extraResponseHistogram: HISTOGRAM_RESPONSE,
       });
     } finally {
       this.#pendingFetchCount--;
@@ -152,10 +157,15 @@ export class Weather extends BaseFeature {
     this.#fetchIntervalMs = ms < 0 ? FETCH_INTERVAL_MS : ms;
   }
 
+  _test_setTimeoutMs(ms) {
+    this.#timeoutMs = ms < 0 ? MERINO_TIMEOUT_MS : ms;
+  }
+
   #merino = null;
   #suggestion = null;
   #fetchInterval = 0;
   #fetchIntervalMs = FETCH_INTERVAL_MS;
+  #timeoutMs = MERINO_TIMEOUT_MS;
   #waitForFetchesDeferred = null;
   #pendingFetchCount = 0;
 }

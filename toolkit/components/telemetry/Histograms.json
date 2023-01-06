@@ -8890,6 +8890,18 @@
     "bug_numbers": [1727799],
     "description": "Firefox: Latency of the Merino source for quick suggest (ms)"
   },
+  "FX_URLBAR_MERINO_LATENCY_WEATHER_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1804536],
+    "description": "Firefox: Latency of Merino weather suggestions (ms)"
+  },
   "FX_URLBAR_MERINO_RESPONSE": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
@@ -8900,11 +8912,29 @@
       "success",
       "timeout",
       "network_error",
-      "http_error"
+      "http_error",
+      "no_suggestion"
     ],
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1737923],
     "description": "Firefox: Records whether each Merino fetch was successful or not. 'success' (0): The fetch completed without any error before the timeout elapsed. 'timeout' (1): The timeout elapsed before the fetch completed or otherwise failed. 'network_error' (2): The fetch failed due to a network error before the timeout elapsed. e.g., the user's network or the Merino server was down. 'http_error' (3): The fetch completed before the timeout elapsed but the server returned an error."
+  },
+  "FX_URLBAR_MERINO_RESPONSE_WEATHER": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "success",
+      "timeout",
+      "network_error",
+      "http_error",
+      "no_suggestion"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1804536],
+    "description": "For weather suggestions, this histogram is updated in addition to FX_URLBAR_MERINO_RESPONSE. The categories are the same."
   },
   "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS": {
     "record_in_processes": ["main"],

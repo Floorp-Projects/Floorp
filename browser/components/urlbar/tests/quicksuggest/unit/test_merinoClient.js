@@ -58,8 +58,8 @@ add_task(async function name() {
   Assert.equal(client.name, "New client", "newClient name is correct");
 });
 
-// Basic test that checks fetched suggestions.
-add_task(async function basic() {
+// Does a successful fetch.
+add_task(async function success() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   await fetchAndCheckSuggestions({
@@ -77,6 +77,32 @@ add_task(async function basic() {
     latencyRecorded: true,
     client: gClient,
   });
+});
+
+// Does a successful fetch that doesn't return any suggestions.
+add_task(async function noSuggestions() {
+  let { suggestions } = MerinoTestUtils.server.response.body;
+  MerinoTestUtils.server.response.body.suggestions = [];
+
+  let histograms = MerinoTestUtils.getAndClearHistograms();
+
+  await fetchAndCheckSuggestions({
+    expected: [],
+  });
+
+  Assert.equal(
+    gClient.lastFetchStatus,
+    "no_suggestion",
+    "The request successfully finished without suggestions"
+  );
+  MerinoTestUtils.checkAndClearHistograms({
+    histograms,
+    response: "no_suggestion",
+    latencyRecorded: true,
+    client: gClient,
+  });
+
+  MerinoTestUtils.server.response.body.suggestions = suggestions;
 });
 
 // Checks a response that's valid but also has some unexpected properties.
@@ -125,12 +151,12 @@ add_task(async function unexpectedResponseBody() {
 
     Assert.equal(
       gClient.lastFetchStatus,
-      "success",
-      "The request successfully finished"
+      "no_suggestion",
+      "The request successfully finished without suggestions"
     );
     MerinoTestUtils.checkAndClearHistograms({
       histograms,
-      response: "success",
+      response: "no_suggestion",
       latencyRecorded: true,
       client: gClient,
     });
