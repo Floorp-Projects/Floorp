@@ -40,7 +40,6 @@
 
       this._firstTab = null;
       this._lastTab = null;
-      this._beforeSelectedTab = null;
       this._beforeHoveredTab = null;
       this._afterHoveredTab = null;
       this._hoveredTab = null;
@@ -1211,28 +1210,6 @@
       let visibleTabs = this._getVisibleTabs();
       if (!visibleTabs.length) {
         return;
-      }
-      let selectedTab = this.selectedItem;
-      let selectedIndex = visibleTabs.indexOf(selectedTab);
-      if (this._beforeSelectedTab) {
-        this._beforeSelectedTab.removeAttribute("beforeselected-visible");
-      }
-
-      if (selectedTab.closing || selectedIndex <= 0) {
-        this._beforeSelectedTab = null;
-      } else {
-        let beforeSelectedTab = visibleTabs[selectedIndex - 1];
-        let separatedByScrollButton =
-          this.getAttribute("overflow") == "true" &&
-          beforeSelectedTab.pinned &&
-          !selectedTab.pinned;
-        if (!separatedByScrollButton) {
-          this._beforeSelectedTab = beforeSelectedTab;
-          this._beforeSelectedTab.setAttribute(
-            "beforeselected-visible",
-            "true"
-          );
-        }
       }
 
       this._firstTab?.removeAttribute("first-visible-tab");
