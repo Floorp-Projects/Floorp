@@ -30,12 +30,6 @@ FileSystemBackgroundRequestHandler::FileSystemBackgroundRequestHandler()
 FileSystemBackgroundRequestHandler::~FileSystemBackgroundRequestHandler() =
     default;
 
-void FileSystemBackgroundRequestHandler::ClearActor() {
-  MOZ_ASSERT(mFileSystemManagerChild);
-
-  mFileSystemManagerChild = nullptr;
-}
-
 void FileSystemBackgroundRequestHandler::Shutdown() {
   mShutdown.Flip();
 
@@ -115,9 +109,6 @@ FileSystemBackgroundRequestHandler::CreateFileSystemManagerChild(
                     rv, __func__);
               } else {
                 self->mFileSystemManagerChild = child;
-
-                self->mFileSystemManagerChild->SetBackgroundRequestHandler(
-                    self);
 
                 self->mCreateFileSystemManagerChildPromiseHolder
                     .ResolveIfExists(true, __func__);

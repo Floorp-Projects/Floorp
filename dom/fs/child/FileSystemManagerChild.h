@@ -12,15 +12,9 @@
 
 namespace mozilla::dom {
 
-class FileSystemBackgroundRequestHandler;
-
 class FileSystemManagerChild : public PFileSystemManagerChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(FileSystemManagerChild, Destroy(),
-                                          override)
-
-  void SetBackgroundRequestHandler(
-      FileSystemBackgroundRequestHandler* aBackgroundRequestHandler);
+  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(FileSystemManagerChild, Destroy())
 
 #ifdef DEBUG
   virtual bool AllSyncAccessHandlesClosed() const;
@@ -38,8 +32,6 @@ class FileSystemManagerChild : public PFileSystemManagerChild {
 
   ::mozilla::ipc::IPCResult RecvCloseAll(CloseAllResolver&& aResolver);
 
-  void ActorDestroy(ActorDestroyReason aWhy) override;
-
  protected:
   virtual ~FileSystemManagerChild() = default;
 
@@ -47,10 +39,6 @@ class FileSystemManagerChild : public PFileSystemManagerChild {
     Shutdown();
     delete this;
   }
-
-  // The weak reference is cleared in ActorDestroy.
-  FileSystemBackgroundRequestHandler* MOZ_NON_OWNING_REF
-      mBackgroundRequestHandler;
 };
 
 }  // namespace mozilla::dom

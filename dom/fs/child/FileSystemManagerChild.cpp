@@ -7,20 +7,11 @@
 #include "FileSystemManagerChild.h"
 
 #include "FileSystemAccessHandleChild.h"
-#include "FileSystemBackgroundRequestHandler.h"
 #include "FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/FileSystemSyncAccessHandle.h"
 #include "mozilla/dom/FileSystemWritableFileStream.h"
 
 namespace mozilla::dom {
-
-void FileSystemManagerChild::SetBackgroundRequestHandler(
-    FileSystemBackgroundRequestHandler* aBackgroundRequestHandler) {
-  MOZ_ASSERT(aBackgroundRequestHandler);
-  MOZ_ASSERT(!mBackgroundRequestHandler);
-
-  mBackgroundRequestHandler = aBackgroundRequestHandler;
-}
 
 #ifdef DEBUG
 bool FileSystemManagerChild::AllSyncAccessHandlesClosed() const {
@@ -91,13 +82,6 @@ FileSystemManagerChild::AllocPFileSystemWritableFileStreamChild() {
                      aValues) { resolver(NS_OK); });
 
   return IPC_OK();
-}
-
-void FileSystemManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
-  if (mBackgroundRequestHandler) {
-    mBackgroundRequestHandler->ClearActor();
-    mBackgroundRequestHandler = nullptr;
-  }
 }
 
 }  // namespace mozilla::dom
