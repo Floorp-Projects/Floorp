@@ -220,6 +220,9 @@ struct FuncOffsets : CallableOffsets {
   // falling through to the normal prologue. The checked call entry is thus at
   // the beginning of the CodeRange and the unchecked call entry is at some
   // offset after the checked call entry.
+  //
+  // Note that there won't always be a checked call entry because not all
+  // functions require them. See GenerateFunctionPrologue.
   uint32_t uncheckedCallEntry;
 
   // The tierEntry is the point within a function to which the patching code
@@ -355,6 +358,9 @@ class CodeRange {
 
   uint32_t funcCheckedCallEntry() const {
     MOZ_ASSERT(isFunction());
+    // not all functions have the checked call prologue;
+    // see GenerateFunctionPrologue
+    MOZ_ASSERT(u.func.beginToUncheckedCallEntry_ != 0);
     return begin_;
   }
   uint32_t funcUncheckedCallEntry() const {
@@ -618,7 +624,7 @@ WASM_DECLARE_POD_VECTOR(TryNote, TryNoteVector)
 // CallIndirectId describes how to compile a call_indirect and matching
 // signature check in the function prologue for a given function type.
 
-enum class CallIndirectIdKind { None, Immediate, Global };
+enum class CallIndirectIdKind { AsmJS, Immediate, Global, None };
 
 class CallIndirectId {
   CallIndirectIdKind kind_;
@@ -629,6 +635,10 @@ class CallIndirectId {
 
  public:
   CallIndirectId() : kind_(CallIndirectIdKind::None), bits_(0) {}
+
+  // Get a CallIndirectId for an asm.js function which will generate a no-op
+  // checked call prologue.
+  static CallIndirectId forAsmJSFunc();
 
   // Get the CallIndirectId for a function in a specific module.
   static CallIndirectId forFunc(const ModuleEnvironment& moduleEnv,

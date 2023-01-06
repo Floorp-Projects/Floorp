@@ -2143,7 +2143,7 @@ class FunctionCompiler {
     CalleeDesc callee;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(tableIndex == 0);
-      MOZ_ASSERT(callIndirectId.kind() == CallIndirectIdKind::None);
+      MOZ_ASSERT(callIndirectId.kind() == CallIndirectIdKind::AsmJS);
       const TableDesc& table =
           moduleEnv_.tables[moduleEnv_.asmJSSigToTableIndex[funcTypeIndex]];
       MOZ_ASSERT(IsPowerOfTwo(table.initialLength));
@@ -2155,7 +2155,7 @@ class FunctionCompiler {
       index = maskedIndex;
       callee = CalleeDesc::asmJSTable(table);
     } else {
-      MOZ_ASSERT(callIndirectId.kind() != CallIndirectIdKind::None);
+      MOZ_ASSERT(callIndirectId.kind() != CallIndirectIdKind::AsmJS);
       const TableDesc& table = moduleEnv_.tables[tableIndex];
       callee = CalleeDesc::wasmTable(table, callIndirectId);
     }

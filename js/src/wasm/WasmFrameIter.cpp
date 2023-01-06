@@ -450,11 +450,6 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
   // this requires AutoForbidPoolsAndNops to prevent a constant pool from being
   // randomly inserted between two instructions.
 
-  // The size of the prologue is constrained to be no larger than the difference
-  // between WasmCheckedTailEntryOffset and WasmCheckedCallEntryOffset; to
-  // conserve code space / avoid excessive padding, this difference is made as
-  // tight as possible.
-
 #if defined(JS_CODEGEN_MIPS64)
   {
     *entry = masm.currentOffset();
@@ -620,20 +615,23 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
                                     FuncOffsets* offsets) {
   AutoCreatedBy acb(masm, "wasm::GenerateFunctionPrologue");
 
-  // These constants reflect statically-determined offsets between a function's
-  // checked call entry and the checked tail's entry, see diagram below.  The
-  // Entry is a call target, so must have CodeAlignment, but the TailEntry is
-  // only a jump target from a stub.
+  // We are going to generate this code layout:
+  // ---------------------------------------------
+  // checked call entry:    callable prologue
+  //                        check signature
+  //                        jump functionBody ──┐
+  // unchecked call entry:  callable prologue   │
+  //                        functionBody  <─────┘
+  // -----------------------------------------------
+  // checked call entry - used for call_indirect when we have to check the
+  // signature.
   //
-  // The CheckedCallEntryOffset is normally zero.
-  //
-  // CheckedTailEntryOffset > CheckedCallEntryOffset, and if CPSIZE is the size
-  // of the callable prologue then TailEntryOffset - CallEntryOffset >= CPSIZE.
-  // It is a goal to keep that difference as small as possible to reduce the
-  // amount of padding inserted in the prologue.
+  // unchecked call entry - used for regular direct same-instance calls.
+
+  // The checked call entry is a call target, so must have CodeAlignment.
+  // Its offset is normally zero.
   static_assert(WasmCheckedCallEntryOffset % CodeAlignment == 0,
                 "code aligned");
-  static_assert(WasmCheckedTailEntryOffset > WasmCheckedCallEntryOffset);
 
   // Flush pending pools so they do not get dumped between the 'begin' and
   // 'uncheckedCallEntry' offsets since the difference must be less than
@@ -642,85 +640,70 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
   masm.flushBuffer();
   masm.haltingAlign(CodeAlignment);
 
-  // We are going to generate the next code layout:
-  // ---------------------------------------------
-  // checked call entry:    callable prologue
-  // checked tail entry:    check signature
-  //                        jump functionBody
-  // unchecked call entry:  callable prologue
-  //                        functionBody
-  // -----------------------------------------------
-  // checked call entry - used for call_indirect when we have to check the
-  // signature.
-  //
-  // checked tail entry - used by indirect call trampolines which already
-  // had pushed Frame on the callee’s behalf.
-  //
-  // unchecked call entry - used for regular direct same-instance calls.
-
   Label functionBody;
 
-  // Generate checked call entry. The BytecodeOffset of the trap is fixed up to
-  // be the bytecode offset of the callsite by JitActivation::startWasmTrap.
   offsets->begin = masm.currentOffset();
-  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - offsets->begin ==
-                                 WasmCheckedCallEntryOffset);
-  uint32_t dummy;
-  GenerateCallablePrologue(masm, &dummy);
 
-  // Check that we did not overshoot the space budget for the prologue.
-  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - offsets->begin <=
-                                 WasmCheckedTailEntryOffset);
-
-  // Pad to WasmCheckedTailEntryOffset.  Don't use nopAlign because the target
-  // offset is not necessarily a power of two.  The expected number of NOPs here
-  // is very small.
-  while (masm.currentOffset() - offsets->begin < WasmCheckedTailEntryOffset) {
-    masm.nop();
-  }
-
-  // Signature check starts at WasmCheckedTailEntryOffset.
-  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - offsets->begin ==
-                                 WasmCheckedTailEntryOffset);
-  switch (callIndirectId.kind()) {
-    case CallIndirectIdKind::Global: {
-      Register scratch = WasmTableCallScratchReg0;
-      masm.loadWasmGlobalPtr(callIndirectId.globalDataOffset(), scratch);
-      masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
-                     &functionBody);
-      masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
-      break;
-    }
-    case CallIndirectIdKind::Immediate: {
-      masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
-                    Imm32(callIndirectId.immediate()), &functionBody);
-      masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
-      break;
-    }
-    case CallIndirectIdKind::None:
-      masm.jump(&functionBody);
-      break;
-  }
-
-  // The preceding code may have generated a small constant pool to support the
-  // comparison in the signature check.  But if we flush the pool here we will
-  // also force the creation of an unused branch veneer in the pool for the jump
-  // to functionBody from the signature check on some platforms, thus needlessly
-  // inflating the size of the prologue.
+  // Only first-class functions (those that can be referenced in a table) need
+  // the checked call prologue w/ signature check. It is impossible to perform
+  // a checked call otherwise.
   //
-  // On no supported platform that uses a pool (arm, arm64) is there any risk at
-  // present of that branch or other elements in the pool going out of range
-  // while we're generating the following padding and prologue, therefore no
-  // pool elements will be emitted in the prologue, therefore it is safe not to
-  // flush here.
-  //
-  // We assert that this holds at runtime by comparing the expected entry offset
-  // to the recorded ditto; if they are not the same then
-  // GenerateCallablePrologue flushed a pool before the prologue code, contrary
-  // to assumption.
+  // asm.js function tables are homogeneous and don't need a signature check.
+  // However, they can be put in tables which expect a checked call entry point,
+  // so we generate a no-op entry point for consistency. If asm.js performance
+  // was important we could refine this in the future.
+  if (callIndirectId.kind() != CallIndirectIdKind::None) {
+    // Generate checked call entry. The BytecodeOffset of the trap is fixed up
+    // to be the bytecode offset of the callsite by
+    // JitActivation::startWasmTrap.
+    MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - offsets->begin ==
+                                   WasmCheckedCallEntryOffset);
+    uint32_t dummy;
+    GenerateCallablePrologue(masm, &dummy);
+
+    switch (callIndirectId.kind()) {
+      case CallIndirectIdKind::Global: {
+        Register scratch = WasmTableCallScratchReg0;
+        masm.loadWasmGlobalPtr(callIndirectId.globalDataOffset(), scratch);
+        masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg,
+                       scratch, &functionBody);
+        masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
+        break;
+      }
+      case CallIndirectIdKind::Immediate: {
+        masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
+                      Imm32(callIndirectId.immediate()), &functionBody);
+        masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
+        break;
+      }
+      case CallIndirectIdKind::AsmJS:
+        masm.jump(&functionBody);
+        break;
+      case CallIndirectIdKind::None:
+        break;
+    }
+
+    // The preceding code may have generated a small constant pool to support
+    // the comparison in the signature check.  But if we flush the pool here we
+    // will also force the creation of an unused branch veneer in the pool for
+    // the jump to functionBody from the signature check on some platforms, thus
+    // needlessly inflating the size of the prologue.
+    //
+    // On no supported platform that uses a pool (arm, arm64) is there any risk
+    // at present of that branch or other elements in the pool going out of
+    // range while we're generating the following padding and prologue,
+    // therefore no pool elements will be emitted in the prologue, therefore it
+    // is safe not to flush here.
+    //
+    // We assert that this holds at runtime by comparing the expected entry
+    // offset to the recorded ditto; if they are not the same then
+    // GenerateCallablePrologue flushed a pool before the prologue code,
+    // contrary to assumption.
+
+    masm.nopAlign(CodeAlignment);
+  }
 
   // Generate unchecked call entry:
-  masm.nopAlign(CodeAlignment);
   DebugOnly<uint32_t> expectedEntry = masm.currentOffset();
   GenerateCallablePrologue(masm, &offsets->uncheckedCallEntry);
   MOZ_ASSERT(expectedEntry == offsets->uncheckedCallEntry);
