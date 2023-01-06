@@ -32,6 +32,31 @@ namespace webrtc {
 class DesktopCaptureOptions;
 class DesktopFrame;
 
+// A controller to be implemented and returned by
+// GetDelegatedSourceListController in capturers that require showing their own
+// source list and managing user selection there. Apart from ensuring the
+// visibility of the source list, these capturers should largely be interacted
+// with the same as a normal capturer, though there may be some caveats for
+// some DesktopCapturer methods. See GetDelegatedSourceListController for more
+// information.
+class RTC_EXPORT DelegatedSourceListController {
+ public:
+  // Used to prompt the capturer to show the delegated source list. If the
+  // source list is already visible, this will be a no-op. Must be called after
+  // starting the DesktopCapturer.
+  //
+  // Note that any selection from a previous invocation of the source list may
+  // be cleared when this method is called.
+  virtual void EnsureVisible() = 0;
+
+  // Used to prompt the capturer to hide the delegated source list. If the
+  // source list is already hidden, this will be a no-op.
+  virtual void EnsureHidden() = 0;
+
+ protected:
+  virtual ~DelegatedSourceListController() {}
+};
+
 // Abstract interface for screen and window capturers.
 class RTC_EXPORT DesktopCapturer {
  public:
@@ -89,6 +114,18 @@ class RTC_EXPORT DesktopCapturer {
   // valid until capturer is destroyed.
   virtual void Start(Callback* callback) = 0;
 
+  // Returns a valid pointer if the capturer requires the user to make a
+  // selection from a source list provided by the capturer.
+  // Returns nullptr if the capturer does not provide a UI for the user to make
+  // a selection.
+  //
+  // Callers should not take ownership of the returned pointer, but it is
+  // guaranteed to be valid as long as the desktop_capturer is valid.
+  // Note that consumers should still use GetSourceList and SelectSource, but
+  // their behavior may be modified if this returns a value. See those methods
+  // for a more in-depth discussion of those potential modifications.
+  virtual DelegatedSourceListController* GetDelegatedSourceListController();
+
   // Sets SharedMemoryFactory that will be used to create buffers for the
   // captured frames. The factory can be invoked on a thread other than the one
   // where CaptureFrame() is called. It will be destroyed on the same thread.
@@ -117,10 +154,19 @@ class RTC_EXPORT DesktopCapturer {
   // should return monitors.
   // For DesktopCapturer implementations to capture windows, this function
   // should only return root windows owned by applications.
+  //
+  // Note that capturers who use a delegated source list will return a
+  // SourceList with exactly one value, but it may not be viable for capture
+  // (e.g. CaptureFrame will return ERROR_TEMPORARY) until a selection has been
+  // made.
   virtual bool GetSourceList(SourceList* sources);
 
   // Selects a source to be captured. Returns false in case of a failure (e.g.
   // if there is no source with the specified type and id.)
+  //
+  // Note that some capturers with delegated source lists may also support
+  // selecting a SourceID that is not in the returned source list as a form of
+  // restore token.
   virtual bool SelectSource(SourceId id);
 
   // Brings the selected source to the front and sets the input focus on it.
