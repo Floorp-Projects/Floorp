@@ -120,7 +120,7 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
 }
 
 NS_IMETHODIMP
-AndroidAlerts::CloseAlert(const nsAString& aAlertName) {
+AndroidAlerts::CloseAlert(const nsAString& aAlertName, bool aContextClosed) {
   java::WebNotification::LocalRef notification =
       mNotificationsMap.Get(aAlertName);
   if (!notification) {

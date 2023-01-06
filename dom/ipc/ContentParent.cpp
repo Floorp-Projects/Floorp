@@ -4804,10 +4804,11 @@ mozilla::ipc::IPCResult ContentParent::RecvShowAlert(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvCloseAlert(const nsAString& aName) {
+mozilla::ipc::IPCResult ContentParent::RecvCloseAlert(const nsAString& aName,
+                                                      bool aContextClosed) {
   nsCOMPtr<nsIAlertsService> sysAlerts(components::Alerts::Service());
   if (sysAlerts) {
-    sysAlerts->CloseAlert(aName);
+    sysAlerts->CloseAlert(aName, aContextClosed);
   }
 
   return IPC_OK();

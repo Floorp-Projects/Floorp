@@ -1037,7 +1037,8 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvShowAlert(nsIAlertNotification* aAlert);
 
-  mozilla::ipc::IPCResult RecvCloseAlert(const nsAString& aName);
+  mozilla::ipc::IPCResult RecvCloseAlert(const nsAString& aName,
+                                         bool aContextClosed);
 
   mozilla::ipc::IPCResult RecvDisableNotifications(nsIPrincipal* aPrincipal);
 

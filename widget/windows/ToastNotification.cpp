@@ -780,13 +780,21 @@ ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
 }
 
 NS_IMETHODIMP
-ToastNotification::CloseAlert(const nsAString& aAlertName) {
+ToastNotification::CloseAlert(const nsAString& aAlertName,
+                              bool aContextClosed) {
   RefPtr<ToastNotificationHandler> handler;
   if (NS_WARN_IF(!mActiveHandlers.Get(aAlertName, getter_AddRefs(handler)))) {
     return NS_OK;
   }
+
+  if (!aContextClosed) {
+    // Hide the alert when not implicitly closed by tab/window closing.
+    handler->HideAlert();
+  }
+
   mActiveHandlers.Remove(aAlertName);
   handler->UnregisterHandler();
+
   return NS_OK;
 }
 
