@@ -13,12 +13,20 @@ For more information about Hunspell or the affix file format, you can check
 Requesting to add new words to the en-US dictionary
 ===================================================
 
-If you’d like to add new words to the dictionary, you can `file a bug`_:
+If you’d like to add new words to the dictionary, you can add your request to
+`this bug <https://bugzilla.mozilla.org/show_bug.cgi?id=enus-dictionary>`_:
 
+* Include all possible forms, e.g. plural and genitive forms for nouns,
+  different tenses for verbs.
 * Try to provide information on the terms you want to add, in particular
   references to external sources that confirm the usage of the term (e.g.
   Merriam-Webster or Oxford online dictionaries).
-* Include all possible forms, e.g. plural for nouns, different tenses for verbs.
+
+.. note::
+
+  If you’re fixing the existing bug with pending requests, make sure to `file a
+  new bug`_ and move the alias ``enus-dictionary`` (in the *Details* section)
+  from the old bug to the new one.
 
 Adding new words to the en-US dictionary
 ========================================
@@ -186,6 +194,6 @@ The script:
 
 
 .. _SCOWL: http://wordlist.aspell.net
-.. _file a bug: https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Spelling%20Checker%3A%20en-US%20Dictionary
+.. _file a new bug: https://bugzilla.mozilla.org/show_bug.cgi?id=enus-dictionary
 .. _SourceForce: https://sourceforge.net/projects/wordlist/files/SCOWL/
 .. _bug 237921: https://bugzilla.mozilla.org/show_bug.cgi?id=237921
