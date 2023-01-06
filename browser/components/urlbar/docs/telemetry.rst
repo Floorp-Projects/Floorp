@@ -49,6 +49,16 @@ FX_URLBAR_SELECTED_RESULT_METHOD
     Before QuantumBar, it was possible to right-click a result to highlight but
     not pick it. Then the user could press Enter. This is no more possible.
 
+FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS
+  This probe records the amount of time the zero-prefix view was shown; that is,
+  the time from when it was opened to the time it was closed. "Zero-prefix"
+  means the search string was empty, so the zero-prefix view is the view that's
+  shown when the user clicks in the urlbar before typing a search string. Often
+  it's also called the "top sites" view since normally it shows the user's top
+  sites. This is an exponential histogram whose values range from 0 to 60,000
+  with 50 buckets. Values are in milliseconds. This histogram was introduced in
+  Firefox 110.0 in bug 1806765.
+
 Scalars
 -------
 
@@ -357,6 +367,31 @@ urlbar.tabtosearch.*
   .. note::
     Due to the potentially sensitive nature of these data, they are currently
     collected only on pre-release version of Firefox. See bug 1686330.
+
+urlbar.zeroprefix.abandonment
+  A uint recording the number of abandonments of the zero-prefix view.
+  "Zero-prefix" means the search string was empty, so the zero-prefix view is
+  the view that's shown when the user clicks in the urlbar before typing a
+  search string. Often it's called the "top sites" view since normally it shows
+  the user's top sites. "Abandonment" means the user opened the zero-prefix view
+  but it was closed without the user picking a result inside it. This scalar was
+  introduced in Firefox 110.0 in bug 1806765.
+
+urlbar.zeroprefix.engagement
+  A uint recording the number of engagements in the zero-prefix view.
+  "Zero-prefix" means the search string was empty, so the zero-prefix view is
+  the view that's shown when the user clicks in the urlbar before typing a
+  search string. Often it's called the "top sites" view since normally it shows
+  the user's top sites. "Engagement" means the user picked a result inside the
+  view. This scalar was introduced in Firefox 110.0 in bug 1806765.
+
+urlbar.zeroprefix.exposure
+  A uint recording the number of times the user was exposed to the zero-prefix
+  view; that is, the number of times it was shown. "Zero-prefix" means the
+  search string was empty, so the zero-prefix view is the view that's shown when
+  the user clicks in the urlbar before typing a search string. Often it's called
+  the "top sites" view since normally it shows the user's top sites. This scalar
+  was introduced in Firefox 110.0 in bug 1806765.
 
 places.*
   This is places related telemetry.

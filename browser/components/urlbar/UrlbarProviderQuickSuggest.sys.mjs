@@ -37,6 +37,7 @@ const TELEMETRY_SCALARS = {
   CLICK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_sponsored_bestmatch`,
   CLICK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.click_dynamic_wikipedia`,
   CLICK_WEATHER: `${TELEMETRY_PREFIX}.click_weather`,
+  EXPOSURE_WEATHER: `${TELEMETRY_PREFIX}.exposure_weather`,
   HELP_SPONSORED: `${TELEMETRY_PREFIX}.help_sponsored`,
   HELP_NONSPONSORED: `${TELEMETRY_PREFIX}.help_nonsponsored`,
   HELP_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_nonsponsored_bestmatch`,
@@ -342,6 +343,21 @@ class ProviderQuickSuggest extends UrlbarProvider {
     lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
     this._recordEngagementTelemetry(result, queryContext.isPrivate, "block");
     return true;
+  }
+
+  onResultsShown(queryContext, results) {
+    let weatherResult = results.find(
+      r => r.payload.merinoProvider == MERINO_PROVIDER_WEATHER
+    );
+    if (weatherResult) {
+      // Telemetry indexes are 1-based.
+      let telemetryResultIndex = weatherResult.rowIndex + 1;
+      Services.telemetry.keyedScalarAdd(
+        TELEMETRY_SCALARS.EXPOSURE_WEATHER,
+        telemetryResultIndex,
+        1
+      );
+    }
   }
 
   /**

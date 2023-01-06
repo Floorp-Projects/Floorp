@@ -9,6 +9,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.sys.mjs",
@@ -30,6 +32,11 @@ XPCOMUtils.defineLazyServiceGetter(
 
 // Query selector for selectable elements in tip and dynamic results.
 const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable=true]";
+
+const ZERO_PREFIX_HISTOGRAM_DWELL_TIME = "FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS";
+const ZERO_PREFIX_SCALAR_ABANDONMENT = "urlbar.zeroprefix.abandonment";
+const ZERO_PREFIX_SCALAR_ENGAGEMENT = "urlbar.zeroprefix.engagement";
+const ZERO_PREFIX_SCALAR_EXPOSURE = "urlbar.zeroprefix.exposure";
 
 const getBoundsWithoutFlushing = element =>
   element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
@@ -405,6 +412,7 @@ export class UrlbarView {
     this.#rows.textContent = "";
     this.panel.setAttribute("noresults", "true");
     this.clearSelection();
+    this.visibleResults = [];
   }
 
   /**
@@ -456,6 +464,15 @@ export class UrlbarView {
     this.window.removeEventListener("blur", this);
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
+
+    if (this.#isShowingZeroPrefix) {
+      if (elementPicked) {
+        Services.telemetry.scalarAdd(ZERO_PREFIX_SCALAR_ENGAGEMENT, 1);
+      } else {
+        Services.telemetry.scalarAdd(ZERO_PREFIX_SCALAR_ABANDONMENT, 1);
+      }
+      this.#setIsShowingZeroPrefix(false);
+    }
   }
 
   /**
@@ -580,14 +597,22 @@ export class UrlbarView {
       return;
     }
 
-    // If the query finished and it returned some results, remove stale rows.
+    // At this point the query finished successfully. If it returned some
+    // results, remove stale rows. Otherwise remove all rows.
     if (this.#queryUpdatedResults) {
       this.#removeStaleRows();
-      return;
+    } else {
+      this.clear();
     }
 
-    // The query didn't return any results.  Clear the view.
-    this.clear();
+    // Now that the view has finished updating for this query, call
+    // `#setIsShowingZeroPrefix()`.
+    this.#setIsShowingZeroPrefix(!queryContext.searchString);
+
+    // If the query returned results, we're done.
+    if (this.#queryUpdatedResults) {
+      return;
+    }
 
     // If search mode isn't active, close the view.
     if (!this.input.searchMode) {
@@ -882,6 +907,7 @@ export class UrlbarView {
   #resultMenuCommands;
   #rows;
   #selectedElement;
+  #zeroPrefixStopwatchInstance = null;
 
   #createElement(name) {
     return this.document.createElementNS("http://www.w3.org/1999/xhtml", name);
@@ -2428,6 +2454,48 @@ export class UrlbarView {
       element.textContent = "";
     }
     element.removeAttribute("data-l10n-id");
+  }
+
+  get #isShowingZeroPrefix() {
+    return !!this.#zeroPrefixStopwatchInstance;
+  }
+
+  #setIsShowingZeroPrefix(isShowing) {
+    if (!!isShowing == !!this.#zeroPrefixStopwatchInstance) {
+      return;
+    }
+
+    if (!isShowing) {
+      TelemetryStopwatch.finish(
+        ZERO_PREFIX_HISTOGRAM_DWELL_TIME,
+        this.#zeroPrefixStopwatchInstance
+      );
+      this.#zeroPrefixStopwatchInstance = null;
+      return;
+    }
+
+    this.#zeroPrefixStopwatchInstance = {};
+    TelemetryStopwatch.start(
+      ZERO_PREFIX_HISTOGRAM_DWELL_TIME,
+      this.#zeroPrefixStopwatchInstance
+    );
+
+    Services.telemetry.scalarAdd(ZERO_PREFIX_SCALAR_EXPOSURE, 1);
+
+    // Some quick suggest telemetry needs to be recorded when the zero-prefix
+    // view is shown. Ideally this logic would be general to all providers.
+    // Relying on `visibleResults` here means we assume `onQueryFinished()` has
+    // been called by this point and `visibleResults` accurately reflects the
+    // visible rows at the end of the zero-prefix query.
+    let quickSuggestResults = this.visibleResults.filter(
+      r => r.providerName == lazy.UrlbarProviderQuickSuggest.name
+    );
+    if (quickSuggestResults.length) {
+      lazy.UrlbarProviderQuickSuggest.onResultsShown(
+        this.#queryContext,
+        quickSuggestResults
+      );
+    }
   }
 
   // Event handlers below.
