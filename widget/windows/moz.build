@@ -36,6 +36,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     "ShellHeaderOnlyUtils.h",
+    "ToastNotificationHeaderOnlyUtils.h",
     "UrlmonHeaderOnlyUtils.h",
     "WindowsConsole.h",
     "WindowsEventLog.h",
