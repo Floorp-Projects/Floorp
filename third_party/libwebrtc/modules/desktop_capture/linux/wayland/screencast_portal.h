@@ -105,6 +105,7 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
   // was successful and only then you will be able to get all the required
   // information in order to continue working with PipeWire.
   void Start() override;
+  void Stop() override;
   xdg_portal::SessionDetails GetSessionDetails() override;
 
   // Method to notify the reason for failure of a portal request.
@@ -112,7 +113,6 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
 
   // Sends a create session request to the portal.
   void RequestSession(GDBusProxy* proxy) override;
-  void Cleanup();
 
   // Set of methods leveraged by remote desktop portal to setup a common session
   // with screen cast portal.

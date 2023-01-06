@@ -56,19 +56,21 @@ ScreenCastPortal::ScreenCastPortal(
       user_data_(user_data) {}
 
 ScreenCastPortal::~ScreenCastPortal() {
-  Cleanup();
+  Stop();
 }
 
-void ScreenCastPortal::Cleanup() {
+void ScreenCastPortal::Stop() {
   UnsubscribeSignalHandlers();
   TearDownSession(std::move(session_handle_), proxy_, cancellable_,
                   connection_);
   session_handle_ = "";
   cancellable_ = nullptr;
   proxy_ = nullptr;
+  restore_token_ = "";
 
   if (pw_fd_ != -1) {
     close(pw_fd_);
+    pw_fd_ = -1;
   }
 }
 
@@ -121,7 +123,7 @@ xdg_portal::SessionDetails ScreenCastPortal::GetSessionDetails() {
 void ScreenCastPortal::OnPortalDone(RequestResponse result) {
   notifier_->OnScreenCastRequestResult(result, pw_stream_node_id_, pw_fd_);
   if (result != RequestResponse::kSuccess) {
-    Cleanup();
+    Stop();
   }
 }
 
