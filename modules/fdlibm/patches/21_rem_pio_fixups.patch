@@ -109,3 +109,97 @@ diff --git a/s_tan.cpp b/s_tan.cpp
  	int32_t n, ix;
  
      /* High word of x. */
+--- a/s_cosf.cpp	2022-12-11 21:26:36.041643110 -0500
++++ b/s_cosf.cpp	2022-12-11 21:34:08.197486828 -0500
+@@ -18,19 +18,19 @@
+ //__FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+ #define	INLINE_KERNEL_COSDF
+ #define	INLINE_KERNEL_SINDF
+ #define INLINE_REM_PIO2F
+ #include "math_private.h"
+-#include "e_rem_pio2f.c"
+-#include "k_cosf.c"
+-#include "k_sinf.c"
++#include "e_rem_pio2f.cpp"
++#include "k_cosf.cpp"
++#include "k_sinf.cpp"
+ 
+ /* Small multiples of pi/2 rounded to double precision. */
+ static const double
+ c1pio2 = 1*M_PI_2,			/* 0x3FF921FB, 0x54442D18 */
+ c2pio2 = 2*M_PI_2,			/* 0x400921FB, 0x54442D18 */
+ c3pio2 = 3*M_PI_2,			/* 0x4012D97C, 0x7F3321D2 */
+ c4pio2 = 4*M_PI_2;			/* 0x401921FB, 0x54442D18 */
+ 
+--- a/s_sinf.cpp	2022-12-11 21:26:36.045643147 -0500
++++ b/s_sinf.cpp	2022-12-11 21:33:52.741362926 -0500
+@@ -18,19 +18,19 @@
+ //__FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+ #define	INLINE_KERNEL_COSDF
+ #define	INLINE_KERNEL_SINDF
+ #define INLINE_REM_PIO2F
+ #include "math_private.h"
+-#include "e_rem_pio2f.c"
+-#include "k_cosf.c"
+-#include "k_sinf.c"
++#include "e_rem_pio2f.cpp"
++#include "k_cosf.cpp"
++#include "k_sinf.cpp"
+ 
+ /* Small multiples of pi/2 rounded to double precision. */
+ static const double
+ s1pio2 = 1*M_PI_2,			/* 0x3FF921FB, 0x54442D18 */
+ s2pio2 = 2*M_PI_2,			/* 0x400921FB, 0x54442D18 */
+ s3pio2 = 3*M_PI_2,			/* 0x4012D97C, 0x7F3321D2 */
+ s4pio2 = 4*M_PI_2;			/* 0x401921FB, 0x54442D18 */
+ 
+--- a/s_tanf.cpp	2022-12-11 21:26:36.045643147 -0500
++++ b/s_tanf.cpp	2022-12-11 21:33:45.269302886 -0500
+@@ -17,18 +17,18 @@
+ //#include <sys/cdefs.h>
+ //__FBSDID("$FreeBSD$");
+ 
+ #include <float.h>
+ 
+ #define	INLINE_KERNEL_TANDF
+ #define INLINE_REM_PIO2F
+ #include "math_private.h"
+-#include "e_rem_pio2f.c"
+-#include "k_tanf.c"
++#include "e_rem_pio2f.cpp"
++#include "k_tanf.cpp"
+ 
+ /* Small multiples of pi/2 rounded to double precision. */
+ static const double
+ t1pio2 = 1*M_PI_2,			/* 0x3FF921FB, 0x54442D18 */
+ t2pio2 = 2*M_PI_2,			/* 0x400921FB, 0x54442D18 */
+ t3pio2 = 3*M_PI_2,			/* 0x4012D97C, 0x7F3321D2 */
+ t4pio2 = 4*M_PI_2;			/* 0x401921FB, 0x54442D18 */
+ 
+--- a/e_rem_pio2f.cpp	2022-12-13 14:50:12.582776365 -0500
++++ b/e_rem_pio2f.cpp	2022-12-13 14:51:05.003200166 -0500
+@@ -35,17 +35,17 @@
+  */
+ 
+ static const double
+ invpio2 =  6.36619772367581382433e-01, /* 0x3FE45F30, 0x6DC9C883 */
+ pio2_1  =  1.57079631090164184570e+00, /* 0x3FF921FB, 0x50000000 */
+ pio2_1t =  1.58932547735281966916e-08; /* 0x3E5110b4, 0x611A6263 */
+ 
+ #ifdef INLINE_REM_PIO2F
+-static __inline __always_inline
++static inline
+ #endif
+ int
+ __ieee754_rem_pio2f(float x, double *y)
+ {
+ 	double w,r,fn;
+ 	double tx[1],ty[1];
+ 	float z;
+ 	int32_t e0,n,ix,hx;
