@@ -904,6 +904,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     andq(src.valueReg(), dest);
   }
 
+  // Like unboxGCThingForGCBarrier, but loads the GC thing's chunk base.
+  void getGCThingValueChunk(const Address& src, Register dest) {
+    movq(ImmWord(JS::detail::ValueGCThingPayloadChunkMask), dest);
+    andq(Operand(src), dest);
+  }
+  void getGCThingValueChunk(const ValueOperand& src, Register dest) {
+    MOZ_ASSERT(src.valueReg() != dest);
+    movq(ImmWord(JS::detail::ValueGCThingPayloadChunkMask), dest);
+    andq(src.valueReg(), dest);
+  }
+
   inline void fallibleUnboxPtrImpl(const Operand& src, Register dest,
                                    JSValueType type, Label* fail);
 
