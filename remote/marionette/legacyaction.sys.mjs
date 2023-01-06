@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
+  json: "chrome://remote/content/marionette/json.sys.mjs",
   event: "chrome://remote/content/marionette/event.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   WebReference: "chrome://remote/content/marionette/element.sys.mjs",
@@ -97,10 +97,7 @@ action.Chain.prototype.dispatchActions = function(
 ) {
   this.seenEls = seenEls;
   this.container = container;
-  let commandArray = lazy.evaluate.fromJSON(args, {
-    seenEls,
-    win: container.frame,
-  });
+  let commandArray = lazy.json.deserialize(args, seenEls, container.frame);
 
   if (touchId == null) {
     touchId = this.nextTSouchId++;

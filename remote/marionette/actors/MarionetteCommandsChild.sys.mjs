@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   event: "chrome://remote/content/marionette/event.sys.mjs",
   interaction: "chrome://remote/content/marionette/interaction.sys.mjs",
+  json: "chrome://remote/content/marionette/json.sys.mjs",
   legacyaction: "chrome://remote/content/marionette/legacyaction.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   sandbox: "chrome://remote/content/marionette/evaluate.sys.mjs",
@@ -81,10 +82,11 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
-      const data = lazy.evaluate.fromJSON(serializedData, {
-        seenEls: this.#processActor.getNodeCache(),
-        win: this.contentWindow,
-      });
+      const data = lazy.json.deserialize(
+        serializedData,
+        this.#processActor.getNodeCache(),
+        this.contentWindow
+      );
 
       switch (name) {
         case "MarionetteCommandsParent:clearElement":
@@ -176,9 +178,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       }
 
       return {
-        data: lazy.evaluate.toJSON(result, {
-          seenEls: this.#processActor.getNodeCache(),
-        }),
+        data: lazy.json.clone(result, this.#processActor.getNodeCache()),
       };
     } catch (e) {
       // Always wrap errors as WebDriverError
