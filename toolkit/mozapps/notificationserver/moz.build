@@ -25,6 +25,8 @@ DEFINES["IMPL_MFBT"] = True
 
 OS_LIBS += [
     "advapi32",
+    "kernel32",
+    "user32",
 ]
 
 LIBRARY_DEFINES["MOZ_NO_MOZALLOC"] = True
