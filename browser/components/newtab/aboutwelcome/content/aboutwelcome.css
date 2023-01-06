@@ -562,18 +562,27 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container label {
   vertical-align: middle;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.dual-action-buttons button {
-  padding: 8px 16px;
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta {
+  margin: 8px 0;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.dual-action-buttons .secondary-cta {
-  display: block;
-  position: relative;
-  bottom: unset;
-  margin-block: 5px 0;
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link {
+  color: var(--in-content-link-color);
+  background: none;
+  padding: 0;
+  font-weight: normal;
+  text-decoration: underline;
+  cursor: pointer;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.dual-action-buttons .secondary-cta .secondary {
-  margin-inline: 0;
-  font-size: 13px;
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:hover {
+  color: var(--in-content-link-color-hover);
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.secondary:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.additional-cta-container {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta {
   position: absolute;
@@ -822,6 +831,9 @@ html {
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
     margin-inline: 0;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .additional-cta.cta-link {
+    align-self: center;
   }
   .onboardingContainer .screen[pos=split] .section-main:dir(rtl) {
     margin: 0 auto auto;
@@ -1300,14 +1312,16 @@ html {
   translate: calc(var(--progress-bar-progress, 0%) * -1 + 100%);
 }
 .onboardingContainer .primary,
-.onboardingContainer .secondary {
+.onboardingContainer .secondary,
+.onboardingContainer .additional-cta {
   font-size: 13px;
   line-height: 16px;
   padding: 11px 15px;
   transition: var(--transition);
 }
 .onboardingContainer .primary.rtamo,
-.onboardingContainer .secondary.rtamo {
+.onboardingContainer .secondary.rtamo,
+.onboardingContainer .additional-cta.rtamo {
   margin-top: 24px;
 }
 .onboardingContainer .secondary {
@@ -1483,7 +1497,8 @@ html {
 .onboardingContainer .dialog-initial .primary,
 .onboardingContainer .dialog-initial .secondary,
 .onboardingContainer .dialog-initial .secondary-cta,
-.onboardingContainer .dialog-initial .steps {
+.onboardingContainer .dialog-initial .steps,
+.onboardingContainer .dialog-initial .cta-link {
   transition-delay: 1s;
 }
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .tiles-theme-section,
@@ -1492,7 +1507,8 @@ html {
 }
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .primary,
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .secondary,
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .secondary-cta {
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .secondary-cta,
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .cta-link {
   transition-delay: 0.4s;
 }
 .onboardingContainer .screen-2 .section-main {
@@ -1562,7 +1578,8 @@ html {
 .onboardingContainer.transition-in .screen:not([pos=corner]) .primary,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .checkbox-container,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .secondary,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .secondary-cta:not(.top) {
+.onboardingContainer.transition-in .screen:not([pos=corner]) .secondary-cta:not(.top),
+.onboardingContainer.transition-in .screen:not([pos=corner]) .cta-link {
   opacity: 0;
   translate: 0 calc(-1 * var(--translate));
 }
@@ -1607,7 +1624,8 @@ html {
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .primary,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .checkbox-container,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary-cta:not(.top) {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary-cta:not(.top),
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .cta-link {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.3s;
