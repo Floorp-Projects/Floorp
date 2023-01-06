@@ -418,7 +418,7 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("italic", "inherit", { toComp: "normal" }),
     new AnimTestcaseFromTo("normal", "italic"),
     new AnimTestcaseFromTo("italic", "oblique"),
-    new AnimTestcaseFromTo("oblique", "normal"),
+    new AnimTestcaseFromTo("oblique", "normal", { midComp: "oblique 7deg" }),
   ]),
   new TestcaseBundle(gPropList.font_variant, [
     new AnimTestcaseFromTo("inherit", "small-caps", { fromComp: "normal" }),
