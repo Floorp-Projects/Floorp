@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<head>
+  <meta charset=utf-8>
+  <title>Test the error message when parsing import maps failed</title>
+</head>
+<body onload='testLoaded()'>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script>
+let gotMsg = false;
+window.onerror = function(event, src, lineno, colno, error) {
+  info("error: " + error.message);
+  ok(error instanceof SyntaxError, "error should be SyntaxError.");
+  ok(error.message.match(/import map/),
+     "error.message should contain 'import map'");
+  gotMsg = true;
+};
+</script>
+
+<!--
+An import map with invalid JSON format. A SyntaxError will be thrown when parsing
+the import map.
+ -->
+<script type="importmap" onerror='importMapError()'>
+{
+  "imports": {{
+    "foo": "./foo.js"
+  }
+}
+</script>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(gotMsg, "Should have thrown a SyntaxError.");
+    SimpleTest.finish();
+  }
+</script>
+</body>
