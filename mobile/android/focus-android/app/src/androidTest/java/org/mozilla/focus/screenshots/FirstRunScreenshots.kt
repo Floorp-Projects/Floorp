@@ -36,17 +36,17 @@ class FirstRunScreenshots : ScreenshotTest() {
             SystemClock.sleep(5000)
             Screengrab.screenshot("Onboarding_1_View")
 
-            clickOnboardingNextBtn()
+            clickOnboardingNextButton()
 
             verifyOnboardingSecondSlide()
             Screengrab.screenshot("Onboarding_2_View")
 
-            clickOnboardingNextBtn()
+            clickOnboardingNextButton()
 
             verifyOnboardingThirdSlide()
             Screengrab.screenshot("Onboarding_3_View")
 
-            clickOnboardingNextBtn()
+            clickOnboardingNextButton()
 
             verifyOnboardingLastSlide()
             Screengrab.screenshot("Onboarding_last_View")

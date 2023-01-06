@@ -9,7 +9,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
@@ -32,25 +31,17 @@ class HomeScreenRobot {
 
     fun closeOnboarding() = onboardingCloseButton.clickAndWaitForNewWindow(waitingTime)
 
-    fun verifyOnboardingFirstSlide() {
-        firstSlide.check(matches(isDisplayed()))
-    }
+    fun verifyOnboardingFirstSlide() = assertTrue(firstSlideTitle.waitForExists(waitingTime))
 
-    fun verifyOnboardingSecondSlide() {
-        secondSlide.check(matches(isDisplayed()))
-    }
+    fun verifyOnboardingSecondSlide() = assertTrue(secondSlideTitle.waitForExists(waitingTime))
 
-    fun verifyOnboardingThirdSlide() {
-        thirdSlide.check(matches(isDisplayed()))
-    }
+    fun verifyOnboardingThirdSlide() = assertTrue(thirdSlideTitle.waitForExists(waitingTime))
 
-    fun verifyOnboardingLastSlide() {
-        lastSlide.check(matches(isDisplayed()))
-    }
+    fun verifyOnboardingLastSlide() = assertTrue(lastSlide.waitForExists(waitingTime))
 
-    fun clickOnboardingNextBtn() = nextBtn.click()
+    fun clickOnboardingNextButton() = nextButton.clickAndWaitForNewWindow(waitingTimeShort)
 
-    fun clickOnboardingFinishBtn() = finishBtn.click()
+    fun clickOnboardingFinishButton() = finishButton.clickAndWaitForNewWindow(waitingTimeShort)
 
     fun verifyPageShortcutExists(title: String) {
         assertTrue(
@@ -151,21 +142,25 @@ private val editURLBar =
 private val mainMenu = onView(withId(R.id.menuView))
 
 /********* First Run Locators  */
-private val firstSlide = onView(withText(R.string.firstrun_defaultbrowser_title))
+private val firstSlideTitle =
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.firstrun_defaultbrowser_title)))
 
-private val secondSlide = onView(withText(R.string.firstrun_search_title))
+private val secondSlideTitle =
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.firstrun_search_title)))
 
-private val thirdSlide = onView(withText(R.string.firstrun_shortcut_title))
+private val thirdSlideTitle =
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.firstrun_shortcut_title)))
 
-private val lastSlide = onView(withText(R.string.firstrun_privacy_title))
+private val lastSlide =
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.firstrun_privacy_title)))
 
-private val nextBtn = mDevice.findObject(
+private val nextButton = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/next")
         .enabled(true),
 )
 
-private val finishBtn = mDevice.findObject(
+private val finishButton = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/finish")
         .enabled(true),

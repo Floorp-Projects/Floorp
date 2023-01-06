@@ -43,13 +43,13 @@ class OldFirstRunTest {
     fun firstRunOnboardingTest() {
         homeScreen {
             verifyOnboardingFirstSlide()
-            clickOnboardingNextBtn()
+            clickOnboardingNextButton()
             verifyOnboardingSecondSlide()
-            clickOnboardingNextBtn()
+            clickOnboardingNextButton()
             verifyOnboardingThirdSlide()
-            clickOnboardingNextBtn()
+            clickOnboardingNextButton()
             verifyOnboardingLastSlide()
-            clickOnboardingFinishBtn()
+            clickOnboardingFinishButton()
             verifyEmptySearchBar()
         }
     }
@@ -58,7 +58,7 @@ class OldFirstRunTest {
     fun skipFirstRunOnboardingTest() {
         homeScreen {
             verifyOnboardingFirstSlide()
-            clickOnboardingNextBtn()
+            clickOnboardingNextButton()
             verifyOnboardingSecondSlide()
             skipFirstRun()
             verifyEmptySearchBar()
