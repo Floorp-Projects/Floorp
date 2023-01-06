@@ -1045,18 +1045,37 @@ nsDefaultCommandLineHandler.prototype = {
     if (AppConstants.platform == "win") {
       // Windows itself does disk I/O when the notification service is
       // initialized, so make sure that is lazy.
-      var tag;
-      while (
-        (tag = cmdLine.handleFlagWithParam("notification-windowsTag", false))
-      ) {
-        let onUnknownWindowsTag = (unknownTag, launchUrl, privilegedName) => {
-          console.info(
-            `Completing Windows notification (tag=${JSON.stringify(
-              unknownTag
-            )}, launchUrl=${JSON.stringify(
-              launchUrl
-            )}, privilegedName=${JSON.stringify(privilegedName)}))`
-          );
+      while (true) {
+        let tag = cmdLine.handleFlagWithParam("notification-windowsTag", false);
+        if (!tag) {
+          break;
+        }
+
+        let alertService = lazy.gWindowsAlertsService;
+        if (!alertService) {
+          console.error("Windows alert service not available.");
+          break;
+        }
+
+        async function handleNotification() {
+          const {
+            launchUrl,
+            privilegedName,
+          } = await alertService.handleWindowsTag(tag);
+
+          // If `launchUrl` or `privilegedName` are provided, then the
+          // notification was from a prior instance of the application and we
+          // need to handled fallback behavior.
+          if (launchUrl || privilegedName) {
+            console.info(
+              `Completing Windows notification (tag=${JSON.stringify(
+                tag
+              )}, launchUrl=${JSON.stringify(
+                launchUrl
+              )}, privilegedName=${JSON.stringify(privilegedName)}))`
+            );
+          }
+
           if (privilegedName) {
             Services.telemetry.setEventRecordingEnabled(
               "browser.launched_to_handle",
@@ -1066,28 +1085,55 @@ nsDefaultCommandLineHandler.prototype = {
               name: privilegedName,
             });
           }
-          if (!launchUrl) {
-            return;
-          }
-          let uri = resolveURIInternal(cmdLine, launchUrl);
-          urilist.push(uri);
-        };
 
-        try {
-          if (
-            lazy.gWindowsAlertsService?.handleWindowsTag(
-              tag,
-              onUnknownWindowsTag
-            )
-          ) {
-            // Don't pop open a new window.
-            cmdLine.preventDefault = true;
+          if (launchUrl) {
+            let uri = resolveURIInternal(cmdLine, launchUrl);
+            if (cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+              // Try to find an existing window and load our URI into the current
+              // tab, new tab, or new window as prefs determine.
+              try {
+                handURIToExistingBrowser(
+                  uri,
+                  Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
+                  cmdLine,
+                  false,
+                  lazy.gSystemPrincipal
+                );
+                return;
+              } catch (e) {}
+            }
+
+            if (shouldLoadURI(uri)) {
+              openBrowserWindow(cmdLine, lazy.gSystemPrincipal, [uri.spec]);
+            }
+          } else if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+            // No URL provided, but notification was interacted with while the
+            // application was closed. Fall back to opening the browser without url.
+            openBrowserWindow(cmdLine, lazy.gSystemPrincipal);
           }
-        } catch (e) {
-          console.error(
-            `Error handling Windows notification with tag '${tag}': ${e}`
-          );
         }
+
+        // Notification handling occurs asynchronously to prevent blocking the
+        // main thread. As a result we won't have the information we need to open
+        // a new tab in the case of notification fallback handling before
+        // returning. We call `enterLastWindowClosingSurvivalArea` to prevent
+        // the browser from exiting in case early blank window is pref'd off.
+        if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+          Services.startup.enterLastWindowClosingSurvivalArea();
+        }
+        handleNotification()
+          .catch(e => {
+            console.error(
+              `Error handling Windows notification with tag '${tag}': ${e}`
+            );
+          })
+          .finally(() => {
+            if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+              Services.startup.exitLastWindowClosingSurvivalArea();
+            }
+          });
+
+        return;
       }
     }
 
