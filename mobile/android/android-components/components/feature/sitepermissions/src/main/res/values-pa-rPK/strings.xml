@@ -6,6 +6,9 @@
     <!-- Text for a positive button in a permission request dialog, this button will give
         access to this permission-->
     <string name="mozac_feature_sitepermissions_allow">اجازت دیو</string>
+    <!-- Text for a negative button in a permission request dialog, this button will do not give
+    access to this permission-->
+    <string name="mozac_feature_sitepermissions_not_allow">اجازت نہ دیو</string>
     <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_always_allow">ہمیشہ</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
