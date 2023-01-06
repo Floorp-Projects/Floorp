@@ -79,8 +79,7 @@
     static get inheritedAttributes() {
       return {
         ".tab-background": "selected=visuallyselected,fadein,multiselected",
-        ".tab-line":
-          "selected=visuallyselected,multiselected,before-multiselected",
+        ".tab-line": "selected=visuallyselected,multiselected",
         ".tab-loading-burst": "pinned,bursting,notselectedsinceload",
         ".tab-content":
           "pinned,selected=visuallyselected,titlechanged,attention",
@@ -188,10 +187,6 @@
 
     get multiselected() {
       return this.getAttribute("multiselected") == "true";
-    }
-
-    get beforeMultiselected() {
-      return this.getAttribute("before-multiselected") == "true";
     }
 
     get userContextId() {

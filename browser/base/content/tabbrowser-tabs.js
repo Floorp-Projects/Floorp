@@ -1225,17 +1225,6 @@
       if (hoveredTab) {
         hoveredTab._mouseenter();
       }
-
-      // Update before-multiselected attributes.
-      // gBrowser may not be initialized yet, so avoid using it
-      for (let i = 0; i < visibleTabs.length - 1; i++) {
-        let tab = visibleTabs[i];
-        let nextTab = visibleTabs[i + 1];
-        tab.removeAttribute("before-multiselected");
-        if (nextTab.multiselected) {
-          tab.setAttribute("before-multiselected", "true");
-        }
-      }
     }
 
     _updateCloseButtons() {
