@@ -5,7 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -76,14 +75,15 @@ export class InteractionsChild extends JSWindowActorChild {
   }
 
   #recordNewPage() {
-    let docInfo = this.#getDocumentInfo();
-    if (!docInfo || !this.docShell.currentDocumentChannel) {
+    if (!this.docShell.currentDocumentChannel) {
       // If there is no document channel, then it is something we're not
       // interested in, but we do need to know that the previous interaction
       // has ended.
       this.sendAsyncMessage("Interactions:PageHide");
       return;
     }
+
+    let docInfo = this.#getDocumentInfo();
 
     // This may happen when the page calls replaceState or pushState with the
     // same URL. We'll just consider this to not be a new page.
@@ -122,10 +122,7 @@ export class InteractionsChild extends JSWindowActorChild {
           return;
         }
 
-        let docInfo = await this.#getDocumentInfo();
-        if (docInfo) {
-          this.sendAsyncMessage("Interactions:PageHide");
-        }
+        this.sendAsyncMessage("Interactions:PageHide");
         break;
       }
     }
@@ -139,16 +136,6 @@ export class InteractionsChild extends JSWindowActorChild {
   #getDocumentInfo() {
     let doc = this.document;
 
-    let requirements = lazy.InteractionsBlocklist.urlRequirements.get(
-      doc.documentURIObject.scheme + ":"
-    );
-    if (
-      !requirements ||
-      (requirements.extension &&
-        !doc.documentURIObject.spec.endsWith(requirements.extension))
-    ) {
-      return null;
-    }
     let referrer;
     if (doc.referrer) {
       referrer = Services.io.newURI(doc.referrer);
