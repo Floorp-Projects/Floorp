@@ -262,6 +262,7 @@ internal class ReleaseMetricController(
 
         Component.FEATURE_SEARCH to AdsTelemetry.SERP_ADD_CLICKED -> {
             BrowserSearch.adClicks[value!!].add()
+            track(Event.GrowthData.SerpAdClicked)
         }
         Component.FEATURE_SEARCH to AdsTelemetry.SERP_SHOWN_WITH_ADDS -> {
             BrowserSearch.withAds[value!!].add()

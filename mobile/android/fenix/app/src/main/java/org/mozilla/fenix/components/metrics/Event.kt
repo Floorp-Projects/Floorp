@@ -23,14 +23,9 @@ sealed class Event {
         object SetAsDefault : GrowthData("xgpcgt")
 
         /**
-         * Event recording the first time Firefox has been resumed in a 24 hour period.
+         * Event recording that an ad was clicked in a search engine results page.
          */
-        object FirstAppOpenForDay : GrowthData("41hl22")
-
-        /**
-         * Event recording the first time a URI is loaded in Firefox in a 24 hour period.
-         */
-        object FirstUriLoadForDay : GrowthData("ja86ek")
+        object SerpAdClicked : GrowthData("e2x17e")
 
         /**
          * Event recording the first time Firefox is used 3 days in a row in the first week of install.

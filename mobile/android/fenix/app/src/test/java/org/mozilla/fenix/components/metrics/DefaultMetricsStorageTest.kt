@@ -101,68 +101,6 @@ class DefaultMetricsStorageTest {
     }
 
     @Test
-    fun `GIVEN that it has been less than 24 hours since last resumed sent WHEN checked for sending THEN will not be sent`() = runTest(dispatcher) {
-        val currentTime = System.currentTimeMillis()
-        every { settings.resumeGrowthLastSent } returns currentTime
-
-        val result = storage.shouldTrack(Event.GrowthData.FirstAppOpenForDay)
-
-        assertFalse(result)
-    }
-
-    @Test
-    fun `GIVEN that it has been more than 24 hours since last resumed sent WHEN checked for sending THEN will be sent`() = runTest(dispatcher) {
-        val currentTime = System.currentTimeMillis()
-        every { settings.resumeGrowthLastSent } returns currentTime - 1000 * 60 * 60 * 24 * 2
-
-        val result = storage.shouldTrack(Event.GrowthData.FirstAppOpenForDay)
-
-        assertTrue(result)
-    }
-
-    @Test
-    fun `WHEN last resumed state updated THEN settings updated accordingly`() = runTest(dispatcher) {
-        val updateSlot = slot<Long>()
-        every { settings.resumeGrowthLastSent } returns 0
-        every { settings.resumeGrowthLastSent = capture(updateSlot) } returns Unit
-
-        storage.updateSentState(Event.GrowthData.FirstAppOpenForDay)
-
-        assertTrue(updateSlot.captured > 0)
-    }
-
-    @Test
-    fun `GIVEN that it has been less than 24 hours since uri load sent WHEN checked for sending THEN will not be sent`() = runTest(dispatcher) {
-        val currentTime = System.currentTimeMillis()
-        every { settings.uriLoadGrowthLastSent } returns currentTime
-
-        val result = storage.shouldTrack(Event.GrowthData.FirstUriLoadForDay)
-
-        assertFalse(result)
-    }
-
-    @Test
-    fun `GIVEN that it has been more than 24 hours since uri load  sent WHEN checked for sending THEN will be sent`() = runTest(dispatcher) {
-        val currentTime = System.currentTimeMillis()
-        every { settings.uriLoadGrowthLastSent } returns currentTime - 1000 * 60 * 60 * 24 * 2
-
-        val result = storage.shouldTrack(Event.GrowthData.FirstUriLoadForDay)
-
-        assertTrue(result)
-    }
-
-    @Test
-    fun `WHEN uri load updated THEN settings updated accordingly`() = runTest(dispatcher) {
-        val updateSlot = slot<Long>()
-        every { settings.uriLoadGrowthLastSent } returns 0
-        every { settings.uriLoadGrowthLastSent = capture(updateSlot) } returns Unit
-
-        storage.updateSentState(Event.GrowthData.FirstUriLoadForDay)
-
-        assertTrue(updateSlot.captured > 0)
-    }
-
-    @Test
     fun `GIVEN that app has been used for less than 3 days in a row WHEN checked for first week activity THEN event will not be sent`() = runTest(dispatcher) {
         val tomorrow = calendarStart.createNextDay()
         every { settings.firstWeekDaysOfUseGrowthData = any() } returns Unit
@@ -271,6 +209,24 @@ class DefaultMetricsStorageTest {
         storage.shouldTrack(Event.GrowthData.FirstWeekSeriesActivity)
 
         assertFalse(captureSlot.isCaptured)
+    }
+
+    @Test
+    fun `GIVEN serp ad clicked event already sent WHEN checking to track serp ad clicked THEN event will not be sent`() = runTest(dispatcher) {
+        every { settings.adClickGrowthSent } returns true
+
+        val result = storage.shouldTrack(Event.GrowthData.SerpAdClicked)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN serp ad clicked event not sent WHEN checking to track serp ad clicked THEN event will be sent`() = runTest(dispatcher) {
+        every { settings.adClickGrowthSent } returns false
+
+        val result = storage.shouldTrack(Event.GrowthData.SerpAdClicked)
+
+        assertTrue(result)
     }
 
     private fun Calendar.copy() = clone() as Calendar

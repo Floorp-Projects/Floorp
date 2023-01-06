@@ -21,7 +21,6 @@ import mozilla.components.support.base.android.Clock
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
@@ -59,9 +58,6 @@ class TelemetryMiddleware(
             is EngineAction.KillEngineSessionAction -> {
                 val tab = context.state.findTabOrCustomTab(action.tabId)
                 onEngineSessionKilled(context.state, tab)
-            }
-            is EngineAction.LoadUrlAction -> {
-                metrics.track(Event.GrowthData.FirstUriLoadForDay)
             }
             else -> {
                 // no-op

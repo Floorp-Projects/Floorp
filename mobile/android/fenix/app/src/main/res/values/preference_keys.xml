@@ -318,8 +318,7 @@
 
     <!-- Growth Data -->
     <string name="pref_key_growth_set_as_default" translatable="false">pref_key_growth_set_as_default</string>
-    <string name="pref_key_growth_resume_last_sent" translatable="false">pref_key_growth_last_resumed</string>
-    <string name="pref_key_growth_uri_load_last_sent" translatable="false">pref_key_growth_uri_load_last_sent</string>
     <string name="pref_key_growth_first_week_series_sent" translatable="false">pref_key_growth_first_week_series_sent</string>
     <string name="pref_key_growth_first_week_days_of_use" translatable="false">pref_key_growth_first_week_days_of_use</string>
+    <string name="pref_key_growth_ad_click_sent" translatable="false">pref_key_growth_ad_click_sent</string>
 </resources>

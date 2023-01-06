@@ -47,21 +47,20 @@ internal class DefaultMetricsStorage(
      */
     override suspend fun shouldTrack(event: Event): Boolean =
         withContext(dispatcher) {
-            // The side-effect of storing days of use needs to happen during the first two days after
-            // install, which would normally be skipped by shouldSendGenerally.
+            // The side-effect of storing days of use always needs to happen.
             updateDaysOfUse()
+            val currentTime = System.currentTimeMillis()
             shouldSendGenerally() && when (event) {
                 Event.GrowthData.SetAsDefault -> {
-                    !settings.setAsDefaultGrowthSent && checkDefaultBrowser()
-                }
-                Event.GrowthData.FirstAppOpenForDay -> {
-                    settings.resumeGrowthLastSent.hasBeenMoreThanDaySince()
-                }
-                Event.GrowthData.FirstUriLoadForDay -> {
-                    settings.uriLoadGrowthLastSent.hasBeenMoreThanDaySince()
+                    currentTime.duringFirstMonth() &&
+                        !settings.setAsDefaultGrowthSent &&
+                        checkDefaultBrowser()
                 }
                 Event.GrowthData.FirstWeekSeriesActivity -> {
-                    shouldTrackFirstWeekActivity()
+                    currentTime.duringFirstMonth() && shouldTrackFirstWeekActivity()
+                }
+                Event.GrowthData.SerpAdClicked -> {
+                    currentTime.duringFirstMonth() && !settings.adClickGrowthSent
                 }
             }
         }
@@ -71,14 +70,11 @@ internal class DefaultMetricsStorage(
             Event.GrowthData.SetAsDefault -> {
                 settings.setAsDefaultGrowthSent = true
             }
-            Event.GrowthData.FirstAppOpenForDay -> {
-                settings.resumeGrowthLastSent = System.currentTimeMillis()
-            }
-            Event.GrowthData.FirstUriLoadForDay -> {
-                settings.uriLoadGrowthLastSent = System.currentTimeMillis()
-            }
             Event.GrowthData.FirstWeekSeriesActivity -> {
                 settings.firstWeekSeriesGrowthSent = true
+            }
+            Event.GrowthData.SerpAdClicked -> {
+                settings.adClickGrowthSent = true
             }
         }
     }
@@ -87,13 +83,13 @@ internal class DefaultMetricsStorage(
         val daysOfUse = settings.firstWeekDaysOfUseGrowthData
         val currentDate = Calendar.getInstance(Locale.US)
         val currentDateString = dateFormatter.format(currentDate.time)
-        if (currentDate.timeInMillis.withinFirstWeek() && daysOfUse.none { it == currentDateString }) {
+        if (currentDate.timeInMillis.duringFirstWeek() && daysOfUse.none { it == currentDateString }) {
             settings.firstWeekDaysOfUseGrowthData = daysOfUse + currentDateString
         }
     }
 
     private fun shouldTrackFirstWeekActivity(): Boolean = Result.runCatching {
-        if (!System.currentTimeMillis().withinFirstWeek() || settings.firstWeekSeriesGrowthSent) {
+        if (!System.currentTimeMillis().duringFirstWeek() || settings.firstWeekSeriesGrowthSent) {
             return false
         }
 
@@ -121,14 +117,13 @@ internal class DefaultMetricsStorage(
         return false
     }.getOrDefault(false)
 
-    private fun Long.hasBeenMoreThanDaySince(): Boolean =
-        System.currentTimeMillis() - this > dayMillis
-
     private fun Long.toCalendar(): Calendar = Calendar.getInstance(Locale.US).also { calendar ->
         calendar.timeInMillis = this
     }
 
-    private fun Long.withinFirstWeek() = this < getInstalledTime() + fullWeekMillis
+    private fun Long.duringFirstWeek() = this < getInstalledTime() + fullWeekMillis
+
+    private fun Long.duringFirstMonth() = this < getInstalledTime() + shortestMonthMillis
 
     private fun Calendar.createNextDay() = (this.clone() as Calendar).also { calendar ->
         calendar.add(Calendar.DAY_OF_MONTH, 1)
@@ -136,8 +131,7 @@ internal class DefaultMetricsStorage(
 
     companion object {
         private const val dayMillis: Long = 1000 * 60 * 60 * 24
-        private const val windowStartMillis: Long = dayMillis * 2
-        private const val windowEndMillis: Long = dayMillis * 28
+        private const val shortestMonthMillis: Long = dayMillis * 28
 
         // Note this is 8 so that recording of FirstWeekSeriesActivity happens throughout the length
         // of the 7th day after install
@@ -146,17 +140,11 @@ internal class DefaultMetricsStorage(
         /**
          * Determines whether events should be tracked based on some general criteria:
          * - user has installed as a result of a campaign
-         * - user is within 2-28 days of install
          * - tracking is still enabled through Nimbus
          */
         fun shouldSendGenerally(context: Context): Boolean {
-            val installedTime = getInstalledTime(context)
-            val timeDifference = System.currentTimeMillis() - installedTime
-            val withinWindow = timeDifference in windowStartMillis..windowEndMillis
-
             return context.settings().adjustCampaignId.isNotEmpty() &&
-                FxNimbus.features.growthData.value().enabled &&
-                withinWindow
+                FxNimbus.features.growthData.value().enabled
         }
 
         fun getInstalledTime(context: Context): Long = context.packageManager
