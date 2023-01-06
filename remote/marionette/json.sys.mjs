@@ -9,7 +9,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   ShadowRoot: "chrome://remote/content/marionette/element.sys.mjs",
@@ -29,8 +28,8 @@ export const json = {};
  *
  * @param {Object} value
  *     Object to be cloned.
- * @param {NodeCache} seenEls
- *     Known node cache to look up WebElement and ShadowRoot instances from.
+ * @param {Set} seen
+ *     List of objects already processed.
  * @param {Function} cloneAlgorithm
  *     The clone algorithm to invoke for individual list entries or object
  *     properties.
@@ -38,27 +37,34 @@ export const json = {};
  * @return {Object}
  *     The cloned object.
  */
-function cloneObject(value, seenEls, cloneAlgorithm) {
-  if (lazy.element.isCollection(value)) {
-    lazy.evaluate.assertAcyclic(value);
-    return [...value].map(entry => cloneAlgorithm(entry, seenEls));
+function cloneObject(value, seen, cloneAlgorithm) {
+  // Only proceed with cloning an object if it hasn't been seen yet.
+  if (seen.has(value)) {
+    throw new lazy.error.JavaScriptError("Cyclic object value");
   }
+  seen.add(value);
 
-  // arbitrary objects
-  let result = {};
-  for (let prop in value) {
-    lazy.evaluate.assertAcyclic(value[prop]);
+  let result;
 
-    try {
-      result[prop] = cloneAlgorithm(value[prop], seenEls);
-    } catch (e) {
-      if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-        lazy.logger.debug(`Skipping ${prop}: ${e.message}`);
-      } else {
-        throw e;
+  if (lazy.element.isCollection(value)) {
+    result = [...value].map(entry => cloneAlgorithm(entry, seen));
+  } else {
+    // arbitrary objects
+    result = {};
+    for (let prop in value) {
+      try {
+        result[prop] = cloneAlgorithm(value[prop], seen);
+      } catch (e) {
+        if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
+          lazy.logger.debug(`Skipping ${prop}: ${e.message}`);
+        } else {
+          throw e;
+        }
       }
     }
   }
+
+  seen.delete(value);
 
   return result;
 }
@@ -82,13 +88,12 @@ function cloneObject(value, seenEls, cloneAlgorithm) {
  *   a callable `toJSON` function, are returned verbatim.  This means
  *   their internal integrity _are not_ checked.  Be careful.
  *
- * -  Other arbitrary objects are first tested for cyclic references
- *    and then recursed into.
+ * - If a cyclic references is detected a JavaScriptError is thrown.
  *
  * @param {Object} value
  *     Object to be cloned.
- * @param {NodeCache} seenEls
- *     Known node cache to look up WebElement and ShadowRoot instances from.
+ * @param {NodeCache} nodeCache
+ *     Node cache that holds already seen WebElement and ShadowRoot references.
  *
  * @return {Object}
  *     Same object as provided by `value` with the WebDriver specific
@@ -100,8 +105,12 @@ function cloneObject(value, seenEls, cloneAlgorithm) {
  *     If the element has gone stale, indicating it is no longer
  *     attached to the DOM.
  */
-json.clone = function(value, seenEls) {
-  function cloneJSON(value, seenEls) {
+json.clone = function(value, nodeCache) {
+  function cloneJSON(value, seen) {
+    if (seen === undefined) {
+      seen = new Set();
+    }
+
     const type = typeof value;
 
     if ([undefined, null].includes(value)) {
@@ -129,7 +138,7 @@ json.clone = function(value, seenEls) {
         );
       }
 
-      const sharedId = seenEls.add(el);
+      const sharedId = nodeCache.add(value);
       return lazy.WebReference.from(el, sharedId).toJSON();
     } else if (typeof value.toJSON == "function") {
       // custom JSON representation
@@ -139,14 +148,14 @@ json.clone = function(value, seenEls) {
       } catch (e) {
         throw new lazy.error.JavaScriptError(`toJSON() failed with: ${e}`);
       }
-      return cloneJSON(unsafeJSON, seenEls);
+      return cloneJSON(unsafeJSON, seen);
     }
 
     // Collections and arbitrary objects
-    return cloneObject(value, seenEls, cloneJSON);
+    return cloneObject(value, seen, cloneJSON);
   }
 
-  return cloneJSON(value, seenEls);
+  return cloneJSON(value, new Set());
 };
 
 /**
@@ -154,8 +163,8 @@ json.clone = function(value, seenEls) {
  *
  * @param {Object} value
  *     Arbitrary object.
- * @param {NodeCache} seenEls
- *     Known node cache to look up WebElement and ShadowRoot instances from.
+ * @param {NodeCache} nodeCache
+ *     Node cache that holds already seen WebElement and ShadowRoot references.
  * @param {WindowProxy} win
  *     Current window.
  *
@@ -168,8 +177,12 @@ json.clone = function(value, seenEls) {
  * @throws {StaleElementReferenceError}
  *     If the element is stale, indicating it is no longer attached to the DOM.
  */
-json.deserialize = function(value, seenEls, win) {
-  function deserializeJSON(value, seenEls) {
+json.deserialize = function(value, nodeCache, win) {
+  function deserializeJSON(value, seen) {
+    if (seen === undefined) {
+      seen = new Set();
+    }
+
     if (value === undefined || value === null) {
       return value;
     }
@@ -190,16 +203,16 @@ json.deserialize = function(value, seenEls, win) {
             webRef instanceof lazy.WebElement ||
             webRef instanceof lazy.ShadowRoot
           ) {
-            return lazy.element.resolveElement(webRef.uuid, win, seenEls);
+            return lazy.element.resolveElement(webRef.uuid, nodeCache, win);
           }
 
           // WebFrame and WebWindow not supported yet
           throw new lazy.error.UnsupportedOperationError();
         }
 
-        return cloneObject(value, seenEls, deserializeJSON);
+        return cloneObject(value, seen, deserializeJSON);
     }
   }
 
-  return deserializeJSON(value, seenEls);
+  return deserializeJSON(value, new Set());
 };
