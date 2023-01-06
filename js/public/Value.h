@@ -308,6 +308,10 @@ constexpr uint64_t ValueTagMask = 0xFFFF'8000'0000'0000;
 // This should only be used in toGCThing. See the 'Spectre mitigations' comment.
 constexpr uint64_t ValueGCThingPayloadMask = 0x0000'7FFF'FFFF'FFFF;
 
+// Mask used to combine an unbox operation with getting the chunk base.
+constexpr uint64_t ValueGCThingPayloadChunkMask =
+    ValueGCThingPayloadMask & ~js::gc::ChunkMask;
+
 constexpr uint64_t ValueTypeToShiftedTag(JSValueType type) {
   return static_cast<uint64_t>(ValueTypeToTag(type)) << JSVAL_TAG_SHIFT;
 }
