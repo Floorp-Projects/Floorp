@@ -12,8 +12,10 @@
 #include <vector>
 
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/ToastNotificationHeaderOnlyUtils.h"
 
 #define NOTIFICATION_SERVER_EVENT_TIMEOUT_MS (10 * 1000)
+using namespace mozilla::widget::toastnotification;
 
 HRESULT STDMETHODCALLTYPE
 NotificationCallback::QueryInterface(REFIID riid, void** ppvObject) {
@@ -106,13 +108,13 @@ mozilla::Maybe<ToastArgs> NotificationCallback::ParseToastArguments(
 
   for (std::wstring key, value;
        std::getline(args, key) && std::getline(args, value);) {
-    if (key == L"program") {
+    if (key == kLaunchArgProgram) {
       serverDisabled = false;
-    } else if (key == L"profile") {
+    } else if (key == kLaunchArgProfile) {
       parsedArgs.profile = value;
-    } else if (key == L"windowsTag") {
+    } else if (key == kLaunchArgTag) {
       parsedArgs.windowsTag = value;
-    } else if (key == L"action") {
+    } else if (key == kLaunchArgAction) {
       // Remainder of args are from the Web Notification action, don't parse.
       // See https://bugzilla.mozilla.org/show_bug.cgi?id=1781929.
       break;

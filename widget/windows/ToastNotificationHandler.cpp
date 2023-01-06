@@ -34,6 +34,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
 #include "nsXREDirProvider.h"
+#include "ToastNotificationHeaderOnlyUtils.h"
 #include "WidgetUtils.h"
 #include "WinUtils.h"
 
@@ -49,7 +50,7 @@ using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::UI::Notifications;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
-using namespace mozilla;
+using namespace toastnotification;
 
 // Needed to disambiguate internal and Windows `ToastNotification` classes.
 using WinToastNotification = ABI::Windows::UI::Notifications::ToastNotification;
@@ -116,7 +117,9 @@ static bool AddActionNode(ComPtr<IXmlDocument>& toastXml,
   // Web Notification actions are arbitrary strings; to prevent breaking launch
   // argument parsing the action argument must be last. All delimiters after
   // `action` are part of the action arugment.
-  nsAutoString args = launchArg + u"\naction\n"_ns + actionArgs;
+  nsAutoString args = launchArg + u"\n"_ns +
+                      nsDependentString(kLaunchArgAction) + u"\n"_ns +
+                      actionArgs;
   success = SetAttribute(action, HStringReference(L"arguments"), args);
   NS_ENSURE_TRUE(success, false);
 
@@ -187,7 +190,7 @@ Result<nsString, nsresult> ToastNotificationHandler::GetLaunchArgument() {
   }
 
   // `program` argument.
-  launchArg += u"program\n"_ns MOZ_APP_NAME;
+  launchArg += nsDependentString(kLaunchArgProgram) + u"\n"_ns MOZ_APP_NAME;
 
   // `profile` argument.
   nsCOMPtr<nsIFile> profDir;
@@ -223,20 +226,24 @@ Result<nsString, nsresult> ToastNotificationHandler::GetLaunchArgument() {
   if (profDir) {
     nsAutoString profilePath;
     MOZ_TRY(profDir->GetPath(profilePath));
-    launchArg += u"\nprofile\n"_ns + profilePath;
+    launchArg += u"\n"_ns + nsDependentString(kLaunchArgProfile) + u"\n"_ns +
+                 profilePath;
   }
 
   if (!mLaunchUrl.IsEmpty()) {
-    launchArg += u"\nlaunchUrl\n"_ns + mLaunchUrl;
+    launchArg +=
+        u"\n"_ns + nsDependentString(kLaunchArgUrl) + u"\n"_ns + mLaunchUrl;
   }
 
   if (mIsSystemPrincipal && !mName.IsEmpty()) {
     // Privileged alerts include any provided name for metrics.
-    launchArg += u"\nprivilegedName\n"_ns + mName;
+    launchArg += u"\n"_ns + nsDependentString(kLaunchArgPrivilegedName) +
+                 u"\n"_ns + mName;
   }
 
   // `windowsTag` argument.
-  launchArg += u"\nwindowsTag\n"_ns + mWindowsTag;
+  launchArg +=
+      u"\n"_ns + nsDependentString(kLaunchArgTag) + u"\n"_ns + mWindowsTag;
 
   return launchArg;
 }
@@ -730,7 +737,7 @@ ToastNotificationHandler::OnActivate(
             nsDependentSubstring token;
 
             while (parse.ReadUntil(Tokenizer16::Token::NewLine(), token)) {
-              if (token == u"action"_ns) {
+              if (token == nsDependentString(kLaunchArgAction)) {
                 Unused << parse.ReadUntil(Tokenizer16::Token::EndOfFile(),
                                           actionString);
               } else {
@@ -862,7 +869,7 @@ ToastNotificationHandler::FindNotificationByTag(const nsAString& aWindowsTag,
   nsDependentSubstring token;
 
   while (parse.ReadUntil(Tokenizer16::Token::NewLine(), token)) {
-    if (token == u"action"_ns) {
+    if (token == nsDependentString(kLaunchArgAction)) {
       // As soon as we see an action, we're done: we don't want to take a "key"
       // from the user-provided action string.
       return E_FAIL;
@@ -897,27 +904,28 @@ ToastNotificationHandler::FindLaunchURLAndPrivilegedNameForWindowsTag(
   aFoundTag = true;
 
   HRESULT hr = ToastNotificationHandler::GetLaunchArgumentValueForKey(
-      toast, u"launchUrl"_ns, aLaunchUrl);
+      toast, nsDependentString(kLaunchArgUrl), aLaunchUrl);
 
   if (!SUCCEEDED(hr)) {
     MOZ_LOG(sWASLog, LogLevel::Debug,
-            ("Did not find launchUrl [hr=0x%08lX]", hr));
+            ("Did not find %ls [hr=0x%08lX]", kLaunchArgUrl, hr));
     aLaunchUrl.SetIsVoid(true);
   } else {
     MOZ_LOG(sWASLog, LogLevel::Debug,
-            ("Found launchUrl [%s]", NS_ConvertUTF16toUTF8(aLaunchUrl).get()));
+            ("Found %ls [%s]", kLaunchArgUrl,
+             NS_ConvertUTF16toUTF8(aLaunchUrl).get()));
   }
 
   hr = ToastNotificationHandler::GetLaunchArgumentValueForKey(
-      toast, u"privilegedName"_ns, aPrivilegedName);
+      toast, nsDependentString(kLaunchArgPrivilegedName), aPrivilegedName);
 
   if (!SUCCEEDED(hr)) {
     MOZ_LOG(sWASLog, LogLevel::Debug,
-            ("Did not find privilegedName [hr=0x%08lX]", hr));
+            ("Did not find %ls [hr=0x%08lX]", kLaunchArgPrivilegedName, hr));
     aPrivilegedName.SetIsVoid(true);
   } else {
     MOZ_LOG(sWASLog, LogLevel::Debug,
-            ("Found privilegedName [%s]",
+            ("Found %ls [%s]", kLaunchArgPrivilegedName,
              NS_ConvertUTF16toUTF8(aPrivilegedName).get()));
   }
 
