@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
@@ -11,16 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  Log: "chrome://remote/content/shared/Log.sys.mjs",
-  pprint: "chrome://remote/content/shared/Format.sys.mjs",
-  ShadowRoot: "chrome://remote/content/marionette/element.sys.mjs",
-  WebElement: "chrome://remote/content/marionette/element.sys.mjs",
-  WebReference: "chrome://remote/content/marionette/element.sys.mjs",
 });
-
-XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
-  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
-);
 
 const ARGUMENTS = "__webDriverArguments";
 const CALLBACK = "__webDriverCallback";
@@ -202,185 +191,10 @@ evaluate.sandbox = function(
 };
 
 /**
- * Convert any web elements in arbitrary objects to a DOM element by
- * looking them up in the seen element reference store.
- *
- * @param {Object} obj
- *     Arbitrary object containing web elements or ElementIdentifiers.
- * @param {Object=} options
- * @param {NodeCache=} options.seenEls
- *     Known node cache to look up WebElement instances from. If `seenEls` is
- *     an instance of `NodeCache`, return WebElement. In the parent
- *     process where `seenEls` is `undefined` the WebElement reference is
- *     passed through.
- * @param {WindowProxy=} options.win
- *     Current window, if `seenEls` is provided.
- *
- * @return {Object}
- *     Same object as provided by `obj` with the web elements
- *     replaced by DOM elements when run in the target window.
- *
- * @throws {NoSuchElementError}
- *     If `seenEls` is a `NodeCache` and the WebElement reference
- *     has not been seen before.
- * @throws {StaleElementReferenceError}
- *     If `seenEls` is a `NodeCache` and the element has gone
- *     stale, indicating it is no longer attached to the DOM.
- */
-evaluate.fromJSON = function(obj, options = {}) {
-  const { seenEls, win } = options;
-
-  switch (typeof obj) {
-    case "boolean":
-    case "number":
-    case "string":
-    default:
-      return obj;
-
-    case "object":
-      if (obj === null) {
-        return obj;
-      } else if (Array.isArray(obj)) {
-        return obj.map(e => evaluate.fromJSON(e, { seenEls, win }));
-      } else if (lazy.WebReference.isReference(obj)) {
-        if (seenEls) {
-          // With the element reference store available the code runs from
-          // within the JSWindowActorChild scope. As such create a WebReference
-          // based on the WebElement identifier and resolve it to a DOM element
-          // or ShadowRoot.
-          const webRef = lazy.WebReference.fromJSON(obj);
-
-          if (
-            webRef instanceof lazy.WebElement ||
-            webRef instanceof lazy.ShadowRoot
-          ) {
-            return lazy.element.resolveElement(webRef.uuid, win, seenEls);
-          }
-
-          // WebFrame and WebWindow not supported yet
-          throw new lazy.error.UnsupportedOperationError();
-        }
-
-        // Within the JSWindowActorParent scope just pass-through the WebReference.
-        return obj;
-      }
-
-      // arbitrary objects
-      let rv = {};
-      for (let prop in obj) {
-        rv[prop] = evaluate.fromJSON(obj[prop], { seenEls, win });
-      }
-      return rv;
-  }
-};
-
-/**
- * Marshal arbitrary objects to JSON-safe primitives that can be
- * transported over the Marionette protocol or across processes.
- *
- * The marshaling rules are as follows:
- *
- * - Primitives are returned as is.
- *
- * - Collections, such as `Array<`, `NodeList`, `HTMLCollection`
- *   et al. are expanded to arrays and then recursed.
- *
- * - Elements that are not known WebElement's are added to the
- *   `NodeCache`. Once known, the elements'
- *   associated web element representation is returned.
- *
- * - In the parent process where a `NodeCache` is not provided
- *   WebElement references are passed through.
- *
- * - Objects with custom JSON representations, i.e. if they have
- *   a callable `toJSON` function, are returned verbatim.  This means
- *   their internal integrity _are not_ checked.  Be careful.
- *
- * -  Other arbitrary objects are first tested for cyclic references
- *    and then recursed into.
- *
- * @param {Object} obj
- *     Object to be marshaled.
- * @param {Object=} options
- * @param {NodeCache=} seenEls
- *     Known element store to look up Element instances from. If `seenEls` is
- *     an instance of `NodeCache`, return a WebElement reference.
- *     If the element isn't known yet a new reference will be created. In the
- *     parent process where `seenEls` is `undefined` the WebElement reference
- *     is passed through as arbitrary object.
- *
- * @return {Object}
- *     Same object as provided by `obj` with the DOM elements
- *     replaced by WebElement references.
- *
- * @throws {JavaScriptError}
- *     If an object contains cyclic references.
- * @throws {StaleElementReferenceError}
- *     If the element has gone stale, indicating it is no longer
- *     attached to the DOM.
- */
-evaluate.toJSON = function(obj, options = {}) {
-  const { seenEls } = options;
-
-  const t = Object.prototype.toString.call(obj);
-
-  if (t == "[object Undefined]" || t == "[object Null]") {
-    return null;
-  } else if (
-    // Primitive values
-    t == "[object Boolean]" ||
-    t == "[object Number]" ||
-    t == "[object String]"
-  ) {
-    return obj;
-  } else if (lazy.element.isCollection(obj)) {
-    // Array, NodeList, HTMLCollection, et al.
-    evaluate.assertAcyclic(obj);
-    return [...obj].map(el => evaluate.toJSON(el, { seenEls }));
-  } else if (lazy.element.isElement(obj) || lazy.element.isShadowRoot(obj)) {
-    // JSWindowActorChild scope: Convert DOM elements (eg. HTMLElement,
-    // XULElement, et al) and ShadowRoot instances to WebReference references.
-
-    const el = Cu.unwaiveXrays(obj);
-
-    // Don't create a reference for stale elements.
-    if (lazy.element.isStale(el)) {
-      throw new lazy.error.StaleElementReferenceError(
-        lazy.pprint`The element ${el} is no longer attached to the DOM`
-      );
-    }
-
-    const sharedId = seenEls.add(el);
-    return lazy.WebReference.from(el, sharedId).toJSON();
-  } else if (typeof obj.toJSON == "function") {
-    // custom JSON representation
-    let unsafeJSON = obj.toJSON();
-    return evaluate.toJSON(unsafeJSON, { seenEls });
-  }
-
-  // arbitrary objects + files
-  let rv = {};
-  for (let prop in obj) {
-    evaluate.assertAcyclic(obj[prop]);
-
-    try {
-      rv[prop] = evaluate.toJSON(obj[prop], { seenEls });
-    } catch (e) {
-      if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-        lazy.logger.debug(`Skipping ${prop}: ${e.message}`);
-      } else {
-        throw e;
-      }
-    }
-  }
-  return rv;
-};
-
-/**
  * Tests if an arbitrary object is cyclic.
  *
  * Element prototypes are by definition acyclic, even when they
- * contain cyclic references.  This is because `evaluate.toJSON`
+ * contain cyclic references.  This is because `evaluate.cloneJSON`
  * ensures they are marshaled as web elements.
  *
  * @param {*} value

@@ -9,7 +9,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   capture: "chrome://remote/content/shared/Capture.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
@@ -29,11 +28,9 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
   }
 
   async sendQuery(name, data) {
-    const serializedData = lazy.evaluate.toJSON(data);
-
     // return early if a dialog is opened
     const result = await Promise.race([
-      super.sendQuery(name, serializedData),
+      super.sendQuery(name, data),
       this.dialogOpenedPromise(),
     ]).finally(() => {
       this._resolveDialogOpened = null;
@@ -42,7 +39,7 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     if ("error" in result) {
       throw lazy.error.WebDriverError.fromJSON(result.error);
     } else {
-      return lazy.evaluate.fromJSON(result.data);
+      return result.data;
     }
   }
 
@@ -63,7 +60,7 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
   clickElement(webEl, capabilities) {
     return this.sendQuery("MarionetteCommandsParent:clickElement", {
       elem: webEl,
-      capabilities,
+      capabilities: capabilities.toJSON(),
     });
   }
 
@@ -149,28 +146,28 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
 
   async isElementDisplayed(webEl, capabilities) {
     return this.sendQuery("MarionetteCommandsParent:isElementDisplayed", {
-      capabilities,
+      capabilities: capabilities.toJSON(),
       elem: webEl,
     });
   }
 
   async isElementEnabled(webEl, capabilities) {
     return this.sendQuery("MarionetteCommandsParent:isElementEnabled", {
-      capabilities,
+      capabilities: capabilities.toJSON(),
       elem: webEl,
     });
   }
 
   async isElementSelected(webEl, capabilities) {
     return this.sendQuery("MarionetteCommandsParent:isElementSelected", {
-      capabilities,
+      capabilities: capabilities.toJSON(),
       elem: webEl,
     });
   }
 
   async sendKeysToElement(webEl, text, capabilities) {
     return this.sendQuery("MarionetteCommandsParent:sendKeysToElement", {
-      capabilities,
+      capabilities: capabilities.toJSON(),
       elem: webEl,
       text,
     });
@@ -179,7 +176,7 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
   async performActions(actions, capabilities) {
     return this.sendQuery("MarionetteCommandsParent:performActions", {
       actions,
-      capabilities,
+      capabilities: capabilities.toJSON(),
     });
   }
 
@@ -189,7 +186,7 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
 
   async singleTap(webEl, x, y, capabilities) {
     return this.sendQuery("MarionetteCommandsParent:singleTap", {
-      capabilities,
+      capabilities: capabilities.toJSON(),
       elem: webEl,
       x,
       y,
