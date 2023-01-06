@@ -128,14 +128,10 @@ function Spinner(props, context) {
       if (this._isArrayDiff(newItems, items)) {
         this.state = Object.assign(this.state, newState);
         this._updateItems();
-        this._scrollTo(newValue, true);
+        this._scrollTo(newValue, /* centering = */ true, /* smooth = */ false);
       } else if (newValue != value) {
         this.state = Object.assign(this.state, newState);
-        if (smoothScroll) {
-          this._smoothScrollTo(newValue, true);
-        } else {
-          this._scrollTo(newValue, true);
-        }
+        this._scrollTo(newValue, /* centering = */ true, smoothScroll);
       }
 
       this.elements.spinner.setAttribute(
@@ -525,48 +521,45 @@ function Spinner(props, context) {
     },
 
     /**
+     * Scroll to a value based on the index
+     *
+     * @param  {Number} index: Index number
+     * @param  {Boolean} smooth: Whether or not scroll should be smooth by default
+     */
+    _scrollToIndex(index, smooth) {
+      // Do nothing if the value is not found
+      if (index < 0) {
+        return;
+      }
+      this.state.index = index;
+      const element = this.elements.spinner.children[index];
+      if (!element) {
+        return;
+      }
+      element.scrollIntoView({
+        behavior: smooth ? "auto" : "instant",
+        block: "start",
+      });
+    },
+
+    /**
      * Scroll to a value.
      *
      * @param  {Number/String} value: Value to scroll to
      * @param  {Boolean} centering: Whether or not to scroll to center location
+     * @param  {Boolean} smooth: Whether or not scroll should be smooth by default
      */
-    _scrollTo(value, centering) {
+    _scrollTo(value, centering, smooth) {
       const index = this._getScrollIndex(value, centering);
-      // Do nothing if the value is not found
-      if (index > -1) {
-        this.state.index = index;
-        this.elements.spinner.scrollTop =
-          this.state.index * ITEM_HEIGHT * this.props.rootFontSize;
-      }
+      this._scrollToIndex(index, smooth);
     },
 
-    /**
-     * Smooth scroll to a value.
-     *
-     * @param  {Number/String} value: Value to scroll to
-     */
     _smoothScrollTo(value) {
-      const index = this._getScrollIndex(value);
-      // Do nothing if the value is not found
-      if (index > -1) {
-        this.state.index = index;
-        this._smoothScrollToIndex(this.state.index);
-      }
+      this._scrollTo(value, /* centering = */ false, /* smooth = */ true);
     },
 
-    /**
-     * Smooth scroll to a value based on the index
-     *
-     * @param  {Number} index: Index number
-     */
     _smoothScrollToIndex(index) {
-      const element = this.elements.spinner.children[index];
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
+      this._scrollToIndex(index, /* smooth = */ true);
     },
 
     /**
