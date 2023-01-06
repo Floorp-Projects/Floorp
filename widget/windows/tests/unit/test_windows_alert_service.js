@@ -83,11 +83,14 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     return s;
   };
 
-  let settingsAction = isBackgroundTaskMode
-    ? ""
-    : `<action content="Notification settings" arguments="${argumentString(
-        "settings"
-      )}" placement="contextmenu"/>`;
+  let settingsAction = hostport => {
+    return isBackgroundTaskMode
+      ? ""
+      : `<action content="Notification settings" arguments="${argumentString(
+          "settings",
+          hostport
+        )}" placement="contextmenu"/>`;
+  };
 
   let alertsService = Cc["@mozilla.org/system-alerts-service;1"]
     .getService(Ci.nsIAlertsService)
@@ -103,7 +106,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   ];
 
   let alert = makeAlert({ name, title, text });
-  let expected = `<toast launch="${argumentString()}"><visual><binding template="ToastText03"><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  let expected = `<toast launch="${argumentString()}"><visual><binding template="ToastText03"><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}</actions></toast>`;
   Assert.equal(
     expected.replace("<actions></actions>", "<actions/>"),
     alertsService.getXmlStringForWindowsAlert(alert),
@@ -111,7 +114,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   );
 
   alert = makeAlert({ name, title, text, imageURL });
-  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}</actions></toast>`;
   Assert.equal(
     expected.replace("<actions></actions>", "<actions/>"),
     alertsService.getXmlStringForWindowsAlert(alert),
@@ -119,7 +122,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   );
 
   alert = makeAlert({ name, title, text, imageURL, requireInteraction: true });
-  expected = `<toast scenario="reminder" launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  expected = `<toast scenario="reminder" launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}</actions></toast>`;
   Assert.equal(
     expected.replace("<actions></actions>", "<actions/>"),
     alertsService.getXmlStringForWindowsAlert(alert),
@@ -127,7 +130,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   );
 
   alert = makeAlert({ name, title, text, imageURL, actions });
-  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}<action content="title1" arguments="${argumentString(
+  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}<action content="title1" arguments="${argumentString(
     "action1"
   )}"/><action content="title2" arguments="${argumentString(
     "action2"
@@ -194,12 +197,20 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     actions: systemActions,
     principal,
   });
-  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText04"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text><text id="3" placement="attribution">via example.com</text></binding></visual><actions><action content="Disable notifications from example.com" arguments="${argumentString(
-    "snooze"
-  )}" placement="contextmenu"/>${settingsAction}<action content="dismissTitle" arguments="${argumentString(
-    "dismiss"
+  expected = `<toast launch="${argumentString(
+    null,
+    principaluri.hostPort
+  )}"><visual><binding template="ToastImageAndText04"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text><text id="3" placement="attribution">via example.com</text></binding></visual><actions><action content="Disable notifications from example.com" arguments="${argumentString(
+    "snooze",
+    principaluri.hostPort
+  )}" placement="contextmenu"/>${settingsAction(
+    principaluri.hostPort
+  )}<action content="dismissTitle" arguments="${argumentString(
+    "dismiss",
+    principaluri.hostPort
   )}"/><action content="snoozeTitle" arguments="${argumentString(
-    "snooze"
+    "snooze",
+    principaluri.hostPort
   )}"/></actions></toast>`;
   Assert.equal(
     expected,
