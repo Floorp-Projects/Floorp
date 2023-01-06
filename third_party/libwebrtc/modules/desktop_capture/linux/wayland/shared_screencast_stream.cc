@@ -176,11 +176,12 @@ void SharedScreenCastStreamPrivate::OnCoreError(void* data,
                                                 int seq,
                                                 int res,
                                                 const char* message) {
-  SharedScreenCastStreamPrivate* that =
+  SharedScreenCastStreamPrivate* stream =
       static_cast<SharedScreenCastStreamPrivate*>(data);
-  RTC_DCHECK(that);
+  RTC_DCHECK(stream);
 
   RTC_LOG(LS_ERROR) << "PipeWire remote error: " << message;
+  pw_thread_loop_signal(stream->pw_main_loop_, false);
 }
 
 void SharedScreenCastStreamPrivate::OnCoreInfo(void* data,
