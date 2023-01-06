@@ -1033,13 +1033,6 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   },
 
   /**
-   * Returns true for record IDs that are considered roots.
-   */
-  isRootRecordID(id) {
-    return lazy.ROOT_RECORD_ID_TO_GUID.hasOwnProperty(id);
-  },
-
-  /**
    * Removes all bookmarks and tombstones from the database. Sync calls this
    * method when it receives a command from a remote client to wipe all stored
    * data.
@@ -1208,63 +1201,6 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
     );
   },
 
-  async removeLivemark(livemarkInfo) {
-    let info = validateSyncBookmarkObject(
-      "BookmarkSyncUtils: removeLivemark",
-      livemarkInfo,
-      {
-        kind: {
-          required: true,
-          validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK,
-        },
-        recordId: { required: true },
-        parentRecordId: { required: true },
-      }
-    );
-
-    let guid = BookmarkSyncUtils.recordIdToGuid(info.recordId);
-    let parentGuid = BookmarkSyncUtils.recordIdToGuid(info.parentRecordId);
-
-    return lazy.PlacesUtils.withConnectionWrapper(
-      "BookmarkSyncUtils: removeLivemark",
-      async function(db) {
-        if (await GUIDMissing(guid)) {
-          // If the livemark doesn't exist in the database, insert a tombstone
-          // and bump its parent's change counter to ensure it's removed from
-          // the server in the current sync.
-          await db.executeTransaction(async function() {
-            await db.executeCached(
-              `
-              UPDATE moz_bookmarks SET
-                syncChangeCounter = syncChangeCounter + 1
-              WHERE guid = :parentGuid`,
-              { parentGuid }
-            );
-
-            await db.executeCached(
-              `
-              INSERT OR IGNORE INTO moz_bookmarks_deleted (guid, dateRemoved)
-              VALUES (:guid, ${lazy.PlacesUtils.toPRTime(Date.now())})`,
-              { guid }
-            );
-          });
-        } else {
-          await lazy.PlacesUtils.bookmarks.remove({
-            guid,
-            // `SYNC_REPARENT_REMOVED_FOLDER_CHILDREN` bumps the change counter for
-            // the child and its new parent, without incrementing the bookmark
-            // tracker's score.
-            source:
-              lazy.PlacesUtils.bookmarks.SOURCES
-                .SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
-          });
-        }
-
-        return pullSyncChanges(db, [guid, parentGuid]);
-      }
-    );
-  },
-
   /**
    * Returns `0` if no sensible timestamp could be found.
    * Otherwise, returns the earliest sensible timestamp between `existingMillis`
@@ -1305,15 +1241,6 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
     let hasMobileBookmarks = !!mobileChildGuids.length;
 
     Services.prefs.setBoolPref(MOBILE_BOOKMARKS_PREF, hasMobileBookmarks);
-  },
-
-  /**
-   * Fetches an array of GUIDs for items that have an annotation set with the
-   * given value.
-   */
-  async fetchGuidsWithAnno(anno, val) {
-    let db = await lazy.PlacesUtils.promiseDBConnection();
-    return fetchGuidsWithAnno(db, anno, val);
   },
 }));
 
@@ -1417,20 +1344,6 @@ var fetchChildGuids = async function(db, parentGuid) {
     { parentGuid }
   );
   return rows.map(row => row.getResultByName("guid"));
-};
-
-// A helper for whenever we want to know if a GUID doesn't exist in the places
-// database. Primarily used to detect orphans on incoming records.
-var GUIDMissing = async function(guid) {
-  try {
-    await lazy.PlacesUtils.promiseItemId(guid);
-    return false;
-  } catch (ex) {
-    if (ex.message == "no item found for the given GUID") {
-      return true;
-    }
-    throw ex;
-  }
 };
 
 // Legacy tag queries may use a `place:` URL that refers to the tag folder ID.
@@ -1621,19 +1534,6 @@ function validateNewBookmark(name, info) {
   });
 
   return insertInfo;
-}
-
-async function fetchGuidsWithAnno(db, anno, val) {
-  let rows = await db.executeCached(
-    `
-    SELECT b.guid FROM moz_items_annos a
-    JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-    JOIN moz_bookmarks b ON b.id = a.item_id
-    WHERE n.name = :anno AND
-          a.content = :val`,
-    { anno, val }
-  );
-  return rows.map(row => row.getResultByName("guid"));
 }
 
 function tagItem(item, tags) {
