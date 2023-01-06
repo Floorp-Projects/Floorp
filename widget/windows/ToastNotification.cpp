@@ -787,8 +787,9 @@ ToastNotification::CloseAlert(const nsAString& aAlertName,
     return NS_OK;
   }
 
-  if (!aContextClosed) {
-    // Hide the alert when not implicitly closed by tab/window closing.
+  if (!aContextClosed || handler->IsPrivate()) {
+    // Hide the alert when not implicitly closed by tab/window closing or when
+    // notification originated from a private tab.
     handler->HideAlert();
   }
 
