@@ -102,10 +102,8 @@
   fill: SelectedItemText;
 }
 
-/* Login form autocompletion with origin showing and generated passwords */
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper,
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper,
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .two-line-wrapper {
+/* Login form autocompletion */
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper {
   padding: 4px;
   padding-inline-start: 0;
 }
