@@ -41,6 +41,8 @@ class FileSystemBackgroundRequestHandler {
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemBackgroundRequestHandler)
 
+  void ClearActor();
+
   void Shutdown();
 
   const RefPtr<FileSystemManagerChild>& FileSystemManagerChildStrongRef() const;
