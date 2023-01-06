@@ -50,7 +50,9 @@
         'mixins': ['shards-6'],
       },
       'slow_peer_connection_unittests': {},
-      'svc_tests': {},
+      'svc_tests': {
+        'mixins': ['shards-4'],
+      },
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
@@ -102,7 +104,9 @@
         'mixins': ['shards-6'],
       },
       'slow_peer_connection_unittests': {},
-      'svc_tests': {},
+      'svc_tests': {
+        'mixins': ['shards-4'],
+      },
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
@@ -166,7 +170,9 @@
       'sdk_unittests': {
         'mixins': ['xcode_parallelization']
       },
-      'svc_tests': {},
+      'svc_tests': {
+        'mixins': ['shards-4'],
+      },
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
