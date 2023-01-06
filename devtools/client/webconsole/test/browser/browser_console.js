@@ -11,10 +11,6 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console.html?" +
   Date.now();
-const TEST_FILE =
-  "chrome://mochitests/content/browser/devtools/client/" +
-  "webconsole/test/browser/" +
-  "test-cu-reporterror.js";
 
 const TEST_XHR_ERROR_URI = `http://example.com/404.html?${Date.now()}`;
 
@@ -95,10 +91,6 @@ async function testMessages() {
     URL.createObjectURL(blob)
   );
 
-  // Check Cu.reportError stack.
-  // Use another js script to not depend on the test file line numbers.
-  Services.scriptloader.loadSubScript(TEST_FILE, hud.iframeWindow);
-
   const sandbox = new Cu.Sandbox(null, {
     wantComponents: false,
     wantGlobalProperties: ["URL", "URLSearchParams"],
@@ -107,12 +99,14 @@ async function testMessages() {
     `new Error("error from nuked globals");`,
     sandbox
   );
-  Cu.reportError(error);
+  console.error(error);
   Cu.nukeSandbox(sandbox);
 
   // Check privileged error message from a content process
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    Cu.reportError("privileged content process error message");
+    (async function() {
+      throw new Error("privileged content process error message");
+    })();
   });
 
   // Add a message from a content window.
@@ -196,11 +190,6 @@ async function testMessages() {
     hud,
     "message from chrome window",
     ".console-api"
-  );
-  await checkUniqueMessageExists(
-    hud,
-    "error thrown from test-cu-reporterror.js via Cu.reportError()",
-    ".error"
   );
   await checkUniqueMessageExists(hud, "error from nuked globals", ".error");
   await checkUniqueMessageExists(
