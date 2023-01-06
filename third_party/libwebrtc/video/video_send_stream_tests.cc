@@ -3387,7 +3387,12 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(
         ::testing::ValuesIn<Vp9TestParams>(
             {{"L2T1h", 2, 1, InterLayerPredMode::kOn},
-             {"L2T2_KEY_SHIFT", 2, 2, InterLayerPredMode::kOnKeyPic}}),
+             {"L2T2h", 2, 2, InterLayerPredMode::kOn},
+             {"L2T3h", 2, 3, InterLayerPredMode::kOn},
+             {"L2T2_KEY_SHIFT", 2, 2, InterLayerPredMode::kOnKeyPic},
+             {"L3T1h", 3, 1, InterLayerPredMode::kOn},
+             {"L3T2h", 3, 2, InterLayerPredMode::kOn},
+             {"L3T3h", 3, 3, InterLayerPredMode::kOn}}),
         ::testing::Values(true)),  // use_scalability_mode_identifier
     ParamInfoToStr);
 
@@ -3446,6 +3451,22 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
       }
     }
 
+    int GetRequiredDivisibility() const {
+      absl::optional<ScalabilityMode> scalability_mode =
+          ScalabilityModeFromString(params_.scalability_mode);
+      EXPECT_TRUE(scalability_mode);
+      absl::optional<ScalableVideoController::StreamLayersConfig> config =
+          ScalabilityStructureConfig(*scalability_mode);
+      EXPECT_TRUE(config);
+
+      int required_divisibility = 1;
+      for (size_t sl_idx = 0; sl_idx < params_.num_spatial_layers; ++sl_idx) {
+        required_divisibility = cricket::LeastCommonMultiple(
+            required_divisibility, config->scaling_factor_den[sl_idx]);
+      }
+      return required_divisibility;
+    }
+
     void ModifyVideoCaptureStartResolution(int* width,
                                            int* height,
                                            int* frame_rate) override {
@@ -3453,6 +3474,10 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
       expected_height_ = kHeight << (params_.num_spatial_layers - 1);
       *width = expected_width_;
       *height = expected_height_;
+      // Top layer may be adjusted to ensure evenly divided layers.
+      int divisibility = GetRequiredDivisibility();
+      expected_width_ -= (expected_width_ % divisibility);
+      expected_height_ -= (expected_height_ % divisibility);
     }
 
     void InspectHeader(const RTPVideoHeaderVP9& vp9) override {
