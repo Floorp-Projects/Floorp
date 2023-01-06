@@ -9203,6 +9203,9 @@ class MConstantProto : public MUnaryInstruction,
   HashNumber valueHash() const override;
 
   bool congruentTo(const MDefinition* ins) const override {
+    if (this == ins) {
+      return true;
+    }
     const MDefinition* receiverObject = getReceiverObject();
     return congruentIfOperandsEqual(ins) && receiverObject &&
            receiverObject == ins->toConstantProto()->getReceiverObject();
