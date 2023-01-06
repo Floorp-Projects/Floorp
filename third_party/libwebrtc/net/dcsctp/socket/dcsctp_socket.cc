@@ -1086,9 +1086,9 @@ void DcSctpSocket::HandleDataCommon(AnyDataChunk& chunk) {
   }
 
   if (tcb_->data_tracker().Observe(tsn, immediate_ack)) {
+    tcb_->reassembly_queue().Add(tsn, std::move(data));
     tcb_->reassembly_queue().MaybeResetStreamsDeferred(
         tcb_->data_tracker().last_cumulative_acked_tsn());
-    tcb_->reassembly_queue().Add(tsn, std::move(data));
     DeliverReassembledMessages();
   }
 }
