@@ -5,8 +5,12 @@
 package org.mozilla.fenix.tabstray
 
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.storage.sync.Tab
 
-interface TabsTrayInteractor {
+/**
+ * Interactor for responding to all user actions in the tabs tray.
+ */
+interface TabsTrayInteractor : SyncedTabsInteractor {
     /**
      * Set the current tray item to the clamped [position].
      *
@@ -53,7 +57,7 @@ interface TabsTrayInteractor {
 }
 
 /**
- * Interactor to be called for any tabs tray user actions.
+ * Default implementation of [TabsTrayInteractor].
  *
  * @property controller [TabsTrayController] to which user actions can be delegated for actual app update.
  */
@@ -90,5 +94,9 @@ class DefaultTabsTrayInteractor(
 
     override fun onInactiveDebugClicked(tabs: Collection<TabSessionState>) {
         controller.forceTabsAsInactive(tabs)
+    }
+
+    override fun onSyncedTabClicked(tab: Tab) {
+        controller.handleSyncedTabClicked(tab)
     }
 }

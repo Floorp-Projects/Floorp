@@ -15,11 +15,9 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.private.NoExtras
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -28,7 +26,6 @@ import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.ext.getTabSessionState
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
 import kotlin.coroutines.CoroutineContext
-import mozilla.components.browser.storage.sync.Tab as SyncTab
 
 /**
  * An interactor that helps with navigating to different parts of the app from the tabs tray.
@@ -85,11 +82,6 @@ interface NavigationInteractor {
      * Used when adding [TabSessionState]s as bookmarks.
      */
     fun onSaveToBookmarks(tabs: Collection<TabSessionState>)
-
-    /**
-     * Called when clicking on a SyncedTab item.
-     */
-    fun onSyncedTabClicked(tab: SyncTab)
 }
 
 /**
@@ -98,7 +90,6 @@ interface NavigationInteractor {
 @Suppress("LongParameterList", "TooManyFunctions")
 class DefaultNavigationInteractor(
     private val context: Context,
-    private val activity: HomeActivity,
     private val browserStore: BrowserStore,
     private val navController: NavController,
     private val dismissTabTray: () -> Unit,
@@ -243,16 +234,5 @@ class DefaultNavigationInteractor(
         }
 
         showBookmarkSnackbar(tabs.size)
-    }
-
-    override fun onSyncedTabClicked(tab: SyncTab) {
-        Events.syncedTabOpened.record(NoExtras())
-
-        dismissTabTray()
-        activity.openToBrowserAndLoad(
-            searchTermOrURL = tab.active().url,
-            newTab = true,
-            from = BrowserDirection.FromTabsTray,
-        )
     }
 }

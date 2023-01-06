@@ -10,16 +10,20 @@ import mozilla.components.browser.state.action.DebugAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.DelicateAction
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.GleanMetrics.Tab
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -28,8 +32,12 @@ import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
 import java.util.concurrent.TimeUnit
+import org.mozilla.fenix.GleanMetrics.Tab as GleanTab
 
-interface TabsTrayController {
+/**
+ * Controller for handling any actions in the tabs tray.
+ */
+interface TabsTrayController : SyncedTabsController {
 
     /**
      * Called to open a new tab.
@@ -107,8 +115,25 @@ interface TabsTrayController {
     fun handleMediaClicked(tab: SessionState)
 }
 
+/**
+ * Default implementation of [TabsTrayController].
+ *
+ * @property activity [HomeActivity] used to perform top-level app actions.
+ * @property trayStore [TabsTrayStore] used to read/update the [TabsTrayState].
+ * @property browserStore [BrowserStore] used to read/update the current [BrowserState].
+ * @property browsingModeManager [BrowsingModeManager] used to read/update the current [BrowsingMode].
+ * @property navController [NavController] used to navigate away from the tabs tray.
+ * @property navigateToHomeAndDeleteSession Lambda used to return to the Homescreen and delete the current session.
+ * @property navigationInteractor [NavigationInteractor] used to perform navigation actions with side effects.
+ * @property tabsUseCases Use case wrapper for interacting with tabs.
+ * @property selectTabPosition Lambda used to scroll the tabs tray to the desired position.
+ * @property dismissTray Lambda used to dismiss/minimize the tabs tray.
+ * @property showUndoSnackbarForTab Lambda used to display an UNDO Snackbar.
+ * @property showCancelledDownloadWarning Lambda used to display a cancelled download warning.
+ */
 @Suppress("TooManyFunctions", "LongParameterList")
 class DefaultTabsTrayController(
+    private val activity: HomeActivity,
     private val trayStore: TabsTrayStore,
     private val browserStore: BrowserStore,
     private val browsingModeManager: BrowsingModeManager,
@@ -121,7 +146,6 @@ class DefaultTabsTrayController(
     private val dismissTray: () -> Unit,
     private val showUndoSnackbarForTab: (Boolean) -> Unit,
     internal val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -> Unit,
-
 ) : TabsTrayController {
 
     override fun handleOpeningNewTab(isPrivate: Boolean) {
@@ -279,17 +303,28 @@ class DefaultTabsTrayController(
     override fun handleMediaClicked(tab: SessionState) {
         when (tab.mediaSessionState?.playbackState) {
             PlaybackState.PLAYING -> {
-                Tab.mediaPause.record(NoExtras())
+                GleanTab.mediaPause.record(NoExtras())
                 tab.mediaSessionState?.controller?.pause()
             }
 
             PlaybackState.PAUSED -> {
-                Tab.mediaPlay.record(NoExtras())
+                GleanTab.mediaPlay.record(NoExtras())
                 tab.mediaSessionState?.controller?.play()
             }
             else -> throw AssertionError(
                 "Play/Pause button clicked without play/pause state.",
             )
         }
+    }
+
+    override fun handleSyncedTabClicked(tab: Tab) {
+        Events.syncedTabOpened.record(NoExtras())
+
+        dismissTray()
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = tab.active().url,
+            newTab = true,
+            from = BrowserDirection.FromTabsTray,
+        )
     }
 }

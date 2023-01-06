@@ -91,7 +91,7 @@ class TrayPagerAdapter(
                         )
                     },
                     tabsTrayStore = tabsTrayStore,
-                    navigationInteractor = navInteractor,
+                    interactor = tabsTrayInteractor,
                 )
             }
             else -> throw IllegalStateException("Unknown viewType.")
