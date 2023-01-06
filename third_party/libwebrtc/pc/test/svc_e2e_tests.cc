@@ -244,9 +244,7 @@ MATCHER_P2(HasSpatialAndTemporalLayers,
 }
 
 TEST_P(SvcTest, ScalabilityModeSupported) {
-  // Track frames using an RTP header instead of modifying the encoded data as
-  // this doesn't seem to work for AV1.
-  std::string trials = "WebRTC-VideoFrameTrackingIdAdvertised/Enabled/";
+  std::string trials;
   if (UseDependencyDescriptor()) {
     trials += "WebRTC-DependencyDescriptorAdvertised/Enabled/";
   }
