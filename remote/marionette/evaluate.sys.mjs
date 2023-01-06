@@ -7,7 +7,6 @@ import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
 });
 
@@ -19,30 +18,6 @@ const FINISH = "finish";
 
 /** @namespace */
 export const evaluate = {};
-
-/**
- * Asserts that an arbitrary object is not cyclic.
- *
- * @param {Object} obj
- *     Object to test.  This assertion is only meaningful if passed
- *     an actual object or array.
- * @param {String=} msg
- *     Custom message to use for `error` if assertion fails.
- * @param {Error=} [error=JavaScriptError] error
- *     Error to throw if assertion fails.
- *
- * @throws {JavaScriptError}
- *     If the object is cyclic.
- */
-evaluate.assertAcyclic = function(
-  obj,
-  msg = "",
-  err = lazy.error.JavaScriptError
-) {
-  if (evaluate.isCyclic(obj)) {
-    throw new err(msg || "Cyclic object value");
-  }
-};
 
 /**
  * Evaluate a script in given sandbox.
@@ -188,71 +163,6 @@ evaluate.sandbox = function(
       clearTimeout(scriptTimeoutID);
       marionetteSandbox.window.removeEventListener("unload", unloadHandler);
     });
-};
-
-/**
- * Tests if an arbitrary object is cyclic.
- *
- * Element prototypes are by definition acyclic, even when they
- * contain cyclic references.  This is because `evaluate.cloneJSON`
- * ensures they are marshaled as web elements.
- *
- * @param {*} value
- *     Object to test for cyclical references.
- *
- * @return {boolean}
- *     True if object is cyclic, false otherwise.
- */
-evaluate.isCyclic = function(value, stack = []) {
-  let t = Object.prototype.toString.call(value);
-
-  // null
-  if (t == "[object Undefined]" || t == "[object Null]") {
-    return false;
-
-    // primitives
-  } else if (
-    t == "[object Boolean]" ||
-    t == "[object Number]" ||
-    t == "[object String]"
-  ) {
-    return false;
-
-    // HTMLElement, SVGElement, XULElement, et al.
-  } else if (lazy.element.isElement(value)) {
-    return false;
-
-    // Array, NodeList, HTMLCollection, et al.
-  } else if (lazy.element.isCollection(value)) {
-    if (stack.includes(value)) {
-      return true;
-    }
-    stack.push(value);
-
-    for (let i = 0; i < value.length; i++) {
-      if (evaluate.isCyclic(value[i], stack)) {
-        return true;
-      }
-    }
-
-    stack.pop();
-    return false;
-  }
-
-  // arbitrary objects
-  if (stack.includes(value)) {
-    return true;
-  }
-  stack.push(value);
-
-  for (let prop in value) {
-    if (evaluate.isCyclic(value[prop], stack)) {
-      return true;
-    }
-  }
-
-  stack.pop();
-  return false;
 };
 
 /**

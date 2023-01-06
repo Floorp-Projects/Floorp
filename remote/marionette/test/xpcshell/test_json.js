@@ -121,6 +121,38 @@ add_test(function test_clone_objects() {
   run_next_test();
 });
 
+add_test(function test_clone_сyclicReference() {
+  // object
+  Assert.throws(() => {
+    const obj = {};
+    obj.reference = obj;
+    json.clone(obj, nodeCache);
+  }, /JavaScriptError/);
+
+  // array
+  Assert.throws(() => {
+    const array = [];
+    array.push(array);
+    json.clone(array, nodeCache);
+  }, /JavaScriptError/);
+
+  // array in object
+  Assert.throws(() => {
+    const array = [];
+    array.push(array);
+    json.clone({ array }, nodeCache);
+  }, /JavaScriptError/);
+
+  // object in array
+  Assert.throws(() => {
+    const obj = {};
+    obj.reference = obj;
+    json.clone([obj], nodeCache);
+  }, /JavaScriptError/);
+
+  run_next_test();
+});
+
 add_test(function test_deserialize_generalTypes() {
   // null
   equal(json.deserialize(undefined, nodeCache, win), undefined);

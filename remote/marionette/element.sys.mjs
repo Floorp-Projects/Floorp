@@ -451,11 +451,11 @@ element.findClosest = function(startNode, selector) {
  *
  * @param {ElementIdentifier} id
  *     The WebElement reference identifier for a DOM element.
+ * @param {NodeCache} nodeCache
+ *     Node cache that holds already seen WebElement and ShadowRoot references.
  * @param {WindowProxy} win
  *     Current window, which may differ from the associated
  *     window of <var>el</var>.
- * @param {NodeCache} seenEls
- *     Known element store to look up Element instances from.
  *
  * @return {Element|null} The DOM element that the identifier was generated
  *     for, or null if the element does not still exist.
@@ -467,8 +467,8 @@ element.findClosest = function(startNode, selector) {
  *     If the element has gone stale, indicating its node document is no
  *     longer the active document or it is no longer attached to the DOM.
  */
-element.resolveElement = function(id, win, seenEls) {
-  const el = seenEls.resolve(id);
+element.resolveElement = function(id, nodeCache, win) {
+  const el = nodeCache.resolve(id);
 
   // For WebDriver classic only elements from the same browsing context
   // are allowed to be accessed.
