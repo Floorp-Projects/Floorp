@@ -65,11 +65,8 @@ if (!gFissionBrowser) {
 }
 
 if (AppConstants.NIGHTLY_BUILD) {
-  // Browser front-end, the blocklist is loaded from the child.
+  // Browser front-end.
   known_scripts.modules.add("resource:///actors/InteractionsChild.sys.mjs");
-  known_scripts.modules.add(
-    "resource:///modules/InteractionsBlocklist.sys.mjs"
-  );
 }
 
 // Items on this list *might* load when creating the process, as opposed to
