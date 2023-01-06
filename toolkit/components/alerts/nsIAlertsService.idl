@@ -277,8 +277,12 @@ interface nsIAlertsService : nsISupports
    * @param aName          The name of the notification to close. If no name
    *                       is provided then only a notification created with
    *                       no name (if any) will be closed.
+   * @param aContextClosed The notification was implicitly closed, e.g. by tab
+   *                       or window closure. This is necessary to track as some
+   *                       platforms intentionally leave the notification visible
+   *                       unless explicitly closed, e.g. by notification.close().
    */
-  void closeAlert([optional] in AString aName);
+  void closeAlert([optional] in AString aName, [optional] in boolean aContextClosed);
 
 };
 

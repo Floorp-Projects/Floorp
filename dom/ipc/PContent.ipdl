@@ -1139,7 +1139,7 @@ parent:
 
     async ShowAlert(nsIAlertNotification alert);
 
-    async CloseAlert(nsString name);
+    async CloseAlert(nsString name, bool contextClosed);
 
     async DisableNotifications(nsIPrincipal principal);
 

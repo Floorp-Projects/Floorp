@@ -255,7 +255,7 @@ class Notification : public DOMEventTargetHelper,
   nsresult Init();
   bool IsInPrivateBrowsing();
   void ShowInternal();
-  void CloseInternal();
+  void CloseInternal(bool aContextClosed = false);
 
   static NotificationPermission GetPermissionInternal(
       nsPIDOMWindowInner* aWindow, ErrorResult& rv);

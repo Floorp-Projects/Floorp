@@ -363,7 +363,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
 }
 
 NS_IMETHODIMP
-OSXNotificationCenter::CloseAlert(const nsAString& aAlertName) {
+OSXNotificationCenter::CloseAlert(const nsAString& aAlertName, bool aContextClosed) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* alertName = nsCocoaUtils::ToNSString(aAlertName);
