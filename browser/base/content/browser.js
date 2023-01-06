@@ -4432,6 +4432,11 @@ const BrowserSearch = {
 XPCOMUtils.defineConstant(this, "BrowserSearch", BrowserSearch);
 
 function CreateContainerTabMenu(event) {
+  // Do not open context menus within menus.
+  // Note that triggerNode is null if we're opened by long press.
+  if (event.target.triggerNode?.closest("menupopup")) {
+    return false;
+  }
   createUserContextMenu(event, {
     useAccessKeys: false,
     showDefaultTab: true,
