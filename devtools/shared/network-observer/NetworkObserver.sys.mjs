@@ -466,6 +466,7 @@ export class NetworkObserver {
             remotePort: "",
             status,
             statusText,
+            bodySize: 0,
             headersSize: 0,
             waitingTime: 0,
           },
@@ -814,12 +815,18 @@ export class NetworkObserver {
 
       httpActivity = {
         id: gSequenceId(),
+        // The nsIChannel for which this activity object was created.
         channel,
-        // see #onRequestBodySent()
+        // See #onRequestBodySent()
         charset,
+        // The postData sent by this request.
         sentBody: null,
+        // The URL for the current channel.
         url: channel.URI.spec,
-        headersSize: null,
+        // The encoded response body size.
+        bodySize: 0,
+        // The response headers size.
+        headersSize: 0,
         // needed for host specific security info
         hostname: channel.URI.host,
         discardRequestBody: !this.#saveRequestAndResponseBodies,
@@ -922,7 +929,6 @@ export class NetworkObserver {
 
     // Add listener for the response body.
     const newListener = new lazy.NetworkResponseListener(
-      this,
       httpActivity,
       this.#decodedCertificateCache
     );
@@ -1006,20 +1012,41 @@ export class NetworkObserver {
     // that is not trivial to do in an accurate manner. Hence, we save the
     // response headers in this.#httpResponseExaminer().
 
+    // Extract the protocol (called httpVersion here), response's status and
+    // statusText from the raw headers.
     const headers = extraStringData.split(/\r\n|\n|\r/);
     const statusLine = headers.shift();
     const statusLineArray = statusLine.split(" ");
+    httpActivity.httpVersion = statusLineArray.shift();
+    httpActivity.responseStatus = statusLineArray.shift();
+    httpActivity.responseStatusText = statusLineArray.join(" ");
+    httpActivity.headersSize = extraStringData.length;
 
+    // Discard the response body for known response statuses.
+    switch (parseInt(httpActivity.responseStatus, 10)) {
+      case HTTP_MOVED_PERMANENTLY:
+      case HTTP_FOUND:
+      case HTTP_SEE_OTHER:
+      case HTTP_TEMPORARY_REDIRECT:
+        httpActivity.discardResponseBody = true;
+        break;
+    }
+
+    // Build the response object
     const response = {};
-    response.httpVersion = statusLineArray.shift();
+    response.discardResponseBody = httpActivity.discardResponseBody;
+    response.httpVersion = httpActivity.httpVersion;
     response.remoteAddress = httpActivity.channel.remoteAddress;
     response.remotePort = httpActivity.channel.remotePort;
-    response.status = statusLineArray.shift();
-    response.statusText = statusLineArray.join(" ");
-    response.headersSize = extraStringData.length;
+    response.status = httpActivity.responseStatus;
+    response.statusText = httpActivity.responseStatusText;
+    response.bodySize = httpActivity.bodySize;
+    response.headersSize = httpActivity.headersSize;
+    response.transferredSize = httpActivity.bodySize + httpActivity.headersSize;
     response.waitingTime = this.#convertTimeToMs(
       this.#getWaitTiming(httpActivity.timings)
     );
+
     // Mime type needs to be sent on response start for identifying an sse channel.
     const contentType = headers.find(header => {
       const lowerName = header.toLowerCase();
@@ -1029,21 +1056,6 @@ export class NetworkObserver {
     if (contentType) {
       response.mimeType = contentType.slice("Content-Type: ".length);
     }
-
-    httpActivity.responseStatus = response.status;
-    httpActivity.headersSize = response.headersSize;
-
-    // Discard the response body for known response statuses.
-    switch (parseInt(response.status, 10)) {
-      case HTTP_MOVED_PERMANENTLY:
-      case HTTP_FOUND:
-      case HTTP_SEE_OTHER:
-      case HTTP_TEMPORARY_REDIRECT:
-        httpActivity.discardResponseBody = true;
-        break;
-    }
-
-    response.discardResponseBody = httpActivity.discardResponseBody;
 
     httpActivity.owner.addResponseStart(response, extraStringData);
   }
