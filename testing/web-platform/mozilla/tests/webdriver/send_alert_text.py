@@ -1,5 +1,5 @@
 from tests.support.asserts import assert_error
-from tests.support.authentication import basic_authentication
+from tests.support.http_handlers.authentication import basic_authentication
 
 
 def send_alert_text(session, text=None):
