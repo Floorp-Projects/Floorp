@@ -34,9 +34,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/NetUtil.jsm"
 );
 
-const { getString, showFilePicker } = ChromeUtils.import(
-  "resource://devtools/client/styleeditor/StyleEditorUtil.jsm"
-);
+import {
+  getString,
+  showFilePicker,
+} from "resource://devtools/client/styleeditor/StyleEditorUtil.sys.mjs";
 
 const LOAD_ERROR = "error-load";
 const SAVE_ERROR = "error-save";

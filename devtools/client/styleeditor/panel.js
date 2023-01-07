@@ -9,11 +9,11 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 var EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-var { StyleEditorUI } = ChromeUtils.import(
-  "resource://devtools/client/styleeditor/StyleEditorUI.jsm"
+var { StyleEditorUI } = ChromeUtils.importESModule(
+  "resource://devtools/client/styleeditor/StyleEditorUI.sys.mjs"
 );
-var { getString } = ChromeUtils.import(
-  "resource://devtools/client/styleeditor/StyleEditorUtil.jsm"
+var { getString } = ChromeUtils.importESModule(
+  "resource://devtools/client/styleeditor/StyleEditorUtil.sys.mjs"
 );
 
 var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox, commands) {
