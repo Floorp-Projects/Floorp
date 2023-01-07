@@ -300,7 +300,7 @@ describe("#CacheListAttachedOAuthClients", () => {
     globals.set("fxAccounts", fakeFxAccount);
     authClientsCache = QueryCache.queries.ListAttachedOAuthClients;
     sandbox
-      .stub(global.fxAccounts, "listAttachedOAuthClients")
+      .stub(fxAccounts, "listAttachedOAuthClients")
       .returns(Promise.resolve({}));
   });
 
@@ -314,21 +314,21 @@ describe("#CacheListAttachedOAuthClients", () => {
     clock.tick(fourHours);
 
     await authClientsCache.get();
-    assert.calledOnce(global.fxAccounts.listAttachedOAuthClients);
+    assert.calledOnce(fxAccounts.listAttachedOAuthClients);
 
     clock.tick(fourHours);
     await authClientsCache.get();
-    assert.calledTwice(global.fxAccounts.listAttachedOAuthClients);
+    assert.calledTwice(fxAccounts.listAttachedOAuthClients);
   });
 
   it("should not make additional request before 4 hours", async () => {
     clock.tick(fourHours);
 
     await authClientsCache.get();
-    assert.calledOnce(global.fxAccounts.listAttachedOAuthClients);
+    assert.calledOnce(fxAccounts.listAttachedOAuthClients);
 
     await authClientsCache.get();
-    assert.calledOnce(global.fxAccounts.listAttachedOAuthClients);
+    assert.calledOnce(fxAccounts.listAttachedOAuthClients);
   });
 });
 describe("ASRouterTargeting", () => {
