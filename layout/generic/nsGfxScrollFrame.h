@@ -1034,7 +1034,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   nsIFrame* GetScrolledFrame() const final {
     return mHelper.GetScrolledFrame();
   }
-  mozilla::ScrollStyles GetScrollStyles() const override {
+  mozilla::ScrollStyles GetScrollStyles() const final {
     return mHelper.GetScrollStylesFromFrame();
   }
   bool IsForTextControlWithNoScrollbars() const final {
