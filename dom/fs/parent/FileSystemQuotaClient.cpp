@@ -6,7 +6,6 @@
 
 #include "FileSystemQuotaClient.h"
 
-#include "GetDirectoryForOrigin.h"
 #include "ResultStatement.h"
 #include "datamodel/FileSystemDatabaseManager.h"
 #include "datamodel/FileSystemFileManager.h"
@@ -157,7 +156,6 @@ Result<quota::UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   MOZ_ASSERT(aPersistenceType ==
              quota::PersistenceType::PERSISTENCE_TYPE_DEFAULT);
 
-#if FS_QUOTA_MANAGEMENT_ENABLED
   quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
@@ -165,28 +163,6 @@ Result<quota::UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   // allow it. Use the cached value instead.
   return quotaManager->GetUsageForClient(aPersistenceType, aOriginMetadata,
                                          quota::Client::FILESYSTEM);
-#else
-  const Origin& origin = aOriginMetadata.mOrigin;
-
-  {
-    QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& databaseFile,
-                   data::GetDatabaseFile(origin).mapErr(toNSResult));
-
-    bool exists = false;
-    QM_TRY(MOZ_TO_RESULT(databaseFile->Exists(&exists)));
-    // If database doesn't already exist, we do not create it
-    if (!exists) {
-      return quota::UsageInfo();
-    }
-  }
-
-  // Creating connection will create and write to the database file
-  QM_TRY_INSPECT(const ResultConnection& conn,
-                 GetStorageConnection(origin).mapErr(toNSResult));
-
-  return data::FileSystemDatabaseManager::GetUsage(conn, origin)
-      .mapErr(toNSResult);
-#endif
 }
 
 void QuotaClient::OnOriginClearCompleted(

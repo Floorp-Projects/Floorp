@@ -8,7 +8,6 @@
 
 #include "FileSystemDatabaseManager.h"
 #include "FileSystemStreamCallbacks.h"
-#include "GetDirectoryForOrigin.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
@@ -147,9 +146,6 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
     }
   }
 
-  // XXX This can be enabled once the integration with quota manager is
-  // finished.
-#if FS_QUOTA_MANAGEMENT_ENABLED
   QM_TRY_UNWRAP(
       nsCOMPtr<nsIRandomAccessStream> stream,
       CreateFileRandomAccessStream(quota::PERSISTENCE_TYPE_DEFAULT,
@@ -157,10 +153,6 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
                                    quota::Client::FILESYSTEM, file, -1, -1,
                                    nsIFileRandomAccessStream::DEFER_OPEN),
       IPC_OK(), reportError);
-#else
-  QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
-                NS_NewLocalFileRandomAccessStream(file), IPC_OK(), reportError);
-#endif
 
   EnsureStreamCallbacks();
 
