@@ -4179,8 +4179,9 @@ void gfxFont::CreateVerticalMetrics() {
                            ? GetGlyph(kWaterIdeograph, 0)
                            : shaper->GetNominalGlyph(kWaterIdeograph);
         int32_t advance = shaper->GetGlyphVAdvance(gid);
+        // Convert 16.16 fixed-point advance from the shaper to a float.
         metrics->ideographicWidth =
-            advance < 0 ? metrics->aveCharWidth : mFUnitsConvFactor * advance;
+            advance < 0 ? metrics->aveCharWidth : advance / 65536.0;
       }
     }
   }
