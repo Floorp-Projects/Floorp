@@ -39,6 +39,7 @@ extensions.on("uninstalling", (msg, extension) => {
   if (extension.uninstallURL) {
     let browser = windowTracker.topWindow.gBrowser;
     browser.addTab(extension.uninstallURL, {
+      disallowInheritPrincipal: true,
       relatedToCurrent: true,
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
