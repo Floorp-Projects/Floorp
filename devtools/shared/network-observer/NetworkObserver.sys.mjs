@@ -462,6 +462,8 @@ export class NetworkObserver {
         httpActivity.owner.addResponseStart(
           {
             httpVersion,
+            protocol: this.#getProtocol(httpActivity),
+            fromCache: this.#isFromCache(httpActivity),
             remoteAddress: "",
             remotePort: "",
             status,
@@ -1036,6 +1038,8 @@ export class NetworkObserver {
     const response = {};
     response.discardResponseBody = httpActivity.discardResponseBody;
     response.httpVersion = httpActivity.httpVersion;
+    response.protocol = this.#getProtocol(httpActivity);
+    response.fromCache = this.#isFromCache(httpActivity);
     response.remoteAddress = httpActivity.channel.remoteAddress;
     response.remotePort = httpActivity.channel.remotePort;
     response.status = httpActivity.responseStatus;
@@ -1081,6 +1085,66 @@ export class NetworkObserver {
         serverTimings
       );
     }
+  }
+
+  /**
+   * Get the protocol for the provided httpActivity. Either the ALPN negotiated
+   * protocol or as a fallback a protocol computed from the scheme and the
+   * response status.
+   *
+   * TODO: The `protocol` is similar to another response property called
+   * `httpVersion`. `httpVersion` is uppercase and purely computed from the
+   * response status, whereas `protocol` uses nsIHttpChannel.protocolVersion by
+   * default and otherwise falls back on `httpVersion`. Ideally we should merge
+   * the two properties.
+   *
+   * @param {Object} httpActivity
+   *     The httpActivity object for which we need to get the protocol.
+   *
+   * @returns {string}
+   *     The protocol as a string.
+   */
+  #getProtocol(httpActivity) {
+    const { channel, httpVersion } = httpActivity;
+    let protocol = "";
+    try {
+      const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+      // protocolVersion corresponds to ALPN negotiated protocol.
+      protocol = httpChannel.protocolVersion;
+    } catch (e) {
+      // Ignore errors reading protocolVersion.
+    }
+
+    if (["", "unknown"].includes(protocol)) {
+      protocol = channel.URI.scheme;
+      if (
+        typeof httpVersion == "string" &&
+        (protocol === "http" || protocol === "https")
+      ) {
+        protocol = httpVersion.toLowerCase();
+      }
+    }
+
+    return protocol;
+  }
+
+  /**
+   * Check if the channel data for the provided http activity is loaded from the
+   * cache or not.
+   *
+   * @param {Object} httpActivity
+   *     The httpActivity object for which we need to check the cache status.
+   *
+   * @returns {boolean}
+   *     True if the channel data is loaded from the cache, false otherwise.
+   */
+  #isFromCache(httpActivity) {
+    const { channel } = httpActivity;
+    if (channel instanceof Ci.nsICacheInfoChannel) {
+      return channel.isFromCache();
+    }
+
+    return false;
   }
 
   #getBlockedTiming(timings) {

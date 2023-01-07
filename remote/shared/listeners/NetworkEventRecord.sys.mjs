@@ -21,6 +21,7 @@ export class NetworkEventRecord {
   #requestData;
   #requestId;
   #responseData;
+  #wrappedChannel;
 
   /**
    *
@@ -36,31 +37,49 @@ export class NetworkEventRecord {
     const browsingContext = BrowsingContext.get(networkEvent.browsingContextID);
     this.#contextId = lazy.TabManager.getIdForBrowsingContext(browsingContext);
     this.#channel = channel;
+    this.#wrappedChannel = ChannelWrapper.get(channel);
+
     this.#networkListener = networkListener;
 
     // The wrappedChannel id remains identical across redirects, whereas
     // nsIChannel.channelId is different for each and every request.
-    const wrappedChannel = ChannelWrapper.get(channel);
-    this.#requestId = wrappedChannel.id.toString();
+    this.#requestId = this.#wrappedChannel.id.toString();
 
+    // See the RequestData type definition for the full list of properties that
+    // should be set on this object.
     this.#requestData = {
-      bodySize: 0,
+      bodySize: null,
       cookies: [],
       headers: [],
-      headersSize: networkEvent.headersSize || null,
-      method: networkEvent.method || null,
+      headersSize: networkEvent.headersSize,
+      method: networkEvent.method,
       request: this.#requestId,
       timings: {},
-      url: networkEvent.url || null,
+      url: networkEvent.url,
+    };
+
+    // See the ResponseData type definition for the full list of properties that
+    // should be set on this object.
+    this.#responseData = {
+      // encoded size (body)
+      bodySize: null,
+      content: {
+        // decoded size
+        size: null,
+      },
+      // encoded size (headers)
+      headersSize: null,
+      url: networkEvent.url,
     };
   }
 
   /**
-   * This method has to be defined to match the event owner API of the
-   * NetworkObserver. It will only be called once per network event record, so
-   * despite the name we will simply store the headers and rawHeaders.
-   *
    * Set network request headers.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * It will only be called once per network event record, so
+   * despite the name we will simply store the headers and rawHeaders.
    *
    * @param {Array} headers
    *     The request headers array.
@@ -68,22 +87,27 @@ export class NetworkEventRecord {
    *     The raw headers source.
    */
   addRequestHeaders(headers, rawHeaders) {
-    this.#requestData.headers = headers;
+    if (typeof headers == "object") {
+      this.#requestData.headers = headers;
+    }
     this.#requestData.rawHeaders = rawHeaders;
   }
 
   /**
    * Set network request cookies.
    *
-   * This method has to be defined to match the event owner API of the
-   * NetworkObserver. It will only be called once per network event record, so
+   * Required API for a NetworkObserver event owner.
+   *
+   * It will only be called once per network event record, so
    * despite the name we will simply store the cookies.
    *
    * @param {Array} cookies
    *     The request cookies array.
    */
   addRequestCookies(cookies) {
-    this.#requestData.cookies = cookies;
+    if (typeof cookies == "object") {
+      this.#requestData.cookies = cookies;
+    }
 
     // By design, the NetworkObserver will synchronously create a "network event"
     // then call addRequestHeaders and finally addRequestCookies.
@@ -94,16 +118,143 @@ export class NetworkEventRecord {
     this.#emitBeforeRequestSent();
   }
 
-  // Expected network event owner API from the NetworkObserver.
-  addEventTimings() {}
-  addRequestPostData() {}
-  addResponseCache() {}
-  addResponseContent() {}
-  addResponseCookies() {}
-  addResponseHeaders() {}
-  addResponseStart() {}
-  addSecurityInfo() {}
-  addServerTimings() {}
+  /**
+   * Add network request POST data.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * @param {Object} postData
+   *     The request POST data.
+   */
+  addRequestPostData(postData) {
+    // Only the postData size is needed for RemoteAgent consumers.
+    this.#requestData.bodySize = postData.size;
+  }
+
+  /**
+   * Add the initial network response information.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * @param {Object} response
+   *     The response information.
+   * @param {string} rawHeaders
+   *     The raw headers source.
+   */
+  addResponseStart(response, rawHeaders) {
+    this.#responseData = {
+      ...this.#responseData,
+      fromCache: response.fromCache,
+      bodySize: response.bodySize,
+      // Note: at this point we only have access to the headers size. Parsed
+      // headers will be added in addResponseHeaders.
+      headersSize: response.headersSize,
+      bytesReceived: response.transferredSize,
+      mimeType: response.mimeType,
+      protocol: response.protocol,
+      status: parseInt(response.status),
+      statusText: response.statusText,
+    };
+  }
+
+  /**
+   * Add connection security information.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {Object} info
+   *     The object containing security information.
+   * @param {boolean} isRacing
+   *     True if the corresponding channel raced the cache and network requests.
+   */
+  addSecurityInfo(info, isRacing) {}
+
+  /**
+   * Add network response headers.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * @param {Array} headers
+   *     The response headers array.
+   */
+  addResponseHeaders(headers) {
+    this.#responseData.headers = headers;
+    // This should be triggered when all headers have been received, matching
+    // the WebDriverBiDi response started trigger in `4.6. HTTP-network fetch`
+    // from the fetch specification, based on the PR visible at
+    // https://github.com/whatwg/fetch/pull/1540
+    this.#emitResponseStarted();
+  }
+
+  /**
+   * Add network response cookies.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {Array} cookies
+   *     The response cookies array.
+   */
+  addResponseCookies(cookies) {}
+
+  /**
+   * Add network event timings.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {number} total
+   *     The total time for the request.
+   * @param {Object} timings
+   *     The har-like timings.
+   * @param {Object} offsets
+   *     The har-like timings, but as offset from the request start.
+   * @param {Array} serverTimings
+   *     The server timings.
+   */
+  addEventTimings(total, timings, offsets, serverTimings) {}
+
+  /**
+   * Add response cache entry.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {Object} options
+   *     An object which contains a single responseCache property.
+   */
+  addResponseCache(options) {}
+
+  /**
+   * Add response content.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {Object} response
+   *     An object which represents the response content.
+   * @param {Object} responseInfo
+   *     Additional meta data about the response.
+   */
+  addResponseContent(response, responseInfo) {}
+
+  /**
+   * Add server timings.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {Array} serverTimings
+   *     The server timings.
+   */
+  addServerTimings(serverTimings) {}
 
   #emitBeforeRequestSent() {
     const timedChannel = this.#channel.QueryInterface(Ci.nsITimedChannel);
@@ -113,7 +264,19 @@ export class NetworkEventRecord {
       contextId: this.#contextId,
       redirectCount: timedChannel.redirectCount,
       requestData: this.#requestData,
-      requestId: this.#requestId,
+      timestamp: Date.now(),
+    });
+  }
+
+  #emitResponseStarted() {
+    const timedChannel = this.#channel.QueryInterface(Ci.nsITimedChannel);
+    this.#requestData.timings = this.#getTimingsFromTimedChannel(timedChannel);
+
+    this.#networkListener.emit("response-started", {
+      contextId: this.#contextId,
+      redirectCount: timedChannel.redirectCount,
+      requestData: this.#requestData,
+      responseData: this.#responseData,
       timestamp: Date.now(),
     });
   }
@@ -129,8 +292,9 @@ export class NetworkEventRecord {
    * @param {number} requestTime
    *     High definition timestamp for the request start time relative from the
    *     time origin.
-   * @returns {number} High definition timestamp for the request timing relative
-   *     to the start time of the request, or 0 if the provided timing was 0.
+   * @returns {number}
+   *     High definition timestamp for the request timing relative to the start
+   *     time of the request, or 0 if the provided timing was 0.
    */
   #convertTimestamp(timing, requestTime) {
     if (timing == 0) {
