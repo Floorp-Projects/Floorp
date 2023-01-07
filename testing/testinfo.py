@@ -403,12 +403,25 @@ class TestInfoReport(TestInfo):
         startday = endday - datetime.timedelta(days=30)
         while startday < endday:
             nextday = startday + datetime.timedelta(days=1)
+            retries = 2
+            done = False
             if str(nextday) not in testrundata.keys():
-                url = "https://treeherder.mozilla.org/api/groupsummary/"
-                url += "?startday=%s&endday=%s" % (startday.date(), nextday.date())
-                r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
-                r.raise_for_status()
-                testrundata[str(nextday.date())] = r.json()
+                while not done:
+                    url = "https://treeherder.mozilla.org/api/groupsummary/"
+                    url += "?startdate=%s&enddate=%s" % (
+                        startday.date(),
+                        nextday.date(),
+                    )
+                    try:
+                        r = requests.get(
+                            url, headers={"User-agent": "mach-test-info/1.0"}
+                        )
+                        done = True
+                    except requests.exceptions.HTTPError:
+                        retries -= 1
+                        if retries <= 0:
+                            r.raise_for_status()
+                    testrundata[str(nextday.date())] = r.json()
             startday = nextday
 
         return testrundata
