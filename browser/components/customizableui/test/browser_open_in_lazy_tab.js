@@ -16,24 +16,12 @@ add_task(async function open_customize_mode_in_lazy_tab() {
   ]);
   is(tab.label, title, "Tab should have correct title");
 
-  let tabLoaded = new Promise(resolve => {
-    gBrowser.addTabsProgressListener({
-      async onLocationChange(aBrowser) {
-        if (tab.linkedBrowser == aBrowser) {
-          gBrowser.removeTabsProgressListener(this);
-          await Promise.resolve();
-          resolve();
-        }
-      },
-    });
-  });
   let customizePromise = BrowserTestUtils.waitForEvent(
     gNavToolbox,
     "customizationready"
   );
   gCustomizeMode.enter();
   await customizePromise;
-  await tabLoaded;
 
   is(
     tab.getAttribute("customizemode"),
