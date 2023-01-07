@@ -312,7 +312,7 @@ TestRunner.generateFailureList = function() {
 // This delimiter is used to avoid interleaving Mochitest/Gecko logs.
 var LOG_DELIMITER = "\ue175\uee31\u2c32\uacbf";
 
-// A log callback for StructuredLog.jsm
+// A log callback for StructuredLog.sys.mjs
 TestRunner._dumpMessage = function(message) {
   var str;
 
@@ -340,7 +340,7 @@ TestRunner._dumpMessage = function(message) {
   }
 };
 
-// From https://searchfox.org/mozilla-central/source/testing/modules/StructuredLog.jsm
+// From https://searchfox.org/mozilla-central/source/testing/modules/StructuredLog.sys.mjs
 TestRunner.structuredLogger = new StructuredLogger(
   "mochitest",
   TestRunner._dumpMessage,
