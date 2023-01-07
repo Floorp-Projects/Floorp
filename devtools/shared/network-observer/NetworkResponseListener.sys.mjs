@@ -30,8 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  *      nsitraceablechannel-intercept-http-traffic/
  *
  * @constructor
- * @param {NetworkObserver} networkObserver
- *        The NetworkObserver instance which created this listener.
  * @param {Object} httpActivity
  *        HttpActivity object associated with this request. See NetworkObserver
  *        more information.
@@ -41,11 +39,18 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  */
 export class NetworkResponseListener {
   /**
-   * The uncompressed, decoded response body size.
+   * The compressed and encoded response body size. Will progressively increase
+   * until the full response is received.
    *
    * @type {Number}
    */
   #bodySize = 0;
+  /**
+   * The uncompressed, decoded response body size.
+   *
+   * @type {Number}
+   */
+  #decodedBodySize = 0;
   /**
    * nsIStreamListener created by nsIStreamConverterService.asyncConvertData
    *
@@ -90,12 +95,6 @@ export class NetworkResponseListener {
    */
   #offset = 0;
   /**
-   * The NetworkObserver instance which created this listener.
-   *
-   * @type {NetworkObserver}
-   */
-  #networkObserver;
-  /**
    * Stores the received data as a string.
    *
    * @type {string}
@@ -115,12 +114,6 @@ export class NetworkResponseListener {
    */
   #sink = null;
   /**
-   * Response size on the wire, potentially compressed / encoded.
-   *
-   * @type {Number}
-   */
-  #transferredSize = null;
-  /**
    * Indicates if the response had a size greater than response body limit.
    *
    * @type {boolean}
@@ -134,8 +127,7 @@ export class NetworkResponseListener {
    */
   #wrappedNotificationCallbacks;
 
-  constructor(networkObserver, httpActivity, decodedCertificateCache) {
-    this.#networkObserver = networkObserver;
+  constructor(httpActivity, decodedCertificateCache) {
     this.#httpActivity = httpActivity;
     this.#decodedCertificateCache = decodedCertificateCache;
 
@@ -224,7 +216,7 @@ export class NetworkResponseListener {
   onDataAvailable(request, inputStream, offset, count) {
     const data = lazy.NetUtil.readInputStreamToString(inputStream, count);
 
-    this.#bodySize += count;
+    this.#decodedBodySize += count;
 
     if (!this.#httpActivity.discardResponseBody) {
       const limit = Services.prefs.getIntPref(
@@ -416,7 +408,8 @@ export class NetworkResponseListener {
    * size on the wire, which may be compressed / encoded.
    */
   onProgress(request, progress, progressMax) {
-    this.#transferredSize = progress;
+    this.#bodySize = progress;
+
     // Need to forward as well to keep things like Download Manager's progress
     // bar working properly.
     this.#forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
@@ -493,9 +486,13 @@ export class NetworkResponseListener {
       text: data || "",
     };
 
-    response.size = this.#bodySize;
-    response.transferredSize =
-      this.#transferredSize + this.#httpActivity.headersSize;
+    response.bodySize = this.#bodySize;
+    response.decodedBodySize = this.#decodedBodySize;
+    // TODO: Stop exposing the decodedBodySize as `size` which is ambiguous.
+    // Consumers should use `decodedBodySize` instead. See Bug 1808560.
+    response.size = this.#decodedBodySize;
+    response.headersSize = this.#httpActivity.headersSize;
+    response.transferredSize = this.#bodySize + this.#httpActivity.headersSize;
 
     try {
       response.mimeType = this.#request.contentType;
@@ -552,7 +549,6 @@ export class NetworkResponseListener {
     this.#inputStream = null;
     this.#converter = null;
     this.#request = null;
-    this.#networkObserver = null;
 
     this.#isDestroyed = true;
   }
