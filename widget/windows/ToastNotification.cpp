@@ -446,6 +446,9 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   bool textClickable;
   MOZ_TRY(aAlert->GetTextClickable(&textClickable));
 
+  bool isSilent;
+  MOZ_TRY(aAlert->GetSilent(&isSilent));
+
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
@@ -471,7 +474,7 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), aAlertListener, name, cookie, title, text, hostPort,
       textClickable, requireInteraction, actions, isSystemPrincipal, launchUrl,
-      inPrivateBrowsing);
+      inPrivateBrowsing, isSilent);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   MOZ_LOG(sWASLog, LogLevel::Debug,
@@ -518,6 +521,9 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   bool textClickable;
   MOZ_TRY(aAlert->GetTextClickable(&textClickable));
 
+  bool isSilent;
+  MOZ_TRY(aAlert->GetSilent(&isSilent));
+
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
@@ -541,7 +547,7 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), nullptr /* aAlertListener */, name, cookie, title,
       text, hostPort, textClickable, requireInteraction, actions,
-      isSystemPrincipal, launchUrl, inPrivateBrowsing);
+      isSystemPrincipal, launchUrl, inPrivateBrowsing, isSilent);
 
   // Usually, this will be empty during testing, making test output
   // deterministic.
