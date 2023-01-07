@@ -327,7 +327,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       ],
     };
     it("should not set url for default qrcode svg", async () => {
-      sandbox.stub(AppConstants, "isChinaRepack").returns(false);
+      sandbox.stub(global.AppConstants, "isChinaRepack").returns(false);
       const data = await AboutWelcomeDefaults.prepareContentForReact(
         TEST_CONTENT
       );
@@ -338,7 +338,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
     it("should set url for cn qrcode svg", async () => {
-      sandbox.stub(AppConstants, "isChinaRepack").returns(true);
+      sandbox.stub(global.AppConstants, "isChinaRepack").returns(true);
       const data = await AboutWelcomeDefaults.prepareContentForReact(
         TEST_CONTENT
       );
@@ -414,7 +414,9 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
     it("should remove theme screens on win7", async () => {
-      sandbox.stub(AppConstants, "isPlatformAndVersionAtMost").returns(true);
+      sandbox
+        .stub(global.AppConstants, "isPlatformAndVersionAtMost")
+        .returns(true);
 
       const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
         screens: [
@@ -436,7 +438,9 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.deepEqual(screens, [{ id: "hello" }, { id: "world" }]);
     });
     it("shouldn't remove colorway screens on win7", async () => {
-      sandbox.stub(AppConstants, "isPlatformAndVersionAtMost").returns(true);
+      sandbox
+        .stub(global.AppConstants, "isPlatformAndVersionAtMost")
+        .returns(true);
 
       const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
         screens: [

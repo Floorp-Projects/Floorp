@@ -28,8 +28,6 @@ module.exports = {
     "eslint:recommended",
     "plugin:jsx-a11y/recommended", // require("eslint-plugin-jsx-a11y")
     "plugin:mozilla/recommended", // require("eslint-plugin-mozilla") require("eslint-plugin-fetch-options") require("eslint-plugin-html") require("eslint-plugin-no-unsanitized")
-    "plugin:mozilla/browser-test",
-    "plugin:mozilla/mochitest-test",
     "plugin:prettier/recommended", // require("eslint-plugin-prettier")
     "prettier", // require("eslint-config-prettier")
   ],
@@ -75,6 +73,10 @@ module.exports = {
     {
       files: "test/xpcshell/**",
       extends: ["plugin:mozilla/xpcshell-test"],
+    },
+    {
+      files: "test/browser/**",
+      extends: ["plugin:mozilla/browser-test"],
     },
     {
       // Exempt all files without a 'test' string in their path name since no-insecure-url
