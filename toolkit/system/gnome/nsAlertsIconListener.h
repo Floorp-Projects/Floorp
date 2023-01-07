@@ -76,6 +76,7 @@ class nsAlertsIconListener : public nsIAlertNotificationImageListener,
   RefPtr<nsSystemAlertsService> mBackend;
 
   bool mAlertHasAction;
+  bool mAlertIsSilent;
 
   static void* libNotifyHandle;
   static bool libNotifyNotAvail;
