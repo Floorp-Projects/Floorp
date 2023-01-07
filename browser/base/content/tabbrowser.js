@@ -2563,7 +2563,7 @@
         triggeringPrincipal,
         userContextId,
         csp,
-        skipLoad = createLazyBrowser,
+        skipLoad,
         batchInsertingTabs,
         globalHistoryOptions,
         triggeringRemoteType,
@@ -3005,12 +3005,13 @@
           tab = this.addTrustedTab(createLazyBrowser ? url : "about:blank", {
             createLazyBrowser,
             skipAnimation: true,
+            allowInheritPrincipal: true,
             noInitialLabel: true,
             userContextId,
             skipBackgroundNotify: true,
             bulkOrderedOpen: true,
             batchInsertingTabs: true,
-            skipLoad: true,
+            skipLoad: !createLazyBrowser,
             preferredRemoteType,
           });
 
@@ -4934,6 +4935,7 @@
         skipAnimation: true,
         index: aIndex,
         createLazyBrowser,
+        allowInheritPrincipal: createLazyBrowser,
       };
 
       let numPinned = this._numPinnedTabs;
