@@ -322,7 +322,7 @@ describe("ToolbarPanelHub", () => {
     });
     it("should not do anything if the window is closed", () => {
       instance._hideAppmenuButton(fakeWindow, true);
-      assert.notCalled(global.PanelMultiView.getViewNode);
+      assert.notCalled(PanelMultiView.getViewNode);
     });
     it("should not throw if the element does not exist", () => {
       let fn = instance._hideAppmenuButton.bind(null, {

@@ -1978,7 +1978,7 @@ describe("ASRouter", () => {
       );
     });
     it("should set referrer on mac", async () => {
-      sandbox.stub(global.AppConstants, "platform").value("macosx");
+      sandbox.stub(AppConstants, "platform").value("macosx");
 
       Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
