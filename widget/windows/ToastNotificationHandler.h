@@ -34,7 +34,7 @@ class ToastNotificationHandler final
                            bool aClickable, bool aRequireInteraction,
                            const nsTArray<RefPtr<nsIAlertAction>>& aActions,
                            bool aIsSystemPrincipal, const nsAString& aLaunchUrl,
-                           bool aInPrivateBrowsing)
+                           bool aInPrivateBrowsing, bool aIsSilent)
       : mBackend(backend),
         mAumid(aumid),
         mHasImage(false),
@@ -50,6 +50,7 @@ class ToastNotificationHandler final
         mActions(aActions.Clone()),
         mIsSystemPrincipal(aIsSystemPrincipal),
         mLaunchUrl(aLaunchUrl),
+        mIsSilent(aIsSilent),
         mSentFinished(!aAlertListener) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
@@ -117,6 +118,7 @@ class ToastNotificationHandler final
   nsTArray<RefPtr<nsIAlertAction>> mActions;
   bool mIsSystemPrincipal;
   nsString mLaunchUrl;
+  bool mIsSilent;
   bool mSentFinished;
 
   nsresult TryShowAlert();

@@ -563,6 +563,21 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   hr = toastNodeRoot->AppendChild(actionsNode.Get(), &appendedChild);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
+  if (mIsSilent) {
+    ComPtr<IXmlNode> audioNode;
+    // Create <audio silent="true"/> for silent notifications.
+    ComPtr<IXmlElement> audio;
+    hr = toastXml->CreateElement(HStringReference(L"audio").Get(), &audio);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+    SetAttribute(audio, HStringReference(L"silent"), u"true"_ns);
+
+    hr = audio.As(&audioNode);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+    hr = toastNodeRoot->AppendChild(audioNode.Get(), &appendedChild);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  }
+
   return toastXml;
 }
 
