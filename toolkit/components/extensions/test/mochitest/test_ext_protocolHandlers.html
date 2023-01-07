@@ -16,8 +16,11 @@
 /* eslint-disable mozilla/balanced-listeners */
 
 function protocolChromeScript() {
+  const PROTOCOL_HANDLER_OPEN_PERM_KEY = "open-protocol-handler";
+  const PERMISSION_KEY_DELIMITER = "^";
+
   /* eslint-env mozilla/chrome-script */
-  addMessageListener("setup", protocol => {
+  addMessageListener("setup", ({ protocol, principalOrigins }) => {
     let data = {};
     const protoSvc = Cc[
       "@mozilla.org/uriloader/external-protocol-service;1"
@@ -40,6 +43,33 @@ function protocolChromeScript() {
       "@mozilla.org/uriloader/handler-service;1"
     ].getService(Ci.nsIHandlerService);
     handlerSvc.store(protoInfo);
+
+    for (let origin of principalOrigins) {
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(origin),
+        {}
+      );
+      let pbPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(origin),
+        {
+          privateBrowsingId: 1,
+        }
+      );
+      let permKey =
+        PROTOCOL_HANDLER_OPEN_PERM_KEY + PERMISSION_KEY_DELIMITER + protocol;
+      Services.perms.addFromPrincipal(
+        principal,
+        permKey,
+        Services.perms.ALLOW_ACTION,
+        Services.perms.EXPIRE_NEVER
+      );
+      Services.perms.addFromPrincipal(
+        pbPrincipal,
+        permKey,
+        Services.perms.ALLOW_ACTION,
+        Services.perms.EXPIRE_NEVER
+      );
+    }
 
     sendAsyncMessage("handlerData", data);
   });
@@ -136,7 +166,13 @@ add_task(async function test_protocolHandler() {
   let chromeScript = SpecialPowers.loadChromeScript(protocolChromeScript);
 
   let msg = chromeScript.promiseOneMessage("handlerData");
-  chromeScript.sendAsyncMessage("setup", "ext+foo");
+  chromeScript.sendAsyncMessage("setup", {
+    protocol: "ext+foo",
+    principalOrigins: [
+      `moz-extension://${extension.uuid}/`,
+      `moz-extension://${pb_extension.uuid}/`,
+    ],
+  });
   let data = await msg;
   ok(
     data.preferredAction,
@@ -312,7 +348,10 @@ add_task(async function test_protocolHandler_two() {
   let chromeScript = SpecialPowers.loadChromeScript(protocolChromeScript);
 
   let msg = chromeScript.promiseOneMessage("handlerData");
-  chromeScript.sendAsyncMessage("setup", "ext+foo");
+  chromeScript.sendAsyncMessage("setup", {
+    protocol: "ext+foo",
+    principalOrigins: [],
+  });
   let data = await msg;
   ok(
     data.preferredAction,
@@ -516,7 +555,7 @@ add_task(async function test_ftp_protocolHandler() {
   await msg;
 
   msg = chromeScript.promiseOneMessage("handlerData");
-  chromeScript.sendAsyncMessage("setup", "ftp");
+  chromeScript.sendAsyncMessage("setup", { protocol: "ftp", principalOrigins: [] });
   let data = await msg;
   ok(
     data.preferredAction,
