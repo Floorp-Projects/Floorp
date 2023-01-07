@@ -871,7 +871,6 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.build = exports.RenderTask = exports.PDFWorkerUtil = exports.PDFWorker = exports.PDFPageProxy = exports.PDFDocumentProxy = exports.PDFDocumentLoadingTask = exports.PDFDataRangeTransport = exports.LoopbackPort = exports.DefaultStandardFontDataFactory = exports.DefaultCanvasFactory = exports.DefaultCMapReaderFactory = void 0;
 exports.getDocument = getDocument;
-exports.setPDFNetworkStreamFactory = setPDFNetworkStreamFactory;
 exports.version = void 0;
 var _util = __w_pdfjs_require__(1);
 var _annotation_storage = __w_pdfjs_require__(3);
@@ -895,9 +894,7 @@ let DefaultStandardFontDataFactory = _display_utils.DOMStandardFontDataFactory;
 exports.DefaultStandardFontDataFactory = DefaultStandardFontDataFactory;
 ;
 let createPDFNetworkStream;
-function setPDFNetworkStreamFactory(pdfNetworkStreamFactory) {
-  createPDFNetworkStream = pdfNetworkStreamFactory;
-}
+;
 function getDocument(src) {
   const task = new PDFDocumentLoadingTask();
   let source;
@@ -985,7 +982,7 @@ function getDocument(src) {
     params.standardFontDataUrl = null;
   }
   if (typeof params.useWorkerFetch !== "boolean") {
-    params.useWorkerFetch = params.CMapReaderFactory === _display_utils.DOMCMapReaderFactory && params.StandardFontDataFactory === _display_utils.DOMStandardFontDataFactory;
+    params.useWorkerFetch = true;
   }
   if (typeof params.isEvalSupported !== "boolean") {
     params.isEvalSupported = true;
@@ -1038,15 +1035,7 @@ function getDocument(src) {
           disableStream: params.disableStream
         }, rangeTransport);
       } else if (!params.data) {
-        networkStream = createPDFNetworkStream({
-          url: params.url,
-          length: params.length,
-          httpHeaders: params.httpHeaders,
-          withCredentials: params.withCredentials,
-          rangeChunkSize: params.rangeChunkSize,
-          disableRange: params.disableRange,
-          disableStream: params.disableStream
-        });
+        throw new Error("Not implemented: createPDFNetworkStream");
       }
       resolve(networkStream);
     });
@@ -1074,7 +1063,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.3.21',
+    apiVersion: '3.3.39',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -2676,9 +2665,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.3.21';
+const version = '3.3.39';
 exports.version = version;
-const build = '8a0ca0439';
+const build = 'fcaeb5db8';
 exports.build = build;
 
 /***/ }),
@@ -13066,12 +13055,10 @@ var _annotation_editor_layer = __w_pdfjs_require__(21);
 var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
-var _is_node = __w_pdfjs_require__(10);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.3.21';
-const pdfjsBuild = '8a0ca0439';
-;
+const pdfjsVersion = '3.3.39';
+const pdfjsBuild = 'fcaeb5db8';
 })();
 
 /******/ 	return __webpack_exports__;

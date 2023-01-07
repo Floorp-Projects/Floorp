@@ -1540,7 +1540,8 @@ const PDFViewerApplication = {
     this.downloadManager = downloadManager;
     const findController = new _pdf_find_controller.PDFFindController({
       linkService: pdfLinkService,
-      eventBus
+      eventBus,
+      updateMatchesCountOnProgress: false
     });
     this.findController = findController;
     const pdfScriptingManager = new _pdf_scripting_manager.PDFScriptingManager({
@@ -4801,12 +4802,16 @@ function getOriginalIndex(diffs, pos, len) {
   return [start + diffs[i][1], len + diffs[j][1] - diffs[i][1]];
 }
 class PDFFindController {
+  #updateMatchesCountOnProgress = true;
+  #visitedPagesCount = 0;
   constructor({
     linkService,
-    eventBus
+    eventBus,
+    updateMatchesCountOnProgress = true
   }) {
     this._linkService = linkService;
     this._eventBus = eventBus;
+    this.#updateMatchesCountOnProgress = updateMatchesCountOnProgress;
     this.#reset();
     eventBus._on("find", this.#onFind.bind(this));
     eventBus._on("findbarclose", this.#onFindBarClose.bind(this));
@@ -4912,6 +4917,7 @@ class PDFFindController {
     this._pdfDocument = null;
     this._pageMatches = [];
     this._pageMatchesLength = [];
+    this.#visitedPagesCount = 0;
     this._state = null;
     this._selected = {
       pageIdx: -1,
@@ -5073,8 +5079,12 @@ class PDFFindController {
       this.#nextPageMatch();
     }
     const pageMatchesCount = this._pageMatches[pageIndex].length;
-    if (pageMatchesCount > 0) {
-      this._matchesCountTotal += pageMatchesCount;
+    this._matchesCountTotal += pageMatchesCount;
+    if (this.#updateMatchesCountOnProgress) {
+      if (pageMatchesCount > 0) {
+        this.#updateUIResultsCount();
+      }
+    } else if (++this.#visitedPagesCount === this._linkService.pagesCount) {
       this.#updateUIResultsCount();
     }
   }
@@ -5138,6 +5148,7 @@ class PDFFindController {
       this._resumePageIdx = null;
       this._pageMatches.length = 0;
       this._pageMatchesLength.length = 0;
+      this.#visitedPagesCount = 0;
       this._matchesCountTotal = 0;
       this.#updateAllPages();
       for (let i = 0; i < numPages; i++) {
@@ -8099,7 +8110,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.3.21';
+    const viewerVersion = '3.3.39';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12532,8 +12543,8 @@ var _ui_utils = __webpack_require__(1);
 var _app_options = __webpack_require__(2);
 var _pdf_link_service = __webpack_require__(3);
 var _app = __webpack_require__(4);
-const pdfjsVersion = '3.3.21';
-const pdfjsBuild = '8a0ca0439';
+const pdfjsVersion = '3.3.39';
+const pdfjsBuild = 'fcaeb5db8';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

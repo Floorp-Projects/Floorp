@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.3.21';
+    const workerVersion = '3.3.39';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -23552,6 +23552,9 @@ class CFFParser {
     const dict = this.parseDict(dictData);
     const privateDict = this.createDict(CFFPrivateDict, dict, parentDict.strings);
     parentDict.privateDict = privateDict;
+    if (privateDict.getByName("ExpansionFactor") === 0) {
+      privateDict.setByName("ExpansionFactor", 0.06);
+    }
     if (!privateDict.getByName("Subrs")) {
       return;
     }
@@ -31398,8 +31401,10 @@ class Type1Parser {
         case "BlueFuzz":
         case "BlueScale":
         case "LanguageGroup":
-        case "ExpansionFactor":
           program.properties.privateData[token] = this.readNumber();
+          break;
+        case "ExpansionFactor":
+          program.properties.privateData[token] = this.readNumber() || 0.06;
           break;
         case "ForceBold":
           program.properties.privateData[token] = this.readBoolean();
@@ -51446,15 +51451,9 @@ class XRef {
       this.startXRefQueue.push(xrefStm);
       this.readXRef(true);
     }
-    let trailerDict, trailerError;
-    for (const trailer of [...trailers, "generationFallback", ...trailers]) {
-      if (trailer === "generationFallback") {
-        if (!trailerError) {
-          break;
-        }
-        this._generationFallback = true;
-        continue;
-      }
+    const trailerDicts = [];
+    let isEncrypted = false;
+    for (const trailer of trailers) {
       stream.pos = trailer;
       const parser = new _parser.Parser({
         lexer: new _parser.Lexer(stream),
@@ -51468,6 +51467,20 @@ class XRef {
       }
       const dict = parser.getObj();
       if (!(dict instanceof _primitives.Dict)) {
+        continue;
+      }
+      trailerDicts.push(dict);
+      if (dict.has("Encrypt")) {
+        isEncrypted = true;
+      }
+    }
+    let trailerDict, trailerError;
+    for (const dict of [...trailerDicts, "genFallback", ...trailerDicts]) {
+      if (dict === "genFallback") {
+        if (!trailerError) {
+          break;
+        }
+        this._generationFallback = true;
         continue;
       }
       let validPagesDict = false;
@@ -51488,7 +51501,7 @@ class XRef {
         trailerError = ex;
         continue;
       }
-      if (validPagesDict && dict.has("ID")) {
+      if (validPagesDict && (!isEncrypted || dict.has("Encrypt")) && dict.has("ID")) {
         return dict;
       }
       trailerDict = dict;
@@ -52337,8 +52350,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.3.21';
-const pdfjsBuild = '8a0ca0439';
+const pdfjsVersion = '3.3.39';
+const pdfjsBuild = 'fcaeb5db8';
 })();
 
 /******/ 	return __webpack_exports__;
