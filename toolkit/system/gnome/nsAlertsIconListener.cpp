@@ -178,6 +178,9 @@ nsresult nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf) {
   }
 
   if (notify_notification_set_hint) {
+    notify_notification_set_hint(mNotification, "suppress-sound",
+                                 g_variant_new_boolean(mAlertIsSilent));
+
     // If MOZ_DESKTOP_FILE_NAME variable is set, use it as the application id,
     // otherwise use gAppData->name
     if (getenv("MOZ_DESKTOP_FILE_NAME")) {
@@ -313,6 +316,9 @@ nsresult nsAlertsIconListener::InitAlertAsync(nsIAlertNotification* aAlert,
   NS_ENSURE_SUCCESS(rv, rv);
   if (!gHasActions && mAlertHasAction)
     return NS_ERROR_FAILURE;  // No good, fallback to XUL
+
+  rv = aAlert->GetSilent(&mAlertIsSilent);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString title;
   rv = aAlert->GetTitle(title);
