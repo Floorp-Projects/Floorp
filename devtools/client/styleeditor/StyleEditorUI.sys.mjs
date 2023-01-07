@@ -9,17 +9,14 @@ import {
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
-const {
+import {
   getString,
   text,
   showFilePicker,
   optionsPopupMenu,
-} = ChromeUtils.import(
-  "resource://devtools/client/styleeditor/StyleEditorUtil.jsm"
-);
-const { StyleSheetEditor } = ChromeUtils.import(
-  "resource://devtools/client/styleeditor/StyleSheetEditor.jsm"
-);
+} from "resource://devtools/client/styleeditor/StyleEditorUtil.sys.mjs";
+import { StyleSheetEditor } from "resource://devtools/client/styleeditor/StyleSheetEditor.sys.mjs";
+
 const { PluralForm } = require("resource://devtools/shared/plural-form.js");
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 

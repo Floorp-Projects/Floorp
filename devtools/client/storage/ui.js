@@ -45,11 +45,9 @@ loader.lazyGetter(this, "standardSessionString", () => {
 });
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "VariablesView",
-  "resource://devtools/client/storage/VariablesView.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  VariablesView: "resource://devtools/client/storage/VariablesView.sys.mjs",
+});
 
 const REASON = {
   NEW_ROW: "new-row",
