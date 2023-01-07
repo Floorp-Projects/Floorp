@@ -602,10 +602,6 @@ this.tabs = class extends ExtensionAPIPersistent {
       // that it may not otherwise have access to, we set the triggering
       // principal to the url that is being opened.  This is used for newtab,
       // about: and moz-extension: protocols.
-      // We also prevent discarded, or lazy tabs by setting allowInheritPrincipal to false.
-      if (url.startsWith("about:")) {
-        options.allowInheritPrincipal = false;
-      }
       options.triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
         Services.io.newURI(url),
         {
@@ -713,12 +709,7 @@ this.tabs = class extends ExtensionAPIPersistent {
           }).then(window => {
             let url;
 
-            let options = {
-              // When allowInheritPrincipal is false, tabs cannot be discarded, so we set it to true.
-              // TODO bug 1488053: Remove allowInheritPrincipal: true
-              allowInheritPrincipal: true,
-              triggeringPrincipal: context.principal,
-            };
+            let options = { triggeringPrincipal: context.principal };
             if (createProperties.cookieStoreId) {
               // May throw if validation fails.
               options.userContextId = getUserContextIdForCookieStoreId(
