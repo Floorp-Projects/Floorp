@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemQuotaClient.h"
-#include "GetDirectoryForOrigin.h"
 #include "QuotaManagerDependencyFixture.h"
 #include "TestHelpers.h"
 #include "datamodel/FileSystemDataManager.h"
@@ -101,7 +100,6 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
       QM_TRY(MOZ_TO_RESULT(dbFile->Exists(&exists)), QM_VOID);
       QM_TRY(OkIf(exists), QM_VOID);
 
-#if FS_QUOTA_MANAGEMENT_ENABLED
       int64_t dbSize = 0;
       QM_TRY(MOZ_TO_RESULT(dbFile->GetFileSize(&dbSize)), QM_VOID);
 
@@ -109,7 +107,6 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
       QM_TRY(OkIf(qm), QM_VOID);
       qm->DecreaseUsageForClient(
           quota::ClientMetadata{originMeta, quota::Client::FILESYSTEM}, dbSize);
-#endif
 
       QM_WARNONLY_TRY(MOZ_TO_RESULT(dbFile->Remove(/* recursive */ false)));
 
@@ -206,7 +203,6 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
     uint32_t written = 0;
     ASSERT_NE(written, aData.Length());
 
-#if FS_QUOTA_MANAGEMENT_ENABLED
     const quota::OriginMetadata& testOriginMeta = GetTestQuotaOriginMetadata();
 
     TEST_TRY_UNWRAP(nsCOMPtr<nsIOutputStream> fileStream,
@@ -220,13 +216,6 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
                 fileStream->Write(aData.get(), aData.Length(), &written));
 
     ASSERT_EQ(aData.Length(), written);
-#else
-    std::FILE* writable = nullptr;
-    ASSERT_NSEQ(NS_OK, fileObj->OpenANSIFileDesc("w", &writable));
-    ASSERT_TRUE(writable);
-    auto finallyClose = MakeScopeExit([&writable]() { std::fclose(writable); });
-    std::fwrite(aData.get(), sizeof(aData[0]), aData.Length(), writable);
-#endif
   }
 
   /* Static for use in callbacks */
@@ -570,7 +559,7 @@ TEST_F(TestFileSystemQuotaClient, RemovingFileShouldDecreaseUsage) {
                                     quota::PERSISTENCE_TYPE_DEFAULT,
                                     testOriginMeta, isCanceled));
 // Enable when bug 1806363 is fixed
-#if !FS_QUOTA_MANAGEMENT_ENABLED
+#if 0
       ASSERT_NO_FATAL_FAILURE(CheckUsageEqualTo(usageNow, testFileDbUsage));
 #endif
     };
