@@ -8460,6 +8460,13 @@
   mirror: always
   rust: true
 
+  # Is support for :nth-child(An+B of S) and :nth-last-child(An+B of S) enabled?
+- name: layout.css.nth-child-of.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for :has() enabled?
 - name: layout.css.has-selector.enabled
   type: RelaxedAtomicBool

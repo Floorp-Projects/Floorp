@@ -248,6 +248,11 @@ pub trait Parser<'i> {
         false
     }
 
+    /// Whether to parse the selector list of nth-child() or nth-last-child().
+    fn parse_nth_child_of(&self) -> bool {
+        false
+    }
+
     /// Whether to parse the `:where` pseudo-class.
     fn parse_is_and_where(&self) -> bool {
         false
@@ -1106,6 +1111,38 @@ impl NthSelectorData {
     }
 }
 
+/// The properties that comprise an :nth- pseudoclass as of Selectors 4 (e.g.,
+/// nth-child(An+B [of S]?)).
+/// https://www.w3.org/TR/selectors-4/#nth-child-pseudo
+#[derive(Clone, Eq, PartialEq, ToShmem)]
+#[shmem(no_bounds)]
+pub struct NthOfSelectorData<Impl: SelectorImpl>(
+    #[shmem(field_bound)] ThinArc<NthSelectorData, Selector<Impl>>,
+);
+
+impl<Impl: SelectorImpl> NthOfSelectorData<Impl> {
+    /// Returns selector data for :nth-{,last-}{child,of-type}(An+B [of S])
+    #[inline]
+    pub fn new(nth_data: &NthSelectorData, mut selectors: SelectorList<Impl>) -> Self {
+        Self(ThinArc::from_header_and_iter(
+            *nth_data,
+            selectors.0.drain(..),
+        ))
+    }
+
+    /// Returns the An+B part of the selector
+    #[inline]
+    pub fn nth_data(&self) -> &NthSelectorData {
+        &self.0.header.header
+    }
+
+    /// Returns the selector list part of the selector
+    #[inline]
+    pub fn selectors(&self) -> &[Selector<Impl>] {
+        &self.0.slice
+    }
+}
+
 /// A CSS simple selector or combinator. We store both in the same enum for
 /// optimal packing and cache performance, see [1].
 ///
@@ -1151,6 +1188,7 @@ pub enum Component<Impl: SelectorImpl> {
     Empty,
     Scope,
     Nth(NthSelectorData),
+    NthOf(NthOfSelectorData<Impl>),
     NonTSPseudoClass(#[shmem(field_bound)] Impl::NonTSPseudoClass),
     /// The ::slotted() pseudo-element:
     ///
@@ -1339,6 +1377,11 @@ impl<Impl: SelectorImpl> Component<Impl> {
 
             Negation(ref list) | Is(ref list) | Where(ref list) => {
                 if !visitor.visit_selector_list(&list) {
+                    return false;
+                }
+            },
+            NthOf(ref nth_of_data) => {
+                if !visitor.visit_selector_list(nth_of_data.selectors()) {
                     return false;
                 }
             },
@@ -1669,6 +1712,22 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
                     dest.write_char(')')?;
                 }
                 Ok(())
+            },
+            NthOf(ref nth_of_data) => {
+                let nth_data = nth_of_data.nth_data();
+                dest.write_str(match nth_data.ty {
+                    NthType::Child => ":nth-child(",
+                    NthType::LastChild => ":nth-last-child(",
+                    _ => unreachable!(),
+                })?;
+                write_affine(dest, nth_data.a, nth_data.b)?;
+                debug_assert!(
+                    !nth_of_data.selectors().is_empty(),
+                    "The selector list should not be empty"
+                );
+                dest.write_str(" of ")?;
+                serialize_selector_list(nth_of_data.selectors().iter(), dest)?;
+                dest.write_char(')')
             },
             Is(ref list) | Where(ref list) | Negation(ref list) | Has(ref list) => {
                 match *self {
@@ -2404,7 +2463,7 @@ where
 }
 
 fn parse_nth_pseudo_class<'i, 't, P, Impl>(
-    _: &P,
+    parser: &P,
     input: &mut CssParser<'i, 't>,
     state: SelectorParsingState,
     ty: NthType,
@@ -2417,12 +2476,33 @@ where
         return Err(input.new_custom_error(SelectorParseErrorKind::InvalidState));
     }
     let (a, b) = parse_nth(input)?;
-    Ok(Component::Nth(NthSelectorData {
+    let nth_data = NthSelectorData {
         ty,
         is_function: true,
         a,
         b,
-    }))
+    };
+    if !parser.parse_nth_child_of() || ty.is_of_type() {
+        return Ok(Component::Nth(nth_data));
+    }
+
+    // Try to parse "of <selector-list>".
+    if input.try_parse(|i| i.expect_ident_matching("of")).is_err() {
+        return Ok(Component::Nth(nth_data));
+    }
+    // Whitespace between "of" and the selector list is optional
+    // https://github.com/w3c/csswg-drafts/issues/8285
+    let selectors = SelectorList::parse_with_state(
+        parser,
+        input,
+        state |
+            SelectorParsingState::SKIP_DEFAULT_NAMESPACE |
+            SelectorParsingState::DISALLOW_PSEUDOS,
+        ParseErrorRecovery::DiscardList,
+    )?;
+    Ok(Component::NthOf(NthOfSelectorData::new(
+        &nth_data, selectors,
+    )))
 }
 
 /// Returns whether the name corresponds to a CSS2 pseudo-element that
@@ -2764,6 +2844,10 @@ pub mod tests {
         type Error = SelectorParseErrorKind<'i>;
 
         fn parse_slotted(&self) -> bool {
+            true
+        }
+
+        fn parse_nth_child_of(&self) -> bool {
             true
         }
 
