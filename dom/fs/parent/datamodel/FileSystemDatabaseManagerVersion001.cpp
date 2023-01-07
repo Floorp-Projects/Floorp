@@ -15,6 +15,7 @@
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 
 namespace mozilla::dom {
@@ -752,7 +753,18 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
   for (const auto& child : descendants) {
-    QM_WARNONLY_TRY(MOZ_TO_RESULT(mFileManager->RemoveFile(child)));
+    QM_WARNONLY_TRY_UNWRAP(const auto maybeFileSize,
+                           mFileManager->RemoveFile(child));
+
+    if (maybeFileSize) {
+      quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+      MOZ_ASSERT(quotaManager);
+
+      quotaManager->DecreaseUsageForClient(
+          quota::ClientMetadata{mDataManager->OriginMetadataRef(),
+                                quota::Client::FILESYSTEM},
+          *maybeFileSize);
+    }
   }
 
   return true;
@@ -803,7 +815,18 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
-  QM_WARNONLY_TRY(MOZ_TO_RESULT(mFileManager->RemoveFile(entryId)));
+  QM_WARNONLY_TRY_UNWRAP(const auto maybeFileSize,
+                         mFileManager->RemoveFile(entryId));
+
+  if (maybeFileSize) {
+    quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    quotaManager->DecreaseUsageForClient(
+        quota::ClientMetadata{mDataManager->OriginMetadataRef(),
+                              quota::Client::FILESYSTEM},
+        *maybeFileSize);
+  }
 
   return true;
 }

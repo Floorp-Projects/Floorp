@@ -131,9 +131,9 @@ class FileSystemFileManager {
    * @brief Remove the disk-backed file object for a specified entry id.
    *
    * @param aEntryId  Specified id of a file system entry
-   * @return nsresult IO error or success
+   * @return Result<int64_t, QMResult> Error or file size
    */
-  nsresult RemoveFile(const EntryId& aEntryId);
+  Result<int64_t, QMResult> RemoveFile(const EntryId& aEntryId);
 
  private:
   explicit FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory);
