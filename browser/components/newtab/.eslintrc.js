@@ -11,9 +11,6 @@ module.exports = {
     },
     sourceType: "module",
   },
-  env: {
-    node: true,
-  },
   plugins: [
     "import", // require("eslint-plugin-import")
     "react", // require("eslint-plugin-react")
@@ -58,13 +55,23 @@ module.exports = {
       },
     },
     {
+      files: [
+        "bin/**",
+        "content-src/**",
+        "./*.js",
+        "loaders/**",
+        "tools/**",
+        "test/unit/**",
+      ],
+      env: {
+        node: true,
+      },
+    },
+    {
       // Use a configuration that's more appropriate for JSMs
       files: "**/*.jsm",
       parserOptions: {
         sourceType: "script",
-      },
-      env: {
-        node: false,
       },
       rules: {
         "no-implicit-globals": "off",
