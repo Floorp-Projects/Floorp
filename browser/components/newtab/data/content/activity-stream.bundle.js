@@ -23,7 +23,6 @@ __webpack_require__.r(__webpack_exports__);
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
 const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
 const PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
@@ -1592,7 +1591,6 @@ var Actions_sys = __webpack_require__(1);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 const MESSAGE_TYPE_LIST = [
   "BLOCK_MESSAGE_BY_ID",
