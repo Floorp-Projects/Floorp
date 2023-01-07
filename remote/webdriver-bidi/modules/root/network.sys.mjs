@@ -7,6 +7,7 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   NetworkListener:
     "chrome://remote/content/shared/listeners/NetworkListener.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
@@ -88,7 +89,8 @@ const InitiatorType = {
 
 /**
  * @typedef {Object} RequestData
- * @property {number} bodySize
+ * @property {number|null} bodySize
+ *     Defaults to null.
  * @property {Array<Cookie>} cookies
  * @property {Array<Header>} headers
  * @property {number} headersSize
@@ -107,6 +109,40 @@ const InitiatorType = {
  * Parameters for the BeforeRequestSent event
  *
  * @typedef {BaseParameters & BeforeRequestSentParametersProperties} BeforeRequestSentParameters
+ */
+
+/**
+ * @typedef {Object} ResponseContent
+ * @property {number|null} size
+ *     Defaults to null.
+ */
+
+/**
+ * @typedef {Object} ResponseData
+ * @property {string} url
+ * @property {string} protocol
+ * @property {number} status
+ * @property {string} statusText
+ * @property {boolean} fromCache
+ * @property {Array<Header>} headers
+ * @property {string} mimeType
+ * @property {number} bytesReceived
+ * @property {number|null} headersSize
+ *     Defaults to null.
+ * @property {number|null} bodySize
+ *     Defaults to null.
+ * @property {ResponseContent} content
+ */
+
+/**
+ * @typedef {Object} ResponseStartedParametersProperties
+ * @property {ResponseData} response
+ */
+
+/**
+ * Parameters for the ResponseStarted event
+ *
+ * @typedef {BaseParameters & ResponseStartedParametersProperties} ResponseStartedParameters
  */
 
 class NetworkModule extends Module {
@@ -128,10 +164,12 @@ class NetworkModule extends Module {
 
     this.#networkListener = new lazy.NetworkListener();
     this.#networkListener.on("before-request-sent", this.#onBeforeRequestSent);
+    this.#networkListener.on("response-started", this.#onResponseStarted);
   }
 
   destroy() {
     this.#networkListener.off("before-request-sent", this.#onBeforeRequestSent);
+    this.#networkListener.off("response-started", this.#onResponseStarted);
 
     this.#beforeRequestSentMap = null;
     this.#subscribedEvents = null;
@@ -174,6 +212,47 @@ class NetworkModule extends Module {
     this.emitEvent(
       "network.beforeRequestSent",
       beforeRequestSentEvent,
+      this.#getContextInfo(browsingContext)
+    );
+  };
+
+  #onResponseStarted = (name, data) => {
+    const {
+      contextId,
+      requestData,
+      responseData,
+      timestamp,
+      redirectCount,
+    } = data;
+
+    const isRedirect = redirectCount > 0;
+
+    const requestId = requestData.requestId;
+    if (this.#beforeRequestSentMap.get(requestId) != redirectCount) {
+      throw new lazy.error.UnknownError(
+        `Redirect count of the request ${requestId} does not match the before request sent map`
+      );
+    }
+
+    const baseParameters = {
+      context: contextId,
+      isRedirect,
+      redirectCount,
+      // Bug 1805405: Handle the navigation id.
+      navigation: null,
+      request: requestData,
+      timestamp,
+    };
+
+    const responseStartedEvent = {
+      ...baseParameters,
+      response: responseData,
+    };
+
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    this.emitEvent(
+      "network.responseStarted",
+      responseStartedEvent,
       this.#getContextInfo(browsingContext)
     );
   };
@@ -234,7 +313,7 @@ class NetworkModule extends Module {
   }
 
   static get supportedEvents() {
-    return ["network.beforeRequestSent"];
+    return ["network.beforeRequestSent", "network.responseStarted"];
   }
 }
 
