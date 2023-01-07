@@ -551,6 +551,7 @@ interface nsIPrincipal : nsISupports
      * NOTE: Main-Thread Only.
      */
     readonly attribute WebExtensionPolicy addonPolicy;
+    readonly attribute WebExtensionPolicy contentScriptAddonPolicy;
 
     /**
      * Gets the id of the user context this principal is inside.  If this
