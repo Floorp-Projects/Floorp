@@ -247,7 +247,8 @@ select {
 }
 
 select:-moz-select-list-box {
-  overflow: auto;
+  overflow-inline: hidden;
+  overflow-block: scroll;
   padding-inline: 0;
   background-color: Field;
   color: FieldText;

@@ -7,14 +7,14 @@
 #define nsListControlFrame_h___
 
 #ifdef DEBUG_evaughan
-//#define DEBUG_rods
+// #define DEBUG_rods
 #endif
 
 #ifdef DEBUG_rods
-//#define DO_REFLOW_DEBUG
-//#define DO_REFLOW_COUNTER
-//#define DO_UNCONSTRAINED_CHECK
-//#define DO_PIXELS
+// #define DO_REFLOW_DEBUG
+// #define DO_REFLOW_COUNTER
+// #define DO_UNCONSTRAINED_CHECK
+// #define DO_PIXELS
 #endif
 
 #include "mozilla/Attributes.h"
@@ -100,7 +100,6 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetFocus(bool aOn = true, bool aRepaint = false) final;
 
-  mozilla::ScrollStyles GetScrollStyles() const final;
   bool ShouldPropagateComputedBSizeToScrolledContent() const final;
 
   // for accessibility purposes

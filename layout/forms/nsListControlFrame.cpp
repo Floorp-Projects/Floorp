@@ -401,17 +401,6 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
   nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }
 
-ScrollStyles nsListControlFrame::GetScrollStyles() const {
-  // TODO(emilio, bug 1750431): Set this in html.css and devirtualize
-  // GetScrollStyles().
-  auto style = StyleOverflow::Scroll;
-  if (GetWritingMode().IsVertical()) {
-    return ScrollStyles(style, StyleOverflow::Hidden);
-  } else {
-    return ScrollStyles(StyleOverflow::Hidden, style);
-  }
-}
-
 bool nsListControlFrame::ShouldPropagateComputedBSizeToScrolledContent() const {
   return true;
 }
