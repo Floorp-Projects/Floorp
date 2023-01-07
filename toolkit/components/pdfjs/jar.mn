@@ -6,7 +6,6 @@ pdfjs.jar:
  content/web/standard_fonts/	(content/web/standard_fonts/*)
  content/web/images/	(content/web/images/annotation-*.svg)
  content/web/images/loading-icon.gif	(content/web/images/loading-icon.gif)
- content/web/images/shadow.png	(content/web/images/shadow.png)
 #ifdef ANDROID
  content/web/viewer.html (content/web/viewer-geckoview.html)
  content/web/viewer.css (content/web/viewer-geckoview.css)
