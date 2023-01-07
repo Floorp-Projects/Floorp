@@ -236,28 +236,32 @@ Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetOrCreateFile(
   return data::GetOrCreateFile(mTopDirectory, aEntryId);
 }
 
-nsresult FileSystemFileManager::RemoveFile(const EntryId& aEntryId) {
+Result<int64_t, QMResult> FileSystemFileManager::RemoveFile(
+    const EntryId& aEntryId) {
   MOZ_ASSERT(!aEntryId.IsEmpty());
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
                 GetFileDestination(mTopDirectory, aEntryId));
 
   bool exists = false;
-  QM_TRY(MOZ_TO_RESULT(pathObject->Exists(&exists)));
+  QM_TRY(QM_TO_RESULT(pathObject->Exists(&exists)));
 
   if (!exists) {
-    return NS_OK;
+    return 0;
   }
 
   bool isFile = false;
-  QM_TRY(MOZ_TO_RESULT(pathObject->IsFile(&isFile)));
+  QM_TRY(QM_TO_RESULT(pathObject->IsFile(&isFile)));
 
   if (!isFile) {
-    return NS_ERROR_FILE_IS_DIRECTORY;
+    return Err(QMResult(NS_ERROR_FILE_IS_DIRECTORY));
   }
 
-  QM_TRY(MOZ_TO_RESULT(pathObject->Remove(/* recursive */ false)));
+  QM_TRY_UNWRAP(int64_t fileSize,
+                QM_TO_RESULT_INVOKE_MEMBER(pathObject, GetFileSize));
 
-  return NS_OK;
+  QM_TRY(QM_TO_RESULT(pathObject->Remove(/* recursive */ false)));
+
+  return fileSize;
 }
 
 }  // namespace mozilla::dom::fs::data

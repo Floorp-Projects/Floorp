@@ -558,10 +558,8 @@ TEST_F(TestFileSystemQuotaClient, RemovingFileShouldDecreaseUsage) {
       TEST_TRY_UNWRAP(usageNow, quotaClient->GetUsageForOrigin(
                                     quota::PERSISTENCE_TYPE_DEFAULT,
                                     testOriginMeta, isCanceled));
-// Enable when bug 1806363 is fixed
-#if 0
+
       ASSERT_NO_FATAL_FAILURE(CheckUsageEqualTo(usageNow, testFileDbUsage));
-#endif
     };
 
     RefPtr<mozilla::dom::quota::Client> quotaClient = fs::CreateQuotaClient();
