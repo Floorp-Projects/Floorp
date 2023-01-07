@@ -19,7 +19,7 @@
         tabBrowserTabs._pinnedTabsLayoutCache = null;
         tabBrowserTabs._positionPinnedTabs();
     }
-    Services.prefs.addObserver("browser.tabs.tabMinWidth", apply);
+    Services.prefs.addObserver("floorp.tabs.showPinnedTabsTitle", apply);
     Services.prefs.addObserver("browser.tabs.tabMinWidth", apply);
     apply();
 }
