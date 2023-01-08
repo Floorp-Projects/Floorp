@@ -348,11 +348,6 @@ class TypeIdSet {
   Set set_;
 
  public:
-  ~TypeIdSet() {
-    // We should clean out all dead entries deterministically before shutdown.
-    MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), set_.empty());
-  }
-
   // Attempt to insert a recursion group into the set, returning an existing
   // recursion group if there was one.
   SharedRecGroup insert(SharedRecGroup recGroup) {
@@ -368,6 +363,20 @@ class TypeIdSet {
       return nullptr;
     }
     return recGroup;
+  }
+
+  void purge() {
+    // TODO: this is not guaranteed to remove all types that are not referenced
+    // from outside the canonical set, as removing a type may make a previous
+    // type we've visited now only have one ref and be eligible to be freed.
+    //
+    // Solving this either involves iterating to a fixed point, or else a much
+    // more invasive change to the lifetime management of recursion groups.
+    for (auto iter = set_.modIter(); !iter.done(); iter.next()) {
+      if (iter.get()->hasOneRef()) {
+        iter.remove();
+      }
+    }
   }
 
   // Release the provided recursion group reference and remove it from the
@@ -388,6 +397,11 @@ class TypeIdSet {
 };
 
 ExclusiveData<TypeIdSet> typeIdSet(mutexid::WasmTypeIdSet);
+
+void wasm::PurgeCanonicalTypes() {
+  ExclusiveData<TypeIdSet>::Guard locked = typeIdSet.lock();
+  locked->purge();
+}
 
 SharedRecGroup TypeContext::canonicalizeGroup(SharedRecGroup recGroup) {
   ExclusiveData<TypeIdSet>::Guard locked = typeIdSet.lock();

@@ -423,6 +423,8 @@ void wasm::ShutDown() {
     return;
   }
 
+  PurgeCanonicalTypes();
+
   // After signalling shutdown by clearing sProcessCodeSegmentMap, wait for
   // concurrent wasm::LookupCodeSegment()s to finish.
   ProcessCodeSegmentMap* map = sProcessCodeSegmentMap;
