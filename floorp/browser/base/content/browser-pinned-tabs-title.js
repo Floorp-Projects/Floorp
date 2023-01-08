@@ -12,7 +12,10 @@
             }
             .tabbrowser-tab[pinned="true"] {
                 width: ${tabMinWidth}px !important;
-            }`;
+            }
+            .tab-throbber[pinned], .tab-icon-pending[pinned], .tab-icon-image[pinned], .tab-sharing-icon-overlay[pinned], .tab-icon-overlay[pinned] {
+                margin-inline-end: 5.5px !important;
+　　　　　　　}`;
             document.body.appendChild(css);
         }
         let tabBrowserTabs = document.getElementById("tabbrowser-tabs");
