@@ -629,11 +629,12 @@ HttpTransactionChild::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
-HttpTransactionChild::EarlyHint(const nsACString& value,
-                                const nsACString& referrerPolicy) {
+HttpTransactionChild::EarlyHint(const nsACString& aValue,
+                                const nsACString& aReferrerPolicy,
+                                const nsACString& aCSPHeader) {
   LOG(("HttpTransactionChild::EarlyHint"));
   if (CanSend()) {
-    Unused << SendEarlyHint(value, referrerPolicy);
+    Unused << SendEarlyHint(aValue, aReferrerPolicy, aCSPHeader);
   }
   return NS_OK;
 }

@@ -75,7 +75,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                                              const nsCString& aResourceUrl,
                                              const nsCString& aRequestString);
   mozilla::ipc::IPCResult RecvEarlyHint(const nsCString& aValue,
-                                        const nsACString& aReferrerPolicy);
+                                        const nsACString& aReferrerPolicy,
+                                        const nsACString& aCSPHeader);
 
   virtual mozilla::TimeStamp GetPendingTime() override;
 
