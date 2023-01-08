@@ -2178,7 +2178,6 @@ void GCRuntime::sweepZones(JS::GCContext* gcx, bool destroyingRuntime) {
         zone->arenas.checkEmptyFreeLists();
         zone->sweepCompartments(gcx, false, destroyingRuntime);
         MOZ_ASSERT(zone->compartments().empty());
-        MOZ_ASSERT(zone->rttValueObjects().empty());
         zone->destroy(gcx);
         continue;
       }

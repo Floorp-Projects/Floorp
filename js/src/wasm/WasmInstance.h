@@ -175,12 +175,6 @@ class alignas(16) Instance {
   // The exclusive maximum index of a global that has been initialized so far.
   uint32_t maxInitializedGlobalsIndexPlus1_;
 
-#ifdef ENABLE_WASM_GC
-  // A flag to control whether a pass to trace types in global data is
-  // necessary or not. Purely an optimization
-  bool hasGcTypes_;
-#endif
-
   // Pointer that should be freed (due to padding before the Instance).
   void* allocatedBase_;
 
@@ -363,11 +357,6 @@ class alignas(16) Instance {
                                uint32_t dstOffset, uint32_t srcOffset,
                                uint32_t len);
 
-#ifdef ENABLE_WASM_GC
-  // Return RttValue of the specified heap type.
-  RttValue* rttCanon(uint32_t typeIndex) const;
-#endif
-
   // Debugger support:
 
   JSString* createDisplayURL(JSContext* cx);
@@ -455,21 +444,22 @@ class alignas(16) Instance {
   static void postBarrierPrecise(Instance* instance, JSObject** location,
                                  JSObject* prev);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
-  static void* structNew(Instance* instance, void* structDescr);
+  static void* structNew(Instance* instance, const wasm::TypeDef* typeDef);
   static void* exceptionNew(Instance* instance, JSObject* tag);
   static int32_t throwException(Instance* instance, JSObject* exn);
   static void* arrayNew(Instance* instance, uint32_t numElements,
-                        void* arrayDescr);
+                        const wasm::TypeDef* typeDef);
   static void* arrayNewData(Instance* instance, uint32_t segByteOffset,
-                            uint32_t numElements, void* arrayDescr,
+                            uint32_t numElements, const wasm::TypeDef* typeDef,
                             uint32_t segIndex);
   static void* arrayNewElem(Instance* instance, uint32_t segElemIndex,
-                            uint32_t numElements, void* arrayDescr,
+                            uint32_t numElements, const wasm::TypeDef* typeDef,
                             uint32_t segIndex);
   static int32_t arrayCopy(Instance* instance, void* dstArray,
                            uint32_t dstIndex, void* srcArray, uint32_t srcIndex,
                            uint32_t numElements, uint32_t elementSize);
-  static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);
+  static int32_t refTest(Instance* instance, void* refPtr,
+                         const wasm::TypeDef* typeDef);
   static int32_t intrI8VecMul(Instance* instance, uint32_t dest, uint32_t src1,
                               uint32_t src2, uint32_t len, uint8_t* memBase);
 };

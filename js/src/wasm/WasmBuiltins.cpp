@@ -275,7 +275,7 @@ const SymbolicAddressSignature SASigPostBarrierFiltering = {
     2,
     {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigStructNew = {
-    SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
+    SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigExceptionNew = {
     SymbolicAddress::ExceptionNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 const SymbolicAddressSignature SASigThrowException = {
@@ -288,19 +288,19 @@ const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
                                                 _RoN,
                                                 _FailOnNullPtr,
                                                 3,
-                                                {_PTR, _I32, _RoN, _END}};
+                                                {_PTR, _I32, _PTR, _END}};
 const SymbolicAddressSignature SASigArrayNewData = {
     SymbolicAddress::ArrayNewData,
     _RoN,
     _FailOnNullPtr,
     5,
-    {_PTR, _I32, _I32, _RoN, _I32, _END}};
+    {_PTR, _I32, _I32, _PTR, _I32, _END}};
 const SymbolicAddressSignature SASigArrayNewElem = {
     SymbolicAddress::ArrayNewElem,
     _RoN,
     _FailOnNullPtr,
     5,
-    {_PTR, _I32, _I32, _RoN, _I32, _END}};
+    {_PTR, _I32, _I32, _PTR, _I32, _END}};
 const SymbolicAddressSignature SASigArrayCopy = {
     SymbolicAddress::ArrayCopy,
     _VOID,
@@ -308,7 +308,7 @@ const SymbolicAddressSignature SASigArrayCopy = {
     7,
     {_PTR, _RoN, _I32, _RoN, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigRefTest = {
-    SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _RoN, _END}};
+    SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _PTR, _END}};
 
 #define DECL_SAS_FOR_INTRINSIC(op, export, sa_name, abitype, entry, idx) \
   const SymbolicAddressSignature SASig##sa_name = {                      \

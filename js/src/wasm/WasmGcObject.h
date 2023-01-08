@@ -20,85 +20,12 @@ using js::wasm::FieldType;
 
 namespace js {
 
-class WasmGcObject;
-
-//=========================================================================
-// RttValue
-
-class RttValue : public NativeObject {
- private:
-  static RttValue* create(JSContext* cx, const wasm::TypeHandle& handle);
-
- public:
-  static const JSClass class_;
-
-  enum Slot {
-    TypeContext = 0,  // Manually refcounted reference to TypeContext
-    TypeDef = 1,      // Raw pointer to TypeDef owned by TypeContext
-    // Maximum number of slots
-    SlotCount = 2,
-  };
-
-  static RttValue* rttCanon(JSContext* cx, const wasm::TypeHandle& handle);
-
-  bool isNewborn() { return getReservedSlot(Slot::TypeContext).isUndefined(); }
-
-  const wasm::TypeDef& typeDef() const {
-    return *(const wasm::TypeDef*)getReservedSlot(Slot::TypeDef).toPrivate();
-  }
-
-  const wasm::TypeContext* typeContext() const {
-    return (const wasm::TypeContext*)getReservedSlot(Slot::TypeContext)
-        .toPrivate();
-  }
-
-  wasm::TypeDefKind kind() const { return typeDef().kind(); }
-
-  // PropOffset is a uint32_t that is used to carry information about the
-  // location of an value from RttValue::lookupProperty to
-  // WasmGcObject::loadValue.  It is distinct from a normal uint32_t to
-  // emphasise the fact that it cannot be interpreted as an offset in any
-  // single contiguous area of memory:
-  //
-  // * If the object in question is a WasmStructObject, it is the value of
-  //   `wasm::StructField::offset` for the relevant field, without regard to
-  //   the inline/outline split.
-  //
-  // * If the object in question is a WasmArrayObject, then
-  //   - u32 == UINT32_MAX (0xFFFF'FFFF) means the "length" property
-  //     is requested
-  //   - u32 < UINT32_MAX means the array element starting at that byte
-  //     offset in WasmArrayObject::data_.  It is not an array index value.
-  //   See RttValue::lookupProperty for details.
-  class PropOffset {
-    uint32_t u32_;
-
-   public:
-    PropOffset() : u32_(0) {}
-    uint32_t get() const { return u32_; }
-    void set(uint32_t u32) { u32_ = u32; }
-  };
-
-  [[nodiscard]] bool lookupProperty(JSContext* cx,
-                                    js::Handle<WasmGcObject*> object, jsid id,
-                                    PropOffset* offset, wasm::FieldType* type);
-  [[nodiscard]] bool hasProperty(JSContext* cx,
-                                 js::Handle<WasmGcObject*> object, jsid id) {
-    RttValue::PropOffset offset;
-    wasm::FieldType type;
-    return lookupProperty(cx, object, id, &offset, &type);
-  }
-
-  static void finalize(JS::GCContext* gcx, JSObject* obj);
-};
-
 //=========================================================================
 // WasmGcObject
 
-/* Base type for typed objects. */
 class WasmGcObject : public JSObject {
  protected:
-  GCPtr<RttValue*> rttValue_;
+  const wasm::TypeDef* typeDef_;
 
   static const ObjectOps objectOps_;
 
@@ -132,20 +59,54 @@ class WasmGcObject : public JSObject {
                                                HandleId id,
                                                ObjectOpResult& result);
 
+  // PropOffset is a uint32_t that is used to carry information about the
+  // location of an value from WasmGcObject::lookupProperty to
+  // WasmGcObject::loadValue.  It is distinct from a normal uint32_t to
+  // emphasise the fact that it cannot be interpreted as an offset in any
+  // single contiguous area of memory:
+  //
+  // * If the object in question is a WasmStructObject, it is the value of
+  //   `wasm::StructField::offset` for the relevant field, without regard to
+  //   the inline/outline split.
+  //
+  // * If the object in question is a WasmArrayObject, then
+  //   - u32 == UINT32_MAX (0xFFFF'FFFF) means the "length" property
+  //     is requested
+  //   - u32 < UINT32_MAX means the array element starting at that byte
+  //     offset in WasmArrayObject::data_.  It is not an array index value.
+  //   See WasmGcObject::lookupProperty for details.
+  class PropOffset {
+    uint32_t u32_;
+
+   public:
+    PropOffset() : u32_(0) {}
+    uint32_t get() const { return u32_; }
+    void set(uint32_t u32) { u32_ = u32; }
+  };
+
+  [[nodiscard]] bool lookupProperty(JSContext* cx,
+                                    js::Handle<WasmGcObject*> object, jsid id,
+                                    PropOffset* offset, wasm::FieldType* type);
+  [[nodiscard]] bool hasProperty(JSContext* cx,
+                                 js::Handle<WasmGcObject*> object, jsid id) {
+    WasmGcObject::PropOffset offset;
+    wasm::FieldType type;
+    return lookupProperty(cx, object, id, &offset, &type);
+  }
+
   template <typename T>
   static T* create(JSContext* cx, const wasm::TypeDef* typeDef,
                    gc::AllocKind allocKind, gc::InitialHeap heap);
 
-  bool loadValue(JSContext* cx, const RttValue::PropOffset& offset,
+  bool loadValue(JSContext* cx, const WasmGcObject::PropOffset& offset,
                  wasm::FieldType type, MutableHandleValue vp);
 
  public:
-  RttValue& rttValue() const {
-    MOZ_ASSERT(rttValue_);
-    return *rttValue_;
-  }
+  const wasm::TypeDef& typeDef() const { return *typeDef_; }
 
-  [[nodiscard]] bool isRuntimeSubtype(js::Handle<RttValue*> rtt) const;
+  wasm::TypeDefKind kind() const { return typeDef().kind(); }
+
+  [[nodiscard]] bool isRuntimeSubtype(const wasm::TypeDef* parentTypeDef) const;
 
   [[nodiscard]] static bool obj_newEnumerate(JSContext* cx, HandleObject obj,
                                              MutableHandleIdVector properties,
@@ -177,7 +138,8 @@ class WasmArrayObject : public WasmGcObject {
   // number of elements.  Reports an error if the number of elements is too
   // large, or if there is an out of memory.  `rtt` is the overall array type,
   // not the element type.
-  static WasmArrayObject* createArray(JSContext* cx, Handle<RttValue*> rtt,
+  static WasmArrayObject* createArray(JSContext* cx,
+                                      const wasm::TypeDef* typeDef,
                                       uint32_t numElements,
                                       gc::InitialHeap heap = gc::DefaultHeap);
 
@@ -241,11 +203,12 @@ class WasmStructObject : public WasmGcObject {
   }
 
   // AllocKind for object creation
-  static gc::AllocKind allocKindForRttValue(RttValue* rtt);
+  static gc::AllocKind allocKindForTypeDef(const wasm::TypeDef* typeDef);
 
   // Creates a new struct typed object initialized to zero. Reports if there
-  // is an out of memory error.  `rtt` is the type of the struct.
-  static WasmStructObject* createStruct(JSContext* cx, Handle<RttValue*> rtt,
+  // is an out of memory error.  `typeDef` is the type of the struct.
+  static WasmStructObject* createStruct(JSContext* cx,
+                                        const wasm::TypeDef* typeDef,
                                         gc::InitialHeap heap = gc::DefaultHeap);
 
   // Given the total number of data bytes required (including alignment

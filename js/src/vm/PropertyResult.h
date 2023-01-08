@@ -75,7 +75,7 @@ class PropertyResult {
     propInfo_ = prop;
   }
 
-  void setTypedObjectProperty() { kind_ = Kind::NonNativeProperty; }
+  void setWasmGcProperty() { kind_ = Kind::NonNativeProperty; }
   void setProxyProperty() { kind_ = Kind::NonNativeProperty; }
 
   void setDenseElement(uint32_t index) {
