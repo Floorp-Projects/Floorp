@@ -15,12 +15,14 @@
             }
             .tab-throbber[pinned], .tab-icon-pending[pinned], .tab-icon-image[pinned], .tab-sharing-icon-overlay[pinned], .tab-icon-overlay[pinned] {
                 margin-inline-end: 5.5px !important;
-　　　　　　　}`;
+            }`;
             document.body.appendChild(css);
         }
-        let tabBrowserTabs = document.getElementById("tabbrowser-tabs");
-        tabBrowserTabs._pinnedTabsLayoutCache = null;
-        tabBrowserTabs._positionPinnedTabs();
+        setTimeout(function() {
+            let tabBrowserTabs = document.getElementById("tabbrowser-tabs");
+            tabBrowserTabs._pinnedTabsLayoutCache = null;
+            tabBrowserTabs._positionPinnedTabs();
+        }, 100);
     }
     Services.prefs.addObserver("floorp.tabs.showPinnedTabsTitle", apply);
     Services.prefs.addObserver("browser.tabs.tabMinWidth", apply);
