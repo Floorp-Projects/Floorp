@@ -3792,6 +3792,19 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            wasm::SymbolicAddress builtin,
                                            wasm::FailureMode failureMode);
 
+  // Perform a subtype check that `subTypeDef` is a subtype of `superTypeDef`
+  // branching to label depending on `onSuccess`. This method is a
+  // specialization of the general `wasm::TypeDef::isSubTypeOf` method for the
+  // case where the `superTypeDef` is statically known, which is the case for
+  // all wasm instructions.
+  //
+  // `scratch` is required iff the `subTypeDepth` is >=
+  // wasm::MinSuperTypeVectorLength. `subTypeDef` is clobbered by this method.
+  // `superTypeDef` is preserved.
+  void branchWasmTypeDefIsSubtype(Register subTypeDef, Register superTypeDef,
+                                  Register scratch, uint32_t subTypeDepth,
+                                  Label* label, bool onSuccess);
+
   // Compute ptr += (indexTemp32 << shift) where shift can be any value < 32.
   // May destroy indexTemp32.  The value of indexTemp32 must be positive, and it
   // is implementation-defined what happens if bits are lost or the value

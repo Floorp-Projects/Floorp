@@ -104,6 +104,8 @@ class WasmGcObject : public JSObject {
  public:
   const wasm::TypeDef& typeDef() const { return *typeDef_; }
 
+  static size_t offsetOfTypeDef() { return offsetof(WasmGcObject, typeDef_); }
+
   wasm::TypeDefKind kind() const { return typeDef().kind(); }
 
   [[nodiscard]] bool isRuntimeSubtype(const wasm::TypeDef* parentTypeDef) const;

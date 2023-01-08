@@ -1322,9 +1322,16 @@ struct BaseCompiler final {
   void setLatentEqz(ValType operandType);
   bool hasLatentOp() const;
   void resetLatentOp();
+  // Jump to the given branch, passing results, if the condition, `cond`
+  // matches between `lhs` and `rhs.
   template <typename Cond, typename Lhs, typename Rhs>
   [[nodiscard]] bool jumpConditionalWithResults(BranchState* b, Cond cond,
                                                 Lhs lhs, Rhs rhs);
+  // Jump to the given branch, passing results, if the WasmGcObject, `object`,
+  // is a subtype of `typeIndex`.
+  [[nodiscard]] bool jumpConditionalWithResults(BranchState* b, RegRef object,
+                                                uint32_t typeIndex,
+                                                bool onSuccess);
   template <typename Cond>
   [[nodiscard]] bool sniffConditionalControlCmp(Cond compareOp,
                                                 ValType operandType);
@@ -1645,6 +1652,10 @@ struct BaseCompiler final {
   };
 
   RegPtr loadTypeDef(uint32_t typeIndex);
+  // Branch to the label if the WasmGcObject `object` is/is not a subtype of
+  // `typeIndex`.
+  void branchGcObjectType(RegRef object, uint32_t typeIndex, Label* label,
+                          bool onSuccess);
   RegPtr emitGcArrayGetData(RegRef rp);
   template <typename NullCheckPolicy>
   RegI32 emitGcArrayGetNumElements(RegRef rp);
