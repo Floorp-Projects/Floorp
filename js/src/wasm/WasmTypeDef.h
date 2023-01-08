@@ -847,6 +847,10 @@ class RecGroup : public AtomicRefCounted<RecGroup> {
   }
 };
 
+// Remove all types from the canonical type set that are not referenced from
+// outside the type set.
+extern void PurgeCanonicalTypes();
+
 using SharedRecGroup = RefPtr<const RecGroup>;
 using MutableRecGroup = RefPtr<RecGroup>;
 using SharedRecGroupVector = Vector<SharedRecGroup, 0, SystemAllocPolicy>;
