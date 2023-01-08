@@ -309,8 +309,8 @@ bool WasmGcObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
 
 /* static */
 template <typename T>
-T* WasmGcObject::create(JSContext* cx, js::gc::AllocKind allocKind,
-                        js::gc::InitialHeap heap) {
+T* WasmGcObject::create(JSContext* cx, const wasm::TypeDef* typeDef,
+                        js::gc::AllocKind allocKind, js::gc::InitialHeap heap) {
   const JSClass* clasp = &T::class_;
   MOZ_ASSERT(IsWasmGcObjectClass(clasp));
   MOZ_ASSERT(!clasp->isNativeObject());
@@ -321,7 +321,7 @@ T* WasmGcObject::create(JSContext* cx, js::gc::AllocKind allocKind,
 
   Rooted<WasmGCShape*> shape(
       cx, WasmGCShape::getShape(cx, clasp, cx->realm(), TaggedProto(),
-                                ObjectFlags()));
+                                &typeDef->recGroup(), ObjectFlags()));
   if (!shape) {
     return nullptr;
   }

@@ -128,6 +128,10 @@ class NativeShape;
 class Shape;
 class PropertyIteratorObject;
 
+namespace wasm {
+class RecGroup;
+};
+
 // Hash policy for ShapeCachePtr's ShapeSetForAdd. Maps the new property key and
 // flags to the new shape.
 struct ShapeForAddHasher : public DefaultHasher<Shape*> {
@@ -347,11 +351,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   uint32_t immutableFlags;   // Immutable flags, see above.
   ObjectFlags objectFlags_;  // Immutable object flags, see ObjectFlags.
 
-  // For NativeShape: the shape's property map. This is either nullptr (for an
-  // initial SharedShape with no properties), a SharedPropMap (for SharedShape)
-  // or a DictionaryPropMap (for DictionaryShape).
-  GCPtr<PropMap*> nativePropMap_;
-
   // Cache used to speed up common operations on shapes.
   ShapeCachePtr cache_;
 
@@ -374,8 +373,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   ShapeCachePtr cache() const { return cache_; }
 
   void maybeCacheIterator(JSContext* cx, PropertyIteratorObject* iter);
-
-  void assertHasNoPropMap() const { MOZ_ASSERT(!nativePropMap_); }
 
   const JSClass* getObjectClass() const { return base()->clasp(); }
   JS::Realm* realm() const { return base()->realm(); }
@@ -420,10 +417,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   inline NativeShape& asNative();
   inline SharedShape& asShared();
   inline DictionaryShape& asDictionary();
+  inline WasmGCShape& asWasmGC();
 
   inline const NativeShape& asNative() const;
   inline const SharedShape& asShared() const;
   inline const DictionaryShape& asDictionary() const;
+  inline const WasmGCShape& asWasmGC() const;
 
 #ifdef DEBUG
   void dump(js::GenericPrinter& out) const;
@@ -463,29 +462,29 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     static_assert(KIND_MASK == JS::shadow::Shape::KIND_MASK);
     static_assert(FIXED_SLOTS_SHIFT == JS::shadow::Shape::FIXED_SLOTS_SHIFT);
     static_assert(FIXED_SLOTS_MASK == JS::shadow::Shape::FIXED_SLOTS_MASK);
-    // Sanity check Shape size is what we expect.
-#ifdef JS_64BIT
-    static_assert(sizeof(Shape) == 4 * sizeof(void*));
-#else
-    static_assert(sizeof(Shape) == 6 * sizeof(void*));
-#endif
   }
 };
 
 // Shared or dictionary shape for a NativeObject.
 class NativeShape : public Shape {
  protected:
+  // The shape's property map. This is either nullptr (for an
+  // initial SharedShape with no properties), a SharedPropMap (for
+  // SharedShape) or a DictionaryPropMap (for DictionaryShape).
+  GCPtr<PropMap*> propMap_;
+
   NativeShape(Kind kind, BaseShape* base, ObjectFlags objectFlags,
               uint32_t nfixed, PropMap* map, uint32_t mapLength)
-      : Shape(kind, base, objectFlags) {
+      : Shape(kind, base, objectFlags), propMap_(map) {
     MOZ_ASSERT(base->clasp()->isNativeObject());
     MOZ_ASSERT(mapLength <= PropMap::Capacity);
     immutableFlags |= (nfixed << FIXED_SLOTS_SHIFT) | mapLength;
-    nativePropMap_ = map;
   }
 
  public:
-  PropMap* propMap() const { return nativePropMap_; }
+  void traceChildren(JSTracer* trc);
+
+  PropMap* propMap() const { return propMap_; }
   uint32_t propMapLength() const { return immutableFlags & MAP_LENGTH_MASK; }
 
   PropertyInfoWithKey lastProperty() const {
@@ -533,7 +532,7 @@ class SharedShape : public NativeShape {
  public:
   SharedPropMap* propMap() const {
     MOZ_ASSERT(isShared());
-    return nativePropMap_ ? nativePropMap_->asShared() : nullptr;
+    return propMap_ ? propMap_->asShared() : nullptr;
   }
   inline SharedPropMap* propMapMaybeForwarded() const;
 
@@ -635,7 +634,7 @@ class DictionaryShape : public NativeShape {
                       uint32_t mapLength) {
     MOZ_ASSERT(isDictionary());
     objectFlags_ = flags;
-    nativePropMap_ = map;
+    propMap_ = map;
     immutableFlags = (immutableFlags & ~MAP_LENGTH_MASK) | mapLength;
     MOZ_ASSERT(propMapLength() == mapLength);
   }
@@ -653,13 +652,16 @@ class DictionaryShape : public NativeShape {
 
   DictionaryPropMap* propMap() const {
     MOZ_ASSERT(isDictionary());
-    MOZ_ASSERT(nativePropMap_);
-    return nativePropMap_->asDictionary();
+    MOZ_ASSERT(propMap_);
+    return propMap_->asDictionary();
   }
 };
 
 // Shape used for a ProxyObject.
 class ProxyShape : public Shape {
+  // Needed to maintain the same size as other shapes.
+  uintptr_t padding_;
+
   friend class js::gc::CellAllocator;
   ProxyShape(BaseShape* base, ObjectFlags objectFlags)
       : Shape(Kind::Proxy, base, objectFlags) {
@@ -673,24 +675,73 @@ class ProxyShape : public Shape {
   static ProxyShape* getShape(JSContext* cx, const JSClass* clasp,
                               JS::Realm* realm, TaggedProto proto,
                               ObjectFlags objectFlags);
+
+ private:
+  static void staticAsserts() {
+    // Silence unused field warning.
+    static_assert(sizeof(padding_) == sizeof(uintptr_t));
+  }
 };
 
 // Shape used for a WasmGCObject.
 class WasmGCShape : public Shape {
+  // The shape's recursion group.
+  const wasm::RecGroup* recGroup_;
+
   friend class js::gc::CellAllocator;
-  WasmGCShape(BaseShape* base, ObjectFlags objectFlags)
-      : Shape(Kind::WasmGC, base, objectFlags) {
+  WasmGCShape(BaseShape* base, const wasm::RecGroup* recGroup,
+              ObjectFlags objectFlags)
+      : Shape(Kind::WasmGC, base, objectFlags), recGroup_(recGroup) {
     MOZ_ASSERT(!base->clasp()->isProxyObject());
     MOZ_ASSERT(!base->clasp()->isNativeObject());
   }
 
   static WasmGCShape* new_(JSContext* cx, Handle<BaseShape*> base,
+                           const wasm::RecGroup* recGroup,
                            ObjectFlags objectFlags);
+
+  // Take a reference to the recursion group.
+  inline void init();
 
  public:
   static WasmGCShape* getShape(JSContext* cx, const JSClass* clasp,
                                JS::Realm* realm, TaggedProto proto,
+                               const wasm::RecGroup* recGroup,
                                ObjectFlags objectFlags);
+
+  // Release the reference to the recursion group.
+  inline void finalize(JS::GCContext* gcx);
+
+  const wasm::RecGroup* recGroup() const {
+    MOZ_ASSERT(isWasmGC());
+    return recGroup_;
+  }
+};
+
+// A type that can be used to get the size of the Shape alloc kind.
+class SizedShape : public Shape {
+  // The various shape kinds have an extra word that is used defined
+  // differently depending on the type.
+  uintptr_t padding_;
+
+  static void staticAsserts() {
+    // Silence unused field warning.
+    static_assert(sizeof(padding_) == sizeof(uintptr_t));
+
+    // Sanity check Shape size is what we expect.
+#ifdef JS_64BIT
+    static_assert(sizeof(SizedShape) == 4 * sizeof(void*));
+#else
+    static_assert(sizeof(SizedShape) == 6 * sizeof(void*));
+#endif
+
+    // All shape kinds must have the same size.
+    static_assert(sizeof(NativeShape) == sizeof(SizedShape));
+    static_assert(sizeof(SharedShape) == sizeof(SizedShape));
+    static_assert(sizeof(DictionaryShape) == sizeof(SizedShape));
+    static_assert(sizeof(ProxyShape) == sizeof(SizedShape));
+    static_assert(sizeof(WasmGCShape) == sizeof(SizedShape));
+  }
 };
 
 inline NativeShape& js::Shape::asNative() {
@@ -708,6 +759,11 @@ inline DictionaryShape& js::Shape::asDictionary() {
   return *static_cast<DictionaryShape*>(this);
 }
 
+inline WasmGCShape& js::Shape::asWasmGC() {
+  MOZ_ASSERT(isWasmGC());
+  return *static_cast<WasmGCShape*>(this);
+}
+
 inline const NativeShape& js::Shape::asNative() const {
   MOZ_ASSERT(isNative());
   return *static_cast<const NativeShape*>(this);
@@ -721,6 +777,11 @@ inline const SharedShape& js::Shape::asShared() const {
 inline const DictionaryShape& js::Shape::asDictionary() const {
   MOZ_ASSERT(isDictionary());
   return *static_cast<const DictionaryShape*>(this);
+}
+
+inline const WasmGCShape& js::Shape::asWasmGC() const {
+  MOZ_ASSERT(isWasmGC());
+  return *static_cast<const WasmGCShape*>(this);
 }
 
 // Iterator for iterating over a shape's properties. It can be used like this:

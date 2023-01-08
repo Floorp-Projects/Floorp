@@ -90,7 +90,7 @@ void ShapeZone::checkTablesAfterMovingGC() {
 
     using Lookup = WasmGCShapeHasher::Lookup;
     Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
-                  shape->objectFlags());
+                  shape->recGroup(), shape->objectFlags());
     WasmGCShapeSet::Ptr ptr = wasmGCShapes.lookup(lookup);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }

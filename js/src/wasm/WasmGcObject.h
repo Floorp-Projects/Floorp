@@ -133,8 +133,8 @@ class WasmGcObject : public JSObject {
                                                ObjectOpResult& result);
 
   template <typename T>
-  static T* create(JSContext* cx, gc::AllocKind allocKind,
-                   gc::InitialHeap heap);
+  static T* create(JSContext* cx, const wasm::TypeDef* typeDef,
+                   gc::AllocKind allocKind, gc::InitialHeap heap);
 
   bool loadValue(JSContext* cx, const RttValue::PropOffset& offset,
                  wasm::FieldType type, MutableHandleValue vp);

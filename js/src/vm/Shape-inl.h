@@ -50,13 +50,13 @@ template <class ObjectSubclass>
 MOZ_ALWAYS_INLINE PropMap* NativeShape::lookup(JSContext* cx, PropertyKey key,
                                                uint32_t* index) {
   uint32_t len = propMapLength();
-  return len > 0 ? nativePropMap_->lookup(cx, len, key, index) : nullptr;
+  return len > 0 ? propMap_->lookup(cx, len, key, index) : nullptr;
 }
 
 MOZ_ALWAYS_INLINE PropMap* NativeShape::lookupPure(PropertyKey key,
                                                    uint32_t* index) {
   uint32_t len = propMapLength();
-  return len > 0 ? nativePropMap_->lookupPure(len, key, index) : nullptr;
+  return len > 0 ? propMap_->lookupPure(len, key, index) : nullptr;
 }
 
 inline void Shape::purgeCache(JS::GCContext* gcx) {
@@ -70,11 +70,18 @@ inline void Shape::finalize(JS::GCContext* gcx) {
   if (!cache_.isNone()) {
     purgeCache(gcx);
   }
+  if (isWasmGC()) {
+    asWasmGC().finalize(gcx);
+  }
 }
+
+inline void WasmGCShape::init() { recGroup_->AddRef(); }
+
+inline void WasmGCShape::finalize(JS::GCContext* gcx) { recGroup_->Release(); }
 
 inline SharedPropMap* SharedShape::propMapMaybeForwarded() const {
   MOZ_ASSERT(isShared());
-  PropMap* propMap = nativePropMap_;
+  PropMap* propMap = propMap_;
   return propMap ? MaybeForwarded(propMap)->asShared() : nullptr;
 }
 
