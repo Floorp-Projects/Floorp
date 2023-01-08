@@ -361,8 +361,7 @@ const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
   // recursion group.
   CheckedUint32 totalBytes = 0;
   for (uint32_t typeIndex = 0; typeIndex < recGroup->numTypes(); typeIndex++) {
-    totalBytes +=
-        SuperTypeVector::byteSizeForTypeDef(recGroup->type(typeIndex));
+    totalBytes += SuperTypeVector::byteSizeForTypeDef(recGroup->type(typeIndex));
   }
   if (!totalBytes.isValid()) {
     return nullptr;
