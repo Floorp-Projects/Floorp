@@ -668,13 +668,17 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnH2PushStream(
 }  // namespace net
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvEarlyHint(
-    const nsCString& aValue, const nsACString& aReferrerPolicy) {
-  LOG(("HttpTransactionParent::RecvEarlyHint header=%s aReferrerPolicy=%s",
+    const nsCString& aValue, const nsACString& aReferrerPolicy,
+    const nsACString& aCSPHeader) {
+  LOG(
+      ("HttpTransactionParent::RecvEarlyHint header=%s aReferrerPolicy=%s "
+       "aCSPHeader=%s",
        PromiseFlatCString(aValue).get(),
-       PromiseFlatCString(aReferrerPolicy).get()));
+       PromiseFlatCString(aReferrerPolicy).get(),
+       PromiseFlatCString(aCSPHeader).get()));
   nsCOMPtr<nsIEarlyHintObserver> obs = do_QueryInterface(mChannel);
   if (obs) {
-    Unused << obs->EarlyHint(aValue, aReferrerPolicy);
+    Unused << obs->EarlyHint(aValue, aReferrerPolicy, aCSPHeader);
   }
 
   return IPC_OK();

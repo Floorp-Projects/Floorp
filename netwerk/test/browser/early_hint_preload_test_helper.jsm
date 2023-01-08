@@ -8,6 +8,7 @@ const EXPORTED_SYMBOLS = [
   "request_count_checking",
   "test_hint_preload",
   "test_hint_preload_internal",
+  "test_preload_hint_and_request",
 ];
 
 const { Assert } = ChromeUtils.importESModule(
@@ -95,4 +96,48 @@ async function test_hint_preload_internal(
   ).then(response => response.json());
 
   await request_count_checking(testName, gotRequestCount, expectedRequestCount);
+}
+
+// Verify that CSP policies in both the 103 response as well as the main response are respected.
+// e.g.
+// 103 Early Hint
+// Content-Security-Policy: style-src: self;
+// Link: </style.css>; rel=preload; as=style
+// 200 OK
+// Content-Security-Policy: style-src: none;
+// Link: </font.ttf>; rel=preload; as=font
+
+// Server-side we verify that:
+//  - the hinted preload request was made as expected
+//  - the load request request was made as expected
+// Client-side, we verify that the image was loaded or not loaded, depending on the scenario
+
+// This verifies preload hints and requests
+async function test_preload_hint_and_request(input, expected_results) {
+  // reset the count
+  let headers = new Headers();
+  headers.append("X-Early-Hint-Count-Start", "");
+  await fetch(
+    "https://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs",
+    { headers }
+  );
+
+  let requestUrl = `https://example.com/browser/netwerk/test/browser/early_hint_csp_options_html.sjs?as=${
+    input.resource_type
+  }&hinted=${input.hinted ? "1" : "0"}${input.csp ? "&csp=" + input.csp : ""}${
+    input.csp_in_early_hint
+      ? "&csp_in_early_hint=" + input.csp_in_early_hint
+      : ""
+  }${input.host ? "&host=" + input.host : ""}`;
+
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, requestUrl, true);
+
+  let gotRequestCount = await fetch(
+    "https://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs"
+  ).then(response => response.json());
+
+  await Assert.deepEqual(gotRequestCount, expected_results, input.test_name);
+
+  gBrowser.removeCurrentTab();
+  Services.cache2.clear();
 }

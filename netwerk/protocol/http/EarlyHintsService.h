@@ -27,7 +27,8 @@ class EarlyHintsService {
   EarlyHintsService();
   ~EarlyHintsService();
   void EarlyHint(const nsACString& aLinkHeader, nsIURI* aBaseURI,
-                 nsIChannel* aChannel, const nsACString& aReferrerPolicy);
+                 nsIChannel* aChannel, const nsACString& aReferrerPolicy,
+                 const nsACString& aCSPHeader);
   void FinalResponse(uint32_t aResponseStatus);
   void Cancel(const nsACString& aReason);
 

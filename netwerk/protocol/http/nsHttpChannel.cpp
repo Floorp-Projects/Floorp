@@ -9865,13 +9865,14 @@ nsHttpChannel::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::EarlyHint(const nsACString& linkHeader,
-                         const nsACString& referrerPolicy) {
+nsHttpChannel::EarlyHint(const nsACString& aLinkHeader,
+                         const nsACString& aReferrerPolicy,
+                         const nsACString& aCspHeader) {
   LOG(("nsHttpChannel::EarlyHint.\n"));
 
   if (mEarlyHintObserver && nsContentUtils::ComputeIsSecureContext(this)) {
     LOG(("nsHttpChannel::EarlyHint propagated.\n"));
-    mEarlyHintObserver->EarlyHint(linkHeader, referrerPolicy);
+    mEarlyHintObserver->EarlyHint(aLinkHeader, aReferrerPolicy, aCspHeader);
   }
   return NS_OK;
 }

@@ -73,7 +73,7 @@ parent:
   async OnH2PushStream(uint32_t pushedStreamId,
                        nsCString resourceUrl,
                        nsCString requestString);
-  async EarlyHint(nsCString linkHeader, nsCString referrerPolicy);
+  async EarlyHint(nsCString linkHeader, nsCString referrerPolicy, nsCString cspHeader);
 
 child:
   async __delete__();
