@@ -118,7 +118,7 @@ NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen(nsIStreamListener* aListener) {
   rv = VisitNextStorage();
   if (NS_FAILED(rv)) return rv;
 
-  rv = NS_MaybeOpenChannelUsingAsyncOpen(mChannel, aListener);
+  rv = mChannel->AsyncOpen(aListener);
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;

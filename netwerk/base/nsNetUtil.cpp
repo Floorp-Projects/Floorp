@@ -1057,7 +1057,7 @@ nsresult NS_ImplementChannelOpen(nsIChannel* channel, nsIInputStream** result) {
                                          getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_MaybeOpenChannelUsingAsyncOpen(channel, listener);
+  rv = channel->AsyncOpen(listener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t n;
@@ -2590,18 +2590,6 @@ nsresult NS_LinkRedirectChannels(uint64_t channelId,
   MOZ_ASSERT(registrar);
 
   return registrar->LinkChannels(channelId, parentChannel, _result);
-}
-
-nsresult NS_MaybeOpenChannelUsingOpen(nsIChannel* aChannel,
-                                      nsIInputStream** aStream) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  return aChannel->Open(aStream);
-}
-
-nsresult NS_MaybeOpenChannelUsingAsyncOpen(nsIChannel* aChannel,
-                                           nsIStreamListener* aListener) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  return aChannel->AsyncOpen(aListener);
 }
 
 nsILoadInfo::CrossOriginEmbedderPolicy

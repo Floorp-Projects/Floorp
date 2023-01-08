@@ -812,22 +812,6 @@ nsresult NS_LinkRedirectChannels(uint64_t channelId,
                                  nsIChannel** _result);
 
 /**
- * Helper function which checks whether the channel can be
- * openend using Open() or has to fall back to opening
- * the channel using Open().
- */
-nsresult NS_MaybeOpenChannelUsingOpen(nsIChannel* aChannel,
-                                      nsIInputStream** aStream);
-
-/**
- * Helper function which checks whether the channel can be
- * openend using AsyncOpen() or has to fall back to opening
- * the channel using AsyncOpen().
- */
-nsresult NS_MaybeOpenChannelUsingAsyncOpen(nsIChannel* aChannel,
-                                           nsIStreamListener* aListener);
-
-/**
  * Returns nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP if `aHeader` is
  * "require-corp" and nsILoadInfo::EMBEDDER_POLICY_NULL otherwise.
  *

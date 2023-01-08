@@ -1350,7 +1350,7 @@ void WebSocketChannel::BeginOpenInternal() {
     return;
   }
 
-  rv = NS_MaybeOpenChannelUsingAsyncOpen(localChannel, this);
+  rv = localChannel->AsyncOpen(this);
 
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::BeginOpenInternal: cannot async open\n"));
