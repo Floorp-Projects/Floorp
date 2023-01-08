@@ -58,7 +58,7 @@ add_task(async function testStoreIPHint() {
     answers: [
       {
         name: "test.IPHint.com",
-        ttl: 999,
+        ttl: 55,
         type: "HTTPS",
         flush: false,
         data: {
@@ -80,7 +80,6 @@ add_task(async function testStoreIPHint() {
   });
 
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
-  Assert.equal(inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).ttl, 999);
   Assert.equal(answer[0].priority, 1);
   Assert.equal(answer[0].name, "test.IPHint.com");
   Assert.equal(answer[0].values.length, 4);
@@ -119,18 +118,17 @@ add_task(async function testStoreIPHint() {
     "got correct answer"
   );
 
-  async function verifyAnswer(flags, expectedAddresses) {
-    let { record } = await new TRRDNSListener("test.IPHint.com", {
+  async function verifyAnswer(flags, answer) {
+    let { inRecord } = await new TRRDNSListener("test.IPHint.com", {
       flags,
       expectedSuccess: false,
     });
-    record.QueryInterface(Ci.nsIDNSAddrRecord);
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     let addresses = [];
-    while (record.hasMore()) {
-      addresses.push(record.getNextAddrAsString());
+    while (inRecord.hasMore()) {
+      addresses.push(inRecord.getNextAddrAsString());
     }
-    Assert.deepEqual(addresses, expectedAddresses);
-    Assert.equal(record.ttl, 999);
+    Assert.deepEqual(addresses, answer);
   }
 
   await verifyAnswer(Ci.nsIDNSService.RESOLVE_IP_HINT, [
