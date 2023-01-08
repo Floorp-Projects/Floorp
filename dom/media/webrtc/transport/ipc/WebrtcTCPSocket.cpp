@@ -471,7 +471,7 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
     return rv;
   }
 
-  rv = NS_MaybeOpenChannelUsingAsyncOpen(httpChannel, this);
+  rv = httpChannel->AsyncOpen(this);
 
   if (NS_FAILED(rv)) {
     LOG(("WebrtcTCPSocket %p: cannot async open\n", this));

@@ -794,8 +794,7 @@ static mozilla::Result<nsCString, nsresult> ReadScript(
   MOZ_TRY(aInfo.EnsureScriptChannel());
 
   nsCOMPtr<nsIInputStream> scriptStream;
-  MOZ_TRY(NS_MaybeOpenChannelUsingOpen(aInfo.ScriptChannel(),
-                                       getter_AddRefs(scriptStream)));
+  MOZ_TRY(aInfo.ScriptChannel()->Open(getter_AddRefs(scriptStream)));
 
   uint64_t len64;
   uint32_t bytesRead;

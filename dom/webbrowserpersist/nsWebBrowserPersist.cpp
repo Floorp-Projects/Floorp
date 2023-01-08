@@ -1469,8 +1469,7 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(nsIChannel* aChannel,
 
   if (fc && !fu) {
     nsCOMPtr<nsIInputStream> fileInputStream, bufferedInputStream;
-    nsresult rv =
-        NS_MaybeOpenChannelUsingOpen(aChannel, getter_AddRefs(fileInputStream));
+    nsresult rv = aChannel->Open(getter_AddRefs(fileInputStream));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedInputStream),
                                    fileInputStream.forget(),
@@ -1488,7 +1487,7 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(nsIChannel* aChannel,
   }
 
   // Read from the input channel
-  nsresult rv = NS_MaybeOpenChannelUsingAsyncOpen(aChannel, this);
+  nsresult rv = aChannel->AsyncOpen(this);
   if (rv == NS_ERROR_NO_CONTENT) {
     // Assume this is a protocol such as mailto: which does not feed out
     // data and just ignore it.
