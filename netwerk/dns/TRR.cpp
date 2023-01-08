@@ -702,8 +702,9 @@ void TRR::StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord) {
 
   mHostResolver->MaybeRenewHostRecord(hostRecord);
 
+  uint32_t ttl = AddrInfo::NO_TTL_DATA;
   RefPtr<AddrInfo> ai(new AddrInfo(aSVCBRecord.mSvcDomainName, ResolverType(),
-                                   TRRTYPE_A, std::move(addresses), mTTL));
+                                   TRRTYPE_A, std::move(addresses), ttl));
 
   // Since we're not actually calling NameLookup for this record, we need
   // to set these fields to avoid assertions in CompleteLookup.

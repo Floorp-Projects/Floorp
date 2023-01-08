@@ -116,7 +116,6 @@ void nsHostRecord::CopyExpirationTimesAndFlagsFrom(
   mValidEnd = aFromHostRecord->mValidEnd;
   mGraceStart = aFromHostRecord->mGraceStart;
   mDoomed = aFromHostRecord->mDoomed;
-  mTtl = uint32_t(aFromHostRecord->mTtl);
 }
 
 bool nsHostRecord::HasUsableResult(const mozilla::TimeStamp& now,
