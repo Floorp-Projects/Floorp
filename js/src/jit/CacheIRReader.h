@@ -103,7 +103,6 @@ class MOZ_RAII CacheIRReader {
   CompletionKind completionKind() { return CompletionKind(buffer_.readByte()); }
 
   Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
-  uint32_t rttValueKey() { return buffer_.readByte(); }
   JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
   JSOp jsop() { return JSOp(buffer_.readByte()); }
   int32_t int32Immediate() { return int32_t(buffer_.readFixedUint32_t()); }

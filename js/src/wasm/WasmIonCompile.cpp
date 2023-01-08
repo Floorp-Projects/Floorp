@@ -3737,12 +3737,12 @@ class FunctionCompiler {
 
   /************************************************ WasmGC: type helpers ***/
 
-  // Returns an MDefinition holding the runtime type denoted by `typeIndex`.
-  [[nodiscard]] MDefinition* loadGcCanon(uint32_t typeIndex) {
+  // Returns an MDefinition holding the type definition for `typeIndex`.
+  [[nodiscard]] MDefinition* loadTypeDef(uint32_t typeIndex) {
     uint32_t typeIdOffset = moduleEnv().offsetOfTypeId(typeIndex);
 
     auto* load =
-        MWasmLoadGlobalVar::New(alloc(), MIRType::RefOrNull, typeIdOffset,
+        MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, typeIdOffset,
                                 /*isConst=*/true, instancePointer_);
     if (!load) {
       return nullptr;
@@ -3983,17 +3983,17 @@ class FunctionCompiler {
   // `typeIndex`s default value.
   [[nodiscard]] MDefinition* createDefaultInitializedArrayObject(
       uint32_t lineOrBytecode, uint32_t typeIndex, MDefinition* numElements) {
-    // Get the rtt value for the array as a whole.
-    MDefinition* arrayRtt = loadGcCanon(typeIndex);
-    if (!arrayRtt) {
+    // Get the type definition for the array as a whole.
+    MDefinition* arrayTypeDef = loadTypeDef(typeIndex);
+    if (!arrayTypeDef) {
       return nullptr;
     }
 
-    // Create call: arrayObject = Instance::arrayNew(numElements, arrayRtt)
+    // Create call: arrayObject = Instance::arrayNew(numElements, arrayTypeDef)
     // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated
     // by this call will trap.
     MDefinition* arrayObject;
-    if (!emitInstanceCall2(lineOrBytecode, SASigArrayNew, numElements, arrayRtt,
+    if (!emitInstanceCall2(lineOrBytecode, SASigArrayNew, numElements, arrayTypeDef,
                            &arrayObject)) {
       return nullptr;
     }
@@ -4218,31 +4218,31 @@ class FunctionCompiler {
     return true;
   }
 
-  // Generate MIR that attempts to downcast `ref` to `castToRTT`.  If the
+  // Generate MIR that attempts to downcast `ref` to `castToTypeDef`.  If the
   // downcast fails, we trap.  If it succeeds, then `ref` can be assumed to
-  // have a type that is a subtype of (or the same as) `castToRTT` after this
+  // have a type that is a subtype of (or the same as) `castToTypeDef` after this
   // point.
   [[nodiscard]] bool refCast(uint32_t lineOrBytecode, MDefinition* ref,
-                             MDefinition* castToRTT) {
-    // Create call: success = Instance::refTest(ref, castToRTT)
+                             MDefinition* castToTypeDef) {
+    // Create call: success = Instance::refTest(ref, castToTypeDef)
     MDefinition* success;
-    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToRTT,
+    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToTypeDef,
                            &success)) {
       return false;
     }
 
     // Trap if `success` is zero.  If it's nonzero, we have established that
-    // `ref <: castToRTT`.
+    // `ref <: castToTypeDef`.
     return trapIfZero(wasm::Trap::BadCast, success);
   }
 
   // Generate MIR that computes a boolean value indicating whether or not it
-  // is possible to downcast `ref` to `castToRTT`.
+  // is possible to downcast `ref` to `castToTypeDef`.
   [[nodiscard]] MDefinition* refTest(uint32_t lineOrBytecode, MDefinition* ref,
-                                     MDefinition* castToRTT) {
-    // Create call: success = Instance::refTest(ref, castToRTT)
+                                     MDefinition* castToTypeDef) {
+    // Create call: success = Instance::refTest(ref, castToTypeDef)
     MDefinition* success;
-    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToRTT,
+    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToTypeDef,
                            &success)) {
       return nullptr;
     }
@@ -4266,8 +4266,8 @@ class FunctionCompiler {
       return false;
     }
 
-    MDefinition* castToRTT = loadGcCanon(castTypeIndex);
-    if (!castToRTT) {
+    MDefinition* castToTypeDef = loadTypeDef(castTypeIndex);
+    if (!castToTypeDef) {
       return false;
     }
 
@@ -4283,9 +4283,9 @@ class FunctionCompiler {
     MDefinition* ref = values.back();
     MOZ_ASSERT(ref->type() == MIRType::RefOrNull);
 
-    // Create call: success = Instance::refTest(ref, castToRTT);
+    // Create call: success = Instance::refTest(ref, castToTypeDef);
     MDefinition* success;
-    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToRTT,
+    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToTypeDef,
                            &success)) {
       return false;
     }
@@ -6535,16 +6535,16 @@ static bool EmitStructNew(FunctionCompiler& f) {
   const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
   MOZ_ASSERT(args.length() == structType.fields_.length());
 
-  // Allocate a default initialized struct.  This requires the rtt value for
-  // the struct.
-  MDefinition* structRTT = f.loadGcCanon(typeIndex);
-  if (!structRTT) {
+  // Allocate a default initialized struct.  This requires the type definition
+  // for the struct.
+  MDefinition* structTypeDef = f.loadTypeDef(typeIndex);
+  if (!structTypeDef) {
     return false;
   }
 
-  // Create call: structObject = Instance::structNew(structRTT)
+  // Create call: structObject = Instance::structNew(structTypeDef)
   MDefinition* structObject;
-  if (!f.emitInstanceCall1(lineOrBytecode, SASigStructNew, structRTT,
+  if (!f.emitInstanceCall1(lineOrBytecode, SASigStructNew, structTypeDef,
                            &structObject)) {
     return false;
   }
@@ -6578,16 +6578,16 @@ static bool EmitStructNewDefault(FunctionCompiler& f) {
     return true;
   }
 
-  // Allocate a default initialized struct.  This requires the rtt value for
-  // the struct.
-  MDefinition* structRTT = f.loadGcCanon(typeIndex);
-  if (!structRTT) {
+  // Allocate a default initialized struct.  This requires the type definition
+  // for the struct.
+  MDefinition* structTypeDef = f.loadTypeDef(typeIndex);
+  if (!structTypeDef) {
     return false;
   }
 
-  // Create call: structObject = Instance::structNew(structRTT)
+  // Create call: structObject = Instance::structNew(structTypeDef)
   MDefinition* structObject;
-  if (!f.emitInstanceCall1(lineOrBytecode, SASigStructNew, structRTT,
+  if (!f.emitInstanceCall1(lineOrBytecode, SASigStructNew, structTypeDef,
                            &structObject)) {
     return false;
   }
@@ -6779,9 +6779,9 @@ static bool EmitArrayNewData(FunctionCompiler& f) {
     return true;
   }
 
-  // Get the rtt value for the array as a whole.
-  MDefinition* arrayRtt = f.loadGcCanon(typeIndex);
-  if (!arrayRtt) {
+  // Get the type definition for the array as a whole.
+  MDefinition* arrayTypeDef = f.loadTypeDef(typeIndex);
+  if (!arrayTypeDef) {
     return false;
   }
 
@@ -6793,12 +6793,12 @@ static bool EmitArrayNewData(FunctionCompiler& f) {
 
   // Create call:
   // arrayObject = Instance::arrayNewData(segByteOffset:u32, numElements:u32,
-  //                                      arrayRtt:word, segIndex:u32)
+  //                                      arrayTypeDef:word, segIndex:u32)
   // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated by
   // this call will trap.
   MDefinition* arrayObject;
   if (!f.emitInstanceCall4(lineOrBytecode, SASigArrayNewData, segByteOffset,
-                           numElements, arrayRtt, segIndexM, &arrayObject)) {
+                           numElements, arrayTypeDef, segIndexM, &arrayObject)) {
     return false;
   }
 
@@ -6821,9 +6821,9 @@ static bool EmitArrayNewElem(FunctionCompiler& f) {
     return true;
   }
 
-  // Get the rtt value for the array as a whole.
-  MDefinition* arrayRtt = f.loadGcCanon(typeIndex);
-  if (!arrayRtt) {
+  // Get the type definition for the array as a whole.
+  MDefinition* arrayTypeDef = f.loadTypeDef(typeIndex);
+  if (!arrayTypeDef) {
     return false;
   }
 
@@ -6835,12 +6835,12 @@ static bool EmitArrayNewElem(FunctionCompiler& f) {
 
   // Create call:
   // arrayObject = Instance::arrayNewElem(segElemIndex:u32, numElements:u32,
-  //                                      arrayRtt:word, segIndex:u32)
+  //                                      arrayTypeDef:word, segIndex:u32)
   // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated by
   // this call will trap.
   MDefinition* arrayObject;
   if (!f.emitInstanceCall4(lineOrBytecode, SASigArrayNewElem, segElemIndex,
-                           numElements, arrayRtt, segIndexM, &arrayObject)) {
+                           numElements, arrayTypeDef, segIndexM, &arrayObject)) {
     return false;
   }
 
@@ -7001,12 +7001,12 @@ static bool EmitRefTest(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* castToRTT = f.loadGcCanon(typeIndex);
-  if (!castToRTT) {
+  MDefinition* castToTypeDef = f.loadTypeDef(typeIndex);
+  if (!castToTypeDef) {
     return false;
   }
 
-  MDefinition* success = f.refTest(lineOrBytecode, ref, castToRTT);
+  MDefinition* success = f.refTest(lineOrBytecode, ref, castToTypeDef);
   if (!success) {
     return false;
   }
@@ -7028,12 +7028,12 @@ static bool EmitRefCast(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* castToRTT = f.loadGcCanon(typeIndex);
-  if (!castToRTT) {
+  MDefinition* castToTypeDef = f.loadTypeDef(typeIndex);
+  if (!castToTypeDef) {
     return false;
   }
 
-  if (!f.refCast(lineOrBytecode, ref, castToRTT)) {
+  if (!f.refCast(lineOrBytecode, ref, castToTypeDef)) {
     return false;
   }
 

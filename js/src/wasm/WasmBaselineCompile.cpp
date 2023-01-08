@@ -6304,13 +6304,13 @@ void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
 
 #ifdef ENABLE_WASM_GC
 
-void BaseCompiler::emitGcCanon(uint32_t typeIndex) {
-  RegRef rp = needRef();
+RegPtr BaseCompiler::loadTypeDef(uint32_t typeIndex) {
+  RegPtr rp = needPtr();
 #  ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(InstanceReg);
 #  endif
   masm.loadWasmGlobalPtr(moduleEnv_.offsetOfTypeId(typeIndex), rp);
-  pushRef(rp);
+  return rp;
 }
 
 /* static */
@@ -6575,9 +6575,9 @@ bool BaseCompiler::emitStructNew() {
 
   const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
-  // Allocate a default initialized struct. This requires the rtt value for the
-  // struct to be pushed on the stack. This will trap on OOM.
-  emitGcCanon(typeIndex);
+  // Allocate a default initialized struct. This requires the type definition
+  // for the struct to be pushed on the stack. This will trap on OOM.
+  pushPtr(loadTypeDef(typeIndex));
   if (!emitInstanceCall(SASigStructNew)) {
     return false;
   }
@@ -6662,9 +6662,9 @@ bool BaseCompiler::emitStructNewDefault() {
     return true;
   }
 
-  // Allocate a default initialized struct. This requires the rtt value for the
-  // struct to be pushed on the stack. This will trap on OOM.
-  emitGcCanon(typeIndex);
+  // Allocate a default initialized struct. This requires the type definition
+  // for the struct to be pushed on the stack. This will trap on OOM.
+  pushPtr(loadTypeDef(typeIndex));
   return emitInstanceCall(SASigStructNew);
 }
 
@@ -6791,9 +6791,9 @@ bool BaseCompiler::emitArrayNew() {
 
   const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
-  // Allocate a default initialized array. This requires the rtt value for the
-  // array to be pushed on the stack. This will trap on OOM.
-  emitGcCanon(typeIndex);
+  // Allocate a default initialized array. This requires the type definition
+  // for the array to be pushed on the stack. This will trap on OOM.
+  pushPtr(loadTypeDef(typeIndex));
   if (!emitInstanceCall(SASigArrayNew)) {
     return false;
   }
@@ -6864,7 +6864,7 @@ bool BaseCompiler::emitArrayNewFixed() {
   // the required number of elements and the required type on, since the call
   // to SASigArrayNew will use them.
   pushI32(numElements);
-  emitGcCanon(typeIndex);
+  pushPtr(loadTypeDef(typeIndex));
   if (!emitInstanceCall(SASigArrayNew)) {
     return false;
   }
@@ -6932,9 +6932,9 @@ bool BaseCompiler::emitArrayNewDefault() {
     return true;
   }
 
-  // Allocate a default initialized array. This requires the rtt value for the
-  // array to be pushed on the stack. This will trap on OOM.
-  emitGcCanon(typeIndex);
+  // Allocate a default initialized array. This requires the type definition
+  // for the array to be pushed on the stack. This will trap on OOM.
+  pushPtr(loadTypeDef(typeIndex));
   return emitInstanceCall(SASigArrayNew);
 }
 
@@ -6949,7 +6949,7 @@ bool BaseCompiler::emitArrayNewData() {
     return true;
   }
 
-  emitGcCanon(typeIndex);
+  pushPtr(loadTypeDef(typeIndex));
   pushI32(int32_t(segIndex));
 
   // The call removes 4 items from the stack: the segment byte offset and
@@ -6969,7 +6969,7 @@ bool BaseCompiler::emitArrayNewElem() {
     return true;
   }
 
-  emitGcCanon(typeIndex);
+  pushPtr(loadTypeDef(typeIndex));
   pushI32(int32_t(segIndex));
 
   // The call removes 4 items from the stack: the segment element offset and
@@ -7158,7 +7158,7 @@ bool BaseCompiler::emitRefTest() {
     return true;
   }
 
-  emitGcCanon(typeIndex);
+  pushPtr(loadTypeDef(typeIndex));
   return emitInstanceCall(SASigRefTest);
 }
 
@@ -7180,7 +7180,7 @@ bool BaseCompiler::emitRefCast() {
   moveRef(refPtr, castedPtr);
   pushRef(castedPtr);
   pushRef(refPtr);
-  emitGcCanon(typeIndex);
+  pushPtr(loadTypeDef(typeIndex));
 
   // 2. ref.test : [ref, rtt] -> [i32]
   if (!emitInstanceCall(SASigRefTest)) {
@@ -7226,7 +7226,7 @@ bool BaseCompiler::emitBrOnCastCommon(bool onSuccess) {
   moveRef(refPtr, castedPtr);
   pushRef(castedPtr);
   pushRef(refPtr);
-  emitGcCanon(castTypeIndex);
+  pushPtr(loadTypeDef(castTypeIndex));
 
   // 2. ref.test : [ref, rtt] -> [i32]
   if (!emitInstanceCall(SASigRefTest)) {

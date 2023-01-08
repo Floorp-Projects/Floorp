@@ -3294,12 +3294,9 @@ js::gc::AllocKind JSObject::allocKindForTenure(
   // WasmStructObjects have a variable-length tail which contains the first
   // few data fields, so make sure we copy it all over to the new object.
   if (is<WasmStructObject>()) {
-    // Figure out the size of this object, from the prototype's RttValue.
-    // The objects we are traversing here are all tenured, so we don't need
-    // to check forwarding pointers.
-    RttValue& descr = as<WasmStructObject>().rttValue();
-    MOZ_ASSERT(!IsInsideNursery(&descr));
-    return WasmStructObject::allocKindForRttValue(&descr);
+    // Figure out the size of this object, from the object's TypeDef.
+    const wasm::TypeDef* typeDef = &as<WasmStructObject>().typeDef();
+    return WasmStructObject::allocKindForTypeDef(typeDef);
   }
 
   if (is<WasmArrayObject>()) {

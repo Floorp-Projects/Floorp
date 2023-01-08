@@ -1644,7 +1644,7 @@ struct BaseCompiler final {
     static void emitTrapSite(BaseCompiler* bc);
   };
 
-  void emitGcCanon(uint32_t typeIndex);
+  RegPtr loadTypeDef(uint32_t typeIndex);
   RegPtr emitGcArrayGetData(RegRef rp);
   template <typename NullCheckPolicy>
   RegI32 emitGcArrayGetNumElements(RegRef rp);

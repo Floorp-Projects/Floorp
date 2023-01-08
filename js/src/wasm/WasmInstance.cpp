@@ -858,13 +858,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return true;
 }
 
-#ifdef ENABLE_WASM_GC
-RttValue* Instance::rttCanon(uint32_t typeIndex) const {
-  return *(RttValue**)addressOfTypeId(typeIndex);
-}
-
-#endif  // ENABLE_WASM_GC
-
 /* static */ int32_t Instance::tableInit(Instance* instance, uint32_t dstOffset,
                                          uint32_t srcOffset, uint32_t len,
                                          uint32_t segIndex,
@@ -1147,38 +1140,30 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
 //
 // GC and exception handling support.
 
-// The typeIndex is an index into the rttValues_ table in the instance.
-// That table holds RttValue objects.
-//
-// When we fail to allocate we return a nullptr; the wasm side must check this
-// and propagate it as an error.
-
-/* static */ void* Instance::structNew(Instance* instance, void* structDescr) {
+/* static */ void* Instance::structNew(Instance* instance,
+                                       const wasm::TypeDef* typeDef) {
   MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-  Rooted<RttValue*> rttValue(cx, (RttValue*)structDescr);
-  MOZ_ASSERT(rttValue);
-  return WasmStructObject::createStruct(cx, rttValue);
+  return WasmStructObject::createStruct(cx, typeDef);
 }
 
 /* static */ void* Instance::arrayNew(Instance* instance, uint32_t numElements,
-                                      void* arrayDescr) {
+                                      const wasm::TypeDef* typeDef) {
   MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-  Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
-  MOZ_ASSERT(rttValue);
-  return WasmArrayObject::createArray(cx, rttValue, numElements);
+  return WasmArrayObject::createArray(cx, typeDef, numElements);
 }
 
 // Creates an array (WasmArrayObject) containing `numElements` of type
-// described by `arrayDescr`.  Initialises it with data copied from the data
+// described by `typeDef`.  Initialises it with data copied from the data
 // segment whose index is `segIndex`, starting at byte offset `segByteOffset`
 // in the segment.  Traps if the segment doesn't hold enough bytes to fill the
 // array.
 /* static */ void* Instance::arrayNewData(Instance* instance,
                                           uint32_t segByteOffset,
                                           uint32_t numElements,
-                                          void* arrayDescr, uint32_t segIndex) {
+                                          const wasm::TypeDef* typeDef,
+                                          uint32_t segIndex) {
   MOZ_ASSERT(SASigArrayNewData.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
 
@@ -1198,11 +1183,8 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
   // At this point, if `seg` is null then `numElements` and `segByteOffset`
   // are both zero.
 
-  Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
-  MOZ_ASSERT(rttValue);
-
   Rooted<WasmArrayObject*> arrayObj(
-      cx, WasmArrayObject::createArray(cx, rttValue, numElements));
+      cx, WasmArrayObject::createArray(cx, typeDef, numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
     return nullptr;
@@ -1217,7 +1199,7 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
   // Compute the number of bytes to copy, ensuring it's below 2^32.
   CheckedUint32 numBytesToCopy =
       CheckedUint32(numElements) *
-      CheckedUint32(rttValue->typeDef().arrayType().elementType_.size());
+      CheckedUint32(typeDef->arrayType().elementType_.size());
   if (!numBytesToCopy.isValid()) {
     // Because the request implies that 2^32 or more bytes are to be copied.
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
@@ -1249,14 +1231,15 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
 
 // This is almost identical to ::arrayNewData, apart from the final part that
 // actually copies the data.  It creates an array (WasmArrayObject)
-// containing `numElements` of type described by `arrayDescr`.  Initialises it
+// containing `numElements` of type described by `typeDef`.  Initialises it
 // with data copied from the element segment whose index is `segIndex`,
 // starting at element number `segElemIndex` in the segment.  Traps if the
 // segment doesn't hold enough elements to fill the array.
 /* static */ void* Instance::arrayNewElem(Instance* instance,
                                           uint32_t segElemIndex,
                                           uint32_t numElements,
-                                          void* arrayDescr, uint32_t segIndex) {
+                                          const wasm::TypeDef* typeDef,
+                                          uint32_t segIndex) {
   MOZ_ASSERT(SASigArrayNewElem.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
 
@@ -1274,17 +1257,14 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
   // At this point, if `seg` is null then `numElements` and `segElemIndex`
   // are both zero.
 
-  Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
-  MOZ_ASSERT(rttValue);
   // The element segment is an array of uint32_t indicating function indices,
   // which we'll have to dereference (to produce real function pointers)
   // before parking them in the array.  Hence each array element must be a
   // machine word.
-  MOZ_RELEASE_ASSERT(rttValue->typeDef().arrayType().elementType_.size() ==
-                     sizeof(void*));
+  MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType_.size() == sizeof(void*));
 
   Rooted<WasmArrayObject*> arrayObj(
-      cx, WasmArrayObject::createArray(cx, rttValue, numElements));
+      cx, WasmArrayObject::createArray(cx, typeDef, numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
     return nullptr;
@@ -1316,7 +1296,7 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
   const uint32_t* src = &seg->elemFuncIndices[segElemIndex];
   for (uint32_t i = 0; i < numElements; i++) {
     uint32_t funcIndex = src[i];
-    FieldType elemType = rttValue->typeDef().arrayType().elementType_;
+    FieldType elemType = typeDef->arrayType().elementType_;
     MOZ_RELEASE_ASSERT(elemType.isRefType());
     RootedVal value(cx, elemType.refType());
     if (funcIndex == NullFuncIndex) {
@@ -1472,7 +1452,7 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
 }
 
 /* static */ int32_t Instance::refTest(Instance* instance, void* refPtr,
-                                       void* rttPtr) {
+                                       const wasm::TypeDef* typeDef) {
   MOZ_ASSERT(SASigRefTest.failureMode == FailureMode::Infallible);
 
   if (!refPtr) {
@@ -1484,9 +1464,7 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
   ASSERT_ANYREF_IS_JSOBJECT;
   Rooted<WasmGcObject*> ref(
       cx, (WasmGcObject*)AnyRef::fromCompiledCode(refPtr).asJSObject());
-  Rooted<RttValue*> rtt(
-      cx, &AnyRef::fromCompiledCode(rttPtr).asJSObject()->as<RttValue>());
-  return int32_t(ref->isRuntimeSubtype(rtt));
+  return int32_t(ref->isRuntimeSubtype(typeDef));
 }
 
 /* static */ int32_t Instance::intrI8VecMul(Instance* instance, uint32_t dest,
@@ -1543,13 +1521,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug)),
       debugFilter_(nullptr),
-      maxInitializedGlobalsIndexPlus1_(0)
-#ifdef ENABLE_WASM_GC
-      ,
-      hasGcTypes_(false)
-#endif
-{
-}
+      maxInitializedGlobalsIndexPlus1_(0) {}
 
 Instance* Instance::create(JSContext* cx, Handle<WasmInstanceObject*> object,
                            const SharedCode& code, uint32_t globalDataLength,
@@ -1683,26 +1655,12 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
       const TypeDef& typeDef = types->type(typeIndex);
       switch (typeDef.kind()) {
-        case TypeDefKind::Func: {
+        case TypeDefKind::Func:
+        case TypeDefKind::Struct:
+        case TypeDefKind::Array: {
           *addressOfTypeId(typeIndex) = &typeDef;
           break;
         }
-#ifdef ENABLE_WASM_GC
-        case TypeDefKind::Struct:
-        case TypeDefKind::Array: {
-          Rooted<RttValue*> rttValue(
-              cx, RttValue::rttCanon(cx, TypeHandle(types, typeIndex)));
-          if (!rttValue) {
-            return false;
-          }
-          // We do not need to use a barrier here because RttValue is always
-          // tenured
-          MOZ_ASSERT(rttValue.get()->isTenured());
-          *((GCPtr<JSObject*>*)addressOfTypeId(typeIndex)) = rttValue;
-          hasGcTypes_ = true;
-          break;
-        }
-#endif
         default:
           MOZ_CRASH();
       }
@@ -1883,20 +1841,6 @@ void Instance::tracePrivate(JSTracer* trc) {
   }
 
   TraceNullableEdge(trc, &memory_, "wasm buffer");
-#ifdef ENABLE_WASM_GC
-  if (hasGcTypes_) {
-    for (uint32_t typeIndex = 0; typeIndex < metadata().types->length();
-         typeIndex++) {
-      const TypeDef& typeDef = metadata().types->type(typeIndex);
-      if (!typeDef.isStructType() && !typeDef.isArrayType()) {
-        continue;
-      }
-      TraceNullableEdge(trc, ((GCPtr<JSObject*>*)addressOfTypeId(typeIndex)),
-                        "wasm rtt value");
-    }
-  }
-#endif
-
   TraceNullableEdge(trc, &pendingException_, "wasm pending exception value");
   TraceNullableEdge(trc, &pendingExceptionTag_, "wasm pending exception tag");
 

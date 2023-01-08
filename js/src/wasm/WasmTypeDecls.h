@@ -39,7 +39,6 @@ class WasmTableObject;
 class WasmGlobalObject;
 class WasmTagObject;
 class WasmExceptionObject;
-class RttValue;
 
 using WasmInstanceObjectVector = GCVector<WasmInstanceObject*>;
 using WasmTableObjectVector = GCVector<WasmTableObject*, 0, SystemAllocPolicy>;

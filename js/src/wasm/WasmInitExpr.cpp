@@ -342,19 +342,15 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   }
 #endif  // ENABLE_WASM_EXTENDED_CONST
 #ifdef ENABLE_WASM_GC
-  WasmStructObject* createStruct(JSContext* cx, uint32_t typeIndex) {
-    Rooted<RttValue*> rttValue(cx, instance().rttCanon(typeIndex));
-    return WasmStructObject::createStruct(cx, rttValue);
-  }
-
   bool evalStructNew(JSContext* cx, uint32_t typeIndex) {
-    Rooted<WasmStructObject*> structObj(cx, createStruct(cx, typeIndex));
+    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
+    const StructType& structType = typeDef.structType();
+
+    Rooted<WasmStructObject*> structObj(
+        cx, WasmStructObject::createStruct(cx, &typeDef));
     if (!structObj) {
       return false;
     }
-
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
-    const StructType& structType = typeDef.structType();
 
     uint32_t numFields = structType.fields_.length();
     for (uint32_t forwardIndex = 0; forwardIndex < numFields; forwardIndex++) {
@@ -369,25 +365,24 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   }
 
   bool evalStructNewDefault(JSContext* cx, uint32_t typeIndex) {
-    Rooted<WasmStructObject*> structObj(cx, createStruct(cx, typeIndex));
+    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
+
+    Rooted<WasmStructObject*> structObj(
+        cx, WasmStructObject::createStruct(cx, &typeDef));
     if (!structObj) {
       return false;
     }
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
                    AnyRef::fromJSObject(structObj));
   }
 
-  WasmArrayObject* createArray(JSContext* cx, uint32_t typeIndex,
-                               uint32_t numElements) {
-    Rooted<RttValue*> rttValue(cx, instance().rttCanon(typeIndex));
-    return WasmArrayObject::createArray(cx, rttValue, numElements);
-  }
-
   bool evalArrayNew(JSContext* cx, uint32_t typeIndex) {
+    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
+
     uint32_t len = popI32();
-    Rooted<WasmArrayObject*> arrayObj(cx, createArray(cx, typeIndex, len));
+    Rooted<WasmArrayObject*> arrayObj(
+        cx, WasmArrayObject::createArray(cx, &typeDef, len));
     if (!arrayObj) {
       return false;
     }
@@ -396,25 +391,29 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     arrayObj->fillVal(val, 0, len);
     stack.popBack();
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
                    AnyRef::fromJSObject(arrayObj));
   }
 
   bool evalArrayNewDefault(JSContext* cx, uint32_t typeIndex) {
+    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
+
     uint32_t len = popI32();
-    Rooted<WasmArrayObject*> arrayObj(cx, createArray(cx, typeIndex, len));
+    Rooted<WasmArrayObject*> arrayObj(
+        cx, WasmArrayObject::createArray(cx, &typeDef, len));
     if (!arrayObj) {
       return false;
     }
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
                    AnyRef::fromJSObject(arrayObj));
   }
 
   bool evalArrayNewFixed(JSContext* cx, uint32_t typeIndex, uint32_t len) {
-    Rooted<WasmArrayObject*> arrayObj(cx, createArray(cx, typeIndex, len));
+    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
+
+    Rooted<WasmArrayObject*> arrayObj(
+        cx, WasmArrayObject::createArray(cx, &typeDef, len));
     if (!arrayObj) {
       return false;
     }
@@ -426,7 +425,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       stack.popBack();
     }
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
                    AnyRef::fromJSObject(arrayObj));
   }

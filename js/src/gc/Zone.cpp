@@ -170,7 +170,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       gcEphemeronEdges_(SystemAllocPolicy(), rt->randomHashCodeScrambler()),
       gcNurseryEphemeronEdges_(SystemAllocPolicy(),
                                rt->randomHashCodeScrambler()),
-      rttValueObjects_(this),
       shapeZone_(this),
       gcScheduled_(false),
       gcScheduledSaved_(false),
@@ -599,19 +598,6 @@ Zone* Zone::nextZone() const {
 void Zone::fixupAfterMovingGC() {
   ZoneAllocator::fixupAfterMovingGC();
   shapeZone().fixupPropMapShapeTableAfterMovingGC();
-}
-
-bool Zone::addRttValueObject(JSContext* cx, HandleObject obj) {
-  // Type descriptor objects are always tenured so we don't need post barriers
-  // on the set.
-  MOZ_ASSERT(!IsInsideNursery(obj));
-
-  if (!rttValueObjects().put(obj)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  return true;
 }
 
 void Zone::purgeAtomCache() {
