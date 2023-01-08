@@ -535,7 +535,7 @@ CoderResult CodeArrayType(Coder<mode>& coder, CoderArg<mode, ArrayType> item) {
 
 template <CoderMode mode>
 CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 360);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 376);
   // TypeDef is a tagged union that begins with kind = None. This implies that
   // we must manually initialize the variant that we decode.
   if constexpr (mode == MODE_DECODE) {

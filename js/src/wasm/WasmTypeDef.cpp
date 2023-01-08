@@ -28,12 +28,14 @@
 #include "threading/ExclusiveData.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
+#include "wasm/WasmCodegenConstants.h"
 #include "wasm/WasmJS.h"
 
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::CheckedUint32;
 using mozilla::IsPowerOfTwo;
 
 // [SMDOC] Immediate type signature encoding
@@ -330,6 +332,92 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   }
   MOZ_ASSERT_UNREACHABLE();
   return 0;
+}
+
+/* static */
+size_t SuperTypeVector::offsetOfTypeDefInVector(uint32_t typeDefDepth) {
+  return offsetof(SuperTypeVector, types) + sizeof(void*) * typeDefDepth;
+}
+
+/* static */
+size_t SuperTypeVector::lengthForTypeDef(const TypeDef& typeDef) {
+  return std::max(uint32_t(typeDef.subTypingDepth()) + 1,
+                  MinSuperTypeVectorLength);
+}
+
+/* static */
+size_t SuperTypeVector::byteSizeForTypeDef(const TypeDef& typeDef) {
+  static_assert(
+      sizeof(SuperTypeVector) + sizeof(void*) * (MaxSubTypingDepth + 1) <=
+          UINT16_MAX,
+      "cannot overflow");
+  return sizeof(SuperTypeVector) + (sizeof(void*) * lengthForTypeDef(typeDef));
+}
+
+/* static */
+const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
+    RecGroup* recGroup) {
+  // Pre-size the amount of space needed for all the super type vectors in this
+  // recursion group.
+  CheckedUint32 totalBytes = 0;
+  for (uint32_t typeIndex = 0; typeIndex < recGroup->numTypes(); typeIndex++) {
+    totalBytes +=
+        SuperTypeVector::byteSizeForTypeDef(recGroup->type(typeIndex));
+  }
+  if (!totalBytes.isValid()) {
+    return nullptr;
+  }
+
+  // Allocate the batch, and retain reference to the first one.
+  SuperTypeVector* firstVector =
+      (SuperTypeVector*)js_malloc(totalBytes.value());
+  if (!firstVector) {
+    return nullptr;
+  }
+
+  // Initialize the vectors, one by one
+  SuperTypeVector* currentVector = firstVector;
+  for (uint32_t typeIndex = 0; typeIndex < recGroup->numTypes(); typeIndex++) {
+    TypeDef& typeDef = recGroup->type(typeIndex);
+
+    // Compute the size again to know where the next vector can be found.
+    size_t vectorByteSize = SuperTypeVector::byteSizeForTypeDef(typeDef);
+
+    // Link the corresponding typeDef to this vector.
+    typeDef.setSuperTypeVector(currentVector);
+
+    // Every vector stores all ancestor types and itself.
+    currentVector->length = SuperTypeVector::lengthForTypeDef(typeDef);
+
+    // Initialize the entries in the vector
+    const TypeDef* currentTypeDef = &typeDef;
+    for (uint32_t index = 0; index < currentVector->length; index++) {
+      uint32_t reverseIndex = currentVector->length - index - 1;
+
+      // If this entry is required just to hit the minimum size, then
+      // initialize it to null.
+      if (reverseIndex > typeDef.subTypingDepth()) {
+        currentVector->types[reverseIndex] = nullptr;
+        continue;
+      }
+
+      // Otherwise we should always be iterating at the same depth as our
+      // currentTypeDef.
+      MOZ_ASSERT(reverseIndex == currentTypeDef->subTypingDepth());
+
+      currentVector->types[reverseIndex] = currentTypeDef;
+      currentTypeDef = currentTypeDef->superTypeDef();
+    }
+
+    // There should be no more super types left over
+    MOZ_ASSERT(currentTypeDef == nullptr);
+
+    // Advance to the next super type vector
+    currentVector =
+        (SuperTypeVector*)(((const char*)currentVector) + vectorByteSize);
+  }
+
+  return firstVector;
 }
 
 struct RecGroupHashPolicy {

@@ -51,6 +51,13 @@ static const uint32_t MaxInlineMemoryCopyLength = 0;
 static const uint32_t MaxInlineMemoryFillLength = 0;
 #endif
 
+// The size we round all super type vectors to. All accesses below this length
+// can avoid bounds checks. The value of three was chosen here to match V8,
+// eventually we should get data of our own to support this.
+//
+// Keep wasm/gc/casting.js in sync with this constant.
+static const uint32_t MinSuperTypeVectorLength = 3;
+
 }  // namespace wasm
 }  // namespace js
 

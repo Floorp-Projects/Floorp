@@ -441,6 +441,81 @@ WASM_DECLARE_CACHEABLE_POD(ArrayType);
 
 using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
 
+// [SMDOC] Super type vector
+//
+// A super type vector is a vector representation of the linked list of super
+// types that a type definition has. Every element is a raw pointer to a type
+// definition. It's possible to form a vector here because type definitions
+// are trees, not DAGs, with every type having at most one super type.
+//
+// The first element in the vector is the 'root' type definition without a
+// super type. The last element is to the type definition itself.
+//
+// ## Subtype checking
+//
+// The only purpose of a super type vector is to support constant time
+// subtyping checks. This is not free, it comes at the cost of worst case N^2
+// metadata size growth. We limit the max subtyping depth to counter this.
+//
+// To perform a subtype check we rely on the following:
+//  (1) a type A is a subtype (<:) of type B iff:
+//        type A == type B OR
+//        type B is reachable by following declared super types of type A
+//  (2) we order super type vectors from least to most derived types
+//  (3) the 'subtyping depth' of all type definitions is statically known
+//
+// With the above, we know that if type B is a super type of type A, that it
+// must be in A's super type vector at type B's subtyping depth. We can
+// therefore just do an index and comparison to determine if that's the case.
+//
+// ## Example
+//
+// For the following type section:
+//   0: (type (struct))
+//   1: (type (sub 1 (struct)))
+//   2: (type (sub 2 (struct)))
+//   3: (type (sub 3 (struct)))
+//
+// (type 0) would have the following super type vector:
+//   [(type 0)]
+//
+// (type 3) would have the following super type vector:
+//   [(type 0), (type 1), (type 2), (type 3)]
+//
+// Checking that (type 3) <: (type 0) can use the fact that (type 0) will
+// always be present at depth 0 of any super type vector it is in, and
+// therefore check the vector at that index.
+//
+// ## Minimum sizing
+//
+// As a further optimization to avoid bounds checking, we guarantee that all
+// super type vectors are at least `MinSuperTypeVectorLength`. All checks
+// against indices that we know statically are at/below that can skip bounds
+// checking. Extra entries added to reach the minimum size are initialized to
+// null.
+struct SuperTypeVector {
+  // Batch allocate super type vectors for all the types in a recursion group.
+  // Returns a pointer to the first super type vector, which can be used to
+  // free all vectors.
+  [[nodiscard]] static const SuperTypeVector* createMultipleForRecGroup(
+      RecGroup* recGroup);
+
+  // The length of a super type vector for a specific type def.
+  static size_t lengthForTypeDef(const TypeDef& typeDef);
+  // The byte size of a super type vector for a specific type def.
+  static size_t byteSizeForTypeDef(const TypeDef& typeDef);
+
+  static size_t offsetOfLength() { return offsetof(SuperTypeVector, length); }
+  static size_t offsetOfTypeDefInVector(uint32_t typeDefDepth);
+
+  // The length of types stored inline below.
+  uint32_t length;
+
+  // Raw pointers to the super types of this type definition. Ordered from
+  // least-derived to most-derived.
+  const TypeDef* types[0];
+};
+
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
 
@@ -452,8 +527,10 @@ enum class TypeDefKind : uint8_t {
 };
 
 class TypeDef {
-  const TypeDef* superTypeDef_;
   uint32_t offsetToRecGroup_;
+  const SuperTypeVector* superTypeVector_;
+  const TypeDef* superTypeDef_;
+  uint16_t subTypingDepth_;
   TypeDefKind kind_;
   union {
     FuncType funcType_;
@@ -471,7 +548,11 @@ class TypeDef {
 
  public:
   explicit TypeDef(RecGroup* recGroup)
-      : superTypeDef_(nullptr), offsetToRecGroup_(0), kind_(TypeDefKind::None) {
+      : offsetToRecGroup_(0),
+        superTypeVector_(nullptr),
+        superTypeDef_(nullptr),
+        subTypingDepth_(0),
+        kind_(TypeDefKind::None) {
     setRecGroup(recGroup);
   }
 
@@ -512,7 +593,19 @@ class TypeDef {
     return *this;
   }
 
+  const SuperTypeVector* superTypeVector() const { return superTypeVector_; }
+
+  void setSuperTypeVector(const SuperTypeVector* superTypeVector) {
+    superTypeVector_ = superTypeVector;
+  }
+
+  static size_t offsetOfSuperTypeVector() {
+    return offsetof(TypeDef, superTypeVector_);
+  }
+
   const TypeDef* superTypeDef() const { return superTypeDef_; }
+
+  uint16_t subTypingDepth() const { return subTypingDepth_; }
 
   const RecGroup& recGroup() const {
     uintptr_t typeDefAddr = (uintptr_t)this;
@@ -633,25 +726,41 @@ class TypeDef {
     return false;
   }
 
-  // Attempts to set the declared super type of this type. Returns false if the
-  // types are not compatible, in which case the super type is not set.
-  [[nodiscard]] bool trySetSuperTypeDef(const TypeDef* superTypeDef) {
-    if (!TypeDef::canBeSubTypeOf(this, superTypeDef)) {
-      return false;
-    }
+  void setSuperTypeDef(const TypeDef* superTypeDef) {
     superTypeDef_ = superTypeDef;
-    return true;
+    subTypingDepth_ = superTypeDef_->subTypingDepth_ + 1;
   }
 
   // Checks if `subType` is a declared sub type of `superType`.
   static bool isSubTypeOf(const TypeDef* subType, const TypeDef* superType) {
-    while (subType) {
-      if (subType == superType) {
-        return true;
-      }
-      subType = subType->superTypeDef();
+    // Fast path for when the types are equal
+    if (MOZ_LIKELY(subType == superType)) {
+      return true;
     }
-    return false;
+    const SuperTypeVector* subSuperTypes = subType->superTypeVector();
+
+    // During construction of a recursion group, the super type vector may not
+    // have been computed yet, in which case we need to fall back to a linear
+    // search.
+    if (!subSuperTypes) {
+      while (subType) {
+        if (subType == superType) {
+          return true;
+        }
+        subType = subType->superTypeDef();
+      }
+      return false;
+    }
+
+    // Otherwise, we need to check if `superType` is one of `subType`s super
+    // types by checking in `subType`s super type vector. We can use the static
+    // information of the depth of `superType` to index directly into the
+    // vector.
+    uint32_t subTypingDepth = superType->subTypingDepth();
+    if (subTypingDepth >= subSuperTypes->length) {
+      return false;
+    }
+    return subSuperTypes->types[subTypingDepth] == superType;
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -688,13 +797,16 @@ class RecGroup : public AtomicRefCounted<RecGroup> {
   bool finalizedTypes_;
   // The number of types stored in this recursion group.
   uint32_t numTypes_;
+  // The batch allocated super type vectors for all type definitions in this
+  // recursion group.
+  const SuperTypeVector* vectors_;
   // The first type definition stored inline in this recursion group.
   TypeDef types_[0];
 
   friend class TypeContext;
 
   explicit RecGroup(uint32_t numTypes)
-      : finalizedTypes_(false), numTypes_(numTypes) {}
+      : finalizedTypes_(false), numTypes_(numTypes), vectors_(nullptr) {}
 
   // Compute the size in bytes of a recursion group with the specified amount
   // of types.
@@ -724,10 +836,20 @@ class RecGroup : public AtomicRefCounted<RecGroup> {
 
   // Finish initialization by acquiring strong references to groups referenced
   // by type definitions.
-  void finalizeDefinitions() {
+  [[nodiscard]] bool finalizeDefinitions() {
     MOZ_ASSERT(!finalizedTypes_);
-    finalizedTypes_ = true;
+    // Super type vectors are only needed for GC and have a size/time impact
+    // that we don't want to encur until we're ready for it. Only use them when
+    // GC is built into the binary.
+#ifdef ENABLE_WASM_GC
+    vectors_ = SuperTypeVector::createMultipleForRecGroup(this);
+    if (!vectors_) {
+      return false;
+    }
+#endif
     visitReferencedGroups([](const RecGroup* recGroup) { recGroup->AddRef(); });
+    finalizedTypes_ = true;
+    return true;
   }
 
   // Visit every external recursion group that is referenced by the types in
@@ -791,6 +913,11 @@ class RecGroup : public AtomicRefCounted<RecGroup> {
       finalizedTypes_ = false;
       visitReferencedGroups(
           [](const RecGroup* recGroup) { recGroup->Release(); });
+    }
+
+    if (vectors_) {
+      js_free((void*)vectors_);
+      vectors_ = nullptr;
     }
 
     // Call destructors on all the type definitions.
@@ -924,7 +1051,9 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
     pendingRecGroup_ = nullptr;
 
     // Finalize the type definitions in the recursion group
-    recGroup->finalizeDefinitions();
+    if (!recGroup->finalizeDefinitions()) {
+      return false;
+    }
 
     // Canonicalize the recursion group
     SharedRecGroup canonicalRecGroup = canonicalizeGroup(recGroup);
