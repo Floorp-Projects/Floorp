@@ -38,6 +38,7 @@ Preferences.addAll([
   { id: "floorp.navbar.bottom", type: "bool" },
   { id: "floorp.disable.fullscreen.notification", type: "bool" },
   { id: "floorp.tabsleep.enabled", type: "bool" },
+  { id: "floorp.tabs.showPinnedTabsTitle", type: "bool" },
 ]);
 
 window.addEventListener("load", function() {
