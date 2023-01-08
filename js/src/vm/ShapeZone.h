@@ -176,10 +176,26 @@ using ProxyShapeSet =
 // Hash policy for the per-zone wasmGCShapes set storing shapes for Wasm GC
 // objects in the zone.
 struct WasmGCShapeHasher : public ShapeBaseHasher {
+  struct Lookup : public ShapeBaseHasher::Lookup {
+    const wasm::RecGroup* recGroup;
+
+    Lookup(const JSClass* clasp, JS::Realm* realm, const TaggedProto& proto,
+           const wasm::RecGroup* recGroup, ObjectFlags objectFlags)
+        : ShapeBaseHasher::Lookup(clasp, realm, proto, objectFlags),
+          recGroup(recGroup) {}
+  };
+
+  static HashNumber hash(const Lookup& lookup) {
+    HashNumber hash = ShapeBaseHasher::hash(lookup);
+    hash = mozilla::AddToHash(hash, lookup.recGroup);
+    return hash;
+  }
+
   static bool match(const WeakHeapPtr<WasmGCShape*>& key,
                     const Lookup& lookup) {
     const WasmGCShape* shape = key.unbarrieredGet();
-    return ShapeBaseHasher::match(shape, lookup);
+    return ShapeBaseHasher::match(shape, lookup) &&
+           shape->recGroup() == lookup.recGroup;
   }
 };
 using WasmGCShapeSet =

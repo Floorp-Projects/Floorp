@@ -79,7 +79,7 @@ namespace gc {
 #define FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
  /* AllocKind              TraceKind     TypeName               SizedType              BGFinal Nursery Compact */ \
     D(SCRIPT,              Script,       js::BaseScript,        js::BaseScript,        false,  false,  true) \
-    D(SHAPE,               Shape,        js::Shape,             js::Shape,             true,   false,  true) \
+    D(SHAPE,               Shape,        js::Shape,             js::SizedShape,        true,   false,  true) \
     D(BASE_SHAPE,          BaseShape,    js::BaseShape,         js::BaseShape,         true,   false,  true) \
     D(GETTER_SETTER,       GetterSetter, js::GetterSetter,      js::GetterSetter,      true,   false,  true) \
     D(COMPACT_PROP_MAP,    PropMap,      js::CompactPropMap,    js::CompactPropMap,    true,   false,  true) \

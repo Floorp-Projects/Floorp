@@ -83,9 +83,10 @@ bool Shape::replaceShape(JSContext* cx, HandleObject obj,
       break;
     case Kind::WasmGC:
       MOZ_ASSERT(nfixed == 0);
-      newShape =
-          WasmGCShape::getShape(cx, obj->shape()->getObjectClass(),
-                                obj->shape()->realm(), proto, objectFlags);
+      const wasm::RecGroup* recGroup = obj->shape()->asWasmGC().recGroup();
+      newShape = WasmGCShape::getShape(cx, obj->shape()->getObjectClass(),
+                                       obj->shape()->realm(), proto, recGroup,
+                                       objectFlags);
       break;
   }
   if (!newShape) {
@@ -1136,8 +1137,13 @@ ProxyShape* ProxyShape::new_(JSContext* cx, Handle<BaseShape*> base,
 
 // static
 WasmGCShape* WasmGCShape::new_(JSContext* cx, Handle<BaseShape*> base,
+                               const wasm::RecGroup* recGroup,
                                ObjectFlags objectFlags) {
-  return cx->newCell<WasmGCShape>(base, objectFlags);
+  WasmGCShape* shape = cx->newCell<WasmGCShape>(base, recGroup, objectFlags);
+  if (shape) {
+    shape->init();
+  }
+  return shape;
 }
 
 MOZ_ALWAYS_INLINE HashNumber ShapeForAddHasher::hash(const Lookup& l) {
@@ -1171,9 +1177,9 @@ void Shape::dump(js::GenericPrinter& out) const {
   }
   if (isNative()) {
     out.printf("mapLength: %u\n", asNative().propMapLength());
-    if (nativePropMap_) {
+    if (asNative().propMap()) {
       out.printf("map:\n");
-      nativePropMap_->dump(out);
+      asNative().propMap()->dump(out);
     } else {
       out.printf("map: (none)\n");
     }
@@ -1417,6 +1423,7 @@ ProxyShape* ProxyShape::getShape(JSContext* cx, const JSClass* clasp,
 /* static */
 WasmGCShape* WasmGCShape::getShape(JSContext* cx, const JSClass* clasp,
                                    JS::Realm* realm, TaggedProto proto,
+                                   const wasm::RecGroup* recGroup,
                                    ObjectFlags objectFlags) {
   MOZ_ASSERT(cx->compartment() == realm->compartment());
   MOZ_ASSERT_IF(proto.isObject(),
@@ -1433,8 +1440,8 @@ WasmGCShape* WasmGCShape::getShape(JSContext* cx, const JSClass* clasp,
   auto& table = realm->zone()->shapeZone().wasmGCShapes;
 
   using Lookup = WasmGCShapeHasher::Lookup;
-  auto ptr =
-      MakeDependentAddPtr(cx, table, Lookup(clasp, realm, proto, objectFlags));
+  auto ptr = MakeDependentAddPtr(
+      cx, table, Lookup(clasp, realm, proto, recGroup, objectFlags));
   if (ptr) {
     return *ptr;
   }
@@ -1445,12 +1452,13 @@ WasmGCShape* WasmGCShape::getShape(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  Rooted<WasmGCShape*> shape(cx, WasmGCShape::new_(cx, nbase, objectFlags));
+  Rooted<WasmGCShape*> shape(
+      cx, WasmGCShape::new_(cx, nbase, recGroup, objectFlags));
   if (!shape) {
     return nullptr;
   }
 
-  Lookup lookup(clasp, realm, protoRoot, objectFlags);
+  Lookup lookup(clasp, realm, protoRoot, recGroup, objectFlags);
   if (!ptr.add(cx, table, lookup, shape)) {
     return nullptr;
   }
