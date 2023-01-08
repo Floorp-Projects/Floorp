@@ -4590,7 +4590,7 @@ void MacroAssembler::branchWasmTypeDefIsSubtype(Register subTypeDef,
                                                 Register scratch,
                                                 uint32_t subTypingDepth,
                                                 Label* label, bool onSuccess) {
-  MOZ_ASSERT_IF(subTypingDepth >= MinSuperTypeVectorLength,
+  MOZ_ASSERT_IF(subTypingDepth >= wasm::MinSuperTypeVectorLength,
                 scratch != Register::Invalid());
 
   // We generate just different enough code for 'is' subtype vs 'is not'

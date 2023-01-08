@@ -2960,6 +2960,9 @@
 - name: WasmStoreFieldRefKA
   gen_boilerplate: false
 
+- name: WasmGcObjectIsSubtypeOf
+  gen_boilerplate: false
+
 #ifdef FUZZING_JS_FUZZILLI
 - name: FuzzilliHash
   gen_boilerplate: false

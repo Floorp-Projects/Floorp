@@ -11178,6 +11178,38 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
   AliasSet getAliasSet() const override { return aliases_; }
 };
 
+// Tests if the WasmGcObject, `object`, is a subtype of `superTypeDef`. The
+// actual super type definition must be known at compile time, so that the
+// subtyping depth of super type depth can be used.
+class MWasmGcObjectIsSubtypeOf : public MBinaryInstruction,
+                                 public NoTypePolicy::Data {
+  uint32_t subTypingDepth_;
+  MWasmGcObjectIsSubtypeOf(MDefinition* object, MDefinition* superTypeDef,
+                           uint32_t subTypingDepth)
+      : MBinaryInstruction(classOpcode, object, superTypeDef),
+        subTypingDepth_(subTypingDepth) {
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmGcObjectIsSubtypeOf)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, superTypeDef))
+
+  uint32_t subTypingDepth() const { return subTypingDepth_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmGcObjectIsSubtypeOf()->subTypingDepth() ==
+               subTypingDepth();
+  }
+
+  HashNumber valueHash() const override {
+    return addU32ToHash(MBinaryInstruction::valueHash(), subTypingDepth());
+  }
+};
+
 #ifdef FUZZING_JS_FUZZILLI
 class MFuzzilliHash : public MUnaryInstruction, public NoTypePolicy::Data {
   explicit MFuzzilliHash(MDefinition* obj)

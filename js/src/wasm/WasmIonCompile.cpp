@@ -3993,8 +3993,8 @@ class FunctionCompiler {
     // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated
     // by this call will trap.
     MDefinition* arrayObject;
-    if (!emitInstanceCall2(lineOrBytecode, SASigArrayNew, numElements, arrayTypeDef,
-                           &arrayObject)) {
+    if (!emitInstanceCall2(lineOrBytecode, SASigArrayNew, numElements,
+                           arrayTypeDef, &arrayObject)) {
       return nullptr;
     }
 
@@ -4218,16 +4218,23 @@ class FunctionCompiler {
     return true;
   }
 
+  [[nodiscard]] MDefinition* isGcObjectSubtypeOf(MDefinition* object,
+                                                 uint32_t castTypeIndex) {
+    auto* superTypeDef = loadTypeDef(castTypeIndex);
+    auto* isSubTypeOf = MWasmGcObjectIsSubtypeOf::New(
+        alloc(), object, superTypeDef,
+        moduleEnv_.types->type(castTypeIndex).subTypingDepth());
+    curBlock_->add(isSubTypeOf);
+    return isSubTypeOf;
+  }
+
   // Generate MIR that attempts to downcast `ref` to `castToTypeDef`.  If the
   // downcast fails, we trap.  If it succeeds, then `ref` can be assumed to
-  // have a type that is a subtype of (or the same as) `castToTypeDef` after this
-  // point.
-  [[nodiscard]] bool refCast(uint32_t lineOrBytecode, MDefinition* ref,
-                             MDefinition* castToTypeDef) {
-    // Create call: success = Instance::refTest(ref, castToTypeDef)
-    MDefinition* success;
-    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToTypeDef,
-                           &success)) {
+  // have a type that is a subtype of (or the same as) `castToTypeDef` after
+  // this point.
+  [[nodiscard]] bool refCast(MDefinition* ref, uint32_t castTypeIndex) {
+    MDefinition* success = isGcObjectSubtypeOf(ref, castTypeIndex);
+    if (!success) {
       return false;
     }
 
@@ -4238,22 +4245,12 @@ class FunctionCompiler {
 
   // Generate MIR that computes a boolean value indicating whether or not it
   // is possible to downcast `ref` to `castToTypeDef`.
-  [[nodiscard]] MDefinition* refTest(uint32_t lineOrBytecode, MDefinition* ref,
-                                     MDefinition* castToTypeDef) {
-    // Create call: success = Instance::refTest(ref, castToTypeDef)
-    MDefinition* success;
-    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToTypeDef,
-                           &success)) {
-      return nullptr;
-    }
-
-    MOZ_ASSERT(success && success->type() == MIRType::Int32);
-    return success;
+  [[nodiscard]] MDefinition* refTest(MDefinition* ref, uint32_t castTypeIndex) {
+    return isGcObjectSubtypeOf(ref, castTypeIndex);
   }
 
   // Generates MIR for br_on_cast and br_on_cast_fail.
-  [[nodiscard]] bool brOnCastCommon(bool onSuccess, uint32_t lineOrBytecode,
-                                    uint32_t labelRelativeDepth,
+  [[nodiscard]] bool brOnCastCommon(bool onSuccess, uint32_t labelRelativeDepth,
                                     uint32_t castTypeIndex,
                                     const ResultType& labelType,
                                     const DefVector& values) {
@@ -4263,11 +4260,6 @@ class FunctionCompiler {
 
     MBasicBlock* fallthroughBlock = nullptr;
     if (!newBlock(curBlock_, &fallthroughBlock)) {
-      return false;
-    }
-
-    MDefinition* castToTypeDef = loadTypeDef(castTypeIndex);
-    if (!castToTypeDef) {
       return false;
     }
 
@@ -4283,10 +4275,8 @@ class FunctionCompiler {
     MDefinition* ref = values.back();
     MOZ_ASSERT(ref->type() == MIRType::RefOrNull);
 
-    // Create call: success = Instance::refTest(ref, castToTypeDef);
-    MDefinition* success;
-    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToTypeDef,
-                           &success)) {
+    MDefinition* success = isGcObjectSubtypeOf(ref, castTypeIndex);
+    if (!success) {
       return false;
     }
 
@@ -6798,7 +6788,8 @@ static bool EmitArrayNewData(FunctionCompiler& f) {
   // this call will trap.
   MDefinition* arrayObject;
   if (!f.emitInstanceCall4(lineOrBytecode, SASigArrayNewData, segByteOffset,
-                           numElements, arrayTypeDef, segIndexM, &arrayObject)) {
+                           numElements, arrayTypeDef, segIndexM,
+                           &arrayObject)) {
     return false;
   }
 
@@ -6840,7 +6831,8 @@ static bool EmitArrayNewElem(FunctionCompiler& f) {
   // this call will trap.
   MDefinition* arrayObject;
   if (!f.emitInstanceCall4(lineOrBytecode, SASigArrayNewElem, segElemIndex,
-                           numElements, arrayTypeDef, segIndexM, &arrayObject)) {
+                           numElements, arrayTypeDef, segIndexM,
+                           &arrayObject)) {
     return false;
   }
 
@@ -6989,8 +6981,6 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
 }
 
 static bool EmitRefTest(FunctionCompiler& f) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
-
   MDefinition* ref;
   uint32_t typeIndex;
   if (!f.iter().readRefTest(&typeIndex, &ref)) {
@@ -7001,12 +6991,7 @@ static bool EmitRefTest(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* castToTypeDef = f.loadTypeDef(typeIndex);
-  if (!castToTypeDef) {
-    return false;
-  }
-
-  MDefinition* success = f.refTest(lineOrBytecode, ref, castToTypeDef);
+  MDefinition* success = f.refTest(ref, typeIndex);
   if (!success) {
     return false;
   }
@@ -7016,8 +7001,6 @@ static bool EmitRefTest(FunctionCompiler& f) {
 }
 
 static bool EmitRefCast(FunctionCompiler& f) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
-
   MDefinition* ref;
   uint32_t typeIndex;
   if (!f.iter().readRefCast(&typeIndex, &ref)) {
@@ -7028,12 +7011,7 @@ static bool EmitRefCast(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* castToTypeDef = f.loadTypeDef(typeIndex);
-  if (!castToTypeDef) {
-    return false;
-  }
-
-  if (!f.refCast(lineOrBytecode, ref, castToTypeDef)) {
+  if (!f.refCast(ref, typeIndex)) {
     return false;
   }
 
@@ -7042,8 +7020,6 @@ static bool EmitRefCast(FunctionCompiler& f) {
 }
 
 static bool EmitBrOnCastCommon(FunctionCompiler& f, bool onSuccess) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
-
   uint32_t labelRelativeDepth;
   uint32_t castTypeIndex;
   ResultType labelType;
@@ -7056,8 +7032,8 @@ static bool EmitBrOnCastCommon(FunctionCompiler& f, bool onSuccess) {
     return false;
   }
 
-  return f.brOnCastCommon(onSuccess, lineOrBytecode, labelRelativeDepth,
-                          castTypeIndex, labelType, values);
+  return f.brOnCastCommon(onSuccess, labelRelativeDepth, castTypeIndex,
+                          labelType, values);
 }
 
 static bool EmitExternInternalize(FunctionCompiler& f) {

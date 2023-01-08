@@ -78,6 +78,7 @@
 #endif
 #include "wasm/WasmBinary.h"
 #include "wasm/WasmGC.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmStubs.h"
 
 #include "builtin/Boolean-inl.h"
@@ -16209,6 +16210,48 @@ void CodeGenerator::visitWasmTrap(LWasmTrap* lir) {
   const MWasmTrap* mir = lir->mir();
 
   masm.wasmTrap(mir->trap(), mir->bytecodeOffset());
+}
+
+void CodeGenerator::visitWasmGcObjectIsSubtypeOf(
+    LWasmGcObjectIsSubtypeOf* ins) {
+  MOZ_ASSERT(gen->compilingWasm());
+  const MWasmGcObjectIsSubtypeOf* mir = ins->mir();
+  Register object = ToRegister(ins->object());
+  Register superTypeDef = ToRegister(ins->superTypeDef());
+  Register subTypeDef = ToRegister(ins->temp0());
+  Register scratch = ins->temp1()->isBogusTemp() ? Register::Invalid()
+                                                 : ToRegister(ins->temp1());
+  Register result = ToRegister(ins->output());
+  Label failed;
+  Label success;
+  Label join;
+  masm.branchTestPtr(Assembler::Zero, object, object, &failed);
+  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), subTypeDef);
+  masm.branchWasmTypeDefIsSubtype(subTypeDef, superTypeDef, scratch,
+                                  mir->subTypingDepth(), &success, true);
+  masm.bind(&failed);
+  masm.xor32(result, result);
+  masm.jump(&join);
+  masm.bind(&success);
+  masm.move32(Imm32(1), result);
+  masm.bind(&join);
+}
+
+void CodeGenerator::visitWasmGcObjectIsSubtypeOfAndBranch(
+    LWasmGcObjectIsSubtypeOfAndBranch* ins) {
+  MOZ_ASSERT(gen->compilingWasm());
+  Register object = ToRegister(ins->object());
+  Register superTypeDef = ToRegister(ins->superTypeDef());
+  Register subTypeDef = ToRegister(ins->temp0());
+  Register scratch = ins->temp1()->isBogusTemp() ? Register::Invalid()
+                                                 : ToRegister(ins->temp1());
+  masm.branchTestPtr(Assembler::Zero, object, object,
+                     ins->ifFalse()->lir()->label());
+  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), subTypeDef);
+  masm.branchWasmTypeDefIsSubtype(subTypeDef, superTypeDef, scratch,
+                                  ins->subTypingDepth(),
+                                  ins->ifTrue()->lir()->label(), true);
+  jumpToBlock(ins->ifFalse());
 }
 
 void CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins) {
