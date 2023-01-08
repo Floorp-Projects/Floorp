@@ -997,6 +997,22 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
+  if (opd->isWasmGcObjectIsSubtypeOf() && opd->isEmittedAtUses()) {
+    MWasmGcObjectIsSubtypeOf* isSubTypeOf = opd->toWasmGcObjectIsSubtypeOf();
+    LAllocation object = useRegister(isSubTypeOf->object());
+    LAllocation superTypeDef = useRegister(isSubTypeOf->superTypeDef());
+    uint32_t subTypingDepth = isSubTypeOf->subTypingDepth();
+    LDefinition subTypeDepth = temp();
+    LDefinition scratch = subTypingDepth >= wasm::MinSuperTypeVectorLength
+                              ? temp()
+                              : LDefinition();
+    add(new (alloc()) LWasmGcObjectIsSubtypeOfAndBranch(
+            ifTrue, ifFalse, object, superTypeDef, subTypingDepth, subTypeDepth,
+            scratch),
+        test);
+    return;
+  }
+
   if (opd->isIsNullOrUndefined() && opd->isEmittedAtUses()) {
     MIsNullOrUndefined* isNullOrUndefined = opd->toIsNullOrUndefined();
     MDefinition* input = isNullOrUndefined->value();
@@ -5144,7 +5160,7 @@ void LIRGenerator::visitIsCrossRealmArrayConstructor(
          ins);
 }
 
-static bool CanEmitIsObjectOrIsNullOrUndefinedAtUses(MInstruction* ins) {
+static bool CanEmitAtUseForSingleTest(MInstruction* ins) {
   if (!ins->canEmitAtUses()) {
     return false;
   }
@@ -5168,7 +5184,7 @@ static bool CanEmitIsObjectOrIsNullOrUndefinedAtUses(MInstruction* ins) {
 }
 
 void LIRGenerator::visitIsObject(MIsObject* ins) {
-  if (CanEmitIsObjectOrIsNullOrUndefinedAtUses(ins)) {
+  if (CanEmitAtUseForSingleTest(ins)) {
     emitAtUses(ins);
     return;
   }
@@ -5180,7 +5196,7 @@ void LIRGenerator::visitIsObject(MIsObject* ins) {
 }
 
 void LIRGenerator::visitIsNullOrUndefined(MIsNullOrUndefined* ins) {
-  if (CanEmitIsObjectOrIsNullOrUndefinedAtUses(ins)) {
+  if (CanEmitAtUseForSingleTest(ins)) {
     emitAtUses(ins);
     return;
   }
@@ -6914,6 +6930,23 @@ void LIRGenerator::visitWasmStoreFieldRefKA(MWasmStoreFieldRefKA* ins) {
   LAllocation value = useRegister(ins->value());
   add(new (alloc()) LWasmStoreRef(instance, valueAddr, value, temp()), ins);
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
+}
+
+void LIRGenerator::visitWasmGcObjectIsSubtypeOf(MWasmGcObjectIsSubtypeOf* ins) {
+  if (CanEmitAtUseForSingleTest(ins)) {
+    emitAtUses(ins);
+    return;
+  }
+
+  LAllocation object = useRegister(ins->object());
+  LAllocation superTypeDef = useRegister(ins->superTypeDef());
+  uint32_t subTypingDepth = ins->subTypingDepth();
+  LDefinition subTypeDepth = temp();
+  LDefinition scratch =
+      subTypingDepth >= wasm::MinSuperTypeVectorLength ? temp() : LDefinition();
+  define(new (alloc()) LWasmGcObjectIsSubtypeOf(object, superTypeDef,
+                                                subTypeDepth, scratch),
+         ins);
 }
 
 #ifdef FUZZING_JS_FUZZILLI

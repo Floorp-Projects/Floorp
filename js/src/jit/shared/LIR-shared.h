@@ -3697,6 +3697,44 @@ class LIonToWasmCallI64 : public LIonToWasmCallBase<INT64_PIECES> {
   LIonToWasmCallI64(uint32_t numOperands, const LDefinition& temp)
       : LIonToWasmCallBase<INT64_PIECES>(classOpcode, numOperands, temp) {}
 };
+
+class LWasmGcObjectIsSubtypeOfAndBranch
+    : public LControlInstructionHelper<2, 2, 2> {
+  uint32_t subTypingDepth_;
+
+ public:
+  LIR_HEADER(WasmGcObjectIsSubtypeOfAndBranch)
+
+  static constexpr uint32_t Object = 0;
+  static constexpr uint32_t SuperTypeDef = 1;
+
+  LWasmGcObjectIsSubtypeOfAndBranch(MBasicBlock* ifTrue, MBasicBlock* ifFalse,
+                                    const LAllocation& object,
+                                    const LAllocation& superTypeDef,
+                                    uint32_t subTypingDepth,
+                                    const LDefinition& temp0,
+                                    const LDefinition& temp1)
+      : LControlInstructionHelper(classOpcode),
+        subTypingDepth_(subTypingDepth) {
+    setSuccessor(0, ifTrue);
+    setSuccessor(1, ifFalse);
+    setOperand(Object, object);
+    setOperand(SuperTypeDef, superTypeDef);
+    setTemp(0, temp0);
+    setTemp(1, temp1);
+  }
+
+  uint32_t subTypingDepth() const { return subTypingDepth_; }
+
+  MBasicBlock* ifTrue() const { return getSuccessor(0); }
+  MBasicBlock* ifFalse() const { return getSuccessor(1); }
+
+  const LAllocation* object() { return getOperand(Object); }
+  const LAllocation* superTypeDef() { return getOperand(SuperTypeDef); }
+  const LDefinition* temp0() { return getTemp(0); }
+  const LDefinition* temp1() { return getTemp(1); }
+};
+
 // Wasm SIMD.
 
 // (v128, v128, v128) -> v128 effect-free operation.

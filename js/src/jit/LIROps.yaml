@@ -284,6 +284,17 @@
 - name: WasmTrap
   mir_op: true
 
+- name: WasmGcObjectIsSubtypeOf
+  mir_op: true
+  operands:
+    object: WordSized
+    superTypeDef: WordSized
+  result_type: WordSized
+  num_temps: 2
+
+- name: WasmGcObjectIsSubtypeOfAndBranch
+  gen_boilerplate: false
+
 - name: WasmReinterpret
   gen_boilerplate: false
 
