@@ -3205,7 +3205,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
           const IPCDataTransferItem& item = items[j];
           RefPtr<nsVariantCC> variant = new nsVariantCC();
           nsresult rv =
-              nsContentUtils::IPCTransferableItemToVariant(item, variant, this);
+              nsContentUtils::IPCTransferableItemToVariant(item, variant);
           if (NS_FAILED(rv)) {
             continue;
           }

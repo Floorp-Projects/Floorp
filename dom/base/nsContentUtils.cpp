@@ -7892,10 +7892,9 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
 }
 
 nsresult nsContentUtils::IPCTransferableItemToVariant(
-    const IPCDataTransferItem& aDataTransferItem, nsIWritableVariant* aVariant,
-    IProtocol* aActor) {
+    const IPCDataTransferItem& aDataTransferItem,
+    nsIWritableVariant* aVariant) {
   MOZ_ASSERT(aVariant);
-  MOZ_ASSERT(aActor);
 
   switch (aDataTransferItem.data().type()) {
     case IPCDataTransferData::TIPCDataTransferString: {

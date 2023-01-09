@@ -2871,7 +2871,7 @@ class nsContentUtils {
 
   static nsresult IPCTransferableItemToVariant(
       const mozilla::dom::IPCDataTransferItem& aDataTransferItem,
-      nsIWritableVariant* aVariant, mozilla::ipc::IProtocol* aActor);
+      nsIWritableVariant* aVariant);
 
   static void TransferablesToIPCTransferables(
       nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
