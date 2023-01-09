@@ -1693,6 +1693,7 @@ if (rtc_include_tests) {
         "containers:unittests",
         "memory:unittests",
         "synchronization:mutex",
+        "task_utils:repeating_task",
         "third_party/base64",
         "third_party/sigslot",
       ]
