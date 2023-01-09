@@ -15,7 +15,6 @@
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/Unused.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIPrompt.h"
 #include "nsISecureBrowserUI.h"
@@ -30,7 +29,6 @@
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "nsIWebNavigation.h"
 
-using mozilla::Unused;
 using mozilla::dom::ServiceWorkerInterceptController;
 
 namespace mozilla {
@@ -38,7 +36,7 @@ namespace net {
 
 ParentChannelListener::ParentChannelListener(
     nsIStreamListener* aListener,
-    dom::CanonicalBrowsingContext* aBrowsingContext, bool aUsePrivateBrowsing)
+    dom::CanonicalBrowsingContext* aBrowsingContext)
     : mNextListener(aListener), mBrowsingContext(aBrowsingContext) {
   LOG(("ParentChannelListener::ParentChannelListener [this=%p, next=%p]", this,
        aListener));
