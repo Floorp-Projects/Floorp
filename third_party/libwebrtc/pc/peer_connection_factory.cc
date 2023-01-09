@@ -46,7 +46,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/field_trial_units.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/rtc_certificate_generator.h"
@@ -60,12 +59,9 @@ CreateModularPeerConnectionFactory(
   // The PeerConnectionFactory must be created on the signaling thread.
   if (dependencies.signaling_thread &&
       !dependencies.signaling_thread->IsCurrent()) {
-    return dependencies.signaling_thread
-        ->Invoke<rtc::scoped_refptr<PeerConnectionFactoryInterface>>(
-            RTC_FROM_HERE, [&dependencies] {
-              return CreateModularPeerConnectionFactory(
-                  std::move(dependencies));
-            });
+    return dependencies.signaling_thread->BlockingCall([&dependencies] {
+      return CreateModularPeerConnectionFactory(std::move(dependencies));
+    });
   }
 
   auto pc_factory = PeerConnectionFactory::Create(std::move(dependencies));
@@ -238,13 +234,12 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
   dependencies.allocator->SetVpnList(configuration.vpn_list);
 
   std::unique_ptr<RtcEventLog> event_log =
-      worker_thread()->Invoke<std::unique_ptr<RtcEventLog>>(
-          RTC_FROM_HERE, [this] { return CreateRtcEventLog_w(); });
+      worker_thread()->BlockingCall([this] { return CreateRtcEventLog_w(); });
 
   const FieldTrialsView* trials =
       dependencies.trials ? dependencies.trials.get() : &field_trials();
-  std::unique_ptr<Call> call = worker_thread()->Invoke<std::unique_ptr<Call>>(
-      RTC_FROM_HERE, [this, &event_log, trials] {
+  std::unique_ptr<Call> call =
+      worker_thread()->BlockingCall([this, &event_log, trials] {
         return CreateCall_w(event_log.get(), *trials);
       });
 

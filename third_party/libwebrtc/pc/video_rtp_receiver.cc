@@ -19,7 +19,6 @@
 #include "api/video/recordable_encoded_frame.h"
 #include "pc/video_track.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -117,7 +116,7 @@ void VideoRtpReceiver::RestartMediaChannel(absl::optional<uint32_t> ssrc) {
   RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
   MediaSourceInterface::SourceState state = source_->state();
   // TODO(tommi): Can we restart the media channel without blocking?
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+  worker_thread_->BlockingCall([&] {
     RTC_DCHECK_RUN_ON(worker_thread_);
     RestartMediaChannel_w(std::move(ssrc), state);
   });
@@ -316,7 +315,7 @@ void VideoRtpReceiver::SetupMediaChannel(absl::optional<uint32_t> ssrc,
   RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
   RTC_DCHECK(media_channel);
   MediaSourceInterface::SourceState state = source_->state();
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+  worker_thread_->BlockingCall([&] {
     RTC_DCHECK_RUN_ON(worker_thread_);
     SetMediaChannel_w(media_channel);
     RestartMediaChannel_w(std::move(ssrc), state);

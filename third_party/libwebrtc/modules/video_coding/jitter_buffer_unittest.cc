@@ -21,7 +21,6 @@
 #include "modules/video_coding/media_opt_util.h"
 #include "modules/video_coding/packet.h"
 #include "modules/video_coding/test/stream_generator.h"
-#include "rtc_base/location.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/metrics.h"
 #include "test/gmock.h"

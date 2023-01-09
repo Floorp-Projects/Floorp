@@ -20,7 +20,6 @@
 #include "pc/proxy.h"
 #include "pc/sctp_utils.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/system/unused.h"
 #include "rtc_base/thread.h"

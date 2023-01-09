@@ -50,7 +50,6 @@
 #include "pc/webrtc_sdp.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/rtc_certificate.h"
@@ -2316,9 +2315,9 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
   auto transceivers = pc_->GetTransceiversInternal();
 
   // TODO(tommi): See if we can avoid synchronously blocking the signaling
-  // thread while we do this (or avoid the Invoke at all).
-  network_thread_->Invoke<void>(RTC_FROM_HERE, [this, &transceivers,
-                                                &voice_stats, &video_stats] {
+  // thread while we do this (or avoid the BlockingCall at all).
+  network_thread_->BlockingCall([this, &transceivers, &voice_stats,
+                                 &video_stats] {
     rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
     for (const auto& transceiver_proxy : transceivers) {
@@ -2363,7 +2362,7 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
   // well as GetCallStats(). At the same time we construct the
   // TrackMediaInfoMaps, which also needs info from the worker thread. This
   // minimizes the number of thread jumps.
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+  worker_thread_->BlockingCall([&] {
     rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
     for (auto& pair : voice_stats) {

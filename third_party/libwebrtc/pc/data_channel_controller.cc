@@ -16,7 +16,6 @@
 #include "api/rtc_error.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/sctp_utils.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -81,7 +80,7 @@ void DataChannelController::DisconnectDataChannel(
 
 void DataChannelController::AddSctpDataStream(int sid) {
   if (data_channel_transport()) {
-    network_thread()->Invoke<void>(RTC_FROM_HERE, [this, sid] {
+    network_thread()->BlockingCall([this, sid] {
       if (data_channel_transport()) {
         data_channel_transport()->OpenChannel(sid);
       }
@@ -91,7 +90,7 @@ void DataChannelController::AddSctpDataStream(int sid) {
 
 void DataChannelController::RemoveSctpDataStream(int sid) {
   if (data_channel_transport()) {
-    network_thread()->Invoke<void>(RTC_FROM_HERE, [this, sid] {
+    network_thread()->BlockingCall([this, sid] {
       if (data_channel_transport()) {
         data_channel_transport()->CloseChannel(sid);
       }
@@ -382,15 +381,14 @@ bool DataChannelController::DataChannelSendData(
     const rtc::CopyOnWriteBuffer& payload,
     cricket::SendDataResult* result) {
   // TODO(bugs.webrtc.org/11547): Expect method to be called on the network
-  // thread instead. Remove the Invoke() below and move assocated state to
+  // thread instead. Remove the BlockingCall() below and move assocated state to
   // the network thread.
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(data_channel_transport());
 
-  RTCError error = network_thread()->Invoke<RTCError>(
-      RTC_FROM_HERE, [this, sid, params, payload] {
-        return data_channel_transport()->SendData(sid, params, payload);
-      });
+  RTCError error = network_thread()->BlockingCall([this, sid, params, payload] {
+    return data_channel_transport()->SendData(sid, params, payload);
+  });
 
   if (error.ok()) {
     *result = cricket::SendDataResult::SDR_SUCCESS;

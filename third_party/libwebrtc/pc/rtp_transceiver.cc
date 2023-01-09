@@ -28,7 +28,6 @@
 #include "pc/rtp_media_utils.h"
 #include "pc/session_description.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/thread.h"
 
@@ -185,57 +184,42 @@ RTCError RtpTransceiver::CreateChannel(
     // TODO(bugs.webrtc.org/11992): Remove this workaround after updates in
     // PeerConnection and add the expectation that we're already on the right
     // thread.
-    new_channel =
-        context()
-            ->worker_thread()
-            ->Invoke<std::unique_ptr<cricket::VoiceChannel>>(
-                RTC_FROM_HERE, [&]() -> std::unique_ptr<cricket::VoiceChannel> {
-                  RTC_DCHECK_RUN_ON(context()->worker_thread());
+    context()->worker_thread()->BlockingCall([&] {
+      RTC_DCHECK_RUN_ON(context()->worker_thread());
 
-                  cricket::VoiceMediaChannel* media_channel =
-                      media_engine()->voice().CreateMediaChannel(
-                          call_ptr, media_config, audio_options,
-                          crypto_options);
-                  if (!media_channel) {
-                    return nullptr;
-                  }
+      cricket::VoiceMediaChannel* media_channel =
+          media_engine()->voice().CreateMediaChannel(
+              call_ptr, media_config, audio_options, crypto_options);
+      if (!media_channel) {
+        return;
+      }
 
-                  auto voice_channel = std::make_unique<cricket::VoiceChannel>(
-                      context()->worker_thread(), context()->network_thread(),
-                      context()->signaling_thread(),
-                      absl::WrapUnique(media_channel), mid, srtp_required,
-                      crypto_options, context()->ssrc_generator());
-
-                  return voice_channel;
-                });
+      new_channel = std::make_unique<cricket::VoiceChannel>(
+          context()->worker_thread(), context()->network_thread(),
+          context()->signaling_thread(), absl::WrapUnique(media_channel), mid,
+          srtp_required, crypto_options, context()->ssrc_generator());
+    });
   } else {
     RTC_DCHECK_EQ(cricket::MEDIA_TYPE_VIDEO, media_type());
 
     // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
     // the worker thread. We shouldn't be using the `call_ptr_` hack here but
     // simply be on the worker thread and use `call_` (update upstream code).
-    new_channel =
-        context()
-            ->worker_thread()
-            ->Invoke<std::unique_ptr<cricket::VideoChannel>>(
-                RTC_FROM_HERE, [&]() -> std::unique_ptr<cricket::VideoChannel> {
-                  RTC_DCHECK_RUN_ON(context()->worker_thread());
-                  cricket::VideoMediaChannel* media_channel =
-                      media_engine()->video().CreateMediaChannel(
-                          call_ptr, media_config, video_options, crypto_options,
-                          video_bitrate_allocator_factory);
-                  if (!media_channel) {
-                    return nullptr;
-                  }
+    context()->worker_thread()->BlockingCall([&] {
+      RTC_DCHECK_RUN_ON(context()->worker_thread());
+      cricket::VideoMediaChannel* media_channel =
+          media_engine()->video().CreateMediaChannel(
+              call_ptr, media_config, video_options, crypto_options,
+              video_bitrate_allocator_factory);
+      if (!media_channel) {
+        return;
+      }
 
-                  auto video_channel = std::make_unique<cricket::VideoChannel>(
-                      context()->worker_thread(), context()->network_thread(),
-                      context()->signaling_thread(),
-                      absl::WrapUnique(media_channel), mid, srtp_required,
-                      crypto_options, context()->ssrc_generator());
-
-                  return video_channel;
-                });
+      new_channel = std::make_unique<cricket::VideoChannel>(
+          context()->worker_thread(), context()->network_thread(),
+          context()->signaling_thread(), absl::WrapUnique(media_channel), mid,
+          srtp_required, crypto_options, context()->ssrc_generator());
+    });
   }
   if (!new_channel) {
     // TODO(hta): Must be a better way
@@ -274,7 +258,7 @@ void RtpTransceiver::SetChannel(
   // Similarly, if the channel() accessor is limited to the network thread, that
   // helps with keeping the channel implementation requirements being met and
   // avoids synchronization for accessing the pointer or network related state.
-  context()->network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->network_thread()->BlockingCall([&]() {
     if (channel_) {
       channel_->SetFirstPacketReceivedCallback(nullptr);
       channel_->SetRtpTransport(nullptr);
@@ -310,7 +294,7 @@ void RtpTransceiver::ClearChannel() {
   }
   std::unique_ptr<cricket::ChannelInterface> channel_to_delete;
 
-  context()->network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->network_thread()->BlockingCall([&]() {
     if (channel_) {
       channel_->SetFirstPacketReceivedCallback(nullptr);
       channel_->SetRtpTransport(nullptr);
@@ -331,7 +315,7 @@ void RtpTransceiver::PushNewMediaChannelAndDeleteChannel(
   if (!channel_to_delete && senders_.empty() && receivers_.empty()) {
     return;
   }
-  context()->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->worker_thread()->BlockingCall([&]() {
     // Push down the new media_channel, if any, otherwise clear it.
     auto* media_channel = channel_ ? channel_->media_channel() : nullptr;
     for (const auto& sender : senders_) {
@@ -399,7 +383,7 @@ bool RtpTransceiver::RemoveReceiver(RtpReceiverInterface* receiver) {
   }
 
   (*it)->internal()->Stop();
-  context()->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->worker_thread()->BlockingCall([&]() {
     // `Stop()` will clear the receiver's pointer to the media channel.
     (*it)->internal()->SetMediaChannel(nullptr);
   });
@@ -533,7 +517,7 @@ void RtpTransceiver::StopSendingAndReceiving() {
   for (const auto& receiver : receivers_)
     receiver->internal()->Stop();
 
-  context()->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->worker_thread()->BlockingCall([&]() {
     // 5 Stop receiving media with receiver.
     for (const auto& receiver : receivers_)
       receiver->internal()->SetMediaChannel(nullptr);

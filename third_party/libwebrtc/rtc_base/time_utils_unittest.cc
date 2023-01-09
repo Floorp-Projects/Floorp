@@ -16,7 +16,6 @@
 #include "rtc_base/event.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/helpers.h"
-#include "rtc_base/location.h"
 #include "rtc_base/message_handler.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
