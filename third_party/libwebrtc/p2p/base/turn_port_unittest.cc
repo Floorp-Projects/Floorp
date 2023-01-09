@@ -171,21 +171,15 @@ class TestConnectionWrapper : public sigslot::has_slots<> {
 
 // Note: This test uses a fake clock with a simulated network round trip
 // (between local port and TURN server) of kSimulatedRtt.
-class TurnPortTest : public ::testing::Test, public sigslot::has_slots<> {
+class TurnPortTest : public ::testing::Test,
+                     public TurnPort::CallbacksForTest,
+                     public sigslot::has_slots<> {
  public:
   TurnPortTest()
       : ss_(new TurnPortTestVirtualSocketServer()),
         main_(ss_.get()),
         socket_factory_(ss_.get()),
-        turn_server_(&main_, ss_.get(), kTurnUdpIntAddr, kTurnUdpExtAddr),
-        turn_ready_(false),
-        turn_error_(false),
-        turn_unknown_address_(false),
-        turn_create_permission_success_(false),
-        turn_port_closed_(false),
-        turn_port_destroyed_(false),
-        udp_ready_(false),
-        test_finish_(false) {
+        turn_server_(&main_, ss_.get(), kTurnUdpIntAddr, kTurnUdpExtAddr) {
     // Some code uses "last received time == 0" to represent "nothing received
     // so far", so we need to start the fake clock at a nonzero time...
     // TODO(deadbeef): Fix this.
@@ -205,16 +199,6 @@ class TurnPortTest : public ::testing::Test, public sigslot::has_slots<> {
                             const std::string& rf,
                             bool /*port_muxed*/) {
     turn_unknown_address_ = true;
-  }
-  void OnTurnCreatePermissionResult(TurnPort* port,
-                                    const SocketAddress& addr,
-                                    int code) {
-    // Ignoring the address.
-    turn_create_permission_success_ = (code == 0);
-  }
-
-  void OnTurnRefreshResult(TurnPort* port, int code) {
-    turn_refresh_success_ = (code == 0);
   }
   void OnTurnReadPacket(Connection* conn,
                         const char* data,
@@ -237,8 +221,16 @@ class TurnPortTest : public ::testing::Test, public sigslot::has_slots<> {
     turn_port_->HandleIncomingPacket(socket, data, size, remote_addr,
                                      packet_time_us);
   }
-  void OnTurnPortClosed(TurnPort* port) { turn_port_closed_ = true; }
   void OnTurnPortDestroyed(PortInterface* port) { turn_port_destroyed_ = true; }
+
+  // TurnPort::TestCallbacks
+  void OnTurnCreatePermissionResult(int code) override {
+    turn_create_permission_success_ = (code == 0);
+  }
+  void OnTurnRefreshResult(int code) override {
+    turn_refresh_success_ = (code == 0);
+  }
+  void OnTurnPortClosed() override { turn_port_closed_ = true; }
 
   rtc::Socket* CreateServerSocket(const SocketAddress addr) {
     rtc::Socket* socket = ss_->CreateSocket(AF_INET, SOCK_STREAM);
@@ -352,14 +344,9 @@ class TurnPortTest : public ::testing::Test, public sigslot::has_slots<> {
                                              &TurnPortTest::OnCandidateError);
     turn_port_->SignalUnknownAddress.connect(
         this, &TurnPortTest::OnTurnUnknownAddress);
-    turn_port_->SignalCreatePermissionResult.connect(
-        this, &TurnPortTest::OnTurnCreatePermissionResult);
-    turn_port_->SignalTurnRefreshResult.connect(
-        this, &TurnPortTest::OnTurnRefreshResult);
-    turn_port_->SignalTurnPortClosed.connect(this,
-                                             &TurnPortTest::OnTurnPortClosed);
     turn_port_->SubscribePortDestroyed(
         [this](PortInterface* port) { OnTurnPortDestroyed(port); });
+    turn_port_->SetCallbacksForTest(this);
   }
 
   void CreateUdpPort() { CreateUdpPort(kLocalAddr2); }
@@ -783,14 +770,14 @@ class TurnPortTest : public ::testing::Test, public sigslot::has_slots<> {
   TestTurnServer turn_server_;
   std::unique_ptr<TurnPort> turn_port_;
   std::unique_ptr<UDPPort> udp_port_;
-  bool turn_ready_;
-  bool turn_error_;
-  bool turn_unknown_address_;
-  bool turn_create_permission_success_;
-  bool turn_port_closed_;
-  bool turn_port_destroyed_;
-  bool udp_ready_;
-  bool test_finish_;
+  bool turn_ready_ = false;
+  bool turn_error_ = false;
+  bool turn_unknown_address_ = false;
+  bool turn_create_permission_success_ = false;
+  bool turn_port_closed_ = false;
+  bool turn_port_destroyed_ = false;
+  bool udp_ready_ = false;
+  bool test_finish_ = false;
   bool turn_refresh_success_ = false;
   std::vector<rtc::Buffer> turn_packets_;
   std::vector<rtc::Buffer> udp_packets_;
