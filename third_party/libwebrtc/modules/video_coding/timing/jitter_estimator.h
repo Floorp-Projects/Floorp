@@ -67,8 +67,6 @@ class JitterEstimator {
   static constexpr TimeDelta OPERATING_SYSTEM_JITTER = TimeDelta::Millis(10);
 
  private:
-  double var_noise_;  // Variance of the time-deviation from the line
-
   // Updates the random jitter estimate, i.e. the variance of the time
   // deviations from the line given by the Kalman filter.
   //
@@ -86,6 +84,7 @@ class JitterEstimator {
   // Post process the calculated estimate.
   void PostProcessEstimate();
 
+  // Returns the estimated incoming frame rate.
   Frequency GetFrameRate() const;
 
   // Filters the {frame_delay_delta, frame_size_delta} measurements through
@@ -95,33 +94,35 @@ class JitterEstimator {
   // TODO(bugs.webrtc.org/14381): Update `avg_frame_size_bytes_` to DataSize
   // when api/units have sufficient precision.
   double avg_frame_size_bytes_;  // Average frame size
-  double var_frame_size_;  // Frame size variance. Unit is bytes^2.
+  double var_frame_size_bytes2_;  // Frame size variance. Unit is bytes^2.
   // Largest frame size received (descending with a factor kPsi)
   // TODO(bugs.webrtc.org/14381): Update `max_frame_size_bytes_` to DataSize
   // when api/units have sufficient precision.
   double max_frame_size_bytes_;
-  // TODO(bugs.webrtc.org/14381): Update `frame_size_sum_bytes_` to DataSize
-  // when api/units have sufficient precision.
-  double frame_size_sum_bytes_;
-  uint32_t frame_size_count_;
+  // TODO(bugs.webrtc.org/14381): Update `startup_frame_size_sum_bytes_` to
+  // DataSize when api/units have sufficient precision.
+  double startup_frame_size_sum_bytes_;
+  size_t startup_frame_size_count_;
 
   absl::optional<Timestamp> last_update_time_;
   // The previously returned jitter estimate
   absl::optional<TimeDelta> prev_estimate_;
   // Frame size of the previous frame
   absl::optional<DataSize> prev_frame_size_;
-  // Average of the random jitter
-  double avg_noise_;
-  uint32_t alpha_count_;
+  // Average of the random jitter. Unit is milliseconds.
+  double avg_noise_ms_;
+  // Variance of the time-deviation from the line. Unit is milliseconds^2.
+  double var_noise_ms2_;
+  size_t alpha_count_;
   // The filtered sum of jitter estimates
   TimeDelta filter_jitter_estimate_ = TimeDelta::Zero();
 
-  uint32_t startup_count_;
+  size_t startup_count_;
   // Time when the latest nack was seen
   Timestamp latest_nack_ = Timestamp::Zero();
   // Keeps track of the number of nacks received, but never goes above
   // kNackLimit.
-  uint32_t nack_count_;
+  size_t nack_count_;
   RttFilter rtt_filter_;
 
   // Tracks frame rates in microseconds.
