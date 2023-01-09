@@ -37,7 +37,6 @@ class Connector {
     this.disconnect = this.disconnect.bind(this);
     this.willNavigate = this.willNavigate.bind(this);
     this.navigate = this.navigate.bind(this);
-    this.sendHTTPRequest = this.sendHTTPRequest.bind(this);
     this.triggerActivity = this.triggerActivity.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
     this.requestData = this.requestData.bind(this);
@@ -76,6 +75,7 @@ class Connector {
     this.getState = getState;
     this.toolbox = connection.toolbox;
     this.commands = this.toolbox.commands;
+    this.networkCommand = this.commands.networkCommand;
 
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
@@ -342,19 +342,6 @@ class Connector {
     }
 
     this.emitForTests(TEST_EVENTS.TIMELINE_EVENT, resource);
-  }
-
-  /**
-   * Send a HTTP request data payload
-   *
-   * @param {object} data data payload would like to sent to backend
-   */
-  async sendHTTPRequest(data) {
-    const networkContentFront = await this.currentTarget.getFront(
-      "networkContent"
-    );
-    const { channelId } = await networkContentFront.sendHTTPRequest(data);
-    return { channelId };
   }
 
   /*

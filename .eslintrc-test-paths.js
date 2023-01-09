@@ -165,6 +165,7 @@ const extraBrowserTestPaths = [
   "devtools/client/styleeditor/test/",
   "devtools/shared/commands/inspected-window/tests/",
   "devtools/shared/commands/inspector/tests/",
+  "devtools/shared/commands/network/tests/",
   "devtools/shared/commands/resource/tests/",
   "devtools/shared/commands/script/tests/",
   "devtools/shared/commands/target-configuration/tests/",

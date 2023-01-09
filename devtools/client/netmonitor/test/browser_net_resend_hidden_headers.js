@@ -15,7 +15,6 @@ add_task(async function() {
 
   const { store, windowRequire, connector } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { sendHTTPRequest } = connector;
 
   const { getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
@@ -29,7 +28,7 @@ add_task(async function() {
   ];
 
   const originalRequest = waitForNetworkEvents(monitor, 1);
-  sendHTTPRequest({
+  connector.networkCommand.sendHTTPRequest({
     url: requestUrl,
     method: "GET",
     headers: requestHeaders,
@@ -49,7 +48,7 @@ add_task(async function() {
 
   const clonedRequest = waitForNetworkEvents(monitor, 1);
 
-  store.dispatch(Actions.sendCustomRequest(connector, originalItem.id));
+  store.dispatch(Actions.sendCustomRequest(originalItem.id));
 
   await clonedRequest;
 

@@ -482,10 +482,9 @@ module.exports = connect(
       dispatch(Actions.openHTTPCustomRequest(true)),
     closeHTTPCustomRequestTab: () =>
       dispatch(Actions.openHTTPCustomRequest(false)),
-    sendCustomRequest: () =>
-      dispatch(Actions.sendCustomRequest(props.connector)),
+    sendCustomRequest: () => dispatch(Actions.sendCustomRequest()),
     sendHTTPCustomRequest: request =>
-      dispatch(Actions.sendHTTPCustomRequest(props.connector, request)),
+      dispatch(Actions.sendHTTPCustomRequest(request)),
     openStatistics: open =>
       dispatch(Actions.openStatistics(props.connector, open)),
     openRequestBlockingAndAddUrl: url =>

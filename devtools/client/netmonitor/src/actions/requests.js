@@ -85,8 +85,8 @@ function cloneSelectedRequest() {
 /**
  * Send a new HTTP request using the data in the custom request form.
  */
-function sendCustomRequest(connector, requestId = null) {
-  return async ({ dispatch, getState }) => {
+function sendCustomRequest(requestId = null) {
+  return async ({ dispatch, getState, connector, commands }) => {
     let request;
     if (requestId) {
       request = getRequestById(getState(), requestId);
@@ -123,13 +123,11 @@ function sendCustomRequest(connector, requestId = null) {
       data.body = request.requestPostData.postData.text;
     }
 
-    // @backward-compat { version 85 } Introduced `channelId` to eventually
-    // replace `actor`.
-    const { channelId, actor } = await connector.sendHTTPRequest(data);
+    const { channelId } = await commands.networkCommand.sendHTTPRequest(data);
 
     dispatch({
       type: SEND_CUSTOM_REQUEST,
-      id: channelId || actor,
+      id: channelId,
     });
   };
 }
