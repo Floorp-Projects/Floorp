@@ -8007,13 +8007,6 @@
   value: -1
   mirror: always
 
-# Whether non-standard caption-side values are enabled
-- name: layout.css.caption-side-non-standard.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Whether @layer is enabled
 - name: layout.css.cascade-layers.enabled
   type: RelaxedAtomicBool
