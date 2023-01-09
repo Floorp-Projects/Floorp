@@ -125,6 +125,7 @@ fuzzy-if(winWidget,0-1,0-10) == grid-max-sizing-flex-003.html grid-max-sizing-fl
 == grid-item-button-001.html grid-item-button-001-ref.html
 == grid-item-table-stretch-001.html grid-item-table-stretch-001-ref.html
 == grid-item-table-stretch-002.html grid-item-table-stretch-002-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == grid-item-table-stretch-003.html grid-item-table-stretch-003-ref.html
 == grid-item-table-stretch-004.html grid-item-table-stretch-004-ref.html
 == grid-item-fieldset-stretch-001.html grid-item-fieldset-stretch-001-ref.html
 skip-if(Android) == grid-item-video-stretch-001.html grid-item-video-stretch-001-ref.html # Huh, Android doesn't have webm support?

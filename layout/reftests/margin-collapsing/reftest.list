@@ -662,14 +662,27 @@ fuzzy-if(winWidget&&!nativeThemePref,0-4,0-36) == block-overflow-5c-dyn.html blo
 == table-caption-2a-dyn.html table-caption-2-ref.html
 == table-caption-2b-dyn.html table-caption-2-ref.html
 == table-caption-2c-dyn.html table-caption-2-ref.html
+# Note: CSS 2.1 suggests that the 'caption-side' values 'top-outside' and
+# 'bottom-outside' will be used in a future CSS Module to restore the
+# CSS 2 definition of 'top' and 'bottom' (which is different from CSS 2.1's).
+# Since Bug #659828 was fixed, 'top-outside' and 'bottom-outside' act as an 
+# alias for the CSS 2.1 values 'top' and 'bottom' respectively.
 == table-caption-top-1.html table-caption-top-1-ref.html
 == table-caption-top-2.html table-caption-top-2-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-top-outside-1.html table-caption-top-1-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-top-outside-2.html table-caption-top-1-ref.html
 == table-caption-bottom-1.html table-caption-bottom-1-ref.html
 == table-caption-bottom-2.html table-caption-bottom-2-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-bottom-outside-1.html table-caption-bottom-1-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-bottom-outside-2.html table-caption-bottom-1-ref.html
 == table-caption-top-1-dyn.html table-caption-top-1-ref.html
 == table-caption-top-2-dyn.html table-caption-top-1-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-top-outside-1-dyn.html table-caption-top-1-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-top-outside-2-dyn.html table-caption-top-2-ref.html
 == table-caption-bottom-1-dyn.html table-caption-bottom-1-ref.html
 == table-caption-bottom-2-dyn.html table-caption-bottom-1-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-bottom-outside-1-dyn.html table-caption-bottom-1-ref.html
+pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-bottom-outside-2-dyn.html table-caption-bottom-1-ref.html
 fails == caption-sibling-1a.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1a.html caption-sibling-1-noref.html
 fails == caption-sibling-1b.html caption-sibling-1-ref.html # Bug 144517

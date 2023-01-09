@@ -2127,6 +2127,17 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void) {
   return sNormalLineHeightControl;
 }
 
+static inline bool IsSideCaption(nsIFrame* aFrame,
+                                 const nsStyleDisplay* aStyleDisplay,
+                                 WritingMode aWM) {
+  if (aStyleDisplay->mDisplay != StyleDisplay::TableCaption) {
+    return false;
+  }
+  auto captionSide = aFrame->StyleTableBorder()->mCaptionSide;
+  return captionSide == StyleCaptionSide::Left ||
+         captionSide == StyleCaptionSide::Right;
+}
+
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -2412,6 +2423,9 @@ void ReflowInput::InitConstraints(
 
       const bool shouldCalculateBlockSideMargins = [&]() {
         if (!isBlockLevel) {
+          return false;
+        }
+        if (IsSideCaption(mFrame, mStyleDisplay, cbwm)) {
           return false;
         }
         if (mStyleDisplay->mDisplay == StyleDisplay::InlineTable) {

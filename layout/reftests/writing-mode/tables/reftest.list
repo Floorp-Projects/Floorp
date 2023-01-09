@@ -75,7 +75,9 @@ fuzzy-if(winWidget,0-48,0-600) fuzzy-if(cocoaWidget,0-19,0-97) == wm-row-progres
 fuzzy-if(winWidget,0-48,0-600) fuzzy-if(cocoaWidget,0-19,0-97) == wm-row-progression-007.xht multicol-count-002-ref.xht
 
 fuzzy-if(Android,0-255,0-38) == table-caption-top-1.html table-caption-top-1-ref.html
-fuzzy-if(Android,0-255,0-38) == table-caption-bottom-1.html table-caption-bottom-1-ref.html
+fuzzy-if(Android,0-255,0-38) pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-bottom-1.html table-caption-bottom-1-ref.html
+fuzzy-if(Android,0-244,0-27) pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-left-1.html table-caption-left-1-ref.html
+fuzzy-if(Android,0-244,0-27) pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-right-1.html table-caption-right-1-ref.html
 
 == border-collapse-bevels-1a.html border-collapse-bevels-1-ref.html
 fuzzy-if(cocoaWidget,0-23,0-162) == border-collapse-bevels-1b.html border-collapse-bevels-1-ref.html
