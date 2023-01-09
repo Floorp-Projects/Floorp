@@ -1,6 +1,51 @@
 {
   "data": [
     {
+      "name": "Opera",
+      "schema": 1673097842713,
+      "status": "beta",
+      "version": "95",
+      "browserid": "opera",
+      "id": "a83007e2-3f6d-4282-a7be-5552e91fc2f1",
+      "last_modified": 1673253925252
+    },
+    {
+      "name": "Opera",
+      "schema": 1673097842762,
+      "status": "nightly",
+      "version": "96",
+      "browserid": "opera",
+      "id": "95fd1f92-7a9a-413e-af7c-2b58179691dc",
+      "last_modified": 1673253925249
+    },
+    {
+      "name": "Safari",
+      "schema": 1673097842855,
+      "status": "current",
+      "version": "16.2",
+      "browserid": "safari",
+      "id": "7e6ed537-46d9-46f0-bd8f-5c0eb537a367",
+      "last_modified": 1673253925246
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1673097842943,
+      "status": "current",
+      "version": "16.2",
+      "browserid": "safari_ios",
+      "id": "af228624-dc78-44a2-a72c-226585c534c1",
+      "last_modified": 1673253925243
+    },
+    {
+      "name": "Opera",
+      "schema": 1673097842662,
+      "status": "current",
+      "version": "94",
+      "browserid": "opera",
+      "id": "d3a433b8-cd5b-4141-95de-c2596c58caaa",
+      "last_modified": 1673253925231
+    },
+    {
       "name": "Firefox for Android",
       "schema": 1671629059860,
       "status": "nightly",
@@ -179,51 +224,6 @@
       "browserid": "samsunginternet_android",
       "id": "0b8dd4c5-f0c2-49b0-9fa2-8bdfdd181f40",
       "last_modified": 1669210981397
-    },
-    {
-      "name": "Opera",
-      "schema": 1667913843795,
-      "status": "nightly",
-      "version": "94",
-      "browserid": "opera",
-      "id": "d3a433b8-cd5b-4141-95de-c2596c58caaa",
-      "last_modified": 1667919711777
-    },
-    {
-      "name": "Opera",
-      "schema": 1667913843660,
-      "status": "current",
-      "version": "92",
-      "browserid": "opera",
-      "id": "5c14c5e1-9a77-4ae5-a9a6-a8009b2681d5",
-      "last_modified": 1667919711773
-    },
-    {
-      "name": "Opera",
-      "schema": 1667913843730,
-      "status": "beta",
-      "version": "93",
-      "browserid": "opera",
-      "id": "d17850de-e945-4e36-bc28-0b7402c3871d",
-      "last_modified": 1667919711767
-    },
-    {
-      "name": "Safari",
-      "schema": 1667654647923,
-      "status": "current",
-      "version": "16.1",
-      "browserid": "safari",
-      "id": "c4f8473c-0997-4e60-8d1c-765c4cb7926a",
-      "last_modified": 1667805461682
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1667654648035,
-      "status": "current",
-      "version": "16.1",
-      "browserid": "safari_ios",
-      "id": "0120aa55-43b9-49d9-9e18-e3d5371e3c77",
-      "last_modified": 1667805461679
     },
     {
       "name": "Node.js",
@@ -487,5 +487,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1671630903915
+  "timestamp": 1673253925252
 }
