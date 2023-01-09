@@ -36,6 +36,7 @@ namespace {
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::AtLeast;
+using ::testing::ElementsAreArray;
 using ::testing::Field;
 using ::testing::Gt;
 using ::testing::Le;
@@ -434,6 +435,68 @@ TEST_F(PacketRouterTest, DoesNotIncrementTransportSequenceNumberOnSendFailure) {
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
   packet_router_.RemoveSendRtpModule(&rtp);
+}
+
+TEST_F(PacketRouterTest, ForwardsAbortedRetransmissions) {
+  NiceMock<MockRtpRtcpInterface> rtp_1;
+  NiceMock<MockRtpRtcpInterface> rtp_2;
+
+  const uint32_t kSsrc1 = 1234;
+  const uint32_t kSsrc2 = 2345;
+  const uint32_t kInvalidSsrc = 3456;
+
+  ON_CALL(rtp_1, SSRC).WillByDefault(Return(kSsrc1));
+  ON_CALL(rtp_2, SSRC).WillByDefault(Return(kSsrc2));
+
+  packet_router_.AddSendRtpModule(&rtp_1, false);
+  packet_router_.AddSendRtpModule(&rtp_2, false);
+
+  // Sets of retransmission sequence numbers we wish to abort, per ssrc.
+  const uint16_t kAbortedRetransmissionsOnSsrc1[] = {17, 42};
+  const uint16_t kAbortedRetransmissionsOnSsrc2[] = {1337, 4711};
+  const uint16_t kAbortedRetransmissionsOnSsrc3[] = {123};
+
+  EXPECT_CALL(rtp_1, OnAbortedRetransmissions(
+                         ElementsAreArray(kAbortedRetransmissionsOnSsrc1)));
+  EXPECT_CALL(rtp_2, OnAbortedRetransmissions(
+                         ElementsAreArray(kAbortedRetransmissionsOnSsrc2)));
+
+  packet_router_.OnAbortedRetransmissions(kSsrc1,
+                                          kAbortedRetransmissionsOnSsrc1);
+  packet_router_.OnAbortedRetransmissions(kSsrc2,
+                                          kAbortedRetransmissionsOnSsrc2);
+
+  // Should be noop and not cause any issues.
+  packet_router_.OnAbortedRetransmissions(kInvalidSsrc,
+                                          kAbortedRetransmissionsOnSsrc3);
+
+  packet_router_.RemoveSendRtpModule(&rtp_1);
+  packet_router_.RemoveSendRtpModule(&rtp_2);
+}
+
+TEST_F(PacketRouterTest, ReportsRtxSsrc) {
+  NiceMock<MockRtpRtcpInterface> rtp_1;
+  NiceMock<MockRtpRtcpInterface> rtp_2;
+
+  const uint32_t kSsrc1 = 1234;
+  const uint32_t kRtxSsrc1 = 1235;
+  const uint32_t kSsrc2 = 2345;
+  const uint32_t kInvalidSsrc = 3456;
+
+  ON_CALL(rtp_1, SSRC).WillByDefault(Return(kSsrc1));
+  ON_CALL(rtp_1, RtxSsrc).WillByDefault(Return(kRtxSsrc1));
+  ON_CALL(rtp_2, SSRC).WillByDefault(Return(kSsrc2));
+
+  packet_router_.AddSendRtpModule(&rtp_1, false);
+  packet_router_.AddSendRtpModule(&rtp_2, false);
+
+  EXPECT_EQ(packet_router_.GetRtxSsrcForMedia(kSsrc1), kRtxSsrc1);
+  EXPECT_EQ(packet_router_.GetRtxSsrcForMedia(kRtxSsrc1), absl::nullopt);
+  EXPECT_EQ(packet_router_.GetRtxSsrcForMedia(kSsrc2), absl::nullopt);
+  EXPECT_EQ(packet_router_.GetRtxSsrcForMedia(kInvalidSsrc), absl::nullopt);
+
+  packet_router_.RemoveSendRtpModule(&rtp_1);
+  packet_router_.RemoveSendRtpModule(&rtp_2);
 }
 
 #if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)

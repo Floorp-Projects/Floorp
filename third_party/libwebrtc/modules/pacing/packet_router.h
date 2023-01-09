@@ -58,6 +58,10 @@ class PacketRouter : public PacingController::PacketSender {
   std::vector<std::unique_ptr<RtpPacketToSend>> FetchFec() override;
   std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePadding(
       DataSize size) override;
+  void OnAbortedRetransmissions(
+      uint32_t ssrc,
+      rtc::ArrayView<const uint16_t> sequence_numbers) override;
+  absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t ssrc) const override;
 
   uint16_t CurrentTransportSequenceNumber() const;
 
