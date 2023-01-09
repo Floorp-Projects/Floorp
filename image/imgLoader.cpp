@@ -1991,10 +1991,7 @@ bool imgLoader::ValidateEntry(
   // just return true in that case.  Doing so would mean that shift-reload
   // doesn't reload data URI documents/images though (which is handy for
   // debugging during gecko development) so we make an exception in that case.
-  nsAutoCString scheme;
-  aURI->GetScheme(scheme);
-  if (scheme.EqualsLiteral("data") &&
-      !(aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE)) {
+  if (aURI->SchemeIs("data") && !(aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE)) {
     return true;
   }
 
