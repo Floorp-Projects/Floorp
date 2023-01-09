@@ -28,23 +28,54 @@
 
 namespace webrtc {
 namespace {
-static constexpr uint32_t kStartupDelaySamples = 30;
-static constexpr int64_t kFsAccuStartupSamples = 5;
-static constexpr Frequency kMaxFramerateEstimate = Frequency::Hertz(200);
-static constexpr TimeDelta kNackCountTimeout = TimeDelta::Seconds(60);
-static constexpr double kDefaultMaxTimestampDeviationInSigmas = 3.5;
-static constexpr double kDefaultAvgAndMaxFrameSize = 500;
 
+// Number of frames to wait for before post processing estimate. Also used in
+// the frame rate estimator ramp-up.
+constexpr size_t kFrameProcessingStartupCount = 30;
+
+// Number of frames to wait for before enabling the frame size filters.
+constexpr size_t kFramesUntilSizeFiltering = 5;
+
+// Initial value for frame size filters.
+constexpr double kInitialAvgAndMaxFrameSizeBytes = 500.0;
+
+// Time constant for average frame size filter.
 constexpr double kPhi = 0.97;
+// Time constant for max frame size filter.
 constexpr double kPsi = 0.9999;
-constexpr uint32_t kAlphaCountMax = 400;
-constexpr uint32_t kNackLimit = 3;
-constexpr int32_t kNumStdDevDelayOutlier = 15;
-constexpr int32_t kNumStdDevFrameSizeOutlier = 3;
+
+// Outlier rejection constants.
+constexpr double kDefaultMaxTimestampDeviationInSigmas = 3.5;
+constexpr double kNumStdDevDelayOutlier = 15.0;
+constexpr double kNumStdDevSizeOutlier = 3.0;
+constexpr double kCongestionRejectionFactor = -0.25;
+
+// Rampup constant for deviation noise filters.
+constexpr size_t kAlphaCountMax = 400;
+
+// Noise threshold constants.
 // ~Less than 1% chance (look up in normal distribution table)...
 constexpr double kNoiseStdDevs = 2.33;
 // ...of getting 30 ms freezes
 constexpr double kNoiseStdDevOffset = 30.0;
+
+// Jitter estimate clamping limits.
+constexpr TimeDelta kMinJitterEstimate = TimeDelta::Millis(1);
+constexpr TimeDelta kMaxJitterEstimate = TimeDelta::Seconds(10);
+
+// A constant describing the delay from the jitter buffer to the delay on the
+// receiving side which is not accounted for by the jitter buffer nor the
+// decoding delay estimate.
+constexpr TimeDelta OPERATING_SYSTEM_JITTER = TimeDelta::Millis(10);
+
+// Time constant for reseting the NACK count.
+constexpr TimeDelta kNackCountTimeout = TimeDelta::Seconds(60);
+
+// RTT mult activation.
+constexpr size_t kNackLimit = 3;
+
+// Frame rate estimate clamping limit.
+constexpr Frequency kMaxFramerateEstimate = Frequency::Hertz(200);
 
 }  // namespace
 
@@ -60,8 +91,8 @@ JitterEstimator::~JitterEstimator() = default;
 
 // Resets the JitterEstimate.
 void JitterEstimator::Reset() {
-  avg_frame_size_bytes_ = kDefaultAvgAndMaxFrameSize;
-  max_frame_size_bytes_ = kDefaultAvgAndMaxFrameSize;
+  avg_frame_size_bytes_ = kInitialAvgAndMaxFrameSizeBytes;
+  max_frame_size_bytes_ = kInitialAvgAndMaxFrameSizeBytes;
   var_frame_size_bytes2_ = 100;
   last_update_time_ = absl::nullopt;
   prev_estimate_ = absl::nullopt;
@@ -90,10 +121,10 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   // Can't use DataSize since this can be negative.
   double delta_frame_bytes =
       frame_size.bytes() - prev_frame_size_.value_or(DataSize::Zero()).bytes();
-  if (startup_frame_size_count_ < kFsAccuStartupSamples) {
+  if (startup_frame_size_count_ < kFramesUntilSizeFiltering) {
     startup_frame_size_sum_bytes_ += frame_size.bytes();
     startup_frame_size_count_++;
-  } else if (startup_frame_size_count_ == kFsAccuStartupSamples) {
+  } else if (startup_frame_size_count_ == kFramesUntilSizeFiltering) {
     // Give the frame size filter.
     avg_frame_size_bytes_ = startup_frame_size_sum_bytes_ /
                             static_cast<double>(startup_frame_size_count_);
@@ -128,39 +159,45 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
       kDefaultMaxTimestampDeviationInSigmas * sqrt(var_noise_ms2_) + 0.5);
   frame_delay.Clamp(-max_time_deviation, max_time_deviation);
 
+  double delay_deviation_ms =
+      frame_delay.ms() -
+      kalman_filter_.GetFrameDelayVariationEstimateTotal(delta_frame_bytes);
+
+  // Outlier rejection.
+  bool abs_delay_is_not_outlier =
+      fabs(delay_deviation_ms) < kNumStdDevDelayOutlier * sqrt(var_noise_ms2_);
+  bool size_is_positive_outlier =
+      frame_size.bytes() >
+      avg_frame_size_bytes_ +
+          kNumStdDevSizeOutlier * sqrt(var_frame_size_bytes2_);
+
   // Only update the Kalman filter if the sample is not considered an extreme
   // outlier. Even if it is an extreme outlier from a delay point of view, if
   // the frame size also is large the deviation is probably due to an incorrect
   // line slope.
-  double deviation_ms =
-      frame_delay.ms() -
-      kalman_filter_.GetFrameDelayVariationEstimateTotal(delta_frame_bytes);
-
-  if (fabs(deviation_ms) < kNumStdDevDelayOutlier * sqrt(var_noise_ms2_) ||
-      frame_size.bytes() >
-          avg_frame_size_bytes_ +
-              kNumStdDevFrameSizeOutlier * sqrt(var_frame_size_bytes2_)) {
+  if (abs_delay_is_not_outlier || size_is_positive_outlier) {
     // Update the variance of the deviation from the line given by the Kalman
     // filter.
-    EstimateRandomJitter(deviation_ms);
+    EstimateRandomJitter(delay_deviation_ms);
     // Prevent updating with frames which have been congested by a large frame,
     // and therefore arrives almost at the same time as that frame.
     // This can occur when we receive a large frame (key frame) which has been
     // delayed. The next frame is of normal size (delta frame), and thus deltaFS
     // will be << 0. This removes all frame samples which arrives after a key
     // frame.
-    if (delta_frame_bytes > -0.25 * max_frame_size_bytes_) {
+    if (delta_frame_bytes >
+        kCongestionRejectionFactor * max_frame_size_bytes_) {
       // Update the Kalman filter with the new data
       kalman_filter_.PredictAndUpdate(frame_delay.ms(), delta_frame_bytes,
                                       max_frame_size_bytes_, var_noise_ms2_);
     }
   } else {
-    int nStdDev =
-        (deviation_ms >= 0) ? kNumStdDevDelayOutlier : -kNumStdDevDelayOutlier;
-    EstimateRandomJitter(nStdDev * sqrt(var_noise_ms2_));
+    double num_stddev = (delay_deviation_ms >= 0) ? kNumStdDevDelayOutlier
+                                                  : -kNumStdDevDelayOutlier;
+    EstimateRandomJitter(num_stddev * sqrt(var_noise_ms2_));
   }
   // Post process the total estimated jitter
-  if (startup_count_ >= kStartupDelaySamples) {
+  if (startup_count_ >= kFrameProcessingStartupCount) {
     PostProcessEstimate();
   } else {
     startup_count_++;
@@ -176,7 +213,7 @@ void JitterEstimator::FrameNacked() {
 }
 
 // Estimates the random jitter by calculating the variance of the sample
-// distance from the line given by theta.
+// distance from the line given by the Kalman filter.
 void JitterEstimator::EstimateRandomJitter(double d_dT) {
   Timestamp now = clock_->CurrentTime();
   if (last_update_time_.has_value()) {
@@ -202,11 +239,11 @@ void JitterEstimator::EstimateRandomJitter(double d_dT) {
     double rate_scale = k30Fps / fps;
     // At startup, there can be a lot of noise in the fps estimate.
     // Interpolate rate_scale linearly, from 1.0 at sample #1, to 30.0 / fps
-    // at sample #kStartupDelaySamples.
-    if (alpha_count_ < kStartupDelaySamples) {
-      rate_scale =
-          (alpha_count_ * rate_scale + (kStartupDelaySamples - alpha_count_)) /
-          kStartupDelaySamples;
+    // at sample #kFrameProcessingStartupCount.
+    if (alpha_count_ < kFrameProcessingStartupCount) {
+      rate_scale = (alpha_count_ * rate_scale +
+                    (kFrameProcessingStartupCount - alpha_count_)) /
+                   kFrameProcessingStartupCount;
     }
     alpha = pow(alpha, rate_scale);
   }
@@ -235,22 +272,19 @@ double JitterEstimator::NoiseThreshold() const {
 
 // Calculates the current jitter estimate from the filtered estimates.
 TimeDelta JitterEstimator::CalculateEstimate() {
-  double retMs = kalman_filter_.GetFrameDelayVariationEstimateSizeBased(
-                     max_frame_size_bytes_ - avg_frame_size_bytes_) +
-                 NoiseThreshold();
+  double ret_ms = kalman_filter_.GetFrameDelayVariationEstimateSizeBased(
+                      max_frame_size_bytes_ - avg_frame_size_bytes_) +
+                  NoiseThreshold();
+  TimeDelta ret = TimeDelta::Millis(ret_ms);
 
-  TimeDelta ret = TimeDelta::Millis(retMs);
-
-  constexpr TimeDelta kMinEstimate = TimeDelta::Millis(1);
-  constexpr TimeDelta kMaxEstimate = TimeDelta::Seconds(10);
   // A very low estimate (or negative) is neglected.
-  if (ret < kMinEstimate) {
-    ret = prev_estimate_.value_or(kMinEstimate);
+  if (ret < kMinJitterEstimate) {
+    ret = prev_estimate_.value_or(kMinJitterEstimate);
     // Sanity check to make sure that no other method has set `prev_estimate_`
-    // to a value lower than `kMinEstimate`.
-    RTC_DCHECK_GE(ret, kMinEstimate);
-  } else if (ret > kMaxEstimate) {  // Sanity
-    ret = kMaxEstimate;
+    // to a value lower than `kMinJitterEstimate`.
+    RTC_DCHECK_GE(ret, kMinJitterEstimate);
+  } else if (ret > kMaxJitterEstimate) {  // Sanity
+    ret = kMaxJitterEstimate;
   }
   prev_estimate_ = ret;
   return ret;
