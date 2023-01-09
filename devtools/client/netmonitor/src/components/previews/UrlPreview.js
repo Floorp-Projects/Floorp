@@ -220,7 +220,7 @@ class UrlPreview extends Component {
           map[obj.name] = obj.value;
         }
         return map;
-      }, {});
+      }, Object.create(null));
     }
 
     if (address) {
