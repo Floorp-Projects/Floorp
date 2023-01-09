@@ -67,5 +67,7 @@ class TabHistoryDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val EXTRA_SESSION_ID = "activeSessionId"
+        val NAME: String = TabHistoryDialogFragment::class.java.canonicalName?.substringAfterLast('.')
+            ?: TabHistoryDialogFragment::class.java.simpleName
     }
 }
