@@ -44,30 +44,18 @@ from mozfile import which
 import distro
 
 APPLICATION_CHOICE = """
-Note on Artifact Mode:
 
-Artifact builds download prebuilt C++ components rather than building
-them locally. Artifact builds are faster!
-
-Artifact builds are recommended for people working on Firefox or
-Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
-for those working on C++ code. For more information see:
-https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
-
-Please choose the version of Firefox you want to build (see note above):
+Please choose the version of Floorp you want to build (see note above):
 %s
 Your choice: """
 
 APPLICATIONS = OrderedDict(
     [
-        ("Firefox for Desktop Artifact Mode", "browser_artifact_mode"),
-        ("Firefox for Desktop", "browser"),
-        ("GeckoView/Firefox for Android Artifact Mode", "mobile_android_artifact_mode"),
-        ("GeckoView/Firefox for Android", "mobile_android"),
-        ("SpiderMonkey JavaScript engine", "js"),
+        ("Floorp for Desktop", "browser"),
+        ("Floorp for Desktop Artifact Mode", "browser_artifact_mode"),
+        ("GeckoView/Floorp Android", "mobile_android"),
     ]
 )
-
 FINISHED = """
 Your system should be ready to build %s!
 """
@@ -253,11 +241,7 @@ class Bootstrapper(object):
         if sys.platform.startswith("darwin") and platform.machine() == "arm64":
             return
 
-        if not self.instance.prompt_yesno("Will you be submitting commits to Mozilla?"):
-            return
-
-        mach_binary = checkout_root / "mach"
-        subprocess.check_call((sys.executable, str(mach_binary), "install-moz-phab"))
+        return
 
     def bootstrap(self, settings):
         if self.choice is None:
@@ -348,7 +332,7 @@ class Bootstrapper(object):
                 configure_mercurial(hg, state_dir)
 
         # Offer to configure Git, if the current checkout or repo type is Git.
-        elif git and checkout_type == "git":
+        elif git and checkout_type == None:
             should_configure_git = False
             if not self.instance.no_interactive:
                 should_configure_git = self.instance.prompt_yesno(prompt=CONFIGURE_GIT)

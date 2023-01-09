@@ -1,0 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+   content/browser/preferences/floorp-main.js
+   content/browser/preferences/lepton.js
+   content/browser/preferences/bsb.js
+
+browser.jar:
+% skin browser classic/1.0 %skin/classic/browser/
+   skin/classic/browser/preferences/preferences-floorp.css
+   skin/classic/browser/lepton.png　　　　　　　　　　　　　　　　　　　　　  (imgs/lepton.png)
+   skin/classic/browser/photon.png  　　　　　　　　　　　　　　　　　   　  (imgs/photon.png)
+   skin/classic/browser/tabbarasurlbar.png                             (imgs/tabbarasurlbar.png)
+   skin/classic/browser/tabbar-as-titlebar.png                         (imgs/tabbar-as-titlebar.png)

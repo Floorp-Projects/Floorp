@@ -12,6 +12,11 @@ XPIDL_SOURCES += [
     "nsIAlertsService.idl",
 ]
 
+if CONFIG["OS_ARCH"] == "WINNT":
+    XPIDL_SOURCES += [
+        "nsIWindowsAlertsService.idl",
+    ]
+
 XPIDL_MODULE = "alerts"
 
 EXPORTS += [

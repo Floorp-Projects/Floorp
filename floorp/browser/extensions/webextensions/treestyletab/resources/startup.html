@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<meta charset="UTF-8">
+<link rel="icon" href="./16x16.svg">
+<title></title>
+<link rel="stylesheet" href="/resources/ui-color.css">
+<style type="text/css"><!--
+  :root > * {
+    transition: opacity 0.25s ease-out;
+  }
+  :root:not(.initialized) > * {
+    opacity: 0;
+  }
+
+  body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    padding: 2em 12%;
+    font: message-box;
+  }
+
+  body,
+  body > * {
+    text-align: center;
+  }
+
+  #icon::before {
+    background: var(--text-color);
+    content: "";
+    display: inline-block;
+    height: 10em;
+    mask: url("24x24-light.svg") no-repeat center / 100%;
+    opacity: 0.7;
+    width: 10em;
+  }
+
+  em {
+    font-style: normal;
+    font-weight: bold;
+  }
+
+  .permissions {
+    text-align: left;
+    margin-left: 8%;
+    margin-right: 8%;
+  }
+  label.has-checkbox:not(.inline),
+  label.has-radio:not(.inline) {
+    margin-left: 2em;
+    text-indent: -2em;
+    display: block;
+  }
+  label[disabled="true"] {
+    opacity: 0.5;
+  }
+  label[disabled="true"] input {
+    opacity: 1;
+  }
+
+  .user-chrome-css {
+    position: fixed;
+    top: 0;
+    left: 0;
+    font-size: 95%;
+    text-align: left;
+    transition: opacity 0.3s ease;
+  }
+  .user-chrome-css:not(:hover) {
+    opacity: 0.65;
+  }
+  .user-chrome-css:hover {
+    width: 80em;
+    max-width: 70%;
+  }
+  .user-chrome-css .arrow {
+    position: absolute;
+    line-height: 1;
+  }
+  .user-chrome-css .arrow.top-tabbar {
+    top: 0;
+    left: 2em;
+    transform: rotate(180deg);
+  }
+  .user-chrome-css .arrow.sidebar-header {
+    top: 1.8em;
+    left: 0;
+    transform: rotate(90deg);
+  }
+  .user-chrome-css p {
+    margin: 1em 0 0 1em;
+    color: #efefef;
+    background: #0c0c0d;
+    border: 1px solid;
+    border-radius: 0.5em;
+    padding: 0.5em;
+    box-shadow: 0.2em 0.2em 0.5em rgba(0, 0, 0, 0.35);
+    min-width: 2em
+  }
+  .user-chrome-css :link,
+  .user-chrome-css :visited {
+    color: white;
+  }
+  .user-chrome-css:hover p.notify,
+  .user-chrome-css:not(:hover) p.description {
+    display: none;
+  }
+  .user-chrome-css p.notify {
+    text-align: center;
+    font-weight: bold;
+  }
+--></style>
+<script type="module" src="./module/startup.js"></script>
+
+<h1 id="title">__MSG_extensionName__</h1>
+<div id="icon"></div>
+<p>__MSG_message_startup_description_1__<em
+  >__MSG_message_startup_description_key__</em
+  >__MSG_message_startup_description_2__<em
+  >__MSG_extensionName__</em
+  >__MSG_message_startup_description_3__</p>
+<p>__MSG_message_startup_description_sync_before__<a
+  id="syncTabsToDeviceOptionsLink" href="#" target="_blank"
+  >__MSG_message_startup_description_sync_link__</a
+  >__MSG_message_startup_description_sync_after__</p>
+<p>__MSG_config_addons_description_before__<a
+  href="__MSG_helper_addons_list_link_uri__" target="_blank"
+  >__MSG_config_addons_description_link_label__</a
+  >__MSG_config_addons_description_after__</p>
+<p>__MSG_config_theme_description_before__<a
+  href="__MSG_helper_theme_list_link_uri__" target="_blank"
+  >__MSG_config_theme_description_link_label__</a
+  >__MSG_config_theme_description_after__</p>
+<p>__MSG_message_startup_history_before__<a
+  href="__MSG_message_startup_history_link_uri__" target="_blank"
+  >__MSG_message_startup_history_link_label__</a
+  >__MSG_message_startup_history_after__</p>
+
+<p>__MSG_message_startup_requestPermissions_description__</p>
+<div class="permissions">
+  <p><label class="has-checkbox"
+           ><input id="bookmarksPermissionGranted"
+                   type="checkbox">
+           __MSG_message_startup_requestPermissions_bookmarks__</label></p>
+  <p><label class="has-checkbox"
+           ><input id="allUrlsPermissionGranted"
+                   type="checkbox">
+           __MSG_message_startup_requestPermissions_allUrls__</label></p>
+</div>
+
+<div class="user-chrome-css">
+  <span class="arrow top-tabbar">▼</span>
+  <span class="arrow sidebar-header">▼</span>
+  <p class="notify">__MSG_message_startup_userChromeCss_notify__</span>
+  <p class="description"
+    >__MSG_message_startup_userChromeCss_description_1__<a
+    href="__MSG_message_startup_userChromeCss_description_link_uri__" target="_blank"
+    >__MSG_message_startup_userChromeCss_description_link_label__</a
+    >__MSG_message_startup_userChromeCss_description_2__<em
+    >__MSG_message_startup_userChromeCss_description_note__</em
+    >__MSG_message_startup_userChromeCss_description_3__</p
+    >
+</div>

@@ -1,0 +1,1096 @@
+@charset "UTF-8";
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+@import url("/resources/ui-base.css");
+
+:root {
+  /* default size, they will be overridden. */
+  --favicon-size: 16px;
+  --tab-size: 32px;
+  --tab-indent: 0px;
+  --tab-margin-bottom: 0px;
+  --tab-margin-left: 0px;
+  --tab-margin-right: 0px;
+  --tab-margin-top: 0px;
+  --faviconized-tab-size: 28px;
+  --svg-small-icon-size: 16px;
+  --new-tab-button-anchor-size: 1.5em;
+  --tabbar-top-area-size: 0px;
+  --tabbar-bottom-area-size: 0px;
+  --after-tabs-area-size: 0px;
+  --pinned-tabs-area-size: 0px;
+  --subpanel-area-size: 0px;
+  --subpanel-content-size: auto;
+
+  --color-animation: 0.25s ease-out;
+  --indent-animation: var(--indent-duration) ease-out;
+  --collapse-animation: var(--collapse-duration) ease-out;
+  --tab-animation: background    var(--color-animation),
+                   bottom        var(--collapse-animation),
+                   color         var(--color-animation),
+                   left          var(--collapse-animation),
+                   margin-bottom var(--collapse-animation),
+                   margin-top    var(--collapse-animation),
+                   max-height    var(--collapse-animation),
+                   max-width     var(--collapse-animation),
+                   min-height    var(--collapse-animation),
+                   min-width     var(--collapse-animation),
+                   opacity       var(--collapse-animation),
+                   padding       var(--collapse-animation), /* for extra margin on overlay-scrollbar mode */
+                   right         var(--collapse-animation),
+                   top           var(--collapse-animation);
+  --tab-indent-animation: margin-left   var(--indent-animation),
+                          margin-right  var(--indent-animation);
+
+  --button-opacity: 0.75;
+  --button-hover-opacity: 1;
+  --button-active-opacity: 1;
+
+  --tab-highlighted-highlight: white;
+  --tab-highlighted-glow: Highlight;
+  --tab-highlighted-base: transparent;
+
+  /* Default color for "No Decoration" */
+  --tab-text-regular: ButtonText;
+
+  --tab-surface: var(--tab-surface-regular);
+  --tab-text: var(--tab-text-regular);
+  --tab-text-shadow: none;
+
+  --multiselected-color: transparent;
+  --multiselected-color-opacity: 0.15;
+
+  /* z-index of elements: we should define them here to keep their strict priorities */
+  --invisible-z-index:       -100;
+  --dummy-element-z-index:   1; /* dummy tab */
+  --background-z-index:      10; /* background screen */
+  --accessible-ui-z-index:   100; /* tabbar itself, and others */
+  --over-tabs-z-index:       100; /* buttons after tabs, pinned tabs (required to make pinned tabs clickable) */
+  --over-buttons-z-index:    200; /* buttons on buttons after tabs */
+  --notification-ui-z-index: 9000;
+  --blocking-ui-z-index:     10000; /* frontmost of others */
+
+  --tab-background-z-index:            10;
+  --tab-extra-contents-behind-z-index: 20;
+  --tab-indent-z-index:                90;
+  --tab-base-z-index:                  100;
+  --tab-favicon-z-index:               200;
+  --tab-burster-z-index:               4000;
+  --tab-highlighter-z-index:           5000;
+  --tab-extra-contents-front-z-index:  6000;
+  --tab-ui-z-index:                    9000;
+  --tab-drop-marker-z-index:           10000;
+
+  --visual-gap-offset: 0px;
+  --visual-gap-hover-animation: top var(--collapse-animation) var(--visual-gap-hover-animation-delay);
+}
+
+tab-item {
+  --tab-current-size: var(--tab-size);
+  --attention-marker-x-offset: calc(0px - ((var(--tab-current-size) - var(--favicon-size)) / 2));
+  --attention-marker-y-offset: calc(0px - ((var(--tab-current-size) - var(--favicon-size)) / 2));
+  --attention-marker-gradient: radial-gradient(circle farthest-corner at 50% calc(100% - 14% + 1px),
+                                               var(--tab-highlighted-glow) 0,
+                                               var(--tab-highlighted-glow) 7%,
+                                               rgba(255, 255, 255, 0) 7%);
+  --attention-marker-gradient-hover: var(--attention-marker-gradient);
+  /* old style
+  --attention-marker-gradient: radial-gradient(circle farthest-corner at 50% calc(100% - 3px),
+                                               var(--tab-highlighted-highlight) 3%,
+                                               var(--tab-highlighted-glow) 10%,
+                                               rgba(255, 255, 255, 0) 20%);
+  --attention-marker-gradient-hover: radial-gradient(circle farthest-corner at 50% calc(100% - 3px),
+                                                     var(--tab-highlighted-highlight) 3%,
+                                                     var(--tab-highlighted-glow) 10%,
+                                                     rgba(255, 255, 255, 0) 23%);
+  */
+}
+tab-item.faviconized {
+  --attention-marker-x-offset: calc(0px - ((var(--tab-current-size) - var(--favicon-size)) / 2) + ((var(--tab-current-size) - var(--faviconized-tab-size)) / 2));
+  --attention-marker-y-offset: calc(0px - ((var(--tab-current-size) - var(--favicon-size)) / 2) + ((var(--tab-current-size) - var(--faviconized-tab-size))));
+}
+
+tab-item:focus {
+  outline: none;
+}
+
+tab-item:not(.faviconized):focus tab-label,
+tab-item.faviconized:focus tab-favicon {
+  outline: 1px dotted;
+}
+
+@keyframes blink {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+:root.debug * {
+  outline: 1px dotted rgba(255, 0, 0, 0.5);
+}
+
+/* Show internal tab id in the debug mode */
+:root.debug tab-item::after {
+  bottom: 0;
+  content: attr(data-tab-id) !important; /* override definition for the highlighting marker */
+  opacity: 0.65;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-align: right;
+  z-index: var(--tab-favicon-z-index);
+}
+
+/* This is required to prevent dragging of images (ex. favicon).
+   Otherwise they are unexpectedly dragged just as an image and
+   it is downloadable via dropping on the desktop or others. */
+img {
+  pointer-events: none;
+}
+
+button,
+.after-tabs [role="button"] /*,
+tab-item,
+tab-twisty,
+tab-closebox,
+tab-sound-button */ {
+  -moz-user-focus: ignore !important;
+}
+
+.vbox {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+
+/* tabbar */
+
+:root, body {
+  color-scheme: light dark;
+  font: message-box; /* this is same to Firefox's UI. */
+}
+
+#tabbar-container,
+#tabbar,
+#tabbar-top,
+#tabbar-bottom,
+#background,
+#subpanel-container {
+  bottom: 0;
+  left: 0;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: var(--accessible-ui-z-index);
+}
+
+#tabbar-container {
+  bottom: var(--subpanel-area-size);
+  top: calc(var(--tabbar-top-area-size) + var(--visual-gap-offset));
+}
+:root.hover-on-top-edge:hover #tabbar-container {
+  transition: var(--visual-gap-hover-animation);
+  top: var(--tabbar-top-area-size) !important;
+}
+
+#tabbar {
+  margin-top: var(--pinned-tabs-area-size);
+  position: absolute;
+}
+
+#tabbar.overflow {
+  bottom: calc(var(--after-tabs-area-size) + var(--tabbar-bottom-area-size));
+  overflow-y: scroll;
+}
+
+.tabs-spacer {
+  display: none;
+  height: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+:root.animation .tabs-spacer {
+  transition: height var(--collapse-animation);
+}
+
+#tabbar.overflow .tabs-spacer {
+  display: block;
+}
+
+:root.initializing #tabbar {
+  opacity: 0;
+}
+
+:root.animation #tabbar {
+  transition: margin-top var(--collapse-animation);
+}
+
+#background {
+  background-color: -moz-dialog; /* This is required to cover dummy elements. See also: https://github.com/piroor/treestyletab/issues/1703#issuecomment-354646405 */
+  pointer-events: none;
+  z-index: var(--background-z-index);
+}
+
+/* put scrollbar leftside */
+:root.left #tabbar {
+  direction: rtl;
+}
+:root.left #all-tabs,
+:root.left #tabbar .after-tabs {
+  direction: ltr;
+}
+
+#tabbar {
+  scrollbar-width: thin;
+}
+
+
+ul {
+  flex-grow: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* dummy elements to calculate actual size of boxes */
+
+#dummy-tabs {
+  bottom: 0;
+  clip: rect(0, 0, 0, 0);
+  left: 0;
+  overflow-y: scroll;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  z-index: var(--dummy-element-z-index); /* Put it below the background. See also: https://github.com/piroor/treestyletab/issues/1703#issuecomment-354646405 */
+}
+
+#dummy-favicon-size-box {
+  background: -moz-dialog;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  max-width: 1em;
+  max-height: 1em;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+#dummy-tab-color-box {
+  background: -moz-dialog;
+}
+
+#dummy-highlight-color-box {
+  background: Highlight;
+  color: HighlightText;
+}
+
+#dummy-shift-tabs-for-scrollbar-distance-box {
+  width: var(--shift-tabs-for-scrollbar-distance, 0);
+}
+
+
+/* tabs */
+
+tab-item {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  line-height: 1;
+  list-style: none;
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  position: relative;
+}
+
+tab-item-substance {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  line-height: 1;
+  margin: var(--tab-margin-top) var(--tab-margin-right) var(--tab-margin-bottom) var(--tab-margin-left);
+  max-width: 100%;
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
+}
+
+:root.left tab-item:not(.pinned) tab-item-substance {
+  margin-left: calc(var(--tab-margin-left) + var(--tab-indent));
+}
+
+/* auto-hidden scrollbar placeholder workaround */
+:root.left.shift-tabs-for-scrollbar-only-on-hover.on-scrollbar-area:hover #tabbar.overflow.scrollbar-autohide tab-item:not(.pinned) tab-item-substance,
+:root.left:not(.shift-tabs-for-scrollbar-only-on-hover) #tabbar.overflow.scrollbar-autohide tab-item:not(.pinned) tab-item-substance {
+  margin-left: calc(var(--tab-margin-left) + var(--tab-indent) + var(--shift-tabs-for-scrollbar-distance));
+}
+
+:root.right tab-item:not(.pinned) tab-item-substance {
+  margin-right: calc(var(--tab-margin-right) + var(--tab-indent));
+}
+
+/* auto-hidden scrollbar placeholder workaround */
+:root.right.shift-tabs-for-scrollbar-only-on-hover.on-scrollbar-area:hover #tabbar.overflow.scrollbar-autohide tab-item:not(.pinned) tab-item-substance,
+:root.right:not(.shift-tabs-for-scrollbar-only-on-hover) #tabbar.overflow.scrollbar-autohide tab-item:not(.pinned) tab-item-substance {
+  margin-right: calc(var(--tab-margin-right) + var(--tab-indent) + var(--shift-tabs-for-scrollbar-distance));
+}
+
+tab-item,
+tab-item * {
+  vertical-align: middle;
+}
+
+tab-item > *,
+tab-item > * > * {
+  position: relative;
+  z-index: var(--tab-base-z-index);
+}
+
+tab-item tab-favicon {
+  z-index: var(--tab-favicon-z-index);
+}
+
+tab-item.hidden {
+  pointer-events: none;
+  position: fixed;
+  visibility: collapse;
+}
+
+:root.animation tab-item.animation-ready,
+:root.animation tab-item.animation-ready tab-item-substance,
+:root.animation .after-tabs button,
+:root.animation .after-tabs [role="button"] {
+  transition: var(--tab-animation);
+}
+:root.animation tab-item.animation-ready:not(.expanding),
+:root.animation tab-item.animation-ready:not(.expanding) tab-item-substance,
+:root.animation tab-item.animation-ready.expanding.moving,
+:root.animation tab-item.animation-ready.expanding.moving tab-item-substance {
+  transition: var(--tab-animation),
+              var(--tab-indent-animation);
+}
+
+tab-item.removing,
+tab-item:not(.pinned).collapsed,
+tab-item.duplicating {
+  margin-top: calc(0px - var(--tab-current-size) - var(--tab-margin-bottom));
+  pointer-events: none;
+  z-index: var(--invisible-z-index);
+}
+tab-item.removing tab-item-substance,
+tab-item:not(.pinned).collapsed tab-item-substance,
+tab-item.duplicating tab-item-substance {
+  opacity: 0;
+}
+
+tab-item:not(.pinned).collapsed.collapsed-completely {
+  visibility: hidden;
+}
+
+tab-item.duplicating,
+tab-item.duplicating tab-item-substance {
+  transition: none;
+}
+
+
+:root.left tab-item tab-twisty {
+  order: -1;
+}
+:root.left tab-item tab-closebox {
+  order: 10000;
+}
+
+:root.right tab-item tab-twisty {
+  order: 10000;
+}
+:root.right tab-item tab-closebox {
+  order: -1;
+}
+
+tab-item .highlighter,
+tab-item .burster,
+tab-item.faviconized.unread tab-favicon::before,
+tab-item.attention tab-favicon::before,
+tab-item .background,
+tab-item .extra-items-container.indent,
+tab-item .extra-items-container.behind,
+tab-item .extra-items-container.front,
+.newtab-button .extra-items-container {
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+tab-item .extra-items-container,
+.newtab-button .extra-items-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+tab-item .extra-items-container.indent {
+  width: var(--tab-indent);
+  z-index: var(--tab-indent-z-index);
+}
+/* auto-hidden scrollbar placeholder workaround */
+#tabbar.overflow.scrollbar-autohide tab-item .extra-items-container.indent{
+  width: calc(var(--tab-indent) + var(--shift-tabs-for-scrollbar-distance));
+}
+:root.left tab-item .extra-items-container.indent {
+  right: auto;
+}
+:root.right tab-item .extra-items-container.indent {
+  left: auto;
+}
+
+tab-item .extra-items-container.front {
+  justify-content: flex-end;
+  left: var(--tab-label-start-offset);
+  pointer-events: auto;
+  right: var(--tab-label-end-offset);
+  z-index: var(--tab-extra-contents-front-z-index);
+}
+
+tab-item:not(.bursting) .burster {
+  display: none;
+}
+
+tab-item .highlighter {
+  z-index: var(--tab-highlighter-z-index);
+}
+
+tab-item .burster {
+  z-index: var(--tab-burster-z-index);
+}
+
+tab-item.faviconized.unread tab-favicon::before,
+tab-item.attention tab-favicon::before {
+  bottom: auto;
+  content: '';
+  height: var(--tab-current-size);
+  left: var(--attention-marker-x-offset);
+  right: auto;
+  top: var(--attention-marker-y-offset);
+  width: var(--tab-current-size);
+}
+
+tab-item .background {
+  z-index: var(--tab-background-z-index);
+}
+
+tab-item .extra-items-container.behind {
+  z-index: var(--tab-extra-contents-behind-z-index);
+}
+
+.newtab-button .extra-items-container {
+  pointer-events: auto;
+  z-index: var(--tab-extra-contents-front-z-index);
+}
+
+:root.newtab-action-selectable
+  .newtab-button
+  .extra-items-container,
+:root:not(.newtab-action-selectable).contextual-identity-selectable:not(.incognito)
+  .newtab-button
+  .extra-items-container {
+  right: var(--new-tab-button-anchor-size);
+}
+
+:root.newtab-action-selectable.contextual-identity-selectable:not(.incognito)
+  .newtab-button
+  .extra-items-container {
+  left: var(--new-tab-button-anchor-size);
+}
+
+
+
+
+/* pinned tabs */
+
+tab-item.pinned {
+  bottom: var(--pinned-position-bottom);
+  left: var(--pinned-position-left);
+  margin: 0;
+  position: fixed;
+  right: var(--pinned-position-right);
+  top: calc(var(--tabbar-top-area-size) + var(--pinned-position-top) + var(--visual-gap-offset));
+  z-index: var(--over-tabs-z-index);
+}
+tab-item.pinned tab-item-substance {
+  border-top: none;
+  border-left: none;
+  margin: 0;
+}
+
+tab-item.pinned:not(.in-visible-area) {
+  pointer-events: none;
+}
+tab-item.pinned:not(.in-visible-area) tab-item-substance {
+  opacity: 0;
+}
+
+:root.hover-on-top-edge:hover tab-item.pinned {
+  top: var(--pinned-position-top) !important;
+}
+:root.hover-on-top-edge:hover tab-item.pinned,
+:root.hover-on-top-edge:hover tab-item.pinned tab-item-substance {
+  transition: var(--visual-gap-hover-animation);
+}
+:root.hover-on-top-edge.animation:hover tab-item.pinned,
+:root.hover-on-top-edge.animation:hover tab-item.pinned tab-item-substance {
+  transition: var(--tab-animation),
+              var(--visual-gap-hover-animation);
+}
+
+tab-item.pinned:not(.faviconized) {
+  left: 0;
+  right: 0;
+}
+
+tab-item.faviconized {
+  --tab-current-size: var(--faviconized-tab-size);
+  height: var(--tab-current-size);
+  max-height: var(--tab-current-size);
+  max-width: var(--tab-current-size);
+  width: var(--tab-current-size);
+}
+tab-item.faviconized tab-item-substance {
+  padding: calc((var(--tab-current-size) - var(--favicon-size)) / 2);
+}
+
+tab-item.pinned tab-closebox,
+tab-item.faviconized tab-twisty,
+tab-item.faviconized .extra-items-container.indent {
+  display: none;
+}
+
+/* Keep label in faviconized tabs for voice operations. See also: https://github.com/piroor/treestyletab/issues/2864 */
+tab-item.faviconized tab-label,
+tab-item.faviconized tab-label * {
+  bottom: 0;
+  display: flex;
+  left: 0;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+tab-item.faviconized.unread:not(.active) tab-item-substance:not(:hover) tab-favicon::before,
+tab-item.attention tab-item-substance:not(:hover) tab-favicon::before {
+  background-image: var(--attention-marker-gradient);
+}
+
+tab-item.faviconized.unread:not(.active) tab-item-substance:hover tab-favicon::before,
+tab-item.attention tab-item-substance:hover tab-favicon::before {
+  background-image: var(--attention-marker-gradient-hover);
+}
+
+tab-item.attention tab-label {
+  font-weight: bold;
+}
+
+tab-item.faviconized.active:not([data-drop-position]) tab-item-substance {
+  /* For high contrast mode */
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+
+
+/* tab label */
+
+tab-item tab-label {
+  flex-grow: 1;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+:root:not([data-label-overflow="fade"]) tab-item tab-label {
+  text-overflow: ".."; /*ellipsis*/;
+}
+
+:root[data-label-overflow="fade"] tab-item tab-label.overflow {
+  mask-image: linear-gradient(to left, transparent 0, black 2em);
+}
+:root[data-label-overflow="fade"] tab-item tab-label.overflow.rtl {
+  direction: rtl;
+  mask-image: linear-gradient(to right, transparent 0, black 2em);
+}
+
+/* This is for backward compatibility about custom user style rules like https://github.com/piroor/treestyletab/issues/1363 */
+tab-item .label-content {
+  color: inherit;
+}
+
+tab-item:not([data-child-ids]) .counter,
+tab-item:not(.subtree-collapsed) .counter {
+  display: none;
+}
+
+.counter::before {
+  content: "(";
+}
+
+.counter::after {
+  content: ")";
+}
+
+
+/* tab-closebox */
+
+tab-closebox {
+  line-height: 0;
+  opacity: var(--button-opacity);
+  position: relative;
+  z-index: var(--tab-ui-z-index);
+}
+tab-closebox:hover {
+  /* For high contrast mode */
+  outline: thin solid transparent;
+}
+
+tab-closebox::after {
+  /*
+    There are some possible characters for this purpose:
+    https://en.wikipedia.org/wiki/X_mark
+    - X: upper case X
+      * Too narrow
+    - ×: U+00D7 MULTIPLICATION SIGN (z notation Cartesian product)
+      * Too small on macOS
+    - ╳: U+2573 BOX DRAWINGS LIGHT DIAGONAL CROSS
+      * Too large on Ubuntu
+    - ☓ : U+2613 SALTIRE (St Andrew's Cross)
+      * Narrow a little on Windows and macOS
+    - ✕: U+2715 MULTIPLICATION X
+      * Too small on macOS
+    - ✖: U+2716 HEAVY MULTIPLICATION X
+      * Too small on macOS
+    - ❌ : U+274C CROSS MARK
+      * Colored on macOS
+    - ❎ : U+274E NEGATIVE SQUARED CROSS MARK
+      * Colored on macOS
+      * Box around the mark is unnecessary
+    - ⨉ : U+2A09 N-ARY TIMES OPERATOR
+    - ⨯: U+2A2F VECTOR OR CROSS PRODUCT
+      * Too small on macOS
+    - 🗙: U+1F5D9 CANCELLATION X
+      * Unavailable on macOS
+    - 🗴 : U+1F5F4 BALLOT SCRIPT X
+      * Unavailable on macOS
+    - 🞩: U+1F7A9 LIGHT SALTIRE
+      * Unavailable on macOS
+    So ⨉ (U+2A09) looks good for me on Windows, macOS, and Linux (tested on Ubuntu).
+    But it is not guaranteed, so now we use SVG icon instead.
+  */
+  -moz-context-properties: fill;
+  background: url("./icons/close-16.svg") no-repeat center / 100%;
+  content: "";
+  display: inline-block;
+  fill: var(--tab-text);
+  height: var(--svg-small-icon-size);
+  width: var(--svg-small-icon-size);
+}
+:root.simulate-svg-context-fill tab-closebox::after {
+  background: var(--tab-text);
+  mask: url("./icons/close-16.svg") no-repeat center / 100%;
+}
+
+
+tab-item:not(.collapsed) tab-closebox:hover {
+  opacity: var(--button-hover-opacity);
+}
+
+tab-item:not(.collapsed) tab-closebox:active {
+  opacity: var(--button-active-opacity);
+}
+
+
+/* contextual identity (aka Container Tab) */
+
+.contextual-identity-marker {
+  --contextual-identity-marker-width: calc(var(--tab-current-size) / 12);
+  position: absolute;
+}
+
+tab-item:not(.faviconized) .contextual-identity-marker {
+  --contextual-identity-marker-margin: min(calc((var(--tab-current-size) - var(--favicon-size)) / 2), calc(var(--tab-current-size) * 0.15));
+  bottom: var(--contextual-identity-marker-margin);
+  top: var(--contextual-identity-marker-margin);
+  width: var(--contextual-identity-marker-width);
+}
+
+:root.left tab-item:not(.faviconized) .contextual-identity-marker {
+  right: 0;
+}
+
+:root.right tab-item:not(.faviconized) .contextual-identity-marker {
+  left: 0;
+}
+
+tab-item.faviconized .contextual-identity-marker {
+  --contextual-identity-marker-margin: min(calc((var(--tab-current-size) - var(--favicon-size)) / 2), calc(var(--tab-current-size) * 0.33));
+  bottom: 0;
+  height: var(--contextual-identity-marker-width);
+  left: var(--contextual-identity-marker-margin);
+  right: var(--contextual-identity-marker-margin);
+}
+
+
+/* non-tab items */
+
+#tabbar-top,
+#tabbar-bottom,
+#tabbar ~ .after-tabs {
+  height: 0;
+  left: 0;
+  overflow: visible;
+  position: absolute;
+  right: 0;
+  z-index: var(--over-tabs-z-index);
+}
+
+#tabbar-top {
+  top: 0;
+}
+
+#tabbar-bottom {
+  bottom: 0;
+  justify-content: flex-end;
+  top: auto;
+}
+
+#tabbar.overflow .after-tabs,
+#tabbar:not(.overflow) ~ .after-tabs {
+  display: none;
+}
+
+#tabbar ~ .after-tabs {
+  bottom: var(--tabbar-bottom-area-size);
+  justify-content: flex-end;
+}
+
+
+.newtab-button-box {
+  position: relative;
+}
+
+.newtab-button {
+  background: none transparent;
+  margin: 0;
+  text-align: center;
+}
+
+.newtab-button::after {
+  -moz-context-properties: fill;
+  background: url("./icons/new-16.svg") no-repeat center / 100%;
+  content: "";
+  display: inline-block;
+  fill: var(--tab-text);
+  height: var(--svg-small-icon-size);
+  opacity: var(--button-opacity);
+  width: var(--svg-small-icon-size);
+}
+:root.simulate-svg-context-fill .newtab-button::after {
+  background: var(--tab-text);
+  mask: url("./icons/new-16.svg") no-repeat center / 100%;
+}
+
+.newtab-button:hover::before {
+  opacity: var(--button-hover-opacity);
+}
+
+:root.newtab-action-selectable
+  .after-tabs
+  .newtab-button-box:hover
+  .newtab-action-selector-anchor,
+.after-tabs
+  .newtab-action-selector-anchor.open,
+:root.contextual-identity-selectable:not(.incognito)
+  .after-tabs
+  .newtab-button-box:hover
+  .contextual-identities-selector-anchor:not([disabled="true"]),
+.after-tabs
+  .contextual-identities-selector-anchor.open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.after-tabs .newtab-action-selector-anchor,
+.after-tabs .contextual-identities-selector-anchor {
+  background: none;
+  bottom: 0;
+  color: var(--tab-text);
+  display: none;
+  max-width: var(--new-tab-button-anchor-size);
+  opacity: 0;
+  overflow: hidden;
+  padding: calc((var(--new-tab-button-anchor-size) - var(--svg-small-icon-size)) / 2);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  transition: opacity var(--collapse-animation);
+  z-index: var(--over-buttons-z-index);
+}
+:root.contextual-identity-selectable
+  .after-tabs
+  .newtab-action-selector-anchor {
+  border-width: 0 1px 0 0;
+  display: flex;
+  left: 0;
+}
+:root:not(.contextual-identity-selectable)
+  .after-tabs
+  .newtab-action-selector-anchor,
+:root.contextual-identity-selectable
+  .after-tabs
+  .contextual-identities-selector-anchor {
+  border-width: 0 0 0 1px;
+  display: flex;
+  right: 0;
+}
+
+.newtab-action-selector-anchor::-moz-focus-inner,
+.contextual-identities-selector-anchor::-moz-focus-inner {
+  border: none;
+}
+
+#subpanel-toggler::before {
+  content: "▼";
+  font-size: 0.65em;
+  margin: 0.125em;
+}
+
+.newtab-action-selector-anchor::after,
+.contextual-identities-selector-anchor::after,
+#subpanel-selector-anchor::after {
+  -moz-context-properties: fill;
+  background: url("./icons/ArrowheadDown.svg") no-repeat center / 60%;
+  content: "";
+  display: inline-block;
+  fill: var(--tab-text);
+  height: var(--svg-small-icon-size);
+  line-height: 1;
+  margin-top: calc((var(--favicon-size) - var(--svg-small-icon-size)) / 2);
+  max-height: var(--favicon-size);
+  max-width: var(--favicon-size);
+  width: var(--svg-small-icon-size);
+}
+:root.simulate-svg-context-fill .newtab-action-selector-anchor::after,
+:root.simulate-svg-context-fill .contextual-identities-selector-anchor::after,
+:root.simulate-svg-context-fill #subpanel-selector-anchor::after {
+  background: var(--tab-text);
+  mask: url("./icons/ArrowheadDown.svg") no-repeat center / 60%;
+}
+
+#contextual-identities-selector li:not([data-icon]) {
+  padding-left: calc(var(--favicon-size) + 0.7em);
+}
+
+
+#out-of-view-tab-notifier {
+  background: transparent repeat-x bottom;
+  background-image: linear-gradient(
+                      to top,
+                      var(--tab-highlighted-glow) 0,
+                      transparent 100%
+                    );
+  display: none;
+  margin-top: calc(0 - var(--tab-size));
+  min-height: var(--tab-size);
+  pointer-events: none;
+  position: relative;
+  opacity: 0;
+}
+
+
+#out-of-view-tab-notifier.notifying {
+  display: block;
+}
+
+:root:not(.animation) #out-of-view-tab-notifier.notifying {
+  opacity: 1;
+}
+
+:root.animation #out-of-view-tab-notifier.notifying {
+  animation: blink var(--out-of-view-tab-notify-duration) ease-in-out 1;
+}
+
+
+/* sub panel */
+
+#subpanel-container {
+  top: auto;
+  height: var(--subpanel-area-size);
+}
+
+#subpanel-container.collapsed iframe#subpanel {
+  visibility: collapse;
+}
+
+iframe#subpanel {
+  border: none;
+  height: var(--subpanel-content-size);
+  margin: 0;
+  max-height: none;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#subpanel-header {
+  background: var(--tab-surface);
+  border-top: 1px solid var(--tab-border);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  line-height: 1;
+  margin: 0;
+  padding: 0.3em 0.2em 0.2em;
+}
+#subpanel-header.resizable {
+  cursor: ns-resize;
+}
+
+#subpanel-container:not(.collapsed) #subpanel-header {
+  border-bottom: 1px solid var(--tab-border);
+}
+
+#subpanel-header-main {
+  display: flex;
+  flex-grow: 1;
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#subpanel-selector-anchor,
+#subpanel-toggler {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--tab-text);
+  display: flex;
+  flex-direction: row;
+  font: -moz-button;
+  padding: 0 0 0 0.5em;
+}
+
+#subpanel-selector-anchor {
+  cursor: default;
+}
+
+#subpanel-selector-anchor > * {
+  pointer-events: none;
+}
+
+#subpanel-selector-anchor span.icon > img,
+#subpanel-selector span.icon > img {
+  height: 1em;
+  max-height: 1em;
+  max-width: 1em;
+  width: 1em;
+}
+
+#subpanel-selector-anchor span.icon > img:not([src]) {
+  display: none;
+}
+
+#subpanel-selector span.icon > :not([src]) {
+  visibility: hidden;
+}
+
+#subpanel-selector span.icon {
+  margin-right: 0.25em;
+}
+
+#subpanel-toggler {
+  cursor: default;
+  padding: 0 0.5em;
+  max-width: 1.5em;
+}
+
+#subpanel-container.collapsed #subpanel-toggler::before {
+  content: "▲";
+}
+
+
+
+/* fake context menu */
+
+#tabContextMenu:not([data-tab-id]) li.extra {
+  display: none !important;
+}
+
+
+/* bookmark dialog */
+
+.rich-confirm .bookmark-dialog input[type="text"],
+.rich-confirm .bookmark-dialog button {
+  max-width: 100%;
+}
+
+
+/* blocking UI */
+
+#blocking-screen {
+  bottom: 0;
+  display: none;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: var(--blocking-ui-z-index);
+}
+
+:root.blocking-throbber #blocking-screen,
+:root.blocking-shade #blocking-screen {
+  background: rgba(0, 0, 0, 0.01);
+}
+:root.animation.blocking-throbber #blocking-screen,
+:root.animation.blocking-shade #blocking-screen {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+:root.blocking #blocking-screen {
+  display: block;
+}
+
+:root:not(.animation).blocking-throbber #blocking-screen *,
+:root:not(.animation).blocking-shade #blocking-screen * {
+  visibility: hidden;
+}
+
+/*
+MenuUI.js workaround: prevent menu elements revealed by the custom user styles.
+See also: https://github.com/piroor/treestyletab/issues/2777
+*/
+body > ul[id$="selector"] {
+  opacity: 0;
+}

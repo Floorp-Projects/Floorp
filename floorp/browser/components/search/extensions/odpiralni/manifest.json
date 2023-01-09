@@ -1,0 +1,25 @@
+{
+  "name": "Odpiralni Časi",
+  "description": "Odpiralni Časi v Sloveniji",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "odpiralni@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Odpiralni Časi",
+      "search_url": "https://www.odpiralnicasi.com/spots",
+      "search_url_get_params": "q={searchTerms}&source=1"
+    }
+  }
+}

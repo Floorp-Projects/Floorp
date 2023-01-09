@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+    <vbox id="sidebar2-box" class="browser-sidebar2 chromeclass-extrachrome" >
+      <box id="sidebar2-header" style="min-height: 2.5em" align="center">
+        <toolbarbutton id="sidebar2-back" class="sidebar2-icon" style="margin-left: 0.5em;" data-l10n-id="sidebar-back-button"  oncommand="sidebarSiteAction(0);"/>
+        <toolbarbutton id="sidebar2-forward" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-forward-button"  oncommand="sidebarSiteAction(1);"/>
+        <toolbarbutton id="sidebar2-reload" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-reload-button"  oncommand="sidebarSiteAction(2);"/>
+        <toolbarbutton id="sidebar2-go-index" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-go-index-button"  oncommand="sidebarSiteAction(3);"/>
+        <spacer flex="1000"/>
+        <toolbarbutton id="sidebar2-keeppanelwidth" context="width-size-context" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-keepWidth-button"  oncommand="keepSidebar2boxWidth();"/>
+        <toolbarbutton id="sidebar2-close" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();"/>
+        </box>
+        <browser id="sidebar2"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
+                 style="max-width: none;" tooltip="aHTMLTooltip"
+                 disableglobalhistory="true" messagemanagergroup="webext-browsers"
+                 webextension-view-type=""
+                 autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="40"/> 
+
+        <browser id="TST"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
+                 style="max-width: none;" tooltip="aHTMLTooltip"
+                 disableglobalhistory="true" messagemanagergroup="webext-browsers"
+                 context="contentAreaContextMenu" webextension-view-type="sidebar"
+                 autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="40"
+                 type="content" remote="true" maychangeremoteness="true" /> 
+    </vbox>
+<splitter id="sidebar-splitter2" class="browser-sidebar2 chromeclass-extrachrome"  hidden="false"/>

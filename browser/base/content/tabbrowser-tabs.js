@@ -34,6 +34,7 @@
 
     init() {
       this.arrowScrollbox = this.querySelector("arrowscrollbox");
+      this.arrowScrollbox.addEventListener("wheel", this, true);
 
       this.baseConnect();
 
@@ -994,6 +995,14 @@
 
       this._tabDropIndicator.hidden = true;
       event.stopPropagation();
+    }
+
+    on_wheel(event) {
+      if (
+        Services.prefs.getBoolPref("toolkit.tabbox.switchByScrolling", false)
+      ) {
+        event.stopImmediatePropagation();
+      }
     }
 
     getTabTitleMessageId() {

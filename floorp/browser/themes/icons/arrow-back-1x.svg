@@ -1,0 +1,3 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+	<path fill="context-fill" stroke-opacity="context-fill-opacity" d="M8,1A1,1,0,1,1,7,2,1,1,0,0,1,8,1ZM2,7A1,1,0,1,1,1,8,1,1,0,0,1,2,7ZM14,7a1,1,0,1,1-1,1A1,1,0,0,1,14,7ZM8,13a1,1,0,1,1-1,1A1,1,0,0,1,8,13Zm0.723,0.309L7.309,14.723l-6-6L2.723,7.309Zm-6-4.586L1.309,7.309l6-6L8.723,2.723Zm-0.707.293v-2h12v2h-12Z"/>
+</svg>

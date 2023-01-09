@@ -16,13 +16,13 @@ BEGIN
   BEGIN
       BLOCK "040904b0"
       BEGIN
-          VALUE "CompanyName", "Mozilla"
-          VALUE "FileDescription", "Firefox"
+          VALUE "CompanyName", "Ablaze"
+          VALUE "FileDescription", "Floorp"
           VALUE "FileVersion", MY_VERSION
           VALUE "InternalName", "7zSD.sfx"
-          VALUE "LegalCopyright", "Mozilla"
+          VALUE "LegalCopyright", "Ablaze"
           VALUE "OriginalFilename", "7zSD.sfx"
-          VALUE "ProductName", "Firefox"
+          VALUE "ProductName", "Floorp"
           VALUE "ProductVersion", MY_VERSION
       END
   END

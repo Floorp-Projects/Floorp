@@ -8,26 +8,27 @@
 
 # BrandFullNameInternal is used for some registry and file system values
 # instead of BrandFullName and typically should not be modified.
-!define BrandFullNameInternal "Mozilla Firefox"
-!define BrandFullName         "Mozilla Firefox"
-!define CompanyName           "Mozilla Corporation"
-!define URLInfoAbout          "https://www.mozilla.org"
-!define URLUpdateInfo         "https://www.mozilla.org/firefox/${AppVersion}/releasenotes"
-!define HelpLink              "https://support.mozilla.org"
+
+!define BrandFullNameInternal "Ablaze Floorp"
+!define BrandFullName         "Ablaze Floorp"
+!define CompanyName           "Ablaze"
+!define URLInfoAbout          "https://www.ablaze.one"
+!define URLUpdateInfo         "https://blog.ablaze.one"
+!define HelpLink              "https://support.ablaze.one"
 
 ; The OFFICIAL define is a workaround to support different urls for Release and
 ; Beta since they share the same branding when building with other branches that
 ; set the update channel to beta.
 !define OFFICIAL
-!define URLStubDownloadX86 "https://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-latest"
-!define URLStubDownloadAMD64 "https://download.mozilla.org/?os=win64&lang=${AB_CD}&product=firefox-latest"
-!define URLStubDownloadAArch64 "https://download.mozilla.org/?os=win64-aarch64&lang=${AB_CD}&product=firefox-latest"
-!define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=release&installer_lang=${AB_CD}"
+!define URLStubDownloadX86 ""
+!define URLStubDownloadAMD64 "https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-win64.installer.exe"
+!define URLStubDownloadAArch64 ""
+!define URLManualDownload ""
 !define URLSystemRequirements "https://www.mozilla.org/firefox/system-requirements/"
 !define Channel "release"
 
 # The installer's certificate name and issuer expected by the stub installer
-!define CertNameDownload   "Mozilla Corporation"
+!define CertNameDownload   "Open Source Developer, Ryosuke Asano"
 !define CertIssuerDownload "DigiCert SHA2 Assured ID Code Signing CA"
 
 # Dialog units are used so the UI displays correctly with the system's DPI

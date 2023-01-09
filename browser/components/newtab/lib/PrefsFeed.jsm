@@ -182,6 +182,7 @@ this.PrefsFeed = class PrefsFeed {
       "discoverystream.sponsored-collections.enabled",
       false
     );
+    this._setIntPref(values, "floorp.background.type", 0);
     this._setBoolPref(values, "discoverystream.isCollectionDismissible", false);
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
     this._setBoolPref(values, "discoverystream.personalization.enabled", false);
