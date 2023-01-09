@@ -1270,7 +1270,15 @@ void TurnPort::HandleConnectionDestroyed(Connection* conn) {
   // already destroyed.
   const rtc::SocketAddress& remote_address = conn->remote_candidate().address();
   TurnEntry* entry = FindEntry(remote_address);
-  RTC_DCHECK(entry != NULL);
+  if (!entry) {
+    // TODO(chromium:1374310): This happens because more than one connection
+    // may be associated with an entry. Previously a connection with the same
+    // address has been destroyed and subsequently the entry removed
+    // (prematurely.)
+    RTC_DLOG_F(LS_WARNING) << "Entry has been removed.";
+    return;
+  }
+
   RTC_DCHECK(!entry->destruction_timestamp().has_value());
   int64_t timestamp = rtc::TimeMillis();
   entry->set_destruction_timestamp(timestamp);
