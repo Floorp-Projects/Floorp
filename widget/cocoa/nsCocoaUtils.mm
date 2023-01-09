@@ -13,6 +13,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "ImageRegion.h"
+#include "nsClipboard.h"
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsMenuBarX.h"
@@ -25,8 +26,10 @@
 #include "nsIRunnable.h"
 #include "nsIAppWindow.h"
 #include "nsIBaseWindow.h"
+#include "nsITransferable.h"
 #include "nsMenuUtilsX.h"
 #include "nsNetUtil.h"
+#include "nsPrimitiveHelpers.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -1550,4 +1553,216 @@ PanGestureInput nsCocoaUtils::CreatePanGestureEvent(NSEvent* aNativeEvent, TimeS
   }
 
   return panEvent;
+}
+
+bool nsCocoaUtils::IsValidPasteboardType(NSString* aAvailableType, bool aAllowFileURL) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  // Prevent exposing fileURL for non-fileURL type.
+  // We need URL provided by dropped webloc file, but don't need file's URL.
+  // kUTTypeFileURL is returned by [NSPasteboard availableTypeFromArray:] for
+  // kPublicUrlPboardType, since it conforms to kPublicUrlPboardType.
+  bool isValid = true;
+  if (!aAllowFileURL &&
+      [aAvailableType isEqualToString:[UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL]]) {
+    isValid = false;
+  }
+
+  return isValid;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
+}
+
+NSString* nsCocoaUtils::GetStringForTypeFromPasteboardItem(NSPasteboardItem* aItem,
+                                                           const NSString* aType,
+                                                           bool aAllowFileURL) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  NSString* availableType =
+      [aItem availableTypeFromArray:[NSArray arrayWithObjects:(id)aType, nil]];
+  if (availableType && IsValidPasteboardType(availableType, aAllowFileURL)) {
+    return [aItem stringForType:(id)availableType];
+  }
+
+  return nil;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+}
+
+NSString* nsCocoaUtils::GetFilePathFromPasteboardItem(NSPasteboardItem* aItem) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  NSString* urlString = GetStringForTypeFromPasteboardItem(
+      aItem, [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL], true);
+  if (urlString) {
+    NSURL* url = [NSURL URLWithString:urlString];
+    if (url) {
+      return [url path];
+    }
+  }
+
+  return nil;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+}
+
+NSString* nsCocoaUtils::GetTitleForURLFromPasteboardItem(NSPasteboardItem* item) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  NSString* name = nsCocoaUtils::GetStringForTypeFromPasteboardItem(
+      item, [UTIHelper stringFromPboardType:kPublicUrlNamePboardType]);
+  if (name) {
+    return name;
+  }
+
+  NSString* filePath = nsCocoaUtils::GetFilePathFromPasteboardItem(item);
+  if (filePath) {
+    return [filePath lastPathComponent];
+  }
+
+  return nil;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+}
+
+void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(nsITransferable* aTransferable,
+                                                            const nsCString& aFlavor,
+                                                            NSPasteboardItem* aItem) {
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  if (!aTransferable || !aItem) {
+    return;
+  }
+
+  MOZ_LOG(gCocoaUtilsLog, LogLevel::Info,
+          ("nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem: looking for pasteboard data of "
+           "type %s\n",
+           aFlavor.get()));
+
+  if (aFlavor.EqualsLiteral(kFileMime)) {
+    NSString* filePath = nsCocoaUtils::GetFilePathFromPasteboardItem(aItem);
+    if (!filePath) {
+      return;
+    }
+
+    unsigned int stringLength = [filePath length];
+    unsigned int dataLength = (stringLength + 1) * sizeof(char16_t);  // in bytes
+    char16_t* clipboardDataPtr = (char16_t*)malloc(dataLength);
+    if (!clipboardDataPtr) {
+      return;
+    }
+
+    [filePath getCharacters:reinterpret_cast<unichar*>(clipboardDataPtr)];
+    clipboardDataPtr[stringLength] = 0;  // null terminate
+
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_NewLocalFile(nsDependentString(clipboardDataPtr), true, getter_AddRefs(file));
+    free(clipboardDataPtr);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    aTransferable->SetTransferData(aFlavor.get(), file);
+    return;
+  }
+
+  if (aFlavor.EqualsLiteral(kCustomTypesMime)) {
+    NSString* availableType =
+        [aItem availableTypeFromArray:[NSArray arrayWithObject:kMozCustomTypesPboardType]];
+    if (!availableType || !nsCocoaUtils::IsValidPasteboardType(availableType, false)) {
+      return;
+    }
+    NSData* pasteboardData = [aItem dataForType:availableType];
+    if (!pasteboardData) {
+      return;
+    }
+
+    unsigned int dataLength = [pasteboardData length];
+    void* clipboardDataPtr = malloc(dataLength);
+    if (!clipboardDataPtr) {
+      return;
+    }
+    [pasteboardData getBytes:clipboardDataPtr length:dataLength];
+
+    nsCOMPtr<nsISupports> genericDataWrapper;
+    nsPrimitiveHelpers::CreatePrimitiveForData(aFlavor, clipboardDataPtr, dataLength,
+                                               getter_AddRefs(genericDataWrapper));
+
+    aTransferable->SetTransferData(aFlavor.get(), genericDataWrapper);
+    free(clipboardDataPtr);
+    return;
+  }
+
+  NSString* pString = nil;
+  if (aFlavor.EqualsLiteral(kUnicodeMime)) {
+    pString = nsCocoaUtils::GetStringForTypeFromPasteboardItem(
+        aItem, [UTIHelper stringFromPboardType:NSPasteboardTypeString]);
+  } else if (aFlavor.EqualsLiteral(kHTMLMime)) {
+    pString = nsCocoaUtils::GetStringForTypeFromPasteboardItem(
+        aItem, [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]);
+  } else if (aFlavor.EqualsLiteral(kURLMime)) {
+    pString = nsCocoaUtils::GetStringForTypeFromPasteboardItem(
+        aItem, [UTIHelper stringFromPboardType:kPublicUrlPboardType]);
+    if (pString) {
+      NSString* title = GetTitleForURLFromPasteboardItem(aItem);
+      if (!title) {
+        title = pString;
+      }
+      pString = [NSString stringWithFormat:@"%@\n%@", pString, title];
+    }
+  } else if (aFlavor.EqualsLiteral(kURLDataMime)) {
+    pString = nsCocoaUtils::GetStringForTypeFromPasteboardItem(
+        aItem, [UTIHelper stringFromPboardType:kPublicUrlPboardType]);
+  } else if (aFlavor.EqualsLiteral(kURLDescriptionMime)) {
+    pString = GetTitleForURLFromPasteboardItem(aItem);
+  } else if (aFlavor.EqualsLiteral(kRTFMime)) {
+    pString = nsCocoaUtils::GetStringForTypeFromPasteboardItem(
+        aItem, [UTIHelper stringFromPboardType:NSPasteboardTypeRTF]);
+  }
+  if (pString) {
+    NSData* stringData;
+    if (aFlavor.EqualsLiteral(kRTFMime)) {
+      stringData = [pString dataUsingEncoding:NSASCIIStringEncoding];
+    } else {
+      stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
+    }
+    unsigned int dataLength = [stringData length];
+    void* clipboardDataPtr = malloc(dataLength);
+    if (!clipboardDataPtr) {
+      return;
+    }
+    [stringData getBytes:clipboardDataPtr length:dataLength];
+
+    // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
+    int32_t signedDataLength = dataLength;
+    nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(aFlavor, &clipboardDataPtr,
+                                                       &signedDataLength);
+    dataLength = signedDataLength;
+
+    // skip BOM (Byte Order Mark to distinguish little or big endian)
+    char16_t* clipboardDataPtrNoBOM = (char16_t*)clipboardDataPtr;
+    if ((dataLength > 2) &&
+        ((clipboardDataPtrNoBOM[0] == 0xFEFF) || (clipboardDataPtrNoBOM[0] == 0xFFFE))) {
+      dataLength -= sizeof(char16_t);
+      clipboardDataPtrNoBOM += 1;
+    }
+
+    nsCOMPtr<nsISupports> genericDataWrapper;
+    nsPrimitiveHelpers::CreatePrimitiveForData(aFlavor, clipboardDataPtrNoBOM, dataLength,
+                                               getter_AddRefs(genericDataWrapper));
+    aTransferable->SetTransferData(aFlavor.get(), genericDataWrapper);
+    free(clipboardDataPtr);
+    return;
+  }
+
+  // We have never supported this on Mac OS X, we should someday. Normally dragging images
+  // in is accomplished with a file path drag instead of the image data itself.
+  /*
+  if (aFlavor.EqualsLiteral(kPNGImageMime) || aFlavor.EqualsLiteral(kJPEGImageMime) ||
+      aFlavor.EqualsLiteral(kJPGImageMime) || aFlavor.EqualsLiteral(kGIFImageMime)) {
+
+  }
+  */
+
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
