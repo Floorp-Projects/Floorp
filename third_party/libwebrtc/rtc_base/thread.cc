@@ -851,29 +851,20 @@ void Thread::Stop() {
   Join();
 }
 
-void Thread::Send(const Location& posted_from,
-                  MessageHandler* phandler,
-                  uint32_t id,
-                  MessageData* pdata) {
+void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
+  TRACE_EVENT0("webrtc", "Thread::BlockingCall");
+
   RTC_DCHECK(!IsQuitting());
   if (IsQuitting())
     return;
 
-  // Sent messages are sent to the MessageHandler directly, in the context
-  // of "thread", like Win32 SendMessage. If in the right context,
-  // call the handler directly.
-  Message msg;
-  msg.posted_from = posted_from;
-  msg.phandler = phandler;
-  msg.message_id = id;
-  msg.pdata = pdata;
   if (IsCurrent()) {
 #if RTC_DCHECK_IS_ON
     RTC_DCHECK(this->IsInvokeToThreadAllowed(this));
     RTC_DCHECK_RUN_ON(this);
     could_be_blocking_call_count_++;
 #endif
-    msg.phandler->OnMessage(&msg);
+    functor();
     return;
   }
 
@@ -892,7 +883,7 @@ void Thread::Send(const Location& posted_from,
 #endif
 
   // Perhaps down the line we can get rid of this workaround and always require
-  // current_thread to be valid when Send() is called.
+  // current_thread to be valid when BlockingCall() is called.
   std::unique_ptr<rtc::Event> done_event;
   if (!current_thread)
     done_event.reset(new rtc::Event());
@@ -908,9 +899,7 @@ void Thread::Send(const Location& posted_from,
       done->Set();
     }
   };
-  PostTask([&msg, cleanup = std::move(cleanup)]() mutable {
-    msg.phandler->OnMessage(&msg);
-  });
+  PostTask([functor, cleanup = std::move(cleanup)] { functor(); });
   if (current_thread) {
     bool waited = false;
     crit_.Enter();
@@ -939,22 +928,6 @@ void Thread::Send(const Location& posted_from,
   } else {
     done_event->Wait(rtc::Event::kForever);
   }
-}
-
-void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
-  TRACE_EVENT0("webrtc", "Thread::BlockingCall");
-
-  class FunctorMessageHandler : public MessageHandler {
-   public:
-    explicit FunctorMessageHandler(rtc::FunctionView<void()> functor)
-        : functor_(functor) {}
-    void OnMessage(Message* msg) override { functor_(); }
-
-   private:
-    rtc::FunctionView<void()> functor_;
-  } handler(functor);
-
-  Send(/*posted_from=*/{}, &handler, /*id=*/0, /*pdata=*/nullptr);
 }
 
 // Called by the ThreadManager when being set as the current thread.
