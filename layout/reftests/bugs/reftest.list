@@ -143,8 +143,6 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 134706-4.html 134706-4-ref.html
 == 134706-5.html 134706-5-ref.html
 == 134706-6.html 134706-6-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == 134706-6b.html 134706-6b-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == 134706-6c.html 134706-6c-ref.html
 == 134706-7.html 134706-7-ref.html
 == 139550-1a.html 139550-1-ref.html
 == 139550-1b.html 139550-1-ref.html
@@ -1029,7 +1027,7 @@ asserts(3) != 427017-1.xhtml about:blank # crash test (needs reftest-paged). exi
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
 == 427129-image.html 427129-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == 427129-table-caption.html 427129-table-caption-ref.html
+== 427129-table-caption.html 427129-table-caption-ref.html
 fuzzy(0-1,0-60) == 427370-1.html 427370-1-ref.html
 == 427730-1.html 427730-1-ref.html
 == 428278.html 428278-ref.html
@@ -1261,8 +1259,6 @@ skip-if(Android) random-if(d2d) == chrome://reftest/content/bugs/478377-1.xhtml 
 == 478614-3.html 478614-3-ref.html
 == 478614-4.html 478614-4-ref.html
 == 478614-5.html 478614-5-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == 478614-6.html 478614-6-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == 478614-7.html 478614-7-ref.html
 == 478811-1.html 478811-1-ref.html
 == 478811-2.html 478811-2-ref.html
 == 478811-3.html 478811-3-ref.html
@@ -1814,7 +1810,6 @@ fails-if(!useDrawSnapshot) == 1059498-2.html 1059498-1-ref.html # WebRender: see
 fails-if(!useDrawSnapshot) == 1059498-3.html 1059498-1-ref.html # WebRender: see bug 1499113
 == 1062108-1.html 1062108-1-ref.html
 == 1062792-1.html 1062792-1-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
 == 1078262-1.html about:blank # bug 1656792
