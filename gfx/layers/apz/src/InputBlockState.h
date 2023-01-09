@@ -169,12 +169,6 @@ class CancelableBlockState : public InputBlockState {
   bool IsDefaultPrevented() const;
 
   /**
-   * @return true iff this block has received all the information it could
-   *         have gotten from the content thread.
-   */
-  virtual bool HasReceivedAllContentNotifications() const;
-
-  /**
    * @return true iff this block has received all the information needed
    *         to properly dispatch the events in the block.
    */
@@ -317,7 +311,6 @@ class PanGestureBlockState : public CancelableBlockState {
                        const PanGestureInput& aEvent);
 
   bool SetContentResponse(bool aPreventDefault) override;
-  bool HasReceivedAllContentNotifications() const override;
   bool IsReadyForHandling() const override;
   bool MustStayActive() override;
   const char* Type() override;
@@ -370,7 +363,6 @@ class PinchGestureBlockState : public CancelableBlockState {
                          TargetConfirmationFlags aFlags);
 
   bool SetContentResponse(bool aPreventDefault) override;
-  bool HasReceivedAllContentNotifications() const override;
   bool IsReadyForHandling() const override;
   bool MustStayActive() override;
   const char* Type() override;
@@ -439,12 +431,6 @@ class TouchBlockState : public CancelableBlockState {
    * Copy various properties from another block.
    */
   void CopyPropertiesFrom(const TouchBlockState& aOther);
-
-  /*
-   * @return true iff this block has received all the information it could
-   *         have gotten from the content thread.
-   */
-  bool HasReceivedAllContentNotifications() const override;
 
   /**
    * @return true iff this block has received all the information needed

@@ -221,10 +221,6 @@ bool CancelableBlockState::IsDefaultPrevented() const {
   return mPreventDefault;
 }
 
-bool CancelableBlockState::HasReceivedAllContentNotifications() const {
-  return HasReceivedRealConfirmedTarget() && mContentResponded;
-}
-
 bool CancelableBlockState::IsReadyForHandling() const {
   if (!IsTargetConfirmed()) {
     return false;
@@ -550,11 +546,6 @@ bool PanGestureBlockState::SetContentResponse(bool aPreventDefault) {
   return stateChanged;
 }
 
-bool PanGestureBlockState::HasReceivedAllContentNotifications() const {
-  return CancelableBlockState::HasReceivedAllContentNotifications() &&
-         !mWaitingForContentResponse;
-}
-
 bool PanGestureBlockState::IsReadyForHandling() const {
   if (!CancelableBlockState::IsReadyForHandling()) {
     return false;
@@ -616,11 +607,6 @@ bool PinchGestureBlockState::SetContentResponse(bool aPreventDefault) {
   return stateChanged;
 }
 
-bool PinchGestureBlockState::HasReceivedAllContentNotifications() const {
-  return CancelableBlockState::HasReceivedAllContentNotifications() &&
-         !mWaitingForContentResponse;
-}
-
 bool PinchGestureBlockState::IsReadyForHandling() const {
   if (!CancelableBlockState::IsReadyForHandling()) {
     return false;
@@ -677,12 +663,6 @@ void TouchBlockState::CopyPropertiesFrom(const TouchBlockState& aOther) {
              aOther.IsContentResponseTimerExpired());
   SetAllowedTouchBehaviors(aOther.mAllowedTouchBehaviors);
   mTransformToApzc = aOther.mTransformToApzc;
-}
-
-bool TouchBlockState::HasReceivedAllContentNotifications() const {
-  return CancelableBlockState::HasReceivedAllContentNotifications()
-         // See comment in TouchBlockState::IsReadyforHandling()
-         && mAllowedTouchBehaviorSet;
 }
 
 bool TouchBlockState::IsReadyForHandling() const {
