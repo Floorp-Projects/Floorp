@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import copy
-
 from taskgraph.task import Task
 from taskgraph.util.schema import Schema
 from voluptuous import Required
+
+from gecko_taskgraph.util.copy_task import copy_task
 
 schema = Schema(
     {
@@ -64,7 +64,7 @@ def loader(kind, path, config, params, loaded_tasks):
         }
 
         if job_template:
-            job.update(copy.deepcopy(job_template))
+            job.update(copy_task(job_template))
 
         # copy shipping_product from upstream
         product = task.attributes.get(

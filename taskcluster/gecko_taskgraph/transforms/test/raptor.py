@@ -3,14 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from copy import deepcopy
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import Extra, Optional, Required
 
 from gecko_taskgraph.transforms.test import test_description_schema
+from gecko_taskgraph.util.copy_task import copy_task
 
 transforms = TransformSequence()
 task_transforms = TransformSequence()
@@ -93,7 +92,7 @@ def split_apps(config, tests):
             ].get("unittest_variant"):
                 continue
 
-            atest = deepcopy(test)
+            atest = copy_task(test)
             suffix = f"-{app}"
             atest["app"] = app
             atest["description"] += f" on {app.capitalize()}"
@@ -138,7 +137,7 @@ def split_raptor_subtests(config, tests):
             chunk_number += 1
 
             # Create new test job
-            chunked = deepcopy(test)
+            chunked = copy_task(test)
             chunked["chunk-number"] = chunk_number
             chunked["subtest"] = subtest
             chunked["subtest-symbol"] = subtest
