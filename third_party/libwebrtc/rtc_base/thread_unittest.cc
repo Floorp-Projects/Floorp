@@ -16,7 +16,6 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "api/task_queue/task_queue_test.h"
 #include "api/units/time_delta.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -25,6 +24,7 @@
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/physical_socket_server.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -524,33 +524,29 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
 
     // Asynchronously invoke SetAndInvokeSet on `thread1` and wait until
     // `thread1` starts the call.
-    static void AsyncInvokeSetAndWait(DEPRECATED_AsyncInvoker* invoker,
-                                      Thread* thread1,
+    static void AsyncInvokeSetAndWait(Thread* thread1,
                                       Thread* thread2,
                                       LockedBool* out) {
       LockedBool async_invoked(false);
 
-      invoker->AsyncInvoke<void>(
-          RTC_FROM_HERE, thread1, [&async_invoked, thread2, out] {
-            SetAndInvokeSet(&async_invoked, thread2, out);
-          });
+      thread1->PostTask([&async_invoked, thread2, out] {
+        SetAndInvokeSet(&async_invoked, thread2, out);
+      });
 
       EXPECT_TRUE_WAIT(async_invoked.Get(), 2000);
     }
   };
 
-  DEPRECATED_AsyncInvoker invoker;
   LockedBool thread_a_called(false);
 
   // Start the sequence A --(invoke)--> B --(async invoke)--> C --(invoke)--> A.
   // Thread B returns when C receives the call and C should be blocked until A
   // starts to process messages.
   Thread* thread_c_ptr = thread_c.get();
-  thread_b->Invoke<void>(
-      RTC_FROM_HERE, [&invoker, thread_c_ptr, thread_a, &thread_a_called] {
-        LocalFuncs::AsyncInvokeSetAndWait(&invoker, thread_c_ptr, thread_a,
-                                          &thread_a_called);
-      });
+  thread_b->Invoke<void>(RTC_FROM_HERE, [thread_c_ptr, thread_a,
+                                         &thread_a_called] {
+    LocalFuncs::AsyncInvokeSetAndWait(thread_c_ptr, thread_a, &thread_a_called);
+  });
   EXPECT_FALSE(thread_a_called.Get());
 
   EXPECT_TRUE_WAIT(thread_a_called.Get(), 2000);
@@ -687,116 +683,6 @@ TEST(ThreadManager, ClearReentrant) {
   t->Post(RTC_FROM_HERE, inner_handler, 0);
   t->Post(RTC_FROM_HERE, &handler, 0,
           new ScopedRefMessageData<RefCountedHandler>(inner_handler));
-}
-
-class DEPRECATED_AsyncInvokeTest : public ::testing::Test {
- public:
-  void IntCallback(int value) {
-    EXPECT_EQ(expected_thread_, Thread::Current());
-    int_value_ = value;
-  }
-  void SetExpectedThreadForIntCallback(Thread* thread) {
-    expected_thread_ = thread;
-  }
-
- protected:
-  enum { kWaitTimeout = 1000 };
-  DEPRECATED_AsyncInvokeTest() : int_value_(0), expected_thread_(nullptr) {}
-
-  rtc::AutoThread main_thread_;
-  int int_value_;
-  Thread* expected_thread_;
-};
-
-TEST_F(DEPRECATED_AsyncInvokeTest, FireAndForget) {
-  DEPRECATED_AsyncInvoker invoker;
-  // Create and start the thread.
-  auto thread = Thread::CreateWithSocketServer();
-  thread->Start();
-  // Try calling functor.
-  AtomicBool called;
-  invoker.AsyncInvoke<void>(RTC_FROM_HERE, thread.get(), FunctorB(&called));
-  EXPECT_TRUE_WAIT(called.get(), kWaitTimeout);
-  thread->Stop();
-}
-
-TEST_F(DEPRECATED_AsyncInvokeTest, NonCopyableFunctor) {
-  DEPRECATED_AsyncInvoker invoker;
-  // Create and start the thread.
-  auto thread = Thread::CreateWithSocketServer();
-  thread->Start();
-  // Try calling functor.
-  AtomicBool called;
-  invoker.AsyncInvoke<void>(RTC_FROM_HERE, thread.get(), FunctorD(&called));
-  EXPECT_TRUE_WAIT(called.get(), kWaitTimeout);
-  thread->Stop();
-}
-
-TEST_F(DEPRECATED_AsyncInvokeTest, KillInvokerDuringExecute) {
-  // Use these events to get in a state where the functor is in the middle of
-  // executing, and then to wait for it to finish, ensuring the "EXPECT_FALSE"
-  // is run.
-  Event functor_started;
-  Event functor_continue;
-  Event functor_finished;
-
-  auto thread = Thread::CreateWithSocketServer();
-  thread->Start();
-  volatile bool invoker_destroyed = false;
-  {
-    auto functor = [&functor_started, &functor_continue, &functor_finished,
-                    &invoker_destroyed] {
-      functor_started.Set();
-      functor_continue.Wait(Event::kForever);
-      rtc::Thread::Current()->SleepMs(kWaitTimeout);
-      EXPECT_FALSE(invoker_destroyed);
-      functor_finished.Set();
-    };
-    DEPRECATED_AsyncInvoker invoker;
-    invoker.AsyncInvoke<void>(RTC_FROM_HERE, thread.get(), functor);
-    functor_started.Wait(Event::kForever);
-
-    // Destroy the invoker while the functor is still executing (doing
-    // SleepMs).
-    functor_continue.Set();
-  }
-
-  // If the destructor DIDN'T wait for the functor to finish executing, it will
-  // hit the EXPECT_FALSE(invoker_destroyed) after it finishes sleeping for a
-  // second.
-  invoker_destroyed = true;
-  functor_finished.Wait(Event::kForever);
-}
-
-// Variant of the above test where the async-invoked task calls AsyncInvoke
-// *again*, for the thread on which the invoker is currently being destroyed.
-// This shouldn't deadlock or crash. The second invocation should be ignored.
-TEST_F(DEPRECATED_AsyncInvokeTest,
-       KillInvokerDuringExecuteWithReentrantInvoke) {
-  Event functor_started;
-  // Flag used to verify that the recursively invoked task never actually runs.
-  bool reentrant_functor_run = false;
-
-  Thread* main = Thread::Current();
-  Thread thread(std::make_unique<NullSocketServer>());
-  thread.Start();
-  {
-    DEPRECATED_AsyncInvoker invoker;
-    auto reentrant_functor = [&reentrant_functor_run] {
-      reentrant_functor_run = true;
-    };
-    auto functor = [&functor_started, &invoker, main, reentrant_functor] {
-      functor_started.Set();
-      Thread::Current()->SleepMs(kWaitTimeout);
-      invoker.AsyncInvoke<void>(RTC_FROM_HERE, main, reentrant_functor);
-    };
-    // This queues a task on `thread` to sleep for `kWaitTimeout` then queue a
-    // task on `main`. But this second queued task should never run, since the
-    // destructor will be entered before it's even invoked.
-    invoker.AsyncInvoke<void>(RTC_FROM_HERE, &thread, functor);
-    functor_started.Wait(Event::kForever);
-  }
-  EXPECT_FALSE(reentrant_functor_run);
 }
 
 void WaitAndSetEvent(Event* wait_event, Event* set_event) {

@@ -1148,9 +1148,6 @@ rtc_library("rtc_base") {
   public_configs = []
 
   sources = [
-    "async_invoker.cc",
-    "async_invoker.h",
-    "async_invoker_inl.h",
     "async_packet_socket.cc",
     "async_packet_socket.h",
     "async_tcp_socket.cc",
@@ -1815,6 +1812,7 @@ if (rtc_include_tests) {
         ":macromagic",
         ":net_helpers",
         ":null_socket_server",
+        ":refcount",
         ":rtc_base",
         ":rtc_base_tests_utils",
         ":rtc_event",
