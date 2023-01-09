@@ -17,7 +17,6 @@
 #include "api/dtls_transport_interface.h"
 #include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -50,8 +49,7 @@ SctpTransportInformation SctpTransport::Information() const {
   // expected thread. Chromium currently calls this method from
   // TransceiverStateSurfacer.
   if (!owner_thread_->IsCurrent()) {
-    return owner_thread_->Invoke<SctpTransportInformation>(
-        RTC_FROM_HERE, [this] { return Information(); });
+    return owner_thread_->BlockingCall([this] { return Information(); });
   }
   RTC_DCHECK_RUN_ON(owner_thread_);
   return info_;

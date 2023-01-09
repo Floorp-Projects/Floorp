@@ -20,7 +20,6 @@
 #include "pc/audio_track.h"
 #include "pc/media_stream_track_proxy.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/location.h"
 
 namespace webrtc {
 
@@ -101,7 +100,7 @@ void AudioRtpReceiver::OnSetVolume(double volume) {
   RTC_DCHECK_LE(volume, 10);
 
   bool track_enabled = track_->internal()->enabled();
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
+  worker_thread_->BlockingCall([&]() {
     RTC_DCHECK_RUN_ON(worker_thread_);
     // Update the cached_volume_ even when stopped, to allow clients to set
     // the volume before starting/restarting, eg see crbug.com/1272566.
@@ -168,7 +167,7 @@ void AudioRtpReceiver::RestartMediaChannel(absl::optional<uint32_t> ssrc) {
   RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
   bool enabled = track_->internal()->enabled();
   MediaSourceInterface::SourceState state = source_->state();
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
+  worker_thread_->BlockingCall([&]() {
     RTC_DCHECK_RUN_ON(worker_thread_);
     RestartMediaChannel_w(std::move(ssrc), enabled, state);
   });

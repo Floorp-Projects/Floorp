@@ -595,7 +595,7 @@ VideoReceiveStreamInterface::Stats ReceiveStatisticsProxy::GetStats() const {
   RTC_DCHECK_RUN_ON(&main_thread_);
 
   // Like VideoReceiveStreamInterface::GetStats, called on the worker thread
-  // from StatsCollector::ExtractMediaInfo via worker_thread()->Invoke().
+  // from StatsCollector::ExtractMediaInfo via worker_thread()->BlockingCall().
   // WebRtcVideoChannel::GetStats(), GetVideoReceiverInfo.
 
   // Get current frame rates here, as only updating them on new frames prevents

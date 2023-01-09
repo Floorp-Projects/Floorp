@@ -1253,7 +1253,7 @@ void BasicNetworkManager::set_vpn_list(const std::vector<NetworkMask>& vpn) {
   if (thread_ == nullptr) {
     vpn_ = vpn;
   } else {
-    thread_->Invoke<void>(RTC_FROM_HERE, [this, vpn] { vpn_ = vpn; });
+    thread_->BlockingCall([this, vpn] { vpn_ = vpn; });
   }
 }
 

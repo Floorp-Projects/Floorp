@@ -23,7 +23,6 @@
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helpers.h"
 #include "rtc_base/socket_address.h"
@@ -730,7 +729,7 @@ void SocketTest::SocketServerWaitInternal(const IPAddress& loopback) {
   // Shouldn't signal when blocked in a thread Send, where process_io is false.
   std::unique_ptr<Thread> thread(Thread::CreateWithSocketServer());
   thread->Start();
-  thread->Invoke<void>(RTC_FROM_HERE, [] { Thread::SleepMs(500); });
+  thread->BlockingCall([] { Thread::SleepMs(500); });
   EXPECT_FALSE(sink.Check(accepted.get(), SSE_READ));
 
   // But should signal when process_io is true.

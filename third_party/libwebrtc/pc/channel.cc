@@ -29,7 +29,6 @@
 #include "pc/rtp_media_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/strings/string_format.h"
@@ -269,8 +268,8 @@ bool BaseChannel::SetPayloadTypeDemuxingEnabled(bool enabled) {
   // network thread. At the moment there's a workaround for inconsistent state
   // between the worker and network thread because of this (see
   // OnDemuxerCriteriaUpdatePending elsewhere in this file) and
-  // SetPayloadTypeDemuxingEnabled_w has an Invoke over to the network thread
-  // to apply state updates.
+  // SetPayloadTypeDemuxingEnabled_w has a BlockingCall over to the network
+  // thread to apply state updates.
   RTC_DCHECK_RUN_ON(worker_thread());
   TRACE_EVENT0("webrtc", "BaseChannel::SetPayloadTypeDemuxingEnabled");
   return SetPayloadTypeDemuxingEnabled_w(enabled);
@@ -461,7 +460,7 @@ bool BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
   if (update_demuxer)
     media_channel()->OnDemuxerCriteriaUpdatePending();
 
-  bool success = network_thread()->Invoke<bool>(RTC_FROM_HERE, [&]() mutable {
+  bool success = network_thread()->BlockingCall([&]() mutable {
     RTC_DCHECK_RUN_ON(network_thread());
     // NOTE: This doesn't take the BUNDLE case in account meaning the RTP header
     // extension maps are not merged when BUNDLE is enabled. This is fine
@@ -491,8 +490,8 @@ bool BaseChannel::RegisterRtpDemuxerSink_w() {
   media_channel_->OnDemuxerCriteriaUpdatePending();
   // Copy demuxer criteria, since they're a worker-thread variable
   // and we want to pass them to the network thread
-  bool ret = network_thread_->Invoke<bool>(
-      RTC_FROM_HERE, [this, demuxer_criteria = demuxer_criteria_] {
+  bool ret = network_thread_->BlockingCall(
+      [this, demuxer_criteria = demuxer_criteria_] {
         RTC_DCHECK_RUN_ON(network_thread());
         if (!rtp_transport_) {
           // Transport was disconnected before attempting to update the

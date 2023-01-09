@@ -14,7 +14,6 @@
 #include "api/test/time_controller.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/event.h"
-#include "rtc_base/location.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
@@ -121,7 +120,7 @@ TEST_P(SimulatedRealTimeControllerConformanceTest, ThreadPostInvokeOrderTest) {
   // posted/invoked.
   ExecutionOrderKeeper execution_order;
   thread->PostTask([&]() { execution_order.Executed(1); });
-  thread->Invoke<void>(RTC_FROM_HERE, [&]() { execution_order.Executed(2); });
+  thread->BlockingCall([&]() { execution_order.Executed(2); });
   time_controller->AdvanceTime(TimeDelta::Millis(100));
   EXPECT_THAT(execution_order.order(), ElementsAreArray({1, 2}));
   // Destroy `thread` before `execution_order` to be sure `execution_order`
@@ -140,7 +139,7 @@ TEST_P(SimulatedRealTimeControllerConformanceTest,
   ExecutionOrderKeeper execution_order;
   thread->PostTask([&]() {
     thread->PostTask([&]() { execution_order.Executed(2); });
-    thread->Invoke<void>(RTC_FROM_HERE, [&]() { execution_order.Executed(1); });
+    thread->BlockingCall([&]() { execution_order.Executed(1); });
   });
   time_controller->AdvanceTime(TimeDelta::Millis(100));
   EXPECT_THAT(execution_order.order(), ElementsAreArray({1, 2}));
