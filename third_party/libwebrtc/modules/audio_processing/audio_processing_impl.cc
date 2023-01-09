@@ -1374,7 +1374,7 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     if (config_.capture_level_adjustment.analog_mic_gain_emulation.enabled) {
       if (submodules_.agc_manager) {
         submodules_.capture_levels_adjuster->SetAnalogMicGainLevel(
-            submodules_.agc_manager->stream_analog_level());
+            submodules_.agc_manager->recommended_analog_level());
       } else if (submodules_.gain_control) {
         submodules_.capture_levels_adjuster->SetAnalogMicGainLevel(
             submodules_.gain_control->stream_analog_level());
@@ -1641,7 +1641,7 @@ int AudioProcessingImpl::recommended_stream_analog_level_locked() const {
   }
 
   if (submodules_.agc_manager) {
-    return submodules_.agc_manager->stream_analog_level();
+    return submodules_.agc_manager->recommended_analog_level();
   }
 
   if (submodules_.gain_control) {
@@ -1852,6 +1852,10 @@ void AudioProcessingImpl::InitializeGainController1() {
     return;
   }
 
+  RTC_HISTOGRAM_BOOLEAN(
+      "WebRTC.Audio.GainController.Analog.Enabled",
+      config_.gain_controller1.analog_gain_controller.enabled);
+
   if (!submodules_.gain_control) {
     submodules_.gain_control.reset(new GainControlImpl());
   }
@@ -1887,7 +1891,7 @@ void AudioProcessingImpl::InitializeGainController1() {
     int stream_analog_level = -1;
     const bool re_creation = !!submodules_.agc_manager;
     if (re_creation) {
-      stream_analog_level = submodules_.agc_manager->stream_analog_level();
+      stream_analog_level = submodules_.agc_manager->recommended_analog_level();
     }
     submodules_.agc_manager.reset(new AgcManagerDirect(
         num_proc_channels(), config_.gain_controller1.analog_gain_controller));
