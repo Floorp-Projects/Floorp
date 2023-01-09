@@ -2690,7 +2690,19 @@ function createUpdate(aCallback, aAddon, aUpdate, isUserRequested) {
       install = new LocalAddonInstall(aAddon.location, url, opts);
       await install.init();
     } else {
-      install = new DownloadAddonInstall(aAddon.location, url, opts);
+      let loc = aAddon.location;
+      if (aAddon.isBuiltinColorwayTheme) {
+        // Builtin colorways theme needs to be updated by installing the version
+        // got from AMO into the profile location and not using the location
+        // where the builtin addon is currently installed.
+        logger.info(
+          `Overriding location to APP_PROFILE on builtin colorway theme update for "${aAddon.id}"`
+        );
+        loc = lazy.XPIInternal.XPIStates.getLocation(
+          lazy.XPIInternal.KEY_APP_PROFILE
+        );
+      }
+      install = new DownloadAddonInstall(loc, url, opts);
     }
 
     aCallback(install);

@@ -355,6 +355,14 @@ class AddonInternal {
     return lazy.XPIInternal.maybeResolveURI(Services.io.newURI(this.rootURI));
   }
 
+  get isBuiltinColorwayTheme() {
+    return (
+      this.type === "theme" &&
+      this.location.isBuiltin &&
+      this.id.endsWith("-colorway@mozilla.org")
+    );
+  }
+
   /**
    * Validate a list of origins are contained in the installOrigins array (defined in manifest.json).
    *
@@ -826,6 +834,19 @@ class AddonInternal {
       let isSystem = this.location.isSystem || this.location.isBuiltin;
       // Add-ons that are installed by a file link cannot be upgraded.
       if (!isSystem && !this.location.isLinkedAddon(this.id)) {
+        permissions |= lazy.AddonManager.PERM_CAN_UPGRADE;
+      }
+      // Allow active and retained colorways builtin themes to be updated to the same theme hosted on AMO
+      // (the PERM_CAN_UPGRADE permission will ensure we will be asking AMO for an update,
+      // then the AMO addon xpi will be installed in the profile location, overridden in
+      // the `createUpdate` defined in `XPIInstall.jsm` and called from `UpdateChecker`
+      // `onUpdateCheckComplete` method).
+      if (
+        this.isBuiltinColorwayTheme &&
+        lazy.BuiltInThemes?.themeIsExpired?.(this.id) &&
+        (lazy.BuiltInThemes?.isActiveTheme?.(this.id) ||
+          lazy.BuiltInThemes?.isRetainedExpiredTheme?.(this.id))
+      ) {
         permissions |= lazy.AddonManager.PERM_CAN_UPGRADE;
       }
     }
@@ -1463,6 +1484,7 @@ function defineAddonWrapperProperty(name, getter) {
   "sitePermissions",
   "siteOrigin",
   "isCorrectlySigned",
+  "isBuiltinColorwayTheme",
 ].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
