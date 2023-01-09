@@ -277,6 +277,11 @@ pub unsafe extern "C" fn midir_impl_init(callback: AddCallback) -> *mut MidirWra
     if let Ok(mut midir_impl) = MidirWrapper::new() {
         midir_impl.refresh(callback, None);
 
+        // Gecko invokes this initialization on a separate thread from all the
+        // other operations, so make it clear to Rust this needs to be Send.
+        fn assert_send<T: Send>(_: &T) {}
+        assert_send(&midir_impl);
+
         let midir_box = Box::new(midir_impl);
         // Leak the object as it will be owned by the C++ code from now on
         Box::leak(midir_box) as *mut _

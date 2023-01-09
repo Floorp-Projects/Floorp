@@ -68,6 +68,17 @@ class MIDIPlatformService {
   // protocols left to communicate with.
   void MaybeStop();
 
+  // Initializes statics on startup.
+  static void InitStatics();
+
+  // Returns the MIDI Task Queue.
+  static nsISerialEventTarget* OwnerThread();
+
+  // Asserts that we're on the above task queue.
+  static void AssertThread() {
+    MOZ_DIAGNOSTIC_ASSERT(OwnerThread()->IsOnCurrentThread());
+  }
+
   // True if service is live.
   static bool IsRunning();
 

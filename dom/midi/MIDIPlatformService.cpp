@@ -154,6 +154,22 @@ void MIDIPlatformService::RemovePortInfo(MIDIPortInfo& aPortInfo) {
   }
 }
 
+StaticRefPtr<nsISerialEventTarget> gMIDITaskQueue;
+
+// static
+void MIDIPlatformService::InitStatics() {
+  nsCOMPtr<nsISerialEventTarget> queue;
+  MOZ_ALWAYS_SUCCEEDS(
+      NS_CreateBackgroundTaskQueue("MIDITaskQueue", getter_AddRefs(queue)));
+  gMIDITaskQueue = queue.forget();
+  ClearOnShutdown(&gMIDITaskQueue);
+}
+
+// static
+nsISerialEventTarget* MIDIPlatformService::OwnerThread() {
+  return gMIDITaskQueue;
+}
+
 StaticRefPtr<MIDIPlatformService> gMIDIPlatformService;
 
 // static
