@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#rs-default-controller-class-definition
  */
 
-[Exposed=*, Pref="dom.streams.readable_stream_default_controller.enabled"]
+[Exposed=*]
 interface ReadableStreamDefaultController {
   readonly attribute unrestricted double? desiredSize;
 

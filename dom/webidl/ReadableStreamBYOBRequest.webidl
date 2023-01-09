@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#rs-byob-request-class-definition
  */
 
-[Exposed=*, Pref="dom.streams.byte_streams.enabled"]
+[Exposed=*]
 interface ReadableStreamBYOBRequest {
   readonly attribute ArrayBufferView? view;
 

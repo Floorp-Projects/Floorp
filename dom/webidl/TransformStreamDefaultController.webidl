@@ -7,8 +7,7 @@
  * https://streams.spec.whatwg.org/#ts-default-controller-class-definition
  */
 
-[Exposed=*,
- Pref="dom.streams.transform_streams.enabled"]
+[Exposed=*]
 interface TransformStreamDefaultController {
   readonly attribute unrestricted double? desiredSize;
   [Throws] undefined enqueue(optional any chunk);

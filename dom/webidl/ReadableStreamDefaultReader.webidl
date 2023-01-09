@@ -19,8 +19,7 @@ interface mixin ReadableStreamGenericReader {
   Promise<undefined> cancel(optional any reason);
 };
 
-[Exposed=*,
-Pref="dom.streams.readable_stream_default_reader.enabled"]
+[Exposed=*]
 interface ReadableStreamDefaultReader {
   [Throws]
   constructor(ReadableStream stream);
