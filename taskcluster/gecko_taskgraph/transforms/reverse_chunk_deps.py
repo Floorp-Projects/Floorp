@@ -5,18 +5,19 @@
 Adjust dependencies to not exceed MAX_DEPENDENCIES
 """
 
+from copy import deepcopy
+
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.treeherder import add_suffix
 
 import gecko_taskgraph.transforms.release_deps as release_deps
 from gecko_taskgraph import MAX_DEPENDENCIES
-from gecko_taskgraph.util.copy_task import copy_task
 
 transforms = TransformSequence()
 
 
 def yield_job(orig_job, deps, count):
-    job = copy_task(orig_job)
+    job = deepcopy(orig_job)
     job["dependencies"] = deps
     job["name"] = "{}-{}".format(orig_job["name"], count)
     if "treeherder" in job:

@@ -6,6 +6,7 @@ Do transforms specific to l10n kind
 """
 
 
+import copy
 import json
 
 from mozbuild.chunkify import chunkify
@@ -26,7 +27,6 @@ from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
     task_name,
 )
-from gecko_taskgraph.util.copy_task import copy_task
 
 
 def _by_platform(arg):
@@ -226,7 +226,7 @@ def handle_keyed_by(config, jobs):
         "when.files-changed",
     ]
     for job in jobs:
-        job = copy_task(job)  # don't overwrite dict values here
+        job = copy.deepcopy(job)  # don't overwrite dict values here
         for field in fields:
             resolve_keyed_by(item=job, field=field, item_name=job["name"])
         yield job
@@ -278,7 +278,7 @@ def chunk_locales(config, jobs):
             if remainder:
                 chunks = int(chunks + 1)
             for this_chunk in range(1, chunks + 1):
-                chunked = copy_task(job)
+                chunked = copy.deepcopy(job)
                 chunked["name"] = chunked["name"].replace("/", f"-{this_chunk}/", 1)
                 chunked["mozharness"]["options"] = chunked["mozharness"].get(
                     "options", []
