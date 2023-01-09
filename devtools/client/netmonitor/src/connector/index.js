@@ -39,7 +39,6 @@ class Connector {
     this.navigate = this.navigate.bind(this);
     this.sendHTTPRequest = this.sendHTTPRequest.bind(this);
     this.triggerActivity = this.triggerActivity.bind(this);
-    this.getTabTarget = this.getTabTarget.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
     this.requestData = this.requestData.bind(this);
     this.getTimingMarker = this.getTimingMarker.bind(this);
@@ -478,14 +477,6 @@ class Connector {
    */
   getLongString(stringGrip) {
     return this.dataProvider.getLongString(stringGrip);
-  }
-
-  /**
-   * Getter that access tab target instance.
-   * @return {object} browser tab target instance
-   */
-  getTabTarget() {
-    return this.currentTarget;
   }
 
   /**

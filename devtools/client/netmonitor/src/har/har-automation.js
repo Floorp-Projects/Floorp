@@ -235,8 +235,7 @@ function getDefaultTargetFile(options) {
     Services.prefs.getCharPref("devtools.netmonitor.har.defaultLogDir");
   const folder = HarUtils.getLocalDirectory(path);
 
-  const tabTarget = options.connector.getTabTarget();
-  const host = new URL(tabTarget.url);
+  const host = new URL(options.connector.currentTarget.url);
   const fileName = HarUtils.getHarFileName(
     options.defaultFileName,
     options.jsonp,

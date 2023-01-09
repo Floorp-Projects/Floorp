@@ -179,7 +179,6 @@ function NetworkEventMessage({
     getLongString: grip => {
       return serviceContainer.getLongString(grip);
     },
-    getTabTarget: () => {},
     sendHTTPRequest: () => {},
     triggerActivity: () => {},
     requestData: (requestId, dataType) => {
