@@ -128,6 +128,14 @@ class MockPacingControllerCallback : public PacingController::PacketSender {
               (),
               (override));
   MOCK_METHOD(size_t, SendPadding, (size_t target_size));
+  MOCK_METHOD(void,
+              OnAbortedRetransmissions,
+              (uint32_t, rtc::ArrayView<const uint16_t>),
+              (override));
+  MOCK_METHOD(absl::optional<uint32_t>,
+              GetRtxSsrcForMedia,
+              (uint32_t),
+              (const, override));
 };
 
 // Mock callback implementing the raw api.
@@ -147,6 +155,14 @@ class MockPacketSender : public PacingController::PacketSender {
               GeneratePadding,
               (DataSize target_size),
               (override));
+  MOCK_METHOD(void,
+              OnAbortedRetransmissions,
+              (uint32_t, rtc::ArrayView<const uint16_t>),
+              (override));
+  MOCK_METHOD(absl::optional<uint32_t>,
+              GetRtxSsrcForMedia,
+              (uint32_t),
+              (const, override));
 };
 
 class PacingControllerPadding : public PacingController::PacketSender {
@@ -176,6 +192,12 @@ class PacingControllerPadding : public PacingController::PacketSender {
       padding_sent_ += kPaddingPacketSize;
     }
     return packets;
+  }
+
+  void OnAbortedRetransmissions(uint32_t,
+                                rtc::ArrayView<const uint16_t>) override {}
+  absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t) const override {
+    return absl::nullopt;
   }
 
   size_t padding_sent() { return padding_sent_; }
@@ -218,6 +240,12 @@ class PacingControllerProbing : public PacingController::PacketSender {
       target_size -= padding_size;
     }
     return packets;
+  }
+
+  void OnAbortedRetransmissions(uint32_t,
+                                rtc::ArrayView<const uint16_t>) override {}
+  absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t) const override {
+    return absl::nullopt;
   }
 
   int packets_sent() const { return packets_sent_; }
