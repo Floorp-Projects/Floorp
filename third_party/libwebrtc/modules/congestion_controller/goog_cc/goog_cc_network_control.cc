@@ -547,11 +547,14 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
     // call UpdateDelayBasedEstimate after SetSendBitrate.
     bandwidth_estimation_->UpdateDelayBasedEstimate(report.feedback_time,
                                                     result.target_bitrate);
-    // Update the estimate in the ProbeController, in case we want to probe.
-    MaybeTriggerOnNetworkChanged(&update, report.feedback_time);
   }
   bandwidth_estimation_->UpdateLossBasedEstimator(report,
                                                   result.delay_detector_state);
+  if (result.updated) {
+    // Update the estimate in the ProbeController, in case we want to probe.
+    MaybeTriggerOnNetworkChanged(&update, report.feedback_time);
+  }
+
   recovered_from_overuse = result.recovered_from_overuse;
 
   if (recovered_from_overuse) {

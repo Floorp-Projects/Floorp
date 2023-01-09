@@ -369,6 +369,7 @@ void SendSideBandwidthEstimation::UpdateLossBasedEstimator(
   if (LossBasedBandwidthEstimatorV2Enabled()) {
     loss_based_bandwidth_estimator_v2_.UpdateBandwidthEstimate(
         report.packet_feedbacks, delay_based_limit_, delay_detector_state);
+    UpdateEstimate(report.feedback_time);
   }
 }
 
