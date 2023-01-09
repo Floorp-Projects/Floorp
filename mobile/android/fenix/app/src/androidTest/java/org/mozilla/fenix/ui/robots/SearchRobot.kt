@@ -46,6 +46,7 @@ import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -110,31 +111,40 @@ class SearchRobot {
         }
     }
 
-    fun verifyFirefoxSuggestResults(rule: ComposeTestRule, searchSuggestion: String) {
+    fun verifyFirefoxSuggestResults(rule: ComposeTestRule, searchTerm: String, vararg searchSuggestions: String) {
         rule.waitForIdle()
         for (i in 1..RETRY_COUNT) {
             try {
-                rule.onNodeWithTag("mozac.awesomebar.suggestions")
-                    .performScrollToNode(hasText(searchSuggestion))
-                    .assertExists()
+                for (searchSuggestion in searchSuggestions) {
+                    mDevice.waitForObjects(mDevice.findObject(UiSelector().textContains(searchSuggestion)))
+                    rule.onNodeWithTag("mozac.awesomebar.suggestions")
+                        .performScrollToNode(hasText(searchSuggestion))
+                        .assertExists()
+                }
+
                 break
             } catch (e: AssertionError) {
                 if (i == RETRY_COUNT) {
                     throw e
                 } else {
-                    expandSearchSuggestionsList()
+                    mDevice.pressBack()
+                    homeScreen {
+                    }.openSearch {
+                        typeSearch(searchTerm)
+                    }
                 }
             }
         }
     }
 
-    fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchSuggestion: String) {
+    fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, vararg searchSuggestions: String) {
         rule.waitForIdle()
-
-        assertFalse(
-            mDevice.findObject(UiSelector().textContains(searchSuggestion))
-                .waitForExists(waitingTime),
-        )
+        for (searchSuggestion in searchSuggestions) {
+            assertFalse(
+                mDevice.findObject(UiSelector().textContains(searchSuggestion))
+                    .waitForExists(waitingTime),
+            )
+        }
     }
 
     fun verifyAllowSuggestionsInPrivateModeDialog() {
@@ -365,6 +375,16 @@ class SearchRobot {
 
             SettingsSubMenuSearchRobot().interact()
             return SettingsSubMenuSearchRobot.Transition()
+        }
+
+        fun clickSearchSuggestion(searchSuggestion: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.findObject(UiSelector().textContains(searchSuggestion)).also {
+                it.waitForExists(waitingTime)
+                it.clickAndWaitForNewWindow(waitingTimeShort)
+            }
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
     }
 }

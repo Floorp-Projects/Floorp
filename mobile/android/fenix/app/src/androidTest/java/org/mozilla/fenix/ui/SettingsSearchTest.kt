@@ -98,53 +98,81 @@ class SettingsSearchTest {
 
     @Test
     fun toggleSearchBookmarksAndHistoryTest() {
-        // Bookmarks 2 websites, toggles the bookmarks and history search settings off,
-        // then verifies if the websites do not show in the suggestions.
         val page1 = getGenericAsset(mockWebServer, 1)
         val page2 = getGenericAsset(mockWebServer, 2)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(page1.url) {
-            verifyUrl(page1.url.toString())
-        }.openThreeDotMenu {
-        }.bookmarkPage {
         }.openTabDrawer {
             closeTab()
         }
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(page2.url) {
-            verifyUrl(page2.url.toString())
-        }.openThreeDotMenu {
-        }.bookmarkPage {
-        }.openTabDrawer {
-            closeTab()
-        }
-        // Verifies that bookmarks & history suggestions are shown
+
         homeScreen {
         }.openSearch {
             typeSearch("test")
-            expandSearchSuggestionsList()
-            verifyFirefoxSuggestResults(activityTestRule, "Firefox Suggest")
-            verifyFirefoxSuggestResults(activityTestRule, "Test_Page_1")
-            verifyFirefoxSuggestResults(activityTestRule, "Test_Page_2")
-        }.dismissSearchBar {
+            verifyFirefoxSuggestResults(
+                activityTestRule,
+                "test",
+                "Firefox Suggest",
+                "Test_Page_1",
+            )
+        }.clickSearchSuggestion("Test_Page_1") {
+            verifyUrl(page1.url.toString())
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(page2.url) {
+        }.openThreeDotMenu {
+        }.bookmarkPage {
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyHistoryListExists()
+            clickDeleteHistoryButton("Test_Page_2")
+        }
+
+        exitMenu()
+
+        homeScreen {
+        }.openSearch {
+            typeSearch("test")
+            verifyFirefoxSuggestResults(
+                activityTestRule,
+                "test",
+                "Firefox Suggest",
+                "Test_Page_2",
+            )
+        }.clickSearchSuggestion("Test_Page_2") {
+            verifyUrl(page2.url.toString())
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
-            // Disables the search bookmarks & history settings
-            verifySearchBookmarks()
-            switchSearchBookmarksToggle()
             switchSearchHistoryToggle()
-            exitMenu()
+            switchSearchBookmarksToggle()
         }
-        // Verifies that bookmarks and history suggestions are not shown
+
+        exitMenu()
+
         homeScreen {
         }.openSearch {
             typeSearch("test")
-            expandSearchSuggestionsList()
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "Firefox Suggest")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "Test_Page_1")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "Test_Page_2")
+            verifyNoSuggestionsAreDisplayed(
+                activityTestRule,
+                "Firefox Suggest",
+                "Test_Page_1",
+                "Test_Page_2",
+            )
         }
     }
 
