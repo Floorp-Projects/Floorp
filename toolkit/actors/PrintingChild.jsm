@@ -178,7 +178,7 @@ class PrintingChild extends JSWindowActorChild {
 
       // Create container div (main element) and append it to body
       let containerElement = document.createElement("div");
-      containerElement.setAttribute("id", "container");
+      containerElement.setAttribute("class", "container");
       document.body.appendChild(containerElement);
 
       // Reader Mode might return null if there's a failure when parsing the document.
@@ -189,19 +189,18 @@ class PrintingChild extends JSWindowActorChild {
 
         // Create header div and append it to container
         let headerElement = document.createElement("div");
-        headerElement.setAttribute("id", "reader-header");
+        headerElement.setAttribute("class", "reader-header");
         headerElement.setAttribute("class", "header");
         containerElement.appendChild(headerElement);
 
         // Jam the article's title and byline into header div
         let titleElement = document.createElement("h1");
-        titleElement.setAttribute("id", "reader-title");
+        titleElement.setAttribute("class", "reader-title");
         titleElement.textContent = article.title;
         headerElement.appendChild(titleElement);
 
         let bylineElement = document.createElement("div");
-        bylineElement.setAttribute("id", "reader-credits");
-        bylineElement.setAttribute("class", "credits");
+        bylineElement.setAttribute("class", "reader-credits credits");
         bylineElement.textContent = article.byline;
         headerElement.appendChild(bylineElement);
 
@@ -215,7 +214,7 @@ class PrintingChild extends JSWindowActorChild {
 
         // Jam the article's content into content div
         let readerContent = document.createElement("div");
-        readerContent.setAttribute("id", "moz-reader-content");
+        readerContent.setAttribute("class", "moz-reader-content");
         contentElement.appendChild(readerContent);
 
         let articleUri = Services.io.newURI(article.url);
