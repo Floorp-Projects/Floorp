@@ -29,10 +29,18 @@ class nsIConsoleListenerWatcher {
       return;
     }
 
+    let latestRetrievedCachedMessageTimestamp = -1;
+
     // Create the consoleListener.
     const listener = {
       QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
       observe: message => {
+        if (
+          message.microSecondTimeStamp <= latestRetrievedCachedMessageTimestamp
+        ) {
+          return;
+        }
+
         if (!this.shouldHandleMessage(targetActor, message)) {
           return;
         }
@@ -41,9 +49,15 @@ class nsIConsoleListenerWatcher {
       },
     };
 
-    // Retrieve the cached messages just before registering the listener, so we don't get
-    // duplicated messages.
+    // Retrieve the cached messages and get the last cached message timestamp before
+    // registering the listener, so we can ignore messages we'd be notified about but that
+    // were already retrieved in the cache.
     const cachedMessages = Services.console.getMessageArray() || [];
+    if (cachedMessages.length) {
+      latestRetrievedCachedMessageTimestamp = cachedMessages.at(-1)
+        .microSecondTimeStamp;
+    }
+
     Services.console.registerListener(listener);
     this.listener = listener;
 
