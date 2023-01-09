@@ -76,8 +76,7 @@ luci.builder.defaults.test_presentation.set(
 lucicfg.config(
     config_dir = ".",
     tracked_files = [
-        "chops-weetbix-dev.cfg",
-        "chops-weetbix.cfg",
+        "luci-analysis.cfg",
         "commit-queue.cfg",
         "cr-buildbucket.cfg",
         "luci-logdog.cfg",
@@ -130,12 +129,17 @@ luci.project(
                 "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
             ],
         ),
+        # Roles for LUCI Analysis.
         luci.binding(
-            roles = "role/weetbix.queryUser",
-            groups = "googlers",
+            roles = "role/analysis.reader",
+            groups = "all",
         ),
         luci.binding(
-            roles = "role/weetbix.editor",
+            roles = "role/analysis.queryUser",
+            groups = "authenticated-users",
+        ),
+        luci.binding(
+            roles = "role/analysis.editor",
             groups = "googlers",
         ),
     ],
@@ -153,13 +157,8 @@ luci.milo(
 ################################################################################
 
 lucicfg.emit(
-    dest = "chops-weetbix-dev.cfg",
-    data = io.read_file("chops-weetbix-dev.cfg"),
-)
-
-lucicfg.emit(
-    dest = "chops-weetbix.cfg",
-    data = io.read_file("chops-weetbix.cfg"),
+    dest = "luci-analysis.cfg",
+    data = io.read_file("luci-analysis.cfg"),
 )
 
 ################################################################################
