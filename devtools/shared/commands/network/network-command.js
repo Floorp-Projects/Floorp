@@ -36,6 +36,61 @@ class NetworkCommand {
     return { channelId };
   }
 
+  /*
+   * Get the list of blocked URL filters.
+   *
+   * A URL filter is a RegExp string so that one filter can match many URLs.
+   * It can be an absolute URL to match only one precise request:
+   *   http://mozilla.org/index.html
+   * Or just a string which would match all URL containing this string:
+   *   mozilla
+   * Or a RegExp to match various types of URLs:
+   *   http://*mozilla.org/*.css
+   *
+   * @return {Array}
+   *         List of all currently blocked URL filters.
+   */
+  async getBlockedUrls() {
+    const networkParentFront = await this.watcherFront.getNetworkParentActor();
+    return networkParentFront.getBlockedUrls();
+  }
+
+  /**
+   * Updates the list of blocked URL filters.
+   *
+   * @param {Array} urls
+   *        An array of URL filter strings.
+   *        See getBlockedUrls for definition of URL filters.
+   */
+  async setBlockedUrls(urls) {
+    const networkParentFront = await this.watcherFront.getNetworkParentActor();
+    return networkParentFront.setBlockedUrls(urls);
+  }
+
+  /**
+   * Block only one additional URL filter
+   *
+   * @param {String} url
+   *        URL filter to block.
+   *        See getBlockedUrls for definition of URL filters.
+   */
+  async blockRequestForUrl(url) {
+    const networkParentFront = await this.watcherFront.getNetworkParentActor();
+    return networkParentFront.blockRequest({ url });
+  }
+
+  /**
+   * Stop blocking only one specific URL filter
+   *
+   * @param {String} url
+   *        URL filter to unblock.
+   *        See getBlockedUrls for definition of URL filters.
+   */
+  async unblockRequestForUrl(url) {
+    const networkParentFront = await this.watcherFront.getNetworkParentActor();
+    return networkParentFront.unblockRequest({ url });
+  }
+
   destroy() {}
 }
 

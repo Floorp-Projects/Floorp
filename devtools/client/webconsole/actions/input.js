@@ -190,7 +190,6 @@ function handleHelperResult(response) {
   return async ({ dispatch, hud, toolbox, webConsoleUI, getState }) => {
     const { result, helperResult } = response;
     const helperHasRawOutput = !!helperResult?.rawOutput;
-    const networkFront = await hud.resourceCommand.watcherFront.getNetworkParentActor();
 
     if (helperResult?.type) {
       switch (helperResult.type) {
@@ -292,7 +291,7 @@ function handleHelperResult(response) {
           // process, while the request has to be blocked from the parent process.
           // Then, calling the Netmonitor action will only update the visual state of the Netmonitor,
           // but we also have to block the request via the NetworkParentActor.
-          await networkFront.blockRequest({ url: blockURL });
+          await hud.commands.networkCommand.blockRequestForUrl(blockURL);
           toolbox
             .getPanel("netmonitor")
             ?.panelWin.store.dispatch(
@@ -313,7 +312,7 @@ function handleHelperResult(response) {
           break;
         case "unblockURL":
           const unblockURL = helperResult.args.url;
-          await networkFront.unblockRequest({ url: unblockURL });
+          await hud.commands.networkCommand.unblockRequestForUrl(unblockURL);
           toolbox
             .getPanel("netmonitor")
             ?.panelWin.store.dispatch(

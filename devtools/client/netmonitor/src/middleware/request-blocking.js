@@ -31,10 +31,10 @@ const BLOCKING_EVENTS = [
 
 /**
  * This middleware is responsible for syncing the list of blocking patterns/urls with the backed.
- * It utilizes the connector object and `setBlockedUrls` function to sent the current list to the server
+ * It utilizes the NetworkCommand and `setBlockedUrls` function to sent the current list to the server
  * every time it's been modified.
  */
-function requestBlockingMiddleware(connector) {
+function requestBlockingMiddleware(commands) {
   return store => next => async action => {
     const res = next(action);
 
@@ -48,7 +48,7 @@ function requestBlockingMiddleware(connector) {
             return arr;
           }, [])
         : [];
-      await connector.setBlockedUrls(urls);
+      await commands.networkCommand.setBlockedUrls(urls);
       store.dispatch({ type: REQUEST_BLOCKING_UPDATE_COMPLETE });
     }
     return res;
