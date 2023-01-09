@@ -1621,7 +1621,7 @@ bool SnapshotIterator::allocationReadable(const RValueAllocation& alloc,
   // If we have to recover stores, and if we are not interested in the
   // default value of the instruction, then we have to check if the recover
   // instruction results are available.
-  if (alloc.needSideEffect() && !(rm & RM_AlwaysDefault)) {
+  if (alloc.needSideEffect() && rm != ReadMethod::AlwaysDefault) {
     if (!hasInstructionResults()) {
       return false;
     }
@@ -1653,7 +1653,8 @@ bool SnapshotIterator::allocationReadable(const RValueAllocation& alloc,
     case RValueAllocation::RECOVER_INSTRUCTION:
       return hasInstructionResult(alloc.index());
     case RValueAllocation::RI_WITH_DEFAULT_CST:
-      return rm & RM_AlwaysDefault || hasInstructionResult(alloc.index());
+      return rm == ReadMethod::AlwaysDefault ||
+             hasInstructionResult(alloc.index());
 
     default:
       return true;
@@ -1741,10 +1742,10 @@ Value SnapshotIterator::allocationValue(const RValueAllocation& alloc,
       return fromInstructionResult(alloc.index());
 
     case RValueAllocation::RI_WITH_DEFAULT_CST:
-      if (rm & RM_Normal && hasInstructionResult(alloc.index())) {
+      if (rm == ReadMethod::Normal && hasInstructionResult(alloc.index())) {
         return fromInstructionResult(alloc.index());
       }
-      MOZ_ASSERT(rm & RM_AlwaysDefault);
+      MOZ_ASSERT(rm == ReadMethod::AlwaysDefault);
       return ionScript_->getConstant(alloc.index2());
 
     default:
@@ -1857,11 +1858,11 @@ void SnapshotIterator::writeAllocationValuePayload(
 
 void SnapshotIterator::traceAllocation(JSTracer* trc) {
   RValueAllocation alloc = readAllocation();
-  if (!allocationReadable(alloc, RM_AlwaysDefault)) {
+  if (!allocationReadable(alloc, ReadMethod::AlwaysDefault)) {
     return;
   }
 
-  Value v = allocationValue(alloc, RM_AlwaysDefault);
+  Value v = allocationValue(alloc, ReadMethod::AlwaysDefault);
   if (!v.isGCThing()) {
     return;
   }
