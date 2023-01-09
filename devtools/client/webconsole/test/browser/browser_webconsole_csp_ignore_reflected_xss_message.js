@@ -20,11 +20,15 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await navigateTo(TEST_FILE);
 
-  await waitFor(() => findWarningMessage(hud, EXPECTED_RESULT));
+  await checkUniqueMessageExists(hud, EXPECTED_RESULT, ".warn");
   ok(
     true,
     `CSP logs displayed in console when using "reflected-xss" directive`
   );
+
+  info("Reload page and check that the CSP warning is not duplicated");
+  await reloadBrowser();
+  await checkUniqueMessageExists(hud, EXPECTED_RESULT, ".warn");
 
   Services.cache2.clear();
 });
