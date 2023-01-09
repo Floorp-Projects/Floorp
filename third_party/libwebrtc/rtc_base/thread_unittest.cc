@@ -58,10 +58,20 @@ class TestGenerator {
   int count;
 };
 
-struct TestMessage : public MessageData {
-  explicit TestMessage(int v) : value(v) {}
+// Receives messages and sends on a socket.
+class MessageClient : public TestGenerator {
+ public:
+  MessageClient(Thread* pth, Socket* socket) : socket_(socket) {}
 
-  int value;
+  ~MessageClient() { delete socket_; }
+
+  void OnValue(int value) {
+    int result = Next(value);
+    EXPECT_GE(socket_->Send(&result, sizeof(result)), 0);
+  }
+
+ private:
+  Socket* socket_;
 };
 
 // Receives on a socket and sends by posting messages.
@@ -70,7 +80,7 @@ class SocketClient : public TestGenerator, public sigslot::has_slots<> {
   SocketClient(Socket* socket,
                const SocketAddress& addr,
                Thread* post_thread,
-               MessageHandler* phandler)
+               MessageClient* phandler)
       : socket_(AsyncUDPSocket::Create(socket, addr)),
         post_thread_(post_thread),
         post_handler_(phandler) {
@@ -90,32 +100,15 @@ class SocketClient : public TestGenerator, public sigslot::has_slots<> {
     uint32_t prev = reinterpret_cast<const uint32_t*>(buf)[0];
     uint32_t result = Next(prev);
 
-    post_thread_->PostDelayed(RTC_FROM_HERE, 200, post_handler_, 0,
-                              new TestMessage(result));
+    post_thread_->PostDelayedTask([post_handler_ = post_handler_,
+                                   result] { post_handler_->OnValue(result); },
+                                  TimeDelta::Millis(200));
   }
 
  private:
   AsyncUDPSocket* socket_;
   Thread* post_thread_;
-  MessageHandler* post_handler_;
-};
-
-// Receives messages and sends on a socket.
-class MessageClient : public MessageHandlerAutoCleanup, public TestGenerator {
- public:
-  MessageClient(Thread* pth, Socket* socket) : socket_(socket) {}
-
-  ~MessageClient() override { delete socket_; }
-
-  void OnMessage(Message* pmsg) override {
-    TestMessage* msg = static_cast<TestMessage*>(pmsg->pdata);
-    int result = Next(msg->value);
-    EXPECT_GE(socket_->Send(&result, sizeof(result)), 0);
-    delete msg;
-  }
-
- private:
-  Socket* socket_;
+  MessageClient* post_handler_;
 };
 
 class CustomThread : public rtc::Thread {
@@ -223,6 +216,7 @@ struct FunctorD {
 
 // See: https://code.google.com/p/webrtc/issues/detail?id=2409
 TEST(ThreadTest, DISABLED_Main) {
+  rtc::AutoThread main_thread;
   const SocketAddress addr("127.0.0.1", 0);
 
   // Create the messaging client on its own thread.
@@ -242,7 +236,8 @@ TEST(ThreadTest, DISABLED_Main) {
   th2->Start();
 
   // Get the messages started.
-  th1->PostDelayed(RTC_FROM_HERE, 100, &msg_client, 0, new TestMessage(1));
+  th1->PostDelayedTask([&msg_client] { msg_client.OnValue(1); },
+                       TimeDelta::Millis(100));
 
   // Give the clients a little while to run.
   // Messages will be processed at 100, 300, 500, 700, 900.
@@ -657,14 +652,17 @@ TEST(ThreadManager, ProcessAllMessageQueuesWithClearedQueue) {
   ThreadManager::ProcessAllMessageQueuesForTesting();
 }
 
-class RefCountedHandler : public MessageHandlerAutoCleanup,
-                          public rtc::RefCountInterface {
+class RefCountedHandler : public MessageHandler, public rtc::RefCountInterface {
  public:
+  ~RefCountedHandler() override { ThreadManager::Clear(this); }
+
   void OnMessage(Message* msg) override {}
 };
 
-class EmptyHandler : public MessageHandlerAutoCleanup {
+class EmptyHandler : public MessageHandler {
  public:
+  ~EmptyHandler() override { ThreadManager::Clear(this); }
+
   void OnMessage(Message* msg) override {}
 };
 
@@ -679,7 +677,7 @@ TEST(ThreadManager, ClearReentrant) {
   // again in a re-entrant fashion, which previously triggered a DCHECK.
   // The inner handler will be removed in a re-entrant fashion from the
   // message queue of the thread while the outer handler is removed, verifying
-  // that the iterator is not invalidated in "MessageQueue::Clear".
+  // that the iterator is not invalidated in "Thread::Clear".
   t->Post(RTC_FROM_HERE, inner_handler, 0);
   t->Post(RTC_FROM_HERE, &handler, 0,
           new ScopedRefMessageData<RefCountedHandler>(inner_handler));
