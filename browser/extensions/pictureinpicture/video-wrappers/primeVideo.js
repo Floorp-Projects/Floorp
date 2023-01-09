@@ -5,8 +5,53 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
+  /**
+   * Playing the video when the readyState is HAVE_METADATA (1) can cause play
+   * to fail but it will load the video and trying to play again allows enough
+   * time for the second play to successfully play the video.
+   * @param {HTMLVideoElement} video
+   *  The original video element
+   */
+  play(video) {
+    video.play().catch(() => {
+      video.play();
+    });
+  }
+  /**
+   * Seeking large amounts of time can cause the video readyState to
+   * HAVE_METADATA (1) and it will throw an error when trying to play the video.
+   * To combat this, after seeking we check if the readyState changed and if so,
+   * we will play to video to "load" the video at the new time and then play or
+   * pause the video depending on if the video was playing before we seeked.
+   * @param {HTMLVideoElement} video
+   *  The original video element
+   * @param {Number} position
+   *  The new time to set the video to
+   * @param {Boolean} wasPlaying
+   *  True if the video was playing before seeking else false
+   */
+  setCurrentTime(video, position, wasPlaying) {
+    if (wasPlaying === undefined) {
+      this.wasPlaying = !video.paused;
+    }
+    video.currentTime = position;
+    if (video.readyState < video.HAVE_CURRENT_DATA) {
+      video
+        .play()
+        .then(() => {
+          if (!wasPlaying) {
+            video.pause();
+          }
+        })
+        .catch(() => {
+          if (wasPlaying) {
+            this.play(video);
+          }
+        });
+    }
+  }
   setCaptionContainerObserver(video, updateCaptionsFunction) {
-    let container = document.querySelector("#dv-web-player");
+    let container = document?.querySelector("#dv-web-player");
 
     if (container) {
       updateCaptionsFunction("");
