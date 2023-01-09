@@ -76,6 +76,7 @@ const getSoftmaxPrecisionTolerance = (resources) => {
 const PrecisionMetrics = {
   clamp: {ULP: {float32: 0, float16: 0}},
   concat: {ULP: {float32: 0, float16: 0}},
+  leakyRelu: {ULP: {float32: 1, float16: 1}},
   relu: {ULP: {float32: 0, float16: 0}},
   reshape: {ULP: {float32: 0, float16: 0}},
   slice: {ULP: {float32: 0, float16: 0}},
