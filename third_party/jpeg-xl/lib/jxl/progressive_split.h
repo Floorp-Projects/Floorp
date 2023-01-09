@@ -71,6 +71,8 @@ struct ProgressiveMode {
                      kNoDownsamplingFactor ||
                  p[i].suitable_for_downsampling_of_at_least <=
                      last_downsampling_factor);
+      // Only used inside assert.
+      (void)last_downsampling_factor;
       if (p[i].suitable_for_downsampling_of_at_least != kNoDownsamplingFactor) {
         last_downsampling_factor = p[i].suitable_for_downsampling_of_at_least;
       }

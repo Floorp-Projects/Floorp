@@ -9,6 +9,7 @@
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/common.h"
 #if JPEGXL_ENABLE_BOXES || JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/box_content_decoder.h"
 #endif
@@ -175,9 +176,9 @@ enum class DecoderStage : uint32_t {
 };
 
 enum class FrameStage : uint32_t {
-  kHeader,      // Must parse frame header.
-  kTOC,         // Must parse TOC
-  kFull,        // Must parse full pixels
+  kHeader,  // Must parse frame header.
+  kTOC,     // Must parse TOC
+  kFull,    // Must parse full pixels
 };
 
 enum class BoxStage : uint32_t {
@@ -346,9 +347,9 @@ struct JxlDecoderStruct {
   bool last_codestream_seen;
   bool got_codestream_signature;
   bool got_basic_info;
-  bool got_transform_data;            // To skip everything before ICC.
-  bool got_all_headers;               // Codestream metadata headers.
-  bool post_headers;                  // Already decoding pixels.
+  bool got_transform_data;  // To skip everything before ICC.
+  bool got_all_headers;     // Codestream metadata headers.
+  bool post_headers;        // Already decoding pixels.
   jxl::ICCReader icc_reader;
   jxl::JxlDecoderFrameIndexBox frame_index_box;
   // This means either we actually got the preview image, or determined we
@@ -2382,33 +2383,6 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetPreviewOutBuffer(
   dec->image_out_size = size;
   dec->image_out_format = *format;
 
-  return JXL_DEC_SUCCESS;
-}
-
-JXL_EXPORT JxlDecoderStatus JxlDecoderDCOutBufferSize(
-    const JxlDecoder* dec, const JxlPixelFormat* format, size_t* size) {
-  size_t bits;
-  JxlDecoderStatus status = PrepareSizeCheck(dec, format, &bits);
-  if (status != JXL_DEC_SUCCESS) return status;
-
-  size_t xsize = jxl::DivCeil(
-      dec->metadata.oriented_xsize(dec->keep_orientation), jxl::kBlockDim);
-  size_t ysize = jxl::DivCeil(
-      dec->metadata.oriented_ysize(dec->keep_orientation), jxl::kBlockDim);
-
-  size_t row_size =
-      jxl::DivCeil(xsize * format->num_channels * bits, jxl::kBitsPerByte);
-  size_t last_row_size = row_size;
-  if (format->align > 1) {
-    row_size = jxl::DivCeil(row_size, format->align) * format->align;
-  }
-  *size = row_size * (ysize - 1) + last_row_size;
-  return JXL_DEC_SUCCESS;
-}
-
-JXL_EXPORT JxlDecoderStatus JxlDecoderSetDCOutBuffer(
-    JxlDecoder* dec, const JxlPixelFormat* format, void* buffer, size_t size) {
-  // No buffer set: this feature is deprecated
   return JXL_DEC_SUCCESS;
 }
 

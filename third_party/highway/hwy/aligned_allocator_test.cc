@@ -48,7 +48,7 @@ class SampleObject {
 
 class FakeAllocator {
  public:
-  // static AllocPtr and FreePtr member to be used with the alligned
+  // static AllocPtr and FreePtr member to be used with the aligned
   // allocator. These functions calls the private non-static members.
   static void* StaticAlloc(void* opaque, size_t bytes) {
     return reinterpret_cast<FakeAllocator*>(opaque)->Alloc(bytes);

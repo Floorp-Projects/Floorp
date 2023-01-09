@@ -431,6 +431,11 @@ JXL_EXPORT JxlEncoderError JxlEncoderGetError(JxlEncoder* enc);
  * When the return value is not JXL_ENC_ERROR or JXL_ENC_SUCCESS, the encoding
  * requires more JxlEncoderProcessOutput calls to continue.
  *
+ * The caller must guarantee that *avail_out >= 32 when calling
+ * JxlEncoderProcessOutput; otherwise, JXL_ENC_NEED_MORE_OUTPUT will be
+ * returned. It is guaranteed that, if *avail_out >= 32, at least one byte of
+ * output will be written.
+ *
  * This encodes the frames and/or boxes added so far. If the last frame or last
  * box has been added, @ref JxlEncoderCloseInput, @ref JxlEncoderCloseFrames
  * and/or @ref JxlEncoderCloseBoxes must be called before the next

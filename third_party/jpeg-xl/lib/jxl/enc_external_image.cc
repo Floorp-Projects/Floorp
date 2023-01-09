@@ -208,9 +208,8 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
 }
 Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, const ColorEncoding& c_current,
-                           bool alpha_is_premultiplied, size_t bits_per_sample,
-                           JxlPixelFormat format, ThreadPool* pool,
-                           ImageBundle* ib) {
+                           size_t bits_per_sample, JxlPixelFormat format,
+                           ThreadPool* pool, ImageBundle* ib) {
   const size_t color_channels = c_current.Channels();
   bool has_alpha = format.num_channels == 2 || format.num_channels == 4;
   if (format.num_channels < color_channels) {
@@ -238,13 +237,13 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
     JXL_RETURN_IF_ERROR(
         ConvertFromExternal(bytes, xsize, ysize, bits_per_sample, format,
                             format.num_channels - 1, pool, &alpha));
-    ib->SetAlpha(std::move(alpha), alpha_is_premultiplied);
+    ib->SetAlpha(std::move(alpha));
   } else if (!has_alpha && ib->HasAlpha()) {
     // if alpha is not passed, but it is expected, then assume
     // it is all-opaque
     ImageF alpha(xsize, ysize);
     FillImage(1.0f, &alpha);
-    ib->SetAlpha(std::move(alpha), alpha_is_premultiplied);
+    ib->SetAlpha(std::move(alpha));
   }
 
   return true;
@@ -267,8 +266,7 @@ Status BufferToImageBundle(const JxlPixelFormat& pixel_format, uint32_t xsize,
   size_t bitdepth = JxlDataTypeBytes(pixel_format.data_type) * kBitsPerByte;
   JXL_RETURN_IF_ERROR(ConvertFromExternal(
       jxl::Span<const uint8_t>(static_cast<const uint8_t*>(buffer), size),
-      xsize, ysize, c_current,
-      /*alpha_is_premultiplied=*/false, bitdepth, pixel_format, pool, ib));
+      xsize, ysize, c_current, bitdepth, pixel_format, pool, ib));
   ib->VerifyMetadata();
 
   return true;

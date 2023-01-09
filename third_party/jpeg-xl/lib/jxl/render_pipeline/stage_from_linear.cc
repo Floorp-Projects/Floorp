@@ -17,6 +17,7 @@
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
+namespace {
 
 // These templates are not found via ADL.
 using hwy::HWY_NAMESPACE::IfThenZeroElse;
@@ -170,6 +171,7 @@ std::unique_ptr<RenderPipelineStage> GetFromLinearStage(
   }
 }
 
+}  // namespace
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace jxl

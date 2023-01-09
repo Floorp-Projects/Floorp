@@ -223,7 +223,7 @@ bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
       fprintf(stderr,
               "Input file is truncated (total bytes: %" PRIuS
               ", processed bytes: %" PRIuS
-              ") and allow_partial_input was disabled.",
+              ") and --allow_partial_files is not present.\n",
               bytes_size, bytes_size - released_size);
       return false;
     } else if (status == JXL_DEC_BOX) {

@@ -1,3 +1,18 @@
+highway (1.0.2-1) UNRELEASED; urgency=medium
+
+* Add ExclusiveNeither, FindKnownFirstTrue, Ne128
+* Add 16-bit SumOfLanes/ReorderWidenMulAccumulate/ReorderDemote2To
+* Faster sort for low-entropy input, improved pivot selection
+* Add GN build system, Highway FAQ, k32v32 type to vqsort
+* CMake: Support find_package(GTest), add rvv-inl.h, add HWY_ENABLE_TESTS
+* Fix MIPS and C++20 build, Apple LLVM 10.3 detection, EMU128 AllTrue on RVV
+* Fix missing exec_prefix, RVV build, warnings, libatomic linking
+* Work around GCC 10.4 issue, disabled RDCYCLE, arm7 with vfpv3
+* Documentation/example improvements
+* Support static dispatch to SVE2_128 and SVE_256
+
+ -- Jan Wassenberg <janwas@google.com>  Thu, 27 Oct 2022 17:00:00 +0200
+
 highway (1.0.1-1) UNRELEASED; urgency=medium
 
 * Add Eq128, i64 Mul, unsigned->float ConvertTo

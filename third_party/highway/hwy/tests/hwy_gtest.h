@@ -22,7 +22,7 @@
 #include <stdint.h>
 
 #include <string>
-#include <utility>  // std::tuple
+#include <tuple>
 
 #include "gtest/gtest.h"
 #include "hwy/highway.h"

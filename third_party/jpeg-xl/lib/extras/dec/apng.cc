@@ -76,8 +76,142 @@ Status DecodeSRGB(const unsigned char* payload, const size_t payload_size,
   if (payload_size != 1) return JXL_FAILURE("Wrong sRGB size");
   // (PNG uses the same values as ICC.)
   if (payload[0] >= 4) return JXL_FAILURE("Invalid Rendering Intent");
+  color_encoding->white_point = JXL_WHITE_POINT_D65;
+  color_encoding->primaries = JXL_PRIMARIES_SRGB;
+  color_encoding->transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
   color_encoding->rendering_intent =
       static_cast<JxlRenderingIntent>(payload[0]);
+  return true;
+}
+
+// If the cICP profile is not fully supported, return false and leave
+// color_encoding unmodified.
+Status DecodeCICP(const unsigned char* payload, const size_t payload_size,
+                  JxlColorEncoding* color_encoding) {
+  if (payload_size != 4) return JXL_FAILURE("Wrong cICP size");
+  JxlColorEncoding color_enc = *color_encoding;
+
+  // From https://www.itu.int/rec/T-REC-H.273-202107-I/en
+  if (payload[0] == 1) {
+    // IEC 61966-2-1 sRGB
+    color_enc.primaries = JXL_PRIMARIES_SRGB;
+    color_enc.white_point = JXL_WHITE_POINT_D65;
+  } else if (payload[0] == 4) {
+    // Rec. ITU-R BT.470-6 System M
+    color_enc.primaries = JXL_PRIMARIES_CUSTOM;
+    color_enc.primaries_red_xy[0] = 0.67;
+    color_enc.primaries_red_xy[1] = 0.33;
+    color_enc.primaries_green_xy[0] = 0.21;
+    color_enc.primaries_green_xy[1] = 0.71;
+    color_enc.primaries_blue_xy[0] = 0.14;
+    color_enc.primaries_blue_xy[1] = 0.08;
+    color_enc.white_point = JXL_WHITE_POINT_CUSTOM;
+    color_enc.white_point_xy[0] = 0.310;
+    color_enc.white_point_xy[1] = 0.316;
+  } else if (payload[0] == 5) {
+    // Rec. ITU-R BT.1700-0 625 PAL and 625 SECAM
+    color_enc.primaries = JXL_PRIMARIES_CUSTOM;
+    color_enc.primaries_red_xy[0] = 0.64;
+    color_enc.primaries_red_xy[1] = 0.33;
+    color_enc.primaries_green_xy[0] = 0.29;
+    color_enc.primaries_green_xy[1] = 0.60;
+    color_enc.primaries_blue_xy[0] = 0.15;
+    color_enc.primaries_blue_xy[1] = 0.06;
+    color_enc.white_point = JXL_WHITE_POINT_D65;
+  } else if (payload[0] == 6 || payload[0] == 7) {
+    // SMPTE ST 170 (2004) / SMPTE ST 240 (1999)
+    color_enc.primaries = JXL_PRIMARIES_CUSTOM;
+    color_enc.primaries_red_xy[0] = 0.630;
+    color_enc.primaries_red_xy[1] = 0.340;
+    color_enc.primaries_green_xy[0] = 0.310;
+    color_enc.primaries_green_xy[1] = 0.595;
+    color_enc.primaries_blue_xy[0] = 0.155;
+    color_enc.primaries_blue_xy[1] = 0.070;
+    color_enc.white_point = JXL_WHITE_POINT_D65;
+  } else if (payload[0] == 8) {
+    // Generic film (colour filters using Illuminant C)
+    color_enc.primaries = JXL_PRIMARIES_CUSTOM;
+    color_enc.primaries_red_xy[0] = 0.681;
+    color_enc.primaries_red_xy[1] = 0.319;
+    color_enc.primaries_green_xy[0] = 0.243;
+    color_enc.primaries_green_xy[1] = 0.692;
+    color_enc.primaries_blue_xy[0] = 0.145;
+    color_enc.primaries_blue_xy[1] = 0.049;
+    color_enc.white_point = JXL_WHITE_POINT_CUSTOM;
+    color_enc.white_point_xy[0] = 0.310;
+    color_enc.white_point_xy[1] = 0.316;
+  } else if (payload[0] == 9) {
+    // Rec. ITU-R BT.2100-2
+    color_enc.primaries = JXL_PRIMARIES_2100;
+    color_enc.white_point = JXL_WHITE_POINT_D65;
+  } else if (payload[0] == 10) {
+    // CIE 1931 XYZ
+    color_enc.primaries = JXL_PRIMARIES_CUSTOM;
+    color_enc.primaries_red_xy[0] = 1;
+    color_enc.primaries_red_xy[1] = 0;
+    color_enc.primaries_green_xy[0] = 0;
+    color_enc.primaries_green_xy[1] = 1;
+    color_enc.primaries_blue_xy[0] = 0;
+    color_enc.primaries_blue_xy[1] = 0;
+    color_enc.white_point = JXL_WHITE_POINT_E;
+  } else if (payload[0] == 11) {
+    // SMPTE RP 431-2 (2011)
+    color_enc.primaries = JXL_PRIMARIES_P3;
+    color_enc.white_point = JXL_WHITE_POINT_DCI;
+  } else if (payload[0] == 12) {
+    // SMPTE EG 432-1 (2010)
+    color_enc.primaries = JXL_PRIMARIES_P3;
+    color_enc.white_point = JXL_WHITE_POINT_D65;
+  } else if (payload[0] == 22) {
+    color_enc.primaries = JXL_PRIMARIES_CUSTOM;
+    color_enc.primaries_red_xy[0] = 0.630;
+    color_enc.primaries_red_xy[1] = 0.340;
+    color_enc.primaries_green_xy[0] = 0.295;
+    color_enc.primaries_green_xy[1] = 0.605;
+    color_enc.primaries_blue_xy[0] = 0.155;
+    color_enc.primaries_blue_xy[1] = 0.077;
+    color_enc.white_point = JXL_WHITE_POINT_D65;
+  } else {
+    JXL_WARNING("Unsupported primaries specified in cICP chunk: %d",
+                static_cast<int>(payload[0]));
+    return false;
+  }
+
+  if (payload[1] == 1 || payload[1] == 6 || payload[1] == 14 ||
+      payload[1] == 15) {
+    // Rec. ITU-R BT.709-6
+    color_enc.transfer_function = JXL_TRANSFER_FUNCTION_709;
+  } else if (payload[1] == 4) {
+    // Rec. ITU-R BT.1700-0 625 PAL and 625 SECAM
+    color_enc.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
+    color_enc.gamma = 1 / 2.2;
+  } else if (payload[1] == 5) {
+    // Rec. ITU-R BT.470-6 System B, G
+    color_enc.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
+    color_enc.gamma = 1 / 2.8;
+  } else if (payload[1] == 8 || payload[1] == 13 || payload[1] == 16 ||
+             payload[1] == 17 || payload[1] == 18) {
+    // These codes all match the corresponding JXL enum values
+    color_enc.transfer_function = static_cast<JxlTransferFunction>(payload[1]);
+  } else {
+    JXL_WARNING("Unsupported transfer function specified in cICP chunk: %d",
+                static_cast<int>(payload[1]));
+    return false;
+  }
+
+  if (payload[2] != 0) {
+    JXL_WARNING("Unsupported color space specified in cICP chunk: %d",
+                static_cast<int>(payload[2]));
+    return false;
+  }
+  if (payload[3] != 1) {
+    JXL_WARNING("Unsupported full-range flag specified in cICP chunk: %d",
+                static_cast<int>(payload[3]));
+    return false;
+  }
+  // cICP has no rendering intent, so use the default
+  color_enc.rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
+  *color_encoding = color_enc;
   return true;
 }
 
@@ -286,6 +420,7 @@ constexpr uint32_t kId_fcTL = 0x4C546366;
 constexpr uint32_t kId_IDAT = 0x54414449;
 constexpr uint32_t kId_fdAT = 0x54416466;
 constexpr uint32_t kId_IEND = 0x444E4549;
+constexpr uint32_t kId_cICP = 0x50434963;
 constexpr uint32_t kId_iCCP = 0x50434369;
 constexpr uint32_t kId_sRGB = 0x42475273;
 constexpr uint32_t kId_gAMA = 0x414D4167;
@@ -469,7 +604,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
 
   ppf->frames.clear();
 
-  bool have_color = false, have_srgb = false;
+  bool have_color = false;
+  bool have_cicp = false, have_iccp = false, have_srgb = false;
   bool errorstate = true;
   if (id == kId_IHDR && chunkIHDR.size() == 25) {
     x0 = 0;
@@ -490,6 +626,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
     ppf->color_encoding.white_point = JXL_WHITE_POINT_D65;
     ppf->color_encoding.primaries = JXL_PRIMARIES_SRGB;
     ppf->color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+    ppf->color_encoding.rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
 
     if (!processing_start(png_ptr, info_ptr, (void*)&frameRaw, hasInfo,
                           chunkIHDR, chunksInfo)) {
@@ -625,7 +762,17 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
                               chunk.size() - 4)) {
             break;
           }
-        } else if (id == kId_iCCP) {
+        } else if (id == kId_cICP) {
+          // Color profile chunks: cICP has the highest priority, followed by
+          // iCCP and sRGB (which shouldn't co-exist, but if they do, we use
+          // iCCP), followed finally by gAMA and cHRM.
+          if (DecodeCICP(chunk.data() + 8, chunk.size() - 12,
+                         &ppf->color_encoding)) {
+            have_cicp = true;
+            have_color = true;
+            ppf->icc.clear();
+          }
+        } else if (!have_cicp && id == kId_iCCP) {
           if (processing_data(png_ptr, info_ptr, chunk.data(), chunk.size())) {
             JXL_WARNING("Corrupt iCCP chunk");
             break;
@@ -642,19 +789,20 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           if (ok && proflen) {
             ppf->icc.assign(profile, profile + proflen);
             have_color = true;
+            have_iccp = true;
           } else {
             // TODO(eustas): JXL_WARNING?
           }
-        } else if (id == kId_sRGB) {
+        } else if (!have_cicp && !have_iccp && id == kId_sRGB) {
           JXL_RETURN_IF_ERROR(DecodeSRGB(chunk.data() + 8, chunk.size() - 12,
                                          &ppf->color_encoding));
           have_srgb = true;
           have_color = true;
-        } else if (id == kId_gAMA) {
+        } else if (!have_cicp && !have_srgb && !have_iccp && id == kId_gAMA) {
           JXL_RETURN_IF_ERROR(DecodeGAMA(chunk.data() + 8, chunk.size() - 12,
                                          &ppf->color_encoding));
           have_color = true;
-        } else if (id == kId_cHRM) {
+        } else if (!have_cicp && !have_srgb && !have_iccp && id == kId_cHRM) {
           JXL_RETURN_IF_ERROR(DecodeCHRM(chunk.data() + 8, chunk.size() - 12,
                                          &ppf->color_encoding));
           have_color = true;
@@ -677,12 +825,6 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
       }
     }
 
-    if (have_srgb) {
-      ppf->color_encoding.white_point = JXL_WHITE_POINT_D65;
-      ppf->color_encoding.primaries = JXL_PRIMARIES_SRGB;
-      ppf->color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
-      ppf->color_encoding.rendering_intent = JXL_RENDERING_INTENT_PERCEPTUAL;
-    }
     JXL_RETURN_IF_ERROR(ApplyColorHints(
         color_hints, have_color, ppf->info.num_color_channels == 1, ppf));
   }

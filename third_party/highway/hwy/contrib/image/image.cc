@@ -15,7 +15,7 @@
 
 #include "hwy/contrib/image/image.h"
 
-#include <algorithm>  // swap
+#include <algorithm>  // std::swap
 #include <cstddef>
 
 #undef HWY_TARGET_INCLUDE

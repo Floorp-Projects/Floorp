@@ -16,7 +16,11 @@
 #ifndef HIGHWAY_HWY_TARGETS_H_
 #define HIGHWAY_HWY_TARGETS_H_
 
+// Allows opting out of C++ standard library usage, which is not available in
+// some Compiler Explorer environments.
+#ifndef HWY_NO_LIBCXX
 #include <vector>
+#endif
 
 // For SIMD module implementations and their callers. Defines which targets to
 // generate and call.
@@ -25,7 +29,7 @@
 #include "hwy/detect_targets.h"
 #include "hwy/highway_export.h"
 
-#if !HWY_ARCH_RVV
+#if !HWY_ARCH_RVV && !defined(HWY_NO_LIBCXX)
 #include <atomic>
 #endif
 
@@ -61,6 +65,8 @@ HWY_DLLEXPORT void DisableTargets(int64_t disabled_targets);
 // all targets.
 HWY_DLLEXPORT void SetSupportedTargetsForTest(int64_t targets);
 
+#ifndef HWY_NO_LIBCXX
+
 // Return the list of targets in HWY_TARGETS supported by the CPU as a list of
 // individual HWY_* target macros such as HWY_SCALAR or HWY_NEON. This list
 // is affected by the current SetSupportedTargetsForTest() mock if any.
@@ -73,6 +79,8 @@ HWY_INLINE std::vector<int64_t> SupportedAndGeneratedTargets() {
   }
   return ret;
 }
+
+#endif  // HWY_NO_LIBCXX
 
 static inline HWY_MAYBE_UNUSED const char* TargetName(int64_t target) {
   switch (target) {
@@ -296,8 +304,8 @@ struct ChosenTarget {
   }
 
  private:
-  // TODO(janwas): remove #if once <atomic> is available
-#if HWY_ARCH_RVV
+  // TODO(janwas): remove RVV once <atomic> is available
+#if HWY_ARCH_RVV || defined(HWY_NO_LIBCXX)
   int64_t LoadMask() const { return mask_; }
   void StoreMask(int64_t mask) { mask_ = mask; }
 

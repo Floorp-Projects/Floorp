@@ -291,6 +291,8 @@ set(JPEGXL_INTERNAL_SOURCES_ENC
   jxl/enc_entropy_coder.h
   jxl/enc_external_image.cc
   jxl/enc_external_image.h
+  jxl/enc_fast_lossless.cc
+  jxl/enc_fast_lossless.h
   jxl/enc_file.cc
   jxl/enc_file.h
   jxl/enc_frame.cc
@@ -360,6 +362,8 @@ set(JPEGXL_INTERNAL_SOURCES_ENC
   jxl/progressive_split.h
 )
 
+set_source_files_properties(jxl/enc_fast_lossless.cc PROPERTIES COMPILE_FLAGS -O3)
+
 set(JPEGXL_DEC_INTERNAL_LIBS
   hwy
   Threads::Threads
@@ -378,15 +382,6 @@ set(JPEGXL_INTERNAL_LIBS
   ${JPEGXL_DEC_INTERNAL_LIBS}
   brotlienc-static
 )
-
-# strips the -static suffix from all the elements in LIST
-function(strip_static OUTPUT_VAR LIB_LIST)
-  foreach(lib IN LISTS ${LIB_LIST})
-    string(REGEX REPLACE "-static$" "" lib "${lib}")
-    list(APPEND out_list "${lib}")
-  endforeach()
-  set(${OUTPUT_VAR} ${out_list} PARENT_SCOPE)
-endfunction()
 
 if (JPEGXL_ENABLE_SKCMS)
   list(APPEND JPEGXL_INTERNAL_FLAGS -DJPEGXL_ENABLE_SKCMS=1)

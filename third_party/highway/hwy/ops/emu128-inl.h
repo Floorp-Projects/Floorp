@@ -18,6 +18,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <cmath>  // std::abs, std::isnan
 
 #include "hwy/base.h"
 #include "hwy/ops/shared-inl.h"
@@ -32,6 +33,9 @@ using Full128 = Simd<T, 16 / sizeof(T), 0>;
 // (Wrapper class required for overloading comparison operators.)
 template <typename T, size_t N = 16 / sizeof(T)>
 struct Vec128 {
+  using PrivateT = T;                     // only for DFromV
+  static constexpr size_t kPrivateN = N;  // only for DFromV
+
   HWY_INLINE Vec128() = default;
   Vec128(const Vec128&) = default;
   Vec128& operator=(const Vec128&) = default;
@@ -78,23 +82,11 @@ struct Mask128 {
   Raw bits[16 / sizeof(T)] = {};
 };
 
-namespace detail {
-
-// Deduce Simd<T, N, 0> from Vec128<T, N>
-struct Deduce128 {
-  template <typename T, size_t N>
-  Simd<T, N, 0> operator()(Vec128<T, N>) const {
-    return Simd<T, N, 0>();
-  }
-};
-
-}  // namespace detail
+template <class V>
+using DFromV = Simd<typename V::PrivateT, V::kPrivateN, 0>;
 
 template <class V>
-using DFromV = decltype(detail::Deduce128()(V()));
-
-template <class V>
-using TFromV = TFromD<DFromV<V>>;
+using TFromV = typename V::PrivateT;
 
 // ------------------------------ BitCast
 
@@ -378,6 +370,12 @@ template <typename T, size_t N>
 HWY_API Mask128<T, N> Xor(const Mask128<T, N> a, Mask128<T, N> b) {
   const Simd<T, N, 0> d;
   return MaskFromVec(Xor(VecFromMask(d, a), VecFromMask(d, b)));
+}
+
+template <typename T, size_t N>
+HWY_API Mask128<T, N> ExclusiveNeither(const Mask128<T, N> a, Mask128<T, N> b) {
+  const Simd<T, N, 0> d;
+  return MaskFromVec(AndNot(VecFromMask(d, a), Not(VecFromMask(d, b))));
 }
 
 // ================================================== SHIFTS
@@ -1235,12 +1233,29 @@ HWY_API Mask128<uint64_t> Eq128(Simd<uint64_t, 2, 0> /* tag */,
   return ret;
 }
 
+HWY_API Mask128<uint64_t> Ne128(Simd<uint64_t, 2, 0> /* tag */,
+                                Vec128<uint64_t> a, const Vec128<uint64_t> b) {
+  const bool ne = a.raw[1] != b.raw[1] || a.raw[0] != b.raw[0];
+  Mask128<uint64_t> ret;
+  ret.bits[0] = ret.bits[1] = Mask128<uint64_t>::FromBool(ne);
+  return ret;
+}
+
 HWY_API Mask128<uint64_t> Eq128Upper(Simd<uint64_t, 2, 0> /* tag */,
                                      Vec128<uint64_t> a,
                                      const Vec128<uint64_t> b) {
   const bool eq = a.raw[1] == b.raw[1];
   Mask128<uint64_t> ret;
   ret.bits[0] = ret.bits[1] = Mask128<uint64_t>::FromBool(eq);
+  return ret;
+}
+
+HWY_API Mask128<uint64_t> Ne128Upper(Simd<uint64_t, 2, 0> /* tag */,
+                                     Vec128<uint64_t> a,
+                                     const Vec128<uint64_t> b) {
+  const bool ne = a.raw[1] != b.raw[1];
+  Mask128<uint64_t> ret;
+  ret.bits[0] = ret.bits[1] = Mask128<uint64_t>::FromBool(ne);
   return ret;
 }
 
@@ -1546,6 +1561,22 @@ HWY_API Vec128<bfloat16_t, 2 * N> ReorderDemote2To(
   // Avoid OddEven - we want the upper half of `a` even on big-endian systems.
   const Vec128<uint32_t, N> a_mask = Set(du32, 0xFFFF0000);
   return BitCast(dbf16, IfVecThenElse(a_mask, BitCast(du32, a), b_in_lower));
+}
+
+template <size_t N>
+HWY_API Vec128<int16_t, 2 * N> ReorderDemote2To(Simd<int16_t, 2 * N, 0> /*d16*/,
+                                                Vec128<int32_t, N> a,
+                                                Vec128<int32_t, N> b) {
+  const int16_t min = LimitsMin<int16_t>();
+  const int16_t max = LimitsMax<int16_t>();
+  Vec128<int16_t, 2 * N> ret;
+  for (size_t i = 0; i < N; ++i) {
+    ret.raw[i] = static_cast<int16_t>(HWY_MIN(HWY_MAX(min, a.raw[i]), max));
+  }
+  for (size_t i = 0; i < N; ++i) {
+    ret.raw[N + i] = static_cast<int16_t>(HWY_MIN(HWY_MAX(min, b.raw[i]), max));
+  }
+  return ret;
 }
 
 namespace detail {
@@ -2233,9 +2264,8 @@ HWY_API bool AllFalse(Simd<T, N, 0> /* tag */, const Mask128<T, N> mask) {
 
 template <typename T, size_t N>
 HWY_API bool AllTrue(Simd<T, N, 0> /* tag */, const Mask128<T, N> mask) {
-  using Bits = typename Mask128<T, N>::Raw;
-  constexpr Bits kAll = static_cast<Bits>(~Bits{0});
-  Bits and_sum = kAll;
+  constexpr uint64_t kAll = LimitsMax<typename Mask128<T, N>::Raw>();
+  uint64_t and_sum = kAll;
   for (size_t i = 0; i < N; ++i) {
     and_sum &= mask.bits[i];
   }
@@ -2278,6 +2308,16 @@ HWY_API size_t CountTrue(Simd<T, N, 0> /* tag */, const Mask128<T, N> mask) {
     count += mask.bits[i] != 0;
   }
   return count;
+}
+
+template <typename T, size_t N>
+HWY_API size_t FindKnownFirstTrue(Simd<T, N, 0> /* tag */,
+                               const Mask128<T, N> mask) {
+  for (size_t i = 0; i < N; ++i) {
+    if (mask.bits[i] != 0) return i;
+  }
+  HWY_DASSERT(false);
+  return 0;
 }
 
 template <typename T, size_t N>
@@ -2379,6 +2419,7 @@ HWY_API size_t CompressBitsStore(Vec128<T, N> v,
 }
 
 // ------------------------------ ReorderWidenMulAccumulate (MulAdd, ZipLower)
+
 template <size_t N>
 HWY_API Vec128<float, N> ReorderWidenMulAccumulate(Simd<float, N, 0> df32,
                                                    Vec128<bfloat16_t, 2 * N> a,
@@ -2393,6 +2434,20 @@ HWY_API Vec128<float, N> ReorderWidenMulAccumulate(Simd<float, N, 0> df32,
   const Vec128<float, N> b1 = PromoteTo(df32, UpperHalf(dbf16, b));
   sum1 = MulAdd(BitCast(df32, a1), BitCast(df32, b1), sum1);
   return MulAdd(BitCast(df32, a0), BitCast(df32, b0), sum0);
+}
+
+template <size_t N>
+HWY_API Vec128<int32_t, N> ReorderWidenMulAccumulate(
+    Simd<int32_t, N, 0> d32, Vec128<int16_t, 2 * N> a, Vec128<int16_t, 2 * N> b,
+    const Vec128<int32_t, N> sum0, Vec128<int32_t, N>& sum1) {
+  const Rebind<int16_t, decltype(d32)> d16;
+  // Avoid ZipLower/Upper so this also works on big-endian systems.
+  const Vec128<int32_t, N> a0 = PromoteTo(d32, LowerHalf(d16, a));
+  const Vec128<int32_t, N> a1 = PromoteTo(d32, UpperHalf(d16, a));
+  const Vec128<int32_t, N> b0 = PromoteTo(d32, LowerHalf(d16, b));
+  const Vec128<int32_t, N> b1 = PromoteTo(d32, UpperHalf(d16, b));
+  sum1 = MulAdd(BitCast(d32, a1), BitCast(d32, b1), sum1);
+  return MulAdd(BitCast(d32, a0), BitCast(d32, b0), sum0);
 }
 
 // ================================================== REDUCTIONS

@@ -7,16 +7,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <atomic>
 #include <chrono>
 #include <thread>
+#include <vector>
 
-#include "fast_lossless.h"
+#include "lib/jxl/enc_fast_lossless.h"
 #include "lodepng.h"
 #include "pam-input.h"
 
 int main(int argc, char** argv) {
   if (argc < 3) {
-    fprintf(stderr, "Usage: %s in.png out.jxl [effort] [num_reps]\n", argv[0]);
+    fprintf(stderr,
+            "Usage: %s in.png out.jxl [effort] [num_reps] [num_threads]\n",
+            argv[0]);
     return 1;
   }
 
@@ -24,6 +28,7 @@ int main(int argc, char** argv) {
   const char* out = argv[2];
   int effort = argc >= 4 ? atoi(argv[3]) : 2;
   size_t num_reps = argc >= 5 ? atoi(argv[4]) : 1;
+  size_t num_threads = argc >= 6 ? atoi(argv[5]) : 0;
 
   if (effort < 0 || effort > 127) {
     fprintf(
@@ -44,6 +49,35 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  auto parallel_runner = [](void* num_threads_ptr, void* opaque,
+                            void fun(void*, size_t), size_t count) {
+    size_t num_threads = *(size_t*)num_threads_ptr;
+    if (num_threads == 0) {
+      num_threads = std::thread::hardware_concurrency();
+    }
+    if (num_threads > count) {
+      num_threads = count;
+    }
+    if (num_threads == 1) {
+      for (size_t i = 0; i < count; i++) {
+        fun(opaque, i);
+      }
+    } else {
+      std::atomic<int> task{0};
+      std::vector<std::thread> threads;
+      for (size_t i = 0; i < num_threads; i++) {
+        threads.push_back(std::thread([count, opaque, fun, &task]() {
+          while (true) {
+            int t = task++;
+            if (t >= count) break;
+            fun(opaque, t);
+          }
+        }));
+      }
+      for (auto& t : threads) t.join();
+    }
+  };
+
   size_t encoded_size = 0;
   unsigned char* encoded = nullptr;
   size_t stride = width * nb_chans * (bitdepth > 8 ? 2 : 1);
@@ -51,8 +85,9 @@ int main(int argc, char** argv) {
   auto start = std::chrono::high_resolution_clock::now();
   for (size_t _ = 0; _ < num_reps; _++) {
     free(encoded);
-    encoded_size = JxlFastLosslessEncode(png, width, stride, height, nb_chans,
-                                         bitdepth, effort, &encoded);
+    encoded_size = JxlFastLosslessEncode(
+        png, width, stride, height, nb_chans, bitdepth,
+        /*big_endian=*/true, effort, &encoded, &num_threads, +parallel_runner);
   }
   auto stop = std::chrono::high_resolution_clock::now();
   if (num_reps > 1) {

@@ -54,6 +54,7 @@ struct TestSumOfLanes {
 
 HWY_NOINLINE void TestAllSumOfLanes() {
   ForUIF3264(ForPartialVectors<TestSumOfLanes>());
+  ForUI16(ForPartialVectors<TestSumOfLanes>());
 }
 
 struct TestMinOfLanes {
@@ -170,10 +171,8 @@ HWY_NOINLINE void TestAllMinMaxOfLanes() {
   const ForPartialVectors<TestMaxOfLanes> test_max;
   ForUIF3264(test_min);
   ForUIF3264(test_max);
-  test_min(uint16_t());
-  test_max(uint16_t());
-  test_min(int16_t());
-  test_max(int16_t());
+  ForUI16(test_min);
+  ForUI16(test_max);
 }
 
 struct TestSumsOf8 {

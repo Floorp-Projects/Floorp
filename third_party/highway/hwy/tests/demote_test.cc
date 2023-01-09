@@ -16,6 +16,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <cmath>  // std::isfinite
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/demote_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep

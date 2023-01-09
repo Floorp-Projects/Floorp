@@ -20,7 +20,8 @@ fi
 [ -f lodepng.h ] || curl -o lodepng.h --url 'https://raw.githubusercontent.com/lvandeve/lodepng/8c6a9e30576f07bf470ad6f09458a2dcd7a6a84a/lodepng.h'
 [ -f lodepng.o ] || "$CXX" lodepng.cpp -O3 -o lodepng.o -c
 
-"$CXX" -O3 -DFASTLL_ENABLE_NEON_INTRINSICS -fopenmp \
+"$CXX" -O3 \
   -I. lodepng.o \
-  "${DIR}"/fast_lossless.cc "${DIR}"/fast_lossless_main.cc \
+  -I"${DIR}"/../../ \
+  "${DIR}"/../../lib/jxl/enc_fast_lossless.cc "${DIR}"/fast_lossless_main.cc \
   -o fast_lossless

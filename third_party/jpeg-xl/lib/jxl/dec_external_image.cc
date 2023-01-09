@@ -489,17 +489,5 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
       pool, out_image, out_size, out_callback, undo_orientation);
 }
 
-Status ConvertToExternal(const jxl::ImageF& channel, size_t bits_per_sample,
-                         bool float_out, JxlEndianness endianness,
-                         size_t stride, jxl::ThreadPool* pool, void* out_image,
-                         size_t out_size, const PixelCallback& out_callback,
-                         jxl::Orientation undo_orientation) {
-  const ImageF* channels[1];
-  channels[0] = &channel;
-  return ConvertChannelsToExternal(channels, 1, bits_per_sample, float_out,
-                                   endianness, stride, pool, out_image,
-                                   out_size, out_callback, undo_orientation);
-}
-
 }  // namespace jxl
 #endif  // HWY_ONCE

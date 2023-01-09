@@ -35,7 +35,7 @@ namespace hwy {
 namespace HWY_NAMESPACE {
 
 // Prints lanes around `lane`, in memory order.
-template <class D, class V = Vec<D>>
+template <class D, class V = VFromD<D>>
 void Print(const D d, const char* caption, VecArg<V> v, size_t lane_u = 0,
            size_t max_lanes = 7) {
   const size_t N = Lanes(d);

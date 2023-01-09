@@ -11,7 +11,27 @@
 
 namespace jxl {
 
+bool SetJpegXlOutBuffer(
+    std::unique_ptr<JxlDecoderStruct, JxlDecoderDestroyStruct> *dec,
+    JxlPixelFormat *format, size_t *buffer_size, gpointer *pixels_buffer_1) {
+  if (JXL_DEC_SUCCESS !=
+      JxlDecoderImageOutBufferSize(dec->get(), format, buffer_size)) {
+    g_printerr(LOAD_PROC " Error: JxlDecoderImageOutBufferSize failed\n");
+    return false;
+  }
+  *pixels_buffer_1 = g_malloc(*buffer_size);
+  if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutBuffer(dec->get(), format,
+                                                     *pixels_buffer_1,
+                                                     *buffer_size)) {
+    g_printerr(LOAD_PROC " Error: JxlDecoderSetImageOutBuffer failed\n");
+    return false;
+  }
+  return true;
+}
+
 bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
+  bool stop_processing = false;
+  JxlDecoderStatus status = JXL_DEC_NEED_MORE_INPUT;
   std::vector<uint8_t> icc_profile;
   GimpColorProfile *profile_icc = nullptr;
   GimpColorProfile *profile_int = nullptr;
@@ -62,9 +82,10 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
 
   auto dec = JxlDecoderMake(nullptr);
   if (JXL_DEC_SUCCESS !=
-      JxlDecoderSubscribeEvents(dec.get(),
-                                JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING |
-                                    JXL_DEC_FULL_IMAGE | JXL_DEC_FRAME)) {
+      JxlDecoderSubscribeEvents(
+          dec.get(), JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING |
+                         JXL_DEC_FULL_IMAGE | JXL_DEC_FRAME_PROGRESSION |
+                         JXL_DEC_FRAME)) {
     g_printerr(LOAD_PROC " Error: JxlDecoderSubscribeEvents failed\n");
     return false;
   }
@@ -85,10 +106,16 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
   // grand decode loop...
   JxlDecoderSetInput(dec.get(), compressed.data(), compressed.size());
 
+  if (JXL_DEC_SUCCESS != JxlDecoderSetProgressiveDetail(
+                             dec.get(), JxlProgressiveDetail::kPasses)) {
+    g_printerr(LOAD_PROC " Error: JxlDecoderSetProgressiveDetail failed\n");
+    return false;
+  }
+
   while (true) {
     gimp_load_progress.update();
 
-    JxlDecoderStatus status = JxlDecoderProcessInput(dec.get());
+    if (!stop_processing) status = JxlDecoderProcessInput(dec.get());
 
     if (status == JXL_DEC_BASIC_INFO) {
       if (JXL_DEC_SUCCESS != JxlDecoderGetBasicInfo(dec.get(), &info)) {
@@ -316,18 +343,8 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
     } else if (status == JXL_DEC_NEED_IMAGE_OUT_BUFFER) {
       // get image from decoder in FLOAT
       format.data_type = JXL_TYPE_FLOAT;
-      if (JXL_DEC_SUCCESS !=
-          JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size)) {
-        g_printerr(LOAD_PROC " Error: JxlDecoderImageOutBufferSize failed\n");
+      if (!SetJpegXlOutBuffer(&dec, &format, &buffer_size, &pixels_buffer_1))
         return false;
-      }
-      pixels_buffer_1 = g_malloc(buffer_size);
-      if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutBuffer(dec.get(), &format,
-                                                         pixels_buffer_1,
-                                                         buffer_size)) {
-        g_printerr(LOAD_PROC " Error: JxlDecoderSetImageOutBuffer failed\n");
-        return false;
-      }
     } else if (status == JXL_DEC_FULL_IMAGE) {
       // create and insert layer
       gchar *layer_name;
@@ -390,6 +407,9 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
       gimp_item_transform_translate(layer, crop_x0, crop_y0);
 
       g_clear_object(&buffer);
+      g_free(pixels_buffer_1);
+      g_free(pixels_buffer_2);
+      if (stop_processing) status = JXL_DEC_SUCCESS;
       g_free(layer_name);
       layer_idx++;
     } else if (status == JXL_DEC_FRAME) {
@@ -424,7 +444,13 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
       // It's not required to call JxlDecoderReleaseInput(dec.get())
       // since the decoder will be destroyed.
       break;
-    } else if (status == JXL_DEC_NEED_MORE_INPUT) {
+    } else if (status == JXL_DEC_NEED_MORE_INPUT ||
+               status == JXL_DEC_FRAME_PROGRESSION) {
+      stop_processing = status != JXL_DEC_FRAME_PROGRESSION;
+      if (JxlDecoderFlushImage(dec.get()) == JXL_DEC_SUCCESS) {
+        status = JXL_DEC_FULL_IMAGE;
+        continue;
+      }
       g_printerr(LOAD_PROC " Error: Already provided all input\n");
       return false;
     } else if (status == JXL_DEC_ERROR) {

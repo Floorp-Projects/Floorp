@@ -143,7 +143,7 @@
 #define HWY_DEFAULT_UNROLL HWY_UNROLL()
 #else
 #define HWY_UNROLL(factor)
-#define HWY_DEFAULT_UNROLL HWY_UNROLL()
+#define HWY_DEFAULT_UNROLL
 #endif
 
 
@@ -293,6 +293,13 @@ struct alignas(16) K64V64 {
   uint64_t key;
 };
 
+// 32 bit key plus 32 bit value. Allows vqsort recursions to terminate earlier
+// than when considering both to be a 64-bit key.
+struct alignas(8) K32V32 {
+  uint32_t value;  // little-endian layout
+  uint32_t key;
+};
+
 #pragma pack(pop)
 
 static inline HWY_MAYBE_UNUSED bool operator<(const uint128_t& a,
@@ -304,6 +311,10 @@ static inline HWY_MAYBE_UNUSED bool operator>(const uint128_t& a,
                                               const uint128_t& b) {
   return b < a;
 }
+static inline HWY_MAYBE_UNUSED bool operator==(const uint128_t& a,
+                                               const uint128_t& b) {
+  return a.lo == b.lo && a.hi == b.hi;
+}
 
 static inline HWY_MAYBE_UNUSED bool operator<(const K64V64& a,
                                               const K64V64& b) {
@@ -313,6 +324,24 @@ static inline HWY_MAYBE_UNUSED bool operator<(const K64V64& a,
 static inline HWY_MAYBE_UNUSED bool operator>(const K64V64& a,
                                               const K64V64& b) {
   return b < a;
+}
+static inline HWY_MAYBE_UNUSED bool operator==(const K64V64& a,
+                                               const K64V64& b) {
+  return a.key == b.key;
+}
+
+static inline HWY_MAYBE_UNUSED bool operator<(const K32V32& a,
+                                              const K32V32& b) {
+  return a.key < b.key;
+}
+// Required for std::greater.
+static inline HWY_MAYBE_UNUSED bool operator>(const K32V32& a,
+                                              const K32V32& b) {
+  return b < a;
+}
+static inline HWY_MAYBE_UNUSED bool operator==(const K32V32& a,
+                                               const K32V32& b) {
+  return a.key == b.key;
 }
 
 //------------------------------------------------------------------------------
@@ -369,6 +398,8 @@ HWY_API constexpr bool IsSame() {
   hwy::EnableIf<sizeof(T) != (bytes)>* = nullptr
 #define HWY_IF_LANE_SIZE_LT(T, bytes) \
   hwy::EnableIf<sizeof(T) < (bytes)>* = nullptr
+#define HWY_IF_LANE_SIZE_GE(T, bytes) \
+  hwy::EnableIf<sizeof(T) >= (bytes)>* = nullptr
 
 #define HWY_IF_LANES_PER_BLOCK(T, N, LANES) \
   hwy::EnableIf<HWY_MIN(sizeof(T) * N, 16) / sizeof(T) == (LANES)>* = nullptr
@@ -401,16 +432,14 @@ struct Relations<uint8_t> {
   using Unsigned = uint8_t;
   using Signed = int8_t;
   using Wide = uint16_t;
-  enum { is_signed = 0 };
-  enum { is_float = 0 };
+  enum { is_signed = 0, is_float = 0 };
 };
 template <>
 struct Relations<int8_t> {
   using Unsigned = uint8_t;
   using Signed = int8_t;
   using Wide = int16_t;
-  enum { is_signed = 1 };
-  enum { is_float = 0 };
+  enum { is_signed = 1, is_float = 0 };
 };
 template <>
 struct Relations<uint16_t> {
@@ -418,8 +447,7 @@ struct Relations<uint16_t> {
   using Signed = int16_t;
   using Wide = uint32_t;
   using Narrow = uint8_t;
-  enum { is_signed = 0 };
-  enum { is_float = 0 };
+  enum { is_signed = 0, is_float = 0 };
 };
 template <>
 struct Relations<int16_t> {
@@ -427,8 +455,7 @@ struct Relations<int16_t> {
   using Signed = int16_t;
   using Wide = int32_t;
   using Narrow = int8_t;
-  enum { is_signed = 1 };
-  enum { is_float = 0 };
+  enum { is_signed = 1, is_float = 0 };
 };
 template <>
 struct Relations<uint32_t> {
@@ -437,8 +464,7 @@ struct Relations<uint32_t> {
   using Float = float;
   using Wide = uint64_t;
   using Narrow = uint16_t;
-  enum { is_signed = 0 };
-  enum { is_float = 0 };
+  enum { is_signed = 0, is_float = 0 };
 };
 template <>
 struct Relations<int32_t> {
@@ -447,8 +473,7 @@ struct Relations<int32_t> {
   using Float = float;
   using Wide = int64_t;
   using Narrow = int16_t;
-  enum { is_signed = 1 };
-  enum { is_float = 0 };
+  enum { is_signed = 1, is_float = 0 };
 };
 template <>
 struct Relations<uint64_t> {
@@ -457,8 +482,7 @@ struct Relations<uint64_t> {
   using Float = double;
   using Wide = uint128_t;
   using Narrow = uint32_t;
-  enum { is_signed = 0 };
-  enum { is_float = 0 };
+  enum { is_signed = 0, is_float = 0 };
 };
 template <>
 struct Relations<int64_t> {
@@ -466,15 +490,13 @@ struct Relations<int64_t> {
   using Signed = int64_t;
   using Float = double;
   using Narrow = int32_t;
-  enum { is_signed = 1 };
-  enum { is_float = 0 };
+  enum { is_signed = 1, is_float = 0 };
 };
 template <>
 struct Relations<uint128_t> {
   using Unsigned = uint128_t;
   using Narrow = uint64_t;
-  enum { is_signed = 0 };
-  enum { is_float = 0 };
+  enum { is_signed = 0, is_float = 0 };
 };
 template <>
 struct Relations<float16_t> {
@@ -482,16 +504,14 @@ struct Relations<float16_t> {
   using Signed = int16_t;
   using Float = float16_t;
   using Wide = float;
-  enum { is_signed = 1 };
-  enum { is_float = 1 };
+  enum { is_signed = 1, is_float = 1 };
 };
 template <>
 struct Relations<bfloat16_t> {
   using Unsigned = uint16_t;
   using Signed = int16_t;
   using Wide = float;
-  enum { is_signed = 1 };
-  enum { is_float = 1 };
+  enum { is_signed = 1, is_float = 1 };
 };
 template <>
 struct Relations<float> {
@@ -500,8 +520,7 @@ struct Relations<float> {
   using Float = float;
   using Wide = double;
   using Narrow = float16_t;
-  enum { is_signed = 1 };
-  enum { is_float = 1 };
+  enum { is_signed = 1, is_float = 1 };
 };
 template <>
 struct Relations<double> {
@@ -509,8 +528,7 @@ struct Relations<double> {
   using Signed = int64_t;
   using Float = double;
   using Narrow = float;
-  enum { is_signed = 1 };
-  enum { is_float = 1 };
+  enum { is_signed = 1, is_float = 1 };
 };
 
 template <size_t N>
@@ -647,6 +665,20 @@ constexpr float HighestValue<float>() {
 template <>
 constexpr double HighestValue<double>() {
   return 1.7976931348623158e+308;
+}
+
+// Difference between 1.0 and the next representable value.
+template <typename T>
+HWY_API constexpr T Epsilon() {
+  return 1;
+}
+template <>
+constexpr float Epsilon<float>() {
+  return 1.192092896e-7f;
+}
+template <>
+constexpr double Epsilon<double>() {
+  return 2.2204460492503131e-16;
 }
 
 // Returns width in bits of the mantissa field in IEEE binary32/64.

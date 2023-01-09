@@ -52,10 +52,11 @@ HWY_ATTR_NO_MSAN void OneFloorLog2(const DF df,
   // Type tags for converting to other element types (Rebind = same count).
   const hn::RebindToSigned<DF> d32;
   const hn::Rebind<uint8_t, DF> d8;
+  using VI32 = hn::Vec<decltype(d32)>;
 
-  const auto u8 = hn::Load(d8, values);
-  const auto bits = hn::BitCast(d32, hn::ConvertTo(df, hn::PromoteTo(d32, u8)));
-  const auto exponent = hn::Sub(hn::ShiftRight<23>(bits), hn::Set(d32, 127));
+  const VI32 vi32 = hn::PromoteTo(d32, hn::Load(d8, values));
+  const VI32 bits = hn::BitCast(d32, hn::ConvertTo(df, vi32));
+  const VI32 exponent = hn::Sub(hn::ShiftRight<23>(bits), hn::Set(d32, 127));
   hn::Store(hn::DemoteTo(d8, exponent), d8, log2);
 }
 

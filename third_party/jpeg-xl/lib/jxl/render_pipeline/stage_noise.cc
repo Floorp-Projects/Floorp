@@ -68,9 +68,10 @@ class StrengthEvalLut {
     auto scaled_vx = Max(Zero(D()), Mul(vx, Set(D(), kScale)));
     auto floor_x = Floor(scaled_vx);
     auto frac_x = Sub(scaled_vx, floor_x);
-    floor_x = IfThenElse(Ge(scaled_vx, Set(D(), kScale)), Set(D(), kScale - 1),
+    floor_x = IfThenElse(Ge(scaled_vx, Set(D(), kScale + 1)), Set(D(), kScale),
                          floor_x);
-    frac_x = IfThenElse(Ge(scaled_vx, Set(D(), kScale)), Set(D(), 1), frac_x);
+    frac_x =
+        IfThenElse(Ge(scaled_vx, Set(D(), kScale + 1)), Set(D(), 1), frac_x);
     auto floor_x_int = ConvertTo(DI(), floor_x);
 #if HWY_TARGET == HWY_SCALAR
     auto low = Set(D(), noise_params_.lut[floor_x_int.raw]);

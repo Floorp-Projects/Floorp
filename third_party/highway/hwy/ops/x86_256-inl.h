@@ -83,6 +83,9 @@ class Vec256 {
   using Raw = typename detail::Raw256<T>::type;
 
  public:
+  using PrivateT = T;                                  // only for DFromV
+  static constexpr size_t kPrivateN = 32 / sizeof(T);  // only for DFromV
+
   // Compound assignment. Only usable if there is a corresponding non-member
   // binary operator overload. For example, only f32 and f64 support division.
   HWY_INLINE Vec256& operator*=(const Vec256 other) {
@@ -156,6 +159,9 @@ struct Mask256 {
 };
 
 #endif  // HWY_TARGET <= HWY_AVX3
+
+template <typename T>
+using Full256 = Simd<T, 32 / sizeof(T), 0>;
 
 // ------------------------------ BitCast
 
@@ -764,6 +770,43 @@ HWY_INLINE Mask256<T> Xor(hwy::SizeTag<8> /*tag*/, const Mask256<T> a,
 #endif
 }
 
+template <typename T>
+HWY_INLINE Mask256<T> ExclusiveNeither(hwy::SizeTag<1> /*tag*/,
+                                       const Mask256<T> a, const Mask256<T> b) {
+#if HWY_COMPILER_HAS_MASK_INTRINSICS
+  return Mask256<T>{_kxnor_mask32(a.raw, b.raw)};
+#else
+  return Mask256<T>{static_cast<__mmask32>(~(a.raw ^ b.raw) & 0xFFFFFFFF)};
+#endif
+}
+template <typename T>
+HWY_INLINE Mask256<T> ExclusiveNeither(hwy::SizeTag<2> /*tag*/,
+                                       const Mask256<T> a, const Mask256<T> b) {
+#if HWY_COMPILER_HAS_MASK_INTRINSICS
+  return Mask256<T>{_kxnor_mask16(a.raw, b.raw)};
+#else
+  return Mask256<T>{static_cast<__mmask16>(~(a.raw ^ b.raw) & 0xFFFF)};
+#endif
+}
+template <typename T>
+HWY_INLINE Mask256<T> ExclusiveNeither(hwy::SizeTag<4> /*tag*/,
+                                       const Mask256<T> a, const Mask256<T> b) {
+#if HWY_COMPILER_HAS_MASK_INTRINSICS
+  return Mask256<T>{_kxnor_mask8(a.raw, b.raw)};
+#else
+  return Mask256<T>{static_cast<__mmask8>(~(a.raw ^ b.raw) & 0xFF)};
+#endif
+}
+template <typename T>
+HWY_INLINE Mask256<T> ExclusiveNeither(hwy::SizeTag<8> /*tag*/,
+                                       const Mask256<T> a, const Mask256<T> b) {
+#if HWY_COMPILER_HAS_MASK_INTRINSICS
+  return Mask256<T>{static_cast<__mmask8>(_kxnor_mask8(a.raw, b.raw) & 0xF)};
+#else
+  return Mask256<T>{static_cast<__mmask8>(~(a.raw ^ b.raw) & 0xF)};
+#endif
+}
+
 }  // namespace detail
 
 template <typename T>
@@ -791,6 +834,11 @@ HWY_API Mask256<T> Not(const Mask256<T> m) {
   // Flip only the valid bits.
   constexpr size_t N = 32 / sizeof(T);
   return Xor(m, Mask256<T>::FromBits((1ull << N) - 1));
+}
+
+template <typename T>
+HWY_API Mask256<T> ExclusiveNeither(const Mask256<T> a, Mask256<T> b) {
+  return detail::ExclusiveNeither(hwy::SizeTag<sizeof(T)>(), a, b);
 }
 
 #else  // AVX2
@@ -881,6 +929,12 @@ template <typename T>
 HWY_API Mask256<T> Xor(const Mask256<T> a, Mask256<T> b) {
   const Full256<T> d;
   return MaskFromVec(Xor(VecFromMask(d, a), VecFromMask(d, b)));
+}
+
+template <typename T>
+HWY_API Mask256<T> ExclusiveNeither(const Mask256<T> a, Mask256<T> b) {
+  const Full256<T> d;
+  return MaskFromVec(AndNot(VecFromMask(d, a), Not(VecFromMask(d, b))));
 }
 
 #endif  // HWY_TARGET <= HWY_AVX3
@@ -2866,6 +2920,7 @@ HWY_API Vec256<float> Shuffle2301(const Vec256<float> v) {
   return Vec256<float>{_mm256_shuffle_ps(v.raw, v.raw, 0xB1)};
 }
 
+// Used by generic_ops-inl.h
 namespace detail {
 
 template <typename T, HWY_IF_LANE_SIZE(T, 4)>
@@ -3694,7 +3749,7 @@ HWY_API Vec256<TI> TableLookupBytes(const Vec128<T, N> bytes,
 
 namespace detail {
 
-#if HWY_TARGET > HWY_AVX3  // AVX2 or older
+#if HWY_TARGET > HWY_AVX3 && !HWY_IDE  // AVX2 or older
 
 // Returns 2^v for use as per-lane multipliers to emulate 16-bit shifts.
 template <typename T>
@@ -3721,7 +3776,7 @@ HWY_INLINE Vec256<MakeUnsigned<T>> Pow2(const Vec256<T> v) {
 
 HWY_INLINE Vec256<uint16_t> Shl(hwy::UnsignedTag /*tag*/, Vec256<uint16_t> v,
                                 Vec256<uint16_t> bits) {
-#if HWY_TARGET <= HWY_AVX3
+#if HWY_TARGET <= HWY_AVX3 || HWY_IDE
   return Vec256<uint16_t>{_mm256_sllv_epi16(v.raw, bits.raw)};
 #else
   return v * Pow2(bits);
@@ -3757,7 +3812,7 @@ HWY_API Vec256<T> operator<<(Vec256<T> v, Vec256<T> bits) {
 // ------------------------------ Shr (MulHigh, IfThenElse, Not)
 
 HWY_API Vec256<uint16_t> operator>>(Vec256<uint16_t> v, Vec256<uint16_t> bits) {
-#if HWY_TARGET <= HWY_AVX3
+#if HWY_TARGET <= HWY_AVX3 || HWY_IDE
   return Vec256<uint16_t>{_mm256_srlv_epi16(v.raw, bits.raw)};
 #else
   Full256<uint16_t> d;
@@ -3798,7 +3853,7 @@ HWY_API Vec256<int64_t> operator>>(Vec256<int64_t> v, Vec256<int64_t> bits) {
 
 HWY_INLINE Vec256<uint64_t> MulEven(const Vec256<uint64_t> a,
                                     const Vec256<uint64_t> b) {
-  const DFromV<decltype(a)> du64;
+  const Full256<uint64_t> du64;
   const RepartitionToNarrow<decltype(du64)> du32;
   const auto maskL = Set(du64, 0xFFFFFFFFULL);
   const auto a32 = BitCast(du32, a);
@@ -3827,7 +3882,7 @@ HWY_INLINE Vec256<uint64_t> MulEven(const Vec256<uint64_t> a,
 
 HWY_INLINE Vec256<uint64_t> MulOdd(const Vec256<uint64_t> a,
                                    const Vec256<uint64_t> b) {
-  const DFromV<decltype(a)> du64;
+  const Full256<uint64_t> du64;
   const RepartitionToNarrow<decltype(du64)> du32;
   const auto maskL = Set(du64, 0xFFFFFFFFULL);
   const auto a32 = BitCast(du32, a);
@@ -3852,25 +3907,13 @@ HWY_INLINE Vec256<uint64_t> MulOdd(const Vec256<uint64_t> a,
   return InterleaveUpper(du64, mulL, mulH);
 }
 
-// ------------------------------ ReorderWidenMulAccumulate (MulAdd, ZipLower)
-
-HWY_API Vec256<float> ReorderWidenMulAccumulate(Full256<float> df32,
-                                                Vec256<bfloat16_t> a,
-                                                Vec256<bfloat16_t> b,
-                                                const Vec256<float> sum0,
-                                                Vec256<float>& sum1) {
-  // TODO(janwas): _mm256_dpbf16_ps when available
-  const Repartition<uint16_t, decltype(df32)> du16;
-  const RebindToUnsigned<decltype(df32)> du32;
-  const Vec256<uint16_t> zero = Zero(du16);
-  // Lane order within sum0/1 is undefined, hence we can avoid the
-  // longer-latency lane-crossing PromoteTo.
-  const Vec256<uint32_t> a0 = ZipLower(du32, zero, BitCast(du16, a));
-  const Vec256<uint32_t> a1 = ZipUpper(du32, zero, BitCast(du16, a));
-  const Vec256<uint32_t> b0 = ZipLower(du32, zero, BitCast(du16, b));
-  const Vec256<uint32_t> b1 = ZipUpper(du32, zero, BitCast(du16, b));
-  sum1 = MulAdd(BitCast(df32, a1), BitCast(df32, b1), sum1);
-  return MulAdd(BitCast(df32, a0), BitCast(df32, b0), sum0);
+// ------------------------------ ReorderWidenMulAccumulate
+HWY_API Vec256<int32_t> ReorderWidenMulAccumulate(Full256<int32_t> /*d32*/,
+                                                  Vec256<int16_t> a,
+                                                  Vec256<int16_t> b,
+                                                  const Vec256<int32_t> sum0,
+                                                  Vec256<int32_t>& /*sum1*/) {
+  return sum0 + Vec256<int32_t>{_mm256_madd_epi16(a.raw, b.raw)};
 }
 
 // ================================================== CONVERT
@@ -4053,6 +4096,11 @@ HWY_API Vec256<bfloat16_t> ReorderDemote2To(Full256<bfloat16_t> dbf16,
   return BitCast(dbf16, OddEven(BitCast(du16, a), BitCast(du16, b_in_even)));
 }
 
+HWY_API Vec256<int16_t> ReorderDemote2To(Full256<int16_t> /*d16*/,
+                                         Vec256<int32_t> a, Vec256<int32_t> b) {
+  return Vec256<int16_t>{_mm256_packs_epi32(a.raw, b.raw)};
+}
+
 HWY_API Vec128<float> DemoteTo(Full128<float> /* tag */,
                                const Vec256<double> v) {
   return Vec128<float>{_mm256_cvtpd_ps(v.raw)};
@@ -4218,7 +4266,7 @@ HWY_API Vec256<float> ConvertTo(HWY_MAYBE_UNUSED Full256<float> df,
   const RebindToSigned<decltype(df)> d32;
 
   const auto msk_lo = Set(du32, 0xFFFF);
-  const auto cnst2_16_flt = Set(df, 65536.0f); // 2^16
+  const auto cnst2_16_flt = Set(df, 65536.0f);  // 2^16
 
   // Extract the 16 lowest/highest significant bits of v and cast to signed int
   const auto v_lo = BitCast(d32, And(v, msk_lo));
@@ -4238,9 +4286,9 @@ HWY_API Vec256<double> ConvertTo(HWY_MAYBE_UNUSED Full256<double> dd,
   using VU = VFromD<decltype(d64)>;
 
   const VU msk_lo = Set(d64, 0xFFFFFFFFULL);
-  const auto cnst2_32_dbl = Set(dd, 4294967296.0); // 2^32
+  const auto cnst2_32_dbl = Set(dd, 4294967296.0);  // 2^32
 
-   // Extract the 32 lowest significant bits of v
+  // Extract the 32 lowest significant bits of v
   const VU v_lo = And(v, msk_lo);
   const VU v_hi = ShiftRight<32>(v);
 
@@ -4458,9 +4506,15 @@ HWY_API size_t CountTrue(const Full256<T> /* tag */, const Mask256<T> mask) {
 }
 
 template <typename T>
-HWY_API intptr_t FindFirstTrue(const Full256<T> /* tag */,
-                               const Mask256<T> mask) {
-  return mask.raw ? intptr_t(Num0BitsBelowLS1Bit_Nonzero32(mask.raw)) : -1;
+HWY_API size_t FindKnownFirstTrue(const Full256<T> /* tag */,
+                                  const Mask256<T> mask) {
+  return Num0BitsBelowLS1Bit_Nonzero32(mask.raw);
+}
+
+template <typename T>
+HWY_API intptr_t FindFirstTrue(const Full256<T> d, const Mask256<T> mask) {
+  return mask.raw ? static_cast<intptr_t>(FindKnownFirstTrue(d, mask))
+                  : intptr_t{-1};
 }
 
 // Beware: the suffix indicates the number of mask bits, not lane size!
@@ -4904,6 +4958,13 @@ HWY_API size_t CountTrue(const Full256<T> /* tag */, const Mask256<T> mask) {
 }
 
 template <typename T>
+HWY_API size_t FindKnownFirstTrue(const Full256<T> /* tag */,
+                                  const Mask256<T> mask) {
+  const uint64_t mask_bits = detail::BitsFromMask(mask);
+  return Num0BitsBelowLS1Bit_Nonzero64(mask_bits);
+}
+
+template <typename T>
 HWY_API intptr_t FindFirstTrue(const Full256<T> /* tag */,
                                const Mask256<T> mask) {
   const uint64_t mask_bits = detail::BitsFromMask(mask);
@@ -4915,8 +4976,7 @@ HWY_API intptr_t FindFirstTrue(const Full256<T> /* tag */,
 namespace detail {
 
 template <typename T, HWY_IF_LANE_SIZE(T, 4)>
-HWY_INLINE Indices256<uint32_t> IndicesFromBits(Full256<T> d,
-                                                uint64_t mask_bits) {
+HWY_INLINE Vec256<uint32_t> IndicesFromBits(Full256<T> d, uint64_t mask_bits) {
   const RebindToUnsigned<decltype(d)> d32;
   // We need a masked Iota(). With 8 lanes, there are 256 combinations and a LUT
   // of SetTableIndices would require 8 KiB, a large part of L1D. The other
@@ -4925,49 +4985,49 @@ HWY_INLINE Indices256<uint32_t> IndicesFromBits(Full256<T> d,
   // bits, for a total of 1 KiB.
   alignas(16) constexpr uint32_t packed_array[256] = {
       // PrintCompress32x8Tables
-      0x76543210, 0x76543210, 0x76543201, 0x76543210, 0x76543102, 0x76543120,
-      0x76543021, 0x76543210, 0x76542103, 0x76542130, 0x76542031, 0x76542310,
-      0x76541032, 0x76541320, 0x76540321, 0x76543210, 0x76532104, 0x76532140,
-      0x76532041, 0x76532410, 0x76531042, 0x76531420, 0x76530421, 0x76534210,
-      0x76521043, 0x76521430, 0x76520431, 0x76524310, 0x76510432, 0x76514320,
-      0x76504321, 0x76543210, 0x76432105, 0x76432150, 0x76432051, 0x76432510,
-      0x76431052, 0x76431520, 0x76430521, 0x76435210, 0x76421053, 0x76421530,
-      0x76420531, 0x76425310, 0x76410532, 0x76415320, 0x76405321, 0x76453210,
-      0x76321054, 0x76321540, 0x76320541, 0x76325410, 0x76310542, 0x76315420,
-      0x76305421, 0x76354210, 0x76210543, 0x76215430, 0x76205431, 0x76254310,
-      0x76105432, 0x76154320, 0x76054321, 0x76543210, 0x75432106, 0x75432160,
-      0x75432061, 0x75432610, 0x75431062, 0x75431620, 0x75430621, 0x75436210,
-      0x75421063, 0x75421630, 0x75420631, 0x75426310, 0x75410632, 0x75416320,
-      0x75406321, 0x75463210, 0x75321064, 0x75321640, 0x75320641, 0x75326410,
-      0x75310642, 0x75316420, 0x75306421, 0x75364210, 0x75210643, 0x75216430,
-      0x75206431, 0x75264310, 0x75106432, 0x75164320, 0x75064321, 0x75643210,
-      0x74321065, 0x74321650, 0x74320651, 0x74326510, 0x74310652, 0x74316520,
-      0x74306521, 0x74365210, 0x74210653, 0x74216530, 0x74206531, 0x74265310,
-      0x74106532, 0x74165320, 0x74065321, 0x74653210, 0x73210654, 0x73216540,
-      0x73206541, 0x73265410, 0x73106542, 0x73165420, 0x73065421, 0x73654210,
-      0x72106543, 0x72165430, 0x72065431, 0x72654310, 0x71065432, 0x71654320,
-      0x70654321, 0x76543210, 0x65432107, 0x65432170, 0x65432071, 0x65432710,
-      0x65431072, 0x65431720, 0x65430721, 0x65437210, 0x65421073, 0x65421730,
-      0x65420731, 0x65427310, 0x65410732, 0x65417320, 0x65407321, 0x65473210,
-      0x65321074, 0x65321740, 0x65320741, 0x65327410, 0x65310742, 0x65317420,
-      0x65307421, 0x65374210, 0x65210743, 0x65217430, 0x65207431, 0x65274310,
-      0x65107432, 0x65174320, 0x65074321, 0x65743210, 0x64321075, 0x64321750,
-      0x64320751, 0x64327510, 0x64310752, 0x64317520, 0x64307521, 0x64375210,
-      0x64210753, 0x64217530, 0x64207531, 0x64275310, 0x64107532, 0x64175320,
-      0x64075321, 0x64753210, 0x63210754, 0x63217540, 0x63207541, 0x63275410,
-      0x63107542, 0x63175420, 0x63075421, 0x63754210, 0x62107543, 0x62175430,
-      0x62075431, 0x62754310, 0x61075432, 0x61754320, 0x60754321, 0x67543210,
-      0x54321076, 0x54321760, 0x54320761, 0x54327610, 0x54310762, 0x54317620,
-      0x54307621, 0x54376210, 0x54210763, 0x54217630, 0x54207631, 0x54276310,
-      0x54107632, 0x54176320, 0x54076321, 0x54763210, 0x53210764, 0x53217640,
-      0x53207641, 0x53276410, 0x53107642, 0x53176420, 0x53076421, 0x53764210,
-      0x52107643, 0x52176430, 0x52076431, 0x52764310, 0x51076432, 0x51764320,
-      0x50764321, 0x57643210, 0x43210765, 0x43217650, 0x43207651, 0x43276510,
-      0x43107652, 0x43176520, 0x43076521, 0x43765210, 0x42107653, 0x42176530,
-      0x42076531, 0x42765310, 0x41076532, 0x41765320, 0x40765321, 0x47653210,
-      0x32107654, 0x32176540, 0x32076541, 0x32765410, 0x31076542, 0x31765420,
-      0x30765421, 0x37654210, 0x21076543, 0x21765430, 0x20765431, 0x27654310,
-      0x10765432, 0x17654320, 0x07654321, 0x76543210};
+      0x76543210, 0x76543218, 0x76543209, 0x76543298, 0x7654310a, 0x765431a8,
+      0x765430a9, 0x76543a98, 0x7654210b, 0x765421b8, 0x765420b9, 0x76542b98,
+      0x765410ba, 0x76541ba8, 0x76540ba9, 0x7654ba98, 0x7653210c, 0x765321c8,
+      0x765320c9, 0x76532c98, 0x765310ca, 0x76531ca8, 0x76530ca9, 0x7653ca98,
+      0x765210cb, 0x76521cb8, 0x76520cb9, 0x7652cb98, 0x76510cba, 0x7651cba8,
+      0x7650cba9, 0x765cba98, 0x7643210d, 0x764321d8, 0x764320d9, 0x76432d98,
+      0x764310da, 0x76431da8, 0x76430da9, 0x7643da98, 0x764210db, 0x76421db8,
+      0x76420db9, 0x7642db98, 0x76410dba, 0x7641dba8, 0x7640dba9, 0x764dba98,
+      0x763210dc, 0x76321dc8, 0x76320dc9, 0x7632dc98, 0x76310dca, 0x7631dca8,
+      0x7630dca9, 0x763dca98, 0x76210dcb, 0x7621dcb8, 0x7620dcb9, 0x762dcb98,
+      0x7610dcba, 0x761dcba8, 0x760dcba9, 0x76dcba98, 0x7543210e, 0x754321e8,
+      0x754320e9, 0x75432e98, 0x754310ea, 0x75431ea8, 0x75430ea9, 0x7543ea98,
+      0x754210eb, 0x75421eb8, 0x75420eb9, 0x7542eb98, 0x75410eba, 0x7541eba8,
+      0x7540eba9, 0x754eba98, 0x753210ec, 0x75321ec8, 0x75320ec9, 0x7532ec98,
+      0x75310eca, 0x7531eca8, 0x7530eca9, 0x753eca98, 0x75210ecb, 0x7521ecb8,
+      0x7520ecb9, 0x752ecb98, 0x7510ecba, 0x751ecba8, 0x750ecba9, 0x75ecba98,
+      0x743210ed, 0x74321ed8, 0x74320ed9, 0x7432ed98, 0x74310eda, 0x7431eda8,
+      0x7430eda9, 0x743eda98, 0x74210edb, 0x7421edb8, 0x7420edb9, 0x742edb98,
+      0x7410edba, 0x741edba8, 0x740edba9, 0x74edba98, 0x73210edc, 0x7321edc8,
+      0x7320edc9, 0x732edc98, 0x7310edca, 0x731edca8, 0x730edca9, 0x73edca98,
+      0x7210edcb, 0x721edcb8, 0x720edcb9, 0x72edcb98, 0x710edcba, 0x71edcba8,
+      0x70edcba9, 0x7edcba98, 0x6543210f, 0x654321f8, 0x654320f9, 0x65432f98,
+      0x654310fa, 0x65431fa8, 0x65430fa9, 0x6543fa98, 0x654210fb, 0x65421fb8,
+      0x65420fb9, 0x6542fb98, 0x65410fba, 0x6541fba8, 0x6540fba9, 0x654fba98,
+      0x653210fc, 0x65321fc8, 0x65320fc9, 0x6532fc98, 0x65310fca, 0x6531fca8,
+      0x6530fca9, 0x653fca98, 0x65210fcb, 0x6521fcb8, 0x6520fcb9, 0x652fcb98,
+      0x6510fcba, 0x651fcba8, 0x650fcba9, 0x65fcba98, 0x643210fd, 0x64321fd8,
+      0x64320fd9, 0x6432fd98, 0x64310fda, 0x6431fda8, 0x6430fda9, 0x643fda98,
+      0x64210fdb, 0x6421fdb8, 0x6420fdb9, 0x642fdb98, 0x6410fdba, 0x641fdba8,
+      0x640fdba9, 0x64fdba98, 0x63210fdc, 0x6321fdc8, 0x6320fdc9, 0x632fdc98,
+      0x6310fdca, 0x631fdca8, 0x630fdca9, 0x63fdca98, 0x6210fdcb, 0x621fdcb8,
+      0x620fdcb9, 0x62fdcb98, 0x610fdcba, 0x61fdcba8, 0x60fdcba9, 0x6fdcba98,
+      0x543210fe, 0x54321fe8, 0x54320fe9, 0x5432fe98, 0x54310fea, 0x5431fea8,
+      0x5430fea9, 0x543fea98, 0x54210feb, 0x5421feb8, 0x5420feb9, 0x542feb98,
+      0x5410feba, 0x541feba8, 0x540feba9, 0x54feba98, 0x53210fec, 0x5321fec8,
+      0x5320fec9, 0x532fec98, 0x5310feca, 0x531feca8, 0x530feca9, 0x53feca98,
+      0x5210fecb, 0x521fecb8, 0x520fecb9, 0x52fecb98, 0x510fecba, 0x51fecba8,
+      0x50fecba9, 0x5fecba98, 0x43210fed, 0x4321fed8, 0x4320fed9, 0x432fed98,
+      0x4310feda, 0x431feda8, 0x430feda9, 0x43feda98, 0x4210fedb, 0x421fedb8,
+      0x420fedb9, 0x42fedb98, 0x410fedba, 0x41fedba8, 0x40fedba9, 0x4fedba98,
+      0x3210fedc, 0x321fedc8, 0x320fedc9, 0x32fedc98, 0x310fedca, 0x31fedca8,
+      0x30fedca9, 0x3fedca98, 0x210fedcb, 0x21fedcb8, 0x20fedcb9, 0x2fedcb98,
+      0x10fedcba, 0x1fedcba8, 0x0fedcba9, 0xfedcba98};
 
   // No need to mask because _mm256_permutevar8x32_epi32 ignores bits 3..31.
   // Just shift each copy of the 32 bit LUT to extract its 4-bit fields.
@@ -4975,12 +5035,11 @@ HWY_INLINE Indices256<uint32_t> IndicesFromBits(Full256<T> d,
   // latency, it may be faster to use LoadDup128 and PSHUFB.
   const auto packed = Set(d32, packed_array[mask_bits]);
   alignas(32) constexpr uint32_t shifts[8] = {0, 4, 8, 12, 16, 20, 24, 28};
-  return Indices256<uint32_t>{(packed >> Load(d32, shifts)).raw};
+  return packed >> Load(d32, shifts);
 }
 
 template <typename T, HWY_IF_LANE_SIZE(T, 8)>
-HWY_INLINE Indices256<uint32_t> IndicesFromBits(Full256<T> d,
-                                                uint64_t mask_bits) {
+HWY_INLINE Vec256<uint32_t> IndicesFromBits(Full256<T> d, uint64_t mask_bits) {
   const Repartition<uint32_t, decltype(d)> d32;
 
   // For 64-bit, we still need 32-bit indices because there is no 64-bit
@@ -4988,18 +5047,20 @@ HWY_INLINE Indices256<uint32_t> IndicesFromBits(Full256<T> d,
   // unpacking and load the entire index vector directly.
   alignas(32) constexpr uint32_t u32_indices[128] = {
       // PrintCompress64x4PairTables
-      0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 0, 1, 4, 5,
-      6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 4, 5, 0, 1, 2, 3, 6, 7, 0, 1, 4, 5,
-      2, 3, 6, 7, 2, 3, 4, 5, 0, 1, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 6, 7,
-      0, 1, 2, 3, 4, 5, 0, 1, 6, 7, 2, 3, 4, 5, 2, 3, 6, 7, 0, 1, 4, 5,
-      0, 1, 2, 3, 6, 7, 4, 5, 4, 5, 6, 7, 0, 1, 2, 3, 0, 1, 4, 5, 6, 7,
-      2, 3, 2, 3, 4, 5, 6, 7, 0, 1, 0, 1, 2, 3, 4, 5, 6, 7};
-  return Indices256<uint32_t>{Load(d32, u32_indices + 8 * mask_bits).raw};
+      0,  1,  2,  3,  4,  5,  6, 7, 8, 9, 2,  3,  4,  5,  6,  7,
+      10, 11, 0,  1,  4,  5,  6, 7, 8, 9, 10, 11, 4,  5,  6,  7,
+      12, 13, 0,  1,  2,  3,  6, 7, 8, 9, 12, 13, 2,  3,  6,  7,
+      10, 11, 12, 13, 0,  1,  6, 7, 8, 9, 10, 11, 12, 13, 6,  7,
+      14, 15, 0,  1,  2,  3,  4, 5, 8, 9, 14, 15, 2,  3,  4,  5,
+      10, 11, 14, 15, 0,  1,  4, 5, 8, 9, 10, 11, 14, 15, 4,  5,
+      12, 13, 14, 15, 0,  1,  2, 3, 8, 9, 12, 13, 14, 15, 2,  3,
+      10, 11, 12, 13, 14, 15, 0, 1, 8, 9, 10, 11, 12, 13, 14, 15};
+  return Load(d32, u32_indices + 8 * mask_bits);
 }
 
 template <typename T, HWY_IF_LANE_SIZE(T, 4)>
-HWY_INLINE Indices256<uint32_t> IndicesFromNotBits(Full256<T> d,
-                                                   uint64_t mask_bits) {
+HWY_INLINE Vec256<uint32_t> IndicesFromNotBits(Full256<T> d,
+                                               uint64_t mask_bits) {
   const RebindToUnsigned<decltype(d)> d32;
   // We need a masked Iota(). With 8 lanes, there are 256 combinations and a LUT
   // of SetTableIndices would require 8 KiB, a large part of L1D. The other
@@ -5008,49 +5069,49 @@ HWY_INLINE Indices256<uint32_t> IndicesFromNotBits(Full256<T> d,
   // bits, for a total of 1 KiB.
   alignas(16) constexpr uint32_t packed_array[256] = {
       // PrintCompressNot32x8Tables
-      0x76543210, 0x07654321, 0x17654320, 0x10765432, 0x27654310, 0x20765431,
-      0x21765430, 0x21076543, 0x37654210, 0x30765421, 0x31765420, 0x31076542,
-      0x32765410, 0x32076541, 0x32176540, 0x32107654, 0x47653210, 0x40765321,
-      0x41765320, 0x41076532, 0x42765310, 0x42076531, 0x42176530, 0x42107653,
-      0x43765210, 0x43076521, 0x43176520, 0x43107652, 0x43276510, 0x43207651,
-      0x43217650, 0x43210765, 0x57643210, 0x50764321, 0x51764320, 0x51076432,
-      0x52764310, 0x52076431, 0x52176430, 0x52107643, 0x53764210, 0x53076421,
-      0x53176420, 0x53107642, 0x53276410, 0x53207641, 0x53217640, 0x53210764,
-      0x54763210, 0x54076321, 0x54176320, 0x54107632, 0x54276310, 0x54207631,
-      0x54217630, 0x54210763, 0x54376210, 0x54307621, 0x54317620, 0x54310762,
-      0x54327610, 0x54320761, 0x54321760, 0x54321076, 0x67543210, 0x60754321,
-      0x61754320, 0x61075432, 0x62754310, 0x62075431, 0x62175430, 0x62107543,
-      0x63754210, 0x63075421, 0x63175420, 0x63107542, 0x63275410, 0x63207541,
-      0x63217540, 0x63210754, 0x64753210, 0x64075321, 0x64175320, 0x64107532,
-      0x64275310, 0x64207531, 0x64217530, 0x64210753, 0x64375210, 0x64307521,
-      0x64317520, 0x64310752, 0x64327510, 0x64320751, 0x64321750, 0x64321075,
-      0x65743210, 0x65074321, 0x65174320, 0x65107432, 0x65274310, 0x65207431,
-      0x65217430, 0x65210743, 0x65374210, 0x65307421, 0x65317420, 0x65310742,
-      0x65327410, 0x65320741, 0x65321740, 0x65321074, 0x65473210, 0x65407321,
-      0x65417320, 0x65410732, 0x65427310, 0x65420731, 0x65421730, 0x65421073,
-      0x65437210, 0x65430721, 0x65431720, 0x65431072, 0x65432710, 0x65432071,
-      0x65432170, 0x65432107, 0x76543210, 0x70654321, 0x71654320, 0x71065432,
-      0x72654310, 0x72065431, 0x72165430, 0x72106543, 0x73654210, 0x73065421,
-      0x73165420, 0x73106542, 0x73265410, 0x73206541, 0x73216540, 0x73210654,
-      0x74653210, 0x74065321, 0x74165320, 0x74106532, 0x74265310, 0x74206531,
-      0x74216530, 0x74210653, 0x74365210, 0x74306521, 0x74316520, 0x74310652,
-      0x74326510, 0x74320651, 0x74321650, 0x74321065, 0x75643210, 0x75064321,
-      0x75164320, 0x75106432, 0x75264310, 0x75206431, 0x75216430, 0x75210643,
-      0x75364210, 0x75306421, 0x75316420, 0x75310642, 0x75326410, 0x75320641,
-      0x75321640, 0x75321064, 0x75463210, 0x75406321, 0x75416320, 0x75410632,
-      0x75426310, 0x75420631, 0x75421630, 0x75421063, 0x75436210, 0x75430621,
-      0x75431620, 0x75431062, 0x75432610, 0x75432061, 0x75432160, 0x75432106,
-      0x76543210, 0x76054321, 0x76154320, 0x76105432, 0x76254310, 0x76205431,
-      0x76215430, 0x76210543, 0x76354210, 0x76305421, 0x76315420, 0x76310542,
-      0x76325410, 0x76320541, 0x76321540, 0x76321054, 0x76453210, 0x76405321,
-      0x76415320, 0x76410532, 0x76425310, 0x76420531, 0x76421530, 0x76421053,
-      0x76435210, 0x76430521, 0x76431520, 0x76431052, 0x76432510, 0x76432051,
-      0x76432150, 0x76432105, 0x76543210, 0x76504321, 0x76514320, 0x76510432,
-      0x76524310, 0x76520431, 0x76521430, 0x76521043, 0x76534210, 0x76530421,
-      0x76531420, 0x76531042, 0x76532410, 0x76532041, 0x76532140, 0x76532104,
-      0x76543210, 0x76540321, 0x76541320, 0x76541032, 0x76542310, 0x76542031,
-      0x76542130, 0x76542103, 0x76543210, 0x76543021, 0x76543120, 0x76543102,
-      0x76543210, 0x76543201, 0x76543210, 0x76543210};
+      0xfedcba98, 0x8fedcba9, 0x9fedcba8, 0x98fedcba, 0xafedcb98, 0xa8fedcb9,
+      0xa9fedcb8, 0xa98fedcb, 0xbfedca98, 0xb8fedca9, 0xb9fedca8, 0xb98fedca,
+      0xbafedc98, 0xba8fedc9, 0xba9fedc8, 0xba98fedc, 0xcfedba98, 0xc8fedba9,
+      0xc9fedba8, 0xc98fedba, 0xcafedb98, 0xca8fedb9, 0xca9fedb8, 0xca98fedb,
+      0xcbfeda98, 0xcb8feda9, 0xcb9feda8, 0xcb98feda, 0xcbafed98, 0xcba8fed9,
+      0xcba9fed8, 0xcba98fed, 0xdfecba98, 0xd8fecba9, 0xd9fecba8, 0xd98fecba,
+      0xdafecb98, 0xda8fecb9, 0xda9fecb8, 0xda98fecb, 0xdbfeca98, 0xdb8feca9,
+      0xdb9feca8, 0xdb98feca, 0xdbafec98, 0xdba8fec9, 0xdba9fec8, 0xdba98fec,
+      0xdcfeba98, 0xdc8feba9, 0xdc9feba8, 0xdc98feba, 0xdcafeb98, 0xdca8feb9,
+      0xdca9feb8, 0xdca98feb, 0xdcbfea98, 0xdcb8fea9, 0xdcb9fea8, 0xdcb98fea,
+      0xdcbafe98, 0xdcba8fe9, 0xdcba9fe8, 0xdcba98fe, 0xefdcba98, 0xe8fdcba9,
+      0xe9fdcba8, 0xe98fdcba, 0xeafdcb98, 0xea8fdcb9, 0xea9fdcb8, 0xea98fdcb,
+      0xebfdca98, 0xeb8fdca9, 0xeb9fdca8, 0xeb98fdca, 0xebafdc98, 0xeba8fdc9,
+      0xeba9fdc8, 0xeba98fdc, 0xecfdba98, 0xec8fdba9, 0xec9fdba8, 0xec98fdba,
+      0xecafdb98, 0xeca8fdb9, 0xeca9fdb8, 0xeca98fdb, 0xecbfda98, 0xecb8fda9,
+      0xecb9fda8, 0xecb98fda, 0xecbafd98, 0xecba8fd9, 0xecba9fd8, 0xecba98fd,
+      0xedfcba98, 0xed8fcba9, 0xed9fcba8, 0xed98fcba, 0xedafcb98, 0xeda8fcb9,
+      0xeda9fcb8, 0xeda98fcb, 0xedbfca98, 0xedb8fca9, 0xedb9fca8, 0xedb98fca,
+      0xedbafc98, 0xedba8fc9, 0xedba9fc8, 0xedba98fc, 0xedcfba98, 0xedc8fba9,
+      0xedc9fba8, 0xedc98fba, 0xedcafb98, 0xedca8fb9, 0xedca9fb8, 0xedca98fb,
+      0xedcbfa98, 0xedcb8fa9, 0xedcb9fa8, 0xedcb98fa, 0xedcbaf98, 0xedcba8f9,
+      0xedcba9f8, 0xedcba98f, 0xfedcba98, 0xf8edcba9, 0xf9edcba8, 0xf98edcba,
+      0xfaedcb98, 0xfa8edcb9, 0xfa9edcb8, 0xfa98edcb, 0xfbedca98, 0xfb8edca9,
+      0xfb9edca8, 0xfb98edca, 0xfbaedc98, 0xfba8edc9, 0xfba9edc8, 0xfba98edc,
+      0xfcedba98, 0xfc8edba9, 0xfc9edba8, 0xfc98edba, 0xfcaedb98, 0xfca8edb9,
+      0xfca9edb8, 0xfca98edb, 0xfcbeda98, 0xfcb8eda9, 0xfcb9eda8, 0xfcb98eda,
+      0xfcbaed98, 0xfcba8ed9, 0xfcba9ed8, 0xfcba98ed, 0xfdecba98, 0xfd8ecba9,
+      0xfd9ecba8, 0xfd98ecba, 0xfdaecb98, 0xfda8ecb9, 0xfda9ecb8, 0xfda98ecb,
+      0xfdbeca98, 0xfdb8eca9, 0xfdb9eca8, 0xfdb98eca, 0xfdbaec98, 0xfdba8ec9,
+      0xfdba9ec8, 0xfdba98ec, 0xfdceba98, 0xfdc8eba9, 0xfdc9eba8, 0xfdc98eba,
+      0xfdcaeb98, 0xfdca8eb9, 0xfdca9eb8, 0xfdca98eb, 0xfdcbea98, 0xfdcb8ea9,
+      0xfdcb9ea8, 0xfdcb98ea, 0xfdcbae98, 0xfdcba8e9, 0xfdcba9e8, 0xfdcba98e,
+      0xfedcba98, 0xfe8dcba9, 0xfe9dcba8, 0xfe98dcba, 0xfeadcb98, 0xfea8dcb9,
+      0xfea9dcb8, 0xfea98dcb, 0xfebdca98, 0xfeb8dca9, 0xfeb9dca8, 0xfeb98dca,
+      0xfebadc98, 0xfeba8dc9, 0xfeba9dc8, 0xfeba98dc, 0xfecdba98, 0xfec8dba9,
+      0xfec9dba8, 0xfec98dba, 0xfecadb98, 0xfeca8db9, 0xfeca9db8, 0xfeca98db,
+      0xfecbda98, 0xfecb8da9, 0xfecb9da8, 0xfecb98da, 0xfecbad98, 0xfecba8d9,
+      0xfecba9d8, 0xfecba98d, 0xfedcba98, 0xfed8cba9, 0xfed9cba8, 0xfed98cba,
+      0xfedacb98, 0xfeda8cb9, 0xfeda9cb8, 0xfeda98cb, 0xfedbca98, 0xfedb8ca9,
+      0xfedb9ca8, 0xfedb98ca, 0xfedbac98, 0xfedba8c9, 0xfedba9c8, 0xfedba98c,
+      0xfedcba98, 0xfedc8ba9, 0xfedc9ba8, 0xfedc98ba, 0xfedcab98, 0xfedca8b9,
+      0xfedca9b8, 0xfedca98b, 0xfedcba98, 0xfedcb8a9, 0xfedcb9a8, 0xfedcb98a,
+      0xfedcba98, 0xfedcba89, 0xfedcba98, 0xfedcba98};
 
   // No need to mask because <_mm256_permutevar8x32_epi32> ignores bits 3..31.
   // Just shift each copy of the 32 bit LUT to extract its 4-bit fields.
@@ -5058,12 +5119,12 @@ HWY_INLINE Indices256<uint32_t> IndicesFromNotBits(Full256<T> d,
   // latency, it may be faster to use LoadDup128 and PSHUFB.
   const auto packed = Set(d32, packed_array[mask_bits]);
   alignas(32) constexpr uint32_t shifts[8] = {0, 4, 8, 12, 16, 20, 24, 28};
-  return Indices256<uint32_t>{(packed >> Load(d32, shifts)).raw};
+  return packed >> Load(d32, shifts);
 }
 
 template <typename T, HWY_IF_LANE_SIZE(T, 8)>
-HWY_INLINE Indices256<uint32_t> IndicesFromNotBits(Full256<T> d,
-                                                   uint64_t mask_bits) {
+HWY_INLINE Vec256<uint32_t> IndicesFromNotBits(Full256<T> d,
+                                               uint64_t mask_bits) {
   const Repartition<uint32_t, decltype(d)> d32;
 
   // For 64-bit, we still need 32-bit indices because there is no 64-bit
@@ -5071,13 +5132,15 @@ HWY_INLINE Indices256<uint32_t> IndicesFromNotBits(Full256<T> d,
   // unpacking and load the entire index vector directly.
   alignas(32) constexpr uint32_t u32_indices[128] = {
       // PrintCompressNot64x4PairTables
-      0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 4, 5, 6, 7, 0, 1, 0, 1, 4, 5, 6, 7,
-      2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 0, 1, 2, 3, 6, 7, 4, 5, 2, 3, 6, 7,
-      0, 1, 4, 5, 0, 1, 6, 7, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 0, 1,
-      2, 3, 4, 5, 6, 7, 2, 3, 4, 5, 0, 1, 6, 7, 0, 1, 4, 5, 2, 3, 6, 7,
-      4, 5, 0, 1, 2, 3, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 0, 1, 4, 5,
-      6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
-  return Indices256<uint32_t>{Load(d32, u32_indices + 8 * mask_bits).raw};
+      8, 9, 10, 11, 12, 13, 14, 15, 10, 11, 12, 13, 14, 15, 8,  9,
+      8, 9, 12, 13, 14, 15, 10, 11, 12, 13, 14, 15, 8,  9,  10, 11,
+      8, 9, 10, 11, 14, 15, 12, 13, 10, 11, 14, 15, 8,  9,  12, 13,
+      8, 9, 14, 15, 10, 11, 12, 13, 14, 15, 8,  9,  10, 11, 12, 13,
+      8, 9, 10, 11, 12, 13, 14, 15, 10, 11, 12, 13, 8,  9,  14, 15,
+      8, 9, 12, 13, 10, 11, 14, 15, 12, 13, 8,  9,  10, 11, 14, 15,
+      8, 9, 10, 11, 12, 13, 14, 15, 10, 11, 8,  9,  12, 13, 14, 15,
+      8, 9, 10, 11, 12, 13, 14, 15, 8,  9,  10, 11, 12, 13, 14, 15};
+  return Load(d32, u32_indices + 8 * mask_bits);
 }
 template <typename T, HWY_IF_NOT_LANE_SIZE(T, 2)>
 HWY_INLINE Vec256<T> Compress(Vec256<T> v, const uint64_t mask_bits) {
@@ -5085,7 +5148,9 @@ HWY_INLINE Vec256<T> Compress(Vec256<T> v, const uint64_t mask_bits) {
   const Repartition<uint32_t, decltype(d)> du32;
 
   HWY_DASSERT(mask_bits < (1ull << (32 / sizeof(T))));
-  const auto indices = IndicesFromBits(d, mask_bits);
+  // 32-bit indices because we only have _mm256_permutevar8x32_epi32 (there is
+  // no instruction for 4x64).
+  const Indices256<uint32_t> indices{IndicesFromBits(d, mask_bits).raw};
   return BitCast(d, TableLookupLanes(BitCast(du32, v), indices));
 }
 
@@ -5135,7 +5200,9 @@ HWY_INLINE Vec256<T> CompressNot(Vec256<T> v, const uint64_t mask_bits) {
   const Repartition<uint32_t, decltype(d)> du32;
 
   HWY_DASSERT(mask_bits < (1ull << (32 / sizeof(T))));
-  const auto indices = IndicesFromNotBits(d, mask_bits);
+  // 32-bit indices because we only have _mm256_permutevar8x32_epi32 (there is
+  // no instruction for 4x64).
+  const Indices256<uint32_t> indices{IndicesFromNotBits(d, mask_bits).raw};
   return BitCast(d, TableLookupLanes(BitCast(du32, v), indices));
 }
 
@@ -5199,7 +5266,22 @@ HWY_API size_t CompressBlendedStore(Vec256<T> v, Mask256<T> m, Full256<T> d,
                                     T* HWY_RESTRICT unaligned) {
   const uint64_t mask_bits = detail::BitsFromMask(m);
   const size_t count = PopCount(mask_bits);
-  BlendedStore(detail::Compress(v, mask_bits), FirstN(d, count), d, unaligned);
+
+  const Repartition<uint32_t, decltype(d)> du32;
+  HWY_DASSERT(mask_bits < (1ull << (32 / sizeof(T))));
+  // 32-bit indices because we only have _mm256_permutevar8x32_epi32 (there is
+  // no instruction for 4x64). Nibble MSB encodes FirstN.
+  const Vec256<uint32_t> idx_and_mask = detail::IndicesFromBits(d, mask_bits);
+  // Shift nibble MSB into MSB
+  const Mask256<uint32_t> mask32 = MaskFromVec(ShiftLeft<28>(idx_and_mask));
+  // First cast to unsigned (RebindMask cannot change lane size)
+  const Mask256<MakeUnsigned<T>> mask_u{mask32.raw};
+  const Mask256<T> mask = RebindMask(d, mask_u);
+  const Vec256<T> compressed =
+      BitCast(d, TableLookupLanes(BitCast(du32, v),
+                                  Indices256<uint32_t>{idx_and_mask.raw}));
+
+  BlendedStore(compressed, mask, d, unaligned);
   // Workaround for MSAN not marking output as initialized (b/233326619)
 #if HWY_IS_MSAN
   __msan_unpoison(unaligned, count * sizeof(T));
@@ -5429,6 +5511,28 @@ HWY_INLINE Vec256<T> MaxOfLanes(hwy::SizeTag<8> /* tag */,
   return Max(v10, v01);
 }
 
+HWY_API Vec256<uint16_t> SumOfLanes(hwy::SizeTag<2> /* tag */,
+                                    Vec256<uint16_t> v) {
+  const Full256<uint16_t> d;
+  const RepartitionToWide<decltype(d)> d32;
+  const auto even = And(BitCast(d32, v), Set(d32, 0xFFFF));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto sum = SumOfLanes(hwy::SizeTag<4>(), even + odd);
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(sum)), BitCast(d, sum));
+}
+HWY_API Vec256<int16_t> SumOfLanes(hwy::SizeTag<2> /* tag */,
+                                   Vec256<int16_t> v) {
+  const Full256<int16_t> d;
+  const RepartitionToWide<decltype(d)> d32;
+  // Sign-extend
+  const auto even = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, v)));
+  const auto odd = ShiftRight<16>(BitCast(d32, v));
+  const auto sum = SumOfLanes(hwy::SizeTag<4>(), even + odd);
+  // Also broadcast into odd lanes.
+  return OddEven(BitCast(d, ShiftLeft<16>(sum)), BitCast(d, sum));
+}
+
 HWY_API Vec256<uint16_t> MinOfLanes(hwy::SizeTag<2> /* tag */,
                                     Vec256<uint16_t> v) {
   const Full256<uint16_t> d;
@@ -5475,7 +5579,7 @@ HWY_API Vec256<int16_t> MaxOfLanes(hwy::SizeTag<2> /* tag */,
 
 }  // namespace detail
 
-// Supported for {uif}32x8, {uif}64x4. Returns the sum in each lane.
+// Supported for {uif}{32,64},{ui}16. Returns the broadcasted result.
 template <typename T>
 HWY_API Vec256<T> SumOfLanes(Full256<T> d, const Vec256<T> vHL) {
   const Vec256<T> vLH = ConcatLowerUpper(d, vHL, vHL);

@@ -30,9 +30,8 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
 // representation. This is the opposite of ConvertToExternal().
 Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, const ColorEncoding& c_current,
-                           bool alpha_is_premultiplied, size_t bits_per_sample,
-                           JxlPixelFormat format, ThreadPool* pool,
-                           ImageBundle* ib);
+                           size_t bits_per_sample, JxlPixelFormat format,
+                           ThreadPool* pool, ImageBundle* ib);
 Status BufferToImageF(const JxlPixelFormat& pixel_format, size_t xsize,
                       size_t ysize, const void* buffer, size_t size,
                       ThreadPool* pool, ImageF* channel);

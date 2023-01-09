@@ -81,13 +81,12 @@ HWY_NOINLINE void BenchPartition() {
       // The pivot value can influence performance. Do exactly what vqsort will
       // do so that the performance (influenced by prefetching and branch
       // prediction) is likely to predict the actual performance inside vqsort.
-      detail::PivotResult result;
-      const auto pivot = detail::ChoosePivot(d, st, aligned.get(), num_lanes,
-                                             buf.get(), rng, result);
+      detail::DrawSamples(d, st, aligned.get(), num_lanes, buf.get(), rng);
+      detail::SortSamples(d, st, buf.get());
+      auto pivot = detail::ChoosePivotByRank(d, st, buf.get());
 
       const Timestamp t0;
-      detail::Partition(d, st, aligned.get(), 0, num_lanes - 1, pivot,
-                        buf.get());
+      detail::Partition(d, st, aligned.get(), num_lanes - 1, pivot, buf.get());
       seconds.push_back(SecondsSince(t0));
       // 'Use' the result to prevent optimizing out the partition.
       sum += static_cast<double>(aligned.get()[num_lanes / 2]);

@@ -270,8 +270,8 @@ bool DecodePAM(const char* filename, uint8_t** buffer, size_t* w, size_t* h,
   const uint8_t* pos = nullptr;
   if (!parser.ParseHeader(&header, &pos)) return false;
 
-  if (header.bits_per_sample == 0 || header.bits_per_sample > 12) {
-    return error_msg("PNM: bits_per_sample invalid (can do at most 12-bit)");
+  if (header.bits_per_sample == 0 || header.bits_per_sample > 16) {
+    return error_msg("PNM: bits_per_sample invalid (can do at most 16-bit)");
   }
   *w = header.xsize;
   *h = header.ysize;

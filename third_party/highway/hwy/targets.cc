@@ -43,7 +43,6 @@
 #endif  // HWY_COMPILER_MSVC
 
 #elif HWY_ARCH_ARM && HWY_OS_LINUX
-#include <asm/hwcap.h>
 #include <sys/auxv.h>
 #endif  // HWY_ARCH_*
 
@@ -104,7 +103,7 @@ int64_t supported_targets_for_test_ = 0;
 int64_t supported_mask_ = LimitsMax<int64_t>();
 
 #if HWY_ARCH_X86
-// Arbritrary bit indices indicating which instruction set extensions are
+// Arbitrary bit indices indicating which instruction set extensions are
 // supported. Use enum to ensure values are distinct.
 enum class FeatureIndex : uint32_t {
   kSSE = 0,

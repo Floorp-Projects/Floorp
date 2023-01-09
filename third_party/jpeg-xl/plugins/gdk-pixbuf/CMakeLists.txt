@@ -65,7 +65,8 @@ if(BUILD_TESTING AND NOT CMAKE_CROSSCOMPILING)
 
     # libX11.so and libgdk-x11-2.0.so are not compiled with MSAN -> report
     # use-of-uninitialized-value for string some internal string value.
-    if (NOT (SANITIZER STREQUAL "msan"))
+    # TODO(eustas): investigate direct memory leak (32 bytes).
+    if (NOT (SANITIZER STREQUAL "msan") AND NOT (SANITIZER STREQUAL "asan"))
       add_test(
         NAME pixbufloader_test_jxl
         COMMAND

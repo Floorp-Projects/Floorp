@@ -69,7 +69,7 @@ void RandomImage(Xorshift128Plus* rng, const Rect& rect,
 
     size_t x = 0;
     // Only entire batches (avoids exceeding the image padding).
-    for (; x + kFloatsPerBatch <= xsize; x += kFloatsPerBatch) {
+    for (; x + kFloatsPerBatch < xsize; x += kFloatsPerBatch) {
       rng->Fill(batch);
       for (size_t i = 0; i < kFloatsPerBatch; i += Lanes(df)) {
         BitsToFloat(reinterpret_cast<const uint32_t*>(batch) + i, row + x + i);

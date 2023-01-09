@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <cmath>  // std::isnan
 #include <string>
 
 #include "hwy/aligned_allocator.h"

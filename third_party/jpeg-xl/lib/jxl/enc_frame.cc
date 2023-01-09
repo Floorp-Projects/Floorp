@@ -61,6 +61,7 @@
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/loop_filter.h"
+#include "lib/jxl/modular/options.h"
 #include "lib/jxl/quant_weights.h"
 #include "lib/jxl/quantizer.h"
 #include "lib/jxl/splines.h"
@@ -314,6 +315,13 @@ Status MakeFrameHeader(const CompressParams& cparams,
           "Chroma subsampling is not supported in VarDCT mode when not "
           "recompressing JPEGs");
     }
+  }
+  if (frame_header->color_transform != ColorTransform::kYCbCr &&
+      (frame_header->chroma_subsampling.MaxHShift() != 0 ||
+       frame_header->chroma_subsampling.MaxVShift() != 0)) {
+    return JXL_FAILURE(
+        "Chroma subsampling is not supported when color transform is not "
+        "YCbCr");
   }
 
   frame_header->flags = FrameFlagsFromParams(cparams);
@@ -1093,6 +1101,75 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                    const JxlCmsInterface& cms, ThreadPool* pool,
                    BitWriter* writer, AuxOut* aux_out) {
   CompressParams cparams = cparams_orig;
+  if (cparams.speed_tier == SpeedTier::kGlacier) {
+    std::vector<CompressParams> all_params;
+    std::vector<size_t> size;
+
+    CompressParams cparams_attempt = cparams_orig;
+    cparams_attempt.speed_tier = SpeedTier::kTortoise;
+    cparams_attempt.options.max_properties = 4;
+
+    for (float x : {0.0f, 80.f}) {
+      cparams_attempt.channel_colors_percent = x;
+      for (float y : {0.0f, 95.0f}) {
+        cparams_attempt.channel_colors_pre_transform_percent = y;
+        // 70000 ensures that the number of palette colors is representable in
+        // modular headers.
+        for (int K : {0, 1 << 10, 70000}) {
+          cparams_attempt.palette_colors = K;
+          for (int tree_mode : {-1, (int)ModularOptions::TreeMode::kNoWP,
+                                (int)ModularOptions::TreeMode::kDefault}) {
+            if (tree_mode == -1) {
+              // LZ77 only
+              cparams_attempt.options.nb_repeats = 0;
+            } else {
+              cparams_attempt.options.nb_repeats = 1;
+              cparams_attempt.options.wp_tree_mode =
+                  static_cast<ModularOptions::TreeMode>(tree_mode);
+            }
+            for (Predictor pred : {Predictor::Zero, Predictor::Variable}) {
+              cparams_attempt.options.predictor = pred;
+              for (int g : {0, 1, 3}) {
+                cparams_attempt.modular_group_size_shift = g;
+                for (Override patches : {Override::kDefault, Override::kOff}) {
+                  cparams_attempt.patches = patches;
+                  all_params.push_back(cparams_attempt);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    size.resize(all_params.size());
+
+    std::atomic<int> num_errors{0};
+
+    JXL_RETURN_IF_ERROR(RunOnPool(
+        pool, 0, all_params.size(), ThreadPool::NoInit,
+        [&](size_t task, size_t) {
+          BitWriter w;
+          PassesEncoderState state;
+          if (!EncodeFrame(all_params[task], frame_info, metadata, ib, &state,
+                           cms, nullptr, &w, aux_out)) {
+            num_errors.fetch_add(1, std::memory_order_relaxed);
+            return;
+          }
+          size[task] = w.BitsWritten();
+        },
+        "Compress kGlacier"));
+    JXL_RETURN_IF_ERROR(num_errors.load(std::memory_order_relaxed) == 0);
+
+    size_t best_idx = 0;
+    for (size_t i = 1; i < all_params.size(); i++) {
+      if (size[best_idx] > size[i]) {
+        best_idx = i;
+      }
+    }
+    cparams = all_params[best_idx];
+  }
+
   if (cparams_orig.target_bitrate > 0.0f &&
       frame_info.frame_type == FrameType::kRegularFrame) {
     cparams.target_bitrate = 0.0f;

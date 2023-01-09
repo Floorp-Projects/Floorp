@@ -24,14 +24,15 @@
 #include <stdlib.h>
 #include <time.h>    // clock_gettime
 
-#include <algorithm>  // sort
+#include <algorithm>  // std::sort, std::find_if
 #include <array>
 #include <atomic>
 #include <chrono>  //NOLINT
 #include <limits>
-#include <numeric>  // iota
+#include <numeric>  // std::iota
 #include <random>
 #include <string>
+#include <utility>  // std::pair
 #include <vector>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -150,7 +151,7 @@ inline Ticks Start() {
       // "cc" = flags modified by SHL.
       : "rdx", "memory", "cc");
 #elif HWY_ARCH_RVV
-  asm volatile("rdcycle %0" : "=r"(t));
+  asm volatile("rdtime %0" : "=r"(t));
 #elif defined(_WIN32) || defined(_WIN64)
   LARGE_INTEGER counter;
   (void)QueryPerformanceCounter(&counter);

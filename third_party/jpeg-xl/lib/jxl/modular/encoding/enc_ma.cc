@@ -977,7 +977,7 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
     const pixel_type *row = image.channel[channel_ids[i]].Row(y);
     pixel_samples.push_back(row[x]);
     size_t xp = x == 0 ? 1 : x - 1;
-    diff_samples.push_back(row[x] - row[xp]);
+    diff_samples.push_back((int64_t)row[x] - row[xp]);
   }
 }
 

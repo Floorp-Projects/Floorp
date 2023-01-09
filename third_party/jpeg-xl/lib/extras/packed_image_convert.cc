@@ -58,7 +58,6 @@ Status ConvertPackedFrameToImageBundle(const JxlBasicInfo& info,
 
   JXL_RETURN_IF_ERROR(ConvertFromExternal(
       span, frame.color.xsize, frame.color.ysize, io.metadata.m.color_encoding,
-      /*alpha_is_premultiplied=*/info.alpha_premultiplied,
       frame_bits_per_sample, frame.color.format, pool, bundle));
 
   bundle->extra_channels().resize(io.metadata.m.extra_channel_info.size());
