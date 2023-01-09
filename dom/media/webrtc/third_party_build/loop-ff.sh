@@ -158,6 +158,20 @@ MODIFIED_BUILD_RELATED_FILE_CNT=`hg diff -c tip --stat \
     --include 'third_party/libwebrtc/webrtc.gni' \
     | grep -v "files changed" \
     | wc -l | tr -d " " || true`
+ERROR_HELP=$"
+Generating build files has failed.  This likely means changes to one or more
+BUILD.gn files are required.  Commit those changes following the instructions
+in https://wiki.mozilla.org/Media/WebRTC/libwebrtc_Update_Process#Operational_notes
+Then complete these steps:
+  # generate moz.build files (may not be necessary)
+  ./mach python python/mozbuild/mozbuild/gn_processor.py \\
+      $SCRIPT_DIR/gn-configs/webrtc.json
+  # commit the updated moz.build files with the appropriate commit msg
+  bash $SCRIPT_DIR/commit-build-file-changes.sh
+  # do a (hopefully) quick test build
+  ./mach build
+After a successful build, you may resume this script.
+"
 echo "===loop-ff=== Modified BUILD.gn (or webrtc.gni) files: $MODIFIED_BUILD_RELATED_FILE_CNT" 2>&1| tee -a $LOOP_OUTPUT_LOG
 if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
   echo "===loop-ff=== Regenerate build files" 2>&1| tee -a $LOOP_OUTPUT_LOG
@@ -172,6 +186,7 @@ if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
 
   bash $SCRIPT_DIR/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 fi
+ERROR_HELP=""
 
 ERROR_HELP=$"
 The test build has failed.  Most likely this is due to an upstream api change that
