@@ -302,18 +302,19 @@ class InactivePropertyHelper {
         fixId: "inactive-css-position-property-on-unpositioned-box-fix",
         msgId: "inactive-css-position-property-on-unpositioned-box",
       },
-      // text-overflow property used on elements for which overflow is not set to hidden.
-      // Note that this validator only checks if overflow:hidden is set on the element.
+      // text-overflow property used on elements for which 'overflow' is set to 'visible'
+      // (the initial value) in the inline axis. Note that this validator only checks if
+      // 'overflow-inline' computes to 'visible' on the element.
       // In theory, we should also be checking if the element is a block as this doesn't
       // normally work on inline element. However there are many edge cases that made it
       // impossible for the JS code to determine whether the type of box would support
       // text-overflow. So, rather than risking to show invalid warnings, we decided to
-      // only warn when overflow:hidden wasn't set. There is more information about this
-      // in this discussion https://phabricator.services.mozilla.com/D62407 and on the bug
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1551578
+      // only warn when 'overflow-inline: visible' was set. There is more information
+      // about this in this discussion https://phabricator.services.mozilla.com/D62407 and
+      // on the bug https://bugzilla.mozilla.org/show_bug.cgi?id=1551578
       {
         invalidProperties: ["text-overflow"],
-        when: () => !this.hasInlineOverflow,
+        when: () => this.checkComputedStyle("overflow-inline", ["visible"]),
         fixId: "inactive-text-overflow-when-no-overflow-fix",
         msgId: "inactive-text-overflow-when-no-overflow",
       },
@@ -846,17 +847,6 @@ class InactivePropertyHelper {
     return !(
       overflowValues.includes("visible") || overflowValues.includes("clip")
     );
-  }
-
-  /**
-   * Check if the current node has inline overflow
-   */
-  get hasInlineOverflow() {
-    const property = this.hasVerticalWritingMode(this.node)
-      ? "overflow-y"
-      : "overflow-x";
-
-    return !this.checkComputedStyle(property, ["visible"]);
   }
 
   /**
