@@ -92,24 +92,14 @@ static void ActivateOrDeactivate(XULButtonElement& aButton, bool aActivate) {
   aButton.OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
 }
 
-XULButtonElement* XULMenuParentElement::GetContainingMenu() const {
-  if (IsMenuBar()) {
-    return nullptr;
-  }
-  auto* button = XULButtonElement::FromNodeOrNull(GetParent());
-  if (!button || !button->IsMenu()) {
-    return nullptr;
-  }
-  return button;
-}
-
 void XULMenuParentElement::LockMenuUntilClosed(bool aLock) {
-  if (IsMenuBar()) {
+  auto* popup = XULPopupElement::FromNode(*this);
+  if (!popup) {
     return;
   }
   mLocked = aLock;
   // Lock/Unlock the parent menu too.
-  if (XULButtonElement* menu = GetContainingMenu()) {
+  if (XULButtonElement* menu = popup->GetContainingMenu()) {
     if (XULMenuParentElement* parent = menu->GetMenuParent()) {
       parent->LockMenuUntilClosed(aLock);
     }
@@ -133,16 +123,6 @@ void XULMenuParentElement::SetActiveMenuChild(XULButtonElement* aChild,
 
   if (!aChild) {
     return;
-  }
-
-  // When a menu opens a submenu, the mouse will often be moved onto a sibling
-  // before moving onto an item within the submenu, causing the parent to become
-  // deselected. We need to ensure that the parent menu is reselected when an
-  // item in the submenu is selected.
-  if (RefPtr menu = GetContainingMenu()) {
-    if (RefPtr parent = menu->GetMenuParent()) {
-      parent->SetActiveMenuChild(menu, aByKey);
-    }
   }
 
   mActiveItem = aChild;

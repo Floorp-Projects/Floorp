@@ -128,6 +128,14 @@ static Modifiers ConvertModifiers(const ActivateMenuItemOptions& aModifiers) {
   return modifiers;
 }
 
+XULButtonElement* XULPopupElement::GetContainingMenu() const {
+  auto* button = XULButtonElement::FromNodeOrNull(GetParent());
+  if (!button || !button->IsMenu()) {
+    return nullptr;
+  }
+  return button;
+}
+
 void XULPopupElement::PopupOpened(bool aSelectFirstItem) {
   if (aSelectFirstItem) {
     SelectFirstItem();
