@@ -17,7 +17,7 @@
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "modules/video_coding/timing/frame_delay_delta_kalman_filter.h"
+#include "modules/video_coding/timing/frame_delay_variation_kalman_filter.h"
 #include "modules/video_coding/timing/rtt_filter.h"
 #include "rtc_base/rolling_accumulator.h"
 
@@ -90,7 +90,7 @@ class JitterEstimator {
 
   // Filters the {frame_delay_delta, frame_size_delta} measurements through
   // a linear Kalman filter.
-  FrameDelayDeltaKalmanFilter kalman_filter_;
+  FrameDelayVariationKalmanFilter kalman_filter_;
 
   // TODO(bugs.webrtc.org/14381): Update `avg_frame_size_bytes_` to DataSize
   // when api/units have sufficient precision.

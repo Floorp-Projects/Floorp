@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/timing/frame_delay_delta_kalman_filter.h"
+#include "modules/video_coding/timing/frame_delay_variation_kalman_filter.h"
 
 #include "test/gtest.h"
 
@@ -18,9 +18,9 @@ namespace {
 // This test verifies that the initial filter state (link bandwidth, link
 // propagation delay) is such that a frame of size zero would take no time to
 // propagate.
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      InitializedFilterWithZeroSizeFrameTakesNoTimeToPropagate) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // A zero-sized frame...
   double frame_size_variation_bytes = 0.0;
@@ -38,9 +38,9 @@ TEST(FrameDelayDeltaKalmanFilterTest,
 
 // TODO(brandtr): Look into if there is a factor 1000 missing here? It seems
 // unreasonable to have an initial link bandwidth of 512 _mega_bits per second?
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      InitializedFilterWithSmallSizeFrameTakesFixedTimeToPropagate) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // A 1000-byte frame...
   double frame_size_variation_bytes = 1000.0;
@@ -55,9 +55,9 @@ TEST(FrameDelayDeltaKalmanFilterTest,
       expected_frame_delay_variation_estimate_ms);
 }
 
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      NegativeNoiseVarianceDoesNotUpdateFilter) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // Negative variance...
   double var_noise = -0.1;
@@ -82,9 +82,9 @@ TEST(FrameDelayDeltaKalmanFilterTest,
             0.0);
 }
 
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      VerifyConvergenceWithAlternatingDeviations) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // One frame every 33 ms.
   int framerate_fps = 30;

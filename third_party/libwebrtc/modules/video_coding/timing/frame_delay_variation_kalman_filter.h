@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_DELTA_KALMAN_FILTER_H_
-#define MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_DELTA_KALMAN_FILTER_H_
+#ifndef MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_VARIATION_KALMAN_FILTER_H_
+#define MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_VARIATION_KALMAN_FILTER_H_
 
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
@@ -51,10 +51,10 @@ namespace webrtc {
 //    [(1 / bytes per ms)^2, ms^2].
 //  * The observation noise covariance (`r`) is a scalar [ms^2] that is
 //    determined externally to this class.
-class FrameDelayDeltaKalmanFilter {
+class FrameDelayVariationKalmanFilter {
  public:
-  FrameDelayDeltaKalmanFilter();
-  ~FrameDelayDeltaKalmanFilter() = default;
+  FrameDelayVariationKalmanFilter();
+  ~FrameDelayVariationKalmanFilter() = default;
 
   // Predicts and updates the filter, given a new pair of frame delay variation
   // and frame size variation.
@@ -103,4 +103,4 @@ class FrameDelayDeltaKalmanFilter {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_DELTA_KALMAN_FILTER_H_
+#endif  // MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_VARIATION_KALMAN_FILTER_H_
