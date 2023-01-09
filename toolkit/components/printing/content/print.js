@@ -318,8 +318,35 @@ var PrintEventHandler = {
       await this.print(settings);
     });
 
-    let settingsToChange = await this.refreshSettings(selectedPrinter.value);
-    await this.updateSettings(settingsToChange, true);
+    let originalError;
+    const printersByPriority = [
+      selectedPrinter.value,
+      ...Object.getOwnPropertyNames(printersByName).filter(
+        name => name != selectedPrinter.value
+      ),
+    ];
+
+    // Try to update settings, falling back to any available printer
+    for (const printerName of printersByPriority) {
+      try {
+        let settingsToChange = await this.refreshSettings(printerName);
+        await this.updateSettings(settingsToChange, true);
+        originalError = null;
+        break;
+      } catch (e) {
+        if (!originalError) {
+          originalError = e;
+          // Report on how often fetching the last used printer settings fails.
+          this.reportPrintingError("PRINTER_SETTINGS_LAST_USED");
+        }
+      }
+    }
+
+    // Only throw original error if no fallback was possible
+    if (originalError) {
+      this.reportPrintingError("PRINTER_SETTINGS");
+      throw originalError;
+    }
 
     let initialPreviewDone = this._updatePrintPreview();
 
