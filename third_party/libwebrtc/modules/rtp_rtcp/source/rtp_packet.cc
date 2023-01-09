@@ -693,7 +693,7 @@ bool RtpPacket::RemoveExtension(ExtensionType type) {
 
 std::string RtpPacket::ToString() const {
   rtc::StringBuilder result;
-  result << "{payload_type=" << payload_type_ << "marker=" << marker_
+  result << "{payload_type=" << payload_type_ << ", marker=" << marker_
          << ", sequence_number=" << sequence_number_
          << ", padding_size=" << padding_size_ << ", timestamp=" << timestamp_
          << ", ssrc=" << ssrc_ << ", payload_offset=" << payload_offset_
