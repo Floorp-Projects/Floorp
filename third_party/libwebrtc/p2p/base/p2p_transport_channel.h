@@ -200,6 +200,8 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   int check_receiving_interval() const;
   absl::optional<rtc::NetworkRoute> network_route() const override;
 
+  void RemoveConnection(const Connection* connection);
+
   // Helper method used only in unittest.
   rtc::DiffServCodePoint DefaultDscpValue() const;
 
@@ -427,6 +429,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   std::vector<PortInterface*> pruned_ports_ RTC_GUARDED_BY(network_thread_);
 
   Connection* selected_connection_ RTC_GUARDED_BY(network_thread_) = nullptr;
+  std::vector<Connection*> connections_ RTC_GUARDED_BY(network_thread_);
 
   std::vector<RemoteCandidate> remote_candidates_
       RTC_GUARDED_BY(network_thread_);
