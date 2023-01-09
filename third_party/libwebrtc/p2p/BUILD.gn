@@ -38,6 +38,7 @@ rtc_library("rtc_p2p") {
     "base/dtls_transport_factory.h",
     "base/dtls_transport_internal.cc",
     "base/dtls_transport_internal.h",
+    "base/ice_agent_interface.h",
     "base/ice_controller_factory_interface.h",
     "base/ice_controller_interface.cc",
     "base/ice_controller_interface.h",
