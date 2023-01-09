@@ -175,23 +175,6 @@ class TurnPort : public Port {
   rtc::AsyncPacketSocket* socket() const { return socket_; }
   StunRequestManager& request_manager() { return request_manager_; }
 
-  // Signal with resolved server address.
-  // Parameters are port, server address and resolved server address.
-  // This signal will be sent only if server address is resolved successfully.
-  sigslot::
-      signal3<TurnPort*, const rtc::SocketAddress&, const rtc::SocketAddress&>
-          SignalResolvedServerAddress;
-
-  // Signal when TurnPort is closed,
-  // e.g remote socket closed (TCP)
-  //  or receiveing a REFRESH response with lifetime 0.
-  sigslot::signal1<TurnPort*> SignalTurnPortClosed;
-
-  // All public methods/signals below are for testing only.
-  sigslot::signal2<TurnPort*, int> SignalTurnRefreshResult;
-  sigslot::signal3<TurnPort*, const rtc::SocketAddress&, int>
-      SignalCreatePermissionResult;
-
   bool HasRequests() { return !request_manager_.empty(); }
   void set_credentials(const RelayCredentials& credentials) {
     credentials_ = credentials;
@@ -203,6 +186,16 @@ class TurnPort : public Port {
   void HandleConnectionDestroyed(Connection* conn) override;
 
   void CloseForTest() { Close(); }
+
+  // TODO(solenberg): Tests should be refactored to not peek at internal state.
+  class CallbacksForTest {
+   public:
+    virtual ~CallbacksForTest() {}
+    virtual void OnTurnCreatePermissionResult(int code) = 0;
+    virtual void OnTurnRefreshResult(int code) = 0;
+    virtual void OnTurnPortClosed() = 0;
+  };
+  void SetCallbacksForTest(CallbacksForTest* callbacks);
 
  protected:
   TurnPort(webrtc::TaskQueueBase* thread,
@@ -370,6 +363,8 @@ class TurnPort : public Port {
   std::string turn_logging_id_;
 
   webrtc::ScopedTaskSafety task_safety_;
+
+  CallbacksForTest* callbacks_for_test_ = nullptr;
 
   friend class TurnEntry;
   friend class TurnAllocateRequest;
