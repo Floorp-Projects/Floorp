@@ -238,8 +238,8 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mAllowZoomAndMinSize(true),
       mScriptUnconstrainedSize(mSize),
       mScriptMinSize(Length::FromPixels(
-          CSSPixel::FromPoints(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT))),
-      mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER),
+          CSSPixel::FromPoints(kMathMLDefaultScriptMinSizePt))),
+      mScriptSizeMultiplier(kMathMLDefaultScriptSizeMultiplier),
       mLanguage(aDocument.GetLanguageForStyle()) {
   MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
@@ -1092,7 +1092,7 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mFlexWrap(StyleFlexWrap::Nowrap),
       mObjectFit(StyleObjectFit::Fill),
       mBoxSizing(StyleBoxSizing::Content),
-      mOrder(NS_STYLE_ORDER_INITIAL),
+      mOrder(0),
       mFlexGrow(0.0f),
       mFlexShrink(1.0f),
       mZIndex(StyleZIndex::Auto()),
@@ -2955,8 +2955,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextEmphasisColor(StyleColor::CurrentColor()),
       mWebkitTextFillColor(StyleColor::CurrentColor()),
       mWebkitTextStrokeColor(StyleColor::CurrentColor()),
-      mTabSize(
-          StyleNonNegativeLengthOrNumber::Number(NS_STYLE_TABSIZE_INITIAL)),
+      mTabSize(StyleNonNegativeLengthOrNumber::Number(8.f)),
       mWordSpacing(LengthPercentage::Zero()),
       mLetterSpacing({0.}),
       mLineHeight(StyleLineHeight::Normal()),

@@ -340,24 +340,15 @@ enum class StyleFlexWrap : uint8_t {
   WrapReverse,
 };
 
-// See nsStylePosition
-// NOTE: This is the initial value of the integer-valued 'order' property
-// (rather than an internal numerical representation of some keyword).
-#define NS_STYLE_ORDER_INITIAL 0
-
-// 'subgrid' keyword in grid-template-{columns,rows}
-#define NS_STYLE_GRID_TEMPLATE_SUBGRID 0
-
 // CSS Grid <track-breadth> keywords
-// Should not overlap with NS_STYLE_GRID_TEMPLATE_SUBGRID
 enum class StyleGridTrackBreadth : uint8_t {
   MaxContent = 1,
   MinContent = 2,
 };
 
 // defaults per MathML spec
-#define NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER 0.71f
-#define NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT 8
+static constexpr float kMathMLDefaultScriptSizeMultiplier{0.71f};
+static constexpr float kMathMLDefaultScriptMinSizePt{8.f};
 
 // See nsStyleFont
 enum class StyleMathVariant : uint8_t {
@@ -489,9 +480,6 @@ enum class StyleVisibility : uint8_t {
   Visible,
   Collapse,
 };
-
-// See nsStyleText
-#define NS_STYLE_TABSIZE_INITIAL 8
 
 // See nsStyleText
 enum class StyleWhiteSpace : uint8_t {

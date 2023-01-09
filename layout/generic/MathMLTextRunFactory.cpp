@@ -459,7 +459,7 @@ void MathMLTextRunFactory::RebuildTextRun(
         uint8_t sstyLevel = 0;
         float scriptScaling =
             pow(styles[0]->mScriptSizeMultiplier, mSSTYScriptLevel);
-        static_assert(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER < 1,
+        static_assert(kMathMLDefaultScriptSizeMultiplier < 1,
                       "Shouldn't it make things smaller?");
         /*
           An SSTY level of 2 is set if the scaling factor is less than or equal
@@ -478,14 +478,14 @@ void MathMLTextRunFactory::RebuildTextRun(
           To opt out of this change, add the following to the stylesheet:
           "font-feature-settings: 'ssty' 0"
         */
-        if (scriptScaling <= (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER +
-                              (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER *
-                               NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)) /
+        if (scriptScaling <= (kMathMLDefaultScriptSizeMultiplier +
+                              (kMathMLDefaultScriptSizeMultiplier *
+                               kMathMLDefaultScriptSizeMultiplier)) /
                                  2) {
           // Currently only the first two ssty settings are used, so two is
           // large as we go
           sstyLevel = 2;
-        } else if (scriptScaling <= NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER) {
+        } else if (scriptScaling <= kMathMLDefaultScriptSizeMultiplier) {
           sstyLevel = 1;
         }
         if (sstyLevel) {
