@@ -268,6 +268,10 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
     DataRate bitrate,
     bool bwe_limited_due_to_packet_loss,
     Timestamp at_time) {
+  if (bwe_limited_due_to_packet_loss != bwe_limited_due_to_packet_loss_ &&
+      config_.limit_probe_target_rate_to_loss_bwe) {
+    state_ = State::kProbingComplete;
+  }
   bwe_limited_due_to_packet_loss_ = bwe_limited_due_to_packet_loss;
   if (bitrate < kBitrateDropThreshold * estimated_bitrate_) {
     time_of_last_large_drop_ = at_time;
