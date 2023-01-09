@@ -22,13 +22,6 @@ mozilla::ipc::IPCResult MIDIManagerChild::RecvMIDIPortListUpdate(
   return IPC_OK();
 }
 
-void MIDIManagerChild::SetActorAlive() {
-  // IPC Channels for MIDIManagers are created and managed by MIDIAccessManager,
-  // so once the actor is created, we'll need to add a reference to keep it
-  // alive until BackgroundChildImpl kills it.
-  AddRef();
-}
-
 void MIDIManagerChild::Shutdown() {
   MOZ_ASSERT(!mShutdown);
   mShutdown = true;

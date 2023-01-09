@@ -24,7 +24,6 @@ class MIDIManagerChild final : public PMIDIManagerChild {
 
   MIDIManagerChild();
   mozilla::ipc::IPCResult RecvMIDIPortListUpdate(const MIDIPortList& aPortList);
-  void SetActorAlive();
   void Shutdown();
 
  private:

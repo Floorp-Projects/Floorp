@@ -1249,25 +1249,14 @@ bool BackgroundParentImpl::DeallocPMIDIPortParent(PMIDIPortParent* aActor) {
   return true;
 }
 
-PMIDIManagerParent* BackgroundParentImpl::AllocPMIDIManagerParent() {
+already_AddRefed<PMIDIManagerParent>
+BackgroundParentImpl::AllocPMIDIManagerParent() {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
   RefPtr<MIDIManagerParent> result = new MIDIManagerParent();
   MIDIPlatformService::Get()->AddManager(result);
-  return result.forget().take();
-}
-
-bool BackgroundParentImpl::DeallocPMIDIManagerParent(
-    PMIDIManagerParent* aActor) {
-  MOZ_ASSERT(aActor);
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  RefPtr<MIDIManagerParent> parent =
-      dont_AddRef(static_cast<MIDIManagerParent*>(aActor));
-  parent->Teardown();
-  return true;
+  return result.forget();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvHasMIDIDevice(

@@ -350,9 +350,7 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   bool DeallocPMIDIPortParent(PMIDIPortParent* aActor) override;
 
-  PMIDIManagerParent* AllocPMIDIManagerParent() override;
-
-  bool DeallocPMIDIManagerParent(PMIDIManagerParent* aActor) override;
+  already_AddRefed<PMIDIManagerParent> AllocPMIDIManagerParent() override;
 
   mozilla::ipc::IPCResult RecvHasMIDIDevice(
       HasMIDIDeviceResolver&& aResolver) override;
