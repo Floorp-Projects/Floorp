@@ -17,10 +17,6 @@
 
 class nsITransferable;
 
-@interface UTIHelper : NSObject
-+ (NSString*)stringFromPboardType:(NSString*)aType;
-@end
-
 class nsClipboard : public nsBaseClipboard {
  public:
   nsClipboard();
