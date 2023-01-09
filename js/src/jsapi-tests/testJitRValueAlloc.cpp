@@ -26,6 +26,52 @@ static RValueAllocation Read(const RValueAllocation& slot) {
   return RValueAllocation::read(reader);
 }
 
+class Fibonacci {
+  class Iterator {
+   public:
+    // std::iterator traits.
+    using iterator_category = std::input_iterator_tag;
+    using value_type = int32_t;
+    using difference_type = int32_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+   private:
+    uint32_t value_{};
+    uint32_t last_{};
+
+    Iterator() = default;
+    Iterator(value_type value, value_type last) : value_(value), last_(last) {}
+
+    friend class Fibonacci;
+
+   public:
+    Iterator& operator++() {
+      auto next = value_ + last_;
+      if (next <= static_cast<uint32_t>(INT32_MAX)) {
+        last_ = value_;
+        value_ = next;
+      } else {
+        *this = Iterator{};
+      }
+      return *this;
+    }
+
+    bool operator==(const Iterator& other) const {
+      return value_ == other.value_ && last_ == other.last_;
+    }
+
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+    auto operator*() const { return static_cast<int32_t>(value_); }
+  };
+
+ public:
+  auto begin() { return Iterator{0, 1}; }
+
+  auto end() { return Iterator{}; }
+};
+
 BEGIN_TEST(testJitRValueAlloc_Double) {
   RValueAllocation s;
   for (uint32_t i = 0; i < FloatRegisters::Total; i++) {
@@ -48,8 +94,7 @@ END_TEST(testJitRValueAlloc_FloatReg)
 
 BEGIN_TEST(testJitRValueAlloc_FloatStack) {
   RValueAllocation s;
-  int32_t i, last = 0, tmp;
-  for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
+  for (auto i : Fibonacci{}) {
     s = RValueAllocation::AnyFloat(i);
     CHECK(s == Read(s));
   }
@@ -86,8 +131,7 @@ END_TEST(testJitRValueAlloc_TypedReg)
 
 BEGIN_TEST(testJitRValueAlloc_TypedStack) {
   RValueAllocation s;
-  int32_t i, last = 0, tmp;
-  for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
+  for (auto i : Fibonacci{}) {
 #define FOR_EACH_JSVAL(_)       \
   _(JSVAL_TYPE_DOUBLE)          \
   _(JSVAL_TYPE_INT32)           \
@@ -134,8 +178,7 @@ END_TEST(testJitRValueAlloc_UntypedRegReg)
 BEGIN_TEST(testJitRValueAlloc_UntypedRegStack) {
   RValueAllocation s;
   for (uint32_t i = 0; i < Registers::Total; i++) {
-    int32_t j, last = 0, tmp;
-    for (j = 0; j > 0; tmp = j, j += last, last = tmp) {
+    for (auto j : Fibonacci{}) {
       s = RValueAllocation::Untyped(Register::FromCode(i), j);
       CHECK(s == Read(s));
     }
@@ -146,8 +189,7 @@ END_TEST(testJitRValueAlloc_UntypedRegStack)
 
 BEGIN_TEST(testJitRValueAlloc_UntypedStackReg) {
   RValueAllocation s;
-  int32_t i, last = 0, tmp;
-  for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
+  for (auto i : Fibonacci{}) {
     for (uint32_t j = 0; j < Registers::Total; j++) {
       s = RValueAllocation::Untyped(i, Register::FromCode(j));
       CHECK(s == Read(s));
@@ -159,10 +201,8 @@ END_TEST(testJitRValueAlloc_UntypedStackReg)
 
 BEGIN_TEST(testJitRValueAlloc_UntypedStackStack) {
   RValueAllocation s;
-  int32_t i, li = 0, ti;
-  for (i = 0; i > 0; ti = i, i += li, li = ti) {
-    int32_t j, lj = 0, tj;
-    for (j = 0; j > 0; tj = j, j += lj, lj = tj) {
+  for (auto i : Fibonacci{}) {
+    for (auto j : Fibonacci{}) {
       s = RValueAllocation::Untyped(i, j);
       CHECK(s == Read(s));
     }
@@ -185,8 +225,7 @@ END_TEST(testJitRValueAlloc_UntypedReg)
 
 BEGIN_TEST(testJitRValueAlloc_UntypedStack) {
   RValueAllocation s;
-  int32_t i, last = 0, tmp;
-  for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
+  for (auto i : Fibonacci{}) {
     s = RValueAllocation::Untyped(i);
     CHECK(s == Read(s));
   }
@@ -208,8 +247,7 @@ END_TEST(testJitRValueAlloc_UndefinedAndNull)
 
 BEGIN_TEST(testJitRValueAlloc_ConstantPool) {
   RValueAllocation s;
-  int32_t i, last = 0, tmp;
-  for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
+  for (auto i : Fibonacci{}) {
     s = RValueAllocation::ConstantPool(i);
     CHECK(s == Read(s));
   }
