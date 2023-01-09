@@ -24,6 +24,7 @@
 #include "modules/video_coding/timing/frame_delay_variation_kalman_filter.h"
 #include "modules/video_coding/timing/rtt_filter.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
+#include "rtc_base/numerics/moving_median_filter.h"
 #include "rtc_base/numerics/percentile_filter.h"
 #include "rtc_base/rolling_accumulator.h"
 
@@ -45,45 +46,52 @@ class JitterEstimator {
     }
 
     std::unique_ptr<StructParametersParser> Parser() {
+      // clang-format off
       return StructParametersParser::Create(
+          "avg_frame_size_median", &avg_frame_size_median,
           "max_frame_size_percentile", &max_frame_size_percentile,
-          "max_frame_size_window", &max_frame_size_window,
+          "frame_size_window", &frame_size_window,
           "num_stddev_delay_outlier", &num_stddev_delay_outlier,
           "num_stddev_size_outlier", &num_stddev_size_outlier,
           "congestion_rejection_factor", &congestion_rejection_factor);
+      // clang-format on
     }
 
     bool MaxFrameSizePercentileEnabled() const {
       return max_frame_size_percentile.has_value();
     }
 
+    // If set, the "avg" frame size is calculated as the median over a window
+    // of recent frame sizes.
+    bool avg_frame_size_median = false;
+
     // If set, the "max" frame size is calculated as this percentile over a
     // window of recent frame sizes.
-    absl::optional<double> max_frame_size_percentile;
+    absl::optional<double> max_frame_size_percentile = absl::nullopt;
 
-    // The length of the percentile filter's window, in number of frames.
-    absl::optional<int> max_frame_size_window;
+    // The length of the percentile filters' window, in number of frames.
+    absl::optional<int> frame_size_window = absl::nullopt;
 
     // A (relative) frame delay variation sample is an outlier if its absolute
     // deviation from the Kalman filter model falls outside this number of
     // sample standard deviations.
     //
     // Increasing this value rejects fewer samples.
-    absl::optional<double> num_stddev_delay_outlier;
+    absl::optional<double> num_stddev_delay_outlier = absl::nullopt;
 
     // An (absolute) frame size sample is an outlier if its positive deviation
     // from the estimated average frame size falls outside this number of sample
     // standard deviations.
     //
     // Increasing this value rejects fewer samples.
-    absl::optional<double> num_stddev_size_outlier;
+    absl::optional<double> num_stddev_size_outlier = absl::nullopt;
 
     // A (relative) frame size variation sample is deemed "congested", and is
     // thus rejected, if its value is less than this factor times the estimated
     // max frame size.
     //
     // Decreasing this value rejects fewer samples.
-    absl::optional<double> congestion_rejection_factor;
+    absl::optional<double> congestion_rejection_factor = absl::nullopt;
   };
 
   JitterEstimator(Clock* clock, const FieldTrialsView& field_trials);
@@ -167,6 +175,9 @@ class JitterEstimator {
   // when api/units have sufficient precision.
   double max_frame_size_bytes_;
   // Percentile frame sized received (over a window). Only used if configured.
+  MovingMedianFilter<int64_t> avg_frame_size_median_bytes_;
+  // TODO(webrtc:14151): Make `MovingMedianFilter` take a percentile value and
+  // switch `max_frame_size_bytes_percentile_` over to that class.
   PercentileFilter<int64_t> max_frame_size_bytes_percentile_;
   std::queue<int64_t> frame_sizes_in_percentile_filter_;
   // TODO(bugs.webrtc.org/14381): Update `startup_frame_size_sum_bytes_` to
