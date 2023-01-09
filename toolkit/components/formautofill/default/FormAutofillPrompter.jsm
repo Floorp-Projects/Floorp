@@ -37,6 +37,8 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () =>
   FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
 );
 
+const { ENABLED_AUTOFILL_CREDITCARDS_PREF } = FormAutofill;
+
 const GetStringFromName = FormAutofillUtils.stringBundle.GetStringFromName;
 const formatStringFromName =
   FormAutofillUtils.stringBundle.formatStringFromName;
@@ -410,13 +412,8 @@ let FormAutofillPrompter = {
 
     if (state == "cancel") {
       return;
-    }
-
-    if (state == "disable") {
-      Services.prefs.setBoolPref(
-        "extensions.formautofill.creditCards.enabled",
-        false
-      );
+    } else if (state == "disable") {
+      Services.prefs.setBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF, false);
       return;
     }
 
@@ -425,27 +422,18 @@ let FormAutofillPrompter = {
       return;
     }
 
-    let changedGUIDs = [];
-    if (creditCard.guid) {
-      if (state == "update") {
-        await storage.creditCards.update(
-          creditCard.guid,
-          creditCard.record,
-          true
-        );
-        changedGUIDs.push(creditCard.guid);
-      } else if ("create") {
-        changedGUIDs.push(await storage.creditCards.add(creditCard.record));
-      }
-    } else {
-      changedGUIDs.push(
-        ...(await storage.creditCards.mergeToStorage(creditCard.record))
+    let changedGUID = null;
+    if (state == "create" || state == "save") {
+      changedGUID = await storage.creditCards.add(creditCard.record);
+    } else if (state == "update") {
+      await storage.creditCards.update(
+        creditCard.guid,
+        creditCard.record,
+        true
       );
-      if (!changedGUIDs.length) {
-        changedGUIDs.push(await storage.creditCards.add(creditCard.record));
-      }
+      changedGUID = creditCard.guid;
     }
-    changedGUIDs.forEach(guid => storage.creditCards.notifyUsed(guid));
+    storage.creditCards.notifyUsed(changedGUID);
   },
 
   _getUpdatedCCIcon(network) {
