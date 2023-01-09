@@ -89,7 +89,7 @@ class Connector {
       owner: this.owner,
     });
 
-    await this.toolbox.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
+    await this.commands.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
     });
 
@@ -114,7 +114,7 @@ class Connector {
 
     this._destroyed = true;
 
-    this.toolbox.resourceCommand.unwatchResources([TYPES.DOCUMENT_EVENT], {
+    this.commands.resourceCommand.unwatchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
     });
 
@@ -137,7 +137,7 @@ class Connector {
     // Clear all the caches in the data provider
     this.dataProvider.clear();
 
-    this.toolbox.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
+    this.commands.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
     this.emitForTests("clear-network-resources");
 
     // Disable the realted network logs in the webconsole
@@ -145,7 +145,7 @@ class Connector {
   }
 
   pause() {
-    return this.toolbox.resourceCommand.unwatchResources(
+    return this.commands.resourceCommand.unwatchResources(
       Connector.NETWORK_RESOURCES,
       {
         onAvailable: this.onResourceAvailable,
@@ -155,7 +155,7 @@ class Connector {
   }
 
   resume(ignoreExistingResources = true) {
-    return this.toolbox.resourceCommand.watchResources(
+    return this.commands.resourceCommand.watchResources(
       Connector.NETWORK_RESOURCES,
       {
         onAvailable: this.onResourceAvailable,
