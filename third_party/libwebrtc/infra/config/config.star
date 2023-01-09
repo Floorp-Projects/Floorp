@@ -523,7 +523,6 @@ def ci_builder(
         perf_cat = None,
         prioritized = False,
         enabled = True,
-        use_reclient = False,
         **kwargs):
     """Add a post-submit builder.
 
@@ -535,7 +534,6 @@ def ci_builder(
       perf_cat: the category + name for the /perf/ console, or None to omit from the console.
       prioritized: True to make this builder have a higher priority and never batch builds.
       enabled: False to exclude this builder from consoles and failure notifications.
-      use_reclient: True to use reclient to build instead of goma.
       **kwargs: Pass on to webrtc_builder / luci.builder.
     Returns:
       A luci.builder.
@@ -557,10 +555,10 @@ def ci_builder(
     properties = properties or {}
     properties = dict(properties)  # Avoid mutating the original dict.
     properties["builder_group"] = "client.webrtc"
-    if use_reclient:
-        properties.update(make_reclient_properties("rbe-webrtc-trusted"))
-    else:
-        properties.update(make_goma_properties())
+    properties.update(make_reclient_properties("rbe-webrtc-trusted"))
+
+    # TODO(b/245249582): remove goma properties after reclient migration.
+    properties.update(make_goma_properties())
     notifies = ["post_submit_failure_notifier", "infra_failure_notifier"]
     notifies += ["webrtc_tree_closer"] if name not in skipped_lkgr_bots else []
     return webrtc_builder(
@@ -703,7 +701,7 @@ android_builder("Android32 (M Nexus5X)(dbg)", "Android|arm|dbg")
 android_try_job("android_compile_arm_dbg", cq = None)
 android_try_job("android_arm_dbg")
 android_builder("Android32 (M Nexus5X)", "Android|arm|rel")
-android_builder("Android32 (M Nexus5X)(reclient)", "Android|arm|re", use_reclient = True)
+android_builder("Android32 (M Nexus5X)(reclient)", "Android|arm|re")
 android_try_job("android_arm_rel")
 android_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android|arm|Builder|", prioritized = True)
 android_try_job("android_compile_arm_rel")
@@ -731,7 +729,7 @@ android_try_job("android_chromium_compile", recipe = "chromium_trybot", branch_c
 ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
 ios_builder("iOS64 Release", "iOS|arm64|rel")
-ios_builder("iOS64 Release (reclient)", "iOS|arm64|re", use_reclient = True)
+ios_builder("iOS64 Release (reclient)", "iOS|arm64|re")
 ios_try_job("ios_compile_arm64_rel")
 ios_builder("iOS64 Sim Debug (iOS 14)", "iOS|x64|14")
 ios_try_job("ios_sim_x64_dbg_ios14")
@@ -750,7 +748,7 @@ linux_builder("Linux64 Debug", "Linux|x64|dbg")
 linux_try_job("linux_dbg", cq = None)
 linux_try_job("linux_compile_dbg")
 linux_builder("Linux64 Release", "Linux|x64|rel")
-linux_builder("Linux64 Release (reclient)", "Linux|x64|re", use_reclient = True)
+linux_builder("Linux64 Release (reclient)", "Linux|x64|re")
 linux_try_job("linux_rel")
 linux_builder("Linux64 Builder", "Linux|x64|size", perf_cat = "Linux|x64|Builder|", prioritized = True)
 linux_try_job("linux_compile_rel")
@@ -784,7 +782,7 @@ mac_builder("Mac64 Debug", "Mac|x64|dbg")
 mac_try_job("mac_dbg", cq = None)
 mac_try_job("mac_compile_dbg")
 mac_builder("Mac64 Release", "Mac|x64|rel")
-mac_builder("Mac64 Release (reclient)", "Mac|x64|re", use_reclient = True)
+mac_builder("Mac64 Release (reclient)", "Mac|x64|re")
 mac_try_job("mac_rel")
 mac_try_job("mac_compile_rel", cq = None)
 mac_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
@@ -812,7 +810,7 @@ win_try_job("win_x64_clang_dbg", cq = None)
 win_try_job("win_x64_clang_dbg_win10", cq = None)
 win_try_job("win_compile_x64_clang_dbg")
 win_builder("Win64 Release (Clang)", "Win Clang|x64|rel")
-win_builder("Win64 Release (Clang)(reclient)", "Win Clang|x64|re", use_reclient = True)
+win_builder("Win64 Release (Clang)(reclient)", "Win Clang|x64|re")
 win_try_job("win_x64_clang_rel", cq = None)
 win_try_job("win_compile_x64_clang_rel")
 win_builder("Win64 ASan", "Win Clang|x64|asan")
