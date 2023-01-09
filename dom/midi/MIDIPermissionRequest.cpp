@@ -178,10 +178,14 @@ MIDIPermissionRequest::Run() {
 // devices, we instrument silent denials with a randomized delay between 3
 // and 13 seconds, which is intended to model the time the user might spend
 // considering a prompt before denying it.
+//
+// Note that we set the random component of the delay to zero in automation
+// to avoid unnecessarily increasing test end-to-end time.
 void MIDIPermissionRequest::CancelWithRandomizedDelay() {
   MOZ_ASSERT(NS_IsMainThread());
   uint32_t baseDelayMS = 3 * 1000;
-  uint32_t randomDelayMS = RandomUint64OrDie() % (10 * 1000);
+  uint32_t randomDelayMS =
+      xpc::IsInAutomation() ? 0 : RandomUint64OrDie() % (10 * 1000);
   auto delay = TimeDuration::FromMilliseconds(baseDelayMS + randomDelayMS);
   RefPtr<MIDIPermissionRequest> self = this;
   NS_NewTimerWithCallback(
