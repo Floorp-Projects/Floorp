@@ -11,6 +11,9 @@
 #ifndef MODULES_VIDEO_CODING_TIMING_JITTER_ESTIMATOR_H_
 #define MODULES_VIDEO_CODING_TIMING_JITTER_ESTIMATOR_H_
 
+#include <memory>
+
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/units/data_size.h"
@@ -19,6 +22,7 @@
 #include "api/units/timestamp.h"
 #include "modules/video_coding/timing/frame_delay_variation_kalman_filter.h"
 #include "modules/video_coding/timing/rtt_filter.h"
+#include "rtc_base/experiments/struct_parameters_parser.h"
 #include "rtc_base/rolling_accumulator.h"
 
 namespace webrtc {
@@ -27,10 +31,50 @@ class Clock;
 
 class JitterEstimator {
  public:
-  explicit JitterEstimator(Clock* clock, const FieldTrialsView& field_trials);
-  ~JitterEstimator();
+  // Configuration struct for statically overriding some constants and
+  // behaviour, configurable through field trials.
+  struct Config {
+    static constexpr char kFieldTrialsKey[] = "WebRTC-JitterEstimatorConfig";
+
+    static Config Parse(absl::string_view field_trial) {
+      Config config;
+      config.Parser()->Parse(field_trial);
+      return config;
+    }
+
+    std::unique_ptr<StructParametersParser> Parser() {
+      return StructParametersParser::Create(
+          "num_stddev_delay_outlier", &num_stddev_delay_outlier,
+          "num_stddev_size_outlier", &num_stddev_size_outlier,
+          "congestion_rejection_factor", &congestion_rejection_factor);
+    }
+
+    // A (relative) frame delay variation sample is an outlier if its absolute
+    // deviation from the Kalman filter model falls outside this number of
+    // sample standard deviations.
+    //
+    // Increasing this value rejects fewer samples.
+    absl::optional<double> num_stddev_delay_outlier;
+
+    // An (absolute) frame size sample is an outlier if its positive deviation
+    // from the estimated average frame size falls outside this number of sample
+    // standard deviations.
+    //
+    // Increasing this value rejects fewer samples.
+    absl::optional<double> num_stddev_size_outlier;
+
+    // A (relative) frame size variation sample is deemed "congested", and is
+    // thus rejected, if its value is less than this factor times the estimated
+    // max frame size.
+    //
+    // Decreasing this value rejects fewer samples.
+    absl::optional<double> congestion_rejection_factor;
+  };
+
+  JitterEstimator(Clock* clock, const FieldTrialsView& field_trials);
   JitterEstimator(const JitterEstimator&) = delete;
   JitterEstimator& operator=(const JitterEstimator&) = delete;
+  ~JitterEstimator();
 
   // Resets the estimate to the initial state.
   void Reset();
@@ -61,7 +105,15 @@ class JitterEstimator {
   //          - rtt          : Round trip time.
   void UpdateRtt(TimeDelta rtt);
 
+  // Returns the configuration. Only to be used by unit tests.
+  Config GetConfigForTest() const;
+
  private:
+  // These functions return values that could be overriden through the config.
+  double GetNumStddevDelayOutlier() const;
+  double GetNumStddevSizeOutlier() const;
+  double GetCongestionRejectionFactor() const;
+
   // Updates the random jitter estimate, i.e. the variance of the time
   // deviations from the line given by the Kalman filter.
   //
@@ -81,6 +133,9 @@ class JitterEstimator {
 
   // Returns the estimated incoming frame rate.
   Frequency GetFrameRate() const;
+
+  // Configuration that may override some internals.
+  const Config config_;
 
   // Filters the {frame_delay_delta, frame_size_delta} measurements through
   // a linear Kalman filter.
