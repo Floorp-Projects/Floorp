@@ -15,6 +15,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -33,6 +34,7 @@
 #include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "video/decode_synchronizer.h"
+#include "video/task_queue_frame_decode_scheduler.h"
 
 using ::testing::_;
 using ::testing::AllOf;
@@ -107,11 +109,12 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
 constexpr auto kMaxWaitForKeyframe = TimeDelta::Millis(500);
 constexpr auto kMaxWaitForFrame = TimeDelta::Millis(1500);
 class VideoStreamBufferControllerFixture
-    : public ::testing::WithParamInterface<std::string>,
+    : public ::testing::WithParamInterface<std::tuple<bool, std::string>>,
       public FrameSchedulingReceiver {
  public:
   VideoStreamBufferControllerFixture()
-      : field_trials_(GetParam()),
+      : sync_decoding_(std::get<0>(GetParam())),
+        field_trials_(std::get<1>(GetParam())),
         time_controller_(kClockStart),
         clock_(time_controller_.GetClock()),
         fake_metronome_(time_controller_.GetTaskQueueFactory(),
@@ -120,7 +123,7 @@ class VideoStreamBufferControllerFixture
                      &fake_metronome_,
                      time_controller_.GetMainThread()),
         timing_(clock_, field_trials_),
-        buffer_(VideoStreamBufferController::CreateFromFieldTrial(
+        buffer_(std::make_unique<VideoStreamBufferController>(
             clock_,
             time_controller_.GetMainThread(),
             &timing_,
@@ -128,7 +131,10 @@ class VideoStreamBufferControllerFixture
             this,
             kMaxWaitForKeyframe,
             kMaxWaitForFrame,
-            &decode_sync_,
+            sync_decoding_ ? decode_sync_.CreateSynchronizedFrameScheduler()
+                           : std::make_unique<TaskQueueFrameDecodeScheduler>(
+                                 clock_,
+                                 time_controller_.GetMainThread()),
             field_trials_)) {
     // Avoid starting with negative render times.
     timing_.set_min_playout_delay(TimeDelta::Millis(10));
@@ -198,6 +204,7 @@ class VideoStreamBufferControllerFixture
   int dropped_frames() const { return dropped_frames_; }
 
  protected:
+  const bool sync_decoding_;
   test::ScopedKeyValueConfig field_trials_;
   GlobalSimulatedTimeController time_controller_;
   Clock* const clock_;
@@ -732,11 +739,14 @@ TEST_P(VideoStreamBufferControllerTest, NextFrameWithOldTimestamp) {
   EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(2)));
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    VideoStreamBufferController,
-    VideoStreamBufferControllerTest,
-    ::testing::Values("WebRTC-FrameBuffer3/arm:FrameBuffer3/",
-                      "WebRTC-FrameBuffer3/arm:SyncDecoding/"));
+INSTANTIATE_TEST_SUITE_P(VideoStreamBufferController,
+                         VideoStreamBufferControllerTest,
+                         ::testing::Combine(::testing::Bool(),
+                                            ::testing::Values("")),
+                         [](const auto& info) {
+                           return std::get<0>(info.param) ? "SyncDecoding"
+                                                          : "UnsyncedDecoding";
+                         });
 
 class LowLatencyVideoStreamBufferControllerTest
     : public ::testing::Test,
@@ -817,10 +827,11 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest,
 INSTANTIATE_TEST_SUITE_P(
     VideoStreamBufferController,
     LowLatencyVideoStreamBufferControllerTest,
-    ::testing::Values(
-        "WebRTC-FrameBuffer3/arm:FrameBuffer3/"
-        "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/",
-        "WebRTC-FrameBuffer3/arm:SyncDecoding/"
-        "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/"));
+    ::testing::Combine(
+        ::testing::Bool(),
+        ::testing::Values(
+            "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/",
+            "WebRTC-ZeroPlayoutDelay/"
+            "min_pacing:16ms,max_decode_queue_size:5/")));
 
 }  // namespace webrtc

@@ -55,6 +55,7 @@ rtc_library("video") {
   deps = [
     ":frame_cadence_adapter",
     ":frame_dumping_decoder",
+    ":task_queue_frame_decode_scheduler",
     ":unique_timestamp_counter",
     ":video_stream_buffer_controller",
     ":video_stream_encoder_impl",
@@ -239,6 +240,7 @@ rtc_library("video_stream_buffer_controller") {
   ]
   deps = [
     ":decode_synchronizer",
+    ":frame_decode_scheduler",
     ":frame_decode_timing",
     ":task_queue_frame_decode_scheduler",
     ":video_receive_stream_timeout_tracker",

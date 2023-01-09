@@ -38,17 +38,6 @@ class FrameSchedulingReceiver {
 
 class VideoStreamBufferController {
  public:
-  static std::unique_ptr<VideoStreamBufferController> CreateFromFieldTrial(
-      Clock* clock,
-      TaskQueueBase* worker_queue,
-      VCMTiming* timing,
-      VCMReceiveStatisticsCallback* stats_proxy,
-      FrameSchedulingReceiver* receiver,
-      TimeDelta max_wait_for_keyframe,
-      TimeDelta max_wait_for_frame,
-      DecodeSynchronizer* decode_sync,
-      const FieldTrialsView& field_trials);
-  virtual ~VideoStreamBufferController() = default;
   VideoStreamBufferController(
       Clock* clock,
       TaskQueueBase* worker_queue,
@@ -59,6 +48,7 @@ class VideoStreamBufferController {
       TimeDelta max_wait_for_frame,
       std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler,
       const FieldTrialsView& field_trials);
+  virtual ~VideoStreamBufferController() = default;
 
   void Stop();
   void SetProtectionMode(VCMVideoProtection protection_mode);
