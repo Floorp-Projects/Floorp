@@ -10,7 +10,6 @@ run-using handlers in `taskcluster/gecko_taskgraph/transforms/job`.
 """
 
 
-import copy
 import json
 import logging
 
@@ -23,6 +22,7 @@ from voluptuous import Any, Exclusive, Extra, Optional, Required
 
 from gecko_taskgraph.transforms.cached_tasks import order_tasks
 from gecko_taskgraph.transforms.task import task_description_schema
+from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 
 logger = logging.getLogger(__name__)
@@ -211,7 +211,7 @@ def make_task_description(config, jobs):
         if job["worker"]["implementation"] == "docker-worker":
             job["run"].setdefault("workdir", "/builds/worker")
 
-        taskdesc = copy.deepcopy(job)
+        taskdesc = copy_task(job)
 
         # fill in some empty defaults to make run implementations easier
         taskdesc.setdefault("attributes", {})

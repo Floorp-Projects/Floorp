@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import copy
-
 from taskgraph.task import Task
 from taskgraph.util.schema import Schema
 from voluptuous import Required
+
+from gecko_taskgraph.util.copy_task import copy_task
 
 from ..util.attributes import sorted_unique_list
 
@@ -61,7 +61,7 @@ def loader(kind, path, config, params, loaded_tasks):
         job = {"dependent-tasks": dep_tasks}
         job["primary-dependency"] = get_primary_dep(config, dep_tasks)
         if job_template:
-            job.update(copy.deepcopy(job_template))
+            job.update(copy_task(job_template))
         # copy shipping_product from upstream
         product = job["primary-dependency"].attributes.get(
             "shipping_product", job["primary-dependency"].task.get("shipping-product")
@@ -116,7 +116,7 @@ def group_tasks(config, tasks):
             kinds,
             error_msg=("Multi_dep.py should have filtered down to one task per kind"),
         )
-        dependencies = {t.kind: copy.deepcopy(t) for t in combinations}
+        dependencies = {t.kind: copy_task(t) for t in combinations}
         yield dependencies
 
 

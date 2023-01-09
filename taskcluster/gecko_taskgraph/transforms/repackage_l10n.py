@@ -6,9 +6,9 @@ Transform the repackage task into an actual task description.
 """
 
 
-import copy
-
 from taskgraph.transforms.base import TransformSequence
+
+from gecko_taskgraph.util.copy_task import copy_task
 
 transforms = TransformSequence()
 
@@ -18,7 +18,7 @@ def split_locales(config, jobs):
     for job in jobs:
         dep_job = job["primary-dependency"]
         for locale in dep_job.attributes.get("chunk_locales", []):
-            locale_job = copy.deepcopy(job)  # don't overwrite dict values here
+            locale_job = copy_task(job)  # don't overwrite dict values here
             treeherder = locale_job.setdefault("treeherder", {})
             treeherder["symbol"] = f"L10n-Rpk({locale})"
             locale_job["locale"] = locale
