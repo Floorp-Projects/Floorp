@@ -6893,7 +6893,9 @@ static void MaybeLogPosChanged(HWND aWnd, WINDOWPOS* wp) {
  **************************************************************/
 
 void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
-  if (wp == nullptr) return;
+  if (!wp) {
+    return;
+  }
 
   MaybeLogPosChanged(mWnd, wp);
 
@@ -7025,7 +7027,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
   }
 }
 
-void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
+void nsWindow::OnWindowPosChanging(WINDOWPOS* info) {
   // Update non-client margins if the frame size is changing, and let the
   // browser know we are changing size modes, so alternative css can kick in.
   // If we're going into fullscreen mode, ignore this, since it'll reset
@@ -7051,13 +7053,11 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
                                getter_AddRefs(screen));
 
       if (screen) {
-        int32_t x, y, width, height;
-        screen->GetRect(&x, &y, &width, &height);
-
-        info->x = x;
-        info->y = y;
-        info->cx = width;
-        info->cy = height;
+        auto rect = screen->GetRect();
+        info->x = rect.x;
+        info->y = rect.y;
+        info->cx = rect.width;
+        info->cy = rect.height;
       }
     }
   }
