@@ -1229,13 +1229,19 @@ BackgroundParentImpl::RecvPHttpBackgroundChannelConstructor(
   return IPC_OK();
 }
 
-already_AddRefed<PMIDIPortParent> BackgroundParentImpl::AllocPMIDIPortParent(
-    const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled) {
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIPort(
+    Endpoint<PMIDIPortParent>&& aEndpoint, const MIDIPortInfo& aPortInfo,
+    const bool& aSysexEnabled) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
+  if (!aEndpoint.IsValid()) {
+    return IPC_FAIL(this, "invalid endpoint for MIDIPort");
+  }
+
   RefPtr<MIDIPortParent> result = new MIDIPortParent(aPortInfo, aSysexEnabled);
-  return result.forget();
+  aEndpoint.Bind(result);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIManager(

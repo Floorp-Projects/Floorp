@@ -58,7 +58,7 @@ mozilla::ipc::IPCResult MIDIPortParent::RecvShutdown() {
   if (mShuttingDown) {
     return IPC_OK();
   }
-  Unused << Send__delete__(this);
+  Close();
   return IPC_OK();
 }
 
