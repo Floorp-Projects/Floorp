@@ -1557,6 +1557,7 @@ void AllocationSequence::CreateUDPPorts() {
   }
 
   if (port) {
+    port->SetIceTiebreaker(session_->ice_tiebreaker());
     // If shared socket is enabled, STUN candidate will be allocated by the
     // UDPPort.
     if (IsFlagSet(PORTALLOCATOR_ENABLE_SHARED_SOCKET)) {
@@ -1592,6 +1593,7 @@ void AllocationSequence::CreateTCPPorts() {
       session_->allocator()->allow_tcp_listen(),
       session_->allocator()->field_trials());
   if (port) {
+    port->SetIceTiebreaker(session_->ice_tiebreaker());
     session_->AddAllocatedPort(port.release(), this);
     // Since TCPPort is not created using shared socket, `port` will not be
     // added to the dequeue.
@@ -1621,6 +1623,7 @@ void AllocationSequence::CreateStunPorts() {
       session_->allocator()->stun_candidate_keepalive_interval(),
       session_->allocator()->field_trials());
   if (port) {
+    port->SetIceTiebreaker(session_->ice_tiebreaker());
     session_->AddAllocatedPort(port.release(), this);
     // Since StunPort is not created using shared socket, `port` will not be
     // added to the dequeue.
@@ -1717,6 +1720,7 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config) {
       }
     }
     RTC_DCHECK(port != NULL);
+    port->SetIceTiebreaker(session_->ice_tiebreaker());
     session_->AddAllocatedPort(port.release(), this);
   }
 }
