@@ -1216,9 +1216,6 @@ rtc_library("rtc_base") {
   ]
   if (build_with_mozilla) {
     sources -= [
-      "async_invoker.cc",
-      "async_invoker.h",
-      "async_invoker_inl.h",
       "async_packet_socket.cc",
       "async_packet_socket.h",
       "async_tcp_socket.cc",
