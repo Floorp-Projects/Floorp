@@ -132,6 +132,15 @@ set(JPEGXL_COVERAGE_FLAGS
 endif()  # JPEGXL_ENABLE_COVERAGE
 endif()  #!MSVC
 
+# strips the -static suffix from all the elements in LIST
+function(strip_static OUTPUT_VAR LIB_LIST)
+  foreach(lib IN LISTS ${LIB_LIST})
+    string(REGEX REPLACE "-static$" "" lib "${lib}")
+    list(APPEND out_list "${lib}")
+  endforeach()
+  set(${OUTPUT_VAR} ${out_list} PARENT_SCOPE)
+endfunction()
+
 # The jxl library definition.
 include(jxl.cmake)
 
@@ -140,6 +149,11 @@ if(JPEGXL_ENABLE_TOOLS)
   include(jxl_extras.cmake)
 endif()
 include(jxl_threads.cmake)
+# We only build JPEGLI on linux for now.
+find_package(JPEG)
+if (JPEG_FOUND AND JPEGXL_ENABLE_JPEGLI)
+  include(jpegli.cmake)
+endif()
 
 # Install all the library headers from the source and the generated ones. There
 # is no distinction on which libraries use which header since it is expected

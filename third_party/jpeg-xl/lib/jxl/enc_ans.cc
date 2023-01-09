@@ -78,6 +78,8 @@ float EstimateDataBits(const ANSHistBin* histogram, const ANSHistBin* counts,
     }
   }
   if (total_histogram > 0) {
+    // Used only in assert.
+    (void)total_counts;
     JXL_ASSERT(total_counts == ANS_TAB_SIZE);
   }
   return sum;

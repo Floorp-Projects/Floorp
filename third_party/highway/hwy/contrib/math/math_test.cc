@@ -20,6 +20,7 @@
 #include <stdio.h>
 
 #include <cfloat>  // FLT_MAX
+#include <cmath>   // std::abs
 #include <type_traits>
 
 // clang-format off

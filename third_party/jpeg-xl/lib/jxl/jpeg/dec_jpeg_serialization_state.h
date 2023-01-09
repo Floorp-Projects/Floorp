@@ -63,13 +63,13 @@ struct EncodeScanState {
 
 struct SerializationState {
   enum Stage {
-    INIT,
-    SERIALIZE_SECTION,
-    DONE,
-    ERROR,
+    STAGE_INIT,
+    STAGE_SERIALIZE_SECTION,
+    STAGE_DONE,
+    STAGE_ERROR,
   };
 
-  Stage stage = INIT;
+  Stage stage = STAGE_INIT;
 
   std::deque<OutputChunk> output_queue;
 

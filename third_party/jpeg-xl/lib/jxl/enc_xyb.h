@@ -27,6 +27,10 @@ const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
                          Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
                          ImageBundle* JXL_RESTRICT linear = nullptr);
 
+void Image3FToXYB(const Image3F& in, const ColorEncoding& color_encoding,
+                  float intensity_target, ThreadPool* pool,
+                  Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms);
+
 // Transforms each color component of the given XYB image into the [0.0, 1.0]
 // interval with an affine transform.
 void ScaleXYB(Image3F* opsin);

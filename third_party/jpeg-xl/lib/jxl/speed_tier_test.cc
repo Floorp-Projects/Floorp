@@ -35,7 +35,7 @@ struct SpeedTierTestParams {
 std::ostream& operator<<(std::ostream& os, SpeedTierTestParams params) {
   auto previous_flags = os.flags();
   os << std::boolalpha;
-  os << "SpeedTierTestParams{" << SpeedTierName(params.speed_tier)
+  os << "SpeedTierTestParams{" << static_cast<size_t>(params.speed_tier)
      << ", /*shrink8=*/" << params.shrink8 << "}";
   os.flags(previous_flags);
   return os;

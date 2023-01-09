@@ -37,6 +37,7 @@ DECLARE_FUNCTION(SVE_256)
 DECLARE_FUNCTION(SVE2_128)
 DECLARE_FUNCTION(PPC8)
 DECLARE_FUNCTION(WASM)
+DECLARE_FUNCTION(WASM_EMU256)
 DECLARE_FUNCTION(RVV)
 DECLARE_FUNCTION(SCALAR)
 DECLARE_FUNCTION(EMU128)
@@ -81,6 +82,7 @@ void CheckFakeFunction() {
   CallFunctionForTarget(HWY_SVE2_128, __LINE__);
   CallFunctionForTarget(HWY_PPC8, __LINE__);
   CallFunctionForTarget(HWY_WASM, __LINE__);
+  CallFunctionForTarget(HWY_WASM_EMU256, __LINE__);
   CallFunctionForTarget(HWY_RVV, __LINE__);
   // The tables only have space for either HWY_SCALAR or HWY_EMU128; the former
   // is opt-in only.

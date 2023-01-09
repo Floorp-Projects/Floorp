@@ -15,6 +15,14 @@
 
 // Target-independent types/functions defined after target-specific ops.
 
+#include "hwy/base.h"
+
+// Define detail::Shuffle1230 etc, but only when viewing the current header;
+// normally this is included via highway.h, which includes ops/*.h.
+#if HWY_IDE && !defined(HWY_HIGHWAY_INCLUDED)
+#include "hwy/ops/emu128-inl.h"
+#endif  // HWY_IDE
+
 // Relies on the external include guard in highway.h.
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
@@ -476,31 +484,15 @@ HWY_API void StoreInterleaved2(const V v0, const V v1, Simd<T, N, 0> d,
   detail::StoreTransposedBlocks2(v10L, v10U, d, unaligned);
 }
 
-// 64 bits
-template <typename T>
-HWY_API void StoreInterleaved2(const Vec64<T> part0, const Vec64<T> part1,
-                               Full64<T> /*tag*/, T* HWY_RESTRICT unaligned) {
-  // Use full vectors to reduce the number of stores.
-  const Full128<T> d_full;
-  const Vec128<T> v0{part0.raw};
-  const Vec128<T> v1{part1.raw};
-  const auto v10 = InterleaveLower(d_full, v0, v1);
-  StoreU(v10, d_full, unaligned);
-}
-
-// <= 32 bits
-template <typename T, size_t N, HWY_IF_LE32(T, N)>
-HWY_API void StoreInterleaved2(const Vec128<T, N> part0,
-                               const Vec128<T, N> part1, Simd<T, N, 0> /*tag*/,
+// <= 64 bits
+template <class V, typename T, size_t N, HWY_IF_LE64(T, N)>
+HWY_API void StoreInterleaved2(const V part0, const V part1, Simd<T, N, 0> d,
                                T* HWY_RESTRICT unaligned) {
-  // Use full vectors to reduce the number of stores.
-  const Full128<T> d_full;
-  const Vec128<T> v0{part0.raw};
-  const Vec128<T> v1{part1.raw};
-  const auto v10 = InterleaveLower(d_full, v0, v1);
-  alignas(16) T buf[16 / sizeof(T)];
-  StoreU(v10, d_full, buf);
-  CopyBytes<2 * N * sizeof(T)>(buf, unaligned);
+  const Twice<decltype(d)> d2;
+  const auto v0 = ZeroExtendVector(d2, part0);
+  const auto v1 = ZeroExtendVector(d2, part1);
+  const auto v10 = InterleaveLower(d2, v0, v1);
+  StoreU(v10, d2, unaligned);
 }
 
 // ------------------------------ StoreInterleaved3 (CombineShiftRightBytes,
@@ -526,8 +518,9 @@ template <typename T, size_t N, class V, HWY_IF_LANE_SIZE(T, 1),
 HWY_API void StoreInterleaved3(const V v0, const V v1, const V v2,
                                Simd<T, N, 0> d, T* HWY_RESTRICT unaligned) {
   const RebindToUnsigned<decltype(d)> du;
-  const auto k5 = Set(du, 5);
-  const auto k6 = Set(du, 6);
+  using TU = TFromD<decltype(du)>;
+  const auto k5 = Set(du, TU{5});
+  const auto k6 = Set(du, TU{6});
 
   // Interleave (v0,v1,v2) to (MSB on left, lane 0 on right):
   // v0[5], v2[4],v1[4],v0[4] .. v2[0],v1[0],v0[0]. We're expanding v0 lanes
@@ -576,8 +569,8 @@ template <typename T, size_t N, class V, HWY_IF_LANE_SIZE(T, 2),
 HWY_API void StoreInterleaved3(const V v0, const V v1, const V v2,
                                Simd<T, N, 0> d, T* HWY_RESTRICT unaligned) {
   const Repartition<uint8_t, decltype(d)> du8;
-  const auto k2 = Set(du8, 2 * sizeof(T));
-  const auto k3 = Set(du8, 3 * sizeof(T));
+  const auto k2 = Set(du8, uint8_t{2 * sizeof(T)});
+  const auto k3 = Set(du8, uint8_t{3 * sizeof(T)});
 
   // Interleave (v0,v1,v2) to (MSB on left, lane 0 on right):
   // v1[2],v0[2], v2[1],v1[1],v0[1], v2[0],v1[0],v0[0]. 0x80 so lanes to be
@@ -666,16 +659,15 @@ HWY_API void StoreInterleaved3(const V v0, const V v1, const V v2,
 }
 
 // 64-bit vector, 8-bit lanes
-template <typename T, HWY_IF_LANE_SIZE(T, 1)>
-HWY_API void StoreInterleaved3(const Vec64<T> part0, const Vec64<T> part1,
-                               const Vec64<T> part2, Full64<T> d,
-                               T* HWY_RESTRICT unaligned) {
+template <class V, typename T, HWY_IF_LANE_SIZE(T, 1)>
+HWY_API void StoreInterleaved3(const V part0, const V part1, const V part2,
+                               Full64<T> d, T* HWY_RESTRICT unaligned) {
   constexpr size_t N = 16 / sizeof(T);
   // Use full vectors for the shuffles and first result.
   const Full128<uint8_t> du;
   const Full128<T> d_full;
-  const auto k5 = Set(du, 5);
-  const auto k6 = Set(du, 6);
+  const auto k5 = Set(du, uint8_t{5});
+  const auto k6 = Set(du, uint8_t{6});
 
   const Vec128<T> v0{part0.raw};
   const Vec128<T> v1{part1.raw};
@@ -708,7 +700,7 @@ HWY_API void StoreInterleaved3(const Vec64<T> part0, const Vec64<T> part1,
   const auto B0 = TableLookupBytesOr0(v0, shuf_B0);
   const auto B1 = TableLookupBytesOr0(v1, shuf_B1);
   const auto B2 = TableLookupBytesOr0(v2, shuf_B2);
-  const Vec64<T> B{(B0 | B1 | B2).raw};
+  const V B{(B0 | B1 | B2).raw};
   StoreU(B, d, unaligned + 1 * N);
 }
 
@@ -720,8 +712,8 @@ HWY_API void StoreInterleaved3(const Vec64<T> part0, const Vec64<T> part1,
   const Full128<T> d;
   const Full128<uint8_t> du8;
   constexpr size_t N = 16 / sizeof(T);
-  const auto k2 = Set(du8, 2 * sizeof(T));
-  const auto k3 = Set(du8, 3 * sizeof(T));
+  const auto k2 = Set(du8, uint8_t{2 * sizeof(T)});
+  const auto k3 = Set(du8, uint8_t{3 * sizeof(T)});
 
   const Vec128<T> v0{part0.raw};
   const Vec128<T> v1{part1.raw};
@@ -975,7 +967,7 @@ HWY_API void StoreInterleaved4(const Vec128<T, N> part0,
 // ------------------------------ AESRound
 
 // Cannot implement on scalar: need at least 16 bytes for TableLookupBytes.
-#if HWY_TARGET != HWY_SCALAR
+#if HWY_TARGET != HWY_SCALAR || HWY_IDE
 
 // Define for white-box testing, even if native instructions are available.
 namespace detail {
@@ -991,7 +983,7 @@ namespace detail {
 template <class V>  // u8
 HWY_INLINE V SubBytes(V state) {
   const DFromV<V> du;
-  const auto mask = Set(du, 0xF);
+  const auto mask = Set(du, uint8_t{0xF});
 
   // Change polynomial basis to GF(2^4)
   {
@@ -1034,7 +1026,7 @@ HWY_INLINE V SubBytes(V state) {
       0xFA, 0x35, 0x2B, 0x41, 0xD1, 0x90, 0x1E, 0x8E};
   const auto affL = TableLookupBytesOr0(LoadDup128(du, kAffineL), outL);
   const auto affU = TableLookupBytesOr0(LoadDup128(du, kAffineU), outU);
-  return Xor(Xor(affL, affU), Set(du, 0x63));
+  return Xor(Xor(affL, affU), Set(du, uint8_t{0x63}));
 }
 
 }  // namespace detail
@@ -1080,7 +1072,7 @@ HWY_API V MixColumns(const V state) {
       1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12};
   const RebindToSigned<decltype(du)> di;  // can only do signed comparisons
   const auto msb = Lt(BitCast(di, state), Zero(di));
-  const auto overflow = BitCast(du, IfThenElseZero(msb, Set(di, 0x1B)));
+  const auto overflow = BitCast(du, IfThenElseZero(msb, Set(di, int8_t{0x1B})));
   const auto d = Xor(Add(state, state), overflow);  // = state*2 in GF(2^8).
   const auto s2301 = TableLookupBytes(state, LoadDup128(du, k2301));
   const auto d_s2301 = Xor(d, s2301);
@@ -1200,7 +1192,7 @@ HWY_API V PopulationCount(V v) {
   HWY_ALIGN constexpr uint8_t kLookup[16] = {
       0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
   };
-  const auto lo = And(v, Set(d, 0xF));
+  const auto lo = And(v, Set(d, uint8_t{0xF}));
   const auto hi = ShiftRight<4>(v);
   const auto lookup = LoadDup128(d, kLookup);
   return Add(TableLookupBytes(lookup, hi), TableLookupBytes(lookup, lo));
@@ -1215,9 +1207,10 @@ HWY_API V PopulationCount(V v) {
   static_assert(IsSame<TFromD<D>, uint8_t>(), "V must be u8");
   const D d;
   // See https://arxiv.org/pdf/1611.07612.pdf, Figure 3
-  v = Sub(v, And(ShiftRight<1>(v), Set(d, 0x55)));
-  v = Add(And(ShiftRight<2>(v), Set(d, 0x33)), And(v, Set(d, 0x33)));
-  return And(Add(v, ShiftRight<4>(v)), Set(d, 0x0F));
+  const V k33 = Set(d, uint8_t{0x33});
+  v = Sub(v, And(ShiftRight<1>(v), Set(d, uint8_t{0x55})));
+  v = Add(And(ShiftRight<2>(v), k33), And(v, k33));
+  return And(Add(v, ShiftRight<4>(v)), Set(d, uint8_t{0x0F}));
 }
 #endif  // HWY_TARGET != HWY_RVV
 
@@ -1227,7 +1220,7 @@ HWY_API V PopulationCount(V v) {
   const D d;
   const Repartition<uint8_t, decltype(d)> d8;
   const auto vals = BitCast(d, PopulationCount(BitCast(d8, v)));
-  return Add(ShiftRight<8>(vals), And(vals, Set(d, 0xFF)));
+  return Add(ShiftRight<8>(vals), And(vals, Set(d, uint16_t{0xFF})));
 }
 
 template <typename V, class D = DFromV<V>, HWY_IF_LANE_SIZE_D(D, 4)>
@@ -1236,7 +1229,7 @@ HWY_API V PopulationCount(V v) {
   const D d;
   Repartition<uint16_t, decltype(d)> d16;
   auto vals = BitCast(d, PopulationCount(BitCast(d16, v)));
-  return Add(ShiftRight<16>(vals), And(vals, Set(d, 0xFF)));
+  return Add(ShiftRight<16>(vals), And(vals, Set(d, uint32_t{0xFF})));
 }
 
 #if HWY_HAVE_INTEGER64
@@ -1246,7 +1239,7 @@ HWY_API V PopulationCount(V v) {
   const D d;
   Repartition<uint32_t, decltype(d)> d32;
   auto vals = BitCast(d, PopulationCount(BitCast(d32, v)));
-  return Add(ShiftRight<32>(vals), And(vals, Set(d, 0xFF)));
+  return Add(ShiftRight<32>(vals), And(vals, Set(d, 0xFFULL)));
 }
 #endif
 

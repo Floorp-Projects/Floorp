@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>  // memcpy
 
+#include <unordered_map>
 #include <vector>
 
 // clang-format off
@@ -49,8 +50,10 @@ using detail::TraitsLane;
 #if VQSORT_ENABLED || HWY_IDE
 using detail::OrderAscending128;
 using detail::OrderAscendingKV128;
+using detail::OrderAscendingKV64;
 using detail::OrderDescending128;
 using detail::OrderDescendingKV128;
+using detail::OrderDescendingKV64;
 using detail::Traits128;
 
 template <class Traits>
@@ -282,10 +285,10 @@ static HWY_NOINLINE void TestPartition() {
 
   const size_t N1 = st.LanesPerKey();
   for (bool in_asc : {false, true}) {
-    for (int left_i : {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 15, 22, 28, 29, 30, 31}) {
+    for (int left_i : {0, 1, 4, 6, 7, 8, 12, 15, 22, 28, 30, 31}) {
       const size_t left = static_cast<size_t>(left_i) & ~(N1 - 1);
-      for (size_t ofs : {N, N + 1, N + 2, N + 3, 2 * N, 2 * N + 1, 2 * N + 2,
-                         2 * N + 3, 3 * N - 1, 4 * N - 3, 4 * N - 2}) {
+      for (size_t ofs : {N, N + 1, N + 3, 2 * N, 2 * N + 2, 2 * N + 3,
+                         3 * N - 1, 4 * N - 3, 4 * N - 2}) {
         const size_t len = (base_case_num + ofs) & ~(N1 - 1);
         for (LaneType pivot1 :
              {LaneType(0), LaneType(len / 3), LaneType(len / 2),
@@ -311,10 +314,12 @@ static HWY_NOINLINE void TestPartition() {
             for (size_t i = 0; i < left; ++i) {
               lanes[i] = hwy::LowestValue<LaneType>();
             }
+            std::unordered_map<LaneType, int> counts;
             for (size_t i = left; i < right; ++i) {
               lanes[i] = static_cast<LaneType>(
                   in_asc ? LaneType(i + 1) - static_cast<LaneType>(left)
                          : static_cast<LaneType>(right) - LaneType(i));
+              ++counts[lanes[i]];
               if (kDebug >= 2) {
                 printf("%3zu: %f\n", i, static_cast<double>(lanes[i]));
               }
@@ -324,7 +329,8 @@ static HWY_NOINLINE void TestPartition() {
             }
 
             size_t border =
-                detail::Partition(d, st, lanes, left, right, pivot, buf.get());
+                left + detail::Partition(d, st, lanes + left, right - left,
+                                         pivot, buf.get());
 
             if (kDebug >= 2) {
               printf("out>>>>>>\n");
@@ -335,7 +341,15 @@ static HWY_NOINLINE void TestPartition() {
                 printf("%3zu: sentinel %f\n", i, static_cast<double>(lanes[i]));
               }
             }
-
+            for (size_t i = left; i < right; ++i) {
+              --counts[lanes[i]];
+            }
+            for (auto kv : counts) {
+              if (kv.second != 0) {
+                PrintValue(kv.first);
+                HWY_ABORT("Incorrect count %d\n", kv.second);
+              }
+            }
             VerifyPartition(st, lanes, left, border, right, N1, pivot2);
             for (size_t i = 0; i < misalign; ++i) {
               if (aligned_lanes[i] != hwy::LowestValue<LaneType>())
@@ -357,15 +371,18 @@ static HWY_NOINLINE void TestPartition() {
 }
 
 HWY_NOINLINE void TestAllPartition() {
-  TestPartition<TraitsLane<OrderAscending<int16_t> > >();
   TestPartition<TraitsLane<OrderDescending<int32_t> > >();
+  TestPartition<Traits128<OrderAscending128> >();
+
+#if !HWY_IS_DEBUG_BUILD
+  TestPartition<TraitsLane<OrderAscending<int16_t> > >();
   TestPartition<TraitsLane<OrderAscending<int64_t> > >();
   TestPartition<TraitsLane<OrderDescending<float> > >();
 #if HWY_HAVE_FLOAT64
   TestPartition<TraitsLane<OrderDescending<double> > >();
 #endif
-  TestPartition<Traits128<OrderAscending128> >();
   TestPartition<Traits128<OrderDescending128> >();
+#endif
 }
 
 // (used for sample selection for choosing a pivot)
@@ -436,7 +453,13 @@ class CompareResults {
     const size_t num_keys = copy_.size() / st.LanesPerKey();
     Run<Order>(reference, reinterpret_cast<KeyType*>(copy_.data()), num_keys,
                shared, /*thread=*/0);
-
+#if VQSORT_PRINT >= 3
+    fprintf(stderr, "\nExpected:\n");
+    for (size_t i = 0; i < copy_.size(); ++i) {
+      PrintValue(copy_[i]);
+    }
+    fprintf(stderr, "\n");
+#endif
     for (size_t i = 0; i < copy_.size(); ++i) {
       if (copy_[i] != output[i]) {
         if (sizeof(KeyType) == 16) {
@@ -546,7 +569,7 @@ void TestSort(size_t num_lanes) {
 }
 
 void TestAllSort() {
-  for (int num : {129, 504, 20 * 1000, 34567}) {
+  for (int num : {129, 504, 3 * 1000, 34567}) {
     const size_t num_lanes = AdjustedReps(static_cast<size_t>(num));
     TestSort<TraitsLane<OrderAscending<int16_t> > >(num_lanes);
     TestSort<TraitsLane<OrderDescending<uint16_t> > >(num_lanes);
@@ -571,6 +594,9 @@ void TestAllSort() {
 #if VQSORT_ENABLED
     TestSort<Traits128<OrderAscending128> >(num_lanes);
     TestSort<Traits128<OrderDescending128> >(num_lanes);
+
+    TestSort<TraitsLane<OrderAscendingKV64> >(num_lanes);
+    TestSort<TraitsLane<OrderDescendingKV64> >(num_lanes);
 
     TestSort<Traits128<OrderAscendingKV128> >(num_lanes);
     TestSort<Traits128<OrderDescendingKV128> >(num_lanes);

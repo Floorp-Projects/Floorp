@@ -97,16 +97,6 @@ V ComputeMask(const D d, const V out_val) {
   return Add(kBase, MulAdd(kMul4, v4, MulAdd(kMul2, v2, Mul(kMul3, v3))));
 }
 
-// For converting full vectors to a subset. Assumes `vfull` lanes are identical.
-template <class D, class VFull>
-Vec<D> CapTo(const D d, VFull vfull) {
-  using T = typename D::T;
-  const HWY_FULL(T) dfull;
-  HWY_ALIGN T lanes[MaxLanes(dfull)];
-  Store(vfull, dfull, lanes);
-  return Load(d, lanes);
-}
-
 // mul and mul2 represent a scaling difference between jxl and butteraugli.
 static const float kSGmul = 226.0480446705883f;
 static const float kSGmul2 = 1.0f / 73.377132366608819f;
@@ -206,9 +196,9 @@ template <class D, class V>
 V ColorModulation(const D d, const size_t x, const size_t y,
                   const ImageF& xyb_x, const ImageF& xyb_y, const ImageF& xyb_b,
                   const double butteraugli_target, V out_val) {
-  static const float kStrengthMul = 2.177823400325309;
-  static const float kRedRampStart = 0.0073200141118951231;
-  static const float kRedRampLength = 0.019421555948474039;
+  static const float kStrengthMul = 3.0;
+  static const float kRedRampStart = 0.045;
+  static const float kRedRampLength = 0.09;
   static const float kBlueRampLength = 0.086890611400405895;
   static const float kBlueRampStart = 0.26973418507870539;
   const float strength = kStrengthMul * (1.0f - 0.25f * butteraugli_target);
@@ -217,24 +207,28 @@ V ColorModulation(const D d, const size_t x, const size_t y,
   }
   // x values are smaller than y and b values, need to take the difference into
   // account.
-  const float red_strength = strength * 5.992297772961519f;
+  const float red_strength = strength * 6.5;
   const float blue_strength = strength;
   {
     // Reduce some bits from areas not blue or red.
-    const float offset = strength * -0.009174542291185913f;
+    const float offset = strength * -0.007;  // 9174542291185913f;
     out_val = Add(out_val, Set(d, offset));
   }
   // Calculate how much of the 8x8 block is covered with blue or red.
   auto blue_coverage = Zero(d);
   auto red_coverage = Zero(d);
+  auto bias_y = Set(d, 0.15f);
   for (size_t dy = 0; dy < 8; ++dy) {
     const float* const JXL_RESTRICT row_in_x = xyb_x.Row(y + dy);
     const float* const JXL_RESTRICT row_in_y = xyb_y.Row(y + dy);
     const float* const JXL_RESTRICT row_in_b = xyb_b.Row(y + dy);
     for (size_t dx = 0; dx < 8; dx += Lanes(d)) {
-      const auto pixel_x = Max(
-          Set(d, 0.0f), Sub(Load(d, row_in_x + x + dx), Set(d, kRedRampStart)));
       const auto pixel_y = Load(d, row_in_y + x + dx);
+      // Estimate redness-greeness relative to the intensity.
+      const auto pixel_xpy =
+          Div(Abs(Load(d, row_in_x + x + dx)), Max(pixel_y, bias_y));
+      const auto pixel_x =
+          Max(Set(d, 0.0f), Sub(pixel_xpy, Set(d, kRedRampStart)));
       const auto pixel_b =
           Max(Set(d, 0.0f), Sub(Load(d, row_in_b + x + dx),
                                 Add(pixel_y, Set(d, kBlueRampStart))));
@@ -248,7 +242,7 @@ V ColorModulation(const D d, const size_t x, const size_t y,
   // Saturate when the high red or high blue coverage is above a level.
   // The idea here is that if a certain fraction of the block is red or
   // blue we consider as if it was fully red or blue.
-  static const float ratio = 30.610615782142737f;  // out of 64 pixels.
+  static const float ratio = 28.0f;  // out of 64 pixels.
 
   auto overall_red_coverage = SumOfLanes(d, red_coverage);
   overall_red_coverage =
@@ -299,6 +293,11 @@ V HfModulation(const D d, const size_t x, const size_t y, const ImageF& xyb,
       const auto pd = Load(d, row_in_next + dx);
       sum = Add(sum, AbsDiff(p, pd));
     }
+#if HWY_TARGET == HWY_SCALAR
+    const auto p = Load(d, row_in + 7);
+    const auto pd = Load(d, row_in_next + 7);
+    sum = Add(sum, AbsDiff(p, pd));
+#endif
   }
 
   sum = SumOfLanes(d, sum);
@@ -312,8 +311,8 @@ void PerBlockModulations(const float butteraugli_target, const ImageF& xyb_x,
   JXL_ASSERT(DivCeil(xyb_x.xsize(), kBlockDim) == out->xsize());
   JXL_ASSERT(DivCeil(xyb_x.ysize(), kBlockDim) == out->ysize());
 
-  float base_level = 0.5f * scale;
-  float kDampenRampStart = 7.0f;
+  float base_level = 0.48f * scale;
+  float kDampenRampStart = 2.0f;
   float kDampenRampEnd = 14.0f;
   float dampen = 1.0f;
   if (butteraugli_target >= kDampenRampStart) {
@@ -346,7 +345,7 @@ void PerBlockModulations(const float butteraugli_target, const ImageF& xyb_x,
 
 template <typename D, typename V>
 V MaskingSqrt(const D d, V v) {
-  static const float kLogOffset = 26.481471032459346f;
+  static const float kLogOffset = 28;
   static const float kMul = 211.50759899638012f;
   const auto mul_v = Set(d, kMul * 1e8);
   const auto offset_v = Set(d, kLogOffset);
@@ -420,13 +419,11 @@ void FuzzyErosion(const Rect& from_rect, const ImageF& from,
       StoreMin4(rowb[xm1], min0, min1, min2, min3);
       StoreMin4(rowb[x], min0, min1, min2, min3);
       StoreMin4(rowb[xp1], min0, min1, min2, min3);
-      static const float kMulC = 0.05f;
-      static const float kMul0 = 0.05f;
-      static const float kMul1 = 0.05f;
-      static const float kMul2 = 0.05f;
+      static const float kMul0 = 0.125f;
+      static const float kMul1 = 0.075f;
+      static const float kMul2 = 0.06f;
       static const float kMul3 = 0.05f;
-      float v = kMulC * row[x] + kMul0 * min0 + kMul1 * min1 + kMul2 * min2 +
-                kMul3 * min3;
+      float v = kMul0 * min0 + kMul1 * min1 + kMul2 * min2 + kMul3 * min3;
       if (fx % 2 == 0 && fy % 2 == 0) {
         row_out[fx / 2] = v;
       } else {
@@ -466,8 +463,6 @@ struct AdaptiveQuantizationImpl {
     const float match_gamma_offset = 0.019;
 
     const HWY_FULL(float) df;
-    const float kXMul = 23.426802998210313f;
-    const auto kXMulv = Set(df, kXMul);
 
     size_t y_start = rect.y0() * 8;
     size_t y_end = y_start + rect.ysize() * 8;
@@ -480,6 +475,7 @@ struct AdaptiveQuantizationImpl {
     if (y_end != xyb.ysize()) y_end += 4;
     pre_erosion[thread].ShrinkTo((x1 - x0) / 4, (y_end - y_start) / 4);
 
+    static const float limit = 0.2f;
     // Computes image (padded to multiple of 8x8) of local pixel differences.
     // Subsample both directions by 4.
     for (size_t y = y_start; y < y_end; ++y) {
@@ -489,9 +485,6 @@ struct AdaptiveQuantizationImpl {
       const float* row_in = xyb.PlaneRow(1, y);
       const float* row_in1 = xyb.PlaneRow(1, y1);
       const float* row_in2 = xyb.PlaneRow(1, y2);
-      const float* row_x_in = xyb.PlaneRow(0, y);
-      const float* row_x_in1 = xyb.PlaneRow(0, y1);
-      const float* row_x_in2 = xyb.PlaneRow(0, y2);
       float* JXL_RESTRICT row_out = diff_buffer.Row(thread);
 
       auto scalar_pixel = [&](size_t x) {
@@ -503,11 +496,9 @@ struct AdaptiveQuantizationImpl {
             row_in[x] + match_gamma_offset);
         float diff = gammac * (row_in[x] - base);
         diff *= diff;
-        const float base_x =
-            0.25f * (row_x_in2[x] + row_x_in1[x] + row_x_in[x1] + row_x_in[x2]);
-        float diff_x = gammac * (row_x_in[x] - base_x);
-        diff_x *= diff_x;
-        diff += kXMul * diff_x;
+        if (diff >= limit) {
+          diff = limit;
+        }
         diff = MaskingSqrt(diff);
         if ((y % 4) != 0) {
           row_out[x - x0] += diff;
@@ -537,17 +528,7 @@ struct AdaptiveQuantizationImpl {
                 df, Add(in, match_gamma_offset_v));
         auto diff = Mul(gammacv, Sub(in, base));
         diff = Mul(diff, diff);
-
-        const auto in_x = LoadU(df, row_x_in + x);
-        const auto in_x_r = LoadU(df, row_x_in + x + 1);
-        const auto in_x_l = LoadU(df, row_x_in + x - 1);
-        const auto in_x_t = LoadU(df, row_x_in2 + x);
-        const auto in_x_b = LoadU(df, row_x_in1 + x);
-        auto base_x =
-            Mul(quarter, Add(Add(in_x_r, in_x_l), Add(in_x_t, in_x_b)));
-        auto diff_x = Mul(gammacv, Sub(in_x, base_x));
-        diff_x = Mul(diff_x, diff_x);
-        diff = MulAdd(kXMulv, diff_x, diff);
+        diff = Min(diff, Set(df, limit));
         diff = MaskingSqrt(df, diff);
         if ((y & 3) != 0) {
           diff = Add(diff, LoadU(df, row_out + x - x0));
@@ -735,7 +716,7 @@ ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
 
 constexpr float kDcQuantPow = 0.66f;
 static const float kDcQuant = 1.1f;
-static const float kAcQuant = 0.8f;
+static const float kAcQuant = 0.841f;
 
 void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
                           PassesEncoderState* enc_state,

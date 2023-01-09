@@ -108,15 +108,4 @@ void UnpremultiplyAlpha(float* JXL_RESTRICT r, float* JXL_RESTRICT g,
   }
 }
 
-void UnpremultiplyAlpha(float* JXL_RESTRICT rgba, size_t num_color,
-                        size_t num_pixels) {
-  size_t num_channels = num_color + 1;
-  for (size_t x = 0, ix = 0; x < num_pixels; ++x, ix += num_channels) {
-    const float multiplier = 1.f / std::max(kSmallAlpha, rgba[ix + num_color]);
-    for (size_t c = 0; c < num_color; ++c) {
-      rgba[ix + c] *= multiplier;
-    }
-  }
-}
-
 }  // namespace jxl

@@ -684,7 +684,7 @@ Status ModularFrameEncoder::ComputeEncodingData(
     for (size_t i = 0; i < nb_channels; i++) {
       int32_t min, max;
       compute_minmax(gi.channel[gi.nb_meta_channels + i], &min, &max);
-      int64_t colors = max - min + 1;
+      int64_t colors = (int64_t)max - min + 1;
       JXL_DEBUG_V(10, "Channel %" PRIuS ": range=%i..%i", i, min, max);
       Transform maybe_palette_1(TransformId::kPalette);
       maybe_palette_1.begin_c = i + gi.nb_meta_channels;
@@ -1371,7 +1371,7 @@ Status ModularFrameEncoder::PrepareStreamParams(const Rect& rect,
       for (size_t i = 0; i < nb_channels; i++) {
         int32_t min, max;
         compute_minmax(gi.channel[gi.nb_meta_channels + i], &min, &max);
-        int colors = max - min + 1;
+        int64_t colors = (int64_t)max - min + 1;
         JXL_DEBUG_V(10, "Channel %" PRIuS ": range=%i..%i", i, min, max);
         Transform maybe_palette_1(TransformId::kPalette);
         maybe_palette_1.begin_c = i + gi.nb_meta_channels;
@@ -1417,6 +1417,7 @@ Status ModularFrameEncoder::PrepareStreamParams(const Rect& rect,
       case SpeedTier::kKitten:
         nb_rcts_to_try = 9;
         break;
+      case SpeedTier::kGlacier:
       case SpeedTier::kTortoise:
         nb_rcts_to_try = 19;
         break;

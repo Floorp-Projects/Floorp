@@ -22,7 +22,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <cstddef>
 #include <utility>  // std::move
 
 #include "hwy/aligned_allocator.h"

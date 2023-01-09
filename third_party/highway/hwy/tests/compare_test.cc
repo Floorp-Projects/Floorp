@@ -338,7 +338,7 @@ HWY_NOINLINE void TestAllLt128Upper() {
   ForGEVectors<128, TestLt128Upper>()(uint64_t());
 }
 
-struct TestEq128 {
+struct TestEq128 {  // Also Ne128
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     using V = Vec<D>;
@@ -353,15 +353,24 @@ struct TestEq128 {
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, v00, v00));
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, v01, v01));
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, v10, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128(d, v00, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128(d, v01, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128(d, v10, v10));
 
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v00, v01));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, v10));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, v11));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v00, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v01, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v01, v11));
 
     // Reversed order
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, v00));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v10, v01));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v11, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v01, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v10, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v11, v01));
 
     // Also check 128-bit blocks are independent
     const V iota = Iota(d, 1);
@@ -369,10 +378,16 @@ struct TestEq128 {
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, iota, Add(iota, v10)));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, Add(iota, v01), iota));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, Add(iota, v10), iota));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, iota, Add(iota, v01)));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, iota, Add(iota, v10)));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, Add(iota, v01), iota));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, Add(iota, v10), iota));
 
     // Max value
     const V vm = Make128(d, LimitsMax<T>(), LimitsMax<T>());
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, vm, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128(d, vm, vm));
+
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, vm, v00));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, vm, v01));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, vm, v10));
@@ -381,12 +396,21 @@ struct TestEq128 {
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, vm));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v10, vm));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v11, vm));
+
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, vm, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, vm, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, vm, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, vm, v11));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v00, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v01, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v10, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128(d, v11, vm));
   }
 };
 
 HWY_NOINLINE void TestAllEq128() { ForGEVectors<128, TestEq128>()(uint64_t()); }
 
-struct TestEq128Upper {
+struct TestEq128Upper {  // Also Ne128Upper
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     using V = Vec<D>;
@@ -401,26 +425,43 @@ struct TestEq128Upper {
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v00, v00));
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v01, v01));
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v10, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, v00, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, v01, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, v10, v10));
 
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v00, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, v00, v01));
+
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v01, v10));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v01, v11));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v01, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v01, v11));
 
     // Reversed order
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v01, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, v01, v00));
+
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v10, v01));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v11, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v10, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v11, v01));
 
     // Also check 128-bit blocks are independent
     const V iota = Iota(d, 1);
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, iota, Add(iota, v01)));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, iota, Add(iota, v01)));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, iota, Add(iota, v10)));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, iota, Add(iota, v10)));
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, Add(iota, v01), iota));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, Add(iota, v01), iota));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, Add(iota, v10), iota));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, Add(iota, v10), iota));
 
     // Max value
     const V vm = Make128(d, LimitsMax<T>(), LimitsMax<T>());
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, vm, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne128Upper(d, vm, vm));
+
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, vm, v00));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, vm, v01));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, vm, v10));
@@ -429,6 +470,15 @@ struct TestEq128Upper {
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v01, vm));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v10, vm));
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v11, vm));
+
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, vm, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, vm, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, vm, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, vm, v11));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v00, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v01, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v10, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne128Upper(d, v11, vm));
   }
 };
 

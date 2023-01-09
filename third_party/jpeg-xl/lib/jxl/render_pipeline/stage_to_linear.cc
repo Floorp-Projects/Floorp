@@ -17,6 +17,7 @@
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
+namespace {
 
 // These templates are not found via ADL.
 using hwy::HWY_NAMESPACE::IfThenZeroElse;
@@ -67,7 +68,7 @@ struct OpHlg {
   template <typename D, typename T>
   void Transform(D d, T* r, T* g, T* b) const {
     for (T* val : {r, g, b}) {
-      float vals[MaxLanes(d)];
+      HWY_ALIGN float vals[MaxLanes(d)];
       Store(*val, d, vals);
       for (size_t i = 0; i < Lanes(d); ++i) {
         vals[i] = TF_HLG().DisplayFromEncoded(vals[i]);
@@ -181,6 +182,7 @@ std::unique_ptr<RenderPipelineStage> GetToLinearStage(
   }
 }
 
+}  // namespace
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace jxl

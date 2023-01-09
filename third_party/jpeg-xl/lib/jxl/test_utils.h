@@ -309,7 +309,7 @@ jxl::CodecInOut SomeTestImageToCodecInOut(const std::vector<uint8_t>& buf,
   EXPECT_TRUE(ConvertFromExternal(
       jxl::Span<const uint8_t>(buf.data(), buf.size()), xsize, ysize,
       jxl::ColorEncoding::SRGB(/*is_gray=*/num_channels < 3),
-      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, format,
+      /*bits_per_sample=*/16, format,
       /*pool=*/nullptr,
       /*ib=*/&io.Main()));
   return io;
@@ -410,6 +410,11 @@ std::vector<double> ConvertToRGBA32(const uint8_t* pixels, size_t xsize,
   size_t num_channels = format.num_channels;
   bool gray = num_channels == 1 || num_channels == 2;
   bool alpha = num_channels == 2 || num_channels == 4;
+  JxlEndianness endianness = format.endianness;
+  // Compute actual type:
+  if (endianness == JXL_NATIVE_ENDIAN) {
+    endianness = IsLittleEndian() ? JXL_LITTLE_ENDIAN : JXL_BIG_ENDIAN;
+  }
 
   size_t stride =
       xsize * jxl::DivCeil(GetDataBits(format.data_type) * num_channels,
@@ -434,6 +439,7 @@ std::vector<double> ConvertToRGBA32(const uint8_t* pixels, size_t xsize,
       }
     }
   } else if (format.data_type == JXL_TYPE_UINT16) {
+    JXL_ASSERT(endianness != JXL_NATIVE_ENDIAN);
     // Multiplier to bring to 0-1.0 range
     double mul = factor > 0.0 ? factor : 1.0 / 65535.0;
     for (size_t y = 0; y < ysize; ++y) {
@@ -441,7 +447,7 @@ std::vector<double> ConvertToRGBA32(const uint8_t* pixels, size_t xsize,
         size_t j = (y * xsize + x) * 4;
         size_t i = y * stride + x * num_channels * 2;
         double r, g, b, a;
-        if (format.endianness == JXL_BIG_ENDIAN) {
+        if (endianness == JXL_BIG_ENDIAN) {
           r = (pixels[i + 0] << 8) + pixels[i + 1];
           g = gray ? r : (pixels[i + 2] << 8) + pixels[i + 3];
           b = gray ? r : (pixels[i + 4] << 8) + pixels[i + 5];
@@ -463,12 +469,13 @@ std::vector<double> ConvertToRGBA32(const uint8_t* pixels, size_t xsize,
       }
     }
   } else if (format.data_type == JXL_TYPE_FLOAT) {
+    JXL_ASSERT(endianness != JXL_NATIVE_ENDIAN);
     for (size_t y = 0; y < ysize; ++y) {
       for (size_t x = 0; x < xsize; ++x) {
         size_t j = (y * xsize + x) * 4;
         size_t i = y * stride + x * num_channels * 4;
         double r, g, b, a;
-        if (format.endianness == JXL_BIG_ENDIAN) {
+        if (endianness == JXL_BIG_ENDIAN) {
           r = LoadBEFloat(pixels + i);
           g = gray ? r : LoadBEFloat(pixels + i + 4);
           b = gray ? r : LoadBEFloat(pixels + i + 8);
@@ -486,12 +493,13 @@ std::vector<double> ConvertToRGBA32(const uint8_t* pixels, size_t xsize,
       }
     }
   } else if (format.data_type == JXL_TYPE_FLOAT16) {
+    JXL_ASSERT(endianness != JXL_NATIVE_ENDIAN);
     for (size_t y = 0; y < ysize; ++y) {
       for (size_t x = 0; x < xsize; ++x) {
         size_t j = (y * xsize + x) * 4;
         size_t i = y * stride + x * num_channels * 2;
         double r, g, b, a;
-        if (format.endianness == JXL_BIG_ENDIAN) {
+        if (endianness == JXL_BIG_ENDIAN) {
           r = LoadBEFloat16(pixels + i);
           g = gray ? r : LoadBEFloat16(pixels + i + 2);
           b = gray ? r : LoadBEFloat16(pixels + i + 4);

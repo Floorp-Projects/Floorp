@@ -21,8 +21,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <cmath>  // std::abs
 #include <memory>
-#include <numeric>  // iota
+#include <numeric>  // std::iota, std::inner_product
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/examples/benchmark.cc"

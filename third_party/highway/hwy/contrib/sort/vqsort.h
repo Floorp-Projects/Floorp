@@ -85,6 +85,9 @@ class HWY_CONTRIB_DLLEXPORT Sorter {
   void operator()(K64V64* HWY_RESTRICT keys, size_t n, SortAscending) const;
   void operator()(K64V64* HWY_RESTRICT keys, size_t n, SortDescending) const;
 
+  void operator()(K32V32* HWY_RESTRICT keys, size_t n, SortAscending) const;
+  void operator()(K32V32* HWY_RESTRICT keys, size_t n, SortDescending) const;
+
   // For internal use only
   static void Fill24Bytes(const void* seed_heap, size_t seed_num, void* bytes);
   static bool HaveFloat64();

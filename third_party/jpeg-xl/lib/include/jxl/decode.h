@@ -168,16 +168,6 @@ typedef enum {
    */
   JXL_DEC_NEED_PREVIEW_OUT_BUFFER = 3,
 
-  /** The decoder is able to decode a DC image and requests setting a DC output
-   * buffer using @ref JxlDecoderSetDCOutBuffer. This occurs if @ref
-   * JXL_DEC_DC_IMAGE is requested and it is possible to decode a DC image from
-   * the codestream and the DC out buffer was not yet set. This event re-occurs
-   * for new frames if there are multiple animation frames.
-   * @deprecated The DC feature in this form will be removed. For progressive
-   * rendering, @ref JxlDecoderFlushImage should be used.
-   */
-  JXL_DEC_NEED_DC_OUT_BUFFER = 4,
-
   /** The decoder requests an output buffer to store the full resolution image,
    * which can be set with @ref JxlDecoderSetImageOutBuffer or with @ref
    * JxlDecoderSetImageOutCallback. This event re-occurs for new frames if
@@ -261,27 +251,11 @@ typedef enum {
   JXL_DEC_FRAME = 0x400,
 
   /** Informative event by @ref JxlDecoderProcessInput
-   * "JxlDecoderProcessInput": DC image, 8x8 sub-sampled frame, decoded. It is
-   * not guaranteed that the decoder will always return DC separately, but when
-   * it does it will do so before outputting the full frame. @ref
-   * JxlDecoderSetDCOutBuffer must be used after getting the basic image
-   * information to be able to get the DC pixels, if not this return status only
-   * indicates we're past this point in the codestream. This event occurs max
-   * once per frame and always later than @ref JXL_DEC_FRAME and other header
-   * events and earlier than full resolution pixel data.
-   *
-   * @deprecated The DC feature in this form will be removed. For progressive
-   * rendering, @ref JxlDecoderFlushImage should be used.
-   */
-  JXL_DEC_DC_IMAGE = 0x800,
-
-  /** Informative event by @ref JxlDecoderProcessInput
    * "JxlDecoderProcessInput": full frame (or layer, in case coalescing is
    * disabled) is decoded. @ref JxlDecoderSetImageOutBuffer must be used after
    * getting the basic image information to be able to get the image pixels, if
    * not this return status only indicates we're past this point in the
-   * codestream. This event occurs max once per frame and always later than @ref
-   * JXL_DEC_DC_IMAGE.
+   * codestream. This event occurs max once per frame.
    * In this case, @ref JxlDecoderReleaseInput will return all bytes from the
    * end of the frame (or if @ref JXL_DEC_JPEG_RECONSTRUCTION is subscribed to,
    * from the end of the last box that is needed for jpeg reconstruction) as
@@ -599,8 +573,6 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetCoalescing(JxlDecoder* dec,
  *     available and this informative event is subscribed to.
  * @return @ref JXL_DEC_PREVIEW_IMAGE when preview pixel information is
  *     available and output in the preview buffer.
- * @return @ref JXL_DEC_DC_IMAGE when DC pixel information (8x8 downscaled
- *     version of the image) is available and output is in the DC buffer.
  * @return @ref JXL_DEC_FULL_IMAGE when all pixel information at highest detail
  *     is available and has been output in the pixel buffer.
  */
@@ -991,44 +963,6 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderGetFrameName(const JxlDecoder* dec,
  */
 JXL_EXPORT JxlDecoderStatus JxlDecoderGetExtraChannelBlendInfo(
     const JxlDecoder* dec, size_t index, JxlBlendInfo* blend_info);
-
-/**
- * Returns the minimum size in bytes of the DC image output buffer
- * for the given format. This is the buffer for @ref JxlDecoderSetDCOutBuffer.
- * Requires the basic image information is available in the decoder.
- *
- * @param dec decoder object
- * @param format format of pixels
- * @param size output value, buffer size in bytes
- * @return @ref JXL_DEC_SUCCESS on success, @ref JXL_DEC_ERROR on error, such as
- *     information not available yet.
- *
- * @deprecated The DC feature in this form will be removed. Use @ref
- *     JxlDecoderFlushImage for progressive rendering.
- */
-JXL_DEPRECATED JXL_EXPORT JxlDecoderStatus JxlDecoderDCOutBufferSize(
-    const JxlDecoder* dec, const JxlPixelFormat* format, size_t* size);
-
-/**
- * Sets the buffer to write the lower resolution (8x8 sub-sampled) DC image
- * to. The size of the buffer must be at least as large as given by @ref
- * JxlDecoderDCOutBufferSize. The buffer follows the format described by
- * JxlPixelFormat. The DC image has dimensions ceil(xsize / 8) * ceil(ysize /
- * 8). The buffer is owned by the caller.
- *
- * @param dec decoder object
- * @param format format of pixels. Object owned by user and its contents are
- *     copied internally.
- * @param buffer buffer type to output the pixel data to
- * @param size size of buffer in bytes
- * @return @ref JXL_DEC_SUCCESS on success, @ref JXL_DEC_ERROR on error, such as
- *     size too small.
- *
- * @deprecated The DC feature in this form will be removed. Use @ref
- *     JxlDecoderFlushImage for progressive rendering.
- */
-JXL_DEPRECATED JXL_EXPORT JxlDecoderStatus JxlDecoderSetDCOutBuffer(
-    JxlDecoder* dec, const JxlPixelFormat* format, void* buffer, size_t size);
 
 /**
  * Returns the minimum size in bytes of the image output pixel buffer for the

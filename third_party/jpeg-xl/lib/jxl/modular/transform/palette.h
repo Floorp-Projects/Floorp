@@ -278,6 +278,7 @@ static Status MetaPalette(Image &input, uint32_t begin_c, uint32_t end_c,
                       input.channel.begin() + end_c + 1);
   Channel pch(nb_colors + nb_deltas, nb);
   pch.hshift = -1;
+  pch.vshift = -1;
   input.channel.insert(input.channel.begin(), std::move(pch));
   return true;
 }

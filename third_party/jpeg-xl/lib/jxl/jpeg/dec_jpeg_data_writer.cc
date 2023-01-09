@@ -945,7 +945,7 @@ template <int kOutputMode>
 Status WriteJpegInternal(const JPEGData& jpg, const JPEGOutput& out,
                          SerializationState* ss) {
   const auto maybe_push_output = [&]() -> Status {
-    if (ss->stage != SerializationState::ERROR) {
+    if (ss->stage != SerializationState::STAGE_ERROR) {
       while (!ss->output_queue.empty()) {
         auto& chunk = ss->output_queue.front();
         size_t num_written = out(chunk.next, chunk.len);
@@ -964,12 +964,12 @@ Status WriteJpegInternal(const JPEGData& jpg, const JPEGOutput& out,
 
   while (true) {
     switch (ss->stage) {
-      case SerializationState::INIT: {
+      case SerializationState::STAGE_INIT: {
         // Valid Brunsli requires, at least, 0xD9 marker.
         // This might happen on corrupted stream, or on unconditioned JPEGData.
         // TODO(eustas): check D9 in the only one and is the last one.
         if (jpg.marker_order.empty()) {
-          ss->stage = SerializationState::ERROR;
+          ss->stage = SerializationState::STAGE_ERROR;
           break;
         }
         if (kOutputMode == OutputModes::kModeHistogram) {
@@ -991,13 +991,13 @@ Status WriteJpegInternal(const JPEGData& jpg, const JPEGOutput& out,
 
         EncodeSOI(ss);
         JXL_QUIET_RETURN_IF_ERROR(maybe_push_output());
-        ss->stage = SerializationState::SERIALIZE_SECTION;
+        ss->stage = SerializationState::STAGE_SERIALIZE_SECTION;
         break;
       }
 
-      case SerializationState::SERIALIZE_SECTION: {
+      case SerializationState::STAGE_SERIALIZE_SECTION: {
         if (ss->section_index >= jpg.marker_order.size()) {
-          ss->stage = SerializationState::DONE;
+          ss->stage = SerializationState::STAGE_DONE;
           break;
         }
         uint8_t marker = jpg.marker_order[ss->section_index];
@@ -1005,7 +1005,7 @@ Status WriteJpegInternal(const JPEGData& jpg, const JPEGOutput& out,
             SerializeSection<kOutputMode>(marker, ss, jpg);
         if (status == SerializationStatus::ERROR) {
           JXL_WARNING("Failed to encode marker 0x%.2x", marker);
-          ss->stage = SerializationState::ERROR;
+          ss->stage = SerializationState::STAGE_ERROR;
           break;
         }
         JXL_QUIET_RETURN_IF_ERROR(maybe_push_output());
@@ -1013,21 +1013,21 @@ Status WriteJpegInternal(const JPEGData& jpg, const JPEGOutput& out,
           return JXL_FAILURE("Incomplete serialization data");
         } else if (status != SerializationStatus::DONE) {
           JXL_DASSERT(false);
-          ss->stage = SerializationState::ERROR;
+          ss->stage = SerializationState::STAGE_ERROR;
           break;
         }
         ++ss->section_index;
         break;
       }
 
-      case SerializationState::DONE:
+      case SerializationState::STAGE_DONE:
         JXL_ASSERT(ss->output_queue.empty());
         if (ss->pad_bits != nullptr && ss->pad_bits != ss->pad_bits_end) {
           return JXL_FAILURE("Invalid number of padding bits.");
         }
         return true;
 
-      case SerializationState::ERROR:
+      case SerializationState::STAGE_ERROR:
         return JXL_FAILURE("JPEG serialization error");
     }
   }

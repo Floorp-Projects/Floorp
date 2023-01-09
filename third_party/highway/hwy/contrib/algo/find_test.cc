@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
+#include <algorithm>  // std::find_if
 #include <vector>
 
 #include "hwy/aligned_allocator.h"

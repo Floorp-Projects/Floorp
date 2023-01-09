@@ -33,7 +33,9 @@ if (EXISTS "${SOURCE_DIR}/googletest/CMakeLists.txt" AND
   set(GMOCK_INCLUDE_DIR "$<TARGET_PROPERTY:INCLUDE_DIRECTORIES,gmock>")
   set(GTEST_LIBRARY "$<TARGET_FILE:gtest>")
   set(GTEST_MAIN_LIBRARY "$<TARGET_FILE:gtest_main>")
+  add_library(GTest::gtest ALIAS gtest)
   add_library(GTest::GTest ALIAS gtest)
+  add_library(GTest::gtest_main ALIAS gtest_main)
   add_library(GTest::Main ALIAS gtest_main)
 
   set_target_properties(gtest PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

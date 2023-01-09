@@ -60,9 +60,7 @@ void TestLosslessGroups(size_t group_size_shift) {
 
   compressed_size = Roundtrip(&io, cparams, {}, pool, &io_out);
   EXPECT_LE(compressed_size, 280000u);
-  EXPECT_LE(ButteraugliDistance(io, io_out, cparams.ba_params, GetJxlCms(),
-                                /*distmap=*/nullptr, pool),
-            0.0);
+  EXPECT_TRUE(SamePixels(*io.Main().color(), *io_out.Main().color()));
 }
 
 TEST(ModularTest, RoundtripLosslessGroups128) { TestLosslessGroups(0); }
@@ -96,9 +94,7 @@ TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
 
   compressed_size = Roundtrip(&io, cparams, {}, pool, &io_out);
   EXPECT_LE(compressed_size, 10150u);
-  EXPECT_LE(ButteraugliDistance(io, io_out, cparams.ba_params, GetJxlCms(),
-                                /*distmap=*/nullptr, pool),
-            0.0);
+  EXPECT_TRUE(SamePixels(*io.Main().color(), *io_out.Main().color()));
 }
 
 TEST(ModularTest, RoundtripLossyDeltaPalette) {
@@ -266,8 +262,7 @@ TEST(ModularTest, RoundtripLosslessCustomSqueeze) {
 
   CodecInOut io2;
   EXPECT_LE(Roundtrip(&io, cparams, {}, pool, &io2), 265000u);
-  EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
-                                     /*distmap=*/nullptr, pool));
+  EXPECT_TRUE(SamePixels(*io.Main().color(), *io2.Main().color()));
 }
 
 struct RoundtripLosslessConfig {
@@ -404,8 +399,7 @@ TEST(ModularTest, RoundtripLosslessCustomFloat) {
 
   CodecInOut io2;
   EXPECT_LE(Roundtrip(&io, cparams, {}, pool, &io2), 23000u);
-  EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
-                                     /*distmap=*/nullptr, pool));
+  EXPECT_TRUE(SamePixels(*io.Main().color(), *io2.Main().color()));
 }
 
 void WriteHeaders(BitWriter* writer, size_t xsize, size_t ysize) {
@@ -481,7 +475,7 @@ TEST(ModularTest, PredictorIntegerOverflow) {
   PaddedBytes compressed = std::move(writer).TakeBytes();
   extras::PackedPixelFile ppf;
   extras::JXLDecompressParams params;
-  params.accepted_formats.push_back({1, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0});
+  params.accepted_formats.push_back({1, JXL_TYPE_FLOAT, JXL_NATIVE_ENDIAN, 0});
   EXPECT_TRUE(DecodeImageJXL(compressed.data(), compressed.size(), params,
                              nullptr, &ppf));
   ASSERT_EQ(1, ppf.frames.size());
@@ -529,7 +523,7 @@ TEST(ModularTest, UnsqueezeIntegerOverflow) {
   PaddedBytes compressed = std::move(writer).TakeBytes();
   extras::PackedPixelFile ppf;
   extras::JXLDecompressParams params;
-  params.accepted_formats.push_back({1, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0});
+  params.accepted_formats.push_back({1, JXL_TYPE_FLOAT, JXL_NATIVE_ENDIAN, 0});
   EXPECT_TRUE(DecodeImageJXL(compressed.data(), compressed.size(), params,
                              nullptr, &ppf));
   ASSERT_EQ(1, ppf.frames.size());

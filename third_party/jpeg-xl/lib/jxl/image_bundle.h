@@ -162,7 +162,7 @@ class ImageBundle {
 
   // -- ALPHA
 
-  void SetAlpha(ImageF&& alpha, bool alpha_is_premultiplied);
+  void SetAlpha(ImageF&& alpha);
   bool HasAlpha() const {
     return metadata_->Find(ExtraChannel::kAlpha) != nullptr;
   }

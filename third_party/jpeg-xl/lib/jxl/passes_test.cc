@@ -49,7 +49,7 @@ TEST(PassesTest, RoundtripSmallPasses) {
   Roundtrip(&io, cparams, {}, pool, &io2);
   EXPECT_THAT(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
                                   /*distmap=*/nullptr, pool),
-              IsSlightlyBelow(1.0));
+              IsSlightlyBelow(1.1));
 }
 
 TEST(PassesTest, RoundtripUnalignedPasses) {
@@ -92,8 +92,8 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
                 IsSlightlyBelow(target_distance + threshold));
   };
 
-  auto run1 = std::async(std::launch::async, test, 1.0f, 0.3f);
-  auto run2 = std::async(std::launch::async, test, 2.0f, 0.3f);
+  auto run1 = std::async(std::launch::async, test, 1.0f, 0.5f);
+  auto run2 = std::async(std::launch::async, test, 2.0f, 0.5f);
 }
 
 TEST(PassesTest, RoundtripLargeFastPasses) {

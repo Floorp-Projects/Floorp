@@ -245,7 +245,7 @@ Status OutputEncodingInfo::MaybeSetColorEncoding(
        color_encoding.tf.IsPQ())) {
     return false;
   }
-  if (!xyb_encoded || !CanOutputToColorEncoding(c_desired)) {
+  if (!xyb_encoded && !CanOutputToColorEncoding(c_desired)) {
     return false;
   }
   return SetColorEncoding(c_desired);

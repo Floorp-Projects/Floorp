@@ -33,6 +33,9 @@ using Sisd = Simd<T, 1, 0>;
 // (Wrapper class required for overloading comparison operators.)
 template <typename T>
 struct Vec1 {
+  using PrivateT = T;                     // only for DFromV
+  static constexpr size_t kPrivateN = 1;  // only for DFromV
+
   HWY_INLINE Vec1() = default;
   Vec1(const Vec1&) = default;
   Vec1& operator=(const Vec1&) = default;
@@ -78,23 +81,11 @@ class Mask1 {
   Raw bits;
 };
 
-namespace detail {
-
-// Deduce Sisd<T> from Vec1<T>
-struct Deduce1 {
-  template <typename T>
-  Sisd<T> operator()(Vec1<T>) const {
-    return Sisd<T>();
-  }
-};
-
-}  // namespace detail
+template <class V>
+using DFromV = Simd<typename V::PrivateT, V::kPrivateN, 0>;
 
 template <class V>
-using DFromV = decltype(detail::Deduce1()(V()));
-
-template <class V>
-using TFromV = TFromD<DFromV<V>>;
+using TFromV = typename V::PrivateT;
 
 // ------------------------------ BitCast
 
@@ -341,6 +332,12 @@ HWY_API Mask1<T> Xor(const Mask1<T> a, Mask1<T> b) {
   return MaskFromVec(Xor(VecFromMask(d, a), VecFromMask(d, b)));
 }
 
+template <typename T>
+HWY_API Mask1<T> ExclusiveNeither(const Mask1<T> a, Mask1<T> b) {
+  const Sisd<T> d;
+  return MaskFromVec(AndNot(VecFromMask(d, a), Not(VecFromMask(d, b))));
+}
+
 // ================================================== SHIFTS
 
 // ------------------------------ ShiftLeft/ShiftRight (BroadcastSignBit)
@@ -365,7 +362,7 @@ HWY_API Vec1<T> ShiftRight(const Vec1<T> v) {
     // signed shifts are still implementation-defined.
     using TU = hwy::MakeUnsigned<T>;
     const Sisd<TU> du;
-    const TU shifted = BitCast(du, v).raw >> kBits;
+    const TU shifted = static_cast<TU>(BitCast(du, v).raw >> kBits);
     const TU sign = BitCast(du, BroadcastSignBit(v)).raw;
     const size_t sign_shift =
         static_cast<size_t>(static_cast<int>(sizeof(TU)) * 8 - 1 - kBits);
@@ -426,7 +423,7 @@ HWY_API Vec1<T> ShiftRightSame(const Vec1<T> v, int bits) {
     // signed shifts are still implementation-defined.
     using TU = hwy::MakeUnsigned<T>;
     const Sisd<TU> du;
-    const TU shifted = BitCast(du, v).raw >> bits;
+    const TU shifted = static_cast<TU>(BitCast(du, v).raw >> bits);
     const TU sign = BitCast(du, BroadcastSignBit(v)).raw;
     const size_t sign_shift =
         static_cast<size_t>(static_cast<int>(sizeof(TU)) * 8 - 1 - bits);
@@ -557,16 +554,47 @@ HWY_API Vec1<uint16_t> AverageRound(const Vec1<uint16_t> a,
 template <typename T>
 HWY_API Vec1<T> Abs(const Vec1<T> a) {
   const T i = a.raw;
-  return (i >= 0 || i == hwy::LimitsMin<T>()) ? a : Vec1<T>(-i);
+  return (i >= 0 || i == hwy::LimitsMin<T>()) ? a : Vec1<T>(static_cast<T>(-i));
 }
 HWY_API Vec1<float> Abs(const Vec1<float> a) {
-  return Vec1<float>(std::abs(a.raw));
+  return Vec1<float>(fabsf(a.raw));
 }
 HWY_API Vec1<double> Abs(const Vec1<double> a) {
-  return Vec1<double>(std::abs(a.raw));
+  return Vec1<double>(fabs(a.raw));
 }
 
-// ------------------------------ min/max
+// ------------------------------ Min/Max
+
+// <cmath> may be unavailable, so implement our own.
+namespace detail {
+
+static inline float Abs(float f) {
+  uint32_t i;
+  CopyBytes<4>(&f, &i);
+  i &= 0x7FFFFFFFu;
+  CopyBytes<4>(&i, &f);
+  return f;
+}
+static inline double Abs(double f) {
+  uint64_t i;
+  CopyBytes<8>(&f, &i);
+  i &= 0x7FFFFFFFFFFFFFFFull;
+  CopyBytes<8>(&i, &f);
+  return f;
+}
+
+static inline bool SignBit(float f) {
+  uint32_t i;
+  CopyBytes<4>(&f, &i);
+  return (i >> 31) != 0;
+}
+static inline bool SignBit(double f) {
+  uint64_t i;
+  CopyBytes<8>(&f, &i);
+  return (i >> 63) != 0;
+}
+
+}  // namespace detail
 
 template <typename T, HWY_IF_NOT_FLOAT(T)>
 HWY_API Vec1<T> Min(const Vec1<T> a, const Vec1<T> b) {
@@ -575,8 +603,8 @@ HWY_API Vec1<T> Min(const Vec1<T> a, const Vec1<T> b) {
 
 template <typename T, HWY_IF_FLOAT(T)>
 HWY_API Vec1<T> Min(const Vec1<T> a, const Vec1<T> b) {
-  if (std::isnan(a.raw)) return b;
-  if (std::isnan(b.raw)) return a;
+  if (isnan(a.raw)) return b;
+  if (isnan(b.raw)) return a;
   return Vec1<T>(HWY_MIN(a.raw, b.raw));
 }
 
@@ -587,8 +615,8 @@ HWY_API Vec1<T> Max(const Vec1<T> a, const Vec1<T> b) {
 
 template <typename T, HWY_IF_FLOAT(T)>
 HWY_API Vec1<T> Max(const Vec1<T> a, const Vec1<T> b) {
-  if (std::isnan(a.raw)) return b;
-  if (std::isnan(b.raw)) return a;
+  if (isnan(a.raw)) return b;
+  if (isnan(b.raw)) return a;
   return Vec1<T>(HWY_MAX(a.raw, b.raw));
 }
 
@@ -707,10 +735,10 @@ HWY_API Vec1<float> ApproximateReciprocalSqrt(const Vec1<float> v) {
 
 // Square root
 HWY_API Vec1<float> Sqrt(const Vec1<float> v) {
-  return Vec1<float>(std::sqrt(v.raw));
+  return Vec1<float>(sqrtf(v.raw));
 }
 HWY_API Vec1<double> Sqrt(const Vec1<double> v) {
-  return Vec1<double>(std::sqrt(v.raw));
+  return Vec1<double>(sqrt(v.raw));
 }
 
 // ------------------------------ Floating-point rounding
@@ -725,7 +753,7 @@ HWY_API Vec1<T> Round(const Vec1<T> v) {
   const TI rounded = static_cast<TI>(v.raw + bias);
   if (rounded == 0) return CopySignToAbs(Vec1<T>(0), v);
   // Round to even
-  if ((rounded & 1) && std::abs(static_cast<T>(rounded) - v.raw) == T(0.5)) {
+  if ((rounded & 1) && detail::Abs(static_cast<T>(rounded) - v.raw) == T(0.5)) {
     return Vec1<T>(static_cast<T>(rounded - (v.raw < T(0) ? -1 : 1)));
   }
   return Vec1<T>(static_cast<T>(rounded));
@@ -737,12 +765,12 @@ HWY_API Vec1<int32_t> NearestInt(const Vec1<float> v) {
   using TI = int32_t;
 
   const T abs = Abs(v).raw;
-  const bool signbit = std::signbit(v.raw);
+  const bool is_sign = detail::SignBit(v.raw);
 
   if (!(abs < MantissaEnd<T>())) {  // Huge or NaN
     // Check if too large to cast or NaN
     if (!(abs <= static_cast<T>(LimitsMax<TI>()))) {
-      return Vec1<TI>(signbit ? LimitsMin<TI>() : LimitsMax<TI>());
+      return Vec1<TI>(is_sign ? LimitsMin<TI>() : LimitsMax<TI>());
     }
     return Vec1<int32_t>(static_cast<TI>(v.raw));
   }
@@ -750,8 +778,8 @@ HWY_API Vec1<int32_t> NearestInt(const Vec1<float> v) {
   const TI rounded = static_cast<TI>(v.raw + bias);
   if (rounded == 0) return Vec1<int32_t>(0);
   // Round to even
-  if ((rounded & 1) && std::abs(static_cast<T>(rounded) - v.raw) == T(0.5)) {
-    return Vec1<TI>(rounded - (signbit ? -1 : 1));
+  if ((rounded & 1) && detail::Abs(static_cast<T>(rounded) - v.raw) == T(0.5)) {
+    return Vec1<TI>(rounded - (is_sign ? -1 : 1));
   }
   return Vec1<TI>(rounded);
 }
@@ -1090,19 +1118,19 @@ HWY_API Vec1<ToT> PromoteTo(Sisd<ToT> /* tag */, Vec1<FromT> from) {
 // so we overload for FromT=double and ToT={float,int32_t}.
 HWY_API Vec1<float> DemoteTo(Sisd<float> /* tag */, Vec1<double> from) {
   // Prevent ubsan errors when converting float to narrower integer/float
-  if (std::isinf(from.raw) ||
-      std::fabs(from.raw) > static_cast<double>(HighestValue<float>())) {
-    return Vec1<float>(std::signbit(from.raw) ? LowestValue<float>()
-                                              : HighestValue<float>());
+  if (isinf(from.raw) ||
+      fabs(from.raw) > static_cast<double>(HighestValue<float>())) {
+    return Vec1<float>(detail::SignBit(from.raw) ? LowestValue<float>()
+                                                 : HighestValue<float>());
   }
   return Vec1<float>(static_cast<float>(from.raw));
 }
 HWY_API Vec1<int32_t> DemoteTo(Sisd<int32_t> /* tag */, Vec1<double> from) {
   // Prevent ubsan errors when converting int32_t to narrower integer/int32_t
-  if (std::isinf(from.raw) ||
-      std::fabs(from.raw) > static_cast<double>(HighestValue<int32_t>())) {
-    return Vec1<int32_t>(std::signbit(from.raw) ? LowestValue<int32_t>()
-                                                : HighestValue<int32_t>());
+  if (isinf(from.raw) ||
+      fabs(from.raw) > static_cast<double>(HighestValue<int32_t>())) {
+    return Vec1<int32_t>(detail::SignBit(from.raw) ? LowestValue<int32_t>()
+                                                   : HighestValue<int32_t>());
   }
   return Vec1<int32_t>(static_cast<int32_t>(from.raw));
 }
@@ -1196,10 +1224,9 @@ HWY_API Vec1<ToT> ConvertTo(Sisd<ToT> /* tag */, Vec1<FromT> from) {
   // float## -> int##: return closest representable value. We cannot exactly
   // represent LimitsMax<ToT> in FromT, so use double.
   const double f = static_cast<double>(from.raw);
-  if (std::isinf(from.raw) ||
-      std::fabs(f) > static_cast<double>(LimitsMax<ToT>())) {
-    return Vec1<ToT>(std::signbit(from.raw) ? LimitsMin<ToT>()
-                                            : LimitsMax<ToT>());
+  if (isinf(from.raw) || fabs(f) > static_cast<double>(LimitsMax<ToT>())) {
+    return Vec1<ToT>(detail::SignBit(from.raw) ? LimitsMin<ToT>()
+                                               : LimitsMax<ToT>());
   }
   return Vec1<ToT>(static_cast<ToT>(from.raw));
 }
@@ -1468,6 +1495,11 @@ HWY_API intptr_t FindFirstTrue(Sisd<T> /* tag */, const Mask1<T> mask) {
   return mask.bits == 0 ? -1 : 0;
 }
 
+template <typename T>
+HWY_API size_t FindKnownFirstTrue(Sisd<T> /* tag */, const Mask1<T> /* m */) {
+  return 0;  // There is only one lane and we know it is true.
+}
+
 // ------------------------------ Compress, CompressBits
 
 template <typename T>
@@ -1528,6 +1560,14 @@ HWY_API Vec1<float> ReorderWidenMulAccumulate(Sisd<float> /* tag */,
                                               Vec1<float>& /* sum1 */) {
   return MulAdd(Vec1<float>(F32FromBF16(a.raw)),
                 Vec1<float>(F32FromBF16(b.raw)), sum0);
+}
+
+HWY_API Vec1<int32_t> ReorderWidenMulAccumulate(Sisd<int32_t> /* tag */,
+                                                Vec1<int16_t> a,
+                                                Vec1<int16_t> b,
+                                                const Vec1<int32_t> sum0,
+                                                Vec1<int32_t>& /* sum1 */) {
+  return Vec1<int32_t>(a.raw * b.raw + sum0.raw);
 }
 
 // ================================================== REDUCTIONS

@@ -117,8 +117,7 @@ bool JpegXlSaveGui::GuiOnChangeQuality(GtkAdjustment* adj_qual,
   g_clear_signal_handler(&self->handle_toggle_lossless, self->toggle_lossless);
 
   GtkAdjustment* adj_dist = self->entry_distance;
-  jxl_save_opts.quality = gtk_adjustment_get_value(adj_qual);
-  jxl_save_opts.UpdateDistance();
+  jxl_save_opts.SetQuality(gtk_adjustment_get_value(adj_qual));
   gtk_adjustment_set_value(adj_dist, jxl_save_opts.distance);
 
   self->handle_toggle_lossless = g_signal_connect(
@@ -141,8 +140,7 @@ bool JpegXlSaveGui::GuiOnChangeDistance(GtkAdjustment* adj_dist,
   g_clear_signal_handler(&self->handle_entry_quality, self->entry_quality);
   g_clear_signal_handler(&self->handle_toggle_lossless, self->toggle_lossless);
 
-  jxl_save_opts.distance = gtk_adjustment_get_value(adj_dist);
-  jxl_save_opts.UpdateQuality();
+  jxl_save_opts.SetDistance(gtk_adjustment_get_value(adj_dist));
   gtk_adjustment_set_value(adj_qual, jxl_save_opts.quality);
 
   if (!(jxl_save_opts.distance < 0.001)) {

@@ -10,6 +10,7 @@
 #include <deque>
 #include <vector>
 
+#include "enc_fast_lossless.h"
 #include "jxl/encode.h"
 #include "jxl/memory_manager.h"
 #include "jxl/parallel_runner.h"
@@ -141,13 +142,20 @@ struct JxlEncoderQueuedBox {
   bool compress_box;
 };
 
+using FJXLFrameUniquePtr =
+    std::unique_ptr<JxlFastLosslessFrameState,
+                    decltype(&JxlFastLosslessFreeFrameState)>;
+
 // Either a frame, or a box, not both.
+// Can also be a FJXL frame.
 struct JxlEncoderQueuedInput {
   explicit JxlEncoderQueuedInput(const JxlMemoryManager& memory_manager)
       : frame(nullptr, jxl::MemoryManagerDeleteHelper(&memory_manager)),
         box(nullptr, jxl::MemoryManagerDeleteHelper(&memory_manager)) {}
   MemoryManagerUniquePtr<JxlEncoderQueuedFrame> frame;
   MemoryManagerUniquePtr<JxlEncoderQueuedBox> box;
+  FJXLFrameUniquePtr fast_lossless_frame = {nullptr,
+                                            JxlFastLosslessFreeFrameState};
 };
 
 // Appends a JXL container box header with given type, size, and unbounded
@@ -198,6 +206,7 @@ struct JxlEncoderStruct {
   size_t num_queued_boxes;
   std::vector<jxl::JxlEncoderQueuedInput> input_queue;
   std::deque<uint8_t> output_byte_queue;
+  std::deque<jxl::FJXLFrameUniquePtr> output_fast_frame_queue;
 
   // How many codestream bytes have been written, i.e.,
   // content of jxlc and jxlp boxes. Frame index box jxli
@@ -246,8 +255,8 @@ struct JxlEncoderStruct {
   JxlEncoderStatus RefillOutputByteQueue();
 
   bool MustUseContainer() const {
-    return use_container || codestream_level != 5 || store_jpeg_metadata ||
-           use_boxes;
+    return use_container || (codestream_level != 5 && codestream_level != -1) ||
+           store_jpeg_metadata || use_boxes;
   }
 
   // Appends the bytes of a JXL box header with the provided type and size to

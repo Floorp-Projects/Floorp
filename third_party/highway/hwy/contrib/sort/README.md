@@ -9,10 +9,9 @@ and [paper](https://arxiv.org/abs/2205.05982).
 
 ## Instructions
 
-Here are instructions for reproducing our results on x86 Linux (AVX2, AVX-512)
-and Arm V1 (NEON, SVE).
+Here are instructions for reproducing our results on Linux and AWS (SVE, NEON).
 
-### x86 (Linux)
+### Linux
 
 Please first ensure golang, and Clang (tested with 13.0.1) are installed via
 your system's package manager.
@@ -43,9 +42,10 @@ make -j8 && sudo make install
 cd ..
 ```
 
-AWS clang is at version 11.1, which generates unnecessary AND instructions which
-slow down the sort by 1.15x. We tested with clang trunk as of June 13
+AWS clang is at version 11.1, which generates unnecessary `AND` instructions
+which slow down the sort by 1.15x. We tested with clang trunk as of June 13
 (which reports Git hash 8f6512fea000c3a0d394864bb94e524bee375069). To build:
+
 ```
 git clone --depth 1 https://github.com/llvm/llvm-project.git
 cd llvm-project
@@ -63,6 +63,12 @@ CC=/usr/local/bin/clang CXX=/usr/local/bin/clang++ ~/go/bin/bazelisk build -c op
 bazel-bin/hwy/contrib/sort/sort_test
 bazel-bin/hwy/contrib/sort/bench_sort
 ```
+
+The above command line enables SVE, which is currently only available on
+Graviton 3. You can also test NEON on the same processor, or other Arm CPUs, by
+changing the `-march=` option to `--copt=-march=armv8.2-a+crypto`. Note that
+such flags will be unnecessary once Clang supports `#pragma target` for NEON and
+SVE intrinsics, as it does for x86.
 
 ## Results
 

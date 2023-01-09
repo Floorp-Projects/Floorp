@@ -23,6 +23,7 @@
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/icc_codec.h"
+#include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testdata.h"
 
@@ -94,7 +95,6 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
   EXPECT_TRUE(
       ConvertFromExternal(jxl::Span<const uint8_t>(buf.data(), buf.size()),
                           xsize, ysize, color_encoding,
-                          /*alpha_is_premultiplied=*/false,
                           /*bits_per_sample=*/bitdepth, pixel_format,
                           /*pool=*/nullptr, &io.Main()));
   return io;
@@ -232,7 +232,7 @@ void VerifyRoundtripCompression(
         /*pool=*/nullptr, &alpha_channel));
 
     original_io.metadata.m.SetAlphaBits(basic_info.bits_per_sample);
-    original_io.Main().SetAlpha(std::move(alpha_channel), false);
+    original_io.Main().SetAlpha(std::move(alpha_channel));
     output_pixel_format_with_extra_channel_alpha.num_channels++;
   }
   // Those are the num_extra_channels including a potential alpha channel.
@@ -415,13 +415,14 @@ void VerifyRoundtripCompression(
     decoded_io.SetSize(color->xsize(), color->ysize());
   }
 
-  jxl::ButteraugliParams ba;
-  float butteraugli_score =
-      ButteraugliDistance(original_io, decoded_io, ba, jxl::GetJxlCms(),
-                          /*distmap=*/nullptr, nullptr);
   if (lossless && !already_downsampled) {
-    EXPECT_LE(butteraugli_score, 0.0f);
+    EXPECT_TRUE(jxl::SamePixels(*original_io.Main().color(),
+                                *decoded_io.Main().color()));
   } else {
+    jxl::ButteraugliParams ba;
+    float butteraugli_score =
+        ButteraugliDistance(original_io, decoded_io, ba, jxl::GetJxlCms(),
+                            /*distmap=*/nullptr, nullptr);
     EXPECT_LE(butteraugli_score, 2.0f);
   }
   JxlPixelFormat extra_channel_output_pixel_format = output_pixel_format;

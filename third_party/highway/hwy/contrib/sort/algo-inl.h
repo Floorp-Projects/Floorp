@@ -20,8 +20,9 @@
 #include <stdint.h>
 #include <string.h>  // memcpy
 
-#include <algorithm>
-#include <cmath>  // std::abs
+#include <algorithm>   // std::sort, std::min, std::max
+#include <functional>  // std::less, std::greater
+#include <thread>      // NOLINT
 #include <vector>
 
 #include "hwy/base.h"

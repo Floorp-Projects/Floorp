@@ -16,6 +16,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <algorithm>  // std::fill
 #include <bitset>
 
 #include "hwy/base.h"

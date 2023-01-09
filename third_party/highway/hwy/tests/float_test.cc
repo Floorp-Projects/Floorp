@@ -18,8 +18,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <algorithm>
+#include <algorithm>  // std::copy, std::fill
 #include <limits>
+#include <cmath>  // std::abs, std::isnan, std::isinf, std::ceil, std::floor
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/float_test.cc"

@@ -19,11 +19,11 @@ cd ..
 rm -rf build
 
 #######################################
-echo DEBUG Clang 7
+echo DEBUG Clang 9
 rm -rf build_dbg
 mkdir build_dbg
 cd build_dbg
-CXX=clang++-7 CC=clang-7 cmake .. -DHWY_WARNINGS_ARE_ERRORS:BOOL=ON -DCMAKE_BUILD_TYPE=Debug
+CXX=clang++-9 CC=clang-9 cmake .. -DHWY_WARNINGS_ARE_ERRORS:BOOL=ON -DCMAKE_BUILD_TYPE=Debug
 make -j
 ctest -j
 cd ..
@@ -41,7 +41,7 @@ cd ..
 rm -rf build_32
 
 #######################################
-for VER in 8 9 10; do
+for VER in 10 11 12; do
   echo GCC $VER
   rm -rf build_g$VER
   mkdir build_g$VER

@@ -25,7 +25,7 @@ void BM_DecExternalImage_ConvertImageRGBA(benchmark::State& state) {
   ib.SetFromImage(std::move(color), ColorEncoding::SRGB());
   ImageF alpha(xsize, ysize);
   ZeroFillImage(&alpha);
-  ib.SetAlpha(std::move(alpha), /*alpha_is_premultiplied=*/false);
+  ib.SetAlpha(std::move(alpha));
 
   const size_t bytes_per_row = xsize * num_channels;
   std::vector<uint8_t> interleaved(bytes_per_row * ysize);

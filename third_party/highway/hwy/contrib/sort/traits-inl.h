@@ -42,6 +42,9 @@ namespace detail {
 template <typename T>
 struct KeyLane {
   static constexpr bool Is128() { return false; }
+  // False indicates the entire key (i.e. lane) should be compared. KV stands
+  // for key-value.
+  static constexpr bool IsKV() { return false; }
   constexpr size_t LanesPerKey() const { return 1; }
 
   // What type bench_sort should allocate for generating inputs.
@@ -78,7 +81,20 @@ struct KeyLane {
     return Eq(a, b);
   }
 
-  HWY_INLINE bool Equal1(const T* a, const T* b) { return *a == *b; }
+  template <class D>
+  HWY_INLINE Mask<D> NotEqualKeys(D /*tag*/, Vec<D> a, Vec<D> b) const {
+    return Ne(a, b);
+  }
+
+  // For keys=lanes, any difference counts.
+  template <class D>
+  HWY_INLINE bool NoKeyDifference(D /*tag*/, Vec<D> diff) const {
+    // Must avoid floating-point comparisons (for -0)
+    const RebindToUnsigned<D> du;
+    return AllTrue(du, Eq(BitCast(du, diff), Zero(du)));
+  }
+
+  HWY_INLINE bool Equal1(const T* a, const T* b) const { return *a == *b; }
 
   template <class D>
   HWY_INLINE Vec<D> ReverseKeys(D d, Vec<D> v) const {
@@ -223,7 +239,7 @@ struct OrderAscending : public KeyLane<T> {
 
   template <class D>
   HWY_INLINE Vec<D> PrevValue(D d, Vec<D> v) const {
-    return Sub(v, Set(d, 1));
+    return Sub(v, Set(d, hwy::Epsilon<T>()));
   }
 };
 
@@ -272,7 +288,142 @@ struct OrderDescending : public KeyLane<T> {
 
   template <class D>
   HWY_INLINE Vec<D> PrevValue(D d, Vec<D> v) const {
-    return Add(v, Set(d, 1));
+    return Add(v, Set(d, hwy::Epsilon<T>()));
+  }
+};
+
+struct KeyValue64 : public KeyLane<uint64_t> {
+  // True indicates only part of the key (i.e. lane) should be compared. KV
+  // stands for key-value.
+  static constexpr bool IsKV() { return true; }
+
+  template <class D>
+  HWY_INLINE Mask<D> EqualKeys(D /*tag*/, Vec<D> a, Vec<D> b) const {
+    return Eq(ShiftRight<32>(a), ShiftRight<32>(b));
+  }
+
+  template <class D>
+  HWY_INLINE Mask<D> NotEqualKeys(D /*tag*/, Vec<D> a, Vec<D> b) const {
+    return Ne(ShiftRight<32>(a), ShiftRight<32>(b));
+  }
+
+  HWY_INLINE bool Equal1(const uint64_t* a, const uint64_t* b) const {
+    return (*a >> 32) == (*b >> 32);
+  }
+
+  // Only count differences in the actual key, not the value.
+  template <class D>
+  HWY_INLINE bool NoKeyDifference(D /*tag*/, Vec<D> diff) const {
+    // Must avoid floating-point comparisons (for -0)
+    const RebindToUnsigned<D> du;
+    const Vec<decltype(du)> zero = Zero(du);
+    const Vec<decltype(du)> keys = ShiftRight<32>(diff);  // clear values
+    return AllTrue(du, Eq(BitCast(du, keys), zero));
+  }
+};
+
+struct OrderAscendingKV64 : public KeyValue64 {
+  using Order = SortAscending;
+
+  HWY_INLINE bool Compare1(const LaneType* a, const LaneType* b) {
+    return (*a >> 32) < (*b >> 32);
+  }
+
+  template <class D>
+  HWY_INLINE Mask<D> Compare(D /* tag */, Vec<D> a, Vec<D> b) const {
+    return Lt(ShiftRight<32>(a), ShiftRight<32>(b));
+  }
+
+  // Not required to be stable (preserving the order of equivalent keys), so
+  // we can include the value in the comparison.
+  template <class D>
+  HWY_INLINE Vec<D> First(D /* tag */, const Vec<D> a, const Vec<D> b) const {
+    return Min(a, b);
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> Last(D /* tag */, const Vec<D> a, const Vec<D> b) const {
+    return Max(a, b);
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> FirstOfLanes(D d, Vec<D> v,
+                                 uint64_t* HWY_RESTRICT /* buf */) const {
+    return MinOfLanes(d, v);
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> LastOfLanes(D d, Vec<D> v,
+                                uint64_t* HWY_RESTRICT /* buf */) const {
+    return MaxOfLanes(d, v);
+  }
+
+  // Same as for regular lanes.
+  template <class D>
+  HWY_INLINE Vec<D> FirstValue(D d) const {
+    return Set(d, hwy::LowestValue<TFromD<D> >());
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> LastValue(D d) const {
+    return Set(d, hwy::HighestValue<TFromD<D> >());
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> PrevValue(D d, Vec<D> v) const {
+    return Sub(v, Set(d, uint64_t{1}));
+  }
+};
+
+struct OrderDescendingKV64 : public KeyValue64 {
+  using Order = SortDescending;
+
+  HWY_INLINE bool Compare1(const LaneType* a, const LaneType* b) {
+    return (*b >> 32) < (*a >> 32);
+  }
+
+  template <class D>
+  HWY_INLINE Mask<D> Compare(D /* tag */, Vec<D> a, Vec<D> b) const {
+    return Lt(ShiftRight<32>(b), ShiftRight<32>(a));
+  }
+
+  // Not required to be stable (preserving the order of equivalent keys), so
+  // we can include the value in the comparison.
+  template <class D>
+  HWY_INLINE Vec<D> First(D /* tag */, const Vec<D> a, const Vec<D> b) const {
+    return Max(a, b);
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> Last(D /* tag */, const Vec<D> a, const Vec<D> b) const {
+    return Min(a, b);
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> FirstOfLanes(D d, Vec<D> v,
+                                 uint64_t* HWY_RESTRICT /* buf */) const {
+    return MaxOfLanes(d, v);
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> LastOfLanes(D d, Vec<D> v,
+                                uint64_t* HWY_RESTRICT /* buf */) const {
+    return MinOfLanes(d, v);
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> FirstValue(D d) const {
+    return Set(d, hwy::HighestValue<TFromD<D> >());
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> LastValue(D d) const {
+    return Set(d, hwy::LowestValue<TFromD<D> >());
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> PrevValue(D d, Vec<D> v) const {
+    return Add(v, Set(d, uint64_t{1}));
   }
 };
 

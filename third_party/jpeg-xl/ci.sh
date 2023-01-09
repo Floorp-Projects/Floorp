@@ -69,6 +69,11 @@ if [[ "${ENABLE_WASM_SIMD}" -ne "0" ]]; then
   CMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS} -msimd128"
 fi
 
+if [[ "${ENABLE_WASM_SIMD}" -eq "2" ]]; then
+  CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -DHWY_WANT_WASM2"
+  CMAKE_C_FLAGS="${CMAKE_C_FLAGS} -DHWY_WANT_WASM2"
+fi
+
 if [[ ! -z "${HWY_BASELINE_TARGETS}" ]]; then
   CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -DHWY_BASELINE_TARGETS=${HWY_BASELINE_TARGETS}"
 fi
@@ -139,6 +144,7 @@ detect_clang_version() {
   fi
   local clang_version=$("${CC:-clang}" --version | head -n1)
   clang_version=${clang_version#"Debian "}
+  clang_version=${clang_version#"Ubuntu "}
   local llvm_tag
   case "${clang_version}" in
     "clang version 6."*)
@@ -547,6 +553,7 @@ cmd_coverage_report() {
     # Only print coverage information for the libjxl directories. The rest
     # is not part of the code under test.
     --filter '.*jxl/.*'
+    --exclude '.*_gbench.cc'
     --exclude '.*_test.cc'
     --exclude '.*_testonly..*'
     --exclude '.*_debug.*'
