@@ -3138,6 +3138,7 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, Cond cond,
   return true;
 }
 
+#ifdef ENABLE_WASM_GC
 bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
                                               uint32_t typeIndex,
                                               bool onSuccess) {
@@ -3164,6 +3165,7 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
                      b->invertBranch ? !onSuccess : onSuccess);
   return true;
 }
+#endif
 
 // sniffConditionalControl{Cmp,Eqz} may modify the latentWhatever_ state in
 // the BaseCompiler so that a subsequent conditional branch can be compiled
