@@ -714,7 +714,8 @@ void AboutThirdParty::BackgroundThread() {
     }
 
     nsString name(info.mName.Buffer, info.mName.Length / sizeof(wchar_t));
-    mDynamicBlocklist.Insert(std::move(name));
+    mDynamicBlocklist.Insert(name);
+    mDynamicBlocklistAtLaunch.Insert(std::move(name));
   }
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 }
@@ -745,6 +746,9 @@ NS_IMETHODIMP AboutThirdParty::LookupModuleType(const nsAString& aLeafName,
 #if defined(MOZ_LAUNCHER_PROCESS)
   if (mDynamicBlocklist.Contains(aLeafName)) {
     *aResult |= nsIAboutThirdParty::ModuleType_BlockedByUser;
+  }
+  if (mDynamicBlocklistAtLaunch.Contains(aLeafName)) {
+    *aResult |= nsIAboutThirdParty::ModuleType_BlockedByUserAtLaunch;
   }
 #endif
 

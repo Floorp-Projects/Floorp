@@ -22,6 +22,7 @@ interface nsIAboutThirdParty : nsISupports
   const unsigned long ModuleType_IME = 1 << 1;
   const unsigned long ModuleType_ShellExtension = 1 << 2;
   const unsigned long ModuleType_BlockedByUser = 1 << 3;
+  const unsigned long ModuleType_BlockedByUserAtLaunch = 1 << 4;
 
   /**
    * Returns a bitwise combination of the ModuleType_* flags
