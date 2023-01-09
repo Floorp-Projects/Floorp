@@ -619,6 +619,17 @@ def try_builder(
     )
 
 def perf_builder(name, perf_cat, **kwargs):
+    """Add a perf builder.
+
+    Args:
+      name: builder name (str).
+      perf_cat: the category + name for the /perf/ console, or None to omit from the console.
+      **kwargs: Pass on to webrtc_builder / luci.builder.
+    Returns:
+      A luci.builder.
+
+    Notifications are also disabled.
+    """
     add_milo(name, {"perf": perf_cat})
     properties = make_goma_properties()
     properties["builder_group"] = "client.webrtc.perf"
