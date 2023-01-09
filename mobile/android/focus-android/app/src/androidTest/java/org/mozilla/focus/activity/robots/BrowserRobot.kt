@@ -50,7 +50,24 @@ class BrowserRobot {
         )
 
     fun verifyPageContent(expectedText: String) {
-        mDevice.wait(Until.findObject(By.textContains(expectedText)), waitingTime)
+        sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+
+        runWithIdleRes(sessionLoadedIdlingResource) {
+            for (i in 1..RETRY_COUNT) {
+                try {
+                    assertTrue(
+                        webPageItemContainingText(expectedText).waitForExists(pageLoadingTime),
+                    )
+                    break
+                } catch (e: AssertionError) {
+                    if (i == RETRY_COUNT) {
+                        throw e
+                    } else {
+                        refreshPageIfStillLoading(expectedText)
+                    }
+                }
+            }
+        }
     }
 
     fun verifyTrackingProtectionAlert(expectedText: String) {
@@ -59,7 +76,7 @@ class BrowserRobot {
         for (i in 1..RETRY_COUNT) {
             try {
                 assertTrue(
-                    mDevice.findObject(UiSelector().textContains(expectedText))
+                    webPageItemContainingText(expectedText)
                         .waitForExists(pageLoadingTime),
                 )
                 // close the JavaScript alert
