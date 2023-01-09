@@ -672,8 +672,11 @@ toolbar[brighttext] {
 
 /* Firefox View button and menu item */
 
-:root:not([privatebrowsingmode=temporary]) :is(toolbarbutton, toolbarpaletteitem) + #tabbrowser-tabs,
-:root[privatebrowsingmode=temporary] :is(toolbarbutton:not(#firefox-view-button), toolbarpaletteitem:not(#wrapper-firefox-view-button)) + #tabbrowser-tabs {
+:root:not([privatebrowsingmode=temporary], [firefoxviewhidden]) :is(toolbarbutton, toolbarpaletteitem) + #tabbrowser-tabs,
+:root[privatebrowsingmode=temporary]:not([firefoxviewhidden]) :is(
+  toolbarbutton:not(#firefox-view-button),
+  toolbarpaletteitem:not(#wrapper-firefox-view-button)
+) + #tabbrowser-tabs {
   border-inline-start: 1px solid color-mix(in srgb, currentColor 25%, transparent);
   padding-inline-start: calc(var(--tab-overflow-pinned-tabs-width) + 2px);
   margin-inline-start: 2px;
