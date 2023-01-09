@@ -56,19 +56,9 @@ void Classifier::SplitTables(const nsACString& str,
                              nsTArray<nsCString>& tables) {
   tables.Clear();
 
-  nsACString::const_iterator begin, iter, end;
-  str.BeginReading(begin);
-  str.EndReading(end);
-  while (begin != end) {
-    iter = begin;
-    FindCharInReadable(',', iter, end);
-    nsDependentCSubstring table = Substring(begin, iter);
+  for (const auto& table : str.Split(',')) {
     if (!table.IsEmpty()) {
-      tables.AppendElement(Substring(begin, iter));
-    }
-    begin = iter;
-    if (begin != end) {
-      begin++;
+      tables.AppendElement(table);
     }
   }
 

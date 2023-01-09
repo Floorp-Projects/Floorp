@@ -39,17 +39,9 @@ const uint32_t DOMAIN_SIZE = 4;
 // Parse one stringified range of chunks of the form "n" or "n-m" from a
 // comma-separated list of chunks.  Upon return, 'begin' will point to the
 // next range of chunks in the list of chunks.
-static bool ParseChunkRange(nsACString::const_iterator& aBegin,
-                            const nsACString::const_iterator& aEnd,
-                            uint32_t* aFirst, uint32_t* aLast) {
-  nsACString::const_iterator iter = aBegin;
-  FindCharInReadable(',', iter, aEnd);
-
-  nsAutoCString element(Substring(aBegin, iter));
-  aBegin = iter;
-  if (aBegin != aEnd) aBegin++;
-
-  uint32_t numRead = PR_sscanf(element.get(), "%u-%u", aFirst, aLast);
+static bool ParseChunkRange(const nsAutoCString& string, uint32_t* aFirst,
+                            uint32_t* aLast) {
+  uint32_t numRead = PR_sscanf(string.get(), "%u-%u", aFirst, aLast);
   if (numRead == 2) {
     if (*aFirst > *aLast) {
       uint32_t tmp = *aFirst;
@@ -203,12 +195,9 @@ nsresult ProtocolParserV2::ProcessExpirations(const nsCString& aLine) {
     return NS_ERROR_FAILURE;
   }
   const nsACString& list = Substring(aLine, 3);
-  nsACString::const_iterator begin, end;
-  list.BeginReading(begin);
-  list.EndReading(end);
-  while (begin != end) {
+  for (const auto& str : list.Split(',')) {
     uint32_t first, last;
-    if (ParseChunkRange(begin, end, &first, &last)) {
+    if (ParseChunkRange(nsAutoCString(str), &first, &last)) {
       if (last < first) return NS_ERROR_FAILURE;
       if (last - first > MAX_CHUNK_RANGE) return NS_ERROR_FAILURE;
       for (uint32_t num = first; num <= last; num++) {
