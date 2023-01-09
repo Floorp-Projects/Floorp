@@ -10,9 +10,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   <script src="property_database.js"></script>
   <script type="application/javascript">
 
-  const InspectorUtils = SpecialPowers.InspectorUtils;
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
 
-  SimpleTest.requestLongerTimeout(2);
+async function test() {
+  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   // This holds a canonical test value for each TYPE_ constant.
   let testValues = {
@@ -43,14 +45,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   // Ensure that all the TYPE_ constants have a representative
   // test value, to try to ensure that this test is updated
   // whenever a new type is added.
-  let reps = [];
-  for (let tc in InspectorUtils) {
-    if (/TYPE_/.test(tc)) {
-      if (!(tc in testValues)) {
-        reps.push(tc);
-      }
-    }
-  }
+  let reps = await SpecialPowers.spawn(window, [], () => {
+    return Object.getOwnPropertyNames(InspectorUtils).filter(tc => /TYPE_/.test(tc));
+  }).then(v => v.filter(tc => !(tc in testValues)));
   is(reps.join(","), "", "all types have representative test value");
 
   for (let propertyName in gCSSProperties) {
@@ -76,9 +73,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   ok(!InspectorUtils.cssPropertySupportsType("--variable", "color"),
      "cssPropertySupportsType returns false for variable");
 
+  SimpleTest.finish();
+}
   </script>
 </head>
-<body>
+<body onload="test()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1112014">Mozilla Bug 1112014</a>
 <p id="display"></p>
 <div id="content" style="display: none">
