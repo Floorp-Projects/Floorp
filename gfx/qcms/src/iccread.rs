@@ -21,7 +21,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use std::{
-    convert::TryInto,
+    convert::{TryInto, TryFrom},
     sync::atomic::AtomicBool,
     sync::Arc,
 };
@@ -1249,13 +1249,14 @@ impl From<u8> for TransferCharacteristics {
     }
 }
 
-impl From<TransferCharacteristics> for curveType {
+impl TryFrom<TransferCharacteristics> for curveType {
+    type Error = ();
     /// See [ICC.1:2010](https://www.color.org/specification/ICC1v43_2010-12.pdf)
     /// See [Rec. ITU-R BT.2100-2](https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.2100-2-201807-I!!PDF-E.pdf)
-    fn from(value: TransferCharacteristics) -> Self {
+    fn try_from(value: TransferCharacteristics) -> Result<Self, Self::Error> {
         const NUM_TRC_TABLE_ENTRIES: i32 = 1024;
 
-        match value {
+        Ok(match value {
             TransferCharacteristics::Reserved => panic!("TC={} is reserved", value as u8),
             TransferCharacteristics::Bt709
             | TransferCharacteristics::Bt601
@@ -1310,7 +1311,7 @@ impl From<TransferCharacteristics> for curveType {
             TransferCharacteristics::Unspecified => panic!("TC={} is unspecified", value as u8),
             TransferCharacteristics::Bt470M => *curve_from_gamma(2.2),
             TransferCharacteristics::Bt470Bg => *curve_from_gamma(2.8),
-            TransferCharacteristics::Smpte240 => unimplemented!(),
+            TransferCharacteristics::Smpte240 => return Err(()),
             TransferCharacteristics::Linear => *curve_from_gamma(1.),
             TransferCharacteristics::Log_100 => {
                 // See log_100_transfer_characteristics() for derivation
@@ -1339,8 +1340,8 @@ impl From<TransferCharacteristics> for curveType {
                 let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |v| 10f64.powf(2.5 * v - 2.5));
                 curveType::Curve(table)
             }
-            TransferCharacteristics::Iec61966 => unimplemented!(),
-            TransferCharacteristics::Bt_1361 => unimplemented!(),
+            TransferCharacteristics::Iec61966 => return Err(()),
+            TransferCharacteristics::Bt_1361 => return Err(()),
             TransferCharacteristics::Srgb => {
                 // Should we prefer this or curveType::Parametric?
                 curveType::Curve(build_sRGB_gamma_table(NUM_TRC_TABLE_ENTRIES))
@@ -1365,7 +1366,7 @@ impl From<TransferCharacteristics> for curveType {
                 });
                 curveType::Curve(table)
             }
-            TransferCharacteristics::Smpte428 => unimplemented!(),
+            TransferCharacteristics::Smpte428 => return Err(()),
             TransferCharacteristics::Hlg => {
                 // The opto-electronic transfer characteristic function (OETF)
                 // as defined in ITU-T H.273 table 3, row 18:
@@ -1392,7 +1393,7 @@ impl From<TransferCharacteristics> for curveType {
                 });
                 curveType::Curve(table)
             }
-        }
+        })
     }
 }
 
@@ -1400,7 +1401,7 @@ impl From<TransferCharacteristics> for curveType {
 fn check_transfer_characteristics(cicp: TransferCharacteristics, icc_path: &str) {
     let mut cicp_out = [0u8; crate::transform::PRECACHE_OUTPUT_SIZE];
     let mut icc_out = [0u8; crate::transform::PRECACHE_OUTPUT_SIZE];
-    let cicp_tc = curveType::from(cicp);
+    let cicp_tc = curveType::try_from(cicp).unwrap();
     let icc = Profile::new_from_path(icc_path).unwrap();
     let icc_tc = icc.redTRC.as_ref().unwrap();
 
@@ -1539,7 +1540,7 @@ impl Profile {
         if !set_rgb_colorants(&mut profile, cp.white_point(), qcms_CIE_xyYTRIPLE::from(cp)) {
             return None;
         }
-        let curve = curveType::from(tc);
+        let curve = curveType::try_from(tc).ok()?;
         profile.redTRC = Some(Box::new(curve.clone()));
         profile.blueTRC = Some(Box::new(curve.clone()));
         profile.greenTRC = Some(Box::new(curve));
