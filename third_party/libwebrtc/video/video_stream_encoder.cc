@@ -1755,6 +1755,8 @@ void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
 void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
                                           int64_t time_when_posted_us) {
   RTC_DCHECK_RUN_ON(&encoder_queue_);
+  RTC_LOG(LS_VERBOSE) << __func__ << " posted " << time_when_posted_us
+                      << " ntp time " << video_frame.ntp_time_ms();
 
   // If the encoder fail we can't continue to encode frames. When this happens
   // the WebrtcVideoSender is notified and the whole VideoSendStream is
@@ -1975,6 +1977,8 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
                                 image_copy.size())
                          .value_or(-1);
   }
+  RTC_LOG(LS_VERBOSE) << __func__ << " spatial_idx " << spatial_idx << " qp "
+                      << image_copy.qp_;
 
   // Piggyback ALR experiment group id and simulcast id into the content type.
   const uint8_t experiment_id =
