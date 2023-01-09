@@ -55,7 +55,11 @@ NetMonitorAPI.prototype = {
     this.toolbox = toolbox;
 
     // Configure store/state object.
-    this.store = configureStore(this.connector, this.toolbox.telemetry);
+    this.store = configureStore(
+      this.connector,
+      this.toolbox.commands,
+      this.toolbox.telemetry
+    );
     this.actions = bindActionCreators(Actions, this.store.dispatch);
 
     // Register listener for new requests (utilized by WebExtension API).
