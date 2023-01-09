@@ -2269,9 +2269,18 @@ void LIRGenerator::visitInt32ToStringWithBase(MInt32ToStringWithBase* ins) {
   MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
   MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 
-  auto* lir = new (alloc()) LInt32ToStringWithBase(
-      useRegister(ins->input()), useRegisterOrConstant(ins->base()), temp(),
-      temp());
+  int32_t baseInt =
+      ins->base()->isConstant() ? ins->base()->toConstant()->toInt32() : 0;
+
+  LAllocation base;
+  if (2 <= baseInt && baseInt <= 36) {
+    base = useRegisterOrConstant(ins->base());
+  } else {
+    base = useRegister(ins->base());
+  }
+
+  auto* lir = new (alloc())
+      LInt32ToStringWithBase(useRegister(ins->input()), base, temp(), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
