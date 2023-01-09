@@ -174,6 +174,20 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
       aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       free(clipboardDataPtr);
       break;
+    } else if (flavorStr.EqualsLiteral(kFileMime)) {
+      NSArray* items = [cocoaPasteboard pasteboardItems];
+      if (!items || [items count] <= 0) {
+        continue;
+      }
+
+      // XXX we don't support multiple clipboard item on DOM and XPCOM interface
+      // for now, so we only get the data from the first pasteboard item.
+      NSPasteboardItem* item = [items objectAtIndex:0];
+      if (!item) {
+        continue;
+      }
+
+      nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(aTransferable, flavorStr, item);
     } else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
       NSString* type = [cocoaPasteboard
           availableTypeFromArray:
@@ -409,6 +423,23 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
         CLIPBOARD_LOG("    has %s\n", mimeType.get());
         *outResult = true;
         break;
+      }
+    } else if (mimeType.EqualsLiteral(kFileMime)) {
+      NSArray* items = [generalPBoard pasteboardItems];
+      if (items && [items count] > 0) {
+        // XXX we only check the first pasteboard item as we only get data from
+        // first item in TransferableFromPasteboard for now.
+        if (NSPasteboardItem* item = [items objectAtIndex:0]) {
+          if (NSString *availableType = [item
+                  availableTypeFromArray:
+                      [NSArray arrayWithObjects:[UTIHelper
+                                                    stringFromPboardType:(NSString*)kUTTypeFileURL],
+                                                nil]]) {
+            CLIPBOARD_LOG("    has %s\n", mimeType.get());
+            *outResult = true;
+            break;
+          }
+        }
       }
     }
   }
