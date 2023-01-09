@@ -425,10 +425,7 @@ class SnapshotIterator {
     MOZ_ASSERT(moreAllocations());
     return snapshot_.readAllocation();
   }
-  Value skip() {
-    snapshot_.skipAllocation();
-    return UndefinedValue();
-  }
+  void skip() { snapshot_.skipAllocation(); }
 
   const RResumePoint* resumePoint() const;
   const RInstruction* instruction() const { return recover_.instruction(); }
