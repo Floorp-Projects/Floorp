@@ -1303,6 +1303,11 @@ var AddonManagerInternal = {
             })
           );
         }
+        Services.obs.notifyObservers(
+          null,
+          "addons-background-updates-found",
+          updates.length
+        );
         await Promise.all(updates);
       }
 
