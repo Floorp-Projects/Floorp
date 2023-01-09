@@ -10,6 +10,7 @@ DevToolsModules(
     "breakpoint-actor-map.js",
     "capture-screenshot.js",
     "css-grid-utils.js",
+    "custom-formatters.js",
     "dbg-source.js",
     "event-breakpoints.js",
     "event-loop.js",
