@@ -4,6 +4,7 @@
 
 from pathlib import Path
 
+from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
 
 
@@ -44,7 +45,7 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
         # Cleanup happens via Sanitizer.onStartup
         self.marionette.restart(in_app=False)
 
-        self.assertFalse(
-            self.moved_origin_directory.exists(),
-            "to-be-removed subdirectory must disappear",
+        Wait(self.marionette).until(
+            lambda _: not self.moved_origin_directory.exists(),
+            message="to-be-removed subdirectory must disappear",
         )
