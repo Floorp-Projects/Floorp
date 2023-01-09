@@ -1359,6 +1359,8 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
   // Pass stats for reporting.
   stats_reporter_.UpdateStatistics(capture_.stats);
 
+  UpdateRecommendedInputVolumeLocked();
+
   if (submodules_.capture_levels_adjuster) {
     submodules_.capture_levels_adjuster->ApplyPostLevelAdjustment(
         *capture_buffer);
@@ -1367,8 +1369,9 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
       // If the input volume emulation is used, retrieve the recommended input
       // volume and set that to emulate the input volume on the next processed
       // audio frame.
+      RTC_DCHECK(capture_.recommended_input_volume.has_value());
       submodules_.capture_levels_adjuster->SetAnalogMicGainLevel(
-          recommended_stream_analog_level_locked());
+          *capture_.recommended_input_volume);
     }
   }
 
@@ -1388,7 +1391,9 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
 
   capture_.was_stream_delay_set = false;
 
-  // TODO(bugs.webrtc.org/7494): Dump recommended input volume.
+  data_dumper_->DumpRaw("recommended_input_volume",
+                        capture_.recommended_input_volume.value_or(
+                            kUnspecifiedDataDumpInputVolume));
 
   return kNoError;
 }
@@ -1612,6 +1617,10 @@ void AudioProcessingImpl::set_stream_analog_level_locked(int level) {
       *capture_.applied_input_volume != level;
   capture_.applied_input_volume = level;
 
+  // Invalidate any previously recommended input volume which will be updated by
+  // `ProcessStream()`.
+  capture_.recommended_input_volume = absl::nullopt;
+
   if (submodules_.agc_manager) {
     submodules_.agc_manager->set_stream_analog_level(level);
     return;
@@ -1626,25 +1635,40 @@ void AudioProcessingImpl::set_stream_analog_level_locked(int level) {
 
 int AudioProcessingImpl::recommended_stream_analog_level() const {
   MutexLock lock_capture(&mutex_capture_);
-  return recommended_stream_analog_level_locked();
-}
-
-int AudioProcessingImpl::recommended_stream_analog_level_locked() const {
   if (!capture_.applied_input_volume.has_value()) {
     RTC_LOG(LS_ERROR) << "set_stream_analog_level has not been called";
   }
+  // Input volume to recommend when `set_stream_analog_level()` is not called.
+  constexpr int kFallBackInputVolume = 255;
+  // When APM has no input volume to recommend, return the latest applied input
+  // volume that has been observed in order to possibly produce no input volume
+  // change. If no applied input volume has been observed, return a fall-back
+  // value.
+  return capture_.recommended_input_volume.value_or(
+      capture_.applied_input_volume.value_or(kFallBackInputVolume));
+}
+
+void AudioProcessingImpl::UpdateRecommendedInputVolumeLocked() {
+  if (!capture_.applied_input_volume.has_value()) {
+    // When `set_stream_analog_level()` is not called, no input level can be
+    // recommended.
+    capture_.recommended_input_volume = absl::nullopt;
+    return;
+  }
 
   if (submodules_.agc_manager) {
-    return submodules_.agc_manager->recommended_analog_level();
+    capture_.recommended_input_volume =
+        submodules_.agc_manager->recommended_analog_level();
+    return;
   }
 
   if (submodules_.gain_control) {
-    return submodules_.gain_control->stream_analog_level();
+    capture_.recommended_input_volume =
+        submodules_.gain_control->stream_analog_level();
+    return;
   }
 
-  // Input volume to recommend when `set_stream_analog_level()` is not called.
-  constexpr int kFallBackInputVolume = 255;
-  return capture_.applied_input_volume.value_or(kFallBackInputVolume);
+  capture_.recommended_input_volume = capture_.applied_input_volume;
 }
 
 bool AudioProcessingImpl::CreateAndAttachAecDump(absl::string_view file_name,
