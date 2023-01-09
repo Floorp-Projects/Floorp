@@ -481,13 +481,6 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   nsCOMPtr<EventTarget> chromeHandler = window->GetChromeEventHandler();
   docShell->SetChromeEventHandler(chromeHandler);
 
-  if (window->GetCurrentInnerWindow()) {
-    window->SetKeyboardIndicators(ShowFocusRings());
-  } else {
-    // Skip ShouldShowFocusRing check if no inner window is available
-    window->SetInitialKeyboardIndicators(ShowFocusRings());
-  }
-
   // Window scrollbar flags only affect top level remote frames, not fission
   // frames.
   if (mIsTopLevel) {
@@ -1453,14 +1446,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvActivate(uint64_t aActionId) {
 mozilla::ipc::IPCResult BrowserChild::RecvDeactivate(uint64_t aActionId) {
   MOZ_ASSERT(mWebBrowser);
   mWebBrowser->FocusDeactivate(aActionId);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvSetKeyboardIndicators(
-    const UIStateChangeType& aShowFocusRings) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
-  NS_ENSURE_TRUE(window, IPC_OK());
-  window->SetKeyboardIndicators(aShowFocusRings);
   return IPC_OK();
 }
 

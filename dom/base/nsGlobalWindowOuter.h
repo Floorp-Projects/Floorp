@@ -896,8 +896,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool ShouldShowFocusRing() override;
 
-  void SetKeyboardIndicators(UIStateChangeType aShowFocusRings) override;
-
  public:
   already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
 
@@ -907,8 +905,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void ClearStatus();
 
   void UpdateParentTarget() override;
-
-  void InitializeShowFocusRings();
 
  protected:
   // Helper for getComputedStyle and getDefaultComputedStyle

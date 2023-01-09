@@ -8,7 +8,6 @@ include "mozilla/dom/TabMessageUtils.h";
 
 include protocol PBrowser;
 
-using UIStateChangeType from "nsPIDOMWindow.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
@@ -26,9 +25,6 @@ struct PopupIPCTabContext
 struct FrameIPCTabContext
 {
   uint64_t chromeOuterWindowID;
-
-  // Keyboard indicator state inherited from the parent.
-  UIStateChangeType showFocusRings;
 
   // Maximum number of touch points on the screen.
   uint32_t maxTouchPoints;

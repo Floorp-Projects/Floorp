@@ -39,10 +39,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsWindowRoot::nsWindowRoot(nsPIDOMWindowOuter* aWindow) {
-  mWindow = aWindow;
-  mShowFocusRings = StaticPrefs::browser_display_show_focus_rings();
-}
+nsWindowRoot::nsWindowRoot(nsPIDOMWindowOuter* aWindow) { mWindow = aWindow; }
 
 nsWindowRoot::~nsWindowRoot() {
   if (mListenerManager) {

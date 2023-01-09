@@ -702,9 +702,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvScrollbarPreferenceChanged(ScrollbarPreference);
 
-  mozilla::ipc::IPCResult RecvSetKeyboardIndicators(
-      const UIStateChangeType& aShowFocusRings);
-
   mozilla::ipc::IPCResult RecvStopIMEStateManagement();
 
   mozilla::ipc::IPCResult RecvAllowScriptsToClose();

@@ -353,7 +353,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   // Should be called by derived implementations to notify on system color and
   // theme changes.
   void NotifyThemeChanged(mozilla::widget::ThemeChangeKind);
-  void NotifyUIStateChanged(UIStateChangeType aShowFocusRings);
 
 #ifdef ACCESSIBILITY
   // Get the accessible for the window.
