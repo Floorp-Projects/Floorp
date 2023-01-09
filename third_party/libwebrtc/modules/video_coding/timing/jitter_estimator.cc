@@ -92,7 +92,9 @@ JitterEstimator::JitterEstimator(Clock* clock,
           config_.frame_size_window.value_or(kDefaultFrameSizeWindow))),
       max_frame_size_bytes_percentile_(
           config_.max_frame_size_percentile.value_or(
-              kDefaultMaxFrameSizePercentile)),
+              kDefaultMaxFrameSizePercentile),
+          static_cast<size_t>(
+              config_.frame_size_window.value_or(kDefaultFrameSizeWindow))),
       fps_counter_(30),  // TODO(sprang): Use an estimator with limit based
                          // on time, rather than number of samples.
       clock_(clock) {
@@ -108,7 +110,6 @@ void JitterEstimator::Reset() {
   var_frame_size_bytes2_ = 100;
   avg_frame_size_median_bytes_.Reset();
   max_frame_size_bytes_percentile_.Reset();
-  frame_sizes_in_percentile_filter_ = std::queue<int64_t>();
   last_update_time_ = absl::nullopt;
   prev_estimate_ = absl::nullopt;
   prev_frame_size_ = absl::nullopt;
@@ -168,14 +169,6 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
     avg_frame_size_median_bytes_.Insert(frame_size.bytes());
   }
   if (config_.MaxFrameSizePercentileEnabled()) {
-    frame_sizes_in_percentile_filter_.push(frame_size.bytes());
-    if (frame_sizes_in_percentile_filter_.size() >
-        static_cast<size_t>(
-            config_.frame_size_window.value_or(kDefaultFrameSizeWindow))) {
-      max_frame_size_bytes_percentile_.Erase(
-          frame_sizes_in_percentile_filter_.front());
-      frame_sizes_in_percentile_filter_.pop();
-    }
     max_frame_size_bytes_percentile_.Insert(frame_size.bytes());
   }
 
@@ -232,12 +225,16 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
     // delayed. The next frame is of normal size (delta frame), and thus deltaFS
     // will be << 0. This removes all frame samples which arrives after a key
     // frame.
-    double max_frame_size_bytes = GetMaxFrameSizeEstimateBytes();
+    double filtered_max_frame_size_bytes =
+        config_.MaxFrameSizePercentileEnabled()
+            ? max_frame_size_bytes_percentile_.GetFilteredValue()
+            : max_frame_size_bytes_;
     if (delta_frame_bytes >
-        GetCongestionRejectionFactor() * max_frame_size_bytes) {
+        GetCongestionRejectionFactor() * filtered_max_frame_size_bytes) {
       // Update the Kalman filter with the new data
       kalman_filter_.PredictAndUpdate(frame_delay.ms(), delta_frame_bytes,
-                                      max_frame_size_bytes, var_noise_ms2_);
+                                      filtered_max_frame_size_bytes,
+                                      var_noise_ms2_);
     }
   } else {
     double num_stddev = (delay_deviation_ms >= 0) ? num_stddev_delay_outlier
@@ -266,16 +263,6 @@ void JitterEstimator::UpdateRtt(TimeDelta rtt) {
 
 JitterEstimator::Config JitterEstimator::GetConfigForTest() const {
   return config_;
-}
-
-double JitterEstimator::GetMaxFrameSizeEstimateBytes() const {
-  if (config_.MaxFrameSizePercentileEnabled()) {
-    RTC_DCHECK_GT(frame_sizes_in_percentile_filter_.size(), 1u);
-    RTC_DCHECK_LE(frame_sizes_in_percentile_filter_.size(),
-                  config_.frame_size_window.value_or(kDefaultFrameSizeWindow));
-    return max_frame_size_bytes_percentile_.GetPercentileValue();
-  }
-  return max_frame_size_bytes_;
 }
 
 double JitterEstimator::GetNumStddevDelayOutlier() const {
@@ -357,8 +344,12 @@ TimeDelta JitterEstimator::CalculateEstimate() {
       config_.avg_frame_size_median
           ? avg_frame_size_median_bytes_.GetFilteredValue()
           : avg_frame_size_bytes_;
+  double filtered_max_frame_size_bytes =
+      config_.MaxFrameSizePercentileEnabled()
+          ? max_frame_size_bytes_percentile_.GetFilteredValue()
+          : max_frame_size_bytes_;
   double worst_case_frame_size_deviation_bytes =
-      GetMaxFrameSizeEstimateBytes() - filtered_avg_frame_size_bytes;
+      filtered_max_frame_size_bytes - filtered_avg_frame_size_bytes;
   double ret_ms = kalman_filter_.GetFrameDelayVariationEstimateSizeBased(
                       worst_case_frame_size_deviation_bytes) +
                   NoiseThreshold();
