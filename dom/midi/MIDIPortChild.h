@@ -40,6 +40,8 @@ class MIDIPortChild final : public PMIDIPortChild, public MIDIPortInterface {
 
   void Teardown();
 
+  void DetachOwner() { mDOMPort = nullptr; }
+
  private:
   ~MIDIPortChild() = default;
   // Pointer to the DOM object this actor represents. The actor cannot outlive

@@ -43,7 +43,7 @@ JSObject* MIDIOutput::WrapObject(JSContext* aCx,
 
 void MIDIOutput::Send(const Sequence<uint8_t>& aData,
                       const Optional<double>& aTimestamp, ErrorResult& aRv) {
-  if (mPort->DeviceState() == MIDIPortDeviceState::Disconnected) {
+  if (Port()->DeviceState() == MIDIPortDeviceState::Disconnected) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -92,12 +92,12 @@ void MIDIOutput::Send(const Sequence<uint8_t>& aData,
       }
     }
   }
-  mPort->SendSend(msgArray);
+  Port()->SendSend(msgArray);
 }
 
 void MIDIOutput::Clear() {
-  if (mPort->ConnectionState() == MIDIPortConnectionState::Closed) {
+  if (Port()->ConnectionState() == MIDIPortConnectionState::Closed) {
     return;
   }
-  mPort->SendClear();
+  Port()->SendClear();
 }
