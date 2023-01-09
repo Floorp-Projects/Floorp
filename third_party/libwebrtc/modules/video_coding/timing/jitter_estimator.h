@@ -61,11 +61,6 @@ class JitterEstimator {
   //          - rtt          : Round trip time.
   void UpdateRtt(TimeDelta rtt);
 
-  // A constant describing the delay from the jitter buffer to the delay on the
-  // receiving side which is not accounted for by the jitter buffer nor the
-  // decoding delay estimate.
-  static constexpr TimeDelta OPERATING_SYSTEM_JITTER = TimeDelta::Millis(10);
-
  private:
   // Updates the random jitter estimate, i.e. the variance of the time
   // deviations from the line given by the Kalman filter.

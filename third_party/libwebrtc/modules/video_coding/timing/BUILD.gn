@@ -121,7 +121,6 @@ rtc_library("timing_unittests") {
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
     "../../../rtc_base:histogram_percentile_counter",
-    "../../../rtc_base:stringutils",
     "../../../rtc_base:timeutils",
     "../../../system_wrappers:system_wrappers",
     "../../../test:scoped_key_value_config",
