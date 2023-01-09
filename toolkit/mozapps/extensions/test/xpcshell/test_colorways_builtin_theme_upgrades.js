@@ -27,6 +27,7 @@ const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const NOT_MIGRATED_THEME = "mock-not-migrated-theme@mozilla.org";
 
 const RETAINED_THEMES_PREF = "browser.theme.retainedExpiredThemes";
+const COLORWAY_MIGRATION_PREF = "browser.theme.colorway-migration";
 
 const ICON_SVG = `
   <svg width="63" height="62" viewBox="0 0 63 62" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -268,7 +269,54 @@ add_setup(async () => {
 
 add_task(
   {
+    pref_set: [[COLORWAY_MIGRATION_PREF, false]],
+  },
+  async function test_colorways_migration_disabled() {
+    info("Install and activate a colorway built-in test theme");
+
+    await installBuiltinExtension(
+      {
+        manifest: createMockThemeManifest(ADDON_ID, "1.0.0"),
+      },
+      false /* waitForStartup */
+    );
+    const activeTheme = await AddonManager.getAddonByID(ADDON_ID);
+    assertAddonWrapperProperties(activeTheme, {
+      id: ADDON_ID,
+      version: "1.0.0",
+      type: "theme",
+      scope: AddonManager.SCOPE_APPLICATION,
+      isBuiltin: true,
+      isBuiltinColorwayTheme: true,
+    });
+    const promiseThemeEnabled = AddonTestUtils.promiseAddonEvent(
+      "onEnabled",
+      addon => addon.id === ADDON_ID
+    );
+    await activeTheme.enable();
+    await promiseThemeEnabled;
+    ok(activeTheme.isActive, "Expect the colorways theme to be active");
+    assertIsActiveThemeID(activeTheme.id);
+
+    info("Verify that built-in colorway migration is disabled as expected");
+
+    assertAddonCanUpgrade(activeTheme, false);
+
+    const promiseBackgroundUpdatesFound = TestUtils.topicObserved(
+      "addons-background-updates-found"
+    );
+    await AddonManagerPrivate.backgroundUpdateCheck();
+    const [, numUpdatesFound] = await promiseBackgroundUpdatesFound;
+    equal(numUpdatesFound, 0, "Expect no add-on updates to be found");
+
+    await activeTheme.uninstall();
+  }
+);
+
+add_task(
+  {
     pref_set: [
+      [COLORWAY_MIGRATION_PREF, true],
       [
         RETAINED_THEMES_PREF,
         JSON.stringify([ADDON_ID_RETAINED, NOT_MIGRATED_THEME]),

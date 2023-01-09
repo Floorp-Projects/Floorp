@@ -102,6 +102,13 @@ const BuiltInThemesHelpers = {
   },
 };
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  BuiltInThemesHelpers,
+  "isColorwayMigrationEnabled",
+  "browser.theme.colorway-migration",
+  false
+);
+
 const { nsIBlocklistService } = Ci;
 
 const { Log } = ChromeUtils.importESModule(
@@ -880,6 +887,7 @@ class AddonInternal {
       // `onUpdateCheckComplete` method).
       if (
         this.isBuiltinColorwayTheme &&
+        BuiltInThemesHelpers.isColorwayMigrationEnabled &&
         BuiltInThemesHelpers.themeIsExpired(this.id) &&
         (BuiltInThemesHelpers.isActiveTheme(this.id) ||
           BuiltInThemesHelpers.isRetainedExpiredTheme(this.id))
