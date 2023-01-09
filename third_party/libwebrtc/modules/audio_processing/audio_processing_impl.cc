@@ -2148,7 +2148,10 @@ void AudioProcessingImpl::RecordAudioProcessingState() {
   AecDump::AudioProcessingState audio_proc_state;
   audio_proc_state.delay = capture_nonlocked_.stream_delay_ms;
   audio_proc_state.drift = 0;
-  audio_proc_state.level = recommended_stream_analog_level_locked();
+  // TODO(bugs.webrtc.org/7494): Refactor to clarify that `stream_analog_level`
+  // is in fact assigned to the applied volume and not to the recommended one.
+  audio_proc_state.applied_input_volume =
+      recommended_stream_analog_level_locked();
   audio_proc_state.keypress = capture_.key_pressed;
   aec_dump_->AddAudioProcessingState(audio_proc_state);
 }

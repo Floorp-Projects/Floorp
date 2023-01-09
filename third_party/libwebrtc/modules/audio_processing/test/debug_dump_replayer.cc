@@ -121,7 +121,7 @@ void DebugDumpReplayer::OnStreamEvent(const audioproc::Stream& msg) {
   // APM should have been created.
   RTC_CHECK(apm_.get());
 
-  apm_->set_stream_analog_level(msg.level());
+  apm_->set_stream_analog_level(msg.applied_input_volume());
   RTC_CHECK_EQ(AudioProcessing::kNoError,
                apm_->set_stream_delay_ms(msg.delay()));
 
