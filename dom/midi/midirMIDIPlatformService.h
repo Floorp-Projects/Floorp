@@ -47,11 +47,16 @@ class midirMIDIPlatformService : public MIDIPlatformService {
   // Wrapper around the midir Rust implementation.
   MidirWrapper* mImplementation;
 
-  // midir has its own internal threads and we can't execute jobs directly on
-  // them, instead we forward them to the background thread the service was
-  // created in.
-  static StaticMutex gBackgroundThreadMutex MOZ_UNANNOTATED;
-  static nsCOMPtr<nsIThread> gBackgroundThread;
+  // The midir backends can invoke CheckAndReceive on arbitrary background
+  // threads, and so we dispatch events from there to the owner task queue.
+  // It's a little ambiguous whether midir can ever invoke CheckAndReceive
+  // on one of its platform-specific background threads after we've dropped
+  // the main instance. Just in case, we use a static mutex to avoid a potential
+  // race with dropping the primary reference to the task queue via
+  // ClearOnShutdown.
+  static StaticMutex gOwnerThreadMutex;
+  static nsCOMPtr<nsISerialEventTarget> gOwnerThread
+      MOZ_GUARDED_BY(gOwnerThreadMutex);
 };
 
 }  // namespace mozilla::dom

@@ -35,7 +35,7 @@ class SendRunnable : public MIDIBackgroundRunnable {
         mMessage(aMessage) {}
   ~SendRunnable() = default;
   virtual void RunInternal() {
-    AssertIsOnBackgroundThread();
+    MIDIPlatformService::AssertThread();
     if (!MIDIPlatformService::IsRunning()) {
       // Some send operations might outlive the service, bail out and do nothing
       return;
@@ -51,15 +51,15 @@ class SendRunnable : public MIDIBackgroundRunnable {
 };
 
 // static
-StaticMutex midirMIDIPlatformService::gBackgroundThreadMutex;
+StaticMutex midirMIDIPlatformService::gOwnerThreadMutex;
 
 // static
-nsCOMPtr<nsIThread> midirMIDIPlatformService::gBackgroundThread;
+nsCOMPtr<nsISerialEventTarget> midirMIDIPlatformService::gOwnerThread;
 
 midirMIDIPlatformService::midirMIDIPlatformService()
     : mImplementation(nullptr) {
-  StaticMutexAutoLock lock(gBackgroundThreadMutex);
-  gBackgroundThread = NS_GetCurrentThread();
+  StaticMutexAutoLock lock(gOwnerThreadMutex);
+  gOwnerThread = OwnerThread();
 }
 
 midirMIDIPlatformService::~midirMIDIPlatformService() {
@@ -67,8 +67,8 @@ midirMIDIPlatformService::~midirMIDIPlatformService() {
   if (mImplementation) {
     midir_impl_shutdown(mImplementation);
   }
-  StaticMutexAutoLock lock(gBackgroundThreadMutex);
-  gBackgroundThread = nullptr;
+  StaticMutexAutoLock lock(gOwnerThreadMutex);
+  gOwnerThread = nullptr;
 }
 
 // static
@@ -108,9 +108,7 @@ void midirMIDIPlatformService::CheckAndReceive(const nsString* aId,
                                                const GeckoTimeStamp* aTimeStamp,
                                                uint64_t aMicros) {
   nsTArray<uint8_t> data;
-  for (size_t i = 0; i < aLength; i++) {
-    data.AppendElement(aData[i]);
-  }
+  data.AppendElements(aData, aLength);
   const TimeStamp* openTime = reinterpret_cast<const TimeStamp*>(aTimeStamp);
   TimeStamp timestamp =
       *openTime + TimeDuration::FromMicroseconds(static_cast<double>(aMicros));
@@ -120,9 +118,9 @@ void midirMIDIPlatformService::CheckAndReceive(const nsString* aId,
   messages.AppendElement(message);
 
   nsCOMPtr<nsIRunnable> r(new ReceiveRunnable(*aId, messages));
-  StaticMutexAutoLock lock(gBackgroundThreadMutex);
-  if (gBackgroundThread) {
-    gBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);
+  StaticMutexAutoLock lock(gOwnerThreadMutex);
+  if (gOwnerThread) {
+    gOwnerThread->Dispatch(r, NS_DISPATCH_NORMAL);
   }
 }
 
@@ -131,6 +129,7 @@ void midirMIDIPlatformService::Refresh() {
 }
 
 void midirMIDIPlatformService::Open(MIDIPortParent* aPort) {
+  AssertThread();
   MOZ_ASSERT(aPort);
   nsString id = aPort->MIDIPortInterface::Id();
   TimeStamp openTimeStamp = TimeStamp::Now();
@@ -141,7 +140,7 @@ void midirMIDIPlatformService::Open(MIDIPortParent* aPort) {
         (openTimeStamp - TimeStamp::ProcessCreation()).ToSeconds());
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
         aPort, aPort->DeviceState(), MIDIPortConnectionState::Open));
-    NS_DispatchToCurrentThread(r);
+    OwnerThread()->Dispatch(r.forget());
   } else {
     LOG("MIDI port open failed: %s", NS_ConvertUTF16toUTF8(id).get());
   }
@@ -152,6 +151,7 @@ void midirMIDIPlatformService::Stop() {
 }
 
 void midirMIDIPlatformService::ScheduleSend(const nsAString& aPortId) {
+  AssertThread();
   LOG("MIDI port schedule send %s", NS_ConvertUTF16toUTF8(aPortId).get());
   nsTArray<MIDIMessage> messages;
   GetMessages(aPortId, messages);
@@ -165,14 +165,15 @@ void midirMIDIPlatformService::ScheduleSend(const nsAString& aPortId) {
         SendMessage(aPortId, message);
       } else {
         nsCOMPtr<nsIRunnable> r(new SendRunnable(aPortId, message));
-        NS_DelayedDispatchToCurrentThread(r.forget(),
-                                          static_cast<uint32_t>(delay));
+        OwnerThread()->DelayedDispatch(r.forget(),
+                                       static_cast<uint32_t>(delay));
       }
     }
   }
 }
 
 void midirMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
+  AssertThread();
   MOZ_ASSERT(aPort);
   nsString id = aPort->MIDIPortInterface::Id();
   LOG("MIDI port schedule close %s", NS_ConvertUTF16toUTF8(id).get());
@@ -180,7 +181,7 @@ void midirMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
     midir_impl_close_port(mImplementation, &id);
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
         aPort, aPort->DeviceState(), MIDIPortConnectionState::Closed));
-    NS_DispatchToCurrentThread(r);
+    OwnerThread()->Dispatch(r.forget());
   }
 }
 

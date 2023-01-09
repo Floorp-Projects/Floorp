@@ -13,7 +13,7 @@ namespace mozilla::dom {
 
 NS_IMETHODIMP
 MIDIBackgroundRunnable::Run() {
-  ::mozilla::ipc::AssertIsOnBackgroundThread();
+  MIDIPlatformService::AssertThread();
   if (!MIDIPlatformService::IsRunning()) {
     return NS_OK;
   }

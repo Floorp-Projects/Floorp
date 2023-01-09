@@ -32,7 +32,7 @@ class MIDIPortInfo;
  */
 class MIDIPlatformService {
  public:
-  NS_INLINE_DECL_REFCOUNTING(MIDIPlatformService);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MIDIPlatformService);
   // Adds info about MIDI Port that has been connected.
   void AddPortInfo(MIDIPortInfo& aPortInfo);
 

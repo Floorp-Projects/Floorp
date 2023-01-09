@@ -38,10 +38,6 @@ class TestMIDIPlatformService : public MIDIPlatformService {
 
  private:
   virtual ~TestMIDIPlatformService();
-  // Convenience object for sending runnables to the background thread. All
-  // runnables are pushed to the background thread, and check for existence of a
-  // manager object on the thread before running.
-  nsCOMPtr<nsIThread> mBackgroundThread;
   // Port that takes test control messages
   MIDIPortInfo mControlInputPort;
   // Port that returns test status messages

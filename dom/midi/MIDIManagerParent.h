@@ -19,7 +19,7 @@ namespace mozilla::dom {
  */
 class MIDIManagerParent final : public PMIDIManagerParent {
  public:
-  NS_INLINE_DECL_REFCOUNTING(MIDIManagerParent, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MIDIManagerParent, override)
   MIDIManagerParent() = default;
   mozilla::ipc::IPCResult RecvRefresh();
   mozilla::ipc::IPCResult RecvShutdown();

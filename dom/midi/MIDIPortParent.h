@@ -20,7 +20,7 @@ namespace mozilla::dom {
  */
 class MIDIPortParent final : public PMIDIPortParent, public MIDIPortInterface {
  public:
-  NS_INLINE_DECL_REFCOUNTING(MIDIPortParent, override);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MIDIPortParent, override);
   void ActorDestroy(ActorDestroyReason) override;
   mozilla::ipc::IPCResult RecvSend(nsTArray<MIDIMessage>&& aMsg);
   mozilla::ipc::IPCResult RecvOpen();

@@ -55,7 +55,7 @@ class QueueMessagesRunnable : public MIDIBackgroundRunnable {
         mMsgs(aMsgs.Clone()) {}
   ~QueueMessagesRunnable() = default;
   virtual void RunInternal() {
-    AssertIsOnBackgroundThread();
+    MIDIPlatformService::AssertThread();
     MIDIPlatformService::Get()->QueueMessages(mPortID, mMsgs);
   }
 
@@ -65,8 +65,7 @@ class QueueMessagesRunnable : public MIDIBackgroundRunnable {
 };
 
 TestMIDIPlatformService::TestMIDIPlatformService()
-    : mBackgroundThread(NS_GetCurrentThread()),
-      mControlInputPort(u"b744eebe-f7d8-499b-872b-958f63c8f522"_ns,
+    : mControlInputPort(u"b744eebe-f7d8-499b-872b-958f63c8f522"_ns,
                         u"Test Control MIDI Device Input Port"_ns,
                         u"Test Manufacturer"_ns, u"1.0.0"_ns,
                         static_cast<uint32_t>(MIDIPortType::Input)),
@@ -88,15 +87,15 @@ TestMIDIPlatformService::TestMIDIPlatformService()
                                   static_cast<uint32_t>(MIDIPortType::Output)),
       mDoRefresh(false),
       mIsInitialized(false) {
-  AssertIsOnBackgroundThread();
+  MIDIPlatformService::AssertThread();
 }
 
 TestMIDIPlatformService::~TestMIDIPlatformService() {
-  AssertIsOnBackgroundThread();
+  MIDIPlatformService::AssertThread();
 }
 
 void TestMIDIPlatformService::Init() {
-  AssertIsOnBackgroundThread();
+  MIDIPlatformService::AssertThread();
 
   if (mIsInitialized) {
     return;
@@ -112,7 +111,7 @@ void TestMIDIPlatformService::Init() {
   nsCOMPtr<nsIRunnable> r(new SendPortListRunnable());
 
   // Start the IO Thread.
-  NS_DispatchToCurrentThread(r);
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void TestMIDIPlatformService::Refresh() {
@@ -134,25 +133,27 @@ void TestMIDIPlatformService::Open(MIDIPortParent* aPort) {
   // push to IO thread.
   nsCOMPtr<nsIRunnable> r(
       new SetStatusRunnable(aPort, aPort->DeviceState(), s));
-  NS_DispatchToCurrentThread(r);
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void TestMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
+  AssertThread();
   MOZ_ASSERT(aPort);
   if (aPort->ConnectionState() == MIDIPortConnectionState::Open) {
     // Connection events are just simulated on the background thread, no need to
     // push to IO thread.
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
         aPort, aPort->DeviceState(), MIDIPortConnectionState::Closed));
-    NS_DispatchToCurrentThread(r);
+    OwnerThread()->Dispatch(r.forget());
   }
 }
 
-void TestMIDIPlatformService::Stop() { AssertIsOnBackgroundThread(); }
+void TestMIDIPlatformService::Stop() { MIDIPlatformService::AssertThread(); }
 
 void TestMIDIPlatformService::ScheduleSend(const nsAString& aPortId) {
+  AssertThread();
   nsCOMPtr<nsIRunnable> r(new ProcessMessagesRunnable(aPortId));
-  NS_DispatchToCurrentThread(r);
+  OwnerThread()->Dispatch(r.forget());
 }
 
 void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId) {
@@ -170,21 +171,21 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId) {
             case 0x00: {
               nsCOMPtr<nsIRunnable> r(
                   new ReceiveRunnable(mControlInputPort.id(), msg));
-              mBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);
+              OwnerThread()->Dispatch(r, NS_DISPATCH_NORMAL);
               break;
             }
             // Cause control test ports to connect
             case 0x01: {
               nsCOMPtr<nsIRunnable> r1(
                   new AddPortRunnable(mStateTestInputPort));
-              mBackgroundThread->Dispatch(r1, NS_DISPATCH_NORMAL);
+              OwnerThread()->Dispatch(r1, NS_DISPATCH_NORMAL);
               break;
             }
             // Cause control test ports to disconnect
             case 0x02: {
               nsCOMPtr<nsIRunnable> r1(
                   new RemovePortRunnable(mStateTestInputPort));
-              mBackgroundThread->Dispatch(r1, NS_DISPATCH_NORMAL);
+              OwnerThread()->Dispatch(r1, NS_DISPATCH_NORMAL);
               break;
             }
             // Test for packet timing
@@ -207,7 +208,7 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId) {
               }
               nsCOMPtr<nsIRunnable> r(
                   new QueueMessagesRunnable(aPortId, newMsgs));
-              mBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);
+              OwnerThread()->Dispatch(r, NS_DISPATCH_NORMAL);
               break;
             }
             // Causes the next refresh to add new ports to the list
@@ -226,7 +227,7 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId) {
             case 0x00: {
               nsCOMPtr<nsIRunnable> r(
                   new ReceiveRunnable(mControlInputPort.id(), msg));
-              mBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);
+              OwnerThread()->Dispatch(r, NS_DISPATCH_NORMAL);
               break;
             }
             // Test for system real time messages in the middle of sysex
@@ -244,7 +245,7 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId) {
               MIDIUtils::ParseMessages(msgs, TimeStamp::Now(), newMsgs);
               nsCOMPtr<nsIRunnable> r(
                   new ReceiveRunnable(mControlInputPort.id(), newMsgs));
-              mBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);
+              OwnerThread()->Dispatch(r, NS_DISPATCH_NORMAL);
               break;
             }
             default:
