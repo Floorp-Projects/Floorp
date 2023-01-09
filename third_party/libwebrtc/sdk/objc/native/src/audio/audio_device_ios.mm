@@ -16,6 +16,7 @@
 #include <cmath>
 
 #include "api/array_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "helpers.h"
 #include "modules/audio_device/fine_audio_buffer.h"
 #include "rtc_base/checks.h"
@@ -59,15 +60,6 @@ namespace ios_adm {
 // Can most likely be removed.
 const UInt16 kFixedPlayoutDelayEstimate = 30;
 const UInt16 kFixedRecordDelayEstimate = 30;
-
-enum AudioDeviceMessageType : uint32_t {
-  kMessageTypeInterruptionBegin,
-  kMessageTypeInterruptionEnd,
-  kMessageTypeValidRouteChange,
-  kMessageTypeCanPlayOrRecordChange,
-  kMessageTypePlayoutGlitchDetected,
-  kMessageOutputVolumeChange,
-};
 
 using ios::CheckAndLogError;
 
@@ -115,16 +107,15 @@ AudioDeviceIOS::AudioDeviceIOS(bool bypass_voice_processing)
   LOGI() << "ctor" << ios::GetCurrentThreadDescription()
          << ",bypass_voice_processing=" << bypass_voice_processing_;
   io_thread_checker_.Detach();
-  thread_checker_.Detach();
   thread_ = rtc::Thread::Current();
 
   audio_session_observer_ = [[RTCNativeAudioSessionDelegateAdapter alloc] initWithObserver:this];
 }
 
 AudioDeviceIOS::~AudioDeviceIOS() {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   LOGI() << "~dtor" << ios::GetCurrentThreadDescription();
-  thread_->Clear(this);
+  safety_->SetNotAlive();
   Terminate();
   audio_session_observer_ = nil;
 }
@@ -132,16 +123,15 @@ AudioDeviceIOS::~AudioDeviceIOS() {
 void AudioDeviceIOS::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) {
   LOGI() << "AttachAudioBuffer";
   RTC_DCHECK(audioBuffer);
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   audio_device_buffer_ = audioBuffer;
 }
 
 AudioDeviceGeneric::InitStatus AudioDeviceIOS::Init() {
   LOGI() << "Init";
   io_thread_checker_.Detach();
-  thread_checker_.Detach();
 
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   if (initialized_) {
     return InitStatus::OK;
   }
@@ -167,7 +157,7 @@ AudioDeviceGeneric::InitStatus AudioDeviceIOS::Init() {
 
 int32_t AudioDeviceIOS::Terminate() {
   LOGI() << "Terminate";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   if (!initialized_) {
     return 0;
   }
@@ -178,13 +168,13 @@ int32_t AudioDeviceIOS::Terminate() {
 }
 
 bool AudioDeviceIOS::Initialized() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   return initialized_;
 }
 
 int32_t AudioDeviceIOS::InitPlayout() {
   LOGI() << "InitPlayout";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(initialized_);
   RTC_DCHECK(!audio_is_initialized_);
   RTC_DCHECK(!playing_.load());
@@ -199,18 +189,18 @@ int32_t AudioDeviceIOS::InitPlayout() {
 }
 
 bool AudioDeviceIOS::PlayoutIsInitialized() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   return audio_is_initialized_;
 }
 
 bool AudioDeviceIOS::RecordingIsInitialized() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   return audio_is_initialized_;
 }
 
 int32_t AudioDeviceIOS::InitRecording() {
   LOGI() << "InitRecording";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(initialized_);
   RTC_DCHECK(!audio_is_initialized_);
   RTC_DCHECK(!recording_.load());
@@ -226,7 +216,7 @@ int32_t AudioDeviceIOS::InitRecording() {
 
 int32_t AudioDeviceIOS::StartPlayout() {
   LOGI() << "StartPlayout";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(audio_is_initialized_);
   RTC_DCHECK(!playing_.load());
   RTC_DCHECK(audio_unit_);
@@ -251,7 +241,7 @@ int32_t AudioDeviceIOS::StartPlayout() {
 
 int32_t AudioDeviceIOS::StopPlayout() {
   LOGI() << "StopPlayout";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   if (!audio_is_initialized_ || !playing_.load()) {
     return 0;
   }
@@ -282,7 +272,7 @@ bool AudioDeviceIOS::Playing() const {
 
 int32_t AudioDeviceIOS::StartRecording() {
   LOGI() << "StartRecording";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(audio_is_initialized_);
   RTC_DCHECK(!recording_.load());
   RTC_DCHECK(audio_unit_);
@@ -305,7 +295,7 @@ int32_t AudioDeviceIOS::StartRecording() {
 
 int32_t AudioDeviceIOS::StopRecording() {
   LOGI() << "StopRecording";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   if (!audio_is_initialized_ || !recording_.load()) {
     return 0;
   }
@@ -329,7 +319,7 @@ int32_t AudioDeviceIOS::PlayoutDelay(uint16_t& delayMS) const {
 int AudioDeviceIOS::GetPlayoutAudioParameters(AudioParameters* params) const {
   LOGI() << "GetPlayoutAudioParameters";
   RTC_DCHECK(playout_parameters_.is_valid());
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   *params = playout_parameters_;
   return 0;
 }
@@ -337,7 +327,7 @@ int AudioDeviceIOS::GetPlayoutAudioParameters(AudioParameters* params) const {
 int AudioDeviceIOS::GetRecordAudioParameters(AudioParameters* params) const {
   LOGI() << "GetRecordAudioParameters";
   RTC_DCHECK(record_parameters_.is_valid());
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   *params = record_parameters_;
   return 0;
 }
@@ -345,31 +335,29 @@ int AudioDeviceIOS::GetRecordAudioParameters(AudioParameters* params) const {
 void AudioDeviceIOS::OnInterruptionBegin() {
   RTC_DCHECK(thread_);
   LOGI() << "OnInterruptionBegin";
-  thread_->Post(RTC_FROM_HERE, this, kMessageTypeInterruptionBegin);
+  thread_->PostTask(SafeTask(safety_, [this] { HandleInterruptionBegin(); }));
 }
 
 void AudioDeviceIOS::OnInterruptionEnd() {
   RTC_DCHECK(thread_);
   LOGI() << "OnInterruptionEnd";
-  thread_->Post(RTC_FROM_HERE, this, kMessageTypeInterruptionEnd);
+  thread_->PostTask(SafeTask(safety_, [this] { HandleInterruptionEnd(); }));
 }
 
 void AudioDeviceIOS::OnValidRouteChange() {
   RTC_DCHECK(thread_);
-  thread_->Post(RTC_FROM_HERE, this, kMessageTypeValidRouteChange);
+  thread_->PostTask(SafeTask(safety_, [this] { HandleValidRouteChange(); }));
 }
 
 void AudioDeviceIOS::OnCanPlayOrRecordChange(bool can_play_or_record) {
   RTC_DCHECK(thread_);
-  thread_->Post(RTC_FROM_HERE,
-                this,
-                kMessageTypeCanPlayOrRecordChange,
-                new rtc::TypedMessageData<bool>(can_play_or_record));
+  thread_->PostTask(SafeTask(
+      safety_, [this, can_play_or_record] { HandleCanPlayOrRecordChange(can_play_or_record); }));
 }
 
 void AudioDeviceIOS::OnChangedOutputVolume() {
   RTC_DCHECK(thread_);
-  thread_->Post(RTC_FROM_HERE, this, kMessageOutputVolumeChange);
+  thread_->PostTask(SafeTask(safety_, [this] { HandleOutputVolumeChange(); }));
 }
 
 OSStatus AudioDeviceIOS::OnDeliverRecordedData(AudioUnitRenderActionFlags* flags,
@@ -464,7 +452,7 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
       if (glitch_threshold < 120 && delta_time > 120) {
         RTCLog(@"Glitch warning is ignored. Probably caused by device switch.");
       } else {
-        thread_->Post(RTC_FROM_HERE, this, kMessageTypePlayoutGlitchDetected);
+        thread_->PostTask(SafeTask(safety_, [this] { HandlePlayoutGlitchDetected(); }));
       }
     }
   }
@@ -479,34 +467,8 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
   return noErr;
 }
 
-void AudioDeviceIOS::OnMessage(rtc::Message* msg) {
-  switch (msg->message_id) {
-    case kMessageTypeInterruptionBegin:
-      HandleInterruptionBegin();
-      break;
-    case kMessageTypeInterruptionEnd:
-      HandleInterruptionEnd();
-      break;
-    case kMessageTypeValidRouteChange:
-      HandleValidRouteChange();
-      break;
-    case kMessageTypeCanPlayOrRecordChange: {
-      rtc::TypedMessageData<bool>* data = static_cast<rtc::TypedMessageData<bool>*>(msg->pdata);
-      HandleCanPlayOrRecordChange(data->data());
-      delete data;
-      break;
-    }
-    case kMessageTypePlayoutGlitchDetected:
-      HandlePlayoutGlitchDetected();
-      break;
-    case kMessageOutputVolumeChange:
-      HandleOutputVolumeChange();
-      break;
-  }
-}
-
 void AudioDeviceIOS::HandleInterruptionBegin() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Interruption begin. IsInterrupted changed from %d to 1.", is_interrupted_);
   if (audio_unit_ && audio_unit_->GetState() == VoiceProcessingAudioUnit::kStarted) {
     RTCLog(@"Stopping the audio unit due to interruption begin.");
@@ -519,7 +481,7 @@ void AudioDeviceIOS::HandleInterruptionBegin() {
 }
 
 void AudioDeviceIOS::HandleInterruptionEnd() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Interruption ended. IsInterrupted changed from %d to 0. "
           "Updating audio unit state.",
          is_interrupted_);
@@ -542,7 +504,7 @@ void AudioDeviceIOS::HandleInterruptionEnd() {
 }
 
 void AudioDeviceIOS::HandleValidRouteChange() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_OBJC_TYPE(RTCAudioSession)* session = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
   RTCLog(@"%@", session);
   HandleSampleRateChange();
@@ -554,7 +516,7 @@ void AudioDeviceIOS::HandleCanPlayOrRecordChange(bool can_play_or_record) {
 }
 
 void AudioDeviceIOS::HandleSampleRateChange() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Handling sample rate change.");
 
   // Don't do anything if we're interrupted.
@@ -639,7 +601,7 @@ void AudioDeviceIOS::HandleSampleRateChange() {
 }
 
 void AudioDeviceIOS::HandlePlayoutGlitchDetected() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   // Don't update metrics if we're interrupted since a "glitch" is expected
   // in this state.
   if (is_interrupted_) {
@@ -664,7 +626,7 @@ void AudioDeviceIOS::HandlePlayoutGlitchDetected() {
 }
 
 void AudioDeviceIOS::HandleOutputVolumeChange() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Output volume change detected.");
   // Store time of this detection so it can be used to defer detection of
   // glitches too close in time to this event.
@@ -752,7 +714,7 @@ bool AudioDeviceIOS::CreateAudioUnit() {
 }
 
 void AudioDeviceIOS::UpdateAudioUnit(bool can_play_or_record) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Updating audio unit state. CanPlayOrRecord=%d IsInterrupted=%d",
          can_play_or_record,
          is_interrupted_);
@@ -839,7 +801,7 @@ void AudioDeviceIOS::UpdateAudioUnit(bool can_play_or_record) {
 }
 
 bool AudioDeviceIOS::ConfigureAudioSession() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Configuring audio session.");
   if (has_configured_session_) {
     RTCLogWarning(@"Audio session already configured.");
@@ -859,7 +821,7 @@ bool AudioDeviceIOS::ConfigureAudioSession() {
 }
 
 bool AudioDeviceIOS::ConfigureAudioSessionLocked() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Configuring audio session.");
   if (has_configured_session_) {
     RTCLogWarning(@"Audio session already configured.");
@@ -877,7 +839,7 @@ bool AudioDeviceIOS::ConfigureAudioSessionLocked() {
 }
 
 void AudioDeviceIOS::UnconfigureAudioSession() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
   RTCLog(@"Unconfiguring audio session.");
   if (!has_configured_session_) {
     RTCLogWarning(@"Audio session already unconfigured.");
@@ -894,7 +856,7 @@ void AudioDeviceIOS::UnconfigureAudioSession() {
 
 bool AudioDeviceIOS::InitPlayOrRecord() {
   LOGI() << "InitPlayOrRecord";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
 
   // There should be no audio unit at this point.
   if (!CreateAudioUnit()) {
@@ -938,7 +900,7 @@ bool AudioDeviceIOS::InitPlayOrRecord() {
 
 void AudioDeviceIOS::ShutdownPlayOrRecord() {
   LOGI() << "ShutdownPlayOrRecord";
-  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(thread_);
 
   // Stop the audio unit to prevent any additional audio callbacks.
   audio_unit_->Stop();
