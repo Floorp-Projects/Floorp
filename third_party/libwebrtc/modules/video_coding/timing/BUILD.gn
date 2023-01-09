@@ -60,9 +60,13 @@ rtc_library("jitter_estimator") {
     "../../../api/units:timestamp",
     "../../../rtc_base",
     "../../../rtc_base:safe_conversions",
+    "../../../rtc_base/experiments:field_trial_parser",
     "../../../system_wrappers",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("rtt_filter") {
@@ -116,6 +120,7 @@ rtc_library("timing_unittests") {
     ":rtt_filter",
     ":timing_module",
     "../../../api:array_view",
+    "../../../api:field_trials",
     "../../../api/units:data_size",
     "../../../api/units:frequency",
     "../../../api/units:time_delta",
