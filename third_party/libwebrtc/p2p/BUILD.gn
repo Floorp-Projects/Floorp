@@ -18,6 +18,7 @@ group("p2p") {
 rtc_library("rtc_p2p") {
   visibility = [ "*" ]
   sources = [
+    "base/active_ice_controller_factory_interface.h",
     "base/active_ice_controller_interface.h",
     "base/async_stun_tcp_socket.cc",
     "base/async_stun_tcp_socket.h",
