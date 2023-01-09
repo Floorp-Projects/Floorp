@@ -1239,8 +1239,13 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIPort(
     return IPC_FAIL(this, "invalid endpoint for MIDIPort");
   }
 
-  RefPtr<MIDIPortParent> result = new MIDIPortParent(aPortInfo, aSysexEnabled);
-  aEndpoint.Bind(result);
+  MIDIPlatformService::OwnerThread()->Dispatch(NS_NewRunnableFunction(
+      "CreateMIDIPortRunnable", [=, endpoint = std::move(aEndpoint)]() mutable {
+        RefPtr<MIDIPortParent> result =
+            new MIDIPortParent(aPortInfo, aSysexEnabled);
+        endpoint.Bind(result);
+      }));
+
   return IPC_OK();
 }
 
@@ -1253,9 +1258,14 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIManager(
     return IPC_FAIL(this, "invalid endpoint for MIDIManager");
   }
 
-  RefPtr<MIDIManagerParent> result = new MIDIManagerParent();
-  aEndpoint.Bind(result);
-  MIDIPlatformService::Get()->AddManager(result);
+  MIDIPlatformService::OwnerThread()->Dispatch(NS_NewRunnableFunction(
+      "CreateMIDIManagerRunnable",
+      [=, endpoint = std::move(aEndpoint)]() mutable {
+        RefPtr<MIDIManagerParent> result = new MIDIManagerParent();
+        endpoint.Bind(result);
+        MIDIPlatformService::Get()->AddManager(result);
+      }));
+
   return IPC_OK();
 }
 
@@ -1264,8 +1274,17 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvHasMIDIDevice(
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  bool hasDevice = MIDIPlatformService::Get()->HasDevice();
-  aResolver(hasDevice);
+  InvokeAsync(MIDIPlatformService::OwnerThread(), __func__,
+              []() {
+                bool hasDevice = MIDIPlatformService::Get()->HasDevice();
+                return BoolPromise::CreateAndResolve(hasDevice, __func__);
+              })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [resolver = std::move(aResolver)](
+                 const BoolPromise::ResolveOrRejectValue& r) {
+               resolver(r.IsResolve() && r.ResolveValue());
+             });
+
   return IPC_OK();
 }
 
