@@ -22,7 +22,7 @@ const TIMESTAMP_SEARCH_STRING = "timestamp";
 const TIMESTAMP_SUGGESTION_URL = `http://example.com/timestamp-${TIMESTAMP_TEMPLATE}`;
 const TIMESTAMP_SUGGESTION_CLICK_URL = `http://click.reporting.test.com/timestamp-${TIMESTAMP_TEMPLATE}-foo`;
 
-const REMOTE_SETTINGS_DATA = [
+const REMOTE_SETTINGS_RESULTS = [
   {
     id: 1,
     url: "http://test.com/q=frabbits",
@@ -190,9 +190,9 @@ add_task(async function init() {
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
-  cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit(
-    REMOTE_SETTINGS_DATA
-  );
+  cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+  });
 });
 
 // Tests with only non-sponsored suggestions enabled with a matching search
@@ -1213,12 +1213,12 @@ add_task(async function blockedSuggestionsAPI() {
 
 // Test whether the blocking for remote settings results works.
 add_task(async function block() {
-  for (const suggestion of REMOTE_SETTINGS_DATA) {
-    await QuickSuggest.blockedSuggestions.add(suggestion.url);
+  for (const result of REMOTE_SETTINGS_RESULTS) {
+    await QuickSuggest.blockedSuggestions.add(result.url);
   }
 
-  for (const suggestion of REMOTE_SETTINGS_DATA) {
-    const context = createContext(suggestion.keywords[0], {
+  for (const result of REMOTE_SETTINGS_RESULTS) {
+    const context = createContext(result.keywords[0], {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     });
@@ -1275,6 +1275,6 @@ add_task(async function remoteSettingsDataType() {
 
   // Restore the stub for the remainder of the test.
   cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit(
-    REMOTE_SETTINGS_DATA
+    REMOTE_SETTINGS_RESULTS
   );
 });

@@ -21,17 +21,19 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: Utils } = ChromeUtils.importESModule(
+  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
-  return new Utils(this);
+  module.init(this);
+  return module;
 });
 
 XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
-  const { MerinoTestUtils: Utils } = ChromeUtils.importESModule(
+  const { MerinoTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/MerinoTestUtils.sys.mjs"
   );
-  return new Utils(this);
+  module.init(this);
+  return module;
 });
 
 registerCleanupFunction(async () => {
@@ -77,14 +79,24 @@ async function updateTopSites(condition, searchShortcuts = false) {
  *
  * @param {object} options
  *   Options
- * @param {Array} options.suggestions
- *   Quick suggest will be initialized with these suggestions. They should be
- *   the suggestions you want to test.
+ * @param {Array} options.remoteSettingsResults
+ *   Array of remote settings result objects. If not given, no suggestions
+ *   will be present in remote settings.
+ * @param {Array} options.merinoSuggestions
+ *   Array of Merino suggestion objects. If given, this function will start
+ *   the mock Merino server and set `quicksuggest.dataCollection.enabled` to
+ *   true so that `UrlbarProviderQuickSuggest` will fetch suggestions from it.
+ *   Otherwise Merino will not serve suggestions, but you can still set up
+ *   Merino without using this function by using `MerinoTestUtils` directly.
  * @param {Array} options.config
  *   Quick suggest will be initialized with this config. Leave undefined to use
  *   the default config. See `QuickSuggestTestUtils` for details.
  */
-async function setUpTelemetryTest({ suggestions, config = undefined }) {
+async function setUpTelemetryTest({
+  remoteSettingsResults = null,
+  merinoSuggestions = null,
+  config = QuickSuggestTestUtils.DEFAULT_CONFIG,
+}) {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enable blocking on primary sponsored and nonsponsored suggestions so we
@@ -110,7 +122,11 @@ async function setUpTelemetryTest({ suggestions, config = undefined }) {
   // Add a mock engine so we don't hit the network.
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(suggestions, config);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults,
+    merinoSuggestions,
+    config,
+  });
 }
 
 /**
@@ -166,7 +182,11 @@ async function doTelemetryTest({
   showSuggestion = () =>
     UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: suggestion.keywords[0],
+      // If the suggestion object is a remote settings result, it will have a
+      // `keywords` property. Otherwise the suggestion object must be a Merino
+      // suggestion, and the search string doesn't matter in that case because
+      // the mock Merino server will be set up to return suggestions regardless.
+      value: suggestion.keywords?.[0] || "test",
       fireInputEvent: true,
     }),
 }) {

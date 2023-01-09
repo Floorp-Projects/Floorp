@@ -10,12 +10,13 @@
 
 const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
 
-const suggestion = {
-  id: 1,
-  url: "https://example.com/navigational-suggestion",
+const MERINO_SUGGESTION = {
   title: "Navigational suggestion",
-  keywords: ["nav"],
-  iab_category: "5 - Education",
+  url: "https://example.com/navigational-suggestion",
+  provider: "top_picks",
+  is_sponsored: false,
+  score: 0.25,
+  block_id: 0,
   is_top_pick: true,
 };
 
@@ -34,7 +35,7 @@ add_setup(async function() {
 
   await setUpTelemetryTest({
     config,
-    suggestions: [suggestion],
+    merinoSuggestions: [MERINO_SUGGESTION],
   });
 });
 
@@ -43,7 +44,7 @@ add_task(async function navigational() {
   let match_type = "firefox-suggest";
   await doTelemetryTest({
     index,
-    suggestion,
+    suggestion: MERINO_SUGGESTION,
     // impression-only
     impressionOnly: {
       scalars: {
@@ -128,7 +129,7 @@ add_task(async function navigationalBestMatch() {
   });
   await doTelemetryTest({
     index,
-    suggestion,
+    suggestion: MERINO_SUGGESTION,
     // impression-only
     impressionOnly: {
       scalars: {

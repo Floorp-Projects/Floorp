@@ -8,10 +8,11 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: Utils } = ChromeUtils.importESModule(
+  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
-  return new Utils(this);
+  module.init(this);
+  return module;
 });
 
 const GROUP_ID = "searchbarGroup";

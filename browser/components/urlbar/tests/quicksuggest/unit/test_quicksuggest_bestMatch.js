@@ -13,7 +13,7 @@ const MAX_RESULT_COUNT = UrlbarPrefs.get("maxRichResults");
 const BEST_MATCH_POSITION_SEARCH_STRING = "bestmatchposition";
 const BEST_MATCH_POSITION = Math.round(MAX_RESULT_COUNT / 2);
 
-const SUGGESTIONS = [
+const REMOTE_SETTINGS_RESULTS = [
   {
     id: 1,
     url: "http://example.com/",
@@ -47,7 +47,7 @@ const SUGGESTIONS = [
   },
 ];
 
-const EXPECTED_BEST_MATCH_RESULT = {
+const EXPECTED_BEST_MATCH_URLBAR_RESULT = {
   type: UrlbarUtils.RESULT_TYPE.URL,
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
@@ -71,7 +71,7 @@ const EXPECTED_BEST_MATCH_RESULT = {
   },
 };
 
-const EXPECTED_NON_BEST_MATCH_RESULT = {
+const EXPECTED_NON_BEST_MATCH_URLBAR_RESULT = {
   type: UrlbarUtils.RESULT_TYPE.URL,
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
@@ -95,7 +95,7 @@ const EXPECTED_NON_BEST_MATCH_RESULT = {
   },
 };
 
-const EXPECTED_BEST_MATCH_POSITION_RESULT = {
+const EXPECTED_BEST_MATCH_POSITION_URLBAR_RESULT = {
   type: UrlbarUtils.RESULT_TYPE.URL,
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
@@ -129,7 +129,9 @@ add_task(async function init() {
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(SUGGESTIONS);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+  });
 });
 
 // Tests a best match result.
@@ -140,7 +142,7 @@ add_task(async function bestMatch() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_BEST_MATCH_RESULT],
+    matches: [EXPECTED_BEST_MATCH_URLBAR_RESULT],
   });
 
   let result = context.results[0];
@@ -172,7 +174,7 @@ add_task(async function nonBestMatch() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_NON_BEST_MATCH_RESULT],
+    matches: [EXPECTED_NON_BEST_MATCH_URLBAR_RESULT],
   });
 
   let result = context.results[0];
@@ -198,7 +200,7 @@ add_task(async function nonBestMatch() {
 add_task(async function prefixKeywords() {
   let sawNonBestMatch = false;
   let sawBestMatch = false;
-  for (let keyword of SUGGESTIONS[0].keywords) {
+  for (let keyword of REMOTE_SETTINGS_RESULTS[0].keywords) {
     info(`Searching for "${keyword}"`);
     let context = createContext(keyword, {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -207,10 +209,10 @@ add_task(async function prefixKeywords() {
 
     let expectedResult;
     if (keyword.length < 4) {
-      expectedResult = EXPECTED_NON_BEST_MATCH_RESULT;
+      expectedResult = EXPECTED_NON_BEST_MATCH_URLBAR_RESULT;
       sawNonBestMatch = true;
     } else {
-      expectedResult = EXPECTED_BEST_MATCH_RESULT;
+      expectedResult = EXPECTED_BEST_MATCH_URLBAR_RESULT;
       sawBestMatch = true;
     }
 
@@ -269,7 +271,7 @@ add_task(async function tabToSearch() {
         satisfiesAutofillThreshold: true,
       }),
       // best match
-      EXPECTED_BEST_MATCH_RESULT,
+      EXPECTED_BEST_MATCH_URLBAR_RESULT,
       // visit
       makeVisitResult(context, {
         uri: engineURL,
@@ -309,7 +311,7 @@ async function doDisabledTest() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_NON_BEST_MATCH_RESULT],
+    matches: [EXPECTED_NON_BEST_MATCH_URLBAR_RESULT],
   });
 
   let result = context.results[0];
@@ -370,7 +372,7 @@ add_task(async function position() {
         heuristic: true,
       }),
       // best match whose backing suggestion has a `position`
-      EXPECTED_BEST_MATCH_POSITION_RESULT,
+      EXPECTED_BEST_MATCH_POSITION_URLBAR_RESULT,
       // visits
       ...visitResults.slice(0, MAX_RESULT_COUNT - 2),
     ],
@@ -393,7 +395,7 @@ add_task(async function blockedAsBestMatch() {
       });
       await check_results({
         context,
-        matches: [EXPECTED_NON_BEST_MATCH_RESULT],
+        matches: [EXPECTED_NON_BEST_MATCH_URLBAR_RESULT],
       });
     },
   });
@@ -410,7 +412,7 @@ add_task(async function noConfig() {
       });
       await check_results({
         context,
-        matches: [EXPECTED_NON_BEST_MATCH_RESULT],
+        matches: [EXPECTED_NON_BEST_MATCH_URLBAR_RESULT],
       });
     },
   });
@@ -439,7 +441,7 @@ add_task(async function hueristicDeduplication() {
     await check_results({
       context,
       matches: expectBestMatch
-        ? [EXPECTED_AUTOFILL_RESULT, EXPECTED_BEST_MATCH_RESULT]
+        ? [EXPECTED_AUTOFILL_RESULT, EXPECTED_BEST_MATCH_URLBAR_RESULT]
         : [EXPECTED_AUTOFILL_RESULT],
     });
     await PlacesUtils.history.clear();

@@ -84,13 +84,15 @@ const WEATHER_FETCH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 /**
  * Test utils for Merino.
  */
-export class MerinoTestUtils {
+class _MerinoTestUtils {
   /**
+   * Initializes the utils.
+   *
    * @param {object} scope
    *   The global JS scope where tests are being run. This allows the instance
    *   to access test helpers like `Assert` that are available in the scope.
    */
-  constructor(scope) {
+  init(scope) {
     if (!scope) {
       throw new Error("MerinoTestUtils() must be called with a scope");
     }
@@ -715,3 +717,5 @@ class MockMerinoServer {
   #nextDelayedResponseID = 0;
   #delayedResponseRecords = new Set();
 }
+
+export var MerinoTestUtils = new _MerinoTestUtils();

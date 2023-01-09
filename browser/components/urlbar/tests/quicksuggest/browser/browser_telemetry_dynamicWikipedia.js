@@ -14,14 +14,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
 
-const suggestion = {
-  id: 1,
+const MERINO_SUGGESTION = {
+  block_id: 1,
   url: "https://example.com/dynamic-wikipedia",
   title: "Dynamic Wikipedia suggestion",
-  keywords: ["dynamic-wikipedia"],
   click_url: "https://example.com/click",
   impression_url: "https://example.com/impression",
   advertiser: "dynamic-wikipedia",
+  provider: "wikipedia",
   iab_category: "5 - Education",
 };
 
@@ -32,14 +32,14 @@ const position = index + 1;
 
 add_setup(async function() {
   await setUpTelemetryTest({
-    suggestions: [suggestion],
+    merinoSuggestions: [MERINO_SUGGESTION],
   });
 });
 
 add_task(async function() {
   await doTelemetryTest({
     index,
-    suggestion,
+    suggestion: MERINO_SUGGESTION,
     // impression-only
     impressionOnly: {
       scalars: {
@@ -62,9 +62,11 @@ add_task(async function() {
           match_type,
           position,
           is_clicked: false,
-          improve_suggest_experience_checked: false,
-          block_id: suggestion.id,
-          advertiser: suggestion.advertiser,
+          improve_suggest_experience_checked: true,
+          block_id: MERINO_SUGGESTION.block_id,
+          advertiser: MERINO_SUGGESTION.advertiser,
+          request_id: MerinoTestUtils.server.response.body.request_id,
+          source: "merino",
         },
       },
     },
@@ -94,9 +96,11 @@ add_task(async function() {
               match_type,
               position,
               is_clicked: true,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              improve_suggest_experience_checked: true,
+              block_id: MERINO_SUGGESTION.block_id,
+              advertiser: MERINO_SUGGESTION.advertiser,
+              request_id: MerinoTestUtils.server.response.body.request_id,
+              source: "merino",
             },
           },
           {
@@ -104,9 +108,11 @@ add_task(async function() {
             payload: {
               match_type,
               position,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              improve_suggest_experience_checked: true,
+              block_id: MERINO_SUGGESTION.block_id,
+              advertiser: MERINO_SUGGESTION.advertiser,
+              request_id: MerinoTestUtils.server.response.body.request_id,
+              source: "merino",
             },
           },
         ],
@@ -136,9 +142,11 @@ add_task(async function() {
               match_type,
               position,
               is_clicked: false,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              improve_suggest_experience_checked: true,
+              block_id: MERINO_SUGGESTION.block_id,
+              advertiser: MERINO_SUGGESTION.advertiser,
+              request_id: MerinoTestUtils.server.response.body.request_id,
+              source: "merino",
             },
           },
           {
@@ -146,10 +154,12 @@ add_task(async function() {
             payload: {
               match_type,
               position,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
-              iab_category: suggestion.iab_category,
+              improve_suggest_experience_checked: true,
+              block_id: MERINO_SUGGESTION.block_id,
+              advertiser: MERINO_SUGGESTION.advertiser,
+              iab_category: MERINO_SUGGESTION.iab_category,
+              request_id: MerinoTestUtils.server.response.body.request_id,
+              source: "merino",
             },
           },
         ],
@@ -179,9 +189,11 @@ add_task(async function() {
               match_type,
               position,
               is_clicked: false,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              improve_suggest_experience_checked: true,
+              block_id: MERINO_SUGGESTION.block_id,
+              advertiser: MERINO_SUGGESTION.advertiser,
+              request_id: MerinoTestUtils.server.response.body.request_id,
+              source: "merino",
             },
           },
         ],

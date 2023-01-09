@@ -21,7 +21,7 @@ const NON_SPONSORED_SEARCH_STRING = "nonspon";
 
 const TEST_URL = "http://example.com/quicksuggest";
 
-const TEST_DATA = [
+const REMOTE_SETTINGS_RESULTS = [
   {
     id: 1,
     url: `${TEST_URL}?q=${SPONSORED_SEARCH_STRING}`,
@@ -56,7 +56,9 @@ add_setup(async function() {
   // Add a mock engine so we don't hit the network.
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(TEST_DATA);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+  });
 
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();

@@ -12,15 +12,17 @@ ChromeUtils.defineESModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
 
-const SPONSORED_SUGGESTION = {
-  id: 1,
-  url: "https://example.com/sponsored",
-  title: "Sponsored suggestion",
-  keywords: ["sponsored"],
-  click_url: "https://example.com/click",
-  impression_url: "https://example.com/impression",
-  advertiser: "testadvertiser",
-};
+const REMOTE_SETTINGS_RESULTS = [
+  {
+    id: 1,
+    url: "https://example.com/sponsored",
+    title: "Sponsored suggestion",
+    keywords: ["sponsored"],
+    click_url: "https://example.com/click",
+    impression_url: "https://example.com/impression",
+    advertiser: "testadvertiser",
+  },
+];
 
 add_setup(async function() {
   await PlacesUtils.history.clear();
@@ -33,7 +35,9 @@ add_setup(async function() {
   // Add a mock engine so we don't hit the network.
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit([SPONSORED_SUGGESTION]);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+  });
 });
 
 // Tests telemetry recorded when toggling the
@@ -311,7 +315,7 @@ add_task(async function nimbusExposure() {
       await QuickSuggestTestUtils.assertIsQuickSuggest({
         window,
         index: 1,
-        url: SPONSORED_SUGGESTION.url,
+        url: REMOTE_SETTINGS_RESULTS[0].url,
       });
       await QuickSuggestTestUtils.assertExposureEvent(true, "control");
 
