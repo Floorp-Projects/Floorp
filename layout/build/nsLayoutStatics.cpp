@@ -115,6 +115,7 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/MIDIPlatformService.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -292,6 +293,10 @@ nsresult nsLayoutStatics::Initialize() {
   RLBoxExpatSandboxPool::Initialize();
 
   RLBoxWOFF2SandboxPool::Initalize();
+
+  if (XRE_IsParentProcess()) {
+    MIDIPlatformService::InitStatics();
+  }
 
 #ifndef MOZ_WIDGET_ANDROID
   if (XRE_IsParentProcess()) {
