@@ -294,9 +294,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return nullptr;
   }
 
-  void ReportSdpFormatReceived(
-      const SessionDescriptionInterface& remote_description) override {}
-
   void ReportSdpBundleUsage(
       const SessionDescriptionInterface& remote_description) override {}
 
