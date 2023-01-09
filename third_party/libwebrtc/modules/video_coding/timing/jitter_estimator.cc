@@ -79,7 +79,7 @@ void JitterEstimator::Reset() {
   rtt_filter_.Reset();
   fps_counter_.Reset();
 
-  kalman_filter_ = FrameDelayDeltaKalmanFilter();
+  kalman_filter_ = FrameDelayVariationKalmanFilter();
 }
 
 // Updates the estimates with the new measurements.

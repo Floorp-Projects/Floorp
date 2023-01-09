@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/timing/frame_delay_delta_kalman_filter.h"
+#include "modules/video_coding/timing/frame_delay_variation_kalman_filter.h"
 
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
@@ -18,9 +18,9 @@ namespace webrtc {
 namespace {
 // TODO(brandtr): The value below corresponds to 8 Gbps. Is that reasonable?
 constexpr double kMaxBandwidth = 0.000001;  // Unit: [1 / bytes per ms].
-}
+}  // namespace
 
-FrameDelayDeltaKalmanFilter::FrameDelayDeltaKalmanFilter() {
+FrameDelayVariationKalmanFilter::FrameDelayVariationKalmanFilter() {
   // TODO(brandtr): Is there a factor 1000 missing here?
   estimate_[0] = 1 / (512e3 / 8);  // Unit: [1 / bytes per ms]
   estimate_[1] = 0;                // Unit: [ms]
@@ -35,7 +35,7 @@ FrameDelayDeltaKalmanFilter::FrameDelayDeltaKalmanFilter() {
   process_noise_cov_diag_[1] = 1e-10;    // Unit: [ms^2]
 }
 
-void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
+void FrameDelayVariationKalmanFilter::PredictAndUpdate(
     double frame_delay_variation_ms,
     double frame_size_variation_bytes,
     double max_frame_size_bytes,
@@ -131,13 +131,13 @@ void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
              estimate_cov_[0][0] >= 0);
 }
 
-double FrameDelayDeltaKalmanFilter::GetFrameDelayVariationEstimateSizeBased(
+double FrameDelayVariationKalmanFilter::GetFrameDelayVariationEstimateSizeBased(
     double frame_size_variation_bytes) const {
   // Unit: [1 / bytes per millisecond] * [bytes] = [milliseconds].
   return estimate_[0] * frame_size_variation_bytes;
 }
 
-double FrameDelayDeltaKalmanFilter::GetFrameDelayVariationEstimateTotal(
+double FrameDelayVariationKalmanFilter::GetFrameDelayVariationEstimateTotal(
     double frame_size_variation_bytes) const {
   double frame_transmission_delay_ms =
       GetFrameDelayVariationEstimateSizeBased(frame_size_variation_bytes);
