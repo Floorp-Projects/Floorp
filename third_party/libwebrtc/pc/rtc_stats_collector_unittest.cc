@@ -1009,6 +1009,82 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCertificateStatsSingle) {
   ExpectReportContainsCertificateInfo(report, *remote_certinfo);
 }
 
+// These SSRC collisions are legal.
+TEST_F(RTCStatsCollectorTest, ValidSsrcCollisionDoesNotCrash) {
+  // BUNDLE audio/video inbound/outbound. Unique SSRCs needed within the BUNDLE.
+  cricket::VoiceMediaInfo mid1_info;
+  mid1_info.receivers.emplace_back();
+  mid1_info.receivers[0].add_ssrc(1);
+  mid1_info.senders.emplace_back();
+  mid1_info.senders[0].add_ssrc(2);
+  pc_->AddVoiceChannel("Mid1", "Transport1", mid1_info);
+  cricket::VideoMediaInfo mid2_info;
+  mid2_info.receivers.emplace_back();
+  mid2_info.receivers[0].add_ssrc(3);
+  mid2_info.senders.emplace_back();
+  mid2_info.senders[0].add_ssrc(4);
+  pc_->AddVideoChannel("Mid2", "Transport1", mid2_info);
+  // Now create a second BUNDLE group with SSRCs colliding with the first group
+  // (but again no collisions within the group).
+  cricket::VoiceMediaInfo mid3_info;
+  mid3_info.receivers.emplace_back();
+  mid3_info.receivers[0].add_ssrc(1);
+  mid3_info.senders.emplace_back();
+  mid3_info.senders[0].add_ssrc(2);
+  pc_->AddVoiceChannel("Mid3", "Transport2", mid3_info);
+  cricket::VideoMediaInfo mid4_info;
+  mid4_info.receivers.emplace_back();
+  mid4_info.receivers[0].add_ssrc(3);
+  mid4_info.senders.emplace_back();
+  mid4_info.senders[0].add_ssrc(4);
+  pc_->AddVideoChannel("Mid4", "Transport2", mid4_info);
+
+  // This should not crash (https://crbug.com/1361612).
+  rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+  auto inbound_rtps = report->GetStatsOfType<RTCInboundRTPStreamStats>();
+  auto outbound_rtps = report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  // TODO(https://crbug.com/webrtc/14443): When valid SSRC collisions are
+  // handled correctly, we should expect to see 4 of each type of object here.
+  EXPECT_EQ(inbound_rtps.size(), 2u);
+  EXPECT_EQ(outbound_rtps.size(), 2u);
+}
+
+// These SSRC collisions are illegal, so it is not clear if this setup can
+// happen even when talking to a malicious endpoint, but simulate illegal SSRC
+// collisions just to make sure we don't crash in even the most extreme cases.
+TEST_F(RTCStatsCollectorTest, InvalidSsrcCollisionDoesNotCrash) {
+  // One SSRC to rule them all.
+  cricket::VoiceMediaInfo mid1_info;
+  mid1_info.receivers.emplace_back();
+  mid1_info.receivers[0].add_ssrc(1);
+  mid1_info.senders.emplace_back();
+  mid1_info.senders[0].add_ssrc(1);
+  pc_->AddVoiceChannel("Mid1", "BundledTransport", mid1_info);
+  cricket::VideoMediaInfo mid2_info;
+  mid2_info.receivers.emplace_back();
+  mid2_info.receivers[0].add_ssrc(1);
+  mid2_info.senders.emplace_back();
+  mid2_info.senders[0].add_ssrc(1);
+  pc_->AddVideoChannel("Mid2", "BundledTransport", mid2_info);
+  cricket::VoiceMediaInfo mid3_info;
+  mid3_info.receivers.emplace_back();
+  mid3_info.receivers[0].add_ssrc(1);
+  mid3_info.senders.emplace_back();
+  mid3_info.senders[0].add_ssrc(1);
+  pc_->AddVoiceChannel("Mid3", "BundledTransport", mid3_info);
+  cricket::VideoMediaInfo mid4_info;
+  mid4_info.receivers.emplace_back();
+  mid4_info.receivers[0].add_ssrc(1);
+  mid4_info.senders.emplace_back();
+  mid4_info.senders[0].add_ssrc(1);
+  pc_->AddVideoChannel("Mid4", "BundledTransport", mid4_info);
+
+  // This should not crash (https://crbug.com/1361612).
+  stats_->GetStatsReport();
+  // Because this setup is illegal, there is no "right answer" to how the report
+  // should look. We only care about not crashing.
+}
+
 TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
   // Audio
   cricket::VoiceMediaInfo voice_media_info;
