@@ -69,6 +69,12 @@
       };
       testAccessibleTree("table_with_display_block_mtd", table_tree);
 
+      // Equivalent to the above test but with display: block mtr.
+      testAccessibleTree("table_with_display_block_mtr", table_tree);
+
+      // Equivalent to the above test but with display: block mtable.
+      testAccessibleTree("table_with_display_block", table_tree);
+
       SimpleTest.finish();
     }
 
@@ -135,6 +141,19 @@
         <mtd style="display: block">test</mtd>
       </mtr>
     </mtable>
+
+    <mtable id="table_with_display_block_mtr">
+      <mtr style="display: block">
+        <mtd>test</mtd>
+      </mtr>
+    </mtable>
+
+    <mtable id="table_with_display_block" style="display: block">
+      <mtr>
+        <mtd>test</mtd>
+      </mtr>
+    </mtable>
+
   </math>
 
 </body>
