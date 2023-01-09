@@ -605,6 +605,20 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
     as_bstrpick_d(dest, src.valueReg(), JSVAL_TAG_SHIFT - 1, 0);
   }
 
+  // Like unboxGCThingForGCBarrier, but loads the GC thing's chunk base.
+  void getGCThingValueChunk(const Address& src, Register dest) {
+    ScratchRegisterScope scratch(asMasm());
+    MOZ_ASSERT(scratch != dest);
+    loadPtr(src, dest);
+    movePtr(ImmWord(JS::detail::ValueGCThingPayloadChunkMask), scratch);
+    as_and(dest, dest, scratch);
+  }
+  void getGCThingValueChunk(const ValueOperand& src, Register dest) {
+    MOZ_ASSERT(src.valueReg() != dest);
+    movePtr(ImmWord(JS::detail::ValueGCThingPayloadChunkMask), dest);
+    as_and(dest, dest, src.valueReg());
+  }
+
   void unboxInt32(const ValueOperand& operand, Register dest);
   void unboxInt32(Register src, Register dest);
   void unboxInt32(const Address& src, Register dest);

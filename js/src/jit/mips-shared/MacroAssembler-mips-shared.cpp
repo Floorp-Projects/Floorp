@@ -1804,11 +1804,8 @@ uint32_t MacroAssembler::pushFakeReturnAddress(Register scratch) {
 }
 
 void MacroAssembler::loadStoreBuffer(Register ptr, Register buffer) {
-  if (ptr != buffer) {
-    movePtr(ptr, buffer);
-  }
-  orPtr(Imm32(gc::ChunkMask), buffer);
-  loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
+  ma_and(buffer, ptr, Imm32(int32_t(~gc::ChunkMask)));
+  loadPtr(Address(buffer, gc::ChunkStoreBufferOffset), buffer);
 }
 
 void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
@@ -1817,11 +1814,10 @@ void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
   MOZ_ASSERT(ptr != temp);
   MOZ_ASSERT(ptr != SecondScratchReg);
 
-  movePtr(ptr, SecondScratchReg);
-  orPtr(Imm32(gc::ChunkMask), SecondScratchReg);
+  ma_and(SecondScratchReg, ptr, Imm32(int32_t(~gc::ChunkMask)));
   branchPtr(InvertCondition(cond),
-            Address(SecondScratchReg, gc::ChunkStoreBufferOffsetFromLastByte),
-            ImmWord(0), label);
+            Address(SecondScratchReg, gc::ChunkStoreBufferOffset), ImmWord(0),
+            label);
 }
 
 void MacroAssembler::comment(const char* msg) { Assembler::comment(msg); }
