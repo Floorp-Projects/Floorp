@@ -1327,11 +1327,13 @@ struct BaseCompiler final {
   template <typename Cond, typename Lhs, typename Rhs>
   [[nodiscard]] bool jumpConditionalWithResults(BranchState* b, Cond cond,
                                                 Lhs lhs, Rhs rhs);
+#ifdef ENABLE_WASM_GC
   // Jump to the given branch, passing results, if the WasmGcObject, `object`,
   // is a subtype of `typeIndex`.
   [[nodiscard]] bool jumpConditionalWithResults(BranchState* b, RegRef object,
                                                 uint32_t typeIndex,
                                                 bool onSuccess);
+#endif
   template <typename Cond>
   [[nodiscard]] bool sniffConditionalControlCmp(Cond compareOp,
                                                 ValType operandType);
