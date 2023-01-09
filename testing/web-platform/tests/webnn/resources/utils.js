@@ -79,6 +79,7 @@ const PrecisionMetrics = {
   leakyRelu: {ULP: {float32: 1, float16: 1}},
   relu: {ULP: {float32: 0, float16: 0}},
   reshape: {ULP: {float32: 0, float16: 0}},
+  sigmoid: {ULP: {float32: 32+2, float16: 3}}, // float32 (leaving a few ULP for roundoff)
   slice: {ULP: {float32: 0, float16: 0}},
   softmax: {ULP: {float32: getSoftmaxPrecisionTolerance, float16: getSoftmaxPrecisionTolerance}},
   transpose: {ULP: {float32: 0, float16: 0}},
