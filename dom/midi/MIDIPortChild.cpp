@@ -14,19 +14,15 @@ using namespace mozilla::dom;
 
 MIDIPortChild::MIDIPortChild(const MIDIPortInfo& aPortInfo, bool aSysexEnabled,
                              MIDIPort* aPort)
-    : MIDIPortInterface(aPortInfo, aSysexEnabled),
-      mDOMPort(aPort),
-      mActorWasAlive(false) {}
+    : MIDIPortInterface(aPortInfo, aSysexEnabled), mDOMPort(aPort) {}
 
-void MIDIPortChild::Teardown() {
+void MIDIPortChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (mDOMPort) {
     mDOMPort->UnsetIPCPort();
     MOZ_ASSERT(!mDOMPort);
   }
   MIDIPortInterface::Shutdown();
 }
-
-void MIDIPortChild::ActorDestroy(ActorDestroyReason aWhy) {}
 
 mozilla::ipc::IPCResult MIDIPortChild::RecvReceive(
     nsTArray<MIDIMessage>&& aMsgs) {
@@ -49,12 +45,6 @@ mozilla::ipc::IPCResult MIDIPortChild::RecvUpdateStatus(
     mDOMPort->FireStateChangeEvent();
   }
   return IPC_OK();
-}
-
-void MIDIPortChild::SetActorAlive() {
-  MOZ_ASSERT(!mActorWasAlive);
-  mActorWasAlive = true;
-  AddRef();
 }
 
 nsresult MIDIPortChild::GenerateStableId(const nsACString& aOrigin) {

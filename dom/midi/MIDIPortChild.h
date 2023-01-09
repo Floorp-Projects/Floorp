@@ -23,7 +23,7 @@ class MIDIPortInfo;
  */
 class MIDIPortChild final : public PMIDIPortChild, public MIDIPortInterface {
  public:
-  NS_INLINE_DECL_REFCOUNTING(MIDIPortChild);
+  NS_INLINE_DECL_REFCOUNTING(MIDIPortChild, override);
   mozilla::ipc::IPCResult RecvReceive(nsTArray<MIDIMessage>&& aMsgs);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -35,10 +35,6 @@ class MIDIPortChild final : public PMIDIPortChild, public MIDIPortInterface {
                 MIDIPort* aPort);
   nsresult GenerateStableId(const nsACString& aOrigin);
   const nsString& StableId() { return mStableId; };
-  // virtual void Shutdown() override;
-  void SetActorAlive();
-
-  void Teardown();
 
   void DetachOwner() { mDOMPort = nullptr; }
 
@@ -48,7 +44,6 @@ class MIDIPortChild final : public PMIDIPortChild, public MIDIPortInterface {
   // the DOM object.
   MIDIPort* mDOMPort;
   nsString mStableId;
-  bool mActorWasAlive;
 };
 }  // namespace mozilla::dom
 

@@ -58,20 +58,17 @@ mozilla::ipc::IPCResult MIDIPortParent::RecvShutdown() {
   if (mShuttingDown) {
     return IPC_OK();
   }
-  Teardown();
   Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-void MIDIPortParent::Teardown() {
+void MIDIPortParent::ActorDestroy(ActorDestroyReason) {
   mMessageQueue.Clear();
   MIDIPortInterface::Shutdown();
   if (MIDIPlatformService::IsRunning()) {
     MIDIPlatformService::Get()->RemovePort(this);
   }
 }
-
-void MIDIPortParent::ActorDestroy(ActorDestroyReason) {}
 
 bool MIDIPortParent::SendUpdateStatus(
     const MIDIPortDeviceState& aDeviceState,

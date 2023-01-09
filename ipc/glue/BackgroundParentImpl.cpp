@@ -1229,24 +1229,13 @@ BackgroundParentImpl::RecvPHttpBackgroundChannelConstructor(
   return IPC_OK();
 }
 
-PMIDIPortParent* BackgroundParentImpl::AllocPMIDIPortParent(
+already_AddRefed<PMIDIPortParent> BackgroundParentImpl::AllocPMIDIPortParent(
     const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
   RefPtr<MIDIPortParent> result = new MIDIPortParent(aPortInfo, aSysexEnabled);
-  return result.forget().take();
-}
-
-bool BackgroundParentImpl::DeallocPMIDIPortParent(PMIDIPortParent* aActor) {
-  MOZ_ASSERT(aActor);
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  RefPtr<MIDIPortParent> parent =
-      dont_AddRef(static_cast<MIDIPortParent*>(aActor));
-  parent->Teardown();
-  return true;
+  return result.forget();
 }
 
 already_AddRefed<PMIDIManagerParent>

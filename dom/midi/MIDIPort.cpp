@@ -58,8 +58,6 @@ MIDIPort::~MIDIPort() {
     // probably CC'ing this port object. Send the shutdown message to also clean
     // up the IPC channel.
     Port()->SendShutdown();
-    // This will unset the IPC Port pointer. Don't call anything after this.
-    Port()->Teardown();
   }
 }
 
@@ -86,9 +84,6 @@ bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
   LOG("MIDIPort::Initialize (%s, %s)",
       NS_ConvertUTF16toUTF8(Port()->Name()).get(),
       MIDIPortTypeValues::strings[uint32_t(Port()->Type())].value);
-  // Make sure to increase the ref count for the port, so it can be cleaned up
-  // by the IPC manager.
-  Port()->SetActorAlive();
   return true;
 }
 
