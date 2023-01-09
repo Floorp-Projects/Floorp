@@ -742,6 +742,9 @@ nsMenuBarFrame* XULButtonElement::GetMenuBar(FlushType aFlushType) {
 }
 
 XULMenuParentElement* XULButtonElement::GetMenuParent() const {
+  if (IsXULElement(nsGkAtoms::menulist)) {
+    return nullptr;
+  }
   return FirstAncestorOfType<XULMenuParentElement>();
 }
 
