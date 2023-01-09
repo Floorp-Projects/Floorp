@@ -3325,6 +3325,7 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   MediaDecoderStateMachineBase::InitializationTask(aDecoder);
 
   // Connect mirrors.
+  mStreamName.Connect(aDecoder->CanonicalStreamName());
   mSinkDevice.Connect(aDecoder->CanonicalSinkDevice());
   mOutputCaptureState.Connect(aDecoder->CanonicalOutputCaptureState());
   mOutputDummyTrack.Connect(aDecoder->CanonicalOutputDummyTrack());
