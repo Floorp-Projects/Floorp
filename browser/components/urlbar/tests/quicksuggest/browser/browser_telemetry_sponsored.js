@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
 
-const suggestion = {
+const REMOTE_SETTINGS_RESULT = {
   id: 1,
   url: "https://example.com/sponsored",
   title: "Sponsored suggestion",
@@ -30,7 +30,7 @@ const position = index + 1;
 
 add_setup(async function() {
   await setUpTelemetryTest({
-    suggestions: [suggestion],
+    remoteSettingsResults: [REMOTE_SETTINGS_RESULT],
   });
 });
 
@@ -51,7 +51,7 @@ add_task(async function sponsored() {
     });
     await doTelemetryTest({
       index,
-      suggestion,
+      suggestion: REMOTE_SETTINGS_RESULT,
       // impression-only
       impressionOnly: {
         scalars: {
@@ -74,8 +74,8 @@ add_task(async function sponsored() {
             position,
             improve_suggest_experience_checked,
             is_clicked: false,
-            block_id: suggestion.id,
-            advertiser: suggestion.advertiser,
+            block_id: REMOTE_SETTINGS_RESULT.id,
+            advertiser: REMOTE_SETTINGS_RESULT.advertiser,
           },
         },
       },
@@ -104,8 +104,8 @@ add_task(async function sponsored() {
                 position,
                 improve_suggest_experience_checked,
                 is_clicked: true,
-                block_id: suggestion.id,
-                advertiser: suggestion.advertiser,
+                block_id: REMOTE_SETTINGS_RESULT.id,
+                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
               },
             },
             {
@@ -114,8 +114,8 @@ add_task(async function sponsored() {
                 match_type,
                 position,
                 improve_suggest_experience_checked,
-                block_id: suggestion.id,
-                advertiser: suggestion.advertiser,
+                block_id: REMOTE_SETTINGS_RESULT.id,
+                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
               },
             },
           ],
@@ -144,8 +144,8 @@ add_task(async function sponsored() {
                 position,
                 improve_suggest_experience_checked,
                 is_clicked: false,
-                block_id: suggestion.id,
-                advertiser: suggestion.advertiser,
+                block_id: REMOTE_SETTINGS_RESULT.id,
+                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
               },
             },
             {
@@ -154,9 +154,9 @@ add_task(async function sponsored() {
                 match_type,
                 position,
                 improve_suggest_experience_checked,
-                block_id: suggestion.id,
-                advertiser: suggestion.advertiser,
-                iab_category: suggestion.iab_category,
+                block_id: REMOTE_SETTINGS_RESULT.id,
+                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
+                iab_category: REMOTE_SETTINGS_RESULT.iab_category,
               },
             },
           ],
@@ -185,8 +185,8 @@ add_task(async function sponsored() {
                 position,
                 improve_suggest_experience_checked,
                 is_clicked: false,
-                block_id: suggestion.id,
-                advertiser: suggestion.advertiser,
+                block_id: REMOTE_SETTINGS_RESULT.id,
+                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
               },
             },
           ],
@@ -205,7 +205,7 @@ add_task(async function sponsoredBestMatch() {
   });
   await doTelemetryTest({
     index,
-    suggestion,
+    suggestion: REMOTE_SETTINGS_RESULT,
     // impression-only
     impressionOnly: {
       scalars: {
@@ -229,8 +229,8 @@ add_task(async function sponsoredBestMatch() {
           position,
           is_clicked: false,
           improve_suggest_experience_checked: false,
-          block_id: suggestion.id,
-          advertiser: suggestion.advertiser,
+          block_id: REMOTE_SETTINGS_RESULT.id,
+          advertiser: REMOTE_SETTINGS_RESULT.advertiser,
         },
       },
     },
@@ -261,8 +261,8 @@ add_task(async function sponsoredBestMatch() {
               position,
               is_clicked: true,
               improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              block_id: REMOTE_SETTINGS_RESULT.id,
+              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
             },
           },
           {
@@ -271,8 +271,8 @@ add_task(async function sponsoredBestMatch() {
               match_type,
               position,
               improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              block_id: REMOTE_SETTINGS_RESULT.id,
+              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
             },
           },
         ],
@@ -303,8 +303,8 @@ add_task(async function sponsoredBestMatch() {
               position,
               is_clicked: false,
               improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              block_id: REMOTE_SETTINGS_RESULT.id,
+              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
             },
           },
           {
@@ -313,9 +313,9 @@ add_task(async function sponsoredBestMatch() {
               match_type,
               position,
               improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
-              iab_category: suggestion.iab_category,
+              block_id: REMOTE_SETTINGS_RESULT.id,
+              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
+              iab_category: REMOTE_SETTINGS_RESULT.iab_category,
             },
           },
         ],
@@ -346,8 +346,8 @@ add_task(async function sponsoredBestMatch() {
               position,
               is_clicked: false,
               improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              block_id: REMOTE_SETTINGS_RESULT.id,
+              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
             },
           },
         ],

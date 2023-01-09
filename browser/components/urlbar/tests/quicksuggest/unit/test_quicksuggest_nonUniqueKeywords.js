@@ -158,7 +158,6 @@ add_task(async function() {
       ...qsResult,
       block_id: qsResult.id,
       is_sponsored: isSponsored,
-      is_top_pick: false,
       score:
         typeof score == "number"
           ? score
@@ -166,7 +165,6 @@ add_task(async function() {
       source: "remote-settings",
       icon: null,
       position: undefined,
-      _test_is_best_match: undefined,
     };
     delete qsSuggestion.keywords;
     delete qsSuggestion.id;
@@ -198,7 +196,9 @@ add_task(async function() {
     });
   }
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(qsResults);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: qsResults,
+  });
 
   // Run a test for each keyword.
   for (let [keyword, test] of Object.entries(TESTS)) {

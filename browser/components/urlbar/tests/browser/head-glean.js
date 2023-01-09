@@ -12,10 +12,11 @@ ChromeUtils.defineESModuleGetters(this, {
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: Utils } = ChromeUtils.importESModule(
+  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
-  return new Utils(this);
+  module.init(this);
+  return module;
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -64,28 +65,30 @@ function _assertGleanTelemetry(telemetryName, expectedExtraList) {
 }
 
 async function ensureQuickSuggestInit() {
-  return lazy.QuickSuggestTestUtils.ensureQuickSuggestInit([
-    {
-      id: 1,
-      url: "https://example.com/sponsored",
-      title: "Sponsored suggestion",
-      keywords: ["sponsored"],
-      click_url: "https://example.com/click",
-      impression_url: "https://example.com/impression",
-      advertiser: "TestAdvertiser",
-      iab_category: "22 - Shopping",
-    },
-    {
-      id: 2,
-      url: `https://example.com/nonsponsored`,
-      title: "Non-sponsored suggestion",
-      keywords: ["nonsponsored"],
-      click_url: "https://example.com/click",
-      impression_url: "https://example.com/impression",
-      advertiser: "TestAdvertiser",
-      iab_category: "5 - Education",
-    },
-  ]);
+  return lazy.QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: [
+      {
+        id: 1,
+        url: "https://example.com/sponsored",
+        title: "Sponsored suggestion",
+        keywords: ["sponsored"],
+        click_url: "https://example.com/click",
+        impression_url: "https://example.com/impression",
+        advertiser: "TestAdvertiser",
+        iab_category: "22 - Shopping",
+      },
+      {
+        id: 2,
+        url: `https://example.com/nonsponsored`,
+        title: "Non-sponsored suggestion",
+        keywords: ["nonsponsored"],
+        click_url: "https://example.com/click",
+        impression_url: "https://example.com/impression",
+        advertiser: "TestAdvertiser",
+        iab_category: "5 - Education",
+      },
+    ],
+  });
 }
 
 async function doTest(testFn) {

@@ -31,13 +31,51 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 let gTestScope;
 
-XPCOMUtils.defineLazyGetter(lazy, "UrlbarTestUtils", () => {
-  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
-    "resource://testing-common/UrlbarTestUtils.sys.mjs"
-  );
-  module.init(gTestScope);
-  gTestScope.registerCleanupFunction?.(() => module.uninit());
-  return module;
+// Test utils singletons need special handling. Since they are uninitialized in
+// cleanup functions, they must be re-initialized on each new test. That does
+// not happen automatically inside system modules like this one because system
+// module lifetimes are the app's lifetime, unlike individual browser chrome and
+// xpcshell tests.
+/* eslint-disable mozilla/valid-lazy */
+Object.defineProperty(lazy, "UrlbarTestUtils", {
+  get: () => {
+    if (!lazy._UrlbarTestUtils) {
+      const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+        "resource://testing-common/UrlbarTestUtils.sys.mjs"
+      );
+      module.init(gTestScope);
+      gTestScope.registerCleanupFunction(() => {
+        module.uninit();
+        // Make sure the utils are re-initialized during the next test.
+        lazy._UrlbarTestUtils = null;
+      });
+      lazy._UrlbarTestUtils = module;
+    }
+    return lazy._UrlbarTestUtils;
+  },
+});
+
+// Test utils singletons need special handling. Since they are uninitialized in
+// cleanup functions, they must be re-initialized on each new test. That does
+// not happen automatically inside system modules like this one because system
+// module lifetimes are the app's lifetime, unlike individual browser chrome and
+// xpcshell tests.
+/* eslint-disable mozilla/valid-lazy */
+Object.defineProperty(lazy, "MerinoTestUtils", {
+  get: () => {
+    if (!lazy._MerinoTestUtils) {
+      const { MerinoTestUtils: module } = ChromeUtils.importESModule(
+        "resource://testing-common/MerinoTestUtils.sys.mjs"
+      );
+      module.init(gTestScope);
+      gTestScope.registerCleanupFunction(() => {
+        // Make sure the utils are re-initialized during the next test.
+        lazy._MerinoTestUtils = null;
+      });
+      lazy._MerinoTestUtils = module;
+    }
+    return lazy._MerinoTestUtils;
+  },
 });
 
 const DEFAULT_CONFIG = {
@@ -95,13 +133,15 @@ const TEST_SCOPE_PROPERTIES = [
 /**
  * Test utils for quick suggest.
  */
-export class QuickSuggestTestUtils {
+class _QuickSuggestTestUtils {
   /**
+   * Initializes the utils.
+   *
    * @param {object} scope
    *   The global JS scope where tests are being run. This allows the instance
    *   to access test helpers like `Assert` that are available in the scope.
    */
-  constructor(scope) {
+  init(scope) {
     if (!scope) {
       throw new Error("QuickSuggestTestUtils() must be called with a scope");
     }
@@ -138,41 +178,73 @@ export class QuickSuggestTestUtils {
   /**
    * Waits for quick suggest initialization to finish, ensures its data will not
    * be updated again during the test, and also optionally sets it up with mock
-   * data.
+   * suggestions.
    *
-   * @param {Array} [results]
-   *   Array of quick suggest result objects. If not given, then this function
-   *   won't set up any mock data.
-   * @param {object} [config]
-   *   Configuration object.
+   * @param {object} options
+   *   Options object
+   * @param {Array} options.remoteSettingsResults
+   *   Array of remote settings result objects. If not given, no suggestions
+   *   will be present in remote settings.
+   * @param {Array} options.merinoSuggestions
+   *   Array of Merino suggestion objects. If given, this function will start
+   *   the mock Merino server and set `quicksuggest.dataCollection.enabled` to
+   *   true so that `UrlbarProviderQuickSuggest` will fetch suggestions from it.
+   *   Otherwise Merino will not serve suggestions, but you can still set up
+   *   Merino without using this function by using `MerinoTestUtils` directly.
+   * @param {object} options.config
+   *   The quick suggest configuration object.
    * @returns {Function}
    *   A cleanup function. You only need to call this function if you're in a
    *   browser chrome test and you did not also call `init`. You can ignore it
    *   otherwise.
    */
-  async ensureQuickSuggestInit(results = null, config = DEFAULT_CONFIG) {
+  async ensureQuickSuggestInit({
+    remoteSettingsResults = null,
+    merinoSuggestions = null,
+    config = DEFAULT_CONFIG,
+  } = {}) {
     this.info?.("ensureQuickSuggestInit calling QuickSuggest.init()");
     lazy.QuickSuggest.init();
 
-    this.info?.("ensureQuickSuggestInit awaiting readyPromise");
-    await lazy.QuickSuggest.remoteSettings.readyPromise;
-    this.info?.("ensureQuickSuggestInit done awaiting readyPromise");
+    this.info?.("ensureQuickSuggestInit awaiting remoteSettings.readyPromise");
+    let { remoteSettings } = lazy.QuickSuggest;
+    await remoteSettings.readyPromise;
+    this.info?.(
+      "ensureQuickSuggestInit done awaiting remoteSettings.readyPromise"
+    );
 
-    // Ignore settings syncs so any actual remote settings syncs that happen
-    // during the test are ignored.
-    lazy.QuickSuggest.remoteSettings._test_ignoreSettingsSync = true;
-    let cleanup = () => {
-      delete lazy.QuickSuggest.remoteSettings._test_ignoreSettingsSync;
+    this.setConfig(config);
+
+    // Set up the remote settings client. Ignore remote settings syncs that
+    // occur during the test. Clear its results and add the test results.
+    remoteSettings._test_ignoreSettingsSync = true;
+    remoteSettings._test_resultsByKeyword.clear();
+    if (remoteSettingsResults) {
+      this.info?.("ensureQuickSuggestInit adding remote settings results");
+      await remoteSettings._test_addResults(remoteSettingsResults);
+      this.info?.("ensureQuickSuggestInit done adding remote settings results");
+    }
+
+    // Set up Merino.
+    if (merinoSuggestions) {
+      this.info?.("ensureQuickSuggestInit setting up Merino server");
+      await lazy.MerinoTestUtils.server.start();
+      lazy.MerinoTestUtils.server.response.body.suggestions = merinoSuggestions;
+      lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+      this.info?.("ensureQuickSuggestInit done setting up Merino server");
+    }
+
+    let cleanup = async () => {
+      this.info?.("ensureQuickSuggestInit starting cleanup");
+      this.setConfig(DEFAULT_CONFIG);
+      delete remoteSettings._test_ignoreSettingsSync;
+      remoteSettings._test_resultsByKeyword.clear();
+      if (merinoSuggestions) {
+        lazy.UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
+      }
+      this.info?.("ensureQuickSuggestInit finished cleanup");
     };
     this.registerCleanupFunction?.(cleanup);
-
-    if (results) {
-      lazy.QuickSuggest.remoteSettings._test_resultsByKeyword.clear();
-      await lazy.QuickSuggest.remoteSettings._test_addResults(results);
-    }
-    if (config) {
-      this.setConfig(config);
-    }
 
     return cleanup;
   }
@@ -820,3 +892,5 @@ export class QuickSuggestTestUtils {
     await promise;
   }
 }
+
+export var QuickSuggestTestUtils = new _QuickSuggestTestUtils();

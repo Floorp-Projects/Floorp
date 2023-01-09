@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
 
-const SUGGESTIONS = [
+const REMOTE_SETTINGS_RESULTS = [
   {
     id: 1,
     url: "https://example.com/sponsored",
@@ -41,7 +41,7 @@ const SUGGESTIONS = [
   },
 ];
 
-const SPONSORED_SUGGESTION = SUGGESTIONS[0];
+const SPONSORED_RESULT = REMOTE_SETTINGS_RESULTS[0];
 
 // Spy for the custom impression/click sender
 let spy;
@@ -59,7 +59,9 @@ add_setup(async function() {
   // Add a mock engine so we don't hit the network.
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(SUGGESTIONS);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+  });
 });
 
 // Makes sure impression telemetry is not recorded when the urlbar engagement is
@@ -73,7 +75,7 @@ add_task(async function abandonment() {
   });
   await QuickSuggestTestUtils.assertIsQuickSuggest({
     window,
-    url: SPONSORED_SUGGESTION.url,
+    url: SPONSORED_RESULT.url,
   });
   await UrlbarTestUtils.promisePopupClose(window, () => {
     gURLBar.blur();
@@ -202,7 +204,7 @@ add_task(async function hiddenRow() {
   gURLBar.focus();
   let queryPromise = UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: SUGGESTIONS[0].keywords[0],
+    value: REMOTE_SETTINGS_RESULTS[0].keywords[0],
     fireInputEvent: true,
   });
 
@@ -262,7 +264,9 @@ add_task(async function notAddedToView() {
 
     // Now do a search for a suggestion and hit enter after the provider adds it
     // but before it appears in the view.
-    await doEngagementWithoutAddingResultToView(SUGGESTIONS[0].keywords[0]);
+    await doEngagementWithoutAddingResultToView(
+      REMOTE_SETTINGS_RESULTS[0].keywords[0]
+    );
 
     // The quick suggest provider added a result but it wasn't visible in the
     // view, and no other quick suggest results were visible in the view. No
@@ -282,7 +286,7 @@ add_task(async function previousResultStillVisible() {
   // Open a new tab since we'll load a page.
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     // Do a search for the first suggestion.
-    let firstSuggestion = SUGGESTIONS[0];
+    let firstSuggestion = REMOTE_SETTINGS_RESULTS[0];
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: firstSuggestion.keywords[0],
@@ -300,7 +304,7 @@ add_task(async function previousResultStillVisible() {
     // and hit enter after the provider adds it but before it appears in the
     // view.
     await doEngagementWithoutAddingResultToView(
-      SUGGESTIONS[1].keywords[0],
+      REMOTE_SETTINGS_RESULTS[1].keywords[0],
       index
     );
 

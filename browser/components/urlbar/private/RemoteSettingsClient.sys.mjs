@@ -186,8 +186,6 @@ export class RemoteSettingsClient extends BaseFeature {
       source: "remote-settings",
       icon: icons.shift(),
       position: result.position,
-      is_top_pick: !!result.is_top_pick,
-      _test_is_best_match: result._test_is_best_match,
     }));
   }
 

@@ -12,7 +12,7 @@
 
 "use strict";
 
-const SUGGESTIONS = [1, 2, 3].map(i => ({
+const REMOTE_SETTINGS_RESULTS = [1, 2, 3].map(i => ({
   id: i,
   title: `Best match ${i}`,
   url: `http://example.com/bestmatch${i}`,
@@ -20,10 +20,9 @@ const SUGGESTIONS = [1, 2, 3].map(i => ({
   click_url: "http://example.com/click",
   impression_url: "http://example.com/impression",
   advertiser: "TestAdvertiser",
-  _test_is_best_match: true,
 }));
 
-const NON_BEST_MATCH_SUGGESTION = {
+const NON_BEST_MATCH_RESULT = {
   id: 99,
   title: "Non-best match",
   url: "http://example.com/nonbestmatch",
@@ -45,9 +44,11 @@ add_setup(async function() {
   await QuickSuggest.blockedSuggestions._test_readyPromise;
   await QuickSuggest.blockedSuggestions.clear();
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(
-    SUGGESTIONS.concat(NON_BEST_MATCH_SUGGESTION)
-  );
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS.concat(
+      NON_BEST_MATCH_RESULT
+    ),
+  });
 });
 
 // When the user is enrolled in a best match experiment with the feature enabled
@@ -181,12 +182,12 @@ async function doNimbusExposureTest({
         info("Doing first search");
         await UrlbarTestUtils.promiseAutocompleteResultPopup({
           window,
-          value: NON_BEST_MATCH_SUGGESTION.keywords[0],
+          value: NON_BEST_MATCH_RESULT.keywords[0],
           fireInputEvent: true,
         });
         await QuickSuggestTestUtils.assertIsQuickSuggest({
           window,
-          url: NON_BEST_MATCH_SUGGESTION.url,
+          url: NON_BEST_MATCH_RESULT.url,
         });
         await UrlbarTestUtils.promisePopupClose(window);
 
@@ -198,12 +199,12 @@ async function doNimbusExposureTest({
       info("Doing second search");
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        value: SUGGESTIONS[0].keywords[0],
+        value: REMOTE_SETTINGS_RESULTS[0].keywords[0],
         fireInputEvent: true,
       });
       await QuickSuggestTestUtils.assertIsQuickSuggest({
         window,
-        originalUrl: SUGGESTIONS[0].url,
+        originalUrl: REMOTE_SETTINGS_RESULTS[0].url,
         isBestMatch: bestMatchExpected,
       });
       await QuickSuggestTestUtils.assertExposureEvent(
