@@ -62,3 +62,37 @@ addAccessibleTask(snippet2, async function(browser, accDoc) {
 
   testChildrenIds(container, ["input"]);
 });
+
+/**
+ * Ensure that changing the slot on the body while moving the body doesn't
+ * try to remove the DocAccessible. We test this here instead of in
+ * accessible/tests/mochitest/treeupdate/test_shadow_slots.html because this
+ * messes with the body element and we don't want that to impact other tests.
+ */
+addAccessibleTask(
+  `
+<div id="host"></div>
+<script>
+  const host = document.getElementById("host");
+  host.attachShadow({ mode: "open" });
+  const emptyScript = document.createElement("script");
+  emptyScript.id = "emptyScript";
+  document.head.append(emptyScript);
+</script>
+  `,
+  async function(browser, docAcc) {
+    info("Moving body and setting slot on body");
+    let reordered = waitForEvent(EVENT_REORDER, docAcc);
+    await invokeContentTask(browser, [], () => {
+      const host = content.document.getElementById("host");
+      const emptyScript = content.document.getElementById("emptyScript");
+      const body = content.document.body;
+      emptyScript.append(host);
+      host.append(body);
+      body.slot = "";
+    });
+    await reordered;
+    is(docAcc.childCount, 0, "document has no children after body move");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
