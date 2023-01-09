@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist position Test"
+        onload="setTimeout(runTest, 0)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script>
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+async function runTest() {
+  let panel = document.querySelector("panel");
+  let menulist = document.getElementById("menulist");
+  let menulistPopup = document.getElementById("menulistpopup");
+
+  menulistPopup.addEventListener("popupshown", function(e) {
+    ok(false, "Menulist popup shown");
+  });
+
+  let panelShown = new Promise(r => panel.addEventListener("popupshown", r, { once: true }));
+  info("opening panel");
+  panel.openPopup(null, { x: 0, y: 0 });
+  await panelShown;
+  info("panel opened");
+
+  info("hovering menulist");
+  synthesizeMouseAtCenter(menulist, { type: "mousemove" });
+  info("waiting for a bit");
+  await new Promise(r => setTimeout(r, 500));
+
+  isnot(menulist.open, "menulist should not be open on hover when inside a popup");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<panel style="width: 500px; height: 500px">
+  <menulist style="width: 200px" id="menulist">
+    <menupopup style="max-height: 90px;" id="menulistpopup">
+      <menuitem label="One"/>
+      <menuitem label="Two"/>
+      <menuitem label="Three"/>
+      <menuitem label="Four"/>
+      <menuitem label="Five"/>
+      <menuitem label="Six"/>
+      <menuitem label="Seven"/>
+    </menupopup>
+  </menulist>
+</panel>
+
+</window>
