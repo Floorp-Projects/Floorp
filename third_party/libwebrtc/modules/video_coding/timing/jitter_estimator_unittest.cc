@@ -145,8 +145,27 @@ TEST_F(JitterEstimatorTest, RttMultAddCap) {
             *jitter_by_rtt_mult_cap[0].second.GetPercentile(1.0) * 1.25);
 }
 
+// By default, the `JitterEstimator` is not robust against single large frames.
+TEST_F(JitterEstimatorTest, Single2xFrameSizeImpactsJitterEstimate) {
+  ValueGenerator gen(10);
+
+  // Steady state.
+  Run(/*duration_s=*/60, /*framerate_fps=*/30, gen);
+  TimeDelta steady_state_jitter =
+      estimator_.GetJitterEstimate(0, absl::nullopt);
+
+  // A single outlier frame size...
+  estimator_.UpdateEstimate(gen.Delay(), 2 * gen.FrameSize());
+  TimeDelta outlier_jitter = estimator_.GetJitterEstimate(0, absl::nullopt);
+
+  // ...impacts the estimate.
+  EXPECT_GT(outlier_jitter.ms(), steady_state_jitter.ms());
+}
+
 TEST_F(JitterEstimatorTest, EmptyFieldTrialsParsesToUnsetConfig) {
   JitterEstimator::Config config = estimator_.GetConfigForTest();
+  EXPECT_FALSE(config.max_frame_size_percentile.has_value());
+  EXPECT_FALSE(config.max_frame_size_window.has_value());
   EXPECT_FALSE(config.num_stddev_delay_outlier.has_value());
   EXPECT_FALSE(config.num_stddev_size_outlier.has_value());
   EXPECT_FALSE(config.congestion_rejection_factor.has_value());
@@ -157,6 +176,8 @@ class FieldTrialsOverriddenJitterEstimatorTest : public JitterEstimatorTest {
   FieldTrialsOverriddenJitterEstimatorTest()
       : JitterEstimatorTest(
             "WebRTC-JitterEstimatorConfig/"
+            "max_frame_size_percentile:0.9,"
+            "max_frame_size_window:30,"
             "num_stddev_delay_outlier:2,"
             "num_stddev_size_outlier:3.1,"
             "congestion_rejection_factor:-1.55/") {}
@@ -165,6 +186,8 @@ class FieldTrialsOverriddenJitterEstimatorTest : public JitterEstimatorTest {
 
 TEST_F(FieldTrialsOverriddenJitterEstimatorTest, FieldTrialsParsesCorrectly) {
   JitterEstimator::Config config = estimator_.GetConfigForTest();
+  EXPECT_EQ(*config.max_frame_size_percentile, 0.9);
+  EXPECT_EQ(*config.max_frame_size_window, 30);
   EXPECT_EQ(*config.num_stddev_delay_outlier, 2.0);
   EXPECT_EQ(*config.num_stddev_size_outlier, 3.1);
   EXPECT_EQ(*config.congestion_rejection_factor, -1.55);
@@ -185,6 +208,30 @@ TEST_F(FieldTrialsOverriddenJitterEstimatorTest,
 
   // ...does not change the estimate.
   EXPECT_EQ(outlier_jitter.ms(), steady_state_jitter.ms());
+}
+
+// The field trial is configured to be robust against the `(1 - 0.9) = 10%`
+// largest frames over a window of length `30`.
+TEST_F(FieldTrialsOverriddenJitterEstimatorTest,
+       Four2xFrameSizesImpactJitterEstimate) {
+  ValueGenerator gen(10);
+
+  // Steady state.
+  Run(/*duration_s=*/60, /*framerate_fps=*/30, gen);
+  TimeDelta steady_state_jitter =
+      estimator_.GetJitterEstimate(0, absl::nullopt);
+
+  // Three outlier frames do not impact the jitter estimate.
+  for (int i = 0; i < 3; ++i) {
+    estimator_.UpdateEstimate(gen.Delay(), 2 * gen.FrameSize());
+  }
+  TimeDelta outlier_jitter_3x = estimator_.GetJitterEstimate(0, absl::nullopt);
+  EXPECT_EQ(outlier_jitter_3x.ms(), steady_state_jitter.ms());
+
+  // Four outlier frames do impact the jitter estimate.
+  estimator_.UpdateEstimate(gen.Delay(), 2 * gen.FrameSize());
+  TimeDelta outlier_jitter_4x = estimator_.GetJitterEstimate(0, absl::nullopt);
+  EXPECT_GT(outlier_jitter_4x.ms(), outlier_jitter_3x.ms());
 }
 
 }  // namespace

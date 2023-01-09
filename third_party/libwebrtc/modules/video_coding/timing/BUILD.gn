@@ -59,6 +59,8 @@ rtc_library("jitter_estimator") {
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
     "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_numerics",
     "../../../rtc_base:safe_conversions",
     "../../../rtc_base/experiments:field_trial_parser",
     "../../../system_wrappers",
