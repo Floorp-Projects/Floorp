@@ -120,7 +120,6 @@ sync protocol PBackground
   manages PFileCreator;
   manages PMessagePort;
   manages PCameras;
-  manages PMIDIPort;
   manages PQuota;
   manages PSelectTLSClientAuthCert;
   manages PServiceWorker;
@@ -265,8 +264,8 @@ parent:
   async PClientManager();
 
   async CreateMIDIManager(Endpoint<PMIDIManagerParent> aEndpoint);
-
-  async PMIDIPort(MIDIPortInfo portInfo, bool sysexEnabled);
+  async CreateMIDIPort(Endpoint<PMIDIPortParent> aEndpoint,
+                       MIDIPortInfo portInfo, bool sysexEnabled);
   async HasMIDIDevice() returns (bool hasDevice);
 
   // This method is used to propagate storage activities from the child actor

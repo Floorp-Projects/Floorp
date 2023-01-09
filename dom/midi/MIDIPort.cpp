@@ -9,6 +9,7 @@
 #include "mozilla/dom/MIDIPortChild.h"
 #include "mozilla/dom/MIDIAccess.h"
 #include "mozilla/dom/MIDITypes.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/dom/Document.h"
@@ -77,7 +78,16 @@ bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
   MOZ_ASSERT(b,
              "Should always have a valid BackgroundChild when creating a port "
              "object!");
-  if (!b->SendPMIDIPortConstructor(port, aPortInfo, aSysexEnabled)) {
+
+  // Create the endpoints and bind the one on the child side.
+  Endpoint<PMIDIPortParent> parentEndpoint;
+  Endpoint<PMIDIPortChild> childEndpoint;
+  MOZ_ALWAYS_SUCCEEDS(
+      PMIDIPort::CreateEndpoints(&parentEndpoint, &childEndpoint));
+  MOZ_ALWAYS_TRUE(childEndpoint.Bind(port));
+
+  if (!b->SendCreateMIDIPort(std::move(parentEndpoint), aPortInfo,
+                             aSysexEnabled)) {
     return false;
   }
   mPortHolder.Init(port.forget());

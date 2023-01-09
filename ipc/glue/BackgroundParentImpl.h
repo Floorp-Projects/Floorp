@@ -345,8 +345,9 @@ class BackgroundParentImpl : public PBackgroundParent {
   mozilla::ipc::IPCResult RecvPClientManagerConstructor(
       PClientManagerParent* aActor) override;
 
-  already_AddRefed<PMIDIPortParent> AllocPMIDIPortParent(
-      const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled) override;
+  mozilla::ipc::IPCResult RecvCreateMIDIPort(
+      Endpoint<PMIDIPortParent>&& aEndpoint, const MIDIPortInfo& aPortInfo,
+      const bool& aSysexEnabled) override;
 
   mozilla::ipc::IPCResult RecvCreateMIDIManager(
       Endpoint<PMIDIManagerParent>&& aEndpoint) override;
