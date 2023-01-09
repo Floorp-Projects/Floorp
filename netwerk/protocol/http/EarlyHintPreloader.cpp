@@ -390,7 +390,7 @@ nsresult EarlyHintPreloader::OpenChannel(
   success = httpChannel->SetRequestHeader("X-Moz"_ns, "early hint"_ns, false);
   MOZ_ASSERT(NS_SUCCEEDED(success));
 
-  mParentListener = new ParentChannelListener(this, nullptr, false);
+  mParentListener = new ParentChannelListener(this, nullptr);
 
   PriorizeAsPreload();
 

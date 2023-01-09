@@ -408,8 +408,7 @@ DocumentLoadListener::DocumentLoadListener(
     : mIsDocumentLoad(aIsDocumentLoad) {
   LOG(("DocumentLoadListener ctor [this=%p]", this));
   mParentChannelListener =
-      new ParentChannelListener(this, aLoadingBrowsingContext,
-                                aLoadingBrowsingContext->UsePrivateBrowsing());
+      new ParentChannelListener(this, aLoadingBrowsingContext);
 }
 
 DocumentLoadListener::~DocumentLoadListener() {
