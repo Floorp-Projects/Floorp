@@ -399,7 +399,6 @@ void MFMediaSource::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle) {
 
 IFACEMETHODIMP MFMediaSource::GetService(REFGUID aGuidService, REFIID aRiid,
                                          LPVOID* aResult) {
-  AssertOnMFThreadPool();
   if (!IsEqualGUID(aGuidService, MF_RATE_CONTROL_SERVICE)) {
     return MF_E_UNSUPPORTED_SERVICE;
   }
