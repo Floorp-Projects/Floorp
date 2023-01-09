@@ -599,56 +599,72 @@ class ProviderQuickSuggest extends UrlbarProvider {
       }
     );
 
-    // custom pings
-    if (!isPrivate && !isWeather) {
-      // `is_clicked` is whether the user clicked the suggestion. `selType` will
-      // be "quicksuggest" in that case. See this method's JSDoc for all
-      // possible `selType` values.
-      let is_clicked = selType == "quicksuggest";
-      let payload = {
+    // custom engagement pings
+    if (!isPrivate) {
+      this._sendEngagementPings({
+        selType,
         match_type,
-        // Always use lowercase to make the reporting consistent
-        advertiser: result.payload.sponsoredAdvertiser.toLocaleLowerCase(),
-        block_id: result.payload.sponsoredBlockId,
-        improve_suggest_experience_checked: lazy.UrlbarPrefs.get(
-          "quicksuggest.dataCollection.enabled"
-        ),
-        position: telemetryResultIndex,
-        request_id: result.payload.requestId,
-        source: result.payload.source,
-      };
+        result,
+        telemetryResultIndex,
+      });
+    }
+  }
 
-      // impression
+  _sendEngagementPings({ selType, match_type, result, telemetryResultIndex }) {
+    // Custom engagement pings are sent only for the main sponsored and non-
+    // sponsored suggestions with an advertiser in their payload, not for other
+    // types of suggestions like navigational suggestions, weather, etc.
+    if (!result.payload.sponsoredAdvertiser) {
+      return;
+    }
+
+    // `is_clicked` is whether the user clicked the suggestion. `selType` will
+    // be "quicksuggest" in that case. See this method's JSDoc for all
+    // possible `selType` values.
+    let is_clicked = selType == "quicksuggest";
+    let payload = {
+      match_type,
+      // Always use lowercase to make the reporting consistent
+      advertiser: result.payload.sponsoredAdvertiser.toLocaleLowerCase(),
+      block_id: result.payload.sponsoredBlockId,
+      improve_suggest_experience_checked: lazy.UrlbarPrefs.get(
+        "quicksuggest.dataCollection.enabled"
+      ),
+      position: telemetryResultIndex,
+      request_id: result.payload.requestId,
+      source: result.payload.source,
+    };
+
+    // impression
+    lazy.PartnerLinkAttribution.sendContextualServicesPing(
+      {
+        ...payload,
+        is_clicked,
+        reporting_url: result.payload.sponsoredImpressionUrl,
+      },
+      lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
+    );
+
+    // click
+    if (is_clicked) {
       lazy.PartnerLinkAttribution.sendContextualServicesPing(
         {
           ...payload,
-          is_clicked,
-          reporting_url: result.payload.sponsoredImpressionUrl,
+          reporting_url: result.payload.sponsoredClickUrl,
         },
-        lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
+        lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
       );
+    }
 
-      // click
-      if (is_clicked) {
-        lazy.PartnerLinkAttribution.sendContextualServicesPing(
-          {
-            ...payload,
-            reporting_url: result.payload.sponsoredClickUrl,
-          },
-          lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
-        );
-      }
-
-      // block
-      if (selType == "block") {
-        lazy.PartnerLinkAttribution.sendContextualServicesPing(
-          {
-            ...payload,
-            iab_category: result.payload.sponsoredIabCategory,
-          },
-          lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
-        );
-      }
+    // block
+    if (selType == "block") {
+      lazy.PartnerLinkAttribution.sendContextualServicesPing(
+        {
+          ...payload,
+          iab_category: result.payload.sponsoredIabCategory,
+        },
+        lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
+      );
     }
   }
 
