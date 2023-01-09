@@ -126,7 +126,7 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   clonePolicy.allowIntraClusterClonableSharedObjects();
 
   if (NS_IsMainThread()) {
-    nsGlobalWindowInner* win = nsContentUtils::CallerInnerWindow();
+    nsGlobalWindowInner* win = nsContentUtils::IncumbentInnerWindow();
     if (win && win->IsSharedMemoryAllowed()) {
       clonePolicy.allowSharedMemoryObjects();
     }

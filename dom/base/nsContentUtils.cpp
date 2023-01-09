@@ -10608,12 +10608,10 @@ bool nsContentUtils::
   return false;
 }
 
-/* static */
-nsGlobalWindowInner* nsContentUtils::CallerInnerWindow() {
-  nsIGlobalObject* global = GetIncumbentGlobal();
-  NS_ENSURE_TRUE(global, nullptr);
+static nsGlobalWindowInner* GetInnerWindowForGlobal(nsIGlobalObject* aGlobal) {
+  NS_ENSURE_TRUE(aGlobal, nullptr);
 
-  if (auto* window = global->AsInnerWindow()) {
+  if (auto* window = aGlobal->AsInnerWindow()) {
     return nsGlobalWindowInner::Cast(window);
   }
 
@@ -10623,7 +10621,7 @@ nsGlobalWindowInner* nsContentUtils::CallerInnerWindow() {
   // the |source| of the received message to be the window set as the
   // sandboxPrototype. This used to work incidentally for unrelated reasons, but
   // now we need to do some special handling to support it.
-  JS::Rooted<JSObject*> scope(RootingCx(), global->GetGlobalJSObject());
+  JS::Rooted<JSObject*> scope(RootingCx(), aGlobal->GetGlobalJSObject());
   NS_ENSURE_TRUE(scope, nullptr);
 
   if (xpc::IsSandbox(scope)) {
@@ -10637,7 +10635,17 @@ nsGlobalWindowInner* nsContentUtils::CallerInnerWindow() {
 
   // The calling window must be holding a reference, so we can return a weak
   // pointer.
-  return nsGlobalWindowInner::Cast(global->AsInnerWindow());
+  return nsGlobalWindowInner::Cast(aGlobal->AsInnerWindow());
+}
+
+/* static */
+nsGlobalWindowInner* nsContentUtils::IncumbentInnerWindow() {
+  return GetInnerWindowForGlobal(GetIncumbentGlobal());
+}
+
+/* static */
+nsGlobalWindowInner* nsContentUtils::EntryInnerWindow() {
+  return GetInnerWindowForGlobal(GetEntryGlobal());
 }
 
 /* static */

@@ -3276,7 +3276,21 @@ class nsContentUtils {
   static bool HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
       Document* aDocument);
 
-  static nsGlobalWindowInner* CallerInnerWindow();
+  /**
+   * Get the inner window corresponding to the incumbent global, including
+   * mapping extension content script globals to the attached window.
+   *
+   * Returns null if the incumbent global doesn't correspond to an inner window.
+   */
+  static nsGlobalWindowInner* IncumbentInnerWindow();
+
+  /**
+   * Get the inner window corresponding to the entry global, including mapping
+   * extension content script globals to the attached window.
+   *
+   * Returns null if the entry global doesn't correspond to an inner window.
+   */
+  static nsGlobalWindowInner* EntryInnerWindow();
 
   /*
    * Return safe area insets of window that defines as
