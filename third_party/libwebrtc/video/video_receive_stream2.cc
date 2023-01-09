@@ -54,6 +54,7 @@
 #include "video/call_stats2.h"
 #include "video/frame_dumping_decoder.h"
 #include "video/receive_statistics_proxy2.h"
+#include "video/task_queue_frame_decode_scheduler.h"
 
 namespace webrtc {
 
@@ -228,7 +229,6 @@ VideoReceiveStream2::VideoReceiveStream2(
           TimeDelta::Millis(config_.rtp.nack.rtp_history_ms),
           false)),
       maximum_pre_stream_decoders_("max", kDefaultMaximumPreStreamDecoders),
-      decode_sync_(decode_sync),
       decode_queue_(task_queue_factory_->CreateTaskQueue(
           "DecodingQueue",
           TaskQueueFactory::Priority::HIGH)) {
@@ -252,9 +252,13 @@ VideoReceiveStream2::VideoReceiveStream2(
 
   timing_->set_render_delay(TimeDelta::Millis(config_.render_delay_ms));
 
-  buffer_ = VideoStreamBufferController::CreateFromFieldTrial(
+  std::unique_ptr<FrameDecodeScheduler> scheduler =
+      decode_sync ? decode_sync->CreateSynchronizedFrameScheduler()
+                  : std::make_unique<TaskQueueFrameDecodeScheduler>(
+                        clock, call_->worker_thread());
+  buffer_ = std::make_unique<VideoStreamBufferController>(
       clock_, call_->worker_thread(), timing_.get(), &stats_proxy_, this,
-      max_wait_for_keyframe_, max_wait_for_frame_, decode_sync_,
+      max_wait_for_keyframe_, max_wait_for_frame_, std::move(scheduler),
       call_->trials());
 
   if (rtx_ssrc()) {

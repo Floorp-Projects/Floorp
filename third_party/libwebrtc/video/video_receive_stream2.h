@@ -339,8 +339,6 @@ class VideoReceiveStream2
   // any video frame has been received.
   FieldTrialParameter<int> maximum_pre_stream_decoders_;
 
-  DecodeSynchronizer* decode_sync_;
-
   // Defined last so they are destroyed before all other members.
   rtc::TaskQueue decode_queue_;
 
