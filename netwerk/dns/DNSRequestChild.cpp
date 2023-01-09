@@ -220,22 +220,25 @@ class ChildDNSByTypeRecord : public nsIDNSByTypeRecord,
   NS_DECL_NSIDNSHTTPSSVCRECORD
 
   explicit ChildDNSByTypeRecord(const TypeRecordResultType& reply,
-                                const nsACString& aHost);
+                                const nsACString& aHost, uint32_t aTTL);
 
  private:
   virtual ~ChildDNSByTypeRecord() = default;
 
   TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
   bool mAllRecordsExcluded = false;
+  uint32_t mTTL = 0;
 };
 
 NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord,
                   nsIDNSTXTRecord, nsIDNSHTTPSSVCRecord)
 
 ChildDNSByTypeRecord::ChildDNSByTypeRecord(const TypeRecordResultType& reply,
-                                           const nsACString& aHost)
+                                           const nsACString& aHost,
+                                           uint32_t aTTL)
     : DNSHTTPSSVCRecordBase(aHost) {
   mResults = reply;
+  mTTL = aTTL;
 }
 
 NS_IMETHODIMP
@@ -354,7 +357,8 @@ ChildDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
 
 NS_IMETHODIMP
 ChildDNSByTypeRecord::GetTtl(uint32_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aResult = mTTL;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -494,7 +498,8 @@ bool DNSRequestSender::OnRecvLookupCompleted(const DNSRequestResponse& reply) {
     case DNSRequestResponse::TIPCTypeRecord: {
       MOZ_ASSERT(mType != nsIDNSService::RESOLVE_TYPE_DEFAULT);
       mResultRecord =
-          new ChildDNSByTypeRecord(reply.get_IPCTypeRecord().mData, mHost);
+          new ChildDNSByTypeRecord(reply.get_IPCTypeRecord().mData, mHost,
+                                   reply.get_IPCTypeRecord().mTTL);
       break;
     }
     default:
