@@ -13,6 +13,14 @@ loader.lazyRequireGetter(
 
 const _invalidCustomFormatterHooks = new WeakSet();
 
+// Custom exception used between customFormatterHeader and processFormatterForHeader
+class FormatterError extends Error {
+  constructor(message, script) {
+    super(message);
+    this.script = script;
+  }
+}
+
 /**
  * Handle a protocol request to get the custom formatter header for an object.
  * This is typically returned into ObjectActor's form if custom formatters are enabled.
@@ -29,141 +37,169 @@ const _invalidCustomFormatterHooks = new WeakSet();
 function customFormatterHeader(rawValue) {
   const globalWrapper = Cu.getGlobalForObject(rawValue);
   const global = globalWrapper?.wrappedJSObject;
-  if (global && Array.isArray(global.devtoolsFormatters)) {
-    // We're using the same setup as the eager evaluation to ensure evaluating
-    // the custom formatter's functions doesn't have any side effects.
-    const dbg = makeSideeffectFreeDebugger();
-    const dbgGlobal = dbg.makeGlobalObjectReference(global);
 
-    for (const [index, formatter] of global.devtoolsFormatters.entries()) {
+  // We except a `devtoolsFormatters` global attribute and it to be an array
+  if (!global || !Array.isArray(global.devtoolsFormatters)) {
+    return null;
+  }
+
+  // We're using the same setup as the eager evaluation to ensure evaluating
+  // the custom formatter's functions doesn't have any side effects.
+  const dbg = makeSideeffectFreeDebugger();
+
+  try {
+    const dbgGlobal = dbg.makeGlobalObjectReference(global);
+    const debuggeeValue = dbgGlobal.makeDebuggeeValue(rawValue);
+
+    for (const [
+      customFormatterIndex,
+      formatter,
+    ] of global.devtoolsFormatters.entries()) {
       // If the message for the erroneous formatter already got logged,
       // skip logging it again.
       if (_invalidCustomFormatterHooks.has(formatter)) {
         continue;
       }
 
-      const headerType = typeof formatter?.header;
-      if (headerType !== "function") {
-        _invalidCustomFormatterHooks.add(formatter);
-        logCustomFormatterError(
-          globalWrapper,
-          `devtoolsFormatters[${index}].header should be a function, got ${headerType}`
-        );
-        continue;
-      }
-
       // TODO: Any issues regarding the implementation will be covered in https://bugzil.la/1776611.
       try {
-        const formatterHeaderDbgValue = dbgGlobal.makeDebuggeeValue(
-          formatter.header
-        );
-        const debuggeeValue = dbgGlobal.makeDebuggeeValue(rawValue);
-        const header = formatterHeaderDbgValue.call(dbgGlobal, debuggeeValue);
-        let errorMsg = "";
-        if (header?.return?.class === "Array") {
-          const rawHeader = header.return.unsafeDereference();
-          if (rawHeader.length === 0) {
-            _invalidCustomFormatterHooks.add(formatter);
-            logCustomFormatterError(
-              globalWrapper,
-              `devtoolsFormatters[${index}].header returned an empty array`,
-              formatterHeaderDbgValue?.script
-            );
-            continue;
-          }
-          let hasBody = false;
-          const hasBodyType = typeof formatter?.hasBody;
-          if (hasBodyType === "function") {
-            const formatterHasBodyDbgValue = dbgGlobal.makeDebuggeeValue(
-              formatter.hasBody
-            );
-            hasBody = formatterHasBodyDbgValue.call(dbgGlobal, debuggeeValue);
-
-            if (hasBody == null) {
-              _invalidCustomFormatterHooks.add(formatter);
-
-              logCustomFormatterError(
-                globalWrapper,
-                `devtoolsFormatters[${index}].hasBody was not run because it has side effects`,
-                formatterHasBodyDbgValue?.script
-              );
-
-              continue;
-            } else if ("throw" in hasBody) {
-              _invalidCustomFormatterHooks.add(formatter);
-
-              logCustomFormatterError(
-                globalWrapper,
-                `devtoolsFormatters[${index}].hasBody threw: ${
-                  hasBody.throw.getProperty("message")?.return
-                }`,
-                formatterHasBodyDbgValue?.script
-              );
-
-              continue;
-            }
-          } else if (hasBodyType !== "undefined") {
-            _invalidCustomFormatterHooks.add(formatter);
-            logCustomFormatterError(
-              globalWrapper,
-              `devtoolsFormatters[${index}].hasBody should be a function, got ${hasBodyType}`
-            );
-            continue;
-          }
-
-          return {
-            useCustomFormatter: true,
-            customFormatterIndex: index,
-            // As the value represents an array coming from the page,
-            // we're cloning it to avoid any interferences with the original
-            // variable.
-            header: global.structuredClone(rawHeader),
-            hasBody: !!hasBody?.return,
-          };
-        }
-
-        // If the header returns null, the custom formatter isn't used for that object
-        if (header?.return === null) {
-          continue;
-        }
-
-        _invalidCustomFormatterHooks.add(formatter);
-        if (header == null) {
-          errorMsg = `devtoolsFormatters[${index}].header was not run because it has side effects`;
-        } else if ("return" in header) {
-          let type = typeof header.return;
-          if (type === "object") {
-            type = header.return?.class;
-          }
-          errorMsg = `devtoolsFormatters[${index}].header should return an array, got ${type}`;
-        } else if ("throw" in header) {
-          errorMsg = `devtoolsFormatters[${index}].header threw: ${
-            header.throw.getProperty("message")?.return
-          }`;
-        }
-
-        logCustomFormatterError(
+        const rv = processFormatterForHeader({
+          customFormatterIndex,
+          debuggeeValue,
+          formatter,
+          dbgGlobal,
           globalWrapper,
-          errorMsg,
-          formatterHeaderDbgValue?.script
-        );
+          global,
+        });
+        // Return the first valid formatter value
+        if (rv) {
+          return rv;
+        }
       } catch (e) {
+        _invalidCustomFormatterHooks.add(formatter);
         logCustomFormatterError(
           globalWrapper,
-          `devtoolsFormatters[${index}] couldn't be run: ${e.message}`
+          e instanceof FormatterError
+            ? `devtoolsFormatters[${customFormatterIndex}].${e.message}`
+            : `devtoolsFormatters[${customFormatterIndex}] couldn't be run: ${e.message}`,
+          // If the exception is FormatterError, this comes with a script attribute
+          e.script
         );
-      } finally {
-        // We need to be absolutely sure that the side-effect-free debugger's
-        // debuggees are removed because otherwise we risk them terminating
-        // execution of later code in the case of unexpected exceptions.
-        dbg.removeAllDebuggees();
       }
     }
+  } finally {
+    // We need to be absolutely sure that the side-effect-free debugger's
+    // debuggees are removed because otherwise we risk them terminating
+    // execution of later code in the case of unexpected exceptions.
+    dbg.removeAllDebuggees();
   }
 
   return null;
 }
 exports.customFormatterHeader = customFormatterHeader;
+
+/**
+ * Handle one precise custom formatter.
+ * i.e. one element of the window.customFormatters Array.
+ *
+ * @param {Object} options
+ * @param {Object} formatter
+ *        The raw formatter object (coming from "customFormatter" array).
+ * @param {Number} customFormatterIndex
+ *        Position of the formatter in the "customFormatter" array.
+ * @param {Object} rawValue
+ *        The raw Javascript object to format.
+ * @param {Debugger.Object} debuggeeValue
+ *        The Debugger.Object of rawValue.
+ * @param {Debugger.Object} dbgGlobal
+ *        The Debugger.Object for the global of rawValue.
+ * @param {Object} global
+ *        The global object of rawValue.
+ *
+ * @returns {Object} See customFormatterHeader jsdoc, it returns the same object.
+ */
+function processFormatterForHeader({
+  customFormatterIndex,
+  formatter,
+  debuggeeValue,
+  dbgGlobal,
+  global,
+}) {
+  const headerType = typeof formatter?.header;
+  if (headerType !== "function") {
+    throw new FormatterError(`header should be a function, got ${headerType}`);
+  }
+
+  // Call the formatter's header attribute, which should be a function.
+  const formatterHeaderDbgValue = dbgGlobal.makeDebuggeeValue(formatter.header);
+  const header = formatterHeaderDbgValue.call(dbgGlobal, debuggeeValue);
+
+  // If the header returns null, the custom formatter isn't used for that object
+  if (header?.return === null) {
+    return null;
+  }
+
+  // The header has to be an Array, all other cases are errors
+  if (header?.return?.class !== "Array") {
+    let errorMsg = "";
+    if (header == null) {
+      errorMsg = `header was not run because it has side effects`;
+    } else if ("return" in header) {
+      let type = typeof header.return;
+      if (type === "object") {
+        type = header.return?.class;
+      }
+      errorMsg = `header should return an array, got ${type}`;
+    } else if ("throw" in header) {
+      errorMsg = `header threw: ${header.throw.getProperty("message")?.return}`;
+    }
+
+    throw new FormatterError(errorMsg, formatterHeaderDbgValue?.script);
+  }
+
+  const rawHeader = header.return.unsafeDereference();
+  if (rawHeader.length === 0) {
+    throw new FormatterError(
+      `header returned an empty array`,
+      formatterHeaderDbgValue?.script
+    );
+  }
+
+  let hasBody = false;
+  const hasBodyType = typeof formatter?.hasBody;
+  if (hasBodyType === "function") {
+    const formatterHasBodyDbgValue = dbgGlobal.makeDebuggeeValue(
+      formatter.hasBody
+    );
+    hasBody = formatterHasBodyDbgValue.call(dbgGlobal, debuggeeValue);
+
+    if (hasBody == null) {
+      throw new FormatterError(
+        `hasBody was not run because it has side effects`,
+        formatterHasBodyDbgValue?.script
+      );
+    } else if ("throw" in hasBody) {
+      throw new FormatterError(
+        `hasBody threw: ${hasBody.throw.getProperty("message")?.return}`,
+        formatterHasBodyDbgValue?.script
+      );
+    }
+  } else if (hasBodyType !== "undefined") {
+    throw new FormatterError(
+      `hasBody should be a function, got ${hasBodyType}`
+    );
+  }
+
+  return {
+    useCustomFormatter: true,
+    customFormatterIndex,
+    // As the value represents an array coming from the page,
+    // we're cloning it to avoid any interferences with the original
+    // variable.
+    header: global.structuredClone(rawHeader),
+    hasBody: !!hasBody?.return,
+  };
+}
 
 /**
  * Handle a protocol request to get the custom formatter body for an object
