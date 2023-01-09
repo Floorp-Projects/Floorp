@@ -1210,8 +1210,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   virtual void UpdateParentTarget() override;
 
-  void InitializeShowFocusRings();
-
   // Clear the document-dependent slots on our JS wrapper.  Inner windows only.
   void ClearDocumentDependentSlots(JSContext* aCx);
 

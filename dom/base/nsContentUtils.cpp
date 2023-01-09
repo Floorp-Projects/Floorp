@@ -7779,23 +7779,6 @@ void nsContentUtils::CallOnAllRemoteChildren(
   }
 }
 
-struct UIStateChangeInfo {
-  UIStateChangeType mShowFocusRings;
-
-  explicit UIStateChangeInfo(UIStateChangeType aShowFocusRings)
-      : mShowFocusRings(aShowFocusRings) {}
-};
-
-void nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-    nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowFocusRings) {
-  UIStateChangeInfo stateInfo(aShowFocusRings);
-  CallOnAllRemoteChildren(aWindow, [&stateInfo](BrowserParent* aBrowserParent) {
-    Unused << aBrowserParent->SendSetKeyboardIndicators(
-        stateInfo.mShowFocusRings);
-    return CallState::Continue;
-  });
-}
-
 bool nsContentUtils::IPCDataTransferItemHasKnownFlavor(
     const IPCDataTransferItem& aItem) {
   // Unknown types are converted to kCustomTypesMime.

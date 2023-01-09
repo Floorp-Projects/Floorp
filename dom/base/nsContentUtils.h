@@ -2842,14 +2842,6 @@ class nsContentUtils {
       const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&
           aCallback);
 
-  /*
-   * Call nsPIDOMWindow::SetKeyboardIndicators all all remote children. This is
-   * in here rather than nsGlobalWindow because BrowserParent indirectly
-   * includes Windows headers which aren't allowed there.
-   */
-  static void SetKeyboardIndicatorsOnRemoteChildren(
-      nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowFocusRings);
-
   /**
    * Given an IPCDataTransferImageContainer construct an imgIContainer for the
    * image encoded by the transfer item.

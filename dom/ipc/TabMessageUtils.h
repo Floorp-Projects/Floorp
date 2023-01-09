@@ -26,12 +26,6 @@ struct ParamTraits<nsSizeMode>
                                       nsSizeMode_Invalid> {};
 
 template <>
-struct ParamTraits<UIStateChangeType>
-    : public ContiguousEnumSerializer<UIStateChangeType,
-                                      UIStateChangeType_NoChange,
-                                      UIStateChangeType_Invalid> {};
-
-template <>
 struct ParamTraits<nsIRemoteTab::NavigationType>
     : public ContiguousEnumSerializerInclusive<
           nsIRemoteTab::NavigationType,

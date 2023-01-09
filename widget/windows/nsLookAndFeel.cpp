@@ -446,7 +446,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       // The system metric is the number of pixels at which a drag should
       // start.  Our look and feel metric is the number of pixels you can
       // move before starting a drag, so subtract 1.
-
       aResult = ::GetSystemMetrics(SM_CXDRAG) - 1;
       break;
     case IntID::DragThresholdY:
@@ -482,6 +481,12 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::WindowsDefaultTheme:
       aResult = nsUXThemeData::IsDefaultWindowTheme();
       break;
+    case IntID::ShowKeyboardCues: {
+      BOOL show = FALSE;
+      ::SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &show, 0);
+      aResult = show;
+      break;
+    }
     case IntID::DWMCompositor:
       aResult = gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
       break;
@@ -605,10 +610,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = WinUtils::GetSystemMetricsForDpi(SM_CXHSCROLL, 96);
       break;
     case IntID::PrefersReducedMotion: {
-      BOOL enableAnimation = TRUE;
-      ::SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &enableAnimation,
-                              0);
-      aResult = enableAnimation ? 0 : 1;
+      BOOL enable = TRUE;
+      ::SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &enable, 0);
+      aResult = !enable;
       break;
     }
     case IntID::PrimaryPointerCapabilities: {

@@ -708,8 +708,6 @@ child:
 
     async DynamicToolbarOffsetChanged(ScreenIntCoord height);
 
-    async SetKeyboardIndicators(UIStateChangeType showFocusRings);
-
     /**
      * StopIMEStateManagement() is called when the process loses focus and
      * should stop managing IME state.

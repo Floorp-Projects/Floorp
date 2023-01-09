@@ -43,8 +43,6 @@ class TabContext {
 
   uint64_t ChromeOuterWindowID() const;
 
-  UIStateChangeType ShowFocusRings() const;
-
   uint32_t MaxTouchPoints() const { return mMaxTouchPoints; }
 
  protected:
@@ -64,9 +62,7 @@ class TabContext {
    */
   bool SetTabContext(const TabContext& aContext);
 
-  bool SetTabContext(uint64_t aChromeOuterWindowID,
-                     UIStateChangeType aShowFocusRings,
-                     uint32_t aMaxTouchPoints);
+  bool SetTabContext(uint64_t aChromeOuterWindowID, uint32_t aMaxTouchPoints);
 
   /**
    * Modify this TabContext to match the given TabContext.  This is a special
@@ -107,11 +103,6 @@ class TabContext {
   int32_t mJSPluginID;
 
   /**
-   * Keyboard indicator state (focus rings).
-   */
-  UIStateChangeType mShowFocusRings;
-
-  /**
    * Maximum number of touch points.
    */
   uint32_t mMaxTouchPoints;
@@ -128,11 +119,8 @@ class MutableTabContext : public TabContext {
     return TabContext::SetTabContext(aContext);
   }
 
-  bool SetTabContext(uint64_t aChromeOuterWindowID,
-                     UIStateChangeType aShowFocusRings,
-                     uint32_t aMaxTouchPoints) {
-    return TabContext::SetTabContext(aChromeOuterWindowID, aShowFocusRings,
-                                     aMaxTouchPoints);
+  bool SetTabContext(uint64_t aChromeOuterWindowID, uint32_t aMaxTouchPoints) {
+    return TabContext::SetTabContext(aChromeOuterWindowID, aMaxTouchPoints);
   }
 
   bool SetTabContextForJSPluginFrame(uint32_t aJSPluginID) {

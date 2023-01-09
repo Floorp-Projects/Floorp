@@ -1841,14 +1841,6 @@ void nsBaseWidget::NotifyThemeChanged(ThemeChangeKind aKind) {
   LookAndFeel::NotifyChangedAllWindows(aKind);
 }
 
-void nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowFocusRings) {
-  if (Document* doc = GetDocument()) {
-    if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
-      win->SetKeyboardIndicators(aShowFocusRings);
-    }
-  }
-}
-
 nsresult nsBaseWidget::NotifyIME(const IMENotification& aIMENotification) {
   if (mIMEHasQuit) {
     return NS_OK;

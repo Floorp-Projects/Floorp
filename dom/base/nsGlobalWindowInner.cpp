@@ -60,6 +60,7 @@
 #include "mozilla/FlushType.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Maybe.h"
@@ -4614,9 +4615,13 @@ bool nsGlobalWindowInner::ShouldShowFocusRing() {
       StaticPrefs::browser_display_always_show_rings_after_key_focus()) {
     return true;
   }
-
-  nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
-  return root && root->ShowFocusRings();
+  if (StaticPrefs::browser_display_show_focus_rings()) {
+    return true;
+  }
+  if (LookAndFeel::GetInt(LookAndFeel::IntID::ShowKeyboardCues)) {
+    return true;
+  }
+  return false;
 }
 
 bool nsGlobalWindowInner::TakeFocus(bool aFocus, uint32_t aFocusMethod) {

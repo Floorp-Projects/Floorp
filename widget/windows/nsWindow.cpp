@@ -1683,10 +1683,6 @@ void nsWindow::Show(bool bState) {
     // that we've taken over the window from the skeleton UI, and we should
     // no longer treat resizes / moves specially.
     mIsShowingPreXULSkeletonUI = false;
-    // Initialize the UI state - this would normally happen below, but since
-    // we're actually already showing, we won't hit it in the normal way.
-    ::SendMessageW(mWnd, WM_CHANGEUISTATE,
-                   MAKEWPARAM(UIS_SET, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
 #if defined(ACCESSIBILITY)
     // If our HWND has focus and the a11y engine hasn't started yet, fire a
     // focus win event. Windows already did this when the skeleton UI appeared,
@@ -1814,13 +1810,6 @@ void nsWindow::Show(bool bState) {
 
           ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
         }
-      }
-
-      if (!wasVisible && (mWindowType == eWindowType_toplevel ||
-                          mWindowType == eWindowType_dialog)) {
-        // When a toplevel window or dialog is shown, initialize the UI state
-        ::SendMessageW(mWnd, WM_CHANGEUISTATE,
-                       MAKEWPARAM(UIS_SET, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
       }
     } else {
       // Clear contents to avoid ghosting of old content if we display
@@ -5280,10 +5269,10 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_SETTINGCHANGE: {
       if (wParam == SPI_SETCLIENTAREAANIMATION ||
-          // CaretBlinkTime is cached in nsLookAndFeel
-          wParam == SPI_SETKEYBOARDDELAY) {
-        // This only affects reduced motion settings and and carent blink time,
-        // so no need to invalidate style / layout.
+          wParam == SPI_SETKEYBOARDCUES || wParam == SPI_SETKEYBOARDDELAY) {
+        // These need to update LookAndFeel cached values.
+        // They affect reduced motion settings / caret blink count / and
+        // keyboard cues, so no need to invalidate style / layout.
         NotifyThemeChanged(widget::ThemeChangeKind::MediaQueriesOnly);
         break;
       }
@@ -6276,29 +6265,6 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       LPRECT rect = (LPRECT)lParam;
       OnDPIChanged(rect->left, rect->top, rect->right - rect->left,
                    rect->bottom - rect->top);
-      break;
-    }
-
-    case WM_UPDATEUISTATE: {
-      // If the UI state has changed, fire an event so the UI updates the
-      // keyboard cues based on the system setting and how the window was
-      // opened. For example, a dialog opened via a keyboard press on a button
-      // should enable cues, whereas the same dialog opened via a mouse click of
-      // the button should not.
-      if (mWindowType == eWindowType_toplevel ||
-          mWindowType == eWindowType_dialog) {
-        int32_t action = LOWORD(wParam);
-        if (action == UIS_SET || action == UIS_CLEAR) {
-          int32_t flags = HIWORD(wParam);
-          UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
-          if (flags & UISF_HIDEFOCUS) {
-            showFocusRings = (action == UIS_SET) ? UIStateChangeType_Clear
-                                                 : UIStateChangeType_Set;
-          }
-          NotifyUIStateChanged(showFocusRings);
-        }
-      }
-
       break;
     }
 

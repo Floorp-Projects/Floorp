@@ -3015,30 +3015,6 @@ nsIPrincipal* nsGlobalWindowOuter::PartitionedPrincipal() {
 // nsGlobalWindowOuter::nsIDOMWindow
 //*****************************************************************************
 
-void nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
-    UIStateChangeType aShowFocusRings) {
-  MOZ_ASSERT(!GetCurrentInnerWindow());
-
-  nsPIDOMWindowOuter* piWin = GetPrivateRoot();
-  if (!piWin) {
-    return;
-  }
-
-  MOZ_ASSERT(piWin == this);
-
-  // only change the flags that have been modified
-  nsCOMPtr<nsPIWindowRoot> windowRoot = do_QueryInterface(mChromeEventHandler);
-  if (!windowRoot) {
-    return;
-  }
-
-  if (aShowFocusRings != UIStateChangeType_NoChange) {
-    windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
-  }
-
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowFocusRings);
-}
-
 Element* nsPIDOMWindowOuter::GetFrameElementInternal() const {
   return mFrameElement;
 }
@@ -6699,42 +6675,6 @@ uint32_t nsGlobalWindowOuter::GetFocusMethod() {
 
 bool nsGlobalWindowOuter::ShouldShowFocusRing() {
   FORWARD_TO_INNER(ShouldShowFocusRing, (), false);
-}
-
-void nsGlobalWindowOuter::SetKeyboardIndicators(
-    UIStateChangeType aShowFocusRings) {
-  nsPIDOMWindowOuter* piWin = GetPrivateRoot();
-  if (!piWin) {
-    return;
-  }
-
-  MOZ_ASSERT(piWin == this);
-
-  bool oldShouldShowFocusRing = ShouldShowFocusRing();
-
-  // only change the flags that have been modified
-  nsCOMPtr<nsPIWindowRoot> windowRoot = do_QueryInterface(mChromeEventHandler);
-  if (!windowRoot) {
-    return;
-  }
-
-  if (aShowFocusRings != UIStateChangeType_NoChange) {
-    windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
-  }
-
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowFocusRings);
-
-  bool newShouldShowFocusRing = ShouldShowFocusRing();
-  if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&
-      mInnerWindow->mFocusedElement &&
-      oldShouldShowFocusRing != newShouldShowFocusRing) {
-    // Update focusedNode's state.
-    if (newShouldShowFocusRing) {
-      mInnerWindow->mFocusedElement->AddStates(ElementState::FOCUSRING);
-    } else {
-      mInnerWindow->mFocusedElement->RemoveStates(ElementState::FOCUSRING);
-    }
-  }
 }
 
 bool nsGlobalWindowOuter::TakeFocus(bool aFocus, uint32_t aFocusMethod) {

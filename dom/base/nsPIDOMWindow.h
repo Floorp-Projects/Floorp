@@ -76,13 +76,6 @@ class CustomElementRegistry;
 enum class CallerType : uint32_t;
 }  // namespace mozilla::dom
 
-enum UIStateChangeType {
-  UIStateChangeType_NoChange,
-  UIStateChangeType_Set,
-  UIStateChangeType_Clear,
-  UIStateChangeType_Invalid  // used for serialization only
-};
-
 enum class FullscreenReason {
   // Toggling the fullscreen mode requires trusted context.
   ForFullscreenMode,
@@ -792,11 +785,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   bool IsRootOuterWindow() { return mIsRootOuterWindow; }
 
-  /**
-   * Set initial keyboard indicator state for focus rings.
-   */
-  void SetInitialKeyboardIndicators(UIStateChangeType aShowFocusRings);
-
   // Internal getter/setter for the frame element, this version of the
   // getter crosses chrome boundaries whereas the public scriptable
   // one doesn't for security reasons.
@@ -1026,11 +1014,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    * Whether the focused content within the window should show a focus ring.
    */
   virtual bool ShouldShowFocusRing() = 0;
-
-  /**
-   * Set the keyboard indicator state for accelerators and focus rings.
-   */
-  virtual void SetKeyboardIndicators(UIStateChangeType aShowFocusRings) = 0;
 
   /**
    * Indicates that the page in the window has been hidden. This is used to

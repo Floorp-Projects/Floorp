@@ -1225,9 +1225,6 @@
   rust: true
 
 # Whether focus rings are always shown by default.
-#
-# This is the initial value of nsWindowRoot::mShowFocusRings, but it can be
-# overridden by system preferences.
 - name: browser.display.show_focus_rings
   type: bool
   value: false

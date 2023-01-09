@@ -3624,27 +3624,21 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   MOZ_ASSERT(mPendingBrowsingContext->EverAttached());
 
-  UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint64_t chromeOuterWindowID = 0;
 
-  Document* doc = mOwnerContent->OwnerDoc();
-  if (doc) {
-    nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(doc);
-    if (root) {
-      showFocusRings = root->ShowFocusRings() ? UIStateChangeType_Set
-                                              : UIStateChangeType_Clear;
-
-      nsPIDOMWindowOuter* outerWin = root->GetWindow();
-      if (outerWin) {
-        chromeOuterWindowID = outerWin->WindowID();
-      }
+  nsCOMPtr<nsPIWindowRoot> root =
+      nsContentUtils::GetWindowRoot(mOwnerContent->OwnerDoc());
+  if (root) {
+    nsPIDOMWindowOuter* outerWin = root->GetWindow();
+    if (outerWin) {
+      chromeOuterWindowID = outerWin->WindowID();
     }
   }
 
   uint32_t maxTouchPoints = BrowserParent::GetMaxTouchPoints(mOwnerContent);
 
-  bool tabContextUpdated = aTabContext->SetTabContext(
-      chromeOuterWindowID, showFocusRings, maxTouchPoints);
+  bool tabContextUpdated =
+      aTabContext->SetTabContext(chromeOuterWindowID, maxTouchPoints);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;

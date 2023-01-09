@@ -67,9 +67,6 @@ class nsPIWindowRoot : public mozilla::dom::EventTarget {
 
   // Enumerate all stored browsers that for which the weak reference is valid.
   virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) = 0;
-
-  virtual bool ShowFocusRings() = 0;
-  virtual void SetShowFocusRings(bool aEnable) = 0;
 };
 
 namespace mozilla::dom {
