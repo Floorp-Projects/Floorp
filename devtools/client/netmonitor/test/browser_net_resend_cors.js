@@ -70,7 +70,7 @@ add_task(async function() {
     store.dispatch(Actions.cloneRequest(item.id));
 
     info("Sending the cloned request (without change)");
-    store.dispatch(Actions.sendCustomRequest(connector, item.id));
+    store.dispatch(Actions.sendCustomRequest(item.id));
 
     await waitUntil(
       () => getSortedRequests(store.getState()).length === length + 1

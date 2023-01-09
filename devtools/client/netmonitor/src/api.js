@@ -209,7 +209,7 @@ NetMonitorAPI.prototype = {
     this.store.dispatch(Actions.batchFlush());
     // Send custom request with same url, headers and body as the request
     // with the given requestId.
-    this.store.dispatch(Actions.sendCustomRequest(this.connector, requestId));
+    this.store.dispatch(Actions.sendCustomRequest(requestId));
   },
 };
 

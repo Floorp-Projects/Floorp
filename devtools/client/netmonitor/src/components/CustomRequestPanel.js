@@ -369,8 +369,7 @@ module.exports = connect(
   (dispatch, props) => ({
     removeSelectedCustomRequest: () =>
       dispatch(Actions.removeSelectedCustomRequest()),
-    sendCustomRequest: () =>
-      dispatch(Actions.sendCustomRequest(props.connector)),
+    sendCustomRequest: () => dispatch(Actions.sendCustomRequest()),
     updateRequest: (id, data, batch) =>
       dispatch(Actions.updateRequest(id, data, batch)),
   })

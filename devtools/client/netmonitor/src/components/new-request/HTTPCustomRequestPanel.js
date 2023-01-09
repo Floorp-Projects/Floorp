@@ -507,6 +507,6 @@ module.exports = connect(
   state => ({ request: getClickedRequest(state) }),
   (dispatch, props) => ({
     sendCustomRequest: request =>
-      dispatch(Actions.sendHTTPCustomRequest(props.connector, request)),
+      dispatch(Actions.sendHTTPCustomRequest(request)),
   })
 )(HTTPCustomRequestPanel);

@@ -179,7 +179,6 @@ function NetworkEventMessage({
     getLongString: grip => {
       return serviceContainer.getLongString(grip);
     },
-    sendHTTPRequest: () => {},
     triggerActivity: () => {},
     requestData: (requestId, dataType) => {
       return serviceContainer.requestData(requestId, dataType);

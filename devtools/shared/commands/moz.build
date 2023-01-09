@@ -5,6 +5,7 @@
 DIRS += [
     "inspected-window",
     "inspector",
+    "network",
     "resource",
     "root-resource",
     "script",

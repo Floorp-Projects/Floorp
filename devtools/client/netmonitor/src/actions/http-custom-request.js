@@ -69,8 +69,8 @@ function toggleHTTPCustomRequestPanel() {
 /**
  * Send a new HTTP request using the data in the custom request form.
  */
-function sendHTTPCustomRequest(connector, request) {
-  return async ({ dispatch, getState }) => {
+function sendHTTPCustomRequest(request) {
+  return async ({ dispatch, getState, connector, commands }) => {
     if (!request) {
       return;
     }
@@ -104,7 +104,7 @@ function sendHTTPCustomRequest(connector, request) {
       data.body = request.requestPostData.postData?.text;
     }
 
-    const { channelId } = await connector.sendHTTPRequest(data);
+    const { channelId } = await commands.networkCommand.sendHTTPRequest(data);
 
     const newRequest = getRequestByChannelId(getState(), channelId);
     // If the new custom request is available already select the request, else

@@ -175,7 +175,7 @@ async function testOldEditAndResendPanel() {
   });
   info("Starting test... ");
 
-  const { document, store, windowRequire, connector } = monitor.panelWin;
+  const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   const { getSelectedRequest, getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
@@ -214,7 +214,7 @@ async function testOldEditAndResendPanel() {
 
   // send the new request
   const wait = waitForNetworkEvents(monitor, 1);
-  store.dispatch(Actions.sendCustomRequest(connector));
+  store.dispatch(Actions.sendCustomRequest());
   await wait;
 
   let sentItem;

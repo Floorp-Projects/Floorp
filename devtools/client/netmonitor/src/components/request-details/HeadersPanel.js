@@ -845,7 +845,6 @@ module.exports = connect(
     openHTTPCustomRequestTab: () =>
       dispatch(Actions.openHTTPCustomRequest(true)),
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
-    sendCustomRequest: () =>
-      dispatch(Actions.sendCustomRequest(props.connector)),
+    sendCustomRequest: () => dispatch(Actions.sendCustomRequest()),
   })
 )(HeadersPanel);

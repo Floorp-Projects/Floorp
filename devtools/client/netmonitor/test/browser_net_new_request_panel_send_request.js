@@ -20,8 +20,6 @@ add_task(async function() {
   info("Starting test... ");
 
   const { document, store, windowRequire, connector } = monitor.panelWin;
-  const { sendHTTPRequest } = connector;
-
   // Action should be processed synchronously in tests.
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
@@ -50,7 +48,7 @@ add_task(async function() {
     },
   };
   const waitUntilRequestDisplayed = waitForNetworkEvents(monitor, 1);
-  sendHTTPRequest(request);
+  connector.networkCommand.sendHTTPRequest(request);
   await waitUntilRequestDisplayed;
 
   info("selecting first request");
