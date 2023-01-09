@@ -386,10 +386,6 @@ class SnapshotIterator {
 
     // Read the default value, or the normal value if there is no default.
     RM_AlwaysDefault = 1 << 1,
-
-    // Try to read the normal value if it is readable, otherwise default to
-    // the Default value.
-    RM_NormalOrDefault = RM_Normal | RM_AlwaysDefault,
   };
 
  private:
