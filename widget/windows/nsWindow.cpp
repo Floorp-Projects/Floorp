@@ -3514,7 +3514,7 @@ static LRESULT CALLBACK FullscreenTransitionWindowProc(HWND hWnd, UINT uMsg,
 }
 
 struct FullscreenTransitionInitData {
-  nsIntRect mBounds;
+  LayoutDeviceIntRect mBounds;
   HANDLE mSemaphore;
   HANDLE mThread;
   HWND mWnd;
@@ -3613,14 +3613,11 @@ bool nsWindow::PrepareForFullscreenTransition(nsISupports** aData) {
 
   FullscreenTransitionInitData initData;
   nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
-  int32_t x, y, width, height;
-  screen->GetRectDisplayPix(&x, &y, &width, &height);
+  const DesktopIntRect rect = screen->GetRectDisplayPix();
   MOZ_ASSERT(BoundsUseDesktopPixels(),
              "Should only be called on top-level window");
-  double scale = GetDesktopToDeviceScale().scale;  // XXX or GetDefaultScale() ?
-  initData.mBounds.SetRect(NSToIntRound(x * scale), NSToIntRound(y * scale),
-                           NSToIntRound(width * scale),
-                           NSToIntRound(height * scale));
+  initData.mBounds =
+      LayoutDeviceIntRect::Round(rect * GetDesktopToDeviceScale());
 
   // Create a semaphore for synchronizing the window handle which will
   // be created by the transition thread and used by the main thread for
