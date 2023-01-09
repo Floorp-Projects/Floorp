@@ -652,10 +652,7 @@ if (rtc_include_tests) {
   rtc_library("fake_network_pipe_unittests") {
     testonly = true
 
-    sources = [
-      "fake_network_pipe_unittest.cc",
-      "simulated_network_unittest.cc",
-    ]
+    sources = [ "fake_network_pipe_unittest.cc" ]
     deps = [
       ":fake_network",
       ":simulated_network",
