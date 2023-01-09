@@ -543,14 +543,11 @@ void AgcManagerDirect::SetupDigitalGainControl(
   }
 }
 
-void AgcManagerDirect::AnalyzePreProcess(const AudioBuffer* audio) {
+void AgcManagerDirect::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
+  const float* const* audio = audio_buffer.channels_const();
+  size_t samples_per_channel = audio_buffer.num_frames();
   RTC_DCHECK(audio);
-  AnalyzePreProcess(audio->channels_const(), audio->num_frames());
-}
 
-void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
-                                         size_t samples_per_channel) {
-  RTC_DCHECK(audio);
   AggregateChannelLevels();
   if (!capture_output_used_) {
     return;
@@ -647,19 +644,18 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
   AggregateChannelLevels();
 }
 
-void AgcManagerDirect::Process(const AudioBuffer* audio) {
-  RTC_DCHECK(audio);
+void AgcManagerDirect::Process(const AudioBuffer& audio_buffer) {
   AggregateChannelLevels();
 
   if (!capture_output_used_) {
     return;
   }
 
-  const size_t num_frames_per_band = audio->num_frames_per_band();
+  const size_t num_frames_per_band = audio_buffer.num_frames_per_band();
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
     std::array<int16_t, AudioBuffer::kMaxSampleRate / 100> audio_data;
     int16_t* audio_use = audio_data.data();
-    FloatS16ToS16(audio->split_bands_const_f(ch)[0], num_frames_per_band,
+    FloatS16ToS16(audio_buffer.split_bands_const_f(ch)[0], num_frames_per_band,
                   audio_use);
     channel_agcs_[ch]->Process({audio_use, num_frames_per_band});
     new_compressions_to_set_[ch] = channel_agcs_[ch]->new_compression();
