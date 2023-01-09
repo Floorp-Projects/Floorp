@@ -24,6 +24,7 @@ const ADDON_ID = "mock-colorway@mozilla.org";
 const ADDON_ID_RETAINED = "mock-disabled-retained-colorway@mozilla.org";
 const ADDON_ID_NOT_RETAINED = "mock-disabled-not-retained-colorway@mozilla.org";
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+const NOT_MIGRATED_THEME = "mock-not-migrated-theme@mozilla.org";
 
 const RETAINED_THEMES_PREF = "browser.theme.retainedExpiredThemes";
 
@@ -267,7 +268,12 @@ add_setup(async () => {
 
 add_task(
   {
-    pref_set: [[RETAINED_THEMES_PREF, JSON.stringify([ADDON_ID_RETAINED])]],
+    pref_set: [
+      [
+        RETAINED_THEMES_PREF,
+        JSON.stringify([ADDON_ID_RETAINED, NOT_MIGRATED_THEME]),
+      ],
+    ],
   },
   async function test_colorways_builtin_upgrade() {
     info("Verify default theme initially enabled");
@@ -367,9 +373,26 @@ add_task(
     // Make sure a non-colorways built-in theme cannot check for updates.
     assertAddonCanUpgrade(defaultTheme, false);
 
+    Assert.deepEqual(
+      Services.prefs.getStringPref(RETAINED_THEMES_PREF),
+      JSON.stringify([retainedTheme.id, NOT_MIGRATED_THEME]),
+      `Expect the retained theme id to be listed in the ${RETAINED_THEMES_PREF} pref`
+    );
+
     const promiseUpdatesInstalled = Promise.all([
       waitForBootstrapUpdateMethod(ADDON_ID, "2.0.0"),
       waitForBootstrapUpdateMethod(ADDON_ID_RETAINED, "3.0.0"),
+    ]);
+
+    const promiseInstallsEnded = Promise.all([
+      AddonTestUtils.promiseInstallEvent(
+        "onInstallEnded",
+        addon => addon.id === ADDON_ID
+      ),
+      AddonTestUtils.promiseInstallEvent(
+        "onInstallEnded",
+        addon => addon.id === ADDON_ID_RETAINED
+      ),
     ]);
 
     const promiseActiveThemeStartupCompleted = AddonTestUtils.promiseWebExtensionStartup(
@@ -420,6 +443,14 @@ add_task(
     // test is running on windows builds.
     info("Wait for the active theme to have been fully loaded");
     await promiseActiveThemeStartupCompleted;
+
+    await promiseInstallsEnded;
+
+    Assert.deepEqual(
+      Services.prefs.getStringPref(RETAINED_THEMES_PREF),
+      JSON.stringify([NOT_MIGRATED_THEME]),
+      `Expect migrated retained theme to not be listed anymore in the ${RETAINED_THEMES_PREF} pref`
+    );
 
     info(
       "uninstall test colorways themes and expect default theme to become active"

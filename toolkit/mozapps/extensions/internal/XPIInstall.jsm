@@ -51,6 +51,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
+  BuiltInThemesHelpers: "resource://gre/modules/addons/XPIDatabase.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
@@ -1858,6 +1859,17 @@ class AddonInstall {
           AddonManagerPrivate.notifyAddonChanged(
             this.addon.id,
             this.addon.type
+          );
+        }
+
+        // Clear the colorways builtins migrated to a non-builtin themes
+        // form the list of the retained themes.
+        if (
+          this.existingAddon?.isBuiltinColorwayTheme &&
+          !this.addon.isBuiltin
+        ) {
+          lazy.BuiltInThemesHelpers.unretainMigratedColorwayTheme(
+            this.addon.id
           );
         }
       };
