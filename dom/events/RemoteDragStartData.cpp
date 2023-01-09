@@ -58,8 +58,8 @@ void RemoteDragStartData::AddInitialDnDDataTo(
             new nsContentAreaDragDropDataProvider();
         variant->SetAsISupports(flavorDataProvider);
       } else {
-        nsresult rv = nsContentUtils::IPCTransferableItemToVariant(
-            item, variant, mBrowserParent);
+        nsresult rv =
+            nsContentUtils::IPCTransferableItemToVariant(item, variant);
         if (NS_FAILED(rv)) {
           continue;
         }
