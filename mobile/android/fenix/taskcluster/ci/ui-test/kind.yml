@@ -156,6 +156,6 @@ tasks:
         run-on-git-branches: [main]
         run:
             commands:
-                - [automation/taskcluster/androidTest/ui-test.sh, arm-legacy-api-tests, app.apk, android-test.apk, '2']
+                - [automation/taskcluster/androidTest/ui-test.sh, arm-legacy-api-tests, app.apk, android-test.apk, '50']
         treeherder:
             symbol: debug(legacy-arm)

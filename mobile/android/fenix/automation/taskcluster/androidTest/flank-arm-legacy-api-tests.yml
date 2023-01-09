@@ -20,15 +20,37 @@ gcloud:
   performance-metrics: true
 
   test-targets:
+    - notPackage org.mozilla.fenix.screenshots
+    - notPackage org.mozilla.fenix.syncintegration
+    - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
+    - class org.mozilla.fenix.ui.NavigationToolbarTest#goBackTest
+    - class org.mozilla.fenix.ui.NavigationToolbarTest#goForwardTest
+    - class org.mozilla.fenix.ui.HistoryTest#visitedUrlHistoryTest
+    - class org.mozilla.fenix.ui.SmokeTest#openMainMenuSettingsItemTest
+    - class org.mozilla.fenix.ui.SettingsSearchTest#toggleSearchSuggestionsTest
+    - class org.mozilla.fenix.ui.CollectionTest#deleteCollectionTest
+    - class org.mozilla.fenix.ui.SmokeTest#noHistoryInPrivateBrowsingTest
+    - class org.mozilla.fenix.ui.SmokeTest#verifyBasicNavigationToolbarFunctionality
+    - class org.mozilla.fenix.ui.TabbedBrowsingTest#openNewTabTest
+    - class org.mozilla.fenix.ui.TabbedBrowsingTest#openNewPrivateTabTest
+    - class org.mozilla.fenix.ui.TopSitesTest#verifyOpenTopSiteNormalTab
+    - class org.mozilla.fenix.ui.BookmarksTest#addBookmarkTest
+    - class org.mozilla.fenix.ui.HomeScreenTest#homeScreenItemsTest
 
   device:
     - model: Pixel2.arm
+      version: 26
+      locale: en_US
+    - model: walleye
+      version: 27
+      locale: en_US
+    - model: dreamlte
       version: 28
       locale: en_US
 
 flank:
   project: GOOGLE_PROJECT
-  max-test-shards: 2
+  max-test-shards: 50
   num-test-runs: 1
   output-style: compact
   full-junit-result: true
