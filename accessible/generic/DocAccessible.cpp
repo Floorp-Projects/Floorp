@@ -2148,6 +2148,7 @@ void DocAccessible::FireEventsOnInsertion(LocalAccessible* aContainer) {
 }
 
 void DocAccessible::ContentRemoved(LocalAccessible* aChild) {
+  MOZ_DIAGNOSTIC_ASSERT(aChild != this, "Should never be called for the doc");
   LocalAccessible* parent = aChild->LocalParent();
   MOZ_DIAGNOSTIC_ASSERT(parent, "Unattached accessible from tree");
 

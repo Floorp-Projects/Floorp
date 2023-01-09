@@ -1441,7 +1441,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   }
 
   if (aAttribute == nsGkAtoms::slot &&
-      !mContent->GetFlattenedTreeParentNode()) {
+      !mContent->GetFlattenedTreeParentNode() && this != mDoc) {
     // This is inside a shadow host but is no longer slotted.
     mDoc->ContentRemoved(this);
   }
