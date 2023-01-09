@@ -2674,22 +2674,6 @@ class nsContentUtils {
                             nsString& aParams);
 
   /**
-   * Function checks if the user is idle.
-   *
-   * @param aRequestedIdleTimeInMS    The idle observer's requested idle time.
-   * @param aUserIsIdle               boolean indicating if the user
-   *                                  is currently idle or not.
-   * @return NS_OK                    NS_OK returned if the requested idle
-   *                                  service and the current idle time were
-   *                                  successfully obtained.
-   *                                  NS_ERROR_FAILURE returned if the the
-   *                                  requested idle service or the current
-   *                                  idle were not obtained.
-   */
-  static nsresult IsUserIdle(uint32_t aRequestedIdleTimeInMS,
-                             bool* aUserIsIdle);
-
-  /**
    * Takes a selection, and a text control element (<input> or <textarea>), and
    * returns the offsets in the text content corresponding to the selection.
    * The selection's anchor and focus must both be in the root node passed or a
