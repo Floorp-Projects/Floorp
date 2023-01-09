@@ -163,7 +163,7 @@ class AudioProcessingImpl : public AudioProcessing {
 
   void set_stream_analog_level_locked(int level)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
-  int recommended_stream_analog_level_locked() const
+  void UpdateRecommendedInputVolumeLocked()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
 
   void OverrideSubmoduleCreationForTesting(
@@ -475,6 +475,10 @@ class AudioProcessingImpl : public AudioProcessing {
     // acquired. Unspecified when unknown.
     absl::optional<int> applied_input_volume;
     bool applied_input_volume_changed;
+    // Recommended input volume to apply on the audio input device the next time
+    // that audio is acquired. Unspecified when no input volume can be
+    // recommended.
+    absl::optional<int> recommended_input_volume;
   } capture_ RTC_GUARDED_BY(mutex_capture_);
 
   struct ApmCaptureNonLockedState {
