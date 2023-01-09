@@ -1493,6 +1493,43 @@ bool TextLeafPoint::ContainsPoint(int32_t aX, int32_t aY) {
   return CharBounds().Contains(aX, aY);
 }
 
+LayoutDeviceIntRect TextLeafRange::Bounds() const {
+  if (mEnd == mStart || mEnd < mStart) {
+    return LayoutDeviceIntRect();
+  }
+
+  bool locatedFinalLine = false;
+  TextLeafPoint currPoint = mStart;
+  LayoutDeviceIntRect result = currPoint.CharBounds();
+
+  // Union the first and last chars of each line to create a line rect. Then,
+  // union the lines together.
+  while (!locatedFinalLine) {
+    // Fetch the last point in the current line by getting the
+    // start of the next line and going back one char. We don't
+    // use BOUNDARY_LINE_END here because it is equivalent to LINE_START when
+    // the line doesn't end with a line feed character.
+    TextLeafPoint lineStartPoint =
+        currPoint.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_START, eDirNext,
+                               /* aIncludeOrigin */ false);
+    TextLeafPoint lastPointInLine = lineStartPoint.FindBoundary(
+        nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious,
+        /* aIncludeOrigin */ false);
+    if (mEnd <= lastPointInLine) {
+      lastPointInLine = mEnd;
+      locatedFinalLine = true;
+    }
+
+    LayoutDeviceIntRect currLine = currPoint.CharBounds();
+    currLine.UnionRect(currLine, lastPointInLine.CharBounds());
+    result.UnionRect(result, currLine);
+
+    currPoint = lineStartPoint;
+  }
+
+  return result;
+}
+
 TextLeafRange::Iterator TextLeafRange::Iterator::BeginIterator(
     const TextLeafRange& aRange) {
   Iterator result(aRange);

@@ -249,6 +249,13 @@ class TextLeafRange final {
   TextLeafPoint End() const { return mEnd; }
   void SetEnd(const TextLeafPoint& aEnd) { mEnd = aEnd; }
 
+  /**
+   * Returns a union rect (in dev pixels) of all character bounds in this range.
+   * This rect is screen-relative and inclusive of mEnd. This function only
+   * works on remote accessibles, and assumes caching is enabled.
+   */
+  LayoutDeviceIntRect Bounds() const;
+
  private:
   TextLeafPoint mStart;
   TextLeafPoint mEnd;
