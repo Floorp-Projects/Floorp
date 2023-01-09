@@ -53,7 +53,7 @@ void CaptureStreamInfo::AddAudioProcessingState(
   auto* stream = event_->mutable_stream();
   stream->set_delay(state.delay);
   stream->set_drift(state.drift);
-  stream->set_level(state.level);
+  stream->set_applied_input_volume(state.applied_input_volume);
   stream->set_keypress(state.keypress);
 }
 }  // namespace webrtc

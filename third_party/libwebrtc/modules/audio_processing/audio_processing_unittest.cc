@@ -357,7 +357,7 @@ void ExpectStreamFieldsEq(const audioproc::Stream& actual,
   EXPECT_EQ(actual.output_data(), expected.output_data());
   EXPECT_EQ(actual.delay(), expected.delay());
   EXPECT_EQ(actual.drift(), expected.drift());
-  EXPECT_EQ(actual.level(), expected.level());
+  EXPECT_EQ(actual.applied_input_volume(), expected.applied_input_volume());
   EXPECT_EQ(actual.keypress(), expected.keypress());
 }
 
@@ -1518,7 +1518,7 @@ void ApmTest::ProcessDebugDump(absl::string_view in_filename,
       // ProcessStream could have changed this for the output frame.
       frame_.num_channels = apm_->num_input_channels();
 
-      apm_->set_stream_analog_level(msg.level());
+      apm_->set_stream_analog_level(msg.applied_input_volume());
       EXPECT_NOERR(apm_->set_stream_delay_ms(msg.delay()));
       if (msg.has_keypress()) {
         apm_->set_stream_key_pressed(msg.keypress());
