@@ -1117,24 +1117,6 @@
       "last_modified": 1666727874974
     },
     {
-      "schema": 1666727385938,
-      "derHash": "eZ4gVk1FSE36DyjtcmA3/wcNZsUd6OI0MoTeyrD8mZE=",
-      "subject": "CN=Network Solutions EV Server CA 2,O=Network Solutions L.L.C.,L=Herndon,ST=VA,C=US",
-      "subjectDN": "MHoxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJWQTEQMA4GA1UEBxMHSGVybmRvbjEhMB8GA1UEChMYTmV0d29yayBTb2x1dGlvbnMgTC5MLkMuMSkwJwYDVQQDEyBOZXR3b3JrIFNvbHV0aW9ucyBFViBTZXJ2ZXIgQ0EgMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e31f1427ec6db92529d090d990064b3f8fd08dc7b1f02e0b68d1ef7ff9e4505c",
-        "size": 1857,
-        "filename": "uY4iOhjFT5ZJncBPVcvV4Vp7MzDa5mJyEdEtzpD6i28=.pem",
-        "location": "security-state-staging/intermediates/397f2aa1-bd87-47da-b308-5ddefa3c9e3c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "uY4iOhjFT5ZJncBPVcvV4Vp7MzDa5mJyEdEtzpD6i28=",
-      "crlite_enrolled": false,
-      "id": "3b08d1c1-eaa3-447e-a837-aa1abd1be8a4",
-      "last_modified": 1666727874958
-    },
-    {
       "schema": 1666727432688,
       "derHash": "S3M04diZmCK6+o/2iIElOJsYpOWrJv+mJMf2j9yB8Ms=",
       "subject": "CN=GlobalSign CloudSSL CA - SHA256 - G3,O=GlobalSign nv-sa,C=BE",
@@ -1511,24 +1493,6 @@
       "crlite_enrolled": false,
       "id": "53f85a16-b4c6-49b5-b7ae-79f9a96b81be",
       "last_modified": 1666727874656
-    },
-    {
-      "schema": 1666727334805,
-      "derHash": "NWpfTZlOnvp8rvxJF2iRHWXsJZd0ZbYQ4vKapEcmMcM=",
-      "subject": "CN=EC-SectorPublic,OU=Serveis Públics de Certificació,O=CONSORCI ADMINISTRACIO OBERTA DE CATALUNYA,C=ES",
-      "subjectDN": "MIGIMQswCQYDVQQGEwJFUzEzMDEGA1UECgwqQ09OU09SQ0kgQURNSU5JU1RSQUNJTyBPQkVSVEEgREUgQ0FUQUxVTllBMSowKAYDVQQLDCFTZXJ2ZWlzIFDDumJsaWNzIGRlIENlcnRpZmljYWNpw7MxGDAWBgNVBAMMD0VDLVNlY3RvclB1YmxpYw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8aa452217d865dd183b477c08181966ceab5ca68b4abe8ee3224d4a860effb60",
-        "size": 2101,
-        "filename": "VMk3U3j_saU9dzdCeDTxe0MSzuZR2tplayTBfNxG2oQ=.pem",
-        "location": "security-state-staging/intermediates/8e636754-d680-47c7-8862-2e0d71bd6568.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "VMk3U3j/saU9dzdCeDTxe0MSzuZR2tplayTBfNxG2oQ=",
-      "crlite_enrolled": false,
-      "id": "8a63a6e7-575b-46fb-bdf4-944f8aa5edcc",
-      "last_modified": 1666727874642
     },
     {
       "schema": 1666727400963,
@@ -3275,24 +3239,6 @@
       "crlite_enrolled": false,
       "id": "fe4c9d57-29aa-400b-a933-93193441cf39",
       "last_modified": 1666727873281
-    },
-    {
-      "schema": 1666727407004,
-      "derHash": "pYmOW/uEKVwEPsQDQoivs34NWjhm8Xy2V7l/cty1O+w=",
-      "subject": "CN=EC-ACC,OU=Serveis Publics de Certificacio+OU=Vegeu https://www.catcert.net/verarrel (c)03+OU=Jerarquia Entitats de Certificacio Catalanes,O=Agencia Catalana de Certificacio (NIF Q-0801176-I),C=ES",
-      "subjectDN": "MIHzMQswCQYDVQQGEwJFUzE7MDkGA1UECgwyQWdlbmNpYSBDYXRhbGFuYSBkZSBDZXJ0aWZpY2FjaW8gKE5JRiBRLTA4MDExNzYtSSkxKDAmBgNVBAsMH1NlcnZlaXMgUHVibGljcyBkZSBDZXJ0aWZpY2FjaW8xNTAzBgNVBAsMLFZlZ2V1IGh0dHBzOi8vd3d3LmNhdGNlcnQubmV0L3ZlcmFycmVsIChjKTAzMTUwMwYDVQQLDCxKZXJhcnF1aWEgRW50aXRhdHMgZGUgQ2VydGlmaWNhY2lvIENhdGFsYW5lczEPMA0GA1UEAwwGRUMtQUND",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c91d4443f3c8f83a280186a047029b6b4b7ce659addce7f07caf597e11a9dc65",
-        "size": 1902,
-        "filename": "sh0qdDMYcSuhbzmRnZYaS6-6O8qaQ6dbH8_iLF1wyro=.pem",
-        "location": "security-state-staging/intermediates/dad2be5f-3b40-4362-a644-e7ed3ec0debd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "sh0qdDMYcSuhbzmRnZYaS6+6O8qaQ6dbH8/iLF1wyro=",
-      "crlite_enrolled": false,
-      "id": "96d98717-9a96-4d73-b156-2eb909eb5054",
-      "last_modified": 1666727873267
     },
     {
       "schema": 1666727384413,
@@ -26911,5 +26857,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1671602223107
+  "timestamp": 1673081823176
 }
