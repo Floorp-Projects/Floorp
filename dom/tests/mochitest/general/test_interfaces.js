@@ -417,11 +417,19 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "FileSystemDirectoryEntry", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "FileSystemDirectoryHandle", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "FileSystemDirectoryReader", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "FileSystemEntry", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "FileSystemFileEntry", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "FileSystemFileHandle", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "FileSystemHandle", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "FileSystemWritableFileStream", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "FocusEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
