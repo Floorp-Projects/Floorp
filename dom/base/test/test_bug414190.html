@@ -40,7 +40,7 @@ function runTest() {
   var tableBoundingRect = table.getBoundingClientRect();
   var cellBoundingRect = cell.getBoundingClientRect();
   var captionBoundingRect = caption.getBoundingClientRect();
-  
+
   is(tableRects.length, 2, "Table should have rects for body and caption");
   isEqualRect(tableRects[0], cellBoundingRect, 10,
               "Table first rect should be cell rect");
@@ -51,41 +51,18 @@ function runTest() {
   is(captionBoundingRect.right - captionBoundingRect.left, 50, "Caption incorrect width");
   is(captionBoundingRect.bottom - captionBoundingRect.top, 70, "Caption incorrect height");
   is(captionBoundingRect.top, cellBoundingRect.bottom + 10, "Discontiguous vertical geometry");
-  
+
   is(tableBoundingRect.top, cellBoundingRect.top - 10, "Table top error");
   is(tableBoundingRect.left, cellBoundingRect.left - 10, "Table left error");
   is(tableBoundingRect.bottom, captionBoundingRect.bottom, "Table bottom error");
   is(tableBoundingRect.right, cellBoundingRect.right + 10, "Table right error");
-  
-  caption.style.captionSide = "left";
-  
-  tableRects = table.getClientRects();
-  tableBoundingRect = table.getBoundingClientRect();
-  cellBoundingRect = cell.getBoundingClientRect();
-  captionBoundingRect = caption.getBoundingClientRect();
-  
-  is(tableRects.length, 2, "Table should have rects for body and caption");
-  isEqualRect(tableRects[0], cellBoundingRect, 10,
-              "Table first rect should be cell rect plus border");
-  isEqualRect(tableRects[1], captionBoundingRect, 0,
-              "Table second rect should be caption rect");
-  is(cellBoundingRect.right - cellBoundingRect.left, 80, "Cell incorrect width");
-  is(cellBoundingRect.bottom - cellBoundingRect.top, 100, "Cell incorrect height");
-  is(captionBoundingRect.right - captionBoundingRect.left, 50, "Caption incorrect width");
-  is(captionBoundingRect.bottom - captionBoundingRect.top, 70, "Caption incorrect height");
-  is(captionBoundingRect.right + 10, cellBoundingRect.left, "Discontiguous horizontal geometry");
-  is(tableBoundingRect.top, cellBoundingRect.top - 10, "Table top error");
-  is(tableBoundingRect.left, captionBoundingRect.left, "Table left error");
-  is(tableBoundingRect.bottom, cellBoundingRect.bottom + 10, "Table bottom error");
-  is(tableBoundingRect.right, cellBoundingRect.right + 10, "Table right error");
+
   SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
 
-addLoadEvent(function() {
-  SpecialPowers.pushPrefEnv({"set": [["layout.css.caption-side-non-standard.enabled", true]]}, runTest);
-});
+addLoadEvent(runTest);
 </script>
 </pre>
 </body>
