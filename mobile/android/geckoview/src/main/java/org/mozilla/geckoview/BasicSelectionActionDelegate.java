@@ -9,8 +9,10 @@ package org.mozilla.geckoview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -26,6 +28,8 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+import java.util.ArrayList;
+import java.util.List;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
@@ -178,10 +182,31 @@ public class BasicSelectionActionDelegate
     }
 
     if (mExternalActionsEnabled && !mSelection.text.isEmpty() && ACTION_PROCESS_TEXT.equals(id)) {
-      final PackageManager pm = mActivity.getPackageManager();
-      return pm.resolveActivity(getProcessTextIntent(), PackageManager.MATCH_DEFAULT_ONLY) != null;
+      return !getProcessTextExportedActivities().isEmpty();
     }
+
     return mSelection.isActionAvailable(id);
+  }
+
+  /**
+   * Get exported activities for {@link BasicSelectionActionDelegate#ACTION_PROCESS_TEXT} when text
+   * is selected.
+   *
+   * @return list of exported activities
+   */
+  private @NonNull List<ResolveInfo> getProcessTextExportedActivities() {
+    final PackageManager pm = mActivity.getPackageManager();
+    final List<ResolveInfo> resolvedList =
+        pm.queryIntentActivityOptions(
+            null, null, getProcessTextIntent(null), PackageManager.MATCH_DEFAULT_ONLY);
+    final ArrayList<ResolveInfo> exportedList = new ArrayList<>();
+    for (final ResolveInfo info : resolvedList) {
+      if (info.activityInfo.exported) {
+        exportedList.add(info);
+      }
+    }
+
+    return exportedList;
   }
 
   /**
@@ -302,8 +327,12 @@ public class BasicSelectionActionDelegate
     return mSelection.text.substring(0, maxLength);
   }
 
-  private Intent getProcessTextIntent() {
+  private Intent getProcessTextIntent(@Nullable final ResolveInfo resolveInfo) {
     final Intent intent = new Intent(Intent.ACTION_PROCESS_TEXT);
+    if (resolveInfo != null) {
+      intent.setComponent(
+          new ComponentName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name));
+    }
     intent.addCategory(Intent.CATEGORY_DEFAULT);
     intent.setType("text/plain");
     // If using large text, anything intent may throw RemoteException.
@@ -345,24 +374,14 @@ public class BasicSelectionActionDelegate
       final int menuId = i + Menu.FIRST;
 
       if (ACTION_PROCESS_TEXT.equals(actionId)) {
-        if (mExternalActionsEnabled && !mSelection.text.isEmpty()) {
-          try {
-            menu.addIntentOptions(
-                menuId,
-                menuId,
-                menuId,
-                mActivity.getComponentName(),
-                /* specifiec */ null,
-                getProcessTextIntent(),
-                /* flags */ 0, /* items */
-                null);
-            changed = true;
-          } catch (final RuntimeException e) {
-            if (e.getCause() instanceof TransactionTooLargeException) {
-              // Binder size error. MAX_INTENT_TEXT_LENGTH is still large?
-              Log.e(LOGTAG, "Cannot add intent option", e);
-            } else {
-              throw e;
+        if (mExternalActionsEnabled && mSelection != null && !mSelection.text.isEmpty()) {
+          final List<ResolveInfo> exportedPackageInfo = getProcessTextExportedActivities();
+          if (!exportedPackageInfo.isEmpty()) {
+            for (final ResolveInfo info : exportedPackageInfo) {
+              final boolean isMenuItemAdded = addProcessTextMenuItem(menu, menuId, info);
+              if (isMenuItemAdded) {
+                changed = true;
+              }
             }
           }
         } else if (menu.findItem(menuId) != null) {
@@ -383,6 +402,31 @@ public class BasicSelectionActionDelegate
       }
     }
     return changed;
+  }
+
+  private boolean addProcessTextMenuItem(
+      final Menu menu, final int menuId, final ResolveInfo info) {
+    boolean isMenuItemAdded = false;
+    try {
+      menu.addIntentOptions(
+          menuId,
+          menuId,
+          menuId,
+          mActivity.getComponentName(),
+          /* specifiec */ null,
+          getProcessTextIntent(info),
+          /* flags */ Menu.FLAG_APPEND_TO_GROUP, /* items */
+          null);
+      isMenuItemAdded = true;
+    } catch (final RuntimeException e) {
+      if (e.getCause() instanceof TransactionTooLargeException) {
+        // Binder size error. MAX_INTENT_TEXT_LENGTH is still large?
+        Log.e(LOGTAG, "Cannot add intent option", e);
+      } else {
+        throw e;
+      }
+    }
+    return isMenuItemAdded;
   }
 
   @Override
