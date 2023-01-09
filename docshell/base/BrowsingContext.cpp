@@ -1212,12 +1212,16 @@ BrowsingContext* BrowsingContext::FindWithName(
     const nsAString& aName, bool aUseEntryGlobalForAccessCheck) {
   RefPtr<BrowsingContext> requestingContext = this;
   if (aUseEntryGlobalForAccessCheck) {
-    if (nsCOMPtr<nsIDocShell> caller = do_GetInterface(GetEntryGlobal())) {
-      if (caller->GetBrowsingContext()) {
+    if (nsGlobalWindowInner* caller = nsContentUtils::EntryInnerWindow()) {
+      if (caller->GetBrowsingContextGroup() == Group()) {
         requestingContext = caller->GetBrowsingContext();
+      } else {
+        MOZ_RELEASE_ASSERT(caller->GetPrincipal()->IsSystemPrincipal(),
+                           "caller must be either same-group or system");
       }
     }
   }
+  MOZ_ASSERT(requestingContext, "must have a requestingContext");
 
   BrowsingContext* found = nullptr;
   if (aName.IsEmpty()) {
