@@ -901,7 +901,7 @@
     <string name="preference_https_only_title">Mòde HTTPS solament</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary3">Ensaja automaticament de se connectar als sites amb lo chiframent HTTPS per una seguretat melhorada.</string>
+    <string name="preference_https_only_summary3">Ensajar de se connectar automaticament als sites amb lo chiframent HTTPS per una seguretat melhorada.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Excepcions</string>
