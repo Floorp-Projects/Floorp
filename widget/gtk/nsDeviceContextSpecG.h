@@ -52,7 +52,6 @@ class nsDeviceContextSpecGTK : public nsIDeviceContextSpec {
   nsCString mTitle;
 
  private:
-  nsresult DoEndDocument();
   void EnumeratePrinters();
   void StartPrintJob();
   static gboolean PrinterEnumerator(GtkPrinter* aPrinter, gpointer aData);
