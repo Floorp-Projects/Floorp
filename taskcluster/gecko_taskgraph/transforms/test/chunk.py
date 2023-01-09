@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import copy
 
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
@@ -15,7 +16,6 @@ from gecko_taskgraph.util.chunking import (
     get_runtimes,
     guess_mozinfo_from_task,
 )
-from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.perfile import perfile_number_of_chunks
 
 DYNAMIC_CHUNK_DURATION = 20 * 60  # seconds
@@ -196,7 +196,7 @@ def split_chunks(config, tasks):
             this_chunk = i + 1
 
             # copy the test and update with the chunk number
-            chunked = copy_task(task)
+            chunked = copy.deepcopy(task)
             chunked["this-chunk"] = this_chunk
 
             if chunked_manifests is not None:

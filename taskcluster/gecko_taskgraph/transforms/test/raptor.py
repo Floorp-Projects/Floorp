@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+from copy import deepcopy
+
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import Extra, Optional, Required
 
 from gecko_taskgraph.transforms.test import test_description_schema
-from gecko_taskgraph.util.copy_task import copy_task
 
 transforms = TransformSequence()
 task_transforms = TransformSequence()
@@ -92,7 +93,7 @@ def split_apps(config, tests):
             ].get("unittest_variant"):
                 continue
 
-            atest = copy_task(test)
+            atest = deepcopy(test)
             suffix = f"-{app}"
             atest["app"] = app
             atest["description"] += f" on {app.capitalize()}"
@@ -131,10 +132,13 @@ def split_raptor_subtests(config, tests):
             yield test
             continue
 
-        for chunk_number, subtest in enumerate(subtests):
+        chunk_number = 0
+
+        for subtest in subtests:
+            chunk_number += 1
 
             # Create new test job
-            chunked = copy_task(test)
+            chunked = deepcopy(test)
             chunked["chunk-number"] = chunk_number
             chunked["subtest"] = subtest
             chunked["subtest-symbol"] = subtest
@@ -186,7 +190,7 @@ def split_page_load_by_url(config, tests):
 
         if len(subtest_symbol) > 10 and "ytp" not in subtest_symbol:
             raise Exception(
-                "Treeherder symbol %s is larger than 10 char! Please use a different symbol."
+                "Treeherder symbol %s is lager than 10 char! Please use a different symbol."
                 % subtest_symbol
             )
 
@@ -221,30 +225,38 @@ def modify_extra_options(config, tests):
             extra_options = test.setdefault("mozharness", {}).setdefault(
                 "extra-options", []
             )
-
+            ind = None
             for i, opt in enumerate(extra_options):
                 if "conditioned-profile" in opt:
-                    extra_options.pop(i)
+                    ind = i
                     break
+            if ind:
+                extra_options.pop(ind)
 
         if "-widevine" in test_name:
             extra_options = test.setdefault("mozharness", {}).setdefault(
                 "extra-options", []
             )
+            ind = None
             for i, opt in enumerate(extra_options):
                 if "--conditioned-profile=settled" in opt:
-                    extra_options[i] += "-youtube"
+                    ind = i
                     break
+            if ind:
+                extra_options[ind] += "-youtube"
 
         if "unity-webgl" in test_name:
             # Disable the extra-profiler-run for unity-webgl tests.
             extra_options = test.setdefault("mozharness", {}).setdefault(
                 "extra-options", []
             )
+            ind = None
             for i, opt in enumerate(extra_options):
                 if "extra-profiler-run" in opt:
-                    extra_options.pop(i)
+                    ind = i
                     break
+            if ind:
+                extra_options.pop(ind)
 
         yield test
 

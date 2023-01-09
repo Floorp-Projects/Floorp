@@ -114,7 +114,9 @@ def split_public_and_private(config, jobs):
                 this_job["scopes"] = [partner_bucket_scope, action_scope]
                 this_job["partner_public"] = False
 
-            partner_path_key = f"partner-{destination}-path"
+            partner_path_key = "partner-{destination}-path".format(
+                destination=destination
+            )
             partner_path = this_job[partner_path_key].format(**repl_dict)
             this_job.setdefault("worker", {})[
                 "upstream-artifacts"
