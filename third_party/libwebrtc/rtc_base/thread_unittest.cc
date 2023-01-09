@@ -143,77 +143,6 @@ class SignalWhenDestroyedThread : public Thread {
   Event* event_;
 };
 
-// A bool wrapped in a mutex, to avoid data races. Using a volatile
-// bool should be sufficient for correct code ("eventual consistency"
-// between caches is sufficient), but we can't tell the compiler about
-// that, and then tsan complains about a data race.
-
-// See also discussion at
-// http://stackoverflow.com/questions/7223164/is-mutex-needed-to-synchronize-a-simple-flag-between-pthreads
-
-// Using std::atomic<bool> or std::atomic_flag in C++11 is probably
-// the right thing to do, but those features are not yet allowed. Or
-// rtc::AtomicInt, if/when that is added. Since the use isn't
-// performance critical, use a plain critical section for the time
-// being.
-
-class AtomicBool {
- public:
-  explicit AtomicBool(bool value = false) : flag_(value) {}
-  AtomicBool& operator=(bool value) {
-    webrtc::MutexLock scoped_lock(&mutex_);
-    flag_ = value;
-    return *this;
-  }
-  bool get() const {
-    webrtc::MutexLock scoped_lock(&mutex_);
-    return flag_;
-  }
-
- private:
-  mutable webrtc::Mutex mutex_;
-  bool flag_;
-};
-
-// Function objects to test Thread::Invoke.
-struct FunctorA {
-  int operator()() { return 42; }
-};
-class FunctorB {
- public:
-  explicit FunctorB(AtomicBool* flag) : flag_(flag) {}
-  void operator()() {
-    if (flag_)
-      *flag_ = true;
-  }
-
- private:
-  AtomicBool* flag_;
-};
-struct FunctorC {
-  int operator()() {
-    Thread::Current()->ProcessMessages(50);
-    return 24;
-  }
-};
-struct FunctorD {
- public:
-  explicit FunctorD(AtomicBool* flag) : flag_(flag) {}
-  FunctorD(FunctorD&&) = default;
-
-  FunctorD(const FunctorD&) = delete;
-  FunctorD& operator=(const FunctorD&) = delete;
-
-  FunctorD& operator=(FunctorD&&) = default;
-  void operator()() {
-    if (flag_)
-      *flag_ = true;
-  }
-
- private:
-  AtomicBool* flag_;
-};
-
 // See: https://code.google.com/p/webrtc/issues/detail?id=2409
 TEST(ThreadTest, DISABLED_Main) {
   rtc::AutoThread main_thread;
@@ -276,9 +205,9 @@ TEST(ThreadTest, CountBlockingCalls) {
 
   // Test invoking on the current thread. This should not count as an 'actual'
   // invoke, but should still count as an invoke that could block since we
-  // that the call to Invoke serves a purpose in some configurations (and should
-  // not be used a general way to call methods on the same thread).
-  current.Invoke<void>(RTC_FROM_HERE, []() {});
+  // that the call to `BlockingCall` serves a purpose in some configurations
+  // (and should not be used a general way to call methods on the same thread).
+  current.BlockingCall([]() {});
   EXPECT_EQ(0u, blocked_calls.GetBlockingCallCount());
   EXPECT_EQ(1u, blocked_calls.GetCouldBeBlockingCallCount());
   EXPECT_EQ(1u, blocked_calls.GetTotalBlockedCallCount());
@@ -286,7 +215,7 @@ TEST(ThreadTest, CountBlockingCalls) {
   // Create a new thread to invoke on.
   auto thread = Thread::CreateWithSocketServer();
   thread->Start();
-  EXPECT_EQ(42, thread->Invoke<int>(RTC_FROM_HERE, []() { return 42; }));
+  EXPECT_EQ(42, thread->BlockingCall([]() { return 42; }));
   EXPECT_EQ(1u, blocked_calls.GetBlockingCallCount());
   EXPECT_EQ(1u, blocked_calls.GetCouldBeBlockingCallCount());
   EXPECT_EQ(2u, blocked_calls.GetTotalBlockedCallCount());
@@ -307,7 +236,7 @@ TEST(ThreadTest, CountBlockingCallsOneCallback) {
         [&](uint32_t actual_block, uint32_t could_block) {
           was_called_back = true;
         });
-    current.Invoke<void>(RTC_FROM_HERE, []() {});
+    current.BlockingCall([]() {});
   }
   EXPECT_TRUE(was_called_back);
 }
@@ -323,7 +252,7 @@ TEST(ThreadTest, CountBlockingCallsSkipCallback) {
     // Changed `blocked_calls` to not issue the callback if there are 1 or
     // fewer blocking calls (i.e. we set the minimum required number to 2).
     blocked_calls.set_minimum_call_count_for_callback(2);
-    current.Invoke<void>(RTC_FROM_HERE, []() {});
+    current.BlockingCall([]() {});
   }
   // We should not have gotten a call back.
   EXPECT_FALSE(was_called_back);
@@ -421,23 +350,23 @@ TEST(ThreadTest, InvokesAllowedByDefault) {
   main_thread.ProcessMessages(100);
 }
 
-TEST(ThreadTest, Invoke) {
+TEST(ThreadTest, BlockingCall) {
   // Create and start the thread.
   auto thread = Thread::CreateWithSocketServer();
   thread->Start();
   // Try calling functors.
-  EXPECT_EQ(42, thread->Invoke<int>(RTC_FROM_HERE, FunctorA()));
-  AtomicBool called;
-  FunctorB f2(&called);
-  thread->Invoke<void>(RTC_FROM_HERE, f2);
-  EXPECT_TRUE(called.get());
+  EXPECT_EQ(42, thread->BlockingCall([] { return 42; }));
+  bool called = false;
+  thread->BlockingCall([&] { called = true; });
+  EXPECT_TRUE(called);
+
   // Try calling bare functions.
   struct LocalFuncs {
     static int Func1() { return 999; }
     static void Func2() {}
   };
-  EXPECT_EQ(999, thread->Invoke<int>(RTC_FROM_HERE, &LocalFuncs::Func1));
-  thread->Invoke<void>(RTC_FROM_HERE, &LocalFuncs::Func2);
+  EXPECT_EQ(999, thread->BlockingCall(&LocalFuncs::Func1));
+  thread->BlockingCall(&LocalFuncs::Func2);
 }
 
 // Verifies that two threads calling Invoke on each other at the same time does
@@ -449,8 +378,8 @@ TEST(ThreadTest, TwoThreadsInvokeDeathTest) {
   Thread* main_thread = Thread::Current();
   auto other_thread = Thread::CreateWithSocketServer();
   other_thread->Start();
-  other_thread->Invoke<void>(RTC_FROM_HERE, [main_thread] {
-    RTC_EXPECT_DEATH(main_thread->Invoke<void>(RTC_FROM_HERE, [] {}), "loop");
+  other_thread->BlockingCall([main_thread] {
+    RTC_EXPECT_DEATH(main_thread->BlockingCall([] {}), "loop");
   });
 }
 
@@ -464,10 +393,9 @@ TEST(ThreadTest, ThreeThreadsInvokeDeathTest) {
   auto third = Thread::Create();
   third->Start();
 
-  second->Invoke<void>(RTC_FROM_HERE, [&] {
-    third->Invoke<void>(RTC_FROM_HERE, [&] {
-      RTC_EXPECT_DEATH(first->Invoke<void>(RTC_FROM_HERE, [] {}), "loop");
-    });
+  second->BlockingCall([&] {
+    third->BlockingCall(
+        [&] { RTC_EXPECT_DEATH(first->BlockingCall([] {}), "loop"); });
   });
 }
 
@@ -476,7 +404,7 @@ TEST(ThreadTest, ThreeThreadsInvokeDeathTest) {
 // Verifies that if thread A invokes a call on thread B and thread C is trying
 // to invoke A at the same time, thread A does not handle C's invoke while
 // invoking B.
-TEST(ThreadTest, ThreeThreadsInvoke) {
+TEST(ThreadTest, ThreeThreadsBlockingCall) {
   AutoThread thread;
   Thread* thread_a = Thread::Current();
   auto thread_b = Thread::CreateWithSocketServer();
@@ -506,7 +434,7 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
   struct LocalFuncs {
     static void Set(LockedBool* out) { out->Set(true); }
     static void InvokeSet(Thread* thread, LockedBool* out) {
-      thread->Invoke<void>(RTC_FROM_HERE, [out] { Set(out); });
+      thread->BlockingCall([out] { Set(out); });
     }
 
     // Set `out` true and call InvokeSet on `thread`.
@@ -538,8 +466,7 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
   // Thread B returns when C receives the call and C should be blocked until A
   // starts to process messages.
   Thread* thread_c_ptr = thread_c.get();
-  thread_b->Invoke<void>(RTC_FROM_HERE, [thread_c_ptr, thread_a,
-                                         &thread_a_called] {
+  thread_b->BlockingCall([thread_c_ptr, thread_a, &thread_a_called] {
     LocalFuncs::AsyncInvokeSetAndWait(thread_c_ptr, thread_a, &thread_a_called);
   });
   EXPECT_FALSE(thread_a_called.Get());

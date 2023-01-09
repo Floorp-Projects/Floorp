@@ -941,10 +941,8 @@ void Thread::Send(const Location& posted_from,
   }
 }
 
-void Thread::InvokeInternal(const Location& posted_from,
-                            rtc::FunctionView<void()> functor) {
-  TRACE_EVENT2("webrtc", "Thread::Invoke", "src_file", posted_from.file_name(),
-               "src_func", posted_from.function_name());
+void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
+  TRACE_EVENT0("webrtc", "Thread::BlockingCall");
 
   class FunctorMessageHandler : public MessageHandler {
    public:
@@ -956,7 +954,7 @@ void Thread::InvokeInternal(const Location& posted_from,
     rtc::FunctionView<void()> functor_;
   } handler(functor);
 
-  Send(posted_from, &handler);
+  Send(/*posted_from=*/{}, &handler, /*id=*/0, /*pdata=*/nullptr);
 }
 
 // Called by the ThreadManager when being set as the current thread.

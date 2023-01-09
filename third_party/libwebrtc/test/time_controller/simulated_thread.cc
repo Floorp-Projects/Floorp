@@ -61,25 +61,18 @@ void SimulatedThread::RunReady(Timestamp at_time) {
   }
 }
 
-void SimulatedThread::Send(const rtc::Location& posted_from,
-                           rtc::MessageHandler* phandler,
-                           uint32_t id,
-                           rtc::MessageData* pdata) {
+void SimulatedThread::BlockingCall(rtc::FunctionView<void()> functor) {
   if (IsQuitting())
     return;
-  rtc::Message msg;
-  msg.posted_from = posted_from;
-  msg.phandler = phandler;
-  msg.message_id = id;
-  msg.pdata = pdata;
+
   if (IsCurrent()) {
-    msg.phandler->OnMessage(&msg);
+    functor();
   } else {
     TaskQueueBase* yielding_from = TaskQueueBase::Current();
     handler_->StartYield(yielding_from);
     RunReady(Timestamp::MinusInfinity());
     CurrentThreadSetter set_current(this);
-    msg.phandler->OnMessage(&msg);
+    functor();
     handler_->StopYield(yielding_from);
   }
 }
