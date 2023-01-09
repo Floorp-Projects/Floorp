@@ -21,7 +21,7 @@ MIDIPortChild::MIDIPortChild(const MIDIPortInfo& aPortInfo, bool aSysexEnabled,
 void MIDIPortChild::Teardown() {
   if (mDOMPort) {
     mDOMPort->UnsetIPCPort();
-    mDOMPort = nullptr;
+    MOZ_ASSERT(!mDOMPort);
   }
   MIDIPortInterface::Shutdown();
 }

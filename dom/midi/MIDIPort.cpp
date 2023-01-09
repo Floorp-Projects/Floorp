@@ -53,13 +53,13 @@ MIDIPort::~MIDIPort() {
     mMIDIAccessParent->RemovePortListener(this);
     mMIDIAccessParent = nullptr;
   }
-  if (mPort) {
+  if (Port()) {
     // If the IPC port channel is still alive at this point, it means we're
     // probably CC'ing this port object. Send the shutdown message to also clean
     // up the IPC channel.
-    mPort->SendShutdown();
+    Port()->SendShutdown();
     // This will unset the IPC Port pointer. Don't call anything after this.
-    mPort->Teardown();
+    Port()->Teardown();
   }
 }
 
@@ -82,66 +82,66 @@ bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
   if (!b->SendPMIDIPortConstructor(port, aPortInfo, aSysexEnabled)) {
     return false;
   }
-  mPort = port;
+  mPortHolder.Init(port.forget());
   LOG("MIDIPort::Initialize (%s, %s)",
-      NS_ConvertUTF16toUTF8(mPort->Name()).get(),
-      MIDIPortTypeValues::strings[uint32_t(mPort->Type())].value);
+      NS_ConvertUTF16toUTF8(Port()->Name()).get(),
+      MIDIPortTypeValues::strings[uint32_t(Port()->Type())].value);
   // Make sure to increase the ref count for the port, so it can be cleaned up
   // by the IPC manager.
-  mPort->SetActorAlive();
+  Port()->SetActorAlive();
   return true;
 }
 
 void MIDIPort::UnsetIPCPort() {
   LOG("MIDIPort::UnsetIPCPort (%s, %s)",
-      NS_ConvertUTF16toUTF8(mPort->Name()).get(),
-      MIDIPortTypeValues::strings[uint32_t(mPort->Type())].value);
-  mPort = nullptr;
+      NS_ConvertUTF16toUTF8(Port()->Name()).get(),
+      MIDIPortTypeValues::strings[uint32_t(Port()->Type())].value);
+  mPortHolder.Clear();
 }
 
 void MIDIPort::GetId(nsString& aRetVal) const {
-  MOZ_ASSERT(mPort);
-  aRetVal = mPort->StableId();
+  MOZ_ASSERT(Port());
+  aRetVal = Port()->StableId();
 }
 
 void MIDIPort::GetManufacturer(nsString& aRetVal) const {
-  MOZ_ASSERT(mPort);
-  aRetVal = mPort->Manufacturer();
+  MOZ_ASSERT(Port());
+  aRetVal = Port()->Manufacturer();
 }
 
 void MIDIPort::GetName(nsString& aRetVal) const {
-  MOZ_ASSERT(mPort);
-  aRetVal = mPort->Name();
+  MOZ_ASSERT(Port());
+  aRetVal = Port()->Name();
 }
 
 void MIDIPort::GetVersion(nsString& aRetVal) const {
-  MOZ_ASSERT(mPort);
-  aRetVal = mPort->Version();
+  MOZ_ASSERT(Port());
+  aRetVal = Port()->Version();
 }
 
 MIDIPortType MIDIPort::Type() const {
-  MOZ_ASSERT(mPort);
-  return mPort->Type();
+  MOZ_ASSERT(Port());
+  return Port()->Type();
 }
 
 MIDIPortConnectionState MIDIPort::Connection() const {
-  MOZ_ASSERT(mPort);
-  return mPort->ConnectionState();
+  MOZ_ASSERT(Port());
+  return Port()->ConnectionState();
 }
 
 MIDIPortDeviceState MIDIPort::State() const {
-  MOZ_ASSERT(mPort);
-  return mPort->DeviceState();
+  MOZ_ASSERT(Port());
+  return Port()->DeviceState();
 }
 
 bool MIDIPort::SysexEnabled() const {
-  MOZ_ASSERT(mPort);
-  return mPort->SysexEnabled();
+  MOZ_ASSERT(Port());
+  return Port()->SysexEnabled();
 }
 
 already_AddRefed<Promise> MIDIPort::Open(ErrorResult& aError) {
   LOG("MIDIPort::Open");
-  MOZ_ASSERT(mPort);
+  MOZ_ASSERT(Port());
   RefPtr<Promise> p;
   if (mOpeningPromise) {
     p = mOpeningPromise;
@@ -153,13 +153,13 @@ already_AddRefed<Promise> MIDIPort::Open(ErrorResult& aError) {
     return nullptr;
   }
   mOpeningPromise = p;
-  mPort->SendOpen();
+  Port()->SendOpen();
   return p.forget();
 }
 
 already_AddRefed<Promise> MIDIPort::Close(ErrorResult& aError) {
   LOG("MIDIPort::Close");
-  MOZ_ASSERT(mPort);
+  MOZ_ASSERT(Port());
   RefPtr<Promise> p;
   if (mClosingPromise) {
     p = mClosingPromise;
@@ -171,7 +171,7 @@ already_AddRefed<Promise> MIDIPort::Close(ErrorResult& aError) {
     return nullptr;
   }
   mClosingPromise = p;
-  mPort->SendClose();
+  Port()->SendClose();
   return p.forget();
 }
 
@@ -189,14 +189,14 @@ void MIDIPort::FireStateChangeEvent() {
 
   StateChange();
 
-  MOZ_ASSERT(mPort);
-  if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
-      mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
+  MOZ_ASSERT(Port());
+  if (Port()->ConnectionState() == MIDIPortConnectionState::Open ||
+      Port()->ConnectionState() == MIDIPortConnectionState::Pending) {
     if (mOpeningPromise) {
       mOpeningPromise->MaybeResolve(this);
       mOpeningPromise = nullptr;
     }
-  } else if (mPort->ConnectionState() == MIDIPortConnectionState::Closed) {
+  } else if (Port()->ConnectionState() == MIDIPortConnectionState::Closed) {
     if (mOpeningPromise) {
       mOpeningPromise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
       mOpeningPromise = nullptr;
@@ -207,14 +207,14 @@ void MIDIPort::FireStateChangeEvent() {
     }
   }
 
-  if (mPort->DeviceState() == MIDIPortDeviceState::Connected &&
-      mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
-    mPort->SendOpen();
+  if (Port()->DeviceState() == MIDIPortDeviceState::Connected &&
+      Port()->ConnectionState() == MIDIPortConnectionState::Pending) {
+    Port()->SendOpen();
   }
 
-  if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
-      (mPort->DeviceState() == MIDIPortDeviceState::Connected &&
-       mPort->ConnectionState() == MIDIPortConnectionState::Pending)) {
+  if (Port()->ConnectionState() == MIDIPortConnectionState::Open ||
+      (Port()->DeviceState() == MIDIPortDeviceState::Connected &&
+       Port()->ConnectionState() == MIDIPortConnectionState::Pending)) {
     KeepAliveOnStatechange();
   } else {
     DontKeepAliveOnStatechange();
@@ -241,7 +241,7 @@ void MIDIPort::Receive(const nsTArray<MIDIMessage>& aMsg) {
 
 void MIDIPort::DisconnectFromOwner() {
   DontKeepAliveOnStatechange();
-  mPort->SendClose();
+  Port()->SendClose();
 
   DOMEventTargetHelper::DisconnectFromOwner();
 }
@@ -260,6 +260,6 @@ void MIDIPort::DontKeepAliveOnStatechange() {
   }
 }
 
-const nsString& MIDIPort::StableId() { return mPort->StableId(); }
+const nsString& MIDIPort::StableId() { return Port()->StableId(); }
 
 }  // namespace mozilla::dom

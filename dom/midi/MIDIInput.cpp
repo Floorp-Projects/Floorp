@@ -56,9 +56,9 @@ void MIDIInput::Receive(const nsTArray<MIDIMessage>& aMsgs) {
 }
 
 void MIDIInput::StateChange() {
-  if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
-      (mPort->DeviceState() == MIDIPortDeviceState::Connected &&
-       mPort->ConnectionState() == MIDIPortConnectionState::Pending)) {
+  if (Port()->ConnectionState() == MIDIPortConnectionState::Open ||
+      (Port()->DeviceState() == MIDIPortDeviceState::Connected &&
+       Port()->ConnectionState() == MIDIPortConnectionState::Pending)) {
     KeepAliveOnMidimessage();
   } else {
     DontKeepAliveOnMidimessage();
@@ -70,9 +70,9 @@ void MIDIInput::EventListenerAdded(nsAtom* aType) {
     // HACK: the Web MIDI spec states that we should open a port only when
     // setting the midimessage event handler but Chrome does it even when
     // adding event listeners hence this.
-    if (mPort->ConnectionState() != MIDIPortConnectionState::Open) {
+    if (Port()->ConnectionState() != MIDIPortConnectionState::Open) {
       LOG("onmidimessage event listener added, sending implicit Open");
-      mPort->SendOpen();
+      Port()->SendOpen();
     }
   }
 
