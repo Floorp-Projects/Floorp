@@ -66,6 +66,7 @@ const PrecisionMetrics = {
   concat: {ULP: {float32: 0, float16: 0}},
   relu: {ULP: {float32: 0, float16: 0}},
   reshape: {ULP: {float32: 0, float16: 0}},
+  slice: {ULP: {float32: 0, float16: 0}},
 };
 
 /**
