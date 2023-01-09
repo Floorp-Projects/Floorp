@@ -397,11 +397,11 @@ def generate_beetmover_upstream_artifacts(
             "platform": platform,
         },
     )
-    map_config = deepcopy(cached_load_yaml(job["attributes"]["artifact_map"]))
+    map_config = cached_load_yaml(job["attributes"]["artifact_map"])
     upstream_artifacts = list()
 
     if not locale:
-        locales = map_config["default_locales"]
+        locales = deepcopy(map_config["default_locales"])
     elif isinstance(locale, list):
         locales = locale
     else:
@@ -472,7 +472,7 @@ def generate_beetmover_upstream_artifacts(
         upstream_artifacts.append(
             {
                 "taskId": {"task-reference": f"<{dep}>"},
-                "taskType": map_config["tasktype_map"].get(dep),
+                "taskType": deepcopy(map_config["tasktype_map"].get(dep)),
                 "paths": sorted(paths),
                 "locale": locale,
             }
