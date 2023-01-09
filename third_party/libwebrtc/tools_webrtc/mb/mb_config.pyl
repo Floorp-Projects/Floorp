@@ -48,6 +48,9 @@
       'Android64 Builder arm64': 'android_pure_release_bot_arm64',
       'Android64 Builder x64 (dbg)': 'android_debug_static_bot_x64',
 
+      # Fuchsia
+      'Fuchsia Release': 'release_bot_x64_fuchsia',
+
       # Linux
       # "More configs" bots will build all the following configs in sequence.
       # This is using MB's "phases" feature.
@@ -160,6 +163,9 @@
       'android_compile_x64_rel': 'android_release_bot_x64',
       'android_compile_x86_dbg': 'android_debug_static_bot_x86',
       'android_compile_x86_rel': 'android_release_bot_x86',
+
+      # Fuchsia
+      'fuchsia_rel': 'release_bot_x64_fuchsia',
 
       # iOS
       'ios_compile_arm64_dbg': 'ios_debug_bot_arm64',
@@ -301,6 +307,7 @@
     'release_bot_arm': ['openh264', 'release_bot', 'arm'],
     'release_bot_arm64': ['openh264', 'release_bot', 'arm64'],
     'release_bot_x64': ['openh264', 'release_bot', 'x64'],
+    'release_bot_x64_fuchsia': ['openh264', 'release_bot', 'x64', 'fuchsia'],
     'release_bot_x64_reclient': [
       'openh264', 'release_bot_reclient', 'x64',
     ],
@@ -403,6 +410,9 @@
     },
     'dummy_audio_file_devices': {
       'gn_args': 'rtc_use_dummy_audio_file_devices=true',
+    },
+    'fuchsia': {
+      'gn_args': 'is_fuchsia=true'
     },
     'full_symbols': {
       'gn_args': 'symbol_level=2',

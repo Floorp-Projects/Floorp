@@ -65,6 +65,13 @@
       },
       'Android64 Builder arm64': {},
       'Android64 Builder x64 (dbg)': {},
+      'Fuchsia Release': {
+        'os_type': 'linux',
+        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests',
+        },
+      },
       'Linux (more configs)': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
@@ -416,6 +423,13 @@
       'android_compile_x64_rel': {},
       'android_compile_x86_dbg': {},
       'android_compile_x86_rel': {},
+      'fuchsia_rel': {
+        'os_type': 'linux',
+        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'test_suties': {
+          'isolateds_scripts': 'desktop_tests',
+        },
+      },
       'ios_compile_arm64_dbg': {},
       'ios_compile_arm64_rel': {},
       'ios_sim_x64_dbg_ios12': {

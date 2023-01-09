@@ -63,6 +63,7 @@ skipped_lkgr_bots = [
     "Mac64 Release (reclient)",
     "Win64 Release (Clang)(reclient)",
     "iOS64 Release (reclient)",
+    "Fuchsia Release",
 ]
 
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
@@ -777,6 +778,8 @@ linux_builder("Linux (more configs)", "Linux|x64|more")
 linux_try_job("linux_more_configs")
 linux_try_job("linux_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
 linux_try_job("linux_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
+linux_builder("Fuchsia Release", "Fuchsia|x64|rel")
+linux_try_job("fuchsia_rel", cq = None)
 
 mac_builder("Mac64 Debug", "Mac|x64|dbg")
 mac_try_job("mac_dbg", cq = None)
