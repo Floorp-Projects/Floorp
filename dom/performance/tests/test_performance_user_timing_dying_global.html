@@ -40,13 +40,17 @@
                 ok(true, 'new PerformanceMark() on dying global did not crash');
 
                 try {
-                  dyingWindow.performance.mark('markMethod', {detail: 'markMethodDetail'});
+                    dyingWindow.performance.mark('markMethod', {detail: 'markMethodDetail'});
                 } catch (e) {
-                  is(e.code, e.INVALID_STATE_ERR, 'performance.mark on dying global threw expected exception');
+                    is(e.code, e.INVALID_STATE_ERR, 'performance.mark on dying global threw expected exception');
                 }
                 ok(true, 'performance.mark on dying global did not crash');
 
-                dyingWindow.performance.measure('measureMethod');
+                try {
+                    dyingWindow.performance.measure('measureMethod');
+                } catch (e) {
+                    is(e.code, e.INVALID_STATE_ERR, 'performance.measure on dying global threw expected exception');
+                }
                 ok(true, 'performance.measure on dying global did not crash');
             }
         </script>

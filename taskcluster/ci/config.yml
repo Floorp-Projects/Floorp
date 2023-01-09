@@ -473,11 +473,21 @@ taskgraph:
 
 workers:
     aliases:
-        b-linux.*:
+        b-linux-aws:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: 'b-linux'
+        b-linux-gcp:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
+        b-linux.*:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: '{alias}-gcp'
         b-win2012:
             provisioner: '{trust-domain}-{level}'
             implementation: generic-worker
@@ -487,7 +497,7 @@ workers:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: '{alias}'
+            worker-type: '{alias}-gcp'
         balrog:
             provisioner: scriptworker-k8s
             implementation: balrog
@@ -563,11 +573,16 @@ workers:
             implementation: generic-worker
             os: linux-bitbar
             worker-type: 'gecko-{alias}'
-        t-linux(-large|-xlarge|-xlarge-source|-metal):
+        t-linux(-large|-xlarge|-xlarge-source):
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: '{alias}'
+            worker-type: '{alias}-gcp'
+        t-linux-metal:
+            provisioner: '{trust-domain}-t'
+            implementation: docker-worker
+            os: linux
+            worker-type: 't-linux-kvm-gcp'
         t-linux-talos:
             provisioner: releng-hardware
             implementation: generic-worker
@@ -605,7 +620,7 @@ workers:
                     default: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: 't-linux-xlarge'
+            worker-type: 't-linux-xlarge-gcp'
         b-osx-1015:
             provisioner: releng-hardware
             implementation: generic-worker
@@ -648,7 +663,7 @@ workers:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: misc
+            worker-type: misc-gcp
 
 
 mac-notarization:

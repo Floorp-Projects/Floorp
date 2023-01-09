@@ -448,6 +448,20 @@ var gPrivacyPane = {
       httpsOnlyRadioGroup.value = "disabled";
       httpsOnlyExceptionButton.disabled = true;
     }
+
+    if (
+      Services.prefs.prefIsLocked("dom.security.https_only_mode") ||
+      Services.prefs.prefIsLocked("dom.security.https_only_mode_pbm")
+    ) {
+      httpsOnlyRadioGroup.disabled = true;
+    }
+
+    if (
+      Services.prefs.prefIsLocked("dom.security.https_only_mode") ||
+      Services.prefs.prefIsLocked("dom.security.https_only_mode_pbm")
+    ) {
+      httpsOnlyRadioGroup.disabled = true;
+    }
   },
 
   syncToHttpsOnlyPref() {

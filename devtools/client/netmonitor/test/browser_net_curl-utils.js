@@ -309,10 +309,10 @@ function testEscapeStringWin() {
     "Double quotes should be escaped."
   );
 
-  const percentSigns = "%AppData%";
+  const percentSigns = "%TEMP% %@foo% %2XX% %_XX% %?XX%";
   is(
     CurlUtils.escapeStringWin(percentSigns),
-    '""%"AppData"%""',
+    '"^%^TEMP^% ^%^@foo^% ^%^2XX^% ^%^_XX^% ^%?XX^%"',
     "Percent signs should be escaped."
   );
 
@@ -323,25 +323,32 @@ function testEscapeStringWin() {
     "Backslashes should be escaped."
   );
 
-  const newLines = "line1\r\nline2\r\nline3";
+  const newLines = "line1\r\nline2\r\rline3\n\nline4";
   is(
     CurlUtils.escapeStringWin(newLines),
-    '"line1"^\u000d\u000A\u000d\u000A"line2"^\u000d\u000A\u000d\u000A"line3"',
+    '"line1"^\r\n\r\n"line2"^\r\n\r\n""^\r\n\r\n"line3"^\r\n\r\n""^\r\n\r\n"line4"',
     "Newlines should be escaped."
   );
 
   const dollarSignCommand = "$(calc.exe)";
   is(
     CurlUtils.escapeStringWin(dollarSignCommand),
-    '"`$(calc.exe)"',
+    '"\\$(calc.exe)"',
     "Dollar sign should be escaped."
   );
 
   const tickSignCommand = "`$(calc.exe)";
   is(
     CurlUtils.escapeStringWin(tickSignCommand),
-    '"```$(calc.exe)"',
+    '"\\`\\$(calc.exe)"',
     "Both the tick and dollar signs should be escaped."
+  );
+
+  const evilCommand = `query=evil\r\rcmd" /c timeout /t 3 & calc.exe\r\r`;
+  is(
+    CurlUtils.escapeStringWin(evilCommand),
+    '"query=evil"^\r\n\r\n""^\r\n\r\n"cmd"" /c timeout /t 3 & calc.exe"^\r\n\r\n""^\r\n\r\n""',
+    "The evil command is escaped properly"
   );
 }
 

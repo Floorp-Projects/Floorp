@@ -301,30 +301,19 @@ var PrintEventHandler = {
       // system dialog the title will be used to generate the prepopulated
       // filename in the file picker.
       settings.title = this.activeTitle;
-      const PRINTDIALOGSVC = Cc[
-        "@mozilla.org/widget/printdialog-service;1"
-      ].getService(Ci.nsIPrintDialogService);
-      try {
+      Services.telemetry.scalarAdd("printing.dialog_opened_via_preview_tm", 1);
+      const doPrint = await this._showPrintDialog(
+        window,
+        this.hasSelection,
+        settings
+      );
+      if (!doPrint) {
         Services.telemetry.scalarAdd(
-          "printing.dialog_opened_via_preview_tm",
+          "printing.dialog_via_preview_cancelled_tm",
           1
         );
-        await this._showPrintDialog(
-          PRINTDIALOGSVC,
-          window,
-          this.hasSelection,
-          settings
-        );
-      } catch (e) {
-        if (e.result == Cr.NS_ERROR_ABORT) {
-          Services.telemetry.scalarAdd(
-            "printing.dialog_via_preview_cancelled_tm",
-            1
-          );
-          window.close();
-          return; // user cancelled
-        }
-        throw e;
+        window.close();
+        return;
       }
       await this.print(settings);
     });
@@ -1023,13 +1012,8 @@ var PrintEventHandler = {
    * testing purposes. The showPrintDialog() call blocks until the dialog is
    * closed, so we mark it as async to allow us to reject from the test.
    */
-  async _showPrintDialog(
-    aPrintDialogService,
-    aWindow,
-    aHaveSelection,
-    aSettings
-  ) {
-    return aPrintDialogService.showPrintDialog(
+  async _showPrintDialog(aWindow, aHaveSelection, aSettings) {
+    return PrintUtils.handleSystemPrintDialog(
       aWindow,
       aHaveSelection,
       aSettings
