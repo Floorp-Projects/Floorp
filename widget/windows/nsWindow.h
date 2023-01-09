@@ -592,8 +592,8 @@ class nsWindow final : public nsBaseWidget {
   bool OnTouch(WPARAM wParam, LPARAM lParam);
   bool OnHotKey(WPARAM wParam, LPARAM lParam);
   bool OnPaint(HDC aDC, uint32_t aNestingLevel);
+  void OnWindowPosChanging(WINDOWPOS* info);
   void OnWindowPosChanged(WINDOWPOS* wp);
-  void OnWindowPosChanging(LPWINDOWPOS& info);
   void OnSysColorChanged();
   void OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height);
   bool OnPointerEvents(UINT msg, WPARAM wParam, LPARAM lParam);
