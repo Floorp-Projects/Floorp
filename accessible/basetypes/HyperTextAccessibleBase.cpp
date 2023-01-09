@@ -239,10 +239,8 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
   // and last character, and union their bounds. They might reside on different
   // lines, and a simple union may yield an incorrect width. We
   // should use the length of the longest spanned line for our width.
-  // TODO: This functionality should probably live in TextLeafRange
-  // see bug 1769824
 
-  TextLeafPoint currPoint = ToTextLeafPoint(aStartOffset, false);
+  TextLeafPoint startPoint = ToTextLeafPoint(aStartOffset, false);
   TextLeafPoint endPoint =
       ToTextLeafPoint(ConvertMagicOffset(aEndOffset), true);
   if (!endPoint) {
@@ -254,44 +252,18 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
   // For our purposes, `endPoint` should be inclusive.
   endPoint = endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR,
                                    eDirPrevious, false);
-
-  if (endPoint == currPoint) {
-    result = currPoint.CharBounds();
-    nsAccUtils::ConvertScreenCoordsTo(&result.x, &result.y, aCoordType, Acc());
-    return result;
-  } else if (endPoint < currPoint) {
+  if (endPoint < startPoint) {
     return result;
   }
 
-  bool locatedFinalLine = false;
-  result = currPoint.CharBounds();
-
-  // Union the first and last chars of each line to create a line rect. Then,
-  // union the lines together.
-  while (!locatedFinalLine) {
-    // Fetch the last point in the current line by getting the
-    // start of the next line and going back one char. We don't
-    // use BOUNDARY_LINE_END here because it is equivalent to LINE_START when
-    // the line doesn't end with a line feed character.
-    TextLeafPoint lineStartPoint =
-        currPoint.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_START, eDirNext,
-                               /* aIncludeOrigin */ false);
-    TextLeafPoint lastPointInLine = lineStartPoint.FindBoundary(
-        nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious,
-        /* aIncludeOrigin */ false);
-    if (endPoint <= lastPointInLine) {
-      lastPointInLine = endPoint;
-      locatedFinalLine = true;
-    }
-
-    LayoutDeviceIntRect currLine = currPoint.CharBounds();
-    currLine.UnionRect(currLine, lastPointInLine.CharBounds());
-    result.UnionRect(result, currLine);
-
-    currPoint = lineStartPoint;
+  if (endPoint == startPoint) {
+    result = startPoint.CharBounds();
+  } else {
+    TextLeafRange range(startPoint, endPoint);
+    result = range.Bounds();
   }
 
-  // Calls to TextLeafPoint::CharBounds() will construct screen coordinates.
+  // Calls to TextLeafRange::Bounds() will construct screen coordinates.
   // Perform any additional conversions here.
   nsAccUtils::ConvertScreenCoordsTo(&result.x, &result.y, aCoordType, Acc());
   return result;
