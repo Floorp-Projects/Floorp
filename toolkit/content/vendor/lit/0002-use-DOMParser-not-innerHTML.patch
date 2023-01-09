@@ -1,14 +1,14 @@
-From e2fb71a850fda2d1f02a19d41a3db1cd7cf8618d Mon Sep 17 00:00:00 2001
+From 0d300a2e703fdcc575ce36dfd62f6c3a9887a3ff Mon Sep 17 00:00:00 2001
 From: Mark Striemer <mstriemer@mozilla.com>
 Date: Wed, 16 Nov 2022 23:07:57 -0600
-Subject: [PATCH 2/4] use DOMParser not innerHTML=
+Subject: [PATCH 2/5] use DOMParser not innerHTML=
 
 ---
  packages/lit-html/src/lit-html.ts | 13 ++++++++++---
  1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/packages/lit-html/src/lit-html.ts b/packages/lit-html/src/lit-html.ts
-index 51941fdf..13914ca7 100644
+index 896d298b..994c24e2 100644
 --- a/packages/lit-html/src/lit-html.ts
 +++ b/packages/lit-html/src/lit-html.ts
 @@ -14,6 +14,8 @@ const NODE_MODE = false;
@@ -39,5 +39,5 @@ index 51941fdf..13914ca7 100644
  }
  
 -- 
-2.32.0 (Apple Git-132)
+2.37.1 (Apple Git-137.1)
 

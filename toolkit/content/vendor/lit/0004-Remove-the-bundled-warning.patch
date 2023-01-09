@@ -1,7 +1,7 @@
-From 05d4da4eb99355580884d9685152f66f9e7f8d5d Mon Sep 17 00:00:00 2001
+From db47e472d6f2393c58c1691d21e9bbc753b3d9da Mon Sep 17 00:00:00 2001
 From: Mark Striemer <mstriemer@mozilla.com>
 Date: Tue, 22 Nov 2022 18:20:46 -0600
-Subject: [PATCH 4/4] Remove the bundled warning
+Subject: [PATCH 4/5] Remove the bundled warning
 
 ---
  packages/lit/src/index.all.ts | 8 --------
@@ -24,5 +24,5 @@ index 1f8e5499..2bccd703 100644
 -  );
 -}
 -- 
-2.32.0 (Apple Git-132)
+2.37.1 (Apple Git-137.1)
 
