@@ -2787,7 +2787,6 @@ StyleImageOrientation nsStyleVisibility::UsedImageOrientation(
 
   nsCOMPtr<nsIPrincipal> triggeringPrincipal =
       aRequest->GetTriggeringPrincipal();
-  nsCOMPtr<nsIURI> uri = aRequest->GetURI();
 
   // If the request was for a blob, the request may not have a triggering
   // principal and we should use the input orientation.
@@ -2795,10 +2794,16 @@ StyleImageOrientation nsStyleVisibility::UsedImageOrientation(
     return aOrientation;
   }
 
+  nsCOMPtr<nsIURI> uri = aRequest->GetURI();
+  // If the image request is a data uri, then treat the request as a
+  // same origin request.
+  bool isSameOrigin =
+      uri->SchemeIs("data") || triggeringPrincipal->IsSameOrigin(uri);
+
   // If the image request is a cross-origin request, do not enforce the
   // image orientation found in the style. Use the image orientation found
   // in the exif data.
-  if (!triggeringPrincipal->IsSameOrigin(uri)) {
+  if (!isSameOrigin) {
     return StyleImageOrientation::FromImage;
   }
 
