@@ -36,6 +36,7 @@
 #include "call/adaptation/video_stream_adapter.h"
 #include "modules/video_coding/include/video_codec_initializer.h"
 #include "modules/video_coding/svc/svc_rate_allocator.h"
+#include "modules/video_coding/utility/vp8_constants.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -1950,26 +1951,17 @@ void VideoStreamEncoder::OnLossNotification(
   }
 }
 
-EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
+EncodedImage VideoStreamEncoder::AugmentEncodedImage(
     const EncodedImage& encoded_image,
     const CodecSpecificInfo* codec_specific_info) {
-  TRACE_EVENT_INSTANT1("webrtc", "VCMEncodedFrameCallback::Encoded",
-                       "timestamp", encoded_image.Timestamp());
-
-  // TODO(bugs.webrtc.org/10520): Signal the simulcast id explicitly.
-
-  const size_t spatial_idx = encoded_image.SpatialIndex().value_or(0);
   EncodedImage image_copy(encoded_image);
-
+  const size_t spatial_idx = encoded_image.SpatialIndex().value_or(0);
   frame_encode_metadata_writer_.FillTimingInfo(spatial_idx, &image_copy);
-
   frame_encode_metadata_writer_.UpdateBitstream(codec_specific_info,
                                                 &image_copy);
-
   VideoCodecType codec_type = codec_specific_info
                                   ? codec_specific_info->codecType
                                   : VideoCodecType::kVideoCodecGeneric;
-
   if (image_copy.qp_ < 0 && qp_parsing_allowed_) {
     // Parse encoded frame QP if that was not provided by encoder.
     image_copy.qp_ = qp_parser_
@@ -1979,6 +1971,8 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
   }
   RTC_LOG(LS_VERBOSE) << __func__ << " spatial_idx " << spatial_idx << " qp "
                       << image_copy.qp_;
+  image_copy.SetAtTargetQuality(codec_type == kVideoCodecVP8 &&
+                                image_copy.qp_ <= kVp8SteadyStateQpThreshold);
 
   // Piggyback ALR experiment group id and simulcast id into the content type.
   const uint8_t experiment_id =
@@ -1995,6 +1989,24 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
   // value 0 on the wire is reserved for 'no simulcast stream specified'.
   RTC_CHECK(videocontenttypehelpers::SetSimulcastId(
       &image_copy.content_type_, static_cast<uint8_t>(spatial_idx + 1)));
+
+  return image_copy;
+}
+
+EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
+    const EncodedImage& encoded_image,
+    const CodecSpecificInfo* codec_specific_info) {
+  TRACE_EVENT_INSTANT1("webrtc", "VCMEncodedFrameCallback::Encoded",
+                       "timestamp", encoded_image.Timestamp());
+
+  // TODO(bugs.webrtc.org/10520): Signal the simulcast id explicitly.
+
+  const size_t spatial_idx = encoded_image.SpatialIndex().value_or(0);
+  const VideoCodecType codec_type = codec_specific_info
+                                        ? codec_specific_info->codecType
+                                        : VideoCodecType::kVideoCodecGeneric;
+  EncodedImage image_copy =
+      AugmentEncodedImage(encoded_image, codec_specific_info);
 
   // Post a task because `send_codec_` requires `encoder_queue_` lock and we
   // need to update on quality convergence.
