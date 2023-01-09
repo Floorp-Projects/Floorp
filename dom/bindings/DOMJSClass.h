@@ -451,6 +451,7 @@ enum DOMObjectType : uint8_t {
   eInterface,
   eInterfacePrototype,
   eGlobalInterfacePrototype,
+  eNamespace,
   eNamedPropertiesObject
 };
 
@@ -549,8 +550,8 @@ struct DOMIfaceAndProtoJSClass {
   // initialization for aggregate/POD types.
   const JSClass mBase;
 
-  // Either eInterface, eInterfacePrototype, eGlobalInterfacePrototype or
-  // eNamedPropertiesObject.
+  // Either eInterface, eNamespace, eInterfacePrototype,
+  // eGlobalInterfacePrototype or eNamedPropertiesObject.
   DOMObjectType mType;  // uint8_t
 
   // Boolean indicating whether this object wants a @@hasInstance property
