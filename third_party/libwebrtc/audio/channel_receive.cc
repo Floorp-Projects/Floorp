@@ -812,8 +812,6 @@ CallReceiveStatistics ChannelReceive::GetRTCPStatistics() const {
   stats.cumulativeLost = rtp_stats.packets_lost;
   stats.jitterSamples = rtp_stats.jitter;
 
-  stats.rttMs = GetRTT();
-
   // Data counters.
   if (statistician) {
     stats.payload_bytes_rcvd = rtp_stats.packet_counter.payload_bytes;
