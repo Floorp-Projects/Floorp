@@ -5621,11 +5621,15 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "bottom",
+      "bottom-outside",
       "inherit",
       "initial",
+      "left",
       "revert",
       "revert-layer",
+      "right",
       "top",
+      "top-outside",
       "unset"
     ]
   },

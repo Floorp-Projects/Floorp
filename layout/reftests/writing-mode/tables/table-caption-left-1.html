@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+html {
+  font: 12px sans-serif;
+}
+.h {
+  writing-mode: horizontal-tb;
+}
+.vlr {
+  writing-mode: vertical-lr;
+}
+.vrl {
+  writing-mode: vertical-rl;
+}
+.ltr {
+  direction: ltr;
+}
+.rtl {
+  direction: rtl;
+}
+table {
+  border-spacing: 0;
+  margin-bottom: 10px;
+  caption-side: left;
+}
+td {
+  width: 200px;
+  height: 100px;
+  background: silver;
+  padding: 0;
+}
+caption {
+  background: cyan;
+  min-block-size: 20px;
+}
+</style>
+</head>
+<body>
+
+<table class="h ltr">
+  <caption>table caption</caption>
+  <tr><td></td></tr>
+</table>
+
+<table class="h rtl">
+  <caption>table caption</caption>
+  <tr><td></td></tr>
+</table>
+
+<table class="vlr ltr">
+  <caption>table caption</caption>
+  <tr><td></td></tr>
+</table>
+
+<table class="vlr rtl">
+  <caption>table caption</caption>
+  <tr><td></td></tr>
+</table>
+
+<table class="vrl ltr">
+  <caption>table caption</caption>
+  <tr><td></td></tr>
+</table>
+
+<table class="vrl rtl">
+  <caption>table caption</caption>
+  <tr><td></td></tr>
+</table>
