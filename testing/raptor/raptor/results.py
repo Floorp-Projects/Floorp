@@ -640,6 +640,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                                 bt_result["measurements"].setdefault(k, []).extend(v)
                             else:
                                 bt_result["measurements"].setdefault(k, []).append(v)
+                        bt_result["custom_data"] = True
                     else:
                         for k, v in data.items():
                             bt_result["measurements"].setdefault(k, []).append(v)
