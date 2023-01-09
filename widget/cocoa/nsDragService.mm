@@ -44,13 +44,6 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 mozilla::StaticRefPtr<nsIArray> gDraggedTransferables;
 
-NSString* const kPublicUrlPboardType = @"public.url";
-NSString* const kPublicUrlNamePboardType = @"public.url-name";
-NSString* const kUrlsWithTitlesPboardType = @"WebURLsWithTitlesPboardType";
-NSString* const kMozWildcardPboardType = @"org.mozilla.MozillaWildcard";
-NSString* const kMozCustomTypesPboardType = @"org.mozilla.custom-clipdata";
-NSString* const kMozFileUrlsPboardType = @"org.mozilla.file-urls";
-
 nsDragService::nsDragService()
     : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false) {}
 

@@ -5,8 +5,8 @@
 
 #include <algorithm>
 
+#include "mozilla/gfx/2D.h"
 #include "mozilla/Logging.h"
-
 #include "mozilla/Unused.h"
 
 #include "gfxPlatform.h"
@@ -18,44 +18,17 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsIFile.h"
 #include "nsStringStream.h"
-#include "nsDragService.h"
 #include "nsEscape.h"
 #include "nsPrintfCString.h"
 #include "nsObjCExceptions.h"
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"
 
+using mozilla::LogLevel;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
-using mozilla::LogLevel;
 
 mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
-
-@implementation UTIHelper
-
-+ (NSString*)stringFromPboardType:(NSString*)aType {
-  if ([aType isEqualToString:kMozWildcardPboardType] ||
-      [aType isEqualToString:kMozCustomTypesPboardType] ||
-      [aType isEqualToString:kPublicUrlPboardType] ||
-      [aType isEqualToString:kPublicUrlNamePboardType] ||
-      [aType isEqualToString:kMozFileUrlsPboardType] ||
-      [aType isEqualToString:(NSString*)kPasteboardTypeFileURLPromise] ||
-      [aType isEqualToString:(NSString*)kPasteboardTypeFilePromiseContent] ||
-      [aType isEqualToString:(NSString*)kUTTypeFileURL] ||
-      [aType isEqualToString:NSStringPboardType] ||
-      [aType isEqualToString:NSPasteboardTypeString] ||
-      [aType isEqualToString:NSPasteboardTypeHTML] || [aType isEqualToString:NSPasteboardTypeRTF] ||
-      [aType isEqualToString:NSPasteboardTypeTIFF] || [aType isEqualToString:NSPasteboardTypePNG]) {
-    return [NSString stringWithString:aType];
-  }
-  NSString* dynamicType = (NSString*)UTTypeCreatePreferredIdentifierForTag(
-      kUTTagClassNSPboardType, (CFStringRef)aType, kUTTypeData);
-  NSString* result = [NSString stringWithString:dynamicType];
-  [dynamicType release];
-  return result;
-}
-
-@end  // UTIHelper
 
 nsClipboard::nsClipboard() : nsBaseClipboard(), mCachedClipboard(-1), mChangeCount(0) {}
 

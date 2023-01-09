@@ -28,6 +28,18 @@
 - (CGFloat)backingScaleFactor;
 @end
 
+// Pasteborad types
+extern NSString* const kPublicUrlPboardType;
+extern NSString* const kPublicUrlNamePboardType;
+extern NSString* const kUrlsWithTitlesPboardType;
+extern NSString* const kMozWildcardPboardType;
+extern NSString* const kMozCustomTypesPboardType;
+extern NSString* const kMozFileUrlsPboardType;
+
+@interface UTIHelper : NSObject
++ (NSString*)stringFromPboardType:(NSString*)aType;
+@end
+
 class nsIWidget;
 
 namespace mozilla {
