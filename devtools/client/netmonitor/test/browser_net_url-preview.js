@@ -90,9 +90,20 @@ add_task(async function() {
 
   const netWorkEvent = waitForNetworkEvents(monitor, 3);
   await performRequestsInContent([
+    // URL with same parameter name with different values
     { url: "sjs_content-type-test-server.sjs?a=3&a=45&a=60" },
+
+    // URL with mix of different parameter names
     { url: "sjs_content-type-test-server.sjs?x=5&a=3&a=4&a=3&b=3" },
+
+    // URL contains a parameter with `query` as the name. This makes sure
+    // there is no conflict with the query property on the Url Object in the
+    // UrlPreview
     { url: "sjs_content-type-test-server.sjs?x=5&a=3&a=4&a=3&query=3" },
+
+    // URL contains a paramter with `__proto__` as the name. This makes sure
+    // there is no conflict with the prototype chain of the JS object.
+    { url: "sjs_content-type-test-server.sjs?__proto__=5" },
   ]);
   await netWorkEvent;
 
@@ -142,6 +153,33 @@ add_task(async function() {
     ).textContent,
     "query",
     "Contains the query parameter"
+  );
+
+  // Collapse preview
+  await toggleUrlPreview(false, document, monitor);
+
+  urlPreview = waitForDOM(document, "#headers-panel .url-preview", 1);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[3]
+  );
+
+  urlPreviewValue = (await urlPreview)[0].textContent;
+  ok(
+    urlPreviewValue.endsWith("?__proto__=5"),
+    "The parameters in the url preview match."
+  );
+
+  // Expand preview
+  await toggleUrlPreview(true, document, monitor);
+
+  // Check if the expanded preview contains the "__proto__" parameter
+  is(
+    document.querySelector(
+      "#headers-panel .url-preview tr#\\/GET\\/query\\/__proto__ .treeLabelCell"
+    ).textContent,
+    "__proto__",
+    "Contains the __proto__ parameter"
   );
 
   return teardown(monitor);
