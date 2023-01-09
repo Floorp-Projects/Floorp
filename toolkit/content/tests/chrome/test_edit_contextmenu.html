@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
     SimpleTest.waitForExplicitFinish();
 
     async function runTest() {
-      let win = window.browsingContext.topChromeWindow.open("file_edit_contextmenu.xhtml", "context-menu", "chrome,width=600,height=600");
-      await new Promise(r => win.addEventListener("load", r, { once: true}));
+      let win = window.browsingContext.topChromeWindow.open("file_edit_contextmenu.xhtml", "_blank", "chrome,width=600,height=600");
+      await new Promise(r => win.addEventListener("load", r, { once: true }));
       await SimpleTest.promiseFocus(win);
 
       const elements = [
@@ -27,6 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
       for (const element of elements) {
         await testElement(element, win);
       }
+      win.close();
       SimpleTest.finish();
     }
 
