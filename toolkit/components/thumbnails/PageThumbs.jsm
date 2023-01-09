@@ -331,7 +331,7 @@ var PageThumbs = {
    * @return a promise
    */
   async _captureRemoteThumbnail(aBrowser, aWidth, aHeight, aArgs) {
-    if (!aBrowser.browsingContext || !aBrowser.parentElement) {
+    if (!aBrowser.browsingContext || !aBrowser.isConnected) {
       return null;
     }
 
@@ -353,7 +353,10 @@ var PageThumbs = {
       throw new Error("IMAGE_ZERO_DIMENSION");
     }
 
-    let doc = aBrowser.parentElement.ownerDocument;
+    if (!aBrowser.isConnected) {
+      return null;
+    }
+    let doc = aBrowser.ownerDocument;
     let thumbnail = doc.createElementNS(
       lazy.PageThumbUtils.HTML_NAMESPACE,
       "canvas"
@@ -384,6 +387,9 @@ var PageThumbs = {
         aArgs.backgroundColor,
         aArgs.fullViewport
       );
+      if (!image) {
+        return null;
+      }
 
       thumbnail.width = fullScale ? contentWidth : aWidth;
       thumbnail.height = fullScale ? contentHeight : aHeight;
