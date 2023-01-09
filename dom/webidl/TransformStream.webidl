@@ -9,7 +9,7 @@
 
 [Exposed=*,
  //Transferable See Bug 1734240
- Pref="dom.streams.transform_streams.enabled"]
+]
 interface TransformStream {
   [Throws]
   constructor(optional object transformer,

@@ -22,10 +22,10 @@ interface ReadableStream {
   [Throws]
   ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions options = {});
 
-  [Pref="dom.streams.transform_streams.enabled", Throws]
+  [Throws]
   ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
 
-  [Pref="dom.streams.pipeTo.enabled", NewObject]
+  [NewObject]
   Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
 
   [Throws]
