@@ -10,7 +10,6 @@
 :root {
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
-  --toolbar-non-lwt-bgimage: none;
 
   --panel-separator-color: hsla(210,4%,10%,.14);
 
