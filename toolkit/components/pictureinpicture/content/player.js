@@ -466,12 +466,12 @@ let Player = {
     if (!this.scrubbing) {
       return;
     }
-    this.scrubbing = false;
     let scrubberPosition = this.getScrubberPositionFromEvent(event);
     this.setVideoTime(scrubberPosition);
     if (this.wasPlaying) {
       this.actor.sendAsyncMessage("PictureInPicture:Play");
     }
+    this.scrubbing = false;
   },
 
   getScrubberPositionFromEvent(event) {
@@ -479,9 +479,11 @@ let Player = {
   },
 
   setVideoTime(scrubberPosition) {
+    let wasPlaying = this.scrubbing ? this.wasPlaying : this.isPlaying;
     this.setScrubberPosition(scrubberPosition);
     this.actor.sendAsyncMessage("PictureInPicture:SetVideoTime", {
       scrubberPosition,
+      wasPlaying,
     });
   },
 
