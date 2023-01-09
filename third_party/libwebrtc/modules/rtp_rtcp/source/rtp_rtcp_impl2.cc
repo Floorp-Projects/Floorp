@@ -368,6 +368,13 @@ ModuleRtpRtcpImpl2::FetchFecPackets() {
   return rtp_sender_->packet_sender.FetchFecPackets();
 }
 
+void ModuleRtpRtcpImpl2::OnAbortedRetransmissions(
+    rtc::ArrayView<const uint16_t> sequence_numbers) {
+  RTC_DCHECK(rtp_sender_);
+  RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
+  rtp_sender_->packet_sender.OnAbortedRetransmissions(sequence_numbers);
+}
+
 void ModuleRtpRtcpImpl2::OnPacketsAcknowledged(
     rtc::ArrayView<const uint16_t> sequence_numbers) {
   RTC_DCHECK(rtp_sender_);

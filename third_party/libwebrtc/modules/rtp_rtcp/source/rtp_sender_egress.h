@@ -91,6 +91,10 @@ class RtpSenderEgress {
                                   const FecProtectionParams& key_params);
   std::vector<std::unique_ptr<RtpPacketToSend>> FetchFecPackets();
 
+  // Clears pending status for these sequence numbers in the packet history.
+  void OnAbortedRetransmissions(
+      rtc::ArrayView<const uint16_t> sequence_numbers);
+
  private:
   // Maps capture time in milliseconds to send-side delay in milliseconds.
   // Send-side delay is the difference between transmission time and capture

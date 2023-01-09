@@ -390,6 +390,17 @@ RtpSenderEgress::FetchFecPackets() {
   return {};
 }
 
+void RtpSenderEgress::OnAbortedRetransmissions(
+    rtc::ArrayView<const uint16_t> sequence_numbers) {
+  RTC_DCHECK_RUN_ON(&pacer_checker_);
+  // Mark aborted retransmissions as sent, rather than leaving them in
+  // a 'pending' state - otherwise they can not be requested again and
+  // will not be cleared until the history has reached its max size.
+  for (uint16_t seq_no : sequence_numbers) {
+    packet_history_->MarkPacketAsSent(seq_no);
+  }
+}
+
 bool RtpSenderEgress::HasCorrectSsrc(const RtpPacketToSend& packet) const {
   switch (*packet.packet_type()) {
     case RtpPacketMediaType::kAudio:

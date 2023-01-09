@@ -98,6 +98,10 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               (),
               (override));
   MOCK_METHOD(void,
+              OnAbortedRetransmissions,
+              (rtc::ArrayView<const uint16_t>),
+              (override));
+  MOCK_METHOD(void,
               OnPacketsAcknowledged,
               (rtc::ArrayView<const uint16_t>),
               (override));

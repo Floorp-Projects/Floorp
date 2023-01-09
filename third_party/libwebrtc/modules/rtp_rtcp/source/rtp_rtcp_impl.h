@@ -139,6 +139,9 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
 
   std::vector<std::unique_ptr<RtpPacketToSend>> FetchFecPackets() override;
 
+  void OnAbortedRetransmissions(
+      rtc::ArrayView<const uint16_t> sequence_numbers) override;
+
   void OnPacketsAcknowledged(
       rtc::ArrayView<const uint16_t> sequence_numbers) override;
 
