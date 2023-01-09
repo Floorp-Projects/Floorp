@@ -56,6 +56,7 @@ class MIDIAccessManager final {
  private:
   MIDIAccessManager();
   ~MIDIAccessManager();
+  void StartActor();
   // True if object has received a device list from the MIDI platform service.
   bool mHasPortList;
   // List of known ports for the system.

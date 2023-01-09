@@ -1238,14 +1238,19 @@ already_AddRefed<PMIDIPortParent> BackgroundParentImpl::AllocPMIDIPortParent(
   return result.forget();
 }
 
-already_AddRefed<PMIDIManagerParent>
-BackgroundParentImpl::AllocPMIDIManagerParent() {
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIManager(
+    Endpoint<PMIDIManagerParent>&& aEndpoint) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
+  if (!aEndpoint.IsValid()) {
+    return IPC_FAIL(this, "invalid endpoint for MIDIManager");
+  }
+
   RefPtr<MIDIManagerParent> result = new MIDIManagerParent();
+  aEndpoint.Bind(result);
   MIDIPlatformService::Get()->AddManager(result);
-  return result.forget();
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvHasMIDIDevice(
