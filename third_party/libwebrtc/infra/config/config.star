@@ -632,6 +632,7 @@ def perf_builder(name, perf_cat, **kwargs):
     """
     add_milo(name, {"perf": perf_cat})
     properties = make_goma_properties()
+    properties.update(make_reclient_properties("rbe-webrtc-trusted"))
     properties["builder_group"] = "client.webrtc.perf"
     return webrtc_builder(
         name = name,
