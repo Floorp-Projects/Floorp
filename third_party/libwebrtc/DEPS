@@ -267,6 +267,19 @@ deps = {
       'condition': 'checkout_android',
       'dep_type': 'cipd',
   },
+  # This duplication is intentional, so we avoid updating the r8.jar used by
+  # dexing unless necessary, since each update invalidates all incremental
+  # dexing and unnecessarily slows down all bots.
+  'src/third_party/r8/d8': {
+      'packages': [
+          {
+              'package': 'chromium/third_party/r8',
+              'version': 'PWja-vUPRluhUOsoIZey_Dmxkw106_xQR7NM_Z8aZxIC',
+          },
+      ],
+      'condition': 'checkout_android',
+      'dep_type': 'cipd',
+  },
   'src/third_party/proguard': {
       'packages': [
           {
