@@ -362,6 +362,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void AddFinalDiscardListener(std::function<void(uint64_t)>&& aListener);
 
+  bool ForceAppWindowActive() const { return mForceAppWindowActive; }
+  void SetForceAppWindowActive(bool, ErrorResult&);
+  void RecomputeAppWindowVisibility();
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -547,11 +551,14 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   RefPtr<RestoreState> mRestoreState;
 
+  nsCOMPtr<nsITimer> mSessionStoreSessionStorageUpdateTimer;
+
   // If this is a top level context, this is true if our browser ID is marked as
   // active in the process priority manager.
   bool mPriorityActive = false;
 
-  nsCOMPtr<nsITimer> mSessionStoreSessionStorageUpdateTimer;
+  // See CanonicalBrowsingContext.forceAppWindowActive.
+  bool mForceAppWindowActive = false;
 
   bool mIsReplaced = false;
 

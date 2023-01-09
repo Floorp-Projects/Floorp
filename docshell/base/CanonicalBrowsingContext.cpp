@@ -1297,6 +1297,48 @@ void CanonicalBrowsingContext::AddFinalDiscardListener(
   mFullyDiscardedListeners.AppendElement(std::move(aListener));
 }
 
+void CanonicalBrowsingContext::SetForceAppWindowActive(bool aForceActive,
+                                                       ErrorResult& aRv) {
+  MOZ_DIAGNOSTIC_ASSERT(IsChrome());
+  MOZ_DIAGNOSTIC_ASSERT(IsTop());
+  if (!IsChrome() || !IsTop()) {
+    return aRv.ThrowNotAllowedError(
+        "You shouldn't need to force this BrowsingContext to be active, use "
+        ".isActive instead");
+  }
+  if (mForceAppWindowActive == aForceActive) {
+    return;
+  }
+  mForceAppWindowActive = aForceActive;
+  RecomputeAppWindowVisibility();
+}
+
+void CanonicalBrowsingContext::RecomputeAppWindowVisibility() {
+  MOZ_RELEASE_ASSERT(IsChrome());
+  MOZ_RELEASE_ASSERT(IsTop());
+
+  const bool isActive = [&] {
+    if (ForceAppWindowActive()) {
+      return true;
+    }
+    auto* docShell = GetDocShell();
+    if (NS_WARN_IF(!docShell)) {
+      return false;
+    }
+    nsCOMPtr<nsIWidget> widget;
+    nsDocShell::Cast(docShell)->GetMainWidget(getter_AddRefs(widget));
+    if (NS_WARN_IF(!widget)) {
+      return false;
+    }
+    if (widget->IsFullyOccluded() ||
+        widget->SizeMode() == nsSizeMode_Minimized) {
+      return false;
+    }
+    return true;
+  }();
+  SetIsActive(isActive, IgnoreErrors());
+}
+
 void CanonicalBrowsingContext::AdjustPrivateBrowsingCount(
     bool aPrivateBrowsing) {
   if (IsDiscarded() || !EverAttached() || IsChrome()) {

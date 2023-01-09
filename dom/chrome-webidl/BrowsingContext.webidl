@@ -331,6 +331,10 @@ interface CanonicalBrowsingContext : BrowsingContext {
 
   undefined clearRestoreState();
 
+  // Force this browsing context, which must correspond to an app window, to
+  // be active regardless of the window being minimized or fully occluded.
+  [SetterThrows] attribute boolean forceAppWindowActive;
+
   /**
    * This allows chrome to override the default choice of whether touch events
    * are available in a specific BrowsingContext and its descendents.
