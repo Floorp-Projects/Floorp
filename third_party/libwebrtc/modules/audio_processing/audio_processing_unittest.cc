@@ -955,8 +955,8 @@ TEST_F(ApmTest, PreAmplifier) {
   EXPECT_EQ(config.pre_amplifier.fixed_gain_factor, 1.5f);
 }
 
-// This test a simple test that ensures that the emulated analog mic gain
-// functionality runs without crashing.
+// Ensures that the emulated analog mic gain functionality runs without
+// crashing.
 TEST_F(ApmTest, AnalogMicGainEmulation) {
   // Fill the audio frame with a sawtooth pattern.
   rtc::ArrayView<int16_t> frame_data = GetMutableFrameData(&frame_);

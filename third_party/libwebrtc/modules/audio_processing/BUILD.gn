@@ -114,7 +114,10 @@ rtc_source_set("aec_dump_interface") {
     ":api",
     ":audio_frame_view",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("gain_controller2") {
