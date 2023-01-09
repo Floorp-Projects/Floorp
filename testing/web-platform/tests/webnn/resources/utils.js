@@ -60,6 +60,18 @@ const getExpectedData = (resources, outputName) => {
   return data;
 };
 
+/**
+ * Get ULP tolerance of softmax operation.
+ * @param {Object} resources - Resources used for building a graph
+ * @returns {Number} A tolerance number
+ */
+const getSoftmaxPrecisionTolerance = (resources) => {
+  // Compute the softmax values of the 2-D input tensor along axis 1.
+  const inputShape = resources.inputs[Object.keys(resources.inputs)[0]].shape;
+  const tolerance = inputShape[1] * 3 + 3;
+  return tolerance;
+};
+
 // Refer to precision metrics on https://github.com/webmachinelearning/webnn/issues/265#issuecomment-1256242643
 const PrecisionMetrics = {
   clamp: {ULP: {float32: 0, float16: 0}},
@@ -67,6 +79,7 @@ const PrecisionMetrics = {
   relu: {ULP: {float32: 0, float16: 0}},
   reshape: {ULP: {float32: 0, float16: 0}},
   slice: {ULP: {float32: 0, float16: 0}},
+  softmax: {ULP: {float32: getSoftmaxPrecisionTolerance, float16: getSoftmaxPrecisionTolerance}},
 };
 
 /**
@@ -82,7 +95,7 @@ const getPrecisonTolerance = (operationName, metricType, resources) => {
   let tolerance = PrecisionMetrics[operationName][metricType][precisionType];
   // If the tolerance is dynamic, then evaluate the function to get the value.
   if (tolerance instanceof Function) {
-    tolerance = tolerance(resources, operationName);
+    tolerance = tolerance(resources);
   }
   return tolerance;
 };
