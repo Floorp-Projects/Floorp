@@ -101,6 +101,9 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request,
     if (byTypeRec) {
       IPCTypeRecord result;
       byTypeRec->GetResults(&result.mData);
+      if (nsCOMPtr<nsIDNSHTTPSSVCRecord> rec = do_QueryInterface(aRecord)) {
+        rec->GetTtl(&result.mTTL);
+      }
       SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(result));
       return NS_OK;
     }
