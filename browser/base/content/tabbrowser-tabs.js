@@ -1214,15 +1214,6 @@
         "first-visible-unpinned-tab",
         "true"
       );
-
-      let hoveredTab = this._hoveredTab;
-      if (hoveredTab) {
-        hoveredTab._mouseleave();
-      }
-      hoveredTab = this.querySelector("tab:hover");
-      if (hoveredTab) {
-        hoveredTab._mouseenter();
-      }
     }
 
     _updateCloseButtons() {
