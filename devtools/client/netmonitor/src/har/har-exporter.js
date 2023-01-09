@@ -78,8 +78,7 @@ const HarExporter = {
 
     let data = await this.fetchHarData(options);
 
-    const tabTarget = options.connector.getTabTarget();
-    const host = new URL(tabTarget.url);
+    const host = new URL(options.connector.currentTarget.url);
 
     const fileName = HarUtils.getHarFileName(
       defaultFileName,
@@ -193,15 +192,13 @@ const HarExporter = {
    */
   async buildHarData(options) {
     const { connector } = options;
-    const { getTabTarget } = connector;
-    const { title } = getTabTarget();
 
     // Disconnect from redux actions/store.
     connector.enableActions(false);
 
     options = {
       ...options,
-      title,
+      title: connector.currentTarget.title,
       getString: connector.getLongString,
       getTimingMarker: connector.getTimingMarker,
       requestData: connector.requestData,
