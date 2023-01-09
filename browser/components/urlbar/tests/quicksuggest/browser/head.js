@@ -80,8 +80,11 @@ async function updateTopSites(condition, searchShortcuts = false) {
  * @param {Array} options.suggestions
  *   Quick suggest will be initialized with these suggestions. They should be
  *   the suggestions you want to test.
+ * @param {Array} options.config
+ *   Quick suggest will be initialized with this config. Leave undefined to use
+ *   the default config. See `QuickSuggestTestUtils` for details.
  */
-async function setUpTelemetryTest({ suggestions }) {
+async function setUpTelemetryTest({ suggestions, config = undefined }) {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enable blocking on primary sponsored and nonsponsored suggestions so we
@@ -107,7 +110,7 @@ async function setUpTelemetryTest({ suggestions }) {
   // Add a mock engine so we don't hit the network.
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(suggestions);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit(suggestions, config);
 }
 
 /**
