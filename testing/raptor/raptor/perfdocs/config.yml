@@ -128,6 +128,7 @@ suites:
             raptor-youtube-playback-v9-full-1080p30-firefox: "FF"
             raptor-youtube-playback-v9-full-1080p60-firefox: "FF"
             speedometer: "FF, CH, CU, FE, GV, RB, CH-M"
+            speedometer3: "FF, CH, CU, FE, GV, RB, CH-M"
             stylebench: "FF, CH, CU"
             sunspider: "FF, CH, CU"
             twitch-animation: "FF"

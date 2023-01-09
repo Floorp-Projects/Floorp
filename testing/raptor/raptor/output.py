@@ -9,10 +9,12 @@ import copy
 import json
 import os
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterable
 
 import filters
 import six
 from logger.logger import RaptorLogger
+from utils import flatten
 
 LOG = RaptorLogger(component="perftest-output")
 
@@ -26,6 +28,12 @@ VISUAL_METRICS = [
     "VisualComplete85",
     "VisualComplete95",
     "VisualComplete99",
+]
+
+METRIC_BLOCKLIST = [
+    "mean",
+    "median",
+    "geomean",
 ]
 
 
@@ -341,6 +349,15 @@ class PerftestOutput(object):
         if testname.startswith("raptor-v8_7"):
             return 100 * filters.geometric_mean(_filter(vals))
 
+        if testname == "speedometer3":
+            score = None
+            for val, name in vals:
+                if name == "score":
+                    score = val
+            if score is None:
+                raise Exception("Unable to find score for Speedometer 3")
+            return score
+
         if "speedometer" in testname:
             correctionFactor = 3
             results = _filter(vals)
@@ -457,6 +474,66 @@ class PerftestOutput(object):
 
         # pylint: disable=W1633
         return round(filters.mean(_filter(vals)), 2)
+
+    def parseUnknown(self, test):
+        # Attempt to flatten whatever we've been given
+        # Dictionary keys will be joined by dashes, arrays represent
+        # represent "iterations"
+        _subtests = {}
+
+        if not isinstance(test["measurements"], dict):
+            raise Exception(
+                "Expected a dictionary with a single entry as the name of the test. "
+                "The value of this key should be the data."
+            )
+        if test.get("custom_data", False):
+            # If custom_data is true it means that the data was already flattened
+            # and the test name is included in the keys (the test might have
+            # also removed it if it's in the subtest_name_filters option). Handle this
+            # exception by wrapping it
+            test["measurements"] = {test["name"]: [test["measurements"]]}
+
+        for iteration in test["measurements"][list(test["measurements"].keys())[0]]:
+            flattened_metrics = None
+            if not test.get("custom_data", False):
+                flattened_metrics = flatten(iteration, ())
+
+            for metric, value in (flattened_metrics or iteration).items():
+                if metric in METRIC_BLOCKLIST:
+                    # TODO: Add an option in the test manifest for this
+                    continue
+                if metric not in _subtests:
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[metric] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": metric,
+                        "replicates": [],
+                    }
+                if not isinstance(value, Iterable):
+                    value = [value]
+                # pylint: disable=W1633
+                _subtests[metric]["replicates"].extend([round(x, 3) for x in value])
+
+        vals = []
+        subtests = []
+        names = list(_subtests)
+        names.sort(reverse=True)
+        summaries = {
+            "median": filters.median,
+            "mean": filters.mean,
+            "geomean": filters.geometric_mean,
+        }
+        for name in names:
+            summary_method = test.get("submetric_summary_method", "median")
+            _subtests[name]["value"] = round(
+                summaries[summary_method](_subtests[name]["replicates"]), 3
+            )
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
 
     def parseSpeedometerOutput(self, test):
         # each benchmark 'index' becomes a subtest; each pagecycle / iteration
@@ -1294,6 +1371,8 @@ class RaptorOutput(PerftestOutput):
                     subtests, vals = self.parseWASMMiscOutput(test)
                 elif "webaudio" in test["measurements"]:
                     subtests, vals = self.parseWebaudioOutput(test)
+                else:
+                    subtests, vals in self.parseUnknown(test)
 
                 suite["subtests"] = subtests
 
@@ -1718,30 +1797,37 @@ class BrowsertimeOutput(PerftestOutput):
                 if "speedometer" in test["measurements"]:
                     # this includes stylebench
                     subtests, vals = self.parseSpeedometerOutput(test)
-                if "ares6" in test["name"]:
+                elif "ares6" in test["name"]:
                     subtests, vals = self.parseAresSixOutput(test)
-                if "motionmark" in test["measurements"]:
+                elif "motionmark" in test["measurements"]:
                     subtests, vals = self.parseMotionmarkOutput(test)
-                if "youtube-playback" in test["name"]:
+                elif "youtube-playback" in test["name"]:
                     subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
-                if "unity-webgl" in test["name"]:
+                elif "unity-webgl" in test["name"]:
                     subtests, vals = self.parseUnityWebGLOutput(test)
-                if "webaudio" in test["measurements"]:
+                elif "webaudio" in test["measurements"]:
                     subtests, vals = self.parseWebaudioOutput(test)
-                if "wasm-godot" in test["measurements"]:
+                elif "wasm-godot" in test["measurements"]:
                     subtests, vals = self.parseWASMGodotOutput(test)
-                if "wasm-misc" in test["measurements"]:
+                elif "wasm-misc" in test["measurements"]:
                     subtests, vals = self.parseWASMMiscOutput(test)
-                if "sunspider" in test["measurements"]:
+                elif "sunspider" in test["measurements"]:
                     subtests, vals = self.parseSunspiderOutput(test)
-                if "assorted-dom" in test["measurements"]:
+                elif "assorted-dom" in test["measurements"]:
                     subtests, vals = self.parseAssortedDomOutput(test)
-                if "jetstream2" in test["measurements"]:
+                elif "jetstream2" in test["measurements"]:
                     subtests, vals = self.parseJetstreamTwoOutput(test)
-                if "matrix-react-bench" in test["name"]:
+                elif "matrix-react-bench" in test["name"]:
                     subtests, vals = self.parseMatrixReactBenchOutput(test)
-                if "twitch-animation" in test["name"]:
+                elif "twitch-animation" in test["name"]:
                     subtests, vals = self.parseTwitchAnimationOutput(test)
+                else:
+                    # Attempt to parse the unknown benchmark by flattening the
+                    # given data and merging all the arrays of non-iterable
+                    # data that fall under the same key.
+                    # XXX Note that this is not fully implemented for the summary
+                    # of the metric or test as we don't have a use case for that yet.
+                    subtests, vals = self.parseUnknown(test)
 
                 if subtests is None:
                     raise Exception("No benchmark metrics found in browsertime results")

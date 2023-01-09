@@ -259,6 +259,7 @@ browsertime-benchmark:
                     - [motionmark-animometer, mm-a]
                     - [motionmark-htmlsuite, mm-h]
                     - [speedometer, sp]
+                    - [speedometer3, sp3]
                     - [stylebench, sb]
                     - [sunspider, ss]
                     - [twitch-animation, tw-a]
@@ -272,6 +273,7 @@ browsertime-benchmark:
                     - [motionmark-animometer, mm-a]
                     - [motionmark-htmlsuite, mm-h]
                     - [speedometer, sp]
+                    - [speedometer3, sp3]
                     - [stylebench, sb]
                     - [sunspider, ss]
                     - [unity-webgl, ugl]
@@ -284,6 +286,7 @@ browsertime-benchmark:
                     - [motionmark-animometer, mm-a]
                     - [motionmark-htmlsuite, mm-h]
                     - [speedometer, sp]
+                    - [speedometer3, sp3]
                     - [stylebench, sb]
                     - [sunspider, ss]
                     - [unity-webgl, ugl]
@@ -309,6 +312,15 @@ browsertime-benchmark:
                     default: 2
     run-on-projects:
         by-subtest:
+            speedometer3:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            windows.*: []
+                            linux.*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            mac.*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            default: []
+                    default: []
             unity-webgl:
                 by-app:
                     firefox:
