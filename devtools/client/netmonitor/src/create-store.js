@@ -80,7 +80,7 @@ function configureStore(connector, commands, telemetry) {
 
   // Prepare middleware.
   const middleware = applyMiddleware(
-    requestBlocking(connector),
+    requestBlocking(commands),
     thunk({ connector, commands }),
     prefs,
     batching,

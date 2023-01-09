@@ -344,13 +344,6 @@ class Connector {
     this.emitForTests(TEST_EVENTS.TIMELINE_EVENT, resource);
   }
 
-  /*
-   * Get the list of blocked URLs
-   */
-  async getBlockedUrls() {
-    return this.networkFront.getBlockedUrls();
-  }
-
   async updatePersist() {
     const enabled = Services.prefs.getBoolPref(
       DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF
@@ -359,15 +352,6 @@ class Connector {
     await this.networkFront.setPersist(enabled);
 
     this.emitForTests(TEST_EVENTS.PERSIST_CHANGED, enabled);
-  }
-
-  /**
-   * Updates the list of blocked URLs
-   *
-   * @param {object} urls An array of URL strings
-   */
-  async setBlockedUrls(urls) {
-    return this.networkFront.setBlockedUrls(urls);
   }
 
   /**

@@ -83,11 +83,11 @@ function updateBlockedUrl(oldUrl, newUrl) {
 }
 
 async function openRequestBlocking() {
-  return async ({ dispatch, getState, connector }) => {
+  return async ({ dispatch, getState, commands }) => {
     const state = getState();
     if (!state.requestBlocking.blockingSynced) {
       const blockedUrls = state.requestBlocking.blockedUrls;
-      const responses = await connector.getBlockedUrls();
+      const responses = await commands.networkCommand.getBlockedUrls();
       const urls = responses.flat();
       if (urls.length !== blockedUrls.length) {
         urls.forEach(url => dispatch(addBlockedUrl(url)));
