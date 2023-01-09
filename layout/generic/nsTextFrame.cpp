@@ -5273,7 +5273,7 @@ void nsTextFrame::GetTextDecorations(
 
     if (context->GetPseudoType() == PseudoStyleType::marker &&
         (context->StyleList()->mListStylePosition ==
-             NS_STYLE_LIST_STYLE_POSITION_OUTSIDE ||
+             StyleListStylePosition::Outside ||
          !context->StyleDisplay()->IsInlineOutsideStyle())) {
       // Outside ::marker pseudos, and inside markers that aren't inlines, don't
       // have text decorations.

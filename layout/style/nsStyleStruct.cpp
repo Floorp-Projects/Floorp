@@ -599,7 +599,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
 // nsStyleList
 //
 nsStyleList::nsStyleList(const Document& aDocument)
-    : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
+    : mListStylePosition(StyleListStylePosition::Outside),
       mQuotes(StyleQuotes::Auto()),
       mListStyleImage(StyleImage::None()),
       mImageRegion(StyleClipRectOrAuto::Auto()) {

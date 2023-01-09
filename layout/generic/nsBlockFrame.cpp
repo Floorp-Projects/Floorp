@@ -7533,7 +7533,7 @@ void nsBlockFrame::SetMarkerFrameForListItem(nsIFrame* aMarkerFrame) {
                               NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER),
              "How can we have a ::marker frame already?");
 
-  if (StyleList()->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
+  if (StyleList()->mListStylePosition == StyleListStylePosition::Inside) {
     SetProperty(InsideMarkerProperty(), aMarkerFrame);
     AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_MARKER);
   } else {
