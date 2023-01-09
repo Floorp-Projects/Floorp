@@ -1541,6 +1541,7 @@ void DcSctpSocket::HandleError(const CommonHeader& header,
 void DcSctpSocket::HandleReconfig(
     const CommonHeader& header,
     const SctpPacket::ChunkDescriptor& descriptor) {
+  TimeMs now = callbacks_.TimeMillis();
   absl::optional<ReConfigChunk> chunk = ReConfigChunk::Parse(descriptor.data);
   if (ValidateParseSuccess(chunk) && ValidateHasTCB()) {
     tcb_->stream_reset_handler().HandleReConfig(*std::move(chunk));
@@ -1549,6 +1550,9 @@ void DcSctpSocket::HandleReconfig(
     // that were waiting for this request to finish, continue resetting them.
     MaybeSendResetStreamsRequest();
   }
+  // If a response was processed, pending to-be-reset streams may now have
+  // become unpaused. Try to send more DATA chunks.
+  tcb_->SendBufferedPackets(now);
 }
 
 void DcSctpSocket::HandleShutdown(

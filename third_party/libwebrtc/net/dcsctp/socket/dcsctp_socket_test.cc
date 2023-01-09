@@ -2815,5 +2815,39 @@ TEST(DcSctpSocketTest, ResetStreamsDeferred) {
   EXPECT_EQ(msg3->payload().size(), kSmallMessageSize);
 }
 
+TEST(DcSctpSocketTest, ResetStreamsWithPausedSenderResumesWhenPerformed) {
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  ConnectSockets(a, z);
+
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51),
+                              std::vector<uint8_t>(kSmallMessageSize)),
+                {});
+
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(1)}));
+
+  // Will be queued, as the stream has an outstanding reset operation.
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(52),
+                              std::vector<uint8_t>(kSmallMessageSize)),
+                {});
+
+  EXPECT_CALL(a.cb, OnStreamsResetPerformed(ElementsAre(StreamID(1))));
+  EXPECT_CALL(z.cb, OnIncomingStreamsReset(ElementsAre(StreamID(1))));
+  ExchangeMessages(a, z);
+
+  absl::optional<DcSctpMessage> msg1 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg1.has_value());
+  EXPECT_EQ(msg1->stream_id(), StreamID(1));
+  EXPECT_EQ(msg1->ppid(), PPID(51));
+  EXPECT_EQ(msg1->payload().size(), kSmallMessageSize);
+
+  absl::optional<DcSctpMessage> msg2 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg2.has_value());
+  EXPECT_EQ(msg2->stream_id(), StreamID(1));
+  EXPECT_EQ(msg2->ppid(), PPID(52));
+  EXPECT_EQ(msg2->payload().size(), kSmallMessageSize);
+}
+
 }  // namespace
 }  // namespace dcsctp
