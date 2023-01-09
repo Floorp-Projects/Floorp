@@ -88,8 +88,9 @@ class StreamResetHandler {
         last_processed_req_seq_nbr_(
             handover_state ? ReconfigRequestSN(
                                  handover_state->rx.last_completed_reset_req_sn)
-                           : ReconfigRequestSN(*ctx_->peer_initial_tsn() - 1)) {
-  }
+                           : ReconfigRequestSN(*ctx_->peer_initial_tsn() - 1)),
+        last_processed_req_result_(
+            ReconfigurationResponseParameter::Result::kSuccessNothingToDo) {}
 
   // Initiates reset of the provided streams. While there can only be one
   // ongoing stream reset request at any time, this method can be called at any
@@ -224,6 +225,8 @@ class StreamResetHandler {
 
   // For incoming requests - last processed request sequence number.
   ReconfigRequestSN last_processed_req_seq_nbr_;
+  // The result from last processed incoming request
+  ReconfigurationResponseParameter::Result last_processed_req_result_;
 };
 }  // namespace dcsctp
 
