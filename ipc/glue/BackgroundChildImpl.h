@@ -195,10 +195,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPWebAuthnTransactionChild(
       PWebAuthnTransactionChild* aActor) override;
 
-  virtual PMIDIPortChild* AllocPMIDIPortChild(
-      const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled) override;
-  virtual bool DeallocPMIDIPortChild(PMIDIPortChild*) override;
-
   already_AddRefed<PServiceWorkerChild> AllocPServiceWorkerChild(
       const IPCServiceWorkerDescriptor&);
 

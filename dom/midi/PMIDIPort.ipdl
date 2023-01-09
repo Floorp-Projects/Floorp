@@ -10,7 +10,6 @@ include MIDITypes;
 namespace mozilla {
 namespace dom {
 
-[ManualDealloc]
 async protocol PMIDIPort
 {
   manager PBackground;
