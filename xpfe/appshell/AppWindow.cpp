@@ -27,6 +27,7 @@
 #include "nsIAppShellService.h"
 #include "nsIContentViewer.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsPIDOMWindow.h"
 #include "nsScreen.h"
 #include "nsIInterfaceRequestor.h"
@@ -2996,18 +2997,11 @@ void AppWindow::RecomputeBrowsingContextVisibility() {
   if (!mDocShell) {
     return;
   }
-  if (RefPtr bc = mDocShell->GetBrowsingContext()) {
-    nsCOMPtr<nsIWidget> widget;
-    mDocShell->GetMainWidget(getter_AddRefs(widget));
-    const bool isActive = [&] {
-      if (!widget) {
-        return false;
-      }
-      return widget->SizeMode() != nsSizeMode_Minimized &&
-             !widget->IsFullyOccluded();
-    }();
-    bc->SetIsActive(isActive, IgnoreErrors());
+  RefPtr bc = mDocShell->GetBrowsingContext();
+  if (!bc) {
+    return;
   }
+  bc->Canonical()->RecomputeAppWindowVisibility();
 }
 
 void AppWindow::OcclusionStateChanged(bool aIsFullyOccluded) {
