@@ -37,7 +37,6 @@ enum TemporalStructureMode {
   kTemporalStructureMode1,  // 1 temporal layer structure - i.e., IPPP...
   kTemporalStructureMode2,  // 2 temporal layers 01...
   kTemporalStructureMode3,  // 3 temporal layers 0212...
-  kTemporalStructureMode4   // 3 temporal layers 02120212...
 };
 
 struct GofInfoVP9 {
@@ -83,52 +82,6 @@ struct GofInfoVP9 {
         temporal_up_switch[3] = true;
         num_ref_pics[3] = 1;
         pid_diff[3][0] = 1;
-        break;
-      case kTemporalStructureMode4:
-        num_frames_in_gof = 8;
-        temporal_idx[0] = 0;
-        temporal_up_switch[0] = true;
-        num_ref_pics[0] = 1;
-        pid_diff[0][0] = 4;
-
-        temporal_idx[1] = 2;
-        temporal_up_switch[1] = true;
-        num_ref_pics[1] = 1;
-        pid_diff[1][0] = 1;
-
-        temporal_idx[2] = 1;
-        temporal_up_switch[2] = false;
-        num_ref_pics[2] = 1;
-        pid_diff[2][0] = 2;
-
-        temporal_idx[3] = 2;
-        temporal_up_switch[3] = true;
-        num_ref_pics[3] = 2;
-        pid_diff[3][0] = 1;
-        pid_diff[3][1] = 2;
-
-        temporal_idx[4] = 0;
-        temporal_up_switch[4] = false;
-        num_ref_pics[4] = 1;
-        pid_diff[4][0] = 4;
-
-        temporal_idx[5] = 2;
-        temporal_up_switch[5] = true;
-        num_ref_pics[5] = 2;
-        pid_diff[5][0] = 1;
-        pid_diff[5][1] = 2;
-
-        temporal_idx[6] = 1;
-        temporal_up_switch[6] = false;
-        num_ref_pics[6] = 2;
-        pid_diff[6][0] = 2;
-        pid_diff[6][1] = 4;
-
-        temporal_idx[7] = 2;
-        temporal_up_switch[7] = true;
-        num_ref_pics[7] = 2;
-        pid_diff[7][0] = 1;
-        pid_diff[7][1] = 2;
         break;
       default:
         RTC_DCHECK_NOTREACHED();
