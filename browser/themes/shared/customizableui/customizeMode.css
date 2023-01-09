@@ -22,14 +22,13 @@
 
 #customization-container {
   background-color: var(--toolbar-non-lwt-bgcolor);
-  background-image: var(--toolbar-non-lwt-bgimage);
   color: var(--toolbar-color);
 }
 
 #customization-container:-moz-lwtheme {
   /* Ensure this displays on top of the non-lwt bgcolor, to make sure it's not
    * semi-transparent */
-  background-image: var(--toolbar-bgimage), linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
+  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
 }
 
 :root[lwtheme-image] #customization-container {

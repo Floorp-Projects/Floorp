@@ -559,7 +559,6 @@
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
 .tab-background:is([selected], [multiselected]) {
   background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
-  background-image: var(--tab-selected-bgimage, var(--toolbar-bgimage));
   background-origin: border-box;
   background-repeat: repeat-x;
 }
