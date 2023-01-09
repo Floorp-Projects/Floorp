@@ -69,7 +69,7 @@
       'Linux64 Builder': 'pure_release_bot_x64',
       'Linux64 Debug': 'debug_bot_x64',
       'Linux64 Debug (ARM)': 'debug_bot_arm64',
-      'Linux64 Release': 'release_bot_x64',
+      'Linux64 Release': 'release_bot_x64_reclient',
       'Linux64 Release (ARM)': 'release_bot_arm64',
       'Linux64 Release (Libfuzzer)': 'libfuzzer_asan_release_bot_x64',
       'Linux64 Release (reclient)': 'release_bot_x64_reclient',
