@@ -498,13 +498,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
  private:
   static const int kSlowDispatchLoggingThreshold = 50;  // 50 ms
 
-  // TODO(bugs.webrtc.org/9702): Delete and move Send's implementation into
-  // `BlockingCall` when derived classes override `BlockingCall` instead.
-  virtual void Send(const Location& posted_from,
-                    MessageHandler* phandler,
-                    uint32_t id,
-                    MessageData* pdata);
-
   // Get() will process I/O until:
   //  1) A message is available (returns true)
   //  2) cmsWait seconds have elapsed (returns false)
