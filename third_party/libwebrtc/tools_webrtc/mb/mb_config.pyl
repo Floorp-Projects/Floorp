@@ -412,7 +412,7 @@
       'gn_args': 'rtc_use_dummy_audio_file_devices=true',
     },
     'fuchsia': {
-      'gn_args': 'is_fuchsia=true'
+      'gn_args': 'target_os="fuchsia"'
     },
     'full_symbols': {
       'gn_args': 'symbol_level=2',
