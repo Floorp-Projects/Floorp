@@ -170,12 +170,15 @@ ID3D11Device* GLBlitHelper::GetD3D11() const {
   EGLDeviceEXT deviceEGL = 0;
   NOTE_IF_FALSE(egl->fQueryDisplayAttribEXT(LOCAL_EGL_DEVICE_EXT,
                                             (EGLAttrib*)&deviceEGL));
-  if (!egl->mLib->fQueryDeviceAttribEXT(
-          deviceEGL, LOCAL_EGL_D3D11_DEVICE_ANGLE,
-          (EGLAttrib*)(ID3D11Device**)getter_AddRefs(mD3D11))) {
+  ID3D11Device* device = nullptr;
+  // ANGLE does not `AddRef` its returned pointer for `QueryDeviceAttrib`, so no
+  // `getter_AddRefs`.
+  if (!egl->mLib->fQueryDeviceAttribEXT(deviceEGL, LOCAL_EGL_D3D11_DEVICE_ANGLE,
+                                        (EGLAttrib*)&device)) {
     MOZ_ASSERT(false, "d3d9?");
     return nullptr;
   }
+  mD3D11 = device;
   return mD3D11;
 }
 
