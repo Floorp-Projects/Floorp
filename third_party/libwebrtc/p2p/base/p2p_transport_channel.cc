@@ -223,7 +223,7 @@ P2PTransportChannel::~P2PTransportChannel() {
   std::vector<Connection*> copy(connections().begin(), connections().end());
   for (Connection* connection : copy) {
     connection->SignalDestroyed.disconnect(this);
-    ice_controller_->OnConnectionDestroyed(connection);
+    RemoveConnection(connection);
     connection->Destroy();
   }
   resolvers_.clear();
@@ -281,6 +281,7 @@ void P2PTransportChannel::AddConnection(Connection* connection) {
   LogCandidatePairConfig(connection,
                          webrtc::IceCandidatePairConfigType::kAdded);
 
+  connections_.push_back(connection);
   ice_controller_->AddConnection(connection);
 }
 
@@ -1693,7 +1694,7 @@ void P2PTransportChannel::RemoveConnectionForTest(Connection* connection) {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(FindConnection(connection));
   connection->SignalDestroyed.disconnect(this);
-  ice_controller_->OnConnectionDestroyed(connection);
+  RemoveConnection(connection);
   RTC_DCHECK(!FindConnection(connection));
   if (selected_connection_ == connection)
     selected_connection_ = nullptr;
@@ -2045,7 +2046,7 @@ void P2PTransportChannel::HandleAllTimedOut() {
       update_selected_connection = true;
     }
     connection->SignalDestroyed.disconnect(this);
-    ice_controller_->OnConnectionDestroyed(connection);
+    RemoveConnection(connection);
     connection->Destroy();
   }
 
@@ -2172,7 +2173,7 @@ void P2PTransportChannel::OnConnectionDestroyed(Connection* connection) {
   // use it.
 
   // Remove this connection from the list.
-  ice_controller_->OnConnectionDestroyed(connection);
+  RemoveConnection(connection);
 
   RTC_LOG(LS_INFO) << ToString() << ": Removed connection " << connection
                    << " (" << connections().size() << " remaining)";
@@ -2191,6 +2192,14 @@ void P2PTransportChannel::OnConnectionDestroyed(Connection* connection) {
     // "completed".
     UpdateState();
   }
+}
+
+void P2PTransportChannel::RemoveConnection(const Connection* connection) {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  auto it = absl::c_find(connections_, connection);
+  RTC_DCHECK(it != connections_.end());
+  connections_.erase(it);
+  ice_controller_->OnConnectionDestroyed(connection);
 }
 
 // When a port is destroyed, remove it from our list of ports to use for
