@@ -819,6 +819,14 @@ static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
   return DefineConstructor(cx, global, nameKey, constructor);
 }
 
+static bool DefineToStringTag(JSContext* cx, JS::Handle<JSObject*> obj,
+                              JS::Handle<JSString*> class_name) {
+  JS::Rooted<jsid> toStringTagId(
+      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
+  return JS_DefinePropertyById(cx, obj, toStringTagId, class_name,
+                               JSPROP_READONLY);
+}
+
 // name must be an atom (or JS::PropertyKey::NonIntAtom will assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
@@ -905,6 +913,10 @@ static JSObject* CreateInterfaceObject(
     }
   }
 
+  if (isNamespace && !DefineToStringTag(cx, constructor, name)) {
+    return nullptr;
+  }
+
   if (proto && !JS_LinkConstructorAndPrototype(cx, constructor, proto)) {
     return nullptr;
   }
@@ -986,10 +998,7 @@ static JSObject* CreateInterfacePrototypeObject(
     }
   }
 
-  JS::Rooted<jsid> toStringTagId(
-      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
-  if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, name,
-                             JSPROP_READONLY)) {
+  if (!DefineToStringTag(cx, ourProto, name)) {
     return nullptr;
   }
 
