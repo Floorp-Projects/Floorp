@@ -94,7 +94,10 @@ async function fetchData() {
     // by the time we gathered data about the module above.
     if (gBackgroundTasksDone) {
       module.isBlockedByBuiltin =
-        !(module.typeFlags & Ci.nsIAboutThirdParty.ModuleType_BlockedByUser) &&
+        !(
+          module.typeFlags &
+          Ci.nsIAboutThirdParty.ModuleType_BlockedByUserAtLaunch
+        ) &&
         !!module.events.length &&
         module.events.every(e => e.loadStatus !== 0);
     } else {
