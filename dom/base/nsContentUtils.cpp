@@ -330,7 +330,6 @@
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
 #  include "nsIURIWithSpecialOrigin.h"
 #endif
-#include "nsIUserIdleService.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebNavigationInfo.h"
@@ -1575,21 +1574,6 @@ void nsContentUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
     aType = aValue;
   }
   aType.StripWhitespace();
-}
-
-nsresult nsContentUtils::IsUserIdle(uint32_t aRequestedIdleTimeInMS,
-                                    bool* aUserIsIdle) {
-  nsresult rv;
-  nsCOMPtr<nsIUserIdleService> idleService =
-      do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t idleTimeInMS;
-  rv = idleService->GetIdleTime(&idleTimeInMS);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aUserIsIdle = idleTimeInMS >= aRequestedIdleTimeInMS;
-  return NS_OK;
 }
 
 /**
