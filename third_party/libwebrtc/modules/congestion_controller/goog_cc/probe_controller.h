@@ -53,6 +53,9 @@ struct ProbeControllerConfig {
   // If the network state estimate increase more than this rate, a probe is sent
   // the next process interval.
   FieldTrialParameter<double> network_state_estimate_fast_rampup_rate;
+  // If the network state estimate decreases more than this rate, a probe is
+  // sent the next process interval.
+  FieldTrialParameter<double> network_state_estimate_drop_down_rate;
   FieldTrialParameter<double> network_state_probe_scale;
   // Overrides min_probe_duration if network_state_estimate_probing_interval
   // is set and a network state estimate is known.
@@ -68,8 +71,9 @@ struct ProbeControllerConfig {
   FieldTrialParameter<int> min_probe_packets_sent;
   // The minimum probing duration.
   FieldTrialParameter<TimeDelta> min_probe_duration;
-
-  FieldTrialParameter<bool> probe_if_bwe_limited_due_to_loss;
+  // Max limit the target rate of a probe to current estimate if BWE is loss
+  // limited.
+  FieldTrialParameter<bool> limit_probe_target_rate_to_loss_bwe;
 };
 
 // This class controls initiation of probing to estimate initial channel
