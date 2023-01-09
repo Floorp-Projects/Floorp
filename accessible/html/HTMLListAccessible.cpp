@@ -59,7 +59,7 @@ nsRect HTMLLIAccessible::BoundsInAppUnits() const {
 
   if (bullet && frame &&
       frame->StyleList()->mListStylePosition !=
-          NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
+          StyleListStylePosition::Inside) {
     nsRect bulletRect = bullet->BoundsInAppUnits();
     return rect.Union(bulletRect);
   }

@@ -2427,7 +2427,7 @@ void ReflowInput::InitConstraints(
         const auto pseudoType = mFrame->Style()->GetPseudoType();
         if (pseudoType == PseudoStyleType::marker &&
             mFrame->GetParent()->StyleList()->mListStylePosition ==
-                NS_STYLE_LIST_STYLE_POSITION_OUTSIDE) {
+                StyleListStylePosition::Outside) {
           // Exclude outside ::markers.
           return false;
         }

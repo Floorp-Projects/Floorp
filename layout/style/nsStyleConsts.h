@@ -436,8 +436,7 @@ enum class ListStyle : uint8_t {
 };
 
 // See nsStyleList
-#define NS_STYLE_LIST_STYLE_POSITION_INSIDE 0
-#define NS_STYLE_LIST_STYLE_POSITION_OUTSIDE 1
+enum class StyleListStylePosition : uint8_t { Inside, Outside };
 
 // See nsStyleVisibility
 enum class StylePointerEvents : uint8_t {

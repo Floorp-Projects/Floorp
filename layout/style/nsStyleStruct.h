@@ -717,7 +717,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
-  uint8_t mListStylePosition;
+  mozilla::StyleListStylePosition mListStylePosition;
 
   mozilla::CounterStylePtr mCounterStyle;
   mozilla::StyleQuotes mQuotes;

@@ -5988,7 +5988,7 @@ nsIFrame* nsCSSFrameConstructor::FindSiblingInternal(
     auto* marker = nsLayoutUtils::GetMarkerFrame(aContent);
     const bool isInsideMarker =
         marker && marker->GetInFlowParent()->StyleList()->mListStylePosition ==
-                      NS_STYLE_LIST_STYLE_POSITION_INSIDE;
+                      StyleListStylePosition::Inside;
     return isInsideMarker ? marker : nullptr;
   };
 
@@ -9780,7 +9780,7 @@ void nsCSSFrameConstructor::ProcessChildren(
           (listItem = do_QueryFrame(aFrame)) &&
           !styleParentFrame->IsFieldSetFrame()) {
         isOutsideMarker = computedStyle->StyleList()->mListStylePosition ==
-                          NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
+                          StyleListStylePosition::Outside;
         ItemFlags extraFlags;
         if (isOutsideMarker) {
           extraFlags += ItemFlag::IsForOutsideMarker;
