@@ -1758,8 +1758,8 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
         }
         candidate_pair_stats->requests_received =
             static_cast<uint64_t>(info.recv_ping_requests);
-        candidate_pair_stats->requests_sent = static_cast<uint64_t>(
-            info.sent_ping_requests_before_first_response);
+        candidate_pair_stats->requests_sent =
+            static_cast<uint64_t>(info.sent_ping_requests_total);
         candidate_pair_stats->responses_received =
             static_cast<uint64_t>(info.recv_ping_responses);
         candidate_pair_stats->responses_sent =
