@@ -40,6 +40,7 @@ extern NSString* const kMozFileUrlsPboardType;
 + (NSString*)stringFromPboardType:(NSString*)aType;
 @end
 
+class nsITransferable;
 class nsIWidget;
 
 namespace mozilla {
@@ -473,6 +474,18 @@ class nsCocoaUtils {
       const mozilla::ScreenPoint& aPanStartPoint, const mozilla::ScreenPoint& aPreciseDelta,
       const mozilla::gfx::IntPoint& aLineOrPageDelta, mozilla::Modifiers aModifiers);
 
+  /**
+   * Return true if aAvailableType is a vaild NSPasteboard type.
+   */
+  static bool IsValidPasteboardType(NSString* aAvailableType, bool aAllowFileURL);
+
+  /**
+   * Set data for specific type from NSPasteboardItem to Transferable.
+   */
+  static void SetTransferDataForTypeFromPasteboardItem(nsITransferable* aTransferable,
+                                                       const nsCString& aFlavor,
+                                                       NSPasteboardItem* aItem);
+
  private:
   /**
    * Completion handlers used as an argument to the macOS API to
@@ -507,6 +520,23 @@ class nsCocoaUtils {
    * to a request video or audio capture permission.
    */
   static void ResolveMediaCapturePromises(bool aGranted, PromiseArray& aPromiseList);
+
+  /**
+   * Get string data for a specific type from NSPasteboardItem.
+   */
+  static NSString* GetStringForTypeFromPasteboardItem(NSPasteboardItem* aItem,
+                                                      const NSString* aType,
+                                                      bool aAllowFileURL = false);
+
+  /**
+   * Get the file path from NSPasteboardItem.
+   */
+  static NSString* GetFilePathFromPasteboardItem(NSPasteboardItem* aItem);
+
+  /**
+   * Get the title for URL from NSPasteboardItem.
+   */
+  static NSString* GetTitleForURLFromPasteboardItem(NSPasteboardItem* item);
 
   /**
    * Array of promises waiting to be resolved due to a video capture request.

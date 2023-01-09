@@ -168,74 +168,6 @@ NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode, const Maybe<CSSInt
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-bool nsDragService::IsValidType(NSString* availableType, bool allowFileURL) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
-  // Prevent exposing fileURL for non-fileURL type.
-  // We need URL provided by dropped webloc file, but don't need file's URL.
-  // kUTTypeFileURL is returned by [NSPasteboard availableTypeFromArray:] for
-  // kPublicUrlPboardType, since it conforms to kPublicUrlPboardType.
-  bool isValid = true;
-  if (!allowFileURL &&
-      [availableType isEqualToString:[UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL]]) {
-    isValid = false;
-  }
-
-  return isValid;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(false);
-}
-
-NSString* nsDragService::GetStringForType(NSPasteboardItem* item, const NSString* type,
-                                          bool allowFileURL) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
-  NSString* availableType = [item availableTypeFromArray:[NSArray arrayWithObjects:(id)type, nil]];
-  if (availableType && IsValidType(availableType, allowFileURL)) {
-    return [item stringForType:(id)availableType];
-  }
-
-  return nil;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
-}
-
-NSString* nsDragService::GetTitleForURL(NSPasteboardItem* item) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
-  NSString* name =
-      GetStringForType(item, [UTIHelper stringFromPboardType:kPublicUrlNamePboardType]);
-  if (name) {
-    return name;
-  }
-
-  NSString* filePath = GetFilePath(item);
-  if (filePath) {
-    return [filePath lastPathComponent];
-  }
-
-  return nil;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
-}
-
-NSString* nsDragService::GetFilePath(NSPasteboardItem* item) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
-  NSString* urlString =
-      GetStringForType(item, [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL], true);
-  if (urlString) {
-    NSURL* url = [NSURL URLWithString:urlString];
-    if (url) {
-      return [url path];
-    }
-  }
-
-  return nil;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
-}
-
 nsresult nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
                                               const Maybe<CSSIntRegion>& aRegion,
                                               uint32_t aActionType) {
@@ -324,13 +256,17 @@ NS_IMETHODIMP
 nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (!aTransferable) return NS_ERROR_FAILURE;
+  if (!aTransferable) {
+    return NS_ERROR_FAILURE;
+  }
 
   // get flavor list that includes all acceptable flavors (including ones obtained through
   // conversion)
   nsTArray<nsCString> flavors;
   nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // if this drag originated within Mozilla we should just use the cached data from
   // when the drag started if possible
@@ -350,138 +286,26 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     }
   }
 
+  NSArray* droppedItems = [globalDragPboard pasteboardItems];
+  if (!droppedItems) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t itemCount = [droppedItems count];
+  if (aItemIndex >= itemCount) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NSPasteboardItem* item = [droppedItems objectAtIndex:aItemIndex];
+  if (!item) {
+    return NS_ERROR_FAILURE;
+  }
+
   // now check the actual clipboard for data
   for (uint32_t i = 0; i < flavors.Length(); i++) {
-    nsCString& flavorStr = flavors[i];
-
-    MOZ_LOG(sCocoaLog, LogLevel::Info,
-            ("nsDragService::GetData: looking for clipboard data of type %s\n", flavorStr.get()));
-
-    NSArray* droppedItems = [globalDragPboard pasteboardItems];
-    if (!droppedItems) {
-      continue;
-    }
-
-    uint32_t itemCount = [droppedItems count];
-    if (aItemIndex >= itemCount) {
-      continue;
-    }
-
-    NSPasteboardItem* item = [droppedItems objectAtIndex:aItemIndex];
-    if (!item) {
-      continue;
-    }
-
-    if (flavorStr.EqualsLiteral(kFileMime)) {
-      NSString* filePath = GetFilePath(item);
-      if (!filePath) continue;
-
-      unsigned int stringLength = [filePath length];
-      unsigned int dataLength = (stringLength + 1) * sizeof(char16_t);  // in bytes
-      char16_t* clipboardDataPtr = (char16_t*)malloc(dataLength);
-      if (!clipboardDataPtr) return NS_ERROR_OUT_OF_MEMORY;
-      [filePath getCharacters:reinterpret_cast<unichar*>(clipboardDataPtr)];
-      clipboardDataPtr[stringLength] = 0;  // null terminate
-
-      nsCOMPtr<nsIFile> file;
-      rv = NS_NewLocalFile(nsDependentString(clipboardDataPtr), true, getter_AddRefs(file));
-      free(clipboardDataPtr);
-      if (NS_FAILED(rv)) continue;
-
-      aTransferable->SetTransferData(flavorStr.get(), file);
-
-      break;
-    } else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
-      NSString* availableType =
-          [item availableTypeFromArray:[NSArray arrayWithObject:kMozCustomTypesPboardType]];
-      if (!availableType || !IsValidType(availableType, false)) {
-        continue;
-      }
-      NSData* pasteboardData = [item dataForType:availableType];
-      if (!pasteboardData) {
-        continue;
-      }
-
-      unsigned int dataLength = [pasteboardData length];
-      void* clipboardDataPtr = malloc(dataLength);
-      if (!clipboardDataPtr) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      [pasteboardData getBytes:clipboardDataPtr length:dataLength];
-
-      nsCOMPtr<nsISupports> genericDataWrapper;
-      nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
-                                                 getter_AddRefs(genericDataWrapper));
-
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
-      free(clipboardDataPtr);
-      break;
-    }
-
-    NSString* pString = nil;
-    if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-      pString = GetStringForType(item, [UTIHelper stringFromPboardType:NSPasteboardTypeString]);
-    } else if (flavorStr.EqualsLiteral(kHTMLMime)) {
-      pString = GetStringForType(item, [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]);
-    } else if (flavorStr.EqualsLiteral(kURLMime)) {
-      pString = GetStringForType(item, [UTIHelper stringFromPboardType:kPublicUrlPboardType]);
-      if (pString) {
-        NSString* title = GetTitleForURL(item);
-        if (!title) {
-          title = pString;
-        }
-        pString = [NSString stringWithFormat:@"%@\n%@", pString, title];
-      }
-    } else if (flavorStr.EqualsLiteral(kURLDataMime)) {
-      pString = GetStringForType(item, [UTIHelper stringFromPboardType:kPublicUrlPboardType]);
-    } else if (flavorStr.EqualsLiteral(kURLDescriptionMime)) {
-      pString = GetTitleForURL(item);
-    } else if (flavorStr.EqualsLiteral(kRTFMime)) {
-      pString = GetStringForType(item, [UTIHelper stringFromPboardType:NSPasteboardTypeRTF]);
-    }
-    if (pString) {
-      NSData* stringData;
-      if (flavorStr.EqualsLiteral(kRTFMime)) {
-        stringData = [pString dataUsingEncoding:NSASCIIStringEncoding];
-      } else {
-        stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
-      }
-      unsigned int dataLength = [stringData length];
-      void* clipboardDataPtr = malloc(dataLength);
-      if (!clipboardDataPtr) return NS_ERROR_OUT_OF_MEMORY;
-      [stringData getBytes:clipboardDataPtr length:dataLength];
-
-      // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
-      int32_t signedDataLength = dataLength;
-      nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, &clipboardDataPtr,
-                                                         &signedDataLength);
-      dataLength = signedDataLength;
-
-      // skip BOM (Byte Order Mark to distinguish little or big endian)
-      char16_t* clipboardDataPtrNoBOM = (char16_t*)clipboardDataPtr;
-      if ((dataLength > 2) &&
-          ((clipboardDataPtrNoBOM[0] == 0xFEFF) || (clipboardDataPtrNoBOM[0] == 0xFFFE))) {
-        dataLength -= sizeof(char16_t);
-        clipboardDataPtrNoBOM += 1;
-      }
-
-      nsCOMPtr<nsISupports> genericDataWrapper;
-      nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtrNoBOM, dataLength,
-                                                 getter_AddRefs(genericDataWrapper));
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
-      free(clipboardDataPtr);
-      break;
-    }
-
-    // We have never supported this on Mac OS X, we should someday. Normally dragging images
-    // in is accomplished with a file path drag instead of the image data itself.
-    /*
-    if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
-        flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime)) {
-
-    }
-    */
+    nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(aTransferable, flavors[i], item);
   }
+
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -539,7 +363,7 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
 
   NSString* availableType =
       [globalDragPboard availableTypeFromArray:[NSArray arrayWithObjects:(id)type, nil]];
-  if (availableType && IsValidType(availableType, allowFileURL)) {
+  if (availableType && nsCocoaUtils::IsValidPasteboardType(availableType, allowFileURL)) {
     *_retval = true;
   }
 
