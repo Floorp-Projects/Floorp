@@ -378,7 +378,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   SessionSaverInternal,
   "_idleDelay",
   PREF_IDLE_DELAY,
-  180000 /* 3 minutes */,
+  180 /* 3 minutes */,
   (key, previous, latest) => {
     // Update the idle observer for the new `PREF_IDLE_DELAY` value. Here we need
     // to re-fetch the service instead of the original one in use; This is for a
