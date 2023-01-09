@@ -1628,7 +1628,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   connection_info.total_round_trip_time_ms = 0;
   connection_info.current_round_trip_time_ms = absl::nullopt;
   connection_info.recv_ping_requests = 2020;
-  connection_info.sent_ping_requests_total = 2020;
+  connection_info.sent_ping_requests_total = 2222;
   connection_info.sent_ping_requests_before_first_response = 2000;
   connection_info.recv_ping_responses = 4321;
   connection_info.sent_ping_responses = 1000;
@@ -1665,10 +1665,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_pair.bytes_discarded_on_send = 7;
   expected_pair.total_round_trip_time = 0.0;
   expected_pair.requests_received = 2020;
-  expected_pair.requests_sent = 2000;
+  expected_pair.requests_sent = 2222;
   expected_pair.responses_received = 4321;
   expected_pair.responses_sent = 1000;
-  expected_pair.consent_requests_sent = (2020 - 2000);
+  expected_pair.consent_requests_sent = (2222 - 2000);
   // `expected_pair.current_round_trip_time` should be undefined because the
   // current RTT is not set.
   // `expected_pair.available_[outgoing/incoming]_bitrate` should be undefined
