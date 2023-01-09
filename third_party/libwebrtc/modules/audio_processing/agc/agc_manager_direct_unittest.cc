@@ -10,15 +10,19 @@
 
 #include "modules/audio_processing/agc/agc_manager_direct.h"
 
+#include <fstream>
 #include <limits>
+#include <vector>
 
 #include "modules/audio_processing/agc/gain_control.h"
 #include "modules/audio_processing/agc/mock_agc.h"
 #include "modules/audio_processing/include/mock_audio_processing.h"
+#include "rtc_base/numerics/safe_minmax.h"
 #include "rtc_base/strings/string_builder.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/testsupport/file_utils.h"
 
 using ::testing::_;
 using ::testing::AtLeast;
@@ -39,6 +43,9 @@ constexpr int kMinMicLevel = 12;
 constexpr int kClippedLevelStep = 15;
 constexpr float kClippedRatioThreshold = 0.1f;
 constexpr int kClippedWaitFrames = 300;
+
+constexpr float kMinSample = std::numeric_limits<int16_t>::min();
+constexpr float kMaxSample = std::numeric_limits<int16_t>::max();
 
 using AnalogAgcConfig =
     AudioProcessing::Config::GainController1::AnalogGainController;
@@ -96,8 +103,8 @@ void CallPreProcessAudioBuffer(int num_calls,
                                float peak_ratio,
                                AgcManagerDirect& manager) {
   RTC_DCHECK_LE(peak_ratio, 1.0f);
-  AudioBuffer audio_buffer(kSampleRateHz, 1, kSampleRateHz, 1, kSampleRateHz,
-                           1);
+  AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
+                           kNumChannels, kSampleRateHz, kNumChannels);
   const int num_channels = audio_buffer.num_channels();
   const int num_frames = audio_buffer.num_frames();
 
@@ -160,8 +167,8 @@ std::string GetAgcMinMicLevelExperimentFieldTrial(
 void WriteAudioBufferSamples(float samples_value,
                              float clipped_ratio,
                              AudioBuffer& audio_buffer) {
-  RTC_DCHECK_GE(samples_value, std::numeric_limits<int16_t>::min());
-  RTC_DCHECK_LE(samples_value, std::numeric_limits<int16_t>::max());
+  RTC_DCHECK_GE(samples_value, kMinSample);
+  RTC_DCHECK_LE(samples_value, kMaxSample);
   RTC_DCHECK_GE(clipped_ratio, 0.0f);
   RTC_DCHECK_LE(clipped_ratio, 1.0f);
   int num_channels = audio_buffer.num_channels();
@@ -187,12 +194,71 @@ void CallPreProcessAndProcess(int num_calls,
   }
 }
 
+// Reads a given number of 10 ms chunks from a PCM file and feeds them to
+// `AgcManagerDirect`.
+class SpeechSamplesReader {
+ private:
+  // Recording properties.
+  static constexpr int kPcmSampleRateHz = 16000;
+  static constexpr int kPcmNumChannels = 1;
+  static constexpr int kPcmBytesPerSamples = sizeof(int16_t);
+
+ public:
+  SpeechSamplesReader()
+      : is_(test::ResourcePath("audio_processing/agc/agc_audio", "pcm"),
+            std::ios::binary | std::ios::ate),
+        audio_buffer_(kPcmSampleRateHz,
+                      kPcmNumChannels,
+                      kPcmSampleRateHz,
+                      kPcmNumChannels,
+                      kPcmSampleRateHz,
+                      kPcmNumChannels),
+        buffer_(audio_buffer_.num_frames()),
+        buffer_num_bytes_(buffer_.size() * kPcmBytesPerSamples) {
+    RTC_CHECK(is_);
+  }
+
+  // Reads `num_frames` 10 ms frames from the beginning of the PCM file, applies
+  // `gain_db` and feeds the frames into `agc` by calling `AnalyzePreProcess()`
+  // and `Process()` for each frame. Reads the number of 10 ms frames available
+  // in the PCM file if `num_frames` is too large - i.e., does not loop.
+  void Feed(int num_frames, int gain_db, AgcManagerDirect& agc) {
+    float gain = std::pow(10.0f, gain_db / 20.0f);  // From dB to linear gain.
+    is_.seekg(0, is_.beg);  // Start from the beginning of the PCM file.
+
+    // Read and feed frames.
+    for (int i = 0; i < num_frames; ++i) {
+      is_.read(reinterpret_cast<char*>(buffer_.data()), buffer_num_bytes_);
+      if (is_.gcount() < buffer_num_bytes_) {
+        // EOF reached. Stop.
+        break;
+      }
+      // Apply gain and copy samples into `audio_buffer_`.
+      std::transform(buffer_.begin(), buffer_.end(),
+                     audio_buffer_.channels()[0], [gain](int16_t v) -> float {
+                       return rtc::SafeClamp(static_cast<float>(v) * gain,
+                                             kMinSample, kMaxSample);
+                     });
+
+      agc.AnalyzePreProcess(&audio_buffer_);
+      agc.Process(&audio_buffer_);
+    }
+  }
+
+ private:
+  std::ifstream is_;
+  AudioBuffer audio_buffer_;
+  std::vector<int16_t> buffer_;
+  const std::streamsize buffer_num_bytes_;
+};
+
 }  // namespace
 
 // TODO(bugs.webrtc.org/12874): Use constexpr struct with designated
 // initializers once fixed.
 constexpr AnalogAgcConfig GetAnalogAgcTestConfig() {
   AnalogAgcConfig config;
+  config.enabled = true;
   config.startup_min_volume = kInitialVolume;
   config.clipped_level_min = kClippedMin;
   config.enable_digital_adaptive = true;
@@ -200,6 +266,12 @@ constexpr AnalogAgcConfig GetAnalogAgcTestConfig() {
   config.clipped_ratio_threshold = kClippedRatioThreshold;
   config.clipped_wait_frames = kClippedWaitFrames;
   config.clipping_predictor = kDefaultAnalogConfig.clipping_predictor;
+  return config;
+}
+
+constexpr AnalogAgcConfig GetDisabledAnalogAgcConfig() {
+  AnalogAgcConfig config = GetAnalogAgcTestConfig();
+  config.enabled = false;
   return config;
 }
 
@@ -322,11 +394,83 @@ INSTANTIATE_TEST_SUITE_P(,
                          AgcManagerDirectParametrizedTest,
                          testing::Values(absl::nullopt, 12, 20));
 
+// Checks that when the analog controller is disabled, no downward adaptation
+// takes place.
+TEST_P(AgcManagerDirectParametrizedTest,
+       DisabledAnalogAgcDoesNotAdaptDownwards) {
+  AgcManagerDirect manager_no_analog_agc(kNumChannels,
+                                         GetDisabledAnalogAgcConfig());
+  manager_no_analog_agc.Initialize();
+  AgcManagerDirect manager_with_analog_agc(kNumChannels,
+                                           GetAnalogAgcTestConfig());
+  manager_with_analog_agc.Initialize();
+
+  AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
+                           kNumChannels, kSampleRateHz, kNumChannels);
+
+  constexpr int kAnalogLevel = 250;
+  static_assert(kAnalogLevel > kInitialVolume, "Increase `kAnalogLevel`.");
+  manager_no_analog_agc.set_stream_analog_level(kAnalogLevel);
+  manager_with_analog_agc.set_stream_analog_level(kAnalogLevel);
+
+  // Make a first call with input that doesn't clip in order to let the
+  // controller read the input volume. That is needed because clipping input
+  // causes the controller to stay in idle state for
+  // `AnalogAgcConfig::clipped_wait_frames` frames.
+  WriteAudioBufferSamples(/*samples_value=*/0.0f, /*clipping_ratio=*/0.0f,
+                          audio_buffer);
+  manager_no_analog_agc.AnalyzePreProcess(&audio_buffer);
+  manager_with_analog_agc.AnalyzePreProcess(&audio_buffer);
+  manager_no_analog_agc.Process(&audio_buffer);
+  manager_with_analog_agc.Process(&audio_buffer);
+
+  // Feed clipping input to trigger a downward adapation of the analog level.
+  WriteAudioBufferSamples(/*samples_value=*/0.0f, /*clipping_ratio=*/0.2f,
+                          audio_buffer);
+  manager_no_analog_agc.AnalyzePreProcess(&audio_buffer);
+  manager_with_analog_agc.AnalyzePreProcess(&audio_buffer);
+  manager_no_analog_agc.Process(&audio_buffer);
+  manager_with_analog_agc.Process(&audio_buffer);
+
+  // Check that no adaptation occurs when the analog controller is disabled
+  // and make sure that the test triggers a downward adaptation otherwise.
+  EXPECT_EQ(manager_no_analog_agc.recommended_analog_level(), kAnalogLevel);
+  ASSERT_LT(manager_with_analog_agc.recommended_analog_level(), kAnalogLevel);
+}
+
+// Checks that when the analog controller is disabled, no upward adaptation
+// takes place.
+TEST_P(AgcManagerDirectParametrizedTest, DisabledAnalogAgcDoesNotAdaptUpwards) {
+  AgcManagerDirect manager_no_analog_agc(kNumChannels,
+                                         GetDisabledAnalogAgcConfig());
+  manager_no_analog_agc.Initialize();
+  AgcManagerDirect manager_with_analog_agc(kNumChannels,
+                                           GetAnalogAgcTestConfig());
+  manager_with_analog_agc.Initialize();
+
+  constexpr int kAnalogLevel = kInitialVolume;
+  manager_no_analog_agc.set_stream_analog_level(kAnalogLevel);
+  manager_with_analog_agc.set_stream_analog_level(kAnalogLevel);
+
+  // Feed speech with low energy to trigger an upward adapation of the analog
+  // level.
+  constexpr int kNumFrames = 125;
+  constexpr int kGainDb = -20;
+  SpeechSamplesReader reader;
+  reader.Feed(kNumFrames, kGainDb, manager_no_analog_agc);
+  reader.Feed(kNumFrames, kGainDb, manager_with_analog_agc);
+
+  // Check that no adaptation occurs when the analog controller is disabled
+  // and make sure that the test triggers an upward adaptation otherwise.
+  EXPECT_EQ(manager_no_analog_agc.recommended_analog_level(), kAnalogLevel);
+  ASSERT_GT(manager_with_analog_agc.recommended_analog_level(), kAnalogLevel);
+}
+
 TEST_P(AgcManagerDirectParametrizedTest,
        StartupMinVolumeConfigurationIsRespected) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
-  EXPECT_EQ(kInitialVolume, helper.manager.stream_analog_level());
+  EXPECT_EQ(kInitialVolume, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, MicVolumeResponseToRmsError) {
@@ -347,12 +491,12 @@ TEST_P(AgcManagerDirectParametrizedTest, MicVolumeResponseToRmsError) {
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(11), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(130, helper.manager.stream_analog_level());
+  EXPECT_EQ(130, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(20), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(168, helper.manager.stream_analog_level());
+  EXPECT_EQ(168, helper.manager.recommended_analog_level());
 
   // Inside the compressor's window; no change of volume.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
@@ -366,17 +510,17 @@ TEST_P(AgcManagerDirectParametrizedTest, MicVolumeResponseToRmsError) {
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-1), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(167, helper.manager.stream_analog_level());
+  EXPECT_EQ(167, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-1), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(163, helper.manager.stream_analog_level());
+  EXPECT_EQ(163, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-9), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(129, helper.manager.stream_analog_level());
+  EXPECT_EQ(129, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, MicVolumeIsLimited) {
@@ -387,62 +531,62 @@ TEST_P(AgcManagerDirectParametrizedTest, MicVolumeIsLimited) {
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(183, helper.manager.stream_analog_level());
+  EXPECT_EQ(183, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(243, helper.manager.stream_analog_level());
+  EXPECT_EQ(243, helper.manager.recommended_analog_level());
 
   // Won't go higher than the maximum.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(255, helper.manager.stream_analog_level());
+  EXPECT_EQ(255, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-1), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(254, helper.manager.stream_analog_level());
+  EXPECT_EQ(254, helper.manager.recommended_analog_level());
 
   // Maximum downwards change is limited.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(194, helper.manager.stream_analog_level());
+  EXPECT_EQ(194, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(137, helper.manager.stream_analog_level());
+  EXPECT_EQ(137, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(88, helper.manager.stream_analog_level());
+  EXPECT_EQ(88, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(54, helper.manager.stream_analog_level());
+  EXPECT_EQ(54, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(33, helper.manager.stream_analog_level());
+  EXPECT_EQ(33, helper.manager.recommended_analog_level());
 
   // Won't go lower than the minimum.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
   EXPECT_EQ(std::max(18, GetMinMicLevel()),
-            helper.manager.stream_analog_level());
+            helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
   EXPECT_EQ(std::max(12, GetMinMicLevel()),
-            helper.manager.stream_analog_level());
+            helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, CompressorStepsTowardsTarget) {
@@ -609,7 +753,7 @@ TEST_P(AgcManagerDirectParametrizedTest, UnmutingChecksVolumeWithoutRaising) {
   // SetMicVolume should not be called.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_)).WillOnce(Return(false));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(127, helper.manager.stream_analog_level());
+  EXPECT_EQ(127, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, UnmutingRaisesTooLowVolume) {
@@ -621,7 +765,7 @@ TEST_P(AgcManagerDirectParametrizedTest, UnmutingRaisesTooLowVolume) {
   helper.ExpectCheckVolumeAndReset(/*volume=*/11);
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_)).WillOnce(Return(false));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(GetMinMicLevel(), helper.manager.stream_analog_level());
+  EXPECT_EQ(GetMinMicLevel(), helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest,
@@ -639,10 +783,10 @@ TEST_P(AgcManagerDirectParametrizedTest,
 
   // GetMicVolume returns a value outside of the quantization slack, indicating
   // a manual volume change.
-  ASSERT_NE(helper.manager.stream_analog_level(), 154);
+  ASSERT_NE(helper.manager.recommended_analog_level(), 154);
   helper.manager.set_stream_analog_level(154);
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(154, helper.manager.stream_analog_level());
+  EXPECT_EQ(154, helper.manager.recommended_analog_level());
 
   // Do the same thing, except downwards now.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
@@ -650,13 +794,13 @@ TEST_P(AgcManagerDirectParametrizedTest,
   helper.manager.set_stream_analog_level(100);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(100, helper.manager.stream_analog_level());
+  EXPECT_EQ(100, helper.manager.recommended_analog_level());
 
   // And finally verify the AGC continues working without a manual change.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-1), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(99, helper.manager.stream_analog_level());
+  EXPECT_EQ(99, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest,
@@ -669,11 +813,11 @@ TEST_P(AgcManagerDirectParametrizedTest,
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillRepeatedly(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(183, helper.manager.stream_analog_level());
+  EXPECT_EQ(183, helper.manager.recommended_analog_level());
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(243, helper.manager.stream_analog_level());
+  EXPECT_EQ(243, helper.manager.recommended_analog_level());
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(255, helper.manager.stream_analog_level());
+  EXPECT_EQ(255, helper.manager.recommended_analog_level());
 
   // Manual change does not result in SetMicVolume call.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
@@ -681,13 +825,13 @@ TEST_P(AgcManagerDirectParametrizedTest,
   helper.manager.set_stream_analog_level(50);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(50, helper.manager.stream_analog_level());
+  EXPECT_EQ(50, helper.manager.recommended_analog_level());
 
   // Continues working as usual afterwards.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(20), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(69, helper.manager.stream_analog_level());
+  EXPECT_EQ(69, helper.manager.recommended_analog_level());
 }
 
 // Checks that, when the min mic level override is not specified, AGC ramps up
@@ -704,23 +848,23 @@ TEST(AgcManagerDirectTest, RecoveryAfterManualLevelChangeBelowMin) {
   helper.manager.set_stream_analog_level(1);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(1, helper.manager.stream_analog_level());
+  EXPECT_EQ(1, helper.manager.recommended_analog_level());
 
   // Continues working as usual afterwards.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(11), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(2, helper.manager.stream_analog_level());
+  EXPECT_EQ(2, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(11, helper.manager.stream_analog_level());
+  EXPECT_EQ(11, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(20), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(18, helper.manager.stream_analog_level());
+  EXPECT_EQ(18, helper.manager.recommended_analog_level());
 }
 
 // Checks that, when the min mic level override is specified, AGC immediately
@@ -742,7 +886,7 @@ TEST_P(AgcManagerDirectParametrizedTest,
   helper.manager.set_stream_analog_level(1);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(GetMinMicLevel(), helper.manager.stream_analog_level());
+  EXPECT_EQ(GetMinMicLevel(), helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, NoClippingHasNoImpact) {
@@ -750,7 +894,7 @@ TEST_P(AgcManagerDirectParametrizedTest, NoClippingHasNoImpact) {
   helper.FirstProcess();
 
   helper.CallPreProc(/*num_calls=*/100, /*clipped_ratio=*/0);
-  EXPECT_EQ(128, helper.manager.stream_analog_level());
+  EXPECT_EQ(128, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, ClippingUnderThresholdHasNoImpact) {
@@ -758,7 +902,7 @@ TEST_P(AgcManagerDirectParametrizedTest, ClippingUnderThresholdHasNoImpact) {
   helper.FirstProcess();
 
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/0.099);
-  EXPECT_EQ(128, helper.manager.stream_analog_level());
+  EXPECT_EQ(128, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, ClippingLowersVolume) {
@@ -767,7 +911,7 @@ TEST_P(AgcManagerDirectParametrizedTest, ClippingLowersVolume) {
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/0.2);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, WaitingPeriodBetweenClippingChecks) {
@@ -776,16 +920,16 @@ TEST_P(AgcManagerDirectParametrizedTest, WaitingPeriodBetweenClippingChecks) {
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(0);
   helper.CallPreProc(/*num_calls=*/300,
                      /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(225, helper.manager.stream_analog_level());
+  EXPECT_EQ(225, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, ClippingLoweringIsLimited) {
@@ -794,12 +938,12 @@ TEST_P(AgcManagerDirectParametrizedTest, ClippingLoweringIsLimited) {
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(kClippedMin, helper.manager.stream_analog_level());
+  EXPECT_EQ(kClippedMin, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(0);
   helper.CallPreProc(/*num_calls=*/1000,
                      /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(kClippedMin, helper.manager.stream_analog_level());
+  EXPECT_EQ(kClippedMin, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest,
@@ -809,12 +953,12 @@ TEST_P(AgcManagerDirectParametrizedTest,
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillRepeatedly(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.CallProcess(/*num_calls=*/10);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest,
@@ -824,14 +968,14 @@ TEST_P(AgcManagerDirectParametrizedTest,
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(185, helper.manager.stream_analog_level());
+  EXPECT_EQ(185, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillRepeatedly(DoAll(SetArgPointee<0>(40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
   helper.CallProcess(/*num_calls=*/10);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest,
@@ -841,7 +985,7 @@ TEST_P(AgcManagerDirectParametrizedTest,
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, kAboveClippedThreshold);
-  EXPECT_EQ(195, helper.manager.stream_analog_level());
+  EXPECT_EQ(195, helper.manager.recommended_analog_level());
 
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(11), Return(true)))
@@ -875,13 +1019,13 @@ TEST_P(AgcManagerDirectParametrizedTest,
                      /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(180, helper.manager.stream_analog_level());
+  EXPECT_EQ(180, helper.manager.recommended_analog_level());
 
   helper.CallPreProc(/*num_calls=*/300,
                      /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(1, kAboveClippedThreshold);
-  EXPECT_EQ(kClippedMin, helper.manager.stream_analog_level());
+  EXPECT_EQ(kClippedMin, helper.manager.recommended_analog_level());
 
   // Current level is now at the minimum, but the maximum allowed level still
   // has more to decrease.
@@ -927,7 +1071,7 @@ TEST_P(AgcManagerDirectParametrizedTest, UserCanRaiseVolumeAfterClipping) {
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(210, helper.manager.stream_analog_level());
+  EXPECT_EQ(210, helper.manager.recommended_analog_level());
 
   // High enough error to trigger a volume check.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
@@ -936,23 +1080,23 @@ TEST_P(AgcManagerDirectParametrizedTest, UserCanRaiseVolumeAfterClipping) {
   helper.manager.set_stream_analog_level(250);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(250, helper.manager.stream_analog_level());
+  EXPECT_EQ(250, helper.manager.recommended_analog_level());
 
   // Move down...
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-10), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(210, helper.manager.stream_analog_level());
+  EXPECT_EQ(210, helper.manager.recommended_analog_level());
   // And back up to the new max established by the user.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(250, helper.manager.stream_analog_level());
+  EXPECT_EQ(250, helper.manager.recommended_analog_level());
   // Will not move above new maximum.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(250, helper.manager.stream_analog_level());
+  EXPECT_EQ(250, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, ClippingDoesNotPullLowVolumeBackUp) {
@@ -960,9 +1104,9 @@ TEST_P(AgcManagerDirectParametrizedTest, ClippingDoesNotPullLowVolumeBackUp) {
   helper.SetVolumeAndProcess(/*volume=*/80);
 
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(0);
-  int initial_volume = helper.manager.stream_analog_level();
+  int initial_volume = helper.manager.recommended_analog_level();
   helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(initial_volume, helper.manager.stream_analog_level());
+  EXPECT_EQ(initial_volume, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, TakesNoActionOnZeroMicVolume) {
@@ -973,17 +1117,17 @@ TEST_P(AgcManagerDirectParametrizedTest, TakesNoActionOnZeroMicVolume) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(30), Return(true)));
   helper.manager.set_stream_analog_level(0);
   helper.CallProcess(/*num_calls=*/10);
-  EXPECT_EQ(0, helper.manager.stream_analog_level());
+  EXPECT_EQ(0, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, ClippingDetectionLowersVolume) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/255);
-  EXPECT_EQ(255, helper.manager.stream_analog_level());
+  EXPECT_EQ(255, helper.manager.recommended_analog_level());
   helper.CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/0.99f);
-  EXPECT_EQ(255, helper.manager.stream_analog_level());
+  EXPECT_EQ(255, helper.manager.recommended_analog_level());
   helper.CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/1.0f);
-  EXPECT_EQ(240, helper.manager.stream_analog_level());
+  EXPECT_EQ(240, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest,
@@ -991,11 +1135,11 @@ TEST_P(AgcManagerDirectParametrizedTest,
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/255);
   EXPECT_FALSE(helper.manager.clipping_predictor_enabled());
-  EXPECT_EQ(255, helper.manager.stream_analog_level());
+  EXPECT_EQ(255, helper.manager.recommended_analog_level());
   helper.CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/0.99f);
-  EXPECT_EQ(255, helper.manager.stream_analog_level());
+  EXPECT_EQ(255, helper.manager.recommended_analog_level());
   helper.CallPreProcForChangingAudio(/*num_calls=*/100, /*peak_ratio=*/0.99f);
-  EXPECT_EQ(255, helper.manager.stream_analog_level());
+  EXPECT_EQ(255, helper.manager.recommended_analog_level());
 }
 
 TEST_P(AgcManagerDirectParametrizedTest, DisableDigitalDisablesDigital) {
@@ -1112,15 +1256,16 @@ TEST(AgcManagerDirectTest, AgcMinMicLevelExperimentCheckMinLevelWithClipping) {
                            *manager_with_override);
 
   // Make sure that an adaptation occurred.
-  ASSERT_GT(manager->stream_analog_level(), 0);
+  ASSERT_GT(manager->recommended_analog_level(), 0);
 
   // Check that the test signal triggers a larger downward adaptation for
   // `manager`, which is allowed to reach a lower gain.
-  EXPECT_GT(manager_with_override->stream_analog_level(),
-            manager->stream_analog_level());
+  EXPECT_GT(manager_with_override->recommended_analog_level(),
+            manager->recommended_analog_level());
   // Check that the gain selected by `manager_with_override` equals the minimum
   // value overridden via field trial.
-  EXPECT_EQ(manager_with_override->stream_analog_level(), kMinMicLevelOverride);
+  EXPECT_EQ(manager_with_override->recommended_analog_level(),
+            kMinMicLevelOverride);
 }
 
 // Checks that, when the "WebRTC-Audio-AgcMinMicLevelExperiment" field trial is
@@ -1171,15 +1316,15 @@ TEST(AgcManagerDirectTest,
                            *manager_with_override);
 
   // Make sure that an adaptation occurred.
-  ASSERT_GT(manager->stream_analog_level(), 0);
+  ASSERT_GT(manager->recommended_analog_level(), 0);
 
   // Check that the selected analog gain is the same for both controllers and
   // that it equals the minimum level reached when clipping is handled. That is
   // expected because the minimum microphone level override is less than the
   // minimum level used when clipping is detected.
-  EXPECT_EQ(manager->stream_analog_level(),
-            manager_with_override->stream_analog_level());
-  EXPECT_EQ(manager_with_override->stream_analog_level(),
+  EXPECT_EQ(manager->recommended_analog_level(),
+            manager_with_override->recommended_analog_level());
+  EXPECT_EQ(manager_with_override->recommended_analog_level(),
             kDefaultAnalogConfig.clipped_level_min);
 }
 
@@ -1252,14 +1397,14 @@ TEST_P(AgcManagerDirectParametrizedTest,
   manager.set_stream_analog_level(/*level=*/255);
   EXPECT_FALSE(manager.clipping_predictor_enabled());
   EXPECT_FALSE(manager.use_clipping_predictor_step());
-  EXPECT_EQ(manager.stream_analog_level(), 255);
+  EXPECT_EQ(manager.recommended_analog_level(), 255);
   manager.Process(&audio_buffer);
   CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 255);
+  EXPECT_EQ(manager.recommended_analog_level(), 255);
   CallPreProcessAudioBuffer(/*num_calls=*/300, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 255);
+  EXPECT_EQ(manager.recommended_analog_level(), 255);
   CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 255);
+  EXPECT_EQ(manager.recommended_analog_level(), 255);
 }
 
 TEST_P(AgcManagerDirectParametrizedTest,
@@ -1291,53 +1436,58 @@ TEST_P(AgcManagerDirectParametrizedTest,
   EXPECT_TRUE(manager_with_prediction.clipping_predictor_enabled());
   EXPECT_FALSE(manager_without_prediction.clipping_predictor_enabled());
   EXPECT_TRUE(manager_with_prediction.use_clipping_predictor_step());
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(), kInitialLevel);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
+            kInitialLevel);
 
   // Expect a change in the analog level when the prediction step is used.
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
             kInitialLevel - kClippedLevelStep);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
+            kInitialLevel);
 
   // Expect no change during waiting.
   CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
             kInitialLevel - kClippedLevelStep);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
+            kInitialLevel);
 
   // Expect a change when the prediction step is used.
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
             kInitialLevel - 2 * kClippedLevelStep);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
+            kInitialLevel);
 
   // Expect no change when clipping is not detected or predicted.
   CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
             kInitialLevel - 2 * kClippedLevelStep);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
+            kInitialLevel);
 
   // Expect a change for clipping frames.
   CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
             kInitialLevel - 3 * kClippedLevelStep);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
             kInitialLevel - kClippedLevelStep);
 
   // Expect no change during waiting.
@@ -1345,9 +1495,9 @@ TEST_P(AgcManagerDirectParametrizedTest,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(kClippedWaitFrames, kClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
             kInitialLevel - 3 * kClippedLevelStep);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
             kInitialLevel - kClippedLevelStep);
 
   // Expect a change for clipping frames.
@@ -1355,9 +1505,9 @@ TEST_P(AgcManagerDirectParametrizedTest,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
             kInitialLevel - 4 * kClippedLevelStep);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(),
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
             kInitialLevel - 2 * kClippedLevelStep);
 }
 
@@ -1389,64 +1539,65 @@ TEST_P(AgcManagerDirectParametrizedTest,
   EXPECT_TRUE(manager_with_prediction.clipping_predictor_enabled());
   EXPECT_FALSE(manager_without_prediction.clipping_predictor_enabled());
   EXPECT_FALSE(manager_with_prediction.use_clipping_predictor_step());
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(), kInitialLevel);
-  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.recommended_analog_level(),
+            kInitialLevel);
 
   // Expect no change in the analog level for non-clipping frames.
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
-            manager_without_prediction.stream_analog_level());
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
+            manager_without_prediction.recommended_analog_level());
 
   // Expect no change for non-clipping frames.
   CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
-            manager_without_prediction.stream_analog_level());
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
+            manager_without_prediction.recommended_analog_level());
 
   // Expect no change for non-clipping frames.
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
-            manager_without_prediction.stream_analog_level());
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
+            manager_without_prediction.recommended_analog_level());
 
   // Expect no change when clipping is not detected or predicted.
   CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
-            manager_without_prediction.stream_analog_level());
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
+            manager_without_prediction.recommended_analog_level());
 
   // Expect a change for clipping frames.
   CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
-            manager_without_prediction.stream_analog_level());
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
+            manager_without_prediction.recommended_analog_level());
 
   // Expect no change during waiting.
   CallPreProcessAudioBuffer(kClippedWaitFrames, kClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(kClippedWaitFrames, kClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
-            manager_without_prediction.stream_analog_level());
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
+            manager_without_prediction.recommended_analog_level());
 
   // Expect a change for clipping frames.
   CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
                             manager_with_prediction);
   CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
                             manager_without_prediction);
-  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
-            manager_without_prediction.stream_analog_level());
+  EXPECT_EQ(manager_with_prediction.recommended_analog_level(),
+            manager_without_prediction.recommended_analog_level());
 }
 
 }  // namespace webrtc

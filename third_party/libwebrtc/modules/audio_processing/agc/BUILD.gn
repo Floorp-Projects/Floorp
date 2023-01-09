@@ -178,6 +178,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:checks",
       "../../../rtc_base:random",
       "../../../rtc_base:safe_conversions",
+      "../../../rtc_base:safe_minmax",
       "../../../rtc_base:stringutils",
       "../../../system_wrappers:metrics",
       "../../../test:field_trial",
