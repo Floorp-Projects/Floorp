@@ -1,0 +1,109 @@
+From 5f0afd7c556938cbf2693acf31656e9bcc01a3a5 Mon Sep 17 00:00:00 2001
+From: Mark Striemer <mstriemer@mozilla.com>
+Date: Wed, 14 Dec 2022 15:34:57 -0600
+Subject: [PATCH 5/5] Bug 1808741 - Do not set style attributes when using
+ styleMap
+
+---
+ packages/lit-html/src/directives/style-map.ts | 21 +---------
+ .../src/test/directives/style-map_test.ts     | 38 +------------------
+ 2 files changed, 3 insertions(+), 56 deletions(-)
+
+diff --git a/packages/lit-html/src/directives/style-map.ts b/packages/lit-html/src/directives/style-map.ts
+index 5a77c676..cd7df040 100644
+--- a/packages/lit-html/src/directives/style-map.ts
++++ b/packages/lit-html/src/directives/style-map.ts
+@@ -43,21 +43,8 @@ class StyleMapDirective extends Directive {
+ 
+   render(styleInfo: Readonly<StyleInfo>) {
+     return Object.keys(styleInfo).reduce((style, prop) => {
+-      const value = styleInfo[prop];
+-      if (value == null) {
+-        return style;
+-      }
+-      // Convert property names from camel-case to dash-case, i.e.:
+-      //  `backgroundColor` -> `background-color`
+-      // Vendor-prefixed names need an extra `-` appended to front:
+-      //  `webkitAppearance` -> `-webkit-appearance`
+-      // Exception is any property name containing a dash, including
+-      // custom properties; we assume these are already dash-cased i.e.:
+-      //  `--my-button-color` --> `--my-button-color`
+-      prop = prop
+-        .replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, '-$&')
+-        .toLowerCase();
+-      return style + `${prop}:${value};`;
++      // Make sure we use `styleInfo` so the TypeScript checker is happy. This is really a no-op.
++      return style + prop.slice(0, 0);
+     }, '');
+   }
+ 
+@@ -66,10 +53,6 @@ class StyleMapDirective extends Directive {
+ 
+     if (this._previousStyleProperties === undefined) {
+       this._previousStyleProperties = new Set();
+-      for (const name in styleInfo) {
+-        this._previousStyleProperties.add(name);
+-      }
+-      return this.render(styleInfo);
+     }
+ 
+     // Remove old properties that no longer exist in styleInfo
+diff --git a/packages/lit-html/src/test/directives/style-map_test.ts b/packages/lit-html/src/test/directives/style-map_test.ts
+index 6f607e88..913f8a9e 100644
+--- a/packages/lit-html/src/test/directives/style-map_test.ts
++++ b/packages/lit-html/src/test/directives/style-map_test.ts
+@@ -4,8 +4,7 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
+-import {AttributePart, html, render} from 'lit-html';
+-import {directive} from 'lit-html/directive.js';
++import {html, render} from 'lit-html';
+ import {StyleInfo, styleMap} from 'lit-html/directives/style-map.js';
+ import {assert} from '@esm-bundle/chai';
+ 
+@@ -33,41 +32,6 @@ suite('styleMap', () => {
+     container = document.createElement('div');
+   });
+ 
+-  test('render() only properties', () => {
+-    // Get the StyleMapDirective class indirectly, since it's not exported
+-    const result = styleMap({});
+-    // This property needs to remain unminified.
+-    const StyleMapDirective = result['_$litDirective$'];
+-
+-    // Extend StyleMapDirective so we can test its render() method
+-    class TestStyleMapDirective extends StyleMapDirective {
+-      override update(
+-        _part: AttributePart,
+-        [styleInfo]: Parameters<this['render']>
+-      ) {
+-        return this.render(styleInfo);
+-      }
+-    }
+-    const testStyleMap = directive(TestStyleMapDirective);
+-    render(
+-      html`<div
+-        style=${testStyleMap({
+-          color: 'red',
+-          backgroundColor: 'blue',
+-          webkitAppearance: 'none',
+-          ['padding-left']: '4px',
+-        })}
+-      ></div>`,
+-      container
+-    );
+-    const div = container.firstElementChild as HTMLDivElement;
+-    const style = div.style;
+-    assert.equal(style.color, 'red');
+-    assert.equal(style.backgroundColor, 'blue');
+-    assert.include(['none', undefined], style.webkitAppearance);
+-    assert.equal(style.paddingLeft, '4px');
+-  });
+-
+   test('first render skips undefined properties', () => {
+     renderStyleMap({marginTop: undefined, marginBottom: null});
+     const el = container.firstElementChild as HTMLElement;
+-- 
+2.37.1 (Apple Git-137.1)
+

@@ -1015,7 +1015,7 @@ ReactiveElement.shadowRootOptions = { mode: 'open' };
 polyfillSupport$2 === null || polyfillSupport$2 === void 0 ? void 0 : polyfillSupport$2({ ReactiveElement });
 // IMPORTANT: do not change the property name or the assignment expression.
 // This line will be used in regexes to search for ReactiveElement usage.
-((_d$1 = global$1.reactiveElementVersions) !== null && _d$1 !== void 0 ? _d$1 : (global$1.reactiveElementVersions = [])).push('1.4.2');
+((_d$1 = global$1.reactiveElementVersions) !== null && _d$1 !== void 0 ? _d$1 : (global$1.reactiveElementVersions = [])).push('1.5.0');
 
 /**
  * @license
@@ -2094,7 +2094,7 @@ const polyfillSupport$1 = global.litHtmlPolyfillSupport;
 polyfillSupport$1 === null || polyfillSupport$1 === void 0 ? void 0 : polyfillSupport$1(Template, ChildPart$1);
 // IMPORTANT: do not change the property name or the assignment expression.
 // This line will be used in regexes to search for lit-html usage.
-((_d = global.litHtmlVersions) !== null && _d !== void 0 ? _d : (global.litHtmlVersions = [])).push('2.4.0');
+((_d = global.litHtmlVersions) !== null && _d !== void 0 ? _d : (global.litHtmlVersions = [])).push('2.5.0');
 /**
  * Renders a value, usually a lit-html TemplateResult, to the container.
  *
@@ -4026,31 +4026,13 @@ class StyleMapDirective extends Directive {
     }
     render(styleInfo) {
         return Object.keys(styleInfo).reduce((style, prop) => {
-            const value = styleInfo[prop];
-            if (value == null) {
-                return style;
-            }
-            // Convert property names from camel-case to dash-case, i.e.:
-            //  `backgroundColor` -> `background-color`
-            // Vendor-prefixed names need an extra `-` appended to front:
-            //  `webkitAppearance` -> `-webkit-appearance`
-            // Exception is any property name containing a dash, including
-            // custom properties; we assume these are already dash-cased i.e.:
-            //  `--my-button-color` --> `--my-button-color`
-            prop = prop
-                .replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, '-$&')
-                .toLowerCase();
-            return style + `${prop}:${value};`;
+            return style + prop.slice(0, 0);
         }, '');
     }
     update(part, [styleInfo]) {
         const { style } = part.element;
         if (this._previousStyleProperties === undefined) {
             this._previousStyleProperties = new Set();
-            for (const name in styleInfo) {
-                this._previousStyleProperties.add(name);
-            }
-            return this.render(styleInfo);
         }
         // Remove old properties that no longer exist in styleInfo
         // We use forEach() instead of for-of so that re don't require down-level
