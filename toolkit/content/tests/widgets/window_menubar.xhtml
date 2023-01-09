@@ -546,9 +546,8 @@ var popupTests = [
                // shortcut key are fired asynchronously
                "popuphiding filepopup", "popuphidden filepopup",
                "popupshowing helppopup",
-               "DOMMenuItemActive item1",
-               "DOMMenuItemInactive item1",
                "DOMMenuInactive filepopup",
+               "DOMMenuItemActive contents",
                "popupshown helppopup" ] :
             [ "popupshowing helppopup", "DOMMenuItemInactive filemenu",
               "DOMMenuItemActive helpmenu",
@@ -556,7 +555,14 @@ var popupTests = [
               // "accelerator on active menubar" because menus opened from a
               // shortcut key are fired asynchronously
               "DOMMenuItemActive contents", "popupshown helppopup" ],
-  test() { synthesizeKey("KEY_ArrowLeft"); synthesizeKey("KEY_ArrowDown"); },
+  test() {
+    synthesizeKey("KEY_ArrowLeft");
+    // This setTimeout is needed so that the hiding of the file popup happens on
+    // Linux before we process the arrow down.
+    setTimeout(() => {
+      synthesizeKey("KEY_ArrowDown");
+    }, 0);
+  },
   result(testname) {
     is(document.getElementById("helpmenu").openedWithKey, true, testname + " openedWithKey");
   }
@@ -566,9 +572,7 @@ var popupTests = [
   // should not close because there is more than one item corresponding to
   // that letter
   testname: "menuitem with no accelerator",
-  events: kIsLinux ?
-           [ "DOMMenuItemActive one" ] :
-           [ "DOMMenuItemInactive contents", "DOMMenuItemActive one" ],
+  events: [ "DOMMenuItemInactive contents", "DOMMenuItemActive one" ],
   test() { sendChar("o"); },
   result(testname) { checkOpen("helpmenu", testname); }
 },
