@@ -30,8 +30,6 @@ add_setup(async function setup() {
       ["browser.urlbar.quickactions.enabled", true],
       ["browser.urlbar.suggest.quickactions", true],
       ["browser.urlbar.shortcuts.quickactions", true],
-      ["screenshots.browser.component.enabled", true],
-      ["extensions.screenshots.disabled", false],
     ],
   });
 
@@ -214,7 +212,13 @@ add_task(async function test_disabled() {
   UrlbarProviderQuickActions.removeAction("disabledaction");
 });
 
-add_task(async function test_screenshot_disabled() {
+/**
+ * The first part of this test confirms that when the screenshots component is enabled
+ * the screenshot quick action button will be enabled on about: pages.
+ * The second part confirms that when the screenshots extension is enabled the
+ * screenshot quick action button will be disbaled on about: pages.
+ */
+add_task(async function test_screenshot_enabled_or_disabled() {
   let onLoaded = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
@@ -233,6 +237,30 @@ add_task(async function test_screenshot_disabled() {
     "The action is displayed"
   );
   let screenshotButton = window.document.querySelector(
+    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+  );
+  Assert.ok(
+    !screenshotButton.hasAttribute("disabled"),
+    "Screenshot button is enabled on about pages"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["screenshots.browser.component.enabled", false]],
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "screenshot",
+  });
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2,
+    "The action is displayed"
+  );
+  screenshotButton = window.document.querySelector(
     ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
   );
   Assert.equal(
@@ -276,6 +304,10 @@ async function isScreenshotInitialized() {
 }
 
 add_task(async function test_screenshot() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["screenshots.browser.component.enabled", true]],
+  });
+
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, DUMMY_PAGE);
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
