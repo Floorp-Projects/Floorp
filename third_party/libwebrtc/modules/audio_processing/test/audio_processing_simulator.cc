@@ -210,6 +210,7 @@ AudioProcessingSimulator::~AudioProcessingSimulator() {
 void AudioProcessingSimulator::ProcessStream(bool fixed_interface) {
   // Optionally use the fake recording device to simulate analog gain.
   if (settings_.simulate_mic_gain) {
+    RTC_DCHECK(!settings_.use_analog_mic_gain_emulation);
     if (settings_.aec_dump_input_filename) {
       // When the analog gain is simulated and an AEC dump is used as input, set
       // the undo level to `aec_dump_mic_level_` to virtually restore the
@@ -225,7 +226,7 @@ void AudioProcessingSimulator::ProcessStream(bool fixed_interface) {
 
     // Notify the current mic level to AGC.
     ap_->set_stream_analog_level(fake_recording_device_.MicLevel());
-  } else {
+  } else if (!settings_.use_analog_mic_gain_emulation) {
     // Notify the current mic level to AGC.
     ap_->set_stream_analog_level(settings_.aec_dump_input_filename
                                      ? aec_dump_mic_level_

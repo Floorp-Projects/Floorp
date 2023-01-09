@@ -1099,18 +1099,13 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
   }
 
   if (submodules_.capture_levels_adjuster) {
-    // If the analog mic gain emulation is active, get the emulated analog mic
-    // gain and pass it to the analog gain control functionality.
     if (config_.capture_level_adjustment.analog_mic_gain_emulation.enabled) {
-      int level = submodules_.capture_levels_adjuster->GetAnalogMicGainLevel();
-      if (submodules_.agc_manager) {
-        submodules_.agc_manager->set_stream_analog_level(level);
-      } else if (submodules_.gain_control) {
-        int error = submodules_.gain_control->set_stream_analog_level(level);
-        RTC_DCHECK_EQ(kNoError, error);
-      }
+      // When the input volume is emulated, retrieve the volume applied to the
+      // input audio and notify that to APM so that the volume is passed to the
+      // active AGC.
+      set_stream_analog_level_locked(
+          submodules_.capture_levels_adjuster->GetAnalogMicGainLevel());
     }
-
     submodules_.capture_levels_adjuster->ApplyPreLevelAdjustment(
         *capture_buffer);
   }
@@ -1369,16 +1364,12 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     submodules_.capture_levels_adjuster->ApplyPostLevelAdjustment(
         *capture_buffer);
 
-    // If the analog mic gain emulation is active, retrieve the level from the
-    // analog gain control and set it to mic gain emulator.
     if (config_.capture_level_adjustment.analog_mic_gain_emulation.enabled) {
-      if (submodules_.agc_manager) {
-        submodules_.capture_levels_adjuster->SetAnalogMicGainLevel(
-            submodules_.agc_manager->recommended_analog_level());
-      } else if (submodules_.gain_control) {
-        submodules_.capture_levels_adjuster->SetAnalogMicGainLevel(
-            submodules_.gain_control->stream_analog_level());
-      }
+      // If the input volume emulation is used, retrieve the recommended input
+      // volume and set that to emulate the input volume on the next processed
+      // audio frame.
+      submodules_.capture_levels_adjuster->SetAnalogMicGainLevel(
+          recommended_stream_analog_level_locked());
     }
   }
 
@@ -1603,14 +1594,20 @@ void AudioProcessingImpl::set_stream_key_pressed(bool key_pressed) {
 }
 
 void AudioProcessingImpl::set_stream_analog_level(int level) {
-  MutexLock lock_capture(&mutex_capture_);
+  // Check that input volume emulation is disabled since, when enabled, there is
+  // no externally applied input volume to notify to APM.
+  RTC_DCHECK(
+      !submodules_.capture_levels_adjuster ||
+      !config_.capture_level_adjustment.analog_mic_gain_emulation.enabled);
 
-  if (config_.capture_level_adjustment.analog_mic_gain_emulation.enabled) {
-    // If the analog mic gain is emulated internally, simply cache the level for
-    // later reporting back as the recommended stream analog level to use.
-    capture_.cached_stream_analog_level_ = level;
-    return;
-  }
+  MutexLock lock_capture(&mutex_capture_);
+  set_stream_analog_level_locked(level);
+}
+
+void AudioProcessingImpl::set_stream_analog_level_locked(int level) {
+  // Cache the level for later reporting back as the recommended input volume to
+  // use.
+  capture_.cached_stream_analog_level_ = level;
 
   if (submodules_.agc_manager) {
     submodules_.agc_manager->set_stream_analog_level(level);
@@ -1624,10 +1621,6 @@ void AudioProcessingImpl::set_stream_analog_level(int level) {
     RTC_DCHECK_EQ(kNoError, error);
     return;
   }
-
-  // If no analog mic gain control functionality is in place, cache the level
-  // for later reporting back as the recommended stream analog level to use.
-  capture_.cached_stream_analog_level_ = level;
 }
 
 int AudioProcessingImpl::recommended_stream_analog_level() const {
@@ -1636,10 +1629,6 @@ int AudioProcessingImpl::recommended_stream_analog_level() const {
 }
 
 int AudioProcessingImpl::recommended_stream_analog_level_locked() const {
-  if (config_.capture_level_adjustment.analog_mic_gain_emulation.enabled) {
-    return capture_.cached_stream_analog_level_;
-  }
-
   if (submodules_.agc_manager) {
     return submodules_.agc_manager->recommended_analog_level();
   }
