@@ -49,6 +49,7 @@
 #include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/candidate_pair_interface.h"
 #include "p2p/base/connection.h"
+#include "p2p/base/ice_agent_interface.h"
 #include "p2p/base/ice_controller_factory_interface.h"
 #include "p2p/base/ice_controller_interface.h"
 #include "p2p/base/ice_switch_reason.h"
@@ -104,7 +105,8 @@ class RemoteCandidate : public Candidate {
 
 // P2PTransportChannel manages the candidates and connection process to keep
 // two P2P clients connected to each other.
-class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
+class RTC_EXPORT P2PTransportChannel : public IceTransportInternal,
+                                       public IceAgentInterface {
  public:
   static std::unique_ptr<P2PTransportChannel> Create(
       absl::string_view transport_name,
@@ -167,6 +169,18 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   absl::optional<int> GetRttEstimate() override;
   const Connection* selected_connection() const override;
   absl::optional<const CandidatePair> GetSelectedCandidatePair() const override;
+
+  // From IceAgentInterface
+  void OnStartedPinging() override;
+  int64_t GetLastPingSentMs() const override;
+  void UpdateConnectionStates() override;
+  void UpdateState() override;
+  void SendPingRequest(const Connection* connection) override;
+  void SwitchSelectedConnection(const Connection* connection,
+                                IceSwitchReason reason) override;
+  void ForgetLearnedStateForConnections(
+      std::vector<const Connection*> connections) override;
+  bool PruneConnections(std::vector<const Connection*> connections) override;
 
   // TODO(honghaiz): Remove this method once the reference of it in
   // Chromoting is removed.
@@ -260,18 +274,17 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   // Returns true if it's possible to send packets on `connection`.
   bool ReadyToSend(const Connection* connection) const;
   bool PresumedWritable(const Connection* conn) const;
-  void UpdateConnectionStates();
   void RequestSortAndStateUpdate(IceSwitchReason reason_to_sort);
   // Start pinging if we haven't already started, and we now have a connection
   // that's pingable.
   void MaybeStartPinging();
+  void SendPingRequestInternal(Connection* connection);
 
   void SortConnectionsAndUpdateState(IceSwitchReason reason_to_sort);
-  void SortConnections();
-  void SortConnectionsIfNeeded();
   rtc::NetworkRoute ConfigureNetworkRoute(const Connection* conn);
-  void SwitchSelectedConnection(Connection* conn, IceSwitchReason reason);
-  void UpdateState();
+  void SwitchSelectedConnectionInternal(Connection* conn,
+                                        IceSwitchReason reason);
+  void UpdateTransportState();
   void HandleAllTimedOut();
   void MaybeStopPortAllocatorSessions();
   void OnSelectedConnectionDestroyed() RTC_RUN_ON(network_thread_);
@@ -349,6 +362,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   bool MaybeSwitchSelectedConnection(
       IceSwitchReason reason,
       IceControllerInterface::SwitchResult result);
+  bool AllowedToPruneConnections() const;
   void PruneConnections();
 
   // Returns the latest remote ICE parameters or nullptr if there are no remote
