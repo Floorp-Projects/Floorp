@@ -940,9 +940,12 @@ class TargetCommand extends EventEmitter {
     for (const target of targets) {
       // For still-attaching worker targets, the thread or console front may not yet be available,
       // whereas TargetMixin.getFront will throw if the actorID isn't available in targetForm.
+      // Also ignore destroyed targets. For some reason the previous methods fetching targets
+      // can sometime return destroyed targets.
       if (
         (frontType == "thread" && !target.targetForm.threadActor) ||
-        (frontType == "console" && !target.targetForm.consoleActor)
+        (frontType == "console" && !target.targetForm.consoleActor) ||
+        target.isDestroyed()
       ) {
         continue;
       }
