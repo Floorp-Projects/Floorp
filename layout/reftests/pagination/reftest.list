@@ -63,12 +63,8 @@ fuzzy(0-1,0-23) == resize-reflow-001.html resize-reflow-001.ref.html
 == table-caption-splitaftercaption-3.html table-caption-splitaftercaption-3-ref.html
 == table-caption-splitaftercaption-4.html table-caption-splitaftercaption-4-ref.html
 == table-caption-splitaftercaption-5.html table-caption-splitaftercaption-5-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-6.html table-caption-splitaftercaption-6-ref.html
-pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-7.html table-caption-splitaftercaption-7-ref.html
 # == table-caption-splitaftercaption-8.html blank.html # bug 672654
 # == table-caption-splitaftercaption-9.html blank.html # bug 672654
-# pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-10.html blank.html # bug 672654
-# pref(layout.css.caption-side-non-standard.enabled,true) == table-caption-splitaftercaption-11.html blank.html # bug 672654
 == table-cell-breaking-1a.html table-cell-breaking-1-ref.html
 == table-cell-breaking-1b.html table-cell-breaking-1-ref.html
 == table-cell-breaking-2a.html table-cell-breaking-2-ref.html

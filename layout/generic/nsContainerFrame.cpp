@@ -954,45 +954,22 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
     AutoMaybeDisableFontInflation an(this);
 
     WritingMode tableWM = GetParent()->GetWritingMode();
-    StyleCaptionSide captionSide = StyleTableBorder()->mCaptionSide;
-
     if (aWM.IsOrthogonalTo(tableWM)) {
-      if (captionSide == StyleCaptionSide::Top ||
-          captionSide == StyleCaptionSide::TopOutside ||
-          captionSide == StyleCaptionSide::Bottom ||
-          captionSide == StyleCaptionSide::BottomOutside) {
-        // For an orthogonal caption on a block-dir side of the table,
-        // shrink-wrap to min-isize.
-        result.ISize(aWM) = GetMinISize(aRenderingContext);
-      } else {
-        // An orthogonal caption on an inline-dir side of the table
-        // is constrained to the containing block.
-        nscoord pref = GetPrefISize(aRenderingContext);
-        if (pref > aCBSize.ISize(aWM)) {
-          pref = aCBSize.ISize(aWM);
-        }
-        if (pref < result.ISize(aWM)) {
-          result.ISize(aWM) = pref;
-        }
-      }
+      // For an orthogonal caption on a block-dir side of the table, shrink-wrap
+      // to min-isize.
+      result.ISize(aWM) = GetMinISize(aRenderingContext);
     } else {
-      if (captionSide == StyleCaptionSide::Left ||
-          captionSide == StyleCaptionSide::Right) {
-        result.ISize(aWM) = GetMinISize(aRenderingContext);
-      } else if (captionSide == StyleCaptionSide::Top ||
-                 captionSide == StyleCaptionSide::Bottom) {
-        // The outer frame constrains our available isize to the isize of
-        // the table.  Grow if our min-isize is bigger than that, but not
-        // larger than the containing block isize.  (It would really be nice
-        // to transmit that information another way, so we could grow up to
-        // the table's available isize, but that's harder.)
-        nscoord min = GetMinISize(aRenderingContext);
-        if (min > aCBSize.ISize(aWM)) {
-          min = aCBSize.ISize(aWM);
-        }
-        if (min > result.ISize(aWM)) {
-          result.ISize(aWM) = min;
-        }
+      // The outer frame constrains our available isize to the isize of
+      // the table.  Grow if our min-isize is bigger than that, but not
+      // larger than the containing block isize.  (It would really be nice
+      // to transmit that information another way, so we could grow up to
+      // the table's available isize, but that's harder.)
+      nscoord min = GetMinISize(aRenderingContext);
+      if (min > aCBSize.ISize(aWM)) {
+        min = aCBSize.ISize(aWM);
+      }
+      if (min > result.ISize(aWM)) {
+        result.ISize(aWM) = min;
       }
     }
   }
