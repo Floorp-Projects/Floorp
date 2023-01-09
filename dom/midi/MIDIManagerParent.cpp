@@ -27,7 +27,7 @@ mozilla::ipc::IPCResult MIDIManagerParent::RecvShutdown() {
   // This was necessary before bug 1547085 when discarded messages would
   // trigger a crash, and is probably unnecessary now, but we leave it in place
   // just in case.
-  Unused << Send__delete__(this);
+  Close();
   return IPC_OK();
 }
 
