@@ -500,20 +500,6 @@ bool BackgroundChildImpl::DeallocPMIDIPortChild(PMIDIPortChild* aActor) {
   return true;
 }
 
-PMIDIManagerChild* BackgroundChildImpl::AllocPMIDIManagerChild() {
-  MOZ_CRASH("Should be created manually");
-  return nullptr;
-}
-
-bool BackgroundChildImpl::DeallocPMIDIManagerChild(PMIDIManagerChild* aActor) {
-  MOZ_ASSERT(aActor);
-  // The reference is increased in dom/midi/MIDIAccessManager.cpp. We should
-  // decrease it after IPC.
-  RefPtr<dom::MIDIManagerChild> child =
-      dont_AddRef(static_cast<dom::MIDIManagerChild*>(aActor));
-  return true;
-}
-
 mozilla::dom::PClientManagerChild*
 BackgroundChildImpl::AllocPClientManagerChild() {
   return mozilla::dom::AllocClientManagerChild();
