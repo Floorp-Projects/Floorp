@@ -799,7 +799,6 @@ class SdpOfferAnswerHandler::RemoteDescriptionOperation {
   void ReportOfferAnswerUma() {
     RTC_DCHECK(ok());
     if (type_ == SdpType::kOffer || type_ == SdpType::kAnswer) {
-      handler_->pc_->ReportSdpFormatReceived(*desc_.get());
       handler_->pc_->ReportSdpBundleUsage(*desc_.get());
     }
   }
@@ -2200,8 +2199,6 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
     // MaybeStartGathering...
     context_->network_thread()->BlockingCall(
         [this] { port_allocator()->DiscardCandidatePool(); });
-    // Make UMA notes about what was agreed to.
-    ReportNegotiatedSdpSemantics(*local_description());
   }
 
   observer->OnSetLocalDescriptionComplete(RTCError::OK());
@@ -2404,8 +2401,6 @@ void SdpOfferAnswerHandler::SetRemoteDescriptionPostProcess(bool was_answer) {
     // MaybeStartGathering...
     context_->network_thread()->BlockingCall(
         [this] { port_allocator()->DiscardCandidatePool(); });
-    // Make UMA notes about what was agreed to.
-    ReportNegotiatedSdpSemantics(*remote_description());
   }
 
   pc_->NoteUsageEvent(UsageEvent::SET_REMOTE_DESCRIPTION_SUCCEEDED);
@@ -4696,30 +4691,6 @@ void SdpOfferAnswerHandler::RemoveUnusedChannels(
     error.set_error_detail(RTCErrorDetailType::DATA_CHANNEL_FAILURE);
     DestroyDataChannelTransport(error);
   }
-}
-
-void SdpOfferAnswerHandler::ReportNegotiatedSdpSemantics(
-    const SessionDescriptionInterface& answer) {
-  SdpSemanticNegotiated semantics_negotiated;
-  switch (answer.description()->msid_signaling()) {
-    case 0:
-      semantics_negotiated = kSdpSemanticNegotiatedNone;
-      break;
-    case cricket::kMsidSignalingMediaSection:
-      semantics_negotiated = kSdpSemanticNegotiatedUnifiedPlan;
-      break;
-    case cricket::kMsidSignalingSsrcAttribute:
-      semantics_negotiated = kSdpSemanticNegotiatedPlanB;
-      break;
-    case cricket::kMsidSignalingMediaSection |
-        cricket::kMsidSignalingSsrcAttribute:
-      semantics_negotiated = kSdpSemanticNegotiatedMixed;
-      break;
-    default:
-      RTC_DCHECK_NOTREACHED();
-  }
-  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.SdpSemanticNegotiated",
-                            semantics_negotiated, kSdpSemanticNegotiatedMax);
 }
 
 void SdpOfferAnswerHandler::UpdateEndedRemoteMediaStreams() {

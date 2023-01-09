@@ -53,10 +53,6 @@ class PeerConnectionSdpMethods {
   virtual const PeerConnectionInterface::RTCConfiguration* configuration()
       const = 0;
 
-  // Report the UMA metric SdpFormatReceived for the given remote description.
-  virtual void ReportSdpFormatReceived(
-      const SessionDescriptionInterface& remote_description) = 0;
-
   // Report the UMA metric BundleUsage for the given remote description.
   virtual void ReportSdpBundleUsage(
       const SessionDescriptionInterface& remote_description) = 0;
