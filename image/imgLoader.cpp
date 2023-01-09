@@ -2279,14 +2279,6 @@ bool imgLoader::IsImageAvailable(nsIURI* aURI,
   if (!request) {
     return false;
   }
-  if (nsCOMPtr<nsILoadGroup> docLoadGroup = aDocument->GetDocumentLoadGroup()) {
-    nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
-    docLoadGroup->GetLoadFlags(&requestFlags);
-    if (requestFlags & nsIRequest::LOAD_BYPASS_CACHE) {
-      // If we're bypassing the cache, treat the image as not available.
-      return false;
-    }
-  }
   return ValidateCORSMode(request, false, aCORSMode, aTriggeringPrincipal);
 }
 
