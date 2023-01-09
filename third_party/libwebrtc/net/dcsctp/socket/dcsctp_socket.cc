@@ -1549,10 +1549,11 @@ void DcSctpSocket::HandleReconfig(
     // (either successfully or with failure). If there still are pending streams
     // that were waiting for this request to finish, continue resetting them.
     MaybeSendResetStreamsRequest();
+
+    // If a response was processed, pending to-be-reset streams may now have
+    // become unpaused. Try to send more DATA chunks.
+    tcb_->SendBufferedPackets(now);
   }
-  // If a response was processed, pending to-be-reset streams may now have
-  // become unpaused. Try to send more DATA chunks.
-  tcb_->SendBufferedPackets(now);
 }
 
 void DcSctpSocket::HandleShutdown(
