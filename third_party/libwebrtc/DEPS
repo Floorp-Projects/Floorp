@@ -20,7 +20,7 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:9.20220831.2.1',
+  'fuchsia_version': 'version:9.20220912.3.1',
 
   # By default, do not check out the re-client binaries.
   'checkout_reclient': False,
