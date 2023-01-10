@@ -79,7 +79,14 @@ class Benchmark(object):
 
     def _full_clone(self, benchmark_repository, dest):
         subprocess.check_call(
-            ["git", "clone", benchmark_repository, str(dest.resolve())]
+            [
+                "git",
+                "clone",
+                "-c",
+                "http.postBuffer=2147483648",
+                benchmark_repository,
+                str(dest.resolve()),
+            ]
         )
 
     def _get_benchmark_folder(self, benchmark_dest, run_local):
