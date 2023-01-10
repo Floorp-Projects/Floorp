@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-typedef (BufferSource or Blob or USVString) BlobPart;
+typedef (BufferSource or Blob or UTF8String) BlobPart;
 
 [Exposed=(Window,Worker)]
 interface Blob {

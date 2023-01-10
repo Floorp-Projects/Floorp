@@ -203,8 +203,8 @@ void MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
       }
     }
 
-    else if (data.IsUSVString()) {
-      aRv = blobSet.AppendString(data.GetAsUSVString(), aNativeEOL);
+    else if (data.IsUTF8String()) {
+      aRv = blobSet.AppendUTF8String(data.GetAsUTF8String(), aNativeEOL);
       if (aRv.Failed()) {
         return;
       }

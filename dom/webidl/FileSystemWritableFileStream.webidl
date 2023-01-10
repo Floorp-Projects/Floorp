@@ -14,10 +14,10 @@ dictionary WriteParams {
   required WriteCommandType type;
   unsigned long long? size;
   unsigned long long? position;
-  (BufferSource or Blob or USVString)? data;
+  (BufferSource or Blob or UTF8String)? data;
 };
 
-typedef (BufferSource or Blob or USVString or WriteParams) FileSystemWriteChunkType;
+typedef (BufferSource or Blob or UTF8String or WriteParams) FileSystemWriteChunkType;
 
 [Exposed=(Window,Worker), SecureContext, Pref="dom.fs.enabled"]
 interface FileSystemWritableFileStream : WritableStream {
