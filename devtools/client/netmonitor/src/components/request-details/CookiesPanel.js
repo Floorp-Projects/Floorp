@@ -105,7 +105,7 @@ class CookiesPanel extends Component {
         map[obj.name] = obj.value;
       }
       return map;
-    }, {});
+    }, Object.create(null));
 
     // To have different roots for Request and Response cookies
     return { [title]: cookies };

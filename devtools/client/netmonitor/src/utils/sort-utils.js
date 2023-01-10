@@ -34,7 +34,7 @@ function sortObjectKeys(object) {
         acc[key] = object[key];
       }
       return acc;
-    }, {});
+    }, Object.create(null));
 }
 
 module.exports = {

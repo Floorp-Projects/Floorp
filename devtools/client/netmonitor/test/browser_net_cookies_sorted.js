@@ -36,6 +36,9 @@ add_task(async function() {
 
   info("Check if Request-Cookies and Response-Cookies are sorted");
   const expectedLabelValues = [
+    "__proto__",
+    "httpOnly",
+    "value",
     "bob",
     "httpOnly",
     "value",
@@ -45,10 +48,12 @@ add_task(async function() {
     "tom",
     "httpOnly",
     "value",
+    "__proto__",
     "bob",
     "foo",
     "tom",
   ];
+
   const labelCells = document.querySelectorAll(".treeLabelCell");
   labelCells.forEach(function(val, index) {
     is(
