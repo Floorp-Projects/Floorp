@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import android.annotation.TargetApi;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Build;
 import android.util.Log;
 import android.util.SparseArray;
@@ -417,6 +418,7 @@ public class Autofill {
       }
 
       structure.setId(data.id, null, null, null);
+      // This dimensions doesn't seem to used for autofill service.
       structure.setDimens(0, 0, 0, 0, node.getDimensions().width(), node.getDimensions().height());
 
       if (Build.VERSION.SDK_INT >= 26) {
@@ -533,6 +535,7 @@ public class Autofill {
     private final Node mRoot;
     private final Node mParent;
     private final @NonNull Rect mDimens;
+    private final @NonNull Rect mScreenRect;
     private final @NonNull Map<String, Node> mChildren;
     private final @NonNull Map<String, String> mAttributes;
     private final boolean mEnabled;
@@ -566,10 +569,33 @@ public class Autofill {
      * proper dimensions.
      *
      * @return The dimensions of this node.
+     * @deprecated Use {@link #getScreenRect}.
      */
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-fission", version = 112) // should be package private
     @AnyThread
     public @NonNull Rect getDimensions() {
       return mDimens;
+    }
+
+    /**
+     * Get the dimensions of this node in screen coordinates. This is valid when this node has an
+     * focus.
+     *
+     * @return The dimensions of this node.
+     */
+    @AnyThread
+    public @NonNull Rect getScreenRect() {
+      return mScreenRect;
+    }
+
+    /**
+     * Set the dimensions of this node in screen coordinates.
+     *
+     * @param screenRect The dimensions of this node.
+     */
+    /* package */ void setScreenRect(final @NonNull RectF screenRectF) {
+      screenRectF.roundOut(mScreenRect);
     }
 
     /**
@@ -675,6 +701,7 @@ public class Autofill {
       mParent = null;
       mUuid = UUID.randomUUID().toString();
       mDimens = dimensions;
+      mScreenRect = new Rect();
       mSessionId = sessionId;
       mAttributes = new ArrayMap<>();
       mEnabled = false;
@@ -701,6 +728,8 @@ public class Autofill {
           .append(mRoot != null ? mRoot.getUuid() : null)
           .append(", dims=")
           .append(getDimensions().toShortString())
+          .append(", screenRect=")
+          .append(getScreenRect().toShortString())
           .append(", children=[");
 
       for (final Node child : mChildren.values()) {
@@ -757,6 +786,7 @@ public class Autofill {
       } else {
         mDimens = dimens;
       }
+      mScreenRect = new Rect();
 
       mParent = parent;
       // If the root is null, then this object is the root itself
@@ -1147,6 +1177,10 @@ public class Autofill {
         if (focused == null) {
           Log.w(LOGTAG, "Cannot find node uuid=" + uuid);
           return;
+        }
+        if (message != null) {
+          final RectF screenRectF = message.getRectF("screenRect");
+          focused.setScreenRect(screenRectF);
         }
       }
 

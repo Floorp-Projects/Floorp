@@ -974,6 +974,10 @@ public class GeckoView extends FrameLayout {
         return new Rect(0, 0, 0, 0);
       }
 
+      if (!node.getScreenRect().isEmpty()) {
+        return node.getScreenRect();
+      }
+
       final Matrix matrix = new Matrix();
       final RectF rectF = new RectF(node.getDimensions());
       session.getPageToScreenMatrix(matrix);

@@ -4,11 +4,13 @@
 
 package org.mozilla.geckoview.test
 
+import android.graphics.Rect
 import android.util.SparseArray
 import android.view.KeyEvent
 import android.view.View
 import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -667,6 +669,47 @@ class AutofillDelegateTest : BaseSessionTest() {
 
             @AssertCalled(order = [1])
             override fun showSoftInput(session: GeckoSession) {}
+        })
+    }
+
+    @WithDisplay(width = 300, height = 1000)
+    @Test
+    fun autofillIframe() {
+        // No way to click in x-origin frame.
+        assumeThat("Not in x-origin", iframe, not(equalTo("#oop")))
+
+        // Wait for the accessibility nodes to populate.
+        mainSession.loadUri(pageUrl)
+        mainSession.waitForPageStop()
+
+        // Get non-iframe position of input element
+        var screenRect = Rect()
+        mainSession.evaluateJS("document.querySelector('#pass2').focus()")
+
+        sessionRule.waitUntilCalled(object : Autofill.Delegate {
+            @AssertCalled(count = 1)
+            override fun onNodeFocus(
+                session: GeckoSession,
+                node: Autofill.Node,
+                data: Autofill.NodeData
+            ) {
+                screenRect = node.screenRect
+            }
+        })
+
+        mainSession.evaluateJS("document.querySelector('iframe').contentDocument.querySelector('#pass2').focus()")
+
+        sessionRule.waitUntilCalled(object : Autofill.Delegate {
+            @AssertCalled(count = 1)
+            override fun onNodeFocus(
+                session: GeckoSession,
+                node: Autofill.Node,
+                data: Autofill.NodeData
+            ) {
+                assertThat("ID should be valid", node, notNullValue())
+                // iframe's input element should consider iframe's offset. 200 is enough offset.
+                assertThat("position is valid", node.getScreenRect().top, greaterThanOrEqualTo(screenRect.top + 200))
+            }
         })
     }
 }
