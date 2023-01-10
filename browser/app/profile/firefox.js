@@ -1110,7 +1110,7 @@ pref("browser.sessionstore.interval.idle", 3600000); // 1h
 
 // Time (ms) before we assume that the user is idle and that we don't need to
 // collect/save the session quite as often.
-pref("browser.sessionstore.idleDelay", 180000); // 3 minutes
+pref("browser.sessionstore.idleDelay", 180); // 3 minutes
 
 // on which sites to save text data, POSTDATA and cookies
 // 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
