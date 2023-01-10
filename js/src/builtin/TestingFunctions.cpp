@@ -4565,7 +4565,7 @@ class CloneBufferObject : public NativeObject {
       ReportOutOfMemory(cx);
       return nullptr;
     }
-    buffer->steal(data.get());
+    buffer->giveTo(data.get());
     obj->setData(data.release(), false);
     return obj;
   }
