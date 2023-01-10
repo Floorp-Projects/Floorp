@@ -454,7 +454,7 @@ details[open] > .page-section-header > .twisty {
 
 .setup-step {
   padding: var(--card-padding);
-  margin: 0 0 8px;
+  margin-block: 0.5em 1em;
 }
 
 /* Bug 1770534 - Only use the zap-gradient for built-in, color-neutral themes */
