@@ -243,9 +243,30 @@ add_task(async function() {
   const stringRows = cookiesPanel.querySelectorAll(".stringRow");
 
   const expectedResponseCookies = [
-    { bob: { httpOnly: true, value: "true" } },
-    { foo: { httpOnly: true, value: "bar" } },
-    { tom: { httpOnly: true, value: "cool" } },
+    `{
+	"__proto__": {
+		"httpOnly": true,
+		"value": "2"
+	}
+}`,
+    `{
+	"bob": {
+		"httpOnly": true,
+		"value": "true"
+	}
+}`,
+    `{
+	"foo": {
+		"httpOnly": true,
+		"value": "bar"
+	}
+}`,
+    `{
+	"tom": {
+		"httpOnly": true,
+		"value": "cool"
+	}
+}`,
   ];
   for (let i = 0; i < objectRows.length; i++) {
     const cur = objectRows[i];
@@ -255,10 +276,10 @@ add_task(async function() {
         monitor,
         "properties-view-context-menu-copyvalue"
       );
-    }, JSON.stringify(expectedResponseCookies[i], null, "\t"));
+    }, expectedResponseCookies[i]);
   }
 
-  const expectedRequestCookies = ["true", "bar", "cool"];
+  const expectedRequestCookies = ["2", "true", "bar", "cool"];
   for (let i = 0; i < expectedRequestCookies.length; i++) {
     const cur = stringRows[objectRows.length + i];
     EventUtils.sendMouseEvent({ type: "contextmenu" }, cur);
