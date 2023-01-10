@@ -102,6 +102,20 @@
       testRelation("listitem1.1", RELATION_NODE_CHILD_OF, "listitem1");
       testRelation("listitem1.2", RELATION_NODE_CHILD_OF, "listitem1");
 
+      // 'node child of' relation for lists and trees organized by groups, with
+      // intervening generic accessibles between widget components.
+      testRelation("list2_listitem1.1", RELATION_NODE_CHILD_OF, "list2_listitem1");
+      testRelation("list2_listitem1.2", RELATION_NODE_CHILD_OF, "list2_listitem1");
+      testRelation("tree4_treeitem1.1", RELATION_NODE_CHILD_OF, "tree4_treeitem1");
+      testRelation("tree4_treeitem1.2", RELATION_NODE_CHILD_OF, "tree4_treeitem1");
+
+      // 'node child of' relation for a treeitem sibling group special case,
+      // with intervening generic accessibles. In this case, if a treeitem's
+      // parent is a group and that group has a previous treeitem sibling, the
+      // treeitem is a child of that previous treeitem sibling.
+      testRelation("tree3_treeitem1.1", RELATION_NODE_CHILD_OF, "tree3_treeitem1");
+      testRelation("tree3_treeitem1.2", RELATION_NODE_CHILD_OF, "tree3_treeitem1");
+
       // 'node child of' relation for the document having window, returns
       // direct accessible parent (fixed in bug 419770).
       var iframeElmObj = {};
@@ -339,6 +353,18 @@
     </li>
   </ul>
 
+  <div role="tree" id="tree3">
+    <div tabindex="0">
+      <div role="treeitem" id="tree3_treeitem1">1</div>
+    </div>
+    <div tabindex="0">
+      <div role="group">
+        <div role="treeitem" id="tree3_treeitem1.1">1.1</div>
+        <div role="treeitem" id="tree3_treeitem1.2">1.2</div>
+      </div>
+    </div>
+  </div>
+
   <div role="treegrid" id="treegrid">
     <div role="row" id="treegridrow1">
       <span role="gridcell">cell1</span><span role="gridcell">cell2</span>
@@ -356,6 +382,28 @@
       <div role="group">
         <div role="listitem" id="listitem1.1">Item 1A</div>
         <div role="listitem" id="listitem1.2">Item 1B</div>
+      </div>
+    </div>
+  </div>
+
+  <div role="tree" id="tree4">
+    <div role="treeitem" id="tree4_treeitem1">1
+      <div tabindex="0">
+        <div role="group">
+          <div role="treeitem" id="tree4_treeitem1.1">1.1</div>
+          <div role="treeitem" id="tree4_treeitem1.2">1.2</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div role="list" id="list2">
+    <div role="listitem" id="list2_listitem1">1
+      <div tabindex="0">
+        <div role="group">
+          <div role="listitem" id="list2_listitem1.1">1.1</div>
+          <div role="listitem" id="list2_listitem1.2">1.2</div>
+        </div>
       </div>
     </div>
   </div>

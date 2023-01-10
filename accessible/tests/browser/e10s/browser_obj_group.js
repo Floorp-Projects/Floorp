@@ -609,20 +609,8 @@ addAccessibleTask(
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // Attributes calculated even when row is wrapped in a div.
-    testGroupAttrs(
-      getAcc("wrapped_row_1"),
-      1,
-      2,
-      null,
-      isCacheEnabled && browser.isRemoteBrowser
-    );
-    testGroupAttrs(
-      getAcc("wrapped_row_2"),
-      2,
-      2,
-      null,
-      isCacheEnabled && browser.isRemoteBrowser
-    );
+    testGroupAttrs(getAcc("wrapped_row_1"), 1, 2, null);
+    testGroupAttrs(getAcc("wrapped_row_2"), 2, 2, null);
   },
   {
     topLevel: !isWinNoCache,
@@ -718,6 +706,102 @@ addAccessibleTask(
     await p;
     testGroupAttrs(getAcc("tree4_ti2"), 1, 1, 1);
     testGroupParentAttrs(getAcc("tree4"), 1, true);
+  },
+  {
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
+    chrome: true,
+  }
+);
+
+// Verify that intervening SECTION accs in ARIA compound widgets do not split
+// up the group info for descendant owned elements. Test various types of
+// widgets that should all be treated the same.
+addAccessibleTask(
+  `<div role="tree" id="tree">
+    <div tabindex="0">
+      <div role="treeitem" id="ti1">treeitem 1</div>
+    </div>
+    <div tabindex="0">
+      <div role="treeitem" id="ti2">treeitem 2</div>
+    </div>
+  </div>
+  <div role="listbox" id="listbox">
+    <div tabindex="0">
+      <div role="option" id="opt1">option 1</div>
+    </div>
+    <div tabindex="0">
+      <div role="option" id="opt2">option 2</div>
+    </div>
+  </div>
+  <div role="list" id="list">
+    <div tabindex="0">
+      <div role="listitem" id="li1">listitem 1</div>
+    </div>
+    <div tabindex="0">
+      <div role="listitem" id="li2">listitem 2</div>
+    </div>
+  </div>
+  <div role="menu" id="menu">
+    <div tabindex="0">
+      <div role="menuitem" id="mi1">menuitem 1</div>
+    </div>
+    <div tabindex="0">
+      <div role="menuitem" id="mi2">menuitem 2</div>
+    </div>
+  </div>
+  <div role="radiogroup" id="radiogroup">
+    <div tabindex="0">
+      <div role="radio" id="r1">radio 1</div>
+    </div>
+    <div tabindex="0">
+      <div role="radio" id="r2">radio 2</div>
+    </div>
+  </div>
+`,
+  async function(browser, accDoc) {
+    let getAcc = id => findAccessibleChildByID(accDoc, id);
+
+    testGroupAttrs(getAcc("ti1"), 1, 2, 1);
+    testGroupAttrs(getAcc("ti2"), 2, 2, 1);
+
+    testGroupAttrs(getAcc("opt1"), 1, 2, 0);
+    testGroupAttrs(getAcc("opt2"), 2, 2, 0);
+
+    testGroupAttrs(getAcc("li1"), 1, 2, 0);
+    testGroupAttrs(getAcc("li2"), 2, 2, 0);
+
+    testGroupAttrs(getAcc("mi1"), 1, 2, 0);
+    testGroupAttrs(getAcc("mi2"), 2, 2, 0);
+
+    testGroupAttrs(getAcc("r1"), 1, 2, 0);
+    testGroupAttrs(getAcc("r2"), 2, 2, 0);
+  },
+  {
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
+    chrome: true,
+  }
+);
+
+// Verify that non-generic accessibles (like buttons) correctly split the group
+// info of descendant owned elements.
+addAccessibleTask(
+  `<div role="tree" id="tree">
+    <div role="button">
+      <div role="treeitem" id="ti1">first</div>
+    </div>
+    <div tabindex="0">
+      <div role="treeitem" id="ti2">second</div>
+    </div>
+  </div>`,
+  async function(browser, accDoc) {
+    let getAcc = id => findAccessibleChildByID(accDoc, id);
+
+    testGroupAttrs(getAcc("ti1"), 1, 1, 1);
+    testGroupAttrs(getAcc("ti2"), 1, 1, 1);
   },
   {
     topLevel: !isWinNoCache,
