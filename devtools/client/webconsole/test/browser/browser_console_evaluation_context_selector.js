@@ -96,6 +96,16 @@ add_task(async function() {
   );
   ok(true, "The evaluation is done in the document context");
 
+  info("Check that autocomplete is done in the tab document context");
+  await setInputValueForAutocompletion(hud, "p");
+  // `pauseInWorker` is defined in test-evaluate-worker.html
+  ok(
+    getAutocompletePopupLabels(hud.jsterm.autocompletePopup).includes(
+      "pauseInWorker"
+    ),
+    "autocomplete happened in the tab document context"
+  );
+
   // set input text so we can watch for instant evaluation result update
   setInputValue(hud, "globalThis.location.href");
   await waitForEagerEvaluationResult(hud, `"${documentWithWorkerUrl}"`);
@@ -139,6 +149,14 @@ add_task(async function() {
     `WorkerLocation`
   );
   ok(true, "The evaluation is done in the worker context");
+
+  info("Check that autocomplete is done in the worker context");
+  await setInputValueForAutocompletion(hud, "f");
+  // `foo` is defined in test-evaluate-worker.js
+  ok(
+    getAutocompletePopupLabels(hud.jsterm.autocompletePopup).includes("foo"),
+    "autocomplete happened in the worker context"
+  );
 
   // set input text so we can watch for instant evaluation result update
   setInputValue(hud, "document.location.host");

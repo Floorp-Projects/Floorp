@@ -16,6 +16,13 @@ const {
   shouldInputBeAutocompleted,
 } = require("resource://devtools/shared/webconsole/analyze-input-string.js");
 
+loader.lazyRequireGetter(
+  this,
+  "getSelectedTarget",
+  "resource://devtools/shared/commands/target/selectors/targets.js",
+  true
+);
+
 /**
  * Update the data used for the autocomplete popup in the console input (JsTerm).
  *
@@ -244,10 +251,9 @@ function autocompleteDataFetch({
 
     let targetFront = commands.targetCommand.selectedTargetFront;
     // Note that getSelectedTargetFront will return null if we default to the top level target.
-    // For now, in the browser console (without a toolbox), we don't support the context selector.
-    const contextSelectorTargetFront = hud.toolbox
-      ? hud.toolbox.getSelectedTargetFront()
-      : null;
+    const contextSelectorTargetFront = getSelectedTarget(
+      hud.commands.targetCommand.store.getState()
+    );
     const selectedActorId = selectedNodeActorId || frameActorId;
     if (contextSelectorTargetFront) {
       targetFront = contextSelectorTargetFront;
