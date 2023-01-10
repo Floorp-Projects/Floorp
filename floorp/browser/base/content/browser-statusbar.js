@@ -117,4 +117,5 @@ function hideStatusbar() {
         }
     }
     Services.prefs.addObserver("browser.display.statusbar", onPrefChanged);
+    onPrefChanged();
 }
