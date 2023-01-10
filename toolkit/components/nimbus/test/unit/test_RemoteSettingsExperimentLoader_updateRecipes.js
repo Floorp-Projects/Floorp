@@ -36,7 +36,7 @@ add_task(async function test_updateRecipes_activeExperiments() {
   const onRecipe = sandbox.stub(manager, "onRecipe");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
   sandbox.stub(manager.store, "ready").resolves();
-  sandbox.stub(manager.store, "getAllActiveExperiments").returns([recipe]);
+  sandbox.stub(manager.store, "getAllActive").returns([recipe]);
 
   await loader.init();
 
@@ -53,7 +53,7 @@ add_task(async function test_updateRecipes_isFirstRun() {
   const onRecipe = sandbox.stub(manager, "onRecipe");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
   sandbox.stub(manager.store, "ready").resolves();
-  sandbox.stub(manager.store, "getAllActiveExperiments").returns([recipe]);
+  sandbox.stub(manager.store, "getAllActive").returns([recipe]);
 
   // Pretend to be in the first startup
   FirstStartup._state = FirstStartup.IN_PROGRESS;
@@ -96,7 +96,7 @@ add_task(async function test_updateRecipes_invalidFeatureId() {
   const onRecipe = sandbox.stub(manager, "onRecipe");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
   sandbox.stub(manager.store, "ready").resolves();
-  sandbox.stub(manager.store, "getAllActiveExperiments").returns([]);
+  sandbox.stub(manager.store, "getAllActive").returns([]);
 
   await loader.init();
   ok(onRecipe.notCalled, "No recipes");
@@ -140,7 +140,7 @@ add_task(async function test_updateRecipes_invalidFeatureValue() {
   const onRecipe = sandbox.stub(manager, "onRecipe");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
   sandbox.stub(manager.store, "ready").resolves();
-  sandbox.stub(manager.store, "getAllActiveExperiments").returns([]);
+  sandbox.stub(manager.store, "getAllActive").returns([]);
 
   await loader.init();
   ok(onRecipe.notCalled, "No recipes");
@@ -158,7 +158,7 @@ add_task(async function test_updateRecipes_invalidRecipe() {
   const onRecipe = sandbox.stub(manager, "onRecipe");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
   sandbox.stub(manager.store, "ready").resolves();
-  sandbox.stub(manager.store, "getAllActiveExperiments").returns([]);
+  sandbox.stub(manager.store, "getAllActive").returns([]);
 
   await loader.init();
   ok(onRecipe.notCalled, "No recipes");
@@ -525,8 +525,8 @@ add_task(async function test_updateRecipes_validationTelemetry() {
 
     sinon.stub(manager, "onRecipe");
     sinon.stub(manager.store, "ready").resolves();
-    sinon.stub(manager.store, "getAllActiveExperiments").returns([]);
-    sinon.stub(manager.store, "getAllActiveRollouts").returns([]);
+    sinon.stub(manager.store, "getAllActive").returns([]);
+    sinon.stub(manager.store, "getAllRollouts").returns([]);
 
     const telemetrySpy = sinon.spy(manager, "sendValidationFailedTelemetry");
 
@@ -619,8 +619,8 @@ add_task(async function test_updateRecipes_validationDisabled() {
 
     sinon.stub(manager, "onRecipe");
     sinon.stub(manager.store, "ready").resolves();
-    sinon.stub(manager.store, "getAllActiveExperiments").returns([]);
-    sinon.stub(manager.store, "getAllActiveRollouts").returns([]);
+    sinon.stub(manager.store, "getAllActive").returns([]);
+    sinon.stub(manager.store, "getAllRollouts").returns([]);
 
     const finalizeStub = sinon.stub(manager, "onFinalize");
     const telemetrySpy = sinon.spy(manager, "sendValidationFailedTelemetry");
@@ -857,8 +857,8 @@ add_task(async function test_updateRecipes_featureValidationOptOut() {
     sinon.stub(manager, "onRecipe");
     sinon.stub(manager, "onFinalize");
     sinon.stub(manager.store, "ready").resolves();
-    sinon.stub(manager.store, "getAllActiveExperiments").returns([]);
-    sinon.stub(manager.store, "getAllActiveRollouts").returns([]);
+    sinon.stub(manager.store, "getAllActive").returns([]);
+    sinon.stub(manager.store, "getAllRollouts").returns([]);
 
     await loader.init();
     ok(
@@ -909,8 +909,8 @@ add_task(async function test_updateRecipes_invalidFeature_mismatch() {
   sinon.stub(manager, "onRecipe");
   sinon.stub(manager, "onFinalize");
   sinon.stub(manager.store, "ready").resolves();
-  sinon.stub(manager.store, "getAllActiveExperiments").returns([]);
-  sinon.stub(manager.store, "getAllActiveRollouts").returns([]);
+  sinon.stub(manager.store, "getAllActive").returns([]);
+  sinon.stub(manager.store, "getAllRollouts").returns([]);
 
   const telemetrySpy = sinon.stub(manager, "sendValidationFailedTelemetry");
   const targetingSpy = sinon.spy(loader, "checkTargeting");
