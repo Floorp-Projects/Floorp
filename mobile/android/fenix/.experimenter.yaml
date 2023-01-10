@@ -74,14 +74,6 @@ nimbus-validation:
     settings-title:
       type: string
       description: The title of displayed in the Settings screen and app menu.
-pre-permission-notification-prompt:
-  description: A feature that shows the pre-permission notification prompt.
-  hasExposure: true
-  exposureDescription: ""
-  variables:
-    enabled:
-      type: boolean
-      description: "if true, the pre-permission notification prompt is shown to the user."
 re-engagement-notification:
   description: A feature that shows the re-enagement notification if the user is inactive.
   hasExposure: true
