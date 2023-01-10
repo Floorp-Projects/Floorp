@@ -128,6 +128,12 @@ interface nsIThreadManager : nsISupports
   void idleDispatchToMainThread(in nsIRunnable event,
                                 [optional] in uint32_t timeout);
 
+  /*
+   * A helper method to dispatch a task through nsIDirectTaskDispatcher to the
+   * current thread.
+   */
+  void dispatchDirectTaskToCurrentThread(in nsIRunnable event);
+
   /**
    * Enter a nested event loop on the current thread, waiting on, and
    * processing events until condition.isDone() returns true.

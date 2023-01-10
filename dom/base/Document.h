@@ -3559,7 +3559,7 @@ class Document : public nsINode,
 
   Promise* GetDocumentReadyForIdle(ErrorResult& aRv);
 
-  void BlockUnblockOnloadForPDFJS(bool aBlock) {
+  void BlockUnblockOnloadForSystemOrPDFJS(bool aBlock) {
     if (aBlock) {
       BlockOnload();
     } else {

@@ -148,6 +148,17 @@
         }
       });
 
+      if (this._l10nButtons.length) {
+        document.blockUnblockOnload(true);
+        this._translationReady = document.l10n.ready.then(async () => {
+          try {
+            await document.l10n.translateElements(this._l10nButtons);
+          } finally {
+            document.blockUnblockOnload(false);
+          }
+        });
+      }
+
       // Call postLoadInit for things that we need to initialize after onload.
       if (document.readyState == "complete") {
         this._postLoadInit();
@@ -336,11 +347,20 @@
 
     async _postLoadInit() {
       this._setInitialFocusIfNeeded();
-      if (this._l10nButtons.length) {
-        await document.l10n.translateElements(this._l10nButtons);
+      if (this._translationReady) {
+        await this._translationReady;
       }
-      this._sizeToPreferredSize();
-      await this._snapCursorToDefaultButtonIfNeeded();
+
+      // As a hack to ensure Windows sizes the window correctly,
+      // _sizeToPreferredSize() needs to happen after
+      // AppWindow::OnChromeLoaded. That one is called right after the load
+      // event dispatch but within the same task. Using direct dispatch let's
+      // all this code run before the next task (which might be a task to
+      // paint the window).
+      Services.tm.dispatchDirectTaskToCurrentThread(() => {
+        this._sizeToPreferredSize();
+        this._snapCursorToDefaultButtonIfNeeded();
+      });
     }
 
     // This snaps the cursor to the default button rect on windows, when
