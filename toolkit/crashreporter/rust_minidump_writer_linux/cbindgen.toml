@@ -8,3 +8,8 @@ braces = "SameLine"
 line_length = 100
 tab_width = 2
 language = "C++"
+include_guard = "rust_minidump_writer_linux_ffi_generated_h"
+
+[export.rename]
+"fpregset_t" = "struct _libc_fpstate"
+"signalfd_siginfo" = "siginfo_t"

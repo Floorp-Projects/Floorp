@@ -272,12 +272,32 @@ CrashGenerationServer::ClientEvent(short revents)
     return true;
 
 #if defined(MOZ_OXIDIZED_BREAKPAD)
+  // HACK: We need to transmute Breakpad's crash context into a crash_handler
+  // one. This operation is hard-coded here. When we drop Breakpad this won't be
+  // needed anymore.
+  InternalCrashContext oxidized_crash_context;
+  memcpy(&oxidized_crash_context.context,
+         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, context),
+         sizeof(oxidized_crash_context.context));
+  memcpy(&oxidized_crash_context.float_state,
+         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, float_state),
+         sizeof(oxidized_crash_context.float_state));
+  memcpy(&oxidized_crash_context.siginfo,
+         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, siginfo),
+         sizeof(oxidized_crash_context.siginfo));
+  oxidized_crash_context.pid = crashing_pid;
+  memcpy(&oxidized_crash_context.tid,
+         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, tid),
+         sizeof(oxidized_crash_context.tid));
+
   // Ignoring the return-value here for now.
   // The function always creates an empty minidump file even in case of an error.
   // So we'll report that as well via the callback-functions.
   nsCString error_msg;
   bool res = write_minidump_linux_with_context(minidump_filename.c_str(),
-                                    crashing_pid, crash_context, &error_msg);
+                                               crashing_pid,
+                                               &oxidized_crash_context,
+                                               &error_msg);
 #else
   if (!google_breakpad::WriteMinidump(minidump_filename.c_str(),
                                       crashing_pid, crash_context,

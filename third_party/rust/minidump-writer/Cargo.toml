@@ -1,0 +1,56 @@
+[package]
+name = "minidump-writer"
+version = "0.7.0"
+authors = ["Martin Sirringhaus"]
+description = "Rust rewrite of Breakpad's minidump_writer"
+repository = "https://github.com/rust-minidump/minidump-writer"
+homepage = "https://github.com/rust-minidump/minidump-writer"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+byteorder = "1.3.2"
+cfg-if = "1.0"
+crash-context = "0.5"
+memoffset = "0.7"
+minidump-common = "0.15"
+scroll = "0.11"
+tempfile = "3.1.0"
+thiserror = "1.0.21"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.74"
+goblin = "0.6"
+memmap2 = "0.5"
+
+[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
+nix = { version = "0.25", default-features = false, features = [
+    "mman",
+    "process",
+    "ptrace",
+    "user",
+] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Binds some additional mac specifics not in libc
+mach2 = "0.4"
+
+# Additional bindings to Windows specific APIs. Note we don't use windows-sys
+# due to massive version churn
+[target.'cfg(target_os = "windows")'.dependencies.winapi]
+version = "0.3"
+features = ["minwindef", "processthreadsapi", "winnt"]
+
+[dev-dependencies]
+# Minidump-processor is async so we need an executor
+futures = { version = "0.3", features = ["executor"] }
+minidump = "0.15"
+memmap2 = "0.5"
+
+[target.'cfg(target_os = "macos")'.dev-dependencies]
+# We dump symbols for the `test` executable so that we can validate that minidumps
+# created by this crate can be processed by minidump-processor
+dump_syms = { version = "2.0.0", default-features = false }
+minidump-processor = { version = "0.15", default-features = false }
+similar-asserts = "1.2"
+uuid = "1.0"

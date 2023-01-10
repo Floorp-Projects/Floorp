@@ -114,8 +114,6 @@ TOLERATED_DUPES = {
     # expected to remove the dependency on time altogether).
     "time": 2,
     "tokio": 2,
-    # Bug 1793784 is set to remove the use of nix 0.15 shortly.
-    "nix": 2,
 }
 
 
