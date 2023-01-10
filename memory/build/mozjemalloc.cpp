@@ -838,9 +838,11 @@ class FastDivisor {
 #endif
   }
 
-  // Note that this always occurs in unsigned regardless of m's type.  That
-  // is, m is zero-extended before the operation.
-  inline unsigned divide(unsigned num) const {
+  // Note that this always occurs in uint32_t regardless of m's type.  If m is
+  // a uint16_t it will be zero-extended before the multiplication.  We also use
+  // uint32_t rather than something that could possibly be larger because it is
+  // most-likely the cheapest multiplication.
+  inline uint32_t divide(uint32_t num) const {
     // Check that m was initialised.
     MOZ_ASSERT(m);
     return (num * m) >> p;
@@ -2445,14 +2447,15 @@ inline void* arena_t::ArenaRunRegAlloc(arena_run_t* aRun, arena_bin_t* aBin) {
 
 static inline void arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin,
                                         void* ptr, size_t size) {
-  unsigned diff, regind, elm, bit;
+  uint32_t diff, regind;
+  unsigned elm, bit;
 
   MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
 
   // Avoid doing division with a variable divisor if possible.  Using
   // actual division here can reduce allocator throughput by over 20%!
   diff =
-      (unsigned)((uintptr_t)ptr - (uintptr_t)run - bin->mRunFirstRegionOffset);
+      (uint32_t)((uintptr_t)ptr - (uintptr_t)run - bin->mRunFirstRegionOffset);
 
   MOZ_ASSERT(diff <=
              (static_cast<unsigned>(bin->mRunSizePages) << gPageSize2Pow));
