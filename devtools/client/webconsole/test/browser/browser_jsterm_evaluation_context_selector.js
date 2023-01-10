@@ -217,6 +217,35 @@ add_task(async function() {
     evaluationContextSelectorButton.innerText.includes("Top")
   );
   ok(true, "The context was set to the top document");
+
+  info("Check that autocomplete data are cleared when changing context");
+  await setInputValueForAutocompletion(hud, "foo");
+  ok(
+    hasExactPopupLabels(hud.jsterm.autocompletePopup, ["foobar", "foobaz"]),
+    "autocomplete has expected items from top level document"
+  );
+  checkInputCompletionValue(hud, "bar", `completeNode has expected value`);
+
+  info("Select iframe document");
+  // We need to hide the popup to be able to select the target in the context selector.
+  // Don't use `closeAutocompletePopup` as it uses the Escape key, which explicitely hides
+  // the completion node.
+  const onPopupHidden = hud.jsterm.autocompletePopup.once("popuphidden");
+  hud.jsterm.autocompletePopup.hidePopup();
+  onPopupHidden;
+
+  selectTargetInContextSelector(hud, expectedSecondIframeItem.label);
+  await waitFor(() => getInputCompletionValue(hud) === "");
+  ok(true, `completeNode was cleared`);
+
+  const updated = hud.jsterm.once("autocomplete-updated");
+  EventUtils.sendString("b", hud.iframeWindow);
+  await updated;
+
+  ok(
+    hasExactPopupLabels(hud.jsterm.autocompletePopup, []),
+    "autocomplete data was cleared"
+  );
 });
 
 async function testStoreAsGlobalVariable(
