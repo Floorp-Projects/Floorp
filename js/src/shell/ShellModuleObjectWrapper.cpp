@@ -7,6 +7,7 @@
 #include "shell/ShellModuleObjectWrapper.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Span.h"
 
 #include "jsapi.h"  // JS_GetProperty, JS::Call, JS_NewPlainObject, JS_DefineProperty
 
@@ -32,6 +33,8 @@
 
 using namespace js;
 using namespace js::shell;
+
+using mozilla::Span;
 
 #define DEFINE_CLASS_IMPL(CLASS)                                            \
   CLASS* Shell##CLASS##Wrapper::get() {                                     \
@@ -247,11 +250,10 @@ bool ShellModuleWrapperGetter(JSContext* cx, const JS::CallArgs& args,
   }
 
 template <class T>
-bool VectorToArrayFilter(
-    JSContext* cx, JS::Handle<JSObject*> owner,
-    const GCVector<typename T::Target, 0, SystemAllocPolicy>& from,
-    JS::MutableHandle<JS::Value> to) {
-  size_t length = from.length();
+bool SpanToArrayFilter(JSContext* cx, JS::Handle<JSObject*> owner,
+                       Span<const typename T::Target> from,
+                       JS::MutableHandle<JS::Value> to) {
+  size_t length = from.Length();
   JS::Rooted<ArrayObject*> toArray(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!toArray) {
     return false;
@@ -288,7 +290,7 @@ bool ShellModuleNativeWrapperGetter(JSContext* cx, const JS::CallArgs& args,
 }
 
 #define DEFINE_NATIVE_GETTER_FUNCTIONS(CLASS, PROP, FILTER)                    \
-  static const auto& Shell##CLASS##Wrapper_##PROP##Getter_raw(CLASS* obj) {    \
+  static auto Shell##CLASS##Wrapper_##PROP##Getter_raw(CLASS* obj) {           \
     return obj->PROP();                                                        \
   }                                                                            \
   static bool Shell##CLASS##Wrapper_##PROP##Getter_impl(                       \
@@ -362,15 +364,15 @@ DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, ObjectOrNullValue,
 DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusValue, IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeEvaluationError, Value, IdentFilter)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, requestedModules,
-                               VectorToArrayFilter<ShellRequestedModuleWrapper>)
+                               SpanToArrayFilter<ShellRequestedModuleWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, importEntries,
-                               VectorToArrayFilter<ShellImportEntryWrapper>)
+                               SpanToArrayFilter<ShellImportEntryWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, localExportEntries,
-                               VectorToArrayFilter<ShellExportEntryWrapper>)
+                               SpanToArrayFilter<ShellExportEntryWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries,
-                               VectorToArrayFilter<ShellExportEntryWrapper>)
+                               SpanToArrayFilter<ShellExportEntryWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, starExportEntries,
-                               VectorToArrayFilter<ShellExportEntryWrapper>)
+                               SpanToArrayFilter<ShellExportEntryWrapper>)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsIndex, Uint32OrUndefinedValue,
                         IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsAncestorIndex,

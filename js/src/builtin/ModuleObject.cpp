@@ -40,6 +40,7 @@ using namespace js;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
+using mozilla::Span;
 
 static_assert(ModuleStatus::Unlinked < ModuleStatus::Linking &&
                   ModuleStatus::Linking < ModuleStatus::Linked &&
@@ -641,15 +642,17 @@ class js::CyclicModuleFields {
   uint32_t asyncEvaluatingPostOrder = 0;
   uint32_t pendingAsyncDependencies = 0;
 
+  // Fields describing the layout of exportEntries.
+  uint32_t indirectExportEntriesStart = 0;
+  uint32_t starExportEntriesStart = 0;
+
  public:
   HeapPtr<Value> evaluationError;
   HeapPtr<JSObject*> metaObject;
   HeapPtr<ScriptSourceObject*> scriptSourceObject;
   RequestedModuleVector requestedModules;
   ImportEntryVector importEntries;
-  ExportEntryVector localExportEntries;
-  ExportEntryVector indirectExportEntries;
-  ExportEntryVector starExportEntries;
+  ExportEntryVector exportEntries;
   IndirectBindingMap importBindings;
   UniquePtr<FunctionDeclarationVector> functionDeclarations;
   HeapPtr<PromiseObject*> topLevelCapability;
@@ -660,6 +663,14 @@ class js::CyclicModuleFields {
   CyclicModuleFields();
 
   void trace(JSTracer* trc);
+
+  void initExportEntries(MutableHandle<ExportEntryVector> allEntries,
+                         uint32_t localExportCount,
+                         uint32_t indirectExportCount,
+                         uint32_t starExportCount);
+  Span<const ExportEntry> localExportEntries() const;
+  Span<const ExportEntry> indirectExportEntries() const;
+  Span<const ExportEntry> starExportEntries() const;
 
   void setDfsIndex(uint32_t index);
   Maybe<uint32_t> maybeDfsIndex() const;
@@ -690,15 +701,43 @@ void CyclicModuleFields::trace(JSTracer* trc) {
                     "CyclicModuleFields::scriptSourceObject");
   requestedModules.trace(trc);
   importEntries.trace(trc);
-  localExportEntries.trace(trc);
-  indirectExportEntries.trace(trc);
-  starExportEntries.trace(trc);
+  exportEntries.trace(trc);
   importBindings.trace(trc);
   TraceNullableEdge(trc, &topLevelCapability,
                     "CyclicModuleFields::topLevelCapability");
   TraceNullableEdge(trc, &asyncParentModules,
                     "CyclicModuleFields::asyncParentModules");
   TraceNullableEdge(trc, &cycleRoot, "CyclicModuleFields::cycleRoot");
+}
+
+void CyclicModuleFields::initExportEntries(
+    MutableHandle<ExportEntryVector> allEntries, uint32_t localExportCount,
+    uint32_t indirectExportCount, uint32_t starExportCount) {
+  MOZ_ASSERT(allEntries.length() ==
+             localExportCount + indirectExportCount + starExportCount);
+
+  exportEntries = std::move(allEntries.get());
+  indirectExportEntriesStart = localExportCount;
+  starExportEntriesStart = indirectExportEntriesStart + indirectExportCount;
+}
+
+Span<const ExportEntry> CyclicModuleFields::localExportEntries() const {
+  MOZ_ASSERT(indirectExportEntriesStart <= exportEntries.length());
+  return Span(exportEntries.begin(),
+              exportEntries.begin() + indirectExportEntriesStart);
+}
+
+Span<const ExportEntry> CyclicModuleFields::indirectExportEntries() const {
+  MOZ_ASSERT(indirectExportEntriesStart <= starExportEntriesStart);
+  MOZ_ASSERT(starExportEntriesStart <= exportEntries.length());
+  return Span(exportEntries.begin() + indirectExportEntriesStart,
+              exportEntries.begin() + starExportEntriesStart);
+}
+
+Span<const ExportEntry> CyclicModuleFields::starExportEntries() const {
+  MOZ_ASSERT(starExportEntriesStart <= exportEntries.length());
+  return Span(exportEntries.begin() + starExportEntriesStart,
+              exportEntries.end());
 }
 
 void CyclicModuleFields::setDfsIndex(uint32_t index) {
@@ -799,24 +838,24 @@ const CyclicModuleFields* ModuleObject::cyclicModuleFields() const {
   return const_cast<ModuleObject*>(this)->cyclicModuleFields();
 }
 
-const RequestedModuleVector& ModuleObject::requestedModules() const {
+Span<const RequestedModule> ModuleObject::requestedModules() const {
   return cyclicModuleFields()->requestedModules;
 }
 
-const ImportEntryVector& ModuleObject::importEntries() const {
+Span<const ImportEntry> ModuleObject::importEntries() const {
   return cyclicModuleFields()->importEntries;
 }
 
-const ExportEntryVector& ModuleObject::localExportEntries() const {
-  return cyclicModuleFields()->localExportEntries;
+Span<const ExportEntry> ModuleObject::localExportEntries() const {
+  return cyclicModuleFields()->localExportEntries();
 }
 
-const ExportEntryVector& ModuleObject::indirectExportEntries() const {
-  return cyclicModuleFields()->indirectExportEntries;
+Span<const ExportEntry> ModuleObject::indirectExportEntries() const {
+  return cyclicModuleFields()->indirectExportEntries();
 }
 
-const ExportEntryVector& ModuleObject::starExportEntries() const {
-  return cyclicModuleFields()->starExportEntries;
+Span<const ExportEntry> ModuleObject::starExportEntries() const {
+  return cyclicModuleFields()->starExportEntries();
 }
 
 void ModuleObject::initFunctionDeclarations(
@@ -934,16 +973,12 @@ void ModuleObject::setInitialEnvironment(
 void ModuleObject::initImportExportData(
     MutableHandle<RequestedModuleVector> requestedModules,
     MutableHandle<ImportEntryVector> importEntries,
-    MutableHandle<ExportEntryVector> localExportEntries,
-    MutableHandle<ExportEntryVector> indirectExportEntries,
-    MutableHandle<ExportEntryVector> starExportEntries) {
+    MutableHandle<ExportEntryVector> exportEntries, uint32_t localExportCount,
+    uint32_t indirectExportCount, uint32_t starExportCount) {
   cyclicModuleFields()->requestedModules = std::move(requestedModules.get());
   cyclicModuleFields()->importEntries = std::move(importEntries.get());
-  cyclicModuleFields()->localExportEntries =
-      std::move(localExportEntries.get());
-  cyclicModuleFields()->indirectExportEntries =
-      std::move(indirectExportEntries.get());
-  cyclicModuleFields()->starExportEntries = std::move(starExportEntries.get());
+  cyclicModuleFields()->initExportEntries(exportEntries, localExportCount,
+                                          indirectExportCount, starExportCount);
 }
 
 /* static */
@@ -1492,7 +1527,7 @@ bool frontend::StencilModuleMetadata::createExportEntries(
     Handle<ModuleRequestVector> moduleRequests,
     const frontend::StencilModuleMetadata::EntryVector& input,
     MutableHandle<ExportEntryVector> output) const {
-  if (!output.reserve(input.length())) {
+  if (!output.reserve(output.length() + input.length())) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -1575,22 +1610,21 @@ bool frontend::StencilModuleMetadata::initModule(
     return false;
   }
 
-  Rooted<ExportEntryVector> localExportEntriesVector(cx);
+  Rooted<ExportEntryVector> exportEntriesVector(cx);
   if (!createExportEntries(cx, atomCache, moduleRequestsVector,
-                           localExportEntries, &localExportEntriesVector)) {
+                           localExportEntries, &exportEntriesVector)) {
     return false;
   }
 
   Rooted<ExportEntryVector> indirectExportEntriesVector(cx);
   if (!createExportEntries(cx, atomCache, moduleRequestsVector,
-                           indirectExportEntries,
-                           &indirectExportEntriesVector)) {
+                           indirectExportEntries, &exportEntriesVector)) {
     return false;
   }
 
   Rooted<ExportEntryVector> starExportEntriesVector(cx);
   if (!createExportEntries(cx, atomCache, moduleRequestsVector,
-                           starExportEntries, &starExportEntriesVector)) {
+                           starExportEntries, &exportEntriesVector)) {
     return false;
   }
 
@@ -1610,8 +1644,9 @@ bool frontend::StencilModuleMetadata::initModule(
   module->initAsyncSlots(cx, isAsync, asyncParentModulesList);
 
   module->initImportExportData(
-      &requestedModulesVector, &importEntriesVector, &localExportEntriesVector,
-      &indirectExportEntriesVector, &starExportEntriesVector);
+      &requestedModulesVector, &importEntriesVector, &exportEntriesVector,
+      localExportEntries.length(), indirectExportEntries.length(),
+      starExportEntries.length());
 
   return true;
 }
