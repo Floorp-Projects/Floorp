@@ -3659,15 +3659,22 @@ void nsWindow::OnFullscreenWillChange(bool aFullScreen) {
   }
 }
 
-void nsWindow::OnFullscreenChanged(bool aFullScreen) {
+void nsWindow::OnFullscreenChanged(nsSizeMode aOldSizeMode, bool aFullScreen) {
   // If we are going fullscreen, the window size continues to change
   // and the window will be reflow again then.
   UpdateNonClientMargins(/* Reflow */ !aFullScreen);
 
-  // Will call hide chrome, reposition window. Note this will
-  // also cache dimensions for restoration, so it should only
-  // be called once per fullscreen request.
-  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen);
+  // Hide chrome and reposition window. Note this will also cache dimensions for
+  // restoration, so it should only be called once per fullscreen request.
+  //
+  // Don't do this when minimized, since our bounds make no sense then, nor when
+  // coming back from that state.
+  const bool toOrFromMinimized =
+      mFrameState->GetSizeMode() == nsSizeMode_Minimized ||
+      aOldSizeMode == nsSizeMode_Minimized;
+  if (!toOrFromMinimized) {
+    InfallibleMakeFullScreen(aFullScreen);
+  }
 
   if (mIsVisible && !aFullScreen &&
       mFrameState->GetSizeMode() == nsSizeMode_Normal) {
@@ -9375,7 +9382,8 @@ void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
     mWindow->OnFullscreenWillChange(fullscreen);
   }
 
-  mLastSizeMode = mSizeMode;
+  const auto oldSizeMode = mSizeMode;
+  mLastSizeMode = oldSizeMode;
   mSizeMode = aMode;
 
   if (mWindow->mIsVisible) {
@@ -9389,7 +9397,7 @@ void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
   }
 
   if (fullscreenChange) {
-    mWindow->OnFullscreenChanged(fullscreen);
+    mWindow->OnFullscreenChanged(oldSizeMode, fullscreen);
   }
 }
 
