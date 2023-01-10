@@ -12,9 +12,6 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
-  RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
-  SpecialMessageActions:
-    "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -25,8 +22,7 @@ XPCOMUtils.defineLazyGetter(
 
 const Spotlight = {
   sendUserEventTelemetry(event, message, dispatch) {
-    const message_id =
-      message.template === "multistage" ? message.content.id : message.id;
+    const message_id = message.content.id;
     const ping = {
       message_id,
       event,
@@ -68,8 +64,6 @@ const Spotlight = {
     this.sendUserEventTelemetry("IMPRESSION", message, dispatchCFRAction);
     dispatchCFRAction({ type: "IMPRESSION", data: message });
 
-    const unload = await lazy.RemoteImages.patchMessage(message.content.logo);
-
     if (message.content?.modal === "tab") {
       let { closedPromise } = win.gBrowser.getTabDialogBox(browser).open(
         spotlight_url,
@@ -84,32 +78,8 @@ const Spotlight = {
       await win.gDialogBox.open(spotlight_url, [message.content, params]);
     }
 
-    if (unload) {
-      unload();
-    }
-
     // If dismissed report telemetry and exit
-    if (!params.secondaryBtn && !params.primaryBtn) {
-      this.sendUserEventTelemetry("DISMISS", message, dispatchCFRAction);
-      return true;
-    }
-
-    if (params.secondaryBtn) {
-      this.sendUserEventTelemetry("DISMISS", message, dispatchCFRAction);
-      lazy.SpecialMessageActions.handleAction(
-        message.content.body.secondary.action,
-        browser
-      );
-    }
-
-    if (params.primaryBtn) {
-      this.sendUserEventTelemetry("CLICK", message, dispatchCFRAction);
-      lazy.SpecialMessageActions.handleAction(
-        message.content.body.primary.action,
-        browser
-      );
-    }
-
+    this.sendUserEventTelemetry("DISMISS", message, dispatchCFRAction);
     return true;
   },
 };
