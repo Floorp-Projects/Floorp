@@ -784,61 +784,59 @@ class SizeClass {
 //
 // becomes
 //
-//   (X * Inv) >> SIZE_INV_SHIFT
+//   (X * m) >> p
 //
-// Where Inv is calculated during the FastDivisor constructor similarly to:
+// Where m is calculated during the FastDivisor constructor similarly to:
 //
-//   Inv = 2^SIZE_INV_SHIFT / D
+//   m = 2^p / D
 //
 template <typename T>
 class FastDivisor {
  private:
-  // The shift amount is chosen to minimise the size of inv while
+  // The shift amount (p) is chosen to minimise the size of m while
   // working for divisors up to 65536 in steps of 16.  I arrived at 17
-  // experimentally.  I wanted a low number to minimise the range of inv
+  // experimentally.  I wanted a low number to minimise the range of m
   // so it can fit in a uint16_t, 16 didn't work but 17 worked perfectly.
   //
   // We'd need to increase this if we allocated memory on smaller boundaries
   // than 16.
-  static const unsigned divide_inv_shift = 17;
+  static const unsigned p = 17;
 
   // We can fit the inverted divisor in 16 bits, but we template it here for
   // convenience.
-  T inv;
+  T m;
 
  public:
   // Needed so mBins can be constructed.
-  FastDivisor() : inv(0) {}
+  FastDivisor() : m(0) {}
 
   FastDivisor(unsigned div, unsigned max) {
     MOZ_ASSERT(div <= max);
 
     // divide_inv_shift is large enough.
-    MOZ_ASSERT((1U << divide_inv_shift) >= div);
+    MOZ_ASSERT((1U << p) >= div);
 
-    // The calculation here for inv is formula 26 from Section
+    // The calculation here for m is formula 26 from Section
     // 10-9 "Unsigned Division by Divisors >= 1" in
     // Henry S. Warren, Jr.'s Hacker's Delight, 2nd Ed.
-    unsigned inv_ = ((1U << divide_inv_shift) + div - 1 -
-                     (((1U << divide_inv_shift) - 1) % div)) /
-                    div;
+    unsigned m_ = ((1U << p) + div - 1 - (((1U << p) - 1) % div)) / div;
 
-    // Make sure that max * inv does not overflow.
-    MOZ_DIAGNOSTIC_ASSERT(max < UINT_MAX / inv_);
+    // Make sure that max * m does not overflow.
+    MOZ_DIAGNOSTIC_ASSERT(max < UINT_MAX / m_);
 
-    MOZ_ASSERT(inv_ <= std::numeric_limits<T>::max());
-    inv = static_cast<T>(inv_);
+    MOZ_ASSERT(m_ <= std::numeric_limits<T>::max());
+    m = static_cast<T>(m_);
 
-    // Initialisation made inv non-zero.
-    MOZ_ASSERT(inv);
+    // Initialisation made m non-zero.
+    MOZ_ASSERT(m);
   }
 
-  // Note that this always occurs in unsigned regardless of inv's type.  That
-  // is, inv is zero-extended before the operation.
+  // Note that this always occurs in unsigned regardless of m's type.  That
+  // is, m is zero-extended before the operation.
   inline unsigned divide(unsigned num) const {
-    // Check that inv was initialised.
-    MOZ_ASSERT(inv);
-    return (num * inv) >> divide_inv_shift;
+    // Check that m was initialised.
+    MOZ_ASSERT(m);
+    return (num * m) >> p;
   }
 };
 
