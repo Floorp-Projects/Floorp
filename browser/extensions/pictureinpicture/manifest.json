@@ -4,7 +4,7 @@
     "description": "Fixes for web compatibility with Picture-in-Picture",
     "version": "1.0.0",
   
-    "applications": {
+    "browser_specific_settings": {
       "gecko": {
         "id": "pictureinpicture@mozilla.org",
         "strict_min_version": "88.0a1"
