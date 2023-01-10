@@ -20,8 +20,7 @@ class BlobSet final {
  public:
   [[nodiscard]] nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
 
-  [[nodiscard]] nsresult AppendUTF8String(const nsACString& aUTF8String,
-                                          bool nativeEOL);
+  [[nodiscard]] nsresult AppendString(const nsAString& aString, bool nativeEOL);
 
   [[nodiscard]] nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
 

@@ -253,7 +253,7 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
 
   aError.MightThrowJSException();
 
-  ArrayBufferViewOrArrayBufferOrBlobOrUTF8StringOrWriteParams data;
+  ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams data;
   if (!data.Init(aCx, aChunk)) {
     aError.StealExceptionFromJSContext(aCx);
     return nullptr;
@@ -353,7 +353,7 @@ JSObject* FileSystemWritableFileStream::WrapObject(
 // WebIDL Interface
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Write(
-    const ArrayBufferViewOrArrayBufferOrBlobOrUTF8StringOrWriteParams& aData,
+    const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
     ErrorResult& aError) {
   // https://fs.spec.whatwg.org/#dom-filesystemwritablefilestream-write
   // Step 1. Let writer be the result of getting a writer for this.
@@ -502,11 +502,11 @@ void FileSystemWritableFileStream::Write(const T& aData,
       return Span{buffer.Data(), buffer.Length()};
     }();
 
-    nsCString dataBuffer;
-    QM_TRY(MOZ_TO_RESULT(dataBuffer.Assign(
-               AsChars(dataSpan).data(), dataSpan.Length(), mozilla::fallible)),
-           rejectAndReturn);
-    QM_TRY_INSPECT(const auto& written, WriteBuffer(dataBuffer, aPosition),
+    auto maybeBuffer = Buffer<char>::CopyFrom(AsChars(dataSpan));
+    QM_TRY(MOZ_TO_RESULT(maybeBuffer.isSome()), rejectAndReturn);
+
+    QM_TRY_INSPECT(const auto& written,
+                   WriteBuffer(maybeBuffer.extract(), aPosition),
                    rejectAndReturn);
 
     LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
@@ -535,10 +535,19 @@ void FileSystemWritableFileStream::Write(const T& aData,
   }
 
   // Step 3.4.8 Otherwise ...
-  MOZ_ASSERT(aData.IsUTF8String());
+  MOZ_ASSERT(aData.IsUSVString());
 
-  QM_TRY_INSPECT(const auto& written,
-                 WriteBuffer(aData.GetAsUTF8String(), aPosition),
+  uint32_t count;
+  UniquePtr<char[]> string(
+      ToNewUTF8String(aData.GetAsUSVString(), &count, fallible));
+  QM_TRY((MOZ_TO_RESULT(string.get()).mapErr([](const nsresult) {
+           return NS_ERROR_OUT_OF_MEMORY;
+         })),
+         rejectAndReturn);
+
+  Buffer<char> buffer(std::move(string), count);
+
+  QM_TRY_INSPECT(const auto& written, WriteBuffer(std::move(buffer), aPosition),
                  rejectAndReturn);
 
   LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
@@ -590,17 +599,19 @@ void FileSystemWritableFileStream::Truncate(uint64_t aSize,
 }
 
 Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteBuffer(
-    const nsACString& aBuffer, const Maybe<uint64_t> aPosition) {
+    Buffer<char>&& aBuffer, const Maybe<uint64_t> aPosition) {
   MOZ_ASSERT(!mClosed);
 
-  const auto checkedLength = CheckedInt<PRInt32>(aBuffer.Length());
+  Buffer<char> buffer = std::move(aBuffer);
+
+  const auto checkedLength = CheckedInt<PRInt32>(buffer.Length());
   QM_TRY(MOZ_TO_RESULT(checkedLength.isValid()));
 
   if (aPosition) {
     QM_TRY(SeekPosition(*aPosition));
   }
 
-  return PR_Write(mFileDesc, aBuffer.BeginReading(), checkedLength.value());
+  return PR_Write(mFileDesc, buffer.Elements(), checkedLength.value());
 }
 
 Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteStream(
@@ -608,9 +619,15 @@ Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteStream(
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(!mClosed);
 
-  nsCString rawBuffer;
-  QM_TRY(MOZ_TO_RESULT(NS_ReadInputStreamToString(aStream, rawBuffer, -1)));
-  QM_TRY_RETURN(WriteBuffer(rawBuffer, aPosition));
+  void* rawBuffer = nullptr;
+  uint64_t length;
+  QM_TRY(MOZ_TO_RESULT(
+      NS_ReadInputStreamToBuffer(aStream, &rawBuffer, -1, &length)));
+
+  Buffer<char> buffer(UniquePtr<char[]>(reinterpret_cast<char*>(rawBuffer)),
+                      length);
+
+  QM_TRY_RETURN(WriteBuffer(std::move(buffer), aPosition));
 }
 
 Result<Ok, nsresult> FileSystemWritableFileStream::SeekPosition(

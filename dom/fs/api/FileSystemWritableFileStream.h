@@ -20,11 +20,10 @@ class ErrorResult;
 
 namespace dom {
 
-class ArrayBufferViewOrArrayBufferOrBlobOrUTF8StringOrWriteParams;
+class ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams;
 class Blob;
 class FileSystemManager;
 class FileSystemWritableFileStreamChild;
-class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
 class Promise;
 
 class FileSystemWritableFileStream final : public WritableStream {
@@ -56,7 +55,7 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   // WebIDL Interface
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Write(
-      const ArrayBufferViewOrArrayBufferOrBlobOrUTF8StringOrWriteParams& aData,
+      const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
       ErrorResult& aError);
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Seek(uint64_t aPosition,
@@ -82,7 +81,7 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void Truncate(uint64_t aSize, RefPtr<Promise> aPromise);
 
-  Result<uint64_t, nsresult> WriteBuffer(const nsACString& aBuffer,
+  Result<uint64_t, nsresult> WriteBuffer(Buffer<char>&& aBuffer,
                                          const Maybe<uint64_t> aPosition);
 
   Result<uint64_t, nsresult> WriteStream(nsCOMPtr<nsIInputStream> aStream,
