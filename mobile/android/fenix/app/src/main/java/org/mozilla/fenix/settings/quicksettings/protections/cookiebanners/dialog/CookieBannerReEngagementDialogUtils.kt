@@ -32,7 +32,7 @@ object CookieBannerReEngagementDialogUtils {
             CONTROL_VARIANT -> CookieBannerDialogVariant(
                 title = context.getString(R.string.reduce_cookie_banner_control_experiment_dialog_title),
                 message = context.getString(
-                    R.string.reduce_cookie_banner_control_experiment_dialog_body,
+                    R.string.reduce_cookie_banner_control_experiment_dialog_body_1,
                 ),
                 positiveTextButton = context.getString(
                     R.string.reduce_cookie_banner_control_experiment_dialog_change_setting_button,
@@ -41,7 +41,7 @@ object CookieBannerReEngagementDialogUtils {
             VARIANT_ONE -> CookieBannerDialogVariant(
                 title = context.getString(R.string.reduce_cookie_banner_variant_1_experiment_dialog_title),
                 message = context.getString(
-                    R.string.reduce_cookie_banner_variant_1_experiment_dialog_body,
+                    R.string.reduce_cookie_banner_variant_1_experiment_dialog_body_1,
                     context.getString(R.string.app_name),
                 ),
                 positiveTextButton = context.getString(
@@ -51,7 +51,7 @@ object CookieBannerReEngagementDialogUtils {
             VARIANT_TWO -> CookieBannerDialogVariant(
                 title = context.getString(R.string.reduce_cookie_banner_variant_2_experiment_dialog_title),
                 message = context.getString(
-                    R.string.reduce_cookie_banner_variant_2_experiment_dialog_body,
+                    R.string.reduce_cookie_banner_variant_2_experiment_dialog_body_1,
                     context.getString(R.string.app_name),
                 ),
                 positiveTextButton = context.getString(
@@ -62,7 +62,7 @@ object CookieBannerReEngagementDialogUtils {
                 CookieBannerDialogVariant(
                     title = context.getString(R.string.reduce_cookie_banner_control_experiment_dialog_title),
                     message = context.getString(
-                        R.string.reduce_cookie_banner_control_experiment_dialog_body,
+                        R.string.reduce_cookie_banner_control_experiment_dialog_body_1,
                     ),
                     positiveTextButton = context.getString(
                         R.string.reduce_cookie_banner_control_experiment_dialog_change_setting_button,

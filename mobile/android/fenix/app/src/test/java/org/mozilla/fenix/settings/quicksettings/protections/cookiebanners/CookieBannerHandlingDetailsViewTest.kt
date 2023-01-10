@@ -152,7 +152,7 @@ class CookieBannerHandlingDetailsViewTest {
         val appName = testContext.getString(R.string.app_name)
         val expectedText =
             testContext.getString(
-                R.string.reduce_cookie_banner_details_panel_description_on_for_site,
+                R.string.reduce_cookie_banner_details_panel_description_on_for_site_1,
                 appName,
                 appName,
             )

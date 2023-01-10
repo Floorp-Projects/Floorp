@@ -5,6 +5,5 @@
     <org.mozilla.fenix.settings.CookieBannersSwitchPreference
         android:defaultValue="false"
         android:key="@string/pref_key_cookie_banner_v1"
-        android:summary="@string/reduce_cookie_banner_summary"
         android:title="@string/reduce_cookie_banner_option" />
 </androidx.preference.PreferenceScreen>

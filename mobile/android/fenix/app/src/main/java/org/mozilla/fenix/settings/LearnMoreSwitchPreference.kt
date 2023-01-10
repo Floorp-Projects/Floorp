@@ -28,11 +28,17 @@ abstract class LearnMoreSwitchPreference(context: Context, attrs: AttributeSet?)
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
-
+        holder.itemView.isClickable = false
         val switch = holder.findViewById(R.id.learn_more_switch) as SwitchCompat
 
         switch.run {
             isChecked = getSwitchValue()
+            setOnCheckedChangeListener { _, isChecked ->
+                onPreferenceChangeListener.onPreferenceChange(
+                    this@LearnMoreSwitchPreference,
+                    isChecked,
+                )
+            }
         }
 
         getDescription()?.let {
