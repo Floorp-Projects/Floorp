@@ -8,7 +8,6 @@
 import argparse
 import json
 import os
-import sys
 import textwrap
 
 # Command files like this are listed in build/mach_initialize.py in alphabetical
@@ -236,7 +235,6 @@ def gather_hazard_data(command_context, **kwargs):
             source = "{srcdir}"
             sixgill = "{sixgill_dir}/usr/libexec/sixgill"
             sixgill_bin = "{sixgill_dir}/usr/bin"
-            gcc_bin = "{gcc_dir}/bin"
         """
         ).format(
             script_dir=script_dir(command_context),
@@ -256,11 +254,16 @@ def gather_hazard_data(command_context, **kwargs):
         ]
     )
     args = [
-        sys.executable,
-        os.path.join(script_dir(command_context), "analyze.py"),
-        "dbs",
-        "-v",
+        os.path.join(script_dir(command_context), "run_complete"),
+        "--foreground",
+        "--no-logs",
+        "--build-root=" + objdir,
+        "--wrap-dir=" + sixgill_dir() + "/usr/libexec/sixgill/scripts/wrap_gcc",
+        "--work-dir=work",
+        "-b",
+        sixgill_dir() + "/usr/bin",
         "--buildcommand=" + buildscript,
+        ".",
     ]
 
     return command_context.run_process(args=args, cwd=work_dir, pass_thru=True)
