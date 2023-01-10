@@ -68,6 +68,11 @@ object FeatureFlags {
     const val saveToPDF = true
 
     /**
+     * Enables the notification pre permission prompt.
+     */
+    val notificationPrePermissionPromptEnabled = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables storage maintenance feature.
      *
      * Feature flag tracking: https://github.com/mozilla-mobile/fenix/issues/27759

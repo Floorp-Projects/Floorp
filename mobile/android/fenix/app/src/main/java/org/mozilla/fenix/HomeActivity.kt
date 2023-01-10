@@ -28,6 +28,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -85,6 +86,7 @@ import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
+import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -107,6 +109,7 @@ import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
+import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.Performance
@@ -320,6 +323,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
 
+        showNotificationPermissionPromptIfRequired()
+
         components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
             lifecycleScope.launch(IO) {
                 // If we're authenticated, kick-off a sync and a device state refresh.
@@ -335,6 +340,25 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             "HomeActivity.onCreate",
         )
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
+    }
+
+    /**
+     * On Android 13 or above, prompt the user for notification permission at the start.
+     * Show the pre permission dialog to the user once if the notification are not enabled.
+     */
+    private fun showNotificationPermissionPromptIfRequired() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !NotificationManagerCompat.from(applicationContext).areNotificationsEnabledSafe()
+        ) {
+            if (settings().notificationPrePermissionPromptEnabled) {
+                if (!settings().isNotificationPrePermissionShown && settings().numberOfAppLaunches <= 1) {
+                    navHost.navController.navigate(NavGraphDirections.actionGlobalHomeNotificationPermissionDialog())
+                }
+            } else {
+                // This will trigger the notification permission system dialog as app targets sdk 32.
+                ensureMarketingChannelExists(applicationContext)
+            }
+        }
     }
 
     private fun checkAndExitPiP() {
