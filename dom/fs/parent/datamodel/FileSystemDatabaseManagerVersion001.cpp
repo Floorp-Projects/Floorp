@@ -868,13 +868,12 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
       return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
     }
 
-    QM_TRY_UNWRAP(DebugOnly<bool> isRemoved, RemoveFile(destination));
-    MOZ_ASSERT(isRemoved);
-  } else {
-    QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, destination));
-    if (exists) {
-      return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
-    }
+    return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
+  }
+
+  QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, destination));
+  if (exists) {
+    return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
   }
 
   mozStorageTransaction transaction(
@@ -930,13 +929,12 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
       return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
     }
 
-    QM_TRY_UNWRAP(DebugOnly<bool> isRemoved, RemoveFile(aNewDesignation));
-    MOZ_ASSERT(isRemoved);
-  } else {
-    QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, aNewDesignation));
-    if (exists) {
-      return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
-    }
+    return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
+  }
+
+  QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, aNewDesignation));
+  if (exists) {
+    return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
   }
 
   // To prevent cyclic paths, we check that there is no path from
