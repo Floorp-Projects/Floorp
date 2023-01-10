@@ -7,18 +7,11 @@
 
 <script type="text/javascript">
 
-var mainWindow;
+const contentPage = "http://mochi.test:8888/chrome/dom/fs/test/mochitest/page_blank.html";
 
-function startTest() {
-  mainWindow = window.browsingContext.topChromeWindow;
-
-  doTest();
-}
-
-var contentPage = "http://mochi.test:8888/chrome/dom/fs/test/mochitest/page_blank.html";
-
-function testOnWindow(aIsPrivate, aCallback) {
-  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+function testOnPrivateWindow(aCallback) {
+  let mainWindow = window.browsingContext.topChromeWindow;
+  let win = mainWindow.OpenBrowserWindow({private: true});
   win.addEventListener("load", function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href == "about:privatebrowsing") {
@@ -34,16 +27,21 @@ function testOnWindow(aIsPrivate, aCallback) {
 }
 
 function doTest() {
-  testOnWindow(true, function(privateWin) {
+  testOnPrivateWindow(async function(privateWin) {
     try {
-      let root = privateWin.navigator.storage.getDirectory();
+      let root = await privateWin.navigator.storage.getDirectory();
       ok(false, "Didn't block storage.getDirectory() in private browsing");
     } catch(e) {
       ok(true, "blocked storage.getDirectory() in private browsing");
+      is(e.name, "SecurityError", "Threw right type error");
     }
     privateWin.close();
     SimpleTest.finish();
   });
+}
+
+function startTest() {
+  SpecialPowers.pushPrefEnv({'set': [["dom.fs.enabled", true]]}, doTest);
 }
 
 SimpleTest.waitForExplicitFinish();

@@ -22,6 +22,11 @@ namespace mozilla::dom::fs::test {
 class TestFileSystemDirectoryHandle : public ::testing::Test {
  protected:
   void SetUp() override {
+    // TODO: Fix the test to not depend on CreateFileSystemManagerParent
+    // failure because of the pref set to false.
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    prefs->SetBoolPref("dom.fs.enabled", false);
+
     mRequestHandler = MakeUnique<MockFileSystemRequestHandler>();
     mMetadata = FileSystemEntryMetadata("dir"_ns, u"Directory"_ns,
                                         /* directory */ true);
@@ -30,6 +35,9 @@ class TestFileSystemDirectoryHandle : public ::testing::Test {
   }
 
   void TearDown() override {
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    prefs->SetBoolPref("dom.fs.enabled", true);
+
     if (!mManager->IsShutdown()) {
       mManager->Shutdown();
     }
