@@ -76,20 +76,6 @@ class AccGroupInfo {
   AccGroupInfo(const AccGroupInfo&) = delete;
   AccGroupInfo& operator=(const AccGroupInfo&) = delete;
 
-  static mozilla::a11y::role BaseRole(mozilla::a11y::role aRole) {
-    if (aRole == mozilla::a11y::roles::CHECK_MENU_ITEM ||
-        aRole == mozilla::a11y::roles::PARENT_MENUITEM ||
-        aRole == mozilla::a11y::roles::RADIO_MENU_ITEM) {
-      return mozilla::a11y::roles::MENUITEM;
-    }
-
-    if (aRole == mozilla::a11y::roles::CHECK_RICH_OPTION) {
-      return mozilla::a11y::roles::RICH_OPTION;
-    }
-
-    return aRole;
-  }
-
   /**
    * Return true if the given parent and child roles should have their node
    * relations reported.
