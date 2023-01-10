@@ -101,13 +101,20 @@ function hideStatusbar() {
 
     let statuspanel = document.getElementById("statuspanel");
     let statusText = document.getElementById("status-text");
-    const observer = new MutationObserver(function(mutationsList, observer) {
-        if (!Services.prefs.getBoolPref("browser.display.statusbar", false)) return;
-        if (statuspanel.getAttribute("inactive") === "true") {
-            statusText.style.visibility = "hidden";
-        } else {
-            statusText.style.visibility = "";
+    let observer;
+    let onPrefChanged = function () {
+        observer?.disconnect();
+        statusText.style.visibility = "";
+        if (Services.prefs.getBoolPref("browser.display.statusbar", false)) {
+            observer = new MutationObserver(function(mutationsList, observer) {
+                if (statuspanel.getAttribute("inactive") === "true") {
+                    statusText.style.visibility = "hidden";
+                } else {
+                    statusText.style.visibility = "";
+                }
+            });
+            observer.observe(statuspanel, { attributes: true });
         }
-    });
-    observer.observe(statuspanel, { attributes: true });
+    }
+    Services.prefs.addObserver("browser.display.statusbar", onPrefChanged);
 }
