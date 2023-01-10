@@ -9,6 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 const PanelPosition = "bottomright topright";
@@ -441,7 +442,13 @@ export var ScreenshotsUtils = {
         source: dataUrl,
         target: targetFile,
       });
-      const list = await lazy.Downloads.getList(lazy.Downloads.ALL);
+
+      let isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(
+        browser.ownerGlobal
+      );
+      const list = await lazy.Downloads.getList(
+        isPrivate ? lazy.Downloads.PRIVATE : lazy.Downloads.PUBLIC
+      );
       // add the download to the download list in the Downloads list in the Browser UI
       list.add(download);
 
