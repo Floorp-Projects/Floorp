@@ -1826,12 +1826,14 @@ stop_and_join_render_thread(cubeb_stream * stm, ShutdownPhase phase)
 void
 wasapi_destroy(cubeb * context)
 {
-  auto_lock lock(context->lock);
-  XASSERT(!context->device_collection_enumerator &&
-          !context->collection_notification_client);
+  {
+    auto_lock lock(context->lock);
+    XASSERT(!context->device_collection_enumerator &&
+            !context->collection_notification_client);
 
-  if (context->device_ids) {
-    cubeb_strings_destroy(context->device_ids);
+    if (context->device_ids) {
+      cubeb_strings_destroy(context->device_ids);
+    }
   }
 
   delete context;
