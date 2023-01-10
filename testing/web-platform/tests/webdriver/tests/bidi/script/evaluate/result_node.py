@@ -148,7 +148,7 @@ page_data = """
     ]
 )
 async def test_element_node(bidi_session, inline, top_context, expression, expected):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -202,7 +202,7 @@ async def test_element_node(bidi_session, inline, top_context, expression, expec
     ]
 )
 async def test_attribute_node(bidi_session, inline, top_context, expression, expected):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -238,7 +238,7 @@ async def test_attribute_node(bidi_session, inline, top_context, expression, exp
     ]
 )
 async def test_text_node(bidi_session, inline, top_context, expression, expected):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -276,7 +276,7 @@ async def test_text_node(bidi_session, inline, top_context, expression, expected
 async def test_cdata_node(bidi_session, inline, new_tab, expression, expected):
     xml_page = inline("""<foo>CDATA section: <![CDATA[ < > & ]]>.</foo>""", doctype="xml")
 
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=new_tab['context'], url=xml_page, wait="complete"
     )
 
@@ -316,7 +316,7 @@ async def test_processing_instruction_node(
 ):
     xml_page = inline("""<foo></foo>""", doctype="xml")
 
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=new_tab['context'], url=xml_page, wait="complete"
     )
 
@@ -352,7 +352,7 @@ async def test_processing_instruction_node(
     ]
 )
 async def test_comment_node(bidi_session, inline, top_context, expression, expected):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -404,7 +404,7 @@ async def test_comment_node(bidi_session, inline, top_context, expression, expec
     ]
 )
 async def test_document_node(bidi_session, inline, top_context, expression, expected):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -439,7 +439,7 @@ async def test_document_node(bidi_session, inline, top_context, expression, expe
     ]
 )
 async def test_doctype_node(bidi_session, inline, top_context, expression, expected):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -476,7 +476,7 @@ async def test_doctype_node(bidi_session, inline, top_context, expression, expec
 async def test_document_fragment_node(
     bidi_session, inline, top_context, expression, expected
 ):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -491,7 +491,7 @@ async def test_document_fragment_node(
 
 @pytest.mark.asyncio
 async def test_node_within_object(bidi_session, inline, top_context):
-    result = await bidi_session.browsing_context.navigate(
+    await bidi_session.browsing_context.navigate(
         context=top_context['context'], url=inline(page_data), wait="complete"
     )
 
@@ -517,3 +517,70 @@ async def test_node_within_object(bidi_session, inline, top_context):
             }]
         ]
     }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "expression, expected",
+    [
+        (
+            "document.getElementsByTagName('span')",
+            {
+                "type": "htmlcollection",
+                "value": [
+                    {
+                        "type": "node",
+                        "value": {
+                            "attributes": {},
+                            "childNodeCount": 0,
+                            "children": None,
+                            "localName": "span",
+                            "namespaceURI": "http://www.w3.org/1999/xhtml",
+                            "nodeType": 1
+                        }
+                    },
+                ]
+            }
+        ),
+        (
+            "document.querySelectorAll('span')",
+            {
+                "type": "nodelist",
+                "value": [
+                    {
+                        "type": "node",
+                        "value": {
+                            "attributes": {},
+                            "childNodeCount": 0,
+                            "children": None,
+                            "localName": "span",
+                            "namespaceURI": "http://www.w3.org/1999/xhtml",
+                            "nodeType": 1
+                        }
+                    },
+                ]
+            }
+        ),
+    ], ids=[
+        "htmlcollection",
+        "nodelist"
+    ]
+)
+async def test_node_within_dom_collection(
+    bidi_session,
+    inline,
+    top_context,
+    expression,
+    expected
+):
+    await bidi_session.browsing_context.navigate(
+        context=top_context['context'], url=inline(page_data), wait="complete"
+    )
+
+    result = await bidi_session.script.evaluate(
+        expression=expression,
+        target=ContextTarget(top_context["context"]),
+        await_promise=False,
+    )
+
+    assert result == expected
