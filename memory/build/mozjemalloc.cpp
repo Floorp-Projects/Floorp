@@ -829,6 +829,13 @@ class FastDivisor {
 
     // Initialisation made m non-zero.
     MOZ_ASSERT(m);
+
+    // Test that all the divisions in the range we expected would work.
+#ifdef MOZ_DEBUG
+    for (unsigned num = 0; num < max; num += div) {
+      MOZ_ASSERT(num / div == divide(num));
+    }
+#endif
   }
 
   // Note that this always occurs in unsigned regardless of m's type.  That
