@@ -4,7 +4,7 @@
 /*---
 esid: sec-temporal.now.zoneddatetime
 description: Observable interactions with the provided timezone-like object
-includes: [compareArray.js]
+includes: [compareArray.js, temporalHelpers.js]
 features: [BigInt, Proxy, Temporal]
 ---*/
 const actual = [];
@@ -15,10 +15,8 @@ const expected = [
   'has nestedTimeZone.timeZone'
 ];
 
-const nestedTimeZone = new Proxy({
+const nestedTimeZone = TemporalHelpers.timeZoneObserver(actual, "nestedTimeZone", {
   getOffsetNanosecondsFor(instant) {
-    actual.push('call nestedTimeZone.getOffsetNanosecondsFor');
-
     assert.sameValue(
       instant instanceof Temporal.Instant,
       true,
@@ -27,24 +25,10 @@ const nestedTimeZone = new Proxy({
 
     return -Number(instant.epochNanoseconds % 86400000000000n);
   }
-}, {
-  has(target, property) {
-    actual.push(`has nestedTimeZone.${String(property)}`);
-    return property in target;
-  },
-
-  get(target, property) {
-    actual.push(`get nestedTimeZone.${String(property)}`);
-    return target[property];
-  }
 });
 
-const timeZone = new Proxy({
-  timeZone: nestedTimeZone,
-
+const timeZone = TemporalHelpers.timeZoneObserver(actual, "timeZone", {
   getOffsetNanosecondsFor(instant) {
-    actual.push('call timeZone.getOffsetNanosecondsFor');
-
     assert.sameValue(
       instant instanceof Temporal.Instant,
       true,
@@ -53,17 +37,8 @@ const timeZone = new Proxy({
 
     return -Number(instant.epochNanoseconds % 86400000000000n);
   }
-}, {
-  has(target, property) {
-    actual.push(`has timeZone.${property}`);
-    return property in target;
-  },
-
-  get(target, property) {
-    actual.push(`get timeZone.${property}`);
-    return target[property];
-  }
 });
+timeZone.timeZone = nestedTimeZone;
 
 Object.defineProperty(Temporal.TimeZone, 'from', {
   get() {

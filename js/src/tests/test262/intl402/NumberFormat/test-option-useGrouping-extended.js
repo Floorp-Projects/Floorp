@@ -36,7 +36,6 @@ assert.sameValue(render({notation: 'compact', useGrouping: false}), false, 'comp
 assert.sameValue(render({notation: 'compact', useGrouping: null}), false, 'compact, null');
 assert.sameValue(render({notation: 'compact', useGrouping: 'min2'}), 'min2', 'compact, "min2"');
 
-assert.sameValue(render({useGrouping: 'undefined'}), 'auto', 'use fallback value');
 assert.sameValue(render({useGrouping: 'false'}), 'auto', 'use fallback value');
 assert.sameValue(render({useGrouping: 'true'}), 'auto', 'use fallback value');
 

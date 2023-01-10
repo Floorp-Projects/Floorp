@@ -11,6 +11,7 @@ negative:
   phase: parse
   type: SyntaxError
 flags: [onlyStrict]
+features: [async-functions]
 ---*/
 
 $DONOTEVALUATE();

@@ -10,40 +10,57 @@ features: [Temporal]
 ---*/
 
 const expected = [
-  "get calendar",
-  "get day",
-  "get day.valueOf",
-  "call day.valueOf",
-  "get hour",
-  "get hour.valueOf",
-  "call hour.valueOf",
-  "get microsecond",
-  "get microsecond.valueOf",
-  "call microsecond.valueOf",
-  "get millisecond",
-  "get millisecond.valueOf",
-  "call millisecond.valueOf",
-  "get minute",
-  "get minute.valueOf",
-  "call minute.valueOf",
-  "get month",
-  "get month.valueOf",
-  "call month.valueOf",
-  "get monthCode",
-  "get monthCode.toString",
-  "call monthCode.toString",
-  "get nanosecond",
-  "get nanosecond.valueOf",
-  "call nanosecond.valueOf",
-  "get second",
-  "get second.valueOf",
-  "call second.valueOf",
-  "get year",
-  "get year.valueOf",
-  "call year.valueOf",
+  // GetTemporalCalendarWithISODefault
+  "get fields.calendar",
+  "has fields.calendar.calendar",
+  // CalendarFields
+  "get fields.calendar.fields",
+  "call fields.calendar.fields",
+  // PrepareTemporalFields
+  "get fields.day",
+  "get fields.day.valueOf",
+  "call fields.day.valueOf",
+  "get fields.hour",
+  "get fields.hour.valueOf",
+  "call fields.hour.valueOf",
+  "get fields.microsecond",
+  "get fields.microsecond.valueOf",
+  "call fields.microsecond.valueOf",
+  "get fields.millisecond",
+  "get fields.millisecond.valueOf",
+  "call fields.millisecond.valueOf",
+  "get fields.minute",
+  "get fields.minute.valueOf",
+  "call fields.minute.valueOf",
+  "get fields.month",
+  "get fields.month.valueOf",
+  "call fields.month.valueOf",
+  "get fields.monthCode",
+  "get fields.monthCode.toString",
+  "call fields.monthCode.toString",
+  "get fields.nanosecond",
+  "get fields.nanosecond.valueOf",
+  "call fields.nanosecond.valueOf",
+  "get fields.second",
+  "get fields.second.valueOf",
+  "call fields.second.valueOf",
+  "get fields.year",
+  "get fields.year.valueOf",
+  "call fields.year.valueOf",
+  // InterpretTemporalDateTimeFields
+  "get options.overflow",
+  "get options.overflow.toString",
+  "call options.overflow.toString",
+  "get fields.calendar.dateFromFields",
+  "call fields.calendar.dateFromFields",
+  // inside Calendar.p.dateFromFields
+  "get options.overflow",
+  "get options.overflow.toString",
+  "call options.overflow.toString",
 ];
 const actual = [];
-const fields = {
+
+const fields = TemporalHelpers.propertyBagObserver(actual, {
   year: 1.7,
   month: 1.7,
   monthCode: "M01",
@@ -54,22 +71,12 @@ const fields = {
   millisecond: 1.7,
   microsecond: 1.7,
   nanosecond: 1.7,
-};
-const argument = new Proxy(fields, {
-  get(target, key) {
-    actual.push(`get ${key}`);
-    if (key === "calendar") return Temporal.Calendar.from("iso8601");
-    const result = target[key];
-    return TemporalHelpers.toPrimitiveObserver(actual, result, key);
-  },
-  has(target, key) {
-    actual.push(`has ${key}`);
-    return key in target;
-  },
-});
-const result = Temporal.PlainDateTime.from(argument);
-TemporalHelpers.assertPlainDateTime(result, 1, 1, "M01", 1, 1, 1, 1, 1, 1, 1);
-assert.sameValue(result.calendar.id, "iso8601", "calendar result");
+  calendar: TemporalHelpers.calendarObserver(actual, "fields.calendar"),
+}, "fields");
+
+const options = TemporalHelpers.propertyBagObserver(actual, { overflow: "constrain" }, "options");
+
+Temporal.PlainDateTime.from(fields, options);
 assert.compareArray(actual, expected, "order of operations");
 
 reportCompare(0, 0);

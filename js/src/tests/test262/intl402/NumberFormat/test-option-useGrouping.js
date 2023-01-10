@@ -32,7 +32,7 @@ for (let falsy of [0, null, ""]) {
   assert.sameValue(resolveUseGrouping(falsy), false);
 }
 
-for (let invalidOptions of [42, "MIN2", {} , "True",  "TRUE" , "FALSE" , "False"]) {
+for (let invalidOptions of [42, "MIN2", {} , "True",  "TRUE" , "FALSE" , "False" , "Undefined" , "undefined"]) {
   assert.throws(RangeError, function () {
     return new Intl.NumberFormat(undefined, { useGrouping: invalidOptions });
   }, "Throws RangeError when useGrouping value is not supported");

@@ -10,42 +10,43 @@ features: [Temporal]
 ---*/
 
 const expected = [
-  "get calendar",
-  "get day",
-  "get day.valueOf",
-  "call day.valueOf",
-  "get month",
-  "get month.valueOf",
-  "call month.valueOf",
-  "get monthCode",
-  "get monthCode.toString",
-  "call monthCode.toString",
-  "get year",
-  "get year.valueOf",
-  "call year.valueOf",
+  "get fields.calendar",
+  "has fields.calendar.calendar",
+  "get fields.calendar.fields",
+  "call fields.calendar.fields",
+  "get fields.day",
+  "get fields.day.valueOf",
+  "call fields.day.valueOf",
+  "get fields.month",
+  "get fields.month.valueOf",
+  "call fields.month.valueOf",
+  "get fields.monthCode",
+  "get fields.monthCode.toString",
+  "call fields.monthCode.toString",
+  "get fields.year",
+  "get fields.year.valueOf",
+  "call fields.year.valueOf",
+  "get fields.calendar.dateFromFields",
+  "call fields.calendar.dateFromFields",
+  // inside Calendar.p.dateFromFields
+  "get options.overflow",
+  "get options.overflow.toString",
+  "call options.overflow.toString",
 ];
 const actual = [];
-const fields = {
+
+const calendar = TemporalHelpers.calendarObserver(actual, "fields.calendar");
+const fields = TemporalHelpers.propertyBagObserver(actual, {
   year: 1.7,
   month: 1.7,
   monthCode: "M01",
   day: 1.7,
-};
-const argument = new Proxy(fields, {
-  get(target, key) {
-    actual.push(`get ${key}`);
-    if (key === "calendar") return Temporal.Calendar.from("iso8601");
-    const result = target[key];
-    return TemporalHelpers.toPrimitiveObserver(actual, result, key);
-  },
-  has(target, key) {
-    actual.push(`has ${key}`);
-    return key in target;
-  },
-});
-const result = Temporal.PlainDate.from(argument);
-TemporalHelpers.assertPlainDate(result, 1, 1, "M01", 1);
-assert.sameValue(result.calendar.id, "iso8601", "calendar result");
+  calendar,
+}, "fields");
+
+const options = TemporalHelpers.propertyBagObserver(actual, { overflow: "constrain" }, "options");
+
+const result = Temporal.PlainDate.from(fields, options);
 assert.compareArray(actual, expected, "order of operations");
 
 reportCompare(0, 0);

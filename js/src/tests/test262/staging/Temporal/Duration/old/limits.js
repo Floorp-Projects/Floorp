@@ -79,7 +79,7 @@ function test(ix, prefix, suffix, infix = "") {
   doAsserts(new Temporal.Duration(...Array(ix).fill(0), 1e+26, ...Array(9 - ix).fill(0)));
   doAsserts(Temporal.Duration.from({ [units[ix]]: 1e+26 }));
   if (!infix)
-    doAsserts(Temporal.Duration.from(`${ prefix }100000000000000000000000000${ suffix }`));
+    doAsserts(Temporal.Duration.from(`${ prefix }100000000000001000000000000${ suffix }`));
 }
 test(0, "P", "Y");
 test(1, "P", "M");

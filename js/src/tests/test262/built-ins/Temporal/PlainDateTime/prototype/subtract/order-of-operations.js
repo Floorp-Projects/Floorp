@@ -9,41 +9,54 @@ includes: [compareArray.js, temporalHelpers.js]
 features: [Temporal]
 ---*/
 
-const instance = new Temporal.PlainDateTime(2000, 5, 2, 12, 34, 56, 987, 654, 321);
 const expected = [
-  "get days",
-  "get days.valueOf",
-  "call days.valueOf",
-  "get hours",
-  "get hours.valueOf",
-  "call hours.valueOf",
-  "get microseconds",
-  "get microseconds.valueOf",
-  "call microseconds.valueOf",
-  "get milliseconds",
-  "get milliseconds.valueOf",
-  "call milliseconds.valueOf",
-  "get minutes",
-  "get minutes.valueOf",
-  "call minutes.valueOf",
-  "get months",
-  "get months.valueOf",
-  "call months.valueOf",
-  "get nanoseconds",
-  "get nanoseconds.valueOf",
-  "call nanoseconds.valueOf",
-  "get seconds",
-  "get seconds.valueOf",
-  "call seconds.valueOf",
-  "get weeks",
-  "get weeks.valueOf",
-  "call weeks.valueOf",
-  "get years",
-  "get years.valueOf",
-  "call years.valueOf",
+  // ToTemporalDurationRecord
+  "get fields.days",
+  "get fields.days.valueOf",
+  "call fields.days.valueOf",
+  "get fields.hours",
+  "get fields.hours.valueOf",
+  "call fields.hours.valueOf",
+  "get fields.microseconds",
+  "get fields.microseconds.valueOf",
+  "call fields.microseconds.valueOf",
+  "get fields.milliseconds",
+  "get fields.milliseconds.valueOf",
+  "call fields.milliseconds.valueOf",
+  "get fields.minutes",
+  "get fields.minutes.valueOf",
+  "call fields.minutes.valueOf",
+  "get fields.months",
+  "get fields.months.valueOf",
+  "call fields.months.valueOf",
+  "get fields.nanoseconds",
+  "get fields.nanoseconds.valueOf",
+  "call fields.nanoseconds.valueOf",
+  "get fields.seconds",
+  "get fields.seconds.valueOf",
+  "call fields.seconds.valueOf",
+  "get fields.weeks",
+  "get fields.weeks.valueOf",
+  "call fields.weeks.valueOf",
+  "get fields.years",
+  "get fields.years.valueOf",
+  "call fields.years.valueOf",
+  // AddDateTime
+  "get this.calendar.dateAdd",
+  "call this.calendar.dateAdd",
+  // inside Calendar.p.dateAdd
+  "get options.overflow",
+  "get options.overflow.toString",
+  "call options.overflow.toString",
 ];
 const actual = [];
-const fields = {
+
+const calendar = TemporalHelpers.calendarObserver(actual, "this.calendar");
+const instance = new Temporal.PlainDateTime(2000, 5, 2, 12, 34, 56, 987, 654, 321, calendar);
+// clear observable operations that occurred during the constructor call
+actual.splice(0);
+
+const fields = TemporalHelpers.propertyBagObserver(actual, {
   years: 1,
   months: 1,
   weeks: 1,
@@ -54,24 +67,11 @@ const fields = {
   milliseconds: 1,
   microseconds: 1,
   nanoseconds: 1,
-};
-const argument = new Proxy(fields, {
-  get(target, key) {
-    actual.push(`get ${key}`);
-    const result = target[key];
-    if (result === undefined) {
-      return undefined;
-    }
-    return TemporalHelpers.toPrimitiveObserver(actual, result, key);
-  },
-  has(target, key) {
-    actual.push(`has ${key}`);
-    return key in target;
-  },
-});
-const result = instance.subtract(argument);
-TemporalHelpers.assertPlainDateTime(result, 1999, 3, "M03", 25, 11, 33, 55, 986, 653, 320);
-assert.sameValue(result.calendar.id, "iso8601", "calendar result");
+}, "fields");
+
+const options = TemporalHelpers.propertyBagObserver(actual, { overflow: "constrain" }, "options");
+
+instance.subtract(fields, options);
 assert.compareArray(actual, expected, "order of operations");
 
 reportCompare(0, 0);

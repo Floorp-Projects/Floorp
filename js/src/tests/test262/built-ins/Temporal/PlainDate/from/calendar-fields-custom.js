@@ -14,7 +14,7 @@ class CustomCalendar extends Temporal.Calendar {
     super("iso8601");
   }
   dateFromFields(fields) {
-    assert.compareArray(Object.keys(fields), ["b", "a"]);
+    assert.compareArray(Object.keys(fields), ["a", "b"]);
     return new Temporal.PlainDate(2020, 7, 4);
   }
   fields(fields) {
@@ -25,23 +25,14 @@ class CustomCalendar extends Temporal.Calendar {
 
 const calendar = new CustomCalendar();
 const actual = [];
-const item = new Proxy({ calendar }, {
-  has(target, property) {
-    actual.push(`has item.${property}`);
-    return property in target;
-  },
-  get(target, property) {
-    actual.push(`get item.${property}`);
-    return target[property];
-  },
-});
+const item = TemporalHelpers.propertyBagObserver(actual, { calendar }, "item");
 
 const plainDate = Temporal.PlainDate.from(item);
 TemporalHelpers.assertPlainDate(plainDate, 2020, 7, "M07", 4);
 assert.compareArray(actual, [
   "get item.calendar",
-  "get item.b",
   "get item.a",
+  "get item.b",
 ]);
 
 reportCompare(0, 0);

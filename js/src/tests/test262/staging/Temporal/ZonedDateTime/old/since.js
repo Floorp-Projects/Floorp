@@ -8,7 +8,7 @@ description: Temporal.ZonedDateTime.prototype.since()
 features: [Temporal]
 ---*/
 
-var zdt = Temporal.ZonedDateTime.from("1976-11-18T15:23:30.123456789+01:00[Europe/Vienna]");
+var zdt = Temporal.ZonedDateTime.from("1976-11-18T15:23:30.123456789+01:00[+01:00]");
 
 // zdt.since(earlier) === earlier.until(zdt) with default options
 var earlier = Temporal.ZonedDateTime.from({
@@ -16,7 +16,7 @@ var earlier = Temporal.ZonedDateTime.from({
   month: 3,
   day: 3,
   hour: 18,
-  timeZone: "Europe/Vienna"
+  timeZone: "+01:00"
 });
 assert.sameValue(`${ zdt.since(earlier) }`, `${ earlier.until(zdt) }`);
 
@@ -26,18 +26,18 @@ assert.sameValue(`${ zdt.since({
   month: 10,
   day: 29,
   hour: 10,
-  timeZone: "Europe/Vienna"
+  timeZone: "+01:00"
 }) }`, "-PT376434H36M29.876543211S");
-assert.sameValue(`${ zdt.since("2019-10-29T10:46:38.271986102+01:00[Europe/Vienna]") }`, "-PT376435H23M8.148529313S");
-var feb20 = Temporal.ZonedDateTime.from("2020-02-01T00:00+01:00[Europe/Vienna]");
-var feb21 = Temporal.ZonedDateTime.from("2021-02-01T00:00+01:00[Europe/Vienna]");
+assert.sameValue(`${ zdt.since("2019-10-29T10:46:38.271986102+01:00[+01:00]") }`, "-PT376435H23M8.148529313S");
+var feb20 = Temporal.ZonedDateTime.from("2020-02-01T00:00+01:00[+01:00]");
+var feb21 = Temporal.ZonedDateTime.from("2021-02-01T00:00+01:00[+01:00]");
 
 // defaults to returning hours
 assert.sameValue(`${ feb21.since(feb20) }`, "PT8784H");
 assert.sameValue(`${ feb21.since(feb20, { largestUnit: "auto" }) }`, "PT8784H");
 assert.sameValue(`${ feb21.since(feb20, { largestUnit: "hours" }) }`, "PT8784H");
-assert.sameValue(`${ Temporal.ZonedDateTime.from("2021-02-01T00:00:00.000000001+01:00[Europe/Vienna]").since(feb20) }`, "PT8784H0.000000001S");
-assert.sameValue(`${ feb21.since(Temporal.ZonedDateTime.from("2020-02-01T00:00:00.000000001+01:00[Europe/Vienna]")) }`, "PT8783H59M59.999999999S");
+assert.sameValue(`${ Temporal.ZonedDateTime.from("2021-02-01T00:00:00.000000001+01:00[+01:00]").since(feb20) }`, "PT8784H0.000000001S");
+assert.sameValue(`${ feb21.since(Temporal.ZonedDateTime.from("2020-02-01T00:00:00.000000001+01:00[+01:00]")) }`, "PT8783H59M59.999999999S");
 
 // can return lower or higher units
 assert.sameValue(`${ feb21.since(feb20, { largestUnit: "years" }) }`, "P1Y");
@@ -68,8 +68,8 @@ assert.sameValue(nsDiff.microseconds, 0);
 assert.sameValue(nsDiff.nanoseconds, 86400250250250);
 
 // does not include higher units than necessary
-var lastFeb20 = Temporal.ZonedDateTime.from("2020-02-29T00:00+01:00[Europe/Vienna]");
-var lastFeb21 = Temporal.ZonedDateTime.from("2021-02-28T00:00+01:00[Europe/Vienna]");
+var lastFeb20 = Temporal.ZonedDateTime.from("2020-02-29T00:00+01:00[+01:00]");
+var lastFeb21 = Temporal.ZonedDateTime.from("2021-02-28T00:00+01:00[+01:00]");
 assert.sameValue(`${ lastFeb21.since(lastFeb20) }`, "PT8760H");
 assert.sameValue(`${ lastFeb21.since(lastFeb20, { largestUnit: "months" }) }`, "P11M28D");
 assert.sameValue(`${ lastFeb21.since(lastFeb20, { largestUnit: "years" }) }`, "P11M28D");
@@ -88,11 +88,12 @@ assert.notSameValue(monthsDifference.months, 0);
 
 // no two different calendars
 var zdt1 = new Temporal.ZonedDateTime(0n, "UTC");
-var zdt2 = new Temporal.ZonedDateTime(0n, "UTC", Temporal.Calendar.from("japanese"));
+var fakeJapanese = { toString() { return "japanese"; }};
+var zdt2 = new Temporal.ZonedDateTime(0n, "UTC", fakeJapanese);
 assert.throws(RangeError, () => zdt1.since(zdt2));
 
-var earlier = Temporal.ZonedDateTime.from('2019-01-08T09:22:36.123456789+01:00[Europe/Vienna]');
-var later = Temporal.ZonedDateTime.from('2021-09-07T14:39:40.987654321+02:00[Europe/Vienna]');
+var earlier = Temporal.ZonedDateTime.from('2019-01-08T09:22:36.123456789+01:00[+01:00]');
+var later = Temporal.ZonedDateTime.from('2021-09-07T13:39:40.987654321+01:00[+01:00]');
 // assumes a different default for largestUnit if smallestUnit is larger than days
 assert.sameValue(`${ later.since(earlier, {
   smallestUnit: "years",
@@ -106,238 +107,6 @@ assert.sameValue(`${ later.since(earlier, {
   smallestUnit: "weeks",
   roundingMode: "halfExpand"
 }) }`, "P139W");
-var incrementOneNearest = [
-  [
-    "years",
-    "P3Y"
-  ],
-  [
-    "months",
-    "P32M"
-  ],
-  [
-    "weeks",
-    "P139W"
-  ],
-  [
-    "days",
-    "P973D"
-  ],
-  [
-    "hours",
-    "PT23356H"
-  ],
-  [
-    "minutes",
-    "PT23356H17M"
-  ],
-  [
-    "seconds",
-    "PT23356H17M5S"
-  ],
-  [
-    "milliseconds",
-    "PT23356H17M4.864S"
-  ],
-  [
-    "microseconds",
-    "PT23356H17M4.864198S"
-  ],
-  [
-    "nanoseconds",
-    "PT23356H17M4.864197532S"
-  ]
-];
-incrementOneNearest.forEach(([smallestUnit, expected]) => {
-  var roundingMode = "halfExpand";
-  assert.sameValue(`${ later.since(earlier, {
-    smallestUnit,
-    roundingMode
-  }) }`, expected);
-  assert.sameValue(`${ earlier.since(later, {
-    smallestUnit,
-    roundingMode
-  }) }`, `-${ expected }`);
-});
-var incrementOneCeil = [
-  [
-    "years",
-    "P3Y",
-    "-P2Y"
-  ],
-  [
-    "months",
-    "P32M",
-    "-P31M"
-  ],
-  [
-    "weeks",
-    "P140W",
-    "-P139W"
-  ],
-  [
-    "days",
-    "P974D",
-    "-P973D"
-  ],
-  [
-    "hours",
-    "PT23357H",
-    "-PT23356H"
-  ],
-  [
-    "minutes",
-    "PT23356H18M",
-    "-PT23356H17M"
-  ],
-  [
-    "seconds",
-    "PT23356H17M5S",
-    "-PT23356H17M4S"
-  ],
-  [
-    "milliseconds",
-    "PT23356H17M4.865S",
-    "-PT23356H17M4.864S"
-  ],
-  [
-    "microseconds",
-    "PT23356H17M4.864198S",
-    "-PT23356H17M4.864197S"
-  ],
-  [
-    "nanoseconds",
-    "PT23356H17M4.864197532S",
-    "-PT23356H17M4.864197532S"
-  ]
-];
-incrementOneCeil.forEach(([smallestUnit, expectedPositive, expectedNegative]) => {
-  var roundingMode = "ceil";
-  assert.sameValue(`${ later.since(earlier, {
-    smallestUnit,
-    roundingMode
-  }) }`, expectedPositive);
-  assert.sameValue(`${ earlier.since(later, {
-    smallestUnit,
-    roundingMode
-  }) }`, expectedNegative);
-});
-var incrementOneFloor = [
-  [
-    "years",
-    "P2Y",
-    "-P3Y"
-  ],
-  [
-    "months",
-    "P31M",
-    "-P32M"
-  ],
-  [
-    "weeks",
-    "P139W",
-    "-P140W"
-  ],
-  [
-    "days",
-    "P973D",
-    "-P974D"
-  ],
-  [
-    "hours",
-    "PT23356H",
-    "-PT23357H"
-  ],
-  [
-    "minutes",
-    "PT23356H17M",
-    "-PT23356H18M"
-  ],
-  [
-    "seconds",
-    "PT23356H17M4S",
-    "-PT23356H17M5S"
-  ],
-  [
-    "milliseconds",
-    "PT23356H17M4.864S",
-    "-PT23356H17M4.865S"
-  ],
-  [
-    "microseconds",
-    "PT23356H17M4.864197S",
-    "-PT23356H17M4.864198S"
-  ],
-  [
-    "nanoseconds",
-    "PT23356H17M4.864197532S",
-    "-PT23356H17M4.864197532S"
-  ]
-];
-incrementOneFloor.forEach(([smallestUnit, expectedPositive, expectedNegative]) => {
-  var roundingMode = "floor";
-  assert.sameValue(`${ later.since(earlier, {
-    smallestUnit,
-    roundingMode
-  }) }`, expectedPositive);
-  assert.sameValue(`${ earlier.since(later, {
-    smallestUnit,
-    roundingMode
-  }) }`, expectedNegative);
-});
-var incrementOneTrunc = [
-  [
-    "years",
-    "P2Y"
-  ],
-  [
-    "months",
-    "P31M"
-  ],
-  [
-    "weeks",
-    "P139W"
-  ],
-  [
-    "days",
-    "P973D"
-  ],
-  [
-    "hours",
-    "PT23356H"
-  ],
-  [
-    "minutes",
-    "PT23356H17M"
-  ],
-  [
-    "seconds",
-    "PT23356H17M4S"
-  ],
-  [
-    "milliseconds",
-    "PT23356H17M4.864S"
-  ],
-  [
-    "microseconds",
-    "PT23356H17M4.864197S"
-  ],
-  [
-    "nanoseconds",
-    "PT23356H17M4.864197532S"
-  ]
-];
-incrementOneTrunc.forEach(([smallestUnit, expected]) => {
-  var roundingMode = "trunc";
-  assert.sameValue(`${ later.since(earlier, {
-    smallestUnit,
-    roundingMode
-  }) }`, expected);
-  assert.sameValue(`${ earlier.since(later, {
-    smallestUnit,
-    roundingMode
-  }) }`, `-${ expected }`);
-});
 
 // rounds to an increment of hours
 assert.sameValue(`${ later.since(earlier, {
