@@ -179,7 +179,7 @@ directory_test(async (t, root) => {
       await createFileWithContents(t, 'file-to-remove', '12345', root);
   await createFileWithContents(t, 'file-to-keep', 'abc', root);
 
-  const writable = await cleanup_writable(t, await handle.createWritable());
+  const writable = await handle.createWritable();
   await promise_rejects_dom(
       t, 'NoModificationAllowedError', root.removeEntry('file-to-remove'));
 
