@@ -112,7 +112,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/rust-minidump/minidump-writer.git"]
 git = "https://github.com/rust-minidump/minidump-writer.git"
-rev = "75ada456c92a429704691a85e1cb42fef8cafc0d"
+rev = "7d76616d27b9dc87fe3a94639b8b4f947d52a6aa"
 replace-with = "vendored-sources"
 
 [source."https://github.com/smol-rs/async-task"]
