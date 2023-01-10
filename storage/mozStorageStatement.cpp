@@ -128,7 +128,7 @@ nsresult Statement::initialize(Connection* aDBConnection,
 
     aDBConnection->RecordQueryStatus(srv);
     mQueryStatusRecorded = true;
-    return NS_ERROR_FAILURE;
+    return convertResultCode(srv);
   }
 
   MOZ_LOG(gStorageLog, LogLevel::Debug,
