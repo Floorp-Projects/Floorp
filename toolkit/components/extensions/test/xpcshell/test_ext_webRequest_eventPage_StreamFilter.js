@@ -312,7 +312,7 @@ async function test_create_new_streamfilter_while_suspending({
 
   info("Terminate the background script (simulated idle timeout)");
 
-  extension.terminateBackground();
+  extension.terminateBackground({ disableResetIdleForTest: true });
   await extension.awaitMessage("suspend-listener");
 
   info("Simulated idle timeout canceled");
