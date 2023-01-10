@@ -14,7 +14,7 @@
         "template": {
           "type": "string",
           "description": "Specify the layout template for the Spotlight",
-          "enum": ["multistage"]
+          "enum": ["logo-and-content", "multistage"]
         },
         "backdrop": {
           "type": "string",
