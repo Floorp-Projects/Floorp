@@ -532,9 +532,12 @@ void SurfaceTextureHost::DeallocateDeviceData() {
 
 void SurfaceTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
+  const auto originPos =
+      NeedsYFlip() ? gl::OriginPos::BottomLeft : gl::OriginPos::TopLeft;
   RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderAndroidSurfaceTextureHost(
-          mSurfTex, mSize, mFormat, mContinuousUpdate, mTransformOverride);
+      new wr::RenderAndroidSurfaceTextureHost(mSurfTex, mSize, mFormat,
+                                              mContinuousUpdate, originPos,
+                                              mTransformOverride);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
