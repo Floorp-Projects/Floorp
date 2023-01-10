@@ -14319,6 +14319,8 @@
 # understand parentheses, but && is higher precedence than ||.)
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   value: true
+#elif defined(MOZ_WIDGET_ANDROID) && defined(NIGHTLY_BUILD)
+  value: true
 #else
   value: false
 #endif
