@@ -104,6 +104,7 @@ bool WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
     return false;
   }
 
+  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::GetSystemPrincipal();
   // Create a new IPC connection
   Endpoint<PWebTransportParent> parentEndpoint;
   Endpoint<PWebTransportChild> childEndpoint;
@@ -138,7 +139,8 @@ bool WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
 
   // https://w3c.github.io/webtransport/#webtransport-constructor Spec 5.2
   backgroundChild
-      ->SendCreateWebTransportParent(aURL, dedicated, requireUnreliable,
+      ->SendCreateWebTransportParent(aURL, principal, dedicated,
+                                     requireUnreliable,
                                      (uint32_t)congestionControl,
                                      // XXX serverCertHashes,
                                      std::move(parentEndpoint))
@@ -172,6 +174,7 @@ void WebTransport::ResolveWaitingConnection(
     WebTransportReliabilityMode aReliability, WebTransportChild* aChild) {
   LOG(("Resolved Connection %p, reliability = %u", this,
        (unsigned)aReliability));
+
   MOZ_ASSERT(mState == WebTransportState::CONNECTING);
   mChild = aChild;
   mState = WebTransportState::CONNECTED;
