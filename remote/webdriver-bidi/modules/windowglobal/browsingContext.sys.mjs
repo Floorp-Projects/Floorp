@@ -37,6 +37,7 @@ class BrowsingContextModule extends Module {
       // TODO: The navigation id should be a real id mapped to the navigation.
       // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
       navigation: null,
+      timestamp: Date.now(),
       url: data.target.baseURI,
     };
   }
