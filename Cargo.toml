@@ -104,9 +104,6 @@ memmap2 = { path = "build/rust/memmap2" }
 # Patch getrandom 0.7 to 0.8
 rand = { path = "build/rust/rand" }
 
-# Patch tokio-util 0.6 to 0.7
-tokio-util = { path = "build/rust/tokio-util" }
-
 # Patch env_logger 0.8 to 0.9
 env_logger = { path = "build/rust/env_logger" }
 
@@ -164,6 +161,8 @@ libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { package = "packed_simd_2", git = "https://github.com/hsivonen/packed_simd", rev="412f9a0aa556611de021bde89dee8fefe6e0fbbd" }
 midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3391db08f9ae6400bc023e18" }
 minidump_writer_linux = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "75ada456c92a429704691a85e1cb42fef8cafc0d" }
+# warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
+warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
 
 # application-services overrides to make updating them all simpler.
 interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }

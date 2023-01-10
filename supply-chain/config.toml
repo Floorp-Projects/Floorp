@@ -178,6 +178,10 @@ notes = "This is a first-party crate, normally vendored, but currently patched i
 audit-as-crates-io = false
 notes = "This is a first-party crate, maintained by the appservices team, which is entirely unrelated to the crates.io package of the same name."
 
+[policy.warp]
+audit-as-crates-io = true
+notes = "This is a third-party crate, with an extra patch."
+
 [policy.webdriver]
 audit-as-crates-io = false
 criteria = "safe-to-run"
