@@ -782,3 +782,10 @@ nsThreadManager::IdleDispatchToMainThread(nsIRunnable* aEvent,
   return NS_DispatchToThreadQueue(event.forget(), mMainThread,
                                   EventQueuePriority::Idle);
 }
+
+NS_IMETHODIMP
+nsThreadManager::DispatchDirectTaskToCurrentThread(nsIRunnable* aEvent) {
+  NS_ENSURE_STATE(aEvent);
+  nsCOMPtr<nsIRunnable> runnable = aEvent;
+  return GetCurrentThread()->DispatchDirectTask(runnable.forget());
+}

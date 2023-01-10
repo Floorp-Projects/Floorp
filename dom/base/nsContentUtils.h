@@ -2531,9 +2531,9 @@ class nsContentUtils {
   static bool IsPDFJS(nsIPrincipal* aPrincipal);
   /**
    * Same, but from WebIDL bindings. Checks whether the subject principal is for
-   * the internal PDF viewer.
+   * the internal PDF viewer or system JS.
    */
-  static bool IsPDFJS(JSContext*, JSObject*);
+  static bool IsSystemOrPDFJS(JSContext*, JSObject*);
 
   /**
    * Checks if internal SWF player is enabled.

@@ -6939,8 +6939,9 @@ bool nsContentUtils::IsPDFJS(nsIPrincipal* aPrincipal) {
   return spec.EqualsLiteral("resource://pdf.js/web/viewer.html");
 }
 
-bool nsContentUtils::IsPDFJS(JSContext* aCx, JSObject*) {
-  return IsPDFJS(SubjectPrincipal(aCx));
+bool nsContentUtils::IsSystemOrPDFJS(JSContext* aCx, JSObject*) {
+  nsIPrincipal* principal = SubjectPrincipal(aCx);
+  return principal && (principal->IsSystemPrincipal() || IsPDFJS(principal));
 }
 
 already_AddRefed<nsIDocumentLoaderFactory>
