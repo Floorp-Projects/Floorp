@@ -127,6 +127,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
     DEFINES["USE_NEON"] = True
+    LOCAL_INCLUDES += ["/third_party/xsimd/include"]
     SOURCES += ["AudioNodeEngineNEON.cpp"]
     SOURCES["AudioNodeEngineNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
     if CONFIG["BUILD_ARM_NEON"]:
@@ -136,6 +137,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
 if CONFIG["INTEL_ARCHITECTURE"]:
     SOURCES += ["AudioNodeEngineSSE2.cpp"]
     DEFINES["USE_SSE2"] = True
+    LOCAL_INCLUDES += ["/third_party/xsimd/include"]
     SOURCES["AudioNodeEngineSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
