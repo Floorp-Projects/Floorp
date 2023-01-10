@@ -221,7 +221,7 @@ class GradientCache final
   }
 
   void NotifyHandlerEndLocked(const LockedInstance&) final {
-    NS_DispatchToCurrentThread(
+    NS_DispatchToMainThread(
         NS_NewRunnableFunction("GradientCache::DestroyRemovedGradientStops",
                                [stops = std::move(mRemovedGradientData)] {}));
   }
