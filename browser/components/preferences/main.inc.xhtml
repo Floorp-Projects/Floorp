@@ -240,11 +240,10 @@
             data-l10n-id="lepton-preference-button"/>
       </hbox>
     
-      <radio value="4" class="themes"  data-l10n-id="floorp-legacy"/>
+      <radio value="8" class="themes" data-l10n-id="floorp-fluerialUI"/>
       <label>
-        <div id="floorplegacy"></div>  
+        <div id="fluerialUI"></div>  
       </label>
-
       
       <div id="Windows-only">
       <radio value="5" class="themes" data-l10n-id="floorp-fluentUI"/>
@@ -261,24 +260,25 @@
       </label>
       </div>
       
-      <radio value="8" class="themes" data-l10n-id="floorp-fluerialUI"/>
+      <radio value="4" class="themes"  data-l10n-id="floorp-legacy"/>
       <label>
-        <div id="fluerialUI"></div>  
+        <div id="floorplegacy"></div>  
       </label>
 
     </radiogroup>
 
   <label><html:h2 data-l10n-id="other-preference"/></label>
-  <hbox>
+  <hbox align="center">
     <checkbox preference="floorp.enable.dualtheme"
               id="dualtheme_enable" data-l10n-id="dualtheme-enable"/> 
+    <label class="learnMore" is="text-link" href="https://blog.ablaze.one/2449/2022-10-10/" data-l10n-id="do-not-track-learn-more"></label>
   </hbox>
 
   <html:h2 data-l10n-id="operation-settings"/>
      <checkbox preference="floorp.optimized.msbutton.ope"
                id="MouseSideButton"  data-l10n-id="Mouse-side-button"/>
   #ifdef XP_WIN
-  <hbox>
+  <hbox align="center">
     <checkbox preference="floorp.material.effect.enable"
               id="micaforeveryone" data-l10n-id="material-effect"/>
     <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/mica-for-everyone" data-l10n-id="do-not-track-learn-more"></label>
