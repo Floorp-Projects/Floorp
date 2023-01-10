@@ -15,6 +15,10 @@
 #  include "mozilla/SSE.h"
 #  include "AudioNodeEngineGeneric.h"
 #endif
+#if defined(USE_SSE42) && defined(USE_FMA3)
+#  include "mozilla/SSE.h"
+#  include "AudioNodeEngineGeneric.h"
+#endif
 #include "AudioBlock.h"
 #include "Tracing.h"
 
@@ -74,8 +78,16 @@ void AudioBufferAddWithScale(const float* aInput, float aScale, float* aOutput,
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    Engine<xsimd::sse2>::AudioBufferAddWithScale(aInput, aScale, aOutput,
-                                                 aSize);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      Engine<xsimd::fma3<xsimd::sse4_2>>::AudioBufferAddWithScale(
+          aInput, aScale, aOutput, aSize);
+    } else
+#  endif
+    {
+      Engine<xsimd::sse2>::AudioBufferAddWithScale(aInput, aScale, aOutput,
+                                                   aSize);
+    }
     return;
   }
 #endif
@@ -134,7 +146,16 @@ void BufferComplexMultiply(const float* aInput, const float* aScale,
 #endif
 #ifdef USE_SSE2
   if (mozilla::supports_sse()) {
-    Engine<xsimd::sse2>::BufferComplexMultiply(aInput, aScale, aOutput, aSize);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      Engine<xsimd::fma3<xsimd::sse4_2>>::BufferComplexMultiply(aInput, aScale,
+                                                                aOutput, aSize);
+    } else
+#  endif
+    {
+      Engine<xsimd::sse2>::BufferComplexMultiply(aInput, aScale, aOutput,
+                                                 aSize);
+    }
     return;
   }
 #endif
@@ -270,8 +291,16 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
-        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      Engine<xsimd::fma3<xsimd::sse4_2>>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    } else
+#  endif
+    {
+      Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    }
     return;
   }
 #endif
@@ -308,8 +337,16 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
-        aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      Engine<xsimd::fma3<xsimd::sse2>>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    } else
+#  endif
+    {
+      Engine<xsimd::sse2>::AudioBlockPanStereoToStereo(
+          aInputL, aInputR, aGainL, aGainR, aIsOnTheLeft, aOutputL, aOutputR);
+    }
     return;
   }
 #endif
@@ -335,7 +372,15 @@ float AudioBufferSumOfSquares(const float* aInput, uint32_t aLength) {
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse()) {
-    return Engine<xsimd::sse2>::AudioBufferSumOfSquares(aInput, aLength);
+#  if defined(USE_SSE42) && defined(USE_FMA3)
+    if (mozilla::supports_fma3() && mozilla::supports_sse4_2()) {
+      return Engine<xsimd::fma3<xsimd::sse4_2>>::AudioBufferSumOfSquares(
+          aInput, aLength);
+    } else
+#  endif
+    {
+      return Engine<xsimd::sse2>::AudioBufferSumOfSquares(aInput, aLength);
+    }
   }
 #endif
 
