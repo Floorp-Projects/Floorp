@@ -16,6 +16,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+  LayoutUtils: "resource://gre/modules/LayoutUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -320,8 +321,21 @@ class GeckoViewAutoFillChild extends GeckoViewActorChild {
   onFocus(aTarget) {
     debug`Auto-fill focus on ${aTarget && aTarget.tagName}`;
 
-    const info =
-      aTarget && this._autofillInfos && this._autofillInfos.get(aTarget);
+    const info = aTarget && this._autofillInfos?.get(aTarget);
+    if (info) {
+      const bounds = aTarget.getBoundingClientRect();
+      const screenRect = lazy.LayoutUtils.rectToScreenRect(
+        aTarget.ownerGlobal,
+        bounds
+      );
+      info.screenRect = {
+        left: screenRect.left,
+        top: screenRect.top,
+        right: screenRect.right,
+        bottom: screenRect.bottom,
+      };
+    }
+
     if (!aTarget || info) {
       this.sendAsyncMessage("Focus", {
         node: info,
