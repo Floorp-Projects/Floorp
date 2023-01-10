@@ -331,7 +331,7 @@ const ExperimentFakes = {
       await promise;
     }
 
-    if (manager.store.getAllActive().length) {
+    if (manager.store.getAllActiveExperiments().length) {
       throw new Error("Cleanup failed");
     }
   },

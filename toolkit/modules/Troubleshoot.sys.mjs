@@ -906,15 +906,15 @@ var dataProviders = {
       nimbusRollouts,
     ] = await Promise.all(
       [
-        NormandyAddonStudies.getAllActive(),
-        NormandyPreferenceRollouts.getAllActive(),
-        NormandyPreferenceStudies.getAllActive(),
+        NormandyAddonStudies.getAllActiveExperiments(),
+        NormandyPreferenceRollouts.getAllActiveExperiments(),
+        NormandyPreferenceStudies.getAllActiveExperiments(),
         ExperimentManager.store
           .ready()
-          .then(() => ExperimentManager.store.getAllActive()),
+          .then(() => ExperimentManager.store.getAllActiveExperiments()),
         ExperimentManager.store
           .ready()
-          .then(() => ExperimentManager.store.getAllRollouts()),
+          .then(() => ExperimentManager.store.getAllActiveRollouts()),
       ].map(promise =>
         promise
           .catch(error => {

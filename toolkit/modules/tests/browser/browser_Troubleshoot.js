@@ -249,15 +249,23 @@ var tests = [
 
   function normandyErrorHandling(done) {
     NormandyTestUtils.decorate(
-      NormandyTestUtils.withStub(PreferenceExperiments, "getAllActive", {
-        returnValue: Promise.reject("Expected error - PreferenceExperiments"),
-      }),
-      NormandyTestUtils.withStub(AddonStudies, "getAllActive", {
+      NormandyTestUtils.withStub(
+        PreferenceExperiments,
+        "getAllActiveExperiments",
+        {
+          returnValue: Promise.reject("Expected error - PreferenceExperiments"),
+        }
+      ),
+      NormandyTestUtils.withStub(AddonStudies, "getAllActiveExperiments", {
         returnValue: Promise.reject("Expected error - AddonStudies"),
       }),
-      NormandyTestUtils.withStub(PreferenceRollouts, "getAllActive", {
-        returnValue: Promise.reject("Expected error - PreferenceRollouts"),
-      }),
+      NormandyTestUtils.withStub(
+        PreferenceRollouts,
+        "getAllActiveExperiments",
+        {
+          returnValue: Promise.reject("Expected error - PreferenceRollouts"),
+        }
+      ),
       NormandyTestUtils.withConsoleSpy(),
       async function testNormandyErrorHandling({ consoleSpy }) {
         await new Promise(resolve => {
