@@ -516,7 +516,9 @@ this.backgroundPage = class extends ExtensionAPI {
       const childId = extension.backgroundContext?.childId;
       if (
         childId !== undefined &&
-        extension.hasPermission("webRequestBlocking")
+        extension.hasPermission("webRequestBlocking") &&
+        (extension.manifestVersion <= 3 ||
+          extension.hasPermission("webRequestFilterResponse"))
       ) {
         // Ask to the background page context in the child process to check if there are
         // StreamFilter instances active (e.g. ones with status "transferringdata" or "suspended",

@@ -60,6 +60,7 @@ add_task(async function setup() {
     "tabHide",
     "tabs",
     "webRequestBlocking",
+    "webRequestFilterResponse",
     "webRequestFilterResponse.serviceWorkerScript",
   ];
   OptionalPermissions = Schemas.getPermissionNames([
