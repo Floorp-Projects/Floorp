@@ -252,13 +252,11 @@ cubeb_init(cubeb ** context, char const * context_name,
 #if defined(USE_SUN)
     sun_init,
 #endif
-#if defined(USE_OPENSL)
-    opensl_init,
-#endif
-  // TODO: should probably be preferred over OpenSLES when available.
-  // Initialization will fail on old android devices.
 #if defined(USE_AAUDIO)
     aaudio_init,
+#endif
+#if defined(USE_OPENSL)
+    opensl_init,
 #endif
 #if defined(USE_AUDIOTRACK)
     audiotrack_init,
