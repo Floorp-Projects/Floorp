@@ -9,6 +9,7 @@
 
 #include "mozilla/HashTable.h"  // mozilla::{HashMap, DefaultHasher}
 #include "mozilla/Maybe.h"      // mozilla::Maybe
+#include "mozilla/Span.h"
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // int32_t, uint32_t
@@ -325,9 +326,8 @@ class ModuleObject : public NativeObject {
   void initImportExportData(
       MutableHandle<RequestedModuleVector> requestedModules,
       MutableHandle<ImportEntryVector> importEntries,
-      MutableHandle<ExportEntryVector> localExportEntries,
-      MutableHandle<ExportEntryVector> indirectExportEntries,
-      MutableHandle<ExportEntryVector> starExportEntries);
+      MutableHandle<ExportEntryVector> exportEntries, uint32_t localExportCount,
+      uint32_t indirectExportCount, uint32_t starExportCount);
   static bool Freeze(JSContext* cx, Handle<ModuleObject*> self);
 #ifdef DEBUG
   static bool AssertFrozen(JSContext* cx, Handle<ModuleObject*> self);
@@ -348,11 +348,11 @@ class ModuleObject : public NativeObject {
   Value evaluationError() const;
   JSObject* metaObject() const;
   ScriptSourceObject* scriptSourceObject() const;
-  const RequestedModuleVector& requestedModules() const;
-  const ImportEntryVector& importEntries() const;
-  const ExportEntryVector& localExportEntries() const;
-  const ExportEntryVector& indirectExportEntries() const;
-  const ExportEntryVector& starExportEntries() const;
+  mozilla::Span<const RequestedModule> requestedModules() const;
+  mozilla::Span<const ImportEntry> importEntries() const;
+  mozilla::Span<const ExportEntry> localExportEntries() const;
+  mozilla::Span<const ExportEntry> indirectExportEntries() const;
+  mozilla::Span<const ExportEntry> starExportEntries() const;
   IndirectBindingMap& importBindings();
 
   void setStatus(ModuleStatus newStatus);

@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"       // MOZ_ASSERT
 #include "mozilla/Attributes.h"       // MOZ_STACK_CLASS
 #include "mozilla/MemoryReporting.h"  // MallocSizeOf
+#include "mozilla/Span.h"
 #include "mozilla/Vector.h"
 
 #include <stddef.h>  // size_t
@@ -71,6 +72,9 @@ class GCVector {
 
   T& back() { return vector.back(); }
   const T& back() const { return vector.back(); }
+
+  operator mozilla::Span<T>() { return vector; }
+  operator mozilla::Span<const T>() const { return vector; }
 
   bool initCapacity(size_t cap) { return vector.initCapacity(cap); }
   [[nodiscard]] bool reserve(size_t req) { return vector.reserve(req); }

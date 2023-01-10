@@ -180,7 +180,7 @@ JS::GetRequestedModulesCount(JSContext* cx, Handle<JSObject*> moduleRecord) {
   CHECK_THREAD(cx);
   cx->check(moduleRecord);
 
-  return moduleRecord->as<ModuleObject>().requestedModules().length();
+  return moduleRecord->as<ModuleObject>().requestedModules().Length();
 }
 
 JS_PUBLIC_API JSString* JS::GetRequestedModuleSpecifier(
