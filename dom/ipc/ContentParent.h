@@ -361,6 +361,9 @@ class ContentParent final : public PContentParent,
   virtual nsresult DoSendAsyncMessage(const nsAString& aMessage,
                                       StructuredCloneData& aData) override;
 
+  /** Notify that a tab is about to send Destroy to its child. */
+  void NotifyTabWillDestroy();
+
   /** Notify that a tab is beginning its destruction sequence. */
   void NotifyTabDestroying();
 
@@ -830,6 +833,8 @@ class ContentParent final : public PContentParent,
    * This potentially cancels mainthread content JS execution.
    */
   void SignalImpendingShutdownToContentJS();
+
+  bool CheckTabDestroyWillCauseShutdown(uint32_t aExpectedBrowserCount);
 
   /**
    * Check if this process is ready to be shut down, and if it is, begin the

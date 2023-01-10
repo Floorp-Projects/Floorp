@@ -1717,6 +1717,19 @@ void ContentParent::Init() {
   Unused << SendInitNextGenLocalStorageEnabled(NextGenLocalStorageEnabled());
 }
 
+bool ContentParent::CheckTabDestroyWillCauseShutdown(
+    uint32_t aExpectedBrowserCount) {
+  return (ManagedPBrowserParent().Count() == aExpectedBrowserCount &&
+          !ShouldKeepProcessAlive());
+}
+
+void ContentParent::NotifyTabWillDestroy() {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed) ||
+      CheckTabDestroyWillCauseShutdown(mNumDestroyingTabs + 1)) {
+    NotifyImpendingShutdown();
+  }
+}
+
 void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
                                        bool aSendShutDown) {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
@@ -1724,8 +1737,11 @@ void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
            ManagedPBrowserParent().Count(), aExpectedBrowserCount));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (ManagedPBrowserParent().Count() != aExpectedBrowserCount ||
-      ShouldKeepProcessAlive() || TryToRecycle()) {
+  // CheckTabDestroyWillCauseShutdown will return true and
+  // TryToRecycle will return false if IsInOrBeyond(AppShutdownConfirmed),
+  // so if the parent shuts down we will always shutdown the child.
+  if (!CheckTabDestroyWillCauseShutdown(aExpectedBrowserCount) ||
+      TryToRecycle()) {
     return;
   }
 
@@ -2318,6 +2334,11 @@ bool ContentParent::ShouldKeepProcessAlive() {
 
   // If we have already been marked as dead, don't prevent shutdown.
   if (IsDead()) {
+    return false;
+  }
+
+  // If everything is going down, there is no need to keep us alive, neither.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return false;
   }
 
