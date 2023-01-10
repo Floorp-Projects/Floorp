@@ -12,23 +12,19 @@
 #include "mozilla/dom/PWebTransportParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "nsISupports.h"
-#include "nsIPrincipal.h"
-#include "nsIWebTransport.h"
 
 namespace mozilla::dom {
 
 enum class WebTransportReliabilityMode : uint8_t;
 
-class WebTransportParent : public PWebTransportParent,
-                           public WebTransportSessionEventListener {
+class WebTransportParent : public PWebTransportParent {
  public:
   WebTransportParent() = default;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_WEBTRANSPORTSESSIONEVENTLISTENER
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebTransportParent, override)
 
-  void Create(
-      const nsAString& aURL, nsIPrincipal* aPrincipal, const bool& aDedicated,
+  static void Create(
+      const nsAString& aURL, const bool& aDedicated,
       const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
       // Sequence<WebTransportHash>* aServerCertHashes,
       Endpoint<PWebTransportParent>&& aParentEndpoint,
@@ -39,17 +35,8 @@ class WebTransportParent : public PWebTransportParent,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool IsClosed() const { return mClosed; }
-
  protected:
   virtual ~WebTransportParent();
-
- private:
-  using ResolveType = Tuple<const nsresult&, const uint8_t&>;
-  std::function<void(ResolveType)> mResolver;
-  FlippedOnce<false> mClosed;
-  nsCOMPtr<nsIWebTransport> mWebTransport;
-  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 };
 
 }  // namespace mozilla::dom
