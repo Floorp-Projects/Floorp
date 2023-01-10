@@ -63,6 +63,8 @@ class XULMenuParentElement : public nsXULElement {
   XULButtonElement* GetNextMenuItem(Wrap = Wrap::Yes) const;
   XULButtonElement* GetPrevMenuItem(Wrap = Wrap::Yes) const;
 
+  XULButtonElement* GetContainingMenu() const;
+
   MOZ_CAN_RUN_SCRIPT void SelectFirstItem();
 
  protected:
