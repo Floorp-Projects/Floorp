@@ -6,18 +6,23 @@ package org.mozilla.fenix.settings.quicksettings.protections.cookiebanners
 
 import android.widget.FrameLayout
 import io.mockk.MockKAnnotations
+import io.mockk.coEvery
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
-import mozilla.components.support.ktx.kotlin.toShortUrl
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
@@ -35,6 +40,10 @@ class CookieBannerHandlingDetailsViewTest {
     @MockK(relaxed = true)
     private lateinit var publicSuffixList: PublicSuffixList
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
+
     @Before
     fun setup() {
         MockKAnnotations.init(this)
@@ -45,6 +54,7 @@ class CookieBannerHandlingDetailsViewTest {
                 context = testContext,
                 publicSuffixList = publicSuffixList,
                 interactor = interactor,
+                ioScope = scope,
             ),
         )
         binding = view.binding
@@ -74,34 +84,42 @@ class CookieBannerHandlingDetailsViewTest {
     }
 
     @Test
-    fun `GIVEN cookie banner handling is enabled WHEN biding title THEN title view must have the expected string`() {
-        val websiteUrl = "https://mozilla.org"
+    fun `GIVEN cookie banner handling is enabled WHEN biding title THEN title view must have the expected string`() =
+        runTestOnMain {
+            coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
-        view.bindTitle(url = websiteUrl, isCookieBannerHandlingEnabled = true)
+            val websiteUrl = "https://mozilla.org"
 
-        val expectedText =
-            testContext.getString(
-                R.string.reduce_cookie_banner_details_panel_title_off_for_site,
-                websiteUrl.toShortUrl(publicSuffixList),
-            )
+            view.bindTitle(url = websiteUrl, isCookieBannerHandlingEnabled = true)
 
-        assertEquals(expectedText, view.binding.title.text)
-    }
+            val expectedText =
+                testContext.getString(
+                    R.string.reduce_cookie_banner_details_panel_title_off_for_site,
+                    "mozilla.org",
+                )
+
+            assertEquals(expectedText, view.binding.title.text)
+        }
 
     @Test
-    fun `GIVEN cookie banner handling is disabled WHEN biding title THEN title view must have the expected string`() {
-        val websiteUrl = "https://mozilla.org"
+    fun `GIVEN cookie banner handling is disabled WHEN biding title THEN title view must have the expected string`() =
+        runTestOnMain {
+            coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
-        view.bindTitle(url = websiteUrl, isCookieBannerHandlingEnabled = false)
+            val websiteUrl = "https://mozilla.org"
 
-        val expectedText =
-            testContext.getString(
-                R.string.reduce_cookie_banner_details_panel_title_on_for_site,
-                websiteUrl.toShortUrl(publicSuffixList),
-            )
+            view.bindTitle(url = websiteUrl, isCookieBannerHandlingEnabled = false)
 
-        assertEquals(expectedText, view.binding.title.text)
-    }
+            advanceUntilIdle()
+
+            val expectedText =
+                testContext.getString(
+                    R.string.reduce_cookie_banner_details_panel_title_on_for_site,
+                    "mozilla.org",
+                )
+
+            assertEquals(expectedText, view.binding.title.text)
+        }
 
     @Test
     fun `WHEN clicking the back button THEN view must delegate to the interactor#onBackPressed()`() {

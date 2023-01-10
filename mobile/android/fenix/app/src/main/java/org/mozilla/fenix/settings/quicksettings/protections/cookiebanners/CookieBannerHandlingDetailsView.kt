@@ -8,6 +8,11 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.kotlin.toShortUrl
 import org.mozilla.fenix.R
@@ -24,6 +29,7 @@ import org.mozilla.fenix.trackingprotection.ProtectionsState
 class CookieBannerHandlingDetailsView(
     container: ViewGroup,
     private val context: Context,
+    private val ioScope: CoroutineScope,
     private val publicSuffixList: PublicSuffixList,
     val interactor: CookieBannerDetailsInteractor,
 ) {
@@ -45,14 +51,22 @@ class CookieBannerHandlingDetailsView(
 
     @VisibleForTesting
     internal fun bindTitle(url: String, isCookieBannerHandlingEnabled: Boolean) {
-        val stringID =
-            if (isCookieBannerHandlingEnabled) {
-                R.string.reduce_cookie_banner_details_panel_title_off_for_site
-            } else {
-                R.string.reduce_cookie_banner_details_panel_title_on_for_site
+        ioScope.launch {
+            val host = url.toUri().host.orEmpty()
+            val domain = publicSuffixList.getPublicSuffixPlusOne(host).await()
+
+            launch(Dispatchers.Main) {
+                val stringID =
+                    if (isCookieBannerHandlingEnabled) {
+                        R.string.reduce_cookie_banner_details_panel_title_off_for_site
+                    } else {
+                        R.string.reduce_cookie_banner_details_panel_title_on_for_site
+                    }
+                val data = domain ?: url
+                val shortUrl = data.toShortUrl(publicSuffixList)
+                binding.title.text = context.getString(stringID, shortUrl)
             }
-        val shortUrl = url.toShortUrl(publicSuffixList)
-        binding.title.text = context.getString(stringID, shortUrl)
+        }
     }
 
     @VisibleForTesting

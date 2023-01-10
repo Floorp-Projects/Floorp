@@ -85,6 +85,7 @@ class CookieBannerPanelDialogFragment : FenixDialogFragment() {
 
         cookieBannersView = CookieBannerHandlingDetailsView(
             context = requireContext(),
+            ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
             container = binding.cookieBannerDetailsInfoLayout,
             publicSuffixList = requireComponents.publicSuffixList,
             interactor = DefaultCookieBannerDetailsInteractor(controller),
