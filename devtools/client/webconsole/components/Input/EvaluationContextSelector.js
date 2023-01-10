@@ -50,8 +50,7 @@ class EvaluationContextSelector extends Component {
   static get propTypes() {
     return {
       selectTarget: PropTypes.func.isRequired,
-      updateInstantEvaluationResultForCurrentExpression:
-        PropTypes.func.isRequired,
+      onContextChange: PropTypes.func.isRequired,
       selectedTarget: PropTypes.object,
       lastTargetRefresh: PropTypes.number,
       targets: PropTypes.array,
@@ -84,7 +83,7 @@ class EvaluationContextSelector extends Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.selectedTarget !== prevProps.selectedTarget) {
-      this.props.updateInstantEvaluationResultForCurrentExpression();
+      this.props.onContextChange();
     }
   }
 
@@ -281,9 +280,11 @@ const toolboxConnected = connect(
 module.exports = connect(
   state => state,
   dispatch => ({
-    updateInstantEvaluationResultForCurrentExpression: () =>
+    onContextChange: () => {
       dispatch(
         webconsoleActions.updateInstantEvaluationResultForCurrentExpression()
-      ),
+      );
+      dispatch(webconsoleActions.autocompleteClear());
+    },
   })
 )(toolboxConnected);
