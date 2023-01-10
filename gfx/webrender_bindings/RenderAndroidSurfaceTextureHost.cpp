@@ -18,11 +18,12 @@ namespace wr {
 RenderAndroidSurfaceTextureHost::RenderAndroidSurfaceTextureHost(
     const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat, bool aContinuousUpdate,
-    Maybe<gfx::Matrix4x4> aTransformOverride)
+    gl::OriginPos aOriginPos, Maybe<gfx::Matrix4x4> aTransformOverride)
     : mSurfTex(aSurfTex),
       mSize(aSize),
       mFormat(aFormat),
       mContinuousUpdate(aContinuousUpdate),
+      mOriginPos(aOriginPos),
       mTransformOverride(aTransformOverride),
       mPrepareStatus(STATUS_NONE),
       mAttachedToGLContext(false) {
@@ -228,9 +229,10 @@ RenderAndroidSurfaceTextureHost::ReadTexImage() {
       LOCAL_GL_TEXTURE_EXTERNAL, mFormat);
   int shaderConfig = config.mFeatures;
 
+  const bool yInvert = mOriginPos == gl::OriginPos::TopLeft;
   bool ret = mGL->ReadTexImageHelper()->ReadTexImage(
       surf, mSurfTex->GetTexName(), LOCAL_GL_TEXTURE_EXTERNAL, mSize,
-      shaderConfig, /* aYInvert */ false);
+      shaderConfig, yInvert);
   if (!ret) {
     return nullptr;
   }
