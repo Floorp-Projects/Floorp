@@ -488,6 +488,7 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
 
       subSubFile = contents.files()[0];
       ASSERT_STREQ(testFileMeta.childName(), subSubFile.entryName());
+      ASSERT_EQ(testFile, subSubFile.entryId());
     }
 
     {
@@ -517,16 +518,6 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
     }
 
     {
-      // Try to rename directory to a file
-      FileSystemEntryMetadata src{firstChildDescendant,
-                                  firstChildDescendantMeta.childName(),
-                                  /* is directory */ true};
-      const FileSystemChildMetadata& dest = testFileMeta;
-      TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
-      ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
-    }
-
-    {
       // Try to move subsubdirectory under a file
       FileSystemEntryMetadata src{firstChildDescendant,
                                   firstChildDescendantMeta.childName(),
@@ -535,6 +526,33 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                    firstChildDescendantMeta.childName()};
       TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
       ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);
+    }
+
+    {
+      // Try to rename directory to quietly overwrite a file
+      FileSystemEntryMetadata src{firstChildDescendant,
+                                  firstChildDescendantMeta.childName(),
+                                  /* is directory */ true};
+      const FileSystemChildMetadata& dest = testFileMeta;
+      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+      ASSERT_TRUE(isMoved);
+    }
+
+    {
+      // Move directory back and recreate the file
+      FileSystemEntryMetadata src{firstChildDescendant,
+                                  testFileMeta.childName(),
+                                  /* is directory */ true};
+
+      FileSystemChildMetadata dest{firstChildDir,
+                                   firstChildDescendantMeta.childName()};
+
+      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+      ASSERT_TRUE(isMoved);
+
+      TEST_TRY_UNWRAP(EntryId testFileCheck,
+                      dm->GetOrCreateFile(testFileMeta, /* create */ true));
+      ASSERT_STREQ(testFile, testFileCheck);
     }
 
     {
@@ -612,14 +630,32 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
     }
 
     {
-      // Try to move subSubDirectory one level up to collide with file
+      // Try to move subSubDirectory one level up to quietly overwrite a file
       FileSystemEntryMetadata src{firstChildDescendant,
                                   firstChildDescendantMeta.childName(),
                                   /* is directory */ true};
       FileSystemChildMetadata dest{rootId,
                                    firstChildDescendantMeta.childName()};
-      TEST_TRY_UNWRAP_ERR(nsresult rv, dm->MoveEntry(src, dest));
-      ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
+      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+      ASSERT_TRUE(isMoved);
+    }
+
+    {
+      // Move subSubDirectory back one level down and recreate the file
+      FileSystemEntryMetadata src{firstChildDescendant,
+                                  firstChildDescendantMeta.childName(),
+                                  /* is directory */ true};
+      FileSystemChildMetadata dest{firstChildDir,
+                                   firstChildDescendantMeta.childName()};
+      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
+      ASSERT_TRUE(isMoved);
+
+      TEST_TRY_UNWRAP(
+          EntryId testFileCheck,
+          dm->GetOrCreateFile({rootId, firstChildDescendantMeta.childName()},
+                              /* create */ true));
+      ASSERT_NE(testFile, testFileCheck);
+      testFile = testFileCheck;
     }
 
     // Create a new file in the subsubdirectory
@@ -738,8 +774,7 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
 
     // Names are swapped
     {
-      TEST_TRY_UNWRAP(Path entryPath,
-                      dm->Resolve({rootId, subSubFile.entryId()}));
+      TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, testFile}));
       ASSERT_EQ(2u, entryPath.Length());
       ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
       ASSERT_STREQ(firstChildDescendantMeta.childName(), entryPath[1]);
