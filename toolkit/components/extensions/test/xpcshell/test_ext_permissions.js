@@ -646,6 +646,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "urlbar",
   "webRequest",
   "webRequestBlocking",
+  "webRequestFilterResponse",
   "webRequestFilterResponse.serviceWorkerScript",
 ];
 

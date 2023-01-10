@@ -83,7 +83,10 @@ async function test_idletimeout_on_streamfilter({
       manifest_version,
       background: manifest_version >= 3 ? {} : { persistent: false },
       granted_host_permissions: manifest_version >= 3,
-      permissions: ["webRequest", "webRequestBlocking"],
+      permissions:
+        manifest_version >= 3
+          ? ["webRequest", "webRequestBlocking", "webRequestFilterResponse"]
+          : ["webRequest", "webRequestBlocking"],
       // host_permissions are merged with permissions on a MV2 test extension.
       host_permissions: ["http://example.com/*"],
     },
@@ -290,7 +293,10 @@ async function test_create_new_streamfilter_while_suspending({
       manifest_version,
       background: manifest_version >= 3 ? {} : { persistent: false },
       granted_host_permissions: manifest_version >= 3,
-      permissions: ["webRequest", "webRequestBlocking"],
+      permissions:
+        manifest_version >= 3
+          ? ["webRequest", "webRequestBlocking", "webRequestFilterResponse"]
+          : ["webRequest", "webRequestBlocking"],
       // host_permissions are merged with permissions on a MV2 test extension.
       host_permissions: ["http://example.com/*"],
     },
