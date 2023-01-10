@@ -279,10 +279,10 @@
     <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Notifications help you do more with Firefox</string>
     <!-- Enable notification pre permission dialog description with rationale -->
     <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Sync your tabs between devices, manage downloads, get tips about making the most of Firefox’s privacy protection, and more.</string>
-    <!-- Text for the button to enable app notifications on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Enable notifications</string>
-    <!-- Text for the button to not enable app notifications on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">No thanks</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Continue</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Not now</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
