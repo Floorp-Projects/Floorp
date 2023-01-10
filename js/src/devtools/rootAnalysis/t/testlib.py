@@ -103,7 +103,6 @@ sixgill_bin = '{bindir}'
         if upto:
             cmd += ["--last", upto]
         cmd.append("--source=%s" % self.indir)
-        cmd.append("--objdir=%s" % self.outdir)
         cmd.append("--js=%s" % self.cfg.js)
         if self.cfg.verbose:
             cmd.append("--verbose")

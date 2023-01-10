@@ -37,12 +37,9 @@ class MultiInput(str):
 
 def env(config):
     e = dict(os.environ)
-    e["PATH"] = ":".join(
-        p for p in (config.get("gcc_bin"), config.get("sixgill_bin"), e["PATH"]) if p
-    )
+    e["PATH"] = ":".join(p for p in (config.get("sixgill_bin"), e["PATH"]) if p)
     e["XDB"] = "%(sixgill_bin)s/xdb.so" % config
     e["SOURCE"] = config["source"]
-    e["ANALYZED_OBJDIR"] = config["objdir"]
     return e
 
 
@@ -98,21 +95,6 @@ def print_command(command, outfile=None, env=None):
 
 
 JOBS = {
-    "dbs": {
-        "command": [
-            "{analysis_scriptdir}/run_complete",
-            "--foreground",
-            "--no-logs",
-            "--build-root={objdir}",
-            "--wrap-dir={sixgill}/scripts/wrap_gcc",
-            "--work-dir=work",
-            "-b",
-            "{sixgill_bin}",
-            "--buildcommand={buildcommand}",
-            ".",
-        ],
-        "outputs": [],
-    },
     "list-dbs": {"command": ["ls", "-l"]},
     "rawcalls": {
         "command": [
@@ -206,7 +188,7 @@ JOBS = {
 }
 
 
-# Generator of (i, j, item) tuples:
+# Generator of (i, j, item) tuples corresponding to outputs:
 #  - i is just the index of the yielded tuple (a la enumerate())
 #  - j is the index of the item in the command list
 #  - item is command[j]
@@ -331,13 +313,6 @@ parser.add_argument(
     "--source", metavar="SOURCE", type=str, nargs="?", help="source code to analyze"
 )
 parser.add_argument(
-    "--objdir",
-    metavar="DIR",
-    type=str,
-    nargs="?",
-    help="object directory of compiled files",
-)
-parser.add_argument(
     "--js",
     metavar="JSSHELL",
     type=str,
@@ -364,21 +339,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--list", const=True, nargs="?", type=bool, help="display available steps"
-)
-parser.add_argument(
-    "--buildcommand",
-    "--build",
-    "-b",
-    type=str,
-    nargs="?",
-    help="command to build the tree being analyzed",
-)
-parser.add_argument(
-    "--tag",
-    "-t",
-    type=str,
-    nargs="?",
-    help='name of job, also sets build command to "build.<tag>"',
 )
 parser.add_argument(
     "--expect-file",
@@ -412,23 +372,10 @@ for k, v in vars(args).items():
     if v is not None:
         data[k] = v
 
-if args.tag and not args.buildcommand:
-    args.buildcommand = "build.%s" % args.tag
-
 if args.jobs is not None:
     data["jobs"] = args.jobs
 if not data.get("jobs"):
     data["jobs"] = max_parallel_jobs()
-
-if args.buildcommand:
-    data["buildcommand"] = args.buildcommand
-elif "BUILD" in os.environ:
-    data["buildcommand"] = os.environ["BUILD"]
-else:
-    data["buildcommand"] = "make -j{} -s".format(data["jobs"])
-
-if "ANALYZED_OBJDIR" in os.environ:
-    data["objdir"] = os.environ["ANALYZED_OBJDIR"]
 
 if "GECKO_PATH" in os.environ:
     data["source"] = os.environ["GECKO_PATH"]
@@ -436,7 +383,6 @@ if "SOURCE" in os.environ:
     data["source"] = os.environ["SOURCE"]
 
 steps = [
-    "dbs",
     "gcTypes",
     "rawcalls",
     "gcFunctions",
