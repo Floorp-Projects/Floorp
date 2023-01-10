@@ -519,7 +519,7 @@ pref("browser.urlbar.sponsoredTopSites", false);
 
 // Global toggle for whether the show search terms feature
 // can be used at all, and enabled/disabled by the user.
-#ifdef NIGHTLY_BUILD
+#if defined(EARLY_BETA_OR_EARLIER)
 pref("browser.urlbar.showSearchTerms.featureGate", true);
 #else
 pref("browser.urlbar.showSearchTerms.featureGate", false);
