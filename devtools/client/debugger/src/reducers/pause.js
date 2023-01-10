@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-/* eslint complexity: ["error", 35]*/
+/* eslint complexity: ["error", 36]*/
 
 /**
  * Pause reducer
@@ -100,6 +100,25 @@ function update(state = initialPauseState(), action) {
           pauseCounter: state.threadcx.pauseCounter + 1,
         },
       };
+    }
+
+    case "INSERT_THREAD": {
+      // When navigating to a new location,
+      // we receive NAVIGATE early, which clear things
+      // then we have REMOVE_THREAD of the previous thread.
+      // INSERT_THREAD will be the very first event with the new thread actor ID.
+      // Automatically select the new top level thread.
+      if (action.newThread.isTopLevel) {
+        return {
+          ...state,
+          threadcx: {
+            ...state.threadcx,
+            thread: action.newThread.actor,
+            pauseCounter: state.threadcx.pauseCounter + 1,
+          },
+        };
+      }
+      break;
     }
 
     case "REMOVE_THREAD": {

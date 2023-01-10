@@ -78,4 +78,21 @@ add_task(async function() {
 
   // close the threads pane so following test don't have it open
   threadsPaneEl.click();
+
+  await navigateToAbsoluteURL(dbg, "data:text/html,<title>foo</title>");
+
+  // TOFIX: Bug 1809168 watch expressions aren't updated on navigation
+  todo_is(
+    getWatchExpressionValue(dbg, 1),
+    `""`,
+    "The location.host expression is updated after a navigaiton"
+  );
+
+  await addExpression(dbg, "document.title");
+
+  is(
+    getWatchExpressionValue(dbg, 2),
+    `"foo"`,
+    "We can add expressions after a navigation"
+  );
 });
