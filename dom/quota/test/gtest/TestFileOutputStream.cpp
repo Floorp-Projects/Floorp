@@ -4,140 +4,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
-
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
-#include "mozilla/dom/quota/QuotaManagerService.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
-#include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/gtest/MozAssertions.h"
-#include "mozilla/SpinEventLoopUntil.h"
-#include "mozIStorageService.h"
-#include "mozStorageCID.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsIQuotaCallbacks.h"
-#include "nsIQuotaRequests.h"
+#include "QuotaManagerDependencyFixture.h"
 
 namespace mozilla::dom::quota::test {
 
-// TODO: Refactor this in the scope of Bug 1801364
-class TestFileOutputStream : public ::testing::Test {
+class TestFileOutputStream : public QuotaManagerDependencyFixture {
  public:
-  class RequestResolver final : public nsIQuotaCallback {
-   public:
-    RequestResolver() : mDone(false) {}
-
-    bool Done() const { return mDone; }
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD OnComplete(nsIQuotaRequest* aRequest) override {
-      mDone = true;
-
-      return NS_OK;
-    }
-
-   private:
-    ~RequestResolver() = default;
-
-    bool mDone;
-  };
-
   static void SetUpTestCase() {
-    // The first initialization of storage service must be done on the main
-    // thread.
-    nsCOMPtr<mozIStorageService> storageService =
-        do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-    ASSERT_TRUE(storageService);
+    ASSERT_NO_FATAL_FAILURE(InitializeFixture());
 
-    nsIObserver* observer = quota::QuotaManager::GetObserver();
-    ASSERT_TRUE(observer);
-
-    nsresult rv = observer->Observe(nullptr, "profile-do-change", nullptr);
-    ASSERT_NS_SUCCEEDED(rv);
-
-    AutoJSAPI jsapi;
-
-    bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
-    ASSERT_TRUE(ok);
-
-    // QuotaManagerService::Initialized fails if the testing pref is not set.
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    prefs->SetBoolPref("dom.quotaManager.testing", true);
 
     prefs->SetIntPref("dom.quotaManager.temporaryStorage.fixedLimit",
                       mQuotaLimit);
-
-    nsCOMPtr<nsIQuotaManagerService> qms =
-        quota::QuotaManagerService::GetOrCreate();
-    ASSERT_TRUE(qms);
-
-    nsCOMPtr<nsIQuotaRequest> request;
-    rv = qms->StorageInitialized(getter_AddRefs(request));
-    ASSERT_NS_SUCCEEDED(rv);
-
-    prefs->SetBoolPref("dom.quotaManager.testing", false);
-
-    RefPtr<RequestResolver> resolver = new RequestResolver();
-
-    rv = request->SetCallback(resolver);
-    ASSERT_NS_SUCCEEDED(rv);
-
-    SpinEventLoopUntil("Promise is fulfilled"_ns,
-                       [&resolver]() { return resolver->Done(); });
-
-    quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-    ASSERT_TRUE(quotaManager);
-
-    ASSERT_TRUE(quotaManager->OwningThread());
-
-    sBackgroundTarget = quotaManager->OwningThread();
   }
 
   static void TearDownTestCase() {
-    nsIObserver* observer = quota::QuotaManager::GetObserver();
-    ASSERT_TRUE(observer);
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-    nsresult rv =
-        observer->Observe(nullptr, "profile-before-change-qm", nullptr);
-    ASSERT_NS_SUCCEEDED(rv);
+    prefs->ClearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
 
-    bool done = false;
-
-    InvokeAsync(sBackgroundTarget, __func__,
-                []() {
-                  quota::QuotaManager::Reset();
-
-                  return BoolPromise::CreateAndResolve(true, __func__);
-                })
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [&done](const BoolPromise::ResolveOrRejectValue& value) {
-                 done = true;
-               });
-
-    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
-
-    sBackgroundTarget = nullptr;
+    ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
   }
-
-  static const nsCOMPtr<nsISerialEventTarget>& BackgroundTargetStrongRef() {
-    return sBackgroundTarget;
-  }
-
-  static nsCOMPtr<nsISerialEventTarget> sBackgroundTarget;
 
   static const int32_t mQuotaLimit = 8192;
 };
-
-NS_IMPL_ISUPPORTS(TestFileOutputStream::RequestResolver, nsIQuotaCallback)
-
-nsCOMPtr<nsISerialEventTarget> TestFileOutputStream::sBackgroundTarget;
 
 TEST_F(TestFileOutputStream, extendFileStreamWithSetEOF) {
   auto ioTask = []() {
@@ -278,21 +176,7 @@ TEST_F(TestFileOutputStream, extendFileStreamWithSetEOF) {
     ASSERT_TRUE(0 == avail);
   };
 
-  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-
-  bool done = false;
-
-  InvokeAsync(quotaManager->IOThread(), __func__,
-              [ioTask = std::move(ioTask)]() {
-                ioTask();
-                return BoolPromise::CreateAndResolve(true, __func__);
-              })
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [&done](const BoolPromise::ResolveOrRejectValue& value) {
-               done = true;
-             });
-
-  SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  PerformOnIOThread(std::move(ioTask));
 }
 
 }  // namespace mozilla::dom::quota::test
