@@ -649,7 +649,23 @@ var BackgroundUpdate = {
         lazy.log.debug(
           `${SLUG}: preparing to write Firefox Messaging System targeting information to ${path}`
         );
-        snapshot.data = await lazy.ASRouterTargeting.getEnvironmentSnapshot();
+
+        // Merge latest data into existing data.  This data may be partial, due
+        // to runtime errors and abbreviated collections, especially when
+        // shutting down.  We accept the risk of incomplete or even internally
+        // inconsistent data: it's generally better to have stale data (and
+        // potentially target a user as they appeared in the past) than to block
+        // shutdown for more accurate results.  An alternate approach would be
+        // to restrict the targeting data collected, but it's hard to
+        // distinguish expensive collection operations and the system loses
+        // flexibility when restrictions of this type are added.
+        let latestData = await lazy.ASRouterTargeting.getEnvironmentSnapshot();
+        // We expect to always have data, but: belt-and-braces.
+        if (snapshot?.data?.environment) {
+          Object.assign(snapshot.data.environment, latestData.environment);
+        } else {
+          snapshot.data = latestData;
+        }
       },
       path,
     });
