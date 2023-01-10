@@ -993,13 +993,19 @@ void nsCSPContext::logToConsole(const char* aName,
  * Strip URI for reporting according to:
  * https://w3c.github.io/webappsec-csp/#security-violation-reports
  *
+ * @param aSelfURI
+ *        The URI of the CSP policy. Used for cross-origin checks.
  * @param aURI
  *        The URI of the blocked resource. In case of a redirect, this it the
  *        initial URI the request started out with, not the redirected URI.
+ * @param aEffectiveDirective
+ *        The effective directive that triggered this report
  * @return The ASCII serialization of the uri to be reported ignoring
  *         the ref part of the URI.
  */
-void StripURIForReporting(nsIURI* aURI, nsACString& outStrippedURI) {
+void StripURIForReporting(nsIURI* aSelfURI, nsIURI* aURI,
+                          const nsAString& aEffectiveDirective,
+                          nsACString& outStrippedURI) {
   // If the origin of aURI is a globally unique identifier (for example,
   // aURI has a scheme of data, blob, or filesystem), then
   // return the ASCII serialization of uri’s scheme.
@@ -1013,6 +1019,18 @@ void StripURIForReporting(nsIURI* aURI, nsACString& outStrippedURI) {
     // as if it's a globally unique identifier and just return the scheme.
     aURI->GetScheme(outStrippedURI);
     return;
+  }
+
+  // For cross-origin URIs in frame-src also strip the path.
+  // This prevents detailed tracking of pages loaded into an iframe
+  // by the embedding page using a report-only policy.
+  if (aEffectiveDirective.EqualsLiteral("frame-src") ||
+      aEffectiveDirective.EqualsLiteral("object-src")) {
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    if (NS_FAILED(ssm->CheckSameOriginURI(aSelfURI, aURI, false, false))) {
+      aURI->GetPrePath(outStrippedURI);
+      return;
+    }
   }
 
   // Return aURI, with any fragment component removed.
@@ -1035,7 +1053,8 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
 
   // document-uri
   nsAutoCString reportDocumentURI;
-  StripURIForReporting(mSelfURI, reportDocumentURI);
+  StripURIForReporting(mSelfURI, mSelfURI, aEffectiveDirective,
+                       reportDocumentURI);
   CopyUTF8toUTF16(reportDocumentURI, aViolationEventInit.mDocumentURI);
 
   // referrer
@@ -1044,8 +1063,8 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
   // blocked-uri
   if (aBlockedURI) {
     nsAutoCString reportBlockedURI;
-    StripURIForReporting(aOriginalURI ? aOriginalURI : aBlockedURI,
-                         reportBlockedURI);
+    StripURIForReporting(mSelfURI, aOriginalURI ? aOriginalURI : aBlockedURI,
+                         aEffectiveDirective, reportBlockedURI);
     CopyUTF8toUTF16(reportBlockedURI, aViolationEventInit.mBlockedURI);
   } else {
     CopyUTF8toUTF16(aBlockedString, aViolationEventInit.mBlockedURI);
@@ -1073,7 +1092,7 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
     NS_NewURI(getter_AddRefs(sourceURI), aSourceFile);
     if (sourceURI) {
       nsAutoCString spec;
-      StripURIForReporting(sourceURI, spec);
+      StripURIForReporting(mSelfURI, sourceURI, aEffectiveDirective, spec);
       CopyUTF8toUTF16(spec, aViolationEventInit.mSourceFile);
     } else {
       aViolationEventInit.mSourceFile = aSourceFile;
