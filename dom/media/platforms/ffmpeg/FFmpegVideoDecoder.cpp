@@ -852,13 +852,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
 
-  mCodecContext->skip_frame = mFrameDrop;
-#if MOZ_LOGGING
-  if (mFrameDrop == AVDISCARD_NONREF) {
-    FFMPEG_LOG("Frame skip AVDISCARD_NONREF");
-  }
-#endif
-
   mTrackingId.apply([&](const auto& aId) {
     MediaInfoFlag flag = MediaInfoFlag::None;
     flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
@@ -943,18 +936,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return MediaResult(
           NS_ERROR_DOM_MEDIA_DECODE_ERR,
           RESULT_DETAIL("avcodec_receive_frame error: %s", errStr));
-    }
-
-    if (mFrameDrop == AVDISCARD_NONREF) {
-      FFMPEG_LOG("Requested pts %" PRId64 " decoded frame pts %" PRId64,
-                 packet.pts, GetFramePts(mFrame) + mFrame->pkt_duration);
-      // Switch back to default frame skip policy if we hit correct
-      // decode times. 5 ms treshold is taken from mpv project which
-      // use similar approach after seek (feed_packet() at f_decoder_wrapper.c).
-      if (packet.pts - 5000 <= GetFramePts(mFrame) + mFrame->pkt_duration) {
-        FFMPEG_LOG("Set frame drop to AVDISCARD_DEFAULT.");
-        mFrameDrop = AVDISCARD_DEFAULT;
-      }
     }
 
     UpdateDecodeTimes(decodeStart);
@@ -1368,10 +1349,6 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush() {
   mPtsContext.Reset();
   mDurationMap.Clear();
   mPerformanceRecorder.Record(std::numeric_limits<int64_t>::max());
-  // Discard non-ref frames on HW accelerated backend to avoid decode artifacts.
-  if (IsHardwareAccelerated()) {
-    mFrameDrop = AVDISCARD_NONREF;
-  }
   return FFmpegDataDecoder::ProcessFlush();
 }
 

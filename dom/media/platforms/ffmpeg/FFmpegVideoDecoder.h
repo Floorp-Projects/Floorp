@@ -177,7 +177,6 @@ class FFmpegVideoDecoder<LIBAV_VER>
 
   DurationMap mDurationMap;
   const bool mLowLatency;
-  AVDiscard mFrameDrop = AVDISCARD_DEFAULT;
   const Maybe<TrackingId> mTrackingId;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 
