@@ -975,16 +975,35 @@ def version_path(path):
     return path
 
 
+# Allow to easily build nightly with a release / beta configuration so that we
+# can have the same options we'd have on a release version.
+# This is useful for performance profiling, as there are things that we don't
+# enable in release (like the background hang monitor) that can affect
+# performance.
+option(
+    "--as-milestone",
+    help="Build with another milestone configuration (e.g., as release)",
+    choices=("early-beta", "late-beta", "release"),
+    default=None,
+)
+
+
 # set RELEASE_OR_BETA and NIGHTLY_BUILD variables depending on the cycle we're in
 # The logic works like this:
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
 # - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
 # - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
-@depends(build_environment, build_project, version_path, "--help")
+@depends(
+    build_environment,
+    build_project,
+    version_path,
+    "--as-milestone",
+    "--help",
+)
 @imports(_from="__builtin__", _import="open")
 @imports("os")
 @imports("re")
-def milestone(build_env, build_project, version_path, _):
+def milestone(build_env, build_project, version_path, as_milestone, _):
     versions = []
     paths = ["config/milestone.txt"]
     if build_project == "js":
@@ -1011,6 +1030,17 @@ def milestone(build_env, build_project, version_path, _):
                 die("Could not find a version number in {}".format(p))
             versions.append(content[-1])
 
+    is_early_beta_or_earlier = None
+    if as_milestone:
+        if "a1" not in versions[0]:
+            # We could make this work with some effort
+            die("--as-milestone only works on nightly builds")
+        as_milestone = as_milestone[0]
+        as_milestone_flag = "" if as_milestone == "release" else "b1"
+        versions = [v.replace("a1", as_milestone_flag) for v in versions]
+        if as_milestone == "early-beta":
+            is_early_beta_or_earlier = True
+
     milestone, firefox_version, firefox_version_display = versions[:3]
 
     # version.txt content from the project directory if there is one, otherwise
@@ -1021,7 +1051,7 @@ def milestone(build_env, build_project, version_path, _):
     # firefox version for display.
     app_version_display = versions[-1] if len(versions) > 3 else firefox_version_display
 
-    is_nightly = is_release_or_beta = is_early_beta_or_earlier = None
+    is_nightly = is_release_or_beta = None
 
     if "a1" in milestone:
         is_nightly = True
@@ -1032,21 +1062,22 @@ def milestone(build_env, build_project, version_path, _):
     m = re.search(r"([ab]\d+)", milestone)
     ab_patch = m.group(1) if m else ""
 
-    defines = os.path.join(build_env.topsrcdir, "build", "defines.sh")
-    with open(defines, "r") as fh:
-        for line in fh.read().splitlines():
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            name, _, value = line.partition("=")
-            name = name.strip()
-            value = value.strip()
-            if name != "EARLY_BETA_OR_EARLIER":
-                die(
-                    "Only the EARLY_BETA_OR_EARLIER variable can be set in build/defines.sh"
-                )
-            if value and any(x in app_version_display for x in "ab"):
-                is_early_beta_or_earlier = True
+    if not as_milestone:
+        defines = os.path.join(build_env.topsrcdir, "build", "defines.sh")
+        with open(defines, "r") as fh:
+            for line in fh.read().splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                name, _, value = line.partition("=")
+                name = name.strip()
+                value = value.strip()
+                if name != "EARLY_BETA_OR_EARLIER":
+                    die(
+                        "Only the EARLY_BETA_OR_EARLIER variable can be set in build/defines.sh"
+                    )
+                if value and any(x in app_version_display for x in "ab"):
+                    is_early_beta_or_earlier = True
 
     # Only expose the major version milestone in the UA string and hide the
     # patch leve (bugs 572659 and 870868).
