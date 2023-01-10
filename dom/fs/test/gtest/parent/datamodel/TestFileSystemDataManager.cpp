@@ -6,132 +6,23 @@
 
 #include "FileSystemDataManager.h"
 #include "TestHelpers.h"
-#include "gtest/gtest.h"
-#include "mozIStorageService.h"
-#include "mozStorageCID.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/SpinEventLoopUntil.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/quota/QuotaManager.h"
-#include "mozilla/dom/quota/QuotaManagerService.h"
-#include "mozilla/gtest/MozAssertions.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIQuotaCallbacks.h"
-#include "nsIQuotaRequests.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
+#include "mozilla/dom/quota/test/QuotaManagerDependencyFixture.h"
 
 namespace mozilla::dom::fs::test {
 
-class TestFileSystemDataManager : public ::testing::Test {
+class TestFileSystemDataManager
+    : public quota::test::QuotaManagerDependencyFixture {
  public:
-  class RequestResolver final : public nsIQuotaCallback {
-   public:
-    RequestResolver() : mDone(false) {}
+  static void SetUpTestCase() { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
 
-    bool Done() const { return mDone; }
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD OnComplete(nsIQuotaRequest* aRequest) override {
-      mDone = true;
-
-      return NS_OK;
-    }
-
-   private:
-    ~RequestResolver() = default;
-
-    bool mDone;
-  };
-
-  static void SetUpTestCase() {
-    // The first initialization of storage service must be done on the main
-    // thread.
-    nsCOMPtr<mozIStorageService> storageService =
-        do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-    ASSERT_TRUE(storageService);
-
-    nsIObserver* observer = quota::QuotaManager::GetObserver();
-    ASSERT_TRUE(observer);
-
-    nsresult rv = observer->Observe(nullptr, "profile-do-change", nullptr);
-    ASSERT_NS_SUCCEEDED(rv);
-
-    AutoJSAPI jsapi;
-
-    bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
-    ASSERT_TRUE(ok);
-
-    nsCOMPtr<nsIQuotaManagerService> qms =
-        quota::QuotaManagerService::GetOrCreate();
-    ASSERT_TRUE(qms);
-
-    // QuotaManagerService::Initialized fails if the testing pref is not set.
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    prefs->SetBoolPref("dom.quotaManager.testing", true);
-
-    nsCOMPtr<nsIQuotaRequest> request;
-    rv = qms->StorageInitialized(getter_AddRefs(request));
-    ASSERT_NS_SUCCEEDED(rv);
-
-    prefs->SetBoolPref("dom.quotaManager.testing", false);
-
-    RefPtr<RequestResolver> resolver = new RequestResolver();
-
-    rv = request->SetCallback(resolver);
-    ASSERT_NS_SUCCEEDED(rv);
-
-    SpinEventLoopUntil("Promise is fulfilled"_ns,
-                       [&resolver]() { return resolver->Done(); });
-
-    quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-    ASSERT_TRUE(quotaManager);
-
-    ASSERT_TRUE(quotaManager->OwningThread());
-
-    sBackgroundTarget = quotaManager->OwningThread();
-  }
-
-  static void TearDownTestCase() {
-    nsIObserver* observer = quota::QuotaManager::GetObserver();
-    ASSERT_TRUE(observer);
-
-    nsresult rv =
-        observer->Observe(nullptr, "profile-before-change-qm", nullptr);
-    ASSERT_NS_SUCCEEDED(rv);
-
-    bool done = false;
-
-    InvokeAsync(sBackgroundTarget, __func__,
-                []() {
-                  quota::QuotaManager::Reset();
-
-                  return BoolPromise::CreateAndResolve(true, __func__);
-                })
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [&done](const BoolPromise::ResolveOrRejectValue& value) {
-                 done = true;
-               });
-
-    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
-
-    sBackgroundTarget = nullptr;
-  }
-
-  static const nsCOMPtr<nsISerialEventTarget>& BackgroundTargetStrongRef() {
-    return sBackgroundTarget;
-  }
-
- private:
-  static nsCOMPtr<nsISerialEventTarget> sBackgroundTarget;
+  static void TearDownTestCase() { ASSERT_NO_FATAL_FAILURE(ShutdownFixture()); }
 };
 
-NS_IMPL_ISUPPORTS(TestFileSystemDataManager::RequestResolver, nsIQuotaCallback)
-
-nsCOMPtr<nsISerialEventTarget> TestFileSystemDataManager::sBackgroundTarget;
-
 TEST_F(TestFileSystemDataManager, GetOrCreateFileSystemDataManager) {
-  auto backgroundTask = []() -> RefPtr<BoolPromise> {
+  auto backgroundTask = []() {
     bool done = false;
 
     data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
@@ -154,24 +45,14 @@ TEST_F(TestFileSystemDataManager, GetOrCreateFileSystemDataManager) {
             [&done](const BoolPromise::ResolveOrRejectValue&) { done = true; });
 
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
-
-    return BoolPromise::CreateAndResolve(true, __func__);
   };
 
-  bool done = false;
-
-  InvokeAsync(BackgroundTargetStrongRef(), __func__, std::move(backgroundTask))
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [&done](const BoolPromise::ResolveOrRejectValue& value) {
-               done = true;
-             });
-
-  SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
 TEST_F(TestFileSystemDataManager,
        GetOrCreateFileSystemDataManager_PendingOpen) {
-  auto backgroundTask = []() -> RefPtr<BoolPromise> {
+  auto backgroundTask = []() {
     Registered<data::FileSystemDataManager> rdm1;
 
     Registered<data::FileSystemDataManager> rdm2;
@@ -232,25 +113,15 @@ TEST_F(TestFileSystemDataManager,
 
       SpinEventLoopUntil("Promise is fulfilled"_ns,
                          [&done1, &done2]() { return done1 && done2; });
-
-      return BoolPromise::CreateAndResolve(true, __func__);
     }
   };
 
-  bool done = false;
-
-  InvokeAsync(BackgroundTargetStrongRef(), __func__, std::move(backgroundTask))
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [&done](const BoolPromise::ResolveOrRejectValue& value) {
-               done = true;
-             });
-
-  SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
 TEST_F(TestFileSystemDataManager,
        GetOrCreateFileSystemDataManager_PendingClose) {
-  auto backgroundTask = []() -> RefPtr<BoolPromise> {
+  auto backgroundTask = []() {
     Registered<data::FileSystemDataManager> rdm;
 
     {
@@ -302,20 +173,10 @@ TEST_F(TestFileSystemDataManager,
                  });
 
       SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
-
-      return BoolPromise::CreateAndResolve(true, __func__);
     }
   };
 
-  bool done = false;
-
-  InvokeAsync(BackgroundTargetStrongRef(), __func__, std::move(backgroundTask))
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [&done](const BoolPromise::ResolveOrRejectValue& value) {
-               done = true;
-             });
-
-  SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
 }  // namespace mozilla::dom::fs::test

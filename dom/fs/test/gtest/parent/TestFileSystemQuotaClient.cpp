@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemQuotaClient.h"
-#include "QuotaManagerDependencyFixture.h"
 #include "TestHelpers.h"
 #include "datamodel/FileSystemDataManager.h"
 #include "datamodel/FileSystemDatabaseManager.h"
@@ -22,6 +21,7 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/dom/quota/UsageInfo.h"
+#include "mozilla/dom/quota/test/QuotaManagerDependencyFixture.h"
 #include "mozilla/gtest/MozAssertions.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
@@ -32,41 +32,6 @@
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
 
-// Promise returning test task helpers
-#define TEST_PROMISE_ASSERT_CHECK_META(didFail, someAssert, ...)     \
-  bool MOZ_REMOVE_PAREN(didFail) = true;                             \
-  [&] {                                                              \
-    MOZ_REMOVE_PAREN(someAssert)(__VA_ARGS__);                       \
-    MOZ_REMOVE_PAREN(didFail) = false;                               \
-  }();                                                               \
-  if (MOZ_REMOVE_PAREN(didFail)) {                                   \
-    return BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__); \
-  }
-
-#define TEST_PROMISE_ASSERT_CHECK(...) \
-  TEST_PROMISE_ASSERT_CHECK_META(MOZ_UNIQUE_VAR(testVar), __VA_ARGS__)
-
-// Promise returning test assertions
-#define TEST_PROMISE_ASSERT_TRUE(expr) \
-  TEST_PROMISE_ASSERT_CHECK(ASSERT_TRUE, expr)
-
-#define TEST_PROMISE_ASSERT_NSEQ(lhs, rhs) \
-  TEST_PROMISE_ASSERT_CHECK(ASSERT_NSEQ, lhs, rhs)
-
-#define TEST_PROMISE_ASSERT_SUCCESS(rhs) TEST_PROMISE_ASSERT_NSEQ(NS_OK, rhs)
-
-#define TEST_TRY_PROMISE_UNWRAP_META(tempVar, target, expr)           \
-  auto MOZ_REMOVE_PAREN(tempVar) = (expr);                            \
-  if (!MOZ_REMOVE_PAREN(tempVar).isOk()) {                            \
-    EXPECT_TRUE(MOZ_REMOVE_PAREN(tempVar).isOk());                    \
-    return BoolPromise::CreateAndReject(                              \
-        ToNSResult(MOZ_REMOVE_PAREN(tempVar).unwrapErr()), __func__); \
-  }                                                                   \
-  MOZ_REMOVE_PAREN(target) = MOZ_REMOVE_PAREN(tempVar).unwrap();
-
-#define TEST_TRY_PROMISE_UNWRAP(target, expr) \
-  TEST_TRY_PROMISE_UNWRAP_META(MOZ_UNIQUE_VAR(testVar), target, expr)
-
 namespace mozilla::dom::fs::test {
 
 quota::OriginMetadata GetTestQuotaOriginMetadata() {
@@ -75,18 +40,15 @@ quota::OriginMetadata GetTestQuotaOriginMetadata() {
                                quota::PERSISTENCE_TYPE_DEFAULT};
 }
 
-class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
+class TestFileSystemQuotaClient
+    : public quota::test::QuotaManagerDependencyFixture {
  public:
   // ExceedsPreallocation value may depend on platform and sqlite version!
   static const int sExceedsPreallocation = 32 * 1024;
 
-  const quota::OriginMetadata& GetOriginMetadata() const override {
-    static const auto& testMetadata = GetTestQuotaOriginMetadata();
-
-    return testMetadata;
-  }
-
  protected:
+  void SetUp() override { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
+
   void TearDown() override {
     PerformOnIOThread([]() {
       // We use QM_TRY here to avoid failures if this cleanup is unnecessary
@@ -115,13 +77,15 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
       ASSERT_FALSE(exists);
     });
 
-    QuotaManagerDependencyFixture::TearDown();
+    ASSERT_NO_FATAL_FAILURE(
+        ClearStoragesForOrigin(GetTestQuotaOriginMetadata()));
+    ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
   }
 
   static void InitializeStorage() {
-    auto backgroundTask = []() -> RefPtr<BoolPromise> {
+    auto backgroundTask = []() {
       quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-      TEST_PROMISE_ASSERT_TRUE(quotaManager);
+      ASSERT_TRUE(quotaManager);
 
       quotaManager->IOThread()->Dispatch(
           NS_NewRunnableFunction(
@@ -146,11 +110,9 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
                 qm->EnsureQuotaForOrigin(testOriginMeta);
               }),
           NS_DISPATCH_SYNC);
-
-      return BoolPromise::CreateAndResolve(true, __func__);
     };
 
-    PerformOnBackgroundTarget(std::move(backgroundTask));
+    PerformOnBackgroundThread(std::move(backgroundTask));
   }
 
   static const Name& GetTestFileName() {
@@ -268,7 +230,7 @@ class TestFileSystemQuotaClient : public QuotaManagerDependencyFixture {
 };
 
 TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
-  auto backgroundTask = []() -> RefPtr<BoolPromise> {
+  auto backgroundTask = []() {
     mozilla::Atomic<bool> isCanceled{false};
     auto ioTask = [&isCanceled](const RefPtr<quota::Client>& quotaClient,
                                 data::FileSystemDatabaseManager* dbm) {
@@ -315,7 +277,7 @@ TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
     };
 
     RefPtr<mozilla::dom::quota::Client> quotaClient = fs::CreateQuotaClient();
-    TEST_PROMISE_ASSERT_TRUE(quotaClient);
+    ASSERT_TRUE(quotaClient);
 
     // For uninitialized database, file usage is nothing
     auto checkTask =
@@ -334,21 +296,18 @@ TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
 
     // Initialize database
     Registered<data::FileSystemDataManager> rdm;
-    CreateRegisteredDataManager(rdm);
-    TEST_PROMISE_ASSERT_TRUE(!HasFatalFailure());
+    ASSERT_NO_FATAL_FAILURE(CreateRegisteredDataManager(rdm));
 
     // Run tests with an initialized database
     PerformOnIOThread(std::move(ioTask), std::move(quotaClient),
                       rdm->MutableDatabaseManagerPtr());
-
-    return BoolPromise::CreateAndResolve(true, __func__);
   };
 
-  PerformOnBackgroundTarget(std::move(backgroundTask));
+  PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
 TEST_F(TestFileSystemQuotaClient, WritesToFilesShouldIncreaseUsage) {
-  auto backgroundTask = []() -> RefPtr<BoolPromise> {
+  auto backgroundTask = []() {
     mozilla::Atomic<bool> isCanceled{false};
     auto ioTask = [&isCanceled](
                       const RefPtr<mozilla::dom::quota::Client>& quotaClient,
@@ -407,30 +366,26 @@ TEST_F(TestFileSystemQuotaClient, WritesToFilesShouldIncreaseUsage) {
     };
 
     RefPtr<mozilla::dom::quota::Client> quotaClient = fs::CreateQuotaClient();
-    TEST_PROMISE_ASSERT_TRUE(quotaClient);
+    ASSERT_TRUE(quotaClient);
 
     // Storage initialization
-    InitializeStorage();
-    TEST_PROMISE_ASSERT_TRUE(!HasFatalFailure());
+    ASSERT_NO_FATAL_FAILURE(InitializeStorage());
 
     // Initialize database
     Registered<data::FileSystemDataManager> rdm;
-    CreateRegisteredDataManager(rdm);
-    TEST_PROMISE_ASSERT_TRUE(!HasFatalFailure());
+    ASSERT_NO_FATAL_FAILURE(CreateRegisteredDataManager(rdm));
 
     // Run tests with an initialized database
     PerformOnIOThread(std::move(ioTask), std::move(quotaClient),
                       rdm->MutableDatabaseManagerPtr());
-
-    return BoolPromise::CreateAndResolve(true, __func__);
   };
 
-  PerformOnBackgroundTarget(std::move(backgroundTask));
+  PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
 TEST_F(TestFileSystemQuotaClient,
        DISABLED_TrackedFilesOnInitOriginShouldCauseRescan) {
-  auto backgroundTask = []() -> RefPtr<BoolPromise> {
+  auto backgroundTask = []() {
     mozilla::Atomic<bool> isCanceled{false};
     EntryId* testFileId = new EntryId();
     auto cleanupFileId = MakeScopeExit([&testFileId] { delete testFileId; });
@@ -482,33 +437,29 @@ TEST_F(TestFileSystemQuotaClient,
         };
 
     RefPtr<mozilla::dom::quota::Client> quotaClient = fs::CreateQuotaClient();
-    TEST_PROMISE_ASSERT_TRUE(quotaClient);
+    ASSERT_TRUE(quotaClient);
 
     // Storage initialization
-    InitializeStorage();
-    TEST_PROMISE_ASSERT_TRUE(!HasFatalFailure());
+    ASSERT_NO_FATAL_FAILURE(InitializeStorage());
 
     // Initialize database
     Registered<data::FileSystemDataManager> rdm;
-    CreateRegisteredDataManager(rdm);
-    TEST_PROMISE_ASSERT_TRUE(!HasFatalFailure());
+    ASSERT_NO_FATAL_FAILURE(CreateRegisteredDataManager(rdm));
 
     PerformOnIOThread(std::move(fileCreation),
                       rdm->MutableDatabaseManagerPtr());
 
     // This should force a rescan
-    TEST_PROMISE_ASSERT_TRUE(rdm->LockExclusive(*testFileId));
+    ASSERT_TRUE(rdm->LockExclusive(*testFileId));
     PerformOnIOThread(std::move(writingToFile), std::move(quotaClient),
                       rdm->MutableDatabaseManagerPtr());
-
-    return BoolPromise::CreateAndResolve(true, __func__);
   };
 
-  PerformOnBackgroundTarget(std::move(backgroundTask));
+  PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
 TEST_F(TestFileSystemQuotaClient, RemovingFileShouldDecreaseUsage) {
-  auto backgroundTask = []() -> RefPtr<BoolPromise> {
+  auto backgroundTask = []() {
     mozilla::Atomic<bool> isCanceled{false};
     auto ioTask = [&isCanceled](
                       const RefPtr<mozilla::dom::quota::Client>& quotaClient,
@@ -563,25 +514,21 @@ TEST_F(TestFileSystemQuotaClient, RemovingFileShouldDecreaseUsage) {
     };
 
     RefPtr<mozilla::dom::quota::Client> quotaClient = fs::CreateQuotaClient();
-    TEST_PROMISE_ASSERT_TRUE(quotaClient);
+    ASSERT_TRUE(quotaClient);
 
     // Storage initialization
-    InitializeStorage();
-    TEST_PROMISE_ASSERT_TRUE(!HasFatalFailure());
+    ASSERT_NO_FATAL_FAILURE(InitializeStorage());
 
     // Initialize database
     Registered<data::FileSystemDataManager> rdm;
-    CreateRegisteredDataManager(rdm);
-    TEST_PROMISE_ASSERT_TRUE(!HasFatalFailure());
+    ASSERT_NO_FATAL_FAILURE(CreateRegisteredDataManager(rdm));
 
     // Run tests with an initialized database
     PerformOnIOThread(std::move(ioTask), std::move(quotaClient),
                       rdm->MutableDatabaseManagerPtr());
-
-    return BoolPromise::CreateAndResolve(true, __func__);
   };
 
-  PerformOnBackgroundTarget(std::move(backgroundTask));
+  PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
 }  // namespace mozilla::dom::fs::test
