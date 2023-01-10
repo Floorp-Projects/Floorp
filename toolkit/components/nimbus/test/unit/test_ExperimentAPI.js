@@ -513,7 +513,7 @@ add_task(async function test_getActiveBranch() {
 
 add_task(async function test_getActiveBranch_safe() {
   const sandbox = sinon.createSandbox();
-  sandbox.stub(ExperimentAPI._store, "getAllActiveExperiments").throws();
+  sandbox.stub(ExperimentAPI._store, "getAllActive").throws();
 
   try {
     Assert.equal(
@@ -544,7 +544,7 @@ add_task(async function test_getActiveBranch_storeFailure() {
   // Adding stub later because `addEnrollment` emits update events
   const stub = sandbox.stub(store, "emit");
   // Call getActiveBranch to trigger an activation event
-  sandbox.stub(store, "getAllActiveExperiments").throws();
+  sandbox.stub(store, "getAllActive").throws();
   try {
     ExperimentAPI.getActiveBranch({ featureId: "green" });
   } catch (e) {
