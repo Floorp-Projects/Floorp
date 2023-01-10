@@ -61,6 +61,14 @@ test:
     labels:
       - one_label
       - two_labels
+      - three_labels
+      - four_labels
+      - five_labels
+      - six_labels
+      - seven_labels
+      - eight_labels
+      - nine_labels
+      - ten_labels
     telemetry_mirror: SOME_OTHER_KEYED_BOOL_SCALAR
 
   counter_metric:
