@@ -78,8 +78,6 @@ class XULPopupElement : public XULMenuParentElement {
   MOZ_CAN_RUN_SCRIPT void PopupOpened(bool aSelectFirstItem);
   MOZ_CAN_RUN_SCRIPT void PopupClosed(bool aDeselectMenu);
 
-  XULButtonElement* GetContainingMenu() const;
-
   nsINode* GetTriggerNode() const;
 
   Element* GetAnchorNode() const;
