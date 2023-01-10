@@ -9299,14 +9299,9 @@ void nsWindow::FrameState::OnFrameChanging() {
     return;
   }
 
-  // We don't want to perform the ShowWindow ourselves if we're on one of the
-  // frame changing message. Windows is doing it the frame change for us, and
-  // OnFrameChanged() takes care of activating as needed. We also don't want to
-  // potentially trigger more focus / restore. Among other things, this
-  // addresses a bug on Win7 related to window docking. (bug 489258)
   const nsSizeMode newSizeMode =
       GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
-  EnsureSizeMode(newSizeMode, ShowWindowAndFocus::No);
+  EnsureSizeMode(newSizeMode);
 }
 
 void nsWindow::FrameState::OnFrameChanged() {
@@ -9314,14 +9309,20 @@ void nsWindow::FrameState::OnFrameChanged() {
     return;
   }
 
+  const auto oldSizeMode = mSizeMode;
+
+  // We don't want to perform the ShowWindow ourselves if we're on the frame
+  // changed message. Windows has done the frame change for us, and we take care
+  // of activating as needed. We also don't want to potentially trigger
+  // more focus / restore. Among other things, this addresses a bug on Win7
+  // related to window docking. (bug 489258)
   const auto newSizeMode =
       GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
-  EnsureSizeMode(newSizeMode);
+  EnsureSizeMode(newSizeMode, ShowWindowAndFocus::No);
 
   // If window was restored, window activation might have been bypassed due to
-  // ShowWindowAndFocus::No in OnFrameChanging(), to avoid saving pre-restore
-  // attributes. Force activation now to get correct attributes.
-  if (mSizeMode == nsSizeMode_Normal) {
+  // ShowWindowAndFocus::No. Force activation now to get correct attributes.
+  if (oldSizeMode != mSizeMode && mSizeMode == nsSizeMode_Normal) {
     mWindow->DispatchFocusToTopLevelWindow(true);
   }
 }
