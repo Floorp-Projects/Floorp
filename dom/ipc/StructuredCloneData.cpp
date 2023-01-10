@@ -131,8 +131,7 @@ void StructuredCloneData::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
   }
 
   JSStructuredCloneData data(mBuffer->scope());
-  mBuffer->abandon();
-  mBuffer->steal(&data);
+  mBuffer->giveTo(&data);
   mBuffer = nullptr;
   mSharedData = new SharedJSAllocatedData(std::move(data));
   mInitialized = true;

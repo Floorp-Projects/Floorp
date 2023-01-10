@@ -3913,8 +3913,8 @@ JS_PUBLIC_API bool JS_StructuredClone(
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
     JSAutoStructuredCloneBuffer&& other)
     : data_(other.scope()) {
-  data_.ownTransferables_ = other.data_.ownTransferables_;
-  other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
+  version_ = other.version_;
+  other.giveTo(&data_);
 }
 
 JSAutoStructuredCloneBuffer& JSAutoStructuredCloneBuffer::operator=(
@@ -3922,8 +3922,8 @@ JSAutoStructuredCloneBuffer& JSAutoStructuredCloneBuffer::operator=(
   MOZ_ASSERT(&other != this);
   MOZ_ASSERT(scope() == other.scope());
   clear();
-  data_.ownTransferables_ = other.data_.ownTransferables_;
-  other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
+  version_ = other.version_;
+  other.giveTo(&data_);
   return *this;
 }
 
@@ -3945,22 +3945,11 @@ void JSAutoStructuredCloneBuffer::adopt(
                      OwnTransferablePolicy::OwnsTransferablesIfAny);
 }
 
-void JSAutoStructuredCloneBuffer::steal(
-    JSStructuredCloneData* data, uint32_t* versionp,
-    const JSStructuredCloneCallbacks** callbacks, void** closure) {
-  if (versionp) {
-    *versionp = version_;
-  }
-  if (callbacks) {
-    *callbacks = data_.callbacks_;
-  }
-  if (closure) {
-    *closure = data_.closure_;
-  }
+void JSAutoStructuredCloneBuffer::giveTo(JSStructuredCloneData* data) {
   *data = std::move(data_);
-
   version_ = 0;
   data_.setCallbacks(nullptr, nullptr, OwnTransferablePolicy::NoTransferables);
+  data_.Clear();
 }
 
 bool JSAutoStructuredCloneBuffer::read(

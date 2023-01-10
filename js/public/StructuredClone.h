@@ -681,21 +681,10 @@ class JS_PUBLIC_API JSAutoStructuredCloneBuffer {
              void* closure = nullptr);
 
   /**
-   * Release the buffer and transfer ownership to the caller.
+   * Release ownership of the buffer and assign it and ownership of it to
+   * `data`.
    */
-  void steal(JSStructuredCloneData* data, uint32_t* versionp = nullptr,
-             const JSStructuredCloneCallbacks** callbacks = nullptr,
-             void** closure = nullptr);
-
-  /**
-   * Abandon ownership of any transferable objects stored in the buffer,
-   * without freeing the buffer itself. Useful when copying the data out into
-   * an external container, though note that you will need to use adopt() to
-   * properly release that data eventually.
-   */
-  void abandon() {
-    data_.ownTransferables_ = OwnTransferablePolicy::IgnoreTransferablesIfAny;
-  }
+  void giveTo(JSStructuredCloneData* data);
 
   bool read(JSContext* cx, JS::MutableHandleValue vp,
             const JS::CloneDataPolicy& cloneDataPolicy = JS::CloneDataPolicy(),
