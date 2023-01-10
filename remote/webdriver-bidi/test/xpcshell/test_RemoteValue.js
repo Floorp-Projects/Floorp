@@ -3,6 +3,10 @@
 
 "use strict";
 
+const browser = Services.appShell.createWindowlessBrowser(false);
+const domEl = browser.document.createElement("div");
+browser.document.body.appendChild(domEl);
+
 const PRIMITIVE_TYPES = [
   { value: undefined, serialized: { type: "undefined" } },
   { value: null, serialized: { type: "null" } },
@@ -236,6 +240,30 @@ const REMOTE_COMPLEX_VALUES = [
   { value: new Promise(() => true), serialized: { type: "promise" } },
   { value: new Int8Array(), serialized: { type: "typedarray" } },
   { value: new ArrayBuffer(), serialized: { type: "arraybuffer" } },
+  {
+    value: browser.document.querySelectorAll("div"),
+    serialized: { type: "nodelist" },
+  },
+  {
+    value: browser.document.getElementsByTagName("div"),
+    serialized: { type: "htmlcollection" },
+  },
+  {
+    value: domEl,
+    serialized: {
+      type: "node",
+      value: {
+        attributes: {},
+        childNodeCount: 0,
+        children: [],
+        localName: "div",
+        namespaceURI: "http://www.w3.org/1999/xhtml",
+        nodeType: 1,
+      },
+    },
+  },
+  { value: browser.document.defaultView, serialized: { type: "window" } },
+  { value: new URL("https://example.com"), serialized: { type: "object" } },
   { value: () => true, serialized: { type: "function" } },
   { value() {}, serialized: { type: "function" } },
   {
