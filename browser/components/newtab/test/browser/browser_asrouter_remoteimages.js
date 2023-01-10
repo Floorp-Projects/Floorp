@@ -424,4 +424,4 @@ add_task(async function test_remoteImages_prefetch() {
     await RemoteImagesTestUtils.wipeCache();
     sandbox.restore();
   }
-});
+}).skip(); //Skipping this test since we don't have messages with remote images

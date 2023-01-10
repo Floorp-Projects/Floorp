@@ -58,12 +58,6 @@ const PREFETCH_FINISHED_TOPIC = "remote-images:prefetch-finished";
  */
 const MessageInspectors = {
   spotlight(message) {
-    if (
-      message.content.template === "logo-and-content" &&
-      message.content.logo?.imageId
-    ) {
-      return [message.content.logo.imageId];
-    }
     return [];
   },
 };
