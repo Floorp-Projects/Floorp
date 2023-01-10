@@ -212,6 +212,15 @@ bool Client::TypeToText(Type aType, nsAString& aText, const fallible_t&) {
 }
 
 // static
+nsAutoString Client::TypeToString(Type aType) {
+  nsAutoString res;
+  if (!TypeTo_impl(aType, res)) {
+    BadType();
+  }
+  return res;
+}
+
+// static
 nsAutoCString Client::TypeToText(Type aType) {
   nsAutoCString res;
   if (!TypeTo_impl(aType, res)) {

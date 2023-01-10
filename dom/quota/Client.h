@@ -82,6 +82,9 @@ class Client {
 
   static bool TypeToText(Type aType, nsAString& aText, const fallible_t&);
 
+  // TODO: Rename other similar methods to use String/CString instead of Text.
+  static nsAutoString TypeToString(Type aType);
+
   static nsAutoCString TypeToText(Type aType);
 
   static bool TypeFromText(const nsAString& aText, Type& aType,
