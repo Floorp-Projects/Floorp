@@ -285,7 +285,7 @@ browser.search:
     notification_emails:
       - android-probes@mozilla.com
       - rtestard@mozilla.com
-    expires: 119
+    expires: never
   ad_clicks:
     type: labeled_counter
     description: |
@@ -315,7 +315,7 @@ browser.search:
     notification_emails:
       - android-probes@mozilla.com
       - rtestard@mozilla.com
-    expires: 119
+    expires: never
   in_content:
     type: labeled_counter
     description: |
@@ -334,7 +334,8 @@ browser.search:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 119
+      - rtestard@mozilla.com
+    expires: never
 
   search_count:
     type: labeled_counter
