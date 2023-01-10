@@ -1,4 +1,4 @@
-// |reftest| skip -- Array.fromAsync is not supported
+// |reftest| shell-option(--enable-array-from-async) skip-if(!xulRuntime.shell) -- requires shell-options
 // Copyright (C) 2022 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
