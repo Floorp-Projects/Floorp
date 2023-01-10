@@ -91,7 +91,7 @@ def _extract_gradlew_command(run, fetches_dir):
         _generate_secret_command(secret) for secret in run.get("secrets", [])
     ]
 
-    maven_dependencies_dir = path.join(fetches_dir, "android-gradle-dependencies")
+    maven_dependencies_dir = path.join(fetches_dir, "external-gradle-dependencies")
     gradle_repos_args = [
         "-P{repo_name}Repo=file://{dir}/{repo_name}".format(
             dir=maven_dependencies_dir, repo_name=repo_name

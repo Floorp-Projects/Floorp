@@ -19,7 +19,7 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-            - android-gradle-dependencies
+            - external-gradle-dependencies
     optimization:
         skip-unless-changed: [] # Paths are dynamically added by transforms
     run-on-tasks-for:

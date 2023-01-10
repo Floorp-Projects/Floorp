@@ -52,7 +52,7 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-            - android-gradle-dependencies
+            - external-gradle-dependencies
     include-coverage:
         by-build-type:
             release: false

@@ -20,7 +20,7 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-            - android-gradle-dependencies
+            - external-gradle-dependencies
     run:
         use-caches: false
     run-on-tasks-for:

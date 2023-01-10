@@ -21,7 +21,7 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-            - android-gradle-dependencies
+            - external-gradle-dependencies
     run:
         # TODO Generate APKs in a build task instead
         gradlew: ['clean', 'assembleGecko', 'assembleAndroidTest', 'assembleDebug']

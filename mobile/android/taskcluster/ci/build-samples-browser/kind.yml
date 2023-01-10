@@ -24,7 +24,7 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-            - android-gradle-dependencies
+            - external-gradle-dependencies
     include-coverage: true
     run:
         pre-gradlew:

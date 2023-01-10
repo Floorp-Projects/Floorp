@@ -17,7 +17,7 @@ ANDROID_COMPONENTS_DIR="$REPO_ROOT_DIR/android-components"
 
 pushd "$ANDROID_COMPONENTS_DIR"
 
-. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/android-gradle-dependencies/before.sh"
+. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/external-gradle-dependencies/before.sh"
 
 COMPONENT_REGEX='^  ([-a-z]+):$'
 # Components to ignore on first pass. They don't have any extra dependencies so we can
@@ -70,7 +70,7 @@ set +e; ./gradlew $GRADLE_ARGS test; set -e
 # we're lucky and the dependencies it fetches are found elsewhere.
 
 
-. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/android-gradle-dependencies/after.sh"
+. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/external-gradle-dependencies/after.sh"
 
 popd
 popd
