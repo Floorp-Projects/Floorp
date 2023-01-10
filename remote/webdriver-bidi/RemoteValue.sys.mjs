@@ -334,6 +334,56 @@ function getHandleForObject(realm, ownershipType, object) {
 }
 
 /**
+ * Helper to serialize an Array-like object.
+ *
+ * @see https://w3c.github.io/webdriver-bidi/#serialize-an-array-like
+ *
+ * @param {string} production
+ *     Type of object
+ * @param {string} handleId
+ *     The unique id of the <var>value</var>.
+ * @param {boolean} knownObject
+ *     Indicates if the <var>value</var> has already been serialized.
+ * @param {Object} value
+ *     The Array-like object to serialize.
+ * @param {number|null} maxDepth
+ *     Depth of a serialization.
+ * @param {OwnershipModel} ownershipType
+ *     The ownership model to use for this serialization.
+ * @param {Map} serializationInternalMap
+ *     Map of internal ids.
+ * @param {Realm} realm
+ *     The Realm from which comes the value being serialized.
+ *
+ * @return {Object} Object for serialized values.
+ */
+function serializeArrayLike(
+  production,
+  handleId,
+  knownObject,
+  value,
+  maxDepth,
+  ownershipType,
+  serializationInternalMap,
+  realm
+) {
+  const serialized = buildSerialized(production, handleId);
+  setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
+
+  if (!knownObject && maxDepth !== null && maxDepth > 0) {
+    serialized.value = serializeList(
+      value,
+      maxDepth,
+      ownershipType,
+      serializationInternalMap,
+      realm
+    );
+  }
+
+  return serialized;
+}
+
+/**
  * Helper to serialize as a list.
  *
  * @see https://w3c.github.io/webdriver-bidi/#serialize-as-a-list
@@ -342,7 +392,7 @@ function getHandleForObject(realm, ownershipType, object) {
  *     List of values to be serialized.
  * @param {number|null} maxDepth
  *     Depth of a serialization.
- * @param {OwnershipModel} childOwnership
+ * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
  *     Map of internal ids.
@@ -354,7 +404,7 @@ function getHandleForObject(realm, ownershipType, object) {
 function serializeList(
   iterable,
   maxDepth,
-  childOwnership,
+  ownershipType,
   serializationInternalMap,
   realm
 ) {
@@ -366,7 +416,7 @@ function serializeList(
       serialize(
         item,
         childDepth,
-        childOwnership,
+        ownershipType,
         serializationInternalMap,
         realm
       )
@@ -385,7 +435,7 @@ function serializeList(
  *     List of values to be serialized.
  * @param {number|null} maxDepth
  *     Depth of a serialization.
- * @param {OwnershipModel} childOwnership
+ * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
  *     Map of internal ids.
@@ -397,7 +447,7 @@ function serializeList(
 function serializeMapping(
   iterable,
   maxDepth,
-  childOwnership,
+  ownershipType,
   serializationInternalMap,
   realm
 ) {
@@ -411,14 +461,14 @@ function serializeMapping(
         : serialize(
             key,
             childDepth,
-            childOwnership,
+            ownershipType,
             serializationInternalMap,
             realm
           );
     const serializedValue = serialize(
       item,
       childDepth,
-      childOwnership,
+      ownershipType,
       serializationInternalMap,
       realm
     );
@@ -436,7 +486,7 @@ function serializeMapping(
  *     Node to be serialized.
  * @param {number|null} maxDepth
  *     Depth of a serialization.
- * @param {OwnershipModel} childOwnership
+ * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
  *     Map of internal ids.
@@ -448,7 +498,7 @@ function serializeMapping(
 function serializeNode(
   node,
   maxDepth,
-  childOwnership,
+  ownershipType,
   serializationInternalMap,
   realm
 ) {
@@ -479,7 +529,7 @@ function serializeNode(
         serialize(
           child,
           childDepth,
-          childOwnership,
+          ownershipType,
           serializationInternalMap,
           realm
         )
@@ -550,7 +600,7 @@ export function serialize(
   const knownObject = serializationInternalMap.has(value);
 
   // Set the OwnershipModel to use for all complex object serializations.
-  const childOwnership = OwnershipModel.None;
+  ownershipType = OwnershipModel.None;
 
   // Remote values
 
@@ -563,21 +613,17 @@ export function serialize(
   // All other remote values are non-primitives and their
   // className can be extracted with ChromeUtils.getClassName
   const className = ChromeUtils.getClassName(value);
-  if (className == "Array") {
-    const serialized = buildSerialized("array", handleId);
-    setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
-
-    if (!knownObject && maxDepth !== null && maxDepth > 0) {
-      serialized.value = serializeList(
-        value,
-        maxDepth,
-        childOwnership,
-        serializationInternalMap,
-        realm
-      );
-    }
-
-    return serialized;
+  if (["Array", "HTMLCollection", "NodeList"].includes(className)) {
+    return serializeArrayLike(
+      className.toLowerCase(),
+      handleId,
+      knownObject,
+      value,
+      maxDepth,
+      ownershipType,
+      serializationInternalMap,
+      realm
+    );
   } else if (className == "RegExp") {
     const serialized = buildSerialized("regexp", handleId);
     serialized.value = { pattern: value.source, flags: value.flags };
@@ -594,7 +640,7 @@ export function serialize(
       serialized.value = serializeMapping(
         value.entries(),
         maxDepth,
-        childOwnership,
+        ownershipType,
         serializationInternalMap,
         realm
       );
@@ -608,7 +654,7 @@ export function serialize(
       serialized.value = serializeList(
         value.values(),
         maxDepth,
-        childOwnership,
+        ownershipType,
         serializationInternalMap,
         realm
       );
@@ -637,7 +683,7 @@ export function serialize(
       serialized.value = serializeNode(
         value,
         maxDepth,
-        childOwnership,
+        ownershipType,
         serializationInternalMap,
         realm
       );
@@ -657,7 +703,7 @@ export function serialize(
     serialized.value = serializeMapping(
       Object.entries(value),
       maxDepth,
-      childOwnership,
+      ownershipType,
       serializationInternalMap,
       realm
     );
