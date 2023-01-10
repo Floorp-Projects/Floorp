@@ -57,6 +57,7 @@
       this.addEventListener("focus", this);
       this.addEventListener("AriaFocus", this);
 
+      this._hover = false;
       this._selectedOnFirstMouseDown = false;
 
       /**
@@ -488,15 +489,11 @@
       if (this.hidden || this.closing) {
         return;
       }
-
-      let tabContainer = this.container;
+      this._hover = true;
 
       if (this.selected) {
-        tabContainer._handleTabSelect();
-      }
-
-      tabContainer._hoveredTab = this;
-      if (this.linkedPanel && !this.selected) {
+        this.container._handleTabSelect();
+      } else if (this.linkedPanel) {
         this.linkedBrowser.unselectedTabHover(true);
         this.startUnselectedTabHoverTimer();
       }
@@ -512,7 +509,10 @@
     }
 
     _mouseleave() {
-      this.container._hoveredTab = null;
+      if (!this._hover) {
+        return;
+      }
+      this._hover = false;
       if (this.linkedPanel && !this.selected) {
         this.linkedBrowser.unselectedTabHover(false);
         this.cancelUnselectedTabHoverTimer();
