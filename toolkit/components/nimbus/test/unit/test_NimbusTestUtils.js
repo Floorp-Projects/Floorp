@@ -39,9 +39,9 @@ add_task(async function test_enrollmentHelper() {
 
   await enrollmentPromise;
 
-  Assert.ok(manager.store.getAllActive().length === 1, "Enrolled");
+  Assert.ok(manager.store.getAllActiveExperiments().length === 1, "Enrolled");
   Assert.equal(
-    manager.store.getAllActive()[0].slug,
+    manager.store.getAllActiveExperiments()[0].slug,
     recipe.slug,
     "Has expected slug"
   );
