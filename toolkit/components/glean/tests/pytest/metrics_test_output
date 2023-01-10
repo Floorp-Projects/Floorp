@@ -58,7 +58,7 @@ pub mod test {
             lifetime: Lifetime::Application,
             disabled: false,
             ..Default::default()
-        }, Some(vec!["one_label".into(), "two_labels".into()]))
+        }, Some({const S: &'static str = "eight_labelsfive_labelsfour_labelsnine_labelsone_labelseven_labelssix_labelsten_labelsthree_labelstwo_labels";const LENGTHS: [u8; 10] = [12, 11, 11, 11, 9, 12, 10, 10, 12, 10];let mut offset = 0;LENGTHS.iter().map(|len| {  let start = offset;  offset += *len as usize;  S[start..offset].into()}).collect()}))
     });
 
     #[allow(non_upper_case_globals)]
