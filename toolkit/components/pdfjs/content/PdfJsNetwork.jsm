@@ -23,22 +23,17 @@ function log(aMsg) {
   Services.console.logStringMessage(msg);
 }
 
+function getTypedArray(xhr) {
+  const data = xhr.response;
+  if (typeof data !== "string") {
+    return new Uint8Array(data);
+  }
+  return Uint8Array.from(data, ch => ch.charCodeAt(0) & 0xff);
+}
+
 var NetworkManager = (function NetworkManagerClosure() {
   const OK_RESPONSE = 200;
   const PARTIAL_CONTENT_RESPONSE = 206;
-
-  function getArrayBuffer(xhr) {
-    var data = xhr.response;
-    if (typeof data !== "string") {
-      return data;
-    }
-    var length = data.length;
-    var array = new Uint8Array(length);
-    for (var i = 0; i < length; i++) {
-      array[i] = data.charCodeAt(i) & 0xff;
-    }
-    return array.buffer;
-  }
 
   class NetworkManagerClass {
     constructor(url, args) {
@@ -181,7 +176,7 @@ var NetworkManager = (function NetworkManagerClosure() {
         return;
       }
 
-      var chunk = getArrayBuffer(xhr);
+      const chunk = getTypedArray(xhr);
       if (xhrStatus === PARTIAL_CONTENT_RESPONSE) {
         var rangeHeader = xhr.getResponseHeader("Content-Range");
         var matches = /bytes (\d+)-(\d+)\/(\d+)/.exec(rangeHeader);
