@@ -51,7 +51,6 @@ class GPULogCallback;
 }  // namespace dom
 namespace ipc {
 enum class ResponseRejectReason;
-class Shmem;
 }  // namespace ipc
 
 namespace webgpu {
@@ -94,9 +93,6 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
                   UniquePtr<ffi::WGPULimits> aRawLimits);
 
   RefPtr<WebGPUChild> GetBridge();
-  static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
-                                             size_t aSize,
-                                             const ipc::Shmem& aShmem);
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUCanvasConfiguration& aDesc,
       const layers::RemoteTextureOwnerId aOwnerId, gfx::SurfaceFormat aFormat,
