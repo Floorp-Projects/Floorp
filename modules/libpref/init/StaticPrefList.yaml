@@ -12970,7 +12970,7 @@
 # security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
 - name: security.sandbox.gpu.level
   type: int32_t
-#if defined(XP_WIN) && defined(EARLY_BETA_OR_EARLIER)
+#if defined(XP_WIN)
   value: 1
 #else
   value: 0
