@@ -38,11 +38,16 @@ async function testChromeTab() {
 
   const commands = await CommandsFactory.forTab(tab);
   await commands.targetCommand.startListening();
-  const target = commands.targetCommand.targetFront;
 
-  const threadFront = await target.attachThread();
-
-  const { sources } = await threadFront.getSources();
+  const sources = [];
+  await commands.resourceCommand.watchResources(
+    [commands.resourceCommand.TYPES.SOURCE],
+    {
+      onAvailable(resources) {
+        sources.push(...resources);
+      },
+    }
+  );
   ok(
     sources.find(s => s.url == CHROME_PAGE),
     "The thread actor is able to attach to the chrome page and its sources"
@@ -88,10 +93,17 @@ async function testMainProcess() {
 
   const client = await CommandsFactory.spawnClientToDebugSystemPrincipal();
   const commands = await CommandsFactory.forMainProcess({ client });
-  const target = await commands.descriptorFront.getTarget();
+  await commands.targetCommand.startListening();
 
-  const threadFront = await target.attachThread();
-  const { sources } = await threadFront.getSources();
+  const sources = [];
+  await commands.resourceCommand.watchResources(
+    [commands.resourceCommand.TYPES.SOURCE],
+    {
+      onAvailable(resources) {
+        sources.push(...resources);
+      },
+    }
+  );
   ok(
     sources.find(
       s => s.url == "resource://devtools/client/framework/devtools.js"
@@ -106,8 +118,6 @@ async function testMainProcess() {
     serverGlobal.loader.id,
     "The actors are loaded in a distinct loader in order for the actors to use its very own compartment"
   );
-
-  await target.destroy();
 
   // As this target is remote (i.e. isn't a local tab) calling Target.destroy won't close
   // the client. So do it manually here in order to ensure cleaning up the DevToolsServer
