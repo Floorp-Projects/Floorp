@@ -60,10 +60,11 @@
 <img id="i14" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=anotherjpg.jpg.exe" data-filename="anotherjpg.jpg.jpg" data-filename-platformlinux="anotherjpg.jpg.jpeg">
 
 <!-- jpeg with no filename portion -->
-<img id="i15" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=.jpg" data-filename="index.jpg">
+<img id="i15" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=.jpg"
+     data-filename="jpg.jpg" data-filename-platformlinux="jpg.jpeg">
 
 <!-- png with no filename portion and invalid extension -->
-<img id="i16" src="http://localhost:8000/save_filename.sjs?type=png&filename=.exe" data-filename="index.png">
+<img id="i16" src="http://localhost:8000/save_filename.sjs?type=png&filename=.exe" data-filename="exe.png">
 
 <!-- png with escaped characters -->
 <img id="i17" src="http://localhost:8000/save_filename.sjs?type=png&filename=first%20file.png" data-filename="first file.png">
@@ -295,6 +296,17 @@
 <!-- embedded child html -->
 <object id="i77" data="http://localhost:8000/save_filename.sjs?type=html&filename=child.par"
         data-filename="child.par" data-unknown="true"></object>
+
+<!-- file starting with a dot with and unknown extension -->
+<img id="i78" src="http://localhost:8000/save_filename.sjs?type=png&filename=.extension" data-filename="extension.png">
+
+<!-- html file starting with a dot -->
+<object id="i79" data="http://localhost:8000/save_filename.sjs?type=html&filename=.alternate"
+        data-filename="alternate.html" data-filename-platformwin="alternate.htm" data-unknown="true"></object>
+
+<!-- unrecognized file type starting with a dot -->
+<object id="i80" data="http://localhost:8000/save_filename.sjs?type=otherimage&filename=.alternate" data-filename="alternate"
+        data-unknown="true"></object>
 </span>
 
 <!-- This set is used to test the filename specified by the download attribute is validated correctly. -->
