@@ -10,50 +10,49 @@ features: [Temporal]
 ---*/
 
 const expected = [
-  "get calendar",
-  "get hour",
-  "get hour.valueOf",
-  "call hour.valueOf",
-  "get microsecond",
-  "get microsecond.valueOf",
-  "call microsecond.valueOf",
-  "get millisecond",
-  "get millisecond.valueOf",
-  "call millisecond.valueOf",
-  "get minute",
-  "get minute.valueOf",
-  "call minute.valueOf",
-  "get nanosecond",
-  "get nanosecond.valueOf",
-  "call nanosecond.valueOf",
-  "get second",
-  "get second.valueOf",
-  "call second.valueOf",
+  "get options.overflow",
+  "get options.overflow.toString",
+  "call options.overflow.toString",
+  "get fields.calendar",
+  "get fields.calendar.toString",
+  "call fields.calendar.toString",
+  // ToTemporalTimeRecord
+  "get fields.hour",
+  "get fields.hour.valueOf",
+  "call fields.hour.valueOf",
+  "get fields.microsecond",
+  "get fields.microsecond.valueOf",
+  "call fields.microsecond.valueOf",
+  "get fields.millisecond",
+  "get fields.millisecond.valueOf",
+  "call fields.millisecond.valueOf",
+  "get fields.minute",
+  "get fields.minute.valueOf",
+  "call fields.minute.valueOf",
+  "get fields.nanosecond",
+  "get fields.nanosecond.valueOf",
+  "call fields.nanosecond.valueOf",
+  "get fields.second",
+  "get fields.second.valueOf",
+  "call fields.second.valueOf",
 ];
 const actual = [];
-const fields = {
+
+const fields = TemporalHelpers.propertyBagObserver(actual, {
   hour: 1.7,
   minute: 1.7,
   second: 1.7,
   millisecond: 1.7,
   microsecond: 1.7,
   nanosecond: 1.7,
-};
-const argument = new Proxy(fields, {
-  get(target, key) {
-    actual.push(`get ${key}`);
-    if (key === "calendar") return Temporal.Calendar.from("iso8601");
-    const result = target[key];
-    return TemporalHelpers.toPrimitiveObserver(actual, result, key);
-  },
-  has(target, key) {
-    actual.push(`has ${key}`);
-    return key in target;
-  },
-});
-const result = Temporal.PlainTime.from(argument);
-TemporalHelpers.assertPlainTime(result, 1, 1, 1, 1, 1, 1);
-assert.sameValue(result.calendar.id, "iso8601", "calendar result");
+  calendar: "iso8601",
+}, "fields");
+
+const options = TemporalHelpers.propertyBagObserver(actual, {
+  overflow: "constrain",
+}, "options");
+
+const result = Temporal.PlainTime.from(fields, options);
 assert.compareArray(actual, expected, "order of operations");
 
 reportCompare(0, 0);

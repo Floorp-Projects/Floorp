@@ -4,7 +4,7 @@
 /*---
 esid: sec-temporal.now.zoneddatetime
 description: Behavior when provided calendar value is a function
-includes: [compareArray.js]
+includes: [compareArray.js, temporalHelpers.js]
 features: [BigInt, Proxy, Temporal]
 ---*/
 const actual = [];
@@ -15,20 +15,9 @@ const expected = [
 
 const calendar = function() {};
 
-const timeZone = new Proxy({
+const timeZone = TemporalHelpers.timeZoneObserver(actual, "timeZone", {
   getOffsetNanosecondsFor(instant) {
-    actual.push('call timeZone.getOffsetNanosecondsFor');
     return -Number(instant.epochNanoseconds % 86400000000000n);
-  }
-}, {
-  has(target, property) {
-    actual.push(`has timeZone.${property}`);
-    return property in target;
-  },
-
-  get(target, property) {
-    actual.push(`get timeZone.${property}`);
-    return target[property];
   }
 });
 

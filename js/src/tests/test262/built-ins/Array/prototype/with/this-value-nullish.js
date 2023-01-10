@@ -1,0 +1,25 @@
+// |reftest| shell-option(--enable-change-array-by-copy) skip-if(!Array.prototype.with||!xulRuntime.shell) -- change-array-by-copy is not enabled unconditionally, requires shell-options
+// Copyright (C) 2021 Igalia, S.L. All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+
+/*---
+esid: sec-array.prototype.with
+description: >
+  Array.prototype.with throws if the receiver is null or undefined
+info: |
+  Array.prototype.with ( index, value )
+
+  1. Let O be ? ToObject(this value).
+  ...
+features: [change-array-by-copy]
+---*/
+
+assert.throws(TypeError, () => {
+  Array.prototype.with.call(null, 0, 0);
+}, '`Array.prototype.with.call(null, 0, 0)` throws TypeError');
+
+assert.throws(TypeError, () => {
+  Array.prototype.with.call(undefined, 0, 0);
+}, '`Array.prototype.with.call(undefined, 0, 0)` throws TypeError');
+
+reportCompare(0, 0);

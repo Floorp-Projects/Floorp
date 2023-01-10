@@ -46,7 +46,6 @@ function generateTest(dateTimeString, zoneString) {
   "[Europe/Vienna]",
   "+01:00[Custom/Vienna]",
   "-04:00",
-  "Z",
   ""
 ].forEach(zoneStr => test(`15${ zoneStr }`, [15]));
 [

@@ -13,7 +13,6 @@ features: [Intl.DurationFormat]
 ---*/
 
 const validOptions = [
-  undefined,
   0,
   1,
   5,

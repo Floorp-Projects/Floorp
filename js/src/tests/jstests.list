@@ -612,6 +612,8 @@ skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedYie
 # https://github.com/tc39/proposal-intl-numberformat-v3/pull/107
 skip script test262/intl402/NumberFormat/test-option-useGrouping.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1808799
+skip script test262/intl402/NumberFormat/constructor-roundingIncrement.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

@@ -26,6 +26,6 @@ assert.throws(TypeError, () => { df.format({}) }, "plain object");
 assert.throws(TypeError, () => { df.format({ year: 1 }) }, "unsuported property");
 assert.throws(TypeError, () => { df.format({ years: undefined }) }, "supported property set undefined");
 assert.throws(TypeError, () => { df.format(Symbol())}, "symbol");
-assert.throws(TypeError, () => { df.format("bad string")}, "bad string");
+assert.throws(RangeError, () => { df.format("bad string")}, "bad string");
 
 reportCompare(0, 0);
