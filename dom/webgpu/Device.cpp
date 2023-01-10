@@ -7,7 +7,6 @@
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Device.h"
@@ -39,20 +38,7 @@ GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(Device, DOMEventTargetHelper,
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(Device, DOMEventTargetHelper)
 GPU_IMPL_JS_WRAP(Device)
 
-static void mapFreeCallback(void* aContents, void* aUserData) {
-  Unused << aContents;
-  Unused << aUserData;
-}
-
 RefPtr<WebGPUChild> Device::GetBridge() { return mBridge; }
-
-JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
-                                            size_t aSize,
-                                            const ipc::Shmem& aShmem) {
-  MOZ_ASSERT(aOffset + aSize <= aShmem.Size<uint8_t>());
-  return JS::NewExternalArrayBuffer(aCx, aSize, aShmem.get<uint8_t>() + aOffset,
-                                    &mapFreeCallback, nullptr);
-}
 
 Device::Device(Adapter* const aParent, RawId aId,
                UniquePtr<ffi::WGPULimits> aRawLimits)
