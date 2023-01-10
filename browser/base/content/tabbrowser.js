@@ -3973,9 +3973,7 @@
       this._invalidateCachedTabs();
 
       // Invalidate hovered tab state tracking for this closing tab.
-      if (this.tabContainer._hoveredTab == aTab) {
-        aTab._mouseleave();
-      }
+      aTab._mouseleave();
 
       if (newTab) {
         this.addTrustedTab(BROWSER_NEW_TAB_URL, {
