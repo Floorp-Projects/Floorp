@@ -786,7 +786,7 @@ class SizeClass {
 //
 //   (X * Inv) >> SIZE_INV_SHIFT
 //
-// Where Inv is calculated during the FastDivisor constructor as:
+// Where Inv is calculated during the FastDivisor constructor similarly to:
 //
 //   Inv = 2^SIZE_INV_SHIFT / D
 //
@@ -802,7 +802,8 @@ class FastDivisor {
   // than 16.
   static const unsigned divide_inv_shift = 17;
 
-  // We can fit the inverted divisor in 16 bits.
+  // We can fit the inverted divisor in 16 bits, but we template it here for
+  // convenience.
   T inv;
 
  public:
@@ -815,6 +816,9 @@ class FastDivisor {
     // divide_inv_shift is large enough.
     MOZ_ASSERT((1U << divide_inv_shift) >= div);
 
+    // The calculation here for inv is formula 26 from Section
+    // 10-9 "Unsigned Division by Divisors >= 1" in
+    // Henry S. Warren, Jr.'s Hacker's Delight, 2nd Ed.
     unsigned inv_ = ((1U << divide_inv_shift) + div - 1 -
                      (((1U << divide_inv_shift) - 1) % div)) /
                     div;
