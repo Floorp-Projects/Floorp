@@ -697,8 +697,13 @@ class Talos(
     # clobber defined in BaseScript
 
     def download_and_extract(self, extract_dirs=None, suite_categories=None):
+        # Use in-tree wptserve for Python 3.10 compatibility
+        extract_dirs = [
+            "tools/wptserve/*",
+            "tools/wpt_third_party/pywebsocket3/*",
+        ]
         return super(Talos, self).download_and_extract(
-            suite_categories=["common", "talos"]
+            extract_dirs=extract_dirs, suite_categories=["common", "talos"]
         )
 
     def create_virtualenv(self, **kwargs):
@@ -731,17 +736,22 @@ class Talos(
 
         # virtualenv doesn't already exist so create it
         # install mozbase first, so we use in-tree versions
+        # Additionally, decide where to pull talos requirements from.
         if not self.run_local:
             mozbase_requirements = os.path.join(
                 self.query_abs_dirs()["abs_test_install_dir"],
                 "config",
                 "mozbase_requirements.txt",
             )
+            talos_requirements = os.path.join(self.talos_path, "requirements.txt")
         else:
             mozbase_requirements = os.path.join(
                 os.path.dirname(self.talos_path),
                 "config",
                 "mozbase_source_requirements.txt",
+            )
+            talos_requirements = os.path.join(
+                self.talos_path, "source_requirements.txt"
             )
         self.register_virtualenv_module(
             requirements=[mozbase_requirements],
@@ -751,9 +761,7 @@ class Talos(
         super(Talos, self).create_virtualenv()
         # talos in harness requires what else is
         # listed in talos requirements.txt file.
-        self.install_module(
-            requirements=[os.path.join(self.talos_path, "requirements.txt")]
-        )
+        self.install_module(requirements=[talos_requirements])
 
     def _validate_treeherder_data(self, parser):
         # late import is required, because install is done in create_virtualenv

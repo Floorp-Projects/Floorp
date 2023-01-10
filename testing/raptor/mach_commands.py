@@ -34,11 +34,6 @@ class RaptorRunner(MozbuildObject):
         2. Make the config for Raptor mozharness
         3. Run mozharness
         """
-        # Bug 1759450
-        if sys.version_info.minor >= 10:
-            raise Exception(
-                "Please downgrade your Python version as Raptor does not yet support Python 3.10"
-            )
         self.init_variables(raptor_args, kwargs)
         self.make_config()
         self.write_config()
