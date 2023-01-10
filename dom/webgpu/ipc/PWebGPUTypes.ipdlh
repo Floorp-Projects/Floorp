@@ -7,11 +7,6 @@ using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 namespace mozilla {
 namespace webgpu {
 
-[Comparable] union MaybeShmem {
-    Shmem;
-    null_t;
-};
-
 struct BufferMapSuccess {
     uint64_t offset;
     uint64_t size;
