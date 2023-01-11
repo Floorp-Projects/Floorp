@@ -1680,7 +1680,8 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
   const char* info = "";
 
   if (ppid == DATA_CHANNEL_PPID_DOMSTRING_PARTIAL ||
-      ppid == DATA_CHANNEL_PPID_DOMSTRING) {
+      ppid == DATA_CHANNEL_PPID_DOMSTRING ||
+      ppid == DATA_CHANNEL_PPID_DOMSTRING_EMPTY) {
     is_binary = false;
   }
   if (is_binary != channel->mIsRecvBinary && !channel->mRecvBuffer.IsEmpty()) {
@@ -1736,6 +1737,8 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
          data_length, WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL));
   }
 
+  bool is_empty = false;
+
   switch (ppid) {
     case DATA_CHANNEL_PPID_DOMSTRING:
       DC_DEBUG(
@@ -1750,6 +1753,18 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
       // WebSockets checks IsUTF8() here; we can try to deliver it
       break;
 
+    case DATA_CHANNEL_PPID_DOMSTRING_EMPTY:
+      DC_DEBUG(
+          ("DataChannel: Received empty string message of length %u on channel "
+           "%u",
+           data_length, channel->mStream));
+      type = DataChannelOnMessageAvailable::ON_DATA_STRING;
+      if (bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_BUFFERED) {
+        info = " (string fragmented)";
+      }
+      is_empty = true;
+      break;
+
     case DATA_CHANNEL_PPID_BINARY:
       DC_DEBUG(
           ("DataChannel: Received binary message of length %u on channel id %u",
@@ -1760,6 +1775,18 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
       }
 
       // else send using recvData normally
+      break;
+
+    case DATA_CHANNEL_PPID_BINARY_EMPTY:
+      DC_DEBUG(
+          ("DataChannel: Received empty binary message of length %u on channel "
+           "id %u",
+           data_length, channel->mStream));
+      type = DataChannelOnMessageAvailable::ON_DATA_BINARY;
+      if (bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_BUFFERED) {
+        info = " (binary fragmented)";
+      }
+      is_empty = true;
       break;
 
     default:
@@ -1784,7 +1811,8 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
         type, this, channel, channel->mRecvBuffer));
     channel->mRecvBuffer.Truncate(0);
   } else {
-    nsAutoCString recvData(buffer, data_length);  // copies (<64) or allocates
+    nsAutoCString recvData(is_empty ? "" : buffer,
+                           is_empty ? 0 : data_length);  // allocates >64
     channel->SendOrQueue(
         new DataChannelOnMessageAvailable(type, this, channel, recvData));
   }
@@ -1875,8 +1903,10 @@ void DataChannelConnection::HandleMessage(const void* buffer, size_t length,
       break;
     case DATA_CHANNEL_PPID_DOMSTRING_PARTIAL:
     case DATA_CHANNEL_PPID_DOMSTRING:
+    case DATA_CHANNEL_PPID_DOMSTRING_EMPTY:
     case DATA_CHANNEL_PPID_BINARY_PARTIAL:
     case DATA_CHANNEL_PPID_BINARY:
+    case DATA_CHANNEL_PPID_BINARY_EMPTY:
       HandleDataMessage(buffer, length, ppid, stream, flags);
       break;
     default:
@@ -2763,7 +2793,8 @@ int DataChannelConnection::SendDataMsgInternalOrBuffer(DataChannel& channel,
   int error =
       SendMsgInternalOrBuffer(channel.mBufferedData, msg, buffered, &written);
   mDeferSend = false;
-  if (written) {
+  if (written && ppid != DATA_CHANNEL_PPID_DOMSTRING_EMPTY &&
+      ppid != DATA_CHANNEL_PPID_BINARY_EMPTY) {
     channel.DecrementBufferedAmount(written);
   }
 
@@ -2971,16 +3002,23 @@ int DataChannelConnection::SendDataMsgCommon(uint16_t stream,
   if (NS_WARN_IF(!channelPtr)) {
     return EINVAL;  // TODO: Find a better error code
   }
-
+  bool is_empty = len == 0;
+  const uint8_t byte = 0;
+  if (is_empty) {
+    data = &byte;
+    len = 1;
+  }
   auto& channel = *channelPtr;
   int err = 0;
   MutexAutoLock lock(mLock);
   if (isBinary) {
-    err = SendDataMsg(channel, data, len, DATA_CHANNEL_PPID_BINARY_PARTIAL,
-                      DATA_CHANNEL_PPID_BINARY);
+    err = SendDataMsg(
+        channel, data, len, DATA_CHANNEL_PPID_BINARY_PARTIAL,
+        is_empty ? DATA_CHANNEL_PPID_BINARY_EMPTY : DATA_CHANNEL_PPID_BINARY);
   } else {
     err = SendDataMsg(channel, data, len, DATA_CHANNEL_PPID_DOMSTRING_PARTIAL,
-                      DATA_CHANNEL_PPID_DOMSTRING);
+                      is_empty ? DATA_CHANNEL_PPID_DOMSTRING_EMPTY
+                               : DATA_CHANNEL_PPID_DOMSTRING);
   }
   if (!err) {
     channel.WithTrafficCounters([&len](DataChannel::TrafficCounters& counters) {
