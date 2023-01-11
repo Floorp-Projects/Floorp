@@ -10,11 +10,13 @@ import android.view.View
 import android.view.ViewManager
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.compose.cfr.CFRPopup.PopupAlignment
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -119,5 +121,135 @@ class CFRPopupFullscreenLayoutTest {
             LayoutParams.FLAG_LAYOUT_IN_SCREEN or LayoutParams.FLAG_HARDWARE_ACCELERATED,
             result.flags,
         )
+    }
+
+    @Test
+    fun `GIVEN LTR and INDICATOR_CENTERED_IN_ANCHOR WHEN computing popup bounds THEN return the right X coordinates`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 200.dp,
+            popupAlignment = PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(200),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+        )
+
+        assertEquals(190, result.startCoord.value)
+        assertEquals(400, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN LTR and INDICATOR_CENTERED_IN_ANCHOR WHEN computing popup bounds THEN account for the provided indicator offset`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 200.dp,
+            popupAlignment = PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+            indicatorArrowStartOffset = 50.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(200),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+        )
+
+        // The popup should be translated to the start to ensure the offset to the indicator is respected.
+        assertEquals(140, result.startCoord.value)
+        assertEquals(350, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN LTR and INDICATOR_CENTERED_IN_ANCHOR WHEN computing popup bounds and the popup doesn't fit THEN return the right X coordinates`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 900.dp,
+            popupAlignment = PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(200),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+        )
+
+        // The popup should be translated to the start to ensure it fits the screen.
+        assertEquals(90, result.startCoord.value)
+        assertEquals(1000, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN RTL and INDICATOR_CENTERED_IN_ANCHOR WHEN computing popup bounds THEN return the right X coordinates`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 200.dp,
+            popupAlignment = PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(800),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+        )
+
+        assertEquals(810, result.startCoord.value)
+        assertEquals(600, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN RTL and INDICATOR_CENTERED_IN_ANCHOR WHEN computing popup bounds THEN account for the provided indicator offset`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 200.dp,
+            popupAlignment = PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+            indicatorArrowStartOffset = 50.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(800),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+        )
+
+        // The popup should be translated to the start to ensure the offset to the indicator is respected.
+        assertEquals(860, result.startCoord.value)
+        assertEquals(650, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN RTL and INDICATOR_CENTERED_IN_ANCHOR WHEN computing popup bounds and the popup doesn't fit THEN return the right X coordinates`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 900.dp,
+            popupAlignment = PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(800),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+        )
+
+        // The popup should be translated to the start to ensure it fits the screen.
+        assertEquals(910, result.startCoord.value)
+        assertEquals(0, result.endCoord.value)
     }
 }

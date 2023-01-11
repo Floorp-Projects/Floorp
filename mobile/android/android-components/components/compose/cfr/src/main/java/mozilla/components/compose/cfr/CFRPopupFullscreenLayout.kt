@@ -41,6 +41,7 @@ import mozilla.components.compose.cfr.CFRPopupShape.Companion
 import mozilla.components.compose.cfr.helper.DisplayOrientationListener
 import mozilla.components.compose.cfr.helper.ViewDetachedListener
 import mozilla.components.support.ktx.android.util.dpToPx
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 /**
@@ -48,12 +49,14 @@ import kotlin.math.roundToInt
  * This is compiled to the underlying `Int` type so incurs no performance penalty.
  */
 @JvmInline
-private value class Pixels(val value: Int)
+@VisibleForTesting
+internal value class Pixels(val value: Int)
 
 /**
  * Simple wrapper over the absolute x-coordinates of the popup. Includes any paddings.
  */
-private data class PopupHorizontalBounds(
+@VisibleForTesting
+internal data class PopupHorizontalBounds(
     val startCoord: Pixels,
     val endCoord: Pixels,
 )
@@ -125,7 +128,7 @@ internal class CFRPopupFullscreenLayout(
     @Composable
     override fun Content() {
         val anchorLocation = IntArray(2).apply {
-            anchor.getLocationOnScreen(this)
+            anchor.getLocationInWindow(this)
         }
 
         val anchorXCoordMiddle = Pixels(anchorLocation.first() + anchor.width / 2)
@@ -136,6 +139,8 @@ internal class CFRPopupFullscreenLayout(
         val popupBounds = computePopupHorizontalBounds(
             anchorMiddleXCoord = anchorXCoordMiddle,
             arrowIndicatorWidth = Pixels(Companion.getIndicatorBaseWidthForHeight(indicatorArrowHeight.value)),
+            screenWidth = Pixels(LocalConfiguration.current.screenWidthDp.dp.toPx()),
+            layoutDirection = LocalConfiguration.current.layoutDirection,
         )
 
         val indicatorOffset = computeIndicatorArrowStartCoord(
@@ -229,16 +234,23 @@ internal class CFRPopupFullscreenLayout(
      *
      * @param anchorMiddleXCoord x-coordinate for the middle of the anchor.
      * @param arrowIndicatorWidth x-distance the arrow indicator occupies.
+     * @param screenWidth available width in which the popup will be shown.
+     * @param layoutDirection the layout direction of the anchor layout.
      */
-    @Composable
-    private fun computePopupHorizontalBounds(
+    @VisibleForTesting
+    @Suppress("LongMethod")
+    internal fun computePopupHorizontalBounds(
         anchorMiddleXCoord: Pixels,
         arrowIndicatorWidth: Pixels,
+        screenWidth: Pixels,
+        layoutDirection: Int,
     ): PopupHorizontalBounds {
         val arrowIndicatorHalfWidth = arrowIndicatorWidth.value / 2
+        val popupPadding = Pixels(CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp.toPx())
+        val leftInsets = Pixels(getLeftInsets())
 
-        return if (LocalConfiguration.current.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
-            val startCoord = when (properties.popupAlignment) {
+        return if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
+            var startCoord = when (properties.popupAlignment) {
                 BODY_TO_ANCHOR_START -> {
                     Pixels(anchor.x.roundToInt())
                 }
@@ -251,51 +263,99 @@ internal class CFRPopupFullscreenLayout(
                     Pixels(
                         (anchorMiddleXCoord.value - arrowIndicatorHalfWidth)
                             .minus(properties.indicatorArrowStartOffset.toPx())
-                            .coerceAtLeast(getLeftInsets()),
+                            .coerceAtLeast(leftInsets.value),
+                    )
+                }
+            }
+
+            val endCoord = when (properties.popupAlignment) {
+                INDICATOR_CENTERED_IN_ANCHOR -> {
+                    var maybeEndCoord = Pixels(
+                        startCoord.value
+                            .plus(properties.popupWidth.toPx())
+                            .plus(popupPadding.value),
+                    )
+                    // Handle the scenario in which the popup would get pass the end of the screen.
+                    // Allow it to only be shown between [0, screenWidth] and if these bounds are surpassed
+                    // translate it horizontally to the start to show as much of it as possible.
+                    val endCoordOverflow = maybeEndCoord.value - screenWidth.value
+                    if (endCoordOverflow > 0) {
+                        startCoord = Pixels(
+                            startCoord.value
+                                .minus(endCoordOverflow)
+                                .coerceAtLeast(leftInsets.value),
+                        )
+                        maybeEndCoord = Pixels(maybeEndCoord.value.coerceAtMost(screenWidth.value + leftInsets.value))
+                    }
+                    maybeEndCoord
+                }
+                else -> {
+                    Pixels(
+                        startCoord.value
+                            .plus(properties.popupWidth.toPx())
+                            .plus(popupPadding.value)
+                            .coerceAtMost(screenWidth.value + leftInsets.value),
                     )
                 }
             }
 
             PopupHorizontalBounds(
                 startCoord = startCoord,
-                endCoord = Pixels(
-                    startCoord.value
-                        .plus(properties.popupWidth.toPx())
-                        .plus(CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp.toPx()),
-                ),
+                endCoord = endCoord,
             )
         } else {
-            val startCoord = when (properties.popupAlignment) {
+            var startCoord = when (properties.popupAlignment) {
                 BODY_TO_ANCHOR_START -> {
-                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp.toPx()
-                    val visibleAnchorEnd = screenWidth - anchor.x.roundToInt() + getLeftInsets()
+                    val visibleAnchorEnd = screenWidth.value - anchor.x.roundToInt() + getLeftInsets()
                     Pixels(visibleAnchorEnd)
                 }
                 BODY_TO_ANCHOR_CENTER -> {
                     val popupWidth = (properties.popupWidth + CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp).toPx()
-                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp.toPx()
-                    Pixels(screenWidth - ((anchor.x.roundToInt() + anchor.width) - popupWidth) / 2)
+                    Pixels(screenWidth.value - ((anchor.x.roundToInt() + anchor.width) - popupWidth) / 2)
                 }
                 INDICATOR_CENTERED_IN_ANCHOR -> {
-                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp.toPx()
                     Pixels(
                         // Push the popup as far to the start (in RTL) as possible.
                         anchorMiddleXCoord.value
                             .plus(arrowIndicatorHalfWidth)
                             .plus(properties.indicatorArrowStartOffset.toPx())
-                            .coerceAtMost(screenWidth + getLeftInsets()),
+                            .coerceAtMost(screenWidth.value + leftInsets.value),
                     )
                 }
             }
 
-            PopupHorizontalBounds(
-                startCoord = startCoord,
-                endCoord = Pixels(
-                    startCoord.value
-                        .minus(properties.popupWidth.toPx())
-                        .minus(CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp.toPx()),
-                ),
-            )
+            val endCoord = when (properties.popupAlignment) {
+                INDICATOR_CENTERED_IN_ANCHOR -> {
+                    var maybeEndCoord = Pixels(
+                        startCoord.value
+                            .minus(properties.popupWidth.toPx())
+                            .minus(popupPadding.value),
+                    )
+                    val endCoordOverflow = leftInsets.value - maybeEndCoord.value
+                    // Handle the scenario in which the popup would get pass the end of the screen (in RTL)
+                    // Allow it to only be shown between [0, screenWidth] and if these bounds are surpassed
+                    // translate it horizontally to the start to show as much of it as possible.
+                    if (endCoordOverflow > 0) {
+                        startCoord = Pixels(
+                            startCoord.value
+                                .plus(endCoordOverflow.absoluteValue)
+                                .coerceAtMost(screenWidth.value + leftInsets.value),
+                        )
+                        maybeEndCoord = Pixels(maybeEndCoord.value.coerceAtLeast(leftInsets.value))
+                    }
+                    maybeEndCoord
+                }
+                else -> {
+                    Pixels(
+                        startCoord.value
+                            .minus(properties.popupWidth.toPx())
+                            .minus(popupPadding.value)
+                            .coerceAtLeast(leftInsets.value),
+                    )
+                }
+            }
+
+            PopupHorizontalBounds(startCoord, endCoord)
         }
     }
 
