@@ -252,7 +252,7 @@ internal class CFRPopupFullscreenLayout(
         return if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
             var startCoord = when (properties.popupAlignment) {
                 BODY_TO_ANCHOR_START -> {
-                    Pixels(anchor.x.roundToInt())
+                    Pixels(anchor.x.roundToInt() + leftInsets.value)
                 }
                 BODY_TO_ANCHOR_CENTER -> {
                     val popupWidth = (properties.popupWidth + CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp).toPx()
@@ -306,8 +306,7 @@ internal class CFRPopupFullscreenLayout(
         } else {
             var startCoord = when (properties.popupAlignment) {
                 BODY_TO_ANCHOR_START -> {
-                    val visibleAnchorEnd = screenWidth.value - anchor.x.roundToInt() + getLeftInsets()
-                    Pixels(visibleAnchorEnd)
+                    Pixels(anchor.x.roundToInt() + anchor.width + leftInsets.value)
                 }
                 BODY_TO_ANCHOR_CENTER -> {
                     val popupWidth = (properties.popupWidth + CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp).toPx()
