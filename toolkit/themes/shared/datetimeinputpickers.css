@@ -308,6 +308,12 @@ button.month-year.active::after {
   scroll-snap-type: both mandatory;
 }
 
+@media not (prefers-reduced-motion) {
+  .spinner-container > .spinner {
+    scroll-behavior: smooth;
+  }
+}
+
 .spinner-container > .spinner > div {
   box-sizing: border-box;
   position: relative;
