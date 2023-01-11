@@ -34,7 +34,6 @@ RUN apt-get update && \
       patch \
       p7zip-full \
       procps \
-      python2.7 \
       python3-dev \
       rsync \
       screen \
