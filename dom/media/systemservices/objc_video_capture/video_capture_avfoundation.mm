@@ -237,7 +237,7 @@ void VideoCaptureAvFoundation::SetTrackingId(const char* _Nonnull aTrackingId) {
 void VideoCaptureAvFoundation::StartFrameRecording(int32_t aWidth, int32_t aHeight) {
   MaybeRegisterCallbackThread();
   MutexLock lock(&api_lock_);
-  if (MOZ_UNLIKELY(mTrackingId)) {
+  if (MOZ_UNLIKELY(!mTrackingId)) {
     return;
   }
   auto fromWebrtcVideoType = [](webrtc::VideoType aType) -> CaptureStage::ImageType {
