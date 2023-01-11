@@ -54,11 +54,11 @@ class FileAndPathHelper {
    * Enumerate all paths at which we could find files with symbol information.
    * This method is called by wasm code (via the bindings).
    *
-   * @param {string} debugName
-   * @param {string} breakpadId
+   * @param {LibraryInfo} libraryInfo
    * @returns {Array<string>}
    */
-  getCandidatePathsForBinaryOrPdb(debugName, breakpadId) {
+  getCandidatePathsForDebugFile(libraryInfo) {
+    const { debugName, breakpadId } = libraryInfo;
     const key = `${debugName}:${breakpadId}`;
     const lib = this._libInfoMap.get(key);
     if (!lib) {
@@ -116,6 +116,65 @@ class FileAndPathHelper {
     // (and not, for example, on an Android device), this file should always
     // exist.
     candidatePaths.push(path);
+
+    // On macOS, for system libraries, add a final fallback for the dyld shared
+    // cache. Starting with macOS 11, most system libraries are located in this
+    // system-wide cache file and not present as individual files.
+    if (arch && (path.startsWith("/usr/") || path.startsWith("/System/"))) {
+      // Use the special syntax `dyldcache:<dyldcachepath>:<librarypath>`.
+      candidatePaths.push(
+        `dyldcache:/System/Library/dyld/dyld_shared_cache_${arch}:${path}`
+      );
+    }
+
+    return candidatePaths;
+  }
+
+  /**
+   * Enumerate all paths at which we could find the binary which matches the
+   * given libraryInfo, in order to disassemble machine code.
+   * This method is called by wasm code (via the bindings).
+   *
+   * @param {LibraryInfo} libraryInfo
+   * @returns {Array<string>}
+   */
+  getCandidatePathsForBinary(libraryInfo) {
+    const { debugName, breakpadId } = libraryInfo;
+    const key = `${debugName}:${breakpadId}`;
+    const lib = this._libInfoMap.get(key);
+    if (!lib) {
+      throw new Error(
+        `Could not find the library for "${debugName}", "${breakpadId}".`
+      );
+    }
+
+    const { name, path, arch } = lib;
+    const candidatePaths = [];
+
+    // The location of the binary. If the profile was obtained on this machine
+    // (and not, for example, on an Android device), this file should always
+    // exist.
+    candidatePaths.push(path);
+
+    // Fall back to searching in the manually specified objdirs.
+    // This is needed if the debuggee is a build running on a remote machine that
+    // was compiled by the developer on *this* machine (the "host machine"). In
+    // that case, the objdir will contain the compiled binary.
+    for (const objdirPath of this._objdirs) {
+      try {
+        // Binaries are usually expected to exist at objdir/dist/bin/filename.
+        candidatePaths.push(PathUtils.join(objdirPath, "dist", "bin", name));
+
+        // Also search in the "objdir" directory itself (not just in dist/bin).
+        // If, for some unforeseen reason, the relevant binary is not inside the
+        // objdirs dist/bin/ directory, this provides a way out because it lets the
+        // user specify the actual location.
+        candidatePaths.push(PathUtils.join(objdirPath, name));
+      } catch (e) {
+        // PathUtils.join throws if objdirPath is not an absolute path.
+        // Ignore those invalid objdir paths.
+      }
+    }
 
     // On macOS, for system libraries, add a final fallback for the dyld shared
     // cache. Starting with macOS 11, most system libraries are located in this
