@@ -383,6 +383,25 @@
   </hbox>
 </groupbox>
 
+<!-- Cookie Banner Handling -->
+<groupbox id="cookieBannerHandlingGroup" data-category="panePrivacy" data-subcategory="cookiebanner" hidden="true">
+  <label><html:h2 data-l10n-id="cookie-banner-handling-header" /></label>
+  <vbox flex="1">
+    <hbox>
+      <description>
+        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more" data-l10n-id="cookie-banner-reject-accept" ></html:span>
+        <label id="cookieBannerHandlingLearnMore" class="learnMore" is="text-link" data-l10n-id="cookie-banner-learn-more"></label>
+      </description>
+    </hbox>
+    <hbox>
+      <checkbox id="handleCookieBanners"
+                preference="cookiebanners.service.mode"
+                data-l10n-id="forms-handle-cookie-banners"
+                flex="1" />
+    </hbox>
+  </vbox>
+</groupbox>
+
 <!-- Passwords -->
 <groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" data-subcategory="logins" hidden="true">
   <label><html:h2 data-l10n-id="pane-privacy-logins-and-passwords-header" data-l10n-attrs="searchkeywords"/></label>

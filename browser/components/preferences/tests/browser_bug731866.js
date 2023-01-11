@@ -36,6 +36,15 @@ function checkElements(expectedPane) {
       continue;
     }
 
+    // Cookie Banner Handling is currently disabled by default (bug 1800679)
+    if (element.id == "cookieBannerHandlingGroup") {
+      is_element_hidden(
+        element,
+        "Disabled cookieBannerHandlingGroup should be hidden"
+      );
+      continue;
+    }
+
     // Update prefs are hidden when running an MSIX build
     if (
       updatePrefContainers.includes(element.id) &&
