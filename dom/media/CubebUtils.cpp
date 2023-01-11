@@ -729,6 +729,7 @@ void ShutdownLibrary() {
   Preferences::UnregisterCallbacks(PrefChanged, gCallbackPrefs);
 
   StaticMutexAutoLock lock(sMutex);
+  cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
   if (sCubebContext) {
     cubeb_destroy(sCubebContext);
     sCubebContext = nullptr;
