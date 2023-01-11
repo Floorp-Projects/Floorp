@@ -5,7 +5,6 @@
 package mozilla.components.compose.cfr.helper
 
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.hardware.display.DisplayManager
 import android.hardware.display.DisplayManager.DisplayListener
 import androidx.annotation.VisibleForTesting
@@ -28,7 +27,7 @@ internal class DisplayOrientationListener(
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
 
     @VisibleForTesting
-    internal var currentOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    internal var currentOrientation = displayManager.displays[0].rotation
 
     /**
      * Start listening for display orientation changes.

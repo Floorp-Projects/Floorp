@@ -24,6 +24,10 @@ class DisplayOrientationListenerTest {
     @Before
     fun setup() {
         doReturn(displayManager).`when`(context).getSystemService(Context.DISPLAY_SERVICE)
+
+        val display: Display = mock()
+        doReturn(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT).`when`(display).rotation
+        doReturn(arrayOf(display)).`when`(displayManager).displays
     }
 
     @Test
@@ -68,9 +72,8 @@ class DisplayOrientationListenerTest {
     fun `WHEN a display is changed but doesn't have a new rotation THEN don't inform the client`() {
         var hasRotationChanged = false
         val listener = DisplayOrientationListener(context) { hasRotationChanged = true }
-        listener.currentOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val display: Display = mock()
-        doReturn(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE).`when`(display).rotation
+        doReturn(listener.currentOrientation).`when`(display).rotation
         doReturn(display).`when`(displayManager).getDisplay(1)
 
         listener.onDisplayChanged(1)
@@ -82,7 +85,6 @@ class DisplayOrientationListenerTest {
     fun `WHEN a display is changed and has a new rotation THEN inform the client and remember the new rotation`() {
         var hasRotationChanged = false
         val listener = DisplayOrientationListener(context) { hasRotationChanged = true }
-        listener.currentOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         val display: Display = mock()
         doReturn(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE).`when`(display).rotation
         doReturn(display).`when`(displayManager).getDisplay(1)
