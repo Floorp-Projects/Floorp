@@ -3399,9 +3399,26 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         nsTArray<int32_t> charData;
 
         if (nsTextFrame* currTextFrame = do_QueryFrame(frame)) {
+          nsTextFrame* prevTextFrame = currTextFrame;
           nsRect frameRect = currTextFrame->GetRect();
+          nsIFrame* nearestAccAncestorFrame =
+              LocalParent() ? LocalParent()->GetFrame() : nullptr;
           while (currTextFrame) {
             nsRect contRect = currTextFrame->GetRect();
+            if (prevTextFrame->GetParent() != currTextFrame->GetParent() &&
+                nearestAccAncestorFrame) {
+              // Continuations can span multiple frame tree subtrees,
+              // particularly when multiline text is nested within both block
+              // and inline elements. In addition to using the position of this
+              // continuation to offset our char rects, we'll need to offset
+              // this continuation from the continuations that occurred before
+              // it. We don't know how many there are or what subtrees they're
+              // in, so we use a transform here. This also ensures our offset is
+              // accurate even if the intervening inline elements are not
+              // present in the a11y tree.
+              contRect = nsLayoutUtils::TransformFrameRectToAncestor(
+                  currTextFrame, frameRect, nearestAccAncestorFrame);
+            }
             nsTArray<nsRect> charBounds;
             currTextFrame->GetCharacterRectsInRange(
                 currTextFrame->GetContentOffset(),
@@ -3422,6 +3439,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
               charData.AppendElement(charRect.width);
               charData.AppendElement(charRect.height);
             }
+            prevTextFrame = currTextFrame;
             currTextFrame = currTextFrame->GetNextContinuation();
           }
         }
