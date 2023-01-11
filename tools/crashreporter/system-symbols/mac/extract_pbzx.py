@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -6,7 +5,6 @@
 import lzma
 import shutil
 import struct
-import sys
 
 
 class Pbzx(object):
@@ -61,7 +59,3 @@ def extract_pbzx(pbzx_path):
         pbzx = Pbzx(f)
         with open(pbzx_path + ".cpio", "wb") as out:
             shutil.copyfileobj(pbzx, out)
-
-
-if __name__ == "__main__":
-    extract_pbzx(sys.argv[1])
