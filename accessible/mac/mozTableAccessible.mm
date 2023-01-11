@@ -133,11 +133,13 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
-  if (![self isKindOfClass:[mozTableAccessible class]]) {
+  if (![self isKindOfClass:[mozTableAccessible class]] &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     // If we are not a table, we are a cell or a row.
     // Check to see if the event we're handling should
     // invalidate the mIsLayoutTable cache on our parent
-    // table.
+    // table. Only do this when the core cache is off, because
+    // we don't use the platform cache when its on.
     if (eventType == nsIAccessibleEvent::EVENT_REORDER ||
         eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED) {
       // Invalidate the cache on our parent table
@@ -180,11 +182,16 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 @implementation mozTableAccessible
 
 - (void)invalidateLayoutTableCache {
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup(),
+             "If the core cache is enabled we shouldn't be maintaining the "
+             "platform table cache!");
   mIsLayoutTable = eCachedBoolMiss;
 }
 
 - (BOOL)isLayoutTablePart {
-  if (mIsLayoutTable != eCachedBoolMiss) {
+  if (mIsLayoutTable != eCachedBoolMiss &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Only use the platform cache if the core cache is not on
     return mIsLayoutTable == eCachedTrue;
   }
 
@@ -197,7 +204,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   }
 
   bool tableGuess;
-  // For LocalAccessible and cached RemoteAccessible, We could use
+  // For LocalAccessible and cached RemoteAccessible, we could use
   // AsTableBase()->IsProbablyLayoutTable(). However, if the cache is enabled,
   // that would build the table cache, which is pointless for layout tables on
   // Mac because layout tables are AXGroups and do not expose table properties
@@ -217,7 +224,9 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   if (eventType == nsIAccessibleEvent::EVENT_REORDER ||
       eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED ||
       eventType == nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED) {
-    [self invalidateLayoutTableCache];
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      [self invalidateLayoutTableCache];
+    }
     [self invalidateColumns];
   }
 
