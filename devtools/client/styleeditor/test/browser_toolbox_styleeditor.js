@@ -26,7 +26,6 @@ add_task(async function() {
   await pushPref("devtools.browsertoolbox.scope", "everything");
   await pushPref("devtools.styleeditor.transitions", false);
   await addTab(TEST_URI);
-  await pushPref("devtools.browsertoolbox.scope", "everything");
   const ToolboxTask = await initBrowserToolboxTask();
 
   await ToolboxTask.importFunctions({
@@ -59,19 +58,27 @@ add_task(async function() {
     const contentStylesheetSummaryEl = getStyleEditorItems().find(
       isTabStyleSheet
     );
-    // We might get events for the initial, default selected stylesheet, so wait until
-    // we get the one for the simple.css stylesheet.
-    const onTabStyleSheetEditorSelected = new Promise(resolve => {
-      const onEditorSelected = editor => {
-        if (editor.summary == contentStylesheetSummaryEl) {
-          resolve(editor);
-          panel.UI.off("editor-selected", onEditorSelected);
-        }
-      };
-      panel.UI.on("editor-selected", onEditorSelected);
-    });
-    panel.UI.setActiveSummary(contentStylesheetSummaryEl);
-    const tabStyleSheetEditor = await onTabStyleSheetEditorSelected;
+
+    let tabStyleSheetEditor;
+    if (panel.UI.selectedEditor.friendlyName === "simple.css") {
+      // simple.css might be selected by default, depending on the order in
+      // which the stylesheets have been loaded in the style editor.
+      tabStyleSheetEditor = panel.UI.selectedEditor;
+    } else {
+      // We might get events for the initial, default selected stylesheet, so wait until
+      // we get the one for the simple.css stylesheet.
+      const onTabStyleSheetEditorSelected = new Promise(resolve => {
+        const onEditorSelected = editor => {
+          if (editor.summary == contentStylesheetSummaryEl) {
+            resolve(editor);
+            panel.UI.off("editor-selected", onEditorSelected);
+          }
+        };
+        panel.UI.on("editor-selected", onEditorSelected);
+      });
+      panel.UI.setActiveSummary(contentStylesheetSummaryEl);
+      tabStyleSheetEditor = await onTabStyleSheetEditorSelected;
+    }
     const onStyleApplied = tabStyleSheetEditor.once("style-applied");
     tabStyleSheetEditor.sourceEditor.setText(
       tabStyleSheetEditor.sourceEditor.getText() + "\n body {color: red;}"
