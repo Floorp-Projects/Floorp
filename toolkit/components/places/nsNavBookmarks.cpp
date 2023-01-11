@@ -196,14 +196,6 @@ nsresult nsNavBookmarks::AdjustSeparatorsSyncCounter(int64_t aFolderId,
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetPlacesRoot(int64_t* aRoot) {
-  int64_t id = mDB->GetRootFolderId();
-  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
-  *aRoot = id;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNavBookmarks::GetBookmarksMenuFolder(int64_t* aRoot) {
   int64_t id = mDB->GetMenuFolderId();
   NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
@@ -791,17 +783,13 @@ nsresult nsNavBookmarks::GetDescendantChildren(
 nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
                                               uint16_t aSource) {
   AUTO_PROFILER_LABEL("nsNavBookmarks::RemoveFolderChilder", OTHER);
-
   NS_ENSURE_ARG_MIN(aFolderId, 1);
-  int64_t rootId = -1;
-  nsresult rv = GetPlacesRoot(&rootId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_ARG(aFolderId != rootId);
 
   BookmarkData folder;
-  rv = FetchItemInfo(aFolderId, folder);
+  nsresult rv = FetchItemInfo(aFolderId, folder);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_ARG(folder.type == TYPE_FOLDER);
+  NS_ENSURE_ARG(folder.parentId != 0);
 
   // Fill folder children array recursively.
   nsTArray<BookmarkData> folderChildrenArray;

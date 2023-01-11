@@ -95,11 +95,6 @@ interface nsINavBookmarkObserver : nsISupports
 interface nsINavBookmarksService : nsISupports
 {
   /**
-   * The item ID of the Places root.
-   */
-  readonly attribute long long placesRoot;
-
-  /**
    * The item ID of the bookmarks menu folder.
    */
   readonly attribute long long bookmarksMenuFolder;

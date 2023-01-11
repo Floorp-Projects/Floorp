@@ -646,33 +646,28 @@ add_task(async function test_bookmarkAdded_filtered_root() {
     await startTracking();
 
     _("Create a new root");
-    let rootID = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.placesRoot,
-      "New root",
-      PlacesUtils.bookmarks.DEFAULT_INDEX
-    );
-    let rootGUID = await PlacesUtils.promiseItemGuid(rootID);
-    _(`New root GUID: ${rootGUID}`);
+    let root = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      title: "New root",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
+    _(`New root GUID: ${root.guid}`);
 
     _("Insert a bookmark underneath the new root");
-    let untrackedBmkID = PlacesUtils.bookmarks.insertBookmark(
-      rootID,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Thunderbird!"
-    );
-    let untrackedBmkGUID = await PlacesUtils.promiseItemGuid(untrackedBmkID);
-    _(`New untracked bookmark GUID: ${untrackedBmkGUID}`);
+    let untrackedBmk = await PlacesUtils.bookmarks.insert({
+      parentGuid: root.guid,
+      url: "http://getthunderbird.com",
+      title: "Get Thunderbird!",
+    });
+    _(`New untracked bookmark GUID: ${untrackedBmk.guid}`);
 
     _("Insert a bookmark underneath the Places root");
-    let rootBmkID = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.placesRoot,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
-    let rootBmkGUID = await PlacesUtils.promiseItemGuid(rootBmkID);
-    _(`New Places root bookmark GUID: ${rootBmkGUID}`);
+    let rootBmk = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!",
+    });
+    _(`New Places root bookmark GUID: ${rootBmk.guid}`);
 
     _("New root and bookmark should be ignored");
     await verifyTrackedItems([]);
@@ -690,18 +685,16 @@ add_task(async function test_onItemDeleted_filtered_root() {
     await tracker.stop();
 
     _("Insert a bookmark underneath the Places root");
-    let rootBmkID = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.placesRoot,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
-    let rootBmkGUID = await PlacesUtils.promiseItemGuid(rootBmkID);
-    _(`New Places root bookmark GUID: ${rootBmkGUID}`);
+    let rootBmk = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!",
+    });
+    _(`New Places root bookmark GUID: ${rootBmk.guid}`);
 
     await startTracking();
 
-    PlacesUtils.bookmarks.removeItem(rootBmkID);
+    await PlacesUtils.bookmarks.remove(rootBmk);
 
     await verifyTrackedItems([]);
     // We'll still increment the counter for the removed item.
