@@ -333,12 +333,7 @@ const char* DesktopCaptureImpl::CurrentDeviceName() const {
   return _deviceUniqueId.c_str();
 }
 
-int32_t DesktopCaptureImpl::LazyInitDesktopCapturer() {
-  // Already initialized
-  if (desktop_capturer_cursor_composer_) {
-    return 0;
-  }
-
+static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   DesktopCaptureOptions options = DesktopCaptureOptions::CreateDefault();
   // Leave desktop effects enabled during WebRTC captures.
   options.set_disable_effects(false);
@@ -348,6 +343,17 @@ int32_t DesktopCaptureImpl::LazyInitDesktopCapturer() {
     options.set_allow_iosurface(true);
   }
 #endif
+
+  return options;
+}
+
+int32_t DesktopCaptureImpl::LazyInitDesktopCapturer() {
+  // Already initialized
+  if (desktop_capturer_cursor_composer_) {
+    return 0;
+  }
+
+  DesktopCaptureOptions options = CreateDesktopCaptureOptions();
 
   if (_deviceType == CaptureDeviceType::Screen) {
     std::unique_ptr<DesktopCapturer> pScreenCapturer =
