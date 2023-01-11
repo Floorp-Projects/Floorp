@@ -82,7 +82,6 @@ linux64-rust-dev:
             - rust-1.66.0
         toolchain:
             - linux64-clang-toolchain
-            - linux64-binutils
 
 linux64-rust-cross-1.66:
     description: "rust repack with macos and windows cross support"
