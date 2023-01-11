@@ -25,18 +25,25 @@
     }
 
     async function doTests() {
-      info("Set new row background");
-      await testGotStyleChange("rowOne", "background-color", "green");
+      if (Services.prefs.getBoolPref(
+        "accessibility.cache.enabled",
+        false
+      )) {
+        ok(true, "This event isn't fired when the cache is on " +
+           "but we can't leave this test empty, or the harness complains");
+      } else {
+        info("Set new row background");
+        await testGotStyleChange("rowOne", "background-color", "green");
 
-      info("Remove row background");
-      await testGotStyleChange("rowOne", "background-color", null);
+        info("Remove row background");
+        await testGotStyleChange("rowOne", "background-color", null);
 
-      info("Change cell border");
-      await testGotStyleChange("cellOne", "border", "5px solid green");
+        info("Change cell border");
+        await testGotStyleChange("cellOne", "border", "5px solid green");
 
-      info("Remove cell border");
-      await testGotStyleChange("cellOne", "border", null);
-
+        info("Remove cell border");
+        await testGotStyleChange("cellOne", "border", null);
+      }
       SimpleTest.finish();
     }
 
