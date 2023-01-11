@@ -99,15 +99,9 @@ login-item-copied-password-button-text = Copied!
 login-item-save-changes-button = Save Changes
 login-item-save-new-button = Save
 login-item-cancel-button = Cancel
-
-## The date is displayed in a timeline showing the password evolution.
-## A label is displayed under the date to describe the type of change.
-## (e.g. updated, created, etc...)
-
-login-item-timeline-point-date = { DATETIME($datetime, day: "numeric", month: "short", year: "numeric") }
-login-item-timeline-action-created = Created
-login-item-timeline-action-updated = Updated
-login-item-timeline-action-used = Used
+login-item-time-changed = Last modified: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
+login-item-time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
+login-item-time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
 
 ## OS Authentication dialog
 

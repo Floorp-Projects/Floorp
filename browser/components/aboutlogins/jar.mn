@@ -28,7 +28,6 @@ browser.jar:
   content/browser/aboutlogins/components/login-list-section.mjs           (content/components/login-list-section.mjs)
   content/browser/aboutlogins/components/menu-button.css                 (content/components/menu-button.css)
   content/browser/aboutlogins/components/menu-button.mjs                  (content/components/menu-button.mjs)
-  content/browser/aboutlogins/components/login-timeline.mjs              (content/components/login-timeline.mjs)
   content/browser/aboutlogins/icons/breached-website.svg                 (content/icons/breached-website.svg)
   content/browser/aboutlogins/icons/vulnerable-password.svg              (content/icons/vulnerable-password.svg)
   content/browser/aboutlogins/icons/intro-illustration.svg               (content/icons/intro-illustration.svg)
