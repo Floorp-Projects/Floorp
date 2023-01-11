@@ -275,10 +275,12 @@
     <string name="onboarding_home_content_description_close_button">Close</string>
 
     <!-- Notification pre-permission dialog -->
-    <!-- Enable notification pre permission dialog title -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Notifications help you do more with Firefox</string>
-    <!-- Enable notification pre permission dialog description with rationale -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Sync your tabs between devices, manage downloads, get tips about making the most of Firefox’s privacy protection, and more.</string>
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Notifications help you do more with %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Sync your tabs between devices, manage downloads, get tips about making the most of %s’s privacy protection, and more.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Continue</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
