@@ -177,18 +177,15 @@ def extract_payload(payload_path, output_path):
             return True
         elif header == b"pb":
             logging.info("Extracting pbzx payload")
-            from extract_pbzx import extract_pbzx
+            from extract_pbzx import Pbzx
 
-            # First, extract the PBZX into cpio.
-            extract_pbzx(payload_path)
-            # Next, feed the extracted PBZX into pax.
+            # Feed the extracted PBZX into pax.
             pax_proc = subprocess.Popen(
                 ["pax", "-r", "-k", "-s", ":^/::"],
                 stdin=subprocess.PIPE,
                 cwd=output_path,
             )
-            with open(payload_path + ".cpio", "rb") as f:
-                shutil.copyfileobj(f, pax_proc.stdin)
+            shutil.copyfileobj(Pbzx(open(payload_path, "rb")), pax_proc.stdin)
             pax_proc.stdin.close()
             pax_proc.wait()
             return True
