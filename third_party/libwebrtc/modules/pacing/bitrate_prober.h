@@ -66,7 +66,8 @@ class BitrateProber {
   absl::optional<PacedPacketInfo> CurrentCluster(Timestamp now);
 
   // Returns the minimum number of bytes that the prober recommends for
-  // the next probe, or zero if not probing.
+  // the next probe, or zero if not probing. A probe can consist of multiple
+  // packets that are sent back to back.
   DataSize RecommendedMinProbeSize() const;
 
   // Called to report to the prober that a probe has been sent. In case of
