@@ -749,6 +749,7 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
       return rv;
     }
   } else {
+    mIsRedirect = true;
     // A real, external redirect.  Perform CORS checking on new URL.
     rv = CheckRequestApproved(aOldChannel);
     if (NS_FAILED(rv)) {
@@ -994,9 +995,16 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   // It's a cross site load
   mHasBeenCrossSite = true;
 
-  nsCString userpass;
-  uri->GetUserPass(userpass);
-  NS_ENSURE_TRUE(userpass.IsEmpty(), NS_ERROR_DOM_BAD_URI);
+  if (mIsRedirect || StaticPrefs::network_cors_preflight_block_userpass_uri()) {
+    // https://fetch.spec.whatwg.org/#http-redirect-fetch
+    // Step 9. If request’s mode is "cors", locationURL includes credentials,
+    // and request’s origin is not same origin with locationURL’s origin,
+    // then return a network error.
+
+    nsAutoCString userpass;
+    uri->GetUserPass(userpass);
+    NS_ENSURE_TRUE(userpass.IsEmpty(), NS_ERROR_DOM_BAD_URI);
+  }
 
   // If we have an expanded principal here, we'll reject the CORS request,
   // because we can't send a useful Origin header which is required for CORS.

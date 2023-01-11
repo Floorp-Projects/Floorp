@@ -12065,6 +12065,15 @@
   value: false
   mirror: always
 
+# If true nsCORSListenerProxy will reject any URL that contains user & password
+# regardless if it's a redirect or not. When false nsCORSListenerProxy will
+# only reject URLs with a username and password when they happen on a redirected
+# channel.
+- name: network.cors_preflight.block_userpass_uri
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to record the telemetry event when a JAR channel is failed to load.
 - name: network.jar.record_failure_reason
   type: RelaxedAtomicBool
