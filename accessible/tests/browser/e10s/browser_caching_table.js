@@ -283,20 +283,8 @@ addAccessibleTask(
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("cell").style.border = "1px solid black";
     });
-    if (!isCacheEnabled) {
-      // this event doesn't get fired when the cache is on, so we can't await it
-      await styleChanged;
-    }
-    await untilCacheOk(() => {
-      // manually verify the attribute doesn't exist, since `testAbsentAttrs`
-      // has internal calls to ok() which fail if the cache hasn't yet updated
-      for (let prop of layout.attributes.enumerate()) {
-        if (prop.key == "layout-guess") {
-          return false;
-        }
-      }
-      return true;
-    }, "Table is a data table");
+    await styleChanged;
+    testAbsentAttrs(layout, { "layout-guess": "true" });
   },
   {
     chrome: true,
