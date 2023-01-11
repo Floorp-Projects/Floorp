@@ -43,6 +43,7 @@ FEATURE_CHECK_NEEDED = {
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
     "array-grouping": "!Array.prototype.group",
     "change-array-by-copy": "!Array.prototype.with",
+    "Array.fromAsync": "!Array.fromAsync",
 }
 RELEASE_OR_BETA = set(
     [
