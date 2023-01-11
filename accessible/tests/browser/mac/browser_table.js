@@ -314,7 +314,12 @@ async function testIsLayout(table, elem, event, change, isLayout) {
     event == EVENT_TABLE_STYLING_CHANGED ? "table" : elem
   );
   await change();
-  await toWait;
+  if (event != EVENT_TABLE_STYLING_CHANGED || !isCacheEnabled) {
+    // We can't wait for this event when the cache is on because
+    // we don't fire it. Instead we rely on the `untilCacheIs` check
+    // below.
+    await toWait;
+  }
   let intendedRole = isLayout ? "AXGroup" : "AXTable";
   await untilCacheIs(
     () => table.getAttributeValue("AXRole"),
