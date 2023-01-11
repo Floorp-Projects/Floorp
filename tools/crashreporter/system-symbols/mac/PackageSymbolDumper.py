@@ -45,6 +45,7 @@ import errno
 import logging
 import os
 import shutil
+import stat
 import subprocess
 import tempfile
 import traceback
@@ -177,17 +178,16 @@ def extract_payload(payload_path, output_path):
             return True
         elif header == b"pb":
             logging.info("Extracting pbzx payload")
-            from extract_pbzx import Pbzx
+            from macpkg import Pbzx, uncpio
 
-            # Feed the extracted PBZX into pax.
-            pax_proc = subprocess.Popen(
-                ["pax", "-r", "-k", "-s", ":^/::"],
-                stdin=subprocess.PIPE,
-                cwd=output_path,
-            )
-            shutil.copyfileobj(Pbzx(open(payload_path, "rb")), pax_proc.stdin)
-            pax_proc.stdin.close()
-            pax_proc.wait()
+            for path, mode, content in uncpio(Pbzx(open(payload_path, "rb"))):
+                if not path or not stat.S_ISREG(mode):
+                    continue
+                out = os.path.join(output_path, path.decode())
+                os.makedirs(os.path.dirname(out), exist_ok=True)
+                with open(out, "wb") as fh:
+                    shutil.copyfileobj(content, fh)
+
             return True
         else:
             # Unsupported format
@@ -196,7 +196,7 @@ def extract_payload(payload_path, output_path):
             )
             return False
 
-    except subprocess.CalledProcessError:
+    except Exception:
         return False
 
 

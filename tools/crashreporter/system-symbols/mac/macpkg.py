@@ -51,3 +51,67 @@ class Pbzx(object):
                 # XXX: suboptimal if length is larger than the chunk size
                 result += self.read(None if length is None else length - len(result))
             return result
+
+
+class Take(object):
+    """
+    File object wrapper that allows to read at most a certain length.
+    """
+
+    def __init__(self, fileobj, limit):
+        self.fileobj = fileobj
+        self.limit = limit
+
+    def read(self, length=None):
+        if length is None:
+            length = self.limit
+        else:
+            length = min(length, self.limit)
+        result = self.fileobj.read(length)
+        self.limit -= len(result)
+        return result
+
+
+def uncpio(fileobj):
+    while True:
+        magic = fileobj.read(6)
+        # CPIO payloads in mac pkg files are using the portable ASCII format.
+        if magic != b"070707":
+            if magic.startswith(b"0707"):
+                raise Exception("Unsupported CPIO format")
+            raise Exception("Not a CPIO header")
+        header = fileobj.read(70)
+        (
+            dev,
+            ino,
+            mode,
+            uid,
+            gid,
+            nlink,
+            rdev,
+            mtime,
+            namesize,
+            filesize,
+        ) = struct.unpack(">6s6s6s6s6s6s6s11s6s11s", header)
+        mode = int(mode, 8)
+        nlink = int(nlink, 8)
+        namesize = int(namesize, 8)
+        filesize = int(filesize, 8)
+        name = fileobj.read(namesize)
+        if name[-1] != 0:
+            raise Exception("File name is not NUL terminated")
+        name = name[:-1]
+        if name == b"TRAILER!!!":
+            break
+
+        if b"/../" in name or name.startswith(b"../") or name == b"..":
+            raise Exception(".. is forbidden in file name")
+        if name.startswith(b"."):
+            name = name[1:]
+        if name.startswith(b"/"):
+            name = name[1:]
+        content = Take(fileobj, filesize)
+        yield name, mode, content
+        # Ensure the content is totally consumed
+        while content.read(4096):
+            pass
