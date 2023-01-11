@@ -19,6 +19,12 @@
 using namespace js;
 using namespace js::jit;
 
+const char* const js::jit::LIROpNames[] = {
+#define OPNAME(op, ...) #op,
+    LIR_OPCODE_LIST(OPNAME)
+#undef OPNAME
+};
+
 LIRGraph::LIRGraph(MIRGraph* mir)
     : blocks_(),
       constantPool_(mir->alloc()),
@@ -325,7 +331,7 @@ void LSnapshot::rewriteRecoveredInput(LUse input) {
 #ifdef JS_JITSPEW
 void LNode::printName(GenericPrinter& out, Opcode op) {
   static const char* const names[] = {
-#  define LIROP(x) #  x,
+#  define LIROP(x) #x,
       LIR_OPCODE_LIST(LIROP)
 #  undef LIROP
   };
