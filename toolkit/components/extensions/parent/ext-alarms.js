@@ -8,40 +8,40 @@
 /* import-globals-from ext-toolkit.js */
 
 // Manages an alarm created by the extension (alarms API).
-function Alarm(api, name, alarmInfo) {
-  this.api = api;
-  this.name = name;
-  this.when = alarmInfo.when;
-  this.delayInMinutes = alarmInfo.delayInMinutes;
-  this.periodInMinutes = alarmInfo.periodInMinutes;
-  this.canceled = false;
+class Alarm {
+  constructor(api, name, alarmInfo) {
+    this.api = api;
+    this.name = name;
+    this.when = alarmInfo.when;
+    this.delayInMinutes = alarmInfo.delayInMinutes;
+    this.periodInMinutes = alarmInfo.periodInMinutes;
+    this.canceled = false;
 
-  let delay, scheduledTime;
-  if (this.when) {
-    scheduledTime = this.when;
-    delay = this.when - Date.now();
-  } else {
-    if (!this.delayInMinutes) {
-      this.delayInMinutes = this.periodInMinutes;
+    let delay, scheduledTime;
+    if (this.when) {
+      scheduledTime = this.when;
+      delay = this.when - Date.now();
+    } else {
+      if (!this.delayInMinutes) {
+        this.delayInMinutes = this.periodInMinutes;
+      }
+      delay = this.delayInMinutes * 60 * 1000;
+      scheduledTime = Date.now() + delay;
     }
-    delay = this.delayInMinutes * 60 * 1000;
-    scheduledTime = Date.now() + delay;
+
+    this.scheduledTime = scheduledTime;
+
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    delay = delay > 0 ? delay : 0;
+    timer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
+    this.timer = timer;
   }
 
-  this.scheduledTime = scheduledTime;
-
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  delay = delay > 0 ? delay : 0;
-  timer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
-  this.timer = timer;
-}
-
-Alarm.prototype = {
   clear() {
     this.timer.cancel();
     this.api.alarms.delete(this.name);
     this.canceled = true;
-  },
+  }
 
   observe(subject, topic, data) {
     if (this.canceled) {
@@ -60,7 +60,7 @@ Alarm.prototype = {
     let delay = this.periodInMinutes * 60 * 1000;
     this.scheduledTime = Date.now() + delay;
     this.timer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
-  },
+  }
 
   get data() {
     return {
@@ -68,8 +68,8 @@ Alarm.prototype = {
       scheduledTime: this.scheduledTime,
       periodInMinutes: this.periodInMinutes,
     };
-  },
-};
+  }
+}
 
 this.alarms = class extends ExtensionAPIPersistent {
   constructor(extension) {
