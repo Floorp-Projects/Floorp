@@ -74,6 +74,12 @@
   "c:\\windows\\prefetch\\{prefetch}.pf": {
     "ignore": true
   },
+  "c:\\windows\\system32\\webauthn.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 8192
+  },
   "c:\\windows\\system32\\shell32.dll": {
     "mincount": 0,
     "maxcount": 2,
