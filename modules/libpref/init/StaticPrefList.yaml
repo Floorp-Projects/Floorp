@@ -10542,10 +10542,12 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+#if defined(XP_MACOSX)
 - name: media.webrtc.capture.allow-iosurface
   type: RelaxedAtomicBool
   value: true
   mirror: always
+#endif
 
 #if defined(MOZ_WIDGET_GTK)
 - name: media.webrtc.capture.allow-pipewire
