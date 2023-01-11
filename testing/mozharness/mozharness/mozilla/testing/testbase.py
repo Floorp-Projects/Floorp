@@ -637,6 +637,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?"""
 
     def install(self):
         self.binary_path = self.install_app(app=self.config.get("application"))
+        self.install_dir = os.path.dirname(self.binary_path)
 
     def uninstall_app(self, install_dir=None):
         """Dependent on mozinstall"""

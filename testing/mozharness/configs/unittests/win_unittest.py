@@ -131,6 +131,7 @@ config = {
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--utility-path=tests/bin",
+                "--manifest=tests/xpcshell/tests/xpcshell.ini",
             ],
             "run_filename": "runxpcshelltests.py",
             "testsdir": "xpcshell",
@@ -204,7 +205,14 @@ config = {
         "xpcshell": {
             "options": [
                 "--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
-                "--manifest=tests/xpcshell/tests/xpcshell.ini",
+            ],
+            "tests": [],
+        },
+        "xpcshell-msix": {
+            "options": [
+                "--app-binary=%(binary_path)s",
+                "--app-path=%(install_dir)s",
+                "--xre-path=%(install_dir)s",
             ],
             "tests": [],
         },

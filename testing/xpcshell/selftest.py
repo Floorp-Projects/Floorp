@@ -455,6 +455,7 @@ class XPCShellTestsTests(unittest.TestCase):
             )
         else:
             self.xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
+
         if sys.platform == "win32":
             self.xpcshellBin += ".exe"
         self.utility_path = os.path.join(objdir, "dist", "bin")
@@ -524,6 +525,7 @@ prefs =
         returns |expected|.
         """
         kwargs = {}
+        kwargs["app_binary"] = self.app_binary
         kwargs["xpcshell"] = self.xpcshellBin
         kwargs["symbolsPath"] = self.symbols_path
         kwargs["manifest"] = self.manifest
