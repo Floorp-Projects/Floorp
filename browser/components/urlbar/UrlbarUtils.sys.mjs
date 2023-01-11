@@ -1225,6 +1225,8 @@ export var UrlbarUtils = {
           return "tabtosearch";
         } else if (result.providerName == "quickactions") {
           return "quickaction";
+        } else if (result.providerName == "UrlbarProviderQuickSuggest") {
+          return "quicksuggest";
         }
         return "dynamic";
     }

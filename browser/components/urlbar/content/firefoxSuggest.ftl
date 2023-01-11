@@ -23,6 +23,40 @@ firefox-suggest-urlbar-block =
 firefox-suggest-urlbar-learn-more =
   .title = Learn more about { -firefox-suggest-brand-name }
 
+## These strings are used for weather suggestions in the urlbar.
+
+# This string is displayed above the current temperature
+firefox-suggest-weather-currently = Currently
+
+# This string displays the current temperature value and unit
+# Variables:
+#   $value (number) - The temperature value
+#   $unit (String) - The unit for the temperature
+firefox-suggest-weather-temperature = { $value }°{ $unit }
+
+# This string is the title of the weather summary
+# Variables:
+#   $city (String) - The name of the city the weather data is for
+firefox-suggest-weather-title = Weather for { $city }
+
+# This string displays the weather summary
+# Variables:
+#   $currentConditions (String) - The current weather conditions summary
+#   $forecast (String) - The forecast weather conditions summary
+firefox-suggest-weather-summary-text = { $currentConditions }; { $forecast }
+
+# This string displays the high and low temperatures
+# Variables:
+#   $high (number) - The number for the high temperature
+#   $unit (String) - The unit for the temperature
+#   $low (number) - The number for the low temperature
+firefox-suggest-weather-high-low = High: { $high }°{ $unit } · Low: { $low }°{ $unit }
+
+# This string displays the name of the weather provider
+# Variables:
+#   $provider (String) - The name of the weather provider
+firefox-suggest-weather-sponsored = { $provider } · Sponsored
+
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.
 

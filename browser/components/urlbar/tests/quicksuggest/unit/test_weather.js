@@ -631,32 +631,41 @@ function assertDisabled({ message, pendingFetchCount }) {
 
 function makeExpectedResult(temperatureUnit) {
   return {
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+    type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     payload: {
-      title:
-        WEATHER_SUGGESTION.city_name +
-        " • " +
-        WEATHER_SUGGESTION.current_conditions.temperature[temperatureUnit] +
-        "° " +
-        WEATHER_SUGGESTION.current_conditions.summary +
-        " • " +
-        WEATHER_SUGGESTION.forecast.summary +
-        " • H " +
-        WEATHER_SUGGESTION.forecast.high[temperatureUnit] +
-        "° • L " +
-        WEATHER_SUGGESTION.forecast.low[temperatureUnit] +
-        "°",
-      url: WEATHER_SUGGESTION.url,
+      url: "http://example.com/weather",
       icon: "chrome://global/skin/icons/highlights.svg",
       helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+      helpL10n: {
+        id: "firefox-suggest-urlbar-learn-more",
+      },
       isBlockable: true,
-      blockL10n: { id: "firefox-suggest-urlbar-block" },
-      requestId: MerinoTestUtils.server.response.body.request_id,
+      blockL10n: {
+        id: "firefox-suggest-urlbar-block",
+      },
+      requestId: "request_id",
       source: "merino",
       merinoProvider: "accuweather",
+      dynamicType: "weather",
+      city: "San Francisco",
+      temperature: {
+        c: 15.5,
+        f: 60,
+      },
+      currentConditions: "Mostly cloudy",
+      forecast: "Pleasant Saturday",
+      high: {
+        c: 21.1,
+        f: 70,
+      },
+      low: {
+        c: 13.9,
+        f: 57,
+      },
+      isWeather: true,
+      shouldNavigate: true,
     },
   };
 }

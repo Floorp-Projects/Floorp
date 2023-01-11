@@ -237,3 +237,100 @@
 .urlbarView-row[dynamicType=contextualSearch]:hover > .urlbarView-row-inner {
   background-color: var(--autocomplete-popup-hover-background);
 }
+
+
+/**
+ * Weather
+ *
+ * All em units used below are based on the spec where 1em is 13px.
+ * Thus using 13px as a base to calculate the other relative em sizes, either
+ * a bigger or smaller ratio to 13px.
+ */
+
+.urlbarView-results[wrap] > .urlbarView-row[dynamicType=weather] > .urlbarView-row-inner {
+  flex-wrap: nowrap;
+}
+
+.urlbarView-dynamic-weather-currentConditions {
+  background-color: var(--autocomplete-popup-hover-background);
+  padding: 0.61em 0.61em 0.84em;
+  margin-inline-end: 0.92em;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.urlbarView-dynamic-weather-currently {
+  font-size: 0.85em;
+  margin-bottom: 0.53em;
+}
+
+.urlbarView-dynamic-weather-temperature {
+  margin-inline-end: 0.3em;
+  font-weight: 600;
+  /* The units from the spec:
+     - 1em is 13px
+     - temperature is 18px
+     - We need to figure out the temperature in units of em.
+     - 18px / 13px = 1.385em
+     Therefore, the temperature is 1.385em units.
+  */
+  font-size: 1.385em;
+}
+
+.urlbarView-dynamic-weather-summary {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.urlbarView-dynamic-weather-top {
+  display: flex;
+  align-items: center;
+}
+
+.urlbarView-dynamic-weather-topNoWrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.urlbarView-dynamic-weather-middle {
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+}
+
+.urlbarView-dynamic-weather-middleNoWrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.urlbarView-dynamic-weather-summaryTextSeparator::before {
+  content: '\00B7';
+  margin: 0.25em;
+}
+
+.urlbarView-dynamic-weather-highLow {
+  /* The 100% width is needed so the highLow wraps at the same time as the URL
+     when the URL has overflowed.
+     TODO - In a follow-up patch I will fix it so the highLow will wrap when the
+     highLow has overflowed, it will wrap separte from the URL.*/
+  width: 100%;
+}
+
+.urlbarView-results[wrap] > .urlbarView-row[dynamicType=weather] > .urlbarView-row-inner .urlbarView-dynamic-weather-top,
+.urlbarView-results[wrap] > .urlbarView-row[dynamicType=weather] > .urlbarView-row-inner .urlbarView-dynamic-weather-middle {
+  flex-wrap: wrap;
+}
+
+.urlbarView-results[wrap] > .urlbarView-row[dynamicType=weather] > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary >
+.urlbarView-dynamic-weather-top > .urlbarView-dynamic-weather-topNoWrap > .urlbarView-dynamic-weather-titleSeparator,
+.urlbarView-results[wrap] > .urlbarView-row[dynamicType=weather] > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary >
+.urlbarView-dynamic-weather-middle > .urlbarView-dynamic-weather-middleNoWrap > .urlbarView-dynamic-weather-summaryTextSeparator {
+  display: none;
+}
+
+.urlbarView-dynamic-weather-bottom {
+  font-size: 0.85em;
+  margin-top: 0.40em;
+  opacity: 0.6;
+}
