@@ -573,8 +573,13 @@ void nsAccessibilityService::TableLayoutGuessMaybeChanged(
   if (DocAccessible* document = GetDocAccessible(aPresShell)) {
     if (LocalAccessible* acc = document->GetAccessible(aContent)) {
       if (LocalAccessible* table = nsAccUtils::TableFor(acc)) {
-        document->FireDelayedEvent(
-            nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, table);
+        if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+          // Only fire this event when the cache is off -- we don't
+          // need to maintain the mac table cache otherwise, since
+          // we'll use the core cache instead.
+          document->FireDelayedEvent(
+              nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, table);
+        }
         document->QueueCacheUpdate(table, CacheDomain::Table);
       }
     }
