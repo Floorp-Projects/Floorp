@@ -327,6 +327,13 @@ TEST_SUITES = {
         "kwargs": {"test_file": "all"},
         "task_regex": ["xpcshell($|.*(-1|[^0-9])$)", "test-verify($|.*(-1|[^0-9])$)"],
     },
+    "xpcshell-msix": {
+        "aliases": ("x",),
+        "build_flavor": "xpcshell",
+        "mach_command": "xpcshell-test",
+        "kwargs": {"test_file": "all"},
+        "task_regex": ["xpcshell($|.*(-1|[^0-9])$)", "test-verify($|.*(-1|[^0-9])$)"],
+    },
 }
 """Definitions of all test suites and the metadata needed to run and process
 them. Each test suite definition can contain the following keys.

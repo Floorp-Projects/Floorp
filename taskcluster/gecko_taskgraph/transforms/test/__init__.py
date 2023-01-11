@@ -49,8 +49,11 @@ test_description_schema = Schema(
         Required("description"): str,
         # test suite category and name
         Optional("suite"): Any(
-            str,
-            {Optional("category"): str, Optional("name"): str},
+            optionally_keyed_by("variant", str),
+            {
+                Optional("category"): str,
+                Optional("name"): optionally_keyed_by("variant", str),
+            },
         ),
         # base work directory used to set up the task.
         Optional("workdir"): optionally_keyed_by("test-platform", Any(str, "default")),
@@ -291,7 +294,10 @@ def handle_keyed_by_mozharness(config, tasks):
     for task in tasks:
         for field in fields:
             resolve_keyed_by(
-                task, field, item_name=task["test-name"], enforce_single_match=False
+                task,
+                field,
+                item_name=task["test-name"],
+                enforce_single_match=False,
             )
         yield task
 
@@ -351,11 +357,20 @@ transforms.add_validate(test_description_schema)
 
 
 @transforms.add
+def run_variant_transforms(config, tasks):
+    """Variant transforms are run as soon as possible to allow other transforms
+    to key by variant."""
+    for task in tasks:
+        xforms = TransformSequence()
+        mod = import_module("gecko_taskgraph.transforms.test.variant")
+        xforms.add(mod.transforms)
+
+        yield from xforms(config, [task])
+
+
+@transforms.add
 def resolve_keys(config, tasks):
-    keys = (
-        "require-signed-extensions",
-        "run-without-variant",
-    )
+    keys = ("require-signed-extensions", "run-without-variant", "suite", "suite.name")
     for task in tasks:
         for key in keys:
             resolve_keyed_by(
@@ -365,17 +380,17 @@ def resolve_keys(config, tasks):
                 enforce_single_match=False,
                 **{
                     "release-type": config.params["release_type"],
+                    "variant": task["attributes"].get("unittest_variant"),
                 },
             )
         yield task
 
 
 @transforms.add
-def run_sibling_transforms(config, tasks):
+def run_remaining_transforms(config, tasks):
     """Runs other transform files next to this module."""
     # List of modules to load transforms from in order.
     transform_modules = (
-        ("variant", None),
         ("raptor", lambda t: t["suite"] == "raptor"),
         ("other", None),
         ("worker", None),
