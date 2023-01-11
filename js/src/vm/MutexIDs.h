@@ -59,6 +59,7 @@
   _(MemoryTracker, 500)               \
   _(StencilCache, 500)                \
   _(SourceCompression, 500)           \
+  _(GCDelayedMarkingLock, 500)        \
                                       \
   _(SharedImmutableStringsCache, 600) \
   _(IrregexpLazyStatic, 600)          \

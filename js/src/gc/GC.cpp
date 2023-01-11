@@ -458,6 +458,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       alwaysPreserveCode(false),
       lowMemoryState(false),
       lock(mutexid::GCLock),
+      delayedMarkingLock(mutexid::GCDelayedMarkingLock),
       allocTask(this, emptyChunks_.ref()),
       unmarkTask(this),
       markTask(this),
