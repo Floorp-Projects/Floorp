@@ -84,6 +84,8 @@ class Benchmark(object):
                 "clone",
                 "-c",
                 "http.postBuffer=2147483648",
+                "-c",
+                "core.autocrlf=false",
                 benchmark_repository,
                 str(dest.resolve()),
             ]
