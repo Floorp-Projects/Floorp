@@ -170,7 +170,7 @@ function testTextPos(aID, aOffset, aPoint, aCoordOrigin) {
     "Wrong x coordinate at offset " + aOffset + " for " + prettyName(aID)
   );
   ok(
-    yObj.value - expectedY <= 2 && expectedY - yObj.value <= 2,
+    yObj.value - expectedY < 2 && expectedY - yObj.value < 2,
     "Wrong y coordinate at offset " +
       aOffset +
       " for " +

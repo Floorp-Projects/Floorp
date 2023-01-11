@@ -34,24 +34,13 @@ async function testTextRange(accDoc, browser, id, start, end) {
         // ignore whitespace, but not embedded elements
         let isEmbeddedElement = false;
         if (element.length == undefined) {
-          let potentialTextContainer = element;
-          while (
-            potentialTextContainer &&
-            potentialTextContainer.length == undefined
-          ) {
-            potentialTextContainer = element.firstChild;
-          }
-          if (potentialTextContainer && potentialTextContainer.length) {
-            // If we can reach some text from this container, use that as part
-            // of our range. This is important when testing with intervening inline
-            // elements. ie. <pre><code>ab%0acd
-            element = potentialTextContainer;
-          } else if (element.firstChild) {
-            isEmbeddedElement = true;
-          } else {
+          if (!element.firstChild) {
             continue;
+          } else {
+            isEmbeddedElement = true;
           }
         }
+
         if (element.length + traversed < _start) {
           // If our start index is not within this
           // node, keep looking.
@@ -441,65 +430,3 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: !isWinNoCache }
 );
-
-/**
- * Test character bounds in an intervening inline element with non-br line breaks
- */
-addAccessibleTask(
-  `
-  <style>
-    @font-face {
-      font-family: Ahem;
-      src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
-    }
-    pre {
-      font: 20px/20px Ahem;
-    }
-  </style>
-  <pre id="t"><code>XX
-XXX
-XX
-X</pre>`,
-  async function(browser, docAcc) {
-    await testChar(docAcc, browser, "t", 0);
-    await testChar(docAcc, browser, "t", 3);
-    await testChar(docAcc, browser, "t", 7);
-    await testChar(docAcc, browser, "t", 10);
-  },
-  {
-    chrome: true,
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-  }
-);
-
-// XXX: There's a fuzziness here of about 8 pixels, implying we aren't taking into
-// account some kind of margin or padding. See bug 1809695.
-// /**
-//  * Test character bounds in an intervening inline element with margins
-//  * and with non-br line breaks
-//  */
-// addAccessibleTask(
-//   `
-//   <style>
-//     @font-face {
-//       font-family: Ahem;
-//       src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
-//     }
-//   </style>
-//   <div>hello<pre id="t" style="margin-left:100px;margin-top:30px;background-color:blue;">XX
-// XXX
-// XX
-// X</pre></div>`,
-//   async function(browser, docAcc) {
-//     await testChar(docAcc, browser, "t", 0);
-//     await testChar(docAcc, browser, "t", 3);
-//     await testChar(docAcc, browser, "t", 7);
-//     await testChar(docAcc, browser, "t", 10);
-//   },
-//   {
-//     chrome: true,
-//     topLevel: !isWinNoCache,
-//     iframe: !isWinNoCache,
-//   }
-// );
