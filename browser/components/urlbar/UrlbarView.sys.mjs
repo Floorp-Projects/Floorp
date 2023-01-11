@@ -1295,7 +1295,7 @@ export class UrlbarView {
       item._buttons.get("tip").textContent = result.payload.buttonText;
     }
 
-    if (result.payload.isBlockable) {
+    if (result.payload.isBlockable && !lazy.UrlbarPrefs.get("resultMenu")) {
       this.#addRowButton(item, {
         name: "block",
         l10n: result.payload.blockL10n,
@@ -1312,6 +1312,8 @@ export class UrlbarView {
       let menuCommands = [];
       if (result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY) {
         menuCommands.push("remove-from-history");
+      } else if (result.payload.isBlockable) {
+        menuCommands.push("dismiss-firefox-suggest");
       }
       if (menuCommands.length) {
         this.#resultMenuCommands.set(result, menuCommands);
@@ -2772,6 +2774,7 @@ export class UrlbarView {
       let menuitem = event.target;
       switch (menuitem.dataset.command) {
         case "remove-from-history":
+        case "dismiss-firefox-suggest":
           this.controller.handleDeleteEntry(null, result);
           break;
       }
@@ -2783,7 +2786,7 @@ export class UrlbarView {
       let availableCommands = this.#resultMenuCommands.get(
         this.#resultMenuResult
       );
-      for (let menuitem of this.resultMenu.querySelector("[data-command]")) {
+      for (let menuitem of this.resultMenu.querySelectorAll("[data-command]")) {
         menuitem.hidden = !availableCommands.includes(menuitem.dataset.command);
       }
     }
