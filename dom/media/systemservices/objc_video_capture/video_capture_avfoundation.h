@@ -30,7 +30,11 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   static rtc::scoped_refptr<VideoCaptureModule> Create(const char* _Nullable aDeviceUniqueIdUTF8);
 
   // Implementation of VideoCaptureImpl. Single threaded.
+
+  // Starts capturing synchronously. Idempotent. If an existing capture is live and another
+  // capability is requested we'll restart the underlying backend with the new capability.
   int32_t StartCapture(const VideoCaptureCapability& aCapability) MOZ_EXCLUDES(api_lock_) override;
+  // Stops capturing synchronously. Idempotent.
   int32_t StopCapture() MOZ_EXCLUDES(api_lock_) override;
   bool CaptureStarted() MOZ_EXCLUDES(api_lock_) override;
   int32_t CaptureSettings(VideoCaptureCapability& aSettings) override;
@@ -52,8 +56,12 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   AVCaptureDevice* _Nonnull mDevice RTC_GUARDED_BY(mChecker);
   VideoCaptureAdapter* _Nonnull mAdapter RTC_GUARDED_BY(mChecker);
   RTC_OBJC_TYPE(RTCCameraVideoCapturer) * _Nullable mCapturer RTC_GUARDED_BY(mChecker);
+  // If capture has started, this is the capability it was started for. Written on the mChecker
+  // thread only.
   mozilla::Maybe<VideoCaptureCapability> mCapability MOZ_GUARDED_BY(api_lock_);
+  // Id string uniquely identifying this capture source. Written on the mChecker thread only.
   mozilla::Maybe<nsCString> mTrackingId MOZ_GUARDED_BY(api_lock_);
+  // Adds frame specific markers to the profiler while mTrackingId is set.
   mozilla::PerformanceRecorderMulti<mozilla::CaptureStage> mPerformanceRecorder;
   std::atomic<ProfilerThreadId> mCallbackThreadId;
 };
