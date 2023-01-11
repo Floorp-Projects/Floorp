@@ -95,11 +95,6 @@ interface nsINavBookmarkObserver : nsISupports
 interface nsINavBookmarksService : nsISupports
 {
   /**
-   * The item ID of the bookmarks menu folder.
-   */
-  readonly attribute long long bookmarksMenuFolder;
-
-  /**
    * The item ID of the top-level folder that contain the tag "folders".
    */
   readonly attribute long long tagsFolder;

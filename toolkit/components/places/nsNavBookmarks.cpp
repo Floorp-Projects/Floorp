@@ -196,14 +196,6 @@ nsresult nsNavBookmarks::AdjustSeparatorsSyncCounter(int64_t aFolderId,
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetBookmarksMenuFolder(int64_t* aRoot) {
-  int64_t id = mDB->GetMenuFolderId();
-  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
-  *aRoot = id;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNavBookmarks::GetTagsFolder(int64_t* aRoot) {
   int64_t id = mDB->GetTagsFolderId();
   NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);

@@ -1996,6 +1996,16 @@ export var PlacesUtils = {
     );
     await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
   },
+
+  /**
+   * Can be used to detect being in automation to allow specific code paths
+   * that are normally disallowed.
+   */
+  get isInAutomation() {
+    return (
+      Cu.isInAutomation || Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")
+    );
+  },
 };
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {

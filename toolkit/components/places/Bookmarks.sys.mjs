@@ -262,8 +262,9 @@ export var Bookmarks = Object.freeze({
       },
       parentGuid: {
         required: true,
-        // Inserting into the root folder is not allowed.
-        validIf: b => b.parentGuid != this.rootGuid,
+        // Inserting into the root folder is not allowed unless it's testing.
+        validIf: b =>
+          lazy.PlacesUtils.isInAutomation || b.parentGuid != this.rootGuid,
       },
       title: {
         defaultValue: "",
