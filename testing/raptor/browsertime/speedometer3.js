@@ -41,12 +41,26 @@ module.exports = async function(context, commands) {
             window.testDone = true;
           }
         };
-        const runner = new BenchmarkRunner(window.Suites, benchmarkClient);
-        console.log("created");
-        console.log(Suites);
-        const iterationCount = ${speedometer_iterations};
-        runner.runMultipleIterations(iterationCount);
-        console.log("running");
+        window.Suites.forEach((el) => {
+          if (window.navigator.platform.toLowerCase().includes("win")) {
+            if (
+                el.name == "React-TodoMVC" ||
+                el.name == "React-Redux-TodoMVC" ||
+                el.name == "EmberJS-TodoMVC"
+            ) {
+              el.disabled = true;
+            } else {
+              el.disabled = false;
+            }
+          } else {
+            el.disabled = false;
+          }
+        });
+        // BenchmarkRunner is overriden as the InteractiveBenchmarkRunner
+        const runner = new BenchmarkRunner(window.Suites, ${speedometer_iterations});
+        runner._client = benchmarkClient;
+
+        runner.runSuites();
     `);
 
     let data_exists = false;

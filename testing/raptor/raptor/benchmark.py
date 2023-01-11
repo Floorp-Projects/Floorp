@@ -138,7 +138,7 @@ class Benchmark(object):
                 os.symlink(benchmark_path, dest)
         else:
             # Clobber the benchmark in case a recent update removed any files.
-            mozfile.remove(dest)
+            mozfile.remove(str(dest.resolve()))
             shutil.copytree(benchmark_path, dest)
 
         if any(path.is_file() for path in benchmark_path.iterdir()):

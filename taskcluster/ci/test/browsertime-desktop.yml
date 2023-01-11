@@ -316,9 +316,8 @@ browsertime-benchmark:
                 by-app:
                     firefox:
                         by-test-platform:
-                            windows.*: []
-                            linux.*64.*shippable-qr/.*: [trunk, mozilla-release]
-                            mac.*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            windows.*-32.*: []
+                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             default: []
                     default: []
             unity-webgl:
