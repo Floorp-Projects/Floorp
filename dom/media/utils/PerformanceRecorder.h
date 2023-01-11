@@ -151,7 +151,7 @@ class CaptureStage {
     MJPEG,
   };
 
-  CaptureStage(nsCString aSource, nsCString aTrackingId, int32_t aWidth,
+  CaptureStage(nsCString aSource, TrackingId aTrackingId, int32_t aWidth,
                int32_t aHeight, ImageType aImageType)
       : mSource(std::move(aSource)),
         mTrackingId(std::move(aTrackingId)),
@@ -165,10 +165,12 @@ class CaptureStage {
   }
 
   nsCString mSource;
-  nsCString mTrackingId;
+  TrackingId mTrackingId;
   int32_t mWidth;
   int32_t mHeight;
   ImageType mImageType;
+
+ private:
   mutable Maybe<nsCString> mName;
 };
 

@@ -228,10 +228,10 @@ int32_t VideoCaptureAvFoundation::OnFrame(webrtc::VideoFrame& aFrame) {
   return rv;
 }
 
-void VideoCaptureAvFoundation::SetTrackingId(const char* _Nonnull aTrackingId) {
+void VideoCaptureAvFoundation::SetTrackingId(uint32_t aTrackingIdProcId) {
   RTC_DCHECK_RUN_ON(&mChecker);
   MutexLock lock(&api_lock_);
-  mTrackingId = Some(nsCString(aTrackingId));
+  mTrackingId.emplace(TrackingId::Source::Camera, aTrackingIdProcId);
 }
 
 void VideoCaptureAvFoundation::StartFrameRecording(int32_t aWidth, int32_t aHeight) {
