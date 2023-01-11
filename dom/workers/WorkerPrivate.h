@@ -1041,6 +1041,8 @@ class WorkerPrivate final
   void IncreaseWorkerFinishedRunnableCount() { ++mWorkerFinishedRunnableCount; }
   void DecreaseWorkerFinishedRunnableCount() { --mWorkerFinishedRunnableCount; }
 
+  void RunShutdownTasks();
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1133,6 +1135,12 @@ class WorkerPrivate final
     return !(data->mChildWorkers.IsEmpty() && data->mTimeouts.IsEmpty() &&
              data->mWorkerRefs.IsEmpty());
   }
+
+  friend class WorkerEventTarget;
+
+  bool RegisterShutdownTask(nsITargetShutdownTask* aTask);
+
+  bool UnregisterShutdownTask(nsITargetShutdownTask* aTask);
 
   // Internal logic to dispatch a runnable. This is separate from Dispatch()
   // to allow runnables to be atomically dispatched in bulk.
@@ -1460,6 +1468,11 @@ class WorkerPrivate final
 
   Atomic<uint32_t> mTopLevelWorkerFinishedRunnableCount;
   Atomic<uint32_t> mWorkerFinishedRunnableCount;
+
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks
+      MOZ_GUARDED_BY(mMutex);
+  bool mRunShutdownTasksStarted MOZ_GUARDED_BY(mMutex) = false;
+  bool mRunShutdownTasksFinished MOZ_GUARDED_BY(mMutex) = false;
 };
 
 class AutoSyncLoopHolder {
