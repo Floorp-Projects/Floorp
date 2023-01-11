@@ -19,13 +19,6 @@ export LDFLAGS="${CXXFLAGS} -Wl,-syslibroot,${CROSS_SYSROOT} -Wl,-dead_strip"
 # We patch tools/gn/bootstrap/bootstrap.py to detect this.
 export MAC_CROSS=1
 
-# Gn build scripts use #!/usr/bin/env python, which will be python 2.6 on
-# the worker and cause failures. Work around this by putting python2.7
-# ahead of it in PATH.
-mkdir -p $WORKSPACE/python_bin
-ln -s /usr/bin/python2.7 $WORKSPACE/python_bin/python
-export PATH=$WORKSPACE/python_bin:$PATH
-
 cd $GECKO_PATH
 
 # The ninja templates used to bootstrap gn have hard-coded references to
