@@ -2122,8 +2122,7 @@ void GCMarker::abortLinearWeakMarking() {
 }
 
 MOZ_NEVER_INLINE void GCMarker::delayMarkingChildrenOnOOM(Cell* cell) {
-  AutoLockGC lock(runtime());
-  runtime()->gc.delayMarkingChildren(cell, markColor(), lock);
+  runtime()->gc.delayMarkingChildren(cell, markColor());
 }
 
 bool GCRuntime::hasDelayedMarking() const {
@@ -2132,8 +2131,10 @@ bool GCRuntime::hasDelayedMarking() const {
   return result;
 }
 
-void GCRuntime::delayMarkingChildren(Cell* cell, MarkColor color,
-                                     const AutoLockGC& lock) {
+void GCRuntime::delayMarkingChildren(Cell* cell, MarkColor color) {
+  // Synchronize access to delayed marking state during parallel marking.
+  LockGuard<Mutex> lock(delayedMarkingLock);
+
   Arena* arena = cell->asTenured().arena();
   if (!arena->onDelayedMarkingList()) {
     arena->setNextDelayedMarkingArena(delayedMarkingList);
@@ -2200,6 +2201,7 @@ void GCRuntime::processDelayedMarkingList(MarkColor color) {
 }
 
 void GCRuntime::markAllDelayedChildren(ShouldReportMarkTime reportTime) {
+  MOZ_ASSERT(CurrentThreadIsMainThread() || CurrentThreadIsPerformingGC());
   MOZ_ASSERT(marker().isDrained());
   MOZ_ASSERT(hasDelayedMarking());
 
@@ -2242,6 +2244,8 @@ void GCRuntime::rebuildDelayedMarkingList() {
 }
 
 void GCRuntime::resetDelayedMarking() {
+  MOZ_ASSERT(CurrentThreadIsMainThread());
+
   forEachDelayedMarkingArena([&](Arena* arena) {
     MOZ_ASSERT(arena->onDelayedMarkingList());
     arena->clearDelayedMarkingState();
