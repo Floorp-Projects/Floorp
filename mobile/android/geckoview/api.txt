@@ -1363,9 +1363,10 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.ColorPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected ColorPrompt(@NonNull String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
+    ctor protected ColorPrompt(@NonNull String, @Nullable String, @Nullable String, @Nullable String[], @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     field @Nullable public final String defaultValue;
+    field @Nullable public final String[] predefinedValues;
   }
 
   public static class GeckoSession.PromptDelegate.DateTimePrompt extends GeckoSession.PromptDelegate.BasePrompt {
