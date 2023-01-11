@@ -264,7 +264,7 @@ SubDialog.prototype = {
     this._box.style.removeProperty("--box-max-width-requested");
     this._box.style.removeProperty("min-height");
     this._box.style.removeProperty("min-width");
-    this._overlay.parentNode.style.removeProperty("--inner-height");
+    this._overlay.style.removeProperty("--subdialog-inner-height");
 
     let onClosed = () => {
       this._openedURL = null;
@@ -389,8 +389,8 @@ SubDialog.prototype = {
     let oldResizeBy = this._frame.contentWindow.resizeBy;
     this._frame.contentWindow.resizeBy = (resizeByWidth, resizeByHeight) => {
       // Only handle resizeByHeight currently.
-      let frameHeight = this._overlay.parentNode.style.getPropertyValue(
-        "--inner-height"
+      let frameHeight = this._overlay.style.getPropertyValue(
+        "--subdialog-inner-height"
       );
       if (frameHeight) {
         frameHeight = parseFloat(frameHeight);
@@ -403,8 +403,8 @@ SubDialog.prototype = {
 
       this._box.style.minHeight = boxMinHeight + resizeByHeight + "px";
 
-      this._overlay.parentNode.style.setProperty(
-        "--inner-height",
+      this._overlay.style.setProperty(
+        "--subdialog-inner-height",
         frameHeight + resizeByHeight + "px"
       );
 
@@ -646,10 +646,10 @@ SubDialog.prototype = {
       contentPane?.classList.add("doScroll");
     }
 
-    this._overlay.parentNode.style.setProperty("--inner-height", frameHeight);
+    this._overlay.style.setProperty("--subdialog-inner-height", frameHeight);
     this._frame.style.height = `min(
       calc(100vh - ${frameOverhead}px),
-      var(--inner-height, ${frameHeight})
+      var(--subdialog-inner-height, ${frameHeight})
     )`;
     this._box.style.minHeight = `calc(
       ${boxVerticalBorder + titleBarHeight + frameVerticalMargin}px +
@@ -658,7 +658,7 @@ SubDialog.prototype = {
   },
 
   /**
-   * Helper for convertting em to px because an em value from the dialog window could
+   * Helper for converting em to px because an em value from the dialog window could
    * translate to something else in the host window, as font sizes may vary.
    *
    * @param {String} val

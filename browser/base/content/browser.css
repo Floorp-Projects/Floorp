@@ -1634,28 +1634,33 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   margin-top: -5px;
 }
 
+/* For window-modal dialogs, we allow overlapping the urlbar if the window is
+ * small enough. */
+#window-modal-dialog > .dialogOverlay > .dialogBox:not(.spotlightBox) {
+  /* Do not go below 3px (as otherwise the top of the dialog would be
+   * adjacent to or clipped by the top of the window), or above the window
+   * size. */
+  margin-top: clamp(
+    3px,
+    var(--chrome-offset, 20px) - 5px,
+    calc(100vh - var(--subdialog-inner-height) - 5px)
+  );
+}
+
 #window-modal-dialog {
   overflow: visible;
   padding: 0;
-  --chrome-offset: 20px; /* gets overridden from JS, but pick some default... */
-  margin-top: max(
-    /* Do not go below 8px, corresponding to the negative margin above plus
-     * a tiny bit of space, as otherwise the top of the dialog would be
-     * adjacent to or clipped by the top of the window. */
-    8px,
-    /* Otherwise, use the chrome height,
-     * or the height of the parent window minus the height of the dialog,
-     * whichever is smaller. */
-    min(
-      var(--chrome-offset),
-      calc(100vh - var(--inner-height))
-    )
-  );
+  /* Override default <html:dialog> styles */
+  border-width: 0;
+  background-color: transparent;
+  /* This makes the dialog top-aligned by default (the dialog box will move via
+   * margin-top above) */
+  bottom: auto;
 }
 
 #window-modal-dialog.spotlight {
   /* Spotlight window modal dialogs should be equal in size to the window. */
-  margin: revert;
+  bottom: revert;
   max-height: 100%;
   max-width: 100%;
 }
@@ -1665,12 +1670,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   -moz-box-flex: 1;
   /* Default dialog dimensions */
   width: 34em;
-}
-
-/* Override default <html:dialog> styles */
-#window-modal-dialog {
-  border-width: 0;
-  background-color: transparent;
 }
 
 .dialogOverlay[topmost="true"],
