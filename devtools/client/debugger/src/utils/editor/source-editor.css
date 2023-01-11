@@ -25,10 +25,6 @@
   margin-left: 5px;
   width: 12px;
   height: 12px;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  /* background-image: url("chrome://devtools/skin/images/editor-error.png"); */
   opacity: 0.75;
 }
 
