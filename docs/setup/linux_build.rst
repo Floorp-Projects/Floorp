@@ -123,6 +123,7 @@ Now that your system is bootstrapped, you should be able to build!
 .. code-block:: shell
 
     cd mozilla-unified
+    hg up -C central
     ./mach build
     ./mach run
 
