@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -136,6 +137,8 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             }
 
             binding.filename.text = getString(KEY_FILE_NAME, "")
+            binding.filename.movementMethod = ScrollingMovementMethod()
+
             binding.downloadButton.text = getString(
                 getInt(KEY_DOWNLOAD_TEXT, R.string.mozac_feature_downloads_dialog_download),
             )
