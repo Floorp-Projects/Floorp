@@ -115,6 +115,15 @@ class HomeScreenRobot {
         assertItemWithResIdAndDescriptionExists(automaticThemeDescription)
     }
 
+    fun clickLightThemeButton() =
+        itemWithResId("$packageName:id/theme_light_radio_button").click()
+
+    fun clickDarkThemeButton() =
+        itemWithResId("$packageName:id/theme_dark_radio_button").click()
+
+    fun clickAutomaticThemeButton() =
+        itemWithResId("$packageName:id/theme_automatic_radio_button").click()
+
     fun verifyToolbarPlacementCard(isBottomChecked: Boolean, isTopChecked: Boolean) {
         scrollToElementByText(getStringResource(R.string.onboarding_toolbar_placement_header_1))
         assertItemContainingTextExists(toolbarPlacementHeader, toolbarPlacementDescription)

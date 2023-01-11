@@ -1,5 +1,6 @@
 package org.mozilla.fenix.ui
 
+import android.content.res.Configuration
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -11,6 +12,8 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
+import org.mozilla.fenix.helpers.TestHelper.verifyLightThemeApplied
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -33,6 +36,17 @@ class OnboardingTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+    }
+
+    private fun getUITheme(): Boolean {
+        val mode =
+            activityTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+
+        return when (mode) {
+            Configuration.UI_MODE_NIGHT_YES -> true // dark theme is set
+            Configuration.UI_MODE_NIGHT_NO -> false // dark theme is not set, using light theme
+            else -> false // default option is light theme
+        }
     }
 
     // Verifies the first run onboarding screen
@@ -129,6 +143,38 @@ class OnboardingTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.goToHomescreen {
             verifyExistingTopSitesList()
+        }
+    }
+
+    @Test
+    fun chooseYourThemeCardTest() {
+        homeScreen {
+            verifyChooseYourThemeCard(
+                isDarkThemeChecked = false,
+                isLightThemeChecked = false,
+                isAutomaticThemeChecked = true,
+            )
+            clickLightThemeButton()
+            verifyChooseYourThemeCard(
+                isDarkThemeChecked = false,
+                isLightThemeChecked = true,
+                isAutomaticThemeChecked = false,
+            )
+            verifyLightThemeApplied(getUITheme())
+            clickDarkThemeButton()
+            verifyChooseYourThemeCard(
+                isDarkThemeChecked = true,
+                isLightThemeChecked = false,
+                isAutomaticThemeChecked = false,
+            )
+            verifyDarkThemeApplied(getUITheme())
+            clickAutomaticThemeButton()
+            verifyChooseYourThemeCard(
+                isDarkThemeChecked = false,
+                isLightThemeChecked = false,
+                isAutomaticThemeChecked = true,
+            )
+            verifyLightThemeApplied(getUITheme())
         }
     }
 }

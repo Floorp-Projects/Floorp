@@ -20,8 +20,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers.endsWith
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.hasCousin
@@ -34,11 +32,6 @@ import org.mozilla.fenix.helpers.click
 class SettingsSubMenuCustomizeRobot {
 
     fun verifyThemes() = assertThemes()
-
-    fun verifyLightThemeApplied(expected: Boolean) =
-        assertFalse("Light theme not selected", expected)
-
-    fun verifyDarkThemeApplied(expected: Boolean) = assertTrue("Dark theme not selected", expected)
 
     fun selectDarkMode() = darkModeToggle().click()
 

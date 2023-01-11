@@ -461,4 +461,9 @@ object TestHelper {
 
         return sponsoredShortcut
     }
+
+    fun verifyLightThemeApplied(expected: Boolean) =
+        assertFalse("Light theme not selected", expected)
+
+    fun verifyDarkThemeApplied(expected: Boolean) = assertTrue("Dark theme not selected", expected)
 }
