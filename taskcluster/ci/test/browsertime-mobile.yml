@@ -307,6 +307,28 @@ browsertime-speedometer-mobile:
         extra-options:
             - --test=speedometer
 
+browsertime-speedometer3-mobile:
+    description: Browsertime Speedometer 3 on Android
+    raptor:
+        apps: [geckoview, fenix, chrome-m]
+    tier:
+        by-app:
+            fenix: 2
+            geckoview: 2
+            default: 3
+    run-on-projects:
+        by-app:
+            refbrow: []
+            geckoview:
+                by-test-platform:
+                    android-hw-a51.*shippable-qr.*: [trunk]
+                    default: []
+            default: []
+    treeherder-symbol: Btime(sp3)
+    mozharness:
+        extra-options:
+            - --test=speedometer3
+
 browsertime-unity-webgl-mobile:
     description: Browsertime Unity WebGL on Android
     run-without-variant: false
