@@ -118,6 +118,25 @@ add_task(async function test_connect_wt() {
   webTransport.closeSession(0, "");
 });
 
+add_task(async function test_redirect_wt() {
+  let webTransport = NetUtil.newWebTransport();
+
+  await new Promise(resolve => {
+    let listener = new WebTransportListener().QueryInterface(
+      Ci.WebTransportSessionEventListener
+    );
+
+    listener.closed = resolve;
+
+    webTransport.asyncConnect(
+      NetUtil.newURI(`https://${host}/redirect`),
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      listener
+    );
+  });
+});
+
 add_task(async function test_reject() {
   let webTransport = NetUtil.newWebTransport();
 
