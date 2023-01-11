@@ -62,7 +62,8 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   // Id string uniquely identifying this capture source. Written on the mChecker thread only.
   mozilla::Maybe<mozilla::TrackingId> mTrackingId MOZ_GUARDED_BY(api_lock_);
   // Adds frame specific markers to the profiler while mTrackingId is set.
-  mozilla::PerformanceRecorderMulti<mozilla::CaptureStage> mPerformanceRecorder;
+  mozilla::PerformanceRecorderMulti<mozilla::CaptureStage> mCaptureRecorder;
+  mozilla::PerformanceRecorderMulti<mozilla::CopyVideoStage> mConversionRecorder;
   std::atomic<ProfilerThreadId> mCallbackThreadId;
 };
 
