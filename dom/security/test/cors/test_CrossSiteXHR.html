@@ -81,14 +81,14 @@ function* runTest() {
                },
 
                // nonempty username
-               { pass: 0,
+               { pass: 1,
                  method: "GET",
                  noAllowPreflight: 1,
                  username: "user",
                },
 
                // nonempty password
-               { pass: 0,
+               { pass: 1,
                  method: "GET",
                  noAllowPreflight: 1,
                  password: "password",
