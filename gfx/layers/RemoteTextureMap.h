@@ -60,6 +60,8 @@ class RemoteTextureOwnerClient final {
                    const RemoteTextureOwnerId aOwnerId,
                    UniquePtr<TextureData>&& aTextureData,
                    const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
+  void PushDummyTexture(const RemoteTextureId aTextureId,
+                        const RemoteTextureOwnerId aOwnerId);
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
                                const ipc::Shmem& aDestShmem,
                                const gfx::IntSize& aSize);
@@ -100,6 +102,7 @@ class RemoteTextureMap {
                    const RemoteTextureOwnerId aOwnerId,
                    const base::ProcessId aForPid,
                    UniquePtr<TextureData>&& aTextureData,
+                   RefPtr<TextureHost>& aTextureHost,
                    const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
 
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
@@ -158,6 +161,9 @@ class RemoteTextureMap {
   std::shared_ptr<gl::SharedSurface> GetRecycledSharedSurface(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid);
 
+  static RefPtr<TextureHost> CreateRemoteTexture(TextureData* aTextureData,
+                                                 TextureFlags aTextureFlags);
+
  protected:
   // Holds data related to remote texture
   struct TextureDataHolder {
@@ -214,8 +220,6 @@ class RemoteTextureMap {
   RemoteTextureMap::TextureOwner* GetTextureOwner(
       const MonitorAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
       const base::ProcessId aForPid);
-
-  static RefPtr<TextureHost> CreateRemoteTexture(TextureData* aTextureData);
 
   Monitor mMonitor MOZ_UNANNOTATED;
 

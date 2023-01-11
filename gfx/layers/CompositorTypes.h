@@ -92,9 +92,11 @@ enum class TextureFlags : uint32_t {
   REMOTE_TEXTURE = 1 << 20,
   // The texture is from a DRM source.
   DRM_SOURCE = 1 << 21,
+  // The texture is dummy texture
+  DUMMY_TEXTURE = 1 << 22,
 
   // OR union of all valid bits
-  ALL_BITS = (1 << 22) - 1,
+  ALL_BITS = (1 << 23) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

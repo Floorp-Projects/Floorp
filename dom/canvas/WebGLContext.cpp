@@ -1098,6 +1098,10 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
   const auto onFailure = [&]() -> bool {
     GenerateWarning("Remote texture creation failed.");
     LoseContext();
+    if (mRemoteTextureOwner) {
+      mRemoteTextureOwner->PushDummyTexture(options.remoteTextureId,
+                                            options.remoteTextureOwnerId);
+    }
     return false;
   };
 
