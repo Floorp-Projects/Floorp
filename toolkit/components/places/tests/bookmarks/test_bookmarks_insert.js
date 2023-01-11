@@ -179,6 +179,10 @@ add_task(async function invalid_properties_for_bookmark_type() {
 });
 
 add_task(async function test_insert_into_root_throws() {
+  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(PlacesUtils, "isInAutomation").get(() => false);
+  registerCleanupFunction(() => sandbox.restore());
   Assert.throws(
     () =>
       PlacesUtils.bookmarks.insert({
@@ -197,6 +201,7 @@ add_task(async function test_insert_into_root_throws() {
     /Invalid value for property 'parentGuid'/,
     "Should throw when inserting a folder into the root."
   );
+  sandbox.restore();
 });
 
 add_task(async function long_title_trim() {

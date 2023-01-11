@@ -108,11 +108,11 @@ add_task(async function test_tracking() {
   // Remove existing tracking information for roots.
   await startTracking();
 
-  let folder = PlacesUtils.bookmarks.createFolder(
-    PlacesUtils.bookmarks.bookmarksMenuFolder,
-    "Test Folder",
-    PlacesUtils.bookmarks.DEFAULT_INDEX
-  );
+  let folder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "Test Folder",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
 
   // creating the folder should have made 2 changes - the folder itself and
   // the parent of the folder.
@@ -121,25 +121,24 @@ add_task(async function test_tracking() {
   await resetTracker();
 
   function createBmk() {
-    return PlacesUtils.bookmarks.insertBookmark(
-      folder,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
+    return PlacesUtils.bookmarks.insert({
+      parentGuid: folder.guid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!",
+    });
   }
 
   try {
     _("Tell the tracker to start tracking changes.");
     await startTracking();
-    createBmk();
+    await createBmk();
     // We expect two changed items because the containing folder
     // changed as well (new child).
     await verifyTrackedCount(2);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
     _("Notifying twice won't do any harm.");
-    createBmk();
+    await createBmk();
     await verifyTrackedCount(3);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
@@ -194,13 +193,12 @@ add_task(async function test_bookmarkAdded() {
 
     _("Insert a folder using the sync API");
     let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
-    let syncFolderID = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      "Sync Folder",
-      PlacesUtils.bookmarks.DEFAULT_INDEX
-    );
-    let syncFolderGUID = await PlacesUtils.promiseItemGuid(syncFolderID);
-    await verifyTrackedItems(["menu", syncFolderGUID]);
+    let syncFolder = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      title: "Sync Folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
+    await verifyTrackedItems(["menu", syncFolder.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
 
@@ -209,14 +207,12 @@ add_task(async function test_bookmarkAdded() {
 
     _("Insert a bookmark using the sync API");
     totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
-    let syncBmkID = PlacesUtils.bookmarks.insertBookmark(
-      syncFolderID,
-      CommonUtils.makeURI("https://example.org/sync"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Sync Bookmark"
-    );
-    let syncBmkGUID = await PlacesUtils.promiseItemGuid(syncBmkID);
-    await verifyTrackedItems([syncFolderGUID, syncBmkGUID]);
+    let syncBmk = await PlacesUtils.bookmarks.insert({
+      parentGuid: syncFolder.guid,
+      url: "https://example.org/sync",
+      title: "Sync Bookmark",
+    });
+    await verifyTrackedItems([syncFolder.guid, syncBmk.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
@@ -379,26 +375,23 @@ add_task(async function test_onItemTagged() {
     await tracker.stop();
 
     _("Create a folder");
-    let folder = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      "Parent",
-      PlacesUtils.bookmarks.DEFAULT_INDEX
-    );
-    let folderGUID = await PlacesUtils.promiseItemGuid(folder);
+    let folder = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      title: "Parent",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
     _("Folder ID: " + folder);
-    _("Folder GUID: " + folderGUID);
+    _("Folder GUID: " + folder.guid);
 
     _("Track changes to tags");
     let uri = CommonUtils.makeURI("http://getfirefox.com");
-    let b = PlacesUtils.bookmarks.insertBookmark(
-      folder,
-      uri,
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
-    let bGUID = await PlacesUtils.promiseItemGuid(b);
+    let b = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder.guid,
+      url: uri,
+      title: "Get Firefox!",
+    });
     _("New item is " + b);
-    _("GUID: " + bGUID);
+    _("GUID: " + b.guid);
 
     await startTracking();
 
@@ -407,7 +400,7 @@ add_task(async function test_onItemTagged() {
     PlacesUtils.tagging.tagURI(uri, ["foo"]);
 
     // bookmark should be tracked, folder should not be.
-    await verifyTrackedItems([bGUID]);
+    await verifyTrackedItems([b.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 6);
   } finally {
@@ -747,12 +740,11 @@ add_task(async function test_onFaviconChanged() {
 
     let pageURI = CommonUtils.makeURI("http://getfirefox.com");
     let iconURI = CommonUtils.makeURI("http://getfirefox.com/icon");
-    PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      pageURI,
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: pageURI,
+      title: "Get Firefox!",
+    });
 
     await PlacesTestUtils.addVisits(pageURI);
 
@@ -978,52 +970,47 @@ add_task(async function test_onItemDeleted_removeFolderTransaction() {
     await tracker.stop();
 
     _("Create a folder with two children");
-    let folder_id = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      "Test folder",
-      PlacesUtils.bookmarks.DEFAULT_INDEX
-    );
-    let folder_guid = await PlacesUtils.promiseItemGuid(folder_id);
-    _(`Folder GUID: ${folder_guid}`);
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      folder_id,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
-    let fx_guid = await PlacesUtils.promiseItemGuid(fx_id);
-    _(`Firefox GUID: ${fx_guid}`);
-    let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      folder_id,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Thunderbird!"
-    );
-    let tb_guid = await PlacesUtils.promiseItemGuid(tb_id);
-    _(`Thunderbird GUID: ${tb_guid}`);
+    let folder = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      title: "Test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
+    _(`Folder GUID: ${folder.guid}`);
+    let fx = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder.guid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!",
+    });
+    _(`Firefox GUID: ${fx.guid}`);
+    let tb = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder.guid,
+      url: "http://getthunderbird.com",
+      title: "Get Thunderbird!",
+    });
+    _(`Thunderbird GUID: ${tb.guid}`);
 
     await startTracking();
 
-    let txn = PlacesTransactions.Remove({ guid: folder_guid });
+    let txn = PlacesTransactions.Remove({ guid: folder.guid });
     // We haven't executed the transaction yet.
     await verifyTrackerEmpty();
 
     _("Execute the remove folder transaction");
     await txn.transact();
-    await verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
+    await verifyTrackedItems(["menu", folder.guid, fx.guid, tb.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     await resetTracker();
 
     _("Undo the remove folder transaction");
     await PlacesTransactions.undo();
 
-    await verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
+    await verifyTrackedItems(["menu", folder.guid, fx.guid, tb.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     await resetTracker();
 
     _("Redo the transaction");
     await PlacesTransactions.redo();
-    await verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
+    await verifyTrackedItems(["menu", folder.guid, fx.guid, tb.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
@@ -1085,27 +1072,24 @@ add_task(async function test_onItemDeleted() {
   _("Bookmarks deleted via the synchronous API should be tracked");
 
   try {
-    PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
-    let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Thunderbird!"
-    );
-    let tb_guid = await PlacesUtils.promiseItemGuid(tb_id);
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!",
+    });
+    let tb = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: "http://getthunderbird.com",
+      title: "Get Thunderbird!",
+    });
 
     await startTracking();
 
     // Delete the last item - the item and parent should be tracked.
     let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
-    PlacesUtils.bookmarks.removeItem(tb_id);
+    await PlacesUtils.bookmarks.remove(tb);
 
-    await verifyTrackedItems(["menu", tb_guid]);
+    await verifyTrackedItems(["menu", tb.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
@@ -1248,46 +1232,40 @@ add_task(async function test_onItemDeleted_tree() {
 
   try {
     // Create a couple of parent folders.
-    let folder1_id = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      "First test folder",
-      PlacesUtils.bookmarks.DEFAULT_INDEX
-    );
-    let folder1_guid = await PlacesUtils.promiseItemGuid(folder1_id);
+    let folder1 = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      title: "First test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
 
     // A second folder in the first.
-    let folder2_id = PlacesUtils.bookmarks.createFolder(
-      folder1_id,
-      "Second test folder",
-      PlacesUtils.bookmarks.DEFAULT_INDEX
-    );
-    let folder2_guid = await PlacesUtils.promiseItemGuid(folder2_id);
+    let folder2 = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder1.guid,
+      title: "Second test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
 
     // Create a couple of bookmarks in the second folder.
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      folder2_id,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
-    let fx_guid = await PlacesUtils.promiseItemGuid(fx_id);
-    let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      folder2_id,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Thunderbird!"
-    );
-    let tb_guid = await PlacesUtils.promiseItemGuid(tb_id);
+    let fx = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder2.guid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!",
+    });
+    let tb = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder2.guid,
+      url: "http://getthunderbird.com",
+      title: "Get Thunderbird!",
+    });
 
     await startTracking();
 
     // Delete folder2 - everything we created should be tracked.
     let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
-    PlacesUtils.bookmarks.removeItem(folder2_id);
+    await PlacesUtils.bookmarks.remove(folder2);
 
-    await verifyTrackedItems([fx_guid, tb_guid, folder1_guid, folder2_guid]);
+    await verifyTrackedItems([fx.guid, tb.guid, folder1.guid, folder2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
-    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 5);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 4);
   } finally {
     _("Clean up.");
     await cleanup();

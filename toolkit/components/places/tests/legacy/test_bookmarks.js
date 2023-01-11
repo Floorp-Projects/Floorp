@@ -67,10 +67,14 @@ var bookmarksObserver = {
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 
-// Get bookmarks menu folder id.
-var root = bs.bookmarksMenuFolder;
+var root;
 // Index at which items should begin.
 var bmStartIndex = 0;
+
+add_task(async function setup() {
+  // Get bookmarks menu folder id.
+  root = await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.menuGuid);
+});
 
 add_task(async function test_bookmarks() {
   bs.addObserver(bookmarksObserver);
@@ -80,7 +84,6 @@ add_task(async function test_bookmarks() {
   );
 
   // test special folders
-  Assert.ok(bs.bookmarksMenuFolder > 0);
   Assert.ok(bs.tagsFolder > 0);
 
   // create a folder to hold all the tests
