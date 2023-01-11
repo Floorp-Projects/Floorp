@@ -1,4 +1,4 @@
-{
+(async () => {
     const API_END_POINT = "https://floorp-update.ablaze.one/browser/latest.json"
 
     const Notify = async(url, now, latest) =>{
@@ -74,6 +74,12 @@
             });
     };
 
+    let isPortable = false;
+    try {
+        isPortable = await browser.aboutConfigPrefs.getBoolPref("floorp.isPortable");
+    } catch (e) {}
+    if (isPortable) return;
+
     CheckUpdate();
 
     if (browser.browserAction) {
@@ -81,4 +87,4 @@
             CheckUpdate({isBrowserActionClicked: true});
         });
     }
-}
+})();
