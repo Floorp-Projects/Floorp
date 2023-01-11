@@ -122,6 +122,12 @@ class FileAndPathHelper {
     // system-wide cache file and not present as individual files.
     if (arch && (path.startsWith("/usr/") || path.startsWith("/System/"))) {
       // Use the special syntax `dyldcache:<dyldcachepath>:<librarypath>`.
+
+      // Dyld cache location used on macOS 13+:
+      candidatePaths.push(
+        `dyldcache:/System/Volumes/Preboot/Cryptexes/OS/System/Library/dyld/dyld_shared_cache_${arch}:${path}`
+      );
+      // Dyld cache location used on macOS 11 and 12:
       candidatePaths.push(
         `dyldcache:/System/Library/dyld/dyld_shared_cache_${arch}:${path}`
       );
@@ -181,6 +187,12 @@ class FileAndPathHelper {
     // system-wide cache file and not present as individual files.
     if (arch && (path.startsWith("/usr/") || path.startsWith("/System/"))) {
       // Use the special syntax `dyldcache:<dyldcachepath>:<librarypath>`.
+
+      // Dyld cache location used on macOS 13+:
+      candidatePaths.push(
+        `dyldcache:/System/Volumes/Preboot/Cryptexes/OS/System/Library/dyld/dyld_shared_cache_${arch}:${path}`
+      );
+      // Dyld cache location used on macOS 11 and 12:
       candidatePaths.push(
         `dyldcache:/System/Library/dyld/dyld_shared_cache_${arch}:${path}`
       );
