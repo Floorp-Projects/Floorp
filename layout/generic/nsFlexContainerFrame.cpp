@@ -157,21 +157,6 @@ static inline bool IsAutoOrEnumOnBSize(const StyleSize& aSize, bool aIsInline) {
   return aSize.IsAuto() || (!aIsInline && !aSize.IsLengthPercentage());
 }
 
-// Helper-macros to let us pick one of two expressions to evaluate
-// (an inline-axis expression vs. a block-axis expression), to get a
-// main-axis or cross-axis component.
-// For code that has e.g. a LogicalSize object, the methods
-// FlexboxAxisTracker::MainComponent and CrossComponent are cleaner
-// than these macros. But in cases where we simply have two separate
-// expressions for ISize and BSize (which may be expensive to evaluate),
-// these macros can be used to ensure that only the needed expression is
-// evaluated.
-#define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_) \
-  (axisTracker_).IsInlineAxisMainAxis((wm_)) ? (isize_) : (bsize_)
-
-#define GET_CROSS_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_) \
-  (axisTracker_).IsInlineAxisMainAxis((wm_)) ? (bsize_) : (isize_)
-
 // Encapsulates our flex container's main & cross axes. This class is backed by
 // a FlexboxAxisInfo helper member variable, and it adds some convenience APIs
 // on top of what that struct offers.
@@ -303,9 +288,8 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   // Returns true if this flex item's inline axis in aItemWM is parallel (or
   // antiparallel) to the container's main axis. Returns false, otherwise.
   //
-  // Note: this is a helper for implementing macros and can also be used before
-  // constructing FlexItem. Inside of flex reflow code,
-  // FlexItem::IsInlineAxisMainAxis() is equivalent & more optimal.
+  // Note: this is a helper used before constructing FlexItem. Inside of flex
+  // reflow code, FlexItem::IsInlineAxisMainAxis() is equivalent & more optimal.
   bool IsInlineAxisMainAxis(WritingMode aItemWM) const {
     return IsRowOriented() != GetWritingMode().IsOrthogonalTo(aItemWM);
   }
@@ -1385,14 +1369,16 @@ void nsFlexContainerFrame::GenerateFlexItemForChild(
 
   // MAIN SIZES (flex base size, min/max size)
   // -----------------------------------------
-  nscoord flexBaseSize = GET_MAIN_COMPONENT_LOGICAL(
-      aAxisTracker, childWM, childRI.ComputedISize(), childRI.ComputedBSize());
-  nscoord mainMinSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, childWM,
-                                                   childRI.ComputedMinISize(),
-                                                   childRI.ComputedMinBSize());
-  nscoord mainMaxSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, childWM,
-                                                   childRI.ComputedMaxISize(),
-                                                   childRI.ComputedMaxBSize());
+  const LogicalSize computedSizeInFlexWM = childRI.ComputedSize(flexWM);
+  const LogicalSize computedMinSizeInFlexWM = childRI.ComputedMinSize(flexWM);
+  const LogicalSize computedMaxSizeInFlexWM = childRI.ComputedMaxSize(flexWM);
+
+  const nscoord flexBaseSize = aAxisTracker.MainComponent(computedSizeInFlexWM);
+  const nscoord mainMinSize =
+      aAxisTracker.MainComponent(computedMinSizeInFlexWM);
+  const nscoord mainMaxSize =
+      aAxisTracker.MainComponent(computedMaxSizeInFlexWM);
+
   // This is enforced by the ReflowInput where these values come from:
   MOZ_ASSERT(mainMinSize <= mainMaxSize, "min size is larger than max size");
 
@@ -1401,14 +1387,12 @@ void nsFlexContainerFrame::GenerateFlexItemForChild(
   // Grab the cross size from the reflow input. This might be the right value,
   // or we might resolve it to something else in SizeItemInCrossAxis(); hence,
   // it's tentative. See comment under "Cross Size Determination" for more.
-  nscoord tentativeCrossSize = GET_CROSS_COMPONENT_LOGICAL(
-      aAxisTracker, childWM, childRI.ComputedISize(), childRI.ComputedBSize());
-  nscoord crossMinSize = GET_CROSS_COMPONENT_LOGICAL(
-      aAxisTracker, childWM, childRI.ComputedMinISize(),
-      childRI.ComputedMinBSize());
-  nscoord crossMaxSize = GET_CROSS_COMPONENT_LOGICAL(
-      aAxisTracker, childWM, childRI.ComputedMaxISize(),
-      childRI.ComputedMaxBSize());
+  const nscoord tentativeCrossSize =
+      aAxisTracker.CrossComponent(computedSizeInFlexWM);
+  const nscoord crossMinSize =
+      aAxisTracker.CrossComponent(computedMinSizeInFlexWM);
+  const nscoord crossMaxSize =
+      aAxisTracker.CrossComponent(computedMaxSizeInFlexWM);
 
   // Construct the flex item!
   FlexItem& item = *aLine.Items().EmplaceBack(
