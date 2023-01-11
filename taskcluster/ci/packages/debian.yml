@@ -23,6 +23,16 @@ deb11-mercurial:
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bullseye/" debian/changelog
 
+deb11-cmake:
+    description: "cmake"
+    treeherder:
+        symbol: Deb11(cmake)
+    run:
+        dist: bullseye
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20221201T090253Z/pool/main/c/cmake/cmake_3.25.1-1.dsc
+            sha256: 508b262eee8f18c8924bb4e1b89596fb208efa2fe6bde270d16552d1dc3a0d65
+
 deb11-valgrind:
     description: "Valgrind for Debian bullseye"
     treeherder:
