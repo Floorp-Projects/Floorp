@@ -41,7 +41,6 @@ RUN apt-get update && \
       procps \
       python3-distutils-extra \
       python3-requests \
-      python3-pytoml \
       python3-toml \
       scons \
       subversion \
