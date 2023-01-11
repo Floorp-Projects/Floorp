@@ -331,6 +331,7 @@ def enable_alsa_or_midir_linux_support(alsa_enabled, midir_linux_support):
 pkg_check_modules("MOZ_ALSA", "alsa", when=enable_alsa_or_midir_linux_support)
 
 set_config("MOZ_ALSA", True, when="--enable-alsa")
+set_define("MOZ_ALSA", True, when="--enable-alsa")
 
 # JACK cubeb backend
 # ==============================================================
@@ -351,6 +352,7 @@ option(
 pulseaudio = pkg_check_modules("MOZ_PULSEAUDIO", "libpulse", when="--enable-pulseaudio")
 
 set_config("MOZ_PULSEAUDIO", depends_if(pulseaudio)(lambda _: True))
+set_define("MOZ_PULSEAUDIO", depends_if(pulseaudio)(lambda _: True))
 
 # sndio cubeb backend
 # ==============================================================
