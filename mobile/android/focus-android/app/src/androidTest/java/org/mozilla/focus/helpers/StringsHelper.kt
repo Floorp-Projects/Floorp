@@ -24,5 +24,4 @@ object StringsHelper {
     const val PHONE_APP = "com.android.dialer"
     const val GOOGLE_PHOTOS = "com.google.android.apps.photos"
     const val GOOGLE_CHROME = "com.google.android.apps.chrome"
-    const val GOOGLE_DRIVE = "com.google.android.apps.docs"
 }
