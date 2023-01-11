@@ -11,7 +11,7 @@
 
 namespace sandbox {
 
-#if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
+#if defined(ENABLE_TESTS)
 // Set a low max brokered length for testing to exercise the chunking code.
 static const std::ptrdiff_t kMaxBrokeredLen = 50;
 
