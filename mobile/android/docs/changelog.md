@@ -9,6 +9,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **compose-cfr**
+  * 🚒 Bug fixed [bug #1809592](https://bugzilla.mozilla.org/show_bug.cgi?id=1809592). Improve screen alignment for Contextual Feature Recommendation popups.
+
 * **service-pocket**
   * 🌟 Added `country` and `city` parameters to Pocket sponsored stories fetch request. These can be overwritten using `PocketStoriesConfig`, allowing clients to specify a location and receive sponsored stories when outside countries where Pocket is enabled based on IP location. [Bug 1811537](https://bugzilla.mozilla.org/show_bug.cgi?id=1811537).
 

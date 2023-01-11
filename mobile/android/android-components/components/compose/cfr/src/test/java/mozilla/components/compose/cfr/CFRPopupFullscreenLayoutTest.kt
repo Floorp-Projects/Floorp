@@ -344,4 +344,96 @@ class CFRPopupFullscreenLayoutTest {
         assertEquals(600, result.startCoord.value)
         assertEquals(390, result.endCoord.value)
     }
+
+    @Test
+    fun `GIVEN LTR and BODY_TO_ANCHOR_CENTER WHEN computing popup bounds THEN return the right X coordinates`() {
+        val anchor = spy(View(testContext))
+        doReturn(600).`when`(anchor).width
+        doReturn(200f).`when`(anchor).x
+        val properties = CFRPopupProperties(
+            popupWidth = 400.dp,
+            popupAlignment = PopupAlignment.BODY_TO_ANCHOR_CENTER,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(400),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+        )
+
+        assertEquals(300, result.startCoord.value)
+        assertEquals(710, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN LTR and BODY_TO_ANCHOR_CENTER WHEN computing popup bounds THEN return the right X coordinates and don't account for the provided indicator offset`() {
+        val anchor = spy(View(testContext))
+        doReturn(600).`when`(anchor).width
+        doReturn(200f).`when`(anchor).x
+        val properties = CFRPopupProperties(
+            popupWidth = 400.dp,
+            popupAlignment = PopupAlignment.BODY_TO_ANCHOR_CENTER,
+            indicatorArrowStartOffset = 50.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(400),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+        )
+
+        assertEquals(300, result.startCoord.value)
+        assertEquals(710, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN RTL and BODY_TO_ANCHOR_CENTER WHEN computing popup bounds THEN return the right X coordinates`() {
+        val anchor = spy(View(testContext))
+        doReturn(600).`when`(anchor).width
+        doReturn(200f).`when`(anchor).x
+        val properties = CFRPopupProperties(
+            popupWidth = 400.dp,
+            popupAlignment = PopupAlignment.BODY_TO_ANCHOR_CENTER,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(300),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+        )
+
+        assertEquals(700, result.startCoord.value)
+        assertEquals(290, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN RTL and BODY_TO_ANCHOR_CENTER WHEN computing popup bounds THEN return the right X coordinates and don't account for the provided indicator offset`() {
+        val anchor = spy(View(testContext))
+        doReturn(600).`when`(anchor).width
+        doReturn(200f).`when`(anchor).x
+        val properties = CFRPopupProperties(
+            popupWidth = 400.dp,
+            popupAlignment = PopupAlignment.BODY_TO_ANCHOR_CENTER,
+            indicatorArrowStartOffset = 50.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(300),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+        )
+
+        assertEquals(700, result.startCoord.value)
+        assertEquals(290, result.endCoord.value)
+    }
 }
