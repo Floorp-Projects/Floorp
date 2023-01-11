@@ -2,8 +2,65 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import bz2
 import lzma
+import os
 import struct
+import zlib
+from xml.etree.ElementTree import XML
+
+
+def unxar(fileobj):
+    magic = fileobj.read(4)
+    if magic != b"xar!":
+        raise Exception("Not a XAR?")
+
+    header_size = fileobj.read(2)
+    header_size = struct.unpack(">H", header_size)[0]
+    if header_size > 64:
+        raise Exception(
+            f"Don't know how to handle a {header_size} bytes XAR header size"
+        )
+    header_size -= 6  # what we've read so far.
+    header = fileobj.read(header_size)
+    if len(header) != header_size:
+        raise Exception("Failed to read XAR header")
+    (
+        version,
+        compressed_toc_len,
+        uncompressed_toc_len,
+        checksum_type,
+    ) = struct.unpack(">HQQL", header[:22])
+    if version != 1:
+        raise Exception(f"XAR version {version} not supported")
+    toc = fileobj.read(compressed_toc_len)
+    base = fileobj.tell()
+    if len(toc) != compressed_toc_len:
+        raise Exception("Failed to read XAR TOC")
+    toc = zlib.decompress(toc)
+    if len(toc) != uncompressed_toc_len:
+        raise Exception("Corrupted XAR?")
+    toc = XML(toc).find("toc")
+    for f in toc.findall("file"):
+        if f.find("type").text != "file":
+            continue
+        filename = f.find("name").text
+        data = f.find("data")
+        length = int(data.find("length").text)
+        size = int(data.find("size").text)
+        offset = int(data.find("offset").text)
+        encoding = data.find("encoding").get("style")
+        fileobj.seek(base + offset, os.SEEK_SET)
+        content = Take(fileobj, length)
+        if encoding == "application/octet-stream":
+            if length != size:
+                raise Exception(f"{length} != {size}")
+        elif encoding == "application/x-bzip2":
+            content = bz2.BZ2File(content)
+        else:
+            raise Exception(f"XAR encoding {encoding} not supported")
+
+        yield filename, content
 
 
 class Pbzx(object):

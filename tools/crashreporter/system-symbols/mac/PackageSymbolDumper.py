@@ -32,7 +32,6 @@ Required tools for Linux:
     pax
     gzip
     tar
-    xar (http://code.google.com/p/xar/)
     xpwn's dmg (https://github.com/planetbeing/xpwn)
 
 Created on Apr 11, 2012
@@ -50,6 +49,7 @@ import subprocess
 import tempfile
 import traceback
 
+from macpkg import Pbzx, uncpio, unxar
 from scrapesymbols.gathersymbols import process_paths
 
 
@@ -60,7 +60,9 @@ def expand_pkg(pkg_path, out_path):
     @param pkg_path: a path to an installer package (.pkg)
     @param out_path: a path to hold the package contents
     """
-    subprocess.check_call(["xar", "-x", "-C", out_path, "-f", pkg_path])
+    for name, content in unxar(open(pkg_path, "rb")):
+        with open(os.path.join(out_path, name), "wb") as fh:
+            shutil.copyfileobj(content, fh)
 
 
 def expand_dmg(dmg_path, out_path):
@@ -178,7 +180,6 @@ def extract_payload(payload_path, output_path):
             return True
         elif header == b"pb":
             logging.info("Extracting pbzx payload")
-            from macpkg import Pbzx, uncpio
 
             for path, mode, content in uncpio(Pbzx(open(payload_path, "rb"))):
                 if not path or not stat.S_ISREG(mode):
