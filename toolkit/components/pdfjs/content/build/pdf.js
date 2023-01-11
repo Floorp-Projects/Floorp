@@ -963,6 +963,7 @@ function getDocument(src) {
   params.CMapReaderFactory = params.CMapReaderFactory || DefaultCMapReaderFactory;
   params.StandardFontDataFactory = params.StandardFontDataFactory || DefaultStandardFontDataFactory;
   params.ignoreErrors = params.stopAtErrors !== true;
+  params.transferPdfData = params.transferPdfData === true;
   params.fontExtraProperties = params.fontExtraProperties === true;
   params.pdfBug = params.pdfBug === true;
   params.enableXfa = params.enableXfa === true;
@@ -1029,6 +1030,7 @@ function getDocument(src) {
         networkStream = new _transport_stream.PDFDataTransportStream({
           length: params.length,
           initialData: params.initialData,
+          transferPdfData: params.transferPdfData,
           progressiveDone: params.progressiveDone,
           contentDispositionFilename: params.contentDispositionFilename,
           disableRange: params.disableRange,
@@ -1061,9 +1063,10 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     source.progressiveDone = pdfDataRangeTransport.progressiveDone;
     source.contentDispositionFilename = pdfDataRangeTransport.contentDispositionFilename;
   }
+  const transfers = source.transferPdfData && source.data ? [source.data.buffer] : null;
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.3.39',
+    apiVersion: '3.3.53',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -1082,10 +1085,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
       cMapUrl: source.useWorkerFetch ? source.cMapUrl : null,
       standardFontDataUrl: source.useWorkerFetch ? source.standardFontDataUrl : null
     }
-  });
-  if (source.data) {
-    source.data = null;
-  }
+  }, transfers);
   if (worker.destroyed) {
     throw new Error("Worker was destroyed");
   }
@@ -2665,9 +2665,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.3.39';
+const version = '3.3.53';
 exports.version = version;
-const build = 'fcaeb5db8';
+const build = 'f28bf23a3';
 exports.build = build;
 
 /***/ }),
@@ -8112,20 +8112,29 @@ exports.PDFDataTransportStream = void 0;
 var _util = __w_pdfjs_require__(1);
 var _display_utils = __w_pdfjs_require__(6);
 class PDFDataTransportStream {
-  constructor(params, pdfDataRangeTransport) {
+  #transferPdfData = false;
+  constructor({
+    length,
+    initialData,
+    transferPdfData = false,
+    progressiveDone = false,
+    contentDispositionFilename = null,
+    disableRange = false,
+    disableStream = false
+  }, pdfDataRangeTransport) {
     (0, _util.assert)(pdfDataRangeTransport, 'PDFDataTransportStream - missing required "pdfDataRangeTransport" argument.');
     this._queuedChunks = [];
-    this._progressiveDone = params.progressiveDone || false;
-    this._contentDispositionFilename = params.contentDispositionFilename || null;
-    const initialData = params.initialData;
+    this.#transferPdfData = transferPdfData;
+    this._progressiveDone = progressiveDone;
+    this._contentDispositionFilename = contentDispositionFilename;
     if (initialData?.length > 0) {
-      const buffer = new Uint8Array(initialData).buffer;
+      const buffer = this.#transferPdfData ? initialData.buffer : new Uint8Array(initialData).buffer;
       this._queuedChunks.push(buffer);
     }
     this._pdfDataRangeTransport = pdfDataRangeTransport;
-    this._isStreamingSupported = !params.disableStream;
-    this._isRangeSupported = !params.disableRange;
-    this._contentLength = params.length;
+    this._isStreamingSupported = !disableStream;
+    this._isRangeSupported = !disableRange;
+    this._contentLength = length;
     this._fullRequestReader = null;
     this._rangeReaders = [];
     this._pdfDataRangeTransport.addRangeListener((begin, chunk) => {
@@ -8150,9 +8159,12 @@ class PDFDataTransportStream {
     });
     this._pdfDataRangeTransport.transportReady();
   }
-  _onReceiveData(args) {
-    const buffer = new Uint8Array(args.chunk).buffer;
-    if (args.begin === undefined) {
+  _onReceiveData({
+    begin,
+    chunk
+  }) {
+    const buffer = this.#transferPdfData ? chunk.buffer : new Uint8Array(chunk).buffer;
+    if (begin === undefined) {
       if (this._fullRequestReader) {
         this._fullRequestReader._enqueue(buffer);
       } else {
@@ -8160,7 +8172,7 @@ class PDFDataTransportStream {
       }
     } else {
       const found = this._rangeReaders.some(function (rangeReader) {
-        if (rangeReader._begin !== args.begin) {
+        if (rangeReader._begin !== begin) {
           return false;
         }
         rangeReader._enqueue(buffer);
@@ -13057,8 +13069,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.3.39';
-const pdfjsBuild = 'fcaeb5db8';
+const pdfjsVersion = '3.3.53';
+const pdfjsBuild = 'f28bf23a3';
 })();
 
 /******/ 	return __webpack_exports__;
