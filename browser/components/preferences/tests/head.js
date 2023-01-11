@@ -131,11 +131,13 @@ async function runSearchInput(input) {
 
 async function evaluateSearchResults(
   keyword,
-  searchReults,
+  searchResults,
   includeExperiments = false
 ) {
-  searchReults = Array.isArray(searchReults) ? searchReults : [searchReults];
-  searchReults.push("header-searchResults");
+  searchResults = Array.isArray(searchResults)
+    ? searchResults
+    : [searchResults];
+  searchResults.push("header-searchResults");
 
   await runSearchInput(keyword);
 
@@ -145,7 +147,7 @@ async function evaluateSearchResults(
     if (!includeExperiments && child.id?.startsWith("pane-experimental")) {
       continue;
     }
-    if (searchReults.includes(child.id)) {
+    if (searchResults.includes(child.id)) {
       is_element_visible(child, `${child.id} should be in search results`);
     } else if (child.id) {
       is_element_hidden(child, `${child.id} should not be in search results`);

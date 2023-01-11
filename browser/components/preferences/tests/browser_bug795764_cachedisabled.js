@@ -33,6 +33,13 @@ async function runTest(win) {
   await win.gotoPref("panePrivacy");
   for (let element of elements) {
     let attributeValue = element.getAttribute("data-category");
+
+    // Ignore the cookie banner handling section, as it is currently preffed
+    // off by default (bug 1800679).
+    if (element.id === "cookieBannerHandlingGroup") {
+      continue;
+    }
+
     if (attributeValue == "panePrivacy") {
       is_element_visible(element, "HTTPSOnly should be visible");
 
