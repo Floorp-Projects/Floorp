@@ -344,6 +344,12 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   }
 #endif
 
+#if defined(WEBRTC_USE_PIPEWIRE)
+  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire()) {
+    options.set_allow_pipewire(true);
+  }
+#endif
+
   return options;
 }
 
