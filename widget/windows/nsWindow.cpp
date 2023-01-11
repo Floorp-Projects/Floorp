@@ -3660,6 +3660,10 @@ void nsWindow::OnFullscreenWillChange(bool aFullScreen) {
 }
 
 void nsWindow::OnFullscreenChanged(nsSizeMode aOldSizeMode, bool aFullScreen) {
+  // If we are going fullscreen, the window size continues to change
+  // and the window will be reflow again then.
+  UpdateNonClientMargins(/* Reflow */ !aFullScreen);
+
   // Hide chrome and reposition window. Note this will also cache dimensions for
   // restoration, so it should only be called once per fullscreen request.
   //
@@ -3671,6 +3675,15 @@ void nsWindow::OnFullscreenChanged(nsSizeMode aOldSizeMode, bool aFullScreen) {
   if (!toOrFromMinimized) {
     InfallibleMakeFullScreen(aFullScreen);
   }
+
+  if (mIsVisible && !aFullScreen &&
+      mFrameState->GetSizeMode() == nsSizeMode_Normal) {
+    // Ensure the window exiting fullscreen get activated. Window
+    // activation might be bypassed in SetSizeMode.
+    DispatchFocusToTopLevelWindow(true);
+  }
+
+  OnSizeModeChange();
 
   if (mWidgetListener) {
     mWidgetListener->FullscreenChanged(aFullScreen);
@@ -6791,6 +6804,28 @@ nsresult nsWindow::SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
   return NS_OK;
 }
 
+static void MaybeLogSizeMode(nsSizeMode aMode) {
+#ifdef WINSTATE_DEBUG_OUTPUT
+  switch (aMode) {
+    case nsSizeMode_Normal:
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
+              ("*** SizeMode: nsSizeMode_Normal\n"));
+      break;
+    case nsSizeMode_Minimized:
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
+              ("*** SizeMode: nsSizeMode_Minimized\n"));
+      break;
+    case nsSizeMode_Maximized:
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
+              ("*** SizeMode: nsSizeMode_Maximized\n"));
+      break;
+    default:
+      MOZ_LOG(gWindowsLog, LogLevel::Info, ("*** SizeMode: ??????\n"));
+      break;
+  }
+#endif
+}
+
 static void MaybeLogPosChanged(HWND aWnd, WINDOWPOS* wp) {
 #ifdef WINSTATE_DEBUG_OUTPUT
   if (aWnd == WinUtils::GetTopLevelHWND(aWnd)) {
@@ -7491,8 +7526,6 @@ void nsWindow::OnSizeModeChange() {
   if (mWidgetListener) {
     mWidgetListener->SizeModeChanged(mode);
   }
-
-  UpdateNonClientMargins(false);
 }
 
 bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam) { return true; }
@@ -9237,6 +9270,7 @@ nsSizeMode nsWindow::FrameState::GetSizeMode() const { return mSizeMode; }
 
 void nsWindow::FrameState::CheckInvariant() const {
   MOZ_ASSERT(mSizeMode >= 0 && mSizeMode < nsSizeMode_Invalid);
+  MOZ_ASSERT(mLastSizeMode >= 0 && mLastSizeMode < nsSizeMode_Invalid);
   MOZ_ASSERT(mPreFullscreenSizeMode >= 0 &&
              mPreFullscreenSizeMode < nsSizeMode_Invalid);
   MOZ_ASSERT(mWindow);
@@ -9254,28 +9288,26 @@ void nsWindow::FrameState::ConsumePreXULSkeletonState(bool aWasMaximized) {
   mSizeMode = aWasMaximized ? nsSizeMode_Maximized : nsSizeMode_Normal;
 }
 
-void nsWindow::FrameState::EnsureSizeMode(
-    nsSizeMode aMode, ShowWindowAndFocus aShowWindowAndFocus) {
+void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode) {
   if (mSizeMode == aMode) {
     return;
   }
 
   if (aMode == nsSizeMode_Fullscreen) {
-    EnsureFullscreenMode(true, aShowWindowAndFocus);
+    EnsureFullscreenMode(true);
     MOZ_ASSERT(mSizeMode == nsSizeMode_Fullscreen);
   } else if (mSizeMode == nsSizeMode_Fullscreen && aMode == nsSizeMode_Normal) {
     // If we are in fullscreen mode, minimize should work like normal and
     // return us to fullscreen mode when unminimized. Maximize isn't really
     // available and won't do anything. "Restore" should do the same thing as
     // requesting to end fullscreen.
-    EnsureFullscreenMode(false, aShowWindowAndFocus);
+    EnsureFullscreenMode(false);
   } else {
-    SetSizeModeInternal(aMode, aShowWindowAndFocus);
+    SetSizeModeInternal(aMode);
   }
 }
 
-void nsWindow::FrameState::EnsureFullscreenMode(
-    bool aFullScreen, ShowWindowAndFocus aShowWindowAndFocus) {
+void nsWindow::FrameState::EnsureFullscreenMode(bool aFullScreen) {
   const bool changed = aFullScreen != mFullscreenMode;
   if (changed && aFullScreen) {
     // Save the size mode from before fullscreen.
@@ -9288,9 +9320,8 @@ void nsWindow::FrameState::EnsureFullscreenMode(
     // make sure to call SetSizeModeInternal even if mFullscreenMode didn't
     // change, to ensure we actually end up with a fullscreen sizemode when
     // restoring a window from that state.
-    SetSizeModeInternal(
-        aFullScreen ? nsSizeMode_Fullscreen : mPreFullscreenSizeMode,
-        aShowWindowAndFocus);
+    SetSizeModeInternal(aFullScreen ? nsSizeMode_Fullscreen
+                                    : mPreFullscreenSizeMode);
   }
 }
 
@@ -9302,6 +9333,8 @@ void nsWindow::FrameState::OnFrameChanging() {
   const nsSizeMode newSizeMode =
       GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
   EnsureSizeMode(newSizeMode);
+  mWindow->OnSizeModeChange();
+  mWindow->UpdateNonClientMargins(false);
 }
 
 void nsWindow::FrameState::OnFrameChanged() {
@@ -9309,37 +9342,38 @@ void nsWindow::FrameState::OnFrameChanged() {
     return;
   }
 
-  const auto oldSizeMode = mSizeMode;
+  const nsSizeMode previousSizeMode = mSizeMode;
 
-  // We don't want to perform the ShowWindow ourselves if we're on the frame
-  // changed message. Windows has done the frame change for us, and we take care
-  // of activating as needed. We also don't want to potentially trigger
-  // more focus / restore. Among other things, this addresses a bug on Win7
-  // related to window docking. (bug 489258)
-  const auto newSizeMode =
-      GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
-  EnsureSizeMode(newSizeMode, ShowWindowAndFocus::No);
+  // Windows has just changed the size mode of this window. We don't want to go
+  // through EnsureSizeMode because there we would set the min/max window state
+  // again or for nsSizeMode_Normal, call SetWindow with a parameter of
+  // SW_RESTORE.
+  // There's no need as this window's mode has already changed.
+  // This addresses a bug on Win7 related to window docking. (bug 489258)
+  mSizeMode = GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
 
-  // If window was restored, window activation might have been bypassed due to
-  // ShowWindowAndFocus::No. Force activation now to get correct attributes.
-  if (oldSizeMode != mSizeMode && mSizeMode == nsSizeMode_Normal) {
-    mWindow->DispatchFocusToTopLevelWindow(true);
+  MaybeLogSizeMode(mSizeMode);
+
+  if (mSizeMode != previousSizeMode) {
+    mWindow->OnSizeModeChange();
+  }
+
+  // If window was restored, window activation was bypassed during the
+  // SetSizeMode call originating from OnWindowPosChanging to avoid saving
+  // pre-restore attributes. Force activation now to get correct attributes.
+  if (mLastSizeMode != mSizeMode) {
+    if (mSizeMode == nsSizeMode_Normal) {
+      mWindow->DispatchFocusToTopLevelWindow(true);
+    }
+    mLastSizeMode = mSizeMode;
   }
 }
 
-static void MaybeLogSizeMode(nsSizeMode aMode) {
-#ifdef WINSTATE_DEBUG_OUTPUT
-  MOZ_LOG(gWindowsLog, LogLevel::Info, ("*** SizeMode: %d\n", int(aMode)));
-#endif
-}
-
-void nsWindow::FrameState::SetSizeModeInternal(
-    nsSizeMode aMode, ShowWindowAndFocus aShowWindowAndFocus) {
+void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
   if (mSizeMode == aMode) {
     return;
   }
 
-  const auto oldSizeMode = mSizeMode;
   const bool fullscreenChange =
       mSizeMode == nsSizeMode_Fullscreen || aMode == nsSizeMode_Fullscreen;
   const bool fullscreen = aMode == nsSizeMode_Fullscreen;
@@ -9348,25 +9382,23 @@ void nsWindow::FrameState::SetSizeModeInternal(
     mWindow->OnFullscreenWillChange(fullscreen);
   }
 
+  const auto oldSizeMode = mSizeMode;
+  mLastSizeMode = oldSizeMode;
   mSizeMode = aMode;
 
-  MaybeLogSizeMode(mSizeMode);
-
-  if (bool(aShowWindowAndFocus) && mWindow->mIsVisible) {
+  if (mWindow->mIsVisible) {
     ShowWindowWithMode(mWindow->mWnd, aMode);
-    // XXX Can ShowWindowWithMode somehow turn us from visible -> invisible?
-    // If not, we could avoid the mIsVisible check.
-    if (mWindow->mIsVisible &&
-        (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
-      mWindow->DispatchFocusToTopLevelWindow(true);
-    }
+  }
+
+  // we activate here to ensure that the right child window is focused
+  if (mWindow->mIsVisible &&
+      (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
+    mWindow->DispatchFocusToTopLevelWindow(true);
   }
 
   if (fullscreenChange) {
     mWindow->OnFullscreenChanged(oldSizeMode, fullscreen);
   }
-
-  mWindow->OnSizeModeChange();
 }
 
 void nsWindow::ContextMenuPreventer::Update(
