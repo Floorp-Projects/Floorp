@@ -402,6 +402,7 @@ def build_src(install_dir, host, targets, patches):
 
         [rust]
         ignore-git = false
+        use-lld = true
 
         [install]
         prefix = "{prefix}"
@@ -434,7 +435,6 @@ def build_src(install_dir, host, targets, patches):
         file.write(final_config)
 
     # Setup the env so compilers and toolchains are visible
-    binutils = os.path.join(fetches, "binutils", "bin")
     clang = os.path.join(fetches, "clang")
     clang_bin = os.path.join(clang, "bin")
     clang_lib = os.path.join(clang, "lib")
@@ -442,7 +442,7 @@ def build_src(install_dir, host, targets, patches):
     env = os.environ.copy()
     env.update(
         {
-            "PATH": os.pathsep.join((binutils, clang_bin, os.environ["PATH"])),
+            "PATH": os.pathsep.join((clang_bin, os.environ["PATH"])),
             "LD_LIBRARY_PATH": clang_lib,
         }
     )
