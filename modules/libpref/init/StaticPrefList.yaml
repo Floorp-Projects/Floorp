@@ -10547,6 +10547,13 @@
   value: true
   mirror: always
 
+#if defined(MOZ_WIDGET_GTK)
+- name: media.webrtc.capture.allow-pipewire
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+#endif
+
 - name: media.block-autoplay-until-in-foreground
   type: bool
 #if !defined(MOZ_WIDGET_ANDROID)
