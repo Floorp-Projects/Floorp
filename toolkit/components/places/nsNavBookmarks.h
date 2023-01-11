@@ -272,17 +272,6 @@ class nsNavBookmarks final : public nsINavBookmarksService,
 
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
 
-  int64_t TagsRootId() { return mDB->GetTagsFolderId(); }
-
-  inline bool IsRoot(int64_t aFolderId) {
-    return aFolderId == mDB->GetRootFolderId() ||
-           aFolderId == mDB->GetMenuFolderId() ||
-           aFolderId == mDB->GetTagsFolderId() ||
-           aFolderId == mDB->GetUnfiledFolderId() ||
-           aFolderId == mDB->GetToolbarFolderId() ||
-           aFolderId == mDB->GetMobileFolderId();
-  }
-
   nsresult SetItemDateInternal(enum mozilla::places::BookmarkDate aDateType,
                                int64_t aSyncChangeDelta, int64_t aItemId,
                                PRTime aValue);
