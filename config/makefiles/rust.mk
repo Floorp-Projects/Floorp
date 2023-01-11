@@ -300,9 +300,19 @@ endif
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
-define RUN_CARGO
+define RUN_CARGO_INNER
 $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)$(CARGO) $(1) $(cargo_build_flags) $(cargo_extra_cli_flags)
 endef
+
+ifdef CARGO_NO_ERR
+define RUN_CARGO
+-$(RUN_CARGO_INNER)
+endef
+else
+define RUN_CARGO
+$(RUN_CARGO_INNER)
+endef
+endif
 
 # This function is intended to be called by:
 #
@@ -313,30 +323,6 @@ endef
 #   $(call CARGO_BUILD)
 define CARGO_BUILD
 $(call RUN_CARGO,rustc)
-endef
-
-define CARGO_CHECK
-$(call RUN_CARGO,check)
-endef
-
-ifdef CARGO_NO_ERR
-define CARGO_UDEPS
--$(call RUN_CARGO,udeps)
-endef
-define CARGO_AUDIT
--$(call RUN_CARGO,audit)
-endef
-else
-define CARGO_UDEPS
-$(call RUN_CARGO,udeps)
-endef
-define CARGO_AUDIT
-$(call RUN_CARGO,audit)
-endef
-endif
-
-define CARGO_CLIPPY
-$(call RUN_CARGO,clippy)
 endef
 
 cargo_host_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_HOST_TARGET))_LINKER
@@ -471,26 +457,18 @@ endif
 
 SUGGEST_INSTALL_ON_FAILURE = (ret=$$?; if [ $$ret = 101 ]; then echo If $1 is not installed, install it using: cargo install $1; fi; exit $$ret)
 
-force-cargo-library-check:
-	$(call CARGO_CHECK) --lib $(cargo_target_flag) $(rust_features_flag)
-
-force-cargo-library-clippy:
-	$(call CARGO_CLIPPY) --lib $(cargo_target_flag) $(rust_features_flag)
-
-force-cargo-library-audit:
-	$(call CARGO_AUDIT) || $(call SUGGEST_INSTALL_ON_FAILURE,cargo-audit)
-
-force-cargo-library-udeps:
-	$(call CARGO_UDEPS) --lib $(cargo_target_flag) $(rust_features_flag) || $(call SUGGEST_INSTALL_ON_FAILURE,cargo-udeps)
+ifndef CARGO_NO_AUTO_ARG
+force-cargo-library-%:
+	$(call RUN_CARGO,$*) --lib $(cargo_target_flag) $(rust_features_flag) || $(call SUGGEST_INSTALL_ON_FAILURE,cargo-$*)
 else
-force-cargo-library-check:
+force-cargo-library-%:
+	$(call RUN_CARGO,$*) || $(call SUGGEST_INSTALL_ON_FAILURE,cargo-$*)
+endif
+
+else
+force-cargo-library-%:
 	@true
-force-cargo-library-udeps:
-	@true
-force-cargo-library-clippy:
-	@true
-force-cargo-library-audit:
-	@true
+
 endif # RUST_LIBRARY_FILE
 
 ifdef RUST_TESTS
@@ -521,25 +499,16 @@ force-cargo-host-library-build:
 
 $(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build ;
 
-force-cargo-host-library-check:
-	$(call CARGO_CHECK) --lib $(cargo_host_flag) $(host_rust_features_flag)
-
-force-cargo-host-library-clippy:
-	$(call CARGO_CLIPPY) --lib $(cargo_host_flag) $(host_rust_features_flag)
-
-force-cargo-host-library-audit:
-	$(call CARGO_AUDIT) --lib $(filter-out --release $(cargo_target_flag)) $(host_rust_features_flag)
-
-force-cargo-host-library-udeps:
-	$(call CARGO_UDEPS) --lib $(cargo_host_flag) $(host_rust_features_flag)
+ifndef CARGO_NO_AUTO_ARG
+force-cargo-host-library-%:
+	$(call RUN_CARGO,$*) --lib $(cargo_host_flag) $(host_rust_features_flag)
 else
-force-cargo-host-library-check:
-	@true
-force-cargo-host-library-clippy:
-	@true
-force-cargo-host-library-audit:
-	@true
-force-cargo-host-library-udeps:
+force-cargo-host-library-%:
+	$(call RUN_CARGO,$*) --lib $(filter-out --release $(cargo_host_flag)) $(host_rust_features_flag)
+endif
+
+else
+force-cargo-host-library-%:
 	@true
 endif # HOST_RUST_LIBRARY_FILE
 
@@ -551,25 +520,16 @@ force-cargo-program-build: $(call resfile,module)
 
 $(RUST_PROGRAMS): force-cargo-program-build ;
 
-force-cargo-program-check:
-	$(call CARGO_CHECK) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
-
-force-cargo-program-clippy:
-	$(call CARGO_CLIPPY) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
-
-force-cargo-program-audit:
-	$(call CARGO_AUDIT) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(filter-out --release $(cargo_target_flag))
-
-force-cargo-program-udeps:
-	$(call CARGO_UDEPS) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
+ifndef CARGO_NO_AUTO_ARG
+force-cargo-program-%:
+	$(call RUN_CARGO,$*) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 else
-force-cargo-program-check:
-	@true
-force-cargo-program-clippy:
-	@true
-force-cargo-program-audit:
-	@true
-force-cargo-program-udeps:
+force-cargo-program-%:
+	$(call RUN_CARGO,$*) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(filter-out --release $(cargo_target_flag))
+endif
+
+else
+force-cargo-program-%:
 	@true
 endif # RUST_PROGRAMS
 ifdef HOST_RUST_PROGRAMS
@@ -580,28 +540,17 @@ force-cargo-host-program-build:
 
 $(HOST_RUST_PROGRAMS): force-cargo-host-program-build ;
 
-force-cargo-host-program-check:
+ifndef CARGO_NO_AUTO_ARG
+force-cargo-host-program-%:
 	$(REPORT_BUILD)
-	$(call CARGO_CHECK) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
-
-force-cargo-host-program-clippy:
-	$(REPORT_BUILD)
-	$(call CARGO_CLIPPY) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
-
-force-cargo-host-program-audit:
-	$(REPORT_BUILD)
-	$(call CARGO_CHECK) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(filter-out --release $(cargo_target_flag))
-
-force-cargo-host-program-udeps:
-	$(REPORT_BUILD)
-	$(call CARGO_UDEPS) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
+	$(call RUN_CARGO,$*) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 else
-force-cargo-host-program-check:
+force-cargo-host-program-%:
+	$(call RUN_CARGO,$*) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(filter-out --release $(cargo_target_flag))
+endif
+
+else
+force-cargo-host-program-%:
 	@true
-force-cargo-host-program-clippy:
-	@true
-force-cargo-host-program-audit:
-	@true
-force-cargo-host-program-udeps:
-	@true
+
 endif # HOST_RUST_PROGRAMS

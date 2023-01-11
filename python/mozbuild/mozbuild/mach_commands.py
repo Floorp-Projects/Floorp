@@ -214,6 +214,8 @@ def cargo(
             append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
         if no_errors:
             append_env["CARGO_NO_ERR"] = "1"
+        if cargo_command == "audit":
+            append_env["CARGO_NO_AUTO_ARG"] = "1"
 
         ret = command_context._run_make(
             srcdir=False,
