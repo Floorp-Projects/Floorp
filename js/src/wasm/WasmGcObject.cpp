@@ -543,7 +543,7 @@ void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
 
 DEFINE_TYPEDOBJ_CLASS(WasmArrayObject, WasmArrayObject::obj_trace,
                       WasmArrayObject::obj_finalize, nullptr,
-                      JSCLASS_FOREGROUND_FINALIZE);
+                      JSCLASS_BACKGROUND_FINALIZE);
 
 //=========================================================================
 // WasmStructObject
@@ -627,9 +627,6 @@ void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
 }
 
 /* static */
-size_t WasmStructObject::obj_moved(JSObject* dst, JSObject* src) { return 0; }
-
-/* static */
 void WasmStructObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
   WasmStructObject& structObj = object->as<WasmStructObject>();
 
@@ -660,5 +657,6 @@ void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
   WriteValTo(val, fieldType, data);
 }
 
-DEFINE_TYPEDOBJ_CLASS(WasmStructObject, WasmStructObject::obj_trace, nullptr,
-                      WasmStructObject::obj_moved, 0);
+DEFINE_TYPEDOBJ_CLASS(WasmStructObject, WasmStructObject::obj_trace,
+                      WasmStructObject::obj_finalize, nullptr,
+                      JSCLASS_BACKGROUND_FINALIZE);
