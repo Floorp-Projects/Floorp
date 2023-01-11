@@ -278,6 +278,14 @@ features:
         type: Boolean
         default: true
 
+  pre-permission-notification-prompt:
+    description: A feature that shows the pre-permission notification prompt.
+    variables:
+      enabled:
+        description: if true, the pre-permission notification prompt is shown to the user.
+        type: Boolean
+        default: true
+
 types:
   objects:
     MessageData:
