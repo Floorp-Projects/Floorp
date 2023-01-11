@@ -52,6 +52,7 @@ esac
 PATH="$MOZ_FETCHES_DIR/rustc/bin:$PATH"
 
 cargo install \
+  --locked \
   --verbose \
   --path $MOZ_FETCHES_DIR/${FETCH-$project} \
   --target-dir $workspace/obj \
