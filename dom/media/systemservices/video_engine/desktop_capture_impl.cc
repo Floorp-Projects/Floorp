@@ -338,6 +338,21 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   // Leave desktop effects enabled during WebRTC captures.
   options.set_disable_effects(false);
 
+#if defined(WEBRTC_WIN)
+  if (mozilla::StaticPrefs::media_webrtc_capture_allow_directx()) {
+    options.set_allow_directx_capturer(true);
+    options.set_allow_use_magnification_api(false);
+  } else {
+    options.set_allow_use_magnification_api(true);
+  }
+  options.set_allow_cropping_window_capturer(true);
+#  if defined(RTC_ENABLE_WIN_WGC)
+  if (mozilla::StaticPrefs::media_webrtc_capture_allow_wgc()) {
+    options.set_allow_wgc_capturer(true);
+  }
+#  endif
+#endif
+
 #if defined(WEBRTC_MAC)
   if (mozilla::StaticPrefs::media_webrtc_capture_allow_iosurface()) {
     options.set_allow_iosurface(true);
@@ -375,6 +390,9 @@ int32_t DesktopCaptureImpl::LazyInitDesktopCapturer() {
         std::unique_ptr<DesktopAndCursorComposer>(
             new DesktopAndCursorComposer(std::move(pScreenCapturer), options));
   } else if (_deviceType == CaptureDeviceType::Window) {
+#if defined(RTC_ENABLE_WIN_WGC)
+    options.set_allow_wgc_capturer_fallback(true);
+#endif
     std::unique_ptr<DesktopCapturer> pWindowCapturer =
         DesktopCapturer::CreateWindowCapturer(options);
     if (!pWindowCapturer.get()) {
