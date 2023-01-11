@@ -645,11 +645,6 @@ void BrowserParent::Destroy() {
     return;
   }
 
-  // If we are shutting down everything or we know to be the last
-  // BrowserParent, signal the impending shutdown early to the content process
-  // to avoid to run the SendDestroy before we know we are ExpectingShutdown.
-  Manager()->NotifyTabWillDestroy();
-
   DestroyInternal();
 
   mIsDestroyed = true;
