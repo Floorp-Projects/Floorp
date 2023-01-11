@@ -425,6 +425,16 @@ impl HttpServer for Http3TestServer {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
                                     .unwrap();
+                            } else if path == "/redirect" {
+                                session
+                                    .response(&WebTransportSessionAcceptAction::Reject(
+                                        [
+                                            Header::new(":status", "302"),
+                                            Header::new("location", "/"),
+                                        ]
+                                        .to_vec(),
+                                    ))
+                                    .unwrap();
                             } else if path == "/reject" {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Reject(

@@ -1225,6 +1225,9 @@
   rust: true
 
 # Whether focus rings are always shown by default.
+#
+# This is the initial value of nsWindowRoot::mShowFocusRings, but it can be
+# overridden by system preferences.
 - name: browser.display.show_focus_rings
   type: bool
   value: false
@@ -12142,6 +12145,12 @@
 - name: network.webtransport.datagram_size
   type: RelaxedAtomicUint32
   value: 1200
+  mirror: always
+
+# WebTransport Redirect support
+- name: network.webtransport.redirect.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
