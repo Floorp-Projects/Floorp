@@ -459,9 +459,9 @@ TEST(TaskQueuePacedSenderTest, SchedulesProbeAtSentTime) {
 
 TEST(TaskQueuePacedSenderTest, NoMinSleepTimeWhenProbing) {
   // Set min_probe_delta to be less than kMinSleepTime (1ms).
-  const TimeDelta kMinProbeDelta = TimeDelta::Micros(100);
+  const TimeDelta kMinProbeDelta = TimeDelta::Micros(200);
   ScopedKeyValueConfig trials(
-      "WebRTC-Bwe-ProbingBehavior/min_probe_delta:100us/");
+      "WebRTC-Bwe-ProbingBehavior/min_probe_delta:200us/");
   GlobalSimulatedTimeController time_controller(Timestamp::Millis(1234));
   MockPacketRouter packet_router;
   TaskQueuePacedSender pacer(time_controller.GetClock(), &packet_router, trials,
@@ -495,7 +495,7 @@ TEST(TaskQueuePacedSenderTest, NoMinSleepTimeWhenProbing) {
 
   // Advance time less than PacingController::kMinSleepTime, probing packets
   // for the first millisecond should be sent immediately. Min delta between
-  // probes is 2x 100us, meaning 4 times per ms we will get least one call to
+  // probes is 200us, meaning 4 times per ms we will get least one call to
   // SendPacket().
   DataSize data_sent = DataSize::Zero();
   EXPECT_CALL(packet_router,
@@ -515,7 +515,7 @@ TEST(TaskQueuePacedSenderTest, NoMinSleepTimeWhenProbing) {
   // Verify the amount of probing data sent.
   // Probe always starts with a small (1 byte) padding packet that's not
   // counted into the probe rate here.
-  const DataSize kMinProbeSize = 2 * kMinProbeDelta * kProbingRate;
+  const DataSize kMinProbeSize = kMinProbeDelta * kProbingRate;
   EXPECT_EQ(data_sent, DataSize::Bytes(1) + kPacketSize + 4 * kMinProbeSize);
 }
 
