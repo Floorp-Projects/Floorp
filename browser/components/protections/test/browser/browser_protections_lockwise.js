@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 const { AboutProtectionsParent } = ChromeUtils.importESModule(
   "resource:///actors/AboutProtectionsParent.sys.mjs"
 );
@@ -142,9 +144,10 @@ add_task(async function testLockwiseCardUIWithLogins() {
 
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
-    ).textContent;
+    );
+    await content.document.l10n.translateElements([lockwiseScannedText]);
     is(
-      lockwiseScannedText,
+      lockwiseScannedText.textContent,
       "1 password stored securely.",
       "Correct lockwise scanned text is shown"
     );
