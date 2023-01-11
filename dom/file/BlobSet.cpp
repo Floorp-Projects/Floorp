@@ -30,19 +30,26 @@ nsresult BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength) {
   return AppendBlobImpl(blobImpl);
 }
 
-nsresult BlobSet::AppendString(const nsAString& aString, bool nativeEOL) {
+nsresult BlobSet::AppendUTF8String(const nsACString& aUTF8String,
+                                   bool nativeEOL) {
   nsCString utf8Str;
-  if (NS_WARN_IF(!AppendUTF16toUTF8(aString, utf8Str, mozilla::fallible))) {
+  if (NS_WARN_IF(!utf8Str.Assign(aUTF8String, mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (nativeEOL) {
     if (utf8Str.Contains('\r')) {
-      utf8Str.ReplaceSubstring("\r\n", "\n");
-      utf8Str.ReplaceSubstring("\r", "\n");
+      if (NS_WARN_IF(
+              !utf8Str.ReplaceSubstring("\r\n", "\n", mozilla::fallible) ||
+              !utf8Str.ReplaceSubstring("\r", "\n", mozilla::fallible))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
 #ifdef XP_WIN
-    utf8Str.ReplaceSubstring("\n", "\r\n");
+    if (NS_WARN_IF(
+            !utf8Str.ReplaceSubstring("\n", "\r\n", mozilla::fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 #endif
   }
 
