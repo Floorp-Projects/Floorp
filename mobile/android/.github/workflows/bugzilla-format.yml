@@ -16,7 +16,7 @@ jobs:
     if: github.actor != 'mozilla-l10n-automation-bot' && github.actor != 'github-actions[bot]'
     steps:
       - name: Bugzilla Format
-        uses: gabrielluong/bugzilla-format@1.0.0
+        uses: gabrielluong/bugzilla-format@1.0.1
         if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
