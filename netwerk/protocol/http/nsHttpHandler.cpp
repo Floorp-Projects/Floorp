@@ -876,19 +876,13 @@ void nsHttpHandler::InitUserAgentComponents() {
     }
   }
 
-  // Add the `Mobile` or `Tablet` or `TV` token when running on device.
-  bool isTablet;
-  rv = infoService->GetPropertyAsBool(u"tablet"_ns, &isTablet);
-  if (NS_SUCCEEDED(rv) && isTablet) {
-    mCompatDevice.AssignLiteral("Tablet");
+  // Add the `Mobile` or `TV` token when running on device.
+  bool isTV;
+  rv = infoService->GetPropertyAsBool(u"tv"_ns, &isTV);
+  if (NS_SUCCEEDED(rv) && isTV) {
+    mCompatDevice.AssignLiteral("TV");
   } else {
-    bool isTV;
-    rv = infoService->GetPropertyAsBool(u"tv"_ns, &isTV);
-    if (NS_SUCCEEDED(rv) && isTV) {
-      mCompatDevice.AssignLiteral("TV");
-    } else {
-      mCompatDevice.AssignLiteral("Mobile");
-    }
+    mCompatDevice.AssignLiteral("Mobile");
   }
 
   if (Preferences::GetBool(UA_PREF("use_device"), false)) {
