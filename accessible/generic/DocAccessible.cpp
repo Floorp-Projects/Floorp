@@ -1376,16 +1376,12 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
 
     // If the accessible is a table, or table part, its layout table
     // status may have changed. We need to invalidate the associated
-    // mac table cache, which listens for the following event. We don't
-    // use this cache when the core cache is enabled, so to minimise event
-    // traffic only fire this event when that cache is off.
+    // table cache, which listens for the following event.
     if (acc->IsTable() || acc->IsTableRow() || acc->IsTableCell()) {
       LocalAccessible* table = nsAccUtils::TableFor(acc);
       if (table && table->IsTable()) {
-        if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-          FireDelayedEvent(nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED,
-                           table);
-        }
+        FireDelayedEvent(nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED,
+                         table);
         QueueCacheUpdate(table, CacheDomain::Table);
       }
     }
