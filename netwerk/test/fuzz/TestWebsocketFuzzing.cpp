@@ -110,6 +110,7 @@ static int FuzzingInitNetworkWebsocket(int* argc, char*** argv) {
   Preferences::SetBool("fuzzing.necko.enabled", true);
   Preferences::SetBool("network.websocket.delay-failed-reconnects", false);
   Preferences::SetInt("network.http.speculative-parallel-limit", 0);
+  Preferences::SetInt("network.proxy.type", 0);  // PROXYCONFIG_DIRECT
   return 0;
 }
 
