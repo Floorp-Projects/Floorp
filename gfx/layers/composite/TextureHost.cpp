@@ -167,6 +167,7 @@ already_AddRefed<TextureHost> CreateDummyBufferTextureHost(
     mozilla::layers::TextureFlags aFlags) {
   // Ensure that the host will delete the memory.
   aFlags &= ~TextureFlags::DEALLOCATE_CLIENT;
+  aFlags |= TextureFlags::DUMMY_TEXTURE;
   UniquePtr<TextureData> textureData(BufferTextureData::Create(
       gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8, gfx::BackendType::SKIA,
       aBackend, aFlags, TextureAllocationFlags::ALLOC_DEFAULT, nullptr));
