@@ -4075,6 +4075,56 @@ void WorkerPrivate::NotifyWorkerRefs(WorkerStatus aStatus) {
   }
 }
 
+bool WorkerPrivate::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  MOZ_ASSERT(aTask);
+
+  MutexAutoLock lock(mMutex);
+
+  if (mRunShutdownTasksStarted) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mShutdownTasks.Contains(aTask));
+  mShutdownTasks.AppendElement(aTask);
+
+  return true;
+}
+
+bool WorkerPrivate::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  MOZ_ASSERT(aTask);
+
+  MutexAutoLock lock(mMutex);
+
+  if (mRunShutdownTasksFinished) {
+    return false;
+  }
+
+  MOZ_ASSERT(mShutdownTasks.Contains(aTask));
+  mShutdownTasks.RemoveElement(aTask);
+
+  return true;
+}
+
+void WorkerPrivate::RunShutdownTasks() {
+  CopyableTArray<nsCOMPtr<nsITargetShutdownTask>> shutdownTasks;
+
+  {
+    MutexAutoLock lock(mMutex);
+    shutdownTasks = mShutdownTasks;
+    mRunShutdownTasksStarted = true;
+  }
+
+  for (auto& task : shutdownTasks) {
+    task->TargetShutdown();
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    mShutdownTasks.Clear();
+    mRunShutdownTasksFinished = true;
+  }
+}
+
 void WorkerPrivate::CancelAllTimeouts() {
   auto data = mWorkerThreadAccessible.Access();
 

@@ -119,13 +119,33 @@ WorkerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
 }
 
 NS_IMETHODIMP
-WorkerEventTarget::RegisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+WorkerEventTarget::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  MutexAutoLock lock(mMutex);
+
+  if (!mWorkerPrivate) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!mWorkerPrivate->RegisterShutdownTask(aTask)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-WorkerEventTarget::UnregisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+WorkerEventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  MutexAutoLock lock(mMutex);
+
+  if (!mWorkerPrivate) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!mWorkerPrivate->UnregisterShutdownTask(aTask)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
