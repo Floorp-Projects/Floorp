@@ -5,12 +5,6 @@ ncpu=-j$(grep -c ^processor /proc/cpuinfo)
 
 WORK=/setup/
 cd $WORK
-git clone --depth=1 --single-branch -b system-symbols https://github.com/mozilla/xar xar
-cd xar/xar
-./autogen.sh --prefix=/builds/worker
-make "$ncpu" && make install
-
-cd $WORK
 git clone --depth=1 --single-branch -b system-symbols-mac https://github.com/gabrielesvelto/libdmg-hfsplus.git
 cd libdmg-hfsplus
 cmake .
