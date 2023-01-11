@@ -21,6 +21,7 @@
 #include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/transport/network_control.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
@@ -46,6 +47,10 @@ struct ProbeControllerConfig {
   FieldTrialParameter<TimeDelta> alr_probing_interval;
   FieldTrialParameter<double> alr_probe_scale;
 
+  // Configures how often we send probes if NetworkStateEstimate is available.
+  FieldTrialParameter<TimeDelta> network_state_estimate_probing_interval;
+  FieldTrialParameter<double> network_state_probe_scale;
+
   // Configures the probes emitted by changed to the allocated bitrate.
   FieldTrialOptional<double> first_allocation_probe_scale;
   FieldTrialOptional<double> second_allocation_probe_scale;
@@ -56,6 +61,8 @@ struct ProbeControllerConfig {
   FieldTrialParameter<int> min_probe_packets_sent;
   // The minimum probing duration.
   FieldTrialParameter<TimeDelta> min_probe_duration;
+
+  FieldTrialParameter<bool> probe_if_bwe_limited_due_to_loss;
 };
 
 // This class controls initiation of probing to estimate initial channel
@@ -86,7 +93,8 @@ class ProbeController {
       NetworkAvailability msg);
 
   ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> SetEstimatedBitrate(
-      int64_t bitrate_bps,
+      int64_t target_bitrate_bps,
+      bool bwe_limited_due_to_packet_loss,
       int64_t at_time_ms);
 
   void EnablePeriodicAlrProbing(bool enable);
@@ -99,6 +107,7 @@ class ProbeController {
 
   // Sets a new maximum probing bitrate, without generating a new probe cluster.
   void SetMaxBitrate(int64_t max_bitrate_bps);
+  void SetNetworkStateEstimate(webrtc::NetworkStateEstimate estimate);
 
   // Resets the ProbeController to a state equivalent to as if it was just
   // created EXCEPT for `enable_periodic_alr_probing_`.
@@ -123,12 +132,16 @@ class ProbeController {
       int64_t now_ms,
       std::vector<int64_t> bitrates_to_probe,
       bool probe_further);
+  bool TimeForAlrProbe(int64_t at_time_ms) const;
+  bool TimeForNetworkStateProbe(int64_t at_time_ms) const;
 
   bool network_available_;
+  bool bwe_limited_due_to_packet_loss_;
   State state_;
   int64_t min_bitrate_to_probe_further_bps_;
   int64_t time_last_probing_initiated_ms_;
   int64_t estimated_bitrate_bps_;
+  absl::optional<webrtc::NetworkStateEstimate> network_estimate_;
   int64_t start_bitrate_bps_;
   int64_t max_bitrate_bps_;
   int64_t last_bwe_drop_probing_time_ms_;

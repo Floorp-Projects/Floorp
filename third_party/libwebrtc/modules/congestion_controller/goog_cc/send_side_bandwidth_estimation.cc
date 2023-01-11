@@ -317,6 +317,10 @@ DataRate SendSideBandwidthEstimation::target_rate() const {
   return std::max(min_bitrate_configured_, target);
 }
 
+DataRate SendSideBandwidthEstimation::delay_based_limit() const {
+  return delay_based_limit_;
+}
+
 DataRate SendSideBandwidthEstimation::GetEstimatedLinkCapacity() const {
   return link_capacity_.estimate();
 }
