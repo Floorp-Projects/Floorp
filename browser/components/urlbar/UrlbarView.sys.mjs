@@ -1865,39 +1865,47 @@ export class UrlbarView {
    *   returns an l10n object for the label's l10n string: `{ id, args }`
    */
   #rowLabel(row, currentLabel) {
-    // Labels aren't shown for top sites, i.e., when the search string is empty.
-    if (
-      lazy.UrlbarPrefs.get("groupLabels.enabled") &&
-      this.#queryContext?.searchString &&
-      !row.result.heuristic
-    ) {
-      if (row.result.isBestMatch) {
+    if (!lazy.UrlbarPrefs.get("groupLabels.enabled") || row.result.heuristic) {
+      return null;
+    }
+
+    if (!this.#queryContext?.searchString) {
+      if (row.result.payload.isWeather) {
+        // Add top pick label for weather suggestion
         return { id: "urlbar-group-best-match" };
       }
-      switch (row.result.type) {
-        case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
-        case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-        case lazy.UrlbarUtils.RESULT_TYPE.URL:
-          return { id: "urlbar-group-firefox-suggest" };
-        case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
-          // Show "{ $engine } suggestions" if it's not the first label.
-          if (currentLabel && row.result.payload.suggestion) {
-            let engineName =
-              row.result.payload.engine || Services.search.defaultEngine.name;
-            return {
-              id: "urlbar-group-search-suggestions",
-              args: { engine: engineName },
-            };
-          }
-          break;
-        case lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC:
-          if (row.result.providerName == "quickactions") {
-            return { id: "urlbar-group-quickactions" };
-          }
-          break;
-      }
+
+      return null;
     }
+
+    if (row.result.isBestMatch) {
+      return { id: "urlbar-group-best-match" };
+    }
+
+    switch (row.result.type) {
+      case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
+      case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+      case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+      case lazy.UrlbarUtils.RESULT_TYPE.URL:
+        return { id: "urlbar-group-firefox-suggest" };
+      case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
+        // Show "{ $engine } suggestions" if it's not the first label.
+        if (currentLabel && row.result.payload.suggestion) {
+          let engineName =
+            row.result.payload.engine || Services.search.defaultEngine.name;
+          return {
+            id: "urlbar-group-search-suggestions",
+            args: { engine: engineName },
+          };
+        }
+        break;
+      case lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC:
+        if (row.result.providerName == "quickactions") {
+          return { id: "urlbar-group-quickactions" };
+        }
+        break;
+    }
+
     return null;
   }
 
