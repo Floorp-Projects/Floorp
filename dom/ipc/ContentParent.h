@@ -361,6 +361,9 @@ class ContentParent final : public PContentParent,
   virtual nsresult DoSendAsyncMessage(const nsAString& aMessage,
                                       StructuredCloneData& aData) override;
 
+  /** Notify that a tab is about to send Destroy to its child. */
+  void NotifyTabWillDestroy();
+
   /** Notify that a tab is beginning its destruction sequence. */
   void NotifyTabDestroying();
 
@@ -790,16 +793,20 @@ class ContentParent final : public PContentParent,
   /**
    * We might want to reuse barely used content processes if certain criteria
    * are met.
+   *
+   * With Fission this is a no-op.
    */
-  bool TryToRecycle();
+  bool TryToRecycleE10SOnly();
 
   /**
    * If this process is currently being recycled, unmark it as the recycled
    * content process.
    * If `aForeground` is true, will also restore the process' foreground
    * priority if it was previously the recycled content process.
+   *
+   * With Fission this is a no-op.
    */
-  void StopRecycling(bool aForeground = true);
+  void StopRecyclingE10SOnly(bool aForeground = true);
 
   /**
    * Removing it from the static array so it won't be returned for new tabs in
@@ -830,6 +837,8 @@ class ContentParent final : public PContentParent,
    * This potentially cancels mainthread content JS execution.
    */
   void SignalImpendingShutdownToContentJS();
+
+  bool CheckTabDestroyWillKeepAlive(uint32_t aExpectedBrowserCount);
 
   /**
    * Check if this process is ready to be shut down, and if it is, begin the
