@@ -613,10 +613,10 @@ add_task(
       );
       let cs = content.getComputedStyle(frame);
       Assert.stringMatches(
-        cs.getPropertyValue("--inner-height"),
+        cs.getPropertyValue("--subdialog-inner-height"),
         /px$/,
         "Height (" +
-          cs.getPropertyValue("--inner-height") +
+          cs.getPropertyValue("--subdialog-inner-height") +
           ") should be set to a px value of the scrollHeight from the dialog"
       );
     });
