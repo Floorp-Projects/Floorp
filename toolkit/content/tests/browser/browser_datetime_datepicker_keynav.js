@@ -178,14 +178,17 @@ add_task(async function test_datepicker_keyboard_nav() {
     "Picker is opened with a focus set to the currently selected date"
   );
 
-  // It'd be good to use something else than waitForCondition for this but
-  // there's no exposed event atm when the value changes from the child.
-  await BrowserTestUtils.waitForCondition(() => {
-    return (
-      helper.getElement(MONTH_YEAR).textContent ==
-      DATE_FORMAT(new Date(prevMonth))
-    );
-  }, `Should change to November 2016, instead got ${helper.getElement(MONTH_YEAR).textContent}`);
+  let monthYearEl = helper.getElement(MONTH_YEAR);
+  await BrowserTestUtils.waitForMutationCondition(
+    monthYearEl,
+    { childList: true },
+    () => {
+      return monthYearEl.textContent == DATE_FORMAT(new Date(prevMonth));
+    },
+    `Should change to November 2016, instead got ${
+      helper.getElement(MONTH_YEAR).textContent
+    }`
+  );
 
   Assert.ok(
     true,
@@ -241,9 +244,17 @@ add_task(async function test_datepicker_keyboard_nav() {
 
   Assert.equal(helper.panel.state, "open", "Panel should be opened on Space");
 
-  await BrowserTestUtils.waitForCondition(() => {
-    return helper.getElement(DAY_SELECTED).textContent === "16";
-  }, `Should change to the 16th, instead got ${helper.getElement(DAY_SELECTED).textContent}`);
+  let selectedDayEl = helper.getElement(DAY_SELECTED);
+  await BrowserTestUtils.waitForMutationCondition(
+    selectedDayEl,
+    { childList: true },
+    () => {
+      return selectedDayEl.textContent === "16";
+    },
+    `Should change to the 16th, instead got ${
+      helper.getElement(DAY_SELECTED).textContent
+    }`
+  );
 
   Assert.ok(
     true,
