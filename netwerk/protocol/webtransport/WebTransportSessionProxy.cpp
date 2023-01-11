@@ -94,8 +94,6 @@ nsresult WebTransportSessionProxy::AsyncConnect(
   rv = mChannel->AsyncOpen(this);
   if (NS_FAILED(rv)) {
     MutexAutoLock lock(mMutex);
-    mChannel = nullptr;
-    mListener = nullptr;
     ChangeState(WebTransportSessionProxyState::DONE);
   }
   return rv;
