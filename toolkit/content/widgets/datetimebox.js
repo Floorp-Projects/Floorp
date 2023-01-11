@@ -119,8 +119,12 @@ this.DateTimeBoxWidget = class {
     this.buildEditFields();
 
     if (focused) {
-      this.mInputElement.focus();
+      this._focusFirstField();
     }
+  }
+
+  _focusFirstField() {
+    this.shadowRoot.querySelector(".datetime-edit-field")?.focus();
   }
 
   setup() {
@@ -221,6 +225,10 @@ this.DateTimeBoxWidget = class {
 
     if (this.mInputElement.value) {
       this.setFieldsFromInputValue();
+    }
+
+    if (this.mInputElement.matches(":focus")) {
+      this._focusFirstField();
     }
   }
 
