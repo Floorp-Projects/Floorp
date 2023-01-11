@@ -861,7 +861,13 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
         (!state.clickedElement ||
           state.clickedElement.get() != event.originalTarget);
 
-      if (isMouseUpOnOtherElement || event.type == "click") {
+      if (
+        isMouseUpOnOtherElement ||
+        event.type == "click" ||
+        // pointerup event still triggers after a touchstart event. We just need to detect
+        // the pointer type and determine if we got to this part of the code through a touch event.
+        event.pointerType == "touch"
+      ) {
         // The click is complete, so now we reset the state so that
         // we stop suppressing these events.
         state.isClickingToggle = false;
