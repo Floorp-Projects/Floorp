@@ -565,6 +565,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.9.0 -> 0.9.3"
 
+[[audits.env_logger]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.9.3 -> 0.10.0"
+
 [[audits.extend]]
 who = "Ben Dean-Kawamura <bdk@mozilla.com>"
 criteria = "safe-to-deploy"
