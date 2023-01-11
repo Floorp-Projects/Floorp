@@ -1934,7 +1934,7 @@ var SessionStoreInternal = {
         this._closedWindowTabs.set(permanentKey, tabData);
       }
 
-      if (isFullyLoaded) {
+      if (isFullyLoaded && !winData.title) {
         winData.title =
           tabbrowser.selectedBrowser.contentTitle ||
           tabbrowser.selectedTab.label;
@@ -4210,15 +4210,13 @@ var SessionStoreInternal = {
       tabsData.push(tabData);
     }
 
-    // The FxView tab isn't recorded in the session state and because of this the
-    // selected tab can be off by 1 when we restore the previous state.
-    // To open the correct selected tab on restore we adjust the selected tab before saving.
     let selectedIndex = tabbrowser.tabbox.selectedIndex + 1;
-    if (
-      aWindow.FirefoxViewHandler.tab &&
-      !aWindow.FirefoxViewHandler.tab.selected
-    ) {
-      selectedIndex -= 1;
+    // We don't store the Firefox View tab in Session Store, so if it was the last selected "tab" when
+    // a window is closed, point to the first item in the tab strip instead (it will never be the Firefox View tab,
+    // since it's only inserted into the tab strip after it's selected).
+    if (aWindow.FirefoxViewHandler.tab?.selected) {
+      selectedIndex = 1;
+      winData.title = tabbrowser.tabs[0].label;
     }
     winData.selected = selectedIndex;
 

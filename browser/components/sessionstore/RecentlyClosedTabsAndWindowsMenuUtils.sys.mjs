@@ -104,7 +104,9 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
           .replace("#1", undoItem.title)
           .replace("#2", otherTabsCount);
         let selectedTab = undoItem.tabs[undoItem.selected - 1];
-
+        if (!selectedTab) {
+          continue;
+        }
         createEntry(aTagName, true, i, selectedTab, doc, menuLabel, fragment);
       }
 

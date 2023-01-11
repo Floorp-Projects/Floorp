@@ -8,28 +8,32 @@ const CLOSED_URI = "https://www.example.com/";
 add_task(async function test_TODO() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, CLOSED_URI);
 
+  Assert.equal(gBrowser.tabs[0].linkedBrowser.currentURI.filePath, "blank");
+
+  Assert.equal(gBrowser.tabs[1].linkedBrowser.currentURI.spec, CLOSED_URI);
+
+  Assert.ok(gBrowser.selectedTab == tab);
+
   let state = ss.getCurrentState(true);
 
-  is(state.windows[0].selected, 2, "The selected tab is the second tab");
+  // SessionStore uses one-based indexes
+  Assert.equal(state.windows[0].selected, 2);
 
-  window.FirefoxViewHandler.openTab();
-
-  state = ss.getCurrentState(true);
-
-  is(
-    state.windows[0].selected,
-    3,
-    "The selected tab is Firefox view tab which is the third tab"
+  await EventUtils.synthesizeMouseAtCenter(
+    window.document.getElementById("firefox-view-button"),
+    { type: "mousedown" },
+    window
   );
+  Assert.ok(window.FirefoxViewHandler.tab.selected);
 
-  gBrowser.selectedTab = tab;
+  Assert.equal(gBrowser.tabs[2], window.FirefoxViewHandler.tab);
 
   state = ss.getCurrentState(true);
 
-  // The FxView tab doesn't get recorded in the session state and when we restore we want
-  // to open the tab that was previously opened so we record the tab position minus one
-  is(state.windows[0].selected, 1, "The selected tab is the first tab");
+  // The FxView tab doesn't get recorded in the session state, but if it's the last selected tab when a window is closed
+  // we want to point to the first tab in the tab strip upon restore
+  Assert.equal(state.windows[0].selected, 1);
 
   gBrowser.removeTab(window.FirefoxViewHandler.tab);
-  gBrowser.removeTab(gBrowser.selectedTab);
+  gBrowser.removeTab(tab);
 });
