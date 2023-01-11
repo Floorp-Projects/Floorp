@@ -1890,7 +1890,7 @@
 # How long to stay off the event loop in perf mode.
 - name: content.sink.perf_parse_time
   type: int32_t
-  value: 30000
+  value: 360000
   mirror: always
 
 #  How long to be in interactive mode after an event.
