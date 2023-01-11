@@ -1964,7 +1964,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 180000
    * **repository**: https://github.com/camillobruni/Speedometer
    * **repository branch**: 2022-12-08_interactive_runner
-   * **repository revision**: 9d1643f8038c3931c6bb637472e970130ed4e4b6
+   * **repository revision**: 9e2d82c75a66cae636db1888e916276075a137b8
    * **submetric summary method**: median
    * **subtest lower is better**: true
    * **subtest name filters**: tests/,s3/
@@ -2143,9 +2143,9 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
-        - ❌
-        - ❌
-        - ❌
+        - ✅
+        - ✅
+        - ✅
         - ❌
 
 
