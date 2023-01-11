@@ -295,7 +295,11 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
     @Override
     public ColorPrompt newPrompt(final GeckoBundle info, final Observer observer) {
       return new ColorPrompt(
-          info.getString("id"), info.getString("title"), info.getString("value"), observer);
+          info.getString("id"),
+          info.getString("title"),
+          info.getString("value"),
+          info.getStringArray("predefinedValues"),
+          observer);
     }
 
     @Override

@@ -1,3 +1,7 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 package org.mozilla.geckoview.test
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -578,6 +582,7 @@ class PromptDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onColorPrompt(session: GeckoSession, prompt: PromptDelegate.ColorPrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Value should match", "#ffffff", equalTo(prompt.defaultValue))
+                assertThat("Predefined values size", 0, equalTo(prompt.predefinedValues!!.size))
                 return GeckoResult.fromValue(prompt.confirm("#123456"))
             }
         })
@@ -600,6 +605,49 @@ class PromptDelegateTest : BaseSessionTest() {
             """.trimIndent()
         )
 
+        mainSession.evaluateJS("this.c.click();")
+
+        assertThat(
+            "Value should match",
+            promise.value as String,
+            equalTo("#123456")
+        )
+    }
+
+    @Test fun colorTestWithDatalist() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onColorPrompt(session: GeckoSession, prompt: PromptDelegate.ColorPrompt): GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("Value should match", "#ffffff", equalTo(prompt.defaultValue))
+                assertThat("Predefined values size", 2, equalTo(prompt.predefinedValues!!.size))
+                assertThat("First predefined value", "#000000", equalTo(prompt.predefinedValues?.get(0)))
+                assertThat("Second predefined value", "#808080", equalTo(prompt.predefinedValues?.get(1)))
+                return GeckoResult.fromValue(prompt.confirm("#123456"))
+            }
+        })
+
+        mainSession.evaluateJS(
+            """
+            this.c = document.getElementById('colorexample');
+            this.c.setAttribute('list', 'colorlist');
+            """.trimIndent()
+        )
+
+        val promise = mainSession.evaluatePromiseJS(
+            """
+            new Promise((resolve, reject) => {
+                this.c.addEventListener(
+                    'change',
+                    event => resolve(event.target.value),
+                );
+            })
+            """.trimIndent()
+        )
         mainSession.evaluateJS("this.c.click();")
 
         assertThat(

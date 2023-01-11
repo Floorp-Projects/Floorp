@@ -25,6 +25,7 @@ class ColorPickerDelegate {
       type: "color",
       title: aTitle,
       value: aInitialColor,
+      predefinedValues: aDefaultColors,
     };
   }
 
