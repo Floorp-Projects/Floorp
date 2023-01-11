@@ -44,6 +44,7 @@ MOZHARNESS_SCRIPTS = {
             "mochitest-valgrind-plain",
             "reftest-no-accel",
             "reftest-snapshot",
+            "xpcshell-msix",
         ],
     },
 }
