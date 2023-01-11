@@ -82,7 +82,6 @@ add_task(async function test_bookmarks() {
   // test special folders
   Assert.ok(bs.bookmarksMenuFolder > 0);
   Assert.ok(bs.tagsFolder > 0);
-  Assert.ok(bs.toolbarFolder > 0);
 
   // create a folder to hold all the tests
   // this makes the tests more tolerant of changes to default_places.html

@@ -424,21 +424,17 @@ add_task(async function test_onItemUntagged() {
 
     _("Insert tagged bookmarks");
     let uri = CommonUtils.makeURI("http://getfirefox.com");
-    let fx1ID = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      uri,
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!"
-    );
-    let fx1GUID = await PlacesUtils.promiseItemGuid(fx1ID);
+    let fx1 = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: uri,
+      title: "Get Firefox!",
+    });
     // Different parent and title; same URL.
-    let fx2ID = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.toolbarFolder,
-      uri,
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Download Firefox"
-    );
-    let fx2GUID = await PlacesUtils.promiseItemGuid(fx2ID);
+    let fx2 = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: uri,
+      title: "Download Firefox",
+    });
     PlacesUtils.tagging.tagURI(uri, ["foo"]);
 
     await startTracking();
@@ -447,7 +443,7 @@ add_task(async function test_onItemUntagged() {
     let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     PlacesUtils.tagging.untagURI(uri, ["foo"]);
 
-    await verifyTrackedItems([fx1GUID, fx2GUID]);
+    await verifyTrackedItems([fx1.guid, fx2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 4);
     Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 5);
   } finally {

@@ -105,11 +105,6 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute long long tagsFolder;
 
   /**
-   * The item ID of the personal toolbar folder.
-   */
-  readonly attribute long long toolbarFolder;
-
-  /**
    * The total number of Sync changes (inserts, updates, deletes, merges, and
    * uploads) recorded since Places startup for all bookmarks.
    *

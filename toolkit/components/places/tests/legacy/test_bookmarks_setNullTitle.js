@@ -18,7 +18,7 @@ const TEST_URL = "http://www.mozilla.org";
 function run_test() {
   // Insert a bookmark with an empty title.
   var itemId = bs.insertBookmark(
-    bs.toolbarFolder,
+    bs.tagsFolder,
     uri(TEST_URL),
     bs.DEFAULT_INDEX,
     ""
@@ -34,7 +34,7 @@ function run_test() {
 
   // Insert a bookmark with a null title.
   itemId = bs.insertBookmark(
-    bs.toolbarFolder,
+    bs.tagsFolder,
     uri(TEST_URL),
     bs.DEFAULT_INDEX,
     null
