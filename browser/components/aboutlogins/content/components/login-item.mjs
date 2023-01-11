@@ -77,9 +77,6 @@ export default class LoginItem extends HTMLElement {
     );
     this._favicon = this.shadowRoot.querySelector(".login-item-favicon");
     this._title = this.shadowRoot.querySelector(".login-item-title");
-    this._timeCreated = this.shadowRoot.querySelector(".time-created");
-    this._timeChanged = this.shadowRoot.querySelector(".time-changed");
-    this._timeUsed = this.shadowRoot.querySelector(".time-used");
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
     this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
     this._breachAlertDate = this._breachAlert.querySelector(".alert-date");
@@ -195,15 +192,6 @@ export default class LoginItem extends HTMLElement {
     if (onlyUpdateErrorsAndAlerts) {
       return;
     }
-    document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
-      timeCreated: this._login.timeCreated || "",
-    });
-    document.l10n.setAttributes(this._timeChanged, "login-item-time-changed", {
-      timeChanged: this._login.timePasswordChanged || "",
-    });
-    document.l10n.setAttributes(this._timeUsed, "login-item-time-used", {
-      timeUsed: this._login.timeLastUsed || "",
-    });
 
     this._favicon.src = `page-icon:${this._login.origin}`;
     this._title.textContent = this._login.title;
@@ -251,6 +239,35 @@ export default class LoginItem extends HTMLElement {
     );
     this._updatePasswordRevealState();
     this._updateOriginDisplayState();
+    await this.#renderTimeline();
+  }
+
+  async #renderTimeline() {
+    if (!this._login.guid) {
+      return;
+    }
+
+    let [
+      createdAction,
+      updatedAction,
+      usedAction,
+    ] = await document.l10n.formatValues([
+      {
+        id: "login-item-timeline-action-created",
+      },
+      {
+        id: "login-item-timeline-action-updated",
+      },
+      {
+        id: "login-item-timeline-action-used",
+      },
+    ]);
+    let timeline = this.shadowRoot.querySelector("login-timeline");
+    timeline.history = [
+      { action: createdAction, time: this._login.timeCreated },
+      { action: updatedAction, time: this._login.timePasswordChanged },
+      { action: usedAction, time: this._login.timeLastUsed },
+    ];
   }
 
   setBreaches(breachesByLoginGUID) {
