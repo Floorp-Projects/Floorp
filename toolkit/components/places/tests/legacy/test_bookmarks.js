@@ -80,7 +80,6 @@ add_task(async function test_bookmarks() {
   );
 
   // test special folders
-  Assert.ok(bs.placesRoot > 0);
   Assert.ok(bs.bookmarksMenuFolder > 0);
   Assert.ok(bs.tagsFolder > 0);
   Assert.ok(bs.toolbarFolder > 0);

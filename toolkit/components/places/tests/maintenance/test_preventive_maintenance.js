@@ -10,14 +10,6 @@
  * correct fix steps, without polluting valid data.
  */
 
-// Get services and database connection
-var hs = PlacesUtils.history;
-var bs = PlacesUtils.bookmarks;
-var ts = PlacesUtils.tagging;
-var fs = PlacesUtils.favicons;
-
-var mDBConn = hs.DBConnection;
-var gUnfiledFolderId;
 // ------------------------------------------------------------------------------
 // Helpers
 
@@ -26,32 +18,40 @@ async function cleanDatabase() {
   // First clear any bookmarks the "proper way" to ensure caches like GuidHelper
   // are properly cleared.
   await PlacesUtils.bookmarks.eraseEverything();
-  mDBConn.executeSimpleSQL("DELETE FROM moz_places");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_origins");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_historyvisits");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_anno_attributes");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_annos");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_items_annos");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_inputhistory");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_keywords");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_icons");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_pages_w_icons");
-  mDBConn.executeSimpleSQL(
-    "DELETE FROM moz_bookmarks WHERE id > " + defaultBookmarksMaxId
-  );
-  mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks_deleted");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_places_metadata_search_queries");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_places_metadata_snapshots");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_places_metadata_snapshots_extra");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_places_metadata_snapshots_groups");
-  mDBConn.executeSimpleSQL(
-    "DELETE FROM moz_places_metadata_groups_to_snapshots"
-  );
-  mDBConn.executeSimpleSQL("DELETE FROM moz_session_metadata");
-  mDBConn.executeSimpleSQL("DELETE FROM moz_session_to_places");
+  await PlacesUtils.withConnectionWrapper("cleanDatabase", async db => {
+    await db.executeTransaction(async () => {
+      await db.executeCached("DELETE FROM moz_places");
+      await db.executeCached("DELETE FROM moz_origins");
+      await db.executeCached("DELETE FROM moz_historyvisits");
+      await db.executeCached("DELETE FROM moz_anno_attributes");
+      await db.executeCached("DELETE FROM moz_annos");
+      await db.executeCached("DELETE FROM moz_items_annos");
+      await db.executeCached("DELETE FROM moz_inputhistory");
+      await db.executeCached("DELETE FROM moz_keywords");
+      await db.executeCached("DELETE FROM moz_icons");
+      await db.executeCached("DELETE FROM moz_pages_w_icons");
+      await db.executeCached(
+        "DELETE FROM moz_bookmarks WHERE id > " + defaultBookmarksMaxId
+      );
+      await db.executeCached("DELETE FROM moz_bookmarks_deleted");
+      await db.executeCached("DELETE FROM moz_places_metadata_search_queries");
+      await db.executeCached("DELETE FROM moz_places_metadata_snapshots");
+      await db.executeCached("DELETE FROM moz_places_metadata_snapshots_extra");
+      await db.executeCached(
+        "DELETE FROM moz_places_metadata_snapshots_groups"
+      );
+      await db.executeCached(
+        "DELETE FROM moz_places_metadata_groups_to_snapshots"
+      );
+      await db.executeCached("DELETE FROM moz_session_metadata");
+      await db.executeCached("DELETE FROM moz_session_to_places");
+    });
+  });
+  // Since we're doing raw deletes, we must invalidate the guids cache.
+  await PlacesUtils.invalidateCachedGuids();
 }
 
-function addPlace(
+async function addPlace(
   aUrl,
   aFavicon,
   aGuid = PlacesUtils.history.makeGuid(),
@@ -60,68 +60,82 @@ function addPlace(
   let href = new URL(
     aUrl || `http://www.mozilla.org/${encodeURIComponent(aGuid)}`
   ).href;
-  let stmt = mDBConn.createStatement(
-    "INSERT INTO moz_places (url, url_hash, guid) VALUES (:url, IFNULL(:hash, hash(:url)), :guid)"
-  );
-  stmt.params.url = href;
-  stmt.params.hash = aHash;
-  stmt.params.guid = aGuid;
-  stmt.execute();
-  stmt.finalize();
-  stmt = mDBConn.createStatement("DELETE FROM moz_updateoriginsinsert_temp");
-  stmt.execute();
-  stmt.finalize();
-  let id = mDBConn.lastInsertRowID;
-  if (aFavicon) {
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_pages_w_icons (page_url, page_url_hash) VALUES (:url, IFNULL(:hash, hash(:url)))"
-    );
-    stmt.params.url = href;
-    stmt.params.hash = aHash;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_icons_to_pages (page_id, icon_id) " +
-        "VALUES ((SELECT id FROM moz_pages_w_icons WHERE page_url_hash = IFNULL(:hash, hash(:url))), :favicon)"
-    );
-    stmt.params.url = href;
-    stmt.params.hash = aHash;
-    stmt.params.favicon = aFavicon;
-    stmt.execute();
-    stmt.finalize();
-  }
+  let id;
+  await PlacesUtils.withConnectionWrapper("cleanDatabase", async db => {
+    await db.executeTransaction(async () => {
+      id = (
+        await db.executeCached(
+          `INSERT INTO moz_places (url, url_hash, guid)
+           VALUES (:url, IFNULL(:hash, hash(:url)), :guid)
+           RETURNING id`,
+          {
+            url: href,
+            hash: aHash,
+            guid: aGuid,
+          }
+        )
+      )[0].getResultByIndex(0);
+      await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
+
+      if (aFavicon) {
+        await db.executeCached(
+          `INSERT INTO moz_pages_w_icons (page_url, page_url_hash)
+           VALUES (:url, IFNULL(:hash, hash(:url)))`,
+          {
+            url: href,
+            hash: aHash,
+          }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_icons_to_pages (page_id, icon_id)
+           VALUES (
+            (SELECT id FROM moz_pages_w_icons WHERE page_url_hash = IFNULL(:hash, hash(:url))),
+            :favicon
+           )`,
+          {
+            url: href,
+            hash: aHash,
+            favicon: aFavicon,
+          }
+        );
+      }
+    });
+  });
   return id;
 }
 
-function addBookmark(
+async function addBookmark(
   aPlaceId,
   aType,
-  aParent,
+  aParentGuid = PlacesUtils.bookmarks.unfiledGuid,
   aKeywordId,
-  aFolderType,
   aTitle,
   aGuid = PlacesUtils.history.makeGuid(),
   aSyncStatus = PlacesUtils.bookmarks.SYNC_STATUS.NEW,
   aSyncChangeCounter = 0
 ) {
-  let stmt = mDBConn.createStatement(
-    `INSERT INTO moz_bookmarks (fk, type, parent, keyword_id, folder_type,
-                                title, guid, syncStatus, syncChangeCounter)
-     VALUES (:place_id, :type, :parent, :keyword_id, :folder_type, :title,
-             :guid, :sync_status, :change_counter)`
-  );
-  stmt.params.place_id = aPlaceId || null;
-  stmt.params.type = aType || null;
-  stmt.params.parent = aParent || gUnfiledFolderId;
-  stmt.params.keyword_id = aKeywordId || null;
-  stmt.params.folder_type = aFolderType || null;
-  stmt.params.title = typeof aTitle == "string" ? aTitle : null;
-  stmt.params.guid = aGuid;
-  stmt.params.sync_status = aSyncStatus;
-  stmt.params.change_counter = aSyncChangeCounter;
-  stmt.execute();
-  stmt.finalize();
-  return mDBConn.lastInsertRowID;
+  return PlacesUtils.withConnectionWrapper("addBookmark", async db => {
+    return (
+      await db.executeCached(
+        `INSERT INTO moz_bookmarks (fk, type, parent, keyword_id,
+                                  title, guid, syncStatus, syncChangeCounter)
+         VALUES (:place_id, :type,
+                 (SELECT id FROM moz_bookmarks WHERE guid = :parent), :keyword_id,
+                  :title, :guid, :sync_status, :change_counter)
+         RETURNING id`,
+        {
+          place_id: aPlaceId || null,
+          type: aType || null,
+          parent: aParentGuid,
+          keyword_id: aKeywordId || null,
+          title: typeof aTitle == "string" ? aTitle : null,
+          guid: aGuid,
+          sync_status: aSyncStatus,
+          change_counter: aSyncChangeCounter,
+        }
+      )
+    )[0].getResultByIndex(0);
+  });
 }
 
 // ------------------------------------------------------------------------------
@@ -138,36 +152,39 @@ tests.push({
   _obsoleteWeaveAttribute: "weave/test",
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid.
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Add an obsolete attribute.
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
-    );
-    stmt.params.anno = this._obsoleteWeaveAttribute;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      `INSERT INTO moz_annos (place_id, anno_attribute_id)
-       VALUES (:place_id,
-         (SELECT id FROM moz_anno_attributes WHERE name = :anno)
-       )`
-    );
-    stmt.params.place_id = this._placeId;
-    stmt.params.anno = this._obsoleteWeaveAttribute;
-    stmt.execute();
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        db.executeCached(
+          "INSERT INTO moz_anno_attributes (name) VALUES (:anno)",
+          { anno: this._obsoleteWeaveAttribute }
+        );
+
+        db.executeCached(
+          `INSERT INTO moz_annos (place_id, anno_attribute_id)
+           VALUES (:place_id,
+             (SELECT id FROM moz_anno_attributes WHERE name = :anno)
+           )`,
+          {
+            place_id: this._placeId,
+            anno: this._obsoleteWeaveAttribute,
+          }
+        );
+      });
+    });
   },
 
-  check() {
+  async check() {
     // Check that the obsolete annotation has been removed.
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno"
-    );
-    stmt.params.anno = this._obsoleteWeaveAttribute;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("check", async db => {
+      db.executeCached(
+        "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+        { anno: this._obsoleteWeaveAttribute }
+      );
+    });
   },
 });
 
@@ -181,46 +198,55 @@ tests.push({
   _placeId: null,
   _bookmarkId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid.
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Add a bookmark.
-    this._bookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK);
-    // Add an obsolete attribute.
-    let stmt = mDBConn.createStatement(
-      `INSERT INTO moz_anno_attributes (name)
-       VALUES (:anno1), (:anno2), (:anno3)`
+    this._bookmarkId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
     );
-    stmt.params.anno1 = this._obsoleteSyncAttribute;
-    stmt.params.anno2 = this._obsoleteGuidAttribute;
-    stmt.params.anno3 = this._obsoleteWeaveAttribute;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
-       SELECT :item_id, id
-       FROM moz_anno_attributes
-       WHERE name IN (:anno1, :anno2, :anno3)`
-    );
-    stmt.params.item_id = this._bookmarkId;
-    stmt.params.anno1 = this._obsoleteSyncAttribute;
-    stmt.params.anno2 = this._obsoleteGuidAttribute;
-    stmt.params.anno3 = this._obsoleteWeaveAttribute;
-    stmt.execute();
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        // Add an obsolete attribute.
+        await db.executeCached(
+          `INSERT INTO moz_anno_attributes (name)
+           VALUES (:anno1), (:anno2), (:anno3)`,
+          {
+            anno1: this._obsoleteSyncAttribute,
+            anno2: this._obsoleteGuidAttribute,
+            anno3: this._obsoleteWeaveAttribute,
+          }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
+           SELECT :item_id, id
+           FROM moz_anno_attributes
+           WHERE name IN (:anno1, :anno2, :anno3)`,
+          {
+            item_id: this._bookmarkId,
+            anno1: this._obsoleteSyncAttribute,
+            anno2: this._obsoleteGuidAttribute,
+            anno3: this._obsoleteWeaveAttribute,
+          }
+        );
+      });
+    });
   },
 
-  check() {
+  async check() {
     // Check that the obsolete annotations have been removed.
-    let stmt = mDBConn.createStatement(
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
       `SELECT id FROM moz_anno_attributes
-       WHERE name IN (:anno1, :anno2, :anno3)`
+       WHERE name IN (:anno1, :anno2, :anno3)`,
+      {
+        anno1: this._obsoleteSyncAttribute,
+        anno2: this._obsoleteGuidAttribute,
+        anno3: this._obsoleteWeaveAttribute,
+      }
     );
-    stmt.params.anno1 = this._obsoleteSyncAttribute;
-    stmt.params.anno2 = this._obsoleteGuidAttribute;
-    stmt.params.anno3 = this._obsoleteWeaveAttribute;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -234,56 +260,71 @@ tests.push({
   _placeId: null,
   _bookmarkId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // add a bookmark
-    this._bookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK);
-    // Add a used attribute and an unused one.
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
+    this._bookmarkId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
     );
-    stmt.params.anno = this._usedPageAttribute;
-    stmt.execute();
-    stmt.reset();
-    stmt.params.anno = this._usedItemAttribute;
-    stmt.execute();
-    stmt.reset();
-    stmt.params.anno = this._unusedAttribute;
-    stmt.execute();
-    stmt.finalize();
-
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))"
-    );
-    stmt.params.place_id = this._placeId;
-    stmt.params.anno = this._usedPageAttribute;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))"
-    );
-    stmt.params.item_id = this._bookmarkId;
-    stmt.params.anno = this._usedItemAttribute;
-    stmt.execute();
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        // Add a used attribute and an unused one.
+        await db.executeCached(
+          `INSERT INTO moz_anno_attributes (name)
+           VALUES (:anno1), (:anno2), (:anno3)`,
+          {
+            anno1: this._usedPageAttribute,
+            anno2: this._usedItemAttribute,
+            anno3: this._unusedAttribute,
+          }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_annos (place_id, anno_attribute_id)
+           VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          {
+            place_id: this._placeId,
+            anno: this._usedPageAttribute,
+          }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
+           VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          {
+            item_id: this._bookmarkId,
+            anno: this._usedItemAttribute,
+          }
+        );
+      });
+    });
   },
 
-  check() {
+  async check() {
     // Check that used attributes are still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno"
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+      {
+        anno: this._usedPageAttribute,
+      }
     );
-    stmt.params.anno = this._usedPageAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
-    stmt.params.anno = this._usedItemAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
+    Assert.equal(rows.length, 1);
+    rows = await db.executeCached(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+      {
+        anno: this._usedItemAttribute,
+      }
+    );
+    Assert.equal(rows.length, 1);
     // Check that unused attribute has been removed
-    stmt.params.anno = this._unusedAttribute;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    rows = await db.executeCached(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+      {
+        anno: this._unusedAttribute,
+      }
+    );
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -296,53 +337,54 @@ tests.push({
   _usedPageAttribute: "usedPage",
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
-    // Add a used attribute.
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
-    );
-    stmt.params.anno = this._usedPageAttribute;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))"
-    );
-    stmt.params.place_id = this._placeId;
-    stmt.params.anno = this._usedPageAttribute;
-    stmt.execute();
-    stmt.finalize();
-    // Add an annotation with a nonexistent attribute
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, 1337)"
-    );
-    stmt.params.place_id = this._placeId;
-    stmt.execute();
-    stmt.finalize();
+    this._placeId = await addPlace();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        // Add a used attribute.
+        await db.executeCached(
+          "INSERT INTO moz_anno_attributes (name) VALUES (:anno)",
+          { anno: this._usedPageAttribute }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_annos (place_id, anno_attribute_id)
+           VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          {
+            place_id: this._placeId,
+            anno: this._usedPageAttribute,
+          }
+        );
+        // Add an annotation with a nonexistent attribute
+        await db.executeCached(
+          `INSERT INTO moz_annos (place_id, anno_attribute_id)
+           VALUES(:place_id, 1337)`,
+          { place_id: this._placeId }
+        );
+      });
+    });
   },
 
-  check() {
+  async check() {
     // Check that used attribute is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno"
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+      { anno: this._usedPageAttribute }
     );
-    stmt.params.anno = this._usedPageAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // check that annotation with valid attribute is still there
-    stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)"
+    rows = await db.executeCached(
+      `SELECT id FROM moz_annos
+       WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)`,
+      { anno: this._usedPageAttribute }
     );
-    stmt.params.anno = this._usedPageAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // Check that annotation with bogus attribute has been removed
-    stmt = mDBConn.createStatement(
+    rows = await db.executeCached(
       "SELECT id FROM moz_annos WHERE anno_attribute_id = 1337"
     );
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -355,51 +397,51 @@ tests.push({
   _usedPageAttribute: "usedPage",
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
-    // Add a used attribute.
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
-    );
-    stmt.params.anno = this._usedPageAttribute;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))"
-    );
-    stmt.params.place_id = this._placeId;
-    stmt.params.anno = this._usedPageAttribute;
-    stmt.execute();
-    stmt.reset();
-    // Add an annotation to a nonexistent page
-    stmt.params.place_id = 1337;
-    stmt.params.anno = this._usedPageAttribute;
-    stmt.execute();
-    stmt.finalize();
+    this._placeId = await addPlace();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        // Add a used attribute.
+        await db.executeCached(
+          "INSERT INTO moz_anno_attributes (name) VALUES (:anno)",
+          { anno: this._usedPageAttribute }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_annos (place_id, anno_attribute_id)
+           VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          { place_id: this._placeId, anno: this._usedPageAttribute }
+        );
+        // Add an annotation to a nonexistent page
+        await db.executeCached(
+          `INSERT INTO moz_annos (place_id, anno_attribute_id)
+          VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          { place_id: 1337, anno: this._usedPageAttribute }
+        );
+      });
+    });
   },
 
-  check() {
+  async check() {
     // Check that used attribute is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno"
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+      { anno: this._usedPageAttribute }
     );
-    stmt.params.anno = this._usedPageAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // check that annotation with valid attribute is still there
-    stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)"
+    rows = await db.executeCached(
+      `SELECT id FROM moz_annos
+       WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)`,
+      { anno: this._usedPageAttribute }
     );
-    stmt.params.anno = this._usedPageAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // Check that an annotation to a nonexistent page has been removed
-    stmt = mDBConn.createStatement(
+    rows = await db.executeCached(
       "SELECT id FROM moz_annos WHERE place_id = 1337"
     );
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -417,20 +459,25 @@ tests.push({
   _changeCounterStmt: null,
   _menuChangeCounter: -1,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this.placeId = addPlace();
+    this.placeId = await addPlace();
     // Insert a valid bookmark
-    this._validItemId = addBookmark(this.placeId, bs.TYPE_BOOKMARK);
+    this._validItemId = await addBookmark(
+      this.placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
+    );
     // Insert a bookmark with an invalid place
-    this._invalidItemId = addBookmark(1337, bs.TYPE_BOOKMARK);
+    this._invalidItemId = await addBookmark(
+      1337,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
+    );
     // Insert a synced bookmark with an invalid place. We should write a
     // tombstone when we remove it.
-    this._invalidSyncedItemId = addBookmark(
+    this._invalidSyncedItemId = await addBookmark(
       1337,
-      bs.TYPE_BOOKMARK,
-      bs.bookmarksMenuFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      PlacesUtils.bookmarks.menuGuid,
       null,
       null,
       "bookmarkAAAA",
@@ -438,43 +485,47 @@ tests.push({
     );
     // Insert a folder referencing a nonexistent place ID. D.5 should convert
     // it to a bookmark; D.9 should remove it.
-    this._invalidWrongTypeItemId = addBookmark(1337, bs.TYPE_FOLDER);
+    this._invalidWrongTypeItemId = await addBookmark(
+      1337,
+      PlacesUtils.bookmarks.TYPE_FOLDER
+    );
 
-    this._changeCounterStmt = mDBConn.createStatement(`
-      SELECT syncChangeCounter FROM moz_bookmarks WHERE id = :id`);
-    this._changeCounterStmt.params.id = bs.bookmarksMenuFolder;
-    Assert.ok(this._changeCounterStmt.executeStep());
-    this._menuChangeCounter = this._changeCounterStmt.row.syncChangeCounter;
-    this._changeCounterStmt.reset();
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
+      `SELECT syncChangeCounter FROM moz_bookmarks WHERE guid = :guid`,
+      { guid: PlacesUtils.bookmarks.menuGuid }
+    );
+    Assert.equal(rows.length, 1);
+    this._menuChangeCounter = rows[0].getResultByIndex(0);
   },
 
   async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that valid bookmark is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_bookmarks WHERE id = :item_id"
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_bookmarks WHERE id = :item_id",
+      { item_id: this._validItemId }
     );
-    stmt.params.item_id = this._validItemId;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
+    Assert.equal(rows.length, 1);
     // Check that invalid bookmarks have been removed
     for (let id of [
       this._invalidItemId,
       this._invalidSyncedItemId,
       this._invalidWrongTypeItemId,
     ]) {
-      stmt.params.item_id = id;
-      Assert.ok(!stmt.executeStep());
-      stmt.reset();
+      rows = await db.executeCached(
+        "SELECT id FROM moz_bookmarks WHERE id = :item_id",
+        { item_id: id }
+      );
+      Assert.equal(rows.length, 0);
     }
-    stmt.finalize();
 
-    this._changeCounterStmt.params.id = bs.bookmarksMenuFolder;
-    Assert.ok(this._changeCounterStmt.executeStep());
-    Assert.equal(
-      this._changeCounterStmt.row.syncChangeCounter,
-      this._menuChangeCounter + 1
+    rows = await db.executeCached(
+      `SELECT syncChangeCounter FROM moz_bookmarks WHERE guid = :guid`,
+      { guid: PlacesUtils.bookmarks.menuGuid }
     );
-    this._changeCounterStmt.finalize();
+    Assert.equal(rows.length, 1);
+    Assert.equal(rows[0].getResultByIndex(0), this._menuChangeCounter + 1);
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     Assert.deepEqual(
@@ -496,42 +547,55 @@ tests.push({
   _folderId: null,
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Create a tag
-    this._tagId = addBookmark(null, bs.TYPE_FOLDER, bs.tagsFolder);
+    this._tagId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.tagsGuid
+    );
+    let tagGuid = await PlacesUtils.promiseItemGuid(this._tagId);
     // Insert a bookmark in the tag
-    this._bookmarkId = addBookmark(
+    this._bookmarkId = await addBookmark(
       this._placeId,
-      bs.TYPE_BOOKMARK,
-      this._tagId
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      tagGuid
     );
     // Insert a separator in the tag
-    this._separatorId = addBookmark(null, bs.TYPE_SEPARATOR, this._tagId);
+    this._separatorId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_SEPARATOR,
+      tagGuid
+    );
     // Insert a folder in the tag
-    this._folderId = addBookmark(null, bs.TYPE_FOLDER, this._tagId);
+    this._folderId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      tagGuid
+    );
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that valid bookmark is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_bookmarks WHERE type = :type AND parent = :parent"
+    let rows = await db.executeCached(
+      `SELECT id FROM moz_bookmarks WHERE type = :type AND parent = :parent`,
+      { type: PlacesUtils.bookmarks.TYPE_BOOKMARK, parent: this._tagId }
     );
-    stmt.params.type = bs.TYPE_BOOKMARK;
-    stmt.params.parent = this._tagId;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
+    Assert.equal(rows.length, 1);
     // Check that separator is no more there
-    stmt.params.type = bs.TYPE_SEPARATOR;
-    stmt.params.parent = this._tagId;
-    Assert.ok(!stmt.executeStep());
-    stmt.reset();
+    rows = await db.executeCached(
+      `SELECT id FROM moz_bookmarks WHERE type = :type AND parent = :parent`,
+      { type: PlacesUtils.bookmarks.TYPE_SEPARATOR, parent: this._tagId }
+    );
     // Check that folder is no more there
-    stmt.params.type = bs.TYPE_FOLDER;
-    stmt.params.parent = this._tagId;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    rows = await db.executeCached(
+      `SELECT id FROM moz_bookmarks WHERE type = :type AND parent = :parent`,
+      { type: PlacesUtils.bookmarks.TYPE_FOLDER, parent: this._tagId }
+    );
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -546,41 +610,65 @@ tests.push({
   _emptyTagId: null,
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Create a tag
-    this._tagId = addBookmark(null, bs.TYPE_FOLDER, bs.tagsFolder);
+    this._tagId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.tagsGuid
+    );
+    let tagGuid = await PlacesUtils.promiseItemGuid(this._tagId);
     // Insert a bookmark in the tag
-    this._bookmarkId = addBookmark(
+    this._bookmarkId = await addBookmark(
       this._placeId,
-      bs.TYPE_BOOKMARK,
-      this._tagId
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      tagGuid
     );
     // Create another tag (empty)
-    this._emptyTagId = addBookmark(null, bs.TYPE_FOLDER, bs.tagsFolder);
+    this._emptyTagId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.tagsGuid
+    );
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that valid bookmark is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_bookmarks WHERE id = :id AND type = :type AND parent = :parent"
+    let rows = await db.executeCached(
+      `SELECT id FROM moz_bookmarks
+       WHERE id = :id AND type = :type AND parent = :parent`,
+      {
+        id: this._bookmarkId,
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        parent: this._tagId,
+      }
     );
-    stmt.params.id = this._bookmarkId;
-    stmt.params.type = bs.TYPE_BOOKMARK;
-    stmt.params.parent = this._tagId;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
-    stmt.params.id = this._tagId;
-    stmt.params.type = bs.TYPE_FOLDER;
-    stmt.params.parent = bs.tagsFolder;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
-    stmt.params.id = this._emptyTagId;
-    stmt.params.type = bs.TYPE_FOLDER;
-    stmt.params.parent = bs.tagsFolder;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
+    rows = await db.executeCached(
+      `SELECT b.id FROM moz_bookmarks b
+       JOIN moz_bookmarks p ON p.id = b.parent
+       WHERE b.id = :id AND b.type = :type AND p.guid = :parent`,
+      {
+        id: this._tagId,
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        parent: PlacesUtils.bookmarks.tagsGuid,
+      }
+    );
+    Assert.equal(rows.length, 1);
+    rows = await db.executeCached(
+      `SELECT b.id FROM moz_bookmarks b
+       JOIN moz_bookmarks p ON p.id = b.parent
+       WHERE b.id = :id AND b.type = :type AND p.guid = :parent`,
+      {
+        id: this._emptyTagId,
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        parent: PlacesUtils.bookmarks.tagsGuid,
+      }
+    );
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -598,18 +686,31 @@ tests.push({
 
   async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Insert an orphan bookmark
-    this._orphanBookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK, 8888);
-    // Insert an orphan separator
-    this._orphanSeparatorId = addBookmark(null, bs.TYPE_SEPARATOR, 8888);
-    // Insert a orphan folder
-    this._orphanFolderId = addBookmark(null, bs.TYPE_FOLDER, 8888);
-    // Create a child of the last created folder
-    this._bookmarkId = addBookmark(
+    this._orphanBookmarkId = await addBookmark(
       this._placeId,
-      bs.TYPE_BOOKMARK,
-      this._orphanFolderId
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      8888
+    );
+    // Insert an orphan separator
+    this._orphanSeparatorId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_SEPARATOR,
+      8888
+    );
+    // Insert a orphan folder
+    this._orphanFolderId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      8888
+    );
+    let folderGuid = await PlacesUtils.promiseItemGuid(this._orphanFolderId);
+    // Create a child of the last created folder
+    this._bookmarkId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      folderGuid
     );
   },
 
@@ -618,27 +719,27 @@ tests.push({
     let expectedInfos = [
       {
         id: this._orphanBookmarkId,
-        parent: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         syncChangeCounter: 1,
       },
       {
         id: this._orphanSeparatorId,
-        parent: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         syncChangeCounter: 1,
       },
       {
         id: this._orphanFolderId,
-        parent: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         syncChangeCounter: 1,
       },
       {
         id: this._bookmarkId,
-        parent: this._orphanFolderId,
+        parent: await PlacesUtils.promiseItemGuid(this._orphanFolderId),
         syncChangeCounter: 0,
       },
       {
-        id: gUnfiledFolderId,
-        parent: bs.placesRoot,
+        id: await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid),
+        parent: PlacesUtils.bookmarks.rootGuid,
         syncChangeCounter: 3,
       },
     ];
@@ -646,9 +747,11 @@ tests.push({
     for (let { id, parent, syncChangeCounter } of expectedInfos) {
       let rows = await db.executeCached(
         `
-        SELECT id, syncChangeCounter
-        FROM moz_bookmarks
-        WHERE id = :item_id AND parent = :parent`,
+        SELECT b.id, b.syncChangeCounter
+        FROM moz_bookmarks b
+        JOIN moz_bookmarks p ON b.parent = p.id
+        WHERE b.id = :item_id
+          AND p.guid = :parent`,
         { item_id: id, parent }
       );
       Assert.equal(rows.length, 1);
@@ -675,19 +778,24 @@ tests.push({
 
   async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Add a separator with a fk
-    this._separatorId = addBookmark(this._placeId, bs.TYPE_SEPARATOR);
+    this._separatorId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_SEPARATOR
+    );
     this._separatorGuid = await PlacesUtils.promiseItemGuid(this._separatorId);
     // Add a folder with a fk
-    this._folderId = addBookmark(this._placeId, bs.TYPE_FOLDER);
+    this._folderId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_FOLDER
+    );
     this._folderGuid = await PlacesUtils.promiseItemGuid(this._folderId);
     // Add a synced folder with a fk
-    this._syncedFolderId = addBookmark(
+    this._syncedFolderId = await addBookmark(
       this._placeId,
-      bs.TYPE_FOLDER,
-      bs.toolbarFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.toolbarGuid,
       null,
       null,
       "itemAAAAAAAA",
@@ -699,16 +807,15 @@ tests.push({
   },
 
   async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that items with an fk have been converted to bookmarks
-    let stmt = mDBConn.createStatement(
+    let rows = await db.executeCached(
       `SELECT id, guid, syncChangeCounter
        FROM moz_bookmarks
-       WHERE id = :item_id AND type = :type`
+       WHERE id = :item_id AND type = :type`,
+      { item_id: this._separatorId, type: PlacesUtils.bookmarks.TYPE_BOOKMARK }
     );
-    stmt.params.item_id = this._separatorId;
-    stmt.params.type = bs.TYPE_BOOKMARK;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
+    Assert.equal(rows.length, 1);
     let expected = [
       {
         id: this._folderId,
@@ -720,18 +827,20 @@ tests.push({
       },
     ];
     for (let { id, oldGuid } of expected) {
-      stmt.params.item_id = id;
-      stmt.params.type = bs.TYPE_BOOKMARK;
-      Assert.ok(stmt.executeStep());
-      Assert.notEqual(stmt.row.guid, oldGuid);
-      Assert.equal(stmt.row.syncChangeCounter, 1);
+      rows = await db.executeCached(
+        `SELECT id, guid, syncChangeCounter
+         FROM moz_bookmarks
+         WHERE id = :item_id AND type = :type`,
+        { item_id: id, type: PlacesUtils.bookmarks.TYPE_BOOKMARK }
+      );
+      Assert.equal(rows.length, 1);
+      Assert.notEqual(rows[0].getResultByName("guid"), oldGuid);
+      Assert.equal(rows[0].getResultByName("syncChangeCounter"), 1);
       await Assert.rejects(
         PlacesUtils.promiseItemId(oldGuid),
         /no item found for the given GUID/
       );
-      stmt.reset();
     }
-    stmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     Assert.deepEqual(
@@ -757,23 +866,28 @@ tests.push({
 
   async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Add a bookmark with a valid place id
-    this._validBookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK);
+    this._validBookmarkId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
+    );
     this._validBookmarkGuid = await PlacesUtils.promiseItemGuid(
       this._validBookmarkId
     );
     // Add a bookmark with a null place id
-    this._invalidBookmarkId = addBookmark(null, bs.TYPE_BOOKMARK);
+    this._invalidBookmarkId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
+    );
     this._invalidBookmarkGuid = await PlacesUtils.promiseItemGuid(
       this._invalidBookmarkId
     );
     // Add a synced bookmark with a null place id
-    this._invalidSyncedBookmarkId = addBookmark(
+    this._invalidSyncedBookmarkId = await addBookmark(
       null,
-      bs.TYPE_BOOKMARK,
-      bs.toolbarFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      PlacesUtils.bookmarks.toolbarGuid,
       null,
       null,
       "bookmarkAAAA",
@@ -785,20 +899,23 @@ tests.push({
   },
 
   async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check valid bookmark
-    let stmt = mDBConn.createStatement(`
-      SELECT id, guid, syncChangeCounter
-      FROM moz_bookmarks
-      WHERE id = :item_id AND type = :type`);
-    stmt.params.item_id = this._validBookmarkId;
-    stmt.params.type = bs.TYPE_BOOKMARK;
-    Assert.ok(stmt.executeStep());
-    Assert.equal(stmt.row.syncChangeCounter, 0);
+    let rows = await db.executeCached(
+      `SELECT id, guid, syncChangeCounter
+       FROM moz_bookmarks
+       WHERE id = :item_id AND type = :type`,
+      {
+        item_id: this._validBookmarkId,
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      }
+    );
+    Assert.equal(rows.length, 1);
+    Assert.equal(rows[0].getResultByName("syncChangeCounter"), 0);
     Assert.equal(
       await PlacesUtils.promiseItemId(this._validBookmarkGuid),
       this._validBookmarkId
     );
-    stmt.reset();
 
     // Check invalid bookmarks have been converted to folders
     let expected = [
@@ -812,18 +929,20 @@ tests.push({
       },
     ];
     for (let { id, oldGuid } of expected) {
-      stmt.params.item_id = id;
-      stmt.params.type = bs.TYPE_FOLDER;
-      Assert.ok(stmt.executeStep());
-      Assert.notEqual(stmt.row.guid, oldGuid);
-      Assert.equal(stmt.row.syncChangeCounter, 1);
+      rows = await db.executeCached(
+        `SELECT id, guid, syncChangeCounter
+         FROM moz_bookmarks
+         WHERE id = :item_id AND type = :type`,
+        { item_id: id, type: PlacesUtils.bookmarks.TYPE_FOLDER }
+      );
+      Assert.equal(rows.length, 1);
+      Assert.notEqual(rows[0].getResultByName("guid"), oldGuid);
+      Assert.equal(rows[0].getResultByName("syncChangeCounter"), 1);
       await Assert.rejects(
         PlacesUtils.promiseItemId(oldGuid),
         /no item found for the given GUID/
       );
-      stmt.reset();
     }
-    stmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     Assert.deepEqual(
@@ -853,14 +972,13 @@ tests.push({
     // Item without a type but with a place ID; should be converted to a
     // bookmark. The synced bookmark should be handled the same way, but with
     // a tombstone.
-    this._placeId = addPlace();
-    this._bookmarkId = addBookmark(this._placeId);
+    this._placeId = await addPlace();
+    this._bookmarkId = await addBookmark(this._placeId);
     this._bookmarkGuid = await PlacesUtils.promiseItemGuid(this._bookmarkId);
-    this._syncedBookmarkId = addBookmark(
+    this._syncedBookmarkId = await addBookmark(
       this._placeId,
       null,
-      bs.toolbarFolder,
-      null,
+      PlacesUtils.bookmarks.toolbarGuid,
       null,
       null,
       "bookmarkAAAA",
@@ -872,13 +990,12 @@ tests.push({
 
     // Item without a type and without a place ID; should be converted to a
     // folder.
-    this._folderId = addBookmark();
+    this._folderId = await addBookmark();
     this._folderGuid = await PlacesUtils.promiseItemGuid(this._folderId);
-    this._syncedFolderId = addBookmark(
+    this._syncedFolderId = await addBookmark(
       null,
       null,
-      bs.toolbarFolder,
-      null,
+      PlacesUtils.bookmarks.toolbarGuid,
       null,
       null,
       "folderBBBBBB",
@@ -890,49 +1007,52 @@ tests.push({
   },
 
   async check() {
-    let stmt = mDBConn.createStatement(`
-      SELECT id, guid, type, syncChangeCounter
-      FROM moz_bookmarks
-      WHERE id = :item_id`);
+    let db = await PlacesUtils.promiseDBConnection();
     let expected = [
       {
         id: this._bookmarkId,
         oldGuid: this._bookmarkGuid,
-        type: bs.TYPE_BOOKMARK,
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         syncChangeCounter: 1,
       },
       {
         id: this._syncedBookmarkId,
         oldGuid: this._syncedBookmarkGuid,
-        type: bs.TYPE_BOOKMARK,
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         syncChangeCounter: 1,
       },
       {
         id: this._folderId,
         oldGuid: this._folderGuid,
-        type: bs.TYPE_FOLDER,
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
         syncChangeCounter: 1,
       },
       {
         id: this._syncedFolderId,
         oldGuid: this._syncedFolderGuid,
-        type: bs.TYPE_FOLDER,
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
         syncChangeCounter: 1,
       },
     ];
     for (let { id, oldGuid, type, syncChangeCounter } of expected) {
-      stmt.params.item_id = id;
-      Assert.ok(stmt.executeStep());
-      Assert.equal(stmt.row.type, type);
-      Assert.equal(stmt.row.syncChangeCounter, syncChangeCounter);
-      Assert.notEqual(stmt.row.guid, oldGuid);
+      let rows = await db.executeCached(
+        `SELECT id, guid, type, syncChangeCounter
+         FROM moz_bookmarks
+         WHERE id = :item_id`,
+        { item_id: id }
+      );
+      Assert.equal(rows.length, 1);
+      Assert.equal(rows[0].getResultByName("type"), type);
+      Assert.equal(
+        rows[0].getResultByName("syncChangeCounter"),
+        syncChangeCounter
+      );
+      Assert.notEqual(rows[0].getResultByName("guid"), oldGuid);
       await Assert.rejects(
         PlacesUtils.promiseItemId(oldGuid),
         /no item found for the given GUID/
       );
-      stmt.reset();
     }
-    stmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     Assert.deepEqual(
@@ -956,21 +1076,29 @@ tests.push({
 
   async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Insert a bookmark
-    this._bookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK);
-    // Insert a separator
-    this._separatorId = addBookmark(null, bs.TYPE_SEPARATOR);
-    // Create 3 children of these items
-    this._bookmarkId1 = addBookmark(
+    this._bookmarkId = await addBookmark(
       this._placeId,
-      bs.TYPE_BOOKMARK,
-      this._bookmarkId
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
     );
-    this._bookmarkId2 = addBookmark(
+    // Insert a separator
+    this._separatorId = await addBookmark(
+      null,
+      PlacesUtils.bookmarks.TYPE_SEPARATOR
+    );
+    // Create 3 children of these items
+    let bookmarkGuid = await PlacesUtils.promiseItemGuid(this._bookmarkId);
+    this._bookmarkId1 = await addBookmark(
       this._placeId,
-      bs.TYPE_BOOKMARK,
-      this._separatorId
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      bookmarkGuid
+    );
+    let separatorGuid = await PlacesUtils.promiseItemGuid(this._separatorId);
+    this._bookmarkId2 = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      separatorGuid
     );
   },
 
@@ -979,17 +1107,17 @@ tests.push({
     let expectedInfos = [
       {
         id: this._bookmarkId1,
-        parent: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         syncChangeCounter: 1,
       },
       {
         id: this._bookmarkId2,
-        parent: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         syncChangeCounter: 1,
       },
       {
-        id: gUnfiledFolderId,
-        parent: bs.placesRoot,
+        id: await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid),
+        parent: PlacesUtils.bookmarks.rootGuid,
         syncChangeCounter: 2,
       },
     ];
@@ -997,9 +1125,10 @@ tests.push({
     for (let { id, parent, syncChangeCounter } of expectedInfos) {
       let rows = await db.executeCached(
         `
-        SELECT id, syncChangeCounter
-        FROM moz_bookmarks
-        WHERE id = :item_id AND parent = :parent`,
+        SELECT b.id, b.syncChangeCounter
+        FROM moz_bookmarks b
+        JOIN moz_bookmarks p ON b.parent = p.id
+        WHERE b.id = :item_id AND p.guid = :parent`,
         { item_id: id, parent }
       );
       Assert.equal(rows.length, 1);
@@ -1042,40 +1171,43 @@ tests.push({
     });
 
     async function randomize_positions(aParent, aResultArray) {
-      let parentId = await PlacesUtils.promiseItemId(aParent);
-      let stmt = mDBConn.createStatement(
-        `UPDATE moz_bookmarks SET position = :rand
-         WHERE id IN (
-           SELECT id FROM moz_bookmarks WHERE parent = :parent
-           ORDER BY RANDOM() LIMIT 1
-         )`
-      );
-      for (let i = 0; i < NUM_BOOKMARKS / 2; i++) {
-        stmt.params.parent = parentId;
-        stmt.params.rand = Math.round(Math.random() * (NUM_BOOKMARKS - 1));
-        stmt.execute();
-        stmt.reset();
-      }
-      stmt.finalize();
+      await PlacesUtils.withConnectionWrapper("setup", async db => {
+        await db.executeTransaction(async () => {
+          for (let i = 0; i < NUM_BOOKMARKS / 2; i++) {
+            await db.executeCached(
+              `UPDATE moz_bookmarks SET position = :rand
+               WHERE id IN (
+                 SELECT b.id FROM moz_bookmarks b
+                 JOIN moz_bookmarks p ON b.parent = p.id
+                 WHERE p.guid = :parent
+                 ORDER BY RANDOM() LIMIT 1
+               )`,
+              {
+                parent: aParent,
+                rand: Math.round(Math.random() * (NUM_BOOKMARKS - 1)),
+              }
+            );
+          }
 
-      // Build the expected ordered list of bookmarks.
-      stmt = mDBConn.createStatement(
-        `SELECT id, position
-         FROM moz_bookmarks WHERE parent = :parent
-         ORDER BY position ASC, ROWID ASC`
-      );
-      stmt.params.parent = parentId;
-      while (stmt.executeStep()) {
-        aResultArray.push(stmt.row.id);
-        print(
-          stmt.row.id +
-            "\t" +
-            stmt.row.position +
-            "\t" +
-            (aResultArray.length - 1)
-        );
-      }
-      stmt.finalize();
+          // Build the expected ordered list of bookmarks.
+          let rows = await db.executeCached(
+            `SELECT b.id
+             FROM moz_bookmarks b
+             JOIN moz_bookmarks p ON b.parent = p.id
+             WHERE p.guid = :parent
+             ORDER BY b.position ASC, b.ROWID ASC`,
+            { parent: aParent }
+          );
+          rows.forEach(r => {
+            aResultArray.push(r.getResultByName("id"));
+          });
+          await PlacesTestUtils.dumpTable(db, "moz_bookmarks", [
+            "id",
+            "parent",
+            "position",
+          ]);
+        });
+      });
     }
 
     // Set random positions for the added bookmarks.
@@ -1099,27 +1231,33 @@ tests.push({
     let db = await PlacesUtils.promiseDBConnection();
 
     async function check_order(aParent, aResultArray) {
-      let parentId = await PlacesUtils.promiseItemId(aParent);
       // Build the expected ordered list of bookmarks.
       let childRows = await db.executeCached(
-        `SELECT id, position, syncChangeCounter FROM moz_bookmarks
-         WHERE parent = :parent
-         ORDER BY position ASC`,
-        { parent: parentId }
+        `SELECT b.id, b.position, b.syncChangeCounter
+         FROM moz_bookmarks b
+         JOIN moz_bookmarks p ON b.parent = p.id
+         WHERE p.guid = :parent
+         ORDER BY b.position ASC`,
+        { parent: aParent }
       );
       for (let row of childRows) {
         let id = row.getResultByName("id");
         let position = row.getResultByName("position");
         if (aResultArray.indexOf(id) != position) {
-          dump_table("moz_bookmarks");
-          do_throw("Unexpected unfiled bookmarks order.");
+          info("Expected order: " + aResultArray);
+          await PlacesTestUtils.dumpTable(db, "moz_bookmarks", [
+            "id",
+            "parent",
+            "position",
+          ]);
+          do_throw(`Unexpected bookmarks order for ${aParent}.`);
         }
       }
 
       let parentRows = await db.executeCached(
         `SELECT syncChangeCounter FROM moz_bookmarks
-         WHERE id = :parent`,
-        { parent: parentId }
+         WHERE guid = :parent`,
+        { parent: aParent }
       );
       for (let row of parentRows) {
         let actualChangeCounter = row.getResultByName("syncChangeCounter");
@@ -1145,100 +1283,114 @@ tests.push({
   desc: "Fix empty-named tags",
   _taggedItemIds: {},
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    let placeId = addPlace();
+    let placeId = await addPlace();
     // Create a empty-named tag.
-    this._untitledTagId = addBookmark(
+    this._untitledTagId = await addBookmark(
       null,
-      bs.TYPE_FOLDER,
-      bs.tagsFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.tagsGuid,
       null,
       ""
     );
     // Insert a bookmark in the tag, otherwise it will be removed.
-    addBookmark(placeId, bs.TYPE_BOOKMARK, this._untitledTagId);
+    let untitledTagGuid = await PlacesUtils.promiseItemGuid(
+      this._untitledTagId
+    );
+    await addBookmark(
+      placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      untitledTagGuid
+    );
     // Create a empty-named folder.
-    this._untitledFolderId = addBookmark(
+    this._untitledFolderId = await addBookmark(
       null,
-      bs.TYPE_FOLDER,
-      bs.toolbarFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.toolbarGuid,
       null,
       ""
     );
     // Create a titled tag.
-    this._titledTagId = addBookmark(
+    this._titledTagId = await addBookmark(
       null,
-      bs.TYPE_FOLDER,
-      bs.tagsFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.tagsGuid,
       null,
       "titledTag"
     );
     // Insert a bookmark in the tag, otherwise it will be removed.
-    addBookmark(placeId, bs.TYPE_BOOKMARK, this._titledTagId);
+    let titledTagGuid = await PlacesUtils.promiseItemGuid(this._titledTagId);
+    await addBookmark(
+      placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      titledTagGuid
+    );
     // Create a titled folder.
-    this._titledFolderId = addBookmark(
+    this._titledFolderId = await addBookmark(
       null,
-      bs.TYPE_FOLDER,
-      bs.toolbarFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.toolbarGuid,
       null,
       "titledFolder"
     );
 
     // Create two tagged bookmarks in different folders.
-    this._taggedItemIds.inMenu = addBookmark(
+    this._taggedItemIds.inMenu = await addBookmark(
       placeId,
-      bs.TYPE_BOOKMARK,
-      bs.bookmarksMenuFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      PlacesUtils.bookmarks.menuGuid,
       null,
       "Tagged bookmark in menu"
     );
-    this._taggedItemIds.inToolbar = addBookmark(
+    this._taggedItemIds.inToolbar = await addBookmark(
       placeId,
-      bs.TYPE_BOOKMARK,
-      bs.toolbarFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      PlacesUtils.bookmarks.toolbarGuid,
       null,
       "Tagged bookmark in toolbar"
     );
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that valid bookmark is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT title FROM moz_bookmarks WHERE id = :id"
+    let rows = await db.executeCached(
+      "SELECT title FROM moz_bookmarks WHERE id = :id",
+      { id: this._untitledTagId }
     );
-    stmt.params.id = this._untitledTagId;
-    Assert.ok(stmt.executeStep());
-    Assert.equal(stmt.row.title, "(notitle)");
-    stmt.reset();
-    stmt.params.id = this._untitledFolderId;
-    Assert.ok(stmt.executeStep());
-    Assert.equal(stmt.row.title, "");
-    stmt.reset();
-    stmt.params.id = this._titledTagId;
-    Assert.ok(stmt.executeStep());
-    Assert.equal(stmt.row.title, "titledTag");
-    stmt.reset();
-    stmt.params.id = this._titledFolderId;
-    Assert.ok(stmt.executeStep());
-    Assert.equal(stmt.row.title, "titledFolder");
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
+    Assert.equal(rows[0].getResultByName("title"), "(notitle)");
+    rows = await db.executeCached(
+      "SELECT title FROM moz_bookmarks WHERE id = :id",
+      { id: this._untitledFolderId }
+    );
+    Assert.equal(rows.length, 1);
+    Assert.equal(rows[0].getResultByName("title"), "");
+    rows = await db.executeCached(
+      "SELECT title FROM moz_bookmarks WHERE id = :id",
+      { id: this._titledTagId }
+    );
+    Assert.equal(rows.length, 1);
+    Assert.equal(rows[0].getResultByName("title"), "titledTag");
+    rows = await db.executeCached(
+      "SELECT title FROM moz_bookmarks WHERE id = :id",
+      { id: this._titledFolderId }
+    );
+    Assert.equal(rows.length, 1);
+    Assert.equal(rows[0].getResultByName("title"), "titledFolder");
 
-    let taggedItemsStmt = mDBConn.createStatement(`
-      SELECT syncChangeCounter FROM moz_bookmarks
-      WHERE id IN (:taggedInMenu, :taggedInToolbar)`);
-    taggedItemsStmt.params.taggedInMenu = this._taggedItemIds.inMenu;
-    taggedItemsStmt.params.taggedInToolbar = this._taggedItemIds.inToolbar;
-    while (taggedItemsStmt.executeStep()) {
-      Assert.greaterOrEqual(taggedItemsStmt.row.syncChangeCounter, 1);
+    rows = await db.executeCached(
+      `SELECT syncChangeCounter FROM moz_bookmarks
+       WHERE id IN (:taggedInMenu, :taggedInToolbar)`,
+      {
+        taggedInMenu: this._taggedItemIds.inMenu,
+        taggedInToolbar: this._taggedItemIds.inToolbar,
+      }
+    );
+    for (let row of rows) {
+      Assert.greaterOrEqual(row.getResultByName("syncChangeCounter"), 1);
     }
-    taggedItemsStmt.finalize();
   },
 });
 
@@ -1250,62 +1402,70 @@ tests.push({
 
   _placeId: null,
 
-  setup() {
-    // Insert favicon entries
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_icons (id, icon_url, fixed_icon_url_hash, root) VALUES(:favicon_id, :url, hash(fixup_url(:url)), :root)"
-    );
-    stmt.params.favicon_id = 1;
-    stmt.params.url = "http://www1.mozilla.org/favicon.ico";
-    stmt.params.root = 0;
-    stmt.execute();
-    stmt.reset();
-    stmt.params.favicon_id = 2;
-    stmt.params.url = "http://www2.mozilla.org/favicon.ico";
-    stmt.params.root = 0;
-    stmt.execute();
-    stmt.reset();
-    stmt.params.favicon_id = 3;
-    stmt.params.url = "http://www3.mozilla.org/favicon.ico";
-    stmt.params.root = 1;
-    stmt.execute();
-    stmt.finalize();
-    // Insert orphan page.
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_pages_w_icons (id, page_url, page_url_hash) VALUES(:page_id, :url, hash(:url))"
-    );
-    stmt.params.page_id = 99;
-    stmt.params.url = "http://w99.mozilla.org/";
-    stmt.execute();
-    stmt.finalize();
+  async setup() {
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        // Insert favicon entries
+        await db.executeCached(
+          `INSERT INTO moz_icons (id, icon_url, fixed_icon_url_hash, root) VALUES(:favicon_id, :url, hash(fixup_url(:url)), :root)`,
+          [
+            {
+              favicon_id: 1,
+              url: "http://www1.mozilla.org/favicon.ico",
+              root: 0,
+            },
+            {
+              favicon_id: 2,
+              url: "http://www2.mozilla.org/favicon.ico",
+              root: 0,
+            },
+            {
+              favicon_id: 3,
+              url: "http://www3.mozilla.org/favicon.ico",
+              root: 1,
+            },
+          ]
+        );
+
+        // Insert orphan page.
+        await db.executeCached(
+          `INSERT INTO moz_pages_w_icons (id, page_url, page_url_hash)
+           VALUES(:page_id, :url, hash(:url))`,
+          { page_id: 99, url: "http://w99.mozilla.org/" }
+        );
+      });
+    });
 
     // Insert a place using the existing favicon entry
-    this._placeId = addPlace("http://www.mozilla.org", 1);
+    this._placeId = await addPlace("http://www.mozilla.org", 1);
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that used icon is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_icons WHERE id = :favicon_id"
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_icons WHERE id = :favicon_id",
+      { favicon_id: 1 }
     );
-    stmt.params.favicon_id = 1;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
+    Assert.equal(rows.length, 1);
     // Check that unused icon has been removed
-    stmt.params.favicon_id = 2;
-    Assert.ok(!stmt.executeStep());
-    stmt.reset();
+    rows = await db.executeCached(
+      "SELECT id FROM moz_icons WHERE id = :favicon_id",
+      { favicon_id: 2 }
+    );
+    Assert.equal(rows.length, 0);
     // Check that unused icon has been removed
-    stmt.params.favicon_id = 3;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    rows = await db.executeCached(
+      "SELECT id FROM moz_icons WHERE id = :favicon_id",
+      { favicon_id: 3 }
+    );
+    Assert.equal(rows.length, 0);
     // Check that the orphan page is gone.
-    stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_pages_w_icons WHERE id = :page_id"
+    rows = await db.executeCached(
+      "SELECT id FROM moz_pages_w_icons WHERE id = :page_id",
+      { page_id: 99 }
     );
-    stmt.params.page_id = 99;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -1318,33 +1478,33 @@ tests.push({
   _placeId: null,
   _invalidPlaceId: 1337,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Add a valid visit and an invalid one
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_historyvisits(place_id) VALUES (:place_id)"
-    );
-    stmt.params.place_id = this._placeId;
-    stmt.execute();
-    stmt.reset();
-    stmt.params.place_id = this._invalidPlaceId;
-    stmt.execute();
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeCached(
+        `INSERT INTO moz_historyvisits(place_id)
+         VALUES (:place_id_1), (:place_id_2)`,
+        { place_id_1: this._placeId, place_id_2: this._invalidPlaceId }
+      );
+    });
   },
 
-  check() {
+  async check() {
     // Check that valid visit is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_historyvisits WHERE place_id = :place_id"
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_historyvisits WHERE place_id = :place_id",
+      { place_id: this._placeId }
     );
-    stmt.params.place_id = this._placeId;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
+    Assert.equal(rows.length, 1);
     // Check that invalid visit has been removed
-    stmt.params.place_id = this._invalidPlaceId;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    rows = await db.executeCached(
+      "SELECT id FROM moz_historyvisits WHERE place_id = :place_id",
+      { place_id: this._invalidPlaceId }
+    );
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -1357,35 +1517,38 @@ tests.push({
   _placeId: null,
   _invalidPlaceId: 1337,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Add input history entries
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_inputhistory (place_id, input) VALUES (:place_id, :input)"
-    );
-    stmt.params.place_id = this._placeId;
-    stmt.params.input = "moz";
-    stmt.execute();
-    stmt.reset();
-    stmt.params.place_id = this._invalidPlaceId;
-    stmt.params.input = "moz";
-    stmt.execute();
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeCached(
+        `INSERT INTO moz_inputhistory (place_id, input)
+         VALUES (:place_id_1, :input_1), (:place_id_2, :input_2)`,
+        {
+          place_id_1: this._placeId,
+          input_1: "moz",
+          place_id_2: this._invalidPlaceId,
+          input_2: "moz",
+        }
+      );
+    });
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that inputhistory on valid place is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT place_id FROM moz_inputhistory WHERE place_id = :place_id"
+    let rows = await db.executeCached(
+      "SELECT place_id FROM moz_inputhistory WHERE place_id = :place_id",
+      { place_id: this._placeId }
     );
-    stmt.params.place_id = this._placeId;
-    Assert.ok(stmt.executeStep());
-    stmt.reset();
+    Assert.equal(rows.length, 1);
     // Check that inputhistory on invalid place has gone
-    stmt.params.place_id = this._invalidPlaceId;
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    rows = await db.executeCached(
+      "SELECT place_id FROM moz_inputhistory WHERE place_id = :place_id",
+      { place_id: this._invalidPlaceId }
+    );
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -1399,55 +1562,54 @@ tests.push({
   _bookmarkId: null,
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Insert a bookmark
-    this._bookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK);
-    // Add a used attribute.
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
+    this._bookmarkId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
     );
-    stmt.params.anno = this._usedItemAttribute;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))"
-    );
-    stmt.params.item_id = this._bookmarkId;
-    stmt.params.anno = this._usedItemAttribute;
-    stmt.execute();
-    stmt.finalize();
-    // Add an annotation with a nonexistent attribute
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, 1337)"
-    );
-    stmt.params.item_id = this._bookmarkId;
-    stmt.execute();
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        // Add a used attribute.
+        await db.executeCached(
+          "INSERT INTO moz_anno_attributes (name) VALUES (:anno)",
+          { anno: this._usedItemAttribute }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
+           VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          { item_id: this._bookmarkId, anno: this._usedItemAttribute }
+        );
+        // Add an annotation with a nonexistent attribute
+        await db.executeCached(
+          "INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, 1337)",
+          { item_id: this._bookmarkId }
+        );
+      });
+    });
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that used attribute is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno"
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+      { anno: this._usedItemAttribute }
     );
-    stmt.params.anno = this._usedItemAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // check that annotation with valid attribute is still there
-    stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_items_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)"
+    rows = await db.executeCached(
+      `SELECT id FROM moz_items_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)`,
+      { anno: this._usedItemAttribute }
     );
-    stmt.params.anno = this._usedItemAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // Check that annotation with bogus attribute has been removed
-    stmt = mDBConn.createStatement(
+    rows = await db.executeCached(
       "SELECT id FROM moz_items_annos WHERE anno_attribute_id = 1337"
     );
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -1462,53 +1624,56 @@ tests.push({
   _invalidBookmarkId: 8888,
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
-    this._placeId = addPlace();
+    this._placeId = await addPlace();
     // Insert a bookmark
-    this._bookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK);
-    // Add a used attribute.
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
+    this._bookmarkId = await addBookmark(
+      this._placeId,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK
     );
-    stmt.params.anno = this._usedItemAttribute;
-    stmt.execute();
-    stmt.finalize();
-    stmt = mDBConn.createStatement(
-      "INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES (:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))"
-    );
-    stmt.params.item_id = this._bookmarkId;
-    stmt.params.anno = this._usedItemAttribute;
-    stmt.execute();
-    stmt.reset();
-    // Add an annotation to a nonexistent item
-    stmt.params.item_id = this._invalidBookmarkId;
-    stmt.params.anno = this._usedItemAttribute;
-    stmt.execute();
-    stmt.finalize();
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeTransaction(async () => {
+        // Add a used attribute.
+        await db.executeCached(
+          "INSERT INTO moz_anno_attributes (name) VALUES (:anno)",
+          { anno: this._usedItemAttribute }
+        );
+        await db.executeCached(
+          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
+           VALUES (:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          { item_id: this._bookmarkId, anno: this._usedItemAttribute }
+        );
+        // Add an annotation to a nonexistent item
+        await db.executeCached(
+          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
+           VALUES (:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
+          { item_id: this._invalidBookmarkId, anno: this._usedItemAttribute }
+        );
+      });
+    });
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that used attribute is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno"
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
+      { anno: this._usedItemAttribute }
     );
-    stmt.params.anno = this._usedItemAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // check that annotation with valid attribute is still there
-    stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_items_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)"
+    rows = await db.executeCached(
+      `SELECT id FROM moz_items_annos
+       WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)`,
+      { anno: this._usedItemAttribute }
     );
-    stmt.params.anno = this._usedItemAttribute;
-    Assert.ok(stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 1);
     // Check that an annotation to a nonexistent page has been removed
-    stmt = mDBConn.createStatement(
+    rows = await db.executeCached(
       "SELECT id FROM moz_items_annos WHERE item_id = 8888"
     );
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -1521,27 +1686,40 @@ tests.push({
   _bookmarkId: null,
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Insert 2 keywords
-    let stmt = mDBConn.createStatement(
-      "INSERT INTO moz_keywords (id, keyword, place_id) VALUES(:id, :keyword, :place_id)"
-    );
-    stmt.params.id = 1;
-    stmt.params.keyword = "unused";
-    stmt.params.place_id = 100;
-    stmt.execute();
-    stmt.finalize();
+    let bm = await PlacesUtils.bookmarks.insert({
+      url: "http://testkw.moz.org/",
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    });
+    await PlacesUtils.keywords.insert({
+      url: bm.url,
+      keyword: "used",
+    });
+
+    await PlacesUtils.withConnectionWrapper("setup", async db => {
+      await db.executeCached(
+        `INSERT INTO moz_keywords (id, keyword, place_id)
+         VALUES(NULL, :keyword, :place_id)`,
+        { keyword: "unused", place_id: 100 }
+      );
+    });
   },
 
-  check() {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
     // Check that "used" keyword is still there
-    let stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_keywords WHERE keyword = :keyword"
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_keywords WHERE keyword = :keyword",
+      { keyword: "used" }
     );
+    Assert.equal(rows.length, 1);
     // Check that "unused" keyword has gone
-    stmt.params.keyword = "unused";
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    rows = await db.executeCached(
+      "SELECT id FROM moz_keywords WHERE keyword = :keyword",
+      { keyword: "unused" }
+    );
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -1557,20 +1735,30 @@ tests.push({
 
   async setup() {
     // Place with visits, an autocomplete history entry, anno, and a bookmark.
-    this._placeA = addPlace("http://example.com", null, "placeAAAAAAA");
+    this._placeA = await addPlace("http://example.com", null, "placeAAAAAAA");
 
     // Duplicate Place with different visits and a keyword.
-    let placeB = addPlace("http://example.com", null, "placeBBBBBBB");
+    let placeB = await addPlace("http://example.com", null, "placeBBBBBBB");
 
     // Another duplicate with conflicting autocomplete history entry and
     // two more bookmarks.
-    let placeC = addPlace("http://example.com", null, "placeCCCCCCC");
+    let placeC = await addPlace("http://example.com", null, "placeCCCCCCC");
 
     // Unrelated, unique Place.
-    this._placeD = addPlace("http://example.net", null, "placeDDDDDDD", 1234);
+    this._placeD = await addPlace(
+      "http://example.net",
+      null,
+      "placeDDDDDDD",
+      1234
+    );
 
     // Another unrelated Place, with the same hash as D, but different URL.
-    this._placeE = addPlace("http://example.info", null, "placeEEEEEEE", 1234);
+    this._placeE = await addPlace(
+      "http://example.info",
+      null,
+      "placeEEEEEEE",
+      1234
+    );
 
     let visits = [
       {
@@ -1704,11 +1892,10 @@ tests.push({
     ];
 
     for (let { placeId, parentGuid, title, guid } of bookmarks) {
-      let itemId = addBookmark(
+      let itemId = await addBookmark(
         placeId,
         PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        await PlacesUtils.promiseItemId(parentGuid),
-        null,
+        parentGuid,
         null,
         title,
         guid
@@ -1722,44 +1909,39 @@ tests.push({
         return db.executeTransaction(async function() {
           for (let { placeId, date, type } of visits) {
             await db.executeCached(
-              `
-              INSERT INTO moz_historyvisits(place_id, visit_date, visit_type)
-              VALUES(:placeId, :date, :type)`,
+              `INSERT INTO moz_historyvisits(place_id, visit_date, visit_type)
+               VALUES(:placeId, :date, :type)`,
               { placeId, date: PlacesUtils.toPRTime(date), type }
             );
           }
 
           for (let params of inputs) {
             await db.executeCached(
-              `
-              INSERT INTO moz_inputhistory(place_id, input, use_count)
-              VALUES(:placeId, :input, :count)`,
+              `INSERT INTO moz_inputhistory(place_id, input, use_count)
+               VALUES(:placeId, :input, :count)`,
               params
             );
           }
 
           for (let { name, placeId, content } of annos) {
             await db.executeCached(
-              `
-              INSERT OR IGNORE INTO moz_anno_attributes(name)
-              VALUES(:name)`,
+              `INSERT OR IGNORE INTO moz_anno_attributes(name)
+               VALUES(:name)`,
               { name }
             );
 
             await db.executeCached(
-              `
-              INSERT INTO moz_annos(place_id, anno_attribute_id, content)
-              VALUES(:placeId, (SELECT id FROM moz_anno_attributes
-                                WHERE name = :name), :content)`,
+              `INSERT INTO moz_annos(place_id, anno_attribute_id, content)
+               VALUES(:placeId, (SELECT id FROM moz_anno_attributes
+                                 WHERE name = :name), :content)`,
               { placeId, name, content }
             );
           }
 
           for (let param of keywords) {
             await db.executeCached(
-              `
-              INSERT INTO moz_keywords(keyword, place_id)
-              VALUES(:keyword, :placeId)`,
+              `INSERT INTO moz_keywords(keyword, place_id)
+               VALUES(:keyword, :placeId)`,
               param
             );
           }
@@ -1987,25 +2169,23 @@ tests.push({
   desc: "Recalculate visit_count and last_visit_date",
 
   async setup() {
-    function setVisitCount(aURL, aValue) {
-      let stmt = mDBConn.createStatement(
-        `UPDATE moz_places SET visit_count = :count WHERE url_hash = hash(:url)
-                                                      AND url = :url`
-      );
-      stmt.params.count = aValue;
-      stmt.params.url = aURL;
-      stmt.execute();
-      stmt.finalize();
+    async function setVisitCount(aURL, aValue) {
+      await PlacesUtils.withConnectionWrapper("setVisitCount", async db => {
+        await db.executeCached(
+          `UPDATE moz_places SET visit_count = :count
+           WHERE url_hash = hash(:url) AND url = :url`,
+          { count: aValue, url: aURL }
+        );
+      });
     }
-    function setLastVisitDate(aURL, aValue) {
-      let stmt = mDBConn.createStatement(
-        `UPDATE moz_places SET last_visit_date = :date WHERE url_hash = hash(:url)
-                                                         AND url = :url`
-      );
-      stmt.params.date = aValue;
-      stmt.params.url = aURL;
-      stmt.execute();
-      stmt.finalize();
+    async function setLastVisitDate(aURL, aValue) {
+      await PlacesUtils.withConnectionWrapper("setVisitCount", async db => {
+        await db.executeCached(
+          `UPDATE moz_places SET last_visit_date = :date
+           WHERE url_hash = hash(:url) AND url = :url`,
+          { date: aValue, url: aURL }
+        );
+      });
     }
 
     let now = Date.now() * 1000;
@@ -2015,37 +2195,38 @@ tests.push({
     // Add a page with 1 visit and set wrong visit_count.
     url = "http://2.moz.org/";
     await PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
-    setVisitCount(url, 10);
+    await setVisitCount(url, 10);
     // Add a page with 1 visit and set wrong last_visit_date.
     url = "http://3.moz.org/";
     await PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
-    setLastVisitDate(url, now++);
+    await setLastVisitDate(url, now++);
     // Add a page with 1 visit and set wrong stats.
     url = "http://4.moz.org/";
     await PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
-    setVisitCount(url, 10);
-    setLastVisitDate(url, now++);
+    await setVisitCount(url, 10);
+    await setLastVisitDate(url, now++);
 
     // Add a page without visits.
     url = "http://5.moz.org/";
-    addPlace(url);
+    await addPlace(url);
     // Add a page without visits and set wrong visit_count.
     url = "http://6.moz.org/";
-    addPlace(url);
-    setVisitCount(url, 10);
+    await addPlace(url);
+    await setVisitCount(url, 10);
     // Add a page without visits and set wrong last_visit_date.
     url = "http://7.moz.org/";
-    addPlace(url);
-    setLastVisitDate(url, now++);
+    await addPlace(url);
+    await setLastVisitDate(url, now++);
     // Add a page without visits and set wrong stats.
     url = "http://8.moz.org/";
-    addPlace(url);
-    setVisitCount(url, 10);
-    setLastVisitDate(url, now++);
+    await addPlace(url);
+    await setVisitCount(url, 10);
+    await setLastVisitDate(url, now++);
   },
 
-  check() {
-    let stmt = mDBConn.createStatement(
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
       `SELECT h.id, h.last_visit_date as v_date
        FROM moz_places h
        LEFT JOIN moz_historyvisits v ON v.place_id = h.id AND visit_type NOT IN (0,4,7,8,9)
@@ -2056,8 +2237,7 @@ tests.push({
        LEFT JOIN moz_historyvisits v ON v.place_id = h.id
        GROUP BY h.id HAVING h.last_visit_date IS NOT v_date`
     );
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    Assert.equal(rows.length, 0);
   },
 });
 
@@ -2090,32 +2270,16 @@ tests.push({
     ]);
   },
 
-  check() {
-    return new Promise(resolve => {
-      let stmt = mDBConn.createAsyncStatement(
-        "SELECT h.url FROM moz_places h WHERE h.hidden = 1"
-      );
-      stmt.executeAsync({
-        _count: 0,
-        handleResult(aResultSet) {
-          for (let row; (row = aResultSet.getNextRow()); ) {
-            let url = row.getResultByIndex(0);
-            Assert.ok(/redirecting/.test(url));
-            this._count++;
-          }
-        },
-        handleError(aError) {},
-        handleCompletion(aReason) {
-          Assert.equal(
-            aReason,
-            Ci.mozIStorageStatementCallback.REASON_FINISHED
-          );
-          Assert.equal(this._count, 2);
-          resolve();
-        },
-      });
-      stmt.finalize();
-    });
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
+      "SELECT h.url FROM moz_places h WHERE h.hidden = 1"
+    );
+    Assert.equal(rows.length, 2);
+    for (let row of rows) {
+      let url = row.getResultByIndex(0);
+      Assert.ok(/redirecting/.test(url));
+    }
   },
 });
 
@@ -2144,8 +2308,7 @@ tests.push({
       "add snapshots and sessions",
       async db => {
         await db.execute(
-          `
-           INSERT INTO moz_places_metadata_snapshots
+          `INSERT INTO moz_places_metadata_snapshots
              (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted)
            VALUES ((SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), 0, 0, "MEDIA", 0, 0)
           `,
@@ -2156,8 +2319,7 @@ tests.push({
            VALUES ("guid", 0)`
         );
         await db.execute(
-          `
-           INSERT INTO moz_session_to_places (session_id, place_id, position)
+          `INSERT INTO moz_session_to_places (session_id, place_id, position)
            VALUES (
              (SELECT id FROM moz_session_metadata WHERE guid = "guid"),
              (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
@@ -2230,20 +2392,20 @@ tests.push({
   _placeIds: [],
 
   async setup() {
-    let placeWithValidGuid = addPlace(
+    let placeWithValidGuid = await addPlace(
       "http://example.com/a",
       null,
       "placeAAAAAAA"
     );
     this._placeIds.push(placeWithValidGuid);
 
-    let placeWithEmptyGuid = addPlace("http://example.com/b", null, "");
+    let placeWithEmptyGuid = await addPlace("http://example.com/b", null, "");
     this._placeIds.push(placeWithEmptyGuid);
 
-    let placeWithoutGuid = addPlace("http://example.com/c", null, null);
+    let placeWithoutGuid = await addPlace("http://example.com/c", null, null);
     this._placeIds.push(placeWithoutGuid);
 
-    let placeWithInvalidGuid = addPlace(
+    let placeWithInvalidGuid = await addPlace(
       "http://example.com/c",
       null,
       "{123456}"
@@ -2281,47 +2443,43 @@ tests.push({
   _bookmarkInfos: [],
 
   async setup() {
-    let folderWithInvalidGuid = addBookmark(
+    let folderWithInvalidGuid = await addBookmark(
       null,
       PlacesUtils.bookmarks.TYPE_FOLDER,
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
+      PlacesUtils.bookmarks.menuGuid,
       /* aKeywordId */ null,
-      /* aFolderType */ null,
       "NORMAL folder with invalid GUID",
       "{123456}",
       PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
     );
 
-    let placeIdForBookmarkWithoutGuid = addPlace();
-    let bookmarkWithoutGuid = addBookmark(
+    let placeIdForBookmarkWithoutGuid = await addPlace();
+    let bookmarkWithoutGuid = await addBookmark(
       placeIdForBookmarkWithoutGuid,
       PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      folderWithInvalidGuid,
+      "{123456}",
       /* aKeywordId */ null,
-      /* aFolderType */ null,
       "NEW bookmark without GUID",
       /* aGuid */ null
     );
 
-    let placeIdForBookmarkWithInvalidGuid = addPlace();
-    let bookmarkWithInvalidGuid = addBookmark(
+    let placeIdForBookmarkWithInvalidGuid = await addPlace();
+    let bookmarkWithInvalidGuid = await addBookmark(
       placeIdForBookmarkWithInvalidGuid,
       PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      folderWithInvalidGuid,
+      "{123456}",
       /* aKeywordId */ null,
-      /* aFolderType */ null,
       "NORMAL bookmark with invalid GUID",
       "bookmarkAAAA\n",
       PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
     );
 
-    let placeIdForBookmarkWithValidGuid = addPlace();
-    let bookmarkWithValidGuid = addBookmark(
+    let placeIdForBookmarkWithValidGuid = await addPlace();
+    let bookmarkWithValidGuid = await addBookmark(
       placeIdForBookmarkWithValidGuid,
       PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      folderWithInvalidGuid,
+      "{123456}",
       /* aKeywordId */ null,
-      /* aFolderType */ null,
       "NORMAL bookmark with valid GUID",
       "bookmarkBBBB",
       PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
@@ -2329,7 +2487,7 @@ tests.push({
 
     this._bookmarkInfos.push(
       {
-        id: PlacesUtils.bookmarks.bookmarksMenuFolder,
+        id: await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.menuGuid),
         syncChangeCounter: 1,
         syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
       },
@@ -2359,10 +2517,9 @@ tests.push({
   async check() {
     let db = await PlacesUtils.promiseDBConnection();
     let updatedRows = await db.execute(
-      `
-      SELECT id, guid, syncChangeCounter, syncStatus
-      FROM moz_bookmarks
-      WHERE id IN (?, ?, ?, ?, ?)`,
+      `SELECT id, guid, syncChangeCounter, syncStatus
+       FROM moz_bookmarks
+       WHERE id IN (?, ?, ?, ?, ?)`,
       this._bookmarkInfos.map(info => info.id)
     );
 
@@ -2396,12 +2553,11 @@ tests.push({
   desc: "drop tombstones for bookmarks that aren't deleted",
 
   async setup() {
-    let placeId = addPlace();
-    addBookmark(
+    let placeId = await addPlace();
+    await addBookmark(
       placeId,
-      bs.TYPE_BOOKMARK,
-      bs.bookmarksMenuFolder,
-      null,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      PlacesUtils.bookmarks.menuGuid,
       null,
       "",
       "bookmarkAAAA"
@@ -2411,9 +2567,8 @@ tests.push({
       db.executeTransaction(async function() {
         for (let guid of ["bookmarkAAAA", "bookmarkBBBB"]) {
           await db.executeCached(
-            `
-            INSERT INTO moz_bookmarks_deleted(guid)
-            VALUES(:guid)`,
+            `INSERT INTO moz_bookmarks_deleted(guid)
+             VALUES(:guid)`,
             { guid }
           );
         }
@@ -2437,8 +2592,8 @@ tests.push({
   _bookmarksWithDates: [],
 
   async setup() {
-    let placeIdWithVisits = addPlace();
-    let placeIdWithZeroVisit = addPlace();
+    let placeIdWithVisits = await addPlace();
+    let placeIdWithZeroVisit = await addPlace();
     this._placeVisits.push(
       {
         placeId: placeIdWithVisits,
@@ -2458,42 +2613,42 @@ tests.push({
       {
         guid: "bookmarkAAAA",
         placeId: null,
-        parentId: bs.bookmarksMenuFolder,
+        parent: PlacesUtils.bookmarks.menuGuid,
         dateAdded: null,
         lastModified: PlacesUtils.toPRTime(new Date(2017, 9, 1)),
       },
       {
         guid: "bookmarkBBBB",
         placeId: null,
-        parentId: bs.bookmarksMenuFolder,
+        parent: PlacesUtils.bookmarks.menuGuid,
         dateAdded: PlacesUtils.toPRTime(new Date(2017, 9, 2)),
         lastModified: null,
       },
       {
         guid: "bookmarkCCCC",
         placeId: null,
-        parentId: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         dateAdded: null,
         lastModified: null,
       },
       {
         guid: "bookmarkDDDD",
         placeId: placeIdWithVisits,
-        parentId: bs.mobileFolder,
+        parent: PlacesUtils.bookmarks.mobileGuid,
         dateAdded: null,
         lastModified: null,
       },
       {
         guid: "bookmarkEEEE",
         placeId: placeIdWithVisits,
-        parentId: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         dateAdded: PlacesUtils.toPRTime(new Date(2017, 9, 3)),
         lastModified: PlacesUtils.toPRTime(new Date(2017, 9, 6)),
       },
       {
         guid: "bookmarkFFFF",
         placeId: placeIdWithZeroVisit,
-        parentId: gUnfiledFolderId,
+        parent: PlacesUtils.bookmarks.unfiledGuid,
         dateAdded: 0,
         lastModified: 0,
       }
@@ -2504,28 +2659,23 @@ tests.push({
       db =>
         db.executeTransaction(async () => {
           await db.execute(
-            `
-          INSERT INTO moz_historyvisits(place_id, visit_date)
-          VALUES(:placeId, :visitDate)`,
+            `INSERT INTO moz_historyvisits(place_id, visit_date)
+             VALUES(:placeId, :visitDate)`,
             this._placeVisits
           );
 
           await db.execute(
-            `
-          INSERT INTO moz_bookmarks(fk, type, parent, guid, dateAdded,
-                                    lastModified)
-          VALUES(:placeId, 1, :parentId, :guid, :dateAdded,
-                 :lastModified)`,
+            `INSERT INTO moz_bookmarks(fk, type, parent, guid, dateAdded,
+                                       lastModified)
+             VALUES(:placeId, 1, (SELECT id FROM moz_bookmarks WHERE guid = :parent),
+                    :guid, :dateAdded, :lastModified)`,
             this._bookmarksWithDates
           );
 
           await db.execute(
-            `
-          UPDATE moz_bookmarks SET
-            dateAdded = 0,
-            lastModified = NULL
-          WHERE id = :toolbarFolderId`,
-            { toolbarFolderId: bs.toolbarFolder }
+            `UPDATE moz_bookmarks SET dateAdded = 0, lastModified = NULL
+             WHERE guid = :toolbarFolder`,
+            { toolbarFolder: PlacesUtils.bookmarks.toolbarGuid }
           );
         })
     );
@@ -2534,12 +2684,11 @@ tests.push({
   async check() {
     let db = await PlacesUtils.promiseDBConnection();
     let updatedRows = await db.execute(
-      `
-      SELECT guid, dateAdded, lastModified
-      FROM moz_bookmarks
-      WHERE guid = :guid`,
+      `SELECT guid, dateAdded, lastModified
+       FROM moz_bookmarks
+       WHERE guid = :guid`,
       [
-        { guid: bs.toolbarGuid },
+        { guid: PlacesUtils.bookmarks.toolbarGuid },
         ...this._bookmarksWithDates.map(({ guid }) => ({ guid })),
       ]
     );
@@ -2575,7 +2724,7 @@ tests.push({
         // In all cases, we should fall back to the current time.
         case "bookmarkCCCC":
         case "bookmarkFFFF":
-        case bs.toolbarGuid: {
+        case PlacesUtils.bookmarks.toolbarGuid: {
           let nowAsPRTime = PlacesUtils.toPRTime(new Date());
           Assert.greater(dateAdded, 0);
           Assert.equal(dateAdded, lastModified);
@@ -2620,7 +2769,7 @@ tests.push({
   async setup() {
     this._bookmarksWithDates.push({
       guid: "bookmarkGGGG",
-      parentId: gUnfiledFolderId,
+      parent: PlacesUtils.bookmarks.unfiledGuid,
       dateAdded: PlacesUtils.toPRTime(new Date(2017, 9, 6)),
       lastModified: PlacesUtils.toPRTime(new Date(2017, 9, 3)),
     });
@@ -2630,10 +2779,10 @@ tests.push({
       db =>
         db.executeTransaction(async () => {
           await db.execute(
-            `
-          INSERT INTO moz_bookmarks(type, parent, guid, dateAdded,
-                                    lastModified)
-          VALUES(1, :parentId, :guid, :dateAdded, :lastModified)`,
+            `INSERT INTO moz_bookmarks(type, parent, guid, dateAdded,
+                                       lastModified)
+             VALUES(1, (SELECT id FROM moz_bookmarks WHERE guid = :parent),
+                    :guid, :dateAdded, :lastModified)`,
             this._bookmarksWithDates
           );
         })
@@ -2643,10 +2792,9 @@ tests.push({
   async check() {
     let db = await PlacesUtils.promiseDBConnection();
     let updatedRows = await db.execute(
-      `
-      SELECT guid, dateAdded, lastModified
-      FROM moz_bookmarks
-      WHERE guid = :guid`,
+      `SELECT guid, dateAdded, lastModified
+       FROM moz_bookmarks
+       WHERE guid = :guid`,
       this._bookmarksWithDates.map(({ guid }) => ({ guid }))
     );
 
@@ -2757,12 +2905,12 @@ tests.push({
     // use valid api calls to create a bunch of items
     await PlacesTestUtils.addVisits([{ uri: this._uri1 }, { uri: this._uri2 }]);
 
-    let bookmarks = await bs.insertTree({
-      guid: bs.toolbarGuid,
+    let bookmarks = await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.toolbarGuid,
       children: [
         {
           title: "testfolder",
-          type: bs.TYPE_FOLDER,
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
           children: [
             {
               title: "testbookmark",
@@ -2777,13 +2925,13 @@ tests.push({
     this._bookmark = bookmarks[1];
     this._bookmarkId = await PlacesUtils.promiseItemId(bookmarks[1].guid);
 
-    this._separator = await bs.insert({
+    this._separator = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     });
 
-    ts.tagURI(this._uri1, ["testtag"]);
-    fs.setAndFetchFaviconForPage(
+    PlacesUtils.tagging.tagURI(this._uri1, ["testtag"]);
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
       this._uri2,
       SMALLPNG_DATA_URI,
       false,
@@ -2808,16 +2956,19 @@ tests.push({
     isVisited = await PlacesUtils.history.hasVisits(this._uri2);
     Assert.ok(isVisited);
 
-    Assert.equal((await bs.fetch(this._bookmark.guid)).url, this._uri1.spec);
-    let folder = await bs.fetch(this._folder.guid);
-    Assert.equal(folder.index, 0);
-    Assert.equal(folder.type, bs.TYPE_FOLDER);
     Assert.equal(
-      (await bs.fetch(this._separator.guid)).type,
-      bs.TYPE_SEPARATOR
+      (await PlacesUtils.bookmarks.fetch(this._bookmark.guid)).url,
+      this._uri1.spec
+    );
+    let folder = await PlacesUtils.bookmarks.fetch(this._folder.guid);
+    Assert.equal(folder.index, 0);
+    Assert.equal(folder.type, PlacesUtils.bookmarks.TYPE_FOLDER);
+    Assert.equal(
+      (await PlacesUtils.bookmarks.fetch(this._separator.guid)).type,
+      PlacesUtils.bookmarks.TYPE_SEPARATOR
     );
 
-    Assert.equal(ts.getTagsForURI(this._uri1).length, 1);
+    Assert.equal(PlacesUtils.tagging.getTagsForURI(this._uri1).length, 1);
     Assert.equal(
       (await PlacesUtils.keywords.fetch({ url: this._uri1.spec })).keyword,
       "testkeyword"
@@ -2828,7 +2979,7 @@ tests.push({
     Assert.equal(pageInfo.annotations.get("anno"), "anno");
 
     await new Promise(resolve => {
-      fs.getFaviconURLForPage(this._uri2, aFaviconURI => {
+      PlacesUtils.favicons.getFaviconURLForPage(this._uri2, aFaviconURI => {
         Assert.ok(aFaviconURI.equals(SMALLPNG_DATA_URI));
         resolve();
       });
@@ -2839,21 +2990,17 @@ tests.push({
 // ------------------------------------------------------------------------------
 
 add_task(async function test_preventive_maintenance() {
-  gUnfiledFolderId = await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.unfiledGuid
-  );
-
+  let db = await PlacesUtils.promiseDBConnection();
   // Get current bookmarks max ID for cleanup
-  let stmt = mDBConn.createStatement("SELECT MAX(id) FROM moz_bookmarks");
-  stmt.executeStep();
-  defaultBookmarksMaxId = stmt.getInt32(0);
-  stmt.finalize();
+  defaultBookmarksMaxId = (
+    await db.executeCached("SELECT MAX(id) FROM moz_bookmarks")
+  )[0].getResultByIndex(0);
   Assert.ok(defaultBookmarksMaxId > 0);
 
   for (let test of tests) {
     await PlacesTestUtils.markBookmarksAsSynced();
 
-    dump("\nExecuting test: " + test.name + "\n*** " + test.desc + "\n");
+    info("\nExecuting test: " + test.name + "\n*** " + test.desc + "\n");
     await test.setup();
 
     Services.prefs.clearUserPref("places.database.lastMaintenance");
