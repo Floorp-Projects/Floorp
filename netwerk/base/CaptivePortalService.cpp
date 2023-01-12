@@ -65,6 +65,10 @@ nsresult CaptivePortalService::PerformCheck() {
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
+  if (!mCanUseJS) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   nsresult rv;
   if (!mCaptivePortalDetector) {
@@ -133,6 +137,7 @@ nsresult CaptivePortalService::Initialize() {
     observerService->AddObserver(this, kAbortCaptivePortalLoginEvent, true);
     observerService->AddObserver(this, kCaptivePortalLoginSuccessEvent, true);
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
+    observerService->AddObserver(this, "app-startup", true);
   }
 
   LOG(("Initialized CaptivePortalService\n"));
@@ -333,6 +338,9 @@ CaptivePortalService::Observe(nsISupports* aSubject, const char* aTopic,
     mSlackCount = 0;
   } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Stop();
+    return NS_OK;
+  } else if (!strcmp(aTopic, "app-startup")) {
+    mCanUseJS = true;
     return NS_OK;
   }
 
