@@ -140,6 +140,8 @@ class BodyStreamUnderlyingSourceAlgorithms final
     bodyStream->CloseInputAndReleaseObjects();
   }
 
+  BodyStreamHolder* GetBodyStreamHolder() override { return mUnderlyingSource; }
+
  protected:
   ~BodyStreamUnderlyingSourceAlgorithms() override = default;
 

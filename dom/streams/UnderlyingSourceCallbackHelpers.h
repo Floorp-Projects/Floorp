@@ -52,6 +52,9 @@ class UnderlyingSourceAlgorithmsBase : public nsISupports {
   // from closed(canceled)/errored streams, without waiting for GC.
   virtual void ReleaseObjects() {}
 
+  // Fetch wants to special-case BodyStream-based streams
+  virtual BodyStreamHolder* GetBodyStreamHolder() { return nullptr; }
+
  protected:
   virtual ~UnderlyingSourceAlgorithmsBase() = default;
 };
