@@ -32,6 +32,13 @@ add_task(async function testCDP({ client }) {
     Services.appinfo.sourceURL.split("/").pop(),
     "Browser.getVersion().revision is correct"
   );
+
+  is(
+    version.jsVersion,
+    Services.appinfo.version,
+    "Browser.getVersion().jsVersion is correct"
+  );
+
   // receive console.log messages and print them
   let result = await Log.enable();
   info("Log domain has been enabled");

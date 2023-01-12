@@ -13,13 +13,13 @@ export class Browser extends Domain {
       "@mozilla.org/network/protocol;1?name=http"
     ].getService(Ci.nsIHttpProtocolHandler);
     return {
+      jsVersion: Services.appinfo.version,
       protocolVersion: "1.3",
       product:
         (isHeadless ? "Headless" : "") +
         `${Services.appinfo.name}/${Services.appinfo.version}`,
       revision: Services.appinfo.sourceURL.split("/").pop(),
       userAgent,
-      jsVersion: "1.8.5",
     };
   }
 
