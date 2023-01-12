@@ -4,6 +4,7 @@
 
 #include "FetchLog.h"
 #include "FetchParent.h"
+#include "FetchService.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
 #include "mozilla/SchedulerGroup.h"
@@ -101,6 +102,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
   if (aArgs.controller().isSome()) {
     mController = Some(ServiceWorkerDescriptor(aArgs.controller().ref()));
   }
+  mCookieJarSettings = aArgs.cookieJarSettings();
   mNeedOnDataAvailable = aArgs.needOnDataAvailable();
   mHasCSPEventListener = aArgs.hasCSPEventListener();
 
@@ -120,7 +122,8 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
             ("FetchParent::RecvFetchOp [%p] Success Callback", self.get()));
         AssertIsOnBackgroundThread();
         self->mIsDone = true;
-        if (!self->mActorDestroyed) {
+        self->mPromise = nullptr;
+        if (!self->mActorDestroyed && !self->mExtendForCSPEventListener) {
           FETCH_LOG(("FetchParent::RecvFetchOp [%p] Send__delete__(NS_OK)",
                      self.get()));
           Unused << NS_WARN_IF(!self->Send__delete__(self, NS_OK));
@@ -131,6 +134,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
             ("FetchParent::RecvFetchOp [%p] Failure Callback", self.get()));
         AssertIsOnBackgroundThread();
         self->mIsDone = true;
+        self->mPromise = nullptr;
         if (!self->mActorDestroyed) {
           FETCH_LOG(("FetchParent::RecvFetchOp [%p] Send__delete__(aErr)",
                      self.get()));
@@ -138,7 +142,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
         }
       });
 
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__, [self]() mutable {
+  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__, [self]() mutable {
     FETCH_LOG(
         ("FetchParent::RecvFetchOp [%p], Main Thread Runnable", self.get()));
     AssertIsOnMainThread();
@@ -152,8 +156,31 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
       self->mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
       return;
     }
-    // TODO: Initialize a fetch through FetchService::Fetch, and saving
-    //       returned promises into mResponsePromises
+    RefPtr<FetchService> fetchService = FetchService::GetInstance();
+    MOZ_ASSERT(fetchService);
+    MOZ_ASSERT(!self->mResponsePromises);
+    self->mResponsePromises =
+        fetchService->Fetch(AsVariant(FetchService::WorkerFetchArgs(
+            {self->mRequest.clonePtr(), self->mPrincipalInfo,
+             self->mWorkerScript, self->mClientInfo, self->mController,
+             self->mCookieJarSettings, self->mNeedOnDataAvailable,
+             self->mCSPEventListener, self->mBackgroundEventTarget,
+             self->mID})));
+
+    self->mResponsePromises->GetResponseEndPromise()->Then(
+        self->mBackgroundEventTarget, __func__,
+        [self](ResponseEndArgs&& aArgs) mutable {
+          MOZ_ASSERT(self->mPromise);
+          self->mPromise->Resolve(true, __func__);
+          self->mResponsePromises = nullptr;
+          self->mPromise = nullptr;
+        },
+        [self](CopyableErrorResult&& aErr) mutable {
+          MOZ_ASSERT(self->mPromise);
+          self->mPromise->Reject(aErr.StealNSResult(), __func__);
+          self->mResponsePromises = nullptr;
+          self->mPromise = nullptr;
+        });
   });
 
   MOZ_ALWAYS_SUCCEEDS(
@@ -188,13 +215,57 @@ IPCResult FetchParent::RecvAbortFetchOp() {
   return IPC_OK();
 }
 
+void FetchParent::OnResponseAvailableInternal(
+    SafeRefPtr<InternalResponse>&& aResponse) {
+  FETCH_LOG(("FetchParent::OnResponseAvailableInternal [%p]", this));
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aResponse);
+  MOZ_ASSERT(!mActorDestroyed);
+
+  // To monitor the stream status between processes, response's body can not be
+  // serialized as RemoteLazyInputStream. Such that stream close can be
+  // propagated to FetchDriver in the parent process.
+  aResponse->SetSerializeAsLazy(false);
+
+  // CSP violation notification is asynchronous. Extending the FetchParent's
+  // life cycle for the notificaiton.
+  if (aResponse->Type() == ResponseType::Error &&
+      aResponse->GetErrorCode() == NS_ERROR_CONTENT_BLOCKED &&
+      mCSPEventListener) {
+    FETCH_LOG(
+        ("FetchParent::OnResponseAvailableInternal [%p] "
+         "NS_ERROR_CONTENT_BLOCKED",
+         this));
+    mExtendForCSPEventListener = true;
+  }
+
+  Unused << SendOnResponseAvailableInternal(
+      aResponse->ToParentToChildInternalResponse(WrapNotNull(Manager())));
+}
+
+void FetchParent::OnResponseEnd(const ResponseEndArgs& aArgs) {
+  FETCH_LOG(("FetchParent::OnResponseEnd [%p]", this));
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  Unused << SendOnResponseEnd(aArgs);
+}
+
+void FetchParent::OnDataAvailable() {
+  FETCH_LOG(("FetchParent::OnDataAvailable [%p]", this));
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  Unused << SendOnDataAvailable();
+}
+
 void FetchParent::OnFlushConsoleReport(
-    nsTArray<net::ConsoleReportCollected>&& aReports) {
+    const nsTArray<net::ConsoleReportCollected>& aReports) {
   FETCH_LOG(("FetchParent::OnFlushConsoleReport [%p]", this));
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  Unused << SendOnFlushConsoleReport(std::move(aReports));
+  Unused << SendOnFlushConsoleReport(aReports);
 }
 
 void FetchParent::ActorDestroy(ActorDestroyReason aReason) {
