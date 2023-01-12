@@ -3583,6 +3583,10 @@ nsresult CacheFileIOManager::FindTrashDirToRemove() {
 
   nsresult rv;
 
+  if (!mCacheDirectory) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // We call this method on the main thread during shutdown when user wants to
   // remove all cache files.
   MOZ_ASSERT(mIOThread->IsCurrentThread() || mShuttingDown);
@@ -4074,6 +4078,10 @@ nsresult CacheFileIOManager::SyncRemoveDir(nsIFile* aFile, const char* aDir) {
   nsresult rv;
   nsCOMPtr<nsIFile> file;
 
+  if (!aFile) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   if (!aDir) {
     file = aFile;
   } else {
@@ -4152,6 +4160,12 @@ void CacheFileIOManager::SyncRemoveAllCacheFiles() {
   if (StaticPrefs::network_cache_shutdown_purge_in_background_task()) {
     rv = [&]() -> nsresult {
       nsresult rv;
+
+      // If there is no cache directory, there's nothing to remove.
+      if (!mCacheDirectory) {
+        return NS_OK;
+      }
+
       nsAutoCString leafName;
       rv = mCacheDirectory->GetNativeLeafName(leafName);
       NS_ENSURE_SUCCESS(rv, rv);
