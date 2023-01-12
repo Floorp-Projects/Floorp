@@ -809,6 +809,13 @@ class HomeScreenRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickSignInButton(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
+            signInButton.clickAndWaitForNewWindow(waitingTimeShort)
+
+            SyncSignInRobot().interact()
+            return SyncSignInRobot.Transition()
+        }
     }
 }
 

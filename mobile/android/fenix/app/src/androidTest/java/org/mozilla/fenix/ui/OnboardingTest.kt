@@ -199,4 +199,13 @@ class OnboardingTest {
             verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
         }
     }
+
+    @Test
+    fun pickUpWhereYouLeftOffCardTest() {
+        homeScreen {
+            verifySignInToSyncCard()
+        }.clickSignInButton {
+            verifyTurnOnSyncMenu()
+        }
+    }
 }
