@@ -5117,6 +5117,15 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
   nsCOMPtr<nsILoadInfo> newLoadInfo = newChannel->LoadInfo();
   nsHTTPSOnlyUtils::PotentiallyClearExemptFlag(newLoadInfo);
 
+  // pass on the early hint observer to be able to process `103 Early Hints`
+  // responses after cross origin redirects
+  if (mEarlyHintObserver) {
+    if (RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(newChannel)) {
+      httpChannelImpl->SetEarlyHintObserver(mEarlyHintObserver);
+    }
+    mEarlyHintObserver = nullptr;
+  }
+
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
   if (!httpChannel) return NS_OK;  // no other options to set
 

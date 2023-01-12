@@ -79,6 +79,7 @@ void OngoingEarlyHints::CancelAllOngoingPreloads(const nsACString& aReason) {
   for (auto& preloader : mPreloaders) {
     preloader->CancelChannel(NS_ERROR_ABORT, aReason);
   }
+  mPreloaders.Clear();
   mStartedPreloads.Clear();
 }
 
@@ -426,6 +427,7 @@ EarlyHintConnectArgs EarlyHintPreloader::Register() {
 
 nsresult EarlyHintPreloader::CancelChannel(nsresult aStatus,
                                            const nsACString& aReason) {
+  LOG(("EarlyHintPreloader::CancelChannel [this=%p]\n", this));
   // clear redirect channel in case this channel is cleared between the call of
   // EarlyHintPreloader::AsyncOnChannelRedirect and
   // EarlyHintPreloader::OnRedirectResult
@@ -453,7 +455,7 @@ void EarlyHintPreloader::OnParentReady(nsIParentChannel* aParent,
   RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
   registrar->DeleteEntry(mConnectArgs.earlyHintPreloaderId());
 
-  if (mSuspended) {
+  if (mOnStartRequestCalled) {
     SetParentChannel();
     InvokeStreamListenerFunctions();
   }
@@ -529,6 +531,8 @@ EarlyHintPreloader::OnStartRequest(nsIRequest* aRequest) {
   LOG(("EarlyHintPreloader::OnStartRequest [this=%p]\n", this));
   AssertIsOnMainThread();
 
+  mOnStartRequestCalled = true;
+
   nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
   if (multiPartChannel) {
     multiPartChannel->GetBaseChannel(getter_AddRefs(mChannel));
@@ -537,18 +541,29 @@ EarlyHintPreloader::OnStartRequest(nsIRequest* aRequest) {
   }
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
 
+  nsresult status = NS_OK;
+  Unused << aRequest->GetStatus(&status);
+
   if (mParent) {
     SetParentChannel();
     mParent->OnStartRequest(aRequest);
     InvokeStreamListenerFunctions();
   } else {
+    // Don't suspend the chanel when the channel got cancelled with
+    // CancelChannel, because then OnStopRequest wouldn't get called and we
+    // wouldn't clean up the channel.
+    if (NS_SUCCEEDED(status)) {
+      mChannel->Suspend();
+      mSuspended = true;
+    }
     mStreamListenerFunctions.AppendElement(
         AsVariant(OnStartRequestParams{aRequest}));
-    mChannel->Suspend();
-    mSuspended = true;
   }
 
-  return NS_OK;
+  // return error after adding the OnStartRequest forward. The OnStartRequest
+  // failure has to be forwarded to listener, because they called AsyncOpen on
+  // this channel
+  return status;
 }
 
 // Implementation copied from DocumentLoadListener::OnStopRequest
