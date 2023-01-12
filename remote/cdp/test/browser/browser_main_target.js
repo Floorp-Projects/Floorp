@@ -38,6 +38,12 @@ add_task(async function({ CDP }) {
       "Browser.getVersion().revision is correct"
     );
 
+    is(
+      version.jsVersion,
+      Services.appinfo.version,
+      "Browser.getVersion().jsVersion is correct"
+    );
+
     const { webSocketDebuggerUrl } = await CDP.Version();
     is(
       webSocketDebuggerUrl,
