@@ -5,6 +5,7 @@
 package org.mozilla.fenix.downloads
 
 import android.content.Context
+import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
@@ -112,6 +113,7 @@ class DynamicDownloadDialog(
         }
 
         binding.downloadDialogFilename.text = downloadState.fileName
+        binding.downloadDialogFilename.movementMethod = ScrollingMovementMethod()
     }
 
     fun show() {
