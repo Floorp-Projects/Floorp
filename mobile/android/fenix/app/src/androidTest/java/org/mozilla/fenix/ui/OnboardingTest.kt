@@ -188,4 +188,15 @@ class OnboardingTest {
             verifyToolbarPosition(defaultPosition = true)
         }
     }
+
+    @Test
+    fun privacyProtectionByDefaultCardTest() {
+        homeScreen {
+            verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
+            clickStrictTrackingProtectionButton()
+            verifyPrivacyProtectionCard(isStandardChecked = false, isStrictChecked = true)
+            clickStandardTrackingProtectionButton()
+            verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
+        }
+    }
 }

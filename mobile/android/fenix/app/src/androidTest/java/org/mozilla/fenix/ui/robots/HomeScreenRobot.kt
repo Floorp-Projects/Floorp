@@ -152,13 +152,19 @@ class HomeScreenRobot {
     }
 
     fun verifyPrivacyProtectionCard(isStandardChecked: Boolean, isStrictChecked: Boolean) {
-        scrollToElementByText(getStringResource(R.string.onboarding_tracking_protection_header))
+        scrollToElementByText(getStringResource(R.string.onboarding_privacy_notice_header_1))
         assertItemContainingTextExists(privacyProtectionHeader, privacyProtectionDescription)
         assertCheckedItemWithResIdExists(
             standardTrackingProtectionToggle(isStandardChecked),
             strictTrackingProtectionToggle(isStrictChecked),
         )
     }
+
+    fun clickStandardTrackingProtectionButton() =
+        itemWithResId("$packageName:id/tracking_protection_standard_option").click()
+
+    fun clickStrictTrackingProtectionButton() =
+        itemWithResId("$packageName:id/tracking_protection_strict_default").click()
 
     fun verifyPrivacyNoticeCard() {
         scrollToElementByText(getStringResource(R.string.onboarding_privacy_notice_header_1))
