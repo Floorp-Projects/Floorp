@@ -20,6 +20,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/EndpointForReportParent.h"
+#include "mozilla/dom/FetchParent.h"
 #include "mozilla/dom/FileCreatorParent.h"
 #include "mozilla/dom/FileSystemManagerParentFactory.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
@@ -1481,6 +1482,10 @@ BackgroundParentImpl::AllocPLockManagerParent(
     const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
   return MakeAndAddRef<mozilla::dom::locks::LockManagerParent>(aPrincipalInfo,
                                                                aClientId);
+}
+
+already_AddRefed<dom::PFetchParent> BackgroundParentImpl::AllocPFetchParent() {
+  return MakeAndAddRef<dom::FetchParent>();
 }
 
 already_AddRefed<mozilla::net::PWebSocketConnectionParent>
