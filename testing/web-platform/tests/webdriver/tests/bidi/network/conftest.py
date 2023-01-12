@@ -4,6 +4,8 @@ import pytest
 
 from webdriver.bidi.modules.script import ContextTarget
 
+RESPONSE_COMPLETED_EVENT = "network.responseCompleted"
+
 PAGE_EMPTY_HTML = "/webdriver/tests/bidi/network/support/empty.html"
 
 
@@ -34,7 +36,9 @@ def fetch(bidi_session, top_context):
 
 
 @pytest.fixture
-async def setup_network_test(bidi_session, subscribe_events, top_context, url):
+async def setup_network_test(
+    bidi_session, subscribe_events, wait_for_event, top_context, url
+):
     """Navigate the current top level context to the provided url and subscribe
     to network.beforeRequestSent.
 
@@ -47,18 +51,32 @@ async def setup_network_test(bidi_session, subscribe_events, top_context, url):
     async def _setup_network_test(events, test_url=url(PAGE_EMPTY_HTML)):
         nonlocal listeners
 
+        # Listen for network.responseCompleted for the initial navigation to
+        # make sure this event will not be captured unexpectedly by the tests.
+        await bidi_session.session.subscribe(
+            events=[RESPONSE_COMPLETED_EVENT], contexts=[top_context["context"]]
+        )
+        on_response_completed = wait_for_event(RESPONSE_COMPLETED_EVENT)
+
         await bidi_session.browsing_context.navigate(
             context=top_context["context"],
             url=test_url,
             wait="complete",
         )
+        await on_response_completed
+        await bidi_session.session.unsubscribe(
+            events=[RESPONSE_COMPLETED_EVENT], contexts=[top_context["context"]]
+        )
+
         await subscribe_events(events)
 
         network_events = {}
         for event in events:
             network_events[event] = []
+
             async def on_event(method, data, event=event):
                 network_events[event].append(data)
+
             listeners.append(bidi_session.add_event_listener(event, on_event))
 
         return network_events
