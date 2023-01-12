@@ -75,7 +75,7 @@ describe("Frame", () => {
 
     const props = frameProperties(frame, null);
     const component = mount(<Frame {...props} />);
-    expect(component.text()).toBe("    renderFoo foo-view.js:10");
+    expect(component.text()).toBe("    renderFoo foo-view.js:10");
   });
 
   it("full URL", () => {
@@ -85,7 +85,7 @@ describe("Frame", () => {
 
     const props = frameProperties(frame, null, { displayFullUrl: true });
     const component = mount(<Frame {...props} />);
-    expect(component.text()).toBe(`    renderFoo ${url}:10`);
+    expect(component.text()).toBe(`    renderFoo ${url}:10`);
   });
 
   it("renders asyncCause", () => {
@@ -97,7 +97,7 @@ describe("Frame", () => {
     const props = frameProperties(frame);
     const component = mount(<Frame {...props} />, { context: { l10n: L10N } });
     expect(component.find(".location-async-cause").text()).toBe(
-      `    (Async: setTimeout handler)`
+      `    (Async: setTimeout handler)`
     );
   });
 
