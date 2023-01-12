@@ -94,10 +94,6 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
     return nullptr;
   }
 
-  // XXX(krosylight): BodyStream should really be a subclass of ReadableStream
-  // instead of owning ReadableStream this way. See bug 1803386.
-  void ReleaseObjectsFromBodyStream();
-
   // [Transferable]
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
   MOZ_CAN_RUN_SCRIPT bool Transfer(JSContext* aCx,

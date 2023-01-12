@@ -598,11 +598,6 @@ void BodyStream::ReleaseObjects(const MutexSingleWriterAutoLock& aProofOfLock) {
     }
   }
 
-  ReadableStream* stream = mStreamHolder->GetReadableStreamBody();
-  if (stream) {
-    stream->ReleaseObjectsFromBodyStream();
-  }
-
   mWorkerRef = nullptr;
   mGlobal = nullptr;
 
