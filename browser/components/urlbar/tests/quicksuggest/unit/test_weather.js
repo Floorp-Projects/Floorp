@@ -11,8 +11,6 @@ const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE_WEATHER";
 
 const { WEATHER_SUGGESTION } = MerinoTestUtils;
 
-const EXPECTED_RESULT = makeExpectedResult("f");
-
 add_task(async function init() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit();
   UrlbarPrefs.set("quicksuggest.enabled", true);
@@ -101,7 +99,7 @@ async function doBasicDisableAndEnableTest(pref) {
   });
   await check_results({
     context,
-    matches: [EXPECTED_RESULT],
+    matches: [makeExpectedResult()],
   });
 }
 
@@ -478,34 +476,132 @@ add_task(async function clientTimeout() {
   });
 });
 
-// The UrlbarResult should use the temperature unit appropriate for the user's
-// locale: F for en-US and C for everything else.
-add_task(async function localeTemperatureUnit() {
+// Locale task for when this test runs on an en-US OS.
+add_task(async function locale_enUS() {
+  await doLocaleTest({
+    shouldRunTask: osLocale => osLocale == "en-US",
+    osUnit: "f",
+    unitsByLocale: {
+      "en-US": "f",
+      // When the app's locale is set to any en-* locale, F will be used because
+      // `regionalPrefsLocales` will prefer the en-US OS locale.
+      "en-CA": "f",
+      "en-GB": "f",
+      de: "c",
+    },
+  });
+});
+
+// Locale task for when this test runs on a non-US English OS.
+add_task(async function locale_nonUSEnglish() {
+  await doLocaleTest({
+    shouldRunTask: osLocale => osLocale.startsWith("en") && osLocale != "en-US",
+    osUnit: "c",
+    unitsByLocale: {
+      // When the app's locale is set to en-US, C will be used because
+      // `regionalPrefsLocales` will prefer the non-US English OS locale.
+      "en-US": "c",
+      "en-CA": "c",
+      "en-GB": "c",
+      de: "c",
+    },
+  });
+});
+
+// Locale task for when this test runs on a non-English OS.
+add_task(async function locale_nonEnglish() {
+  await doLocaleTest({
+    shouldRunTask: osLocale => !osLocale.startsWith("en"),
+    osUnit: "c",
+    unitsByLocale: {
+      "en-US": "f",
+      "en-CA": "c",
+      "en-GB": "c",
+      de: "c",
+    },
+  });
+});
+
+/**
+ * Testing locales is tricky due to the weather feature's use of
+ * `Services.locale.regionalPrefsLocales`. By default `regionalPrefsLocales`
+ * prefers the OS locale if its language is the same as the app locale's
+ * language; otherwise it prefers the app locale. For example, assuming the OS
+ * locale is en-CA, then if the app locale is en-US it will prefer en-CA since
+ * both are English, but if the app locale is de it will prefer de. If the pref
+ * `intl.regional_prefs.use_os_locales` is set, then the OS locale is always
+ * preferred.
+ *
+ * This function tests a given set of locales with and without
+ * `intl.regional_prefs.use_os_locales` set.
+ *
+ * @param {object} options
+ *   Options
+ * @param {Function} options.shouldRunTask
+ *   Called with the OS locale. Should return true if the function should run.
+ *   Use this to skip tasks that don't target a desired OS locale.
+ * @param {string} options.osUnit
+ *   The expected "c" or "f" unit for the OS locale.
+ * @param {object} options.unitsByLocale
+ *   The expected "c" or "f" unit when the app's locale is set to particular
+ *   locales. This should be an object that maps locales to expected units. For
+ *   each locale in the object, the app's locale is set to that locale and the
+ *   actual unit is expected to be the unit in the object.
+ */
+async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
+  Services.prefs.setBoolPref("intl.regional_prefs.use_os_locales", true);
+  let osLocale = Services.locale.regionalPrefsLocales[0];
+  Services.prefs.clearUserPref("intl.regional_prefs.use_os_locales");
+
+  if (!shouldRunTask(osLocale)) {
+    info("Skipping task, should not run for this OS locale");
+    return;
+  }
+
   assertEnabled({
     message: "Sanity check initial state",
     hasSuggestion: true,
     pendingFetchCount: 0,
   });
 
-  let unitsByLocale = {
-    "en-US": "f",
-    "en-CA": "c",
-    "en-GB": "c",
-    de: "c",
-  };
+  // Sanity check initial locale info.
+  Assert.equal(
+    Services.locale.appLocaleAsBCP47,
+    "en-US",
+    "Initial app locale should be en-US"
+  );
+  Assert.ok(
+    !Services.prefs.getBoolPref("intl.regional_prefs.use_os_locales"),
+    "intl.regional_prefs.use_os_locales should be false initially"
+  );
+
+  // Check locales.
   for (let [locale, expectedUnit] of Object.entries(unitsByLocale)) {
     await QuickSuggestTestUtils.withLocales([locale], async () => {
-      let context = createContext("", {
-        providers: [UrlbarProviderQuickSuggest.name],
-        isPrivate: false,
-      });
+      info("Checking locale: " + locale);
       await check_results({
-        context,
+        context: createContext("", {
+          providers: [UrlbarProviderQuickSuggest.name],
+          isPrivate: false,
+        }),
         matches: [makeExpectedResult(expectedUnit)],
       });
+
+      info(
+        "Checking locale with intl.regional_prefs.use_os_locales: " + locale
+      );
+      Services.prefs.setBoolPref("intl.regional_prefs.use_os_locales", true);
+      await check_results({
+        context: createContext("", {
+          providers: [UrlbarProviderQuickSuggest.name],
+          isPrivate: false,
+        }),
+        matches: [makeExpectedResult(osUnit)],
+      });
+      Services.prefs.clearUserPref("intl.regional_prefs.use_os_locales");
     });
   }
-});
+}
 
 // A weather suggestion should not be returned for a non-empty search string.
 add_task(async function nonEmptySearchString() {
@@ -546,7 +642,7 @@ add_task(async function block() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_RESULT],
+    matches: [makeExpectedResult()],
   });
 
   // Block the result.
@@ -629,13 +725,19 @@ function assertDisabled({ message, pendingFetchCount }) {
   );
 }
 
-function makeExpectedResult(temperatureUnit) {
+function makeExpectedResult(temperatureUnit = undefined) {
+  if (!temperatureUnit) {
+    temperatureUnit =
+      Services.locale.regionalPrefsLocales[0] == "en-US" ? "f" : "c";
+  }
+
   return {
     type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     payload: {
-      url: "http://example.com/weather",
+      temperatureUnit,
+      url: WEATHER_SUGGESTION.url,
       icon: "chrome://global/skin/icons/highlights.svg",
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
@@ -645,25 +747,17 @@ function makeExpectedResult(temperatureUnit) {
       blockL10n: {
         id: "firefox-suggest-urlbar-block",
       },
-      requestId: "request_id",
+      requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",
       merinoProvider: "accuweather",
       dynamicType: "weather",
-      city: "San Francisco",
-      temperature: {
-        c: 15.5,
-        f: 60,
-      },
-      currentConditions: "Mostly cloudy",
-      forecast: "Pleasant Saturday",
-      high: {
-        c: 21.1,
-        f: 70,
-      },
-      low: {
-        c: 13.9,
-        f: 57,
-      },
+      city: WEATHER_SUGGESTION.city_name,
+      temperature:
+        WEATHER_SUGGESTION.current_conditions.temperature[temperatureUnit],
+      currentConditions: WEATHER_SUGGESTION.current_conditions.summary,
+      forecast: WEATHER_SUGGESTION.forecast.summary,
+      high: WEATHER_SUGGESTION.forecast.high[temperatureUnit],
+      low: WEATHER_SUGGESTION.forecast.low[temperatureUnit],
       isWeather: true,
       shouldNavigate: true,
     },
