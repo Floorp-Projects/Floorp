@@ -145,6 +145,17 @@ const InitiatorType = {
  * @typedef {BaseParameters & ResponseStartedParametersProperties} ResponseStartedParameters
  */
 
+/**
+ * @typedef {Object} ResponseCompletedParametersProperties
+ * @property {ResponseData} response
+ */
+
+/**
+ * Parameters for the ResponseCompleted event
+ *
+ * @typedef {BaseParameters & ResponseCompletedParametersProperties} ResponseCompletedParameters
+ */
+
 class NetworkModule extends Module {
   #beforeRequestSentMap;
   #networkListener;
@@ -164,12 +175,14 @@ class NetworkModule extends Module {
 
     this.#networkListener = new lazy.NetworkListener();
     this.#networkListener.on("before-request-sent", this.#onBeforeRequestSent);
-    this.#networkListener.on("response-started", this.#onResponseStarted);
+    this.#networkListener.on("response-completed", this.#onResponseEvent);
+    this.#networkListener.on("response-started", this.#onResponseEvent);
   }
 
   destroy() {
     this.#networkListener.off("before-request-sent", this.#onBeforeRequestSent);
-    this.#networkListener.off("response-started", this.#onResponseStarted);
+    this.#networkListener.off("response-completed", this.#onResponseEvent);
+    this.#networkListener.off("response-started", this.#onResponseEvent);
 
     this.#beforeRequestSentMap = null;
     this.#subscribedEvents = null;
@@ -216,7 +229,7 @@ class NetworkModule extends Module {
     );
   };
 
-  #onResponseStarted = (name, data) => {
+  #onResponseEvent = (name, data) => {
     const {
       contextId,
       requestData,
@@ -244,15 +257,20 @@ class NetworkModule extends Module {
       timestamp,
     };
 
-    const responseStartedEvent = {
+    const responseEvent = {
       ...baseParameters,
       response: responseData,
     };
 
+    const protocolEventName =
+      name === "response-started"
+        ? "network.responseStarted"
+        : "network.responseCompleted";
+
     const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
     this.emitEvent(
-      "network.responseStarted",
-      responseStartedEvent,
+      protocolEventName,
+      responseEvent,
       this.#getContextInfo(browsingContext)
     );
   };
@@ -313,7 +331,11 @@ class NetworkModule extends Module {
   }
 
   static get supportedEvents() {
-    return ["network.beforeRequestSent", "network.responseStarted"];
+    return [
+      "network.beforeRequestSent",
+      "network.responseCompleted",
+      "network.responseStarted",
+    ];
   }
 }
 
