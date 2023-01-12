@@ -9,7 +9,7 @@ const TEST_FILE =
   "browser/devtools/client/webconsole/test/browser/test-warning-group-csp.html";
 
 add_task(async function testCSPGroup() {
-  const GROUP_LABEL = "Content Security Policy warnings";
+  const GROUP_LABEL = "Content-Security-Policy warnings";
 
   const hud = await openNewTabAndConsole("https://example.org/" + TEST_FILE);
 
