@@ -53,11 +53,6 @@ class ReadableStreamController : public nsISupports {
     mAlgorithms = nullptr;
   }
 
-  // XXX(krosylight): Hacky way to workaround the ownership issue between
-  // BodyStream and ReadableStream trying to cleanup each other. See bug
-  // 1803386.
-  void ClearAlgorithmsWithoutRelease() { mAlgorithms = nullptr; }
-
  protected:
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
