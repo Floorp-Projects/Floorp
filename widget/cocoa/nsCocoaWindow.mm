@@ -2253,8 +2253,10 @@ LayoutDeviceIntSize nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize&
 
 nsMenuBarX* nsCocoaWindow::GetMenuBar() { return mMenuBar; }
 
-void nsCocoaWindow::CaptureRollupEvents(bool aDoCapture) {
+void nsCocoaWindow::CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  gRollupListener = nullptr;
 
   if (aDoCapture) {
     if (![NSApp isActive]) {
@@ -2264,6 +2266,7 @@ void nsCocoaWindow::CaptureRollupEvents(bool aDoCapture) {
       // and gdb sessions. See bug 699538.
       nsToolkit::GetToolkit()->MonitorAllProcessMouseEvents();
     }
+    gRollupListener = aListener;
 
     // Sometimes more than one popup window can be visible at the same time
     // (e.g. nested non-native context menus, or the test case (attachment

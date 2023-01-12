@@ -1395,6 +1395,13 @@ class nsIWidget : public nsISupports {
   virtual nsresult AsyncEnableDragDrop(bool aEnable) = 0;
 
   /**
+   * Enables/Disables system mouse capture.
+   * @param aCapture true enables mouse capture, false disables mouse capture
+   *
+   */
+  virtual void CaptureMouse(bool aCapture) = 0;
+
+  /**
    * Classify the window for the window manager. Mostly for X11.
    */
   virtual void SetWindowClass(const nsAString& xulWinType) = 0;
@@ -1406,7 +1413,8 @@ class nsIWidget : public nsISupports {
    * @param aDoCapture true enables capture, false disables capture
    *
    */
-  virtual void CaptureRollupEvents(bool aDoCapture) = 0;
+  virtual void CaptureRollupEvents(nsIRollupListener* aListener,
+                                   bool aDoCapture) = 0;
 
   /**
    * Bring this window to the user's attention.  This is intended to be a more
