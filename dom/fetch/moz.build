@@ -11,11 +11,9 @@ EXPORTS.mozilla.dom += [
     "BodyExtractor.h",
     "ChannelInfo.h",
     "Fetch.h",
-    "FetchChild.h",
     "FetchDriver.h",
     "FetchIPCTypes.h",
     "FetchObserver.h",
-    "FetchParent.h",
     "FetchService.h",
     "FetchStreamReader.h",
     "FetchStreamUtils.h",
@@ -32,10 +30,8 @@ UNIFIED_SOURCES += [
     "BodyExtractor.cpp",
     "ChannelInfo.cpp",
     "Fetch.cpp",
-    "FetchChild.cpp",
     "FetchDriver.cpp",
     "FetchObserver.cpp",
-    "FetchParent.cpp",
     "FetchService.cpp",
     "FetchStreamReader.cpp",
     "FetchStreamUtils.cpp",
@@ -50,7 +46,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     "FetchTypes.ipdlh",
-    "PFetch.ipdl",
 ]
 
 LOCAL_INCLUDES += [

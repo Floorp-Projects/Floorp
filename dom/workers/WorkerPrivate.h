@@ -38,7 +38,6 @@
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/dom/workerinternals/Queue.h"
 #include "mozilla/dom/JSExecutionManager.h"
-#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
@@ -871,11 +870,6 @@ class WorkerPrivate final
     // Any thread.
     MOZ_ASSERT(mLoadInfo.mCookieJarSettings);
     return mLoadInfo.mCookieJarSettings;
-  }
-
-  const net::CookieJarSettingsArgs& CookieJarSettingsArgs() const {
-    MOZ_ASSERT(mLoadInfo.mCookieJarSettings);
-    return mLoadInfo.mCookieJarSettingsArgs;
   }
 
   const OriginAttributes& GetOriginAttributes() const {

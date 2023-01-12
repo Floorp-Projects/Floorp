@@ -29,7 +29,6 @@ using mozilla::net::RedirectHistoryEntryInfo;
 namespace mozilla {
 
 namespace ipc {
-class PBackgroundChild;
 class PrincipalInfo;
 }  // namespace ipc
 
@@ -97,9 +96,6 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
                   const nsAString& aIntegrity);
 
   explicit InternalRequest(const IPCInternalRequest& aIPCRequest);
-
-  void ToIPCInternalRequest(IPCInternalRequest* aIPCRequest,
-                            mozilla::ipc::PBackgroundChild* aManager);
 
   SafeRefPtr<InternalRequest> Clone();
 
