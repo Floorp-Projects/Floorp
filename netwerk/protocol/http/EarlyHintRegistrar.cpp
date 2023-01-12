@@ -55,13 +55,19 @@ EarlyHintRegistrar::~EarlyHintRegistrar() { MOZ_ASSERT(NS_IsMainThread()); }
 
 // static
 void EarlyHintRegistrar::CleanUp() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!gSingleton) {
     return;
   }
 
   for (auto& preloader : gSingleton->mEarlyHint) {
     if (auto p = preloader.GetData()) {
-      p->CancelChannel(NS_ERROR_ABORT, "EarlyHintRegistrar::CleanUp"_ns);
+      // Don't delete entry from EarlyHintPreloader, because that would
+      // invalidate the iterator.
+
+      p->CancelChannel(NS_ERROR_ABORT, "EarlyHintRegistrar::CleanUp"_ns,
+                       /* aDeleteEntry */ false);
     }
   }
   gSingleton->mEarlyHint.Clear();
@@ -69,6 +75,8 @@ void EarlyHintRegistrar::CleanUp() {
 
 // static
 already_AddRefed<EarlyHintRegistrar> EarlyHintRegistrar::GetOrCreate() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!gSingleton) {
     gSingleton = new EarlyHintRegistrar();
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

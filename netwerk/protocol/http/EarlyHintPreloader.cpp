@@ -38,6 +38,7 @@
 #include "nsILoadInfo.h"
 #include "nsIParentChannel.h"
 #include "nsIReferrerInfo.h"
+#include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
@@ -77,7 +78,7 @@ static uint64_t gEarlyHintPreloaderId{0};
 
 void OngoingEarlyHints::CancelAllOngoingPreloads(const nsACString& aReason) {
   for (auto& preloader : mPreloaders) {
-    preloader->CancelChannel(NS_ERROR_ABORT, aReason);
+    preloader->CancelChannel(NS_ERROR_ABORT, aReason, /* aDeleteEntry */ true);
   }
   mPreloaders.Clear();
   mStartedPreloads.Clear();
@@ -101,7 +102,10 @@ void OngoingEarlyHints::RegisterLinksAndGetConnectArgs(
     nsTArray<EarlyHintConnectArgs>& aOutLinks) {
   // register all channels before returning
   for (auto& preload : mPreloaders) {
-    aOutLinks.AppendElement(preload->Register());
+    EarlyHintConnectArgs args;
+    if (preload->Register(args)) {
+      aOutLinks.AppendElement(std::move(args));
+    }
   }
 }
 
@@ -115,6 +119,10 @@ EarlyHintPreloader::EarlyHintPreloader() {
 };
 
 EarlyHintPreloader::~EarlyHintPreloader() {
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
   Telemetry::Accumulate(Telemetry::EH_STATE_OF_PRELOAD_REQUEST, mState);
 }
 
@@ -417,17 +425,42 @@ void EarlyHintPreloader::SetLinkHeader(const LinkHeader& aLinkHeader) {
   mConnectArgs.link() = aLinkHeader;
 }
 
-EarlyHintConnectArgs EarlyHintPreloader::Register() {
-  // Create an entry in the redirect channel registrar to
-  // allocate an identifier for this load.
+bool EarlyHintPreloader::Register(EarlyHintConnectArgs& aOut) {
+  // Set minimum delay of 1ms to always start the timer after the function call
+  // completed.
+  nsresult rv = NS_NewTimerWithCallback(
+      getter_AddRefs(mTimer), this,
+      std::max(StaticPrefs::network_early_hints_parent_connect_timeout(),
+               (uint32_t)1),
+      nsITimer::TYPE_ONE_SHOT);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(!mTimer);
+    CancelChannel(NS_ERROR_ABORT, "new-timer-failed"_ns,
+                  /* aDeleteEntry */ false);
+    return false;
+  }
+
+  // Create an entry in the redirect channel registrar
   RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
   registrar->RegisterEarlyHint(mConnectArgs.earlyHintPreloaderId(), this);
-  return mConnectArgs;
+
+  aOut = mConnectArgs;
+  return true;
 }
 
 nsresult EarlyHintPreloader::CancelChannel(nsresult aStatus,
-                                           const nsACString& aReason) {
+                                           const nsACString& aReason,
+                                           bool aDeleteEntry) {
   LOG(("EarlyHintPreloader::CancelChannel [this=%p]\n", this));
+
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+  if (aDeleteEntry) {
+    RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
+    registrar->DeleteEntry(mConnectArgs.earlyHintPreloaderId());
+  }
   // clear redirect channel in case this channel is cleared between the call of
   // EarlyHintPreloader::AsyncOnChannelRedirect and
   // EarlyHintPreloader::OnRedirectResult
@@ -437,6 +470,9 @@ nsresult EarlyHintPreloader::CancelChannel(nsresult aStatus,
       mChannel->Resume();
     }
     mChannel->CancelWithReason(aStatus, aReason);
+    // Clearing mChannel is safe, because this EarlyHintPreloader is not in the
+    // EarlyHintRegistrar after this function call and we won't call
+    // SetHttpChannelFromEarlyHintPreloader nor OnStartRequest on mParent.
     mChannel = nullptr;
     SetState(ePreloaderCancelled);
   }
@@ -451,6 +487,11 @@ void EarlyHintPreloader::OnParentReady(nsIParentChannel* aParent,
 
   mParent = aParent;
   mChannelId = aChannelId;
+
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
 
   RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
   registrar->DeleteEntry(mConnectArgs.earlyHintPreloaderId());
@@ -518,7 +559,8 @@ void EarlyHintPreloader::InvokeStreamListenerFunctions() {
 
 NS_IMPL_ISUPPORTS(EarlyHintPreloader, nsIRequestObserver, nsIStreamListener,
                   nsIChannelEventSink, nsIInterfaceRequestor,
-                  nsIRedirectResultListener, nsIMultiPartChannelListener);
+                  nsIRedirectResultListener, nsIMultiPartChannelListener,
+                  nsINamed, nsITimerCallback);
 
 //-----------------------------------------------------------------------------
 // EarlyHintPreloader::nsIStreamListener
@@ -673,6 +715,43 @@ EarlyHintPreloader::OnRedirectResult(nsresult aStatus) {
   }
 
   mRedirectChannel = nullptr;
+
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// EarlyHintPreloader::nsINamed
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+EarlyHintPreloader::GetName(nsACString& aName) {
+  aName.AssignLiteral("EarlyHintPreloader");
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// EarlyHintPreloader::nsITimerCallback
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+EarlyHintPreloader::Notify(nsITimer* timer) {
+  // Death grip, because we will most likely remove the last reference when
+  // deleting us from the EarlyHintRegistrar
+  RefPtr<EarlyHintPreloader> deathGrip(this);
+
+  RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
+  registrar->DeleteEntry(mConnectArgs.earlyHintPreloaderId());
+
+  mTimer = nullptr;
+  mRedirectChannel = nullptr;
+  if (mChannel) {
+    if (mSuspended) {
+      mChannel->Resume();
+    }
+    mChannel->CancelWithReason(NS_ERROR_ABORT, "parent-connect-timeout"_ns);
+    mChannel = nullptr;
+  }
+  SetState(ePreloaderTimeout);
 
   return NS_OK;
 }
