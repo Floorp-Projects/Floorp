@@ -297,6 +297,11 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">关闭</string>
 
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">继续</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">暂时不要</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">新建 %1$s 标签页</string>
@@ -368,6 +373,19 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s 将清除此网站的 Cookie 并刷新页面。清除 Cookie 可能会导致您退出登录，或清空购物车。</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s 会自动尝试拒绝 Cookie 请求。若网站未提供拒绝选项，%2$s 可能会接受所有 Cookie 以关闭横幅。</string>
+
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Cookie 横幅，消失不见！</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">暂时不要</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">关闭横幅</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">关闭弹窗</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">减少 Cookie 横幅</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">允许</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">自动尝试使用 HTTPS 加密协议连接至网站，增强安全性。</string>

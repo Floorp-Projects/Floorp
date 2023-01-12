@@ -296,6 +296,18 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">닫기</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">알림은 %s로 더 많은 작업을 수행하는 데 도움이 됩니다.</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">기기 간에 탭을 동기화하고, 다운로드를 관리하고, %s의 개인 정보 보호를 최대한 활용하는 방법에 대한 팁을 얻으세요.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">계속</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">나중에</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">새 %1$s 탭 열기</string>
@@ -352,7 +364,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">쿠키 배너 줄이기</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox는 자동으로 쿠키 배너에서 쿠키 요청을 거부하려고 시도합니다. 거부 옵션을 사용할 수 없는 경우, Firefox는 배너를 닫기 위해 모든 쿠키를 허용할 수 있습니다.</string>
+    <string name="reduce_cookie_banner_summary">Firefox는 자동으로 쿠키 배너에서 쿠키 요청을 거부하려고 시도합니다. 거부 옵션을 사용할 수 없는 경우, Firefox는 배너를 닫기 위해 모든 쿠키를 수락할 수 있습니다.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">이 사이트에서 꺼짐</string>
@@ -366,7 +378,32 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s는 이 사이트의 쿠키를 지우고 페이지를 새로 고침합니다. 모든 쿠키를 삭제하면 로그아웃되거나 장바구니가 비워질 수 있습니다.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s는 자동으로 쿠키 요청을 거부하려고 시도합니다. 거부 옵션을 사용할 수 없는 경우, %2$s는 배너를 닫기 위해 모든 쿠키를 허용할 수 있습니다.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s는 자동으로 쿠키 요청을 거부하려고 시도합니다. 거부 옵션을 사용할 수 없는 경우, %2$s는 배너를 닫기 위해 모든 쿠키를 수락할 수 있습니다.</string>
+
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">쿠키 배너가 사라졌습니다!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">가능한 경우 쿠키 요청을 자동으로 거부합니다. 그렇지 않으면 배너를 닫기 위해 모든 쿠키를 수락합니다.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">나중에</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">배너 닫기</string>
+
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">쿠키 요청이 더 적게 표시됩니다.</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">쿠키 팝업 덜 보기</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">방해받지 않는 탐색을 위해 쿠키 팝업에 자동으로 응답합니다. %1$s는 가능한 경우 모든 요청을 거부하고 그렇지 않은 경우 모두 수락합니다.</string>
+
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">팝업 닫기</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">쿠키 배너 감소</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">가능한 경우 %1$s가 사이트의 쿠키 동의 요청을 거부하거나 가능하지 않은 경우 쿠키 액세스를 수락하도록 허용하시겠습니까?</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">허용</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">보안 강화를 위해 HTTPS 암호화 프로토콜을 사용하여 사이트에 자동으로 연결을 시도합니다.</string>
