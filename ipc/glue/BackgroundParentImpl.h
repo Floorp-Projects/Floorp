@@ -415,8 +415,6 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   already_AddRefed<PLockManagerParent> AllocPLockManagerParent(
       const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) final;
-
-  already_AddRefed<PFetchParent> AllocPFetchParent() override;
 };
 
 }  // namespace mozilla::ipc
