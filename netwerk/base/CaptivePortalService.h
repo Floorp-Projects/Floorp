@@ -58,6 +58,7 @@ class CaptivePortalService : public nsICaptivePortalService,
   bool mInitialized{false};
   bool mRequestInProgress{false};
   bool mEverBeenCaptive{false};
+  bool mCanUseJS{false};
 
   uint32_t mDelay{kDefaultInterval};
   int32_t mSlackCount{0};
