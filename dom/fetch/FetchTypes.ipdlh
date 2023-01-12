@@ -18,7 +18,6 @@ using RequestRedirect from "mozilla/dom/RequestBinding.h";
 using ResponseType from "mozilla/dom/ResponseBinding.h";
 using struct nsID from "nsID.h";
 using FetchDriverObserver::EndReason from "mozilla/dom/FetchDriver.h";
-using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
 [RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
 [RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
@@ -35,9 +34,8 @@ struct ParentToParentStream {
   nsID uuid;
 };
 
-union ParentToChildStream {
-  RemoteLazyInputStream;
-  IPCStream;
+struct ParentToChildStream {
+  RemoteLazyInputStream stream;
 };
 
 struct ChildToParentStream {
@@ -61,7 +59,6 @@ struct IPCInternalRequest {
   uint32_t contentPolicyType;
   nsString referrer;
   ReferrerPolicy referrerPolicy;
-  ReferrerPolicy environmentReferrerPolicy;
   RequestMode requestMode;
   RequestCredentials requestCredentials;
   RequestCache cacheMode;
@@ -73,7 +70,6 @@ struct IPCInternalRequest {
   uint32_t interceptionContentPolicyType;
   RedirectHistoryEntryInfo[] interceptionRedirectChain;
   bool interceptionFromThirdParty;
-  CrossOriginEmbedderPolicy embedderPolicy;
 };
 
 struct InternalResponseMetadata {
@@ -87,8 +83,6 @@ struct InternalResponseMetadata {
   nsCString alternativeDataType;
   nsITransportSecurityInfo securityInfo;
   PrincipalInfo? principalInfo;
-  nsCString bodyBlobURISpec;
-  nsString bodyLocalPath;
 };
 
 struct ParentToParentInternalResponse {
