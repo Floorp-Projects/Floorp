@@ -189,7 +189,9 @@ class nsWindow final : public nsBaseWidget {
   void SetIcon(const nsAString& aIconSpec) override;
   void SetWindowClass(const nsAString& xulWinType) override;
   LayoutDeviceIntPoint WidgetToScreenOffset() override;
-  void CaptureRollupEvents(bool aDoCapture) override;
+  void CaptureMouse(bool aCapture) override;
+  void CaptureRollupEvents(nsIRollupListener* aListener,
+                           bool aDoCapture) override;
   [[nodiscard]] nsresult GetAttention(int32_t aCycleCount) override;
   bool HasPendingInputEvent() override;
 
@@ -486,9 +488,12 @@ class nsWindow final : public nsBaseWidget {
   void SetHasMappedToplevel(bool aState);
   LayoutDeviceIntSize GetSafeWindowSize(LayoutDeviceIntSize aSize);
 
-  void DispatchContextMenuEventFromMouseEvent(
-      uint16_t domButton, GdkEventButton* aEvent,
-      const mozilla::LayoutDeviceIntPoint& aRefPoint);
+  void EnsureGrabs(void);
+  void GrabPointer(guint32 aTime);
+  void ReleaseGrabs(void);
+
+  void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
+                                              GdkEventButton* aEvent);
 
   void TryToShowNativeWindowMenu(GdkEventButton* aEvent);
 
@@ -504,8 +509,7 @@ class nsWindow final : public nsBaseWidget {
   void SetDefaultIcon(void);
   void SetWindowDecoration(nsBorderStyle aStyle);
   void InitButtonEvent(mozilla::WidgetMouseEvent& aEvent,
-                       GdkEventButton* aGdkEvent,
-                       const mozilla::LayoutDeviceIntPoint& aRefPoint);
+                       GdkEventButton* aGdkEvent);
   bool CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
                       bool aAlwaysRollup);
   void CheckForRollupDuringGrab() { CheckForRollup(0, 0, false, true); }
@@ -772,9 +776,6 @@ class nsWindow final : public nsBaseWidget {
   // Whether we've received a non-blank paint in which case we can reset the
   // clear color to transparent.
   bool mGotNonBlankPaint : 1;
-
-  // Whether we need to retry capturing the mouse because we' re not mapped yet.
-  bool mNeedsToRetryCapturingMouse : 1;
 
   // This bitmap tracks which pixels are transparent. We don't support
   // full translucency at this time; each pixel is either fully opaque

@@ -164,7 +164,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // nsIWidget interface
-  void CaptureRollupEvents(bool aDoCapture) override {}
+  void CaptureMouse(bool aCapture) override {}
+  void CaptureRollupEvents(nsIRollupListener* aListener,
+                           bool aDoCapture) override {}
   nsIWidgetListener* GetWidgetListener() const override;
   void SetWidgetListener(nsIWidgetListener* alistener) override;
   void Destroy() override;
@@ -732,6 +734,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   // scrolling. It is reset to false once a new gesture starts (as indicated by
   // a PANGESTURE_(MAY)START event).
   bool mCurrentPanGestureBelongsToSwipe;
+
+  static nsIRollupListener* gRollupListener;
 
   struct InitialZoomConstraints {
     InitialZoomConstraints(const uint32_t& aPresShellID,
