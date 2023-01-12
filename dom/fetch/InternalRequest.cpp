@@ -193,7 +193,7 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
   if (!XRE_IsParentProcess()) {
     if (body) {
       MOZ_ASSERT(body->type() == BodyStreamVariant::TParentToChildStream);
-      mBodyStream = body->get_ParentToChildStream().stream();
+      mBodyStream = body->get_ParentToChildStream().get_RemoteLazyInputStream();
     }
   } else {
     if (body) {
