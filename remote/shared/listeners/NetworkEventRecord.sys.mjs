@@ -4,6 +4,9 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkUtils:
+    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
+
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
@@ -15,9 +18,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * NetworkListener instance which created it.
  */
 export class NetworkEventRecord {
-  #contextId;
   #channel;
   #networkListener;
+  #redirectCount;
   #requestData;
   #requestId;
   #responseData;
@@ -34,8 +37,6 @@ export class NetworkEventRecord {
    *     The NetworkListener which created this NetworkEventRecord.
    */
   constructor(networkEvent, channel, networkListener) {
-    const browsingContext = BrowsingContext.get(networkEvent.browsingContextID);
-    this.#contextId = lazy.TabManager.getIdForBrowsingContext(browsingContext);
     this.#channel = channel;
     this.#wrappedChannel = ChannelWrapper.get(channel);
 
@@ -144,13 +145,12 @@ export class NetworkEventRecord {
   addResponseStart(response, rawHeaders) {
     this.#responseData = {
       ...this.#responseData,
-      fromCache: response.fromCache,
       bodySize: response.bodySize,
+      bytesReceived: response.transferredSize,
+      fromCache: response.fromCache,
       // Note: at this point we only have access to the headers size. Parsed
       // headers will be added in addResponseHeaders.
       headersSize: response.headersSize,
-      bytesReceived: response.transferredSize,
-      mimeType: response.mimeType,
       protocol: response.protocol,
       status: parseInt(response.status),
       statusText: response.statusText,
@@ -181,6 +181,11 @@ export class NetworkEventRecord {
    */
   addResponseHeaders(headers) {
     this.#responseData.headers = headers;
+
+    // The mimetype info should also be available on the wrapped channel after
+    // headers have been parsed.
+    this.#responseData.mimeType = this.#getMimeType();
+
     // This should be triggered when all headers have been received, matching
     // the WebDriverBiDi response started trigger in `4.6. HTTP-network fetch`
     // from the fetch specification, based on the PR visible at
@@ -235,14 +240,24 @@ export class NetworkEventRecord {
    *
    * Required API for a NetworkObserver event owner.
    *
-   * Not used for RemoteAgent.
-   *
    * @param {Object} response
    *     An object which represents the response content.
    * @param {Object} responseInfo
    *     Additional meta data about the response.
    */
-  addResponseContent(response, responseInfo) {}
+  addResponseContent(response, responseInfo) {
+    // Update content-related sizes with the latest data from addResponseContent.
+    this.#responseData = {
+      ...this.#responseData,
+      bodySize: response.bodySize,
+      bytesReceived: response.transferredSize,
+      content: {
+        size: response.decodedBodySize,
+      },
+    };
+
+    this.#emitResponseCompleted();
+  }
 
   /**
    * Add server timings.
@@ -257,24 +272,34 @@ export class NetworkEventRecord {
   addServerTimings(serverTimings) {}
 
   #emitBeforeRequestSent() {
-    const timedChannel = this.#channel.QueryInterface(Ci.nsITimedChannel);
-    this.#requestData.timings = this.#getTimingsFromTimedChannel(timedChannel);
+    this.#updateDataFromTimedChannel();
 
     this.#networkListener.emit("before-request-sent", {
-      contextId: this.#contextId,
-      redirectCount: timedChannel.redirectCount,
+      contextId: this.#getContextId(),
+      redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       timestamp: Date.now(),
     });
   }
 
+  #emitResponseCompleted() {
+    this.#updateDataFromTimedChannel();
+
+    this.#networkListener.emit("response-completed", {
+      contextId: this.#getContextId(),
+      redirectCount: this.#redirectCount,
+      requestData: this.#requestData,
+      responseData: this.#responseData,
+      timestamp: Date.now(),
+    });
+  }
+
   #emitResponseStarted() {
-    const timedChannel = this.#channel.QueryInterface(Ci.nsITimedChannel);
-    this.#requestData.timings = this.#getTimingsFromTimedChannel(timedChannel);
+    this.#updateDataFromTimedChannel();
 
     this.#networkListener.emit("response-started", {
-      contextId: this.#contextId,
-      redirectCount: timedChannel.redirectCount,
+      contextId: this.#getContextId(),
+      redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       responseData: this.#responseData,
       timestamp: Date.now(),
@@ -302,6 +327,38 @@ export class NetworkEventRecord {
     }
 
     return timing - requestTime;
+  }
+
+  /**
+   * Retrieve the context id corresponding to the current channel, this could
+   * change dynamically during a cross group navigation for an iframe, so this
+   * should always be retrieved dynamically.
+   */
+  #getContextId() {
+    const id = lazy.NetworkUtils.getChannelBrowsingContextID(this.#channel);
+    const browsingContext = BrowsingContext.get(id);
+    return lazy.TabManager.getIdForBrowsingContext(browsingContext);
+  }
+
+  #getMimeType() {
+    // TODO: DevTools NetworkObserver is computing a similar value in
+    // addResponseContent, but uses an inconsistent implementation in
+    // addResponseStart. This approach can only be used as early as in
+    // addResponseHeaders. We should move this logic to the NetworkObserver and
+    // expose mimeType in addResponseStart. Bug 1809670.
+    let mimeType = "";
+
+    try {
+      mimeType = this.#wrappedChannel.contentType;
+      const contentCharset = this.#channel.contentCharset;
+      if (contentCharset) {
+        mimeType += `;charset=${contentCharset}`;
+      }
+    } catch (e) {
+      // Ignore exceptions when reading contentType/contentCharset
+    }
+
+    return mimeType;
   }
 
   #getTimingsFromTimedChannel(timedChannel) {
@@ -350,5 +407,16 @@ export class NetworkEventRecord {
       responseStart: this.#convertTimestamp(responseStartTime, originTime),
       responseEnd: this.#convertTimestamp(responseEndTime, originTime),
     };
+  }
+
+  /**
+   * Update the timings and the redirect count from the nsITimedChannel
+   * corresponding to the current channel. This should be called before emitting
+   * any event from this class.
+   */
+  #updateDataFromTimedChannel() {
+    const timedChannel = this.#channel.QueryInterface(Ci.nsITimedChannel);
+    this.#redirectCount = timedChannel.redirectCount;
+    this.#requestData.timings = this.#getTimingsFromTimedChannel(timedChannel);
   }
 }
