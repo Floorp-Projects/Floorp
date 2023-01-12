@@ -277,7 +277,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSConditionRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CSSContainerRule", insecureContext: true, nightly: true },
+  { name: "CSSContainerRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSCounterStyleRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
