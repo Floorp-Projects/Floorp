@@ -454,10 +454,12 @@ struct Texture {
   }
 
   int bpp() const { return buf_bpp; }
-  void set_bpp() { buf_bpp = bytes_for_internal_format(internal_format); }
+  int compute_bpp() const { return bytes_for_internal_format(internal_format); }
 
   size_t stride() const { return buf_stride; }
-  void set_stride() { buf_stride = aligned_stride(buf_bpp * width); }
+  size_t compute_stride(int bpp, int width) const {
+    return aligned_stride(bpp * width);
+  }
 
   // Set an external backing buffer of this texture.
   void set_buffer(void* new_buf, size_t new_stride) {
@@ -466,13 +468,13 @@ struct Texture {
     // is aligned to the smaller of either the BPP or word-size. We need to at
     // least be able to sample data from within a row and sample whole pixels
     // of smaller formats without risking unaligned access.
-    set_bpp();
-    set_stride();
-    assert(new_stride >= size_t(bpp() * width) &&
-           new_stride % min(bpp(), sizeof(uint32_t)) == 0);
+    int new_bpp = compute_bpp();
+    assert(new_stride >= size_t(new_bpp * width) &&
+           new_stride % min(new_bpp, sizeof(uint32_t)) == 0);
 
     buf = (char*)new_buf;
     buf_size = 0;
+    buf_bpp = new_bpp;
     buf_stride = new_stride;
   }
 
@@ -485,13 +487,13 @@ struct Texture {
     // Check if there is either no buffer currently or if we forced validation
     // of the buffer size because some dimension might have changed.
     if ((!buf || force) && should_free()) {
-      // Initialize the buffer's BPP and stride, since they may have changed.
-      set_bpp();
-      set_stride();
+      // Compute the buffer's BPP and stride, since they may have changed.
+      int new_bpp = compute_bpp();
+      size_t new_stride = compute_stride(new_bpp, width);
       // Compute new size based on the maximum potential stride, rather than
       // the current stride, to hopefully avoid reallocations when size would
       // otherwise change too much...
-      size_t max_stride = max(buf_stride, aligned_stride(buf_bpp * min_width));
+      size_t max_stride = compute_stride(new_bpp, max(width, min_width));
       size_t size = max_stride * max(height, min_height);
       if ((!buf && size > 0) || size > buf_size) {
         // Allocate with a SIMD register-sized tail of padding at the end so we
@@ -512,6 +514,8 @@ struct Texture {
           // Successfully reallocated the buffer, so go ahead and set it.
           buf = new_buf;
           buf_size = size;
+          buf_bpp = new_bpp;
+          buf_stride = new_stride;
           return true;
         }
         // Allocation failed, so ensure we don't leave stale buffer state.
