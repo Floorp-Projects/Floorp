@@ -75,8 +75,9 @@ def _get_gradle_projects(gradle_root, existing_build_config):
         return list(existing_build_config["projects"].keys())
     elif gradle_root.endswith("focus-android"):
         return ["app"]
+    elif gradle_root.endswith("fenix"):
+        return ["app"]
 
-    # TODO: Support fenix
     raise NotImplementedError(f"Cannot find gradle projects for {gradle_root}")
 
 
@@ -130,8 +131,7 @@ def _get_variants(gradle_root):
 
 
 def _should_print_variants(gradle_root):
-    # TODO: Support fenix
-    return gradle_root.endswith("focus-android")
+    return gradle_root.endswith("fenix") or gradle_root.endswith("focus-android")
 
 
 def main():

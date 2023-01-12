@@ -1,0 +1,138 @@
+projects:
+  app:
+    upstream_dependencies:
+    - browser-domains
+    - browser-engine-gecko
+    - browser-icons
+    - browser-menu
+    - browser-menu2
+    - browser-session-storage
+    - browser-state
+    - browser-storage-sync
+    - browser-tabstray
+    - browser-thumbnails
+    - browser-toolbar
+    - compose-awesomebar
+    - compose-cfr
+    - concept-awesomebar
+    - concept-base
+    - concept-engine
+    - concept-menu
+    - concept-push
+    - concept-storage
+    - concept-sync
+    - concept-tabstray
+    - concept-toolbar
+    - feature-accounts
+    - feature-accounts-push
+    - feature-addons
+    - feature-app-links
+    - feature-autofill
+    - feature-awesomebar
+    - feature-contextmenu
+    - feature-customtabs
+    - feature-downloads
+    - feature-findinpage
+    - feature-intent
+    - feature-logins
+    - feature-media
+    - feature-privatemode
+    - feature-prompts
+    - feature-push
+    - feature-pwa
+    - feature-qr
+    - feature-readerview
+    - feature-recentlyclosed
+    - feature-search
+    - feature-session
+    - feature-share
+    - feature-sitepermissions
+    - feature-syncedtabs
+    - feature-tab-collections
+    - feature-tabs
+    - feature-toolbar
+    - feature-top-sites
+    - feature-webauthn
+    - feature-webcompat
+    - feature-webcompat-reporter
+    - feature-webnotifications
+    - lib-crash
+    - lib-crash-sentry
+    - lib-dataprotect
+    - lib-publicsuffixlist
+    - lib-push-firebase
+    - lib-state
+    - service-contile
+    - service-digitalassetlinks
+    - service-firefox-accounts
+    - service-glean
+    - service-location
+    - service-nimbus
+    - service-pocket
+    - service-sync-autofill
+    - service-sync-logins
+    - support-base
+    - support-images
+    - support-ktx
+    - support-locale
+    - support-rusterrors
+    - support-rusthttp
+    - support-rustlog
+    - support-test
+    - support-test-libstate
+    - support-utils
+    - support-webextensions
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
+    - ui-widgets
+variants:
+- apks:
+  - abi: arm64-v8a
+    fileName: app-arm64-v8a-debug.apk
+  - abi: armeabi-v7a
+    fileName: app-armeabi-v7a-debug.apk
+  - abi: x86
+    fileName: app-x86-debug.apk
+  - abi: x86_64
+    fileName: app-x86_64-debug.apk
+  build_type: debug
+  name: debug
+- apks:
+  - abi: arm64-v8a
+    fileName: app-arm64-v8a-release-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-armeabi-v7a-release-unsigned.apk
+  - abi: x86
+    fileName: app-x86-release-unsigned.apk
+  - abi: x86_64
+    fileName: app-x86_64-release-unsigned.apk
+  build_type: release
+  name: release
+- apks:
+  - abi: arm64-v8a
+    fileName: app-arm64-v8a-nightly-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-armeabi-v7a-nightly-unsigned.apk
+  - abi: x86
+    fileName: app-x86-nightly-unsigned.apk
+  - abi: x86_64
+    fileName: app-x86_64-nightly-unsigned.apk
+  build_type: nightly
+  name: nightly
+- apks:
+  - abi: arm64-v8a
+    fileName: app-arm64-v8a-beta-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-armeabi-v7a-beta-unsigned.apk
+  - abi: x86
+    fileName: app-x86-beta-unsigned.apk
+  - abi: x86_64
+    fileName: app-x86_64-beta-unsigned.apk
+  build_type: beta
+  name: beta
+- apks:
+  - abi: noarch
+    fileName: app-debug-androidTest.apk
+  build_type: androidTest
+  name: androidTest
