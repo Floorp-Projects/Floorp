@@ -249,8 +249,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {object} An object describing the view update.
    */
   getViewUpdate(result, idsByName) {
-    let unit = Services.locale.appLocaleAsBCP47 == "en-US" ? "f" : "c";
-    let uppercaseUnit = unit.toUpperCase();
+    let uppercaseUnit = result.payload.temperatureUnit.toUpperCase();
 
     return {
       currently: { l10n: { id: "firefox-suggest-weather-currently" } },
@@ -258,7 +257,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
         l10n: {
           id: "firefox-suggest-weather-temperature",
           args: {
-            value: result.payload.temperature[unit],
+            value: result.payload.temperature,
             unit: uppercaseUnit,
           },
         },
@@ -288,8 +287,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
         l10n: {
           id: "firefox-suggest-weather-high-low",
           args: {
-            high: result.payload.high[unit],
-            low: result.payload.low[unit],
+            high: result.payload.high,
+            low: result.payload.low,
             unit: uppercaseUnit,
           },
         },
@@ -899,6 +898,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return null;
     }
 
+    let unit = Services.locale.regionalPrefsLocales[0] == "en-US" ? "f" : "c";
     let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.DYNAMIC,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -914,11 +914,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
         merinoProvider: suggestion.provider,
         dynamicType: WEATHER_DYNAMIC_TYPE,
         city: suggestion.city_name,
-        temperature: suggestion.current_conditions.temperature,
+        temperatureUnit: unit,
+        temperature: suggestion.current_conditions.temperature[unit],
         currentConditions: suggestion.current_conditions.summary,
         forecast: suggestion.forecast.summary,
-        high: suggestion.forecast.high,
-        low: suggestion.forecast.low,
+        high: suggestion.forecast.high[unit],
+        low: suggestion.forecast.low[unit],
         isWeather: true,
         shouldNavigate: true,
       }
