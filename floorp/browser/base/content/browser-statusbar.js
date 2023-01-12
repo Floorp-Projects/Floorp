@@ -24,9 +24,10 @@ const hideedStatusBar = `
 `;
 
 const displayStatusbar = `
-        background: var(--toolbar-bgcolor);
+        background: none !important;
         border: none !important;
-`
+        box-shadow: none !important;
+`;
 
 document.getElementById("navigator-toolbox").appendChild(toolbarElem);
 CustomizableUI.registerArea("statusBar", {
