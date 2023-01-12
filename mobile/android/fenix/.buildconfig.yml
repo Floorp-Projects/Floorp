@@ -89,48 +89,48 @@ projects:
 variants:
 - apks:
   - abi: arm64-v8a
-    fileName: app-arm64-v8a-debug.apk
+    fileName: app-fenix-arm64-v8a-debug.apk
   - abi: armeabi-v7a
-    fileName: app-armeabi-v7a-debug.apk
+    fileName: app-fenix-armeabi-v7a-debug.apk
   - abi: x86
-    fileName: app-x86-debug.apk
+    fileName: app-fenix-x86-debug.apk
   - abi: x86_64
-    fileName: app-x86_64-debug.apk
+    fileName: app-fenix-x86_64-debug.apk
   build_type: debug
-  name: debug
+  name: fenixDebug
 - apks:
   - abi: arm64-v8a
-    fileName: app-arm64-v8a-release-unsigned.apk
+    fileName: app-fenix-arm64-v8a-release-unsigned.apk
   - abi: armeabi-v7a
-    fileName: app-armeabi-v7a-release-unsigned.apk
+    fileName: app-fenix-armeabi-v7a-release-unsigned.apk
   - abi: x86
-    fileName: app-x86-release-unsigned.apk
+    fileName: app-fenix-x86-release-unsigned.apk
   - abi: x86_64
-    fileName: app-x86_64-release-unsigned.apk
+    fileName: app-fenix-x86_64-release-unsigned.apk
   build_type: release
-  name: release
+  name: fenixRelease
 - apks:
   - abi: arm64-v8a
-    fileName: app-arm64-v8a-nightly-unsigned.apk
+    fileName: app-fenix-arm64-v8a-nightly-unsigned.apk
   - abi: armeabi-v7a
-    fileName: app-armeabi-v7a-nightly-unsigned.apk
+    fileName: app-fenix-armeabi-v7a-nightly-unsigned.apk
   - abi: x86
-    fileName: app-x86-nightly-unsigned.apk
+    fileName: app-fenix-x86-nightly-unsigned.apk
   - abi: x86_64
-    fileName: app-x86_64-nightly-unsigned.apk
+    fileName: app-fenix-x86_64-nightly-unsigned.apk
   build_type: nightly
-  name: nightly
+  name: fenixNightly
 - apks:
   - abi: arm64-v8a
-    fileName: app-arm64-v8a-beta-unsigned.apk
+    fileName: app-fenix-arm64-v8a-beta-unsigned.apk
   - abi: armeabi-v7a
-    fileName: app-armeabi-v7a-beta-unsigned.apk
+    fileName: app-fenix-armeabi-v7a-beta-unsigned.apk
   - abi: x86
-    fileName: app-x86-beta-unsigned.apk
+    fileName: app-fenix-x86-beta-unsigned.apk
   - abi: x86_64
-    fileName: app-x86_64-beta-unsigned.apk
+    fileName: app-fenix-x86_64-beta-unsigned.apk
   build_type: beta
-  name: beta
+  name: fenixBeta
 - apks:
   - abi: noarch
     fileName: app-debug-androidTest.apk
