@@ -391,12 +391,6 @@ extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
   MOZ_ASSERT(aQueue == EventQueuePriority::Idle ||
              aQueue == EventQueuePriority::DeferredTimers);
 
-  // XXX Using current thread for now as the nsIEventTarget.
-  nsIEventTarget* target = mozilla::GetCurrentEventTarget();
-  if (!target) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsCOMPtr<nsIIdleRunnable> idleEvent = do_QueryInterface(event);
 
   if (!idleEvent) {
@@ -404,7 +398,7 @@ extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
     event = do_QueryInterface(idleEvent);
     MOZ_DIAGNOSTIC_ASSERT(event);
   }
-  idleEvent->SetTimer(aTimeout, target);
+  idleEvent->SetTimer(aTimeout, aThread);
 
   nsresult rv = NS_DispatchToThreadQueue(event.forget(), aThread, aQueue);
   if (NS_SUCCEEDED(rv)) {
