@@ -671,12 +671,12 @@ index bd3db4534a85..8fad7e8195c8 100644
      MI->setLength(Constant::getNullValue(MI->getLength()->getType()));
      return MI;
 diff --git a/llvm/lib/Transforms/InstCombine/InstCombineLoadStoreAlloca.cpp b/llvm/lib/Transforms/InstCombine/InstCombineLoadStoreAlloca.cpp
-index 65074c87bdf3..5fe95c9e3088 100644
+index c8226ce2816a..8d58241895b5 100644
 --- a/llvm/lib/Transforms/InstCombine/InstCombineLoadStoreAlloca.cpp
 +++ b/llvm/lib/Transforms/InstCombine/InstCombineLoadStoreAlloca.cpp
-@@ -31,20 +31,20 @@ using namespace PatternMatch;
- STATISTIC(NumDeadStore,    "Number of dead stores eliminated");
- STATISTIC(NumGlobalCopies, "Number of allocas copied from constant global");
+@@ -36,20 +36,20 @@ static cl::opt<unsigned> MaxCopiedFromConstantUsers(
+     cl::desc("Maximum users to visit in copy from constant transform"),
+     cl::Hidden);
  
 -/// isOnlyCopiedFromConstantMemory - Recursively walk the uses of a (derived)
 +/// isOnlyCopiedFromConstantGlobal - Recursively walk the uses of a (derived)
@@ -698,9 +698,9 @@ index 65074c87bdf3..5fe95c9e3088 100644
 +  // ahead and replace the value with the global, this lets the caller quickly
 +  // eliminate the markers.
  
-   SmallVector<PointerIntPair<Value *, 1, bool>, 35> ValuesToInspect;
-   ValuesToInspect.emplace_back(V, false);
-@@ -130,8 +130,8 @@ isOnlyCopiedFromConstantMemory(AAResults *AA, AllocaInst *V,
+   using ValueAndIsOffset = PointerIntPair<Value *, 1, bool>;
+   SmallVector<ValueAndIsOffset, 32> Worklist;
+@@ -150,8 +150,8 @@ isOnlyCopiedFromConstantMemory(AAResults *AA, AllocaInst *V,
        // If the memintrinsic isn't using the alloca as the dest, reject it.
        if (U.getOperandNo() != 0) return false;
  
@@ -711,7 +711,7 @@ index 65074c87bdf3..5fe95c9e3088 100644
          return false;
  
        // Otherwise, the transform is safe.  Remember the copy instruction.
-@@ -141,10 +141,9 @@ isOnlyCopiedFromConstantMemory(AAResults *AA, AllocaInst *V,
+@@ -161,10 +161,9 @@ isOnlyCopiedFromConstantMemory(AAResults *AA, AllocaInst *V,
    return true;
  }
  
@@ -725,7 +725,7 @@ index 65074c87bdf3..5fe95c9e3088 100644
  static MemTransferInst *
  isOnlyCopiedFromConstantMemory(AAResults *AA,
                                 AllocaInst *AI,
-@@ -400,11 +399,11 @@ Instruction *InstCombinerImpl::visitAllocaInst(AllocaInst &AI) {
+@@ -420,11 +419,11 @@ Instruction *InstCombinerImpl::visitAllocaInst(AllocaInst &AI) {
    }
  
    // Check to see if this allocation is only modified by a memcpy/memmove from
@@ -742,7 +742,7 @@ index 65074c87bdf3..5fe95c9e3088 100644
    SmallVector<Instruction *, 4> ToDelete;
    if (MemTransferInst *Copy = isOnlyCopiedFromConstantMemory(AA, &AI, ToDelete)) {
      Value *TheSrc = Copy->getSource();
-@@ -1381,7 +1380,7 @@ Instruction *InstCombinerImpl::visitStoreInst(StoreInst &SI) {
+@@ -1401,7 +1400,7 @@ Instruction *InstCombinerImpl::visitStoreInst(StoreInst &SI) {
    // If we have a store to a location which is known constant, we can conclude
    // that the store must be storing the constant value (else the memory
    // wouldn't be constant), and this must be a noop.
