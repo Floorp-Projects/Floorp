@@ -430,3 +430,47 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: !isWinNoCache }
 );
+
+/**
+ * Test text bounds in a textarea after scrolling.
+ */
+addAccessibleTask(
+  `
+<textarea id="textarea" rows="1">a
+b
+c</textarea>
+  `,
+  async function(browser, docAcc) {
+    // We can't use testChar because Range.getBoundingClientRect isn't supported
+    // inside textareas.
+    const textarea = findAccessibleChildByID(docAcc, "textarea");
+    textarea.QueryInterface(nsIAccessibleText);
+    const oldY = {};
+    textarea.getCharacterExtents(
+      4,
+      {},
+      oldY,
+      {},
+      {},
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    info("Moving textarea caret to c");
+    await invokeContentTask(browser, [], () => {
+      const textareaDom = content.document.getElementById("textarea");
+      textareaDom.focus();
+      textareaDom.selectionStart = 4;
+    });
+    await waitForContentPaint(browser);
+    const newY = {};
+    textarea.getCharacterExtents(
+      4,
+      {},
+      newY,
+      {},
+      {},
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    ok(newY.value < oldY.value, "y coordinate smaller after scrolling down");
+  },
+  { chrome: true, topLevel: !isWinNoCache, iframe: !isWinNoCache }
+);
