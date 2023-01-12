@@ -106,6 +106,7 @@ import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
@@ -348,10 +349,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      */
     private fun showNotificationPermissionPromptIfRequired() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !NotificationManagerCompat.from(applicationContext).areNotificationsEnabledSafe()
+            !NotificationManagerCompat.from(applicationContext).areNotificationsEnabledSafe() &&
+            settings().numberOfAppLaunches <= 1
         ) {
+            // Recording the exposure event here to capture all users who met all criteria to receive
+            // the pre permission notification prompt
+            FxNimbus.features.prePermissionNotificationPrompt.recordExposure()
+
             if (settings().notificationPrePermissionPromptEnabled) {
-                if (!settings().isNotificationPrePermissionShown && settings().numberOfAppLaunches <= 1) {
+                if (!settings().isNotificationPrePermissionShown) {
                     navHost.navController.navigate(NavGraphDirections.actionGlobalHomeNotificationPermissionDialog())
                 }
             } else {
