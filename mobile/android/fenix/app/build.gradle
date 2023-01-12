@@ -614,7 +614,7 @@ dependencies {
     androidTestImplementation FenixDependencies.uiautomator
     androidTestImplementation "tools.fastlane:screengrab:2.0.0"
     // This Falcon version is added to maven central now required for Screengrab
-    implementation 'com.jraska:falcon:2.2.0'
+    androidTestImplementation 'com.jraska:falcon:2.2.0'
 
     androidTestImplementation FenixDependencies.androidx_compose_ui_test
 
