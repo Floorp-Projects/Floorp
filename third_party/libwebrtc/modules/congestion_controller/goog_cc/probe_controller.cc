@@ -24,7 +24,6 @@
 #include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
@@ -88,7 +87,12 @@ ProbeControllerConfig::ProbeControllerConfig(
       alr_probe_scale("alr_scale", 2),
       network_state_estimate_probing_interval("network_state_interval",
                                               TimeDelta::PlusInfinity()),
+      network_state_estimate_fast_rampup_rate("network_state_fast_rampup_rate",
+                                              0),
       network_state_probe_scale("network_state_scale", 1.0),
+      network_state_probe_duration("network_state_probe_duration",
+                                   TimeDelta::Millis(15)),
+
       first_allocation_probe_scale("alloc_p1", 1),
       second_allocation_probe_scale("alloc_p2", 2),
       allocation_allow_further_probing("alloc_probe_further", false),
@@ -103,7 +107,8 @@ ProbeControllerConfig::ProbeControllerConfig(
        &alr_probing_interval, &alr_probe_scale, &first_allocation_probe_scale,
        &second_allocation_probe_scale, &allocation_allow_further_probing,
        &min_probe_duration, &network_state_estimate_probing_interval,
-       &network_state_probe_scale, &probe_if_bwe_limited_due_to_loss},
+       &network_state_estimate_fast_rampup_rate, &network_state_probe_scale,
+       &network_state_probe_duration, &probe_if_bwe_limited_due_to_loss},
       key_value_config->Lookup("WebRTC-Bwe-ProbingConfiguration"));
 
   // Specialized keys overriding subsets of WebRTC-Bwe-ProbingConfiguration
@@ -249,7 +254,8 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateExponentialProbing(
   // 1.2 Mbps to continue probing.
   std::vector<DataRate> probes = {config_.first_exponential_probe_scale *
                                   start_bitrate_};
-  if (config_.second_exponential_probe_scale) {
+  if (config_.second_exponential_probe_scale &&
+      config_.second_exponential_probe_scale.GetOptional().value() > 0) {
     probes.push_back(config_.second_exponential_probe_scale.Value() *
                      start_bitrate_);
   }
@@ -350,6 +356,14 @@ void ProbeController::SetMaxBitrate(DataRate max_bitrate) {
 
 void ProbeController::SetNetworkStateEstimate(
     webrtc::NetworkStateEstimate estimate) {
+  if (config_.network_state_estimate_fast_rampup_rate > 0 &&
+      estimated_bitrate_ < estimate.link_capacity_upper &&
+      (!network_estimate_ ||
+       estimate.link_capacity_upper >=
+           config_.network_state_estimate_fast_rampup_rate *
+               network_estimate_->link_capacity_upper)) {
+    send_probe_on_next_process_interval_ = true;
+  }
   network_estimate_ = estimate;
 }
 
@@ -370,6 +384,7 @@ void ProbeController::Reset(Timestamp at_time) {
   time_of_last_large_drop_ = now;
   bitrate_before_last_large_drop_ = DataRate::Zero();
   max_total_allocated_bitrate_ = DataRate::Zero();
+  send_probe_on_next_process_interval_ = false;
 }
 
 bool ProbeController::TimeForAlrProbe(Timestamp at_time) const {
@@ -407,7 +422,8 @@ std::vector<ProbeClusterConfig> ProbeController::Process(Timestamp at_time) {
   if (estimated_bitrate_.IsZero() || state_ != State::kProbingComplete) {
     return {};
   }
-  if (TimeForAlrProbe(at_time) || TimeForNetworkStateProbe(at_time)) {
+  if (send_probe_on_next_process_interval_ || TimeForAlrProbe(at_time) ||
+      TimeForNetworkStateProbe(at_time)) {
     return InitiateProbing(
         at_time, {estimated_bitrate_ * config_.alr_probe_scale}, true);
   }
@@ -440,6 +456,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     max_probe_bitrate =
         std::min(max_probe_bitrate, max_total_allocated_bitrate_ * 2);
   }
+  send_probe_on_next_process_interval_ = false;
 
   std::vector<ProbeClusterConfig> pending_probes;
   for (DataRate bitrate : bitrates_to_probe) {
@@ -453,7 +470,13 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     ProbeClusterConfig config;
     config.at_time = now;
     config.target_data_rate = bitrate;
-    config.target_duration = config_.min_probe_duration;
+    if (network_estimate_ &&
+        config_.network_state_estimate_probing_interval->IsFinite()) {
+      config.target_duration = config_.network_state_probe_duration;
+    } else {
+      config.target_duration = config_.min_probe_duration;
+    }
+
     config.target_probe_count = config_.min_probe_packets_sent;
     config.id = next_probe_cluster_id_;
     next_probe_cluster_id_++;

@@ -50,7 +50,13 @@ struct ProbeControllerConfig {
 
   // Configures how often we send probes if NetworkStateEstimate is available.
   FieldTrialParameter<TimeDelta> network_state_estimate_probing_interval;
+  // If the network state estimate increase more than this rate, a probe is sent
+  // the next process interval.
+  FieldTrialParameter<double> network_state_estimate_fast_rampup_rate;
   FieldTrialParameter<double> network_state_probe_scale;
+  // Overrides min_probe_duration if network_state_estimate_probing_interval
+  // is set and a network state estimate is known.
+  FieldTrialParameter<TimeDelta> network_state_probe_duration;
 
   // Configures the probes emitted by changed to the allocated bitrate.
   FieldTrialOptional<double> first_allocation_probe_scale;
@@ -142,6 +148,7 @@ class ProbeController {
   DataRate min_bitrate_to_probe_further_ = DataRate::PlusInfinity();
   Timestamp time_last_probing_initiated_ = Timestamp::MinusInfinity();
   DataRate estimated_bitrate_ = DataRate::Zero();
+  bool send_probe_on_next_process_interval_;
   absl::optional<webrtc::NetworkStateEstimate> network_estimate_;
   DataRate start_bitrate_ = DataRate::Zero();
   DataRate max_bitrate_ = DataRate::PlusInfinity();
