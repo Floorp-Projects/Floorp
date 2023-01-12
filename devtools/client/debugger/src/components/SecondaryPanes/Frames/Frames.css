@@ -150,10 +150,6 @@
   left: -9999px;
 }
 
-.frames .frame-indent {
-  white-space: pre;
-}
-
 .call-stack-pane [role="listitem"] .location-async-cause {
   height: 20px;
   line-height: 20px;

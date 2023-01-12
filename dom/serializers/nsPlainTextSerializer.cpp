@@ -107,44 +107,10 @@ static void DetermineLineBreak(const int32_t aFlags, nsAString& aLineBreak) {
 
 void nsPlainTextSerializer::CurrentLine::MaybeReplaceNbspsInContent(
     const int32_t aFlags) {
-  // HTML editors may enforce consecutive spaces in HTML output by replacing
-  // them with non-breaking spaces.
-  // Here we revert this hack when converting HTML text to plain text.
   if (!(aFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
-    //
-    // Replace NBSP characters with spaces if they are adjacent to a space.
-    //
-    const uint32_t length = mContent.Length();
-    bool containsSpace = false;
-    bool containsNBSP = false;
-    // 1. Inspect the string forwards, and replace NBSPs that are **after**
-    // regular spaces.
-    //
-    // After that loop, all sequences of "spaceNBSP*" have been replaced by
-    // equally long "space*" sequences.
-    for (uint32_t i = 0; i < length; i++) {
-      if (mContent[i] == kSPACE) {
-        containsSpace = true;
-      } else if (mContent[i] == kNBSP) {
-        if (i > 0 && mContent[i - 1] == kSPACE) {
-          mContent.SetCharAt(kSPACE, i);
-        } else {
-          containsNBSP = true;
-        }
-      }
-    }
-    // 2. If we found spaces and didn't replace all relevant NBSPs, inpect the
-    // string backwards, and replace NBSPs that are **before** regular spaces.
-    //
-    // After that loop, all sequences of "NBSP*space" have been replaced by
-    // equally long "space*" sequences.
-    if (containsSpace && containsNBSP && length >= 1) {
-      for (uint32_t i = length - 1; i > 0; i--) {
-        if (mContent[i - 1] == kNBSP && mContent[i] == kSPACE) {
-          mContent.SetCharAt(kSPACE, i - 1);
-        }
-      }
-    }
+    // First, replace all nbsp characters with spaces,
+    // which the unicode encoder won't do for us.
+    mContent.ReplaceChar(kNBSP, kSPACE);
   }
 }
 

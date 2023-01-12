@@ -159,12 +159,9 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputEncodeBasicEntities = (1 << 14);
 
   /**
-   * Normally, for non-text-control elements (that is, neither <textarea>
-   * nor <input>), &nbsp; characters adjacent to regular spaces are replaced
-   * by regular spaces.
-   * This flag suppresses that behavior, and causes all &nbsp; characters
-   * to be preserved.
-   *
+   * Normally &nbsp; is replaced with a space character when
+   * encoding data as plain text, set this flag if that's
+   * not desired.
    * Plaintext output only.
    */
   const unsigned long OutputPersistNBSP = (1 << 17);

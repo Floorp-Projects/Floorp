@@ -6,6 +6,8 @@ import React from "react";
 
 export default function FrameIndent() {
   return (
-    <span className="frame-indent clipboard-only">&#32;&#32;&#32;&#32;</span>
+    <span className="frame-indent clipboard-only">
+      &nbsp;&nbsp;&nbsp;&nbsp;
+    </span>
   );
 }
