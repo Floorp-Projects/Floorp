@@ -25,6 +25,7 @@
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.mjs"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.mjs"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-section.mjs"></script>
+    <script type="module" src="chrome://browser/content/aboutlogins/components/login-timeline.mjs"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/menu-button.mjs"></script>
     <script type="module" src="chrome://global/content/elements/moz-button-group.mjs"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/aboutLogins.mjs"></script>
@@ -358,9 +359,7 @@
               <button class="save-changes-button" type="submit"></button>
               <button class="cancel-button" data-l10n-id="login-item-cancel-button" type="button"></button>
             </moz-button-group>
-            <p class="time-created meta-info" data-l10n-id="login-item-time-created" data-l10n-args='{"timeCreated": 0}'></p>
-            <p class="time-changed meta-info" data-l10n-id="login-item-time-changed" data-l10n-args='{"timeChanged": 0}'></p>
-            <p class="time-used meta-info" data-l10n-id="login-item-time-used" data-l10n-args='{"timeUsed": 0}'></p>
+            <login-timeline hidden ></login-timeline>
           </form>
         </div>
       </div>
