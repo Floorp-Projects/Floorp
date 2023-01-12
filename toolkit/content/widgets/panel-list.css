@@ -30,7 +30,7 @@
   padding: 0;
 }
 
-::slotted(hr) {
+::slotted(hr:not([hidden])) {
   display: block !important;
   height: 1px !important;
   background: var(--in-content-box-border-color) !important;
