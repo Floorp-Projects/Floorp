@@ -15,6 +15,7 @@
 #include "nsIMultiPartChannel.h"
 #include "nsIRedirectResultListener.h"
 #include "nsIStreamListener.h"
+#include "nsITimer.h"
 #include "nsNetUtil.h"
 
 class nsAttrValue;
@@ -64,7 +65,9 @@ class EarlyHintPreloader final : public nsIStreamListener,
                                  public nsIChannelEventSink,
                                  public nsIRedirectResultListener,
                                  public nsIInterfaceRequestor,
-                                 public nsIMultiPartChannelListener {
+                                 public nsIMultiPartChannelListener,
+                                 public nsINamed,
+                                 public nsITimerCallback {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -73,6 +76,9 @@ class EarlyHintPreloader final : public nsIStreamListener,
   NS_DECL_NSIREDIRECTRESULTLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
+  // required by NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
+  NS_DECL_NSITIMERCALLBACK
 
  public:
   // Create and insert a preload into OngoingEarlyHints if the same preload
@@ -83,13 +89,18 @@ class EarlyHintPreloader final : public nsIStreamListener,
       nsICookieJarSettings* aCookieJarSettings,
       const nsACString& aReferrerPolicy, const nsACString& aCSPHeader);
 
-  // register Channel to EarlyHintRegistrar returns connect arguments
-  EarlyHintConnectArgs Register();
+  // register Channel to EarlyHintRegistrar. Returns true and sets connect args
+  // if successful
+  bool Register(EarlyHintConnectArgs& aOut);
 
   // Should be called by the preloader service when the preload is not
   // needed after all, because the final response returns a non-2xx status
-  // code.
-  nsresult CancelChannel(nsresult aStatus, const nsACString& aReason);
+  // code. If aDeleteEntry is false, the calling function MUST make sure that
+  // the EarlyHintPreloader is not in the EarlyHintRegistrar anymore. Because
+  // after this function, the EarlyHintPreloader can't connect back to the
+  // parent anymore.
+  nsresult CancelChannel(nsresult aStatus, const nsACString& aReason,
+                         bool aDeleteEntry);
 
   void OnParentReady(nsIParentChannel* aParent, uint64_t aChannelId);
 
@@ -145,6 +156,7 @@ class EarlyHintPreloader final : public nsIStreamListener,
   bool mIsFinished = false;
 
   RefPtr<ParentChannelListener> mParentListener;
+  nsCOMPtr<nsITimer> mTimer;
 
  private:
   // IMPORTANT: when adding new values, always add them to the end, otherwise
@@ -154,6 +166,7 @@ class EarlyHintPreloader final : public nsIStreamListener,
     ePreloaderOpened,
     ePreloaderUsed,
     ePreloaderCancelled,
+    ePreloaderTimeout,
   };
   EHPreloaderState mState = ePreloaderCreated;
   void SetState(EHPreloaderState aState) { mState = aState; }
