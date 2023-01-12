@@ -1066,7 +1066,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   const transfers = source.transferPdfData && source.data ? [source.data.buffer] : null;
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.3.53',
+    apiVersion: '3.3.55',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -2665,9 +2665,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.3.53';
+const version = '3.3.55';
 exports.version = version;
-const build = 'f28bf23a3';
+const build = '1d683708e';
 exports.build = build;
 
 /***/ }),
@@ -8163,7 +8163,7 @@ class PDFDataTransportStream {
     begin,
     chunk
   }) {
-    const buffer = this.#transferPdfData ? chunk.buffer : new Uint8Array(chunk).buffer;
+    const buffer = this.#transferPdfData && chunk?.length >= 0 ? chunk.buffer : new Uint8Array(chunk).buffer;
     if (begin === undefined) {
       if (this._fullRequestReader) {
         this._fullRequestReader._enqueue(buffer);
@@ -13069,8 +13069,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.3.53';
-const pdfjsBuild = 'f28bf23a3';
+const pdfjsVersion = '3.3.55';
+const pdfjsBuild = '1d683708e';
 })();
 
 /******/ 	return __webpack_exports__;
