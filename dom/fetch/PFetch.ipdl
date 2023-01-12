@@ -1,0 +1,53 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include ClientIPCTypes;
+include FetchTypes;
+include IPCServiceWorkerDescriptor;
+include NeckoChannelParams;
+include PBackgroundSharedTypes;
+include PerformanceTimingTypes;
+
+using FetchDriverObserver::EndReason from "mozilla/dom/FetchDriver.h";
+
+namespace mozilla {
+namespace dom {
+
+struct FetchOpArgs{
+  IPCInternalRequest request;
+  PrincipalInfo principalInfo;
+  nsCString workerScript;
+  IPCClientInfo clientInfo;
+  IPCServiceWorkerDescriptor? controller;
+  CookieJarSettingsArgs? cookieJarSettings;
+  bool needOnDataAvailable;
+  bool hasCSPEventListener;
+};
+
+protocol PFetch {
+  manager PBackground;
+
+  parent:
+    async FetchOp(FetchOpArgs aArgs);
+
+    async AbortFetchOp();
+
+  child:
+    async OnResponseAvailableInternal(ParentToChildInternalResponse aResponse);
+
+    async OnResponseEnd(ResponseEndArgs aResponseEndArgs);
+
+    async OnDataAvailable();
+
+    async OnFlushConsoleReport(ConsoleReportCollected[] aReports);
+
+    async OnCSPViolationEvent(nsString aJSON);
+
+    async __delete__(nsresult aResult);
+};
+
+}
+}
