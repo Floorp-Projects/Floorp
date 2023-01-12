@@ -6,10 +6,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1737682
 This is a test of the macOS video low power telemetry, defined as GFX_MACOS_VIDEO_LOW_POWER
 enums in Histograms.json. The test will load some video media files, play them for some
 number of frames, then check that appropriate telemetry has been recorded. Since the
-telemetry fires based on the number of frames presented, the test is structured around
+telemetry fires based on the number of frames painted, the test is structured around
 the `media.video_stats.enabled` pref, which allows us to monitor the number of frames
 that have been shown. The telemetry fires every 600 frames. To make sure we have enough
-presented frames to trigger telemetry, we run the media for many frames and then check
+painted frames to trigger telemetry, we run the media for many frames and then check
 that the expected telemetry value has been recorded at least once.
 
 The tests are run via the MediaTestManager, which loads and plays the video sequentially.
@@ -20,7 +20,7 @@ steps we run before each video. We keep track of which test we are running with 
 1) Set some initial preferences that need to be set for the whole test series.
 2) Start MediaTestManager with a set of media to play.
 3) When a video arrives, increment testIndex and call preTest.
-4) Run the video for PRESENTED_FRAMES frames, then call postTest, which checks telemetry
+4) Run the video for PAINTED_FRAMES frames, then call postTest, which checks telemetry
    and cleans up.
 5) Tell the MediaTestManager we've finished with that video, which triggers the next.
 -->
@@ -40,12 +40,19 @@ steps we run before each video. We keep track of which test we are running with 
   PARALLEL_TESTS = 1;
   SimpleTest.waitForExplicitFinish();
 
-  // How many frames do we run? Must be more than 600, because that's how
+  // How many frames do we run? Must be more than the value set by the
+  // gfx.core-animation.low-power-telemetry-frames pref, because that's how
   // many frames must be shown before telemetry is emitted. We present for
-  // much longer than that to ensure that the telemetry is emitted at least
-  // once.
-  const TELEMETRY_FRAMES = 600;
-  const PRESENTED_FRAMES = TELEMETRY_FRAMES * 3.0;
+  // longer than that to ensure that the telemetry is emitted at least once.
+  // This also has to be enough frames to overcome the animated "<video> is
+  // now fullscreen." popup that appears over the video. While that modal
+  // is visible and animating away, it will register as an overlay and
+  // prevent low power mode. As an estimate, we need at least 200 frames to
+  // ensure that animation has finished and there has been time to fire the
+  // telemetry at least once after it has finished.
+  const TELEMETRY_FRAMES = SpecialPowers.getIntPref("gfx.core-animation.low-power-telemetry-frames");
+  const PAINTED_FRAMES = Math.max(Math.floor(TELEMETRY_FRAMES * 1.1), 200 + TELEMETRY_FRAMES);
+  info(`Running each video for ${PAINTED_FRAMES} frames.`);
 
   // Taken from TelemetryHistogramEnums.h
   const GFX_MACOS_VIDEO_LOW_POWER_LowPower = 1;
@@ -103,8 +110,15 @@ steps we run before each video. We keep track of which test we are running with 
 
       case 2: {
         // Test 2 (LowPower): Enter fullscreen.
+
+        // Wait one frame to ensure the old video is no longer in the layer tree, which
+        // causes problems with the telemetry.
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
         info("Attempting to enter fullscreen.");
+        ok(document.fullscreenEnabled, "Document should permit fullscreen-ing of elements.");
         await SpecialPowers.wrap(v).requestFullscreen();
+        ok(document.fullscreenElement, "Document should have one element in fullscreen.");
         break;
       }
     }
@@ -128,6 +142,7 @@ steps we run before each video. We keep track of which test we are running with 
 
         info("Attempting to exit fullscreen.");
         await SpecialPowers.wrap(document).exitFullscreen();
+        ok(!document.fullscreenElement, "Document should be out of fullscreen.");
 
         // This is the last test.
         testsComplete = true;
@@ -138,8 +153,8 @@ steps we run before each video. We keep track of which test we are running with 
 
   function ontimeupdate(event) {
     let v = event.target;
-    // Count presented frames to see when we should hit some telemetry threshholds.
-    if (v.mozPresentedFrames >= PRESENTED_FRAMES) {
+    // Count painted frames to see when we should hit some telemetry threshholds.
+    if (v.mozPaintedFrames >= PAINTED_FRAMES) {
       v.pause();
       v.removeEventListener("timeupdate", ontimeupdate);
 
@@ -173,8 +188,6 @@ steps we run before each video. We keep track of which test we are running with 
   SpecialPowers.pushPrefEnv({"set": [
         ["media.video_stats.enabled", true],
         ["gfx.core-animation.specialize-video", true],
-        // Bug 1798545
-        ["media.media.seamless-looping", false],
     ]},
     async function() {
       // Clear out existing telemetry in case previous tests were displaying

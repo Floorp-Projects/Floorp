@@ -185,8 +185,6 @@ class NativeLayerRootCA : public NativeLayerRoot {
   // How many times have we committed since the last time we emitted
   // telemetry?
   unsigned int mTelemetryCommitCount = 0;
-  static const unsigned int TELEMETRY_COMMIT_PERIOD =
-      600;  // 10 seconds at 60fps
 };
 
 class RenderSourceNLRS;

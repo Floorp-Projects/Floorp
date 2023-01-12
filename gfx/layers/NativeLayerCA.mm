@@ -311,6 +311,8 @@ bool NativeLayerRootCA::CommitToScreen() {
   }
 
   // Decide if we are going to emit telemetry about video low power on this commit.
+  static const int32_t TELEMETRY_COMMIT_PERIOD =
+      StaticPrefs::gfx_core_animation_low_power_telemetry_frames_AtStartup();
   mTelemetryCommitCount = (mTelemetryCommitCount + 1) % TELEMETRY_COMMIT_PERIOD;
   if (mTelemetryCommitCount == 0) {
     // Figure out if we are hitting video low power mode.
