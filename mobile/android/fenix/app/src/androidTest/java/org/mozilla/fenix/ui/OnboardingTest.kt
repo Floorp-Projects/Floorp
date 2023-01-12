@@ -20,6 +20,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class OnboardingTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
+    private val privacyNoticeLink = "mozilla.org/en-US/privacy/firefox"
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
@@ -206,6 +207,17 @@ class OnboardingTest {
             verifySignInToSyncCard()
         }.clickSignInButton {
             verifyTurnOnSyncMenu()
+        }
+    }
+
+    @Test
+    fun youControlYourDataCardTest() {
+        homeScreen {
+            verifyPrivacyNoticeCard()
+        }.clickPrivacyNoticeButton {
+            verifyUrl(privacyNoticeLink)
+        }.goBack {
+            verifyPrivacyNoticeCard()
         }
     }
 }

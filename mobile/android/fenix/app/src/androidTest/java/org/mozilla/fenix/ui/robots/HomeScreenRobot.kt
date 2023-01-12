@@ -816,6 +816,13 @@ class HomeScreenRobot {
             SyncSignInRobot().interact()
             return SyncSignInRobot.Transition()
         }
+
+        fun clickPrivacyNoticeButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            privacyNoticeButton.clickAndWaitForNewWindow(waitingTimeShort)
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
