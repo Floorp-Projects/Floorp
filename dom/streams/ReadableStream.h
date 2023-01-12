@@ -103,7 +103,21 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
       JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort,
       JS::MutableHandle<JSObject*> aReturnObject);
 
- public:
+  // Public functions to implement other specs
+
+  // https://streams.spec.whatwg.org/#other-specs-rs-create
+  // The following algorithms must only be used on ReadableStream instances
+  // initialized via the above set up or set up with byte reading support
+  // algorithms (not, e.g., on web-developer-created instances):
+
+  MOZ_CAN_RUN_SCRIPT void CloseNative(JSContext* aCx, ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT void EnqueueNative(JSContext* aCx,
+                                        JS::Handle<JS::Value> aChunk,
+                                        ErrorResult& aRv);
+
+  // IDL layer functions
+
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   JSObject* WrapObject(JSContext* aCx,

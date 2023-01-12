@@ -55,6 +55,12 @@ class UnderlyingSourceAlgorithmsBase : public nsISupports {
   // Fetch wants to special-case BodyStream-based streams
   virtual BodyStreamHolder* GetBodyStreamHolder() { return nullptr; }
 
+  // https://streams.spec.whatwg.org/#other-specs-rs-create
+  // By "native" we mean "instances initialized via the above set up or set up
+  // with byte reading support algorithms (not, e.g., on web-developer-created
+  // instances)"
+  virtual bool IsNative() { return true; }
+
  protected:
   virtual ~UnderlyingSourceAlgorithmsBase() = default;
 };
@@ -99,6 +105,8 @@ class UnderlyingSourceAlgorithms final : public UnderlyingSourceAlgorithmsBase {
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override;
+
+  bool IsNative() override { return false; }
 
  protected:
   ~UnderlyingSourceAlgorithms() override { mozilla::DropJSObjects(this); };

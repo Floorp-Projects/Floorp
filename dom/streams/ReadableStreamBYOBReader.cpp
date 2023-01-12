@@ -238,7 +238,7 @@ already_AddRefed<Promise> ReadableStreamBYOBReader::Read(
   // Step 3. If ! IsDetachedBuffer(view.[[ViewedArrayBuffer]]) is true, return a
   // promise rejected with a TypeError exception.
   if (JS::IsDetachedArrayBufferObject(viewedArrayBuffer)) {
-    aRv.ThrowTypeError("Detatched Buffer");
+    aRv.ThrowTypeError("Detached Buffer");
     return nullptr;
   }
 
