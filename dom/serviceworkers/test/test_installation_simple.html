@@ -119,12 +119,10 @@
       reject = rej;
     });
 
-    var reg;
+    var regPromise;
     function continueTest() {
-      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/" })
-        .then(function(r) {
-          reg = r;
-        });;
+      regPromise = navigator.serviceWorker.register(
+        "worker2.js", { scope: "simpleregister/" });
     }
 
     window.onmessage = function(e) {
@@ -136,11 +134,13 @@
         // MaybeStopControlling() when this document is unloaded. At that point
         // the pref has been disabled, so the ServiceWorkerManager is not available.
         frame.setAttribute("src", new URL("about:blank").href);
-        reg.unregister().then(function(success) {
-          ok(success, "The worker should be unregistered successfully");
-          resolve();
-        }, function(error) {
-          dump("Error unregistering the worker: " + error + "\n");
+        regPromise.then(function(reg) {
+          reg.unregister().then(function(success) {
+            ok(success, "The worker should be unregistered successfully");
+            resolve();
+          }, function(error) {
+            dump("Error unregistering the worker: " + error + "\n");
+          });
         });
       } else if (e.data.type == "check") {
         ok(e.data.status, e.data.msg);
