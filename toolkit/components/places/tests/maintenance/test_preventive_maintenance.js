@@ -35,16 +35,6 @@ async function cleanDatabase() {
       );
       await db.executeCached("DELETE FROM moz_bookmarks_deleted");
       await db.executeCached("DELETE FROM moz_places_metadata_search_queries");
-      await db.executeCached("DELETE FROM moz_places_metadata_snapshots");
-      await db.executeCached("DELETE FROM moz_places_metadata_snapshots_extra");
-      await db.executeCached(
-        "DELETE FROM moz_places_metadata_snapshots_groups"
-      );
-      await db.executeCached(
-        "DELETE FROM moz_places_metadata_groups_to_snapshots"
-      );
-      await db.executeCached("DELETE FROM moz_session_metadata");
-      await db.executeCached("DELETE FROM moz_session_to_places");
     });
   });
   // Since we're doing raw deletes, we must invalidate the guids cache.
@@ -2304,31 +2294,6 @@ tests.push({
       url: "http://l4.moz.org/",
       keyword: "kw",
     });
-    await PlacesUtils.withConnectionWrapper(
-      "add snapshots and sessions",
-      async db => {
-        await db.execute(
-          `INSERT INTO moz_places_metadata_snapshots
-             (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted)
-           VALUES ((SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), 0, 0, "MEDIA", 0, 0)
-          `,
-          { url: "http://l4.moz.org/" }
-        );
-        await db.execute(
-          `INSERT INTO moz_session_metadata (guid, last_saved_at)
-           VALUES ("guid", 0)`
-        );
-        await db.execute(
-          `INSERT INTO moz_session_to_places (session_id, place_id, position)
-           VALUES (
-             (SELECT id FROM moz_session_metadata WHERE guid = "guid"),
-             (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
-             1
-           )`,
-          { url: "http://l4.moz.org/" }
-        );
-      }
-    );
     Assert.equal(await this._getForeignCount(), 2);
   },
 
@@ -2343,7 +2308,7 @@ tests.push({
   },
 
   async check() {
-    Assert.equal(await this._getForeignCount(), 4);
+    Assert.equal(await this._getForeignCount(), 2);
   },
 });
 

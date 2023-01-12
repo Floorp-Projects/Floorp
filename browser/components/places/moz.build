@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "tests/unit/interactions/xpcshell.ini",
     "tests/unit/xpcshell.ini",
 ]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
@@ -19,17 +18,9 @@ JAR_MANIFESTS += ["jar.mn"]
 SPHINX_TREES["/browser/places"] = "docs"
 
 EXTRA_JS_MODULES += [
-    "CommonNames.sys.mjs",
-    "DomainGroupBuilder.sys.mjs",
     "Interactions.sys.mjs",
     "InteractionsBlocklist.sys.mjs",
-    "PinnedGroupBuilder.sys.mjs",
     "PlacesUIUtils.sys.mjs",
-    "SnapshotGroups.sys.mjs",
-    "SnapshotMonitor.sys.mjs",
-    "Snapshots.sys.mjs",
-    "SnapshotScorer.sys.mjs",
-    "SnapshotSelector.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.actors += [

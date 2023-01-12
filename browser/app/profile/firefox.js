@@ -2753,28 +2753,6 @@ pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox
   pref("browser.places.interactions.enabled", true);
 #endif
 
-// A set of scores for rating the relevancy of snapshots. The suffixes after the
-// last decimal are prefixed by `_score` and reference the functions called in
-// SnapshotScorer.
-pref("browser.places.snapshots.score.Visit", 1);
-pref("browser.places.snapshots.score.CurrentSession", 1);
-pref("browser.places.snapshots.score.IsUserPersisted", 1);
-pref("browser.places.snapshots.score.IsUserRemoved", -10);
-
-// A set of weights for the snapshot recommendation sources. The suffixes after
-// the last decimal map to the keys of `Snapshots.recommendationSources`.
-pref("browser.places.snapshots.source.CommonReferrer", 3);
-pref("browser.places.snapshots.source.Overlapping", 3);
-pref("browser.places.snapshots.source.TimeOfDay", 3);
-
-// Other preferences affecting snapshots scoring.
-pref("browser.places.snapshots.relevancy.timeOfDayIntervalSeconds", 3600);
-
-// Expiration days for snapshots.
-pref("browser.places.snapshots.expiration.days", 210);
-// For user managed snapshots we use more than a year, to support yearly tasks.
-pref("browser.places.snapshots.expiration.userManaged.days", 420);
-
 // If the user has seen the Firefox View feature tour this value reflects
 // the id of the last screen they saw and whether they completed the tour
 pref("browser.firefox-view.feature-tour", "{\"screen\":\"FIREFOX_VIEW_SPOTLIGHT\",\"complete\":false}");

@@ -18,7 +18,7 @@
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 70
+#define DATABASE_SCHEMA_VERSION 71
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -311,19 +311,12 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
   nsresult MigrateV55Up();
   nsresult MigrateV56Up();
   nsresult MigrateV57Up();
-  nsresult MigrateV58Up();
-  nsresult MigrateV59Up();
   nsresult MigrateV60Up();
   nsresult MigrateV61Up();
-  nsresult MigrateV62Up();
-  nsresult MigrateV63Up();
-  nsresult MigrateV64Up();
-  nsresult MigrateV65Up();
-  nsresult MigrateV66Up();
   nsresult MigrateV67Up();
-  nsresult MigrateV68Up();
   nsresult MigrateV69Up();
   nsresult MigrateV70Up();
+  nsresult MigrateV71Up();
 
   void MigrateV52OriginFrecencies();
 

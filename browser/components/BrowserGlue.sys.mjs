@@ -39,7 +39,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
-  SnapshotMonitor: "resource:///modules/SnapshotMonitor.sys.mjs",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
@@ -1696,8 +1695,6 @@ BrowserGlue.prototype = {
     lazy.PageActions.init();
 
     lazy.DoHController.init();
-
-    lazy.SnapshotMonitor.init();
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();

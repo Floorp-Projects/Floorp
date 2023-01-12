@@ -7,9 +7,6 @@
 const { Interactions } = ChromeUtils.importESModule(
   "resource:///modules/Interactions.sys.mjs"
 );
-const { Snapshots } = ChromeUtils.importESModule(
-  "resource:///modules/Snapshots.sys.mjs"
-);
 const { PlacesUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesUtils.sys.mjs"
 );
@@ -322,71 +319,6 @@ const metadataHandler = new (class extends TableViewer {
 })();
 
 /**
- * Viewer definition for the Snapshots data.
- */
-const snapshotHandler = new (class extends TableViewer {
-  title = "Snapshots";
-  cssGridTemplateColumns = "fit-content(100%) repeat(6, max-content);";
-
-  /**
-   * @see TableViewer.columnMap
-   */
-  columnMap = new Map([
-    ["url", { header: "URL", includeTitle: true }],
-    [
-      "createdAt",
-      {
-        header: "Created",
-        modifier: c => c?.toLocaleString() ?? "",
-      },
-    ],
-    [
-      "removedAt",
-      {
-        header: "Removed",
-        modifier: r => r?.toLocaleString() ?? "",
-      },
-    ],
-    [
-      "firstInteractionAt",
-      {
-        header: "First Interaction",
-        modifier: f => f?.toLocaleString() ?? "",
-      },
-    ],
-    [
-      "lastInteractionAt",
-      {
-        header: "Latest Interaction",
-        modifier: l => l?.toLocaleString() ?? "",
-      },
-    ],
-    [
-      "documentType",
-      {
-        header: "Doc Type",
-        modifier: d =>
-          d == Interactions.DOCUMENT_TYPE.MEDIA ? "Media" : "Generic",
-      },
-    ],
-    [
-      "userPersisted",
-      {
-        header: "User Persisted",
-        modifier: u => (u ? u : ""),
-      },
-    ],
-  ]);
-
-  /**
-   * Loads the current metadata from the database and updates the display.
-   */
-  async updateDisplay() {
-    this.displayData(await Snapshots.query({ includeTombstones: true }));
-  }
-})();
-
-/**
  * Viewer definition for the Places database stats.
  */
 const placesStatsHandler = new (class extends TableViewer {
@@ -454,9 +386,6 @@ function show(selectedButton) {
   currentButton.classList.remove("selected");
   selectedButton.classList.add("selected");
   switch (selectedButton.getAttribute("value")) {
-    case "snapshots":
-      (gCurrentHandler = snapshotHandler).start();
-      break;
     case "metadata":
       (gCurrentHandler = metadataHandler).start();
       metadataHandler.start();
@@ -491,6 +420,6 @@ function setupListeners() {
 
 checkPrefs();
 // Set the initial handler here.
-let gCurrentHandler = snapshotHandler;
+let gCurrentHandler = metadataHandler;
 gCurrentHandler.start().catch(console.error);
 setupListeners();

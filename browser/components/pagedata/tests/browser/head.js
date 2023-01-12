@@ -9,5 +9,4 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   PageDataSchema: "resource:///modules/pagedata/PageDataSchema.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
-  Snapshots: "resource:///modules/Snapshots.sys.mjs",
 });
