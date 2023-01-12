@@ -254,10 +254,22 @@ nsCookieBannerService::GetRules(nsTArray<RefPtr<nsICookieBannerRule>>& aRules) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // Append global rules if enabled. We don't have to deduplicate here because
+  // global rules are stored by ID and every ID maps to exactly one rule.
   if (StaticPrefs::cookiebanners_service_enableGlobalRules()) {
     AppendToArray(aRules, mGlobalRules.Values());
   }
-  AppendToArray(aRules, mRules.Values());
+
+  // Append domain-keyed rules.
+  // Since multiple domains can map to the same rule in mRules we need to
+  // deduplicate using a set before returning a rules array.
+  nsTHashSet<nsRefPtrHashKey<nsICookieBannerRule>> rulesSet;
+
+  for (const nsCOMPtr<nsICookieBannerRule>& rule : mRules.Values()) {
+    rulesSet.Insert(rule);
+  }
+
+  AppendToArray(aRules, rulesSet);
 
   return NS_OK;
 }
