@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout Main Branch"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: fenix
           ref: main
           fetch-depth: 0
       - name: "Update Experiments JSON"
         id: update-experiments-json
-        uses: mozilla-mobile/update-experiments@v2
+        uses: mozilla-mobile/update-experiments@v3
         with:
           repo-path: fenix
           output-path: app/src/main/res/raw/initial_experiments.json
@@ -30,7 +30,7 @@ jobs:
           app-name: fenix
           branch: automation/update-nimbus-experiments
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4
         if: steps.update-experiments-json.outputs.changed == 1 && steps.update-experiments-json.outputs.changed-branch == 1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
