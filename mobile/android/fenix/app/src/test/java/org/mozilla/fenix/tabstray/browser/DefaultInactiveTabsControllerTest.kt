@@ -47,7 +47,7 @@ class DefaultInactiveTabsControllerTest {
         assertNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
         assertNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
 
-        controller.updateCardExpansion(isExpanded = true)
+        controller.handleInactiveTabsHeaderClicked(expanded = true)
 
         assertNotNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
         assertNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
@@ -60,7 +60,7 @@ class DefaultInactiveTabsControllerTest {
         assertNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
         assertNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
 
-        controller.updateCardExpansion(isExpanded = false)
+        controller.handleInactiveTabsHeaderClicked(expanded = false)
 
         assertNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
         assertNotNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
@@ -72,7 +72,7 @@ class DefaultInactiveTabsControllerTest {
 
         assertNull(TabsTrayMetrics.autoCloseDimissed.testGetValue())
 
-        controller.dismissAutoCloseDialog()
+        controller.handleInactiveTabsAutoCloseDialogDismiss()
 
         assertNotNull(TabsTrayMetrics.autoCloseDimissed.testGetValue())
         verify { settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true }
@@ -84,7 +84,7 @@ class DefaultInactiveTabsControllerTest {
 
         assertNull(TabsTrayMetrics.autoCloseTurnOnClicked.testGetValue())
 
-        controller.enableInactiveTabsAutoClose()
+        controller.handleEnableInactiveTabsAutoCloseClicked()
 
         assertNotNull(TabsTrayMetrics.autoCloseTurnOnClicked.testGetValue())
 
@@ -107,7 +107,7 @@ class DefaultInactiveTabsControllerTest {
 
         assertNull(TabsTrayMetrics.openInactiveTab.testGetValue())
 
-        controller.openInactiveTab(tab)
+        controller.handleInactiveTabClicked(tab)
 
         assertNotNull(TabsTrayMetrics.openInactiveTab.testGetValue())
     }
@@ -124,7 +124,7 @@ class DefaultInactiveTabsControllerTest {
 
         assertNull(TabsTrayMetrics.closeInactiveTab.testGetValue())
 
-        controller.closeInactiveTab(tab)
+        controller.handleCloseInactiveTabClicked(tab)
 
         assertNotNull(TabsTrayMetrics.closeInactiveTab.testGetValue())
     }
@@ -152,7 +152,7 @@ class DefaultInactiveTabsControllerTest {
             every { browserStore.state.potentialInactiveTabs } returns listOf(inactiveTab)
             assertNull(TabsTrayMetrics.closeAllInactiveTabs.testGetValue())
 
-            controller.deleteAllInactiveTabs()
+            controller.handleDeleteAllInactiveTabsClicked()
 
             verify { tabsUseCases.removeTabs(listOf("24")) }
             assertNotNull(TabsTrayMetrics.closeAllInactiveTabs.testGetValue())

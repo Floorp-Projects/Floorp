@@ -65,28 +65,28 @@ class DefaultInactiveTabsInteractor(
      * See [InactiveTabsInteractor.onInactiveTabsHeaderClicked].
      */
     override fun onInactiveTabsHeaderClicked(expanded: Boolean) {
-        controller.updateCardExpansion(expanded)
+        controller.handleInactiveTabsHeaderClicked(expanded)
     }
 
     /**
      * See [InactiveTabsInteractor.onAutoCloseDialogCloseButtonClicked].
      */
     override fun onAutoCloseDialogCloseButtonClicked() {
-        controller.dismissAutoCloseDialog()
+        controller.handleInactiveTabsAutoCloseDialogDismiss()
     }
 
     /**
      * See [InactiveTabsInteractor.onEnableAutoCloseClicked].
      */
     override fun onEnableAutoCloseClicked() {
-        controller.enableInactiveTabsAutoClose()
+        controller.handleEnableInactiveTabsAutoCloseClicked()
     }
 
     /**
      * See [InactiveTabsInteractor.onInactiveTabClicked].
      */
     override fun onInactiveTabClicked(tab: TabSessionState) {
-        controller.openInactiveTab(tab)
+        controller.handleInactiveTabClicked(tab)
         browserInteractor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME)
     }
 
@@ -94,7 +94,7 @@ class DefaultInactiveTabsInteractor(
      * See [InactiveTabsInteractor.onInactiveTabClosed].
      */
     override fun onInactiveTabClosed(tab: TabSessionState) {
-        controller.closeInactiveTab(tab)
+        controller.handleCloseInactiveTabClicked(tab)
         browserInteractor.onTabClosed(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME)
     }
 
@@ -102,6 +102,6 @@ class DefaultInactiveTabsInteractor(
      * See [InactiveTabsInteractor.onDeleteAllInactiveTabsClicked].
      */
     override fun onDeleteAllInactiveTabsClicked() {
-        controller.deleteAllInactiveTabs()
+        controller.handleDeleteAllInactiveTabsClicked()
     }
 }

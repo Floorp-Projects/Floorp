@@ -21,35 +21,40 @@ import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
 interface InactiveTabsController {
 
     /**
-     * Opens the given inactive tab.
+     * Opens the provided inactive tab.
+     *
+     * @param tab [TabSessionState] that was clicked.
      */
-    fun openInactiveTab(tab: TabSessionState)
+    fun handleInactiveTabClicked(tab: TabSessionState)
 
     /**
-     * Closes the given inactive tab.
+     * Closes the provided inactive tab.
+     *
+     * @param tab [TabSessionState] that was clicked.
      */
-    fun closeInactiveTab(tab: TabSessionState)
+    fun handleCloseInactiveTabClicked(tab: TabSessionState)
 
     /**
-     * Updates the inactive card to be expanded to display all the tabs, or collapsed with only
-     * the title showing.
+     * Expands or collapses the inactive tabs section.
+     *
+     * @param expanded true when the tap should expand the inactive section.
      */
-    fun updateCardExpansion(isExpanded: Boolean)
+    fun handleInactiveTabsHeaderClicked(expanded: Boolean)
 
     /**
-     * Dismiss the auto-close dialog.
+     * Dismisses the inactive tabs auto-close dialog.
      */
-    fun dismissAutoCloseDialog()
+    fun handleInactiveTabsAutoCloseDialogDismiss()
 
     /**
-     * Enable the auto-close feature with the "after a month" setting.
+     * Enables the inactive tabs auto-close feature with a default time period.
      */
-    fun enableInactiveTabsAutoClose()
+    fun handleEnableInactiveTabsAutoCloseClicked()
 
     /**
-     * Delete all inactive tabs.
+     * Deletes all inactive tabs.
      */
-    fun deleteAllInactiveTabs()
+    fun handleDeleteAllInactiveTabsClicked()
 }
 
 /**
@@ -69,29 +74,29 @@ class DefaultInactiveTabsController(
     private val showUndoSnackbar: (Boolean) -> Unit,
 ) : InactiveTabsController {
 
-    override fun openInactiveTab(tab: TabSessionState) {
+    override fun handleInactiveTabClicked(tab: TabSessionState) {
         TabsTrayMetrics.openInactiveTab.add()
     }
 
-    override fun closeInactiveTab(tab: TabSessionState) {
+    override fun handleCloseInactiveTabClicked(tab: TabSessionState) {
         TabsTrayMetrics.closeInactiveTab.add()
     }
 
-    override fun updateCardExpansion(isExpanded: Boolean) {
-        appStore.dispatch(UpdateInactiveExpanded(isExpanded))
+    override fun handleInactiveTabsHeaderClicked(expanded: Boolean) {
+        appStore.dispatch(UpdateInactiveExpanded(expanded))
 
-        when (isExpanded) {
+        when (expanded) {
             true -> TabsTrayMetrics.inactiveTabsExpanded.record(NoExtras())
             false -> TabsTrayMetrics.inactiveTabsCollapsed.record(NoExtras())
         }
     }
 
-    override fun dismissAutoCloseDialog() {
+    override fun handleInactiveTabsAutoCloseDialogDismiss() {
         markDialogAsShown()
         TabsTrayMetrics.autoCloseDimissed.record(NoExtras())
     }
 
-    override fun enableInactiveTabsAutoClose() {
+    override fun handleEnableInactiveTabsAutoCloseClicked() {
         markDialogAsShown()
         settings.closeTabsAfterOneMonth = true
         settings.closeTabsAfterOneWeek = false
@@ -100,7 +105,7 @@ class DefaultInactiveTabsController(
         TabsTrayMetrics.autoCloseTurnOnClicked.record(NoExtras())
     }
 
-    override fun deleteAllInactiveTabs() {
+    override fun handleDeleteAllInactiveTabsClicked() {
         TabsTrayMetrics.closeAllInactiveTabs.record(NoExtras())
         browserStore.state.potentialInactiveTabs.map { it.id }.let {
             tabsUseCases.removeTabs(it)
