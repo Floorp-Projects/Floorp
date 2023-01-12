@@ -11,8 +11,10 @@ PAGE_EMPTY_HTML = "/webdriver/tests/bidi/network/support/empty.html"
 
 @pytest.fixture
 def fetch(bidi_session, top_context):
-    """Perform a fetch from the page of the top level context."""
-    async def fetch(url, method="GET", headers=None):
+    """Perform a fetch from the page of the provided context, default to the
+    top context.
+    """
+    async def fetch(url, method="GET", headers=None, context=top_context):
         method_arg = f"method: '{method}',"
 
         headers_arg = ""
@@ -28,7 +30,7 @@ def fetch(bidi_session, top_context):
                    {method_arg}
                    {headers_arg}
                  }}).then(response => response.text());""",
-            target=ContextTarget(top_context["context"]),
+            target=ContextTarget(context["context"]),
             await_promise=True,
         )
 
@@ -48,7 +50,7 @@ async def setup_network_test(
     """
     listeners = []
 
-    async def _setup_network_test(events, test_url=url(PAGE_EMPTY_HTML)):
+    async def _setup_network_test(events, test_url=url(PAGE_EMPTY_HTML), contexts=None):
         nonlocal listeners
 
         # Listen for network.responseCompleted for the initial navigation to
@@ -68,7 +70,7 @@ async def setup_network_test(
             events=[RESPONSE_COMPLETED_EVENT], contexts=[top_context["context"]]
         )
 
-        await subscribe_events(events)
+        await subscribe_events(events, contexts)
 
         network_events = {}
         for event in events:
