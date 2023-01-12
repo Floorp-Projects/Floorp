@@ -22,7 +22,7 @@ async function test_hint_completion_on_error(httpCode) {
     { headers }
   );
 
-  let requestUrl = `https://example.com/browser/netwerk/test/browser/early_hint_asset_html.sjs?as=image&code=${httpCode}`;
+  let requestUrl = `https://example.com/browser/netwerk/test/browser/early_hint_asset_html.sjs?hinted=1&as=image&code=${httpCode}`;
 
   await BrowserTestUtils.withNewTab(
     {

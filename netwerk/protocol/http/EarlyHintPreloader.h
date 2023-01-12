@@ -134,7 +134,9 @@ class EarlyHintPreloader final : public nsIStreamListener,
   // so we have to support holding a list.
   nsTArray<StreamListenerFunction> mStreamListenerFunctions;
 
-  // Set to true once OnStartRequest is called and we suspend our mChannel
+  // Set to true once OnStartRequest is called
+  bool mOnStartRequestCalled = false;
+  // Set to true if we suspended mChannel in the OnStartRequest call
   bool mSuspended = false;
   nsCOMPtr<nsIParentChannel> mParent;
   // Set to true after we've received the last OnStopRequest, and shouldn't
