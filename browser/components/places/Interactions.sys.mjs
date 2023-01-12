@@ -8,10 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.sys.mjs",
-  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  Snapshots: "resource:///modules/Snapshots.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -41,13 +39,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "pageViewIdleTime",
   "browser.places.interactions.pageViewIdleTime",
   60
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "snapshotIdleTime",
-  "browser.places.interactions.snapshotIdleTime",
-  2
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -200,7 +191,6 @@ class _Interactions {
       }
     }
     Services.obs.addObserver(this, DOMWINDOW_OPENED_TOPIC, true);
-    Services.obs.addObserver(this, "places-snapshots-added", true);
     lazy.idleService.addIdleObserver(this, lazy.pageViewIdleTime);
     this.#initialized = true;
   }
@@ -282,10 +272,6 @@ class _Interactions {
       updated_at: now,
     };
     this.#interactions.set(browser, interaction);
-
-    // Lock any potential page data in memory until we've decided if this page
-    // needs to become a snapshot or not.
-    lazy.PageDataService.lockEntry(this, docInfo.url);
 
     // Only reset the time if this is being loaded in the active tab of the
     // active window.
@@ -514,17 +500,6 @@ class _Interactions {
       case DOMWINDOW_OPENED_TOPIC:
         this.#onWindowOpen(subject);
         break;
-      case "places-snapshots-added":
-        // For manually created snapshots we want to flush interactions to disk
-        // asap, so that heuristics can use them.
-        data = JSON.parse(data);
-        if (
-          data.some(d => d.userPersisted != lazy.Snapshots.USER_PERSISTED.NO)
-        ) {
-          lazy.logConsole.debug("User added some snapshots");
-          this.#updateInteraction();
-        }
-        break;
       case "idle":
         lazy.logConsole.debug("User went idle");
         // We save the state of the current interaction when we are notified
@@ -625,17 +600,6 @@ class InteractionsStore {
    * Used to unblock the queue of promises when the timer is cleared.
    */
   #timerResolve = undefined;
-  /*
-   * A list of URLs that have had interactions updated since we last checked for
-   * new snapshots.
-   * @type {Set<string>}
-   */
-  #potentialSnapshots = new Set();
-  /*
-   * Whether the user has been idle for more than the value of
-   * `browser.places.interactions.snapshotIdleTime`.
-   */
-  #userIsIdle = false;
 
   constructor() {
     // Block async shutdown to ensure the last write goes through.
@@ -648,23 +612,6 @@ class InteractionsStore {
 
     // Can be used to wait for the last pending write to have happened.
     this.pendingPromise = Promise.resolve();
-
-    lazy.idleService.addIdleObserver(this, lazy.snapshotIdleTime);
-  }
-
-  /**
-   * Tells the snapshot service to check all of the potential snapshots.
-   *
-   * @returns {Promise}
-   */
-  async updateSnapshots() {
-    let urls = [...this.#potentialSnapshots];
-    this.#potentialSnapshots.clear();
-    await lazy.Snapshots.updateSnapshots(urls);
-
-    for (let url of urls) {
-      lazy.PageDataService.unlockEntry(Interactions, url);
-    }
   }
 
   /**
@@ -677,7 +624,6 @@ class InteractionsStore {
       lazy.clearTimeout(this.#timer);
       this.#timerResolve();
       await this.#updateDatabase();
-      await this.updateSnapshots();
     }
   }
 
@@ -731,27 +677,6 @@ class InteractionsStore {
     }
   }
 
-  /**
-   * Handles notifications from the observer service.
-   *
-   * @param {nsISupports} subject
-   *   The subject of the notification.
-   * @param {string} topic
-   *   The topic of the notification.
-   * @param {string} data
-   *   The data attached to the notification.
-   */
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "idle":
-        this.#userIsIdle = true;
-        this.updateSnapshots();
-        break;
-      case "active":
-        this.#userIsIdle = false;
-    }
-  }
-
   async #updateDatabase() {
     this.#timer = undefined;
 
@@ -766,9 +691,7 @@ class InteractionsStore {
     let params = {};
     let SQLInsertFragments = [];
     let i = 0;
-    for (let [url, interactionsForUrl] of interactions) {
-      this.#potentialSnapshots.add(url);
-
+    for (let interactionsForUrl of interactions.values()) {
       for (let interaction of interactionsForUrl.values()) {
         params[`url${i}`] = interaction.url;
         params[`referrer${i}`] = interaction.referrer;
@@ -825,9 +748,5 @@ class InteractionsStore {
     this.progress.pendingUpdates = 0;
 
     Services.obs.notifyObservers(null, "places-metadata-updated");
-
-    if (this.#userIsIdle) {
-      this.updateSnapshots();
-    }
   }
 }

@@ -1202,17 +1202,11 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 91 uses schema version 57
 
-      if (currentSchemaVersion < 58) {
-        rv = MigrateV58Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 58 migration is no longer needed.
 
       // Firefox 92 uses schema version 58
 
-      if (currentSchemaVersion < 59) {
-        rv = MigrateV59Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 59 migration is no longer needed.
 
       // Firefox 94 uses schema version 59
 
@@ -1228,36 +1222,21 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (currentSchemaVersion < 62) {
-        rv = MigrateV62Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 62 migration is no longer needed.
 
       // Firefox 97 uses schema version 62
 
-      if (currentSchemaVersion < 63) {
-        rv = MigrateV63Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 63 migration is no longer needed.
 
       // Firefox 98 uses schema version 63
 
-      if (currentSchemaVersion < 64) {
-        rv = MigrateV64Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 64 migration is no longer needed.
 
       // Firefox 99 uses schema version 64
 
-      if (currentSchemaVersion < 65) {
-        rv = MigrateV65Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 65 migration is no longer needed.
 
-      if (currentSchemaVersion < 66) {
-        rv = MigrateV66Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 66 migration is no longer needed.
 
       // Firefox 100 uses schema version 66
 
@@ -1266,10 +1245,7 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (currentSchemaVersion < 68) {
-        rv = MigrateV68Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // The schema 68 migration is no longer needed.
 
       // Firefox 103 uses schema version 68
 
@@ -1285,7 +1261,12 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 110 uses schema version 70
+      if (currentSchemaVersion < 71) {
+        rv = MigrateV71Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 110 uses schema version 71
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1387,38 +1368,6 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
     // moz_places_metadata_search_queries
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SEARCH_QUERIES);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_places_metadata_snapshots
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_PINNNED);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_places_metadata_snapshots_extra
-    rv =
-        mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA_TYPE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_places_metadata_snapshots_groups
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_GROUPS);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // moz_places_metadata_groups_to_snapshots
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_session_metadata
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_METADATA);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_session_to_places
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_TO_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_previews_tombstones
@@ -1739,8 +1688,6 @@ nsresult Database::InitTempEntities() {
       mMainConn->ExecuteSimpleSQL(CREATE_BOOKMARKS_DELETED_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_METADATA_AFTERINSERT_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_METADATA_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2368,41 +2315,6 @@ nsresult Database::MigrateV57Up() {
   return NS_OK;
 }
 
-nsresult Database::MigrateV58Up() {
-  // Add metadata snapshots tables if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT id FROM moz_places_metadata_snapshots"_ns, getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv =
-        mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_GROUPS);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
-nsresult Database::MigrateV59Up() {
-  // Add metadata snapshots tables if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT id FROM moz_session_metadata"_ns, getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_METADATA);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_TO_PLACES);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
 nsresult Database::MigrateV60Up() {
   // Add the site_name column to moz_places.
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -2428,115 +2340,6 @@ nsresult Database::MigrateV61Up() {
   return NS_OK;
 }
 
-nsresult Database::MigrateV62Up() {
-  // Add builder columns if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT builder FROM moz_places_metadata_snapshots_groups"_ns,
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_snapshots_groups "
-        "ADD COLUMN builder TEXT NOT NULL "_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_snapshots_groups "
-        "ADD COLUMN builder_data TEXT "_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Add indexes if necessary.
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_METADATA_REFERRER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_PINNNED);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA_TYPE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV63Up() {
-  // Add title column to snapshots if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT title FROM moz_places_metadata_snapshots"_ns,
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_snapshots "
-        "ADD COLUMN title TEXT "_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV64Up() {
-  // Add hidden column to snapshot groups if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT hidden FROM moz_places_metadata_snapshots_groups"_ns,
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_snapshots_groups "
-        "ADD COLUMN hidden INTEGER DEFAULT 0 NOT NULL "_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV65Up() {
-  // Add hidden column to snapshot groups to snapshots table if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT hidden FROM moz_places_metadata_groups_to_snapshots"_ns,
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_groups_to_snapshots "
-        "ADD COLUMN hidden INTEGER DEFAULT 0 NOT NULL "_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV66Up() {
-  // Let the title column in snapshots groups be NULL.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT 1 "
-      "FROM sqlite_master "
-      "WHERE name = 'moz_places_metadata_snapshots_groups' AND "
-      "INSTR(sql, 'title TEXT NOT NULL') > 0"_ns,
-      getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-  bool hasMore = false;
-  if (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-    // Migrate non-empty titles to the builder_data object, drop the column
-    // and recreate a nullable one.
-    rv = mMainConn->ExecuteSimpleSQL(
-        "UPDATE moz_places_metadata_snapshots_groups "
-        "SET builder_data = json_set(IFNULL(builder_data, json_object()), "
-        "'$.title', title) "
-        "WHERE title <> '' AND builder_data->>'title' IS NULL"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_snapshots_groups DROP COLUMN title"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_snapshots_groups "
-        "ADD COLUMN title TEXT"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
 nsresult Database::MigrateV67Up() {
   // Align all input field in moz_inputhistory to lowercase. If there are
   // multiple records that expresses the same input, use maximum use_count from
@@ -2551,29 +2354,6 @@ nsresult Database::MigrateV67Up() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(
       "DELETE FROM moz_inputhistory WHERE LOWER(input) <> input"_ns);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV68Up() {
-  // Add removed_reason column to snapshots table if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT removed_reason FROM moz_places_metadata_snapshots"_ns,
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places_metadata_snapshots "
-        "ADD COLUMN removed_reason INTEGER"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Update any entry that has removed_at but not a removed_reason to the
-  // default 0 value, since we don't have better info about the actual reason.
-  rv = mMainConn->ExecuteSimpleSQL(
-      "UPDATE moz_places_metadata_snapshots SET removed_reason = 0 "
-      "WHERE removed_at IS NOT NULL AND removed_reason IS NULL"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2640,6 +2420,46 @@ nsresult Database::MigrateV70Up() {
       "SET recalc_frecency = 1, "
       "    frecency = CASE WHEN frecency = -1 THEN -1 ELSE ABS(frecency) END "
       "WHERE frecency < 0 "_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult Database::MigrateV71Up() {
+  // Fix the foreign counts. We ignore failures as the tables may not exist.
+  mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_places "
+      "SET foreign_count = foreign_count - 1 "
+      "WHERE id in (SELECT place_id FROM moz_places_metadata_snapshots)"_ns);
+  mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_places "
+      "SET foreign_count = foreign_count - 1 "
+      "WHERE id in (SELECT place_id FROM moz_session_to_places)"_ns);
+
+  // Remove unused snapshots and session tables and indexes.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(
+      "DROP INDEX IF EXISTS moz_places_metadata_snapshots_pinnedindex"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      "DROP INDEX IF EXISTS moz_places_metadata_snapshots_extra_typeindex"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      "DROP TABLE IF EXISTS moz_places_metadata_groups_to_snapshots"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      "DROP TABLE IF EXISTS moz_places_metadata_snapshots_groups"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      "DROP TABLE IF EXISTS moz_places_metadata_snapshots_extra"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      "DROP TABLE IF EXISTS moz_places_metadata_snapshots"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      "DROP TABLE IF EXISTS moz_session_to_places"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      "DROP TABLE IF EXISTS moz_session_metadata"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

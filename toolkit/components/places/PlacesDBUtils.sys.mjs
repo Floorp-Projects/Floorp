@@ -778,9 +778,7 @@ export var PlacesDBUtils = {
       {
         query: `UPDATE moz_places SET foreign_count =
           (SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id ) +
-          (SELECT count(*) FROM moz_keywords WHERE place_id = moz_places.id ) +
-          (SELECT count(*) FROM moz_places_metadata_snapshots WHERE place_id = moz_places.id ) +
-          (SELECT count(*) FROM moz_session_to_places WHERE place_id = moz_places.id )`,
+          (SELECT count(*) FROM moz_keywords WHERE place_id = moz_places.id )`,
       },
 
       // L.5 recalculate missing hashes.

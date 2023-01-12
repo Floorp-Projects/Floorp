@@ -143,7 +143,7 @@ class _InteractionsBlocklist {
    * The rules are defined in InteractionsBlocklist.urlRequirements.
    *
    * @param {string|URL|nsIURI} url The URL to check.
-   * @returns {boolean} whether the url can be added to snapshots.
+   * @returns {boolean} whether the url can be recorded.
    */
   canRecordUrl(url) {
     let protocol, pathname;
