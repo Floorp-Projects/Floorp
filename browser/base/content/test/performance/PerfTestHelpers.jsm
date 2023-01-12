@@ -50,9 +50,6 @@ var PerfTestHelpers = {
         let channel = lazy.NetUtil.newChannel({
           uri,
           loadUsingSystemPrincipal: true,
-          // Avoid crashing for non-existant files. If the file not existing
-          // is bad, we can deal with it in the test instead.
-          contentPolicyType: Ci.nsIContentPolicy.TYPE_FETCH,
         });
 
         channel.asyncOpen({

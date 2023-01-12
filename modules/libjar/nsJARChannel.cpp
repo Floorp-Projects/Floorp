@@ -286,6 +286,9 @@ nsresult nsJARChannel::CreateJarInput(nsIZipReaderCache* jarCache,
       new nsJARInputThunk(reader, mJarURI, mJarEntry, jarCache != nullptr);
   rv = input->Init();
   if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
+      CheckForBrokenChromeURL(mLoadInfo, mOriginalURI);
+    }
     return rv;
   }
 
@@ -485,9 +488,6 @@ nsresult nsJARChannel::OnOpenLocalFileComplete(nsresult aResult,
   MOZ_ASSERT(mIsPending);
 
   if (NS_FAILED(aResult)) {
-    if (aResult == NS_ERROR_FILE_NOT_FOUND) {
-      CheckForBrokenChromeURL(mLoadInfo, mOriginalURI);
-    }
     if (!aIsSyncCall) {
       NotifyError(aResult);
     }
