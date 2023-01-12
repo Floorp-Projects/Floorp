@@ -151,6 +151,9 @@ SI void swap(T& a, T& b) {
   b = t;
 }
 
+SI size_t min(size_t a, size_t b) { return a < b ? a : b; }
+SI size_t max(size_t a, size_t b) { return a > b ? a : b; }
+
 SI int32_t min(int32_t a, int32_t b) { return a < b ? a : b; }
 SI int32_t max(int32_t a, int32_t b) { return a > b ? a : b; }
 
