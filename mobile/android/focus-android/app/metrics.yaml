@@ -276,10 +276,12 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/4967
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1804057
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1799049
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1809447
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
       - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
       - https://github.com/mozilla-mobile/focus-android/pull/8109#issuecomment-1337394286
+      - https://github.com/mozilla-mobile/firefox-android/pull/523#issuecomment-1377494482
     data_sensitivity:
       - interaction
     notification_emails:
@@ -306,10 +308,12 @@ browser.search:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4967
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1804057
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1809447
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
       - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
       - https://github.com/mozilla-mobile/focus-android/pull/8109#issuecomment-1337394286
+      - https://github.com/mozilla-mobile/firefox-android/pull/523#issuecomment-1377494482
     data_sensitivity:
       - interaction
     notification_emails:
@@ -327,9 +331,11 @@ browser.search:
       - BASELINE_PING
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4967
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1809447
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
       - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
+      - https://github.com/mozilla-mobile/firefox-android/pull/523#issuecomment-1377494482
     data_sensitivity:
       - interaction
     notification_emails:
