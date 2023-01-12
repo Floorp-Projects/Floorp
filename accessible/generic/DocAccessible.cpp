@@ -652,24 +652,32 @@ void DocAccessible::ScrollTimerCallback(nsITimer* aTimer, void* aClosure) {
 }
 
 void DocAccessible::HandleScroll(nsINode* aTarget) {
+  nsINode* target = aTarget;
+  LocalAccessible* targetAcc = GetAccessible(target);
+  if (!targetAcc && target->IsInNativeAnonymousSubtree()) {
+    // The scroll event for textareas comes from a native anonymous div. We need
+    // the closest non-anonymous ancestor to get the right Accessible.
+    target = target->GetClosestNativeAnonymousSubtreeRootParent();
+    targetAcc = GetAccessible(target);
+  }
   // Regardless of our scroll timer, we need to send a cache update
   // to ensure the next Bounds() query accurately reflects our position
   // after scrolling.
-  if (LocalAccessible* scrollTarget = GetAccessible(aTarget)) {
-    QueueCacheUpdate(scrollTarget, CacheDomain::ScrollPosition);
+  if (targetAcc) {
+    QueueCacheUpdate(targetAcc, CacheDomain::ScrollPosition);
   }
 
   const uint32_t kScrollEventInterval = 100;
   // If we haven't dispatched a scrolling event for a target in at least
   // kScrollEventInterval milliseconds, dispatch one now.
-  mLastScrollingDispatch.WithEntryHandle(aTarget, [&](auto&& lastDispatch) {
+  mLastScrollingDispatch.WithEntryHandle(target, [&](auto&& lastDispatch) {
     const TimeStamp now = TimeStamp::Now();
 
     if (!lastDispatch ||
         (now - lastDispatch.Data()).ToMilliseconds() >= kScrollEventInterval) {
       // We can't fire events on a document whose tree isn't constructed yet.
       if (HasLoadState(eTreeConstructed)) {
-        DispatchScrollingEvent(aTarget, nsIAccessibleEvent::EVENT_SCROLLING);
+        DispatchScrollingEvent(target, nsIAccessibleEvent::EVENT_SCROLLING);
       }
       lastDispatch.InsertOrUpdate(now);
     }
