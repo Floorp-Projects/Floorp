@@ -2780,7 +2780,8 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     return mSizeMode == aModeToTest;
   };
 
-  if (aMode != nsSizeMode_Fullscreen) {
+  if (aMode != nsSizeMode_Fullscreen && aMode != nsSizeMode_Minimized) {
+    // Fullscreen and minimized are compatible.
     if (SizeModeMightBe(nsSizeMode_Fullscreen)) {
       MakeFullScreen(false);
     }
@@ -5223,17 +5224,15 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   mIsTiled = aEvent->new_window_state & GDK_WINDOW_STATE_TILED;
   LOG("\tTiled: %d\n", int(mIsTiled));
 
-  if (mWidgetListener) {
-    if (mSizeMode != oldSizeMode) {
-      if (mSizeMode == nsSizeMode_Fullscreen ||
-          oldSizeMode == nsSizeMode_Fullscreen) {
-        bool isFullscreen = mSizeMode == nsSizeMode_Fullscreen;
-        mWidgetListener->FullscreenWillChange(isFullscreen);
-        mWidgetListener->SizeModeChanged(mSizeMode);
-        mWidgetListener->FullscreenChanged(isFullscreen);
-      } else {
-        mWidgetListener->SizeModeChanged(mSizeMode);
-      }
+  if (mWidgetListener && mSizeMode != oldSizeMode) {
+    if (mSizeMode == nsSizeMode_Fullscreen ||
+        oldSizeMode == nsSizeMode_Fullscreen) {
+      bool isFullscreen = mSizeMode == nsSizeMode_Fullscreen;
+      mWidgetListener->FullscreenWillChange(isFullscreen);
+      mWidgetListener->SizeModeChanged(mSizeMode);
+      mWidgetListener->FullscreenChanged(isFullscreen);
+    } else {
+      mWidgetListener->SizeModeChanged(mSizeMode);
     }
   }
 
@@ -7353,9 +7352,9 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  const bool wasFullscreen = mSizeMode == nsSizeMode_Fullscreen;
   if (aFullScreen) {
-    if (!wasFullscreen) {
+    if (mSizeMode != nsSizeMode_Fullscreen &&
+        mSizeMode != nsSizeMode_Minimized) {
       mLastSizeModeBeforeFullscreen = mSizeMode;
     }
     if (mIsPIPWindow) {
