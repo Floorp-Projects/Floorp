@@ -714,8 +714,8 @@ class WidgetPointerEvent : public WidgetMouseEvent {
     return result;
   }
 
-  uint32_t mWidth;
-  uint32_t mHeight;
+  int32_t mWidth;
+  int32_t mHeight;
   bool mIsPrimary;
   bool mFromTouchEvent;
 
