@@ -177,4 +177,15 @@ class OnboardingTest {
             verifyLightThemeApplied(getUITheme())
         }
     }
+
+    @Test
+    fun pickYourToolbarPlacementCardTest() {
+        homeScreen {
+            verifyToolbarPlacementCard(isBottomChecked = true, isTopChecked = false)
+            clickTopToolbarPlacementButton()
+            verifyToolbarPosition(defaultPosition = false)
+            clickBottomToolbarPlacementButton()
+            verifyToolbarPosition(defaultPosition = true)
+        }
+    }
 }

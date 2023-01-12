@@ -139,6 +139,12 @@ class HomeScreenRobot {
         )
     }
 
+    fun clickTopToolbarPlacementButton() =
+        itemWithResId("$packageName:id/toolbar_top_radio_button").click()
+
+    fun clickBottomToolbarPlacementButton() =
+        itemWithResId("$packageName:id/toolbar_bottom_radio_button").click()
+
     fun verifySignInToSyncCard() {
         scrollToElementByText(getStringResource(R.string.onboarding_account_sign_in_header))
         assertItemContainingTextExists(startSyncHeader, startSyncDescription)
