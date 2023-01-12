@@ -5764,6 +5764,13 @@
     mirror: always
 #endif
 
+#ifdef XP_MACOSX
+-   name: gfx.core-animation.low-power-telemetry-frames
+    type: int32_t
+    value: 600
+    mirror: once
+#endif
+
 #if defined(MOZ_WIDGET_ANDROID)
   # Overrides the glClear color used when the surface origin is not (0, 0)
   # Used for drawing a border around the content.
