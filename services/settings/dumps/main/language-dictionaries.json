@@ -1,6 +1,14 @@
 {
   "data": [
     {
+      "schema": 1672245423392,
+      "dictionaries": [
+        "en-US-mozilla@dictionaries.addons.mozilla.org"
+      ],
+      "id": "en-US",
+      "last_modified": 1673270322227
+    },
+    {
       "schema": 1569354115694,
       "dictionaries": [
         "ca-valencia@dictionaries.addons.mozilla.org"
@@ -483,14 +491,6 @@
     {
       "schema": 1537961639183,
       "dictionaries": [
-        "@unitedstatesenglishdictionary"
-      ],
-      "id": "en-US",
-      "last_modified": 1539698844315
-    },
-    {
-      "schema": 1537961639183,
-      "dictionaries": [
         "marcoagpinto@mail.telepac.pt"
       ],
       "id": "en-GB",
@@ -643,5 +643,5 @@
       "last_modified": 1539698843264
     }
   ],
-  "timestamp": 1569410800356
+  "timestamp": 1673270322227
 }
