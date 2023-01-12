@@ -2,7 +2,6 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=359303
-https://bugzilla.mozilla.org/show_bug.cgi?id=1769534
 -->
 <head>
   <meta charset="utf-8" />
@@ -13,51 +12,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1769534
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=359303">Mozilla Bug 359303</a>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1769534">Mozilla Bug 1769534</a>
 
 <p id="display"></p>
 
 <div id="content">
 <!-- In a plain-text editable control (such as a textarea or textinput), copying to clipboard should
-preserve all non-breaking spaces. -->
+preserve non-breaking spaces. -->
 <input
   id="input-with-non-breaking-spaces"
-  value="Input content: This town is 100&nbsp;km away / «&nbsp;Est-ce Paris&nbsp;?&nbsp;» / Consecutive non-breaking spaces: '&nbsp;&nbsp;' / &nbsp; &nbsp; &nbsp;Text padded using editor-generated pattern.
-  ">
+  value="Input content: This town is 100&nbsp;km away / «&nbsp;Est-ce Paris&nbsp;?&nbsp;» / Consecutive non-breaking spaces: '&nbsp;&nbsp;'">
 <textarea id="textarea-with-non-breaking-spaces">
 Textarea content:
 - This town is 100&nbsp;km away.
 - «&nbsp;Est-ce Paris&nbsp;?&nbsp;»
-- Consecutive non-breaking spaces: '&nbsp;&nbsp;'
- &nbsp; &nbsp; &nbsp;Text padded using editor-generated pattern.
+- Consecutive non-breaking spaces: "&nbsp;&nbsp;"
 </textarea>
 
 <!-- In a content-editable div, copying to clipboard should preserve non-breaking spaces.
-However, HTML editors programmatically insert a alternating pattern of space / NBSP when padding text with spaces
-(otherwises spaces would be collapsed).
-These programmatically-generated NBSPs should be replaced by plain spaces when copying to plain-text.
-See https://bugzilla.mozilla.org/show_bug.cgi?id=1769534
+However, for compatibility with what other browsers currently do, the behavior of replacing non-breaking spaces by spaces is preserved for now.
+See https://bugzilla.mozilla.org/show_bug.cgi?id=359303#c145
 -->
 <div contenteditable="true" id="content-editable-with-non-breaking-spaces">
 Content-editable content:
 - This town is 100&nbsp;km away.
 - «&nbsp;Est-ce Paris&nbsp;?&nbsp;»
-- Consecutive non-breaking spaces: '&nbsp;&nbsp;'
- &nbsp; &nbsp; &nbsp;Text padded using editor-generated pattern.
+- Consecutive non-breaking spaces: "&nbsp;&nbsp;"
 </div>
 
-<!-- In non-editable HTML nodes, like this paragraph, copying to clipboard should preserve non-breaking spaces.
-However, HTML editors programmatically insert a alternating pattern of space / NBSP when padding text with spaces
-(otherwises spaces would be collapsed).
-These programmatically-generated NBSPs should be replaced by plain spaces when copying to plain-text.
-See https://bugzilla.mozilla.org/show_bug.cgi?id=1769534
+<!-- In non-editable HTML nodes, like this paragraph, copying to clipboard should preserve non-breaking
+spaces.
+However, for compatibility with what other browsers currently do, the behavior of replacing non-breaking spaces by spaces is preserved for now.
+See https://bugzilla.mozilla.org/show_bug.cgi?id=359303#c145
 -->
 <p id="paragraph-with-non-breaking-spaces">
 Paragraph content:
 - This town is 100&nbsp;km away.
 - «&nbsp;Est-ce Paris&nbsp;?&nbsp;»
-- Consecutive non-breaking spaces: '&nbsp;&nbsp;'
- &nbsp; &nbsp; &nbsp;Text padded using editor-generated pattern.
+- Consecutive non-breaking spaces: "&nbsp;&nbsp;"
 </p>
 </div>
 
@@ -93,40 +84,28 @@ async function clipboardTextForElementId(aDomId, aExpectedString) {
   return copiedText;
 }
 
-function assertUserNbspPreserved(aCopiedText) {
-  ok(aCopiedText.includes("100 km"), "NBSP between two characters should be preserved");
-  ok(aCopiedText.includes("« "),  "A single NBSP near a punctuation mark should be preserved");
-  ok(aCopiedText.includes(" »"),  "A single NBSP near a punctuation mark should be preserved");
-  ok(aCopiedText.includes(" ? "), "NBSPs before *and* after a character should be preserved");
-  ok(aCopiedText.includes("'  '"), "Consecutive NBSPs should be preserved");
-}
-
-function assertEditorGeneratedNbspPreserved(aCopiedText) {
-  ok(aCopiedText.includes("      Text padded"), "When copying from a plain-text control, editor-generated NBSP (if any) should be preserved");
-}
-
-function assertEditorGeneratedNbspReplaced(aCopiedText) {
-  ok(aCopiedText.includes("      Text padded"), "When copying plain-text from a non plain-text control, editor-generated NBSP should be replaced by standard spaces");
-}
-
 /** Test for Bug 359303 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
-  let textCopiedFromInput = await clipboardTextForElementId("input-with-non-breaking-spaces", "Input");
-  assertUserNbspPreserved(textCopiedFromInput);
-  assertEditorGeneratedNbspPreserved(textCopiedFromInput);
+  let iValue = await clipboardTextForElementId("input-with-non-breaking-spaces", "Input");
+  ok(iValue.includes("100 km"), "NBSP between two characters should be preserved");
+  ok(iValue.includes("« "),  "A single NBSP near a punctuation mark should be preserved");
+  ok(iValue.includes(" »"),  "A single NBSP near a punctuation mark should be preserved");
+  ok(iValue.includes(" ? "), "NBSPs before *and* after a character should be preserved");
+  ok(iValue.includes("  "), "Consecutive NBSPs should be preserved");
 
-  let textCopiedFromTextarea = await clipboardTextForElementId("textarea-with-non-breaking-spaces", "Textarea");
-  assertUserNbspPreserved(textCopiedFromTextarea);
-  assertEditorGeneratedNbspPreserved(textCopiedFromTextarea);
+  let tValue = await clipboardTextForElementId("textarea-with-non-breaking-spaces", "Textarea");
+  ok(tValue.includes("100 km"), "NBSP between two characters should be preserved");
+  ok(tValue.includes("« "),  "A single NBSP near a punctuation mark should be preserved");
+  ok(tValue.includes(" »"),  "A single NBSP near a punctuation mark should be preserved");
+  ok(tValue.includes(" ? "), "NBSPs before *and* after a character should be preserved");
+  ok(tValue.includes("  "), "Consecutive NBSPs should be preserved");
 
-  let textCopiedFromContentEditable = await clipboardTextForElementId("content-editable-with-non-breaking-spaces", "Content-editable");
-  assertUserNbspPreserved(textCopiedFromContentEditable);
-  assertEditorGeneratedNbspReplaced(textCopiedFromContentEditable);
+  let cValue = await clipboardTextForElementId("content-editable-with-non-breaking-spaces", "Content-editable");
+  ok(cValue.includes("100 km"), "NBSP should be replaced by spaces, until brower compatibility issues are sorted out");
 
-  let textCopiedFromNonEditableHtmlContent = await clipboardTextForElementId("paragraph-with-non-breaking-spaces", "Paragraph");
-  assertUserNbspPreserved(textCopiedFromNonEditableHtmlContent);
-  assertEditorGeneratedNbspReplaced(textCopiedFromNonEditableHtmlContent);
+  let pValue = await clipboardTextForElementId("paragraph-with-non-breaking-spaces", "Paragraph");
+  ok(pValue.includes("100 km"), "NBSP should be replaced by spaces, until brower compatibility issues are sorted out");
 
   SimpleTest.finish();
 });
