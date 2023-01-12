@@ -217,6 +217,7 @@ class SettingsPrivacyMenuRobot {
     }
 
     fun clickYesPleaseOption() = blockCookiesYesPleaseOption.click()
+    fun clickBlockThirdPartyCookiesOnly() = block3rdPartyCookiesOnlyOption.click()
 
     fun switchSafeBrowsingToggle(): ViewInteraction = safeBrowsingSwitch().perform(click())
 
@@ -712,7 +713,7 @@ private val blockCookiesYesPleaseOption =
 private val block3rdPartyCookiesOnlyOption =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_yes_option2)),
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_third_party_only_option)),
     )
 
 private val block3rdPartyTrackerCookiesOnlyOption =

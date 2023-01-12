@@ -395,10 +395,26 @@ class BrowserRobot {
     }
 
     fun verifyCookiesEnabled(areCookiesEnabled: String) {
-        mDevice.findObject(UiSelector().resourceId("detected_value")).waitForExists(waitingTime)
-        assertTrue(
-            webPageItemContainingText(areCookiesEnabled).waitForExists(waitingTime),
-        )
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(
+                    mDevice.findObject(
+                        UiSelector()
+                            .resourceId("cookie_message")
+                            .childSelector(
+                                UiSelector().textContains(areCookiesEnabled),
+                            ),
+                    ).waitForExists(waitingTime),
+                )
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    refreshPageIfStillLoading(areCookiesEnabled)
+                }
+            }
+        }
     }
 
     fun clickSetCookiesButton() = clickPageObject(webPageItemWithResourceId("setCookies"))
