@@ -17,6 +17,8 @@ treeherder:
         focus-nightly: Focus nightly-related tasks
         focus-release: Focus production-related tasks
 
+        fenix: Fenix general tasks no matter the variant
+
         # This list is based on .buildconfig.yml except the exceptions down below
         browser-domains: browser-domains
         browser-engine-gecko: browser-engine-gecko

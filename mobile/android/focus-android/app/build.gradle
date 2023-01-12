@@ -593,6 +593,7 @@ clean.doLast {
 if (project.hasProperty("coverage")) {
     tasks.withType(Test) {
         jacoco.includeNoLocationClasses = true
+        jacoco.excludes = ['jdk.internal.*']
     }
 
     android.applicationVariants.all { variant ->

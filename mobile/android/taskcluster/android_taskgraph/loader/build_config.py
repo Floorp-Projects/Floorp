@@ -62,7 +62,11 @@ def _get_components_tasks(config, for_build_type=None):
 def _get_apks_tasks(config):
     not_for_apks = config.get("not-for-apks", [])
     tasks = {
-        apk["name"]: {}
+        apk["name"]: {
+            "attributes": {
+                "treeherder-group": apk["name"],
+            }
+        }
         for apk in get_apk_based_projects()
         if apk["name"] not in not_for_apks
     }

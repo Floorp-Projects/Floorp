@@ -6,6 +6,7 @@
 from taskgraph.transforms.base import TransformSequence
 
 from ..build_config import get_path, get_upstream_deps_for_all_gradle_projects
+from ..gradle import get_gradle_project
 
 transforms = TransformSequence()
 
@@ -13,91 +14,87 @@ transforms = TransformSequence()
 @transforms.add
 def set_treeherder_config(config, tasks):
     for task in tasks:
-        gradle_project = _get_gradle_project(task)
         treeherder = task.setdefault("treeherder", {})
-        treeherder_group = task.get("attributes", {}).get("treeherder-group", gradle_project)
-        treeherder["symbol"] = f"{treeherder_group}(egd)"
+        if not treeherder.get("symbol"):
+            gradle_project = get_gradle_project(task)
+            treeherder_group = task.get("attributes", {}).get("treeherder-group", gradle_project)
+            treeherder["symbol"] = f"{treeherder_group}(egd)"
 
         yield task
 
 
-def _get_gradle_project(task):
-    gradle_project = task.get("attributes", {}).get("component")
-    if not gradle_project:
-        gradle_project = "focus" # TODO: Support Fenix
-    return gradle_project
+
 
 
 @transforms.add
 def extend_resources(config, tasks):
-    deps_per_component = get_upstream_deps_for_all_gradle_projects()
+    deps_per_gradle_project = get_upstream_deps_for_all_gradle_projects()
 
     for task in tasks:
         run = task.setdefault("run", {})
         resources = run.setdefault("resources", [])
 
-        component = task.get("attributes", {}).get("component")
-        if not component:
-            component = "app" # == Focus. TODO: Support Fenix
+        gradle_project = get_gradle_project(task)
+        if gradle_project:
+            dependencies = deps_per_gradle_project[gradle_project]
+            gradle_project_and_deps = [gradle_project] + dependencies
 
-        dependencies = deps_per_component[component]
-        component_and_deps = [component] + dependencies
+            resources.extend([
+                path
+                for gradle_project in gradle_project_and_deps
+                for path in _get_build_gradle_paths(gradle_project)
+            ])
 
-        resources.extend([
-            path
-            for gradle_project in component_and_deps
-            for path in _get_build_gradle_paths(gradle_project)
-        ])
         run["resources"] = sorted(list(set(resources)))
 
         yield task
 
 
 def _get_build_gradle_paths(gradle_project):
-    build_gradle_paths = [
-        "android-components/plugins/publicsuffixlist/build.gradle"
+    project_dir = _get_gradle_project_dir(gradle_project)
+
+    if gradle_project in ("focus", "fenix"):
+        project_subdir = "app"
+    elif gradle_project == "service-telemetry":
+        project_subdir = "service-telemetry"
+    else:
+        project_subdir = get_path(gradle_project)
+
+    return [
+        "android-components/plugins/dependencies/build.gradle",
+        "android-components/plugins/publicsuffixlist/build.gradle",
+        f"{project_dir}/build.gradle",
+        f"{project_dir}/buildSrc/build.gradle",
+        f"{project_dir}/{project_subdir}/build.gradle",
     ]
 
-    if gradle_project in ("app", "service-telemetry"):
-        build_gradle_paths.extend([
-            "focus-android/build.gradle",
-            "focus-android/buildSrc/build.gradle",
-        ])
 
-        if gradle_project == "app":
-            build_gradle_paths.append("focus-android/app/build.gradle")
-
-        if gradle_project == "service-telemetry":
-            build_gradle_paths.append("focus-android/service-telemetry/build.gradle")
+def _get_gradle_project_dir(gradle_project):
+    if gradle_project in ("focus", "service-telemetry"):
+        project_dir = "focus-android"
+    elif gradle_project == "fenix":
+        project_dir = "fenix"
     else:
-        build_gradle_paths.extend([
-            "android-components/build.gradle",
-            "android-components/buildSrc/build.gradle",
-            "android-components/plugins/dependencies/build.gradle",
-            f"android-components/{get_path(gradle_project)}/build.gradle",
-        ])
-
-    return build_gradle_paths
+        project_dir = "android-components"
+    return project_dir
 
 
 @transforms.add
 def set_command_arguments(config, tasks):
     for task in tasks:
-        gradle_project = task.get("attributes", {}).get("component")
-        work_dir = "android-components"
-        if not gradle_project:
-            gradle_project = "app" # == Focus. TODO: Support Fenix
-            work_dir = "focus-android"
-
         run = task.setdefault("run", {})
         arguments = run.setdefault("arguments", [])
         if not arguments:
-            arguments.append(work_dir)
+            gradle_project = get_gradle_project(task)
+            project_dir = _get_gradle_project_dir(gradle_project)
 
-            if work_dir == "android-components":
-                arguments.append("-Pcoverage")
+            arguments.append(project_dir)
+            gradle_task_template = "{gradle_task_name}" if gradle_project in ("focus", "fenix") else "{gradle_project}:{gradle_task_name}"
             arguments.extend([
-                f"{gradle_project}:{gradle_task_name}"
+                gradle_task_template.format(
+                    gradle_project=gradle_project,
+                    gradle_task_name=gradle_task_name,
+                )
                 for gradle_task_name in _get_gradle_task_names(gradle_project)
             ])
 
@@ -106,9 +103,10 @@ def set_command_arguments(config, tasks):
 
 def _get_gradle_task_names(gradle_project):
     gradle_tasks_name = []
-    # TODO Support Fenix
-    if gradle_project == "app":
+    if gradle_project == "focus":
         gradle_tasks_name.extend(["assembleFocusDebug", "assembleAndroidTest", "testFocusDebugUnitTest", "lint"])
+    elif gradle_project == "fenix":
+        gradle_tasks_name.extend(["assemble", "assembleAndroidTest", "testClasses", "test", "lint"])
     else:
         lint_task_name = "lint" if gradle_project in ("tooling-lint", "samples-browser") else "lintRelease"
         gradle_tasks_name.extend(["assemble", "assembleAndroidTest", "test", lint_task_name])

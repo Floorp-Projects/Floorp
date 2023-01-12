@@ -1,6 +1,7 @@
 from taskgraph.transforms.base import TransformSequence
 
 from ..build_config import get_path, get_upstream_deps_for_all_gradle_projects
+from ..gradle import get_gradle_project
 
 
 transforms = TransformSequence()
@@ -47,28 +48,29 @@ def extend_optimization_if_one_already_exists(config, tasks):
         if optimization:
             skip_unless_changed = optimization["skip-unless-changed"]
 
-            component = task["attributes"].get("component")
-            if not component:
-                component = "app" # == Focus. TODO: Support Fenix
+            gradle_project = get_gradle_project(task)
             # TODO Remove this special case when ui-test.sh is able to accept "browser-engine-gecko"
-            if component == "browser":
-                component = "browser-engine-gecko"
+            if gradle_project == "browser":
+                gradle_project = "browser-engine-gecko"
 
-            dependencies = deps_per_component[component]
-            component_and_deps = [component] + dependencies
+            if gradle_project:
+                dependencies = deps_per_component[gradle_project]
+                gradle_project_and_deps = [gradle_project] + dependencies
 
-            skip_unless_changed.extend(sorted([
-                _get_path(component)
-                for component in component_and_deps
-            ]))
+                skip_unless_changed.extend(sorted([
+                    _get_path(gradle_project)
+                    for gradle_project in gradle_project_and_deps
+                ]))
 
         yield task
 
 
-def _get_path(component):
-    if component == "app":
+def _get_path(gradle_project):
+    if gradle_project == "focus":
         return "focus-android/**"
-    elif component == "service-telemetry":
+    elif gradle_project == "service-telemetry":
         return "focus-android/service-telemetry/**"
+    elif gradle_project == "fenix":
+        return "fenix/**"
     else:
-        return f"android-components/{get_path(component)}/**"
+        return f"android-components/{get_path(gradle_project)}/**"
