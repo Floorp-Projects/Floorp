@@ -13,30 +13,31 @@ add_task(async function cacheEnabledAfterDisabled({ client }) {
   await Network.setCacheDisabled({ cacheDisabled: true });
   await Network.setCacheDisabled({ cacheDisabled: false });
 
-  const checkPromise = checkLoadFlags(LOAD_NORMAL, TEST_PAGE);
+  await watchLoadFlags(LOAD_NORMAL, TEST_PAGE);
   await loadURL(TEST_PAGE);
-  await checkPromise;
+  await waitForLoadFlags();
 });
 
 add_task(async function cacheEnabledByDefault({ Network }) {
-  const checkPromise = checkLoadFlags(LOAD_NORMAL, TEST_PAGE);
+  await watchLoadFlags(LOAD_NORMAL, TEST_PAGE);
   await loadURL(TEST_PAGE);
-  await checkPromise;
+  await waitForLoadFlags();
 });
 
 add_task(async function cacheDisabled({ client }) {
   const { Network } = client;
   await Network.setCacheDisabled({ cacheDisabled: true });
 
-  const checkPromise = checkLoadFlags(
-    LOAD_BYPASS_CACHE | INHIBIT_CACHING,
-    TEST_PAGE
-  );
+  await watchLoadFlags(LOAD_BYPASS_CACHE | INHIBIT_CACHING, TEST_PAGE);
   await loadURL(TEST_PAGE);
-  await checkPromise;
+  await waitForLoadFlags();
 });
 
-function checkLoadFlags(flags, url) {
+// This helper will resolve when the content-process progressListener is started
+// and ready to monitor requests.
+// The promise itself will resolve when the progressListener will detect the
+// expected flags for the provided url.
+function watchLoadFlags(flags, url) {
   return ContentTask.spawn(
     gBrowser.selectedBrowser,
     { flags, url },
@@ -114,9 +115,18 @@ function checkLoadFlags(flags, url) {
         ]),
       };
 
-      await new Promise(resolve => {
+      // Store the promise that should be awaited for on the current window.
+      content.resolveCheckLoadFlags = new Promise(resolve => {
         RequestWatcher.init(docShell, flags, url, resolve);
       });
     }
   );
+}
+
+// Wait for the latest promise created in-content by watchLoadFlags to resolve.
+function waitForLoadFlags() {
+  return ContentTask.spawn(gBrowser.selectedBrowser, {}, async () => {
+    await content.resolveCheckLoadFlags;
+    delete content.resolveCheckLoadFlags;
+  });
 }
