@@ -486,38 +486,34 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
  protected:  // Data Members
   class Slots {
    public:
-    Slots()
-        : mDropAllowed(false),
-          mIsDragging(false),
-          mDropRow(-1),
-          mDropOrient(-1),
-          mScrollLines(0),
-          mDragAction(0) {}
+    Slots() = default;
 
     ~Slots() {
-      if (mTimer) mTimer->Cancel();
+      if (mTimer) {
+        mTimer->Cancel();
+      }
     }
 
     friend class nsTreeBodyFrame;
 
    protected:
     // If the drop is actually allowed here or not.
-    bool mDropAllowed;
+    bool mDropAllowed = false;
 
     // True while dragging over the tree.
-    bool mIsDragging;
+    bool mIsDragging = false;
 
     // The row the mouse is hovering over during a drop.
-    int32_t mDropRow;
+    int32_t mDropRow = -1;
 
     // Where we want to draw feedback (above/on this row/below) if allowed.
-    int16_t mDropOrient;
+    int16_t mDropOrient = -1;
 
     // Number of lines to be scrolled.
-    int16_t mScrollLines;
+    int16_t mScrollLines = 0;
 
     // The drag action that was received for this slot
-    uint32_t mDragAction;
+    uint32_t mDragAction = 0;
 
     // Timer for opening/closing spring loaded folders or scrolling the tree.
     nsCOMPtr<nsITimer> mTimer;
@@ -526,7 +522,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
     nsTArray<int32_t> mArray;
   };
 
-  Slots* mSlots;
+  mozilla::UniquePtr<Slots> mSlots;
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
 
