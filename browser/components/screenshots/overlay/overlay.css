@@ -104,8 +104,14 @@
   z-index: 6;
 }
 
-:-moz-native-anonymous .screenshots-button:hover {
-  background-color: #ededf0;
+:-moz-native-anonymous .screenshots-button:hover,
+:-moz-native-anonymous #download:hover {
+  background-color: #52525e;
+  color: #fff;
+}
+
+:-moz-native-anonymous .screenshots-button:hover > img {
+  fill: #fff;
 }
 
 @media (forced-colors: active), (prefers-contrast) {
@@ -175,10 +181,6 @@
 :-moz-native-anonymous #download {
   background-color: #0a84ff;
   color: #fff;
-}
-
-:-moz-native-anonymous #download:hover {
-  background-color: #0072e5;
 }
 
 :-moz-native-anonymous #download > img {
