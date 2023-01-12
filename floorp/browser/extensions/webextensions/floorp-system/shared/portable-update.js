@@ -1,4 +1,11 @@
 (async() => {
+    let isPortable = false;
+    try {
+        isPortable = await browser.aboutConfigPrefs.getBoolPref("floorp.isPortable");
+    } catch (e) {}
+    console.log(`floorp.isPortable: ${isPortable}`);
+    if (!isPortable) return;
+
     const API_BASE_URL = "https://floorp-update.ablaze.one";
 
     let platformInfo = await browser.runtime.getPlatformInfo();
@@ -41,10 +48,6 @@
     }
 
     let main = async () => {
-        let isPortable = await browser.aboutConfigPrefs.getBoolPref("floorp.isPortable");
-        console.log(`floorp.isPortable: ${isPortable}`);
-        if (!isPortable) return;
-
         let appdir = await browser.BrowserInfo.getAppExecutableDirPath();
         let appdir_parent =
             appdir.split(isWin ? "\\" : "/")
