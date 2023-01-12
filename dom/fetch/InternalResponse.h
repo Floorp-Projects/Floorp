@@ -311,6 +311,9 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   bool HasBeenCloned() const { return mCloned; }
 
+  void SetSerializeAsLazy(bool aAllow) { mSerializeAsLazy = aAllow; }
+  bool CanSerializeAsLazy() const { return mSerializeAsLazy; }
+
   void InitChannelInfo(nsIChannel* aChannel) {
     mChannelInfo.InitFromChannel(aChannel);
   }
@@ -380,6 +383,7 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   nsCOMPtr<nsIInputStream> mAlternativeBody;
   nsMainThreadPtrHandle<nsICacheInfoChannel> mCacheInfoChannel;
   bool mCloned;
+  bool mSerializeAsLazy{true};
 
  public:
   static constexpr int64_t UNKNOWN_BODY_SIZE = -1;
