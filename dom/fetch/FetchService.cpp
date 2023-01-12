@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FetchLog.h"
+#include "FetchParent.h"
 #include "nsContentUtils.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsICookieJarSettings.h"
 #include "nsILoadGroup.h"
 #include "nsILoadInfo.h"
@@ -16,14 +18,18 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/PerformanceTiming.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/net/CookieJarSettings.h"
 
 namespace mozilla::dom {
 
@@ -33,8 +39,9 @@ mozilla::LazyLogModule gFetchLog("Fetch");
 
 FetchServicePromises::FetchServicePromises()
     : mAvailablePromise(
-          new FetchServiceResponseAvailablePromise::Private(__func__)),
-      mEndPromise(new FetchServiceResponseEndPromise::Private(__func__)) {
+          MakeRefPtr<FetchServiceResponseAvailablePromise::Private>(__func__)),
+      mEndPromise(
+          MakeRefPtr<FetchServiceResponseEndPromise::Private>(__func__)) {
   mAvailablePromise->UseSynchronousTaskDispatch(__func__);
   mEndPromise->UseSynchronousTaskDispatch(__func__);
 }
@@ -79,25 +86,26 @@ void FetchServicePromises::RejectResponseEndPromise(
 
 // FetchInstance
 
-FetchService::FetchInstance::FetchInstance(SafeRefPtr<InternalRequest> aRequest)
-    : mRequest(std::move(aRequest)) {}
-
-FetchService::FetchInstance::~FetchInstance() = default;
-
-nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
+nsresult FetchService::FetchInstance::Initialize(FetchArgs&& aArgs) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aArgs.is<UnknownArgs>() && mArgs.is<UnknownArgs>());
+
+  mArgs = std::move(aArgs);
 
   // Get needed information for FetchDriver from passed-in channel.
-  if (aChannel) {
-    FETCH_LOG(("FetchInstance::Initialize [%p] aChannel[%p]", this, aChannel));
+  if (mArgs.is<NavigationPreloadArgs>()) {
+    mRequest = mArgs.as<NavigationPreloadArgs>().mRequest.clonePtr();
+    nsIChannel* channel = mArgs.as<NavigationPreloadArgs>().mChannel;
+    FETCH_LOG(("FetchInstance::Initialize [%p] request[%p], channel[%p]", this,
+               mRequest.unsafeGetRawPtr(), channel));
 
     nsresult rv;
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     MOZ_ASSERT(loadInfo);
 
     nsCOMPtr<nsIURI> channelURI;
-    rv = aChannel->GetURI(getter_AddRefs(channelURI));
+    rv = channel->GetURI(getter_AddRefs(channelURI));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -105,7 +113,7 @@ nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
     nsIScriptSecurityManager* securityManager =
         nsContentUtils::GetSecurityManager();
     if (securityManager) {
-      securityManager->GetChannelResultPrincipal(aChannel,
+      securityManager->GetChannelResultPrincipal(channel,
                                                  getter_AddRefs(mPrincipal));
     }
 
@@ -114,7 +122,7 @@ nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
     }
 
     // Get loadGroup from channel
-    rv = aChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
+    rv = channel->GetLoadGroup(getter_AddRefs(mLoadGroup));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -134,10 +142,28 @@ nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
     // Get PerformanceStorage from channel
     mPerformanceStorage = loadInfo->GetPerformanceStorage();
   } else {
-    // TODO:
-    // Get information from InternalRequest and PFetch IPC parameters.
-    // This will be implemented in bug 1351231.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mIsWorkerFetch = true;
+    mRequest = mArgs.as<WorkerFetchArgs>().mRequest.clonePtr();
+
+    FETCH_LOG(("FetchInstance::Initialize [%p] request[%p]", this,
+               mRequest.unsafeGetRawPtr()));
+
+    auto principalOrErr =
+        PrincipalInfoToPrincipal(mArgs.as<WorkerFetchArgs>().mPrincipalInfo);
+    if (principalOrErr.isErr()) {
+      return principalOrErr.unwrapErr();
+    }
+    mPrincipal = principalOrErr.unwrap();
+    nsresult rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), mPrincipal);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (mArgs.as<WorkerFetchArgs>().mCookieJarSettings.isSome()) {
+      net::CookieJarSettings::Deserialize(
+          mArgs.as<WorkerFetchArgs>().mCookieJarSettings.ref(),
+          getter_AddRefs(mCookieJarSettings));
+    }
   }
 
   return NS_OK;
@@ -170,6 +196,21 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
       false                        // IsTrackingFetch
   );
 
+  if (mIsWorkerFetch) {
+    auto& args = mArgs.as<WorkerFetchArgs>();
+    mFetchDriver->SetWorkerScript(args.mWorkerScript);
+    MOZ_ASSERT(args.mClientInfo.isSome());
+    mFetchDriver->SetClientInfo(args.mClientInfo.ref());
+    mFetchDriver->SetController(args.mController);
+    if (args.mCSPEventListener) {
+      mFetchDriver->SetCSPEventListener(args.mCSPEventListener);
+    }
+  }
+
+  mFetchDriver->EnableNetworkInterceptControl();
+
+  mPromises = MakeRefPtr<FetchServicePromises>();
+
   // Call FetchDriver::Fetch to start fetching.
   // Pass AbortSignalImpl as nullptr since we no need support AbortSignalImpl
   // with FetchService. AbortSignalImpl related information should be passed
@@ -181,8 +222,6 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
         ("FetchInstance::Fetch FetchDriver::Fetch failed(0x%X)", (uint32_t)rv));
     return FetchService::NetworkErrorResponse(rv);
   }
-
-  mPromises = MakeRefPtr<FetchServicePromises>();
 
   return mPromises;
 }
@@ -197,74 +236,155 @@ void FetchService::FetchInstance::Cancel() {
     mFetchDriver->RunAbortAlgorithm();
   }
 
-  if (mPromises) {
-    mPromises->ResolveResponseAvailablePromise(
-        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+  MOZ_ASSERT(mPromises);
 
-    mPromises->ResolveResponseEndPromise(
-        ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
-    mPromises = nullptr;
-  }
+  mPromises->ResolveResponseAvailablePromise(
+      InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+
+  mPromises->ResolveResponseEndPromise(
+      ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
     FetchDriverObserver::EndReason aReason,
     JS::Handle<JS::Value> aReasonDetails) {
-  FETCH_LOG(("FetchInstance::OnResponseEnd [%p]", this));
-  if (aReason == eAborted) {
-    FETCH_LOG(("FetchInstance::OnResponseEnd end with eAborted"));
-    if (mPromises) {
-      mPromises->ResolveResponseEndPromise(
-          ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
+  FETCH_LOG(("FetchInstance::OnResponseEnd [%p] %s", this,
+             aReason == eAborted ? "eAborted" : "eNetworking"));
+
+  // Get response timing form FetchDriver
+  Maybe<ResponseTiming> responseTiming;
+  ResponseTiming timing;
+  UniquePtr<PerformanceTimingData> performanceTiming(
+      mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
+                                             timing.entryName()));
+  if (performanceTiming != nullptr) {
+    timing.timingData() = performanceTiming->ToIPC();
+    if (!mIsWorkerFetch) {
+      // Force replace initiatorType for ServiceWorkerNavgationPreload.
+      timing.initiatorType() = u"navigation"_ns;
     }
+    responseTiming = Some(timing);
+  }
+
+  if (mIsWorkerFetch) {
+    FlushConsoleReport();
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__, [endArgs = ResponseEndArgs(aReason, responseTiming),
+                   actorID = mArgs.as<WorkerFetchArgs>().mActorID]() {
+          FETCH_LOG(("FetchParent::OnResponseEnd, Runnable"));
+          RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
+          if (actor) {
+            actor->OnResponseEnd(std::move(endArgs));
+          }
+        });
+    MOZ_ALWAYS_SUCCEEDS(mArgs.as<WorkerFetchArgs>().mEventTarget->Dispatch(
+        r, nsIThread::DISPATCH_NORMAL));
+  }
+
+  MOZ_ASSERT(mPromises);
+
+  // Resolve the ResponseEndPromise
+  mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason, responseTiming),
+                                       __func__);
+
+  if (aReason == eAborted) {
     return;
   }
-  if (mPromises) {
-    // Remove the FetchInstance from FetchInstanceTable
-    RefPtr<FetchService> fetchService = FetchService::GetInstance();
-    MOZ_ASSERT(fetchService);
-    auto entry = fetchService->mFetchInstanceTable.Lookup(mPromises);
-    MOZ_ASSERT(entry);
+
+  // Remove the FetchInstance from FetchInstanceTable
+  RefPtr<FetchService> fetchService = FetchService::GetInstance();
+  MOZ_ASSERT(fetchService);
+  auto entry = fetchService->mFetchInstanceTable.Lookup(mPromises);
+  if (entry) {
     entry.Remove();
     FETCH_LOG(
-        ("FetchInstance::OnResponseEnd entry[%p] of FetchInstance[%p] is "
+        ("FetchInstance::OnResponseEnd entry of responsePromise[%p] is "
          "removed",
-         mPromises.get(), this));
-
-    // Get PerformanceTimingData from FetchDriver.
-    ResponseTiming timing;
-    UniquePtr<PerformanceTimingData> performanceTiming(
-        mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
-                                               timing.entryName()));
-    if (performanceTiming != nullptr) {
-      timing.timingData() = performanceTiming->ToIPC();
-    }
-
-    timing.initiatorType() = u"navigation"_ns;
-
-    // Resolve the ResponseEndPromise
-    mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason, Some(timing)),
-                                         __func__);
-    // Release promises
-    mPromises = nullptr;
+         mPromises.get()));
   }
 }
 
 void FetchService::FetchInstance::OnResponseAvailableInternal(
     SafeRefPtr<InternalResponse> aResponse) {
   FETCH_LOG(("FetchInstance::OnResponseAvailableInternal [%p]", this));
-  if (mPromises) {
-    // Resolve the ResponseAvailablePromise
-    mPromises->ResolveResponseAvailablePromise(std::move(aResponse), __func__);
+  mResponse = std::move(aResponse);
+
+  nsCOMPtr<nsIInputStream> body;
+  mResponse->GetUnfilteredBody(getter_AddRefs(body));
+  FETCH_LOG(
+      ("FetchInstance::OnResponseAvailableInternal [%p] response body: %p",
+       this, body.get()));
+
+  if (mIsWorkerFetch) {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__, [response = mResponse.clonePtr(),
+                   actorID = mArgs.as<WorkerFetchArgs>().mActorID]() mutable {
+          FETCH_LOG(("FetchInstance::OnResponseAvailableInternal Runnable"));
+          RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
+          if (actor) {
+            actor->OnResponseAvailableInternal(std::move(response));
+          }
+        });
+    MOZ_ALWAYS_SUCCEEDS(mArgs.as<WorkerFetchArgs>().mEventTarget->Dispatch(
+        r, nsIThread::DISPATCH_NORMAL));
+  }
+
+  MOZ_ASSERT(mPromises);
+
+  // Resolve the ResponseAvailablePromise
+  mPromises->ResolveResponseAvailablePromise(mResponse.clonePtr(), __func__);
+}
+
+bool FetchService::FetchInstance::NeedOnDataAvailable() {
+  if (mArgs.is<WorkerFetchArgs>()) {
+    return mArgs.as<WorkerFetchArgs>().mNeedOnDataAvailable;
+  }
+  return false;
+}
+
+void FetchService::FetchInstance::OnDataAvailable() {
+  FETCH_LOG(("FetchInstance::OnDataAvailable [%p]", this));
+
+  if (!NeedOnDataAvailable()) {
+    return;
+  }
+
+  if (mIsWorkerFetch) {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__, [actorID = mArgs.as<WorkerFetchArgs>().mActorID]() {
+          FETCH_LOG(("FetchParent::OnDataAvailable, Runnable"));
+          RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
+          if (actor) {
+            actor->OnDataAvailable();
+          }
+        });
+    MOZ_ALWAYS_SUCCEEDS(mArgs.as<WorkerFetchArgs>().mEventTarget->Dispatch(
+        r, nsIThread::DISPATCH_NORMAL));
   }
 }
 
-// TODO:
-// Following methods would not be used for navigation preload, but would be used
-// with PFetch. They will be implemented in bug 1351231.
-bool FetchService::FetchInstance::NeedOnDataAvailable() { return false; }
-void FetchService::FetchInstance::OnDataAvailable() {}
-void FetchService::FetchInstance::FlushConsoleReport() {}
+void FetchService::FetchInstance::FlushConsoleReport() {
+  FETCH_LOG(("FetchInstance::FlushConsoleReport [%p]", this));
+
+  if (mIsWorkerFetch) {
+    if (!mReporter) {
+      return;
+    }
+    nsTArray<net::ConsoleReportCollected> reports;
+    mReporter->StealConsoleReports(reports);
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__, [actorID = mArgs.as<WorkerFetchArgs>().mActorID,
+                   consoleReports = std::move(reports)]() {
+          FETCH_LOG(("FetchParent::FlushConsolReport, Runnable"));
+          RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
+          if (actor) {
+            actor->OnFlushConsoleReport(std::move(consoleReports));
+          }
+        });
+    MOZ_ALWAYS_SUCCEEDS(mArgs.as<WorkerFetchArgs>().mEventTarget->Dispatch(
+        r, nsIThread::DISPATCH_NORMAL));
+  }
+}
 
 // FetchService
 
@@ -382,31 +502,30 @@ NS_IMETHODIMP FetchService::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-RefPtr<FetchServicePromises> FetchService::Fetch(
-    SafeRefPtr<InternalRequest> aRequest, nsIChannel* aChannel) {
+RefPtr<FetchServicePromises> FetchService::Fetch(FetchArgs&& aArgs) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  FETCH_LOG(("FetchService::Fetch aRequest[%p], aChannel[%p], mOffline: %s",
-             aRequest.unsafeGetRawPtr(), aChannel,
-             mOffline ? "true" : "false"));
-
+  FETCH_LOG(("FetchService::Fetch (%s)", aArgs.is<NavigationPreloadArgs>()
+                                             ? "NavigationPreload"
+                                             : "WorkerFetch"));
   if (mOffline) {
     FETCH_LOG(("FetchService::Fetch network offline"));
     return NetworkErrorResponse(NS_ERROR_OFFLINE);
   }
 
   // Create FetchInstance
-  RefPtr<FetchInstance> fetch = MakeRefPtr<FetchInstance>(aRequest.clonePtr());
+  RefPtr<FetchInstance> fetch = MakeRefPtr<FetchInstance>();
 
   // Call FetchInstance::Initialize() to get needed information for FetchDriver,
-  nsresult rv = fetch->Initialize(aChannel);
+  nsresult rv = fetch->Initialize(std::move(aArgs));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NetworkErrorResponse(rv);
   }
 
   // Call FetchInstance::Fetch() to start an asynchronous fetching.
   RefPtr<FetchServicePromises> promises = fetch->Fetch();
+  MOZ_ASSERT(promises);
 
   if (!promises->GetResponseAvailablePromise()->IsResolved()) {
     // Insert the created FetchInstance into FetchInstanceTable.
@@ -427,7 +546,7 @@ RefPtr<FetchServicePromises> FetchService::Fetch(
   return promises;
 }
 
-void FetchService::CancelFetch(RefPtr<FetchServicePromises>&& aPromises) {
+void FetchService::CancelFetch(const RefPtr<FetchServicePromises>&& aPromises) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPromises);
@@ -438,7 +557,6 @@ void FetchService::CancelFetch(RefPtr<FetchServicePromises>&& aPromises) {
     // Notice any modifications here before entry.Remove() probably should be
     // reflected to Observe() offline case.
     entry.Data()->Cancel();
-
     entry.Remove();
     FETCH_LOG(
         ("FetchService::CancelFetch entry [%p] removed", aPromises.get()));
