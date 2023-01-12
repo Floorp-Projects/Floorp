@@ -86,11 +86,13 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
     mStoredError = aStoredError;
   }
 
-  void SetNativeUnderlyingSource(BodyStreamHolder* aUnderlyingSource);
-  BodyStreamHolder* GetNativeUnderlyingSource() {
-    return mNativeUnderlyingSource;
+  BodyStreamHolder* GetBodyStreamHolder() {
+    if (UnderlyingSourceAlgorithmsBase* algorithms =
+            Controller()->GetAlgorithms()) {
+      return algorithms->GetBodyStreamHolder();
+    }
+    return nullptr;
   }
-  bool HasNativeUnderlyingSource() { return mNativeUnderlyingSource; }
 
   // XXX(krosylight): BodyStream should really be a subclass of ReadableStream
   // instead of owning ReadableStream this way. See bug 1803386.
@@ -168,23 +170,6 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   RefPtr<ReadableStreamGenericReader> mReader;
   ReaderState mState = ReaderState::Readable;
   JS::Heap<JS::Value> mStoredError;
-
-  // Optional strong reference to an Underlying Source; This
-  // exists because NativeUnderlyingSource callbacks don't hold
-  // a strong reference to the underlying source: So we need
-  // something else to hold onto that. As well, some of the integration
-  // desires the ability to extract the underlying source from the
-  // ReadableStream.
-  //
-  // While theoretically this ought to be some base class type to support
-  // multiple native underlying source types, I'm not sure what base class
-  // makes any sense for BodyStream, and given there's only body streams
-  // as the underlying source right now, I'm going to punt that problem to
-  // the future where we need to provide other native underlying sources
-  // (i.e. perhaps WebTransport.)
-  //
-  // See bug 1803386.
-  RefPtr<BodyStreamHolder> mNativeUnderlyingSource;
 };
 
 bool IsReadableStreamLocked(ReadableStream* aStream);

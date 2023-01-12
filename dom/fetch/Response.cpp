@@ -293,11 +293,8 @@ already_AddRefed<Response> Response::Constructor(
 
       // If this is a DOM generated ReadableStream, we can extract the
       // inputStream directly.
-      if (readableStream.HasNativeUnderlyingSource()) {
-        BodyStreamHolder* underlyingSource =
-            readableStream.GetNativeUnderlyingSource();
-        MOZ_ASSERT(underlyingSource);
-
+      if (BodyStreamHolder* underlyingSource =
+              readableStream.GetBodyStreamHolder()) {
         aRv = BodyStream::RetrieveInputStream(underlyingSource,
                                               getter_AddRefs(bodyStream));
 
