@@ -42,7 +42,7 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   // Callback. This can be called on any thread.
   int32_t OnFrame(webrtc::VideoFrame& aFrame) MOZ_EXCLUDES(api_lock_);
 
-  void SetTrackingId(uint32_t aTrackingIdProcId) MOZ_EXCLUDES(api_lock_) override;
+  void SetTrackingId(const char* _Nonnull aTrackingId) MOZ_EXCLUDES(api_lock_) override;
 
   // Allows the capturer to start the recording before calling OnFrame, to cover more operations
   // under the same measurement.
@@ -60,10 +60,9 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   // thread only.
   mozilla::Maybe<VideoCaptureCapability> mCapability MOZ_GUARDED_BY(api_lock_);
   // Id string uniquely identifying this capture source. Written on the mChecker thread only.
-  mozilla::Maybe<mozilla::TrackingId> mTrackingId MOZ_GUARDED_BY(api_lock_);
+  mozilla::Maybe<nsCString> mTrackingId MOZ_GUARDED_BY(api_lock_);
   // Adds frame specific markers to the profiler while mTrackingId is set.
-  mozilla::PerformanceRecorderMulti<mozilla::CaptureStage> mCaptureRecorder;
-  mozilla::PerformanceRecorderMulti<mozilla::CopyVideoStage> mConversionRecorder;
+  mozilla::PerformanceRecorderMulti<mozilla::CaptureStage> mPerformanceRecorder;
   std::atomic<ProfilerThreadId> mCallbackThreadId;
 };
 
