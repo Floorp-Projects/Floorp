@@ -14,7 +14,7 @@ add_task(async function json_version() {
     `${Services.appinfo.name}/${Services.appinfo.version}`,
     "Browser name and version found"
   );
-  is(json["Protocol-Version"], "1.0", "Protocol version found");
+  is(json["Protocol-Version"], "1.3", "Protocol version found");
   is(json["User-Agent"], userAgent, "User agent found");
   is(json["V8-Version"], "1.0", "V8 version found");
   is(json["WebKit-Version"], "1.0", "Webkit version found");

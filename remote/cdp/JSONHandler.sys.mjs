@@ -36,7 +36,7 @@ export class JSONHandler {
 
     return {
       Browser: `${Services.appinfo.name}/${Services.appinfo.version}`,
-      "Protocol-Version": "1.0",
+      "Protocol-Version": "1.3",
       "User-Agent": userAgent,
       "V8-Version": "1.0",
       "WebKit-Version": "1.0",
