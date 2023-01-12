@@ -1,9 +1,0 @@
-/**
- * www.storytel.com - Categories disappear after page loaded
- * Bug #1743614 - https://bugzilla.mozilla.org/show_bug.cgi?id=1743614
- * WebCompat issue #48863 - https://webcompat.com/issues/48863
- */
-
-.o-grid__generic__container > .o-grid__generic__item {
-  min-width: 0;
-}

@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "109.0.0",
+  "version": "110.0.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -130,6 +130,7 @@
     "shims/live-test-shim.js",
     "shims/maxmind-geoip.js",
     "shims/microsoftLogin.js",
+    "shims/microsoftVirtualAssistant.js",
     "shims/moat.js",
     "shims/mochitest-shim-1.js",
     "shims/mochitest-shim-2.js",

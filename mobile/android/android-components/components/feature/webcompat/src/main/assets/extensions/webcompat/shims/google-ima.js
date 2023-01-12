@@ -396,6 +396,7 @@ if (!window.google?.ima?.VERSION) {
         for (const type of [
           AdEvent.Type.LOADED,
           AdEvent.Type.STARTED,
+          AdEvent.Type.CONTENT_RESUME_REQUESTED,
           AdEvent.Type.AD_BUFFERING,
           AdEvent.Type.FIRST_QUARTILE,
           AdEvent.Type.MIDPOINT,

@@ -163,11 +163,7 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
   const dl = window.dataLayer;
 
   if (Array.isArray(dl) && !dl.find(e => e["gtm.start"])) {
-    const oldPush = dl.push;
     const push = function(o) {
-      if (oldPush) {
-        return oldPush.apply(dl, arguments);
-      }
       setTimeout(() => run(o?.eventCallback), 1);
       return true;
     };
