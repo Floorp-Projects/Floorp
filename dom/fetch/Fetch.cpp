@@ -9,8 +9,12 @@
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "nsIGlobalObject.h"
 
 #include "nsDOMString.h"
@@ -41,6 +45,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 
 #include "BodyExtractor.h"
+#include "FetchChild.h"
 #include "FetchObserver.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
@@ -597,6 +602,57 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
     if (worker->IsServiceWorker()) {
       r->SetSkipServiceWorker();
+    }
+
+    // PFetch gives no benefit for the fetch in the parent process.
+    // Dispatch fetch to the parent process main thread directly for that case.
+    // For child process, dispatch fetch op to the parent.
+    if (StaticPrefs::dom_workers_pFetch_enabled() && !XRE_IsParentProcess()) {
+      RefPtr<FetchChild> actor =
+          FetchChild::Create(worker, p, signalImpl, observer);
+      if (!actor) {
+        NS_WARNING("Could not keep the worker alive.");
+        aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+        return nullptr;
+      }
+
+      Maybe<ClientInfo> clientInfo(worker->GlobalScope()->GetClientInfo());
+      if (clientInfo.isNothing()) {
+        aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+        return nullptr;
+      }
+
+      auto* backgroundChild =
+          mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+      Unused << NS_WARN_IF(!backgroundChild->SendPFetchConstructor(actor));
+
+      FetchOpArgs ipcArgs;
+
+      ipcArgs.request() = IPCInternalRequest();
+      r->ToIPCInternalRequest(&(ipcArgs.request()), backgroundChild);
+
+      ipcArgs.principalInfo() = worker->GetPrincipalInfo();
+      ipcArgs.clientInfo() = clientInfo.ref().ToIPC();
+      if (worker->GetBaseURI()) {
+        worker->GetBaseURI()->GetAsciiSpec(ipcArgs.workerScript());
+      }
+      if (worker->GlobalScope()->GetController().isSome()) {
+        ipcArgs.controller() =
+            Some(worker->GlobalScope()->GetController().ref().ToIPC());
+      }
+      if (worker->CookieJarSettings()) {
+        ipcArgs.cookieJarSettings() = Some(worker->CookieJarSettingsArgs());
+      }
+      if (worker->CSPEventListener()) {
+        ipcArgs.hasCSPEventListener() = true;
+        actor->SetCSPEventListener(worker->CSPEventListener());
+      } else {
+        ipcArgs.hasCSPEventListener() = false;
+      }
+
+      actor->DoFetchOp(ipcArgs);
+
+      return p.forget();
     }
 
     RefPtr<WorkerFetchResolver> resolver =
