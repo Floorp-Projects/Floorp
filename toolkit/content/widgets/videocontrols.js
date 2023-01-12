@@ -292,7 +292,6 @@ this.VideoControlsImplWidget = class {
         "durationchange",
       ],
 
-      showHours: false,
       firstFrameShown: false,
       timeUpdateCount: 0,
       maxCurrentTimeSeen: 0,
@@ -402,7 +401,6 @@ this.VideoControlsImplWidget = class {
         );
         // It would be nice to retain maxCurrentTimeSeen, but it would be difficult
         // to determine if the media source changed while we were detached.
-        this.initPositionDurationBox();
         this.maxCurrentTimeSeen = currentTime;
         this.showPosition(currentTime, duration);
 
@@ -1146,8 +1144,7 @@ this.VideoControlsImplWidget = class {
         this.statusOverlay.setAttribute("status", error);
       },
 
-      formatTime(aTime, showHours = false) {
-        // Format the duration as "h:mm:ss" or "m:ss"
+      formatTime(aTime) {
         aTime = Math.round(aTime / 1000);
         let hours = Math.floor(aTime / 3600);
         let mins = Math.floor((aTime % 3600) / 60);
@@ -1156,7 +1153,7 @@ this.VideoControlsImplWidget = class {
         if (secs < 10) {
           secs = "0" + secs;
         }
-        if (hours || showHours) {
+        if (hours) {
           if (mins < 10) {
             mins = "0" + mins;
           }
@@ -1165,50 +1162,6 @@ this.VideoControlsImplWidget = class {
           timeString = mins + ":" + secs;
         }
         return timeString;
-      },
-
-      initPositionDurationBox() {
-        const durationSpan = this.durationSpan;
-
-        durationSpan.classList.add("duration");
-        durationSpan.setAttribute("role", "none");
-        durationSpan.id = "durationSpan";
-        this.l10n.setAttributes(
-          this.positionDurationBox,
-          "videocontrols-position-and-duration-labels",
-          { position: "", duration: "" }
-        );
-      },
-
-      showDuration(duration) {
-        let isInfinite = duration == Infinity;
-        this.log("Duration is " + duration + "ms.\n");
-
-        if (isNaN(duration) || isInfinite) {
-          duration = this.maxCurrentTimeSeen;
-        }
-
-        // If the duration is over an hour, thumb should show h:mm:ss instead of mm:ss
-        this.showHours = duration >= 3600000;
-
-        // Format the duration as "h:mm:ss" or "m:ss"
-        let timeString = isInfinite ? "" : this.formatTime(duration);
-        this.positionDurationBox.duration = timeString;
-        this.l10n.setAttributes(
-          this.positionDurationBox,
-          "videocontrols-position-and-duration-labels",
-          {
-            position: this.positionDurationBox.position,
-            duration: timeString,
-          }
-        );
-
-        if (this.showHours) {
-          this.positionDurationBox.modifier = "long";
-          this.durationSpan.modifier = "long";
-        }
-
-        this.scrubber.max = duration;
       },
 
       pauseVideoDuringDragging() {
@@ -1264,42 +1217,56 @@ this.VideoControlsImplWidget = class {
         this.video.muted = false;
       },
 
-      showPosition(currentTime, duration) {
+      showPosition(currentTimeMs, durationMs) {
         // If the duration is unknown (because the server didn't provide
         // it, or the video is a stream), then we want to fudge the duration
         // by using the maximum playback position that's been seen.
-        if (currentTime > this.maxCurrentTimeSeen) {
-          this.maxCurrentTimeSeen = currentTime;
+        if (currentTimeMs > this.maxCurrentTimeSeen) {
+          this.maxCurrentTimeSeen = currentTimeMs;
         }
-        this.showDuration(duration);
+        this.log(
+          "time update @ " + currentTimeMs + "ms of " + durationMs + "ms"
+        );
 
-        this.log("time update @ " + currentTime + "ms of " + duration + "ms");
+        let durationIsInfinite = durationMs == Infinity;
+        if (isNaN(durationMs) || durationIsInfinite) {
+          durationMs = this.maxCurrentTimeSeen;
+        }
+        this.log("durationMs is " + durationMs + "ms.\n");
 
-        let positionTime = this.formatTime(currentTime, this.showHours);
+        // Update the scrubber:
+        this.scrubber.max = durationMs;
+        this.scrubber.value = currentTimeMs;
+        this.updateScrubberProgress();
 
-        this.scrubber.value = currentTime;
-        this.positionDurationBox.position = positionTime;
+        // If the duration is over an hour, thumb should show h:mm:ss instead
+        // of mm:ss, which makes it bigger. We set the modifier prop which
+        // informs CSS custom properties used elsewhere to determine minimum
+        // widths we need to show stuff.
+        let modifier = durationMs >= 3600000 ? "long" : "";
+        this.positionDurationBox.modifier = this.durationSpan.modifier = modifier;
 
+        // Update the text-based labels:
+        let position = this.formatTime(currentTimeMs);
+        let duration = durationIsInfinite ? "" : this.formatTime(durationMs);
+        this._updatePositionLabels(position, duration);
+      },
+
+      _updatePositionLabels(position, duration) {
         this.l10n.setAttributes(
           this.positionDurationBox,
           "videocontrols-position-and-duration-labels",
-          {
-            position: positionTime,
-            duration: this.positionDurationBox.duration,
-          }
+          { position, duration }
         );
 
         // We use .formatValueSync here because .setAttribute doesn't update
         // the DOM fast enough to use this.positionDurationBox.textContent and
-        // if we set the innterHTML on the positionDurationBox then we lose
+        // if we set the innerHTML on the positionDurationBox then we lose
         // reference to the durationSpan element so it is easier to use
         // .formatValueSync to just update the string for the aria-valuetext
         let positionDurationMarkup = this.l10n.formatValueSync(
           "videocontrols-position-and-duration-labels",
-          {
-            position: positionTime,
-            duration: this.positionDurationBox.duration,
-          }
+          { position, duration }
         );
 
         // It's possible that the string we get has markup to overlay into the
@@ -1311,7 +1278,6 @@ this.VideoControlsImplWidget = class {
         ).body.textContent;
 
         this.scrubber.setAttribute("aria-valuetext", positionDurationString);
-        this.updateScrubberProgress();
       },
 
       showBuffered() {
@@ -2902,7 +2868,8 @@ this.VideoControlsImplWidget = class {
               <bdi id="positionLabel" class="positionLabel" role="presentation"></bdi>
               <bdi id="durationLabel" class="durationLabel" role="presentation"></bdi>
               <bdi id="positionDurationBox" class="positionDurationBox" aria-hidden="true">
-                <span data-l10n-name="position-duration-format"></span>
+                <span id="durationSpan" class="duration" role="none"
+                      data-l10n-name="position-duration-format"></span>
               </bdi>
               <div id="controlBarSpacer" class="controlBarSpacer" hidden="true" role="none"></div>
               <button id="muteButton"
