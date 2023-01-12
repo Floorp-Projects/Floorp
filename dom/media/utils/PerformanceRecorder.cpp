@@ -269,7 +269,7 @@ ProfilerString8View CaptureStage::Name() const {
     };
     mName = Some(nsPrintfCString(
         "CaptureVideoFrame %s %dx%d %s %s", mSource.Data(), mWidth, mHeight,
-        imageTypeToStr(mImageType), mTrackingId.ToString().get()));
+        imageTypeToStr(mImageType), mTrackingId.get()));
   }
   return *mName;
 }

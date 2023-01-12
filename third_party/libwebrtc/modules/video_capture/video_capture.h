@@ -156,7 +156,7 @@ class VideoCaptureModule : public rtc::RefCountInterface {
   virtual bool GetApplyRotation() = 0;
 
   // Mozilla: TrackingId setter for use in profiler markers.
-  virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
+  virtual void SetTrackingId(const char* aTrackingId) {}
 
  protected:
   ~VideoCaptureModule() override {}
