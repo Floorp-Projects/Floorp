@@ -151,7 +151,7 @@
 
     <!-- Cookie Banner Reduction Settings-->
     <string name="pref_key_cookie_banner_settings" translatable="false">pref_key_cookie_banner_settings</string>
-    <string name="pref_key_cookie_banner_re_engage_dialog_last_interaction_with_dialog_in_ms" translatable="false">pref_key_cookie_banner_re_engage_dialog_last_interaction_with_dialog_in_ms</string>
+    <string name="pref_key_cookie_banner_re_engage_dialog_last_interaction_in_ms" translatable="false">pref_key_cookie_banner_re_engage_dialog_last_interaction_with_dialog_in_ms</string>
     <string name="pref_key_cookie_banner_re_engage_dialog_dismissed" translatable="false">pref_key_cookie_banner_re_engage_dialog_dismissed</string>
     <string name="pref_key_cookie_banner_first_banner_detected" translatable="false">pref_key_cookie_banner_first_banner_detected</string>
     <string name="pref_key_cookie_banner_v1" translatable="false">pref_key_cookie_banner_v1</string>

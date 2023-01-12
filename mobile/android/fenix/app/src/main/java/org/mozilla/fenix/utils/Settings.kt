@@ -552,9 +552,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
     )
 
-    var lastInteractionWithReEngageCookieBannerDialogInMS by longPreference(
+    var lastInteractionWithReEngageCookieBannerDialogInMs by longPreference(
         appContext.getPreferenceKey(
-            R.string.pref_key_cookie_banner_re_engage_dialog_last_interaction_with_dialog_in_ms,
+            R.string.pref_key_cookie_banner_re_engage_dialog_last_interaction_in_ms,
         ),
         default = 0L,
     )
@@ -584,7 +584,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             shouldShowCookieBannerUI && !userOptOutOfReEngageCookieBannerDialog && !shouldUseCookieBanner
         return if (!shouldShowTotalCookieProtectionCFR && shouldShowDialog) {
             !cookieBannerDetectedPreviously ||
-                timeNowInMillis() - lastInteractionWithReEngageCookieBannerDialogInMS >= timerForCookieBannerDialog
+                timeNowInMillis() - lastInteractionWithReEngageCookieBannerDialogInMs >= timerForCookieBannerDialog
         } else {
             false
         }
