@@ -18,8 +18,8 @@ random-if(d2d) fuzzy-if(!useDrawSnapshot,255-255,39-42) == element-paint-transfo
 fuzzy(0-255,0-4) == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html # Bug 1475907
 fuzzy-if(d2d,0-255,0-24) fuzzy-if(!useDrawSnapshot,255-255,50-115) == element-paint-transform-03.html element-paint-transform-03-ref.html
 
-# For !nativeThemePref: element() uses fallback / skia in WebRender, which antialiases differently from WR.
-# For !nativeThemePref+Windows+WebRender: bug 1496542, the scrollframe snaps differently.
+# For element() uses fallback / skia in WebRender, which antialiases differently from WR.
+# For Windows: bug 1496542, the scrollframe snaps differently.
 # For the rest: -ref the scrollframe is active and layerized differently with APZ.
 fuzzy(0-24,0-106) fuzzy-if(winWidget&&!layersGPUAccelerated,149-149,1203-1203) fuzzy-if(!useDrawSnapshot,1-48,5-68) fuzzy-if(winWidget,47-222,1197-1588) fuzzy-if(Android,0-40,0-81) == element-paint-native-widget.html element-paint-native-widget-ref.html
 
