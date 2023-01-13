@@ -276,13 +276,16 @@ class DefaultTabsTrayController(
      */
     @OptIn(DelicateAction::class)
     override fun forceTabsAsInactive(tabs: Collection<TabSessionState>, numOfDays: Long) {
-        tabs.forEach { tab ->
-            val daysSince = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numOfDays)
-            browserStore.apply {
-                dispatch(LastAccessAction.UpdateLastAccessAction(tab.id, daysSince))
-                dispatch(DebugAction.UpdateCreatedAtAction(tab.id, daysSince))
+        val currentTabId = browserStore.state.selectedTabId
+        tabs
+            .filterNot { it.id == currentTabId }
+            .forEach { tab ->
+                val daysSince = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numOfDays)
+                browserStore.apply {
+                    dispatch(LastAccessAction.UpdateLastAccessAction(tab.id, daysSince))
+                    dispatch(DebugAction.UpdateCreatedAtAction(tab.id, daysSince))
+                }
             }
-        }
     }
 
     @VisibleForTesting
