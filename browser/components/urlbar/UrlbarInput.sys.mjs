@@ -84,10 +84,7 @@ export class UrlbarInput {
                         role="listbox"/>
             </html:div>
           </html:div>
-          <menupopup class="urlbarView-result-menu">
-            <menuitem data-command="remove-from-history" data-l10n-id="urlbar-result-menu-remove-from-history"/>
-            <menuitem data-command="dismiss-firefox-suggest" data-l10n-id="urlbar-result-menu-dismiss-firefox-suggest"/>
-          </menupopup>
+          <menupopup class="urlbarView-result-menu"/>
           <hbox class="search-one-offs"
                 includecurrentengine="true"
                 disabletab="true"/>
