@@ -19,20 +19,9 @@ urlbar-group-best-match =
 firefox-suggest-urlbar-block =
   .title = Dismiss this suggestion
 
-# Block menu item shown in the result menu of top pick and quick suggest
-# results.
-urlbar-result-menu-dismiss-firefox-suggest =
-    .label = Dismiss this suggestion
-    .accesskey = D
-
 # Tooltip text for the help button shown in Firefox Suggest urlbar results.
 firefox-suggest-urlbar-learn-more =
   .title = Learn more about { -firefox-suggest-brand-name }
-
-# Learn More menu item shown in the result menu of Firefox Suggest results.
-urlbar-result-menu-learn-more-about-firefox-suggest =
-    .label = Learn more about { -firefox-suggest-brand-name }
-    .accesskey = L
 
 ## These strings are used for weather suggestions in the urlbar.
 
