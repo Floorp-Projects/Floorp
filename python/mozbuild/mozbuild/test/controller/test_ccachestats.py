@@ -695,6 +695,7 @@ Uncacheable:
             "cache hit (preprocessed)               719\n"
             "cache hit rate                           9\n"
             "cache miss                            8427\n"
+            "called for link                        569\n"
             "called for preprocessing               110\n"
             "compile failed                          49\n"
             "ccache internal error                    1\n"
