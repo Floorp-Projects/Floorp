@@ -3,11 +3,33 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import bz2
+import io
 import lzma
 import os
 import struct
 import zlib
 from xml.etree.ElementTree import XML
+
+
+class ZlibFile(object):
+    def __init__(self, fileobj):
+        self.fileobj = fileobj
+        self.decompressor = zlib.decompressobj()
+        self.buf = b""
+
+    def read(self, length):
+        cutoff = min(length, len(self.buf))
+        result = self.buf[:cutoff]
+        self.buf = self.buf[cutoff:]
+        while len(result) < length:
+            buf = self.fileobj.read(io.DEFAULT_BUFFER_SIZE)
+            if not buf:
+                break
+            buf = self.decompressor.decompress(buf)
+            cutoff = min(length - len(result), len(buf))
+            result += buf[:cutoff]
+            self.buf += buf[cutoff:]
+        return result
 
 
 def unxar(fileobj):
@@ -57,6 +79,9 @@ def unxar(fileobj):
                 raise Exception(f"{length} != {size}")
         elif encoding == "application/x-bzip2":
             content = bz2.BZ2File(content)
+        elif encoding == "application/x-gzip":
+            # Despite the encoding saying gzip, it is in fact, a raw zlib stream.
+            content = ZlibFile(content)
         else:
             raise Exception(f"XAR encoding {encoding} not supported")
 
