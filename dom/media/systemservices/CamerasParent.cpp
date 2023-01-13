@@ -939,7 +939,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
             }
 
             cap.VideoCapture()->SetTrackingId(
-                (*cbh)->mTrackingId.ToString().get());
+                (*cbh)->mTrackingId.mUniqueInProcId);
             error = cap.VideoCapture()->StartCapture(capability);
 
             if (!error) {
