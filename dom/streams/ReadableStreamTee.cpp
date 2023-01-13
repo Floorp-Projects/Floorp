@@ -4,20 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ReadableStreamTee.h"
+
+#include "ReadIntoRequest.h"
+#include "TeeState.h"
 #include "js/Exception.h"
 #include "js/TypeDecls.h"
 #include "js/experimental/TypedData.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/Promise-inl.h"
-#include "mozilla/dom/ReadIntoRequest.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
-#include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
 #include "mozilla/dom/ReadableByteStreamController.h"
-#include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"

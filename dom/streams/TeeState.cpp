@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/TeeState.h"
+#include "TeeState.h"
 
+#include "ReadableStreamTee.h"
 #include "js/Value.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ReadableStream.h"
-#include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {

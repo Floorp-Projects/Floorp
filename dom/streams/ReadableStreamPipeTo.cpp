@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ReadableStreamPipeTo.h"
+
 #include "mozilla/dom/AbortFollower.h"
 #include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
-#include "mozilla/dom/ReadableStreamPipeTo.h"
 #include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/WritableStreamDefaultWriter.h"
 #include "mozilla/dom/Promise.h"
