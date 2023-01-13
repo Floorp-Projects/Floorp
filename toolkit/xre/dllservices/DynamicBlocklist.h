@@ -25,6 +25,7 @@
 #include "mozilla/WindowsDllBlocklistInfo.h"
 
 #if !defined(MOZILLA_INTERNAL_API) && defined(ENABLE_TESTS)
+#  include "mozilla/CmdLineAndEnvUtils.h"
 #  define BLOCKLIST_INSERT_TEST_ENTRY
 #endif  // !defined(MOZILLA_INTERNAL_API) && defined(ENABLE_TESTS)
 
@@ -82,19 +83,26 @@ class DynamicBlockList final : public DynamicBlockListBase {
 #endif    // ENABLE_TESTS
 
   bool LoadFile(const wchar_t* aPath) {
+#ifdef BLOCKLIST_INSERT_TEST_ENTRY
+    const bool shouldInsertBlocklistTestEntry =
+        MOZ_UNLIKELY(mozilla::EnvHasValue("MOZ_DISABLE_NONLOCAL_CONNECTIONS") ||
+                     mozilla::EnvHasValue("MOZ_RUN_GTEST"));
+#endif
+
     nsAutoHandle file(
         ::CreateFileW(aPath, GENERIC_READ,
                       FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE,
                       nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
     if (!file) {
 #ifdef BLOCKLIST_INSERT_TEST_ENTRY
-      // If the blocklist file doesn't exist, we still want to include a test
-      // entry for testing purposes.
-      CreateListWithTestEntry();
-      return true;
-#else
-      return false;
+      if (shouldInsertBlocklistTestEntry) {
+        // If the blocklist file doesn't exist, we still want to include a test
+        // entry for testing purposes.
+        CreateListWithTestEntry();
+        return true;
+      }
 #endif
+      return false;
     }
 
     DWORD bytesRead = 0;
@@ -103,13 +111,14 @@ class DynamicBlockList final : public DynamicBlockListBase {
         ::ReadFile(file.get(), &header, sizeof(header), &bytesRead, nullptr);
     if (!ok) {
 #ifdef BLOCKLIST_INSERT_TEST_ENTRY
-      // If we have a problem reading the blocklist file, we still want to
-      // include a test entry for testing purposes.
-      CreateListWithTestEntry();
-      return true;
-#else
-      return false;
+      if (shouldInsertBlocklistTestEntry) {
+        // If we have a problem reading the blocklist file, we still want to
+        // include a test entry for testing purposes.
+        CreateListWithTestEntry();
+        return true;
+      }
 #endif
+      return false;
     }
     if (bytesRead != sizeof(header)) {
       return false;
@@ -120,13 +129,12 @@ class DynamicBlockList final : public DynamicBlockListBase {
       return false;
     }
 
-    // Write an extra entry for testing purposes if BLOCKLIST_INSERT_TEST_ENTRY
-    // is on
-#ifdef BLOCKLIST_INSERT_TEST_ENTRY
-    uint32_t destinationPayloadSize =
-        header.mPayloadSize + sizeof(DllBlockInfo) + kTestDllBytes;
-#else
     uint32_t destinationPayloadSize = header.mPayloadSize;
+#ifdef BLOCKLIST_INSERT_TEST_ENTRY
+    if (shouldInsertBlocklistTestEntry) {
+      // Write an extra entry for testing purposes
+      destinationPayloadSize += sizeof(DllBlockInfo) + kTestDllBytes;
+    }
 #endif
     UniquePtr<uint8_t[]> payload =
         MakeUnique<uint8_t[]>(destinationPayloadSize);
@@ -152,7 +160,7 @@ class DynamicBlockList final : public DynamicBlockListBase {
           reinterpret_cast<DllBlockInfo*>(payload.get() + offset);
       if (!entry->mName.Length) {
 #ifdef BLOCKLIST_INSERT_TEST_ENTRY
-        if (!haveWrittenTestEntry) {
+        if (shouldInsertBlocklistTestEntry && !haveWrittenTestEntry) {
           // Shift everything forward
           memmove(payload.get() + offset + sizeof(DllBlockInfo),
                   payload.get() + offset, header.mPayloadSize - offset);
@@ -170,7 +178,7 @@ class DynamicBlockList final : public DynamicBlockListBase {
       }
       entry->mName.MaximumLength = entry->mName.Length;
 #ifdef BLOCKLIST_INSERT_TEST_ENTRY
-      if (!haveWrittenTestEntry) {
+      if (shouldInsertBlocklistTestEntry && !haveWrittenTestEntry) {
         UNICODE_STRING currentUnicodeString;
         currentUnicodeString.Buffer =
             reinterpret_cast<PWSTR>(payload.get() + stringOffset);
@@ -189,16 +197,18 @@ class DynamicBlockList final : public DynamicBlockListBase {
           offset += sizeof(DllBlockInfo);
           ++entry;
         }
+        // The start of the string section will be moving ahead (or has already
+        // moved ahead) to make room for the test entry
+        entry->mName.Buffer +=
+            sizeof(DllBlockInfo) / sizeof(entry->mName.Buffer[0]);
       }
-      // The start of the string section will be moving ahead (or has already
-      // moved ahead) to make room for the test entry
-      entry->mName.Buffer +=
-          sizeof(DllBlockInfo) / sizeof(entry->mName.Buffer[0]);
 #endif
     }
 #ifdef BLOCKLIST_INSERT_TEST_ENTRY
-    memcpy(payload.get() + destinationPayloadSize - kTestDllBytes, kTestDll,
-           kTestDllBytes);
+    if (shouldInsertBlocklistTestEntry) {
+      memcpy(payload.get() + destinationPayloadSize - kTestDllBytes, kTestDll,
+             kTestDllBytes);
+    }
 #endif
 
     mPayloadSize = destinationPayloadSize;
