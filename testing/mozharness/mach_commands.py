@@ -89,6 +89,11 @@ class MozharnessRunner(MozbuildObject):
                 "config": desktop_unittest_config
                 + ["--mochitest-suite", "mochitest-browser-a11y"],
             },
+            "mochitest-browser-media": {
+                "script": "desktop_unittest.py",
+                "config": desktop_unittest_config
+                + ["--mochitest-suite", "mochitest-browser-media"],
+            },
             "mochitest-devtools-chrome": {
                 "script": "desktop_unittest.py",
                 "config": desktop_unittest_config

@@ -294,6 +294,28 @@ mochitest-browser-a11y:
     allow-software-gl-layers: false
     virtualization: virtual
 
+mochitest-browser-media:
+    description: "Mochitest browser media"
+    suite:
+        name: mochitest-browser-media
+    treeherder-symbol: M(mda-bc)
+    schedules-component: mochitest-browser-media
+    loopback-video: true
+    run-on-projects:
+        by-test-platform:
+            android.*: []
+            default: built-projects
+    tier: default
+    max-run-time:
+        by-test-platform:
+            .*tsan.*: 1800
+            default: 1200
+    mozharness:
+        mochitest-flavor: browser
+    instance-size: default
+    allow-software-gl-layers: false
+    virtualization: virtual
+
 browser-screenshots:
     description: "Browser Screenshots"
     suite:

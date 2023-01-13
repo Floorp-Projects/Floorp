@@ -171,6 +171,7 @@ config = {
             "--chunk-by-runtime",
         ],
         "mochitest-browser-a11y": ["--flavor=browser", "--subsuite=a11y"],
+        "mochitest-browser-media": ["--flavor=browser", "--subsuite=media-bc"],
         "mochitest-a11y": ["--flavor=a11y", "--disable-e10s"],
         "mochitest-remote": ["--flavor=browser", "--subsuite=remote"],
     },

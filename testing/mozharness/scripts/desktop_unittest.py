@@ -760,6 +760,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 ("plain.*", "mochitest"),
                 ("browser-chrome.*", "browser-chrome"),
                 ("mochitest-browser-a11y.*", "browser-a11y"),
+                ("mochitest-browser-media.*", "browser-media"),
                 ("mochitest-devtools-chrome.*", "devtools-chrome"),
                 ("chrome", "chrome"),
             ],
