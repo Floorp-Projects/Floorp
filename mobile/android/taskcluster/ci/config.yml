@@ -18,6 +18,17 @@ treeherder:
         focus-release: Focus production-related tasks
 
         fenix: Fenix general tasks no matter the variant
+        fenix-beta: Fenix beta-related tasks
+        fenix-debug: Fenix builds made for testing
+        fenix-nightly: Fenix nightly-related tasks
+        fenix-nightlySim: Nightly-related tasks that run on each github push
+        fenix-release: Fenix production-related tasks
+
+        Btime: Raptor-Browsertime tests with Fission enabled
+        Btime-nofis: Raptor-Browsertime tests with Fission disabled
+        forPerformanceTest: Builds made for Raptor and other performance tests
+        Rap: Raptor tests
+        Rap-P: Raptor power tests
 
         # This list is based on .buildconfig.yml except the exceptions down below
         browser-domains: browser-domains
@@ -184,6 +195,7 @@ workers:
             provisioner: scriptworker-k8s
             implementation: scriptworker-beetmover
             os: scriptworker
+            # Note: if dep bucket is wanted, *temporarily* switch to 'mobile-1-beetmover-dev'
             worker-type: 'mobile-{level}-beetmover'
         dep-signing:
             provisioner: scriptworker-k8s
@@ -229,6 +241,11 @@ workers:
             implementation: scriptworker-tree
             os: scriptworker
             worker-type: 'mobile-{level}-tree'
+        t-bitbar.*:
+            provisioner: proj-autophone
+            implementation: generic-worker
+            os: linux-bitbar
+            worker-type: 'gecko-{alias}'
 
 scriptworker:
     scope-prefix: project:mobile:firefox-android:releng
