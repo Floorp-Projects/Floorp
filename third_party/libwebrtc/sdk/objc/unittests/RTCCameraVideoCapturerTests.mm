@@ -517,4 +517,53 @@ CMSampleBufferRef createTestSampleBufferRef() {
   XCTAssertEqual(callbackError, errorMock);
 }
 
+- (void)testStartCaptureSetsOutputDimensionsInvalidPixelFormat {
+  id expectedDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
+  id captureDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
+  OCMStub([captureDeviceInputMock deviceInputWithDevice:_deviceMock error:[OCMArg setTo:nil]])
+      .andReturn(expectedDeviceInputMock);
+
+  OCMStub([_deviceMock lockForConfiguration:[OCMArg setTo:nil]]).andReturn(YES);
+  OCMStub([_deviceMock unlockForConfiguration]);
+  OCMStub([_captureSessionMock canAddInput:expectedDeviceInputMock]).andReturn(YES);
+  OCMStub([_captureSessionMock addInput:expectedDeviceInputMock]);
+  OCMStub([_captureSessionMock inputs]).andReturn(@[ expectedDeviceInputMock ]);
+  OCMStub([_captureSessionMock removeInput:expectedDeviceInputMock]);
+  OCMStub([_captureSessionMock startRunning]);
+  OCMStub([_captureSessionMock stopRunning]);
+
+  id deviceFormatMock = OCMClassMock([AVCaptureDeviceFormat class]);
+  CMVideoFormatDescriptionRef formatDescription;
+
+  int width = 110;
+  int height = 220;
+  FourCharCode pixelFormat = 0x18000000;
+  CMVideoFormatDescriptionCreate(nil, pixelFormat, width, height, nil, &formatDescription);
+  OCMStub([deviceFormatMock formatDescription]).andReturn(formatDescription);
+
+  [_capturer startCaptureWithDevice:_deviceMock format:deviceFormatMock fps:30];
+
+  XCTestExpectation *expectation = [self expectationWithDescription:@"StopCompletion"];
+  [_capturer stopCaptureWithCompletionHandler:^(void) {
+    [expectation fulfill];
+  }];
+
+  [self waitForExpectationsWithTimeout:15 handler:nil];
+
+  OCMVerify([_captureSessionMock
+      addOutput:[OCMArg checkWithBlock:^BOOL(AVCaptureVideoDataOutput *output) {
+        if (@available(iOS 16, *)) {
+          XCTAssertEqual(width, [output.videoSettings[(id)kCVPixelBufferWidthKey] intValue]);
+          XCTAssertEqual(height, [output.videoSettings[(id)kCVPixelBufferHeightKey] intValue]);
+        } else {
+          XCTAssertEqual(0, [output.videoSettings[(id)kCVPixelBufferWidthKey] intValue]);
+          XCTAssertEqual(0, [output.videoSettings[(id)kCVPixelBufferHeightKey] intValue]);
+        }
+        XCTAssertEqual(
+            (FourCharCode)kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+            [output.videoSettings[(id)kCVPixelBufferPixelFormatTypeKey] unsignedIntValue]);
+        return YES;
+      }]]);
+}
+
 @end
