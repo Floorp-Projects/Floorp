@@ -258,10 +258,8 @@ function ArrayFilter(callbackfn /*, thisArg*/) {
     if (k in O) {
       /* Step 8.c.i. */
       var kValue = O[k];
-      /* Step 8.c.ii. */
-      var selected = callContentFunction(callbackfn, T, kValue, k, O);
-      /* Step 8.c.iii. */
-      if (selected) {
+      /* Steps 8.c.ii-iii. */
+      if (callContentFunction(callbackfn, T, kValue, k, O)) {
         DefineDataProperty(A, to++, kValue);
       }
     }
@@ -1663,11 +1661,8 @@ function ArrayFindLastIndex(predicate /*, thisArg*/) {
 
   // Steps 4-5.
   for (var k = len - 1; k >= 0; k--) {
-    // Steps 5.a-b.
-    var kValue = O[k];
-
-    // Steps 5.c-d.
-    if (callContentFunction(predicate, thisArg, kValue, k, O)) {
+    // Steps 5.a-d.
+    if (callContentFunction(predicate, thisArg, O[k], k, O)) {
       return k;
     }
   }

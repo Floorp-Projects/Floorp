@@ -426,11 +426,8 @@ function TypedArrayFilter(callbackfn /*, thisArg*/) {
     // Steps 9.a-b.
     var kValue = O[k];
 
-    // Step 9.c.
-    var selected = ToBoolean(callContentFunction(callbackfn, T, kValue, k, O));
-
-    // Step 9.d.
-    if (selected) {
+    // Steps 9.c-d.
+    if (callContentFunction(callbackfn, T, kValue, k, O)) {
       // Steps 9.d.i-ii.
       kept[captured++] = kValue;
     }
