@@ -22,9 +22,11 @@ The following diagram tries to illustrate how the pieces of the migration wizard
 
 The ``MigrationWizard`` reusable component (``<migration-wizard>``) is a custom element that can be imported from ``migration-wizard.mjs``. The module is expected to load in a DOM window context, whereupon the custom element is automatically registered for that document.
 
-After binding to the document, the ``MigrationWizard`` dispatches a ``MigrationWizard:Init`` custom event, which causes a ``MigrationWizardChild`` to instantiate and be associated with it.
+After binding to the document, the ``MigrationWizard`` dispatches a ``MigrationWizard:Init`` custom event, which causes a ``MigrationWizardChild`` to instantiate and be associated with it. After receiving the migrator state from the ``MigrationWizardParent``, the ``MigrationWizardChild`` will dispatch a ``MigrationWizard:Ready`` event on the ``MigrationWizard``, mainly to aid in testing.
 
 Notably, the ``MigrationWizard`` does not contain any internal logic or privileged code to perform any migrations or to directly interact with the migration mechanisms. Its sole function is to accept input from the user and emit that input as events. The associated ``MigrationWizardChild`` will listen for those events, and take care of calling into the ``MigrationWizard`` to update the state of the reusable component. This means that the reusable component can be embedded in unprivileged contexts and have its states presented in a tool like Storybook.
+
+If the ``MigrationWizard`` is embedded in a dialog, it should have the ``dialog-mode`` attribute set on it so that dialog-appropriate buttons and styles are applied.
 
 ``MigrationWizardConstants``
 ============================
@@ -57,7 +59,7 @@ Since the ``MigrationWizard`` might be embedded in unprivileged documents, addit
 ``migration-dialog.html``
 =========================
 
-This document is meant for being loaded in a tab modal or window modal dialog, and embeds the ``MigrationWizard`` reusable component.
+This document is meant for being loaded in a tab modal or window modal dialog, and embeds the ``MigrationWizard`` reusable component, setting ``dialog-mode`` on it. It listens for dialog-specific events from the ``MigrationWizard``, such as ``MigrationWizard:Close``, which indicates that a "Cancel" button that should close the dialog was clicked.
 
 Pages like ``about:preferences`` or ``about:welcome`` can embed the ``MigrationWizard`` component directly, rather than use ``migration-dialog.html``.
 
