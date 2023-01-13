@@ -138,6 +138,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, FrontendContext* fc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
+      cx(sc->cx_),
       fc(fc),
       stackLimit(stackLimit),
       parent(parent),
@@ -11745,7 +11746,9 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
     return false;
   }
 
-  if (!compilationState.sharedData.add(scriptIndex, sharedData)) {
+  // De-duplicate the bytecode within the runtime.
+  if (!compilationState.sharedData.addAndShare(cx, fc, scriptIndex,
+                                               sharedData)) {
     return false;
   }
 

@@ -2162,13 +2162,15 @@ void JSScript::relazify(JSRuntime* rt) {
   MOZ_ASSERT(isReadyForDelazification());
 }
 
-// Either adds the passed SharedImmutableScriptData into the runtime's
-// SharedImmutableScriptDataTable, or replaces the passed RefPtr with the
-// existing entry.
+// Takes ownership of the passed SharedImmutableScriptData and either adds it
+// into the runtime's SharedImmutableScriptDataTable, or frees it if a matching
+// entry already exists and replaces the passed RefPtr with the existing entry.
 /* static */
 bool SharedImmutableScriptData::shareScriptData(
-    JSContext* cx, RefPtr<SharedImmutableScriptData>& sisd) {
+    JSContext* cx, FrontendContext* fc,
+    RefPtr<SharedImmutableScriptData>& sisd) {
   MOZ_ASSERT(sisd);
+  MOZ_ASSERT(sisd->refCount() == 1);
 
   SharedImmutableScriptData* data = sisd.get();
 
@@ -2181,18 +2183,20 @@ bool SharedImmutableScriptData::shareScriptData(
   SharedImmutableScriptDataTable::AddPtr p =
       cx->scriptDataTable(lock).lookupForAdd(lookup);
   if (p) {
-    // NOTE: Single stencil can be instantiated multiple times and
-    //       the same script data can be passed multiple times.
+    MOZ_ASSERT(data != *p);
     sisd = *p;
   } else {
     if (!cx->scriptDataTable(lock).add(p, data)) {
-      ReportOutOfMemory(cx);
+      ReportOutOfMemory(fc);
       return false;
     }
 
     // Being in the table counts as a reference on the script data.
     data->AddRef();
   }
+
+  // Refs: sisd argument, SharedImmutableScriptDataTable
+  MOZ_ASSERT(sisd->refCount() >= 2);
 
   return true;
 }
@@ -2426,18 +2430,11 @@ bool JSScript::fullyInitFromStencil(
   }
 
   auto* scriptData = stencil.sharedData.get(scriptIndex);
-  MOZ_ASSERT(scriptData);
   MOZ_ASSERT_IF(
       script->isGenerator() || script->isAsync(),
       scriptData->nfixed() <= frontend::ParseContext::Scope::FixedSlotLimit);
 
-  // De-duplicate the bytecode within the runtime.
-  RefPtr<SharedImmutableScriptData> ref(scriptData);
-  if (!SharedImmutableScriptData::shareScriptData(cx, ref)) {
-    return false;
-  }
-
-  script->initSharedData(ref.get());
+  script->initSharedData(scriptData);
 
   // NOTE: JSScript is now constructed and should be linked in.
   rollbackGuard.release();
