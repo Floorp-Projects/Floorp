@@ -1599,23 +1599,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   bool IsContainAny() const { return !!mEffectiveContainment; }
 
-  bool PrecludesSizeContainment() const {
-    return IsInternalRubyDisplayType() ||
-           DisplayInside() == mozilla::StyleDisplayInside::Table ||
-           IsInnerTableStyle();
-  }
+  // This is similar to PrecludesSizeContainmentOrContentVisibility, but also
+  // takes into account whether or not the given frame is a non-atomic,
+  // inline-level box.
+  bool PrecludesSizeContainmentOrContentVisibilityWithFrame(
+      const nsIFrame&) const;
 
-  bool IsContentVisibilityVisible() const {
-    return mContentVisibility == StyleContentVisibility::Visible;
-  }
-
-  bool IsContentVisibilityHidden() const {
-    return mContentVisibility == StyleContentVisibility::Hidden;
-  }
-
-  bool IsContentVisibilityAuto() const {
-    return mContentVisibility == StyleContentVisibility::Auto;
-  }
+  StyleContentVisibility ContentVisibility(const nsIFrame&) const;
 
   /* Returns whether the element has the transform property or a related
    * property. */

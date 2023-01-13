@@ -793,8 +793,8 @@ void nsIFrame::InitPrimaryFrame() {
     PresContext()->RegisterContainerQueryFrame(this);
   }
 
-  if (disp->IsContentVisibilityAuto() &&
-      IsContentVisibilityPropertyApplicable()) {
+  if (StyleDisplay()->ContentVisibility(*this) ==
+      StyleContentVisibility::Auto) {
     PresShell()->RegisterContentVisibilityAutoFrame(this);
     auto* element = Element::FromNodeOrNull(GetContent());
     MOZ_ASSERT(element);
@@ -880,8 +880,8 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
     }
   }
 
-  if (disp->IsContentVisibilityAuto() &&
-      IsContentVisibilityPropertyApplicable()) {
+  if (StyleDisplay()->ContentVisibility(*this) ==
+      StyleContentVisibility::Auto) {
     if (auto* element = Element::FromNodeOrNull(GetContent())) {
       PresContext()->Document()->UnobserveForContentVisibility(*element);
     }
@@ -6884,15 +6884,9 @@ bool nsIFrame::IsContentDisabled() const {
   return element && element->IsDisabled();
 }
 
-bool nsIFrame::IsContentVisibilityPropertyApplicable() const {
-  return GetContent() && GetContent()->IsElement() &&
-         (!StyleDisplay()->IsInlineFlow() ||
-          IsFrameOfType(nsIFrame::eReplaced));
-}
-
 bool nsIFrame::IsContentRelevant() const {
-  MOZ_ASSERT(IsContentVisibilityPropertyApplicable());
-  MOZ_ASSERT(StyleDisplay()->IsContentVisibilityAuto());
+  MOZ_ASSERT(StyleDisplay()->ContentVisibility(*this) ==
+             StyleContentVisibility::Auto);
 
   auto* element = Element::FromNodeOrNull(GetContent());
   MOZ_ASSERT(element);
@@ -6911,22 +6905,14 @@ bool nsIFrame::IsContentRelevant() const {
 
 bool nsIFrame::HidesContent(
     const EnumSet<IncludeContentVisibility>& aInclude) const {
-  const auto& disp = *StyleDisplay();
-  if (disp.IsContentVisibilityVisible()) {
-    return false;
-  };
-
-  if (!IsContentVisibilityPropertyApplicable()) {
-    return false;
-  }
-
+  auto effectiveContentVisibility = StyleDisplay()->ContentVisibility(*this);
   if (aInclude.contains(IncludeContentVisibility::Hidden) &&
-      disp.IsContentVisibilityHidden()) {
+      effectiveContentVisibility == StyleContentVisibility::Hidden) {
     return true;
   }
 
   if (aInclude.contains(IncludeContentVisibility::Auto) &&
-      disp.IsContentVisibilityAuto()) {
+      effectiveContentVisibility == StyleContentVisibility::Auto) {
     return !IsContentRelevant();
   }
 
@@ -7012,8 +6998,8 @@ bool nsIFrame::IsDescendantOfTopLayerElement() const {
 
 void nsIFrame::UpdateIsRelevantContent(
     const ContentRelevancy& aRelevancyToUpdate) {
-  MOZ_ASSERT(IsContentVisibilityPropertyApplicable());
-  MOZ_ASSERT(StyleDisplay()->IsContentVisibilityAuto());
+  MOZ_ASSERT(StyleDisplay()->ContentVisibility(*this) ==
+             StyleContentVisibility::Auto);
 
   auto* element = Element::FromNodeOrNull(GetContent());
   MOZ_ASSERT(element);
