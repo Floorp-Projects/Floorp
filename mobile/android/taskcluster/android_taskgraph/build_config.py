@@ -94,8 +94,7 @@ def get_apk_based_projects():
 
 
 def get_variant(build_type, build_name):
-    # TODO: Support Fenix
-    all_variants = _read_build_config(FOCUS_DIR)["variants"]
+    all_variants = _get_all_variants()
     matching_variants = [
         variant for variant in all_variants
         if variant["build_type"] == build_type and variant["name"] == build_name
@@ -111,3 +110,19 @@ def get_variant(build_type, build_name):
         ))
 
     return matching_variants.pop()
+
+
+def _get_all_variants():
+    all_variants_including_duplicates = _read_build_config(FOCUS_DIR)["variants"] + _read_build_config(FENIX_DIR)["variants"]
+    all_unique_variants = []
+    for variant in all_variants_including_duplicates:
+        if (
+            # androidTest is a special case that can't be prefixed with fenix or focus.
+            # Hence, this variant exist in both build_config and we need to expose it
+            # once only.
+            (variant["build_type"] != "androidTest" and variant["name"] != "androidTest")
+            or variant not in all_unique_variants
+        ):
+            all_unique_variants.append(variant)
+
+    return all_unique_variants
