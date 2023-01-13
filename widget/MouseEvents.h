@@ -43,7 +43,7 @@ class WidgetPointerHelper {
   uint32_t pointerId;
   int32_t tiltX;
   int32_t tiltY;
-  uint32_t twist;
+  int32_t twist;
   float tangentialPressure;
   bool convertToPointer;
   RefPtr<WidgetPointerEventHolder> mCoalescedWidgetEvents;
