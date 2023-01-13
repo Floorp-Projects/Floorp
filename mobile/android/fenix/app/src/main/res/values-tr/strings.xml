@@ -367,6 +367,8 @@
 
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Daha sonra</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Daha az çerez isteği göreceksiniz</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">İzin ver</string>
 

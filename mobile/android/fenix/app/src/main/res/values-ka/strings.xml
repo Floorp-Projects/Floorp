@@ -380,6 +380,17 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">იხილეთ ნაკლები ამომხტარი მოთხოვნები</string>
 
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">თავადვე უპასუხებს ფუნთუშის ამომხტარ მოთხოვნებს, გვერდების შეუფერხებლად მონახულებისთვის. %1$s შეეცდება, უარყოს ყველა მოთხოვნა, თუ არადა თანხმობით მოიცილებს.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">ამომხტომების არიდება</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">ფუნთუშის მოთხოვნების შემცირება</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">გსურთ, %1$s თავადვე უარყოფდეს საიტის მიერ ფუნთუშების მოთხოვნას, როცა შესაძლებელი იქნება, თუ არადა თანხმობით იცილებდეს?</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">ნებართვა</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">თავადვე შეეცდება დაუკავშირდეს საიტებს დაშიფრული HTTPS-ოქმით, მეტი უსაფრთხოებისთვის.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

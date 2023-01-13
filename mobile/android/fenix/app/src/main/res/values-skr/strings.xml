@@ -285,6 +285,11 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">بند کرو</string>
 
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">جاری</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">نویں %1$s ٹیب کھولو</string>
@@ -357,6 +362,21 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ایں سائٹ دیاں کوکیاں صاف کریسی تے ورقہ تازہ کریسی۔ساریاں کوکیاں صاف کرݨ نال تساں سائن آوٹ تھی سڳدے ہو یا تہاݙی خریداری ریڑھی خالی تھی ویسی۔</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کریندا ہے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں %2$s ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
+
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">ہݨ نہ</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">بینر فارغ کرو</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">تساں ٻہوں تھوڑیاں کوکی ارداساں ݙیکھسو</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">تھوڑیاں پوپ اپاں کوکی ݙیکھو</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">پوپ اپ فارغ کرو</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">کوکی بینر گھٹاوݨ</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">اجازت ݙیوو</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">خودکار طور تے ودھدی ہوئی حفاظت کیتے ایچ ٹی ٹی پی ایس خفیہ کاری پروٹوکول ورتندے ہوئے سائٹاں کوں کنکٹ کرݨ دی کوشش کریندے۔</string>

@@ -287,6 +287,18 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Cau</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Mae hysbysiadau yn eich helpu i wneud mwy gyda %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Cydweddu eich tabiau rhwng dyfeisiau, rheoli llwythi, cael awgrymiadau ar wneud y gorau o ddiogelwch preifatrwydd %s, a mwy.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Parhau</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Nid nawr</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Agor tab %1$s newydd</string>
@@ -358,6 +370,30 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">Bydd %1$s yn clirio cwcis y wefan hon ac yn adnewyddu’r dudalen. Gall clirio pob cwci eich allgofnodi neu wagio eich certiau siopa.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig. Os nad oes dewis gwrthod ar gael, gall %2$s dderbyn pob cwci er mwyn cau’r faner.</string>
+
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Gwaredu baneri cwcis!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Gwrthod ceisiadau cwcis yn awtomatig, pan fo modd. Fel arall, derbyn pob cwci i ddiystyru baneri cwcis.</string>
+
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Nid Nawr</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Cau baneri</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Fe welwch lai o geisiadau cwcis</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Gweld llai o lamlenni cwci</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Atebwch ffenestri llamlenni cwci yn awtomatig er mwyn gallu pori heb eich poeni. Bydd %1$s yn gwrthod pob cais os yn bosib, neu’n derbyn pob un os nad.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Cau Llamlenni</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Llai o Faneri Cwcis</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Caniatáu i %1$s wrthod cais caniatâd cwci gwefan os yn bosibl neu dderbyn mynediad cwci pan nad yw’n bosibl?</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Caniatáu</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Yn ceisio cysylltu’n awtomatig â gwefannau gan ddefnyddio’r protocol amgryptio HTTPS am fwy o ddiogelwch.</string>

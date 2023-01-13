@@ -291,6 +291,18 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Itxi</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Jakinarazpenek %s(r)i zuku gehiago ateratzen laguntzen dute</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Sinkronizatu zure fitxak gailuen artean, kudeatu deskargak, jaso aholkuak %s(r)en pribatutasun-babesari zuku gehien ateratzeko, eta gehiago.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Jarraitu</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Une honetan ez</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Ireki %1$s fitxa berria</string>
@@ -361,6 +373,30 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s(e)k gune honetako cookieak garbitu eta orria berrituko du. Cookie guztiak garbitzean, saioak amaitu edo erosketa-orgak hustu litezke.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s saia daiteke cookie iragarki-bandetako eskaerak automatikoki ukatzen. Ukatzeko aukera ez badago erabilgarri, %2$s(e)k cookie guztiak onar litzake iragarki-banda baztertzeko.</string>
+
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Cookie iragarki-bandak kanpora!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Ahal bada, ukatu automatikoki cookie eskaerak. Bestela, onartu cookie guztiak iragarki-bandak baztertzeko.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Une honetan ez</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Baztertu iragarki-bandak</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Cookie eskaera gutxiago ikusiko dituzu</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Ikusi cookie laster-leiho gutxiago</string>
+
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Erantzun automatikoki cookie laster-leihoak distraziorik gabe nabigatzeko. Ahal bada, eskaera guztiak ukatuko ditu %1$s(e)k, edo ezin bada, guztiak onartuko ditu.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Baztertu laster-leihoak</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie iragarki-banden murrizpena</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Baimendu %1$s(e)k gune baten cookie onespen-eskaera ukatzea edo ezin bada, baimendu cookietarako sarbidea?</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Baimendu</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikoki saiatzen da guneetara konektatzen HTTPS zifratze-protokoloa erabiliz, segurtasun gehiago lortzeko.</string>

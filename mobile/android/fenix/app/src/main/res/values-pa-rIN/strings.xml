@@ -296,6 +296,18 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">ਬੰਦ ਕਰੋ</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ %s ਨਾਲ ਹੋਰ ਕਰਨ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਆਪਣੀਆਂ ਟੈਬਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ, ਡਾਊਨਲੋਡ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ, %s ਦੀ ਪਰਦੇਦਾਰੀ ਸੁਰੱਖਿਆ ਦਾ ਪੂਰਾ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਗੁਰ ਲਵੋ ਅਤੇ ਹੋਰ</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">ਜਾਰੀ ਰੱਖੋ</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">ਨਵੀਂ %1$s ਟੈਬ ਖੋਲ੍ਹੋ</string>
@@ -368,6 +380,31 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ਇਸ ਸਾਈਟ ਦੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰ ਕੇ ਵਰਕੇ ਨੂੰ ਸੱਜਰਾ ਕਰ ਦੇਵੇਗਾ। ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰਨ ਨਾਲ ਤੁਸੀਂ ਸਾਈਨ ਆਊਟ ਹੋ ਸਕਦੇ ਹੋ ਜਾਂ ਖਰੀਦਦਾਰੀ ਵਾਲੀ ਟੋਕਰੀ ਖਾਲੀ ਹੋ ਸਕਦੀ ਹੈ।</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s ਆਪਣੇ-ਆਪ ਕੁਕੀਆਂ ਦੀਆਂ ਬੇਨਤੀਆਂ ਨੂੰ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰ ਸਕਦਾ ਹੈ। ਜੇ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਚੋਣ ਮੌਜੂਦ ਨਹੀਂ ਹੁੰਦੀ ਤਾਂ ਝੰਡੀ ਨੂੰ ਖਾਰਜ ਕਰਨ ਵਾਸਤੇ %2$s ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਮੰਨਜ਼ੂਰ ਵੀ ਕਰ ਸਕਦਾ ਹੈ।</string>
+
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">ਕੂਕੀ ਬੈਨਰ ਕਰੋ ਰਵਾਨਾ!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">ਜਦੋਂ ਵੀ ਮੌਕਾ ਹੋਵੇ ਤਾਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ ਖ਼ਾਰਜ ਕਰ ਦਿਓ।
+ਨਹੀਂ ਤਾਂ ਕੂਕੀ ਬੈਨਰ ਨੂੰ ਖਾਰਜ ਕਰਨ ਲਈ ਸਾਰੇ ਕੂਕੀ ਮਨਜ਼ੂਰ ਕਰੋ।</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">ਹੁਣੇ ਨਹੀਂ</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">ਬੈਨਰਾਂ ਨੂੰ ਖ਼ਾਰਜ ਕਰੋ</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">ਤੁਸੀਂ ਬਹੁਤ ਘੱਟ ਕੂਕੀ ਬੇਨਤੀਆਂ ਵੇਖੋਗੇ</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">ਘੱਟ ਕੂਕੀ ਪੌਪ-ਅੱਪ ਵੇਖੋ</string>
+
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">ਰੁਕਾਵਟ ਰਹਿਤ ਬਰਾਊਜ਼ ਕਰਨ ਲਈ ਕੂਕੀ ਪੌਪ-ਅੱਪ ਨੂੰ ਆਪਣੇ-ਆਪ ਜਵਾਬ ਦਿਓ। ਜਦੋਂ ਮੌਕੇ ਹੋਵੇਗਾ ਤਾਂ %1$s ਸਭ ਬੇਨਤੀਆਂ ਨੂੰ ਰੱਦ ਕਰੇਗਾ ਜਾਂ ਜੇ ਨਹੀ ਹੋਵੇਗਾ ਤਾਂ ਸਭ ਨੂੰ ਮਨਜ਼ੂਰ ਕਰੇਗਾ।</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">ਪੌਪ-ਅੱਪ ਖ਼ਾਰਜ ਕਰੋ</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">ਕੂਕੀ ਬੈਨਰ ਘਟਾਉਣਾ</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">%1$s ਨੂੰ ਜਦ ਵੀ ਮੌਕੇ ਹੋਵੇ ਤਾਂ ਸਾਈਟ ਦੇ ਕੂਕੀ ਸਹਿਮਤੀ ਬੇਨਤੀ ਲਈ ਰੱਦ ਕਰਨ ਜਾਂ ਜੇ ਨਾ ਹੋ ਸਕੇ ਤਾਂ ਕੂਕੀ ਪਹੁੰਚ ਨੂੰ ਮਨਜ਼ੂਰ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">ਮਨਜ਼ੂਰ</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਇੰਕ੍ਰਿਪਸ਼ਨ ਪਰੋਟੋਕਾਲ ਵਰਤ ਕੇ ਸਾਈਟਾਂ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੀ ਆਪਣੇ-ਆਪ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
