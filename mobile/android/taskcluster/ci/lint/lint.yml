@@ -34,3 +34,16 @@ lint-focus:
             - ["cd", "focus-android"]
     treeherder:
         symbol: lint(focus)
+
+lint-fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    optimization:
+        skip-unless-changed:
+            - "fenix/**"
+    run:
+        pre-gradlew:
+            - ["cd", "fenix"]
+        gradlew: ['lintDebug', 'githubLintAndroidDetails', 'mozilla-lint-rules:test']
+    treeherder:
+        symbol: lint(fenix)

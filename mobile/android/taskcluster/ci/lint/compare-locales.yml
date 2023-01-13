@@ -29,3 +29,14 @@ compare-locales-focus:
         cwd: '{checkout}/focus-android'
     treeherder:
         symbol: compare-locales(focus)
+
+compare-locales-fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    optimization:
+        skip-unless-changed:
+            - "fenix/**"
+    run:
+        cwd: '{checkout}/fenix'
+    treeherder:
+        symbol: compare-locales(fenix)

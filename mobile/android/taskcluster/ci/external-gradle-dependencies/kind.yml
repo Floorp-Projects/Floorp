@@ -52,8 +52,8 @@ task-defaults:
 
 tasks:
     lint-components:
-        attributes:
-            treeherder-group: lint
+        treeherder:
+            symbol: lint(egd-components)
         run:
             arguments:
                 - android-components/
@@ -62,6 +62,20 @@ tasks:
                 - ktlint
                 - detekt
                 - githubLintDetektDetails
+
+    lint-fenix:
+        treeherder:
+            symbol: lint(egd-fenix)
+        run:
+            arguments:
+                - fenix/
+                - lint
+                - githubLintAndroidDetails
+                - ktlint
+                - detekt
+                - githubLintDetektDetails
+                - mozilla-detekt-rules:test
+                - mozilla-lint-rules:test
 
     test-components:
         attributes:

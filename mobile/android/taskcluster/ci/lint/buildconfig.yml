@@ -37,3 +37,17 @@ buildconfig-focus:
         command: 'pip install --user --require-hashes --requirement taskcluster/scripts/lint/requirements.txt && taskcluster/scripts/lint/is_buildconfig_yml_up_to_date.py focus-android'
     treeherder:
         symbol: buildconfig(focus)
+
+buildconfig-fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    optimization:
+        skip-unless-changed:
+            - "android-components/**/build.gradle"   # A change in A-C may be reflected in fenix
+            - "android-components/.buildconfig.yml"
+            - "fenix/**/build.gradle"
+            - "fenix/.buildconfig.yml"
+    run:
+        command: 'pip install --user --require-hashes --requirement taskcluster/scripts/lint/requirements.txt && taskcluster/scripts/lint/is_buildconfig_yml_up_to_date.py fenix'
+    treeherder:
+        symbol: buildconfig(fenix)

@@ -257,13 +257,13 @@ tasks.register("listRepositories") {
 }
 
 tasks.register("githubTestDetails", GithubDetailsTask) {
-    text = "### [Unit Test Results]({reportsUrl}/test/testDebugUnitTest/index.html)"
+    text = "### [Unit Test Results Fenix]({reportsUrl}/test/testDebugUnitTest/index.html)"
 }
 
 tasks.register("githubLintDetektDetails", GithubDetailsTask) {
-    text = "### [Detekt Results]({reportsUrl}/detekt.html)"
+    text = "### [Detekt Results Fenix]({reportsUrl}/detekt.html)"
 }
 
 tasks.register("githubLintAndroidDetails", GithubDetailsTask) {
-    text = "### [Android Lint Results]({reportsUrl}/lint-results-debug.html)"
+    text = "### [Android Lint Results Fenix]({reportsUrl}/lint-results-debug.html)"
 }

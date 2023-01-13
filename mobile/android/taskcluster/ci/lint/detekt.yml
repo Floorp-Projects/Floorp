@@ -43,3 +43,21 @@ detekt-focus:
             - name: public/reports
               path: /builds/worker/checkouts/vcs/focus-android/build/reports
               type: directory
+
+detekt-fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    optimization:
+        skip-unless-changed:
+            - "fenix/**"
+    run:
+        pre-gradlew:
+            - ["cd", "fenix"]
+        gradlew: [detekt, githubLintDetektDetails, 'mozilla-detekt-rules:test']
+    treeherder:
+        symbol: detekt(fenix)
+    worker:
+        artifacts:
+            - name: public/reports
+              path: /builds/worker/checkouts/vcs/fenix/build/reports
+              type: directory

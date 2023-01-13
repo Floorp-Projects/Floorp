@@ -27,3 +27,15 @@ ktlint-focus:
             - ["cd", "focus-android"]
     treeherder:
         symbol: ktlint(focus)
+
+ktlint-fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    optimization:
+        skip-unless-changed:
+            - "fenix/**"
+    run:
+        pre-gradlew:
+            - ["cd", "fenix"]
+    treeherder:
+        symbol: ktlint(fenix)
