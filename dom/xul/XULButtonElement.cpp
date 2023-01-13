@@ -346,7 +346,7 @@ void XULButtonElement::PostHandleEventForMenus(
     EventChainPostVisitor& aVisitor) {
   auto* event = aVisitor.mEvent;
 
-  if (NS_WARN_IF(event->mOriginalTarget != this)) {
+  if (event->mOriginalTarget != this) {
     return;
   }
 
