@@ -68,6 +68,11 @@ linux64-rust-dev:
     worker-type: b-linux-large-gcp
     treeherder:
         symbol: TL(rust-dev)
+    worker:
+        env:
+            # Work around https://github.com/rust-lang/rust/issues/105967
+            RUSTFLAGS_BOOTSTRAP: '-Clink-arg=-Wl,--undefined-version'
+            RUSTFLAGS_NOT_BOOTSTRAP: '-Clink-arg=-Wl,--undefined-version'
     run:
         arguments: [
             '--patch', 'rust-vendor-std.patch',
