@@ -29,6 +29,9 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
+#ifdef FUZZING
+#  include "mozilla/StaticPrefs_fuzzing.h"
+#endif
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_pdfjs.h"
@@ -1597,10 +1600,17 @@ void Navigator::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads,
 }
 
 GamepadServiceTest* Navigator::RequestGamepadServiceTest(ErrorResult& aRv) {
+#ifdef FUZZING
+  if (!StaticPrefs::fuzzing_enabled()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+#else
   if (!xpc::IsInAutomation()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+#endif
 
   if (!mGamepadServiceTest) {
     mGamepadServiceTest = GamepadServiceTest::CreateTestService(mWindow);
