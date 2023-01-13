@@ -298,104 +298,140 @@ class TestCcacheStats(unittest.TestCase):
     version.
     """
 
-    STAT10 = f"""
-Summary:
-  Cache directory:          /home/suer/.ccache
-  Primary config:           /home/suer/.ccache/ccache.conf
-  Secondary config:         /etc/ccache.conf
-  Stats updated:            {TIMESTAMP_STR}
-  Hits:                      916 / 9343 (9.80 %)
-    Direct:                  197 /  197 (100.0 %)
-    Preprocessed:            719 /  719 (100.0 %)
-  Misses:                   8427
-    Direct:                    0
-    Preprocessed:              0
-  Errors:                      1
-  Uncacheable:              1251
-Primary storage:
-  Hits:                        0 /    0
-  Misses:                      0
-  Cache size (GB):          4.41 / 5.00 (88.27 %)
-  Files:                    4425
-  Cleanups:                  161
-Errors:
-  Missing cache file:          1
-Uncacheable:
-  Autoconf compile/link:     418
-  Bad compiler arguments:      6
-  Called for linking:        569
-  Called for preprocessing:  110
-  Compilation failed:         49
-  No input file:               9
-  Preprocessing failed:       90
-  Unsupported code directive:  1
-    """
+    STAT10 = f"""\
+stats_updated_timestamp\t{int(TIMESTAMP)}
+stats_zeroed_timestamp\t0
+direct_cache_hit\t197
+preprocessed_cache_hit\t719
+cache_miss\t8427
+called_for_link\t569
+called_for_preprocessing\t110
+multiple_source_files\t0
+compiler_produced_stdout\t0
+compiler_produced_no_output\t0
+compiler_produced_empty_output\t0
+compile_failed\t49
+internal_error\t1
+preprocessor_error\t90
+could_not_use_precompiled_header\t0
+could_not_use_modules\t0
+could_not_find_compiler\t0
+missing_cache_file\t1
+bad_compiler_arguments\t6
+unsupported_source_language\t0
+compiler_check_failed\t0
+autoconf_test\t418
+unsupported_compiler_option\t0
+unsupported_code_directive\t1
+output_to_stdout\t0
+bad_output_file\t0
+no_input_file\t9
+error_hashing_extra_file\t0
+cleanups_performed\t161
+files_in_cache\t4425
+cache_size_kibibyte\t4624220
+"""
 
-    STAT11 = f"""
-Summary:
-  Cache directory:  /home/suer/.ccache
-  Primary config:   /home/suer/.ccache/ccache.conf
-  Secondary config: /etc/ccache.conf
-  Stats updated:    {TIMESTAMP_STR}
-  Hits:                0 /    0
-    Direct:            0 /    0
-    Preprocessed:      0 /    0
-  Misses:              0
-    Direct:            0
-    Preprocessed:      0
-Primary storage:
-  Hits:                0 /    0
-  Misses:              0
-  Cache size (GB):  0.00 / 5.00 (0.00 %)
-  Files:               0
-  Cleanups:           16
-    """
+    STAT11 = f"""\
+stats_updated_timestamp\t{int(TIMESTAMP)}
+stats_zeroed_timestamp\t{int(TIMESTAMP2)}
+direct_cache_hit\t0
+preprocessed_cache_hit\t0
+cache_miss\t0
+called_for_link\t0
+called_for_preprocessing\t0
+multiple_source_files\t0
+compiler_produced_stdout\t0
+compiler_produced_no_output\t0
+compiler_produced_empty_output\t0
+compile_failed\t0
+internal_error\t0
+preprocessor_error\t0
+could_not_use_precompiled_header\t0
+could_not_use_modules\t0
+could_not_find_compiler\t0
+missing_cache_file\t0
+bad_compiler_arguments\t0
+unsupported_source_language\t0
+compiler_check_failed\t0
+autoconf_test\t0
+unsupported_compiler_option\t0
+unsupported_code_directive\t0
+output_to_stdout\t0
+bad_output_file\t0
+no_input_file\t0
+error_hashing_extra_file\t0
+cleanups_performed\t16
+files_in_cache\t0
+cache_size_kibibyte\t0
+"""
 
-    STAT12 = """
-Summary:
-  Cache directory:  /home/suer/.ccache
-  Primary config:   /home/suer/.ccache/ccache.conf
-  Secondary config: /etc/ccache.conf
-  Stats updated:    never
-  Hits:                0 /    0
-    Direct:            0 /    0
-    Preprocessed:      0 /    0
-  Misses:              0
-    Direct:            0
-    Preprocessed:      0
-Primary storage:
-  Hits:                0 /    0
-  Misses:              0
-  Cache size (GB):  0.00 / 5.00 (0.00 %)
-  Files:               0
-  Cleanups:           16
-    """
+    STAT12 = """\
+stats_updated_timestamp\t0
+stats_zeroed_timestamp\t0
+direct_cache_hit\t0
+preprocessed_cache_hit\t0
+cache_miss\t0
+called_for_link\t0
+called_for_preprocessing\t0
+multiple_source_files\t0
+compiler_produced_stdout\t0
+compiler_produced_no_output\t0
+compiler_produced_empty_output\t0
+compile_failed\t0
+internal_error\t0
+preprocessor_error\t0
+could_not_use_precompiled_header\t0
+could_not_use_modules\t0
+could_not_find_compiler\t0
+missing_cache_file\t0
+bad_compiler_arguments\t0
+unsupported_source_language\t0
+compiler_check_failed\t0
+autoconf_test\t0
+unsupported_compiler_option\t0
+unsupported_code_directive\t0
+output_to_stdout\t0
+bad_output_file\t0
+no_input_file\t0
+error_hashing_extra_file\t0
+cleanups_performed\t16
+files_in_cache\t0
+cache_size_kibibyte\t0
+"""
 
-    STAT13 = f"""
-Summary:
-  Cache directory:         /Users/leebc/.ccache
-  Primary config:          /Users/leebc/.ccache/ccache.conf
-  Secondary config:        /etc/opt/homebrew/Cellar/ccache/4.6.1_1/ccache.conf
-  Stats updated:           {TIMESTAMP_STR}
-  Hits:                    280542 / 668195 (41.99 %)
-    Direct:                280542 / 669860 (41.88 %)
-    Preprocessed:               0 /      0
-  Misses:                  387653
-    Direct:                389318
-    Preprocessed:               0
-  Errors:                       1
-  Uncacheable:               1667
-Primary storage:
-  Hits:                    588807 / 950404 (61.95 %)
-  Misses:                  361597
-  Cache size (GB):          17.38 /  20.00 (86.92 %)
-  Files:                   335104
-  Cleanups:                   364
-Errors:
-  Could not find compiler:      1
-Uncacheable:
-  Compilation failed:        1665
-  No input file:                2
+    STAT13 = f"""\
+stats_updated_timestamp\t{int(TIMESTAMP)}
+stats_zeroed_timestamp\t{int(TIMESTAMP2)}
+direct_cache_hit\t280542
+preprocessed_cache_hit\t0
+cache_miss\t387653
+called_for_link\t0
+called_for_preprocessing\t0
+multiple_source_files\t0
+compiler_produced_stdout\t0
+compiler_produced_no_output\t0
+compiler_produced_empty_output\t0
+compile_failed\t1665
+internal_error\t1
+preprocessor_error\t0
+could_not_use_precompiled_header\t0
+could_not_use_modules\t0
+could_not_find_compiler\t0
+missing_cache_file\t0
+bad_compiler_arguments\t0
+unsupported_source_language\t0
+compiler_check_failed\t0
+autoconf_test\t0
+unsupported_compiler_option\t0
+unsupported_code_directive\t0
+output_to_stdout\t0
+bad_output_file\t0
+no_input_file\t2
+error_hashing_extra_file\t0
+cleanups_performed\t364
+files_in_cache\t335104
+cache_size_kibibyte\t18224250
 """
 
     maxDiff = None
@@ -676,18 +712,19 @@ Uncacheable:
             "max cache size                        15.0 Gbytes",
         )
 
-    def test_stats_version44(self):
+    def test_stats_version37(self):
         # verify version checks
-        self.assertFalse(CCacheStats._is_version_4_4_or_newer(self.VERSION_3_5_GIT))
-        self.assertFalse(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_2))
-        self.assertTrue(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_4))
-        self.assertTrue(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_4_2))
-        self.assertTrue(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_5))
+        self.assertFalse(CCacheStats._is_version_3_7_or_newer(self.VERSION_3_5_GIT))
+        self.assertTrue(CCacheStats._is_version_3_7_or_newer(self.VERSION_4_2))
+        self.assertTrue(CCacheStats._is_version_3_7_or_newer(self.VERSION_4_4))
+        self.assertTrue(CCacheStats._is_version_3_7_or_newer(self.VERSION_4_4_2))
+        self.assertTrue(CCacheStats._is_version_3_7_or_newer(self.VERSION_4_5))
 
-        # Test parsing 4.4+ output.
+        # Test parsing 3.7+ output.
         stat10 = CCacheStats(self.STAT10, True)
         self.assertEqual(
             str(stat10),
+            "stats zeroed                             0\n"
             f"stats updated                     {int(TIMESTAMP)}\n"
             "cache hit (direct)                     197\n"
             "cache hit (preprocessed)               719\n"
@@ -695,63 +732,133 @@ Uncacheable:
             "cache miss                            8427\n"
             "called for link                        569\n"
             "called for preprocessing               110\n"
+            "multiple source files                    0\n"
+            "compiler produced stdout                 0\n"
+            "compiler produced no output              0\n"
+            "compiler produced empty output           0\n"
             "compile failed                          49\n"
             "ccache internal error                    1\n"
             "preprocessor error                      90\n"
+            "can't use precompiled header             0\n"
+            "couldn't find the compiler               0\n"
             "cache file missing                       1\n"
             "bad compiler arguments                   6\n"
+            "unsupported source language              0\n"
+            "compiler check failed                    0\n"
             "autoconf compile/link                  418\n"
             "unsupported code directive               1\n"
+            "unsupported compiler option              0\n"
+            "output to stdout                         0\n"
             "no input file                            9\n"
+            "error hashing extra file                 0\n"
             "cleanups performed                     161\n"
             "files in cache                        4425\n"
-            "cache size                             4.4 Gbytes\n"
-            "max cache size                         5.0 Gbytes",
+            "cache size                             4.4 Gbytes",
         )
 
         stat11 = CCacheStats(self.STAT11, True)
         self.assertEqual(
             str(stat11),
+            f"stats zeroed                      {int(TIMESTAMP2)}\n"
             f"stats updated                     {int(TIMESTAMP)}\n"
             "cache hit (direct)                       0\n"
             "cache hit (preprocessed)                 0\n"
             "cache hit rate                           0\n"
             "cache miss                               0\n"
+            "called for link                          0\n"
+            "called for preprocessing                 0\n"
+            "multiple source files                    0\n"
+            "compiler produced stdout                 0\n"
+            "compiler produced no output              0\n"
+            "compiler produced empty output           0\n"
+            "compile failed                           0\n"
+            "ccache internal error                    0\n"
+            "preprocessor error                       0\n"
+            "can't use precompiled header             0\n"
+            "couldn't find the compiler               0\n"
+            "cache file missing                       0\n"
+            "bad compiler arguments                   0\n"
+            "unsupported source language              0\n"
+            "compiler check failed                    0\n"
+            "autoconf compile/link                    0\n"
+            "unsupported code directive               0\n"
+            "unsupported compiler option              0\n"
+            "output to stdout                         0\n"
+            "no input file                            0\n"
+            "error hashing extra file                 0\n"
             "cleanups performed                      16\n"
             "files in cache                           0\n"
-            "cache size                             0.0 Kbytes\n"
-            "max cache size                         5.0 Gbytes",
+            "cache size                             0.0 Kbytes",
         )
 
         stat12 = CCacheStats(self.STAT12, True)
         self.assertEqual(
             str(stat12),
+            "stats zeroed                             0\n"
             "stats updated                            0\n"
             "cache hit (direct)                       0\n"
             "cache hit (preprocessed)                 0\n"
             "cache hit rate                           0\n"
             "cache miss                               0\n"
+            "called for link                          0\n"
+            "called for preprocessing                 0\n"
+            "multiple source files                    0\n"
+            "compiler produced stdout                 0\n"
+            "compiler produced no output              0\n"
+            "compiler produced empty output           0\n"
+            "compile failed                           0\n"
+            "ccache internal error                    0\n"
+            "preprocessor error                       0\n"
+            "can't use precompiled header             0\n"
+            "couldn't find the compiler               0\n"
+            "cache file missing                       0\n"
+            "bad compiler arguments                   0\n"
+            "unsupported source language              0\n"
+            "compiler check failed                    0\n"
+            "autoconf compile/link                    0\n"
+            "unsupported code directive               0\n"
+            "unsupported compiler option              0\n"
+            "output to stdout                         0\n"
+            "no input file                            0\n"
+            "error hashing extra file                 0\n"
             "cleanups performed                      16\n"
             "files in cache                           0\n"
-            "cache size                             0.0 Kbytes\n"
-            "max cache size                         5.0 Gbytes",
+            "cache size                             0.0 Kbytes",
         )
 
         stat13 = CCacheStats(self.STAT13, True)
         self.assertEqual(
             str(stat13),
+            f"stats zeroed                      {int(TIMESTAMP2)}\n"
             f"stats updated                     {int(TIMESTAMP)}\n"
             "cache hit (direct)                  280542\n"
             "cache hit (preprocessed)                 0\n"
             "cache hit rate                          41\n"
             "cache miss                          387653\n"
+            "called for link                          0\n"
+            "called for preprocessing                 0\n"
+            "multiple source files                    0\n"
+            "compiler produced stdout                 0\n"
+            "compiler produced no output              0\n"
+            "compiler produced empty output           0\n"
             "compile failed                        1665\n"
             "ccache internal error                    1\n"
+            "preprocessor error                       0\n"
+            "can't use precompiled header             0\n"
+            "couldn't find the compiler               0\n"
+            "cache file missing                       0\n"
+            "bad compiler arguments                   0\n"
+            "unsupported source language              0\n"
+            "compiler check failed                    0\n"
+            "autoconf compile/link                    0\n"
+            "unsupported code directive               0\n"
+            "unsupported compiler option              0\n"
+            "output to stdout                         0\n"
             "no input file                            2\n"
+            "error hashing extra file                 0\n"
             "cleanups performed                     364\n"
             "files in cache                      335104\n"
-            "cache size                            17.4 Gbytes\n"
-            "max cache size                        20.0 Gbytes",
+            "cache size                            17.4 Gbytes",
         )
 
 
