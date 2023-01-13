@@ -99,6 +99,13 @@
     "accessible/tests/browser/telemetry/browser.ini": 4.34,
     "accessible/tests/browser/tree/browser.ini": 1.09
   },
+  "mochitest-browser-media": {
+    "browser/base/content/test/tabMediaIndicator/browser.ini": 0.0,
+    "dom/media/autoplay/test/browser.ini": 0.0,
+    "dom/media/doctor/test/browser.ini": 0.0,
+    "dom/media/mediacontrol/tests/browser.ini": 30.2,
+    "dom/media/mediasession/test/browser.ini": 2.37
+  },
   "mochitest-browser-chrome": {
     "browser/base/content/test/about/browser.ini": 93.84,
     "browser/base/content/test/alerts/browser.ini": 5.54,
@@ -209,8 +216,6 @@
     "dom/l10n/tests/mochitest/browser.ini": 0.48,
     "dom/localstorage/test/browser.ini": 1.73,
     "dom/manifest/test/browser.ini": 5.8,
-    "dom/media/mediacontrol/tests/browser.ini": 30.2,
-    "dom/media/mediasession/test/browser.ini": 2.37,
     "dom/notification/test/browser/browser.ini": 1.76,
     "dom/plugins/test/mochitest/browser.ini": 3.19,
     "dom/quota/test/browser/browser.ini": 4.09,
