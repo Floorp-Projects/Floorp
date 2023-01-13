@@ -146,8 +146,8 @@ tasks:
               in:
                   $if: >
                       tasks_for in ["action", "cron"]
-                      || (isPullRequest && pullRequestAction in ["opened", "reopened", "synchronize"])
-                      || (tasks_for == "github-push" && head_ref[:10] != "refs/tags/" && short_head_ref != "staging.tmp" && short_head_ref != "trying.tmp" && short_head_ref[:8] != "mergify/")
+                      || (isPullRequest && pullRequestAction in ["opened", "reopened", "synchronize"] && baseRepoUrl != repoUrl)
+                      || (tasks_for == "github-push" && head_ref[:10] != "refs/tags/" && short_head_ref != "staging.tmp" && short_head_ref != "trying.tmp")
                   then:
                       $mergeDeep:
                           - $if: 'tasks_for != "action"'
