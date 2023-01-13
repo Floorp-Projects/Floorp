@@ -78,6 +78,39 @@ add_task(async function test_web_accessible_resources_matching() {
   await extension.startup();
   ok(true, "web_accessible_resources with matches and extensions loads");
   await extension.unload();
+
+  extension = await ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [
+        {
+          resources: ["/accessible.html"],
+          extension_ids: [],
+        },
+      ],
+    },
+  });
+
+  await extension.startup();
+  ok(true, "web_accessible_resources with empty extensions loads");
+  await extension.unload();
+
+  extension = await ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [
+        {
+          resources: ["/accessible.html"],
+          matches: ["http://example.com/data/*"],
+          extension_ids: [],
+        },
+      ],
+    },
+  });
+
+  await extension.startup();
+  ok(true, "web_accessible_resources with matches and empty extensions loads");
+  await extension.unload();
 });
 
 add_task(async function test_web_accessible_resources() {
@@ -378,4 +411,58 @@ add_task(async function test_web_accessible_resources_inaccessible() {
 
   await page.close();
   await extension.unload();
+});
+
+add_task(async function test_web_accessible_resources_empty_extension_ids() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [
+        {
+          resources: ["/file.txt"],
+          matches: ["http://example.com/data/*"],
+          extension_ids: [],
+        },
+      ],
+    },
+
+    files: {
+      "file.txt": "some content",
+    },
+  });
+  let secondExtension = ExtensionTestUtils.loadExtension({
+    files: {
+      "page.html": "",
+    },
+  });
+
+  await extension.startup();
+  await secondExtension.startup();
+
+  const fileURL = extension.extension.baseURI.resolve("file.txt");
+  Assert.equal(
+    await ExtensionTestUtils.fetch("http://example.com/data/", fileURL),
+    "some content",
+    "expected access to the extension's resource"
+  );
+
+  // We need to use `try/catch` because `Assert.rejects` does not seem to catch
+  // the error correctly and the task fails because of an uncaught exception.
+  // This is likely due to how errors are propagated somehow.
+  try {
+    await ExtensionTestUtils.fetch(
+      secondExtension.extension.baseURI.resolve("page.html"),
+      fileURL
+    );
+    ok(false, "expected an error to be thrown");
+  } catch (e) {
+    Assert.equal(
+      e?.message,
+      "NetworkError when attempting to fetch resource.",
+      "expected a network error"
+    );
+  }
+
+  await extension.unload();
+  await secondExtension.unload();
 });
