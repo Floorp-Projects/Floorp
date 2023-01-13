@@ -67,9 +67,9 @@ skip-if(isDebugBuild) == 256180-5.html 256180-5-ref.html
 == 25888-2r-block.html 25888-2r-ref.html
 == 25888-3l-block.html 25888-3l-ref.html
 == 25888-3r-block.html 25888-3r-ref.html
-fuzzy-if((winWidget||gtkWidget)&&!nativeThemePref,0-1,0-4) == 28811-1a.html 28811-1-ref.html
+fuzzy-if(winWidget||gtkWidget,0-1,0-4) == 28811-1a.html 28811-1-ref.html
 fuzzy-if(gtkWidget,0-6,0-26200) == 28811-1b.html 28811-1-ref.html  # Bug 1128229
-fuzzy-if((winWidget||gtkWidget)&&!nativeThemePref,0-1,0-4) == 28811-2a.html 28811-2-ref.html
+fuzzy-if(winWidget||gtkWidget,0-1,0-4) == 28811-2a.html 28811-2-ref.html
 fuzzy-if(gtkWidget,0-6,0-26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
@@ -248,7 +248,7 @@ fuzzy(0-1,0-4) fuzzy-if(isDebugBuild,0-1,0-8) == 220165-1.svg 220165-1-ref.svg
 == 234686-17.html 234686-ref.html
 == 234686-18.html 234686-ref.html
 == 234686-19.html 234686-ref.html
-fuzzy-if(!nativeThemePref,0-3,0-1) == 234964-1.html 234964-1-ref.html
+fuzzy(0-3,0-1) == 234964-1.html 234964-1-ref.html
 == 234964-2.html 234964-2-ref.html
 == 235593-1.html 235593-1-ref.html
 fuzzy(0-4,0-2) == 236539-1.html 236539-1-ref.html
@@ -620,7 +620,7 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == chrome://reftest/content/bugs/369882.xhtml chrome://reftest/content/bugs/369882-ref.xhtml
 == 369975-1.html 369975-1.html
 == 370353-1.html 370353-1-ref.html
-fuzzy-if(!nativeThemePref,0-1,0-4) == 370422-1.html 370422-1-ref.html
+fuzzy(0-1,0-4) == 370422-1.html 370422-1-ref.html
 == 370525-1.html 370525-1-ref.html
 != 370525-1.html 370525-1-notref.html
 == 370525-2.html 370525-2-ref.html
@@ -837,7 +837,7 @@ random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref
 == chrome://reftest/content/bugs/401946-1.xhtml about:blank
 pref(layout.outline.include-overflow,true) == 402338-1.html 402338-1-ref.html
 == 402567-1.html 402567-1-ref.html
-fuzzy-if(winWidget&&!nativeThemePref,0-8,0-1) == 402567-2.html 402567-2-ref.html
+fuzzy-if(winWidget,0-8,0-1) == 402567-2.html 402567-2-ref.html
 == 402567-3.html 402567-3-ref.html
 fuzzy-if(gtkWidget,0-2,0-40) == 402567-4.html 402567-4-ref.html
 fuzzy(0-2,0-5) == 402629-1.html 402629-1-ref.html
@@ -1369,10 +1369,10 @@ fuzzy-if(Android,0-5,0-2800) == 506481-1.html 506481-1-ref.html
 == 509155-1.xhtml 509155-1-ref.xhtml
 fuzzy(0-1,0-1200) == 512410.html 512410-ref.html
 == 512631-1.html 512631-1-ref.html
-fuzzy-if(Android,0-1,0-2) fuzzy-if(!nativeThemePref,0-1,0-4) == 513153-1a.html 513153-1-ref.html
-fuzzy-if(Android,0-1,0-2) fuzzy-if(!nativeThemePref,0-1,0-4) == 513153-1b.html 513153-1-ref.html
-pref(widget.non-native-theme.webrender,true) fuzzy-if(winWidget&&nativeThemePref,82-82,84-84) fuzzy-if(cocoaWidget&&nativeThemePref,46-46,58-58) fuzzy-if(appleSilicon&&nativeThemePref,100-100,108-108) == 513153-2a.html 513153-2-ref.html # appleSilicon: bug 1724583
-fuzzy-if(cocoaWidget&&nativeThemePref,46-46,116-116) fuzzy-if(cocoaWidget&&!nativeThemePref,0-112,0-108) == 513153-2b.html 513153-2-ref.html # !nativeThemePref and webrender only fuzzy when widget.non-native-theme.webrender=false, snapping difference
+fuzzy(0-1,0-4) == 513153-1a.html 513153-1-ref.html
+fuzzy(0-1,0-4) == 513153-1b.html 513153-1-ref.html
+pref(widget.non-native-theme.webrender,true) == 513153-2a.html 513153-2-ref.html # appleSilicon: bug 1724583
+fuzzy-if(cocoaWidget,0-112,0-108) == 513153-2b.html 513153-2-ref.html # !nativeThemePref and webrender only fuzzy when widget.non-native-theme.webrender=false, snapping difference
 == chrome://reftest/content/bugs/513318-1.xhtml chrome://reftest/content/bugs/513318-1-ref.xhtml
 fails-if(Android&&(!asyncPan)) != chrome://reftest/content/bugs/513318-2.xhtml chrome://reftest/content/bugs/513318-2-ref.xhtml
 == 514917-1.html 514917-1-ref.html
@@ -1895,7 +1895,7 @@ fuzzy(0-128,0-22) == 1155828-1.html 1155828-1-ref.html # bug 1646527 for WR fuzz
 fuzzy(0-7,0-84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
 fuzzy-if(Android,0-6,0-6) fuzzy-if(appleSilicon,0-1,0-7) == 1169331-1.html 1169331-1-ref.html
-fuzzy(0-3,0-110) random-if(winWidget||Android||gtkWidget) fails-if(!nativeThemePref) == 1174332-1.html 1174332-1-ref.html # bug 1312658, expected to fail w/ non-native theme because of bug 1699937
+fuzzy(0-3,0-110) fails == 1174332-1.html 1174332-1-ref.html # bug 1312658, expected to fail w/ non-native theme because of bug 1699937
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html
 == 1190635-1.html 1190635-1-ref.html
@@ -1989,7 +1989,7 @@ skip-if(isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg
 == 1375315-8.html 1375315-8-ref.html
 == 1375315-9.html 1375315-9-ref.html
 == 1375315-10.html 1375315-10-ref.html
-fuzzy-if(!nativeThemePref,0-1,0-4) == 1375315-11.html 1375315-11-ref.html
+fuzzy(0-1,0-4) == 1375315-11.html 1375315-11-ref.html
 == 1375315-12.html 1375315-12-ref.html
 == 1374062.html 1374062-ref.html
 == 1375674.html 1375674-ref.html

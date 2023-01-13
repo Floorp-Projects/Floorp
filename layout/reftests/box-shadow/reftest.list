@@ -44,6 +44,6 @@ fuzzy(0-16,0-10) == fieldset.html fieldset-ref.html # minor anti-aliasing proble
 fuzzy(0-16,0-10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
-fuzzy(0-159,0-2) fails-if(!dwrite||!nativeThemePref) == 1212823-1.html 1212823-1-ref.html
-fuzzy(0-93,0-8) fails-if(nativeThemePref) == 1212823-2.html 1212823-2-ref.html
+fuzzy(0-159,0-2) fails == 1212823-1.html 1212823-1-ref.html
+fuzzy(0-93,0-8) == 1212823-2.html 1212823-2-ref.html
 == boxshadow-large-offset.html boxshadow-large-offset-ref.html

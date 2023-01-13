@@ -1,13 +1,13 @@
 needs-focus == input-load.html input-ref.html
 needs-focus == input-create.html input-ref.html
 needs-focus == input-number.html input-number-ref.html
-fuzzy-if(!nativeThemePref,0-5,0-1) needs-focus == input-time.html input-time-ref.html # One anti-aliased outline corner.
+fuzzy(0-5,0-1) needs-focus == input-time.html input-time-ref.html # One anti-aliased outline corner.
 needs-focus == button-load.html button-ref.html
 needs-focus == button-create.html button-ref.html
 fuzzy-if(gtkWidget,0-18,0-1) needs-focus == textarea-load.html textarea-ref.html # One anti-aliased corner.
 needs-focus == textarea-create.html textarea-ref.html
 fuzzy-if(Android,0-10,0-5) needs-focus == select-load.html select-ref.html
-fuzzy-if(!nativeThemePref,0-10,0-5) needs-focus == select-create.html select-ref.html
-fuzzy-if(!nativeThemePref,0-1,0-1) needs-focus == autofocus-after-load.html autofocus-after-load-ref.html
+fuzzy(0-10,0-5) needs-focus == select-create.html select-ref.html
+fuzzy(0-1,0-1) needs-focus == autofocus-after-load.html autofocus-after-load-ref.html
 needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html
-fuzzy-if(!nativeThemePref,0-5,0-1) needs-focus == autofocus-after-body-focus.html autofocus-after-body-focus-ref.html
+fuzzy(0-5,0-1) needs-focus == autofocus-after-body-focus.html autofocus-after-body-focus-ref.html

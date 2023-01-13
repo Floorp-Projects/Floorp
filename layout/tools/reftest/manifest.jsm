@@ -601,12 +601,6 @@ function BuildConditionSandbox(aURL) {
 
     // Set a flag on sandbox if the windows default theme is active
     sandbox.windowsDefaultTheme = g.containingWindow.matchMedia("(-moz-windows-default-theme)").matches;
-
-    try {
-        sandbox.nativeThemePref = !prefs.getBoolPref("widget.non-native-theme.enabled");
-    } catch (e) {
-        sandbox.nativeThemePref = true;
-    }
     sandbox.gpuProcessForceEnabled = prefs.getBoolPref("layers.gpu-process.force-enabled", false);
 
     sandbox.prefs = Cu.cloneInto({

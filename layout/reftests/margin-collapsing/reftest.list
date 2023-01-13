@@ -593,7 +593,7 @@ fails == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9-r
 == block-overflow-4-dyn.html block-overflow-4-ref2.html
 == block-overflow-5a-dyn.html block-overflow-5-ref2.html
 == block-overflow-5b-dyn.html block-overflow-5-ref2.html
-fuzzy-if(winWidget&&!nativeThemePref,0-4,0-36) == block-overflow-5c-dyn.html block-overflow-5c-ref2.html
+fuzzy-if(winWidget,0-4,0-36) == block-overflow-5c-dyn.html block-overflow-5c-ref2.html
 == block-overflow-5d-dyn.html block-overflow-5-ref2.html
 # * 'fieldset' elements, per HTML5 (Candidate Recommendation 6 August 2013):
 # §10.3.13 (The fieldset and legend elements): "The fieldset element is
