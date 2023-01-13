@@ -11,7 +11,6 @@
 != indeterminate-native-checked.html indeterminate-native-checked-notref.html
 != indeterminate-native-unchecked.html indeterminate-native-unchecked-notref.html
 == indeterminate-selector.html indeterminate-selector-ref.html
-skip == gtk-theme-width-height.html gtk-theme-width-height-ref.html
 == checkbox-baseline.html checkbox-baseline-ref.html
 == checkbox-radio-color.html checkbox-radio-color-ref.html
 == checkbox-clamp-01.html checkbox-clamp-01-ref.html
