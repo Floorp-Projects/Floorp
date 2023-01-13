@@ -15847,6 +15847,9 @@ ResizeObserver& Document::EnsureLastRememberedSizeObserver() {
 }
 
 void Document::ObserveForLastRememberedSize(Element& aElement) {
+  if (NS_WARN_IF(!IsActive())) {
+    return;
+  }
   // Options are initialized with ResizeObserverBoxOptions::Content_box by
   // default, which is what we want.
   static ResizeObserverOptions options;
