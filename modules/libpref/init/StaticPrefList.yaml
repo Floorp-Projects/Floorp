@@ -2341,11 +2341,12 @@
   value: false
   mirror: always
 
-# Controls whether the "focus fixup rule" is enabled. Nightly-only pending
-# resolution + edits in https://github.com/whatwg/html/issues/8225
+# Controls whether the "focus fixup rule" is enabled. Subject to minor changes
+# based on https://github.com/whatwg/html/pull/8392 and
+# https://github.com/whatwg/html/issues/8225
 - name: dom.focus.fixup
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: dom.mouse_capture.enabled
