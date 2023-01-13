@@ -9,7 +9,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
 from ..build_config import get_version
-from .build import get_nightly_version, craft_path_version
+from .build_components import get_nightly_version, craft_path_version
 
 transforms = TransformSequence()
 
