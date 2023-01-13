@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WritableStream.h"
+
+#include "StreamUtils.h"
 #include "js/Array.h"
 #include "js/PropertyAndElement.h"
 #include "js/TypeDecls.h"
@@ -21,7 +23,6 @@
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadRequest.h"
 #include "mozilla/dom/RootedDictionary.h"
-#include "mozilla/dom/StreamUtils.h"
 #include "mozilla/dom/UnderlyingSinkBinding.h"
 #include "mozilla/dom/WritableStreamBinding.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"

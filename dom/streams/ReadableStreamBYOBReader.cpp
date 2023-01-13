@@ -4,13 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/ReadableStreamBYOBReader.h"
+
+#include "ReadIntoRequest.h"
 #include "js/ArrayBuffer.h"
 #include "js/experimental/TypedData.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamBYOBReaderBinding.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
-#include "mozilla/dom/ReadIntoRequest.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
@@ -18,7 +20,6 @@
 // Temporary Includes
 #include "mozilla/dom/ReadableByteStreamController.h"
 #include "mozilla/dom/ReadableStreamBYOBRequest.h"
-#include "mozilla/dom/ReadableStreamBYOBReader.h"
 
 namespace mozilla::dom {
 
@@ -31,6 +32,10 @@ NS_IMPL_RELEASE_INHERITED(ReadableStreamBYOBReader, ReadableStreamGenericReader)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamBYOBReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(ReadableStreamGenericReader)
+
+ReadableStreamBYOBReader::ReadableStreamBYOBReader(nsISupports* aGlobal)
+    : ReadableStreamGenericReader(do_QueryInterface(aGlobal)),
+      mReadIntoRequests({}) {}
 
 JSObject* ReadableStreamBYOBReader::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

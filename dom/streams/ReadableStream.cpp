@@ -5,6 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ReadableStream.h"
+
+#include "ReadIntoRequest.h"
+#include "ReadableStreamPipeTo.h"
+#include "ReadableStreamTee.h"
+#include "StreamUtils.h"
+#include "TeeState.h"
 #include "js/Array.h"
 #include "js/Exception.h"
 #include "js/PropertyAndElement.h"
@@ -22,7 +28,6 @@
 #include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
-#include "mozilla/dom/ReadIntoRequest.h"
 #include "mozilla/dom/ReadRequest.h"
 #include "mozilla/dom/ReadableByteStreamController.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
@@ -30,12 +35,8 @@
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
-#include "mozilla/dom/ReadableStreamPipeTo.h"
-#include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/StreamUtils.h"
-#include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "mozilla/dom/WritableStream.h"

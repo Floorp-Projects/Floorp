@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/TransformStream.h"
 
+#include "StreamUtils.h"
 #include "TransformerCallbackHelpers.h"
 #include "UnderlyingSourceCallbackHelpers.h"
 #include "js/TypeDecls.h"
@@ -17,7 +18,6 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/TransformStreamBinding.h"
 #include "mozilla/dom/TransformerBinding.h"
-#include "mozilla/dom/StreamUtils.h"
 #include "nsWrapperCache.h"
 
 // XXX: GCC somehow does not allow attributes before lambda return types, while
