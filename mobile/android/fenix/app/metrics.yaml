@@ -871,6 +871,74 @@ onboarding:
     metadata:
       tags:
         - Onboarding
+  notif_ppp_impression:
+    type: event
+    description: |
+      Notification pre permission prompt was shown to the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1810115
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28529
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Notifications
+        - Onboarding
+  notif_ppp_close_click:
+    type: event
+    description: |
+      User clicked the close button on the notification pre permission prompt.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1810115
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28529
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Notifications
+        - Onboarding
+  notif_ppp_positive_btn_click:
+    type: event
+    description: |
+      User clicked the positive button on notification pre permission prompt.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1810115
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28529
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Notifications
+        - Onboarding
+  notif_ppp_negative_btn_click:
+    type: event
+    description: |
+      User clicked the negative button on notification pre permission prompt.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1810115
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28529
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Notifications
+        - Onboarding
 
 search_shortcuts:
   selected:

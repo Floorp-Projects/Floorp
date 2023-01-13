@@ -32,6 +32,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.statusBarsPadding
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.compose.button.SecondaryButton
@@ -69,9 +71,18 @@ fun NotificationPermissionDialogScreen(
 ) {
     NotificationPermissionContent(
         notificationPermissionPageState = NotificationPageState,
-        onDismiss = onDismiss,
-        onPrimaryButtonClick = grantNotificationPermission,
-        onSecondaryButtonClick = onDismiss,
+        onDismiss = {
+            onDismiss()
+            Onboarding.notifPppCloseClick.record(NoExtras())
+        },
+        onPrimaryButtonClick = {
+            grantNotificationPermission()
+            Onboarding.notifPppPositiveBtnClick.record(NoExtras())
+        },
+        onSecondaryButtonClick = {
+            onDismiss()
+            Onboarding.notifPppNegativeBtnClick.record(NoExtras())
+        },
     )
 }
 
@@ -205,7 +216,7 @@ private val NotificationPageState = NotificationPermissionPageState(
     description = R.string.onboarding_home_enable_notifications_description,
     primaryButtonText = R.string.onboarding_home_enable_notifications_positive_button,
     secondaryButtonText = R.string.onboarding_home_enable_notifications_negative_button,
-    onRecordImpressionEvent = {},
+    onRecordImpressionEvent = { Onboarding.notifPppImpression.record(NoExtras()) },
 )
 
 private const val IMAGE_HEIGHT_RATIO = 0.4f
