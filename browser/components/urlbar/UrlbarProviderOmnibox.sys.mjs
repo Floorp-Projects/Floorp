@@ -139,7 +139,7 @@ class ProviderOmnibox extends UrlbarProvider {
     let description = lazy.ExtensionSearchHandler.getDescription(keyword);
     let heuristicResult = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.OMNIBOX,
-      UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+      UrlbarUtils.RESULT_SOURCE.ADDON,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
         content: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -169,7 +169,7 @@ class ProviderOmnibox extends UrlbarProvider {
           }
           let result = new lazy.UrlbarResult(
             UrlbarUtils.RESULT_TYPE.OMNIBOX,
-            UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+            UrlbarUtils.RESULT_SOURCE.ADDON,
             ...lazy.UrlbarResult.payloadAndSimpleHighlights(
               queryContext.tokens,
               {

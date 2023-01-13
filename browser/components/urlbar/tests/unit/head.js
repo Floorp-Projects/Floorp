@@ -508,7 +508,7 @@ function makeOmniboxResult(
 ) {
   let result = new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.OMNIBOX,
-    UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+    UrlbarUtils.RESULT_SOURCE.ADDON,
     ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
       title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
       content: [content, UrlbarUtils.HIGHLIGHT.TYPED],

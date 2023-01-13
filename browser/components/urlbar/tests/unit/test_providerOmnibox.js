@@ -335,6 +335,51 @@ add_task(async function test_extension_private_browsing() {
   await cleanup();
 });
 
+add_task(async function test_extension_private_browsing_allowed() {
+  let extensionName = "Foo Bar";
+  let mockExtension = {
+    name: extensionName,
+    emit: (message, text, id) => {
+      if (message === ExtensionSearchHandler.MSG_INPUT_CHANGED) {
+        ExtensionSearchHandler.addSuggestions(keyword, id, [
+          { content: "foo", description: "first suggestion" },
+          { content: "foobar", description: "second suggestion" },
+        ]);
+        // The API doesn't have a way to notify when addition is complete.
+        do_timeout(1000, () => {
+          controller.stopSearch();
+        });
+      }
+    },
+    privateBrowsingAllowed: true,
+  };
+
+  let keyword = "foo";
+  ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
+
+  let query = `${keyword} foo`;
+  let context = createContext(query, { isPrivate: true });
+  await check_results({
+    context,
+    matches: [
+      makeOmniboxResult(context, {
+        heuristic: true,
+        keyword,
+        description: extensionName,
+        content: query,
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} foobar`,
+        description: "second suggestion",
+      }),
+    ],
+  });
+
+  ExtensionSearchHandler.unregisterKeyword(keyword);
+  await cleanup();
+});
+
 add_task(async function test_correct_events_are_emitted() {
   let events = [];
   function checkEvents(expectedEvents) {
