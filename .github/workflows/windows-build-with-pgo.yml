@@ -28,6 +28,11 @@ jobs:
         rm -rf $GITHUB_WORKSPACE
         mkdir $GITHUB_WORKSPACE
 
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
     - name: Setup Disk & Swap Space 💿
       if: matrix.runs-on == 'ubuntu-22.04'
       run: |
@@ -187,6 +192,11 @@ jobs:
         rm -rf $RUNNER_USERDIR/l10n-central
         rm -rf $GITHUB_WORKSPACE
         mkdir $GITHUB_WORKSPACE
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
 
     - name: Setup Disk & Swap Space 💿
       if: matrix.runs-on == 'ubuntu-22.04'
