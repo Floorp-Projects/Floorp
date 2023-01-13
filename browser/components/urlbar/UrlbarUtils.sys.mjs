@@ -122,6 +122,7 @@ export var UrlbarUtils = {
     OTHER_LOCAL: 5,
     OTHER_NETWORK: 6,
     ACTIONS: 7,
+    ADDON: 8,
   },
 
   // This defines icon locations that are commonly used in the UI.
