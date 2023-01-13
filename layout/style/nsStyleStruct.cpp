@@ -3721,6 +3721,17 @@ nscoord StyleCalcNode::Resolve(nscoord aBasis,
   return ResolveInternal(aBasis, aRounder);
 }
 
+bool nsStyleDisplay::PrecludesSizeContainmentOrContentVisibilityWithFrame(
+    const nsIFrame& aFrame) const {
+  // Note: The spec for size containment says it should have no effect on
+  // non-atomic, inline-level boxes.
+  bool isNonReplacedInline = aFrame.IsFrameOfType(nsIFrame::eLineParticipant) &&
+                             !aFrame.IsFrameOfType(nsIFrame::eReplaced);
+  return isNonReplacedInline || IsInternalRubyDisplayType() ||
+         DisplayInside() == mozilla::StyleDisplayInside::Table ||
+         IsInnerTableStyle();
+}
+
 ContainSizeAxes nsStyleDisplay::GetContainSizeAxes(
     const nsIFrame& aFrame) const {
   // Short circuit for no containment whatsoever
@@ -3728,11 +3739,7 @@ ContainSizeAxes nsStyleDisplay::GetContainSizeAxes(
     return ContainSizeAxes(false, false);
   }
 
-  // Note: The spec for size containment says it should have no effect on
-  // non-atomic, inline-level boxes.
-  bool isNonReplacedInline = aFrame.IsFrameOfType(nsIFrame::eLineParticipant) &&
-                             !aFrame.IsFrameOfType(nsIFrame::eReplaced);
-  if (isNonReplacedInline || PrecludesSizeContainment()) {
+  if (PrecludesSizeContainmentOrContentVisibilityWithFrame(aFrame)) {
     return ContainSizeAxes(false, false);
   }
 
@@ -3754,6 +3761,17 @@ ContainSizeAxes nsStyleDisplay::GetContainSizeAxes(
   return ContainSizeAxes(
       static_cast<bool>(mEffectiveContainment & StyleContain::INLINE_SIZE),
       static_cast<bool>(mEffectiveContainment & StyleContain::BLOCK_SIZE));
+}
+
+StyleContentVisibility nsStyleDisplay::ContentVisibility(
+    const nsIFrame& aFrame) const {
+  if (MOZ_LIKELY(mContentVisibility == StyleContentVisibility::Visible)) {
+    return StyleContentVisibility::Visible;
+  }
+  if (PrecludesSizeContainmentOrContentVisibilityWithFrame(aFrame)) {
+    return StyleContentVisibility::Visible;
+  }
+  return mContentVisibility;
 }
 
 static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
