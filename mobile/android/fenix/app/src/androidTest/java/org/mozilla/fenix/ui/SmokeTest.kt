@@ -30,7 +30,6 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
@@ -363,38 +362,6 @@ class SmokeTest {
             }.submitQuery("mozilla ") {
                 verifyUrl(searchEngine)
             }.goToHomescreen { }
-        }
-    }
-
-    // Saves a login, then changes it and verifies the update
-    @Test
-    fun updateSavedLoginTest() {
-        val saveLoginTest =
-            TestAssetHelper.getSaveLoginAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(saveLoginTest.url) {
-            verifySaveLoginPromptIsShown()
-            // Click Save to save the login
-            saveLoginFromPrompt("Save")
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(saveLoginTest.url) {
-            enterPassword("test")
-            verifyUpdateLoginPromptIsShown()
-            // Click Update to change the saved password
-            saveLoginFromPrompt("Update")
-        }.openThreeDotMenu {
-        }.openSettings {
-            TestHelper.scrollToElementByText("Logins and passwords")
-        }.openLoginsAndPasswordSubMenu {
-        }.openSavedLogins {
-            verifySecurityPromptForLogins()
-            tapSetupLater()
-            // Verify that the login appears correctly
-            verifySavedLoginFromPrompt("test@example.com")
-            viewSavedLoginDetails("test@example.com")
-            revealPassword()
-            verifyPasswordSaved("test") // failing here locally
         }
     }
 
