@@ -287,6 +287,8 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
   static_assert(frontend::CanCopyDataToDisk<TryNote>::value,
                 "TryNote cannot be bulk-copied to disk");
 
+  JSContext* cx = xdr->cx();
+
   uint32_t size;
   if (mode == XDR_ENCODE) {
     if (sisd) {
@@ -338,6 +340,12 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
     if (!sisd->get()->validateLayout(size)) {
       MOZ_ASSERT(false, "Bad ImmutableScriptData");
       return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
+    }
+  }
+
+  if (mode == XDR_DECODE) {
+    if (!SharedImmutableScriptData::shareScriptData(cx, xdr->fc(), sisd)) {
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
