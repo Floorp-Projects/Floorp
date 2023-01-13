@@ -336,8 +336,9 @@ class BrowserToolbarIntegration(
                             onDismiss = { onDismissCookieBannerCfr() },
                             text = {
                                 val textCookieBannerCfr = stringResource(
-                                    id = R.string.cfr_for_cookie_banner,
+                                    id = R.string.cfr_cookie_banner,
                                     LocalContext.current.getString(R.string.onboarding_short_app_name),
+                                    LocalContext.current.getString(R.string.cfr_cookie_banner_link),
                                 )
                                 ClickableSubstringLink(
                                     text = textCookieBannerCfr,
@@ -345,7 +346,7 @@ class BrowserToolbarIntegration(
                                     linkTextDecoration = TextDecoration.Underline,
                                     clickableStartIndex = textCookieBannerCfr.indexOf(
                                         LocalContext.current.getString(
-                                            R.string.cfr_for_cookie_banner_underline_settings,
+                                            R.string.cfr_cookie_banner_link,
                                         ),
                                     ),
                                     clickableEndIndex = textCookieBannerCfr.length,
