@@ -210,6 +210,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
 #endif
 }
 
+// The XCTest framework considers functions that don't take arguments tests. This is a helper.
 - (void)testRotationCamera:(AVCaptureDevicePosition)camera
            withOrientation:(UIDeviceOrientation)deviceOrientation {
 #if TARGET_OS_IPHONE
@@ -262,6 +263,26 @@ CMSampleBufferRef createTestSampleBufferRef() {
 
   CFRelease(sampleBuffer);
 #endif
+}
+
+- (void)testRotationCameraBackLandscapeLeft {
+  [self testRotationCamera:AVCaptureDevicePositionBack
+           withOrientation:UIDeviceOrientationLandscapeLeft];
+}
+
+- (void)testRotationCameraFrontLandscapeLeft {
+  [self testRotationCamera:AVCaptureDevicePositionFront
+           withOrientation:UIDeviceOrientationLandscapeLeft];
+}
+
+- (void)testRotationCameraBackLandscapeRight {
+  [self testRotationCamera:AVCaptureDevicePositionBack
+           withOrientation:UIDeviceOrientationLandscapeRight];
+}
+
+- (void)testRotationCameraFrontLandscapeRight {
+  [self testRotationCamera:AVCaptureDevicePositionFront
+           withOrientation:UIDeviceOrientationLandscapeRight];
 }
 
 - (void)setExif:(CMSampleBufferRef)sampleBuffer {
