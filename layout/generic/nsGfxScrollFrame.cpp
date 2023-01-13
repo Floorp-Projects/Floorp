@@ -442,19 +442,6 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
 
     GetScrollbarMetrics(mBoxState, hScrollbarBox, &mHScrollbarMinSize,
                         &mHScrollbarPrefSize);
-
-    // A zero minimum size is a bug with non-overlay scrollbars. That
-    // means we'll always try to place the scrollbar, even if it will ultimately
-    // not fit, see bug 1809630. XUL collapsing is the exception because the
-    // front-end uses it.
-    MOZ_ASSERT(aFrame->PresContext()->UseOverlayScrollbars() ||
-                   hScrollbarBox->IsXULCollapsed() ||
-                   (mHScrollbarMinSize.width && mHScrollbarMinSize.height),
-               "Shouldn't have a zero horizontal min-scrollbar-size");
-    MOZ_ASSERT(mHScrollbarPrefSize.width >= mHScrollbarMinSize.width &&
-                   mHScrollbarPrefSize.height >= mHScrollbarMinSize.height,
-               "Scrollbar pref size should be >= min size");
-
   } else {
     mHScrollbar = ShowScrollbar::Never;
     mHScrollbarAllowedForScrollingVVInsideLV = false;
@@ -465,15 +452,6 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
 
     GetScrollbarMetrics(mBoxState, vScrollbarBox, &mVScrollbarMinSize,
                         &mVScrollbarPrefSize);
-
-    // See above.
-    MOZ_ASSERT(aFrame->PresContext()->UseOverlayScrollbars() ||
-                   vScrollbarBox->IsXULCollapsed() ||
-                   (mVScrollbarMinSize.width && mVScrollbarMinSize.height),
-               "Shouldn't have a zero vertical min-size");
-    MOZ_ASSERT(mVScrollbarPrefSize.width >= mVScrollbarMinSize.width &&
-                   mVScrollbarPrefSize.height >= mVScrollbarMinSize.height,
-               "Scrollbar pref size should be >= min size");
   } else {
     mVScrollbar = ShowScrollbar::Never;
     mVScrollbarAllowedForScrollingVVInsideLV = false;
