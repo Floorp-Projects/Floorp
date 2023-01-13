@@ -33,6 +33,11 @@ LayoutDeviceIntSize ScrollbarDrawingWin::GetMinimumWidgetSize(
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
+      if ((aAppearance == StyleAppearance::ScrollbarHorizontal ||
+           aAppearance == StyleAppearance::ScrollbarVertical) &&
+          !aPresContext->UseOverlayScrollbars()) {
+        return LayoutDeviceIntSize{};
+      }
       // TODO: for short scrollbars it could be nice if the thumb could shrink
       // under this size.
       auto sizes = GetScrollbarSizes(aPresContext, aFrame);
@@ -41,22 +46,8 @@ LayoutDeviceIntSize ScrollbarDrawingWin::GetMinimumWidgetSize(
           aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
           aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
           aAppearance == StyleAppearance::ScrollbarbuttonRight;
-      const auto relevantSize =
-          isHorizontal ? sizes.mHorizontal : sizes.mVertical;
-      auto size = LayoutDeviceIntSize{relevantSize, relevantSize};
-      if (aAppearance == StyleAppearance::ScrollbarHorizontal ||
-          aAppearance == StyleAppearance::ScrollbarVertical) {
-        // Always reserve some space in the right direction. Historically we've
-        // reserved 3 times the size in the other axis (one for the thumb, two
-        // for the buttons). We do this even when painting thin scrollbars just
-        // for consistency, though there just one would probably do.
-        if (isHorizontal) {
-          size.width *= 3;
-        } else {
-          size.height *= 3;
-        }
-      }
-      return size;
+      const auto size = isHorizontal ? sizes.mHorizontal : sizes.mVertical;
+      return LayoutDeviceIntSize{size, size};
     }
     default:
       return LayoutDeviceIntSize{};
