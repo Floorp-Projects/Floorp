@@ -110,4 +110,9 @@ preference = "accessibility.cache.enabled"
 type = "boolean"
 bug-numbers = [1694563]
 is-public = {default = false, nightly = true}
-default-value = {default = false, nightly = true, android = true}
+[accessibility-cache.default-value]
+default = false
+nightly = true
+android = true
+"early_beta_or_earlier,win" = true
+"early_beta_or_earlier,linux" = true

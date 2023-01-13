@@ -222,8 +222,10 @@
 # the parent process.
 - name: accessibility.cache.enabled
   type: bool
-#ifdef ANDROID
+#if defined(ANDROID)
   value: true
+#elif defined(XP_WIN) || defined(XP_LINUX)
+  value: @IS_EARLY_BETA_OR_EARLIER@
 #else
   value: @IS_NOT_RELEASE_OR_BETA@
 #endif
