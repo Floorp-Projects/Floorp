@@ -2733,9 +2733,10 @@ void nsPresContext::NotifyContentfulPaint() {
           TimeStamp navigationStart = timing->GetNavigationStartTimeStamp();
           TimeDuration elapsed = nowTime - navigationStart;
           nsIURI* docURI = Document()->GetDocumentURI();
-          nsPrintfCString marker("Contentful paint after %dms for URL %s",
-                                 int(elapsed.ToMilliseconds()),
-                                 docURI->GetSpecOrDefault().get());
+          nsPrintfCString marker(
+              "Contentful paint after %dms for URL %s",
+              int(elapsed.ToMilliseconds()),
+              nsContentUtils::TruncatedURLForDisplay(docURI).get());
           PROFILER_MARKER_TEXT(
               "FirstContentfulPaint", DOM,
               MarkerOptions(MarkerTiming::Interval(navigationStart, nowTime),
