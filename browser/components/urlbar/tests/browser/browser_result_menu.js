@@ -8,29 +8,29 @@ add_setup(async function() {
 });
 
 async function openResultMenuAndPressAccesskey(resultIndex, accesskey) {
-  let promiseMenuOpen = BrowserTestUtils.waitForEvent(
-    gURLBar.view.resultMenu,
-    "popupshown"
-  );
-  let promiseMenuClosed = BrowserTestUtils.waitForEvent(
-    gURLBar.view.resultMenu,
-    "popuphidden"
-  );
   let menuButton = UrlbarTestUtils.getButtonForResultIndex(
     window,
     "menu",
     resultIndex
   );
   ok(menuButton, `found the menu button at result index ${resultIndex}`);
+
+  let promiseMenuOpen = BrowserTestUtils.waitForEvent(
+    gURLBar.view.resultMenu,
+    "popupshown"
+  );
   await EventUtils.synthesizeMouseAtCenter(menuButton, {}, window);
   info("waiting for the menu to open");
   await promiseMenuOpen;
-  info(
-    `pressing access key (${accesskey}) of the menu item to remove the result`
+
+  info(`pressing access key (${accesskey}) to activate menu item`);
+  let promiseCommand = BrowserTestUtils.waitForEvent(
+    gURLBar.view.resultMenu,
+    "command"
   );
   EventUtils.synthesizeKey(accesskey);
-  info("waiting for the menu to close");
-  await promiseMenuClosed;
+  info("waiting for command event");
+  await promiseCommand;
 }
 
 add_task(async function test_remove_history() {
@@ -162,7 +162,8 @@ add_task(async function test_remove_search_history() {
 });
 
 add_task(async function firefoxSuggest() {
-  let url = "https://example.com/has-block-button";
+  const url = "https://example.com/hey-there";
+  const helpUrl = "https://example.com/help";
   let provider = new UrlbarTestUtils.TestProvider({
     priority: Infinity,
     results: [
@@ -172,6 +173,11 @@ add_task(async function firefoxSuggest() {
         {
           url,
           isBlockable: true,
+          blockL10n: { id: "urlbar-result-menu-dismiss-firefox-suggest" },
+          helpUrl,
+          helpL10n: {
+            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+          },
         }
       ),
     ],
@@ -187,24 +193,34 @@ add_task(async function firefoxSuggest() {
 
   UrlbarProvidersManager.registerProvider(provider);
 
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "test",
-  });
+  async function openResults() {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
 
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    1,
-    "There should be one result"
-  );
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      1,
+      "There should be one result"
+    );
 
-  let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  Assert.equal(
-    row.result.payload.url,
-    url,
-    "The result should be in the first row"
-  );
+    let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+    Assert.equal(
+      row.result.payload.url,
+      url,
+      "The result should be in the first row"
+    );
+  }
 
+  await openResults();
+  let tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser, helpUrl);
+  await openResultMenuAndPressAccesskey(0, "L");
+  info("Waiting for help URL to load in a new tab");
+  await tabOpenPromise;
+  gBrowser.removeCurrentTab();
+
+  await openResults();
   await openResultMenuAndPressAccesskey(0, "D");
 
   Assert.equal(
