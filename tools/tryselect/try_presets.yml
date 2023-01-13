@@ -93,6 +93,7 @@ media-full:
     query:
         - "mochitest-media !dfpi !nofis"
         - "mochitest-browser-chrome !dfpi !nofis !a11y"
+        - "mochitest-browser-media"
         - "web-platform-tests !dfpi !nofis"
         - "crashtest !wdspec !nofis"
         - "'gtest"
