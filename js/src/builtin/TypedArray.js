@@ -445,6 +445,8 @@ function TypedArrayFilter(callbackfn /*, thisArg*/) {
   // Step 13.
   return A;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayFilter);
 
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
@@ -494,6 +496,8 @@ function TypedArrayFind(predicate /*, thisArg*/) {
   // Step 7.
   return undefined;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayFind);
 
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
@@ -544,6 +548,8 @@ function TypedArrayFindIndex(predicate /*, thisArg*/) {
   // Step 7.
   return -1;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayFindIndex);
 
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
@@ -1493,6 +1499,8 @@ function TypedArrayFindLast(predicate /*, thisArg*/) {
   // Step 7.
   return undefined;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayFindLast);
 
 // https://github.com/tc39/proposal-array-find-from-last
 // %TypedArray%.prototype.findLastIndex ( predicate, thisArg )
@@ -1542,6 +1550,8 @@ function TypedArrayFindLastIndex(predicate /*, thisArg*/) {
   // Step 7.
   return -1;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayFindLastIndex);
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
 //

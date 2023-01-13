@@ -268,6 +268,8 @@ function ArrayFilter(callbackfn /*, thisArg*/) {
   /* Step 9. */
   return A;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(ArrayFilter);
 
 #ifdef NIGHTLY_BUILD
 // Array Grouping proposal
@@ -580,6 +582,8 @@ function ArrayFind(predicate /*, thisArg*/) {
   /* Step 10. */
   return undefined;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(ArrayFind);
 
 /* ES6 draft 2013-05-14 15.4.3.23. */
 function ArrayFindIndex(predicate /*, thisArg*/) {
@@ -612,6 +616,8 @@ function ArrayFindIndex(predicate /*, thisArg*/) {
   /* Step 10. */
   return -1;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(ArrayFindIndex);
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 22.1.3.3 Array.prototype.copyWithin ( target, start [ , end ] )
@@ -1639,6 +1645,8 @@ function ArrayFindLast(predicate /*, thisArg*/) {
   // Step 6.
   return undefined;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(ArrayFindLast);
 
 // https://github.com/tc39/proposal-array-find-from-last
 // Array.prototype.findLastIndex ( predicate, thisArg )
@@ -1670,3 +1678,5 @@ function ArrayFindLastIndex(predicate /*, thisArg*/) {
   // Step 6.
   return -1;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(ArrayFindLastIndex);
