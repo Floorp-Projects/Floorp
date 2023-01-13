@@ -713,6 +713,13 @@ function replaceURL(text, replacementText = "") {
  * @returns {String|null} null if the message can't be part of a warningGroup.
  */
 function getWarningGroupType(message) {
+  // We got report that this can be called with `undefined` (See Bug 1801462 and Bug 1810109).
+  // Until we manage to reproduce and find why this happens, guard on message so at least
+  // we don't crash the console.
+  if (!message) {
+    return null;
+  }
+
   if (
     message.level !== MESSAGE_LEVEL.WARN &&
     // CookieSameSite messages are not warnings but infos
