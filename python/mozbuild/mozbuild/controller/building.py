@@ -877,9 +877,11 @@ class CCacheStats(object):
         ("cache_max_size", "max cache size"),
     ]
 
-    DIRECTORY_DESCRIPTION = "cache directory"
-    PRIMARY_CONFIG_DESCRIPTION = "primary config"
-    SECONDARY_CONFIG_DESCRIPTION = "secondary config"
+    SKIP_LINES = (
+        "cache directory",
+        "primary config",
+        "secondary config",
+    )
 
     STATS_KEYS_4_4 = [
         ("stats_updated", "Summary/Stats updated"),
@@ -938,6 +940,9 @@ class CCacheStats(object):
     ]
 
     SKIP_KEYS_4_4 = [
+        "Summary/Cache directory",
+        "Summary/Primary config",
+        "Summary/Secondary config",
         "Summary/Uncacheable",
         "Summary/Misses/Direct",
         "Summary/Misses/Preprocessed",
@@ -945,10 +950,6 @@ class CCacheStats(object):
         "Primary storage/Misses",
         "Errors/Could not find compiler",
     ]
-
-    DIRECTORY_DESCRIPTION_4_4 = "Summary/Cache directory"
-    PRIMARY_CONFIG_DESCRIPTION_4_4 = "Summary/Primary config"
-    SECONDARY_CONFIG_DESCRIPTION_4_4 = "Summary/Secondary config"
 
     ABSOLUTE_KEYS = {"cache_files", "cache_size", "cache_max_size"}
     FORMAT_KEYS = {"cache_size", "cache_max_size"}
@@ -960,9 +961,6 @@ class CCacheStats(object):
     def __init__(self, output=None, is_version_4_4_or_newer=False):
         """Construct an instance from the output of ccache -s."""
         self._values = {}
-        self.cache_dir = ""
-        self.primary_config = ""
-        self.secondary_config = ""
 
         if not output:
             return
@@ -996,33 +994,24 @@ class CCacheStats(object):
                 subhead = ""
 
     def _parse_line_4_4_plus(self, key, value):
-        if key.startswith(self.DIRECTORY_DESCRIPTION_4_4):
-            self.cache_dir = value
-        elif key.startswith(self.PRIMARY_CONFIG_DESCRIPTION_4_4):
-            self.primary_config = value
-        elif key.startswith(self.SECONDARY_CONFIG_DESCRIPTION_4_4):
-            self.secondary_config = value
-        else:
-            for seq in self.STATS_KEYS_4_4:
-                stat_key = seq[0]
-                stat_description = seq[1]
-                raw_value = value
-                if len(seq) > 2:
-                    raw_value = seq[2](value)
-                if stat_key not in self._values and key == stat_description:
-                    self._values[stat_key] = self._parse_value(raw_value)
+        for seq in self.STATS_KEYS_4_4:
+            stat_key = seq[0]
+            stat_description = seq[1]
+            raw_value = value
+            if len(seq) > 2:
+                raw_value = seq[2](value)
+            if stat_key not in self._values and key == stat_description:
+                self._values[stat_key] = self._parse_value(raw_value)
 
-                    # We dont want to break when we need to extract two infos
-                    # from the same line
-                    if len(seq) < 4:
-                        break
-            else:
-                if key not in self.SKIP_KEYS_4_4:
-                    raise ValueError(
-                        "Failed to parse ccache stats output: '{}' '{}'".format(
-                            key, value
-                        )
-                    )
+                # We dont want to break when we need to extract two infos
+                # from the same line
+                if len(seq) < 4:
+                    break
+        else:
+            if key not in self.SKIP_KEYS_4_4:
+                raise ValueError(
+                    "Failed to parse ccache stats output: '{}' '{}'".format(key, value)
+                )
 
     def _parse_human_format(self, output):
         for line in output.splitlines():
@@ -1032,24 +1021,13 @@ class CCacheStats(object):
 
     def _parse_line(self, line):
         line = six.ensure_text(line)
-        if line.startswith(self.DIRECTORY_DESCRIPTION):
-            self.cache_dir = self._strip_prefix(line, self.DIRECTORY_DESCRIPTION)
-        elif line.startswith(self.PRIMARY_CONFIG_DESCRIPTION):
-            self.primary_config = self._strip_prefix(
-                line, self.PRIMARY_CONFIG_DESCRIPTION
-            )
-        elif line.startswith(self.SECONDARY_CONFIG_DESCRIPTION):
-            self.secondary_config = self._strip_prefix(
-                self._strip_prefix(line, self.SECONDARY_CONFIG_DESCRIPTION),
-                "(readonly)",
-            )
+        for stat_key, stat_description in self.STATS_KEYS:
+            if line.startswith(stat_description):
+                raw_value = self._strip_prefix(line, stat_description)
+                self._values[stat_key] = self._parse_value(raw_value)
+                break
         else:
-            for stat_key, stat_description in self.STATS_KEYS:
-                if line.startswith(stat_description):
-                    raw_value = self._strip_prefix(line, stat_description)
-                    self._values[stat_key] = self._parse_value(raw_value)
-                    break
-            else:
+            if not line.startswith(self.SKIP_LINES):
                 raise ValueError("Failed to parse ccache stats output: %s" % line)
 
     @staticmethod
@@ -1113,7 +1091,6 @@ class CCacheStats(object):
 
     def __sub__(self, other):
         result = CCacheStats()
-        result.cache_dir = self.cache_dir
 
         for k, prefix in self.STATS_KEYS:
             if k not in self._values and k not in other._values:
@@ -1132,11 +1109,6 @@ class CCacheStats(object):
     def __str__(self):
         LEFT_ALIGN = 34
         lines = []
-
-        if self.cache_dir:
-            lines.append(
-                "%s%s" % (self.DIRECTORY_DESCRIPTION.ljust(LEFT_ALIGN), self.cache_dir)
-            )
 
         for stat_key, stat_description in self.STATS_KEYS:
             if stat_key not in self._values:

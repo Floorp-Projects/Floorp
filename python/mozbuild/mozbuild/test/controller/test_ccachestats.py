@@ -405,7 +405,6 @@ Uncacheable:
 
     def test_parse_zero_stats_message(self):
         stats = CCacheStats(self.STAT0)
-        self.assertEqual(stats.cache_dir, "/home/tlin/.ccache")
         self.assertEqual(stats.hit_rates(), (0, 0, 0))
 
     def test_hit_rate_of_diff_stats(self):
@@ -435,7 +434,6 @@ Uncacheable:
         stats_diff = stat3 - stat2
         self.assertEqual(
             str(stat3),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                   12004\n"
             "cache hit (preprocessed)              1786\n"
             "cache miss                           26348\n"
@@ -454,7 +452,6 @@ Uncacheable:
         )
         self.assertEqual(
             str(stats_diff),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                   10104\n"
             "cache hit (preprocessed)              1486\n"
             "cache miss                           23748\n"
@@ -478,7 +475,6 @@ Uncacheable:
         stats_diff = stat5 - stat4
         self.assertEqual(
             str(stat4),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                   21039\n"
             "cache hit (preprocessed)              2315\n"
             "cache miss                           39370\n"
@@ -498,7 +494,6 @@ Uncacheable:
         )
         self.assertEqual(
             str(stat5),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                   21039\n"
             "cache hit (preprocessed)              2315\n"
             "cache miss                           39372\n"
@@ -518,7 +513,6 @@ Uncacheable:
         )
         self.assertEqual(
             str(stats_diff),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                       0\n"
             "cache hit (preprocessed)                 0\n"
             "cache miss                               2\n"
@@ -544,7 +538,6 @@ Uncacheable:
         stats_diff = stat6 - stat3
         self.assertEqual(
             str(stat6),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                  319287\n"
             "cache hit (preprocessed)            125987\n"
             "cache hit rate                          37\n"
@@ -570,7 +563,6 @@ Uncacheable:
         )
         self.assertEqual(
             str(stat3),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                   12004\n"
             "cache hit (preprocessed)              1786\n"
             "cache miss                           26348\n"
@@ -589,7 +581,6 @@ Uncacheable:
         )
         self.assertEqual(
             str(stats_diff),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                  307283\n"
             "cache hit (preprocessed)            124201\n"
             "cache hit rate                          37\n"
@@ -618,7 +609,6 @@ Uncacheable:
         stat7 = CCacheStats(self.STAT7)
         self.assertEqual(
             str(stat7),
-            "cache directory                   /Users/tlin/.ccache\n"
             "cache hit (direct)                   27035\n"
             "cache hit (preprocessed)             13939\n"
             "cache hit rate                          39\n"
@@ -642,7 +632,6 @@ Uncacheable:
         stat8 = CCacheStats(self.STAT8)
         self.assertEqual(
             str(stat8),
-            "cache directory                   /home/psimonyi/.ccache\n"
             f"stats zero time                   {int(TIMESTAMP)}\n"
             f"stats zeroed                      {int(TIMESTAMP)}\n"
             "cache hit (direct)                     571\n"
@@ -667,7 +656,6 @@ Uncacheable:
         stat9 = CCacheStats(self.STAT9)
         self.assertEqual(
             str(stat9),
-            "cache directory                   /Users/tlin/.ccache\n"
             f"stats zero time                   {int(TIMESTAMP)}\n"
             f"stats zeroed                      {int(TIMESTAMP)}\n"
             f"stats updated                     {int(TIMESTAMP2)}\n"
@@ -702,7 +690,6 @@ Uncacheable:
         stat10 = CCacheStats(self.STAT10, True)
         self.assertEqual(
             str(stat10),
-            "cache directory                   /home/suer/.ccache\n"
             f"stats updated                     {int(TIMESTAMP)}\n"
             "cache hit (direct)                     197\n"
             "cache hit (preprocessed)               719\n"
@@ -726,7 +713,6 @@ Uncacheable:
         stat11 = CCacheStats(self.STAT11, True)
         self.assertEqual(
             str(stat11),
-            "cache directory                   /home/suer/.ccache\n"
             f"stats updated                     {int(TIMESTAMP)}\n"
             "cache hit (direct)                       0\n"
             "cache hit (preprocessed)                 0\n"
@@ -741,7 +727,6 @@ Uncacheable:
         stat12 = CCacheStats(self.STAT12, True)
         self.assertEqual(
             str(stat12),
-            "cache directory                   /home/suer/.ccache\n"
             "stats updated                            0\n"
             "cache hit (direct)                       0\n"
             "cache hit (preprocessed)                 0\n"
@@ -756,7 +741,6 @@ Uncacheable:
         stat13 = CCacheStats(self.STAT13, True)
         self.assertEqual(
             str(stat13),
-            "cache directory                   /Users/leebc/.ccache\n"
             f"stats updated                     {int(TIMESTAMP)}\n"
             "cache hit (direct)                  280542\n"
             "cache hit (preprocessed)                 0\n"
