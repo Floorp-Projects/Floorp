@@ -1,0 +1,10 @@
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  document.location.search = '?'
+  let a = self.navigator.storage
+  let xhr = new XMLHttpRequest()
+  xhr.open('POST', 'FOOBAR', false)
+  xhr.send()
+  await a.getDirectory()
+})
+</script>

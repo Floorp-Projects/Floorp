@@ -730,7 +730,7 @@ StorageManager::StorageManager(nsIGlobalObject* aGlobal) : mOwner(aGlobal) {
   MOZ_ASSERT(aGlobal);
 }
 
-StorageManager::~StorageManager() = default;
+StorageManager::~StorageManager() { Shutdown(); }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StorageManager)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -740,8 +740,16 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StorageManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(StorageManager)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner,
-                                      mFileSystemManager)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StorageManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StorageManager)
+  tmp->Shutdown();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StorageManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileSystemManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void StorageManager::Shutdown() {
   if (mFileSystemManager) {
