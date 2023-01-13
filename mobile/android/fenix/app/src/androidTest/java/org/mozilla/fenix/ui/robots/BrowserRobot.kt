@@ -564,13 +564,16 @@ class BrowserRobot {
         )
     }
 
-    fun verifyPrefilledLoginCredentials(userName: String) {
+    fun verifyPrefilledLoginCredentials(userName: String, password: String) {
         var currentTries = 0
         // Sometimes the assertion of the pre-filled logins fails so we are re-trying after refreshing the page
         while (currentTries++ < 3) {
             try {
                 mDevice.waitForObjects(webPageItemWithResourceId("username"))
                 assertTrue(webPageItemWithResourceId("username").text.equals(userName))
+
+                mDevice.waitForObjects(webPageItemWithResourceId("password"))
+                assertTrue(webPageItemWithResourceId("password").text.equals(password))
 
                 break
             } catch (e: AssertionError) {
@@ -581,11 +584,14 @@ class BrowserRobot {
                     clickSuggestedLoginsButton()
                     verifySuggestedUserName(userName)
                     clickLoginSuggestion(userName)
+                    clickShowPasswordButton()
                 }
             }
         }
         mDevice.waitForObjects(webPageItemWithResourceId("username"))
         assertTrue(webPageItemWithResourceId("username").text.equals(userName))
+        mDevice.waitForObjects(webPageItemWithResourceId("password"))
+        assertTrue(webPageItemWithResourceId("password").text.equals(password))
     }
 
     fun verifyAutofilledAddress(streetAddress: String) {
@@ -907,6 +913,12 @@ class BrowserRobot {
         }
         assertItemWithResIdExists(cookieBanner, exists = exists)
     }
+
+    fun clickShowPasswordButton() =
+        itemWithResId("togglePassword").also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
 
     class Transition {
         private fun threeDotButton() = onView(

@@ -117,7 +117,7 @@ class CustomTabsTest {
         }.openSavedLogins {
             verifySecurityPromptForLogins()
             tapSetupLater()
-            verifySavedLoginFromPrompt("mozilla")
+            verifySavedLoginsSectionUsername("mozilla")
         }
     }
 

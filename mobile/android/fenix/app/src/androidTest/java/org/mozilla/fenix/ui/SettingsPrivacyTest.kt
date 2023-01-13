@@ -604,7 +604,7 @@ class SettingsPrivacyTest {
             }.openSavedLogins {
                 verifySecurityPromptForLogins()
                 tapSetupLater()
-                verifySavedLoginFromPrompt("mozilla")
+                verifySavedLoginsSectionUsername("mozilla")
             }
 
             addToHomeScreen {

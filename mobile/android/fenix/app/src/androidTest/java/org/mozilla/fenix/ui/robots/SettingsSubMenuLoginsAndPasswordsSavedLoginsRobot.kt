@@ -5,9 +5,11 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -18,8 +20,14 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -40,8 +48,10 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun tapSetupLater() = onView(withText("Later")).perform(ViewActions.click())
 
-    fun verifySavedLoginFromPrompt(userName: String) =
-        mDevice.waitNotNull(Until.findObjects(By.text(userName)))
+    fun verifySavedLoginsSectionUsername(username: String) =
+        mDevice.waitNotNull(Until.findObjects(By.text(username)))
+
+    fun verifyLoginItemUsername(username: String) = assertItemContainingTextExists(itemContainingText(username))
 
     fun verifyNotSavedLoginFromPrompt() = onView(withText("test@example.com"))
         .check(ViewAssertions.doesNotExist())
@@ -51,10 +61,41 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun viewSavedLoginDetails(loginUserName: String) = onView(withText(loginUserName)).click()
 
+    fun clickThreeDotButton(activityTestRule: HomeActivityIntentTestRule) =
+        openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
+
+    fun clickEditLoginButton() = itemContainingText("Edit").click()
+
+    fun clickDeleteLoginButton() = itemContainingText("Delete").click()
+
+    fun verifyLoginDeletionPrompt() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.login_deletion_confirmation)))
+
+    fun clickConfirmDeleteLogin() =
+        onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog()).click()
+
+    fun clickCancelDeleteLogin() =
+        onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog()).click()
+
+    fun setNewUserName(userName: String) = itemWithResId("$packageName:id/usernameText").setText(userName)
+
+    fun clickClearUserNameButton() = itemWithResId("$packageName:id/clearUsernameTextButton").click()
+
+    fun setNewPassword(password: String) = itemWithResId("$packageName:id/passwordText").setText(password)
+
+    fun clickClearPasswordButton() = itemWithResId("$packageName:id/clearPasswordTextButton").click()
+
+    fun saveEditedLogin() = itemWithResId("$packageName:id/save_login_button").click()
+
     fun revealPassword() = onView(withId(R.id.revealPasswordButton)).click()
 
     fun verifyPasswordSaved(password: String) =
         onView(withId(R.id.passwordText)).check(matches(withText(password)))
+
+    fun verifyPasswordRequiredErrorMessage() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.saved_login_password_required)))
+
+    fun clickGoBackButton() = goBackButton().click()
 
     class Transition {
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
