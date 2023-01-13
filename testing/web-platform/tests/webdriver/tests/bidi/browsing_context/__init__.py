@@ -58,5 +58,8 @@ def assert_navigation_info(event, expected_navigation_info):
     if "navigation" in expected_navigation_info:
         assert event["navigation"] == expected_navigation_info["navigation"]
 
+    if "timestamp" in expected_navigation_info:
+        expected_navigation_info["timestamp"](event["timestamp"])
+
     if "url" in expected_navigation_info:
         assert event["url"] == expected_navigation_info["url"]
