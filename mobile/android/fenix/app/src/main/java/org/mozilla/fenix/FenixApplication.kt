@@ -61,6 +61,7 @@ import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.CustomizeHome
+import org.mozilla.fenix.GleanMetrics.Events.marketingNotificationAllowed
 import org.mozilla.fenix.GleanMetrics.GleanBuildInfo
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.PerfStartup
@@ -73,13 +74,16 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.containsQueryParameters
 import org.mozilla.fenix.ext.getCustomGleanServerUrlIfAvailable
 import org.mozilla.fenix.ext.isCustomEngine
 import org.mozilla.fenix.ext.isKnownSearchDomain
+import org.mozilla.fenix.ext.isNotificationChannelEnabled
 import org.mozilla.fenix.ext.setCustomEndpointIfAvailable
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.onboarding.MARKETING_CHANNEL_ID
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.ProfilerMarkerFactProcessor
 import org.mozilla.fenix.perf.StartupTimeline
@@ -723,14 +727,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
             defaultWallpaper.set(isDefaultTheCurrentWallpaper)
 
-            @Suppress("TooGenericExceptionCaught")
-            try {
-                notificationsAllowed.set(
-                    NotificationManagerCompat.from(applicationContext).areNotificationsEnabled(),
-                )
-            } catch (e: Exception) {
-                Logger.warn("Failed to check if notifications are enabled", e)
-            }
+            val notificationManagerCompat = NotificationManagerCompat.from(applicationContext)
+            notificationsAllowed.set(notificationManagerCompat.areNotificationsEnabledSafe())
+            marketingNotificationAllowed.set(
+                notificationManagerCompat.isNotificationChannelEnabled(MARKETING_CHANNEL_ID),
+            )
         }
 
         with(AndroidAutofill) {
