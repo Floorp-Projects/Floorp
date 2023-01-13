@@ -30,7 +30,24 @@ const FAKE_BROWSER_LIST = [
 const Template = state => {
   let wiz = document.createElement("migration-wizard");
   wiz.setState(state);
-  return wiz;
+
+  let card = document.createElement("div");
+  card.classList.add("card", "card-no-hover");
+  card.style.width = "fit-content";
+  card.append(wiz);
+
+  let style = document.createElement("style");
+  style.textContent = `
+    @media (prefers-reduced-motion: no-preference) {
+      migration-wizard::part(progress-spinner) {
+        mask: url(/migration/progress-mask.svg);
+      }
+    }
+  `;
+
+  card.prepend(style);
+
+  return card;
 };
 
 export const MainSelectorVariant1 = Template.bind({});
@@ -50,11 +67,64 @@ MainSelectorVariant2.args = {
 export const Progress = Template.bind({});
 Progress.args = {
   page: MigrationWizardConstants.PAGES.PROGRESS,
+  progress: {
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+      inProgress: true,
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
+      inProgress: true,
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
+      inProgress: true,
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
+      inProgress: true,
+    },
+  },
+};
+
+export const PartialProgress = Template.bind({});
+PartialProgress.args = {
+  page: MigrationWizardConstants.PAGES.PROGRESS,
+  progress: {
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+      inProgress: true,
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
+      inProgress: false,
+      message: "14 logins and passwords",
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
+      inProgress: true,
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
+      inProgress: false,
+      message: "Addresses, credit cards, form history",
+    },
+  },
 };
 
 export const Success = Template.bind({});
 Success.args = {
   page: MigrationWizardConstants.PAGES.PROGRESS,
+  progress: {
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+      inProgress: false,
+      message: "14 bookmarks",
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
+      inProgress: false,
+      message: "14 logins and passwords",
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
+      inProgress: false,
+      message: "From the last 180 days",
+    },
+    [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
+      inProgress: false,
+      message: "Addresses, credit cards, form history",
+    },
+  },
 };
 
 export const SafariPermissions = Template.bind({});

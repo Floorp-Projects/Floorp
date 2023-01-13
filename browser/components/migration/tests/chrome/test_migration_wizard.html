@@ -4,14 +4,45 @@
   <meta charset="utf-8">
   <title>Basic tests for the Migration Wizard component</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script src="chrome://browser/content/migration/migration-wizard.mjs" type="module"></script>
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script>
     "use strict";
 
+    const { MigrationWizardConstants } = ChromeUtils.importESModule(
+      "chrome://browser/content/migration/migration-wizard-constants.mjs"
+    );
+
+    let gWiz = null;
+    let gShadowRoot = null;
+    let gDeck = null;
+
+    /**
+     * Returns the .resource-progress-group div for a particular resource
+     * type.
+     *
+     * @param {string} displayedResourceType
+     *   One of the constants belonging to
+     *   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
+     * @returns {Element}
+     */
+    function getResourceGroup(displayedResourceType) {
+      return gShadowRoot.querySelector(
+        `.resource-progress-group[data-resource-type="${displayedResourceType}"]`);
+    }
+
+    add_setup(async function() {
+      gWiz = document.getElementById("test-wizard");
+      gShadowRoot = gWiz.openOrClosedShadowRoot;
+      gDeck = gShadowRoot.querySelector("#wizard-deck");
+    });
+
     /**
      * Tests that the MigrationWizard:Init event is fired when the <migration-wizard>
-     * is added to the DOM.
+     * is added to the DOM, and then ensures that the starting page is correct.
+     * This uses a dynamically created <migration-wizard> instead of the one already
+     * in the content div to make sure that the init event is captured.
      */
     add_task(async function test_init_event() {
       let wiz = document.createElement("migration-wizard");
@@ -22,12 +53,149 @@
       content.appendChild(wiz);
       await promise;
       ok(true, "Saw MigrationWizard:Init event.");
+      let shadowRoot = wiz.openOrClosedShadowRoot;
+      let deck = shadowRoot.querySelector("#wizard-deck");
+      is(deck.selectedViewName, "page-selection", "Should have the browser / profile selection page selected");
+      wiz.remove();
+    });
+
+    /**
+     * Tests that the wizard can show a list of browser and profiles.
+     */
+    add_task(async function test_selection() {
+      gWiz.setState({
+        page: MigrationWizardConstants.PAGES.SELECTION,
+        migrators: ["some-browser-0", "some-browser-1"],
+      });
+
+      let selector = gShadowRoot.querySelector("#browser-profile-selector");
+      is(selector.childElementCount, 2, "Should have two child elements");
+      is(selector.children[0].value, "some-browser-0");
+      is(selector.children[1].value, "some-browser-1");
+    });
+
+    /**
+     * Tests that the wizard can show partial progress during migration.
+     */
+    add_task(async function test_partial_progress() {
+      const BOOKMARKS_SUCCESS_STRING = "Some bookmarks success string";
+      gWiz.setState({
+        page: MigrationWizardConstants.PAGES.PROGRESS,
+        progress: {
+          [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+            inProgress: false,
+            message: BOOKMARKS_SUCCESS_STRING,
+          },
+          // Don't include PASSWORDS to check that it's hidden.
+          [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
+            inProgress: true,
+          },
+          [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
+            inProgress: true,
+          },
+        },
+      });
+      is(gDeck.selectedViewName, "page-progress", "Should have the progress page selected");
+
+      // Bookmarks
+      let bookmarksGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS);
+      ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
+      let progressIcon = bookmarksGroup.querySelector(".progress-icon");
+      ok(progressIcon.classList.contains("completed"), "Progress should be completed");
+      is(bookmarksGroup.querySelector(".success-text").textContent, BOOKMARKS_SUCCESS_STRING);
+
+      // Passwords
+      let passwordsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS);
+      ok(isHidden(passwordsGroup), "Passwords group should be hidden");
+
+      // History
+      let historyGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY);
+      ok(!isHidden(historyGroup), "History group should be visible");
+      progressIcon = historyGroup.querySelector(".progress-icon");
+      ok(!progressIcon.classList.contains("completed"), "Progress should be still be underway");
+      is(historyGroup.querySelector(".success-text").textContent.trim(), "");
+
+      // Form Data
+      let formDataGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA);
+      ok(!isHidden(formDataGroup), "Form data group should be visible");
+      progressIcon = formDataGroup.querySelector(".progress-icon");
+      ok(!progressIcon.classList.contains("completed"), "Progress should be still be underway");
+      is(formDataGroup.querySelector(".success-text").textContent.trim(), "");
+
+      // With progress still being underway, the header should be using the
+      // in progress string.
+      let header = gShadowRoot.querySelector("#progress-header");
+      is(header.getAttribute("data-l10n-id"),
+        "migration-wizard-progress-header",
+        "Should be showing in-progress header string"
+      );
+    });
+
+    /**
+     * Tests that the wizard can show completed migration progress.
+     */
+    add_task(async function test_completed_progress() {
+      const BOOKMARKS_SUCCESS_STRING = "Some bookmarks success string";
+      const PASSWORDS_SUCCESS_STRING = "Some passwords success string";
+      const FORMDATA_SUCCESS_STRING = "Some formdata string";
+      gWiz.setState({
+        page: MigrationWizardConstants.PAGES.PROGRESS,
+        progress: {
+          [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+            inProgress: false,
+            message: BOOKMARKS_SUCCESS_STRING,
+          },
+          [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
+            inProgress: false,
+            message: PASSWORDS_SUCCESS_STRING,
+          },
+          // Don't include HISTORY to check that it's hidden.
+          [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
+            inProgress: false,
+            message: FORMDATA_SUCCESS_STRING,
+          },
+        },
+      });
+      is(gDeck.selectedViewName, "page-progress", "Should have the progress page selected");
+
+      // Bookmarks
+      let bookmarksGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS);
+      ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
+      let progressIcon = bookmarksGroup.querySelector(".progress-icon");
+      ok(progressIcon.classList.contains("completed"), "Progress should be completed");
+      is(bookmarksGroup.querySelector(".success-text").textContent, BOOKMARKS_SUCCESS_STRING);
+
+      // Passwords
+      let passwordsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS);
+      ok(!isHidden(passwordsGroup), "Passwords group should be visible");
+      progressIcon = passwordsGroup.querySelector(".progress-icon");
+      ok(progressIcon.classList.contains("completed"), "Progress should be completed");
+      is(passwordsGroup.querySelector(".success-text").textContent, PASSWORDS_SUCCESS_STRING);
+
+      // History
+      let historyGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY);
+      ok(isHidden(historyGroup), "History group should be hidden");
+
+      // Form Data
+      let formDataGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA);
+      ok(!isHidden(formDataGroup), "Form data group should be visible");
+      progressIcon = formDataGroup.querySelector(".progress-icon");
+      ok(progressIcon.classList.contains("completed"), "Progress should be completed");
+      is(formDataGroup.querySelector(".success-text").textContent, FORMDATA_SUCCESS_STRING);
+
+      // With progress being complete, the header should be using the completed
+      // migration string.
+      let header = gShadowRoot.querySelector("#progress-header");
+      is(header.getAttribute("data-l10n-id"),
+        "migration-wizard-progress-done-header",
+        "Should be showing completed migration header string"
+      );
     });
   </script>
 </head>
 <body>
 <p id="display"></p>
-<div id="content"></div>
+<div id="content"><migration-wizard id="test-wizard"></migration-wizard></div>
 <pre id="test"></pre>
 </body>
 </html>
