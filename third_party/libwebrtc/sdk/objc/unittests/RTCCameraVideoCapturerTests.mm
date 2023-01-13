@@ -72,7 +72,6 @@ CMSampleBufferRef createTestSampleBufferRef() {
 @property(nonatomic, strong) id delegateMock;
 @property(nonatomic, strong) id deviceMock;
 @property(nonatomic, strong) id captureConnectionMock;
-@property(nonatomic, strong) id captureSessionMock;
 @property(nonatomic, strong) RTC_OBJC_TYPE(RTCCameraVideoCapturer) * capturer;
 @end
 
@@ -80,31 +79,14 @@ CMSampleBufferRef createTestSampleBufferRef() {
 @synthesize delegateMock = _delegateMock;
 @synthesize deviceMock = _deviceMock;
 @synthesize captureConnectionMock = _captureConnectionMock;
-@synthesize captureSessionMock = _captureSessionMock;
 @synthesize capturer = _capturer;
 
-- (void)setup {
+- (void)setUp {
   self.delegateMock = OCMProtocolMock(@protocol(RTC_OBJC_TYPE(RTCVideoCapturerDelegate)));
   self.captureConnectionMock = OCMClassMock([AVCaptureConnection class]);
   self.capturer =
       [[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:self.delegateMock];
-  self.deviceMock = [self createDeviceMock];
-}
-
-- (void)setupWithMockedCaptureSession {
-  self.captureSessionMock = OCMStrictClassMock([AVCaptureSession class]);
-  OCMStub([self.captureSessionMock setSessionPreset:[OCMArg any]]);
-  OCMStub([self.captureSessionMock setUsesApplicationAudioSession:NO]);
-  OCMStub([self.captureSessionMock canAddOutput:[OCMArg any]]).andReturn(YES);
-  OCMStub([self.captureSessionMock addOutput:[OCMArg any]]);
-  OCMStub([self.captureSessionMock beginConfiguration]);
-  OCMStub([self.captureSessionMock commitConfiguration]);
-  self.delegateMock = OCMProtocolMock(@protocol(RTC_OBJC_TYPE(RTCVideoCapturerDelegate)));
-  self.captureConnectionMock = OCMClassMock([AVCaptureConnection class]);
-  self.capturer =
-      [[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:self.delegateMock
-                                                       captureSession:self.captureSessionMock];
-  self.deviceMock = [self createDeviceMock];
+  self.deviceMock = [RTCCameraVideoCapturerTests createDeviceMock];
 }
 
 - (void)tearDown {
@@ -117,7 +99,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
 
 #pragma mark - utils
 
-- (id)createDeviceMock {
++ (id)createDeviceMock {
   return OCMClassMock([AVCaptureDevice class]);
 }
 
@@ -343,6 +325,47 @@ CMSampleBufferRef createTestSampleBufferRef() {
   EXPECT_EQ(cameraPosition, AVCaptureDevicePositionBack);
 #endif
 }
+
+@end
+
+@interface RTCCameraVideoCapturerTestsWithMockedCaptureSession : XCTestCase
+@property(nonatomic, strong) id delegateMock;
+@property(nonatomic, strong) id deviceMock;
+@property(nonatomic, strong) id captureSessionMock;
+@property(nonatomic, strong) RTC_OBJC_TYPE(RTCCameraVideoCapturer) * capturer;
+@end
+
+@implementation RTCCameraVideoCapturerTestsWithMockedCaptureSession
+@synthesize delegateMock = _delegateMock;
+@synthesize deviceMock = _deviceMock;
+@synthesize captureSessionMock = _captureSessionMock;
+@synthesize capturer = _capturer;
+
+- (void)setUp {
+  self.captureSessionMock = OCMStrictClassMock([AVCaptureSession class]);
+  OCMStub([self.captureSessionMock setSessionPreset:[OCMArg any]]);
+  OCMStub([self.captureSessionMock setUsesApplicationAudioSession:NO]);
+  OCMStub([self.captureSessionMock canAddOutput:[OCMArg any]]).andReturn(YES);
+  OCMStub([self.captureSessionMock addOutput:[OCMArg any]]);
+  OCMStub([self.captureSessionMock beginConfiguration]);
+  OCMStub([self.captureSessionMock commitConfiguration]);
+  self.delegateMock = OCMProtocolMock(@protocol(RTC_OBJC_TYPE(RTCVideoCapturerDelegate)));
+  self.capturer =
+      [[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:self.delegateMock
+                                                       captureSession:self.captureSessionMock];
+  self.deviceMock = [RTCCameraVideoCapturerTests createDeviceMock];
+}
+
+- (void)tearDown {
+  [self.delegateMock stopMocking];
+  [self.deviceMock stopMocking];
+  self.delegateMock = nil;
+  self.deviceMock = nil;
+  self.capturer = nil;
+  self.captureSessionMock = nil;
+}
+
+#pragma mark - test cases
 
 - (void)testStartingAndStoppingCapture {
   id expectedDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
