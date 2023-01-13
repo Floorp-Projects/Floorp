@@ -127,23 +127,16 @@ UNIFIED_SOURCES += [
 
 if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
     DEFINES["USE_NEON"] = True
-    LOCAL_INCLUDES += ["/third_party/xsimd/include"]
     SOURCES += ["AudioNodeEngineNEON.cpp"]
     SOURCES["AudioNodeEngineNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
     if CONFIG["BUILD_ARM_NEON"]:
         LOCAL_INCLUDES += ["/media/openmax_dl/dl/api/"]
 
-# Are we targeting x86 or x64?  If so, build SSEX files.
+# Are we targeting x86 or x64?  If so, build SSE2 files.
 if CONFIG["INTEL_ARCHITECTURE"]:
-    SOURCES += ["AudioNodeEngineSSE2.cpp", "AudioNodeEngineSSE4_2_FMA3.cpp"]
+    SOURCES += ["AudioNodeEngineSSE2.cpp"]
     DEFINES["USE_SSE2"] = True
-    DEFINES["USE_SSE4_2"] = True
-    DEFINES["USE_FMA3"] = True
-    LOCAL_INCLUDES += ["/third_party/xsimd/include"]
     SOURCES["AudioNodeEngineSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
-    SOURCES["AudioNodeEngineSSE4_2_FMA3.cpp"].flags += (
-        CONFIG["SSE4_2_FLAGS"] + CONFIG["FMA_FLAGS"]
-    )
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
