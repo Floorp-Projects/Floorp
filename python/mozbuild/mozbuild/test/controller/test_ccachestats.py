@@ -632,7 +632,6 @@ Uncacheable:
         stat8 = CCacheStats(self.STAT8)
         self.assertEqual(
             str(stat8),
-            f"stats zero time                   {int(TIMESTAMP)}\n"
             f"stats zeroed                      {int(TIMESTAMP)}\n"
             "cache hit (direct)                     571\n"
             "cache hit (preprocessed)              1203\n"
@@ -656,7 +655,6 @@ Uncacheable:
         stat9 = CCacheStats(self.STAT9)
         self.assertEqual(
             str(stat9),
-            f"stats zero time                   {int(TIMESTAMP)}\n"
             f"stats zeroed                      {int(TIMESTAMP)}\n"
             f"stats updated                     {int(TIMESTAMP2)}\n"
             "cache hit (direct)                   80147\n"

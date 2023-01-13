@@ -842,8 +842,7 @@ class CCacheStats(object):
     STATS_KEYS = [
         # (key, description)
         # Refer to stats.c in ccache project for all the descriptions.
-        ("stats_zeroed", "stats zero time"),  # Old name prior to ccache 3.4
-        ("stats_zeroed", "stats zeroed"),
+        ("stats_zeroed", ("stats zeroed", "stats zero time")),
         ("stats_updated", "stats updated"),
         ("cache_hit_direct", "cache hit (direct)"),
         ("cache_hit_preprocessed", "cache hit (preprocessed)"),
@@ -1032,6 +1031,10 @@ class CCacheStats(object):
 
     @staticmethod
     def _strip_prefix(line, prefix):
+        if isinstance(prefix, tuple):
+            for p in prefix:
+                line = CCacheStats._strip_prefix(line, p)
+            return line
         return line[len(prefix) :].strip() if line.startswith(prefix) else line
 
     @staticmethod
@@ -1120,6 +1123,9 @@ class CCacheStats(object):
                 value = "%15s" % self._format_value(value)
             else:
                 value = "%8u" % value
+
+            if isinstance(stat_description, tuple):
+                stat_description = stat_description[0]
 
             lines.append("%s%s" % (stat_description.ljust(LEFT_ALIGN), value))
 
