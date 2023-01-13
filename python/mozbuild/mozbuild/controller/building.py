@@ -902,7 +902,7 @@ class CCacheStats(object):
         ),
         ("cache_miss", "Summary/Misses"),
         ("error", "Summary/Errors"),
-        ("linking", "Uncacheable/Called for linking"),
+        ("link", "Uncacheable/Called for linking"),
         ("preprocessing", "Uncacheable/Called for preprocessing"),
         ("failed", "Uncacheable/Compilation failed"),
         ("preprocessor_error", "Uncacheable/Preprocessing failed"),
