@@ -569,10 +569,11 @@ class BuildMonitor(MozbuildObject):
                 "Swap in/out (MB): {sin}/{sout}",
             )
 
-    def ccache_stats(self):
+    def ccache_stats(self, ccache=None):
         ccache_stats = None
 
-        ccache = mozfile.which("ccache")
+        if ccache is None:
+            ccache = mozfile.which("ccache")
         if ccache:
             # With CCache v3.7+ we can use --print-stats
             has_machine_format = CCacheStats.check_version_3_7_or_newer(ccache)
@@ -1145,7 +1146,6 @@ class BuildDriver(MozbuildObject):
         warnings_path = self._get_state_filename("warnings.json")
         monitor = self._spawn(BuildMonitor)
         monitor.init(warnings_path)
-        ccache_start = monitor.ccache_stats()
         footer = BuildProgressFooter(self.log_manager.terminal, monitor)
 
         # Disable indexing in objdir because it is not necessary and can slow
@@ -1218,6 +1218,12 @@ class BuildDriver(MozbuildObject):
                     return config_rc
 
                 config = self.reload_config_environment()
+
+            if config.substs.get("MOZ_USING_CCACHE"):
+                ccache = config.substs.get("CCACHE")
+                ccache_start = monitor.ccache_stats(ccache)
+            else:
+                ccache_start = None
 
             # Collect glean metrics
             substs = config.substs
@@ -1482,7 +1488,10 @@ class BuildDriver(MozbuildObject):
         if high_finder:
             print(FINDER_SLOW_MESSAGE % finder_percent)
 
-        ccache_end = monitor.ccache_stats()
+        if config.substs.get("MOZ_USING_CCACHE"):
+            ccache_end = monitor.ccache_stats(ccache)
+        else:
+            ccache_end = None
 
         ccache_diff = None
         if ccache_start and ccache_end:
