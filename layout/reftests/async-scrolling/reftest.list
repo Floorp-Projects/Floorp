@@ -35,7 +35,7 @@ skip-if(!asyncPan) == sticky-pos-scrollable-4.html sticky-pos-scrollable-4-ref.h
 skip-if(!asyncPan) == sticky-pos-scrollable-5.html sticky-pos-scrollable-5-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-6.html sticky-pos-scrollable-6-ref.html
 skip-if(!asyncPan) fuzzy-if(appleSilicon,0-1,0-8) == sticky-pos-scrollable-7.html sticky-pos-scrollable-7-ref.html
-skip-if(!asyncPan) fuzzy(0-2,0-2) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-4) fuzzy-if(winWidget&&!nativeThemePref,0-1,0-51) fuzzy-if(appleSilicon,0-1,0-8) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
+skip-if(!asyncPan) fuzzy(0-2,0-2) fuzzy-if(gtkWidget,0-1,0-4) fuzzy-if(winWidget,0-1,0-51) fuzzy-if(appleSilicon,0-1,0-8) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
@@ -63,7 +63,7 @@ fuzzy-if(browserIsRemote&&d2d,0-1,0-22) skip-if(!asyncPan) fuzzy-if(swgl,0-255,0
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
 fuzzy-if(Android,0-19,0-10) fuzzy-if(gtkWidget,12-19,12-32) fuzzy-if(cocoaWidget,17-21,20-44) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html # Bug 1604338
-fuzzy-if(Android,0-44,0-136) fuzzy-if(gtkWidget,16-26,26-64) fuzzy-if(cocoaWidget,10-13,38-82) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-36) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html # Bug 1604338
+fuzzy-if(Android,0-44,0-136) fuzzy-if(gtkWidget,16-26,26-64) fuzzy-if(cocoaWidget,10-13,38-82) fuzzy-if(winWidget,0-4,0-36) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html # Bug 1604338
 fuzzy-if(Android,0-13,0-16) fuzzy-if(gtkWidget,17-28,24-60) fuzzy-if(cocoaWidget,15-19,40-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html # Bug 1604338
 fuzzy-if(Android,0-13,0-16) fuzzy-if(gtkWidget,17-29,24-60) fuzzy-if(cocoaWidget,15-19,40-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html # Bug 1604338
 skip-if(!asyncPan) == fixed-pos-scrolled-clip-5.html fixed-pos-scrolled-clip-5-ref.html
