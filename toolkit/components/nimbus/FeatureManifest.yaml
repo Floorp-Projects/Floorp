@@ -830,3 +830,13 @@ dapTelemetry:
       type: boolean
       fallbackPref: toolkit.telemetry.dap_task1_enabled
       description: Whether to send fake measurements for verification task 1.
+
+etpLevel2PBMPref:
+  description: The pref that controls the ETP level 2 list in the private browsing mode
+  owner: tihuang@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      description: Whether to enable ETP level 2 list in the private browsing mode.
+      type: boolean
+      setPref: "privacy.annotate_channels.strict_list.pbmode.enabled"
