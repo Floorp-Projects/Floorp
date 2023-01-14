@@ -5,6 +5,7 @@
   <title>Various zoomToFocusedInput tests</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
@@ -13,8 +14,22 @@ var subtests = [
   {"file": "helper_zoomToFocusedInput_multiline.html"},
   {"file": "helper_zoomToFocusedInput_iframe.html"},
   {"file": "helper_zoomToFocusedInput_fixed_bug1673511.html"},
-  {"file": "helper_zoomToFocusedInput_nozoom.html"},
+  {"file": "helper_zoomToFocusedInput_nozoom_bug1738696.html"},
 ];
+
+// These tests rely on mobile viewport sizing, so only run them on
+// mobile for now. In the future we can consider running them on
+// on desktop, but only in configurations with overlay scrollbars
+// (see bug 1608506).
+let platform = getPlatform();
+if (platform == "android") {
+  subtests.push(
+     {"file": "helper_zoomToFocusedInput_nozoom.html"}
+  );
+  subtests.push(
+     {"file": "helper_zoomToFocusedInput_zoom.html"}
+  );
+}
 
 if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
