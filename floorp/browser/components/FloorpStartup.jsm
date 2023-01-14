@@ -43,7 +43,7 @@ let isUpdated = false;
         if (version === "10.0") {
             isNativeNotificationEnabled = true;
         }
-    } else {
+    } else if (AppConstants.platform === "linux") {
         isNativeNotificationEnabled = true;
     }
     let prefs = Services.prefs.getDefaultBranch(null);
