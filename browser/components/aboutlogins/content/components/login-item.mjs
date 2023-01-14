@@ -77,6 +77,9 @@ export default class LoginItem extends HTMLElement {
     );
     this._favicon = this.shadowRoot.querySelector(".login-item-favicon");
     this._title = this.shadowRoot.querySelector(".login-item-title");
+    this._timeCreated = this.shadowRoot.querySelector(".time-created");
+    this._timeChanged = this.shadowRoot.querySelector(".time-changed");
+    this._timeUsed = this.shadowRoot.querySelector(".time-used");
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
     this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
     this._breachAlertDate = this._breachAlert.querySelector(".alert-date");
@@ -192,6 +195,15 @@ export default class LoginItem extends HTMLElement {
     if (onlyUpdateErrorsAndAlerts) {
       return;
     }
+    document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
+      timeCreated: this._login.timeCreated || "",
+    });
+    document.l10n.setAttributes(this._timeChanged, "login-item-time-changed", {
+      timeChanged: this._login.timePasswordChanged || "",
+    });
+    document.l10n.setAttributes(this._timeUsed, "login-item-time-used", {
+      timeUsed: this._login.timeLastUsed || "",
+    });
 
     this._favicon.src = `page-icon:${this._login.origin}`;
     this._title.textContent = this._login.title;
@@ -239,26 +251,6 @@ export default class LoginItem extends HTMLElement {
     );
     this._updatePasswordRevealState();
     this._updateOriginDisplayState();
-    this.#updateTimeline();
-  }
-
-  #updateTimeline() {
-    let timeline = this.shadowRoot.querySelector("login-timeline");
-    timeline.hidden = !this._login.guid;
-    timeline.history = [
-      {
-        actionId: "login-item-timeline-action-created",
-        time: this._login.timeCreated,
-      },
-      {
-        actionId: "login-item-timeline-action-updated",
-        time: this._login.timePasswordChanged,
-      },
-      {
-        actionId: "login-item-timeline-action-used",
-        time: this._login.timeLastUsed,
-      },
-    ];
   }
 
   setBreaches(breachesByLoginGUID) {
