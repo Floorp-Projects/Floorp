@@ -285,6 +285,13 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">بند کرو</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">اطلاع نامے %s نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">آپݨے ٹیباں کوں ڈیوائساں دے درمیان ہم وقت بݨاؤ، ڈاؤن لوڈاں منیج کرو، %s دی رازداری حفاظت بارے گُر گھنو تے ٻیا ٻہوں کجھ۔</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">جاری</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -363,6 +370,8 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کریندا ہے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں %2$s ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
 
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">کوکی بینرز شروع تھی ڳئے!</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">ہݨ نہ</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->

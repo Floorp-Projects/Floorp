@@ -282,6 +282,11 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">වසන්න</string>
 
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">ඉදිරියට</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">දැන් නොවේ</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">නව %1$s පටිත්තක් අරින්න</string>
@@ -351,6 +356,11 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s මෙම අඩවියේ දත්තකඩ ඉවත් කර පිටුව නැවුම් කරයි. සියළුම දත්තකඩ මැකීමෙන් බඩු කරත්ත හිස් වීමට හෝ ඔබව නික්මවීමට ඉඩ ඇත.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරන නමුත් ප්‍රතික්‍ෂේප විකල්පයක් නැති නම්, %2$s මගින් කවුළුව සැඟවීමට දත්තකඩ සියල්ල පිළිගනු ඇත.</string>
+
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">දැන් නොවේ</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">ඉඩ දෙන්න</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS සංකේතන කෙටුම්පත භාවිතයෙන් අඩවි වෙත ස්වයංක්‍රීයව සම්බන්ධ වීමට තැත් කරයි.</string>
