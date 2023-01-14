@@ -1,8 +1,8 @@
 <!DOCTYPE>
 <html>
   <head>
-  <title>Checking zoomToFocusedInput does not zoom if meta viewport does not allow it</title>
-  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=0.5 minimum-scale=0.5, maximum-scale=1, user-scalable=no" />
+  <title>Checking zoomToFocusedInput zooms if meta viewport allows it</title>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=0.5 minimum-scale=0.5, maximum-scale=1" />
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
@@ -30,7 +30,7 @@ async function test() {
   await transformEndPromise;
   await promiseApzFlushedRepaints();
   resolution = await getResolution();
-  ok(resolution == prev_resolution, "zoomToFocusedInput input did not change resolution " + resolution);
+  ok(resolution != prev_resolution, "zoomToFocusedInput input changed resolution " + resolution);
 }
 
 waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
