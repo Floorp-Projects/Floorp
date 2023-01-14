@@ -1,0 +1,228 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const EXPORTED_SYMBOLS = [];
+
+const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+);
+
+const TAB_SLEEP_ENABLED_PREF = "floorp.tabsleep.enabled";
+const TAB_SLEEP_TESTMODE_ENABLED_PREF = "floorp.tabsleep.testmode.enabled";
+const TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF = "floorp.tabsleep.tabTimeoutSeconds";
+
+const EXCLUDE_URL_PATTERNS = [
+    "auth",
+    "verify",
+    "verification",
+    "create",
+    "delete",
+    "remove",
+    "move",
+    "edit",
+    "signin",
+    "signup",
+    "sign-in",
+    "sign-up",
+    "login",
+    "log-in",
+    "modify",
+    "form",
+    "settings",
+    "token",
+    "secure",
+    "secret",
+    "new",
+    "wp-admin",
+    "cart",
+    "upload",
+    "^about:",
+    "^chrome:\/\/",
+    "^resource:\/\/",
+];
+
+const EXCLUDE_URL_PATTERNS_COMPILED = [];
+
+for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
+    EXCLUDE_URL_PATTERNS_COMPILED.push(new RegExp(EXCLUDE_URL_PATTERN));
+}
+
+function getAllTabs() {
+    let tabs = [];
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+        if (win.gBrowser && win.gBrowser.tabs) {
+            tabs = tabs.concat(win.gBrowser.tabs);
+        }
+    }
+    return tabs;
+}
+
+function tabObserve(callback) {
+    function listener(event) {
+        callback(event);
+    }
+
+    for (let domwindow of Services.wm.getEnumerator("navigator:browser")) {
+        domwindow.addEventListener("TabAttrModified", listener);
+        domwindow.addEventListener("TabPinned", listener);
+        domwindow.addEventListener("TabUnpinned", listener);
+        domwindow.addEventListener("TabBrowserInserted", listener);
+        domwindow.addEventListener("TabBrowserDiscarded", listener);
+        domwindow.addEventListener("TabShow", listener);
+        domwindow.addEventListener("TabHide", listener);
+        domwindow.addEventListener("TabOpen", listener);
+        domwindow.addEventListener("TabClose", listener);
+        domwindow.addEventListener("TabSelect", listener);
+        domwindow.addEventListener("TabMultiSelect", listener);
+    }
+
+    let windowListener = {
+        onOpenWindow(aXulWin) {
+            let domwindow = aXulWin.docShell.domWindow;
+            domwindow.addEventListener(
+                "load",
+                function() {
+                    if (domwindow.location.href === "chrome://browser/content/browser.xhtml") {
+                        listener({
+                            type: "WindowOpened",
+                            targets:
+                                typeof domwindow.gBrowser.tabs !== "undefined" ?
+                                    domwindow.gBrowser.tabs :
+                                    [],
+                        }); // https://searchfox.org/mozilla-esr102/source/browser/components/extensions/parent/ext-browser.js#590-611
+                        domwindow.addEventListener("TabAttrModified", listener);
+                        domwindow.addEventListener("TabPinned", listener);
+                        domwindow.addEventListener("TabUnpinned", listener);
+                        domwindow.addEventListener("TabBrowserInserted", listener);
+                        domwindow.addEventListener("TabBrowserDiscarded", listener);
+                        domwindow.addEventListener("TabShow", listener);
+                        domwindow.addEventListener("TabHide", listener);
+                        domwindow.addEventListener("TabOpen", listener);
+                        domwindow.addEventListener("TabClose", listener);
+                        domwindow.addEventListener("TabSelect", listener);
+                        domwindow.addEventListener("TabMultiSelect", listener);
+                    }
+                },
+                { once: true }
+            );
+        },
+        onCloseWindow(aWindow) {
+            let domwindow = aWindow.docShell.domWindow;
+            if (domwindow.location.href === "chrome://browser/content/browser.xhtml") {
+                domwindow.removeEventListener("TabAttrModified", listener);
+                domwindow.removeEventListener("TabPinned", listener);
+                domwindow.removeEventListener("TabUnpinned", listener);
+                domwindow.removeEventListener("TabBrowserInserted", listener);
+                domwindow.removeEventListener("TabBrowserDiscarded", listener);
+                domwindow.removeEventListener("TabShow", listener);
+                domwindow.removeEventListener("TabHide", listener);
+                domwindow.removeEventListener("TabOpen", listener);
+                domwindow.removeEventListener("TabClose", listener);
+                domwindow.removeEventListener("TabSelect", listener);
+                domwindow.removeEventListener("TabMultiSelect", listener);
+            }
+        },
+    }
+    Services.wm.addListener(windowListener);
+
+    return {
+        disconnect: function() {
+            Services.wm.removeListener(windowListener);
+            for (let domwindow of Services.wm.getEnumerator("navigator:browser")) {
+                domwindow.removeEventListener("TabAttrModified", listener);
+                domwindow.removeEventListener("TabPinned", listener);
+                domwindow.removeEventListener("TabUnpinned", listener);
+                domwindow.removeEventListener("TabBrowserInserted", listener);
+                domwindow.removeEventListener("TabBrowserDiscarded", listener);
+                domwindow.removeEventListener("TabShow", listener);
+                domwindow.removeEventListener("TabHide", listener);
+                domwindow.removeEventListener("TabOpen", listener);
+                domwindow.removeEventListener("TabClose", listener);
+                domwindow.removeEventListener("TabSelect", listener);
+                domwindow.removeEventListener("TabMultiSelect", listener);
+            }
+        }
+    }
+}
+
+//gBrowser.discardBrowser(gBrowser.tabs[0])
+
+let tabSleepEnabled = false;
+let TAB_TIMEOUT_SECONDS;
+let tabObserve_ = null;
+
+function enableTabSleep() {
+    if (tabSleepEnabled) return;
+    tabSleepEnabled = true;
+    tabObserve_ = tabObserve(function(event) {
+        switch (event.type) {
+            case "TabAttrModified":
+                break;
+            case "TabPinned":
+                break;
+            case "TabUnpinned":
+                break;
+            case "TabBrowserInserted":
+                break;
+            case "TabBrowserDiscarded":
+                break;
+            case "TabShow":
+                break;
+            case "TabHide":
+                break;
+            case "TabOpen":
+                break;
+            case "TabClose":
+                break;
+            case "TabSelect":
+                break;
+            case "TabMultiSelect":
+                break;
+            case "WindowOpened":
+                break;
+        }
+        console.log(event.type);
+    });
+}
+
+function disableTabSleep() {
+    if (!tabSleepEnabled) return;
+    tabSleepEnabled = false;
+    tabObserve_?.disconnect();
+    tabObserve_ = null;
+}
+
+{
+    let isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
+    //let isTestMode = Services.prefs.getBoolPref(TAB_SLEEP_TESTMODE_ENABLED_PREF, false);
+
+    let systemMemory = Services.sysinfo.getProperty("memsize");
+    let systemMemoryGB = systemMemory / 1024 / 1024 / 1024;
+    console.log(`System Memory (GB): ${systemMemoryGB}`);
+
+    let tabTimeoutSecondsDefault = Math.floor(60 * (systemMemoryGB * 5));
+    Services.prefs.getDefaultBranch(null)
+        .setIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, tabTimeoutSecondsDefault);
+
+    let timeoutSecondsPrefHandle = function() {
+        TAB_TIMEOUT_SECONDS = Services.prefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, tabTimeoutSecondsDefault);
+        console.log(`TAB_TIMEOUT_SECONDS: ${TAB_TIMEOUT_SECONDS}`);
+    };
+    timeoutSecondsPrefHandle();
+    Services.prefs.addObserver(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, timeoutSecondsPrefHandle);
+
+    if (isEnabled) {
+        enableTabSleep();
+    }
+
+    Services.prefs.addObserver(TAB_SLEEP_ENABLED_PREF, function() {
+        let isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
+        if (isEnabled) {
+            enableTabSleep();
+        } else {
+            disableTabSleep();
+        }
+    });
+}
