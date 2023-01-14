@@ -701,12 +701,6 @@
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_summary">За мање банера аутоматским одбијањем захтева за колачиће, када год је то могуће.</string>
 
-    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_title">Даље смањење банера колачића</string>
-
-    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_summary">Захтеви за банере колачића ће бити прихваћени ради одбијања још више банера.</string>
-
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Смањење банера колачића</string>
 
@@ -736,6 +730,13 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s може аутоматски да покуша да одбије колачиће. Ако опција за онемогућавање није доступна, %1$s може да прихвати све колачиће да затвори банер.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner">%1$s покушава да одбије захтеве за колачиће да би уклонио досадне банере колачића.\n\nУправљајте подешавањима банера колачића у подешавањима.</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings">подешавања</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Самостално покретање</string>

@@ -701,12 +701,6 @@
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_summary">Se färre banners genom att automatiskt avvisa kak-förfrågningar, när det är möjligt.</string>
 
-    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_title">Minska ytterligare kakbanners</string>
-
-    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_summary">Kakbanner-förfrågningar kommer att accepteras för att avvisa fler banners.</string>
-
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Reducering av kakbanner</string>
 
@@ -736,6 +730,13 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s kan försöka att automatiskt avvisa kak-förfrågningar. Om ett avvisningsalternativ inte är tillgängligt kan %1$s acceptera alla kakor för att ta bort bannern.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner">%1$s försöker avvisa kak-förfrågningar för att avvisa irriterande kak-banners.\n\nHantera kak-bannerinställningar i inställningarna.</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings">inställningar</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatisk uppspelning</string>

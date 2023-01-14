@@ -701,12 +701,6 @@
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_summary">Veja menos avisos, rejeitando automaticamente solicitações de cookies, quando possível.</string>
 
-    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_title">Reduzir ainda mais avisos de cookies</string>
-
-    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_summary">Solicitações de avisos de cookies serão aceitas para descartar mais avisos.</string>
-
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Redução de avisos de cookies</string>
 
@@ -736,6 +730,13 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site">O %1$s pode tentar rejeitar solicitações de cookies automaticamente. Se não estiver disponível uma opção de rejeição, o %1$s pode aceitar todos os cookies para descartar o aviso.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner">O %1$s tenta rejeitar solicitações de cookies para descartar avisos chatos de cookies.\n\nGerencie as preferências de avisos de cookies nas configurações.</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings">configurações</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Reprodução automática</string>

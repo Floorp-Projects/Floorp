@@ -703,12 +703,6 @@
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_summary">Gweld llai o faneri trwy wrthod ceisiadau cwcis yn awtomatig, pan fo modd.</string>
 
-    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_title">Llai fyth o faneri cwcis</string>
-
-    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_summary">Bydd ceisiadau baneri cwci yn cael eu derbyn er mwyn cau rhagor o faneri.</string>
-
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Llai o Faneri Cwcis</string>
 
@@ -738,6 +732,13 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig. Os nad oes dewis gwrthod ar gael, gall %1$s dderbyn pob cwci er mwyn cau’r faner.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner">Mae %1$s yn ceisio gwrthod ceisiadau cwci i ddiystyru baneri cwci annifyr.\n\nRheolwch ddewisiadau baneri cwci yn y gosodiadau.</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings">gosodiadau</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Awtochwarae</string>
