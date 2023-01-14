@@ -27,126 +27,37 @@ const FAKE_BROWSER_LIST = [
   "Opera GX",
 ];
 
-const Template = ({ state, dialogMode }) => {
+const Template = state => {
   let wiz = document.createElement("migration-wizard");
-  wiz.toggleAttribute("dialog-mode", dialogMode);
   wiz.setState(state);
-
-  let card = document.createElement("div");
-  card.classList.add("card", "card-no-hover");
-  card.style.width = "fit-content";
-  card.append(wiz);
-
-  let style = document.createElement("style");
-  style.textContent = `
-    @media (prefers-reduced-motion: no-preference) {
-      migration-wizard::part(progress-spinner) {
-        mask: url(/migration/progress-mask.svg);
-      }
-    }
-  `;
-
-  card.prepend(style);
-
-  return card;
+  return wiz;
 };
 
 export const MainSelectorVariant1 = Template.bind({});
 MainSelectorVariant1.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.SELECTION,
-    migrators: FAKE_BROWSER_LIST,
-    withImportAll: false,
-  },
+  page: MigrationWizardConstants.PAGES.SELECTION,
+  migrators: FAKE_BROWSER_LIST,
+  withImportAll: false,
 };
 
 export const MainSelectorVariant2 = Template.bind({});
 MainSelectorVariant2.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.SELECTION,
-    migrators: FAKE_BROWSER_LIST,
-    withImportAll: true,
-  },
+  page: MigrationWizardConstants.PAGES.SELECTION,
+  migrators: FAKE_BROWSER_LIST,
+  withImportAll: true,
 };
 
 export const Progress = Template.bind({});
 Progress.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.PROGRESS,
-    progress: {
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-        inProgress: true,
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
-        inProgress: true,
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
-        inProgress: true,
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
-        inProgress: true,
-      },
-    },
-  },
-};
-
-export const PartialProgress = Template.bind({});
-PartialProgress.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.PROGRESS,
-    progress: {
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-        inProgress: true,
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
-        inProgress: false,
-        message: "14 logins and passwords",
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
-        inProgress: true,
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
-        inProgress: false,
-        message: "Addresses, credit cards, form history",
-      },
-    },
-  },
+  page: MigrationWizardConstants.PAGES.PROGRESS,
 };
 
 export const Success = Template.bind({});
 Success.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.PROGRESS,
-    progress: {
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-        inProgress: false,
-        message: "14 bookmarks",
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
-        inProgress: false,
-        message: "14 logins and passwords",
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
-        inProgress: false,
-        message: "From the last 180 days",
-      },
-      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
-        inProgress: false,
-        message: "Addresses, credit cards, form history",
-      },
-    },
-  },
+  page: MigrationWizardConstants.PAGES.PROGRESS,
 };
 
 export const SafariPermissions = Template.bind({});
 SafariPermissions.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.SAFARI_PERMISSION,
-  },
+  page: MigrationWizardConstants.PAGES.SAFARI_PERMISSION,
 };
