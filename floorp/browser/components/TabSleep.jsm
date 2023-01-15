@@ -135,7 +135,7 @@ function tabObserve(callback) {
                 function() {
                     if (domwindow.location.href === "chrome://browser/content/browser.xhtml") {
                         listener({
-                            type: "WindowOpened",
+                            type: "WindowOpen",
                             targets:
                                 typeof domwindow.gBrowser.tabs !== "undefined" ?
                                     domwindow.gBrowser.tabs :
@@ -161,6 +161,13 @@ function tabObserve(callback) {
         onCloseWindow(aWindow) {
             let domwindow = aWindow.docShell.domWindow;
             if (domwindow.location.href === "chrome://browser/content/browser.xhtml") {
+                listener({
+                    type: "WindowClose",
+                    targets:
+                        typeof domwindow.gBrowser.tabs !== "undefined" ?
+                            domwindow.gBrowser.tabs :
+                            [],
+                }); // https://searchfox.org/mozilla-esr102/source/browser/components/extensions/parent/ext-browser.js#621-627
                 domwindow.removeEventListener("TabAttrModified", listener);
                 domwindow.removeEventListener("TabPinned", listener);
                 domwindow.removeEventListener("TabUnpinned", listener);
@@ -208,7 +215,7 @@ let tabObserve_ = null;
 function enableTabSleep() {
     if (tabSleepEnabled) return;
     tabSleepEnabled = true;
-    let tabsLastActivity = {};
+    let tabs = getAllTabs();
     tabObserve_ = tabObserve(function(event) {
         let nativeTab = event.target;
         switch (event.type) {
@@ -236,21 +243,41 @@ function enableTabSleep() {
             case "TabHide":
                 break;
             case "TabOpen":
+                if (!tabs.includes(nativeTab)) {
+                    tabs.push(nativeTab);
+                }
+                nativeTab.lastActivity = (new Date()).getTime();
                 break;
             case "TabClose":
+                tabs = tabs.filter(nativeTab_ => nativeTab_ !== nativeTab);
                 break;
             case "TabSelect":
+                nativeTab.lastActivity = (new Date()).getTime();
                 break;
             case "TabMultiSelect":
                 break;
             case "TabStateChange":
+                nativeTab.lastActivity = (new Date()).getTime();
                 break;
             case "TabLocationChange":
+                nativeTab.lastActivity = (new Date()).getTime();
                 break;
-            case "WindowOpened":
+            case "WindowOpen":
+                for (let nativeTab of event.targets) {
+                    if (!tabs.includes(nativeTab)) {
+                        tabs.push(nativeTab);
+                    }
+                    nativeTab.lastActivity = (new Date()).getTime();
+                }
+                break;
+            case "WindowClose":
+                for (let nativeTab of event.targets) {
+                    tabs = tabs.filter(nativeTab_ => nativeTab_ !== nativeTab);
+                }
                 break;
         }
         console.log(event.type);
+        console.log(tabs);
     });
 }
 
