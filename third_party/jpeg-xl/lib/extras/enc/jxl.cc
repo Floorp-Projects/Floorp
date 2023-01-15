@@ -40,6 +40,10 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
   auto encoder = JxlEncoderMake(/*memory_manager=*/nullptr);
   JxlEncoder* enc = encoder.get();
 
+  if (params.allow_expert_options) {
+    JxlEncoderAllowExpertOptions(enc);
+  }
+
   if (params.runner_opaque != nullptr &&
       JXL_ENC_SUCCESS != JxlEncoderSetParallelRunner(enc, params.runner,
                                                      params.runner_opaque)) {

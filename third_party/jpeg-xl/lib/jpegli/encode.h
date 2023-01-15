@@ -81,6 +81,38 @@ void jpegli_finish_compress(j_compress_ptr cinfo);
 
 void jpegli_destroy_compress(j_compress_ptr cinfo);
 
+//
+// New API functions that are not available in libjpeg
+//
+// NOTE: This part of the API is still experimental and will probably change in
+// the future.
+//
+
+// Sets the butteraugli target distance for the compressor.
+void jpegli_set_distance(j_compress_ptr cinfo, float distance);
+
+// Returns the butteraugli target distance for the given quality parameter.
+float jpegli_quality_to_distance(int quality);
+
+// Writes an ICC profile for the XYB color space and internally converts the
+// input image to XYB.
+void jpegli_set_xyb_mode(j_compress_ptr cinfo);
+
+typedef enum {
+  JPEGLI_TYPE_FLOAT = 0,
+  JPEGLI_TYPE_UINT8 = 2,
+  JPEGLI_TYPE_UINT16 = 3,
+} JpegliDataType;
+
+typedef enum {
+  JPEGLI_NATIVE_ENDIAN = 0,
+  JPEGLI_LITTLE_ENDIAN = 1,
+  JPEGLI_BIG_ENDIAN = 2,
+} JpegliEndianness;
+
+void jpegli_set_input_format(j_compress_ptr cinfo, JpegliDataType data_type,
+                             JpegliEndianness endianness);
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }  // extern "C"
 #endif

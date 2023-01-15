@@ -8,7 +8,7 @@
 # Library version macros
 libjxl_version_defines = [
     "JPEGXL_MAJOR_VERSION=0",
-    "JPEGXL_MINOR_VERSION=8",
+    "JPEGXL_MINOR_VERSION=9",
     "JPEGXL_PATCH_VERSION=0",
 ]
 

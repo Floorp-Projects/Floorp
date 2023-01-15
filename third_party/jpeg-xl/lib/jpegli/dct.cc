@@ -19,7 +19,6 @@ namespace HWY_NAMESPACE {
 
 void ComputeDCTCoefficients(const jxl::Image3F& opsin, const bool xyb,
                             const jxl::ImageF& qf,
-                            const jxl::FrameDimensions& frame_dim,
                             const float* qm,
                             std::vector<jxl::jpeg::JPEGComponent>* components) {
   int max_samp_factor = 1;
@@ -90,11 +89,10 @@ HWY_EXPORT(ComputeDCTCoefficients);
 
 void ComputeDCTCoefficients(const jxl::Image3F& opsin, const bool xyb,
                             const jxl::ImageF& qf,
-                            const jxl::FrameDimensions& frame_dim,
                             const float* qm,
                             std::vector<jxl::jpeg::JPEGComponent>* components) {
   HWY_DYNAMIC_DISPATCH(ComputeDCTCoefficients)
-  (opsin, xyb, qf, frame_dim, qm, components);
+  (opsin, xyb, qf, qm, components);
 }
 
 }  // namespace jpegli

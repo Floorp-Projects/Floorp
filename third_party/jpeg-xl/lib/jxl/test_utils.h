@@ -320,22 +320,6 @@ bool Near(double expected, double value, double max_dist) {
   return dist <= max_dist;
 }
 
-// Loads a Big-Endian float
-float LoadBEFloat(const uint8_t* p) {
-  uint32_t u = LoadBE32(p);
-  float result;
-  memcpy(&result, &u, 4);
-  return result;
-}
-
-// Loads a Little-Endian float
-float LoadLEFloat(const uint8_t* p) {
-  uint32_t u = LoadLE32(p);
-  float result;
-  memcpy(&result, &u, 4);
-  return result;
-}
-
 // Based on highway scalar implementation, for testing
 float LoadFloat16(uint16_t bits16) {
   const uint32_t sign = bits16 >> 15;

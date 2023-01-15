@@ -27,7 +27,7 @@
 #define FJXL_ENABLE_NEON 1
 #endif
 
-#elif defined(__x86_64__) || defined(_M_X64)
+#elif (defined(__x86_64__) || defined(_M_X64)) && !defined(_MSC_VER)
 #include <immintrin.h>
 
 // TODO(veluca): MSVC support for dynamic dispatch.
@@ -2782,10 +2782,10 @@ struct ChunkEncoder {
     } else {
       unsigned token, nbits, bits;
       EncodeHybridUintLZ77(count, &token, &nbits, &bits);
-      output.Write((code.lz77_nbits[token] + nbits + code.raw_nbits[0]),
-                   (((bits << code.lz77_nbits[token]) | code.lz77_bits[token])
-                    << code.raw_nbits[0]) |
-                       code.raw_bits[0]);
+      uint64_t wbits = bits;
+      wbits = (wbits << code.lz77_nbits[token]) | code.lz77_bits[token];
+      wbits = (wbits << code.raw_nbits[0]) | code.raw_bits[0];
+      output.Write(code.lz77_nbits[token] + nbits + code.raw_nbits[0], wbits);
     }
   }
 
@@ -3174,9 +3174,9 @@ void ProcessImageArea(const unsigned char* rgba, size_t x0, size_t y0,
   for (size_t y = 0; y < ys; y++) {
     const auto rgba_row =
         rgba + row_stride * (y0 + y) + x0 * nb_chans * BitDepth::kInputBytes;
-    pixel_t* crow[4];
-    pixel_t* prow[4];
-    for (size_t i = 0; i < 4; i++) {
+    pixel_t* crow[4] = {};
+    pixel_t* prow[4] = {};
+    for (size_t i = 0; i < nb_chans; i++) {
       crow[i] = align(&group_data[i][y & 1][kPadding]);
       prow[i] = align(&group_data[i][(y - 1) & 1][kPadding]);
     }
