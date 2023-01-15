@@ -9,6 +9,10 @@ const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
 );
 
+const { clearInterval, setInterval } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
+
 const TAB_SLEEP_ENABLED_PREF = "floorp.tabsleep.enabled";
 const TAB_SLEEP_TESTMODE_ENABLED_PREF = "floorp.tabsleep.testmode.enabled";
 const TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF = "floorp.tabsleep.tabTimeoutSeconds";
@@ -85,7 +89,6 @@ function tabObserve(callback) {
             }
 
             if (status) {
-                console.log("onStateChange");
                 let nativeTab = browser.ownerGlobal.gBrowser.getTabForBrowser(browser);
                 if (nativeTab) {
                     callback({
@@ -99,7 +102,6 @@ function tabObserve(callback) {
         onLocationChange(browser, webProgress, request, locationURI, flags) {
             if (webProgress.isTopLevel) {
                 let status = webProgress.isLoadingDocument ? "loading" : "complete";
-                console.log("onLocationChange");
                 let nativeTab = browser.ownerGlobal.gBrowser.getTabForBrowser(browser);
                 if (nativeTab) {
                     callback({
@@ -206,8 +208,6 @@ function tabObserve(callback) {
     }
 }
 
-//gBrowser.discardBrowser(gBrowser.tabs[0])
-
 let tabSleepEnabled = false;
 let TAB_TIMEOUT_SECONDS;
 let tabObserve_ = null;
@@ -277,8 +277,38 @@ function enableTabSleep() {
                 break;
         }
         console.log(event.type);
-        console.log(tabs);
     });
+
+    setInterval(function(){
+        for (let nativeTab of tabs) {
+            if (nativeTab.selected) continue;
+            if (nativeTab.multiselected) continue;
+            if (nativeTab.pinned) continue;
+            if (nativeTab.attention) continue;
+            if (nativeTab.soundPlaying) continue;
+            if (!nativeTab.linkedPanel) continue;
+            if (nativeTab.getAttribute("busy") === "true") continue;
+
+            let target = true;
+            for (let EXCLUDE_URL_PATTERN_COMPILED of EXCLUDE_URL_PATTERNS_COMPILED) {
+                if (EXCLUDE_URL_PATTERN_COMPILED.test(nativeTab.linkedBrowser.documentURI.spec)) {
+                    target = false;
+                }
+            }
+            if (!target) continue;
+            if (
+                ((new Date()).getTime() - nativeTab.lastAccessed) > (TAB_TIMEOUT_SECONDS * 1000) &&
+                (
+                    typeof nativeTab.lastActivity === "undefined" ||
+                    ((new Date()).getTime() - nativeTab.lastActivity) > (TAB_TIMEOUT_SECONDS * 1000)
+                )
+            ) {
+                let linkedPanel = nativeTab.linkedPanel;
+                nativeTab.ownerGlobal.gBrowser.discardBrowser(nativeTab);
+                console.log(`${nativeTab.label} (${linkedPanel}): discarded`);
+            }
+        }
+    }, 30 * 1000);
 }
 
 function disableTabSleep() {
