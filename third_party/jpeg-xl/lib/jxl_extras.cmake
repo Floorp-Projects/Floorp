@@ -130,10 +130,10 @@ if(JPEG_FOUND)
     extras/dec/jpegli.h
     extras/dec/jpg.cc
     extras/dec/jpg.h
+    extras/enc/jpegli.cc
+    extras/enc/jpegli.h
     extras/enc/jpg.cc
     extras/enc/jpg.h
-    extras/encode_jpeg.cc
-    extras/encode_jpeg.h
   )
   target_include_directories(jxl_extras-static PRIVATE "${JPEG_INCLUDE_DIRS}")
   target_link_libraries(jxl_extras-static PRIVATE ${JPEG_LIBRARIES} jpegli-static)

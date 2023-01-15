@@ -16,7 +16,6 @@ namespace jpegli {
 
 void ComputeDCTCoefficients(const jxl::Image3F& opsin, const bool xyb,
                             const jxl::ImageF& qf,
-                            const jxl::FrameDimensions& frame_dim,
                             const float* qm,
                             std::vector<jxl::jpeg::JPEGComponent>* components);
 

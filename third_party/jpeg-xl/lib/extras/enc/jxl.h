@@ -57,6 +57,8 @@ struct JXLCompressParams {
   JxlParallelRunner runner = JxlThreadParallelRunner;
   void* runner_opaque = nullptr;
 
+  bool allow_expert_options = false;
+
   void AddOption(JxlEncoderFrameSettingId id, int64_t val) {
     options.emplace_back(JXLOption(id, val, 0));
   }

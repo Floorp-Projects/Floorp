@@ -24,7 +24,7 @@
 namespace jxl {
 namespace extras {
 
-Status Encoder::VerifyBasicInfo(const JxlBasicInfo& info) const {
+Status Encoder::VerifyBasicInfo(const JxlBasicInfo& info) {
   if (info.xsize == 0 || info.ysize == 0) {
     return JXL_FAILURE("Empty image");
   }
@@ -52,7 +52,7 @@ Status Encoder::VerifyFormat(const JxlPixelFormat& format) const {
 }
 
 Status Encoder::VerifyBitDepth(JxlDataType data_type, uint32_t bits_per_sample,
-                               uint32_t exponent_bits) const {
+                               uint32_t exponent_bits) {
   if ((data_type == JXL_TYPE_UINT8 &&
        (bits_per_sample == 0 || bits_per_sample > 8 || exponent_bits != 0)) ||
       (data_type == JXL_TYPE_UINT16 &&
@@ -68,8 +68,8 @@ Status Encoder::VerifyBitDepth(JxlDataType data_type, uint32_t bits_per_sample,
   return true;
 }
 
-Status Encoder::VerifyPackedImage(const PackedImage& image,
-                                  const JxlBasicInfo& info) const {
+Status Encoder::VerifyImageSize(const PackedImage& image,
+                                const JxlBasicInfo& info) {
   if (image.pixels() == nullptr) {
     return JXL_FAILURE("Invalid image.");
   }
@@ -85,6 +85,12 @@ Status Encoder::VerifyPackedImage(const PackedImage& image,
       image.format.num_channels != info_num_channels) {
     return JXL_FAILURE("Frame size does not match image size");
   }
+  return true;
+}
+
+Status Encoder::VerifyPackedImage(const PackedImage& image,
+                                  const JxlBasicInfo& info) const {
+  JXL_RETURN_IF_ERROR(VerifyImageSize(image, info));
   JXL_RETURN_IF_ERROR(VerifyFormat(image.format));
   JXL_RETURN_IF_ERROR(VerifyBitDepth(image.format.data_type,
                                      info.bits_per_sample,

@@ -8,12 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
- - encoder API: new function `JxlEncoderSetFrameBitDepth` to set the bit depth
-   of the input buffer.
  - decoder API: new function `JxlDecoderSetImageBitDepth` to set the bit depth
    of the output buffer.
- - encoder API: add an effort 10 option for lossless compression.
+ - decoder API proposal: add `JxlDecoderSetOutputColorProfile` and
+   `JxlDecoderSetCms` to enable decoding to desired colorspace; NB: not
+   implemented yet.
+ - encoder API: new function `JxlEncoderSetFrameBitDepth` to set the bit depth
+   of the input buffer.
+ - encoder API: add an effort 10 option for lossless compression; using this
+   setting requires calling `JxlEncoderAllowExpertOptions`.
+ - encoder API: new `JXL_ENC_FRAME_SETTING_JPEG_COMPRESS_BOXES` enum value to
+   allow explicit control of metadata compression
 
+### Removed
+ - common API: removed `JxlIntrinsicSizeHeader`
+ - decoder API: removed deprecated `JXL_DEC_NEED_DC_OUT_BUFFER` and
+   `JXL_DEC_DC_IMAGE` events, `JxlDecoderDCOutBufferSize` and
+   `JxlDecoderSetDCOutBuffer` functions
+
+### Changed / clarified
+ - encoder API: `JxlEncoderProcessOutput` requires at least 32 bytes of output
+   space to proceed and guarantees that at least one byte will be written
 ## [0.7] - 2022-07-21
 
 ### Added

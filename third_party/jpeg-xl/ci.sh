@@ -1409,6 +1409,10 @@ cmd_bump_version() {
     -e "s/(set\\(JPEGXL_MINOR_VERSION) [0-9]+\\)/\\1 ${minor})/" \
     -e "s/(set\\(JPEGXL_PATCH_VERSION) [0-9]+\\)/\\1 ${patch})/" \
     -i lib/CMakeLists.txt
+  sed -E \
+    -e "s/(LIBJXL_VERSION: )[0-9\\.]+/\\1 ${major}.${minor}.${patch}/" \
+    -e "s/(LIBJXL_ABI_VERSION: )[0-9\\.]+/\\1 ${major}.${minor}/" \
+    -i .github/workflows/conformance.yml
 
   # Update lib.gni
   tools/build_cleaner.py --update

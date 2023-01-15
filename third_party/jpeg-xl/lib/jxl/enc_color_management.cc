@@ -849,9 +849,9 @@ bool ApplyCICP(const uint8_t color_primaries,
 
   const auto primaries = static_cast<Primaries>(color_primaries);
   const auto tf = static_cast<TransferFunction>(transfer_characteristics);
-  if (!EnumValid(tf) || tf == TransferFunction::kUnknown) return false;
-  if (!(EnumValid(primaries) || color_primaries == 12) ||
-      primaries == Primaries::kCustom) {
+  if (tf == TransferFunction::kUnknown || !EnumValid(tf)) return false;
+  if (primaries == Primaries::kCustom ||
+      !(color_primaries == 12 || EnumValid(primaries))) {
     return false;
   }
   c->SetColorSpace(ColorSpace::kRGB);

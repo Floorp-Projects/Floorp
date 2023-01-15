@@ -91,6 +91,7 @@ foreach (TESTFILE IN LISTS TEST_FILES)
     gmock
     GTest::GTest
     GTest::Main
+    ${JPEG_LIBRARIES}
   )
   # Output test targets in the test directory.
   set_target_properties(${TESTNAME} PROPERTIES PREFIX "tests/")

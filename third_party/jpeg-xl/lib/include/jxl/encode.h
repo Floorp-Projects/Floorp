@@ -1178,6 +1178,16 @@ JXL_EXPORT void JxlColorEncodingSetToSRGB(JxlColorEncoding* color_encoding,
 JXL_EXPORT void JxlColorEncodingSetToLinearSRGB(
     JxlColorEncoding* color_encoding, JXL_BOOL is_gray);
 
+/**
+ * Enables usage of expert options.
+ *
+ * At the moment, the only expert option is setting an effort value of 10,
+ * which gives the best compression for pixel-lossless modes but is very slow.
+ *
+ * @param enc encoder object.
+ */
+JXL_EXPORT void JxlEncoderAllowExpertOptions(JxlEncoder* enc);
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }
 #endif

@@ -55,22 +55,6 @@ float LoadBEFloat16(const uint8_t* p) {
   return LoadFloat16(bits16);
 }
 
-// Loads a float in big endian
-float LoadBEFloat(const uint8_t* p) {
-  float value;
-  const uint32_t u = LoadBE32(p);
-  memcpy(&value, &u, 4);
-  return value;
-}
-
-// Loads a float in little endian
-float LoadLEFloat(const uint8_t* p) {
-  float value;
-  const uint32_t u = LoadLE32(p);
-  memcpy(&value, &u, 4);
-  return value;
-}
-
 typedef uint32_t(LoadFuncType)(const uint8_t* p);
 template <LoadFuncType LoadFunc>
 void JXL_INLINE LoadFloatRow(float* JXL_RESTRICT row_out, const uint8_t* in,

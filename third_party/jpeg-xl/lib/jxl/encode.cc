@@ -1071,9 +1071,16 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
 
   switch (option) {
     case JXL_ENC_FRAME_SETTING_EFFORT:
-      if (value < 1 || value > 10) {
-        return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
-                             "Encode effort has to be in [1..10]");
+      if (frame_settings->enc->allow_expert_options) {
+        if (value < 1 || value > 10) {
+          return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
+                               "Encode effort has to be in [1..10]");
+        }
+      } else {
+        if (value < 1 || value > 9) {
+          return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
+                               "Encode effort has to be in [1..9]");
+        }
       }
       frame_settings->values.cparams.speed_tier =
           static_cast<jxl::SpeedTier>(10 - value);
@@ -1659,6 +1666,12 @@ static bool CanDoFastLossless(const JxlEncoderFrameSettings* frame_settings,
           frame_settings->enc->metadata.m.bit_depth.bits_per_sample) {
     return false;
   }
+  // TODO(veluca): implement support for LSB-padded input in fast_lossless.
+  if (frame_settings->values.image_bit_depth.type ==
+          JxlBitDepthType::JXL_BIT_DEPTH_FROM_PIXEL_FORMAT &&
+      frame_settings->values.image_bit_depth.bits_per_sample % 8 != 0) {
+    return false;
+  }
   if (!frame_settings->values.frame_name.empty()) {
     return false;
   }
@@ -2070,4 +2083,8 @@ void JxlColorEncodingSetToLinearSRGB(JxlColorEncoding* color_encoding,
                                      JXL_BOOL is_gray) {
   ConvertInternalToExternalColorEncoding(
       jxl::ColorEncoding::LinearSRGB(is_gray), color_encoding);
+}
+
+void JxlEncoderAllowExpertOptions(JxlEncoder* enc) {
+  enc->allow_expert_options = true;
 }
