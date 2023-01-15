@@ -211,12 +211,17 @@ function tabObserve(callback) {
 let tabSleepEnabled = false;
 let TAB_TIMEOUT_SECONDS;
 let tabObserve_ = null;
+let interval = null;
+let isTestMode = false;
 
 function enableTabSleep() {
     if (tabSleepEnabled) return;
     tabSleepEnabled = true;
     let tabs = getAllTabs();
     tabObserve_ = tabObserve(function(event) {
+        if (isTestMode) {
+            console.log(`Tab Sleep: event type => ${event.type}`);
+        }
         let nativeTab = event.target;
         switch (event.type) {
             case "TabAttrModified":
@@ -276,10 +281,12 @@ function enableTabSleep() {
                 }
                 break;
         }
-        console.log(event.type);
+        if (isTestMode) {
+            console.log(`Tab Sleep: tabs => ${tabs.length}`);
+        }
     });
 
-    setInterval(function(){
+    interval = setInterval(function() {
         for (let nativeTab of tabs) {
             if (nativeTab.selected) continue;
             if (nativeTab.multiselected) continue;
@@ -305,7 +312,9 @@ function enableTabSleep() {
             ) {
                 let linkedPanel = nativeTab.linkedPanel;
                 nativeTab.ownerGlobal.gBrowser.discardBrowser(nativeTab);
-                console.log(`${nativeTab.label} (${linkedPanel}): discarded`);
+                if (isTestMode) {
+                    console.log(`Tab Sleep: ${nativeTab.label} (${linkedPanel}) => discarded`);
+                }
             }
         }
     }, 30 * 1000);
@@ -316,15 +325,19 @@ function disableTabSleep() {
     tabSleepEnabled = false;
     tabObserve_?.disconnect();
     tabObserve_ = null;
+    if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+    }
 }
 
 {
     let isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
-    //let isTestMode = Services.prefs.getBoolPref(TAB_SLEEP_TESTMODE_ENABLED_PREF, false);
+    isTestMode = Services.prefs.getBoolPref(TAB_SLEEP_TESTMODE_ENABLED_PREF, false);
 
     let systemMemory = Services.sysinfo.getProperty("memsize");
     let systemMemoryGB = systemMemory / 1024 / 1024 / 1024;
-    console.log(`System Memory (GB): ${systemMemoryGB}`);
+    console.log(`Tab Sleep: System Memory (GB) => ${systemMemoryGB}`);
 
     let tabTimeoutSecondsDefault = Math.floor(60 * (systemMemoryGB * 5));
     Services.prefs.getDefaultBranch(null)
@@ -332,7 +345,7 @@ function disableTabSleep() {
 
     let timeoutSecondsPrefHandle = function() {
         TAB_TIMEOUT_SECONDS = Services.prefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, tabTimeoutSecondsDefault);
-        console.log(`TAB_TIMEOUT_SECONDS: ${TAB_TIMEOUT_SECONDS}`);
+        console.log(`Tab Sleep: TAB_TIMEOUT_SECONDS => ${TAB_TIMEOUT_SECONDS}`);
     };
     timeoutSecondsPrefHandle();
     Services.prefs.addObserver(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, timeoutSecondsPrefHandle);
@@ -348,5 +361,9 @@ function disableTabSleep() {
         } else {
             disableTabSleep();
         }
+    });
+
+    Services.prefs.addObserver(TAB_SLEEP_TESTMODE_ENABLED_PREF, function() {
+        isTestMode = Services.prefs.getBoolPref(TAB_SLEEP_TESTMODE_ENABLED_PREF, false);
     });
 }
