@@ -15,8 +15,8 @@ promise_test(async t => {
     clearBufferAndSetSize(1);
     let count = 0;
     const allEntriesReceived =  new Promise(resolve => {
-      new PerformanceObserver(t.step_func(() => {
-        for (const entry of performance.getEntries()) {
+      new PerformanceObserver(t.step_func((list) => {
+        for (const entry of list.getEntries()) {
           if (entry.name.includes(scriptResources[0])) {
             count += 1;
           } else if (entry.name.includes(scriptResources[1])) {
