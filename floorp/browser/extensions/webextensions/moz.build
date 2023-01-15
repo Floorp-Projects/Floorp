@@ -12,7 +12,6 @@ DIRS += [
     "official-site-ua",
     "webpanel-ua",
     "multirow-tabs",
-    "tab-sleep",
 ]
 
 DIRS += ["floorp-system/shared"]
