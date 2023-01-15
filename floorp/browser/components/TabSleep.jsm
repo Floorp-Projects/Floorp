@@ -64,6 +64,54 @@ function tabObserve(callback) {
         callback(event);
     }
 
+    let statusListener = {
+        onStateChange(browser, webProgress, request, stateFlags, statusCode) {
+            if (!webProgress.isTopLevel) {
+                return;
+            }
+
+            let status;
+            if (stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+                if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
+                    status = "loading";
+                } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+                    status = "complete";
+                }
+            } else if (
+                stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+                statusCode == Cr.NS_BINDING_ABORTED
+            ) {
+                status = "complete";
+            }
+
+            if (status) {
+                console.log("onStateChange");
+                let nativeTab = browser.ownerGlobal.gBrowser.getTabForBrowser(browser);
+                if (nativeTab) {
+                    callback({
+                        type: "TabStateChange",
+                        target: nativeTab,
+                        status: status,
+                    });
+                }
+            }
+        },
+        onLocationChange(browser, webProgress, request, locationURI, flags) {
+            if (webProgress.isTopLevel) {
+                let status = webProgress.isLoadingDocument ? "loading" : "complete";
+                console.log("onLocationChange");
+                let nativeTab = browser.ownerGlobal.gBrowser.getTabForBrowser(browser);
+                if (nativeTab) {
+                    callback({
+                        type: "TabLocationChange",
+                        target: nativeTab,
+                        locationURI: locationURI,
+                    });
+                }
+            }
+        }
+    } // https://searchfox.org/mozilla-esr102/source/toolkit/components/extensions/parent/ext-tabs-base.js#1413-1448
+
     for (let domwindow of Services.wm.getEnumerator("navigator:browser")) {
         domwindow.addEventListener("TabAttrModified", listener);
         domwindow.addEventListener("TabPinned", listener);
@@ -76,6 +124,7 @@ function tabObserve(callback) {
         domwindow.addEventListener("TabClose", listener);
         domwindow.addEventListener("TabSelect", listener);
         domwindow.addEventListener("TabMultiSelect", listener);
+        domwindow.gBrowser.addTabsProgressListener(statusListener);
     }
 
     let windowListener = {
@@ -103,6 +152,7 @@ function tabObserve(callback) {
                         domwindow.addEventListener("TabClose", listener);
                         domwindow.addEventListener("TabSelect", listener);
                         domwindow.addEventListener("TabMultiSelect", listener);
+                        domwindow.gBrowser.addTabsProgressListener(statusListener);
                     }
                 },
                 { once: true }
@@ -122,6 +172,7 @@ function tabObserve(callback) {
                 domwindow.removeEventListener("TabClose", listener);
                 domwindow.removeEventListener("TabSelect", listener);
                 domwindow.removeEventListener("TabMultiSelect", listener);
+                domwindow.gBrowser.removeTabsProgressListener(statusListener);
             }
         },
     }
@@ -142,6 +193,7 @@ function tabObserve(callback) {
                 domwindow.removeEventListener("TabClose", listener);
                 domwindow.removeEventListener("TabSelect", listener);
                 domwindow.removeEventListener("TabMultiSelect", listener);
+                domwindow.gBrowser.removeTabsProgressListener(statusListener);
             }
         }
     }
@@ -156,9 +208,20 @@ let tabObserve_ = null;
 function enableTabSleep() {
     if (tabSleepEnabled) return;
     tabSleepEnabled = true;
+    let tabsLastActivity = {};
     tabObserve_ = tabObserve(function(event) {
+        let nativeTab = event.target;
         switch (event.type) {
             case "TabAttrModified":
+                let changed = event.detail.changed;
+                if (
+                    changed.includes("muted") ||
+                    changed.includes("soundplaying") ||
+                    changed.includes("label") ||
+                    changed.includes("attention")
+                ) {
+                    nativeTab.lastActivity = (new Date()).getTime();
+                }
                 break;
             case "TabPinned":
                 break;
@@ -179,6 +242,10 @@ function enableTabSleep() {
             case "TabSelect":
                 break;
             case "TabMultiSelect":
+                break;
+            case "TabStateChange":
+                break;
+            case "TabLocationChange":
                 break;
             case "WindowOpened":
                 break;
