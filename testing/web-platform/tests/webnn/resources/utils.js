@@ -61,6 +61,57 @@ const getExpectedDataAndType = (resources, outputName) => {
 };
 
 /**
+ * Get ULP tolerance of conv2d operation.
+ * @param {Object} resources - Resources used for building a graph
+ * @returns {Number} A tolerance number
+ */
+const getConv2dPrecisionTolerance = (resources) => {
+  // number of reduced input elements multiplied by filter and summed (a sliding dot product like pooling)
+  const inputNameArray = Object.keys(resources.inputs);
+  const inputShape = resources.inputs[inputNameArray[0]].shape;
+  const filterShape = resources.inputs[inputNameArray[1]].shape;
+  const options = resources.options;
+  let groups = 1;
+  let inputChannels = inputShape[1]; // default nchw inputLayout
+  let filterWidth = filterShape[3]; // default oihw filterLayout
+  let filterHeight = filterShape[2];
+  if (options) {
+    if (options.groups) {
+      groups = options.groups;
+    }
+    if (options.inputLayout) {
+      if (!['nchw', 'nhwc'].includes(options.inputLayout)) {
+        throw new Error(`Unsupported inputLayout ${options.inputLayout}`);
+      }
+      inputChannels = options.inputLayout === 'nchw' ? inputChannels : inputShape[3];
+    }
+    if (options.filterLayout) {
+      if (!['oihw', 'hwio', 'ohwi', 'ihwo'].includes(options.filterLayout)) {
+        throw new Error(`Unsupported filterLayout ${options.filterLayout}`);
+      }
+      switch (options.filterLayout) {
+        case 'oihw':
+          // Just use the existing filterWidth and filterHeight above.
+          break;
+        case 'hwio':
+          filterWidth = filterShape[1];
+          filterHeight = filterShape[0];
+          break;
+        case 'ohwi':
+        case 'ihwo':
+          filterWidth = filterShape[2];
+          filterHeight = filterShape[1];
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  const tolerance = filterWidth * filterHeight * (inputChannels / groups) * 2;
+  return tolerance;
+};
+
+/**
  * Get ULP tolerance of matmul operation.
  * @param {Object} resources - Resources used for building a graph
  * @returns {Number} A tolerance number
@@ -90,6 +141,7 @@ const getSoftmaxPrecisionTolerance = (resources) => {
 const PrecisionMetrics = {
   clamp: {ULP: {float32: 0, float16: 0}},
   concat: {ULP: {float32: 0, float16: 0}},
+  conv2d: {ULP: {float32: getConv2dPrecisionTolerance, float16: getConv2dPrecisionTolerance}},
   leakyRelu: {ULP: {float32: 1, float16: 1}},
   matmul: {ULP: {float32: getMatmulPrecisionTolerance, float16: getMatmulPrecisionTolerance}},
   relu: {ULP: {float32: 0, float16: 0}},
@@ -227,6 +279,17 @@ const checkResults = (operationName, namedOutputOperands, outputs, resources) =>
     tolerance = getPrecisonTolerance(operationName, metricType, operandType);
     doAssert(operationName, outputData, expectedData, tolerance, operandType, metricType)
   }
+};
+
+/**
+ * Create a constant operand
+ * @param {MLGraphBuilder} builder - A ML graph builder
+ * @param {Object} resources - Resources used for constant operand
+ * @returns {MLOperand} A constant operand
+ */
+const createConstantOperand = (builder, resources) => {
+  const bufferView = new TypedArrayDict[resources.type](resources.data);
+  return builder.constant({type: resources.type, dimensions: resources.shape}, bufferView);
 };
 
 /**
