@@ -3864,6 +3864,20 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
   nsCString spec;
   aURI->GetSpec(spec);
 
+#ifdef ANDROID
+  // Various toolkit files use this and are shipped on android, but
+  // info-pages.css and aboutLicense.css are not - bug 1808987
+  if (StringEndsWith(spec, "info-pages.css"_ns) ||
+      StringEndsWith(spec, "aboutLicense.css"_ns) ||
+      // Error page CSS is also missing: bug 1810039
+      StringEndsWith(spec, "aboutNetError.css"_ns) ||
+      StringEndsWith(spec, "error-pages.css"_ns) ||
+      // Used by an extension installation test - bug 1809650
+      StringBeginsWith(spec, "resource://android/assets/web_extensions/"_ns)) {
+    return;
+  }
+#endif
+
   // DTD files from gre may not exist when requested by tests.
   if (StringBeginsWith(spec, "resource://gre/res/dtd/"_ns)) {
     return;
