@@ -12,6 +12,7 @@
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StorageManager.h"
+#include "mozilla/dom/fs/ManagedMozPromiseRequestHolder.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 
@@ -54,7 +55,20 @@ void FileSystemManager::Shutdown() {
 
   mBackgroundRequestHandler->Shutdown();
 
-  mCreateFileSystemManagerChildPromiseRequestHolder.DisconnectIfExists();
+  for (RefPtr<PromiseRequestHolder<BoolPromise>> holder :
+       mPromiseRequestHolders.ForwardRange()) {
+    holder->DisconnectIfExists();
+  }
+}
+
+void FileSystemManager::RegisterPromiseRequestHolder(
+    PromiseRequestHolder<BoolPromise>* aHolder) {
+  mPromiseRequestHolders.AppendElement(aHolder);
+}
+
+void FileSystemManager::UnregisterPromiseRequestHolder(
+    PromiseRequestHolder<BoolPromise>* aHolder) {
+  mPromiseRequestHolders.RemoveElement(aHolder);
 }
 
 void FileSystemManager::BeginRequest(
@@ -78,22 +92,23 @@ void FileSystemManager::BeginRequest(
   QM_TRY_INSPECT(const auto& principalInfo, mGlobal->GetStorageKey(), QM_VOID,
                  [&aFailure](nsresult rv) { aFailure(rv); });
 
-  mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr<FileSystemManager>(this),
-           success = std::move(aSuccess), failure = std::move(aFailure)](
-              const BoolPromise::ResolveOrRejectValue& aValue) {
-            self->mCreateFileSystemManagerChildPromiseRequestHolder.Complete();
+  auto holder = MakeRefPtr<PromiseRequestHolder<BoolPromise>>(this);
 
-            if (aValue.IsResolve()) {
-              success(self->mBackgroundRequestHandler
-                          ->FileSystemManagerChildStrongRef());
-            } else {
-              failure(aValue.RejectValue());
-            }
-          })
-      ->Track(mCreateFileSystemManagerChildPromiseRequestHolder);
+  mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr<FileSystemManager>(this), holder,
+              success = std::move(aSuccess), failure = std::move(aFailure)](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               holder->Complete();
+
+               if (aValue.IsResolve()) {
+                 success(self->mBackgroundRequestHandler
+                             ->FileSystemManagerChildStrongRef());
+               } else {
+                 failure(aValue.RejectValue());
+               }
+             })
+      ->Track(*holder);
 }
 
 already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aError) {
