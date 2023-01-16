@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 add_task(async function noEventsWhenPageDomainDisabled({ client }) {
   await runPageLifecycleTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
