@@ -21,7 +21,7 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsClipboardProxy, nsIClipboard, nsIClipboardProxy)
 
-nsClipboardProxy::nsClipboardProxy() : mClipboardCaps(false, false) {}
+nsClipboardProxy::nsClipboardProxy() : mClipboardCaps(false, false, false) {}
 
 NS_IMETHODIMP
 nsClipboardProxy::SetData(nsITransferable* aTransferable,
@@ -80,14 +80,25 @@ nsClipboardProxy::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 }
 
 NS_IMETHODIMP
-nsClipboardProxy::SupportsSelectionClipboard(bool* aIsSupported) {
-  *aIsSupported = mClipboardCaps.supportsSelectionClipboard();
-  return NS_OK;
-}
+nsClipboardProxy::IsClipboardTypeSupported(int32_t aWhichClipboard,
+                                           bool* aIsSupported) {
+  switch (aWhichClipboard) {
+    case kGlobalClipboard:
+      // We always support the global clipboard.
+      *aIsSupported = true;
+      return NS_OK;
+    case kSelectionClipboard:
+      *aIsSupported = mClipboardCaps.supportsSelectionClipboard();
+      return NS_OK;
+    case kFindClipboard:
+      *aIsSupported = mClipboardCaps.supportsFindClipboard();
+      return NS_OK;
+    case kSelectionCache:
+      *aIsSupported = mClipboardCaps.supportsSelectionCache();
+      return NS_OK;
+  }
 
-NS_IMETHODIMP
-nsClipboardProxy::SupportsFindClipboard(bool* aIsSupported) {
-  *aIsSupported = mClipboardCaps.supportsFindClipboard();
+  *aIsSupported = false;
   return NS_OK;
 }
 

@@ -1056,14 +1056,10 @@ RefPtr<DataFlavorsPromise> nsClipboard::AsyncHasDataMatchingFlavors(
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsSelectionClipboard(bool* _retval) {
-  *_retval = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClipboard::SupportsFindClipboard(bool* _retval) {
-  *_retval = false;
+nsClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard, bool* _retval) {
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = kGlobalClipboard == aWhichClipboard ||
+             kSelectionClipboard == aWhichClipboard;
   return NS_OK;
 }
 

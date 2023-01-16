@@ -510,12 +510,8 @@ nsresult nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // check whether the system supports the selection clipboard or not.
-  bool selectionSupported;
-  rv = clipboard->SupportsSelectionClipboard(&selectionSupported);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // put the transferable on the clipboard
-  if (selectionSupported) {
+  if (clipboard->IsClipboardTypeSupported(nsIClipboard::kSelectionClipboard)) {
+    // put the transferable on the clipboard
     rv = clipboard->SetData(trans, nullptr, nsIClipboard::kSelectionClipboard);
     NS_ENSURE_SUCCESS(rv, rv);
   }

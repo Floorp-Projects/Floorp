@@ -5466,15 +5466,11 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   // at "mousedown" event.
 
   int32_t clipboardType = nsIClipboard::kGlobalClipboard;
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIClipboard> clipboardService =
-      do_GetService("@mozilla.org/widget/clipboard;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    bool selectionSupported;
-    rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
-    if (NS_SUCCEEDED(rv) && selectionSupported) {
-      clipboardType = nsIClipboard::kSelectionClipboard;
-    }
+      do_GetService("@mozilla.org/widget/clipboard;1");
+  if (clipboardService && clipboardService->IsClipboardTypeSupported(
+                              nsIClipboard::kSelectionClipboard)) {
+    clipboardType = nsIClipboard::kSelectionClipboard;
   }
 
   // Fire ePaste event by ourselves since we need to dispatch "paste" event

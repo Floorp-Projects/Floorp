@@ -3040,14 +3040,18 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   nsCOMPtr<nsIClipboard> clipboard(
       do_GetService("@mozilla.org/widget/clipboard;1"));
   MOZ_ASSERT(clipboard, "No clipboard?");
+  MOZ_ASSERT(
+      clipboard->IsClipboardTypeSupported(nsIClipboard::kGlobalClipboard),
+      "We should always support the global clipboard.");
 
-  rv = clipboard->SupportsSelectionClipboard(
-      &xpcomInit.clipboardCaps().supportsSelectionClipboard());
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  xpcomInit.clipboardCaps().supportsSelectionClipboard() =
+      clipboard->IsClipboardTypeSupported(nsIClipboard::kSelectionClipboard);
 
-  rv = clipboard->SupportsFindClipboard(
-      &xpcomInit.clipboardCaps().supportsFindClipboard());
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  xpcomInit.clipboardCaps().supportsFindClipboard() =
+      clipboard->IsClipboardTypeSupported(nsIClipboard::kFindClipboard);
+
+  xpcomInit.clipboardCaps().supportsSelectionCache() =
+      clipboard->IsClipboardTypeSupported(nsIClipboard::kSelectionCache);
 
   // Let's copy the domain policy from the parent to the child (if it's active).
   StructuredCloneData initialData;

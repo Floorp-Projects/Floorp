@@ -95,16 +95,10 @@ HeadlessClipboard::HasDataMatchingFlavors(
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::SupportsSelectionClipboard(bool* aIsSupported) {
-  *aIsSupported = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HeadlessClipboard::SupportsFindClipboard(bool* _retval) {
+HeadlessClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard,
+                                            bool* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  *_retval = false;
+  *_retval = kGlobalClipboard == aWhichClipboard;
   return NS_OK;
 }
 

@@ -47,21 +47,18 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(clipboard, NS_ERROR_FAILURE);
 
-  bool clipboardSupported;
   // don't go any further if they're asking for the selection
   // clipboard on a platform which doesn't support it (i.e., unix)
-  if (nsIClipboard::kSelectionClipboard == aClipboardID) {
-    rv = clipboard->SupportsSelectionClipboard(&clipboardSupported);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!clipboardSupported) return NS_ERROR_FAILURE;
+  if (nsIClipboard::kSelectionClipboard == aClipboardID &&
+      !clipboard->IsClipboardTypeSupported(nsIClipboard::kSelectionClipboard)) {
+    return NS_ERROR_FAILURE;
   }
 
   // don't go any further if they're asking for the find clipboard on a platform
   // which doesn't support it (i.e., non-osx)
-  if (nsIClipboard::kFindClipboard == aClipboardID) {
-    rv = clipboard->SupportsFindClipboard(&clipboardSupported);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!clipboardSupported) return NS_ERROR_FAILURE;
+  if (nsIClipboard::kFindClipboard == aClipboardID &&
+      !clipboard->IsClipboardTypeSupported(nsIClipboard::kFindClipboard)) {
+    return NS_ERROR_FAILURE;
   }
 
   // create a transferable for putting data on the clipboard
@@ -119,8 +116,8 @@ nsClipboardHelper::CopyString(const nsAString& aString,
   // unix also needs us to copy to the selection clipboard. this will
   // fail in CopyStringToClipboard if we're not on a platform that
   // supports the selection clipboard. (this could have been #ifdef
-  // XP_UNIX, but using the SupportsSelectionClipboard call is the
-  // more correct thing to do.
+  // XP_UNIX, but using the IsClipboardTypeSupported call is the more correct
+  // thing to do.
   //
   // if this fails in any way other than "not being unix", we'll get
   // the assertion we need in CopyStringToClipboard, and we needn't

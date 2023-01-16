@@ -808,7 +808,11 @@ Finder.prototype = {
 
 export function GetClipboardSearchString(aLoadContext) {
   let searchString = "";
-  if (!Services.clipboard.supportsFindClipboard()) {
+  if (
+    !Services.clipboard.isClipboardTypeSupported(
+      Services.clipboard.kFindClipboard
+    )
+  ) {
     return searchString;
   }
 
@@ -833,7 +837,12 @@ export function GetClipboardSearchString(aLoadContext) {
 }
 
 export function SetClipboardSearchString(aSearchString) {
-  if (!aSearchString || !Services.clipboard.supportsFindClipboard()) {
+  if (
+    !aSearchString ||
+    !Services.clipboard.isClipboardTypeSupported(
+      Services.clipboard.kFindClipboard
+    )
+  ) {
     return;
   }
 
