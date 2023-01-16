@@ -40,13 +40,17 @@ namespace glean {
     boolean glean_submit_ping_by_name_sync(string ping_name, optional string? reason = null);
 
     void glean_set_test_mode(boolean enabled);
-    void glean_test_destroy_glean(boolean clear_stores);
+    void glean_test_destroy_glean(boolean clear_stores, optional string? data_path = null);
 
     void glean_set_dirty_flag(boolean flag);
 
     PingUploadTask glean_get_upload_task();
     UploadTaskAction glean_process_ping_upload_response(string uuid, UploadResult result);
 };
+
+// A `Cow<'static, str>`, but really it's always the owned part.
+[Custom]
+typedef string CowString;
 
 // The Glean configuration.
 //
@@ -61,6 +65,7 @@ dictionary InternalConfiguration {
     boolean delay_ping_lifetime_io;
     string app_build;
     boolean use_core_mps;
+    boolean trim_data_to_registered_pings;
 };
 
 // Values for the `client_info` metrics.
@@ -321,7 +326,7 @@ interface StringMetric {
 };
 
 interface LabeledCounter {
-    constructor(CommonMetricData meta, sequence<string>? labels);
+    constructor(CommonMetricData meta, sequence<CowString>? labels);
 
     CounterMetric get(string label);
 
@@ -329,7 +334,7 @@ interface LabeledCounter {
 };
 
 interface LabeledBoolean {
-    constructor(CommonMetricData meta, sequence<string>? labels);
+    constructor(CommonMetricData meta, sequence<CowString>? labels);
 
     BooleanMetric get(string label);
 
@@ -337,7 +342,7 @@ interface LabeledBoolean {
 };
 
 interface LabeledString {
-    constructor(CommonMetricData meta, sequence<string>? labels);
+    constructor(CommonMetricData meta, sequence<CowString>? labels);
 
     StringMetric get(string label);
 

@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::ErrorType;
 use crate::metrics::MetricType;
 use crate::metrics::Rate;
@@ -20,7 +21,7 @@ use crate::Glean;
 pub struct NumeratorMetric(pub(crate) Arc<RateMetric>);
 
 impl MetricType for NumeratorMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         self.0.meta()
     }
 }

@@ -49,6 +49,7 @@ pub(crate) fn new_glean(
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
             use_core_mps: false,
+            trim_data_to_registered_pings: false,
         },
     };
 

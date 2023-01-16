@@ -2304,7 +2304,7 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "51.8.2"
+version = "52.0.0"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -2322,7 +2322,7 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "51.8.2"
+version = "52.0.0"
 dependencies = [
  "android_logger",
  "bincode",
@@ -4564,7 +4564,7 @@ dependencies = [
 
 [[package]]
 name = "rkv"
-version = "0.18.2"
+version = "0.18.4"
 dependencies = [
  "arrayref",
  "bincode",

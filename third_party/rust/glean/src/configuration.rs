@@ -30,4 +30,8 @@ pub struct Configuration {
     pub uploader: Option<Box<dyn PingUploader + 'static>>,
     /// Whether Glean should schedule "metrics" pings for you.
     pub use_core_mps: bool,
+    /// Whether Glean should limit its storage to only that of registered pings.
+    /// Unless you know that all your and your libraries' pings are appropriately registered
+    /// _before_ init, you shouldn't use this.
+    pub trim_data_to_registered_pings: bool,
 }
