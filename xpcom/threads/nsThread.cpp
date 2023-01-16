@@ -1375,13 +1375,6 @@ void nsThread::DoMainThreadSpecificProcessing() const {
   }
 }
 
-NS_IMETHODIMP
-nsThread::GetEventTarget(nsIEventTarget** aEventTarget) {
-  nsCOMPtr<nsIEventTarget> target = this;
-  target.forget(aEventTarget);
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsIDirectTaskDispatcher
 
@@ -1410,10 +1403,6 @@ NS_IMETHODIMP nsThread::HaveDirectTasks(bool* aValue) {
   *aValue = mDirectTasks.HaveTasks();
   return NS_OK;
 }
-
-nsIEventTarget* nsThread::EventTarget() { return this; }
-
-nsISerialEventTarget* nsThread::SerialEventTarget() { return this; }
 
 NS_IMPL_ISUPPORTS(nsThreadShutdownContext, nsIThreadShutdown)
 

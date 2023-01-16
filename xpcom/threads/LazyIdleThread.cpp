@@ -635,15 +635,4 @@ LazyIdleThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-LazyIdleThread::GetEventTarget(nsIEventTarget** aEventTarget) {
-  nsCOMPtr<nsIEventTarget> target = this;
-  target.forget(aEventTarget);
-  return NS_OK;
-}
-
-nsIEventTarget* LazyIdleThread::EventTarget() { return this; }
-
-nsISerialEventTarget* LazyIdleThread::SerialEventTarget() { return this; }
-
 }  // namespace mozilla

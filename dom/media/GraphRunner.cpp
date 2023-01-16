@@ -153,9 +153,7 @@ NS_IMETHODIMP GraphRunner::Run() {
   return NS_OK;
 }
 
-bool GraphRunner::OnThread() const {
-  return mThread->EventTarget()->IsOnCurrentThread();
-}
+bool GraphRunner::OnThread() const { return mThread->IsOnCurrentThread(); }
 
 #ifdef DEBUG
 bool GraphRunner::InDriverIteration(const GraphDriver* aDriver) const {
