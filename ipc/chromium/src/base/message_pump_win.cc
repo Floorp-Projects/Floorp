@@ -154,8 +154,7 @@ void MessagePumpForUI::PumpOutPendingPaintMessages() {
     MSG msg;
     if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE | PM_QS_PAINT)) break;
     ProcessMessageHelper(msg);
-    if (state_->should_quit)  // Handle WM_QUIT.
-      break;
+    if (state_->should_quit) break;
   }
 }
 
@@ -306,11 +305,10 @@ bool MessagePumpForUI::ProcessNextWindowsMessage() {
 
 bool MessagePumpForUI::ProcessMessageHelper(const MSG& msg) {
   if (WM_QUIT == msg.message) {
-    // Repost the QUIT message so that it will be retrieved by the primary
-    // GetMessage() loop.
-    state_->should_quit = true;
-    PostQuitMessage(static_cast<int>(msg.wParam));
-    return false;
+    // WM_QUIT is the standard way to exit a GetMessage() loop. Our MessageLoop
+    // has its own quit mechanism, so WM_QUIT is unexpected and should be
+    // ignored.
+    return true;
   }
 
   // While running our main message pump, we discard kMsgHaveWork messages.
