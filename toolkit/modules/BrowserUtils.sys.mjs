@@ -147,29 +147,25 @@ export var BrowserUtils = {
     });
   },
 
-  formatURIStringForDisplay(uriString, options = {}) {
+  formatURIStringForDisplay(uriString) {
     try {
-      return this.formatURIForDisplay(Services.io.newURI(uriString), options);
+      return this.formatURIForDisplay(Services.io.newURI(uriString));
     } catch (ex) {
       return uriString;
     }
   },
 
-  formatURIForDisplay(uri, options = {}) {
-    let { showInsecureHTTP = false } = options;
+  formatURIForDisplay(uri) {
     switch (uri.scheme) {
       case "view-source":
         let innerURI = uri.spec.substring("view-source:".length);
-        return this.formatURIStringForDisplay(innerURI, options);
+        return this.formatURIStringForDisplay(innerURI);
       case "http":
       // Fall through.
       case "https":
         let host = uri.displayHostPort;
-        if (!showInsecureHTTP && host.startsWith("www.")) {
+        if (host.startsWith("www.")) {
           host = Services.eTLD.getSchemelessSite(uri);
-        }
-        if (showInsecureHTTP && uri.scheme == "http") {
-          return "http://" + host;
         }
         return host;
       case "about":
@@ -179,7 +175,7 @@ export var BrowserUtils = {
           let url = new URL(uri.specIgnoringRef);
           // _If_ we find a non-null origin, report that.
           if (url.origin && url.origin != "null") {
-            return this.formatURIStringForDisplay(url.origin, options);
+            return this.formatURIStringForDisplay(url.origin);
           }
           // otherwise, fall through...
         } catch (ex) {
