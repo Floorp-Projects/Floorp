@@ -59,6 +59,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 //-------------------------------------------------------------------------Multirow-tabs----------------------------------------------------------------------------
 
+function setMultirowTabMaxHeight() {
+  document.querySelector("#tabbrowser-arrowscrollbox")
+    .shadowRoot
+    .querySelector("[part=scrollbox]")
+    .removeAttribute("style");
+
+  let rowValue = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row");
+  let tabHeight = document.querySelector(".tabbrowser-tab").clientHeight;
+  document.querySelector("#tabbrowser-arrowscrollbox")
+    .shadowRoot
+    .querySelector("[part=scrollbox]")
+    .setAttribute("style", "max-height: " + tabHeight*rowValue + "px !important;");
+}
+
+function removeMultirowTabMaxHeight() {
+  document.querySelector("#tabbrowser-arrowscrollbox")
+    .shadowRoot
+    .querySelector("[part=scrollbox]")
+    .removeAttribute("style");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   window.setTimeout(function(){
     if (Services.prefs.getBoolPref("floorp.enable.multitab")) {
