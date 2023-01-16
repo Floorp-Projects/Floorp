@@ -3,6 +3,16 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// This test must be first, since we need the actor not to be created already.
+exported_symbols.testGetDirectoryTwice = async function() {
+  const promise1 = navigator.storage.getDirectory();
+  const promise2 = navigator.storage.getDirectory();
+
+  await Promise.all([promise1, promise2]);
+
+  Assert.ok(true, "Should not have thrown");
+};
+
 exported_symbols.testGetDirectoryDoesNotThrow = async function() {
   await navigator.storage.getDirectory();
 
