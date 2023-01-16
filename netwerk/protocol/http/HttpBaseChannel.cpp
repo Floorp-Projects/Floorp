@@ -3104,6 +3104,8 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
           OPAQUE_RESPONSE_BLOCKING_CROSS_ORIGIN_OPAQUE_RESPONSE_COUNT,
       1);
 
+  PROFILER_MARKER_TEXT("ORB safelist check", NETWORK, {}, "Before sniff"_ns);
+
   // https://whatpr.org/fetch/1442.html#orb-algorithm
   // Step 1
   nsAutoCString contentType;
@@ -3204,6 +3206,8 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
 // * `OpaqueResponseBlocker::ValidateJavaScript`
 OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff(
     const nsACString& aContentType, bool aNoSniff) {
+  PROFILER_MARKER_TEXT("ORB safelist check", NETWORK, {}, "After sniff"_ns);
+
   // https://whatpr.org/fetch/1442.html#orb-algorithm
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mCachedOpaqueResponseBlockingPref);
