@@ -95,13 +95,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
   }
 }
 
-ScriptLoadRequest::~ScriptLoadRequest() {
-  if (IsMarkedForBytecodeEncoding()) {
-    DropBytecodeCacheReferences();
-  }
-  mLoadContext = nullptr;
-  DropJSObjects(this);
-}
+ScriptLoadRequest::~ScriptLoadRequest() { DropJSObjects(this); }
 
 void ScriptLoadRequest::SetReady() {
   MOZ_ASSERT(!IsReadyToRun());
