@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import copy
+from gecko_taskgraph.util.copy_task import copy_task
 
 
 def merge_to(source, dest):
@@ -55,5 +55,5 @@ def merge(*objects):
     Returns the result without modifying any arguments.
     """
     if len(objects) == 1:
-        return copy.deepcopy(objects[0])
+        return copy_task(objects[0])
     return merge_to(objects[-1], merge(*objects[:-1]))
