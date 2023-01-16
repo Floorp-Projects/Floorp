@@ -49,7 +49,7 @@ from random import random
 from subprocess import PIPE
 from subprocess import Popen
 
-__version__ = "1"
+__version__ = "1.3.0"
 
 # Allowed request header characters:
 # !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9, \, "
@@ -1243,25 +1243,34 @@ def _log_api_error(e):
 
 
 def _authorize(req, auth_file):
-    if not auth_file:
-        return
-
     is_taskcluster_auth = False
-    with open(auth_file) as f:
-        auth_file_content = f.read().strip()
+
+    if not auth_file:
         try:
-            auth_file_content = json.loads(auth_file_content)
+            taskcluster_env_keys = {
+                "clientId": "TASKCLUSTER_CLIENT_ID",
+                "accessToken": "TASKCLUSTER_ACCESS_TOKEN",
+            }
+            auth_content = {k: os.environ[v] for k, v in taskcluster_env_keys.items()}
             is_taskcluster_auth = True
-        except Exception:
-            pass
+        except KeyError:
+            return
+    else:
+        with open(auth_file) as f:
+            auth_content = f.read().strip()
+            try:
+                auth_content = json.loads(auth_content)
+                is_taskcluster_auth = True
+            except Exception:
+                pass
 
     if is_taskcluster_auth:
-        taskcluster_header = make_taskcluster_header(auth_file_content, req)
+        taskcluster_header = make_taskcluster_header(auth_content, req)
         log.debug("Using taskcluster credentials in %s" % auth_file)
         req.add_unredirected_header("Authorization", taskcluster_header)
     else:
         log.debug("Using Bearer token in %s" % auth_file)
-        req.add_unredirected_header("Authorization", "Bearer %s" % auth_file_content)
+        req.add_unredirected_header("Authorization", "Bearer %s" % auth_content)
 
 
 def _send_batch(base_url, auth_file, batch, region):
@@ -1438,7 +1447,7 @@ def change_visibility(base_urls, digest, visibility, auth_file):
             "visibility": visibility,
         }
     ]
-    return send_operation_on_file(data, base_urls, digest, visibility, auth_file)
+    return send_operation_on_file(data, base_urls, digest, auth_file)
 
 
 def delete_instances(base_urls, digest, auth_file):
