@@ -279,13 +279,6 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
   // All good.
 }
 
-// UnderlyingSource.cancel callback, implemented for BodyStream.
-already_AddRefed<Promise> BodyStream::CancelCallback(
-    JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-    ErrorResult& aRv) {
-  return Promise::CreateResolvedWithUndefined(mGlobal, aRv);
-}
-
 void BodyStream::CloseInputAndReleaseObjects() {
   mMutex.AssertOnWritingThread();
 
