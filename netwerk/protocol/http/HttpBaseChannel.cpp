@@ -3091,12 +3091,12 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (!mCachedOpaqueResponseBlockingPref) {
-    return OpaqueResponse::Alllow;
+    return OpaqueResponse::Allow;
   }
 
   // https://whatpr.org/fetch/1442.html#http-fetch, step 6.4
   if (!ShouldBlockOpaqueResponse()) {
-    return OpaqueResponse::Alllow;
+    return OpaqueResponse::Allow;
   }
 
   // https://whatpr.org/fetch/1442.html#orb-algorithm
@@ -3115,7 +3115,7 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
                                          nosniff)) {
     case OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED:
       // Step 3.1
-      return OpaqueResponse::Alllow;
+      return OpaqueResponse::Allow;
     case OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED:
       // Step 3.2
       LOGORB("Blocked: BLOCKED_BLOCKLISTED_NEVER_SNIFFED");
@@ -3145,7 +3145,7 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
     bool isMediaInitialRequest;
     mLoadInfo->GetIsMediaInitialRequest(&isMediaInitialRequest);
     if (!isMediaInitialRequest) {
-      return OpaqueResponse::Alllow;
+      return OpaqueResponse::Allow;
     }
   }
 
@@ -3231,7 +3231,7 @@ OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff(
   // Step 13
   if (!mResponseHead || aContentType.IsEmpty()) {
     LOGORB("Allowed: mimeType is failure");
-    return OpaqueResponse::Alllow;
+    return OpaqueResponse::Allow;
   }
 
   // Step 14
