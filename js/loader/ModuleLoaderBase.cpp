@@ -755,7 +755,6 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
   JS::Rooted<JSObject*> moduleRecord(cx, ms->ModuleRecord());
   uint32_t length = JS::GetRequestedModulesCount(cx, moduleRecord);
 
-  JS::Rooted<JS::Value> requestedModule(cx);
   for (uint32_t i = 0; i < length; i++) {
     JS::Rooted<JSString*> str(
         cx, JS::GetRequestedModuleSpecifier(cx, moduleRecord, i));
