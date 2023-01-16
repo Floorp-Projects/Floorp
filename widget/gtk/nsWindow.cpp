@@ -9494,6 +9494,10 @@ void nsWindow::LockNativePointer() {
     return;
   }
 
+  if (mLockedPointer || mRelativePointer) {
+    UnlockNativePointer();
+  }
+
   mLockedPointer = zwp_pointer_constraints_v1_lock_pointer(
       pointerConstraints, surface, pointer, nullptr,
       ZWP_POINTER_CONSTRAINTS_V1_LIFETIME_PERSISTENT);
