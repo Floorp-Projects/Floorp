@@ -63,7 +63,7 @@ pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784
 
 # Test video with rotation information can be rotated.
 fails-if(geckoview&&!swgl) == bug1228601-video-rotation-90.html bug1228601-video-rotated-ref.html # bug 1558285 for geckoview
-fuzzy(0-1,0-30) fails-if(geckoview&&!swgl) == bug1423850-canvas-video-rotation-90.html bug1423850-canvas-video-rotated-ref.html # bug 1558285 for geckoview
+fuzzy(0-1,0-30) fails-if(geckoview&&!swgl) random-if(geckoview&&swgl) == bug1423850-canvas-video-rotation-90.html bug1423850-canvas-video-rotated-ref.html # bug 1558285 for geckoview
 
 == bug1512297.html bug1512297-ref.html
 
