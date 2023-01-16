@@ -8985,6 +8985,34 @@ opaque.response.blocking:
       - 'main'
     release_channel_collection: opt-out
 
+  cross_origin_opaque_response_count:
+    bug_numbers:
+      - 1804638
+    description: >
+      The number of loads of cross origin opaque resources.
+    expires: never
+    kind: uint
+    notification_emails:
+      - farre@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  javascript_validation_count:
+    bug_numbers:
+      - 1804638
+    description: >
+      The number of times we run the JS validator.
+    expires: never
+    kind: uint
+    notification_emails:
+      - farre@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 places:
   sponsored_visit_no_triggering_url:
     bug_numbers:

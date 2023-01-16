@@ -17151,5 +17151,31 @@
     "n_buckets": 100,
     "description": "The length of time (in seconds) that a Picture-in-Picture window was open.",
     "releaseChannelCollection": "opt-out"
+  },
+  "ORB_JAVASCRIPT_VALIDATION_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "keyed": true,
+    "keys": ["javascript", "json", "other", "failure"],
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1804638],
+    "description": "Time (in ms) that it takes for a ORB JavaScript validator to complete a validation, including IPC to the validator actor."
+  },
+  "ORB_RECEIVE_DATA_FOR_VALIDATION_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "keyed": true,
+    "keys": ["javascript", "json", "other", "failure"],
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1804638],
+    "description": "Time (in ms) that it takes to receive data for ORB JavaScript validation, including IPC to the validator actor."
   }
 }

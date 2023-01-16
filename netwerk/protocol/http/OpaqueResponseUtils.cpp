@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/dom/JSValidatorParent.h"
 #include "ErrorList.h"
 #include "nsContentUtils.h"
 #include "nsHttpResponseHead.h"
@@ -269,6 +270,10 @@ OpaqueResponseBlocker::OnStopRequest(nsIRequest* aRequest,
   }
 
   if (mState == State::Sniffing) {
+    // It is the call to JSValidatorParent::OnStopRequest that will trigger the
+    // JS parser.
+    mStartOfJavaScriptValidation = TimeStamp::Now();
+
     MOZ_ASSERT(mJSValidator);
     mPendingOnStopRequestStatus = Some(aStatusCode);
     mJSValidator->OnStopRequest(aStatusCode);
@@ -360,6 +365,34 @@ nsresult OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterSniff(
   return ValidateJavaScript(httpBaseChannel, uri, loadInfo);
 }
 
+static void RecordTelemetry(const TimeStamp& aStartOfValidation,
+                            const TimeStamp& aStartOfJavaScriptValidation,
+                            OpaqueResponseBlocker::ValidatorResult aResult) {
+  using ValidatorResult = OpaqueResponseBlocker::ValidatorResult;
+  MOZ_DIAGNOSTIC_ASSERT(aStartOfValidation);
+
+  auto key = [aResult]() {
+    switch (aResult) {
+      case ValidatorResult::JavaScript:
+        return "javascript"_ns;
+      case ValidatorResult::JSON:
+        return "json"_ns;
+      case ValidatorResult::Other:
+        return "other"_ns;
+      case ValidatorResult::Failure:
+        return "failure"_ns;
+    }
+  }();
+
+  TimeStamp now = TimeStamp::Now();
+  Telemetry::AccumulateTimeDelta(Telemetry::ORB_RECEIVE_DATA_FOR_VALIDATION_MS,
+                                 key, aStartOfValidation,
+                                 aStartOfJavaScriptValidation);
+
+  Telemetry::AccumulateTimeDelta(Telemetry::ORB_JAVASCRIPT_VALIDATION_MS, key,
+                                 aStartOfJavaScriptValidation, now);
+}
+
 // The specification for ORB is currently being written:
 // https://whatpr.org/fetch/1442.html#orb-algorithm
 // The `opaque-response-safelist check` is implemented in:
@@ -387,27 +420,35 @@ nsresult OpaqueResponseBlocker::ValidateJavaScript(HttpBaseChannel* aChannel,
     return rv;
   }
 
+  Telemetry::ScalarAdd(
+      Telemetry::ScalarID::OPAQUE_RESPONSE_BLOCKING_JAVASCRIPT_VALIDATION_COUNT,
+      1);
+
   LOGORB("Send %s to the validator", aURI->GetSpecOrDefault().get());
   // https://whatpr.org/fetch/1442.html#orb-algorithm, step 15
   mJSValidator = dom::JSValidatorParent::Create();
   mJSValidator->IsOpaqueResponseAllowed(
       [self = RefPtr{this}, channel = nsCOMPtr{aChannel}, uri = nsCOMPtr{aURI},
-       loadInfo = nsCOMPtr{aLoadInfo}](bool aAllowed,
-                                       Maybe<ipc::Shmem> aSharedData) {
+       loadInfo = nsCOMPtr{aLoadInfo}, startOfValidation = TimeStamp::Now()](
+          Maybe<ipc::Shmem> aSharedData, ValidatorResult aResult) {
         MOZ_LOG(gORBLog, LogLevel::Debug,
                 ("JSValidator resolved for %s with %s",
                  uri->GetSpecOrDefault().get(),
                  aSharedData.isSome() ? "true" : "false"));
-        if (aAllowed) {
+        bool allowed = aResult == ValidatorResult::JavaScript;
+        if (allowed) {
           self->AllowResponse();
         } else {
           self->BlockResponse(channel, NS_ERROR_FAILURE);
           LogORBError(loadInfo, uri);
         }
-        self->ResolveAndProcessData(channel, aAllowed, aSharedData);
+        self->ResolveAndProcessData(channel, allowed, aSharedData);
         if (aSharedData.isSome()) {
           self->mJSValidator->DeallocShmem(aSharedData.ref());
         }
+
+        RecordTelemetry(startOfValidation, self->mStartOfJavaScriptValidation,
+                        aResult);
 
         Unused << dom::PJSValidatorParent::Send__delete__(self->mJSValidator);
         self->mJSValidator = nullptr;
