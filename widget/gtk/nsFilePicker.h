@@ -48,6 +48,8 @@ class nsFilePicker : public nsBaseFilePicker {
   nsresult Show(int16_t* aReturn) override;
   void ReadValuesFromFileChooser(void* file_chooser);
 
+  bool WarnForNonReadableFile(void* file_chooser);
+
   static void OnResponse(void* file_chooser, gint response_id,
                          gpointer user_data);
   static void OnDestroy(GtkWidget* file_chooser, gpointer user_data);
