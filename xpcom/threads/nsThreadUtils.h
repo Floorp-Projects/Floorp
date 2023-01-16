@@ -1797,21 +1797,36 @@ class SerialEventTargetGuard {
   nsISerialEventTarget* mLastCurrentThread;
 };
 
-// These functions return event targets that can be used to dispatch to the
-// current or main thread. They can also be used to test if you're on those
-// threads (via IsOnCurrentThread). These functions should be used in preference
-// to the nsIThread-based NS_Get{Current,Main}Thread functions since they will
-// return more useful answers in the case of threads sharing an event loop.
+// Returns NS_GetCurrentThread() cast to an nsIEventTarget*
+//
+// You probably want GetCurrentSerialEventTarget, not this. This method ignores
+// TaskQueues and other uses of SerialEventTargetGuard.
 
 nsIEventTarget* GetCurrentEventTarget();
 
+// See GetMainThreadSerialEventTarget()
+
 nsIEventTarget* GetMainThreadEventTarget();
 
-// These variants of the above functions assert that the given thread has a
-// serial event target (i.e., that it's not part of a thread pool) and returns
-// that.
+// Get the serial event target corresponding to the currently executing task
+// queue or thread. This method will assert if called on a thread pool without
+// an active task queue.
+//
+// This function should generally be preferred over NS_GetCurrentThread since it
+// will return a more useful answer when called from a task queue running on a
+// thread pool or on a non-xpcom thread which accepts runnable dispatches.
+//
+// NOTE: The returned nsISerialEventTarget may not accept runnable dispatches
+// (e.g. if it corresponds to a non-xpcom thread), however it may still be used
+// to check if you're on the given thread/queue using IsOnCurrentThread().
 
 nsISerialEventTarget* GetCurrentSerialEventTarget();
+
+// Get a weak reference to a serial event target which can be used to dispatch
+// runnables to the main thread.
+//
+// NOTE: While this is currently a weak pointer to the nsIThread* returned from
+// NS_GetMainThread(), this may change in the future.
 
 nsISerialEventTarget* GetMainThreadSerialEventTarget();
 
