@@ -19,12 +19,12 @@ const sizeOfShape = (array) => {
 };
 
 /**
- * Get JSON resources from specified test resources file.
- * @param {String} file - A test resources file path
- * @returns {Object} Test resources
+ * Get tests resources from test data JSON file of specified operation name.
+ * @param {String} operationName - An operation name
+ * @returns {Object} Tests resources
  */
-const loadResources = (file) => {
-  const loadJSON = () => {
+const loadTests = (operationName) => {
+  const loadJSON = (file) => {
     let xmlhttp = new XMLHttpRequest();
     xmlhttp.open("GET", file, false);
     xmlhttp.overrideMimeType("application/json");
@@ -36,8 +36,15 @@ const loadResources = (file) => {
     }
   };
 
-  const json = loadJSON();
-  return JSON.parse(json.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m));
+  const capitalLetterMatches = operationName.match(/[A-Z]/);
+  if (capitalLetterMatches !== null) {
+    // for example: the test data JSON file for leakyRelu is leaky_relu.json
+    const capitalLetter = capitalLetterMatches[0];
+    operationName = operationName.replace(capitalLetter, `_${capitalLetter.toLowerCase()}`);
+  }
+  const json = loadJSON(`/webnn/resources/test_data/${operationName}.json`);
+  const resources = JSON.parse(json.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m));
+  return resources.tests;
 };
 
 /**
@@ -172,6 +179,15 @@ const PrecisionMetrics = {
   clamp: {ULP: {float32: 0, float16: 0}},
   concat: {ULP: {float32: 0, float16: 0}},
   conv2d: {ULP: {float32: getConv2dPrecisionTolerance, float16: getConv2dPrecisionTolerance}},
+  // Begin Element-wise binary operations
+  add: {ULP: {float32: 1, float16: 1}},
+  sub: {ULP: {float32: 1, float16: 1}},
+  mul: {ULP: {float32: 1, float16: 1}},
+  div: {ULP: {float32: 2, float16: 2}},
+  max: {ULP: {float32: 0, float16: 0}},
+  min: {ULP: {float32: 0, float16: 0}},
+  pow: {ULP: {float32: 32, float16: 2}},
+  // End Element-wise binary operations
   gemm: {ULP: {float32: getGemmPrecisionTolerance, float16: getGemmPrecisionTolerance}},
   leakyRelu: {ULP: {float32: 1, float16: 1}},
   matmul: {ULP: {float32: getMatmulPrecisionTolerance, float16: getMatmulPrecisionTolerance}},
@@ -190,16 +206,16 @@ const PrecisionMetrics = {
  * Get precison tolerance value.
  * @param {String} operationName - An operation name
  * @param {String} metricType - Value: 'ULP', 'ATOL'
- * @param {String} precisionType - A precision type string, like "float32", "float16",
- *     more types, please see:
- *     https://webmachinelearning.github.io/webnn/#enumdef-mloperandtype
+ * @param {Object} resources - Resources used for building a graph
  * @returns {Number} A tolerance number
  */
-const getPrecisonTolerance = (operationName, metricType, precisionType) => {
+const getPrecisonTolerance = (operationName, metricType, resources) => {
+  // the outputs by split or gru is a sequence
+  const precisionType = Array.isArray(resources.expected) ? resources.expected[0].type : resources.expected.type;
   let tolerance = PrecisionMetrics[operationName][metricType][precisionType];
   // If the tolerance is dynamic, then evaluate the function to get the value.
   if (tolerance instanceof Function) {
-    tolerance = tolerance(resources, operationName);
+    tolerance = tolerance(resources);
   }
   return tolerance;
 };
@@ -300,14 +316,14 @@ const checkResults = (operationName, namedOutputOperands, outputs, resources) =>
       outputData = outputs[operandName];
       // for some operations which may have multi outputs of different types
       [expectedData, operandType] = getExpectedDataAndType(expected, operandName);
-      tolerance = getPrecisonTolerance(operationName, metricType, operandType);
+      tolerance = getPrecisonTolerance(operationName, metricType, resources);
       doAssert(operationName, outputData, expectedData, tolerance, operandType, metricType)
     }
   } else {
     outputData = outputs[expected.name];
     expectedData = expected.data;
     operandType = expected.type;
-    tolerance = getPrecisonTolerance(operationName, metricType, operandType);
+    tolerance = getPrecisonTolerance(operationName, metricType, resources);
     doAssert(operationName, outputData, expectedData, tolerance, operandType, metricType)
   }
 };
@@ -364,6 +380,23 @@ const buildOperationWithSingleInput = (operationName, builder, resources) => {
   const inputOperand = createSingleInputOperand(builder, resources);
   const outputOperand = resources.options ?
       builder[operationName](inputOperand, resources.options) : builder[operationName](inputOperand);
+  namedOutputOperand[resources.expected.name] = outputOperand;
+  return namedOutputOperand;
+};
+
+/**
+ * Build an operation which has two inputs.
+ * @param {String} operationName - An operation name
+ * @param {MLGraphBuilder} builder - A ML graph builder
+ * @param {Object} resources - Resources used for building a graph
+ * @returns {MLNamedOperands}
+ */
+const buildOperationWithTwoInputs= (operationName, builder, resources) => {
+  // For example: MLOperand matmul(MLOperand a, MLOperand b);
+  const namedOutputOperand = {};
+  const [inputOperandA, inputOperandB] = createMultiInputOperands(builder, resources);
+  const outputOperand = resources.options ?
+      builder[operationName](inputOperandA, inputOperandB, resources.options) : builder[operationName](inputOperandA, inputOperandB);
   namedOutputOperand[resources.expected.name] = outputOperand;
   return namedOutputOperand;
 };
@@ -443,13 +476,17 @@ const run = async (operationName, context, builder, resources, buildFunc) => {
 
 /**
  * Run WebNN operation tests.
- * @param {String} operationName - An operation name
- * @param {String} file - A test resources file path
+ * @param {(String[]|String)} operationName - An operation name array or an operation name
  * @param {Function} buildFunc - A build function for an operation
  */
-const testWebNNOperation = (operationName, file, buildFunc) => {
-  const resources = loadResources(file);
-  const tests = resources.tests;
+const testWebNNOperation = (operationName, buildFunc) => {
+  let operationNameArray;
+  if (typeof operationName === 'string') {
+    operationNameArray = [operationName];
+  } else if (Array.isArray(operationName)) {
+    operationNameArray = operationName;
+  }
+
   ExecutionArray.forEach(executionType => {
     const isSync = executionType === 'sync';
     if (self.GLOBAL.isWindow() && isSync) {
@@ -459,29 +496,35 @@ const testWebNNOperation = (operationName, file, buildFunc) => {
     let builder;
     if (isSync) {
       // test sync
-      DeviceTypeArray.forEach(deviceType => {
-        setup(() => {
-          context = navigator.ml.createContextSync({deviceType});
-          builder = new MLGraphBuilder(context);
+      operationNameArray.forEach((subOperationName) => {
+        const tests = loadTests(subOperationName);
+        DeviceTypeArray.forEach(deviceType => {
+          setup(() => {
+            context = navigator.ml.createContextSync({deviceType});
+            builder = new MLGraphBuilder(context);
+          });
+          for (const subTest of tests) {
+            test(() => {
+              runSync(subOperationName, context, builder, subTest, buildFunc);
+            }, `${subTest.name} / ${deviceType} / ${executionType}`);
+          }
         });
-        for (const subTest of tests) {
-          test(() => {
-            runSync(operationName, context, builder, subTest, buildFunc);
-          }, `${subTest.name} / ${deviceType} / ${executionType}`);
-        }
       });
     } else {
       // test async
-      DeviceTypeArray.forEach(deviceType => {
-        promise_setup(async () => {
-          context = await navigator.ml.createContext({deviceType});
-          builder = new MLGraphBuilder(context);
+      operationNameArray.forEach((subOperationName) => {
+        const tests = loadTests(subOperationName);
+        DeviceTypeArray.forEach(deviceType => {
+          promise_setup(async () => {
+            context = await navigator.ml.createContext({deviceType});
+            builder = new MLGraphBuilder(context);
+          });
+          for (const subTest of tests) {
+            promise_test(async () => {
+              await run(subOperationName, context, builder, subTest, buildFunc);
+            }, `${subTest.name} / ${deviceType} / ${executionType}`);
+          }
         });
-        for (const subTest of tests) {
-          promise_test(async () => {
-            await run(operationName, context, builder, subTest, buildFunc);
-          }, `${subTest.name} / ${deviceType} / ${executionType}`);
-        }
       });
     }
   });

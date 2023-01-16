@@ -22,4 +22,4 @@ const buildConv2d= (operationName, builder, resources) => {
   return namedOutputOperand;
 };
 
-testWebNNOperation('conv2d', '/webnn/resources/test_data/conv2d.json', buildConv2d);
+testWebNNOperation('conv2d', buildConv2d);

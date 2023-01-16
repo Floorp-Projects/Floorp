@@ -28,4 +28,4 @@ const buildBatchNorm = (operationName, builder, resources) => {
   return namedOutputOperand;
 };
 
-testWebNNOperation('batchNormalization', '/webnn/resources/test_data/batch_normalization.json', buildBatchNorm);
+testWebNNOperation('batchNormalization', buildBatchNorm);
