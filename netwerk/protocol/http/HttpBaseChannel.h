@@ -80,7 +80,7 @@ enum CacheDisposition : uint8_t {
   kCacheUnknown = 5
 };
 
-enum class OpaqueResponse { Block, Alllow, SniffCompressed, Sniff };
+enum class OpaqueResponse { Block, Allow, SniffCompressed, Sniff };
 
 /*
  * This class is a partial implementation of nsIHttpChannel.  It contains code

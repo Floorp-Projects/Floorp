@@ -348,7 +348,7 @@ nsresult OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterSniff(
     case OpaqueResponse::Block:
       BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
       return NS_ERROR_FAILURE;
-    case OpaqueResponse::Alllow:
+    case OpaqueResponse::Allow:
       AllowResponse();
       return NS_OK;
     case OpaqueResponse::Sniff:
