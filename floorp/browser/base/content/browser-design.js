@@ -55,7 +55,9 @@ function setBrowserDesign() {
   setTimeout(function () {
     gURLBar._updateLayoutBreakoutDimensions();
   }, 500);
-  window.setTimeout(setMultirowTabMaxHeight, 1000);
+  setTimeout(function () {
+    setMultirowTabMaxHeight();
+  }, 1000);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
