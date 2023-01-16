@@ -4,8 +4,8 @@
 
 "use strict";
 
-let { PromptUtils } = ChromeUtils.import(
-  "resource://gre/modules/SharedPromptUtils.jsm"
+let { PromptUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromptUtils.sys.mjs"
 );
 
 const AdjustableTitle = {

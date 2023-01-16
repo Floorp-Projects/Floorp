@@ -7,7 +7,7 @@
 EXTRA_JS_MODULES += [
     "CommonDialog.jsm",
     "Prompter.jsm",
-    "SharedPromptUtils.jsm",
+    "PromptUtils.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

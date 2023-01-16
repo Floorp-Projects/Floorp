@@ -1438,7 +1438,7 @@
   "resource://gre/modules/ShareDelegate.jsm":
     "mobile/android/components/geckoview/ShareDelegate.jsm",
   "resource://gre/modules/SharedPromptUtils.jsm":
-    "toolkit/components/prompts/src/SharedPromptUtils.jsm",
+    "toolkit/components/prompts/src/PromptUtils.jsm",
   "resource://gre/modules/ShieldContentProcess.jsm":
     "toolkit/components/normandy/ShieldContentProcess.jsm",
   "resource://gre/modules/ShortcutUtils.jsm":

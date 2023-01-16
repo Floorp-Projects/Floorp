@@ -39,6 +39,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PluralForm: "resource://gre/modules/PluralForm.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
@@ -84,7 +85,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PanelView: "resource:///modules/PanelMultiView.jsm",
   Pocket: "chrome://pocket/content/Pocket.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
-  PromptUtils: "resource://gre/modules/SharedPromptUtils.jsm",
   // TODO (Bug 1529552): Remove once old urlbar code goes away.
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   RFPHelper: "resource://gre/modules/RFPHelper.jsm",
