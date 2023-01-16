@@ -635,53 +635,6 @@ setUserContextLine(data.id.replace("BSB-",""))
     }
   }
 
-/*---------------------------------------------------------------- design ----------------------------------------------------------------*/
-
-function setBrowserDesign() {
-  let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
-  let updateNumberDate = new Date()
-  let updateNumber = `${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}${Math.floor(Math.random()*1000)}`
-  const ThemeCSS = {
-    ProtonfixUI: `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
-    LeptonUI:    `@import url(chrome://browser/skin/lepton/userChrome.css?${updateNumber});
-                   @import url(chrome://browser/skin/lepton/userChrome.css?${updateNumber});`,
-    LeptonUIMultitab: `@import url(chrome://browser/skin/lepton/photonChrome-multitab.css?${updateNumber});
-                    @import url(chrome://browser/skin/lepton/photonContent-multitab.css?${updateNumber});`,
-    MaterialUI: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
-    MaterialUIMultitab: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);
-    .tabbrowser-tab { margin-top: 0.7em !important;  position: relative !important;  top: -0.34em !important; }`,
-    fluentUI: `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
-    gnomeUI: `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
-    FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css);`,
-  }
-  var Tag = document.createElement('style');
-  Tag.setAttribute("id", "browserdesgin");
-  switch (floorpinterfacenum) {
-    //ProtonUI 
-    case 1:
-      break;
-    case 2:
-      Tag.innerText = ThemeCSS.ProtonfixUI;
-      break;
-    case 3:
-      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.LeptonUIMultitab : ThemeCSS.LeptonUI; ;
-      break;
-    case 4:
-      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.MaterialUIMultitab : ThemeCSS.MaterialUI;
-      break;
-    case 5:
-      if (AppConstants.platform != "linux") Tag.innerText = ThemeCSS.fluentUI;
-      break;
-    case 6:
-      if (AppConstants.platform == "linux") Tag.innerText = ThemeCSS.gnomeUI;
-      break;
-    case 8: 
-      Tag.innerText = ThemeCSS.FluerialUI;
-      break;
-  }
-  document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-}
-
 /*---------------------------------------------------------------- Context Menu ----------------------------------------------------------------*/
 function addContextBox(id,l10n,insert,runFunction){
   let contextMenu = document.createXULElement("menuitem");
@@ -701,17 +654,6 @@ function contextMenuObserverFunc(){
 function contextMenuObserverAdd(id){
   contextMenuObserver.observe(document.getElementById(id), {attributes:true})
   contextMenuObserverFunc()
-}
-
-/*---------------------------------------------------------------- URLbar recalculation ----------------------------------------------------------------*/
-
-function URLbarrecalculation() {
-  setTimeout(function () {
-    gURLBar._updateLayoutBreakoutDimensions();
-  }, 100);
-  setTimeout(function () {
-    gURLBar._updateLayoutBreakoutDimensions();
-  }, 500);
 }
 
 /*---------------------------------------------------------------- Multirow-Tab ----------------------------------------------------------------*/
