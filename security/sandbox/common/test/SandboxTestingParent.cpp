@@ -118,7 +118,7 @@ mozilla::ipc::IPCResult SandboxTestingParent::RecvGetSpecialDirectory(
           dir->GetPath(*aDirPath);
         }
       });
-  SyncRunnable::DispatchToThread(GetMainThreadEventTarget(), runnable,
+  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), runnable,
                                  /*aForceDispatch*/ true);
   return IPC_OK();
 }
