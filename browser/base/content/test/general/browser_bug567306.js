@@ -2,7 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var HasFindClipboard = Services.clipboard.supportsFindClipboard();
+var HasFindClipboard = Services.clipboard.isClipboardTypeSupported(
+  Services.clipboard.kFindClipboard
+);
 
 add_task(async function() {
   let newwindow = await BrowserTestUtils.openNewBrowserWindow();

@@ -229,6 +229,7 @@ union SystemParameterValue {
 struct ClipboardCapabilities {
   bool supportsSelectionClipboard;
   bool supportsFindClipboard;
+  bool supportsSelectionCache;
 };
 
 union FileDescOrError {

@@ -1714,7 +1714,9 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
 
   supportsSelectionClipboard() {
-    return Services.clipboard.supportsSelectionClipboard();
+    return Services.clipboard.isClipboardTypeSupported(
+      Services.clipboard.kSelectionClipboard
+    );
   }
 
   swapFactoryRegistration(cid, contractID, newFactory) {

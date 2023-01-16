@@ -3322,7 +3322,9 @@ export class UrlbarInput {
       // The check on isHandlingUserInput filters out async "select" events
       // from setSelectionRange(), which occur when autofill text is selected.
       !this.window.windowUtils.isHandlingUserInput ||
-      !Services.clipboard.supportsSelectionClipboard()
+      !Services.clipboard.isClipboardTypeSupported(
+        Services.clipboard.kSelectionClipboard
+      )
     ) {
       return;
     }

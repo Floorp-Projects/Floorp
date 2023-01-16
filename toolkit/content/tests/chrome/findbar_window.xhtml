@@ -31,7 +31,7 @@
     var gFindBar = null;
     var gBrowser;
 
-    var gHasFindClipboard = Services.clipboard.supportsFindClipboard();
+    var gHasFindClipboard = Services.clipboard.isClipboardTypeSupported(Services.clipboard.kFindClipboard);
 
     var gStatusText;
     var gXULBrowserWindow = {

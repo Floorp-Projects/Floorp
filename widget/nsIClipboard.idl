@@ -77,22 +77,16 @@ interface nsIClipboard : nsISupports
     boolean hasDataMatchingFlavors ( in Array<ACString> aFlavorList,
                                      in long aWhichClipboard ) ;
 
-   /**
-    * Allows clients to determine if the implementation supports the concept of a
-    * separate clipboard for selection.
-    *
-    * @outResult - true if
-    * @result NS_OK if successful.
-    */
-    boolean supportsSelectionClipboard ( ) ;
-
     /**
-    * Allows clients to determine if the implementation supports the concept of a
-    * separate clipboard for find search strings.
-    *
-    * @result NS_OK if successful.
-    */
-    boolean supportsFindClipboard ( ) ;
+     * Allows clients to determine if the implementation supports the concept of a
+     * separate clipboard.
+     *
+     * @param aWhichClipboard  Specifies the clipboard to which this operation applies.
+     * @outResult  true if the implementaion supports specific clipboard type.
+     * @result  NS_OK if successful.
+     */
+    [infallible]
+    boolean isClipboardTypeSupported(in long aWhichClipboard);
 
     /**
      * Filters the flavors aTransferable can import (see

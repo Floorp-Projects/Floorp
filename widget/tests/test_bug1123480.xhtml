@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
 
     // gClipboardHelper.copyString also puts the data on the selection
     // clipboard if the platform supports it.
-    var expectedFdDelta = Services.clipboard.supportsSelectionClipboard() ? 2 : 1;
+    var expectedFdDelta = Services.clipboard.isClipboardTypeSupported(Services.clipboard.kSelectionClipboard) ? 2 : 1;
     // Undefined private browsing mode should cache to disk
     is(getClipboardCacheFDCount(), initialFdCount + expectedFdDelta, "should cache to disk when PBM is undefined");
 
