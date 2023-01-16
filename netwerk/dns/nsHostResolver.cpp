@@ -1098,6 +1098,17 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
   // so we don't wrongly report the reason for the previous one.
   rec->Reset();
 
+  if (StaticPrefs::network_trr_display_fallback_warning()) {
+    TRRSkippedReason heuristicResult =
+        TRRService::Get()->GetHeuristicDetectionResult();
+    if (heuristicResult != TRRSkippedReason::TRR_UNSET &&
+        heuristicResult != TRRSkippedReason::TRR_OK) {
+      rec->RecordReason(heuristicResult);
+    }
+    LOG(("NameLookup: %s heuristicResult: %d ", rec->host.get(),
+         heuristicResult));
+  }
+
   ComputeEffectiveTRRMode(rec);
 
   if (!rec->mTrrServer.IsEmpty()) {
@@ -1143,6 +1154,33 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
     MOZ_ASSERT(addrRec && addrRec->mResolverType == DNSResolverType::Native);
 #endif
+
+    // Don't fallback to native if the network.trr.display_fallback_warning pref
+    // is set on TRR confirmation failure or a heuristic tripped
+    // Heuristics will only be tripped if we attempted to enable DoH
+    if (StaticPrefs::network_trr_display_fallback_warning() &&
+        (rec->mTRRSkippedReason == TRRSkippedReason::TRR_NOT_CONFIRMED ||
+         (rec->mTRRSkippedReason >=
+              nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH &&
+          rec->mTRRSkippedReason <=
+              nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_NRPT))) {
+      LOG(
+          ("NameLookup: ResolveHostComplete with status NS_ERROR_UNKNOWN_HOST "
+           "for: %s effectiveTRRmode: "
+           "%d SkippedReason: %d",
+           rec->host.get(),
+           static_cast<nsIRequest::TRRMode>(rec->mEffectiveTRRMode),
+           static_cast<int32_t>(rec->mTRRSkippedReason)));
+
+      mozilla::LinkedList<RefPtr<nsResolveHostCallback>> cbs =
+          std::move(rec->mCallbacks);
+      for (nsResolveHostCallback* c = cbs.getFirst(); c;
+           c = c->removeAndGetNext()) {
+        c->OnResolveHostComplete(this, rec, NS_ERROR_UNKNOWN_HOST);
+      }
+
+      return NS_OK;
+    }
 
     rv = NativeLookup(rec, aLock);
   }
