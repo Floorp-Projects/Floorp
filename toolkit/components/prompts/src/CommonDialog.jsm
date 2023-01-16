@@ -5,11 +5,9 @@
 var EXPORTED_SYMBOLS = ["CommonDialog"];
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "EnableDelayHelper",
-  "resource://gre/modules/SharedPromptUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  EnableDelayHelper: "resource://gre/modules/PromptUtils.sys.mjs",
+});
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"

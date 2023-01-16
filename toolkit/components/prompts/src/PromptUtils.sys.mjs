@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["PromptUtils", "EnableDelayHelper"];
-
-var PromptUtils = {
+export var PromptUtils = {
   // Fire a dialog open/close event. Used by tabbrowser to focus the
   // tab which is triggering a prompt.
   // For remote dialogs, we pass in a different DOM window and a separate
@@ -60,7 +58,11 @@ var PromptUtils = {
  *                       is to be disabled.
  * @param focusTarget    The window used to watch focus/blur events.
  */
-var EnableDelayHelper = function({ enableDialog, disableDialog, focusTarget }) {
+export var EnableDelayHelper = function({
+  enableDialog,
+  disableDialog,
+  focusTarget,
+}) {
   this.enableDialog = makeSafe(enableDialog);
   this.disableDialog = makeSafe(disableDialog);
   this.focusTarget = focusTarget;
