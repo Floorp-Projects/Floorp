@@ -33,6 +33,7 @@
 #include "nsAttrName.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -1972,14 +1973,13 @@ bool nsTreeSanitizer::MatchesElementName(ElementNameSet& aNames,
 
 // https://wicg.github.io/sanitizer-api/#attribute-match-list
 bool nsTreeSanitizer::MatchesAttributeMatchList(
-    ElementToAttributeSetTable& aMatchList, Element& aElement,
+    AttributesToElementsMap& aMatchList, Element& aElement,
     int32_t aAttrNamespace, nsAtom* aAttrLocalName) {
   // Step 1. If attribute’s local name does not match the attribute match list
   // list’s key and if the key is not "*": Return false.
   ElementNameSet* names;
-  if (auto lookup = aMatchList.Lookup(aAttrLocalName)) {
-    names = lookup->get();
-  } else if (auto lookup = aMatchList.Lookup(nsGkAtoms::_asterisk)) {
+  if (auto lookup =
+          aMatchList.Lookup(AttributeName(aAttrNamespace, aAttrLocalName))) {
     names = lookup->get();
   } else {
     return false;
@@ -1990,19 +1990,20 @@ bool nsTreeSanitizer::MatchesAttributeMatchList(
   // Step 4. If element is a in either the SVG or MathML namespaces (i.e., it’s
   // a foreign element), then prefix element name with the appropriate namespace
   // designator plus a whitespace character.
+
+  // TODO: This is spec text is going to change.
   int32_t namespaceID = aElement.NodeInfo()->NamespaceID();
   RefPtr<nsAtom> nameAtom = aElement.NodeInfo()->NameAtom();
-  ElementName elemName(namespaceID, nameAtom);
 
   // Step 5. If list’s value does not contain element name and value is not
   // ["*"]: Return false.
-  if (!names->Contains(elemName) &&
-      !names->Contains(ElementName(kNameSpaceID_XHTML, nsGkAtoms::_asterisk))) {
-    return false;
-  }
-
   // Step 6. Return true.
-  return true;
+
+  // nullptr means star (*), i.e. any element.
+  if (!names) {
+    return true;
+  }
+  return MatchesElementName(*names, namespaceID, nameAtom);
 }
 
 // https://wicg.github.io/sanitizer-api/#sanitize-action-for-an-attribute
@@ -2025,19 +2026,19 @@ bool nsTreeSanitizer::MustDropAttribute(Element* aElement,
 
   // Step 4. If attribute matches any attribute match list in config’s attribute
   // drop list: Return drop.
-  if (mDroppedAttributes &&
-      MatchesAttributeMatchList(*mDroppedAttributes, *aElement, aAttrNamespace,
+  if (mDropAttributes &&
+      MatchesAttributeMatchList(*mDropAttributes, *aElement, aAttrNamespace,
                                 aAttrLocalName)) {
     return true;
   }
 
   // Step 5. If attribute allow list exists in config:
-  if (mAllowedAttributes) {
+  if (mAllowAttributes) {
     // Step 5.1. Then let allow list be |config|["allowAttributes"].
     // Step 6. If attribute does not match any attribute match list in allow
     // list: Return drop.
-    if (!MatchesAttributeMatchList(*mAllowedAttributes, *aElement,
-                                   aAttrNamespace, aAttrLocalName)) {
+    if (!MatchesAttributeMatchList(*mAllowAttributes, *aElement, aAttrNamespace,
+                                   aAttrLocalName)) {
       return true;
     }
   } else {
@@ -2458,48 +2459,88 @@ void nsTreeSanitizer::ReleaseStatics() {
   NS_IF_RELEASE(sNullPrincipal);
 }
 
-UniquePtr<nsTreeSanitizer::ElementNameSet> nsTreeSanitizer::ConvertElementNames(
-    const Sequence<nsString>& aNames) {
-  auto names = MakeUnique<ElementNameSet>(aNames.Length());
+static int32_t ConvertNamespaceString(const nsAString& aNamespace,
+                                      bool aForAttribute,
+                                      mozilla::ErrorResult& aRv) {
+  int32_t namespaceID = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
+      aNamespace, /* aInChromeDoc */ false);
+  if (namespaceID == kNameSpaceID_XHTML || namespaceID == kNameSpaceID_MathML ||
+      namespaceID == kNameSpaceID_SVG) {
+    return namespaceID;
+  }
+  if (aForAttribute && (namespaceID == kNameSpaceID_XMLNS ||
+                        namespaceID == kNameSpaceID_XLink)) {
+    return namespaceID;
+  }
 
-  // https://wicg.github.io/sanitizer-api/#normalize-element-name
-  for (const nsString& name : aNames) {
-    // Step 1. Let tokens be the result of strictly splitting name on the
-    // delimiter ":" (U+003A).
-    int32_t index = name.FindChar(':');
+  aRv.ThrowTypeError("Invalid namespace: \""_ns +
+                     NS_ConvertUTF16toUTF8(aNamespace) + "\"."_ns);
+  return kNameSpaceID_Unknown;
+}
 
-    // Step 2. If tokens’ size is 1, then return tokens[0].
-    if (index == kNotFound) {
-      RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(name);
+UniquePtr<nsTreeSanitizer::ElementNameSet> nsTreeSanitizer::ConvertElements(
+    const nsTArray<OwningStringOrSanitizerElementNamespace>& aElements,
+    mozilla::ErrorResult& aRv) {
+  auto set = MakeUnique<ElementNameSet>(aElements.Length());
+  for (const auto& entry : aElements) {
+    if (entry.IsString()) {
+      RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(entry.GetAsString());
+      // The default namespace for elements is HTML.
       ElementName elemName(kNameSpaceID_XHTML, std::move(nameAtom));
-      names->Insert(elemName);
-      continue;
-    }
+      set->Insert(elemName);
+    } else {
+      const auto& elemNamespace = entry.GetAsSanitizerElementNamespace();
 
-    // Step 3. If tokens’ size is 2 and tokens[0] is either "svg" or "math",
-    // then:
-    if (name.FindChar(':', index + 1) == kNotFound) {
-      auto prefix = Substring(name, 0, index);
-      // Step 3.1. Adjust tokens[1] as described in the "any other start tag"
-      // branch of the rules for parsing tokens in foreign content subchapter in
-      // the HTML parsing spec. Step 3.2 Return the concatenation of the list
-      // «|tokens|[0],":" (U+003A),|tokens|[1]».
-      // TODO
-      RefPtr<nsAtom> nameAtom =
-          NS_AtomizeMainThread(Substring(name, index + 1));
-      if (prefix.EqualsLiteral("svg")) {
-        ElementName elemName(kNameSpaceID_SVG, std::move(nameAtom));
-        names->Insert(elemName);
-      } else if (prefix.EqualsLiteral("math")) {
-        ElementName elemName(kNameSpaceID_MathML, std::move(nameAtom));
-        names->Insert(elemName);
+      int32_t namespaceID =
+          ConvertNamespaceString(elemNamespace.mNamespace, false, aRv);
+      if (aRv.Failed()) {
+        return {};
+      }
+
+      RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(elemNamespace.mName);
+      ElementName elemName(namespaceID, std::move(nameAtom));
+      set->Insert(elemName);
+    }
+  }
+
+  return set;
+}
+
+UniquePtr<nsTreeSanitizer::ElementNameSet> nsTreeSanitizer::ConvertElements(
+    const OwningStarOrStringOrSanitizerElementNamespaceSequence& aElements,
+    mozilla::ErrorResult& aRv) {
+  if (aElements.IsStar()) {
+    return nullptr;
+  }
+  return ConvertElements(
+      aElements.GetAsStringOrSanitizerElementNamespaceSequence(), aRv);
+}
+
+UniquePtr<nsTreeSanitizer::AttributesToElementsMap>
+nsTreeSanitizer::ConvertAttributes(
+    const nsTArray<SanitizerAttribute>& aAttributes, ErrorResult& aRv) {
+  auto map = MakeUnique<AttributesToElementsMap>();
+
+  for (const auto& entry : aAttributes) {
+    // The default namespace for attributes is the "null" namespace.
+    int32_t namespaceID = kNameSpaceID_None;
+    if (!entry.mNamespace.IsVoid()) {
+      namespaceID = ConvertNamespaceString(entry.mNamespace, true, aRv);
+      if (aRv.Failed()) {
+        return {};
       }
     }
+    RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(entry.mName);
+    AttributeName attrName(namespaceID, std::move(attrAtom));
 
-    // Step 4. Return null.
-    // Nothing is inserted and name is skipped.
+    UniquePtr<ElementNameSet> elements = ConvertElements(entry.mElements, aRv);
+    if (aRv.Failed()) {
+      return {};
+    }
+    map->InsertOrUpdate(attrName, std::move(elements));
   }
-  return names;
+
+  return map;
 }
 
 void nsTreeSanitizer::WithWebSanitizerOptions(
@@ -2525,36 +2566,35 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
   }
 
   if (aOptions.mAllowElements.WasPassed()) {
-    mAllowElements = ConvertElementNames(aOptions.mAllowElements.Value());
+    mAllowElements = ConvertElements(aOptions.mAllowElements.Value(), aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   if (aOptions.mBlockElements.WasPassed()) {
-    mBlockElements = ConvertElementNames(aOptions.mBlockElements.Value());
+    mBlockElements = ConvertElements(aOptions.mBlockElements.Value(), aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   if (aOptions.mDropElements.WasPassed()) {
-    mDropElements = ConvertElementNames(aOptions.mDropElements.Value());
+    mDropElements = ConvertElements(aOptions.mDropElements.Value(), aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   if (aOptions.mAllowAttributes.WasPassed()) {
-    const Record<nsString, Sequence<nsString>>& allowedAttributes =
-        aOptions.mAllowAttributes.Value();
-    mAllowedAttributes = MakeUnique<ElementToAttributeSetTable>();
-    for (const auto& entry : allowedAttributes.Entries()) {
-      RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(entry.mKey);
-      UniquePtr<ElementNameSet> elements = ConvertElementNames(entry.mValue);
-      mAllowedAttributes->InsertOrUpdate(attrAtom, std::move(elements));
+    mAllowAttributes =
+        ConvertAttributes(aOptions.mAllowAttributes.Value(), aRv);
+    if (aRv.Failed()) {
+      return;
     }
   }
 
   if (aOptions.mDropAttributes.WasPassed()) {
-    const Record<nsString, Sequence<nsString>>& droppedAttributes =
-        aOptions.mDropAttributes.Value();
-    mDroppedAttributes = MakeUnique<ElementToAttributeSetTable>();
-    for (const auto& entry : droppedAttributes.Entries()) {
-      RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(entry.mKey);
-      UniquePtr<ElementNameSet> elements = ConvertElementNames(entry.mValue);
-      mDroppedAttributes->InsertOrUpdate(attrAtom, std::move(elements));
-    }
+    mDropAttributes = ConvertAttributes(aOptions.mDropAttributes.Value(), aRv);
   }
 }
