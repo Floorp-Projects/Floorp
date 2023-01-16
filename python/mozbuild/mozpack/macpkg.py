@@ -2,6 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# TODO: Eventually consolidate with mozpack.pkg module. This is kept separate
+# for now because of the vast difference in API, and to avoid churn for the
+# users of this module (docker images, macos SDK artifacts) when changes are
+# necessary in mozpack.pkg
 import bz2
 import io
 import lzma

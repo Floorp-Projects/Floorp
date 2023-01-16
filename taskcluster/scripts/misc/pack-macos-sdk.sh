@@ -12,7 +12,7 @@ curl -OL $PKG
 shasum -a 256 -c <<EOF
 $SHA256  $(basename $PKG)
 EOF
-pkgutil --expand-full $(basename $PKG) pkg/
-mv pkg/Payload/$SDK_DIR $(basename $SDK_DIR)
+$GECKO_PATH/mach python $(dirname $0)/unpack-sdk.py $(basename $PKG) pkg/
+mv pkg/$SDK_DIR $(basename $SDK_DIR)
 
 $(dirname $0)/pack.sh $(basename $SDK_DIR)
