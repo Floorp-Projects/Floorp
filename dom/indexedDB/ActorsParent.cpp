@@ -13776,8 +13776,14 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
           MOZ_ASSERT(threadPool);
         }
 
+        // Perform database maintenance on a TaskQueue, as database connections
+        // require a serial event target when being opened in order to allow
+        // memory pressure notifications to clear caches (bug 1806751).
+        const auto taskQueue = TaskQueue::Create(
+            do_AddRef(threadPool), "IndexedDB Database Maintenance");
+
         MOZ_ALWAYS_SUCCEEDS(
-            threadPool->Dispatch(databaseMaintenance, NS_DISPATCH_NORMAL));
+            taskQueue->Dispatch(databaseMaintenance, NS_DISPATCH_NORMAL));
 
         RegisterDatabaseMaintenance(databaseMaintenance);
       }
