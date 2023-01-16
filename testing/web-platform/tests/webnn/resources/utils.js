@@ -188,6 +188,17 @@ const PrecisionMetrics = {
   min: {ULP: {float32: 0, float16: 0}},
   pow: {ULP: {float32: 32, float16: 2}},
   // End Element-wise binary operations
+  // Begin Element-wise unary operations
+  abs: {ULP: {float32: 0, float16: 0}},
+  ceil: {ULP: {float32: 0, float16: 0}},
+  cos: {ATOL: {float32: 1/1024, float16: 1/512}},
+  exp: {ULP: {float32: 32, float16: 1}},
+  floor: {ULP: {float32: 0, float16: 0}},
+  log: {ATOL: {float32: 1/1024, float16:  1/1024}},
+  neg: {ULP: {float32: 0, float16: 0}},
+  sin: {ATOL: {float32: 1/1024, float16: 1/512}},
+  tan: {ATOL: {float32: 1/1024, float16: 1/512}},
+  // End Element-wise unary operations
   gemm: {ULP: {float32: getGemmPrecisionTolerance, float16: getGemmPrecisionTolerance}},
   leakyRelu: {ULP: {float32: 1, float16: 1}},
   matmul: {ULP: {float32: getMatmulPrecisionTolerance, float16: getMatmulPrecisionTolerance}},
