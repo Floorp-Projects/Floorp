@@ -1,8 +1,8 @@
 const TEST_URL =
   "https://example.com/browser/dom/tests/browser/focus_after_prompt.html";
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 function awaitAndClosePrompt(browser) {

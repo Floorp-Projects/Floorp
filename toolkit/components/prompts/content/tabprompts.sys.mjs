@@ -215,8 +215,8 @@ export var TabModalPrompt = class {
     // when the domWindow, for which the prompt was created, generates
     // a "pagehide" event.
 
-    let { CommonDialog } = ChromeUtils.import(
-      "resource://gre/modules/CommonDialog.jsm"
+    let { CommonDialog } = ChromeUtils.importESModule(
+      "resource://gre/modules/CommonDialog.sys.mjs"
     );
     this.Dialog = new CommonDialog(args, this.ui);
     this.Dialog.onLoad(null);

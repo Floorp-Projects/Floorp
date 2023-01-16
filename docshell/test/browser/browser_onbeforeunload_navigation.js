@@ -6,8 +6,8 @@ const TARGETED_PAGE =
   "data:text/html," +
   encodeURIComponent("<body>Shouldn't be seeing this</body>");
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 var loadStarted = false;

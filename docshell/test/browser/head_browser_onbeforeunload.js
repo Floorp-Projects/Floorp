@@ -9,8 +9,8 @@ const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
   false
 );
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 async function withTabModalPromptCount(expected, task) {
