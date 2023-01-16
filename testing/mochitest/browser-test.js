@@ -1197,6 +1197,13 @@ Tester.prototype = {
       /* no chrome-harness tools */
     }
 
+    // Ensure we are not idle at the beginning of the test. If we don't do this,
+    // the browser may behave differently if the previous tests ran long.
+    // eg. the session store behavior changes 3 minutes after the last user event.
+    Cc["@mozilla.org/widget/useridleservice;1"]
+      .getService(Ci.nsIUserIdleServiceInternal)
+      .resetIdleTimeOut(0);
+
     // Import head.js script if it exists.
     var currentTestDirPath = this.currentTest.path.substr(
       0,
