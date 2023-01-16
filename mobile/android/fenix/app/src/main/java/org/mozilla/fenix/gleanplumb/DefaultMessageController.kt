@@ -17,13 +17,13 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDi
  */
 class DefaultMessageController(
     private val appStore: AppStore,
-    private val messagingStorage: NimbusMessagingStorage,
+    messagingStorage: NimbusMessagingStorage,
+    private val messagingController: NimbusMessagingController = NimbusMessagingController(messagingStorage),
     private val homeActivity: HomeActivity,
 ) : MessageController {
-    private val controller = NimbusMessagingController(messagingStorage)
 
     override fun onMessagePressed(message: Message) {
-        val action = controller.processMessageAction(message)
+        val action = messagingController.processMessageAction(message)
         handleAction(action)
         appStore.dispatch(MessageClicked(message))
     }

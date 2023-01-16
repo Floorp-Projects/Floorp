@@ -4,22 +4,16 @@
 
 package org.mozilla.fenix.gleanplumb
 
-import android.net.Uri
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
@@ -35,6 +29,7 @@ class DefaultMessageControllerTest {
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val storageNimbus: NimbusMessagingStorage = mockk(relaxed = true)
+    private val controllerNimbus: NimbusMessagingController = mockk(relaxed = true)
     private lateinit var controller: DefaultMessageController
     private val appStore: AppStore = mockk(relaxed = true)
 
@@ -42,6 +37,7 @@ class DefaultMessageControllerTest {
     fun setup() {
         controller = DefaultMessageController(
             messagingStorage = storageNimbus,
+            messagingController = controllerNimbus,
             appStore = appStore,
             homeActivity = activity,
         )
@@ -51,17 +47,10 @@ class DefaultMessageControllerTest {
     fun `WHEN calling onMessagePressed THEN update the app store and handle the action`() {
         val customController = spyk(controller)
         val message = mockMessage()
-        every { customController.handleAction(any()) } returns mockk()
-        every { storageNimbus.getMessageAction(any()) } returns Pair("uuid", message.id)
-        assertNull(Messaging.messageClicked.testGetValue())
 
         customController.onMessagePressed(message)
 
-        assertNotNull(Messaging.messageClicked.testGetValue())
-        val event = Messaging.messageClicked.testGetValue()!!
-        assertEquals(1, event.size)
-        assertEquals(message.id, event.single().extra!!["message_key"])
-        assertEquals("uuid", event.single().extra!!["action_uuid"])
+        verify { controllerNimbus.processMessageAction(message) }
         verify { customController.handleAction(any()) }
         verify { appStore.dispatch(MessageClicked(message)) }
     }
@@ -72,20 +61,10 @@ class DefaultMessageControllerTest {
 
         verify { activity.processIntent(any()) }
 
-        val encodedUrl = Uri.encode("http://mozilla.org")
         assertEquals(
-            "${BuildConfig.DEEP_LINK_SCHEME}://open?url=$encodedUrl",
+            "http://mozilla.org",
             intent.data.toString(),
         )
-    }
-
-    @Test
-    fun `GIVEN an deeplink WHEN calling handleAction THEN process the intent with an deeplink uri`() {
-        val intent = controller.handleAction("://settings_privacy")
-
-        verify { activity.processIntent(any()) }
-
-        assertEquals("${BuildConfig.DEEP_LINK_SCHEME}://settings_privacy", intent.data.toString())
     }
 
     @Test
