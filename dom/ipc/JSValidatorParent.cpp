@@ -24,7 +24,7 @@ already_AddRefed<JSValidatorParent> JSValidatorParent::Create() {
 }
 
 void JSValidatorParent::IsOpaqueResponseAllowed(
-    const std::function<void(Maybe<Shmem>, ValidatorResult)>& aCallback) {
+    const std::function<void(bool, Maybe<Shmem>)>& aCallback) {
   JSOracleParent::WithJSOracle([=, self = RefPtr{this}](const auto* aParent) {
     if (aParent) {
       MOZ_DIAGNOSTIC_ASSERT(self->CanSend());
@@ -34,16 +34,14 @@ void JSValidatorParent::IsOpaqueResponseAllowed(
               const IsOpaqueResponseAllowedPromise::ResolveOrRejectValue&
                   aResult) {
             if (aResult.IsResolve()) {
-              Maybe<Shmem> data;
-              ValidatorResult result;
-              Tie(data, result) = aResult.ResolveValue();
-              aCallback(std::move(data), result);
+              const Tuple<bool, Maybe<Shmem>>& result = aResult.ResolveValue();
+              aCallback(Get<0>(result), Get<1>(aResult.ResolveValue()));
             } else {
-              aCallback(Nothing(), ValidatorResult::Failure);
+              aCallback(false, Nothing());
             }
           });
     } else {
-      aCallback(Nothing(), ValidatorResult::Failure);
+      aCallback(false, Nothing());
     }
   });
 }
