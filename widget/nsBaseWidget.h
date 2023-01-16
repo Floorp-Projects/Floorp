@@ -365,11 +365,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }
 
-  LayoutDeviceIntSize ClientToWindowSize(
-      const LayoutDeviceIntSize& aClientSize) override {
-    return aClientSize;
-  }
-
   // return true if this is a popup widget with a native titlebar
   bool IsPopupWithTitleBar() const {
     return (mWindowType == eWindowType_popup &&
