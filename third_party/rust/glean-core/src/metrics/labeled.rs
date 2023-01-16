@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::borrow::Cow;
 use std::collections::{hash_map::Entry, HashMap};
 use std::sync::{Arc, Mutex};
 
-use crate::common_metric_data::CommonMetricData;
+use crate::common_metric_data::{CommonMetricData, CommonMetricDataInternal};
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::{BooleanMetric, CounterMetric, Metric, MetricType, StringMetric};
 use crate::Glean;
@@ -88,7 +89,7 @@ fn matches_label_regex(value: &str) -> bool {
 /// Labeled metrics allow to record multiple sub-metrics of the same type under different string labels.
 #[derive(Debug)]
 pub struct LabeledMetric<T> {
-    labels: Option<Vec<String>>,
+    labels: Option<Vec<Cow<'static, str>>>,
     /// Type of the underlying metric
     /// We hold on to an instance of it, which is cloned to create new modified instances.
     submetric: T,
@@ -159,12 +160,12 @@ where
     /// Creates a new labeled metric from the given metric instance and optional list of labels.
     ///
     /// See [`get`](LabeledMetric::get) for information on how static or dynamic labels are handled.
-    pub fn new(meta: CommonMetricData, labels: Option<Vec<String>>) -> LabeledMetric<T> {
+    pub fn new(meta: CommonMetricData, labels: Option<Vec<Cow<'static, str>>>) -> LabeledMetric<T> {
         let submetric = T::new_labeled(meta);
         LabeledMetric::new_inner(submetric, labels)
     }
 
-    fn new_inner(submetric: T, labels: Option<Vec<String>>) -> LabeledMetric<T> {
+    fn new_inner(submetric: T, labels: Option<Vec<Cow<'static, str>>>) -> LabeledMetric<T> {
         let label_map = Default::default();
         LabeledMetric {
             labels,
@@ -244,7 +245,7 @@ where
                     Some(_) => {
                         let label = self.static_label(label);
                         self.new_metric_with_name(combine_base_identifier_and_label(
-                            &self.submetric.meta().name,
+                            &self.submetric.meta().inner.name,
                             label,
                         ))
                     }
@@ -303,13 +304,13 @@ pub fn strip_label(identifier: &str) -> &str {
 /// The errors are logged.
 pub fn validate_dynamic_label(
     glean: &Glean,
-    meta: &CommonMetricData,
+    meta: &CommonMetricDataInternal,
     base_identifier: &str,
     label: &str,
 ) -> String {
     let key = combine_base_identifier_and_label(base_identifier, label);
-    for store in &meta.send_in_pings {
-        if glean.storage().has_metric(meta.lifetime, store, &key) {
+    for store in &meta.inner.send_in_pings {
+        if glean.storage().has_metric(meta.inner.lifetime, store, &key) {
             return key;
         }
     }
@@ -320,8 +321,8 @@ pub fn validate_dynamic_label(
         label_count += 1;
     };
 
-    let lifetime = meta.lifetime;
-    for store in &meta.send_in_pings {
+    let lifetime = meta.inner.lifetime;
+    for store in &meta.inner.send_in_pings {
         glean
             .storage()
             .iter_store_from(lifetime, store, Some(prefix), &mut snapshotter);

@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::CounterMetric;
 use crate::metrics::Metric;
@@ -25,7 +26,7 @@ pub struct DenominatorMetric {
 }
 
 impl MetricType for DenominatorMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         self.counter.meta()
     }
 }
@@ -103,13 +104,13 @@ impl DenominatorMetric {
     ) -> Option<i32> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta().identifier(glean),
-            self.meta().lifetime,
+            self.meta().inner.lifetime,
         ) {
             Some(Metric::Counter(i)) => Some(i),
             _ => None,
@@ -124,7 +125,7 @@ impl DenominatorMetric {
     ///
     /// * `error` - The type of error
     /// * `ping_name` - the optional name of the ping to retrieve the metric
-    ///                 for. Defaults to the first value in `send_in_pings`.
+    ///                 for. inner to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

@@ -4,14 +4,15 @@
 
 use std::cmp;
 use std::collections::HashMap;
+use std::sync::atomic::AtomicU8;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, ErrorType};
 use crate::metrics::{Metric, MetricType, RecordedExperiment};
 use crate::storage::{StorageManager, INTERNAL_STORAGE};
 use crate::util::{truncate_string_at_boundary, truncate_string_at_boundary_with_error};
-use crate::CommonMetricData;
-use crate::Glean;
 use crate::Lifetime;
+use crate::{CommonMetricData, Glean};
 
 /// The maximum length of the experiment id, the branch id, and the keys of the
 /// `extra` map. Identifiers longer than this number of characters are truncated.
@@ -30,11 +31,11 @@ const MAX_EXPERIMENTS_EXTRAS_SIZE: usize = 20;
 /// This is used through the `set_experiment_active`/`set_experiment_inactive` Glean SDK API.
 #[derive(Clone, Debug)]
 pub struct ExperimentMetric {
-    meta: CommonMetricData,
+    meta: CommonMetricDataInternal,
 }
 
 impl MetricType for ExperimentMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
 }
@@ -67,13 +68,16 @@ impl ExperimentMetric {
         };
 
         let new_experiment = Self {
-            meta: CommonMetricData {
-                name: format!("{}#experiment", truncated_id),
-                // We don't need a category, the name is already unique
-                category: "".into(),
-                send_in_pings: vec![INTERNAL_STORAGE.into()],
-                lifetime: Lifetime::Application,
-                ..Default::default()
+            meta: CommonMetricDataInternal {
+                inner: CommonMetricData {
+                    name: format!("{}#experiment", truncated_id),
+                    // We don't need a category, the name is already unique
+                    category: "".into(),
+                    send_in_pings: vec![INTERNAL_STORAGE.into()],
+                    lifetime: Lifetime::Application,
+                    ..Default::default()
+                },
+                disabled: AtomicU8::new(0),
             },
         };
 
@@ -179,7 +183,7 @@ impl ExperimentMetric {
         if let Err(e) = glean.storage().remove_single_metric(
             Lifetime::Application,
             INTERNAL_STORAGE,
-            &self.meta.name,
+            &self.meta.inner.name,
         ) {
             log::error!("Failed to set experiment as inactive: {:?}", e);
         }
@@ -196,7 +200,7 @@ impl ExperimentMetric {
             glean.storage(),
             INTERNAL_STORAGE,
             &self.meta.identifier(glean),
-            self.meta.lifetime,
+            self.meta.inner.lifetime,
         ) {
             Some(Metric::Experiment(e)) => Some(e),
             _ => None,

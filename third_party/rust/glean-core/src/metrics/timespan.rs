@@ -6,6 +6,7 @@ use std::convert::TryInto;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::time_unit::TimeUnit;
 use crate::metrics::Metric;
@@ -24,13 +25,13 @@ use crate::Glean;
 // Cloning `CommonMetricData` is not free, as it contains strings, so we also wrap that in an Arc.
 #[derive(Clone, Debug)]
 pub struct TimespanMetric {
-    meta: Arc<CommonMetricData>,
+    meta: Arc<CommonMetricDataInternal>,
     time_unit: TimeUnit,
     start_time: Arc<RwLock<Option<u64>>>,
 }
 
 impl MetricType for TimespanMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
 }
@@ -43,7 +44,7 @@ impl TimespanMetric {
     /// Creates a new timespan metric.
     pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
         Self {
-            meta: Arc::new(meta),
+            meta: Arc::new(meta.into()),
             time_unit,
             start_time: Arc::new(RwLock::new(None)),
         }
@@ -198,7 +199,7 @@ impl TimespanMetric {
     /// Explicitly sets the timespan value synchronously.
     #[doc(hidden)]
     pub fn set_raw_sync(&self, glean: &Glean, elapsed: Duration) {
-        if !self.meta.should_record() {
+        if !self.should_record(glean) {
             return;
         }
 
@@ -271,13 +272,13 @@ impl TimespanMetric {
     ) -> Option<u64> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.lifetime,
+            self.meta.inner.lifetime,
         ) {
             Some(Metric::Timespan(time, time_unit)) => Some(time_unit.duration_convert(time)),
             _ => None,

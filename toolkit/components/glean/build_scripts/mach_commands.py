@@ -193,8 +193,13 @@ def update_glean(command_context, version):
     )
 
     instructions = f"""
-    We've edited the necessary files to require Glean SDK {version}.
-    To ensure it and Firefox's other Rust dependencies are appropriately vendored,
+    We've edited most of the necessary files to require Glean SDK {version}.
+
+    You will have to edit the following files yourself:
+
+        gfx/wr/wr_glyph_rasterizer/Cargo.toml
+
+    Then, to ensure Glean and Firefox's other Rust dependencies are appropriately vendored,
     please run the following commands:
 
         cargo update -p glean

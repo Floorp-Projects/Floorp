@@ -5,6 +5,7 @@
 use std::fmt;
 use std::sync::Arc;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::time_unit::TimeUnit;
 use crate::metrics::Metric;
@@ -83,12 +84,12 @@ impl Default for Datetime {
 /// the application.
 #[derive(Clone, Debug)]
 pub struct DatetimeMetric {
-    meta: Arc<CommonMetricData>,
+    meta: Arc<CommonMetricDataInternal>,
     time_unit: TimeUnit,
 }
 
 impl MetricType for DatetimeMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
 }
@@ -119,7 +120,7 @@ impl DatetimeMetric {
     /// Creates a new datetime metric.
     pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
         Self {
-            meta: Arc::new(meta),
+            meta: Arc::new(meta.into()),
             time_unit,
         }
     }
@@ -240,13 +241,13 @@ impl DatetimeMetric {
         glean: &Glean,
         ping_name: Option<&str>,
     ) -> Option<(ChronoDatetime, TimeUnit)> {
-        let queried_ping_name = ping_name.unwrap_or_else(|| &self.meta().send_in_pings[0]);
+        let queried_ping_name = ping_name.unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
         match StorageManager.snapshot_metric(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.lifetime,
+            self.meta.inner.lifetime,
         ) {
             Some(Metric::Datetime(d, tu)) => Some((d, tu)),
             _ => None,
@@ -311,7 +312,7 @@ impl DatetimeMetric {
     ///
     /// * `error` - The type of error
     /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///   metric for. inner to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///
