@@ -30,7 +30,7 @@
 //
 //   TN:<compartment name>
 //   for-each <source file> {
-//     SN:<filename>
+//     SF:<filename>
 //     for-each <script> {
 //       FN:<line>,<name>
 //     }
