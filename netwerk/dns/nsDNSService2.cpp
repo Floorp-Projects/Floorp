@@ -1438,6 +1438,24 @@ nsDNSService::SetDetectedTrrURI(const nsACString& aURI) {
 }
 
 NS_IMETHODIMP
+nsDNSService::SetHeuristicDetectionResult(nsITRRSkipReason::value aValue) {
+  if (mTrrService) {
+    mTrrService->SetHeuristicDetectionResult(aValue);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSService::GetHeuristicDetectionResult(nsITRRSkipReason::value* aValue) {
+  if (!mTrrService) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aValue = mTrrService->GetHeuristicDetectionResult();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDNSService::GetTRRSkipReasonName(nsITRRSkipReason::value aValue,
                                    nsACString& aName) {
   return mozilla::net::GetTRRSkipReasonName(aValue, aName);
