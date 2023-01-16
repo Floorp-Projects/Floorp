@@ -2977,7 +2977,7 @@ class ADBDevice(ADBCommand):
         sdcard_remote = None
         if os.path.isfile(local) and self.is_dir(remote):
             # force push to use the correct filename in the remote directory
-            remote = posixpath.join(remote, posixpath.basename(local))
+            remote = posixpath.join(remote, os.path.basename(local))
         elif os.path.isdir(local):
             copy_required = True
             temp_parent = tempfile.mkdtemp()
@@ -3012,7 +3012,7 @@ class ADBDevice(ADBCommand):
                 try:
                     with tempfile.NamedTemporaryFile(delete=True) as tmpf:
                         intermediate = posixpath.join(
-                            "/data/local/tmp", posixpath.basename(tmpf.name)
+                            "/data/local/tmp", os.path.basename(tmpf.name)
                         )
                     self.command_output(["push", local, intermediate], timeout=timeout)
                     self.chmod(intermediate, recursive=True, timeout=timeout)
@@ -3038,7 +3038,7 @@ class ADBDevice(ADBCommand):
             self._logger.info("Falling back to using intermediate /sdcard in push.")
             self.mkdir(posixpath.dirname(remote), parents=True, timeout=timeout)
             with tempfile.NamedTemporaryFile(delete=True) as tmpf:
-                sdcard_remote = posixpath.join("/sdcard", posixpath.basename(tmpf.name))
+                sdcard_remote = posixpath.join("/sdcard", os.path.basename(tmpf.name))
             self.command_output(["push", local, sdcard_remote], timeout=timeout)
             self.cp(sdcard_remote, remote, recursive=True, timeout=timeout)
         except BaseException:
@@ -3114,7 +3114,7 @@ class ADBDevice(ADBCommand):
                 try:
                     with tempfile.NamedTemporaryFile(delete=True) as tmpf:
                         intermediate = posixpath.join(
-                            "/data/local/tmp", posixpath.basename(tmpf.name)
+                            "/data/local/tmp", os.path.basename(tmpf.name)
                         )
                     # When using run-as <app>, we must first use the
                     # shell to create the intermediate and chmod it
@@ -3471,7 +3471,7 @@ class ADBDevice(ADBCommand):
         if self.is_file(source, timeout=timeout):
             if self.is_dir(destination, timeout=timeout):
                 # Copy the source file into the destination directory
-                destination = posixpath.join(destination, posixpath.basename(source))
+                destination = posixpath.join(destination, os.path.basename(source))
             self.shell_output("dd if=%s of=%s" % (source, destination), timeout=timeout)
             self.chmod(destination, recursive=recursive, timeout=timeout)
             self._sync(timeout=timeout)
@@ -3485,7 +3485,7 @@ class ADBDevice(ADBCommand):
 
         if self.is_dir(destination, timeout=timeout):
             # Copy the source directory into the destination directory.
-            destination_dir = posixpath.join(destination, posixpath.basename(source))
+            destination_dir = posixpath.join(destination, os.path.basename(source))
         else:
             # Copy the contents of the source directory into the
             # destination directory.
