@@ -61,6 +61,20 @@ const getExpectedDataAndType = (resources, outputName) => {
 };
 
 /**
+ * Get ULP tolerance of matmul operation.
+ * @param {Object} resources - Resources used for building a graph
+ * @returns {Number} A tolerance number
+ */
+const getMatmulPrecisionTolerance = (resources) => {
+  // Matmul : Compute the matrix product of two input tensors.
+  // If a is 1-D, WebNN converts it to a 2-D tensor by prepending a 1 to its dimensions, [n] -> [1, n].
+  // So we can just always check the last dimension here.
+  const shapeA = resources.inputs[Object.keys(resources.inputs)[0]].shape;
+  const tolerance = shapeA[shapeA.length - 1] * 2;
+  return tolerance;
+};
+
+/**
  * Get ULP tolerance of softmax operation.
  * @param {Object} resources - Resources used for building a graph
  * @returns {Number} A tolerance number
@@ -77,6 +91,7 @@ const PrecisionMetrics = {
   clamp: {ULP: {float32: 0, float16: 0}},
   concat: {ULP: {float32: 0, float16: 0}},
   leakyRelu: {ULP: {float32: 1, float16: 1}},
+  matmul: {ULP: {float32: getMatmulPrecisionTolerance, float16: getMatmulPrecisionTolerance}},
   relu: {ULP: {float32: 0, float16: 0}},
   reshape: {ULP: {float32: 0, float16: 0}},
   sigmoid: {ULP: {float32: 32+2, float16: 3}}, // float32 (leaving a few ULP for roundoff)
@@ -225,6 +240,22 @@ const createSingleInputOperand = (builder, resources, inputOperandName) => {
   inputOperandName = inputOperandName ? inputOperandName : Object.keys(resources.inputs)[0];
   const inputResources = resources.inputs[inputOperandName];
   return builder.input(inputOperandName, {type: inputResources.type, dimensions: inputResources.shape});
+};
+
+/**
+ * Create multi input operands for a graph.
+ * @param {MLGraphBuilder} builder - A ML graph builder
+ * @param {Object} resources - Resources used for building a graph
+ * @returns {MLOperand[]} Input operands array
+ */
+const createMultiInputOperands = (builder, resources) => {
+  let inputOperands = [];
+  const inputOperandNameArray = Object.keys(resources.inputs);
+  inputOperandNameArray.forEach(inputOperandName => {
+    const inputOperand = createSingleInputOperand(builder, resources, inputOperandName);
+    inputOperands.push(inputOperand);
+  });
+  return inputOperands;
 };
 
 /**
