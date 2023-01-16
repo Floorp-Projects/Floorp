@@ -592,6 +592,7 @@ impl CompositeState {
         let surface_rect = transform.local_to_surface.map_rect(&local_sub_rect);
 
         surface_rect
+            .round_out()
             .translate(-surface_bounds.min.to_vector())
             .round_out()
             .intersection(&surface_bounds.size().round().into())
