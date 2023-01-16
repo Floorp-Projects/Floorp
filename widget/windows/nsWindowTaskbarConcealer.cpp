@@ -341,13 +341,13 @@ void TaskbarConcealerImpl::MarkAsHidingTaskbar(HWND aWnd, bool aMark) {
   }
 
   MOZ_LOG(sTaskbarConcealerLog, LogLevel::Info,
-          ("Calling PrepareFullScreenHWND(%p, %s)", aWnd, sMark));
+          ("Calling PrepareFullScreen(%p, %s)", aWnd, sMark));
 
-  const nsresult hr = mTaskbarInfo->PrepareFullScreenHWND(aWnd, aMark);
+  const nsresult hr = mTaskbarInfo->PrepareFullScreen(aWnd, aMark);
 
   if (FAILED(hr)) {
     MOZ_LOG(sTaskbarConcealerLog, LogLevel::Error,
-            ("Call to PrepareFullScreenHWND(%p, %s) failed with nsresult %x",
+            ("Call to PrepareFullScreen(%p, %s) failed with nsresult %x",
              aWnd, sMark, hr));
   }
 };
