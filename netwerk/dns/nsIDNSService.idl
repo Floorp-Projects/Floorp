@@ -255,6 +255,18 @@ interface nsIDNSService : nsISupports
      */
     void setDetectedTrrURI(in AUTF8String aURI);
 
+    /**
+     * Stores the result of the TRR heuristic detection.
+     * Will be TRR_OK if no heuristics failed.
+     */
+    void setHeuristicDetectionResult(in nsITRRSkipReason_value value);
+
+    /**
+     * Returns the result of the last TRR heuristic detection.
+     * Will be TRR_OK if no heuristics failed.
+     */
+    readonly attribute nsITRRSkipReason_value heuristicDetectionResult;
+
     ACString getTRRSkipReasonName(in nsITRRSkipReason_value value);
 
     /**

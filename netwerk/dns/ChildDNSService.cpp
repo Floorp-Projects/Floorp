@@ -311,6 +311,16 @@ ChildDNSService::SetDetectedTrrURI(const nsACString& aURI) {
 }
 
 NS_IMETHODIMP
+ChildDNSService::SetHeuristicDetectionResult(nsITRRSkipReason::value aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ChildDNSService::GetHeuristicDetectionResult(nsITRRSkipReason::value* aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ChildDNSService::GetTRRSkipReasonName(nsITRRSkipReason::value aValue,
                                       nsACString& aName) {
   return mozilla::net::GetTRRSkipReasonName(aValue, aName);
