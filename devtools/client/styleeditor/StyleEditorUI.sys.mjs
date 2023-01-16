@@ -1446,8 +1446,8 @@ export class StyleEditorUI extends EventEmitter {
    *         Object with width or/and height properties.
    */
   async #launchResponsiveMode(options = {}) {
-    const tab = this.currentTarget.localTab;
-    const win = this.currentTarget.localTab.ownerDocument.defaultView;
+    const tab = this.#commands.descriptorFront.localTab;
+    const win = tab.ownerDocument.defaultView;
 
     await lazy.ResponsiveUIManager.openIfNeeded(win, tab, {
       trigger: "style_editor",

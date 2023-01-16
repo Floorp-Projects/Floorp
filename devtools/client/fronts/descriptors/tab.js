@@ -249,7 +249,6 @@ class TabDescriptorFront extends DescriptorMixin(
       this._targetFront.off("target-destroyed", this._onTargetDestroyed);
     }
     this._targetFront = targetFront;
-    targetFront.setDescriptor(this);
 
     targetFront.on("target-destroyed", this._onTargetDestroyed);
 

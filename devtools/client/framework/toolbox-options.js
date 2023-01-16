@@ -358,7 +358,8 @@ OptionsPanel.prototype = {
           visibilityswitch: pref,
 
           // Only local tabs are currently supported as targets.
-          isToolSupported: toolbox => toolbox.target.isLocalTab,
+          isToolSupported: toolbox =>
+            toolbox.commands.descriptorFront.isLocalTab,
         })
       );
     }
