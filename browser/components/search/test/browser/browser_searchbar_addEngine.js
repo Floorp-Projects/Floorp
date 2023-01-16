@@ -7,8 +7,8 @@
 
 "use strict";
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");

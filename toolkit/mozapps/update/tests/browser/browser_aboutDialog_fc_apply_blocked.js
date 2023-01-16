@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 const BUILDER_URL = "https://example.com/document-builder.sjs?html=";

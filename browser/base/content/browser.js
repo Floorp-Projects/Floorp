@@ -47,6 +47,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SubDialog: "resource://gre/modules/SubDialog.sys.mjs",
   SubDialogManager: "resource://gre/modules/SubDialog.sys.mjs",
+  TabModalPrompt: "chrome://global/content/tabprompts.sys.mjs",
   TabsSetupFlowManager:
     "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
@@ -92,7 +93,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
   SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   SitePermissions: "resource:///modules/SitePermissions.jsm",
-  TabModalPrompt: "chrome://global/content/tabprompts.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   Translation: "resource:///modules/translation/TranslationParent.jsm",
   UITour: "resource:///modules/UITour.jsm",

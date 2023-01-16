@@ -7,8 +7,8 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 SimpleTest.requestFlakyTimeout("Needs to test a timeout");
