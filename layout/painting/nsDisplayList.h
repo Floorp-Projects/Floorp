@@ -265,7 +265,6 @@ enum class nsDisplayListBuilderMode : uint8_t {
   PaintForPrinting,
   EventDelivery,
   FrameVisibility,
-  TransformComputation,
   GenerateGlyph,
 };
 
