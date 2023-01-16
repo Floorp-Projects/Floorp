@@ -6,13 +6,13 @@
 
 class PictureInPictureVideoWrapper {
   setCaptionContainerObserver(video, updateCaptionsFunction) {
-    let container = document.querySelector(".dmp_VideoView");
+    let container = document.querySelector("#player");
 
     if (container) {
       updateCaptionsFunction("");
       const callback = function(mutationsList, observer) {
         let textNodeList = container
-          ?.querySelector(".dmp_SubtitlesView")
+          ?.querySelector(".subtitles")
           ?.querySelectorAll("div");
 
         if (!textNodeList) {
