@@ -525,12 +525,11 @@ def build_docker_worker_payload(config, task, task_def):
             config, task.get("expiration-policy", "default")
         )
         now = datetime.datetime.utcnow()
+        task_exp = task_def["expires"]["relative-datestamp"]
+        task_exp_from_now = fromNow(task_exp)
         for artifact in worker["artifacts"]:
             art_exp = artifact.get("expires-after", expires_policy)
-            task_exp = task_def["expires"]["relative-datestamp"]
-            expires = (
-                art_exp if fromNow(art_exp, now) < fromNow(task_exp, now) else task_exp
-            )
+            expires = art_exp if fromNow(art_exp, now) < task_exp_from_now else task_exp
             artifacts[artifact["name"]] = {
                 "path": artifact["path"],
                 "type": artifact["type"],
@@ -758,12 +757,12 @@ def build_generic_worker_payload(config, task, task_def):
 
     expires_policy = get_expiration(config, task.get("expiration-policy", "default"))
     now = datetime.datetime.utcnow()
+    task_exp = task_def["expires"]["relative-datestamp"]
+    task_exp_from_now = fromNow(task_exp)
     for artifact in worker.get("artifacts", []):
         art_exp = artifact.get("expires-after", expires_policy)
         task_exp = task_def["expires"]["relative-datestamp"]
-        expires = (
-            art_exp if fromNow(art_exp, now) < fromNow(task_exp, now) else task_exp
-        )
+        expires = art_exp if fromNow(art_exp, now) < task_exp_from_now else task_exp
         a = {
             "path": artifact["path"],
             "type": artifact["type"],
