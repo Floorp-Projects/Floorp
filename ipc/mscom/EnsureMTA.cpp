@@ -163,8 +163,7 @@ RefPtr<EnsureMTA::CreateInstanceAgileRefPromise> EnsureMTA::CreateInstance(
 
   nsCOMPtr<nsIThread> mtaThread(GetPersistentMTAThread());
 
-  return InvokeAsync(mtaThread->SerialEventTarget(), __func__,
-                     std::move(invoker));
+  return InvokeAsync(mtaThread, __func__, std::move(invoker));
 }
 
 /* static */

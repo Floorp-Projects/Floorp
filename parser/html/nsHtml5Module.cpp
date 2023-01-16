@@ -108,14 +108,13 @@ already_AddRefed<nsISerialEventTarget>
 nsHtml5Module::GetStreamParserEventTarget() {
   MOZ_ASSERT(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   if (sStreamParserThread) {
-    nsCOMPtr<nsISerialEventTarget> target =
-        sStreamParserThread->SerialEventTarget();
+    nsCOMPtr<nsISerialEventTarget> target = sStreamParserThread;
     return target.forget();
   }
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   MOZ_RELEASE_ASSERT(mainThread);  // Unrecoverable situation
-  nsCOMPtr<nsISerialEventTarget> target = mainThread->SerialEventTarget();
+  nsCOMPtr<nsISerialEventTarget> target = mainThread;
   return target.forget();
 }
 

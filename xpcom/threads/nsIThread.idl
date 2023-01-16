@@ -165,24 +165,6 @@ interface nsIThread : nsISerialEventTarget
                                   in EventQueuePriority queue);
 
   /**
-   * Use this attribute to dispatch runnables to the thread. Eventually, the
-   * eventTarget attribute will be the only way to dispatch events to a
-   * thread--nsIThread will no longer inherit from nsIEventTarget.
-   */
-  readonly attribute nsIEventTarget eventTarget;
-
-  /**
-   * A fast C++ getter for the eventTarget.
-   */
-  [noscript,notxpcom] nsIEventTargetPtr EventTarget();
-
-  /**
-   * A fast C++ getter for the eventTarget. It asserts that the thread's event
-   * target is an nsISerialEventTarget and then returns it.
-   */
-  [noscript,notxpcom] nsISerialEventTargetPtr SerialEventTarget();
-
-  /**
    * This is set to the end of the last 50+ms event that was executed on
    * this thread (for MainThread only).  Otherwise returns a null TimeStamp.
    */

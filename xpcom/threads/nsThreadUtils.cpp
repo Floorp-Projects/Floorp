@@ -551,7 +551,7 @@ nsIEventTarget* GetCurrentEventTarget() {
     return nullptr;
   }
 
-  return thread->EventTarget();
+  return thread;
 }
 
 nsIEventTarget* GetMainThreadEventTarget() {
@@ -574,7 +574,7 @@ nsISerialEventTarget* GetCurrentSerialEventTarget() {
     return nullptr;
   }
 
-  return thread->SerialEventTarget();
+  return thread;
 }
 
 nsISerialEventTarget* GetMainThreadSerialEventTarget() {
