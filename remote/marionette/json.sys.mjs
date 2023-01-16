@@ -126,9 +126,9 @@ json.clone = function(value, nodeCache) {
       // ShadowRoot instances to WebReference references.
 
       // Evaluation of code will take place in mutable sandboxes, which are
-      // created to waive xrays by default. As such DOM nodes have to be unwaived
-      // before accessing the ownerGlobal is possible, which is needed by
-      // ContentDOMReference.
+      // created to waive xrays by default. As such DOM nodes have to be
+      // unwaived before accessing the ownerGlobal is possible, which is
+      // needed by ContentDOMReference.
       const el = Cu.unwaiveXrays(value);
 
       // Don't create a reference for stale elements.
@@ -138,8 +138,8 @@ json.clone = function(value, nodeCache) {
         );
       }
 
-      const sharedId = nodeCache.add(value);
-      return lazy.WebReference.from(el, sharedId).toJSON();
+      const nodeRef = nodeCache.getOrCreateNodeReference(el);
+      return lazy.WebReference.from(el, nodeRef).toJSON();
     } else if (typeof value.toJSON == "function") {
       // custom JSON representation
       let unsafeJSON;
@@ -203,7 +203,11 @@ json.deserialize = function(value, nodeCache, win) {
             webRef instanceof lazy.WebElement ||
             webRef instanceof lazy.ShadowRoot
           ) {
-            return lazy.element.resolveElement(webRef.uuid, nodeCache, win);
+            return lazy.element.getKnownElement(
+              win.browsingContext,
+              webRef.uuid,
+              nodeCache
+            );
           }
 
           // WebFrame and WebWindow not supported yet

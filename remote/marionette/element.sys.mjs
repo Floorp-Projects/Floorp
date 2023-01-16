@@ -449,16 +449,15 @@ element.findClosest = function(startNode, selector) {
 /**
  * Resolve element from specified web element reference.
  *
- * @param {ElementIdentifier} id
+ * @param {BrowsingContext} browsingContext
+ *     The browsing context to retrieve the element from.
+ * @param {ElementIdentifier} nodeId
  *     The WebElement reference identifier for a DOM element.
  * @param {NodeCache} nodeCache
  *     Node cache that holds already seen WebElement and ShadowRoot references.
- * @param {WindowProxy} win
- *     Current window, which may differ from the associated
- *     window of <var>el</var>.
  *
- * @return {Element|null} The DOM element that the identifier was generated
- *     for, or null if the element does not still exist.
+ * @returns {Element}
+ *     The DOM element that the identifier was generated for.
  *
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> doesn't exist
@@ -467,48 +466,22 @@ element.findClosest = function(startNode, selector) {
  *     If the element has gone stale, indicating its node document is no
  *     longer the active document or it is no longer attached to the DOM.
  */
-element.resolveElement = function(id, nodeCache, win) {
-  const el = nodeCache.resolve(id);
-
-  // For WebDriver classic only elements from the same browsing context
-  // are allowed to be accessed.
-  if (el?.ownerGlobal) {
-    if (win === undefined) {
-      throw new TypeError(
-        "Expected a valid window to resolve the element reference of " +
-          lazy.pprint`${el || JSON.stringify(id.webElRef)}`
-      );
-    }
-
-    const elementBrowsingContext = el.ownerGlobal.browsingContext;
-    let sameBrowsingContext = true;
-
-    if (elementBrowsingContext.top === elementBrowsingContext) {
-      // Cross-group navigations cause a swap of the current top-level browsing
-      // context. The only unique identifier is the browser id the browsing
-      // context actually lives in. If it's equal also treat the browsing context
-      // as the same (bug 1690308).
-      // If the element's browsing context is a top-level browsing context,
-      sameBrowsingContext =
-        elementBrowsingContext.browserId == win.browsingContext.browserId;
-    } else {
-      // For non top-level browsing contexts check for equality directly.
-      sameBrowsingContext = elementBrowsingContext.id == win.browsingContext.id;
-    }
-
-    if (!sameBrowsingContext) {
-      throw new lazy.error.NoSuchElementError(
-        lazy.pprint`The element reference of ${el ||
-          JSON.stringify(id.webElRef)} ` +
-          "is not known in the current browsing context"
-      );
-    }
+element.getKnownElement = function(browsingContext, nodeId, nodeCache) {
+  if (!element.isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
+    throw new lazy.error.NoSuchElementError(
+      lazy.pprint`The element reference of ${JSON.stringify(
+        nodeId.webElRef
+      )} is not known in the current browsing context`
+    );
   }
 
-  if (element.isStale(el)) {
+  // If null, which may be the case if the element has been unwrapped from a
+  // weak reference, it is always considered stale.
+  const el = nodeCache.getNode(browsingContext, nodeId);
+  if (el === null || element.isStale(el)) {
     throw new lazy.error.StaleElementReferenceError(
       lazy.pprint`The element reference of ${el ||
-        JSON.stringify(id.webElRef)} ` +
+        JSON.stringify(nodeId.webElRef)} ` +
         "is stale; either its node document is not the active document, " +
         "or it is no longer connected to the DOM"
     );
@@ -544,21 +517,52 @@ element.isCollection = function(seq) {
 };
 
 /**
+ * Determines if the node reference is known for the given browsing context.
+ *
+ * For WebDriver classic only nodes from the same browsing context are
+ * allowed to be accessed.
+ *
+ * @param {BrowsingContext} browsingContext
+ *     The browsing context the element has to be part of.
+ * @param {ElementIdentifier} nodeId
+ *     The WebElement reference identifier for a DOM element.
+ * @param {NodeCache} nodeCache
+ *     Node cache that holds already seen node references.
+ *
+ * @returns {boolean}
+ *     True if the element is known in the given browsing context.
+ */
+element.isNodeReferenceKnown = function(browsingContext, nodeId, nodeCache) {
+  const nodeDetails = nodeCache.getReferenceDetails(nodeId);
+  if (nodeDetails === null) {
+    return false;
+  }
+
+  if (nodeDetails.isTopBrowsingContext) {
+    // As long as Navigables are not available any cross-group navigation will
+    // cause a swap of the current top-level browsing context. The only unique
+    // identifier in such a case is the browser id the top-level browsing
+    // context actually lives in.
+    return nodeDetails.browserId === browsingContext.browserId;
+  }
+
+  return nodeDetails.browsingContextId === browsingContext.id;
+};
+
+/**
  * Determines if <var>el</var> is stale.
  *
  * An element is stale if its node document is not the active document
  * or if it is not connected.
  *
- * @param {Element=} el
- *     Element to check for staleness.  If null, which may be
- *     the case if the element has been unwrapped from a weak
- *     reference, it is always considered stale.
+ * @param {Element} el
+ *     Element to check for staleness.
  *
  * @return {boolean}
  *     True if <var>el</var> is stale, false otherwise.
  */
 element.isStale = function(el) {
-  if (el == null || !el.ownerGlobal) {
+  if (!el.ownerGlobal) {
     // Without a valid inner window the document is basically closed.
     return true;
   }
