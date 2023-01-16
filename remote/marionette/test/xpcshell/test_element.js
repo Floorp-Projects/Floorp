@@ -11,11 +11,27 @@ const {
 } = ChromeUtils.importESModule(
   "chrome://remote/content/marionette/element.sys.mjs"
 );
+const { NodeCache } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
+);
+
+const MemoryReporter = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
+  Ci.nsIMemoryReporterManager
+);
 
 class Element {
   constructor(tagName, attrs = {}) {
     this.tagName = tagName;
     this.localName = tagName;
+
+    this.isConnected = false;
+    this.ownerGlobal = {
+      document: {
+        isActive() {
+          return true;
+        },
+      },
+    };
 
     for (let attr in attrs) {
       this[attr] = attrs[attr];
@@ -25,6 +41,7 @@ class Element {
   get nodeType() {
     return 1;
   }
+
   get ELEMENT_NODE() {
     return 1;
   }
@@ -41,12 +58,16 @@ class DOMElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
 
+    this.isConnected = true;
+
     if (typeof this.namespaceURI == "undefined") {
       this.namespaceURI = XHTML_NS;
     }
+
     if (typeof this.ownerDocument == "undefined") {
       this.ownerDocument = { designMode: "off" };
     }
+
     if (typeof this.ownerDocument.documentElement == "undefined") {
       this.ownerDocument.documentElement = { namespaceURI: XHTML_NS };
     }
@@ -401,6 +422,97 @@ add_test(function test_coordinates() {
     () => element.coordinates(domEl, [], []),
     /Offset must be a number/
   );
+
+  run_next_test();
+});
+
+add_test(function test_isNodeReferenceKnown() {
+  const browser = Services.appShell.createWindowlessBrowser(false);
+  const nodeCache = new NodeCache();
+
+  // Unknown node reference
+  ok(!element.isNodeReferenceKnown(browser.browsingContext, "foo", nodeCache));
+
+  // Known node reference
+  const el = browser.document.createElement("video");
+  const elRef = nodeCache.getOrCreateNodeReference(el);
+  ok(element.isNodeReferenceKnown(browser.browsingContext, elRef, nodeCache));
+
+  // Different top-level browsing context
+  const browser2 = Services.appShell.createWindowlessBrowser(false);
+  ok(!element.isNodeReferenceKnown(browser2.browsingContext, elRef, nodeCache));
+
+  // Different child browsing context
+  const iframeEl = browser.document.createElement("iframe");
+  browser.document.body.appendChild(iframeEl);
+  const childEl = iframeEl.contentDocument.createElement("div");
+  const childElRef = nodeCache.getOrCreateNodeReference(childEl);
+  const childBrowsingContext = iframeEl.contentWindow.browsingContext;
+  ok(element.isNodeReferenceKnown(childBrowsingContext, childElRef, nodeCache));
+
+  const iframeEl2 = browser2.document.createElement("iframe");
+  browser2.document.body.appendChild(iframeEl2);
+  const childBrowsingContext2 = iframeEl2.contentWindow.browsingContext;
+  ok(
+    !element.isNodeReferenceKnown(childBrowsingContext2, childElRef, nodeCache)
+  );
+
+  run_next_test();
+});
+
+add_test(function test_getKnownElement() {
+  const browser = Services.appShell.createWindowlessBrowser(false);
+  const nodeCache = new NodeCache();
+
+  // Unknown element reference
+  Assert.throws(() => {
+    element.getKnownElement(browser.browsingContext, "foo", nodeCache);
+  }, /NoSuchElementError/);
+
+  // Deleted element (eg. garbage collected)
+  let divEl = browser.document.createElement("div");
+  const divElRef = nodeCache.getOrCreateNodeReference(divEl);
+
+  divEl = null;
+  MemoryReporter.minimizeMemoryUsage(() => {
+    Assert.throws(() => {
+      element.getKnownElement(browser.browsingContext, divElRef, nodeCache);
+    }, /StaleElementReferenceError/);
+
+    run_next_test();
+  });
+
+  // Known element reference
+  let imgEl = browser.document.createElement("img");
+  browser.document.body.appendChild(imgEl);
+  const imgElRef = nodeCache.getOrCreateNodeReference(imgEl);
+  equal(
+    element.getKnownElement(browser.browsingContext, imgElRef, nodeCache),
+    imgEl
+  );
+});
+
+add_test(function test_isStale() {
+  // Not connected to the DOM
+  ok(element.isStale(new Element("div")));
+
+  // Connected to the DOM
+  const domDivEl = new DOMElement("div");
+  ok(!element.isStale(domDivEl));
+
+  // Not part of the active document
+  domDivEl.ownerGlobal = {
+    document: {
+      isActive() {
+        return false;
+      },
+    },
+  };
+  ok(element.isStale(domDivEl));
+
+  // Without ownerGlobal
+  delete domDivEl.ownerGlobal;
+  ok(element.isStale(domDivEl));
 
   run_next_test();
 });

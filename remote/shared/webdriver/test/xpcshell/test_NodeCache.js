@@ -2,45 +2,99 @@ const { NodeCache } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
 );
 
-const nodeCache = new NodeCache();
+function setupTest() {
+  const browser = Services.appShell.createWindowlessBrowser(false);
+  const nodeCache = new NodeCache();
 
-const SVG_NS = "http://www.w3.org/2000/svg";
+  const htmlEl = browser.document.createElement("video");
+  htmlEl.setAttribute("id", "foo");
+  browser.document.body.appendChild(htmlEl);
 
-const browser = Services.appShell.createWindowlessBrowser(false);
+  const svgEl = browser.document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "rect"
+  );
+  browser.document.body.appendChild(svgEl);
 
-const domEl = browser.document.createElement("div");
-browser.document.body.appendChild(domEl);
+  const shadowRoot = htmlEl.openOrClosedShadowRoot;
 
-const svgEl = browser.document.createElementNS(SVG_NS, "rect");
-browser.document.body.appendChild(svgEl);
+  const iframeEl = browser.document.createElement("iframe");
+  browser.document.body.appendChild(iframeEl);
+  const childEl = iframeEl.contentDocument.createElement("div");
 
-registerCleanupFunction(() => {
-  nodeCache.clear({ all: true });
-});
+  return { browser, nodeCache, childEl, iframeEl, htmlEl, shadowRoot, svgEl };
+}
 
-add_test(function addElement() {
-  const domElRef = nodeCache.add(domEl);
-  equal(nodeCache.size, 1);
+add_test(function getOrCreateNodeReference_invalid() {
+  const { htmlEl, nodeCache } = setupTest();
 
-  const domElRefOther = nodeCache.add(domEl);
-  equal(nodeCache.size, 1);
-  equal(domElRefOther, domElRef);
+  const invalidValues = [
+    null,
+    undefined,
+    "foo",
+    42,
+    true,
+    [],
+    {},
+    htmlEl.attributes[0],
+  ];
 
-  nodeCache.add(svgEl);
-  equal(nodeCache.size, 2);
+  for (const value of invalidValues) {
+    info(`Testing value: ${value}`);
+    Assert.throws(() => nodeCache.getOrCreateNodeReference(value), /TypeError/);
+  }
 
   run_next_test();
 });
 
-add_test(function addInvalidElement() {
-  Assert.throws(() => nodeCache.add("foo"), /UnknownError/);
+add_test(function getOrCreateNodeReference_supportedNodeTypes() {
+  const { htmlEl, nodeCache, shadowRoot } = setupTest();
+
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  equal(nodeCache.size, 1);
+
+  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
+  equal(nodeCache.size, 2);
+
+  notEqual(htmlElRef, shadowRootRef);
+
+  run_next_test();
+});
+
+add_test(function getOrCreateNodeReference_referenceAlreadyCreated() {
+  const { htmlEl, nodeCache } = setupTest();
+
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  const htmlElRefOther = nodeCache.getOrCreateNodeReference(htmlEl);
+  equal(nodeCache.size, 1);
+  equal(htmlElRefOther, htmlElRef);
+
+  run_next_test();
+});
+
+add_test(function getOrCreateNodeReference_differentReferencePerNodeCache() {
+  const { browser, htmlEl, nodeCache } = setupTest();
+  const nodeCache2 = new NodeCache();
+
+  const htmlElRef1 = nodeCache.getOrCreateNodeReference(htmlEl);
+  const htmlElRef2 = nodeCache2.getOrCreateNodeReference(htmlEl);
+
+  notEqual(htmlElRef1, htmlElRef2);
+  equal(
+    nodeCache.getNode(browser.browsingContext, htmlElRef1),
+    nodeCache2.getNode(browser.browsingContext, htmlElRef2)
+  );
+
+  equal(nodeCache.getNode(browser.browsingContext, htmlElRef2), null);
 
   run_next_test();
 });
 
 add_test(function clear() {
-  nodeCache.add(domEl);
-  nodeCache.add(svgEl);
+  const { browser, htmlEl, nodeCache, svgEl } = setupTest();
+
+  nodeCache.getOrCreateNodeReference(htmlEl);
+  nodeCache.getOrCreateNodeReference(svgEl);
   equal(nodeCache.size, 2);
 
   // Clear requires explicit arguments.
@@ -48,15 +102,16 @@ add_test(function clear() {
 
   // Clear references for a different browsing context
   const browser2 = Services.appShell.createWindowlessBrowser(false);
-  let imgEl = browser2.document.createElement("img");
-  browser2.document.body.appendChild(imgEl);
+  const imgEl = browser2.document.createElement("img");
+  const imgElRef = nodeCache.getOrCreateNodeReference(imgEl);
+  equal(nodeCache.size, 3);
 
-  nodeCache.add(imgEl);
   nodeCache.clear({ browsingContext: browser.browsingContext });
   equal(nodeCache.size, 1);
+  equal(nodeCache.getNode(browser2.browsingContext, imgElRef), imgEl);
 
   // Clear all references
-  nodeCache.add(domEl);
+  nodeCache.getOrCreateNodeReference(htmlEl);
   equal(nodeCache.size, 2);
 
   nodeCache.clear({ all: true });
@@ -65,59 +120,91 @@ add_test(function clear() {
   run_next_test();
 });
 
-add_test(function resolveElement() {
-  const domElSharedId = nodeCache.add(domEl);
-  deepEqual(nodeCache.resolve(domElSharedId), domEl);
+add_test(function getNode_multiple_nodes() {
+  const { browser, htmlEl, nodeCache, svgEl } = setupTest();
 
-  const svgElSharedId = nodeCache.add(svgEl);
-  deepEqual(nodeCache.resolve(svgElSharedId), svgEl);
-  deepEqual(nodeCache.resolve(domElSharedId), domEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  const svgElRef = nodeCache.getOrCreateNodeReference(svgEl);
 
-  run_next_test();
-});
-
-add_test(function resolveUnknownElement() {
-  Assert.throws(() => nodeCache.resolve("foo"), /NoSuchElementError/);
+  equal(nodeCache.getNode(browser.browsingContext, svgElRef), svgEl);
+  equal(nodeCache.getNode(browser.browsingContext, htmlElRef), htmlEl);
 
   run_next_test();
 });
 
-add_test(function resolveElementNotAttachedToDOM() {
-  const imgEl = browser.document.createElement("img");
+add_test(function getNode_differentBrowsingContextInSameGroup() {
+  const { iframeEl, htmlEl, nodeCache } = setupTest();
 
-  const imgElSharedId = nodeCache.add(imgEl);
-  deepEqual(nodeCache.resolve(imgElSharedId), imgEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  equal(nodeCache.size, 1);
+
+  equal(
+    nodeCache.getNode(iframeEl.contentWindow.browsingContext, htmlElRef),
+    htmlEl
+  );
 
   run_next_test();
 });
 
-add_test(async function resolveElementRemoved() {
-  let imgEl = browser.document.createElement("img");
-  const imgElSharedId = nodeCache.add(imgEl);
+add_test(function getNode_differentBrowsingContextInOtherGroup() {
+  const { htmlEl, nodeCache } = setupTest();
+
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  equal(nodeCache.size, 1);
+
+  const browser2 = Services.appShell.createWindowlessBrowser(false);
+  equal(nodeCache.getNode(browser2.browsingContext, htmlElRef), null);
+
+  run_next_test();
+});
+
+add_test(async function getNode_nodeDeleted() {
+  const { browser, nodeCache } = setupTest();
+  let el = browser.document.createElement("div");
+
+  const elRef = nodeCache.getOrCreateNodeReference(el);
 
   // Delete element and force a garbage collection
-  imgEl = null;
+  el = null;
 
   await doGC();
 
-  const el = nodeCache.resolve(imgElSharedId);
-  deepEqual(el, null);
+  equal(nodeCache.getNode(browser.browsingContext, elRef), null);
 
   run_next_test();
 });
 
-add_test(function elementReferencesDifferentPerNodeCache() {
-  const sharedId = nodeCache.add(domEl);
+add_test(function getNodeDetails_forTopBrowsingContext() {
+  const { browser, htmlEl, nodeCache } = setupTest();
 
-  const nodeCache2 = new NodeCache();
-  const sharedId2 = nodeCache2.add(domEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
 
-  notEqual(sharedId, sharedId2);
-  equal(nodeCache.resolve(sharedId), nodeCache2.resolve(sharedId2));
+  const nodeDetails = nodeCache.getReferenceDetails(htmlElRef);
+  equal(nodeDetails.browserId, browser.browsingContext.browserId);
+  equal(nodeDetails.browsingContextGroupId, browser.browsingContext.group.id);
+  equal(nodeDetails.browsingContextId, browser.browsingContext.id);
+  ok(nodeDetails.isTopBrowsingContext);
+  ok(nodeDetails.nodeWeakRef);
+  equal(nodeDetails.nodeWeakRef.get(), htmlEl);
 
-  Assert.throws(() => nodeCache.resolve(sharedId2), /NoSuchElementError/);
+  run_next_test();
+});
 
-  nodeCache2.clear({ all: true });
+add_test(async function getNodeDetails_forChildBrowsingContext() {
+  const { browser, iframeEl, childEl, nodeCache } = setupTest();
+
+  const childElRef = nodeCache.getOrCreateNodeReference(childEl);
+
+  const nodeDetails = nodeCache.getReferenceDetails(childElRef);
+  equal(nodeDetails.browserId, browser.browsingContext.browserId);
+  equal(nodeDetails.browsingContextGroupId, browser.browsingContext.group.id);
+  equal(
+    nodeDetails.browsingContextId,
+    iframeEl.contentWindow.browsingContext.id
+  );
+  ok(!nodeDetails.isTopBrowsingContext);
+  ok(nodeDetails.nodeWeakRef);
+  equal(nodeDetails.nodeWeakRef.get(), childEl);
 
   run_next_test();
 });

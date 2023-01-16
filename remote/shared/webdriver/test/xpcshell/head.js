@@ -10,5 +10,6 @@ async function doGC() {
   const MemoryReporter = Cc[
     "@mozilla.org/memory-reporter-manager;1"
   ].getService(Ci.nsIMemoryReporterManager);
+
   await new Promise(resolve => MemoryReporter.minimizeMemoryUsage(resolve));
 }
