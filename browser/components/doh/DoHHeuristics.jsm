@@ -92,6 +92,30 @@ const Heuristics = {
   async _setMockLinkService(mockLinkService) {
     this.mockLinkService = mockLinkService;
   },
+
+  heuristicNameToSkipReason(heuristicName) {
+    const namesToSkipReason = {
+      google: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH,
+      youtube: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_YOUTUBE_SAFESEARCH,
+      zscalerCanary: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_ZSCALER_CANARY,
+      canary: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_CANARY,
+      modifiedRoots: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_MODIFIED_ROOTS,
+      browserParent:
+        Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_PARENTAL_CONTROLS,
+      thirdPartyRoots:
+        Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_THIRD_PARTY_ROOTS,
+      policy: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_ENTERPRISE_POLICY,
+      vpn: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_VPN,
+      proxy: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_PROXY,
+      nrpt: Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_NRPT,
+    };
+
+    let value = namesToSkipReason[heuristicName];
+    if (value != undefined) {
+      return value;
+    }
+    return Ci.nsITRRSkipReason.TRR_FAILED;
+  },
 };
 
 async function dnsLookup(hostname, resolveCanonicalName = false) {
