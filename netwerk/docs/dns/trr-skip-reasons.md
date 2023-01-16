@@ -226,3 +226,99 @@ This reason is set when the DNS response contains NXDOMAIN rcode (0x03).
 Value: 31
 
 This reason is set when the request was cancelled prior to completion.
+
+## ODOH_KEY_NOT_USABLE
+
+Value: 32
+
+This reason is set when we don't have a valid ODoHConfig to use.
+
+## ODOH_UPDATE_KEY_FAILED
+
+Value: 33
+
+This reason is set when we failed to update the ODoHConfigs.
+
+## ODOH_KEY_NOT_AVAILABLE
+
+Value: 34
+
+This reason is set when ODoH requests timeout because of no key.
+
+## ODOH_ENCRYPTION_FAILED
+
+Value: 35
+
+This reason is set when we failed to encrypt DNS packets.
+
+## ODOH_DECRYPTION_FAILED
+
+Value: 36
+
+This reason is set when we failed to decrypt DNS packets.
+
+## TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH
+
+Value: 37
+
+This reason is set when the google safesearch heuristic was tripped.
+
+## TRR_HEURISTIC_TRIPPED_YOUTUBE_SAFESEARCH
+
+Value: 38
+
+This reason is set when the youtube safesearch heuristic was tripped.
+
+## TRR_HEURISTIC_TRIPPED_ZSCALER_CANARY
+
+Value: 39
+
+This reason is set when the zscaler canary heuristic was tripped.
+
+## TRR_HEURISTIC_TRIPPED_CANARY
+
+Value: 40
+
+This reason is set when the global canary heuristic was tripped.
+
+## TRR_HEURISTIC_TRIPPED_MODIFIED_ROOTS
+
+Value: 41
+
+This reason is set when the modified roots (enterprise_roots cert pref) heuristic was tripped.
+
+## TRR_HEURISTIC_TRIPPED_PARENTAL_CONTROLS
+
+Value: 42
+
+This reason is set when parental controls are detected.
+
+## TRR_HEURISTIC_TRIPPED_THIRD_PARTY_ROOTS
+
+Value: 43
+
+This reason is set when the third party roots heuristic was tripped.
+
+## TRR_HEURISTIC_TRIPPED_ENTERPRISE_POLICY
+
+Value: 44
+
+This reason is set when enterprise policy heuristic was tripped.
+
+## TRR_HEURISTIC_TRIPPED_VPN
+
+Value: 45
+
+This reason is set when the heuristic was tripped by a vpn being detected.
+
+## TRR_HEURISTIC_TRIPPED_PROXY
+
+Value: 46
+
+This reason is set when the heuristic was tripped by a proxy being detected.
+
+## TRR_HEURISTIC_TRIPPED_NRPT
+
+Value: 47
+
+This reason is set when the heuristic was tripped by a NRPT being detected.
