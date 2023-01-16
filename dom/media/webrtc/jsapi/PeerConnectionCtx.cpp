@@ -532,8 +532,8 @@ static void GMPReady_m() {
 };
 
 static void GMPReady() {
-  GetMainThreadEventTarget()->Dispatch(WrapRunnableNM(&GMPReady_m),
-                                       NS_DISPATCH_NORMAL);
+  GetMainThreadSerialEventTarget()->Dispatch(WrapRunnableNM(&GMPReady_m),
+                                             NS_DISPATCH_NORMAL);
 };
 
 void PeerConnectionCtx::initGMP() {

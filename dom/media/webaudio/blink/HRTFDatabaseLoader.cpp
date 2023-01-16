@@ -123,7 +123,7 @@ class HRTFDatabaseLoader::ProxyReleaseEvent final : public Runnable {
 };
 
 void HRTFDatabaseLoader::ProxyRelease() {
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
   if (MOZ_LIKELY(mainTarget)) {
     RefPtr<ProxyReleaseEvent> event = new ProxyReleaseEvent(this);
     DebugOnly<nsresult> rv = mainTarget->Dispatch(event, NS_DISPATCH_NORMAL);

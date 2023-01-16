@@ -334,7 +334,7 @@ void PDMFactory::EnsureInit() {
     initalization();
     return;
   }
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
       "PDMFactory::EnsureInit", std::move(initalization));
   SyncRunnable::DispatchToThread(mainTarget, runnable);

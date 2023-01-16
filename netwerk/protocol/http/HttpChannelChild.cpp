@@ -2125,7 +2125,7 @@ already_AddRefed<nsIEventTarget> HttpChannelChild::GetODATarget() {
   }
 
   if (!target) {
-    target = GetMainThreadEventTarget();
+    target = GetMainThreadSerialEventTarget();
   }
   return target.forget();
 }

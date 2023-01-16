@@ -195,7 +195,7 @@ nsresult U2FSoftTokenManager::GetOrCreateWrappingKey(
   MOZ_LOG(gNSSTokenLog, LogLevel::Debug,
           ("Key stored, nickname set to %s.", mSecretNickname.get()));
 
-  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
       "dom::U2FSoftTokenManager::GetOrCreateWrappingKey", []() {
         MOZ_ASSERT(NS_IsMainThread());
         Preferences::SetUint(PREF_U2F_NSSTOKEN_COUNTER, 0);
@@ -885,7 +885,7 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
   counterItem.data[2] = (mCounter >> 8) & 0xFF;
   counterItem.data[3] = (mCounter >> 0) & 0xFF;
   uint32_t counter = mCounter;
-  GetMainThreadEventTarget()->Dispatch(
+  GetMainThreadSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction("dom::U2FSoftTokenManager::Sign", [counter]() {
         MOZ_ASSERT(NS_IsMainThread());
         Preferences::SetUint(PREF_U2F_NSSTOKEN_COUNTER, counter);

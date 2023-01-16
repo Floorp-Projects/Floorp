@@ -15,7 +15,7 @@ using namespace mozilla;
 //-----------------------------------------------------------------------------
 
 nsBrowserStatusFilter::nsBrowserStatusFilter()
-    : mTarget(GetMainThreadEventTarget()),
+    : mTarget(GetMainThreadSerialEventTarget()),
       mCurProgress(0),
       mMaxProgress(0),
       mCurrentPercentage(0),
