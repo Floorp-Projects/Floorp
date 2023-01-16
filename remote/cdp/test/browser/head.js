@@ -3,6 +3,9 @@
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const { RemoteAgent } = ChromeUtils.importESModule(
@@ -15,8 +18,21 @@ const { TabManager } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/TabManager.sys.mjs"
 );
 
-const TIMEOUT_MULTIPLIER = SpecialPowers.isDebugBuild ? 4 : 1;
+const TIMEOUT_MULTIPLIER = getTimeoutMultiplier();
 const TIMEOUT_EVENTS = 1000 * TIMEOUT_MULTIPLIER;
+
+function getTimeoutMultiplier() {
+  if (
+    AppConstants.DEBUG ||
+    AppConstants.MOZ_CODE_COVERAGE ||
+    AppConstants.ASAN ||
+    AppConstants.TSAN
+  ) {
+    return 4;
+  }
+
+  return 1;
+}
 
 /*
 add_task() is overriden to setup and teardown a test environment
