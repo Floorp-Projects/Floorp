@@ -215,6 +215,9 @@ extern bool MFBT_DATA sse4_1_enabled;
 #  if !defined(MOZILLA_PRESUME_SSE4_2)
 extern bool MFBT_DATA sse4_2_enabled;
 #  endif
+#  if !defined(MOZILLA_PRESUME_FMA3)
+extern bool MFBT_DATA fma3_enabled;
+#  endif
 #  if !defined(MOZILLA_PRESUME_AVX)
 extern bool MFBT_DATA avx_enabled;
 #  endif
@@ -315,6 +318,16 @@ inline bool supports_sse4_2() { return true; }
 inline bool supports_sse4_2() { return sse_private::sse4_2_enabled; }
 #else
 inline bool supports_sse4_2() { return false; }
+#endif
+
+#if defined(MOZILLA_PRESUME_FMA3)
+#  define MOZILLA_MAY_SUPPORT_FMA3 1
+inline bool supports_fma3() { return true; }
+#elif defined(MOZILLA_SSE_HAVE_CPUID_DETECTION)
+#  define MOZILLA_MAY_SUPPORT_FMA3 1
+inline bool supports_fma3() { return sse_private::fma3_enabled; }
+#else
+inline bool supports_fma3() { return false; }
 #endif
 
 #if defined(MOZILLA_PRESUME_AVX)
