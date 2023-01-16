@@ -32,6 +32,8 @@ static LazyLogModule sThreadPoolLog("nsThreadPool");
 
 static MOZ_THREAD_LOCAL(nsThreadPool*) gCurrentThreadPool;
 
+void nsThreadPool::InitTLS() { gCurrentThreadPool.infallibleInit(); }
+
 // DESIGN:
 //  o  Allocate anonymous threads.
 //  o  Use nsThreadPool::Run as the main routine for each thread.
@@ -45,6 +47,10 @@ static MOZ_THREAD_LOCAL(nsThreadPool*) gCurrentThreadPool;
 NS_IMPL_ISUPPORTS_INHERITED(nsThreadPool, Runnable, nsIThreadPool,
                             nsIEventTarget)
 
+nsThreadPool* nsThreadPool::GetCurrentThreadPool() {
+  return gCurrentThreadPool.get();
+}
+
 nsThreadPool::nsThreadPool()
     : Runnable("nsThreadPool"),
       mMutex("[nsThreadPool.mMutex]"),
@@ -57,9 +63,6 @@ nsThreadPool::nsThreadPool()
       mShutdown(false),
       mRegressiveMaxIdleTime(false),
       mIsAPoolThreadFree(true) {
-  static std::once_flag flag;
-  std::call_once(flag, [] { gCurrentThreadPool.infallibleInit(); });
-
   LOG(("THRD-P(%p) constructor!!!\n", this));
 }
 
