@@ -683,7 +683,7 @@ void CCGCScheduler::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
         minimumBudget, true, [this] { return mDidShutdown; });
   } else {
     mCCRunner->SetMinimumUsefulBudget(minimumBudget.ToMilliseconds());
-    nsIEventTarget* target = mozilla::GetCurrentEventTarget();
+    nsIEventTarget* target = mozilla::GetCurrentSerialEventTarget();
     if (target) {
       mCCRunner->SetTimer(aDelay, target);
     }

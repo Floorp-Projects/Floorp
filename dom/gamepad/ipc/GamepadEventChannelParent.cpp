@@ -47,7 +47,7 @@ GamepadEventChannelParent::Create() {
 GamepadEventChannelParent::GamepadEventChannelParent() : mIsShutdown{false} {
   MOZ_DIAGNOSTIC_ASSERT(IsOnBackgroundThread());
 
-  mBackgroundEventTarget = GetCurrentEventTarget();
+  mBackgroundEventTarget = GetCurrentSerialEventTarget();
 
   RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();

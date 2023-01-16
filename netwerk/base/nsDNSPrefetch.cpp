@@ -65,7 +65,7 @@ nsresult nsDNSPrefetch::Prefetch(nsIDNSService::DNSFlags flags) {
   // then our timing will be useless. However, in such a case,
   // mEndTimestamp will be a null timestamp and callers should check
   // TimingsValid() before using the timing.
-  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
+  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentSerialEventTarget();
 
   flags |= nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
 
@@ -127,7 +127,7 @@ nsresult nsDNSPrefetch::FetchHTTPSSVC(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
+  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentSerialEventTarget();
   nsIDNSService::DNSFlags flags = nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
   if (aRefreshDNS) {
     flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;

@@ -84,7 +84,7 @@ class CheckPermissionRunnable final : public Runnable {
         mActor(aActor),
         mTask(aTask),
         mPath(aPath),
-        mBackgroundEventTarget(GetCurrentEventTarget()) {
+        mBackgroundEventTarget(GetCurrentSerialEventTarget()) {
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();
 

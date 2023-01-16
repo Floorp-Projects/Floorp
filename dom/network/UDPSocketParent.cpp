@@ -217,7 +217,7 @@ static void CheckSTSThread() {
 // should be done there.
 mozilla::ipc::IPCResult UDPSocketParent::RecvConnect(
     const UDPAddressInfo& aAddressInfo) {
-  nsCOMPtr<nsIEventTarget> target = GetCurrentEventTarget();
+  nsCOMPtr<nsIEventTarget> target = GetCurrentSerialEventTarget();
   Unused << NS_WARN_IF(NS_FAILED(GetSTSThread()->Dispatch(
       WrapRunnable(RefPtr<UDPSocketParent>(this), &UDPSocketParent::DoConnect,
                    mSocket, target, aAddressInfo),

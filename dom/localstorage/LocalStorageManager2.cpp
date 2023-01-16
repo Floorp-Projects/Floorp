@@ -96,7 +96,7 @@ class AsyncRequestHelper final : public Runnable,
                      const LSRequestParams& aParams)
       : Runnable("dom::LocalStorageManager2::AsyncRequestHelper"),
         mManager(aManager),
-        mOwningEventTarget(GetCurrentEventTarget()),
+        mOwningEventTarget(GetCurrentSerialEventTarget()),
         mActor(nullptr),
         mPromise(aPromise),
         mParams(aParams),
