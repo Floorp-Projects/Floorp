@@ -385,6 +385,16 @@ static void RecordTelemetry(const TimeStamp& aStartOfValidation,
   }();
 
   TimeStamp now = TimeStamp::Now();
+  PROFILER_MARKER_TEXT(
+      "ORB safelist check", NETWORK,
+      MarkerTiming::Interval(aStartOfValidation, aStartOfJavaScriptValidation),
+      nsPrintfCString("Receive data for validation (%s)", key.get()));
+
+  PROFILER_MARKER_TEXT(
+      "ORB safelist check", NETWORK,
+      MarkerTiming::Interval(aStartOfJavaScriptValidation, now),
+      nsPrintfCString("JS Validation (%s)", key.get()));
+
   Telemetry::AccumulateTimeDelta(Telemetry::ORB_RECEIVE_DATA_FOR_VALIDATION_MS,
                                  key, aStartOfValidation,
                                  aStartOfJavaScriptValidation);
