@@ -90,19 +90,19 @@ add_task(async function test_findmarks() {
     // 2610 is the approximate expected document height, and
     // 10, 2040, 2570 are the approximate positions of the marks.
     const expectedDocHeight = 2610;
-    SimpleTest.isfuzzy(
+    isfuzzy(
       values[0],
       Math.round(10 * (scrollMaxY / expectedDocHeight)),
       10,
       "first value"
     );
-    SimpleTest.isfuzzy(
+    isfuzzy(
       values[1],
       Math.round(2040 * (scrollMaxY / expectedDocHeight)),
       10,
       "second value"
     );
-    SimpleTest.isfuzzy(
+    isfuzzy(
       values[2],
       Math.round(2570 * (scrollMaxY / expectedDocHeight)),
       10,
@@ -194,9 +194,11 @@ add_task(async function test_found_resize() {
   // Some number of extra scrollbar adjustment and painting events can occur
   // when resizing the window, so don't use an exact match for the count.
   let resizedValues = await getMarks(browser, true);
-  SimpleTest.isfuzzy(resizedValues[0], values[0], 2, "first value");
-  SimpleTest.ok(resizedValues[1] - 50 > values[1], "second value");
-  SimpleTest.ok(resizedValues[2] - 50 > values[2], "third value");
+  info(`values: ${JSON.stringify(values)}`);
+  info(`resizedValues: ${JSON.stringify(resizedValues)}`);
+  isfuzzy(resizedValues[0], values[0], 2, "first value");
+  ok(resizedValues[1] - 50 > values[1], "second value");
+  ok(resizedValues[2] - 50 > values[2], "third value");
 
   endFn();
 
@@ -249,7 +251,7 @@ async function verifyFind(browser, text, increase, expectedMarks) {
 
   is(foundMarks.length, expectedMarks.length, "marks count with text " + text);
   for (let t = 0; t < foundMarks.length; t++) {
-    SimpleTest.isfuzzy(
+    isfuzzy(
       foundMarks[t],
       expectedMarks[t],
       5,
