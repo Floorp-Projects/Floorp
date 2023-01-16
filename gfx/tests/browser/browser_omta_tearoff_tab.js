@@ -11,6 +11,13 @@ add_task(async function test() {
     skipAnimation: true,
   });
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.switchTab(gBrowser, tab);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    const anim = content.document.getAnimations()[0];
+    await anim.ready;
+    ok(SpecialPowers.wrap(anim).isRunningOnCompositor);
+  });
 
   let promiseWin = BrowserTestUtils.waitForNewWindow();
   let newWin = gBrowser.replaceTabWithWindow(tab);

@@ -67,12 +67,13 @@ async function waitUntil(predicate, msg) {
   }
   return new Promise(resolve => {
     const timer = setInterval(() => {
-      if (predicate()) {
+      const predicateResult = predicate();
+      if (predicateResult) {
         clearInterval(timer);
         if (msg) {
           dump(`Finished Waiting until: ${msg}\n`);
         }
-        resolve();
+        resolve(predicateResult);
       }
     }, DEBUGGER_POLLING_INTERVAL);
   });
@@ -128,6 +129,7 @@ function waitForSource(dbg, sourceURL) {
   }
   return waitForState(dbg, hasSource, `has source ${sourceURL}`);
 }
+exports.waitForSource = waitForSource;
 
 async function waitForPaused(dbg) {
   const onLoadedScope = waitForLoadedScopes(dbg);
