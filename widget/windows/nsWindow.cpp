@@ -3871,27 +3871,31 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   return LayoutDeviceIntPoint(point.x, point.y);
 }
 
-LayoutDeviceIntSize nsWindow::ClientToWindowSize(
-    const LayoutDeviceIntSize& aClientSize) {
+LayoutDeviceIntMargin nsWindow::ClientToWindowMargin() {
   if (mWindowType == eWindowType_popup && !IsPopupWithTitleBar()) {
-    return aClientSize;
+    return {};
   }
 
-  // Just use (200, 200) as the position
-  const LayoutDeviceIntPoint point(200, 200);
   if (mCustomNonClient) {
-    auto winRect = LayoutDeviceIntRect(point, aClientSize);
-    winRect.Inflate(NonClientSizeMargin(NormalWindowNonClientOffset()));
-    return winRect.Size();
+    return NonClientSizeMargin(NormalWindowNonClientOffset());
   }
 
-  RECT r;
-  r.left = point.x;
-  r.top = point.y;
-  r.right = point.x + aClientSize.width;
-  r.bottom = point.y + aClientSize.height;
-  ::AdjustWindowRectEx(&r, WindowStyle(), false, WindowExStyle());
-  return LayoutDeviceIntSize(r.right - r.left, r.bottom - r.top);
+  // Just use a dummy 200x200 at (200, 200) client rect as the rect.
+  RECT clientRect;
+  clientRect.left = 200;
+  clientRect.top = 200;
+  clientRect.right = 400;
+  clientRect.bottom = 400;
+
+  auto ToRect = [](const RECT& aRect) -> LayoutDeviceIntRect {
+    return {aRect.left, aRect.top, aRect.right - aRect.left,
+            aRect.bottom - aRect.top};
+  };
+
+  RECT windowRect = clientRect;
+  ::AdjustWindowRectEx(&windowRect, WindowStyle(), false, WindowExStyle());
+
+  return ToRect(windowRect) - ToRect(clientRect);
 }
 
 /**************************************************************
