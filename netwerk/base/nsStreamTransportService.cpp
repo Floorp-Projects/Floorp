@@ -375,7 +375,7 @@ class AvailableEvent final : public Runnable {
         mDoingCallback(false),
         mSize(0),
         mResultForCallback(NS_OK) {
-    mCallbackTarget = GetCurrentEventTarget();
+    mCallbackTarget = GetCurrentSerialEventTarget();
   }
 
   NS_IMETHOD Run() override {

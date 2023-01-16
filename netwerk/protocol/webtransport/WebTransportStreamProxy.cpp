@@ -98,7 +98,7 @@ class StatsCallbackWrapper : public nsIWebTransportStreamStatsCallback {
   NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit StatsCallbackWrapper(nsIWebTransportStreamStatsCallback* aCallback)
-      : mCallback(aCallback), mTarget(GetCurrentEventTarget()) {}
+      : mCallback(aCallback), mTarget(GetCurrentSerialEventTarget()) {}
 
   NS_IMETHOD OnSendStatsAvailable(
       nsIWebTransportSendStreamStats* aStats) override {

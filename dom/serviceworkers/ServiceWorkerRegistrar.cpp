@@ -971,7 +971,7 @@ class ServiceWorkerRegistrarSaveDataRunnable final : public Runnable {
   ServiceWorkerRegistrarSaveDataRunnable(
       nsTArray<ServiceWorkerRegistrationData>&& aData, uint32_t aGeneration)
       : Runnable("dom::ServiceWorkerRegistrarSaveDataRunnable"),
-        mEventTarget(GetCurrentEventTarget()),
+        mEventTarget(GetCurrentSerialEventTarget()),
         mData(std::move(aData)),
         mGeneration(aGeneration) {
     AssertIsOnBackgroundThread();

@@ -64,7 +64,7 @@ nsresult nsAsyncRedirectVerifyHelper::Init(
   mFlags = flags;
   mCallbackEventTarget = NS_IsMainThread() && mainThreadEventTarget
                              ? mainThreadEventTarget
-                             : GetCurrentEventTarget();
+                             : GetCurrentSerialEventTarget();
 
   if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                  nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {

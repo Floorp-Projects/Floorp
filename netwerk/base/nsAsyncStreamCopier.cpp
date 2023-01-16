@@ -35,7 +35,7 @@ class AsyncApplyBufferingPolicyEvent final : public Runnable {
   explicit AsyncApplyBufferingPolicyEvent(nsAsyncStreamCopier* aCopier)
       : mozilla::Runnable("AsyncApplyBufferingPolicyEvent"),
         mCopier(aCopier),
-        mTarget(GetCurrentEventTarget()) {}
+        mTarget(GetCurrentSerialEventTarget()) {}
 
   NS_IMETHOD Run() override {
     nsresult rv = mCopier->ApplyBufferingPolicy();
