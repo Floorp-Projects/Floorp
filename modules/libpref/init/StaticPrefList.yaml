@@ -8555,6 +8555,13 @@
   value: true
   mirror: always
 
+# Enables support for the page-orientation  property inside of CSS @page rules.
+- name: layout.css.page-orientation.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Enables support for the size property inside of CSS @page rules.
 - name: layout.css.page-size.enabled
   type: RelaxedAtomicBool
