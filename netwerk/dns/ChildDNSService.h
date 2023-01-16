@@ -68,6 +68,9 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
   RefPtr<TRRServiceParent> mTRRServiceParent;
 
   nsCString mTRRDomain;
+  // Only set in the content process.
+  nsIDNSService::ResolverMode mTRRMode =
+      nsIDNSService::ResolverMode::MODE_NATIVEONLY;
 };
 
 }  // namespace net
