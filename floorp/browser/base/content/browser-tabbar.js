@@ -45,22 +45,26 @@ function setTabbarMode() {
   }
 }
 
-setTabbarMode();
-Services.prefs.addObserver("floorp.browser.tabbar.settings", function () {
-  document.getElementById("tabbardesgin")?.remove();
-  document.getElementById("tabbar-script")?.remove();
-  document.getElementById("navigator-toolbox").insertBefore(document.getElementById("titlebar"), document.getElementById("navigator-toolbox").firstChild);
-  document.getElementById("TabsToolbar").before(document.getElementById("toolbar-menubar"));
-
+document.addEventListener("DOMContentLoaded", () => {
   setTabbarMode();
-});
+  Services.prefs.addObserver("floorp.browser.tabbar.settings", function () {
+    document.getElementById("tabbardesgin")?.remove();
+    document.getElementById("tabbar-script")?.remove();
+    document.getElementById("navigator-toolbox").insertBefore(document.getElementById("titlebar"), document.getElementById("navigator-toolbox").firstChild);
+    document.getElementById("TabsToolbar").before(document.getElementById("toolbar-menubar"));
+  
+    setTabbarMode();
+  });
+}, { once: true });
 
 //-------------------------------------------------------------------------Multirow-tabs----------------------------------------------------------------------------
 
-window.setTimeout(function(){
-  if (Services.prefs.getBoolPref("floorp.enable.multitab")) {
-    setMultirowTabMaxHeight();
-  }
-}, 3000);
-
-Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row",setMultirowTabMaxHeight);
+document.addEventListener("DOMContentLoaded", () => {
+  window.setTimeout(function(){
+    if (Services.prefs.getBoolPref("floorp.enable.multitab")) {
+      setMultirowTabMaxHeight();
+    }
+  }, 3000);
+  
+  Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row",setMultirowTabMaxHeight);  
+}, { once: true });

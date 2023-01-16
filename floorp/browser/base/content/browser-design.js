@@ -58,7 +58,8 @@ function setBrowserDesign() {
   window.setTimeout(setMultirowTabMaxHeight, 1000);
 }
 
-setBrowserDesign();
-
-Services.prefs.addObserver("floorp.browser.user.interface", setBrowserDesign);
-Services.obs.addObserver(setBrowserDesign, "update-photon-pref");
+document.addEventListener("DOMContentLoaded", () => {
+  setBrowserDesign();
+  Services.prefs.addObserver("floorp.browser.user.interface", setBrowserDesign);
+  Services.obs.addObserver(setBrowserDesign, "update-photon-pref");
+}, { once: true });
