@@ -3133,8 +3133,10 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   bool originalCheckedValue = false;
 
-  if (outerActivateEvent) {
+  if (outerActivateEvent &&
+      !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented) {
     mCheckedIsToggled = false;
+    aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
 
     switch (mType) {
       case FormControlType::InputCheckbox: {
@@ -3147,6 +3149,10 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
         originalCheckedValue = Checked();
         DoSetChecked(!originalCheckedValue, true, true);
         mCheckedIsToggled = true;
+
+        if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+        }
       } break;
 
       case FormControlType::InputRadio: {
@@ -3158,13 +3164,16 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
           DoSetChecked(true, true, true);
           mCheckedIsToggled = true;
         }
+
+        if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+        }
       } break;
 
       case FormControlType::InputSubmit:
       case FormControlType::InputImage:
-        if (mForm && !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented) {
+        if (mForm) {
           // Make sure other submit elements don't try to trigger submission.
-          aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
           aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
           aVisitor.mItemData = static_cast<Element*>(mForm);
           // tell the form that we are about to enter a click handler.
