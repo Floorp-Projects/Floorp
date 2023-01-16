@@ -158,18 +158,6 @@ interface nsIWinTaskbar : nsISupports
   void setGroupIdForWindow(in mozIDOMWindow aParent, in AString aIdentifier);
 
   /**
-   * Notify the taskbar that a window is about to enter full screen mode.
-   *
-   * A Windows autohide taskbar will not behave correctly in all cases if
-   * it is not notified when full screen operations start and end.
-   *
-   * @throw NS_ERROR_INVALID_ARG if the window is not a valid top level window
-   * @throw NS_ERROR_UNEXPECTED for general failures.
-   * @throw NS_ERROR_NOT_AVAILABLE if the taskbar cannot be obtained.
-   */
-  void prepareFullScreen(in mozIDOMWindow aWindow, in boolean aFullScreen);
-
-  /**
    * Notify the taskbar that a window identified by its HWND is about to enter
    * full screen mode.
    *
@@ -180,5 +168,5 @@ interface nsIWinTaskbar : nsISupports
    * @throw NS_ERROR_UNEXPECTED for general failures.
    * @throw NS_ERROR_NOT_AVAILABLE if the taskbar cannot be obtained.
    */
-  [noscript] void prepareFullScreenHWND(in voidPtr aWindow, in boolean aFullScreen);
+  [noscript] void prepareFullScreen(in voidPtr aHWND, in boolean aFullScreen);
 };

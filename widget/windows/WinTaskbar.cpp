@@ -433,17 +433,7 @@ WinTaskbar::SetGroupIdForWindow(mozIDOMWindow* aParent,
 }
 
 NS_IMETHODIMP
-WinTaskbar::PrepareFullScreen(mozIDOMWindow* aWindow, bool aFullScreen) {
-  NS_ENSURE_ARG_POINTER(aWindow);
-
-  HWND toplevelHWND = ::GetAncestor(GetHWNDFromDOMWindow(aWindow), GA_ROOT);
-  if (!toplevelHWND) return NS_ERROR_INVALID_ARG;
-
-  return PrepareFullScreenHWND(toplevelHWND, aFullScreen);
-}
-
-NS_IMETHODIMP
-WinTaskbar::PrepareFullScreenHWND(void* aHWND, bool aFullScreen) {
+WinTaskbar::PrepareFullScreen(void* aHWND, bool aFullScreen) {
   if (!Initialize()) return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG_POINTER(aHWND);
