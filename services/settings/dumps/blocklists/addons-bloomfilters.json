@@ -3,6 +3,56 @@
     {
       "stash": {
         "blocked": [
+          "{a68b4019-01d3-4c03-a791-eeb8b53ec666}:0.0.6",
+          "{d527e228-711b-4918-bcde-589e42076ce6}:0.0.1",
+          "{00e372ca-8ef1-4914-8c4b-ec28e095e7ff}:0.0.1",
+          "{00e372ca-8ef1-4914-8c4b-ec28e095e7ff}:0.0.2",
+          "{d527e228-711b-4918-bcde-589e42076ce6}:0.0.2",
+          "{a68b4019-01d3-4c03-a791-eeb8b53ec666}:0.0.4",
+          "{a68b4019-01d3-4c03-a791-eeb8b53ec666}:0.0.7",
+          "{a68b4019-01d3-4c03-a791-eeb8b53ec666}:0.0.3",
+          "{598a358e-4fc0-4b4e-a6cd-4bd58c214b86}:0.0.2",
+          "{bda658be-9344-48be-937d-8d94c5509ed4}:0.0.1",
+          "{bda658be-9344-48be-937d-8d94c5509ed4}:0.0.2",
+          "{a68b4019-01d3-4c03-a791-eeb8b53ec666}:0.0.5",
+          "{dcc9f394-6717-48bc-bee6-407cdc8dafc7}:0.0.1",
+          "{f975ed2a-b296-4310-b1c5-cc594d1bcfb0}:0.0.3",
+          "{f975ed2a-b296-4310-b1c5-cc594d1bcfb0}:0.0.2",
+          "{f975ed2a-b296-4310-b1c5-cc594d1bcfb0}:0.0.1",
+          "{bda658be-9344-48be-937d-8d94c5509ed4}:0.0.4",
+          "{a68b4019-01d3-4c03-a791-eeb8b53ec666}:0.0.1",
+          "{598a358e-4fc0-4b4e-a6cd-4bd58c214b86}:0.0.1",
+          "{ad7ab8eb-e005-4690-99e8-402fb4d594e6}:0.0.5",
+          "{a68b4019-01d3-4c03-a791-eeb8b53ec666}:0.0.2",
+          "{bda658be-9344-48be-937d-8d94c5509ed4}:0.0.3",
+          "{ad7ab8eb-e005-4690-99e8-402fb4d594e6}:0.0.6",
+          "{dcc9f394-6717-48bc-bee6-407cdc8dafc7}:0.0.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1673548633403,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1673634908628,
+      "id": "13987b1e-b22f-43d9-a3ff-35ad24e1585d",
+      "last_modified": 1673635037704
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{a12ff274-81ad-444e-9a24-8e3eee056522}:2.1.1",
+          "{a12ff274-81ad-444e-9a24-8e3eee056522}:2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1673462243282,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1673548507864,
+      "id": "26eee397-9ded-4ba6-a10a-4d38665165fb",
+      "last_modified": 1673548633362
+    },
+    {
+      "stash": {
+        "blocked": [
           "adblockultimatepro@elms.com:1.7.17",
           "{883a5f1c-98a1-4d41-84d1-e261b13aaf0a}:3.1.0",
           "jid1-93CWPelmsRbVPjRQA@jetpack:13.0",
@@ -52,5 +102,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1673462243232
+  "timestamp": 1673635037704
 }
