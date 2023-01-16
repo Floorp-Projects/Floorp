@@ -25,6 +25,7 @@ import re
 import shutil
 import socket
 import ssl
+import stat
 import subprocess
 import sys
 import tarfile
@@ -88,6 +89,26 @@ except ImportError:
 
 class ContentLengthMismatch(Exception):
     pass
+
+
+def _validate_tar_member(member, path):
+    def _is_within_directory(directory, target):
+        abs_directory = os.path.abspath(directory)
+        abs_target = os.path.abspath(target)
+        prefix = os.path.commonprefix([abs_directory, abs_target])
+        return prefix == abs_directory
+
+    member_path = os.path.join(path, member.name)
+    if not _is_within_directory(path, member_path):
+        raise Exception("Attempted path traversal in tar file: " + member.name)
+    if member.mode & (stat.S_ISUID | stat.S_ISGID):
+        raise Exception("Attempted setuid or setgid in tar file: " + member.name)
+
+
+def _safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+    for member in tar.getmembers():
+        _validate_tar_member(member, path)
+    tar.extractall(path, members, numeric_owner=numeric_owner)
 
 
 def platform_name():
@@ -696,8 +717,8 @@ class ScriptMixin(PlatformMixin):
             mode (str): string of the form 'filemode[:compression]' (e.g. 'r:gz' or 'r:bz2')
             extract_to (str, optional): where to extract the compressed file.
         """
-        t = tarfile.open(fileobj=compressed_file, mode=mode)
-        t.extractall(path=extract_to)
+        with tarfile.open(fileobj=compressed_file, mode=mode) as t:
+            _safe_extract(t, path=extract_to)
 
     def download_unpack(self, url, extract_to=".", extract_dirs="*", verbose=False):
         """Generic method to download and extract a compressed file without writing it
@@ -1940,6 +1961,7 @@ class ScriptMixin(PlatformMixin):
                 )
                 with tarfile.open(filename) as bundle:
                     for entry in self._filter_entries(bundle.getnames(), extract_dirs):
+                        _validate_tar_member(bundle.getmember(entry), extract_to)
                         if verbose:
                             self.info(" %s" % entry)
                         bundle.extract(entry, path=extract_to)
