@@ -19,6 +19,7 @@
 #include "prsystem.h"
 
 #include "nsThreadManager.h"
+#include "nsThreadPool.h"
 #include "TaskController.h"
 
 #ifdef XP_WIN
@@ -562,6 +563,10 @@ nsISerialEventTarget* GetCurrentSerialEventTarget() {
           SerialEventTargetGuard::GetCurrentSerialEventTarget()) {
     return current;
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(!nsThreadPool::GetCurrentThreadPool(),
+                        "Call to GetCurrentSerialEventTarget() from thread "
+                        "pool without an active TaskQueue");
 
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
