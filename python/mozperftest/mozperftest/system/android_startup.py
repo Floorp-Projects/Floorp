@@ -29,7 +29,7 @@ TEST_COLD_MAIN_FF = "cold_main_first_frame"
 TEST_COLD_MAIN_RESTORE = "cold_main_session_restore"
 TEST_COLD_VIEW_FF = "cold_view_first_frame"
 TEST_COLD_VIEW_NAV_START = "cold_view_nav_start"
-TEST_URI = "https://example.edu"
+TEST_URI = "https://example.com"
 
 BASE_URL_DICT = {
     PROD_FENIX: (
@@ -65,6 +65,18 @@ BASE_URL_DICT = {
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
         "mobile.v2.focus-android.nightly.{date}.latest.{architecture}/artifacts/"
         "public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
+    ),
+    PROD_FOCUS
+    + "-v3": (
+        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
+        "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}"
+        "/artifacts/public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
+    ),
+    PROD_FOCUS
+    + "-v3-latest": (
+        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
+        "mobile.v3.firefox-android.apks.focus-nightly.latest.{architecture}"
+        "/artifacts/public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
     ),
 }
 PROD_TO_CHANNEL_TO_PKGID = {
@@ -168,7 +180,7 @@ class AndroidStartUp(AndroidDevice):
         self.android_activity = None
         self.capture_logcat = self.capture_file = self.app_name = None
         self.download_date = date.today()
-        self.architecture = "armeabi-v7a"
+        self.architecture = "arm64-v8a"
         self.device = mozdevice.ADBDevice(use_root=False)
 
     def run(self, metadata):
