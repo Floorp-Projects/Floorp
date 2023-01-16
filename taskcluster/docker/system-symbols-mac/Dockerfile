@@ -27,6 +27,8 @@ ADD https://github.com/marco-c/breakpad-mac-update-symbols/raw/21221733edfbcac49
 RUN chmod +x /usr/local/bin/lipo
 
 COPY topsrcdir/tools/crashreporter/system-symbols/mac /builds/worker/mac-update-symbols
+# %include python/mozbuild/mozpack/macpkg.py
+COPY topsrcdir/python/mozbuild/mozpack/macpkg.py /builds/worker/mac-update-symbols/mozpack/
 WORKDIR /builds/worker/mac-update-symbols
 
 RUN chown -R worker:worker /builds/worker

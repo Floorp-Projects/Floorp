@@ -37,6 +37,7 @@ macosx64-sdk-11.3:
     description: "MacOSX11.3 SDK"
     treeherder:
         symbol: TM(sdk11.3)
+    worker-type: b-linux-gcp
     run:
         script: pack-macos-sdk.sh
         arguments:
@@ -45,3 +46,6 @@ macosx64-sdk-11.3:
             - Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX11.3.sdk.tar.zst
         toolchain-alias: macosx64-sdk
+        resources:
+            - python/mozbuild/mozpack/macpkg.py
+            - taskcluster/scripts/misc/unpack-sdk.py

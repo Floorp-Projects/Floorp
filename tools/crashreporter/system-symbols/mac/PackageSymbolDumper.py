@@ -49,7 +49,7 @@ import subprocess
 import tempfile
 import traceback
 
-from macpkg import Pbzx, uncpio, unxar
+from mozpack.macpkg import Pbzx, uncpio, unxar
 from scrapesymbols.gathersymbols import process_paths
 
 
