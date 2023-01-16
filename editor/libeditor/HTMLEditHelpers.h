@@ -995,6 +995,17 @@ struct MOZ_STACK_CLASS EditorInlineStyle : public EditorElementStyle {
   }
 
   /**
+   * Returns true if the style can be represented with <font>.
+   */
+  [[nodiscard]] bool IsStyleOfFontElement() const {
+    MOZ_ASSERT_IF(
+        mHTMLProperty == nsGkAtoms::font,
+        mAttribute == nsGkAtoms::bgcolor || mAttribute == nsGkAtoms::color ||
+            mAttribute == nsGkAtoms::face || mAttribute == nsGkAtoms::size);
+    return mHTMLProperty == nsGkAtoms::font && mAttribute != nsGkAtoms::bgcolor;
+  }
+
+  /**
    * Returns true if the style is conflict with vertical-align even though
    * they are not mapped to vertical-align in the CSS mode.
    */
