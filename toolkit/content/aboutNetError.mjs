@@ -474,10 +474,12 @@ function initPage() {
         "trrLearnMoreContainer"
       );
       trrLearnMoreContainer.hidden = false;
-      let learnMoreLink = document.getElementById("trrOnlylearnMoreLink");
+      let trrOnlyLearnMoreLink = document.getElementById(
+        "trrOnlylearnMoreLink"
+      );
       // This will be replaced at a later point with a link to an offline support page
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1806257
-      learnMoreLink.href =
+      trrOnlyLearnMoreLink.href =
         RPMGetFormatURLPref("network.trr_ui.skip_reason_learn_more_url") +
         skipReason.toLowerCase().replaceAll("_", "-");
 
