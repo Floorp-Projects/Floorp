@@ -42,7 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Svc: "resource://services-sync/util.js",
   FxAccountsClient: "resource://gre/modules/FxAccountsClient.jsm",
   FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -293,10 +292,7 @@ var Authentication = {
  */
 var Sync = {
   getSyncLogsDirectory() {
-    return lazy.OS.Path.join(
-      lazy.OS.Constants.Path.profileDir,
-      ...["weave", "logs"]
-    );
+    return PathUtils.join(PathUtils.profileDir, "weave", "logs");
   },
 
   async init() {
@@ -361,19 +357,12 @@ var Sync = {
 
   async wipeLogs() {
     let outputDirectory = this.getSyncLogsDirectory();
-    if (!(await lazy.OS.File.exists(outputDirectory))) {
+    if (!(await IOUtils.exists(outputDirectory))) {
       return;
     }
     LOG("Wiping existing Sync logs");
     try {
-      let iterator = new lazy.OS.File.DirectoryIterator(outputDirectory);
-      await iterator.forEach(async entry => {
-        try {
-          await lazy.OS.File.remove(entry.path);
-        } catch (error) {
-          LOG("wipeLogs() could not remove " + entry.path, error);
-        }
-      });
+      await IOUtils.remove(outputDirectory, { recursive: true });
     } catch (error) {
       LOG("wipeLogs() failed", error);
     }
@@ -383,27 +372,25 @@ var Sync = {
     let outputDirectory = this.getSyncLogsDirectory();
     let entries = [];
 
-    if (await lazy.OS.File.exists(outputDirectory)) {
+    if (await IOUtils.exists(outputDirectory)) {
       // Iterate through the directory
-      let iterator = new lazy.OS.File.DirectoryIterator(outputDirectory);
+      for (const path of await IOUtils.getChildren(outputDirectory)) {
+        const info = await IOUtils.stat(path);
 
-      await iterator.forEach(async entry => {
-        let info = await lazy.OS.File.stat(entry.path);
         entries.push({
-          path: entry.path,
-          name: entry.name,
-          lastModificationDate: info.lastModificationDate,
+          path,
+          name: PathUtils.filename(path),
+          lastModified: info.lastModified,
         });
-      });
+      }
+
       entries.sort(function(a, b) {
-        return b.lastModificationDate - a.lastModificationDate;
+        return b.lastModified - a.lastModified;
       });
     }
 
     const promises = entries.map(async entry => {
-      let content = await lazy.OS.File.read(entry.path, {
-        encoding: "utf-8",
-      });
+      const content = await IOUtils.readUTF8(entry.path);
       return {
         name: entry.name,
         content,
