@@ -8,8 +8,8 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
 });
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 let authPromptModalType = Services.prefs.getIntPref(

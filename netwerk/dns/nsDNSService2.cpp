@@ -1438,6 +1438,24 @@ nsDNSService::SetDetectedTrrURI(const nsACString& aURI) {
 }
 
 NS_IMETHODIMP
+nsDNSService::SetHeuristicDetectionResult(nsITRRSkipReason::value aValue) {
+  if (mTrrService) {
+    mTrrService->SetHeuristicDetectionResult(aValue);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSService::GetHeuristicDetectionResult(nsITRRSkipReason::value* aValue) {
+  if (!mTrrService) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aValue = mTrrService->GetHeuristicDetectionResult();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDNSService::GetTRRSkipReasonName(nsITRRSkipReason::value aValue,
                                    nsACString& aName) {
   return mozilla::net::GetTRRSkipReasonName(aValue, aName);
@@ -1449,6 +1467,12 @@ nsDNSService::GetCurrentTrrURI(nsACString& aURI) {
     mTrrService->GetURI(aURI);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSService::SetTRRModeInChild(nsIDNSService::ResolverMode mode) {
+  MOZ_ASSERT(false, "Why are we calling this?");
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
@@ -1589,6 +1613,22 @@ nsresult GetTRRSkipReasonName(TRRSkippedReason aReason, nsACString& aName) {
   static_assert(TRRSkippedReason::ODOH_KEY_NOT_AVAILABLE == 34);
   static_assert(TRRSkippedReason::ODOH_ENCRYPTION_FAILED == 35);
   static_assert(TRRSkippedReason::ODOH_DECRYPTION_FAILED == 36);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH ==
+                37);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_YOUTUBE_SAFESEARCH ==
+                38);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_ZSCALER_CANARY == 39);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_CANARY == 40);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_MODIFIED_ROOTS == 41);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_PARENTAL_CONTROLS ==
+                42);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_THIRD_PARTY_ROOTS ==
+                43);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_ENTERPRISE_POLICY ==
+                44);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_VPN == 45);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_PROXY == 46);
+  static_assert(TRRSkippedReason::TRR_HEURISTIC_TRIPPED_NRPT == 47);
 
   switch (aReason) {
     case TRRSkippedReason::TRR_UNSET:
@@ -1701,6 +1741,39 @@ nsresult GetTRRSkipReasonName(TRRSkippedReason aReason, nsACString& aName) {
       break;
     case TRRSkippedReason::ODOH_DECRYPTION_FAILED:
       aName = "ODOH_DECRYPTION_FAILED"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH:
+      aName = "TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_YOUTUBE_SAFESEARCH:
+      aName = "TRR_HEURISTIC_TRIPPED_YOUTUBE_SAFESEARCH"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_ZSCALER_CANARY:
+      aName = "TRR_HEURISTIC_TRIPPED_ZSCALER_CANARY"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_CANARY:
+      aName = "TRR_HEURISTIC_TRIPPED_CANARY"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_MODIFIED_ROOTS:
+      aName = "TRR_HEURISTIC_TRIPPED_MODIFIED_ROOTS"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_PARENTAL_CONTROLS:
+      aName = "TRR_HEURISTIC_TRIPPED_PARENTAL_CONTROLS"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_THIRD_PARTY_ROOTS:
+      aName = "TRR_HEURISTIC_TRIPPED_THIRD_PARTY_ROOTS"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_ENTERPRISE_POLICY:
+      aName = "TRR_HEURISTIC_TRIPPED_ENTERPRISE_POLICY"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_VPN:
+      aName = "TRR_HEURISTIC_TRIPPED_VPN"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_PROXY:
+      aName = "TRR_HEURISTIC_TRIPPED_PROXY"_ns;
+      break;
+    case TRRSkippedReason::TRR_HEURISTIC_TRIPPED_NRPT:
+      aName = "TRR_HEURISTIC_TRIPPED_NRPT"_ns;
       break;
     default:
       MOZ_ASSERT(false, "Unknown value");

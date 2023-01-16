@@ -15,7 +15,7 @@ with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]
 
 TESTING_JS_MODULES += [
-    "test/PromptTestUtils.jsm",
+    "test/PromptTestUtils.sys.mjs",
 ]
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]

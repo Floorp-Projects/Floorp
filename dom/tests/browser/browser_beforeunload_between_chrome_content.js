@@ -1,7 +1,7 @@
 const TEST_URL = "http://www.example.com/browser/dom/tests/browser/dummy.html";
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 function pageScript() {

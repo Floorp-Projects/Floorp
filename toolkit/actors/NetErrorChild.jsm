@@ -29,7 +29,8 @@ class NetErrorChild extends RemotePageChild {
       "RPMCheckAlternateHostAvailable",
       "RPMGetHttpResponseHeader",
       "RPMIsTRROnlyFailure",
-      "RPMShowTRROnlyFailureError",
+      "RPMIsFirefox",
+      "RPMIsNativeFallbackFailure",
       "RPMOpenPreferences",
       "RPMGetTRRSkipReason",
       "RPMGetTRRDomain",
@@ -162,7 +163,7 @@ class NetErrorChild extends RemotePageChild {
   }
 
   RPMIsTRROnlyFailure() {
-    // As per RPMShowTRROnlyFailureError, we will only show this in Firefox
+    // We will only show this in Firefox because the options may direct users to settings only available on Firefox Desktop
     let channel = this.contentWindow?.docShell?.failedChannel?.QueryInterface(
       Ci.nsIHttpChannelInternal
     );
@@ -172,8 +173,35 @@ class NetErrorChild extends RemotePageChild {
     return channel.effectiveTRRMode == Ci.nsIRequest.TRR_ONLY_MODE;
   }
 
-  RPMShowTRROnlyFailureError() {
+  RPMIsFirefox() {
     return lazy.AppInfo.isFirefox;
+  }
+
+  RPMIsNativeFallbackFailure() {
+    let channel = this.contentWindow?.docShell?.failedChannel?.QueryInterface(
+      Ci.nsIHttpChannelInternal
+    );
+    let value = channel?.trrSkipReason ?? Ci.nsITRRSkipReason.TRR_UNSET;
+
+    const warningReasons = new Set([
+      Ci.nsITRRSkipReason.TRR_NOT_CONFIRMED,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_YOUTUBE_SAFESEARCH,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_ZSCALER_CANARY,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_CANARY,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_MODIFIED_ROOTS,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_PARENTAL_CONTROLS,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_THIRD_PARTY_ROOTS,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_ENTERPRISE_POLICY,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_VPN,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_PROXY,
+      Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_NRPT,
+    ]);
+
+    return (
+      Services.dns.currentTrrMode == Ci.nsIRequest.TRR_FIRST_MODE &&
+      warningReasons.has(value)
+    );
   }
 
   RPMGetTRRSkipReason() {

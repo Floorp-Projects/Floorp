@@ -167,6 +167,24 @@ struct ParamTraits<nsIDNSService::DNSFlags>
           nsIDNSService::DNSFlags, nsIDNSService::DNSFlags::ALL_DNSFLAGS_BITS> {
 };
 
+template <>
+struct ParamTraits<nsIDNSService::ResolverMode> {
+  static void Write(MessageWriter* aWriter,
+                    const nsIDNSService::ResolverMode& aParam) {
+    WriteParam(aWriter, (uint8_t)aParam);
+  }
+  static bool Read(MessageReader* aReader,
+                   nsIDNSService::ResolverMode* aResult) {
+    uint8_t mode;
+    if (!ReadParam(aReader, &mode)) {
+      return false;
+    }
+    // TODO: sanity check
+    *aResult = static_cast<nsIDNSService::ResolverMode>(mode);
+    return true;
+  }
+};
+
 }  // namespace IPC
 
 #endif  // mozilla_net_NeckoMessageUtils_h

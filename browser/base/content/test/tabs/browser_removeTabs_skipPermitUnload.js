@@ -7,8 +7,8 @@
  * Tests for waiting for beforeunload before replacing a session.
  */
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 // The first two urls are intentionally different domains to force pages

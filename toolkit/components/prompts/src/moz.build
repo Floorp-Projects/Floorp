@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    "CommonDialog.jsm",
-    "Prompter.jsm",
-    "SharedPromptUtils.jsm",
+    "CommonDialog.sys.mjs",
+    "Prompter.sys.mjs",
+    "PromptUtils.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

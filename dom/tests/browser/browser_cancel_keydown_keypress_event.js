@@ -1,8 +1,8 @@
 const URL =
   "https://example.com/browser/dom/tests/browser/prevent_return_key.html";
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 // Wait for alert dialog and dismiss it immediately.

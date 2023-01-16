@@ -110,7 +110,9 @@ export class ViewSourceChild extends JSWindowActorChild {
       this.docShell.forceEncodingDetection();
     }
 
-    lazy.ViewSourcePageChild.setInitialLineNumber(lineNumber);
+    if (lineNumber) {
+      lazy.ViewSourcePageChild.setInitialLineNumber(lineNumber);
+    }
 
     if (!otherDocShell) {
       this.loadSourceFromURL(viewSrcURL);

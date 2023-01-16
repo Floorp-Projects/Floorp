@@ -9,11 +9,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "EnableDelayHelper",
-  "resource://gre/modules/SharedPromptUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  EnableDelayHelper: "resource://gre/modules/PromptUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
