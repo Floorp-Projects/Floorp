@@ -1,7 +1,0 @@
-[package]
-name = "xulstore-gtest"
-version = "0.1.0"
-authors = ["The Mozilla Project Developers"]
-
-[lib]
-path = "test.rs"

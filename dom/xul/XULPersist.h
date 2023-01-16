@@ -39,9 +39,7 @@ class XULPersist final : public nsStubDocumentObserver {
                                                const nsAString& aDocURI,
                                                nsCOMArray<Element>& aElements);
 
-#ifndef MOZ_NEW_XULSTORE
   nsCOMPtr<nsIXULStore> mLocalStore;
-#endif
 
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   Document* MOZ_NON_OWNING_REF mDocument;

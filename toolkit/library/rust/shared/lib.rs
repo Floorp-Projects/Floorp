@@ -49,8 +49,6 @@ extern crate static_prefs;
 extern crate storage;
 extern crate webrender_bindings;
 extern crate xpcom;
-#[cfg(feature = "new_xulstore")]
-extern crate xulstore;
 
 extern crate audio_thread_priority;
 

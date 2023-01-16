@@ -50,9 +50,6 @@ if CONFIG['MOZ_GECKO_PROFILER_PARSE_ELF']:
 if CONFIG['MOZ_BITS_DOWNLOAD']:
     gkrust_features += ['bitsdownload']
 
-if CONFIG['MOZ_NEW_XULSTORE']:
-    gkrust_features += ['new_xulstore']
-
 if CONFIG['LIBFUZZER']:
     gkrust_features += ['libfuzzer']
 

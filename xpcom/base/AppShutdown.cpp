@@ -37,10 +37,6 @@
 #endif
 #include "prenv.h"
 
-#ifdef MOZ_NEW_XULSTORE
-#  include "mozilla/XULStore.h"
-#endif
-
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
 #endif
@@ -236,11 +232,6 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
     }
 
     nsresult rv;
-#ifdef MOZ_NEW_XULSTORE
-    rv = XULStore::Shutdown();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "XULStore::Shutdown() failed.");
-#endif
-
     nsCOMPtr<nsICertStorage> certStorage =
         do_GetService("@mozilla.org/security/certstorage;1", &rv);
     if (NS_SUCCEEDED(rv)) {

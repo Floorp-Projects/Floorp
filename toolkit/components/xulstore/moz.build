@@ -20,25 +20,6 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
-if CONFIG["MOZ_NEW_XULSTORE"]:
-    EXTRA_JS_MODULES += [
-        "new/XULStore.jsm",
-    ]
-
-    TEST_DIRS += [
-        "tests/gtest",
-    ]
-
-    EXPORTS.mozilla += [
-        "XULStore.h",
-    ]
-
-    UNIFIED_SOURCES += [
-        "XULStore.cpp",
-    ]
-
-    FINAL_LIBRARY = "xul"
-else:
-    EXTRA_JS_MODULES += [
-        "old/XULStore.jsm",
-    ]
+EXTRA_JS_MODULES += [
+    "XULStore.jsm",
+]
