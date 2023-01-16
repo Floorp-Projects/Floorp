@@ -140,13 +140,6 @@ class nsUserIdleService : public nsIUserIdleServiceInternal {
    */
   virtual bool PollIdleTime(uint32_t* aIdleTime);
 
-  /**
-   * Function that determines if we are in poll mode or not.
-   *
-   * @return true if polling is supported, false otherwise.
-   */
-  virtual bool UsePollMode();
-
  private:
   /**
    * Ensure that the timer is expiring at least at the given time

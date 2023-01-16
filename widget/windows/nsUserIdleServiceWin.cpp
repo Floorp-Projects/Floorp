@@ -18,5 +18,3 @@ bool nsUserIdleServiceWin::PollIdleTime(uint32_t* aIdleTime) {
 
   return true;
 }
-
-bool nsUserIdleServiceWin::UsePollMode() { return true; }

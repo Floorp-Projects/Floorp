@@ -50,7 +50,6 @@ class nsUserIdleServiceGTK : public nsUserIdleService {
 
  protected:
   nsUserIdleServiceGTK();
-  virtual bool UsePollMode() override;
 };
 
 #endif  // nsUserIdleServiceGTK_h__

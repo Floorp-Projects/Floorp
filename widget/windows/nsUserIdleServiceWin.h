@@ -37,7 +37,6 @@ class nsUserIdleServiceWin : public nsUserIdleService {
  protected:
   nsUserIdleServiceWin() {}
   virtual ~nsUserIdleServiceWin() {}
-  bool UsePollMode() override;
 };
 
 #endif  // nsUserIdleServiceWin_h__

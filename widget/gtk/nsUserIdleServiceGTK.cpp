@@ -123,5 +123,3 @@ bool nsUserIdleServiceGTK::PollIdleTime(uint32_t* aIdleTime) {
 #endif
   return false;
 }
-
-bool nsUserIdleServiceGTK::UsePollMode() { return sInitialized; }

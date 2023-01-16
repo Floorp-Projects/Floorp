@@ -56,5 +56,3 @@ bool nsUserIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {
 
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
-
-bool nsUserIdleServiceX::UsePollMode() { return true; }

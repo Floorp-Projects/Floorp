@@ -10,5 +10,3 @@
 bool nsUserIdleServiceAndroid::PollIdleTime(uint32_t* aIdleTime) {
   return false;
 }
-
-bool nsUserIdleServiceAndroid::UsePollMode() { return false; }
