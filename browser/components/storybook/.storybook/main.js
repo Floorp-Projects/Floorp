@@ -38,6 +38,9 @@ module.exports = {
     config.resolve.alias[
       "toolkit-widgets"
     ] = `${projectRoot}/toolkit/content/widgets/`;
+    config.resolve.alias[
+      "lit.all.mjs"
+    ] = `${projectRoot}/toolkit/content/widgets/vendor/lit.all.mjs`;
 
     config.module.rules.push({
       test: /\.ftl$/,

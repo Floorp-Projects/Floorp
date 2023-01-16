@@ -4,8 +4,7 @@
 
 // eslint-disable-next-line import/no-unassigned-import
 import "toolkit-widgets/panel-list.js";
-import { html } from "lit";
-import { ifDefined } from "lit/directives/if-defined.js";
+import { html, ifDefined } from "lit.all.mjs";
 
 export default {
   title: "Design System/Components/Panel Menu",
