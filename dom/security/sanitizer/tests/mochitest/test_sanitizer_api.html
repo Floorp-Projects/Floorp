@@ -81,7 +81,7 @@ SimpleTest.waitForExplicitFinish();
       // test for the dropAttributes option
       testString: `<p title="dropme">hello</p>`,
       testExpected: `<p>hello</p>`,
-      sanitizerOptions: { dropAttributes: { 'title': ['p'] } },
+      sanitizerOptions: { dropAttributes: [{name: 'title', elements: ['p']}] },
     },
     {
       // confirming the inverse
@@ -94,8 +94,8 @@ SimpleTest.waitForExplicitFinish();
       testString: `<p title="lol">hello</p>`,
       testExpected: `<p>hello</p>`,
       sanitizerOptions: {
-        allowAttributes: { 'title': ['p'] },
-        dropAttributes: { 'title': ['p'] },
+        allowAttributes: [{ name: 'title', elements: ['p'] }],
+        dropAttributes: [{ name: 'title', elements: ['p'] }]
       },
     },
   ];
