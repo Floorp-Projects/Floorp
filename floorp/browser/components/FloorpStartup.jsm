@@ -100,3 +100,7 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
     UpdateUtils.UpdateUtils.PER_INSTALLATION_PREFS["app.update.background.enabled"].policyFn =
         function() { return false };
 }
+
+
+// Load Tab Sleep feature
+ChromeUtils.import("resource:///modules/TabSleep.jsm");

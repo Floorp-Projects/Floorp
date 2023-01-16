@@ -13,4 +13,5 @@ DIRS += [
 
 EXTRA_JS_MODULES += [
     "FloorpStartup.jsm",
+    "TabSleep.jsm",
 ]
