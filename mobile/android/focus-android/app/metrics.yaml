@@ -401,12 +401,14 @@ mozilla_products:
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5303
       - https://github.com/mozilla-mobile/focus-android/pull/6315
+      - https://github.com/mozilla-mobile/firefox-android/pull/632
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 111
+      - rtestard@mozilla.com
+    expires: never
 
 settings_screen:
   whats_new_tapped:
@@ -2131,9 +2133,10 @@ nimbus_experiments:
       - https://github.com/mozilla-mobile/focus-android/issues/6847
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/6972
+      - https://github.com/mozilla-mobile/firefox-android/pull/632
     notification_emails:
       - android-probes@mozilla.com
-    expires: 112
+    expires: 118
     data_sensitivity:
       - technical
 
