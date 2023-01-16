@@ -52,7 +52,7 @@ class DefaultMessageControllerTest {
         val customController = spyk(controller)
         val message = mockMessage()
         every { customController.handleAction(any()) } returns mockk()
-        every { storageNimbus.getMessageAction(message) } returns Pair("uuid", message.id)
+        every { storageNimbus.getMessageAction(any()) } returns Pair("uuid", message.id)
         assertNull(Messaging.messageClicked.testGetValue())
 
         customController.onMessagePressed(message)
@@ -91,14 +91,9 @@ class DefaultMessageControllerTest {
     @Test
     fun `WHEN calling onMessageDismissed THEN report to the messageManager`() {
         val message = mockMessage()
-        assertNull(Messaging.messageDismissed.testGetValue())
 
         controller.onMessageDismissed(message)
 
-        assertNotNull(Messaging.messageDismissed.testGetValue())
-        val event = Messaging.messageDismissed.testGetValue()!!
-        assertEquals(1, event.size)
-        assertEquals(message.id, event.single().extra!!["message_key"])
         verify { appStore.dispatch(AppAction.MessagingAction.MessageDismissed(message)) }
     }
 

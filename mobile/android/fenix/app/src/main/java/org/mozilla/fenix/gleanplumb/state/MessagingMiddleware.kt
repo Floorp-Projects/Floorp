@@ -20,6 +20,7 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMes
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessages
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.gleanplumb.Message
+import org.mozilla.fenix.gleanplumb.NimbusMessagingController
 import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
 
 typealias AppStoreMiddlewareContext = MiddlewareContext<AppState, AppAction>
@@ -30,7 +31,7 @@ class MessagingMiddleware(
     clock: () -> Long = { System.currentTimeMillis() },
 ) : Middleware<AppState, AppAction> {
 
-    private val controller = NimbusMessagingController(messagingStorage, coroutineScope, clock)
+    private val controller = NimbusMessagingController(messagingStorage, clock)
 
     override fun invoke(
         context: AppStoreMiddlewareContext,
@@ -74,14 +75,16 @@ class MessagingMiddleware(
         oldMessage: Message,
         context: AppStoreMiddlewareContext,
     ) {
-        val newMessage = controller.onMessageDisplayed(oldMessage)
-        val newMessages = if (!newMessage.isExpired) {
-            updateMessage(context, oldMessage, newMessage)
-        } else {
-            consumeMessageToShowIfNeeded(context, oldMessage)
-            removeMessage(context, oldMessage)
+        coroutineScope.launch {
+            val newMessage = controller.onMessageDisplayed(oldMessage)
+            val newMessages = if (!newMessage.isExpired) {
+                updateMessage(context, oldMessage, newMessage)
+            } else {
+                consumeMessageToShowIfNeeded(context, oldMessage)
+                removeMessage(context, oldMessage)
+            }
+            context.dispatch(UpdateMessages(newMessages))
         }
-        context.dispatch(UpdateMessages(newMessages))
     }
 
     @VisibleForTesting
@@ -92,7 +95,9 @@ class MessagingMiddleware(
         val newMessages = removeMessage(context, message)
         context.dispatch(UpdateMessages(newMessages))
         consumeMessageToShowIfNeeded(context, message)
-        controller.onMessageDismissed(message)
+        coroutineScope.launch {
+            controller.onMessageDismissed(message)
+        }
     }
 
     @VisibleForTesting
@@ -101,7 +106,9 @@ class MessagingMiddleware(
         context: AppStoreMiddlewareContext,
     ) {
         // Update Nimbus storage.
-        controller.onMessageClicked(message)
+        coroutineScope.launch {
+            controller.onMessageClicked(message)
+        }
         // Update app state.
         val newMessages = removeMessage(context, message)
         context.dispatch(UpdateMessages(newMessages))
@@ -133,12 +140,11 @@ class MessagingMiddleware(
         oldMessage: Message,
         updatedMessage: Message,
     ): List<Message> {
-        val actualMessageToShow = context.state.messaging.messageToShow.get(updatedMessage.surface)
+        val actualMessageToShow = context.state.messaging.messageToShow[updatedMessage.surface]
 
         if (actualMessageToShow?.id == oldMessage.id) {
             context.dispatch(UpdateMessageToShow(updatedMessage))
         }
         return removeMessage(context, oldMessage) + updatedMessage
     }
-
 }
