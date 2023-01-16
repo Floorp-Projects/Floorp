@@ -29,7 +29,6 @@ class nsUserIdleServiceAndroid : public nsUserIdleService {
  protected:
   nsUserIdleServiceAndroid() {}
   virtual ~nsUserIdleServiceAndroid() {}
-  bool UsePollMode() override;
 };
 
 #endif  // nsUserIdleServiceAndroid_h__

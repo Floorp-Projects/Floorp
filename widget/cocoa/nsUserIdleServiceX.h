@@ -25,7 +25,6 @@ class nsUserIdleServiceX : public nsUserIdleService {
  protected:
   nsUserIdleServiceX() {}
   virtual ~nsUserIdleServiceX() {}
-  bool UsePollMode() override;
 };
 
 #endif  // nsUserIdleServiceX_h_

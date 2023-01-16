@@ -26,9 +26,6 @@
 
 using namespace mozilla;
 
-// interval in milliseconds between internal idle time requests.
-#define MIN_IDLE_POLL_INTERVAL_MSEC (5 * PR_MSEC_PER_SEC) /* 5 sec */
-
 // After the twenty four hour period expires for an idle daily, this is the
 // amount of idle time we wait for before actually firing the idle-daily
 // event.
@@ -459,10 +456,8 @@ nsUserIdleService::AddIdleObserver(nsIObserver* aObserver,
 #endif
 
     mDeltaToNextIdleSwitchInS = aIdleTimeInS;
+    ReconfigureTimer();
   }
-
-  // Ensure timer is running.
-  ReconfigureTimer();
 
   return NS_OK;
 }
@@ -638,11 +633,6 @@ nsUserIdleService::GetIdleTime(uint32_t* idleTime) {
 bool nsUserIdleService::PollIdleTime(uint32_t* /*aIdleTime*/) {
   // Default behavior is not to have the ability to poll an idle time.
   return false;
-}
-
-bool nsUserIdleService::UsePollMode() {
-  uint32_t dummy;
-  return PollIdleTime(&dummy);
 }
 
 nsresult nsUserIdleService::GetDisabled(bool* aResult) {
@@ -875,26 +865,6 @@ void nsUserIdleService::ReconfigureTimer(void) {
   __android_log_print(LOG_LEVEL, LOG_TAG, "next timeout %0.f msec from now",
                       nextTimeoutDuration.ToMilliseconds());
 #endif
-
-  // Check if we should correct the timeout time because we should poll before.
-  if ((mIdleObserverCount > 0) && UsePollMode()) {
-    TimeStamp pollTimeout =
-        curTime + TimeDuration::FromMilliseconds(MIN_IDLE_POLL_INTERVAL_MSEC);
-
-    if (nextTimeoutAt > pollTimeout) {
-      MOZ_LOG(
-          sLog, LogLevel::Debug,
-          ("idleService: idle observers, reducing timeout to %lu msec from now",
-           MIN_IDLE_POLL_INTERVAL_MSEC));
-#ifdef MOZ_WIDGET_ANDROID
-      __android_log_print(
-          LOG_LEVEL, LOG_TAG,
-          "idle observers, reducing timeout to %lu msec from now",
-          MIN_IDLE_POLL_INTERVAL_MSEC);
-#endif
-      nextTimeoutAt = pollTimeout;
-    }
-  }
 
   SetTimerExpiryIfBefore(nextTimeoutAt);
 }
