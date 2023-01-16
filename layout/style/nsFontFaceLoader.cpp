@@ -105,7 +105,7 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
     if (doc) {
       target = doc->EventTargetFor(TaskCategory::Other);
     } else {
-      target = GetMainThreadEventTarget();
+      target = GetMainThreadSerialEventTarget();
     }
     NS_NewTimerWithFuncCallback(
         getter_AddRefs(mLoadTimer), LoadTimerCallback, static_cast<void*>(this),

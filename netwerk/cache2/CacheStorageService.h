@@ -429,7 +429,7 @@ void ProxyRelease(const char* aName, nsCOMPtr<T>& object,
 
 template <class T>
 void ProxyReleaseMainThread(const char* aName, nsCOMPtr<T>& object) {
-  ProxyRelease(aName, object, GetMainThreadEventTarget());
+  ProxyRelease(aName, object, GetMainThreadSerialEventTarget());
 }
 
 }  // namespace net

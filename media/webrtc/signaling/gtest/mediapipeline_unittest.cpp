@@ -43,7 +43,7 @@ class MainAsCurrent : public TaskQueueWrapper<DeletionPolicy::NonBlocking> {
  public:
   MainAsCurrent()
       : TaskQueueWrapper(
-            TaskQueue::Create(do_AddRef(GetMainThreadEventTarget()),
+            TaskQueue::Create(do_AddRef(GetMainThreadSerialEventTarget()),
                               "MainAsCurrentTaskQueue"),
             "MainAsCurrent"_ns),
         mSetter(this) {

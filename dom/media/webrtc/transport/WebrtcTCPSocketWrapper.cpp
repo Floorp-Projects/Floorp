@@ -24,7 +24,7 @@ WebrtcTCPSocketWrapper::WebrtcTCPSocketWrapper(
       mWebrtcTCPSocket(nullptr),
       mMainThread(nullptr),
       mSocketThread(nullptr) {
-  mMainThread = GetMainThreadEventTarget();
+  mMainThread = GetMainThreadSerialEventTarget();
   mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
   MOZ_RELEASE_ASSERT(mMainThread, "no main thread");
   MOZ_RELEASE_ASSERT(mSocketThread, "no socket thread");

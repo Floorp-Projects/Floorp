@@ -233,7 +233,7 @@ void DecoderBenchmark::CheckVersion(const nsACString& aDecoderName) {
   }
 
   DebugOnly<nsresult> rv =
-      GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+      GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
           "DecoderBenchmark::CheckVersion", [name, version]() {
             BenchmarkStorageChild::Instance()->SendCheckVersion(name, version);
           }));

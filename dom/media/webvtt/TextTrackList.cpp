@@ -139,7 +139,7 @@ void TextTrackList::CreateAndDispatchChangeEvent() {
 void TextTrackList::CreateAndDispatchTrackEventRunner(
     TextTrack* aTrack, const nsAString& aEventName) {
   DebugOnly<nsresult> rv;
-  nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
+  nsCOMPtr<nsIEventTarget> target = GetMainThreadSerialEventTarget();
   if (!target) {
     // If we are not able to get the main-thread object we are shutting down.
     return;

@@ -32,7 +32,7 @@ void RLBoxSandboxPool::StartTimer() {
   }
   DebugOnly<nsresult> rv = NS_NewTimerWithCallback(
       getter_AddRefs(mTimer), this, mDelaySeconds * 1000,
-      nsITimer::TYPE_ONE_SHOT, GetMainThreadEventTarget());
+      nsITimer::TYPE_ONE_SHOT, GetMainThreadSerialEventTarget());
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create timer");
 }
 
