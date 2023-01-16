@@ -326,13 +326,16 @@ NS_IMETHODIMP nsIDNService::IsACE(const nsACString& input, bool* _retval) {
   auto stringContains = [](const nsACString& haystack,
                            const nsACString& needle) {
     return std::search(haystack.BeginReading(), haystack.EndReading(),
-                       needle.BeginReading(),
-                       needle.EndReading()) != haystack.EndReading();
+                       needle.BeginReading(), needle.EndReading(),
+                       [](unsigned char ch1, unsigned char ch2) {
+                         return tolower(ch1) == tolower(ch2);
+                       }) != haystack.EndReading();
   };
 
-  *_retval = StringBeginsWith(input, "xn--"_ns) ||
-             (!input.IsEmpty() && input[0] != '.' &&
-              stringContains(input, ".xn--"_ns));
+  *_retval =
+      StringBeginsWith(input, "xn--"_ns, nsCaseInsensitiveCStringComparator) ||
+      (!input.IsEmpty() && input[0] != '.' &&
+       stringContains(input, ".xn--"_ns));
   return NS_OK;
 }
 
@@ -539,7 +542,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
   if (IsAscii(in)) {
     LossyCopyUTF16toASCII(in, out);
     // If label begins with xn-- we still want to check its validity
-    if (!StringBeginsWith(in, u"xn--"_ns)) {
+    if (!StringBeginsWith(in, u"xn--"_ns, nsCaseInsensitiveStringComparator)) {
       return NS_OK;
     }
   }
