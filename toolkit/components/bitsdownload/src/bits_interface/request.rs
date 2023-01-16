@@ -139,7 +139,7 @@ impl BitsRequest {
     ) -> Result<RefPtr<BitsRequest>, BitsTaskError> {
         let _ = context;
         let action: Action = action.into();
-        let monitor_thread = create_thread(&format!("BitsMonitor {}", id)).map_err(|rv| {
+        let monitor_thread = create_thread("BitsMonitor").map_err(|rv| {
             BitsTaskError::from_nsresult(FailedToStartThread, action, MainThread, rv)
         })?;
 

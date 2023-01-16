@@ -66,7 +66,10 @@ pub fn is_main_thread() -> bool {
     unsafe { NS_IsMainThread() }
 }
 
-pub fn create_thread(name: &str) -> Result<RefPtr<nsIThread>, nsresult> {
+// There's no OS requirement that thread names be static, but dynamic thread
+// names tend to conceal more than they reveal when processing large numbers of
+// crash reports.
+pub fn create_thread(name: &'static str) -> Result<RefPtr<nsIThread>, nsresult> {
     getter_addrefs(|p| unsafe {
         NS_NewNamedThreadWithDefaultStackSize(&*nsCString::from(name), p, ptr::null())
     })
