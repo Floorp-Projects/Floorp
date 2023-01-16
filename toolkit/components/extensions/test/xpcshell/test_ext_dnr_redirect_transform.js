@@ -186,18 +186,16 @@ add_task(async function test_redirect_transform_scheme() {
         scheme: "moz-extension",
         host: location.hostname,
       });
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1745761#c7
-      // When extensions.webextensions.remote is false (e.g. on Android),
-      // a redirect to a moz-extension:-URL reveals the underlying jar/file
-      // URL, instead of the moz-extension:-URL.
-      // TODO bug 1802385: fix bug and also run the following part on Android.
-      if (!navigator.userAgent.includes("Android")) {
-        await testFetch(
-          "http://from/war.txt",
-          browser.runtime.getURL("war.txt"),
-          "Scheme change to moz-extension:-URL"
-        );
-      }
+      await testFetch(
+        "http://from/war.txt",
+        browser.runtime.getURL("war.txt"),
+        "Scheme change to moz-extension:-URL"
+      );
+      await testNavigate(
+        "http://from/war.txt",
+        browser.runtime.getURL("war.txt"),
+        "Scheme change to moz-extension:-URL (navigation)"
+      );
       // While the initiator (extension) would be allowed to read the resource
       // due to it being same-origin, the pre-redirect URL (http://from) is not
       // matching web_accessible_resources[].matches, so the load is rejected.
