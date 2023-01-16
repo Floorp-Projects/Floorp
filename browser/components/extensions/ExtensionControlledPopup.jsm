@@ -421,33 +421,24 @@ class ExtensionControlledPopup {
     if (focusedWindow != win) {
       promiseEvent("focus");
     }
-    let unloadListener;
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve, reject) => {
-      if (promises.length) {
+    if (promises.length) {
+      let unloadListener;
+      let unloadPromise = new Promise((resolve, reject) => {
         unloadListener = () => {
           for (let [type, listener] of listenersToRemove) {
             win.removeEventListener(type, listener);
           }
-          reject();
+          reject(new Error("window unloaded"));
         };
         win.addEventListener("unload", unloadListener, { once: true });
-      }
-      let error;
+      });
       try {
-        await Promise.all(promises);
-      } catch (ex) {
-        error = ex;
-      }
-      if (unloadListener) {
+        let allPromises = Promise.all(promises);
+        await Promise.race([allPromises, unloadPromise]);
+      } finally {
         win.removeEventListener("unload", unloadListener);
       }
-      if (error) {
-        reject(new Error("window unloaded"));
-      } else {
-        resolve();
-      }
-    });
+    }
   }
 
   static _getAndMaybeCreatePanel(doc) {
