@@ -110,8 +110,8 @@ class BodyStreamUnderlyingSourceAlgorithms final
                                            UnderlyingSourceAlgorithmsBase)
 
   explicit BodyStreamUnderlyingSourceAlgorithms(
-      BodyStreamHolder* underlyingSource)
-      : mUnderlyingSource(underlyingSource) {}
+      nsIGlobalObject& aGlobal, BodyStreamHolder& aUnderlyingSource)
+      : mGlobal(&aGlobal), mUnderlyingSource(&aUnderlyingSource) {}
 
   MOZ_CAN_RUN_SCRIPT void StartCallback(JSContext* aCx,
                                         ReadableStreamController& aController,
@@ -130,8 +130,7 @@ class BodyStreamUnderlyingSourceAlgorithms final
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override {
-    RefPtr<BodyStream> bodyStream = mUnderlyingSource->GetBodyStream();
-    return bodyStream->CancelCallback(aCx, aReason, aRv);
+    return Promise::CreateResolvedWithUndefined(mGlobal, aRv);
   }
 
   void ReleaseObjects() override {
@@ -149,11 +148,12 @@ class BodyStreamUnderlyingSourceAlgorithms final
   ~BodyStreamUnderlyingSourceAlgorithms() override = default;
 
  private:
+  nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<BodyStreamHolder> mUnderlyingSource;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(BodyStreamUnderlyingSourceAlgorithms,
-                                   UnderlyingSourceAlgorithmsBase,
+                                   UnderlyingSourceAlgorithmsBase, mGlobal,
                                    mUnderlyingSource)
 NS_IMPL_ADDREF_INHERITED(BodyStreamUnderlyingSourceAlgorithms,
                          UnderlyingSourceAlgorithmsBase)
@@ -176,8 +176,8 @@ void SetUpReadableByteStreamControllerFromBodyStreamUnderlyingSource(
       MakeRefPtr<ReadableByteStreamController>(aStream->GetParentObject());
 
   // Step 2 - 7.
-  auto algorithms =
-      MakeRefPtr<BodyStreamUnderlyingSourceAlgorithms>(aUnderlyingSource);
+  auto algorithms = MakeRefPtr<BodyStreamUnderlyingSourceAlgorithms>(
+      *aStream->GetParentObject(), *aUnderlyingSource);
 
   // Step 8
   Maybe<uint64_t> autoAllocateChunkSize = mozilla::Nothing();
