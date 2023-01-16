@@ -13,7 +13,7 @@ import json
 
 import jinja2
 from glean_parser import util
-from glean_parser.metrics import Rate
+from glean_parser.metrics import CowString, Rate
 from util import generate_metric_ids, generate_ping_ids, get_metrics
 
 from js import ID_BITS, ID_SIGNAL_BITS
@@ -85,6 +85,10 @@ def rust_datatypes_filter(value):
                     yield "]"
             elif value is None:
                 yield "None"
+            # CowString is also a 'str' but is a special case.
+            # Ensure its case is handled before str's (below).
+            elif isinstance(value, CowString):
+                yield f'::std::borrow::Cow::from("{value.inner}")'
             elif isinstance(value, str):
                 yield '"' + value + '".into()'
             elif isinstance(value, Rate):
