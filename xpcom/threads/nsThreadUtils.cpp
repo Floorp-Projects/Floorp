@@ -199,7 +199,8 @@ nsresult NS_GetMainThread(nsIThread** aResult) {
 nsresult NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent) {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
-  nsIEventTarget* thread = GetCurrentEventTarget();
+  // XXX: Consider using GetCurrentSerialEventTarget() to support TaskQueues.
+  nsISerialEventTarget* thread = NS_GetCurrentThread();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -252,7 +253,9 @@ nsresult NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags) {
 nsresult NS_DelayedDispatchToCurrentThread(
     already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs) {
   nsCOMPtr<nsIRunnable> event(aEvent);
-  nsIEventTarget* thread = GetCurrentEventTarget();
+
+  // XXX: Consider using GetCurrentSerialEventTarget() to support TaskQueues.
+  nsISerialEventTarget* thread = NS_GetCurrentThread();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
