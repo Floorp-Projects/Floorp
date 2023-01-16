@@ -8,10 +8,6 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { BrowserUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/BrowserUtils.sys.mjs"
-);
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   EnableDelayHelper: "resource://gre/modules/PromptUtils.sys.mjs",
@@ -22,12 +18,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "gReputationService",
   "@mozilla.org/reputationservice/application-reputation-service;1",
   Ci.nsIApplicationReputationService
-);
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gMIMEService",
-  "@mozilla.org/mime;1",
-  Ci.nsIMIMEService
 );
 
 const { Integration } = ChromeUtils.importESModule(
@@ -479,39 +469,41 @@ nsUnknownContentTypeDialog.prototype = {
     this.mDialog.document.addEventListener("dialogaccept", this);
     this.mDialog.document.addEventListener("dialogcancel", this);
 
-    let url = this.mLauncher.source;
-
+    var url = this.mLauncher.source;
     if (url instanceof Ci.nsINestedURI) {
       url = url.innermostURI;
     }
-
-    let iconPath = "goat";
-    let fname = "";
-    if (suggestedFileName) {
-      fname = iconPath = suggestedFileName;
-    } else if (url instanceof Ci.nsIURL) {
-      // A url, use file name from it.
-      fname = iconPath = url.fileName;
-    } else if (["data", "blob"].includes(url.scheme)) {
-      // The path is useless for these, so use a reasonable default.
-      let { MIMEType } = this.mLauncher.MIMEInfo;
-      fname = lazy.gMIMEService.getValidFileName(null, MIMEType, url, 0);
-    } else {
-      fname = url.pathQueryRef;
+    if (url.scheme == "blob") {
+      let origin = new URL(url.spec).origin;
+      // Origin can be "null" for blob URIs from a sandbox.
+      if (origin != "null") {
+        // `newURI` can throw (like for null) and throwing here breaks...
+        // a lot of stuff. So let's avoid doing that in case there are other
+        // edgecases we're missing here.
+        try {
+          url = Services.io.newURI(origin);
+        } catch (ex) {
+          console.error(ex);
+        }
+      }
     }
 
+    var fname = "";
+    var iconPath = "goat";
     this.mSourcePath = url.prePath;
     // Some URIs do not implement nsIURL, so we can't just QI.
     if (url instanceof Ci.nsIURL) {
+      // A url, use file name from it.
+      fname = iconPath = url.fileName;
       this.mSourcePath += url.directory;
     } else {
-      // Don't make the url excessively long (e.g. for data URIs)
-      // (this doesn't use a temp var to avoid copying a potentially
-      // several mb-long string)
-      this.mSourcePath +=
-        url.pathQueryRef.length > 500
-          ? url.pathQueryRef.substring(0, 500) + "\u2026"
-          : url.pathQueryRef;
+      // A generic uri, use path.
+      fname = url.pathQueryRef;
+      this.mSourcePath += url.pathQueryRef;
+    }
+
+    if (suggestedFileName) {
+      fname = iconPath = suggestedFileName;
     }
 
     var displayName = fname.replace(/ +/g, " ");
@@ -522,7 +514,7 @@ nsUnknownContentTypeDialog.prototype = {
     this.mDialog.document.title = this.mTitle;
 
     // Put content type, filename and location into intro.
-    this.initIntro(url, displayName);
+    this.initIntro(url, fname, displayName);
 
     var iconString =
       "moz-icon://" +
@@ -644,13 +636,14 @@ nsUnknownContentTypeDialog.prototype = {
     this.dialogElement("mode").focus();
   },
 
-  initIntro(url, displayName) {
-    this.dialogElement("location").value = displayName;
-    this.dialogElement("location").setAttribute("tooltiptext", displayName);
+  initIntro(url, filename, displayname) {
+    this.dialogElement("location").value = displayname;
+    this.dialogElement("location").setAttribute("realname", filename);
+    this.dialogElement("location").setAttribute("tooltiptext", displayname);
 
     // if mSourcePath is a local file, then let's use the pretty path name
     // instead of an ugly url...
-    let pathString;
+    var pathString;
     if (url instanceof Ci.nsIFileURL) {
       try {
         // Getting .file might throw, or .parent could be null
@@ -659,9 +652,15 @@ nsUnknownContentTypeDialog.prototype = {
     }
 
     if (!pathString) {
-      pathString = BrowserUtils.formatURIForDisplay(url, {
-        showInsecureHTTP: true,
-      });
+      // wasn't a fileURL
+      var tmpurl = url; // don't want to change the real url
+      try {
+        tmpurl = tmpurl
+          .mutate()
+          .setUserPass("")
+          .finalize();
+      } catch (ex) {}
+      pathString = tmpurl.prePath;
     }
 
     // Set the location text, which is separate from the intro text so it can be cropped
