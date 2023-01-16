@@ -20,6 +20,7 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -71,7 +72,14 @@ class ShareOverlayRobot {
         )
     }
 
-    class Transition
+    class Transition {
+        fun clickSaveAsPDF(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+            itemContainingText("Save as PDF").click()
+
+            DownloadRobot().interact()
+            return DownloadRobot.Transition()
+        }
+    }
 }
 
 private fun shareTabsLayout() = onView(withResourceName("shareWrapper"))

@@ -90,6 +90,7 @@ class DownloadRobot {
         }
 
         fun clickOpen(type: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            openDownloadButton().waitForExists(waitingTime)
             openDownloadButton().click()
 
             // verify open intent is matched with associated data type
@@ -186,13 +187,12 @@ private fun closePromptButton() =
     onView(withContentDescription("Close"))
 
 private fun downloadButton() =
-    onView(withText("Download"))
+    onView(withId(R.id.download_button))
         .inRoot(isDialog())
         .check(matches(isDisplayed()))
 
 private fun openDownloadButton() =
-    onView(withId(R.id.download_dialog_action_button))
-        .check(matches(isDisplayed()))
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/download_dialog_action_button"))
 
 private fun downloadedFile(fileName: String) = onView(withText(fileName))
 

@@ -7,10 +7,12 @@ package org.mozilla.fenix.ui
 import androidx.core.net.toUri
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadedFileOnStorage
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -30,6 +32,9 @@ class DownloadTest {
     /* Remote test page managed by Mozilla Mobile QA team at https://github.com/mozilla-mobile/testapp */
     private val downloadTestPage = "https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html"
     private var downloadFile: String = ""
+    private val pdfFileName = "washington.pdf"
+    private val pdfFileURL = "storage.googleapis.com/mobile_test_assets/public/washington.pdf"
+    private val pdfFileContent = "Washington Crossing the Delaware"
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
@@ -182,6 +187,36 @@ class DownloadTest {
             openDownloadedFile(downloadFile)
             verifyPhotosAppOpens()
             mDevice.pressBack()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun openPDFInBrowserTest() {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            clickLinkMatchingText(pdfFileName)
+            verifyUrl(pdfFileURL)
+            verifyPageContent(pdfFileContent)
+        }
+    }
+
+    @Ignore("Failing because of https://bugzilla.mozilla.org/show_bug.cgi?id=1810132")
+    @SmokeTest
+    @Test
+    fun saveAndOpenPdfTest() {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            clickLinkMatchingText(pdfFileName)
+            verifyPageContent(pdfFileContent)
+        }.openThreeDotMenu {
+        }.clickShareButton {
+        }.clickSaveAsPDF {
+            // change back to simple filename
+            verifyDownloadPrompt(pdfFileName)
+        }.clickDownload {
+        }.clickOpen("application/pdf") {
+            assertExternalAppOpens("com.google.android.apps.docs")
         }
     }
 }
