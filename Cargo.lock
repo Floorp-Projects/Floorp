@@ -2271,7 +2271,6 @@ dependencies = [
  "wgpu_bindings",
  "wpf-gpu-raster",
  "xpcom",
- "xulstore",
 ]
 
 [[package]]
@@ -6583,25 +6582,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "xulstore"
-version = "0.1.0"
-dependencies = [
- "crossbeam-utils 0.8.14",
- "cstr",
- "libc",
- "log",
- "moz_task",
- "nserror",
- "nsstring",
- "once_cell",
- "rkv",
- "serde_json",
- "tempfile",
- "thiserror",
- "xpcom",
 ]
 
 [[package]]

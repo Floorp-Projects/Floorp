@@ -6,13 +6,9 @@
 
 #include "XULPersist.h"
 
-#ifdef MOZ_NEW_XULSTORE
-#  include "mozilla/XULStore.h"
-#else
-#  include "nsIXULStore.h"
-#  include "nsIStringEnumerator.h"
-#  include "nsServiceManagerUtils.h"
-#endif
+#include "nsIXULStore.h"
+#include "nsIStringEnumerator.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
@@ -98,14 +94,12 @@ void XULPersist::Persist(Element* aElement, nsAtom* aAttribute) {
     return;
   }
 
-#ifndef MOZ_NEW_XULSTORE
   if (!mLocalStore) {
     mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
     if (NS_WARN_IF(!mLocalStore)) {
       return;
     }
   }
-#endif
 
   nsAutoString id;
 
@@ -132,11 +126,7 @@ void XULPersist::Persist(Element* aElement, nsAtom* aAttribute) {
     valuestr = kMissingAttributeToken;
   }
 
-#ifdef MOZ_NEW_XULSTORE
-  rv = XULStore::SetValue(uri, id, attrstr, valuestr);
-#else
   mLocalStore->SetValue(uri, id, attrstr, valuestr);
-#endif
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "value set");
 }
 
@@ -151,14 +141,12 @@ nsresult XULPersist::ApplyPersistentAttributes() {
 
   // Add all of the 'persisted' attributes into the content
   // model.
-#ifndef MOZ_NEW_XULSTORE
   if (!mLocalStore) {
     mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
     if (NS_WARN_IF(!mLocalStore)) {
       return NS_ERROR_NOT_INITIALIZED;
     }
   }
-#endif
 
   nsCOMArray<Element> elements;
 
@@ -170,35 +158,16 @@ nsresult XULPersist::ApplyPersistentAttributes() {
   NS_ConvertUTF8toUTF16 uri(utf8uri);
 
   // Get a list of element IDs for which persisted values are available
-#ifdef MOZ_NEW_XULSTORE
-  UniquePtr<XULStoreIterator> ids;
-  rv = XULStore::GetIDs(uri, ids);
-#else
   nsCOMPtr<nsIStringEnumerator> ids;
   rv = mLocalStore->GetIDsEnumerator(uri, getter_AddRefs(ids));
-#endif
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-#ifdef MOZ_NEW_XULSTORE
-  while (ids->HasMore()) {
-    nsAutoString id;
-    rv = ids->GetNext(&id);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-#else
-  while (1) {
-    bool hasmore = false;
-    ids->HasMore(&hasmore);
-    if (!hasmore) {
-      break;
-    }
-
+  bool hasmore;
+  while (NS_SUCCEEDED(ids->HasMore(&hasmore)) && hasmore) {
     nsAutoString id;
     ids->GetNext(id);
-#endif
 
     // We want to hold strong refs to the elements while applying
     // persistent attributes, just in case.
@@ -226,41 +195,19 @@ nsresult XULPersist::ApplyPersistentAttributesToElements(
     nsCOMArray<Element>& aElements) {
   nsresult rv = NS_OK;
   // Get a list of attributes for which persisted values are available
-#ifdef MOZ_NEW_XULSTORE
-  UniquePtr<XULStoreIterator> attrs;
-  rv = XULStore::GetAttrs(aDocURI, aID, attrs);
-#else
   nsCOMPtr<nsIStringEnumerator> attrs;
   rv = mLocalStore->GetAttributeEnumerator(aDocURI, aID, getter_AddRefs(attrs));
-#endif
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-#ifdef MOZ_NEW_XULSTORE
-  while (attrs->HasMore()) {
-    nsAutoString attrstr;
-    rv = attrs->GetNext(&attrstr);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsAutoString value;
-    rv = XULStore::GetValue(aDocURI, aID, attrstr, value);
-#else
-  while (1) {
-    bool hasmore = PR_FALSE;
-    attrs->HasMore(&hasmore);
-    if (!hasmore) {
-      break;
-    }
-
+  bool hasmore;
+  while (NS_SUCCEEDED(attrs->HasMore(&hasmore)) && hasmore) {
     nsAutoString attrstr;
     attrs->GetNext(attrstr);
 
     nsAutoString value;
     rv = mLocalStore->GetValue(aDocURI, aID, attrstr, value);
-#endif
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

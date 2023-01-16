@@ -76,10 +76,6 @@
 #  include "nsIWindowsUIUtils.h"
 #endif
 
-#ifdef MOZ_NEW_XULSTORE
-#  include "mozilla/XULStore.h"
-#endif
-
 #include "mozilla/dom/DocumentL10n.h"
 
 #ifdef XP_MACOSX
@@ -1710,10 +1706,6 @@ nsresult AppWindow::GetPersistentValue(const nsAtom* aAttr, nsAString& aValue) {
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ConvertUTF8toUTF16 uri(utf8uri);
 
-#ifdef MOZ_NEW_XULSTORE
-  nsDependentAtomString attrString(aAttr);
-  rv = XULStore::GetValue(uri, windowElementId, attrString, aValue);
-#else
   if (!mLocalStore) {
     mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
     if (NS_WARN_IF(!mLocalStore)) {
@@ -1723,7 +1715,6 @@ nsresult AppWindow::GetPersistentValue(const nsAtom* aAttr, nsAString& aValue) {
 
   rv = mLocalStore->GetValue(uri, windowElementId, nsDependentAtomString(aAttr),
                              aValue);
-#endif
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1946,11 +1937,6 @@ nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
                       maybeConvertedValue);
   }
 
-#ifdef MOZ_NEW_XULSTORE
-  nsDependentAtomString attrString(aAttr);
-  return XULStore::SetValue(uri, windowElementId, attrString,
-                            maybeConvertedValue);
-#else
   if (!mLocalStore) {
     mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
     if (NS_WARN_IF(!mLocalStore)) {
@@ -1960,7 +1946,6 @@ nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
 
   return mLocalStore->SetValue(
       uri, windowElementId, nsDependentAtomString(aAttr), maybeConvertedValue);
-#endif
 }
 
 void AppWindow::MaybeSavePersistentPositionAndSize(

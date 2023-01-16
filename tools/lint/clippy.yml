@@ -35,7 +35,6 @@ clippy:
         - third_party/rust/mp4parse_capi/
         - toolkit/components/kvstore/
         - toolkit/components/glean/
-        - toolkit/components/xulstore/tests/gtest/
         - toolkit/library/rust/
         - tools/fuzzing/rust/
         - tools/profiler/rust-api/
@@ -69,7 +68,6 @@ clippy:
         - storage/rust/
         - storage/variant/
         # nsstring
-        - toolkit/components/xulstore/
         - servo/ports/geckolib/tests/
         - xpcom/rust/xpcom/
         - xpcom/rust/nsstring/

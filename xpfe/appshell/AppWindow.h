@@ -35,10 +35,7 @@
 #include "nsIRemoteTab.h"
 #include "nsIWebProgressListener.h"
 #include "nsITimer.h"
-
-#ifndef MOZ_NEW_XULSTORE
-#  include "nsIXULStore.h"
-#endif
+#include "nsIXULStore.h"
 
 namespace mozilla {
 namespace dom {
@@ -387,9 +384,7 @@ class AppWindow final : public nsIBaseWindow,
   nsresult SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight);
   void SizeShellToWithLimit(int32_t aDesiredWidth, int32_t aDesiredHeight,
                             int32_t shellItemWidth, int32_t shellItemHeight);
-#ifndef MOZ_NEW_XULSTORE
   nsCOMPtr<nsIXULStore> mLocalStore;
-#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(AppWindow, NS_APPWINDOW_IMPL_CID)

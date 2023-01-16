@@ -393,13 +393,6 @@ export var AppConstants = Object.freeze({
 
   TELEMETRY_PING_FORMAT_VERSION: @TELEMETRY_PING_FORMAT_VERSION@,
 
-  MOZ_NEW_XULSTORE:
-#ifdef MOZ_NEW_XULSTORE
-    true,
-#else
-    false,
-#endif
-
   MOZ_NEW_NOTIFICATION_STORE:
 #ifdef MOZ_NEW_NOTIFICATION_STORE
     true,
