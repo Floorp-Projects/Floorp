@@ -23,6 +23,7 @@ const {
   resume,
   selectSource,
   step,
+  waitForSource,
   waitForText,
   waitUntil,
 } = require("./debugger-helpers");
@@ -54,6 +55,7 @@ module.exports = async function() {
   await testProjectSearch(tab, toolbox);
   await testPreview(tab, toolbox, EXPECTED_FUNCTION);
   await testOpeningLargeMinifiedFile(tab, toolbox);
+  await testPrettyPrint(toolbox);
 
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
@@ -188,6 +190,42 @@ async function testOpeningLargeMinifiedFile(tab, toolbox) {
   test.done();
 
   dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [file]);
+
+  await garbageCollect();
+}
+
+async function testPrettyPrint(toolbox) {
+  dump("Waiting for debugger panel\n");
+  const panel = await toolbox.getPanelWhenReady("jsdebugger");
+
+  dump("Creating context\n");
+  const dbg = await createContext(panel);
+
+  // Disable source map so we can prettyprint main.js
+  await dbg.actions.toggleSourceMapsEnabled(false);
+
+  const fileUrl = `${IFRAME_BASE_URL}custom/debugger/static/js/main.js`;
+  const formattedFileUrl = `${fileUrl}:formatted`;
+
+  dump("Select minified file\n");
+  await selectSource(dbg, fileUrl);
+  const prettyPrintButton = await waitUntil(() => {
+    return dbg.win.document.querySelector(".source-footer .prettyPrint.active");
+  });
+
+  const test = runTest("custom.jsdebugger.pretty-print.DAMP");
+
+  dump("Click pretty-print button\n");
+  prettyPrintButton.click();
+  await waitForSource(dbg, formattedFileUrl);
+  await waitForText(dbg, formattedFileUrl, "!function (n) {\n");
+  test.done();
+
+  await dbg.actions.toggleSourceMapsEnabled(true);
+  dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [
+    fileUrl,
+    formattedFileUrl,
+  ]);
 
   await garbageCollect();
 }
