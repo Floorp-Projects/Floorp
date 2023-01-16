@@ -2,18 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["CommonDialog"];
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   EnableDelayHelper: "resource://gre/modules/PromptUtils.sys.mjs",
 });
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-function CommonDialog(args, ui) {
+export function CommonDialog(args, ui) {
   this.args = args;
   this.ui = ui;
   this.initialFocusPromise = new Promise(resolve => {

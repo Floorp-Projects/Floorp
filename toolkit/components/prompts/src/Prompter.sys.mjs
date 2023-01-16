@@ -2,15 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 // This is redefined below, for strange and unfortunate reasons.
-var { PromptUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromptUtils.sys.mjs"
-);
+import { PromptUtils } from "resource://gre/modules/PromptUtils.sys.mjs";
 
 const {
   MODAL_TYPE_TAB,
@@ -22,7 +17,7 @@ const {
 const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
 const SELECT_DIALOG = "chrome://global/content/selectDialog.xhtml";
 
-function Prompter() {
+export function Prompter() {
   // Note that EmbedPrompter clones this implementation.
 }
 
@@ -1733,7 +1728,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-function AuthPromptAdapterFactory() {}
+export function AuthPromptAdapterFactory() {}
 AuthPromptAdapterFactory.prototype = {
   classID: Components.ID("{6e134924-6c3a-4d86-81ac-69432dd971dc}"),
   QueryInterface: ChromeUtils.generateQI(["nsIAuthPromptAdapterFactory"]),
@@ -1814,5 +1809,3 @@ AuthPromptAdapter.prototype = {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };
-
-var EXPORTED_SYMBOLS = ["Prompter", "AuthPromptAdapterFactory"];

@@ -6,20 +6,9 @@
  * nsIPromptService.
  */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
-
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
-
-const EXPORTED_SYMBOLS = ["PromptTestUtils"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
+import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 const kPrefs = {};
 
@@ -51,7 +40,7 @@ function isCommonDialog(modalType) {
   );
 }
 
-let PromptTestUtils = {
+export let PromptTestUtils = {
   /**
    * Wait for a prompt from nsIPrompt or nsIPromptsService, interact with it and
    * click the specified button to close it.
