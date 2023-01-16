@@ -690,6 +690,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
       dont_AddRef(net::ChildDNSService::GetSingleton());
   if (dnsServiceChild) {
     dnsServiceChild->SetTRRDomain(aXPCOMInit.trrDomain());
+    dnsServiceChild->SetTRRModeInChild(aXPCOMInit.trrMode());
   }
   return IPC_OK();
 }
@@ -2170,6 +2171,16 @@ mozilla::ipc::IPCResult ContentChild::RecvSetCaptivePortalState(
       static_cast<mozilla::net::CaptivePortalService*>(cps.get());
   portal->SetStateInChild(aState);
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvSetTRRMode(
+    const nsIDNSService::ResolverMode& mode) {
+  RefPtr<net::ChildDNSService> dnsServiceChild =
+      dont_AddRef(net::ChildDNSService::GetSingleton());
+  if (dnsServiceChild) {
+    dnsServiceChild->SetTRRModeInChild(mode);
+  }
   return IPC_OK();
 }
 

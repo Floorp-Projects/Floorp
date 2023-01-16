@@ -338,11 +338,25 @@ ChildDNSService::GetCurrentTrrURI(nsACString& aURI) {
 
 NS_IMETHODIMP
 ChildDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
+  if (XRE_IsContentProcess()) {
+    *aMode = mTRRMode;
+    return NS_OK;
+  }
   if (!mTRRServiceParent) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   *aMode = mTRRServiceParent->Mode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ChildDNSService::SetTRRModeInChild(nsIDNSService::ResolverMode mode) {
+  if (!XRE_IsContentProcess()) {
+    MOZ_ASSERT(false, "Why are we calling this?");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  mTRRMode = mode;
   return NS_OK;
 }
 
