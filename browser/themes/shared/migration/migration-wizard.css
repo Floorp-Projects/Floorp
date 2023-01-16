@@ -28,6 +28,10 @@ button {
   margin-block-end: 0;
 }
 
+:host(:not([dialog-mode])) .cancel-close {
+  display: none;
+}
+
 .resource-progress {
   display: grid;
   gap: 8px;

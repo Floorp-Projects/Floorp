@@ -44,7 +44,7 @@ export class MigrationWizard extends HTMLElement {
               </label>
             </fieldset>
             <moz-button-group class="buttons">
-              <button data-l10n-id="migration-cancel-button-label"></button>
+              <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
               <button class="primary" data-l10n-id="migration-import-button-label"></button>
             </moz-button-group>
           </div>
@@ -122,6 +122,12 @@ export class MigrationWizard extends HTMLElement {
     this.#browserProfileSelector = shadow.querySelector(
       "#browser-profile-selector"
     );
+
+    let cancelCloseButtons = shadow.querySelectorAll(".cancel-close");
+    for (let button of cancelCloseButtons) {
+      button.addEventListener("click", this);
+    }
+
     this.#shadowRoot = shadow;
   }
 
@@ -264,6 +270,17 @@ export class MigrationWizard extends HTMLElement {
         progressEl.setAttribute("part", "progress-spinner");
       }
     });
+  }
+
+  handleEvent(event) {
+    if (
+      event.type == "click" &&
+      event.target.classList.contains("cancel-close")
+    ) {
+      this.dispatchEvent(
+        new CustomEvent("MigrationWizard:Close", { bubbles: true })
+      );
+    }
   }
 }
 

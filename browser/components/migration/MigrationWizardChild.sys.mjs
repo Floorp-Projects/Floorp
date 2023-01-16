@@ -28,6 +28,11 @@ export class MigrationWizardChild extends JSWindowActorChild {
         migrators,
         page: MigrationWizardConstants.PAGES.SELECTION,
       });
+      this.#wizardEl.dispatchEvent(
+        new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
+          bubbles: true,
+        })
+      );
     }
   }
 

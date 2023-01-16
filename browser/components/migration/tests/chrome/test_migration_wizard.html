@@ -14,6 +14,10 @@
       "chrome://browser/content/migration/migration-wizard-constants.mjs"
     );
 
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
+
     let gWiz = null;
     let gShadowRoot = null;
     let gDeck = null;
@@ -190,6 +194,39 @@
         "migration-wizard-progress-done-header",
         "Should be showing completed migration header string"
       );
+    });
+
+    /**
+     * Tests that the buttons that dismiss the wizard when embedded in
+     * a dialog are only visible when in dialog mode, and dispatch a
+     * MigrationWizard:Close event when clicked.
+     */
+    add_task(async function test_dialog_mode_close() {
+      gWiz.toggleAttribute("dialog-mode", true);
+      gWiz.setState({
+        page: MigrationWizardConstants.PAGES.SELECTION,
+        migrators: ["some-browser-0", "some-browser-1"],
+      });
+
+      // For now, there's only a single .cancel-close button, so let's just test
+      // that one. Let's make this test fail if there are multiple so that we can
+      // then update this test to switch to the right pages to test those buttons
+      // too.
+      let buttons = gShadowRoot.querySelectorAll(".cancel-close");
+      is(
+        buttons.length,
+        1,
+        "This tests expects a single .cancel-close button for now," +
+        " and should be updated when more are added."
+      );
+      let button = buttons[0];
+      ok(!isHidden(button), ".cancel-close button should be visible in dialog mode.");
+      let closeEvent = BrowserTestUtils.waitForEvent(gWiz, "MigrationWizard:Close");
+      synthesizeMouseAtCenter(button, { });
+      await closeEvent;
+
+      gWiz.toggleAttribute("dialog-mode", false);
+      ok(isHidden(button), ".cancel-close button should be hidden when not in dialog mode.");
     });
   </script>
 </head>
