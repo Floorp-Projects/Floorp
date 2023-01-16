@@ -88,7 +88,7 @@ class EncodingCompleteEvent final : public DiscardableRunnable {
         mEncodeCompleteCallback(aEncodeCompleteCallback),
         mFailed(false) {
     if (!NS_IsMainThread() && IsCurrentThreadRunningWorker()) {
-      mCreationEventTarget = GetCurrentEventTarget();
+      mCreationEventTarget = GetCurrentSerialEventTarget();
     } else {
       mCreationEventTarget = GetMainThreadEventTarget();
     }

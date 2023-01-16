@@ -99,7 +99,7 @@ nsresult BackgroundFileSaver::Init() {
               getter_AddRefs(mPipeOutputStream), true, true, 0,
               HasInfiniteBuffer() ? UINT32_MAX : 0);
 
-  mControlEventTarget = GetCurrentEventTarget();
+  mControlEventTarget = GetCurrentSerialEventTarget();
   NS_ENSURE_TRUE(mControlEventTarget, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = NS_CreateBackgroundTaskQueue("BgFileSaver",

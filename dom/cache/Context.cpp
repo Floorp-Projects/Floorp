@@ -475,7 +475,7 @@ class Context::ActionRunnable final : public nsIRunnable,
         mTarget(aTarget),
         mAction(std::move(aAction)),
         mDirectoryMetadata(aDirectoryMetadata),
-        mInitiatingThread(GetCurrentEventTarget()),
+        mInitiatingThread(GetCurrentSerialEventTarget()),
         mState(STATE_INIT),
         mResult(NS_OK),
         mExecutingRunOnTarget(false) {

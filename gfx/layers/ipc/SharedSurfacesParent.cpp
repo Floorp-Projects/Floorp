@@ -15,7 +15,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webrender/RenderSharedSurfaceTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
-#include "nsThreadUtils.h"  // for GetCurrentEventTarget
+#include "nsThreadUtils.h"  // for GetCurrentSerialEventTarget
 
 namespace mozilla {
 namespace layers {
@@ -55,7 +55,7 @@ void SharedSurfacesParent::MappingTracker::NotifyHandlerEnd() {
 SharedSurfacesParent::SharedSurfacesParent()
     : mTracker(
           StaticPrefs::image_mem_shared_unmap_min_expiration_ms_AtStartup(),
-          mozilla::GetCurrentEventTarget()) {}
+          mozilla::GetCurrentSerialEventTarget()) {}
 
 /* static */
 void SharedSurfacesParent::Initialize() {

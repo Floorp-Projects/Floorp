@@ -44,7 +44,7 @@ class AsyncBlockers {
     }
 
     if (aTimeOutInMs > 0) {
-      GetCurrentEventTarget()->DelayedDispatch(
+      GetCurrentSerialEventTarget()->DelayedDispatch(
           NS_NewRunnableFunction("AsyncBlockers::WaitUntilClear",
                                  [promise = mPromise]() {
                                    // The AsyncBlockers object may have been
