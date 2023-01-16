@@ -584,72 +584,34 @@ class FormAutofillParent extends JSWindowActorParent {
     // pick it up.
     delete creditCard.record["cc-type"];
 
-    // If `guid` is present, the form has been autofilled.
-    if (creditCard.guid) {
-      let originalCCData = await lazy.gFormAutofillStorage.creditCards.get(
-        creditCard.guid
-      );
-      let recordUnchanged = true;
-      for (let field in creditCard.record) {
-        if (creditCard.record[field] === "" && !originalCCData[field]) {
-          continue;
-        }
-        // Avoid updating the fields that users don't modify, but skip number field
-        // because we don't want to trigger decryption here.
-        let untouched = creditCard.untouchedFields.includes(field);
-        if (untouched && field !== "cc-number") {
-          creditCard.record[field] = originalCCData[field];
-        }
-        // recordUnchanged will be false if one of the field is changed.
-        recordUnchanged &= untouched;
-      }
+    // Make sure record is normalized before comparing with records in the storage
+    lazy.gFormAutofillStorage.creditCards._normalizeRecord(creditCard.record);
 
-      if (recordUnchanged) {
-        lazy.gFormAutofillStorage.creditCards.notifyUsed(creditCard.guid);
-        return false;
-      }
-    } else {
-      let existingGuid = await lazy.gFormAutofillStorage.creditCards.getDuplicateGuid(
-        creditCard.record
-      );
+    // If the record alreay exists in the storage, don't bother showing the prompt
+    const getMatchRecord = lazy.gFormAutofillStorage.creditCards.getMatchRecord(
+      creditCard.record
+    );
+    const matchRecord = (await getMatchRecord.next()).value;
+    if (matchRecord) {
+      lazy.gFormAutofillStorage.creditCards.notifyUsed(matchRecord.guid);
+      return false;
+    }
 
-      if (existingGuid) {
-        creditCard.guid = existingGuid;
+    // Suppress the pending doorhanger from showing up if user disabled credit card in previous doorhanger.
+    if (!FormAutofill.isAutofillCreditCardsEnabled) {
+      return false;
+    }
 
-        let originalCCData = await lazy.gFormAutofillStorage.creditCards.get(
-          creditCard.guid
-        );
-
-        lazy.gFormAutofillStorage.creditCards._normalizeRecord(
-          creditCard.record
-        );
-
-        // If the credit card record is a duplicate, check if the fields match the
-        // record.
-        let recordUnchanged = true;
-        for (let field in creditCard.record) {
-          if (field == "cc-number") {
-            continue;
-          }
-          if (creditCard.record[field] != originalCCData[field]) {
-            recordUnchanged = false;
-            break;
-          }
-        }
-
-        if (recordUnchanged) {
-          lazy.gFormAutofillStorage.creditCards.notifyUsed(creditCard.guid);
-          return false;
-        }
-      }
+    // Overwrite the guid if there is a duplicate
+    const getDuplicateRecord = lazy.gFormAutofillStorage.creditCards.getDuplicateRecord(
+      creditCard.record
+    );
+    let existingRecord = (await getDuplicateRecord.next()).value;
+    if (existingRecord) {
+      creditCard.guid = existingRecord.guid;
     }
 
     return async () => {
-      // Suppress the pending doorhanger from showing up if user disabled credit card in previous doorhanger.
-      if (!FormAutofill.isAutofillCreditCardsEnabled) {
-        return;
-      }
-
       await lazy.FormAutofillPrompter.promptToSaveCreditCard(
         browser,
         creditCard,

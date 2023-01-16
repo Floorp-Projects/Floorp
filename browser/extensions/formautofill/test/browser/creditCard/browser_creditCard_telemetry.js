@@ -91,19 +91,30 @@ async function assertTelemetry(expected_content, expected_parent) {
   }
 }
 
-function assertHistogram(histogramId, expectedNonZeroRanges) {
-  let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
-
-  // Compute the actual ranges in the format { range1: value1, range2: value2 }.
+async function assertHistogram(histogramId, expectedNonZeroRanges) {
   let actualNonZeroRanges = {};
-  for (let [range, value] of Object.entries(snapshot.values)) {
-    if (value > 0) {
-      actualNonZeroRanges[range] = value;
-    }
-  }
+  await TestUtils.waitForCondition(
+    () => {
+      const snapshot = Services.telemetry
+        .getHistogramById(histogramId)
+        .snapshot();
+      // Compute the actual ranges in the format { range1: value1, range2: value2 }.
+      for (let [range, value] of Object.entries(snapshot.values)) {
+        if (value > 0) {
+          actualNonZeroRanges[range] = value;
+        }
+      }
 
-  // These are stringified to visualize the differences between the values.
-  info("Testing histogram: " + histogramId);
+      return (
+        JSON.stringify(actualNonZeroRanges) ==
+        JSON.stringify(expectedNonZeroRanges)
+      );
+    },
+    "Wait for telemetry to be collected",
+    100,
+    100
+  );
+
   Assert.equal(
     JSON.stringify(actualNonZeroRanges),
     JSON.stringify(expectedNonZeroRanges)
@@ -373,7 +384,7 @@ add_task(async function test_submit_creditCard_new() {
       }
     );
 
-    assertHistogram(CC_NUM_USES_HISTOGRAM, useCount);
+    await assertHistogram(CC_NUM_USES_HISTOGRAM, useCount);
 
     await removeAllRecords();
     SpecialPowers.popPrefEnv();
@@ -451,7 +462,7 @@ add_task(async function test_submit_creditCard_autofill() {
 
   await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_1);
 
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {
     1: 1,
   });
 
@@ -544,7 +555,7 @@ add_task(async function test_submit_creditCard_update() {
       }
     );
 
-    assertHistogram("CREDITCARD_NUM_USES", useCount);
+    await assertHistogram("CREDITCARD_NUM_USES", useCount);
 
     SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
 
@@ -722,41 +733,47 @@ add_task(async function test_histogram() {
 
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
 
-  await setStorage(TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_5);
+  await setStorage(
+    TEST_CREDIT_CARD_1,
+    TEST_CREDIT_CARD_2,
+    TEST_CREDIT_CARD_3,
+    TEST_CREDIT_CARD_5
+  );
   let creditCards = await getCreditCards();
-  Assert.equal(creditCards.length, 3, "3 credit cards in storage");
+  Assert.equal(creditCards.length, 4, "3 credit cards in storage");
 
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {
-    0: 3,
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 4,
   });
 
   await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_1);
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {
-    0: 2,
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 3,
     1: 1,
   });
 
   await openTabAndUseCreditCard(1, TEST_CREDIT_CARD_2);
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {
-    0: 1,
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 2,
     1: 2,
   });
 
   await openTabAndUseCreditCard(0, TEST_CREDIT_CARD_2);
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {
-    0: 1,
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 2,
     1: 1,
     2: 1,
   });
 
   await openTabAndUseCreditCard(1, TEST_CREDIT_CARD_1);
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {
-    0: 1,
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 2,
     2: 2,
   });
 
   await openTabAndUseCreditCard(2, TEST_CREDIT_CARD_5);
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {
+    0: 1,
     1: 1,
     2: 2,
   });
@@ -764,7 +781,7 @@ add_task(async function test_histogram() {
   await removeAllRecords();
   SpecialPowers.popPrefEnv();
 
-  assertHistogram(CC_NUM_USES_HISTOGRAM, {});
+  await assertHistogram(CC_NUM_USES_HISTOGRAM, {});
 });
 
 add_task(async function test_clear_creditCard_autofill() {

@@ -201,28 +201,35 @@ class CreditCards extends CreditCardsBase {
   }
 
   /**
-   * Normalize the given record and return the first matched guid if storage has the same record.
+   * Find a duplicate credit card record in the storage.
    *
-   * @param {object} targetCreditCard
-   *        The credit card for duplication checking.
-   * @returns {Promise<string|null>}
-   *          Return the first guid if storage has the same credit card and null otherwise.
+   * A record is considered as a duplicate of another record when two records
+   * are the "same". This might be true even when some of their fields are
+   * different. For example, one record has the same credit card number but has
+   * different expiration date as the other record are still considered as
+   * "duplicate".
+   * This is different from `getMatchRecord`, which ensures all the fields with
+   * value in the the record is equal to the returned record.
+   *
+   * @param {object} record
+   *        The credit card for duplication checking. please make sure the
+   *        record is normalized.
+   * @returns {object}
+   *          Return the first duplicated record found in storage, null otherwise.
    */
-  async getDuplicateGuid(targetCreditCard) {
-    let clonedTargetCreditCard = this._clone(targetCreditCard);
-    this._normalizeRecord(clonedTargetCreditCard);
-    if (!clonedTargetCreditCard["cc-number"]) {
+  async *getDuplicateRecord(record) {
+    if (!record["cc-number"]) {
       return null;
     }
 
     await this._store.updateCreditCards();
-    for (let creditCard of this._data) {
-      if (creditCard.deleted) {
+    for (const recordInStorage of this._data) {
+      if (recordInStorage.deleted) {
         continue;
       }
 
-      if (creditCard["cc-number"] == clonedTargetCreditCard["cc-number"]) {
-        return creditCard.guid;
+      if (recordInStorage["cc-number"] == record["cc-number"]) {
+        yield recordInStorage;
       }
     }
     return null;

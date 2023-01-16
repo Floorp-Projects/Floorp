@@ -554,7 +554,6 @@ class AutofillRecords {
    *         Indicates which record to be notified.
    */
   notifyUsed(guid) {
-    dump("notifyUsed:" + guid + "\n");
     this.log.debug("notifyUsed:", guid);
 
     let recordFound = this._findByGUID(guid);
@@ -1918,32 +1917,66 @@ class CreditCardsBase extends AutofillRecords {
   }
 
   /**
-   * Normalize the given record and return the first matched guid if storage has the same record.
+   * Find a match credit card record in storage that is either exactly the same
+   * as the given record or a superset of the given record.
    *
-   * @param {object} targetCreditCard
-   *        The credit card for duplication checking.
-   * @returns {Promise<string|null>}
-   *          Return the first guid if storage has the same credit card and null otherwise.
+   * See the comments in `getDuplicateRecord` to see the difference between
+   * `getDuplicateRecord` and `getMatchRecord`
+   *
+   * @param {object} record
+   *        The credit card for match checking. please make sure the
+   *        record is normalized.
+   * @returns {object}
+   *          Return the first matched record found in storage, null otherwise.
    */
-  async getDuplicateGuid(targetCreditCard) {
-    let clonedTargetCreditCard = this._clone(targetCreditCard);
-    this._normalizeRecord(clonedTargetCreditCard);
-    if (!clonedTargetCreditCard["cc-number"]) {
+  async *getMatchRecord(record) {
+    for await (const recordInStorage of this.getDuplicateRecord(record)) {
+      const fields = this.VALID_FIELDS.filter(f => f != "cc-number");
+      if (
+        fields.every(
+          field => !record[field] || record[field] == recordInStorage[field]
+        )
+      ) {
+        yield recordInStorage;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Find a duplicate credit card record in the storage.
+   *
+   * A record is considered as a duplicate of another record when two records
+   * are the "same". This might be true even when some of their fields are
+   * different. For example, one record has the same credit card number but has
+   * different expiration date as the other record are still considered as
+   * "duplicate".
+   * This is different from `getMatchRecord`, which ensures all the fields with
+   * value in the the record is equal to the returned record.
+   *
+   * @param {object} record
+   *        The credit card for duplication checking. please make sure the
+   *        record is normalized.
+   * @returns {object}
+   *          Return the first duplicated record found in storage, null otherwise.
+   */
+  async *getDuplicateRecord(record) {
+    if (!record["cc-number"]) {
       return null;
     }
 
-    for (let creditCard of this._data) {
-      if (creditCard.deleted) {
+    for (const recordInStorage of this._data) {
+      if (recordInStorage.deleted) {
         continue;
       }
 
-      let decrypted = await lazy.OSKeyStore.decrypt(
-        creditCard["cc-number-encrypted"],
+      const decrypted = await lazy.OSKeyStore.decrypt(
+        recordInStorage["cc-number-encrypted"],
         false
       );
 
-      if (decrypted == clonedTargetCreditCard["cc-number"]) {
-        return creditCard.guid;
+      if (decrypted == record["cc-number"]) {
+        yield recordInStorage;
       }
     }
     return null;
