@@ -408,6 +408,13 @@ nsUserIdleService::AddIdleObserver(nsIObserver* aObserver,
   // high either - no more than ~136 years.
   NS_ENSURE_ARG_RANGE(aIdleTimeInS, 1, (UINT32_MAX / 10) - 1);
 
+  if (profiler_thread_is_being_profiled_for_markers()) {
+    nsAutoCString timeCStr;
+    timeCStr.AppendInt(aIdleTimeInS);
+    PROFILER_MARKER_TEXT("UserIdle::AddObserver", OTHER, MarkerStack::Capture(),
+                         timeCStr);
+  }
+
   if (XRE_IsContentProcess()) {
     dom::ContentChild* cpc = dom::ContentChild::GetSingleton();
     cpc->AddIdleObserver(aObserver, aIdleTimeInS);
@@ -465,6 +472,13 @@ nsUserIdleService::RemoveIdleObserver(nsIObserver* aObserver,
                                       uint32_t aTimeInS) {
   NS_ENSURE_ARG_POINTER(aObserver);
   NS_ENSURE_ARG(aTimeInS);
+
+  if (profiler_thread_is_being_profiled_for_markers()) {
+    nsAutoCString timeCStr;
+    timeCStr.AppendInt(aTimeInS);
+    PROFILER_MARKER_TEXT("UserIdle::RemoveObserver", OTHER,
+                         MarkerStack::Capture(), timeCStr);
+  }
 
   if (XRE_IsContentProcess()) {
     dom::ContentChild* cpc = dom::ContentChild::GetSingleton();
@@ -764,6 +778,9 @@ void nsUserIdleService::IdleTimerCallback(void) {
                         "Idle timer callback: tell observer %p user is idle",
                         notifyList[numberOfPendingNotifications]);
 #endif
+    nsAutoCString timeCStr;
+    timeCStr.AppendInt(currentIdleTimeInS);
+    AUTO_PROFILER_MARKER_TEXT("UserIdle::IdleCallback", OTHER, {}, timeCStr);
     notifyList[numberOfPendingNotifications]->Observe(this, OBSERVER_TOPIC_IDLE,
                                                       timeStr.get());
   }
