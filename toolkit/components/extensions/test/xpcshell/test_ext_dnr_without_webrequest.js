@@ -632,20 +632,7 @@ add_task(async function redirect_request_with_dnr_to_extensionPath() {
     {
       let req = await fetch("http://redir/never_reached", { method: "post" });
       browser.test.assertEq(200, req.status, "redirected to extensionPath");
-      if (navigator.userAgent.includes("Android")) {
-        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1745761#c7
-        // When extensions.webextensions.remote is false (e.g. on Android),
-        // a redirect to a moz-extension:-URL reveals the underlying jar/file
-        // URL, instead of the moz-extension:-URL.
-        // TODO bug 1802385: fix bug and remove this Android-only check.
-        browser.test.assertTrue(req.url.endsWith("/war.txt?1"), req.url);
-        browser.test.assertFalse(
-          req.url.startsWith(location.origin),
-          "Work-around for bug 1802385 only needed if URL is not moz-extension:"
-        );
-      } else {
-        browser.test.assertEq(`${location.origin}/war.txt?1`, req.url);
-      }
+      browser.test.assertEq(`${location.origin}/war.txt?1`, req.url);
       browser.test.assertEq("war_ext_res", await req.text());
     }
     // Redirects to extensionPath that is not in web_accessible_resources.
