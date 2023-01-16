@@ -1,7 +1,9 @@
 queue_rules:
   - name: default
     conditions:
-      - status-success=complete-pr
+      - or:
+        - status-success=complete-pr
+        - status-success=complete-push
 pull_request_rules:
   - name: Resolve conflict
     conditions:
@@ -12,7 +14,7 @@ pull_request_rules:
   - name: MickeyMoz - Auto Merge
     conditions:
       - author=MickeyMoz
-      - status-success=complete-pr
+      - status-success=complete-push
       - files~=^android-components/(Gecko\.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)
       - -files~=^(?!android-components/(Gecko\.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)).+$
     actions:
@@ -25,7 +27,7 @@ pull_request_rules:
   - name: L10N - Auto Merge
     conditions:
       - author~=(mozilla-l10n-automation-bot|github-actions\[bot\])
-      - status-success=complete-pr
+      - status-success=complete-push
       - files~=^(android-components|focus-android)/(.+/strings\.xml|l10n\.toml)
       - -files~=^(?!(android-components|focus-android)/(.+/strings\.xml|l10n\.toml)).+$
     actions:
@@ -38,7 +40,7 @@ pull_request_rules:
   - name: Release automation
     conditions:
       - author=github-actions[bot]
-      - status-success=complete-pr
+      - status-success=complete-push
       - files~=^android-components/(\.buildconfig\.yml|.+/NimbusGradlePlugin\.groovy|plugins/dependencies/src/main/java/(Gecko|DependenciesPlugin)\.kt|buildSrc/src/main/java/Gecko\.kt)
       - -files~=^(?!android-components/(\.buildconfig\.yml|.+/NimbusGradlePlugin\.groovy|plugins/dependencies/src/main/java/(Gecko|DependenciesPlugin)\.kt|buildSrc/src/main/java/Gecko\.kt)).+$
     actions:
@@ -52,7 +54,9 @@ pull_request_rules:
         force: false
   - name: Needs landing - Rebase
     conditions:
-      - status-success=complete-pr
+      - or:
+        - status-success=complete-pr
+        - status-success=complete-push
       - label=🛬 needs landing
       - "#approved-reviews-by>=1"
       - -draft
@@ -64,7 +68,9 @@ pull_request_rules:
         name: default
   - name: Needs landing - Squash
     conditions:
-      - status-success=complete-pr
+      - or:
+        - status-success=complete-pr
+        - status-success=complete-push
       - label=🛬 needs landing (squash)
       - "#approved-reviews-by>=1"
       - -draft

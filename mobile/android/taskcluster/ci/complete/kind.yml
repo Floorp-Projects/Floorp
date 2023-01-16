@@ -38,8 +38,8 @@ task-defaults:
     notifications:
         by-geckoview-bump:
             nightly:
-                subject: "[Android-Components] Failed to update geckoview nightly PR#{pull_request_number}"
-                message: "Please check {repository}/pull/{pull_request_number}"
+                subject: "[Firefox-Android] Failed CI for {commit_message}"
+                message: "Please check {repository}/commit/{commit}"
                 emails:
                     - fenix-eng-notifications@mozilla.com
                     - geckoview-core@mozilla.com
