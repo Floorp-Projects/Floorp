@@ -102,5 +102,19 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
 }
 
 
+// Set BMS icon provider
+{
+    let os_languages = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
+    let isChina = os_languages.includes("zh-CN");
+    Services.prefs.getDefaultBranch(null)
+        .setStringPref(
+            "floorp.browser.sidebar.useIconProvider",
+            isChina ?
+                "yandex" : // Setup for China
+                "duckduckgo"
+        );
+}
+
+
 // Load Tab Sleep feature
 ChromeUtils.import("resource:///modules/TabSleep.jsm");

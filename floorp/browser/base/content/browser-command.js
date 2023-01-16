@@ -3,15 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let os_languages = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
-let prefBranch = Services.prefs.getDefaultBranch(null);
-prefBranch.setStringPref(
-  "floorp.browser.sidebar.useIconProvider",
-  os_languages.includes("zh-CN") ?
-    "yandex" :
-    "duckduckgo"
-);
-
 function enableRestMode() {
   if (Services.prefs.getBoolPref("floorp.browser.rest.mode", false)) {
     var Tag = document.createElement("style");
