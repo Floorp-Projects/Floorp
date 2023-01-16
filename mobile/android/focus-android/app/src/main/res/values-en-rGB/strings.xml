@@ -667,12 +667,6 @@
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_summary">See fewer banners by automatically rejecting cookie requests, when possible.</string>
 
-    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_title">Further reduce cookie banners</string>
-
-    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_summary">Cookie banner requests will be accepted to dismiss more banners.</string>
-
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Cookie Banner Reduction</string>
 
@@ -702,6 +696,13 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s can try to automatically reject cookie requests. If a reject option isn’t available, %1$s may accept all cookies to dismiss the banner.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner">%1$s tries to reject cookie requests to dismiss annoying cookie banners.\n\nManage cookie banner preferences in settings.</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings">settings</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Autoplay</string>
