@@ -131,14 +131,11 @@ def split_raptor_subtests(config, tests):
             yield test
             continue
 
-        chunk_number = 0
-
-        for subtest in subtests:
-            chunk_number += 1
+        for chunk_number, subtest in enumerate(subtests):
 
             # Create new test job
             chunked = copy_task(test)
-            chunked["chunk-number"] = chunk_number
+            chunked["chunk-number"] = 1 + chunk_number
             chunked["subtest"] = subtest
             chunked["subtest-symbol"] = subtest
             if isinstance(chunked["subtest"], list):
@@ -189,7 +186,7 @@ def split_page_load_by_url(config, tests):
 
         if len(subtest_symbol) > 10 and "ytp" not in subtest_symbol:
             raise Exception(
-                "Treeherder symbol %s is lager than 10 char! Please use a different symbol."
+                "Treeherder symbol %s is larger than 10 char! Please use a different symbol."
                 % subtest_symbol
             )
 
@@ -224,38 +221,33 @@ def modify_extra_options(config, tests):
             extra_options = test.setdefault("mozharness", {}).setdefault(
                 "extra-options", []
             )
-            ind = None
+
             for i, opt in enumerate(extra_options):
                 if "conditioned-profile" in opt:
-                    ind = i
+                    if i:
+                        extra_options.pop(i)
                     break
-            if ind:
-                extra_options.pop(ind)
 
         if "-widevine" in test_name:
             extra_options = test.setdefault("mozharness", {}).setdefault(
                 "extra-options", []
             )
-            ind = None
             for i, opt in enumerate(extra_options):
                 if "--conditioned-profile=settled" in opt:
-                    ind = i
+                    if i:
+                        extra_options[i] += "-youtube"
                     break
-            if ind:
-                extra_options[ind] += "-youtube"
 
         if "unity-webgl" in test_name:
             # Disable the extra-profiler-run for unity-webgl tests.
             extra_options = test.setdefault("mozharness", {}).setdefault(
                 "extra-options", []
             )
-            ind = None
             for i, opt in enumerate(extra_options):
                 if "extra-profiler-run" in opt:
-                    ind = i
+                    if i:
+                        extra_options.pop(i)
                     break
-            if ind:
-                extra_options.pop(ind)
 
         yield test
 
