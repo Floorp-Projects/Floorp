@@ -50,8 +50,6 @@ function TargetMixin(parentClass) {
       // be able to interact with any commands while it is frequently useful.
       this.commands = null;
 
-      this._forceChrome = false;
-
       this.destroy = this.destroy.bind(this);
 
       this.threadFront = null;
@@ -236,11 +234,6 @@ function TargetMixin(parentClass) {
       return this.client.traits[traitName];
     }
 
-    // Get a promise of the RootActor's form
-    get root() {
-      return this.client.mainRoot.rootForm;
-    }
-
     // Get a Front for a target-scoped actor.
     // i.e. an actor served by RootActor.listTabs or RootActorActor.getTab requests
     async getFront(typeName) {
@@ -288,16 +281,7 @@ function TargetMixin(parentClass) {
     // Allows to controls which features are available against
     // a chrome or a content document.
     get chrome() {
-      return (
-        this.isAddon ||
-        this.isContentProcess ||
-        this.isParentProcess ||
-        this._forceChrome
-      );
-    }
-
-    forceChrome() {
-      this._forceChrome = true;
+      return this.isAddon || this.isContentProcess || this.isParentProcess;
     }
 
     // Tells us if the related actor implements WindowGlobalTargetActor
@@ -323,21 +307,13 @@ function TargetMixin(parentClass) {
     }
 
     get isAddon() {
-      return this.isLegacyAddon || this.isWebExtension;
+      return this.isWebExtension;
     }
 
     get isWorkerTarget() {
       // XXX Remove the check on `workerDescriptor` as part of Bug 1667404.
       return (
         this.typeName === "workerTarget" || this.typeName === "workerDescriptor"
-      );
-    }
-
-    get isLegacyAddon() {
-      return !!(
-        this.targetForm &&
-        this.targetForm.actor &&
-        this.targetForm.actor.match(/conn\d+\.addon(Target)?\d+/)
       );
     }
 
@@ -370,10 +346,6 @@ function TargetMixin(parentClass) {
         this.targetForm.actor &&
         this.targetForm.actor.match(/conn\d+\.parentProcessTarget\d+/)
       );
-    }
-
-    get isMultiProcess() {
-      return !this.window;
     }
 
     getExtensionPathName(url) {
