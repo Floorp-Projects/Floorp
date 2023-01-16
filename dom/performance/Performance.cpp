@@ -856,8 +856,6 @@ void Performance::InsertResourceEntry(PerformanceEntry* aEntry) {
     return;
   }
 
-  QueueEntry(aEntry);
-
   /*
    * Let new entry be the input PerformanceEntry to be added.
    *
@@ -870,6 +868,7 @@ void Performance::InsertResourceEntry(PerformanceEntry* aEntry) {
      * Increase resource timing buffer current size by 1.
      */
     mResourceEntries.InsertElementSorted(aEntry, PerformanceEntryComparator());
+    QueueEntry(aEntry);
     return;
   }
 
