@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 6.3.0
+Version: 6.4.0
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -85,6 +85,12 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 6.4.0
+
+- BUGFIX: Correct code generation for labeled metrics in Rust ([#533](https://github.com/mozilla/glean_parser/pull/533))
+- BUGFIX: Correctly serialize `Rates` for Rust code ([#530](https://github.com/mozilla/glean_parser/pull/530))
+- Feature: Wrap labeled metric's static labels list as CoW strings (requires updated Glean support) ([#534](https://github.com/mozilla/glean_parser/pull/534))
 
 ## 6.3.0
 
