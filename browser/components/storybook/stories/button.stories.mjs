@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { classMap, html } from "lit.all.mjs";
 
 export default {
   title: "Design System/Atoms/Button",
