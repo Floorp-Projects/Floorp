@@ -80,7 +80,7 @@ add_task(async function testFind() {
     browser.test.log(
       "Test that the text found in the top window and nested frames corresponds to the proper position."
     );
-    let terms = ["Banana", "bAnana", "baNana", "banAna", "banaNa", "bananA"];
+    let terms = ["Bánana", "bAnana", "baNana", "banAna", "banaNa", "bananA"];
     for (let i = 0; i < terms.length; i++) {
       browser.test.assertEq(
         terms[i],
@@ -96,6 +96,14 @@ add_task(async function testFind() {
     });
     browser.test.assertEq(1, data.count, "The number of matches found:");
     browser.test.assertEq("baNana", data.rangeData[0].text, "The text found:");
+
+    browser.test.log("Test that diacritic sensitive match works properly.");
+    data = await browser.find.find("bánana", {
+      matchDiacritics: true,
+      includeRangeData: true,
+    });
+    browser.test.assertEq(1, data.count, "The number of matches found:");
+    browser.test.assertEq("Bánana", data.rangeData[0].text, "The text found:");
 
     browser.test.log("Test that case insensitive match works properly.");
     data = await browser.find.find("banana", { caseSensitive: false });
@@ -113,33 +121,33 @@ add_task(async function testFind() {
       {
         framePos: 0,
         text: "example",
-        startTextNodePos: 15,
+        startTextNodePos: 16,
         startOffset: 11,
-        endTextNodePos: 15,
+        endTextNodePos: 16,
         endOffset: 18,
       },
       {
         framePos: 0,
         text: "example",
-        startTextNodePos: 15,
+        startTextNodePos: 16,
         startOffset: 25,
-        endTextNodePos: 15,
+        endTextNodePos: 16,
         endOffset: 32,
       },
       {
         framePos: 0,
         text: "example",
-        startTextNodePos: 18,
+        startTextNodePos: 19,
         startOffset: 6,
-        endTextNodePos: 18,
+        endTextNodePos: 19,
         endOffset: 13,
       },
       {
         framePos: 0,
         text: "example",
-        startTextNodePos: 20,
+        startTextNodePos: 21,
         startOffset: 3,
-        endTextNodePos: 20,
+        endTextNodePos: 21,
         endOffset: 10,
       },
       {
