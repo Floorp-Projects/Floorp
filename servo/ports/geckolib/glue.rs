@@ -2544,6 +2544,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
 
         let element = GeckoElement(element);
         let quirks_mode = element.as_node().owner_doc().quirks_mode();
+        let mut nth_index_cache = Default::default();
         let visited_mode = if relevant_link_visited {
             VisitedHandlingMode::RelevantLinkVisited
         } else {
@@ -2552,7 +2553,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         let mut ctx = MatchingContext::new_for_visited(
             matching_mode,
             None,
-            None,
+            &mut nth_index_cache,
             visited_mode,
             quirks_mode,
             NeedsSelectorFlags::No,
@@ -7275,10 +7276,12 @@ pub unsafe extern "C" fn Servo_InvalidateStyleForDocStateChanges(
             &*styles.data
         }));
 
+    let mut nth_index_cache = Default::default();
     let root = GeckoElement(root);
     let mut processor = DocumentStateInvalidationProcessor::new(
         iter,
         DocumentState::from_bits_truncate(states_changed),
+        &mut nth_index_cache,
         root.as_node().owner_doc().quirks_mode(),
     );
 
