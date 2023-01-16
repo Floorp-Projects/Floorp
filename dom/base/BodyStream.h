@@ -114,11 +114,6 @@ class BodyStream final : public nsIInputStreamCallback,
 #endif
 
  public:
-  // Cancel Callback
-  already_AddRefed<Promise> CancelCallback(
-      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv);
-
   // Pull Callback
   already_AddRefed<Promise> PullCallback(JSContext* aCx,
                                          ReadableStreamController& aController,
