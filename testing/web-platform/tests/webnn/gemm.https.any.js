@@ -25,4 +25,4 @@ const buildGemm= (operationName, builder, resources) => {
   return namedOutputOperand;
 };
 
-testWebNNOperation('gemm', '/webnn/resources/test_data/gemm.json', buildGemm);
+testWebNNOperation('gemm', buildGemm);
