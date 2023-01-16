@@ -31,12 +31,26 @@ JSObject* Sanitizer::WrapObject(JSContext* aCx,
 }
 
 /* static */
+already_AddRefed<Sanitizer> Sanitizer::New(nsIGlobalObject* aGlobal,
+                                           const SanitizerConfig& aOptions,
+                                           ErrorResult& aRv) {
+  nsTreeSanitizer treeSanitizer(nsIParserUtils::SanitizerAllowStyle);
+  treeSanitizer.WithWebSanitizerOptions(aGlobal, aOptions, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<Sanitizer> sanitizer =
+      new Sanitizer(aGlobal, std::move(treeSanitizer));
+  return sanitizer.forget();
+}
+
+/* static */
 already_AddRefed<Sanitizer> Sanitizer::Constructor(
     const GlobalObject& aGlobal, const SanitizerConfig& aOptions,
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Sanitizer> sanitizer = new Sanitizer(global, aOptions);
-  return sanitizer.forget();
+  return New(global, aOptions, aRv);
 }
 
 /* static */

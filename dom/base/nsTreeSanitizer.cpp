@@ -2503,7 +2503,8 @@ UniquePtr<nsTreeSanitizer::ElementNameSet> nsTreeSanitizer::ConvertElementNames(
 }
 
 void nsTreeSanitizer::WithWebSanitizerOptions(
-    nsIGlobalObject* aGlobal, const mozilla::dom::SanitizerConfig& aOptions) {
+    nsIGlobalObject* aGlobal, const mozilla::dom::SanitizerConfig& aOptions,
+    ErrorResult& aRv) {
   if (StaticPrefs::dom_security_sanitizer_logging()) {
     mLogRemovals = true;
     if (nsPIDOMWindowInner* win = aGlobal->AsInnerWindow()) {

@@ -4818,7 +4818,10 @@ void Element::SetHTML(const nsAString& aInnerHTML,
         aError.ThrowInvalidStateError("Missing owner global.");
         return;
       }
-      sanitizer = new Sanitizer(global, {});
+      sanitizer = Sanitizer::New(global, {}, aError);
+      if (aError.Failed()) {
+        return;
+      }
     } else {
       sanitizer = &aOptions.mSanitizer.Value();
     }

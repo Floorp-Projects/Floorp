@@ -30,20 +30,23 @@ namespace dom {
 class GlobalObject;
 
 class Sanitizer final : public nsISupports, public nsWrapperCache {
+  explicit Sanitizer(nsIGlobalObject* aGlobal, nsTreeSanitizer&& aTreeSanitizer)
+      : mGlobal(aGlobal), mTreeSanitizer(std::move(aTreeSanitizer)) {
+    MOZ_ASSERT(aGlobal);
+  }
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Sanitizer);
-
-  explicit Sanitizer(nsIGlobalObject* aGlobal, const SanitizerConfig& aOptions)
-      : mGlobal(aGlobal), mTreeSanitizer(nsIParserUtils::SanitizerAllowStyle) {
-    MOZ_ASSERT(aGlobal);
-    mTreeSanitizer.WithWebSanitizerOptions(aGlobal, aOptions);
-  }
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<Sanitizer> New(nsIGlobalObject* aGlobal,
+                                         const SanitizerConfig& aOptions,
+                                         ErrorResult& aRv);
 
   /**
    * Sanitizer() WebIDL constructor
