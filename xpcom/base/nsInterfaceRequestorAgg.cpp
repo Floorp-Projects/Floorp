@@ -22,7 +22,7 @@ class nsInterfaceRequestorAgg final : public nsIInterfaceRequestor {
                           nsIEventTarget* aConsumerTarget = nullptr)
       : mFirst(aFirst), mSecond(aSecond), mConsumerTarget(aConsumerTarget) {
     if (!mConsumerTarget) {
-      mConsumerTarget = mozilla::GetCurrentEventTarget();
+      mConsumerTarget = mozilla::GetCurrentSerialEventTarget();
     }
   }
 

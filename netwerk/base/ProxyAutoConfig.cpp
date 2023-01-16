@@ -245,7 +245,7 @@ bool ProxyAutoConfig::ResolveAddress(const nsACString& aHostName,
 
   if (NS_FAILED(dns->AsyncResolveNative(
           aHostName, nsIDNSService::RESOLVE_TYPE_DEFAULT, flags, nullptr,
-          helper, GetCurrentEventTarget(), attrs,
+          helper, GetCurrentSerialEventTarget(), attrs,
           getter_AddRefs(helper->mRequest)))) {
     return false;
   }

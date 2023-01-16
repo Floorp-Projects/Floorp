@@ -1885,7 +1885,7 @@ class DatabaseOperationBase : public Runnable,
   DatabaseOperationBase(const nsID& aBackgroundChildLoggingId,
                         uint64_t aLoggingSerialNumber)
       : Runnable("dom::indexedDB::DatabaseOperationBase"),
-        mOwningEventTarget(GetCurrentEventTarget()),
+        mOwningEventTarget(GetCurrentSerialEventTarget()),
         mBackgroundChildLoggingId(aBackgroundChildLoggingId),
         mLoggingSerialNumber(aLoggingSerialNumber),
         mOperationMayProceed(true) {
@@ -8729,7 +8729,7 @@ ConnectionPool::ConnectionRunnable::ConnectionRunnable(
     DatabaseInfo& aDatabaseInfo)
     : Runnable("dom::indexedDB::ConnectionPool::ConnectionRunnable"),
       mDatabaseInfo(aDatabaseInfo),
-      mOwningEventTarget(GetCurrentEventTarget()) {
+      mOwningEventTarget(GetCurrentSerialEventTarget()) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabaseInfo.mConnectionPool);
   aDatabaseInfo.mConnectionPool->AssertIsOnOwningThread();
@@ -8866,7 +8866,7 @@ ConnectionPool::FinishCallbackWrapper::FinishCallbackWrapper(
     : Runnable("dom::indexedDB::ConnectionPool::FinishCallbackWrapper"),
       mConnectionPool(aConnectionPool),
       mCallback(aCallback),
-      mOwningEventTarget(GetCurrentEventTarget()),
+      mOwningEventTarget(GetCurrentSerialEventTarget()),
       mTransactionId(aTransactionId),
       mHasRunOnce(false) {
   AssertIsOnBackgroundThread();
@@ -9531,7 +9531,7 @@ Database::Database(SafeRefPtr<Factory> aFactory,
       mFileHandleDisabled(aFileHandleDisabled),
       mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
       mInPrivateBrowsing(aInPrivateBrowsing),
-      mBackgroundThread(GetCurrentEventTarget())
+      mBackgroundThread(GetCurrentSerialEventTarget())
 #ifdef DEBUG
       ,
       mAllBlobsUnmapped(false)
@@ -12932,7 +12932,7 @@ void QuotaClient::StartIdleMaintenance() {
     return;
   }
 
-  mBackgroundThread = GetCurrentEventTarget();
+  mBackgroundThread = GetCurrentSerialEventTarget();
 
   mMaintenanceQueue.EmplaceBack(MakeRefPtr<Maintenance>(this));
   ProcessMaintenanceQueue();
@@ -13193,7 +13193,7 @@ void QuotaClient::ProcessMaintenanceQueue() {
 DeleteFilesRunnable::DeleteFilesRunnable(
     SafeRefPtr<DatabaseFileManager> aFileManager, nsTArray<int64_t>&& aFileIds)
     : Runnable("dom::indexeddb::DeleteFilesRunnable"),
-      mOwningEventTarget(GetCurrentEventTarget()),
+      mOwningEventTarget(GetCurrentSerialEventTarget()),
       mFileManager(std::move(aFileManager)),
       mFileIds(std::move(aFileIds)),
       mState(State_Initial) {}

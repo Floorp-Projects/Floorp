@@ -79,7 +79,7 @@ class StorageDBThread::InitHelper final : public Runnable {
  public:
   InitHelper()
       : Runnable("dom::StorageDBThread::InitHelper"),
-        mOwningThread(GetCurrentEventTarget()),
+        mOwningThread(GetCurrentSerialEventTarget()),
         mMutex("InitHelper::mMutex"),
         mCondVar(mMutex, "InitHelper::mCondVar"),
         mMainThreadResultCode(NS_OK),
@@ -107,7 +107,7 @@ class StorageDBThread::NoteBackgroundThreadRunnable final : public Runnable {
   explicit NoteBackgroundThreadRunnable(const uint32_t aPrivateBrowsingId)
       : Runnable("dom::StorageDBThread::NoteBackgroundThreadRunnable"),
         mPrivateBrowsingId(aPrivateBrowsingId),
-        mOwningThread(GetCurrentEventTarget()) {
+        mOwningThread(GetCurrentSerialEventTarget()) {
     MOZ_RELEASE_ASSERT(aPrivateBrowsingId < kPrivateBrowsingIdCount);
   }
 

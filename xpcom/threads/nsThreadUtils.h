@@ -1797,13 +1797,6 @@ class SerialEventTargetGuard {
   nsISerialEventTarget* mLastCurrentThread;
 };
 
-// Returns NS_GetCurrentThread() cast to an nsIEventTarget*
-//
-// You probably want GetCurrentSerialEventTarget, not this. This method ignores
-// TaskQueues and other uses of SerialEventTargetGuard.
-
-nsIEventTarget* GetCurrentEventTarget();
-
 // See GetMainThreadSerialEventTarget()
 
 nsIEventTarget* GetMainThreadEventTarget();

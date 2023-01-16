@@ -353,7 +353,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener* listener) {
   if (NS_IsMainThread() && mLabeledMainThreadTarget) {
     mTargetThread = mLabeledMainThreadTarget;
   } else {
-    mTargetThread = GetCurrentEventTarget();
+    mTargetThread = mozilla::GetCurrentSerialEventTarget();
   }
   NS_ENSURE_STATE(mTargetThread);
 

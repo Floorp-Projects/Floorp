@@ -329,7 +329,7 @@ BaseWebSocketChannel::GetDeliveryTarget(nsIEventTarget** aTargetThread) {
 
   nsCOMPtr<nsIEventTarget> target = GetTargetThread();
   if (!target) {
-    target = GetCurrentEventTarget();
+    target = GetCurrentSerialEventTarget();
   }
   target.forget(aTargetThread);
   return NS_OK;

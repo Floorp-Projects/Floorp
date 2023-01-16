@@ -37,7 +37,7 @@ nsresult SpeculativeTransaction::FetchHTTPSRR() {
 
   RefPtr<HTTPSRecordResolver> resolver = new HTTPSRecordResolver(this);
   nsCOMPtr<nsICancelable> dnsRequest;
-  return resolver->FetchHTTPSRRInternal(GetCurrentEventTarget(),
+  return resolver->FetchHTTPSRRInternal(GetCurrentSerialEventTarget(),
                                         getter_AddRefs(dnsRequest));
 }
 

@@ -547,16 +547,6 @@ nsAutoLowPriorityIO::~nsAutoLowPriorityIO() {
 
 namespace mozilla {
 
-nsIEventTarget* GetCurrentEventTarget() {
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return thread;
-}
-
 nsIEventTarget* GetMainThreadEventTarget() {
   return GetMainThreadSerialEventTarget();
 }

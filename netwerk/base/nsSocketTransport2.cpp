@@ -2405,7 +2405,7 @@ NS_IMETHODIMP
 nsSocketTransport::SetSecurityCallbacks(nsIInterfaceRequestor* callbacks) {
   nsCOMPtr<nsIInterfaceRequestor> threadsafeCallbacks;
   NS_NewNotificationCallbacksAggregation(callbacks, nullptr,
-                                         GetCurrentEventTarget(),
+                                         GetCurrentSerialEventTarget(),
                                          getter_AddRefs(threadsafeCallbacks));
   MutexAutoLock lock(mLock);
   mCallbacks = threadsafeCallbacks;

@@ -341,7 +341,7 @@ StructuredCloneHolder::StructuredCloneHolder(
       mGlobal(nullptr)
 #ifdef DEBUG
       ,
-      mCreationEventTarget(GetCurrentEventTarget())
+      mCreationEventTarget(GetCurrentSerialEventTarget())
 #endif
 {
 }
