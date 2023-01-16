@@ -8,6 +8,10 @@ const { DevToolsShim } = ChromeUtils.importESModule(
   "chrome://devtools-startup/content/DevToolsShim.sys.mjs"
 );
 
+const { DEFAULT_SANDBOX_NAME } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
+);
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserToolboxLauncher:
@@ -74,6 +78,21 @@ const DEVTOOLS_ALWAYS_ON_TOP = "devtools.toolbox.alwaysOnTop";
  * set of tools and keeps track of open toolboxes in the browser.
  */
 function DevTools() {
+  // We should be careful to always load a unique instance of this module:
+  // - only in the parent process
+  // - only in the "shared JSM global" spawn by mozJSModuleLoader
+  //   The server codebase typically use another global named "DevTools global",
+  //   which will load duplicated instances of all the modules -or- another
+  //   DevTools module loader named "DevTools (Server Module loader)".
+  if (
+    Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT ||
+    Cu.getRealmLocation(globalThis) != DEFAULT_SANDBOX_NAME
+  ) {
+    throw new Error(
+      "This module should be loaded in the parent process only, in the shared global."
+    );
+  }
+
   this._tools = new Map(); // Map<toolId, tool>
   this._themes = new Map(); // Map<themeId, theme>
   this._toolboxesPerCommands = new Map(); // Map<commands, toolbox>

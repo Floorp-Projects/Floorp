@@ -11,6 +11,8 @@ var { Loader, Require, resolveURI, unload } = ChromeUtils.import(
 );
 import { requireRawId } from "resource://devtools/shared/loader/loader-plugin-raw.sys.mjs";
 
+export const DEFAULT_SANDBOX_NAME = "DevTools (Module loader)";
+
 var gNextLoaderID = 0;
 
 /**
@@ -75,7 +77,9 @@ export function DevToolsLoader({
     sharedGlobal,
     invisibleToDebugger,
     freshCompartment,
-    sandboxName: "DevTools (Module loader)",
+    sandboxName: useDevToolsLoaderGlobal
+      ? "DevTools (Server Module Loader)"
+      : DEFAULT_SANDBOX_NAME,
     // Make sure `define` function exists. JSON Viewer needs modules in AMD
     // format, as it currently uses RequireJS from a content document and
     // can't access our usual loaders. So, any modules shared with the JSON
