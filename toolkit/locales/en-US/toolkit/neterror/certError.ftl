@@ -110,6 +110,11 @@ dnsNotFound-title = Hmm. We’re having trouble finding that site.
 dns-not-found-trr-only-title =
   Possible security risk for { $hostname }.
 
+# Variables:
+#   $hostname (String) - Hostname of the website to which the user was trying to connect.
+dns-not-found-native-fallback-title =
+  Possible security risk for { $hostname }.
+
 fileNotFound-title = File not found
 fileAccessDenied-title = Access to the file was denied
 generic-title = Oops.
