@@ -70,9 +70,10 @@ const getExpectedDataAndType = (resources, outputName) => {
 /**
  * Get ULP tolerance of conv2d operation.
  * @param {Object} resources - Resources used for building a graph
+ * @param {String} operationName - An operation name
  * @returns {Number} A tolerance number
  */
-const getConv2dPrecisionTolerance = (resources) => {
+const getConv2dPrecisionTolerance = (resources, operationName) => {
   // number of reduced input elements multiplied by filter and summed (a sliding dot product like pooling)
   const inputNameArray = Object.keys(resources.inputs);
   const inputShape = resources.inputs[inputNameArray[0]].shape;
@@ -121,9 +122,10 @@ const getConv2dPrecisionTolerance = (resources) => {
 /**
  * Get ULP tolerance of gemm operation.
  * @param {Object} resources - Resources used for building a graph
+ * @param {String} operationName - An operation name
  * @returns {Number} A tolerance number
  */
-const getGemmPrecisionTolerance = (resources) => {
+const getGemmPrecisionTolerance = (resources, operationName) => {
   // GEMM : alpha * (A x B) + beta * C
   // An upper bound for the worst serial ordering is bounded by
   // the number of lossy operations, where matrix multiplication
@@ -150,9 +152,10 @@ const getGemmPrecisionTolerance = (resources) => {
 /**
  * Get ULP tolerance of matmul operation.
  * @param {Object} resources - Resources used for building a graph
+ * @param {String} operationName - An operation name
  * @returns {Number} A tolerance number
  */
-const getMatmulPrecisionTolerance = (resources) => {
+const getMatmulPrecisionTolerance = (resources, operationName) => {
   // Matmul : Compute the matrix product of two input tensors.
   // If a is 1-D, WebNN converts it to a 2-D tensor by prepending a 1 to its dimensions, [n] -> [1, n].
   // So we can just always check the last dimension here.
@@ -164,9 +167,10 @@ const getMatmulPrecisionTolerance = (resources) => {
 /**
  * Get ULP tolerance of averagePool2d operation.
  * @param {Object} resources - Resources used for building a graph
+ * @param {String} operationName - An operation name
  * @returns {Number} A tolerance number
  */
-const getAveragePool2dPrecisionTolerance = (resources) => {
+const getAveragePool2dPrecisionTolerance = (resources, operationName) => {
   const inputShape = resources.inputs[Object.keys(resources.inputs)[0]].shape;
   let height;
   let width;
@@ -193,12 +197,40 @@ const getAveragePool2dPrecisionTolerance = (resources) => {
 /**
  * Get ULP tolerance of softmax operation.
  * @param {Object} resources - Resources used for building a graph
+ * @param {String} operationName - An operation name
  * @returns {Number} A tolerance number
  */
-const getSoftmaxPrecisionTolerance = (resources) => {
+const getSoftmaxPrecisionTolerance = (resources, operationName) => {
   // Compute the softmax values of the 2-D input tensor along axis 1.
   const inputShape = resources.inputs[Object.keys(resources.inputs)[0]].shape;
   const tolerance = inputShape[1] * 3 + 3;
+  return tolerance;
+};
+
+/**
+ * Get ULP tolerance of reduceMean, reduceProduct, reduceSum operations.
+ * @param {Object} resources - Resources used for building a graph
+ * @param {String} operationName - An operation name
+ * @returns {Number} A tolerance number
+ */
+const getReductionPrecisionTolerance = (resources, operationName) => {
+  const inputShape = resources.inputs[Object.keys(resources.inputs)[0]].shape;
+  const rank = inputShape.length;
+  const options = {...resources.options};
+  let sizes;
+  if (options && options.axes) {
+    sizes = options.axes.map(
+                (axis) => axis < 0 ? inputShape[axis + rank] : inputShape[axis]
+    );
+  } else {
+    sizes = inputShape;
+  }
+  let tolerance = sizes.reduce(
+                      (accumulator, currentValue) => accumulator * currentValue
+  );
+  if (operationName === 'reduceMean') {
+    tolerance += 2;
+  }
   return tolerance;
 };
 
@@ -235,6 +267,13 @@ const PrecisionMetrics = {
   averagePool2d: {ULP: {float32: getAveragePool2dPrecisionTolerance, float16: getAveragePool2dPrecisionTolerance}},
   maxPool2d: {ULP: {float32: 0, float16: 0}},
   // End Pooling operations
+  // Begin Reduction operations
+  reduceMax: {ULP: {float32: 0, float16: 0}},
+  reduceMean: {ULP: {float32: getReductionPrecisionTolerance, float16: getReductionPrecisionTolerance}},
+  reduceMin: {ULP: {float32: 0, float16: 0}},
+  reduceProduct: {ULP: {float32: getReductionPrecisionTolerance, float16: getReductionPrecisionTolerance}},
+  reduceSum: {ULP: {float32: getReductionPrecisionTolerance, float16: getReductionPrecisionTolerance}},
+  // End Reduction operations
   relu: {ULP: {float32: 0, float16: 0}},
   reshape: {ULP: {float32: 0, float16: 0}},
   sigmoid: {ULP: {float32: 32+2, float16: 3}}, // float32 (leaving a few ULP for roundoff)
@@ -259,7 +298,7 @@ const getPrecisonTolerance = (operationName, metricType, resources) => {
   let tolerance = PrecisionMetrics[operationName][metricType][precisionType];
   // If the tolerance is dynamic, then evaluate the function to get the value.
   if (tolerance instanceof Function) {
-    tolerance = tolerance(resources);
+    tolerance = tolerance(resources, operationName);
   }
   return tolerance;
 };
