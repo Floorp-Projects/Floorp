@@ -1,6 +1,6 @@
-var IsCallable = getSelfHostedValue("IsCallable");
+// |jit-test| --ion-warmup-threshold=50
 
-setJitCompilerOption("ion.warmup.trigger", 50);
+var IsCallable = getSelfHostedValue("IsCallable");
 
 function testSinglePrimitive() {
   var f1 = function() { assertEq(IsCallable(undefined), false); };

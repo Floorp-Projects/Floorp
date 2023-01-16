@@ -1,6 +1,4 @@
-// |jit-test| error: ReferenceError
-
-setJitCompilerOption("ion.warmup.trigger", 50);
+// |jit-test| error: ReferenceError; --ion-warmup-threshold=50
 setJitCompilerOption("offthread-compilation.enable", 0);
 gcPreserveCode();
 

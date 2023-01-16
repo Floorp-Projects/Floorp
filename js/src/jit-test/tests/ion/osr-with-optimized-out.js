@@ -1,9 +1,8 @@
-// |jit-test| --ion-offthread-compile=off;
+// |jit-test| --ion-offthread-compile=off; --ion-warmup-threshold=30
 
 // We disable any off-main thread compilation, and set a definite trigger for
 // Ion compilation, such that we can garantee that we would OSR into the inner
 // loop before we reach the end of the loop.
-setJitCompilerOption("ion.warmup.trigger", 30);
 gcPreserveCode();
 
 function f (n) {

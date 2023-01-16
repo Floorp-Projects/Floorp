@@ -1,8 +1,7 @@
-// |jit-test| skip-if: !this.getJitCompilerOptions() || !getJitCompilerOptions()['ion.enable']
+// |jit-test| skip-if: !this.getJitCompilerOptions() || !getJitCompilerOptions()['ion.enable']; --ion-warmup-threshold=50
 
 // Test inlining in Ion of fun.apply(..., array).
 
-setJitCompilerOption("ion.warmup.trigger", 50);
 setJitCompilerOption("offthread-compilation.enable", 0);
 gcPreserveCode();
 
