@@ -25,12 +25,29 @@ pub static {{ obj.name|snake_case }}: Lazy<Ping> = Lazy::new(|| {
 
 {% endfor %}
 
-/// Instantiate each custom ping once to trigger registration.
+/// Instantiate custom pings once to trigger registration.
+///
+/// # Arguments
+///
+/// application_id: If present, limit to only registering custom pings
+///                 assigned to the identified application.
 #[doc(hidden)]
-pub fn register_pings() {
-    {% for obj in all_objs['pings'].values() %}
-    let _ = &*{{obj.name|snake_case }};
-    {% endfor %}
+pub fn register_pings(application_id: Option<&str>) {
+    match application_id {
+        {% for id, ping_names in ping_names_by_app_id.items() %}
+        Some("{{id}}") => {
+            log::info!("Registering pings {{ ping_names|join(', ') }} for {{id}}");
+            {% for ping_name in ping_names %}
+            let _ = &*{{ ping_name|snake_case }};
+            {% endfor %}
+        },
+        {% endfor %}
+        _ => {
+            {% for obj in all_objs['pings'].values() %}
+            let _ = &*{{ obj.name|snake_case }};
+            {% endfor %}
+        }
+    }
 }
 
 #[cfg(feature = "with_gecko")]

@@ -41,7 +41,7 @@ pub extern "C" fn fog_shutdown() {
 
 #[no_mangle]
 pub extern "C" fn fog_register_pings() {
-    fog::pings::register_pings();
+    fog::pings::register_pings(None);
 }
 
 static mut PENDING_BUF: Vec<u8> = Vec::new();

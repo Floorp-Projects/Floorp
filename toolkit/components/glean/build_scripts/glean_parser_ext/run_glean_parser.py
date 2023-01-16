@@ -114,8 +114,24 @@ def main(cpp_fd, *args):
     with open_output(js_h_path) as js_fd:
         js.output_js(all_objs, js_fd, options)
 
+    # We only need this info if we're dealing with pings.
+    ping_names_by_app_id = {}
+    if "pings" in all_objs:
+        import sys
+        from os import path
+
+        from buildconfig import topsrcdir
+
+        sys.path.append(path.join(path.dirname(__file__), path.pardir, path.pardir))
+        from metrics_index import pings_by_app_id
+
+        for app_id, ping_yamls in pings_by_app_id.items():
+            input_files = [Path(path.join(topsrcdir, x)) for x in ping_yamls]
+            ping_objs, _ = parse_with_options(input_files, options)
+            ping_names_by_app_id[app_id] = ping_objs["pings"].keys()
+
     with open_output(rust_path) as rust_fd:
-        rust.output_rust(all_objs, rust_fd, options)
+        rust.output_rust(all_objs, rust_fd, ping_names_by_app_id, options)
 
 
 def gifft_map(output_fd, *args):
