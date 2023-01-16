@@ -29,25 +29,26 @@ add_task(async function testIncognitoViews() {
           resolveMessage(msg);
         }
       });
-
-      let awaitPopup = windowId => {
+      let promisePopupDetails = () => {
         return new Promise(resolve => {
           resolveMessage = resolve;
-        }).then(msg => {
-          browser.test.assertEq(
-            windowId,
-            msg.windowId,
-            "Got popup message from correct window"
-          );
-          return msg;
         });
       };
 
       let testWindow = async window => {
-        browser.test.sendMessage("click-browserAction");
+        let popupDetailsPromise = promisePopupDetails();
 
-        let msg = await awaitPopup(window.id);
+        await browser.browserAction.openPopup({
+          windowId: window.id,
+        });
+
+        let msg = await popupDetailsPromise;
         browser.test.assertEq(
+          window.id,
+          msg.windowId,
+          "Got popup message from correct window"
+        );
+        browser.test.assertDeepEq(
           window.incognito,
           msg.incognito,
           "Correct incognito status in browserAction popup"
@@ -68,11 +69,20 @@ add_task(async function testIncognitoViews() {
         });
       });
 
+      function getNonPrivateViewCount() {
+        // The background context is in non-private browsing mode, so getViews()
+        // only returns the views that are not in private browsing mode.
+        return browser.extension.getViews({ type: "popup" }).length;
+      }
+
       try {
         {
           let window = await browser.windows.getCurrent();
 
           await testWindow(window);
+
+          browser.test.assertEq(1, getNonPrivateViewCount(), "popup is open");
+          // ^ The popup will close when a new window is opened below.
         }
 
         {
@@ -83,6 +93,17 @@ add_task(async function testIncognitoViews() {
           await windowReady;
 
           await testWindow(window);
+
+          browser.test.assertEq(
+            0,
+            getNonPrivateViewCount(),
+            "First popup should have been closed when a new window was opened"
+          );
+
+          await browser.windows.remove(window.id);
+          // ^ This also closes the popup panel associated with the window. If
+          // it somehow does not close properly, errors may be reported, e.g.
+          // leakcheck failures in debug mode (like bug 1800100).
         }
 
         browser.test.notifyPass("incognito-views");
@@ -162,24 +183,19 @@ add_task(async function testIncognitoViews() {
           windowId: win.id,
           incognito: browser.extension.inIncognitoContext,
         });
+
+        // TODO bug 1809000: On debug builds, a memory leak is reported when
+        // the popup is closed as part of closing a window. As a work-around,
+        // we explicitly close the popup here.
+        // TODO: Remove when bug 1809000 is fixed.
+        if (browser.extension.inIncognitoContext) {
+          window.close();
+        }
       },
     },
   });
 
-  let win;
-  let promiseBrowserActionOpened;
-  extension.onMessage("click-browserAction", () => {
-    win = Services.wm.getMostRecentWindow("navigator:browser");
-    promiseBrowserActionOpened = openBrowserActionPanel(extension, win, true);
-  });
-
   await extension.startup();
   await extension.awaitFinish("incognito-views");
-  // Prevent intermittent failures of this test in optimized builds due to a race between
-  // opening/closing the browserAction and closing the related window at the end
-  // of the test (e.g. Bug 1707305).
-  await promiseBrowserActionOpened;
-  await closeBrowserAction(extension, win);
   await extension.unload();
-  await BrowserTestUtils.closeWindow(win);
 });
