@@ -112,6 +112,35 @@ const getConv2dPrecisionTolerance = (resources) => {
 };
 
 /**
+ * Get ULP tolerance of gemm operation.
+ * @param {Object} resources - Resources used for building a graph
+ * @returns {Number} A tolerance number
+ */
+const getGemmPrecisionTolerance = (resources) => {
+  // GEMM : alpha * (A x B) + beta * C
+  // An upper bound for the worst serial ordering is bounded by
+  // the number of lossy operations, where matrix multiplication
+  // is a dot product (mul and add times the number of elements)
+  // plus bias operations.
+  const shapeA = resources.inputs[Object.keys(resources.inputs)[0]].shape;
+  const options = {...resources.options};
+  const width = options.aTranspose ? shapeA[0] : shapeA[1];
+  let tolerance = width * 2;
+  // default options.alpha is 1.0
+  if (options.alpha !== undefined && options.alpha !== 1.0) {
+    tolerance++;
+  }
+  if (options.c && options.beta !== 0.0) {
+    // default options.beta is 1.0
+    if (options.beta !== undefined && options.beta !== 1.0) {
+      tolerance++;
+    }
+    tolerance++;
+  }
+  return tolerance;
+};
+
+/**
  * Get ULP tolerance of matmul operation.
  * @param {Object} resources - Resources used for building a graph
  * @returns {Number} A tolerance number
@@ -143,6 +172,7 @@ const PrecisionMetrics = {
   clamp: {ULP: {float32: 0, float16: 0}},
   concat: {ULP: {float32: 0, float16: 0}},
   conv2d: {ULP: {float32: getConv2dPrecisionTolerance, float16: getConv2dPrecisionTolerance}},
+  gemm: {ULP: {float32: getGemmPrecisionTolerance, float16: getGemmPrecisionTolerance}},
   leakyRelu: {ULP: {float32: 1, float16: 1}},
   matmul: {ULP: {float32: getMatmulPrecisionTolerance, float16: getMatmulPrecisionTolerance}},
   relu: {ULP: {float32: 0, float16: 0}},
