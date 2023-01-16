@@ -278,7 +278,15 @@ impl Task for PutTask {
                     Err(err) => return Err(KeyValueError::StoreError(err)),
                 }
 
-                writer.commit()?;
+                // Ignore errors caused by simultaneous access.
+                // We intend to investigate/revert this in bug 1810212.
+                match writer.commit() {
+                    Err(StoreError::IoError(e)) if e.kind() == std::io::ErrorKind::NotFound => {
+                        // Explicitly ignore errors from simultaneous access.
+                    }
+                    Err(e) => return Err(From::from(e)),
+                    _ => (),
+                };
                 break;
             }
 
@@ -383,7 +391,15 @@ impl Task for WriteManyTask {
                     }
                 }
 
-                writer.commit()?;
+                // Ignore errors caused by simultaneous access.
+                // We intend to investigate/revert this in bug 1810212.
+                match writer.commit() {
+                    Err(StoreError::IoError(e)) if e.kind() == std::io::ErrorKind::NotFound => {
+                        // Explicitly ignore errors from simultaneous access.
+                    }
+                    Err(e) => return Err(From::from(e)),
+                    _ => (),
+                };
                 break; // 'outer: loop
             }
 
@@ -543,7 +559,15 @@ impl Task for DeleteTask {
                 Err(err) => return Err(KeyValueError::StoreError(err)),
             };
 
-            writer.commit()?;
+            // Ignore errors caused by simultaneous access.
+            // We intend to investigate/revert this in bug 1810212.
+            match writer.commit() {
+                Err(StoreError::IoError(e)) if e.kind() == std::io::ErrorKind::NotFound => {
+                    // Explicitly ignore errors from simultaneous access.
+                }
+                Err(e) => return Err(From::from(e)),
+                _ => (),
+            };
 
             Ok(())
         }()));
@@ -582,7 +606,15 @@ impl Task for ClearTask {
             let env = self.rkv.read()?;
             let mut writer = env.write()?;
             self.store.clear(&mut writer)?;
-            writer.commit()?;
+            // Ignore errors caused by simultaneous access.
+            // We intend to investigate/revert this in bug 1810212.
+            match writer.commit() {
+                Err(StoreError::IoError(e)) if e.kind() == std::io::ErrorKind::NotFound => {
+                    // Explicitly ignore errors from simultaneous access.
+                }
+                Err(e) => return Err(From::from(e)),
+                _ => (),
+            };
 
             Ok(())
         }()));
