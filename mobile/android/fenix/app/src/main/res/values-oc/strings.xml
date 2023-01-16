@@ -292,6 +292,9 @@
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Las notificacions vos ajudan a ne far mai amb %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Sincronizar los onglets entre vòstres aparelhs, gerissètz los telecargaments, obtenètz de conselhs per trapar çò melhor de la proteccion de la vida privada de %s e encara mai.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Contunhar</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -383,10 +386,14 @@
     <string name="reduce_cookie_banner_dialog_snackbar_text">Veiretz mens de demandas de cookies</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Veire mens de fenèstras sorgissentas de cookies</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Respondre automaticament als cookies de fenèstras sorgissentas per una navegacion sens distraccion. %1$s regetarà totas las demandas se possible, o las acceptarà totas dins lo cas contrari.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Regetar las fenèstras sorgissentas</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reduccion de las bandièras de cookies</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Permetre a %1$s de refusar la demanda de consentiment als cookies d’un site se possible o acceptar l’accès als cookies quand es pas possible ?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Autorizar</string>
 
