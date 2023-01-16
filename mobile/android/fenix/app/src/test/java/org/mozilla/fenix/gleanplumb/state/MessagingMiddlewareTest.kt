@@ -34,6 +34,7 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMes
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.gleanplumb.MessagingState
+import org.mozilla.fenix.gleanplumb.NimbusMessagingController
 import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.nimbus.MessageData
@@ -48,6 +49,7 @@ class MessagingMiddlewareTest {
     private lateinit var appStore: AppStore
     private lateinit var middleware: MessagingMiddleware
     private lateinit var messagingStorage: NimbusMessagingStorage
+    private lateinit var messagingController: NimbusMessagingController
     private lateinit var middlewareContext: MiddlewareContext<AppState, AppAction>
 
     @get:Rule
@@ -57,13 +59,14 @@ class MessagingMiddlewareTest {
     fun setUp() {
         appStore = mockk(relaxed = true)
         messagingStorage = mockk(relaxed = true)
+        messagingController = NimbusMessagingController(messagingStorage, clock = { 0L })
         middlewareContext = mockk(relaxed = true)
         every { middlewareContext.store } returns appStore
 
         middleware = MessagingMiddleware(
             messagingStorage,
+            messagingController,
             coroutineScope,
-            clock = { 0L },
         )
     }
 
@@ -113,6 +116,7 @@ class MessagingMiddlewareTest {
 
         middleware.invoke(middlewareContext, {}, MessageClicked(message))
 
+        coVerify { messagingController.onMessageClicked(message) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(pressed = true)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
     }
@@ -140,6 +144,7 @@ class MessagingMiddlewareTest {
             MessageDismissed(message),
         )
 
+        coVerify { messagingController.onMessageDismissed(message) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(dismissed = true)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
     }
@@ -164,9 +169,9 @@ class MessagingMiddlewareTest {
 
         spiedMiddleware.onMessagedDisplayed(message, middlewareContext)
 
+        coVerify { messagingController.onMessageDisplayed(message) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(displayCount = 1)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
-//        verify { spiedMiddleware.sendExpiredMessageTelemetry(message.id) }
     }
 
     @Test
@@ -187,6 +192,7 @@ class MessagingMiddlewareTest {
 
         spiedMiddleware.onMessageDismissed(middlewareContext, message)
 
+        coVerify { messagingController.onMessageDismissed(message) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(dismissed = true)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
         verify { spiedMiddleware.removeMessage(middlewareContext, message) }
@@ -304,6 +310,7 @@ class MessagingMiddlewareTest {
 
         verify { spiedMiddleware.updateMessage(middlewareContext, oldMessage, updatedMessage) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
+        coVerify { messagingController.onMessageDisplayed(oldMessage) }
         coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
     }
 
@@ -336,7 +343,7 @@ class MessagingMiddlewareTest {
         verify { spiedMiddleware.consumeMessageToShowIfNeeded(middlewareContext, oldMessage) }
         verify { spiedMiddleware.removeMessage(middlewareContext, oldMessage) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
+        coVerify { messagingController.onMessageDisplayed(oldMessage) }
         coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
-//        verify { spiedMiddleware.sendShownMessageTelemetry(oldMessage.id) }
     }
 }

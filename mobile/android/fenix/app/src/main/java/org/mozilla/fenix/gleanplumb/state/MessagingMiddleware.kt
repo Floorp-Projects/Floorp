@@ -27,11 +27,9 @@ typealias AppStoreMiddlewareContext = MiddlewareContext<AppState, AppAction>
 
 class MessagingMiddleware(
     private val messagingStorage: NimbusMessagingStorage,
+    private val controller: NimbusMessagingController = NimbusMessagingController(messagingStorage),
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-    clock: () -> Long = { System.currentTimeMillis() },
 ) : Middleware<AppState, AppAction> {
-
-    private val controller = NimbusMessagingController(messagingStorage, clock)
 
     override fun invoke(
         context: AppStoreMiddlewareContext,
