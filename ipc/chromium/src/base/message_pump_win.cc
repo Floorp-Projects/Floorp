@@ -293,11 +293,11 @@ bool MessagePumpForUI::ProcessNextWindowsMessage() {
   // case to ensure that the message loop peeks again instead of calling
   // MsgWaitForMultipleObjectsEx again.
   bool sent_messages_in_queue = false;
-  DWORD queue_status = GetQueueStatus(QS_SENDMESSAGE);
+  DWORD queue_status = ::GetQueueStatus(QS_SENDMESSAGE);
   if (HIWORD(queue_status) & QS_SENDMESSAGE) sent_messages_in_queue = true;
 
   MSG msg;
-  if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+  if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
     return ProcessMessageHelper(msg);
 
   return sent_messages_in_queue;
@@ -305,9 +305,9 @@ bool MessagePumpForUI::ProcessNextWindowsMessage() {
 
 bool MessagePumpForUI::ProcessMessageHelper(const MSG& msg) {
   if (WM_QUIT == msg.message) {
-    // WM_QUIT is the standard way to exit a GetMessage() loop. Our MessageLoop
-    // has its own quit mechanism, so WM_QUIT is unexpected and should be
-    // ignored.
+    // WM_QUIT is the standard way to exit a ::GetMessage() loop. Our
+    // MessageLoop has its own quit mechanism, so WM_QUIT is unexpected and
+    // should be ignored.
     return true;
   }
 
@@ -320,8 +320,8 @@ bool MessagePumpForUI::ProcessMessageHelper(const MSG& msg) {
   if (state_->dispatcher) {
     if (!state_->dispatcher->Dispatch(msg)) state_->should_quit = true;
   } else {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+    ::TranslateMessage(&msg);
+    ::DispatchMessage(&msg);
   }
 
   DidProcessMessage(msg);
@@ -342,13 +342,13 @@ bool MessagePumpForUI::ProcessPumpReplacementMessage() {
   bool have_message = false;
   if (MessageLoop::current()->os_modal_loop()) {
     // We only peek out WM_PAINT and WM_TIMER here for reasons mentioned above.
-    have_message = PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE) ||
-                   PeekMessage(&msg, NULL, WM_TIMER, WM_TIMER, PM_REMOVE);
+    have_message = ::PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE) ||
+                   ::PeekMessage(&msg, NULL, WM_TIMER, WM_TIMER, PM_REMOVE);
   } else {
-    have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
+    have_message = (0 != ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
 
     if (have_message && msg.message == WM_NULL)
-      have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
+      have_message = (0 != ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
   }
 
   DCHECK(!have_message || kMsgHaveWork != msg.message ||
@@ -361,8 +361,29 @@ bool MessagePumpForUI::ProcessPumpReplacementMessage() {
   // We don't need a special time slice if we didn't have_message to process.
   if (!have_message) return false;
 
+  if (WM_QUIT == msg.message) {
+    // If we're in a nested ::GetMessage() loop then we must let that loop see
+    // the WM_QUIT in order for it to exit. If we're in DoRunLoop then the re-
+    // posted WM_QUIT will be either ignored, or handled, by
+    // ProcessMessageHelper() called directly from ProcessNextWindowsMessage().
+    ::PostQuitMessage(static_cast<int>(msg.wParam));
+    // Note: we *must not* ScheduleWork() here as WM_QUIT is a low-priority
+    // message on Windows (it is only returned by ::PeekMessage() when idle) :
+    // https://blogs.msdn.microsoft.com/oldnewthing/20051104-33/?p=33453. As
+    // such posting a kMsgHaveWork message via ScheduleWork() would cause an
+    // infinite loop (kMsgHaveWork message handled first means we end up here
+    // again and repost WM_QUIT+ScheduleWork() again, etc.). Not leaving a
+    // kMsgHaveWork message behind however is also problematic as unwinding
+    // multiple layers of nested ::GetMessage() loops can result in starving
+    // application tasks. TODO(https://crbug.com/890016) : Fix this.
+
+    // The return value is mostly irrelevant but return true like we would after
+    // processing a QuitClosure() task.
+    return true;
+  }
+
   // Guarantee we'll get another time slice in the case where we go into native
-  // windows code.   This ScheduleWork() may hurt performance a tiny bit when
+  // windows code. This ScheduleWork() may hurt performance a tiny bit when
   // tasks appear very infrequently, but when the event queue is busy, the
   // kMsgHaveWork events get (percentage wise) rarer and rarer.
   ScheduleWork();
