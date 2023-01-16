@@ -1797,10 +1797,6 @@ class SerialEventTargetGuard {
   nsISerialEventTarget* mLastCurrentThread;
 };
 
-// See GetMainThreadSerialEventTarget()
-
-nsIEventTarget* GetMainThreadEventTarget();
-
 // Get the serial event target corresponding to the currently executing task
 // queue or thread. This method will assert if called on a thread pool without
 // an active task queue.

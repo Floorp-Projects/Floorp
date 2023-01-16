@@ -1017,7 +1017,7 @@ void Geolocation::GetCurrentPosition(PositionCallback& aCallback,
 static nsIEventTarget* MainThreadTarget(Geolocation* geo) {
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(geo->GetOwner());
   if (!window) {
-    return GetMainThreadEventTarget();
+    return GetMainThreadSerialEventTarget();
   }
   return nsGlobalWindowInner::Cast(window)->EventTargetFor(
       mozilla::TaskCategory::Other);

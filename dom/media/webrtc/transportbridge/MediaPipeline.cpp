@@ -1201,7 +1201,7 @@ class GenericReceiveListener : public MediaTrackListener {
   void OnRtpReceived() {
     if (mMaybeTrackNeedsUnmute) {
       mMaybeTrackNeedsUnmute = false;
-      GetMainThreadEventTarget()->Dispatch(
+      GetMainThreadSerialEventTarget()->Dispatch(
           NewRunnableMethod("GenericReceiveListener::OnRtpReceived_m", this,
                             &GenericReceiveListener::OnRtpReceived_m));
     }
@@ -1224,7 +1224,7 @@ class GenericReceiveListener : public MediaTrackListener {
       mSource->Destroy();
     }
 
-    GetMainThreadEventTarget()->Dispatch(
+    GetMainThreadSerialEventTarget()->Dispatch(
         NewRunnableMethod("RemoteTrackSource::ForceEnded", mTrackSource.get(),
                           &RemoteTrackSource::ForceEnded));
   }
@@ -1288,7 +1288,7 @@ class MediaPipelineReceiveAudio::PipelineListener
   void MakePrincipalPrivate_s() {
     mForceSilence = true;
 
-    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
         "MediaPipelineReceiveAudio::PipelineListener::MakePrincipalPrivate_s",
         [self = RefPtr<PipelineListener>(this), this] {
           class Message : public ControlMessage {
@@ -1494,7 +1494,7 @@ class MediaPipelineReceiveVideo::PipelineListener
       mForceDropFrames = true;
     }
 
-    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__, [self = RefPtr<PipelineListener>(this), this] {
           RefPtr<nsIPrincipal> privatePrincipal =
               NullPrincipal::CreateWithInheritedAttributes(

@@ -81,7 +81,7 @@ nsresult nsAsyncRedirectVerifyHelper::Init(
   nsresult rv;
   rv = mainThreadEventTarget
            ? mainThreadEventTarget->Dispatch(runnable.forget())
-           : GetMainThreadEventTarget()->Dispatch(runnable.forget());
+           : GetMainThreadSerialEventTarget()->Dispatch(runnable.forget());
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (synchronize) {

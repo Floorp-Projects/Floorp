@@ -273,8 +273,8 @@ void U2FTokenManager::SendPromptNotification(const char16_t* aFormat,
       "U2FTokenManager::RunSendPromptNotification", this,
       &U2FTokenManager::RunSendPromptNotification, json));
 
-  MOZ_ALWAYS_SUCCEEDS(
-      GetMainThreadEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
+  MOZ_ALWAYS_SUCCEEDS(GetMainThreadSerialEventTarget()->Dispatch(
+      r.forget(), NS_DISPATCH_NORMAL));
 }
 
 void U2FTokenManager::RunSendPromptNotification(const nsString& aJSON) {
@@ -390,8 +390,8 @@ static void status_callback(rust_ctap2_status_update_res* status) {
     nsCOMPtr<nsIRunnable> r(NewRunnableMethod<nsString>(
         "U2FTokenManager::RunSendPromptNotification", gInstance,
         &U2FTokenManager::RunSendPromptNotification, notification_json));
-    MOZ_ALWAYS_SUCCEEDS(
-        GetMainThreadEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
+    MOZ_ALWAYS_SUCCEEDS(GetMainThreadSerialEventTarget()->Dispatch(
+        r.forget(), NS_DISPATCH_NORMAL));
   }
 }
 

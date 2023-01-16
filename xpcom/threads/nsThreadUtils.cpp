@@ -547,10 +547,6 @@ nsAutoLowPriorityIO::~nsAutoLowPriorityIO() {
 
 namespace mozilla {
 
-nsIEventTarget* GetMainThreadEventTarget() {
-  return GetMainThreadSerialEventTarget();
-}
-
 nsISerialEventTarget* GetCurrentSerialEventTarget() {
   if (nsISerialEventTarget* current =
           SerialEventTargetGuard::GetCurrentSerialEventTarget()) {

@@ -686,7 +686,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
 
   // If the media stack is successfully configured with parameters,
   // queue a task to run the following steps:
-  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__,
       [this, self = RefPtr<RTCRtpSender>(this), p, paramsCopy, serialNumber] {
         // Set sender.[[LastReturnedParameters]] to null.
@@ -853,7 +853,7 @@ void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
   mLastReturnedParameters = Some(aParameters);
 
   // Queue a task that sets sender.[[LastReturnedParameters]] to null.
-  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<RTCRtpSender>(this)] {
         mLastReturnedParameters = Nothing();
       }));
@@ -1068,7 +1068,7 @@ RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl(ErrorResult& aError) {
   }
 
   // Queue a task that runs the following steps:
-  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [p, sender, track = mNewTrack]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
         // If connection.[[IsClosed]] is true, abort these steps.
         // Set sender.[[SenderTrack]] to withTrack.

@@ -2133,7 +2133,7 @@ WorkerThreadPrimaryRunnable::Run() {
   mWorkerPrivate = nullptr;
 
   // Now recycle this thread.
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
   MOZ_ASSERT(mainTarget);
 
   RefPtr<FinishedRunnable> finishedRunnable =

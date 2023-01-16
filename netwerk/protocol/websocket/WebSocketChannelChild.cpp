@@ -169,7 +169,7 @@ class EventTargetDispatcher : public ChannelEvent {
   already_AddRefed<nsIEventTarget> GetEventTarget() override {
     nsCOMPtr<nsIEventTarget> target = mEventTarget;
     if (!target) {
-      target = GetMainThreadEventTarget();
+      target = GetMainThreadSerialEventTarget();
     }
     return target.forget();
   }
