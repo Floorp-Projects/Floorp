@@ -42,7 +42,7 @@ class nsWindow::TaskbarConcealer {
     HMONITOR monitor;
     bool isGkFullscreen;
   };
-  static Maybe<WindowState> GetWindowState(HWND);
+  static mozilla::Maybe<WindowState> GetWindowState(HWND);
 
   static nsTHashMap<HWND, HMONITOR> sKnownWindows;
   struct Impl;

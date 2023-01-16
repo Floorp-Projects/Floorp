@@ -9,6 +9,11 @@
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/WindowsVersion.h"
+#include "WinUtils.h"
+
+using namespace mozilla;
 
 /**
  * TaskbarConcealerImpl
@@ -106,7 +111,7 @@ nsWindow::TaskbarConcealer::GetWindowState(HWND aWnd) {
 
   // Non-nsWindow windows associated with this thread may include file dialogs
   // and IME input popups.
-  nsWindow* pWin = WinUtils::GetNSWindowPtr(aWnd);
+  nsWindow* pWin = widget::WinUtils::GetNSWindowPtr(aWnd);
   if (!pWin) {
     return Nothing();
   }
