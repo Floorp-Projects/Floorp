@@ -10,7 +10,6 @@
 #include "mozilla/ProcInfo.h"
 #include "mozilla/dom/PJSValidatorChild.h"
 #include "mozilla/dom/JSValidatorUtils.h"
-#include "mozilla/net/OpaqueResponseUtils.h"
 
 namespace mozilla::dom {
 class JSValidatorChild final : public PJSValidatorChild {
@@ -29,9 +28,8 @@ class JSValidatorChild final : public PJSValidatorChild {
  private:
   virtual ~JSValidatorChild() = default;
 
-  using ValidatorResult = net::OpaqueResponseBlocker::ValidatorResult;
-  void Resolve(ValidatorResult aResult);
-  ValidatorResult ShouldAllowJS() const;
+  void Resolve(bool aAllow);
+  bool ShouldAllowJS() const;
 
   nsCString mSourceBytes;
   Maybe<IsOpaqueResponseAllowedResolver> mResolver;

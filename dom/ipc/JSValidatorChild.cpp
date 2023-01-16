@@ -23,7 +23,7 @@ mozilla::ipc::IPCResult JSValidatorChild::RecvOnDataAvailable(Shmem&& aData) {
                            mozilla::fallible)) {
     // To prevent an attacker from flood the validation process,
     // we don't validate here.
-    Resolve(ValidatorResult::Failure);
+    Resolve(false);
   }
   DeallocShmem(aData);
 
@@ -37,7 +37,7 @@ mozilla::ipc::IPCResult JSValidatorChild::RecvOnStopRequest(
   }
 
   if (NS_FAILED(aReason)) {
-    Resolve(ValidatorResult::Failure);
+    Resolve(false);
   } else {
     Resolve(ShouldAllowJS());
   }
@@ -47,41 +47,35 @@ mozilla::ipc::IPCResult JSValidatorChild::RecvOnStopRequest(
 
 void JSValidatorChild::ActorDestroy(ActorDestroyReason aReason) {
   if (mResolver) {
-    Resolve(ValidatorResult::Failure);
+    Resolve(false);
   }
 };
 
-void JSValidatorChild::Resolve(ValidatorResult aResult) {
+void JSValidatorChild::Resolve(bool aAllow) {
   MOZ_ASSERT(mResolver);
   Maybe<Shmem> data = Nothing();
-  if (aResult == ValidatorResult::JavaScript && !mSourceBytes.IsEmpty()) {
-    Shmem sharedData;
-    nsresult rv =
-        JSValidatorUtils::CopyCStringToShmem(this, mSourceBytes, sharedData);
-    if (NS_SUCCEEDED(rv)) {
-      data = Some(std::move(sharedData));
+  if (aAllow) {
+    if (!mSourceBytes.IsEmpty()) {
+      Shmem sharedData;
+      nsresult rv =
+          JSValidatorUtils::CopyCStringToShmem(this, mSourceBytes, sharedData);
+      if (NS_SUCCEEDED(rv)) {
+        data = Some(std::move(sharedData));
+      }
     }
   }
-
-  mResolver.ref()(Tuple<mozilla::Maybe<Shmem>&&, const ValidatorResult&>(
-      std::move(data), aResult));
-  mResolver.reset();
+  mResolver.ref()(
+      Tuple<const bool&, mozilla::Maybe<Shmem>&&>(aAllow, std::move(data)));
+  mResolver = Nothing();
 }
 
-JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS() const {
+bool JSValidatorChild::ShouldAllowJS() const {
   // mSourceBytes could be empty when
   // 1. No OnDataAvailable calls
   // 2. Failed to allocate shmem
-
-  // The empty document parses as JavaScript, so for clarity we have a condition
-  // separately for that.
-  if (mSourceBytes.IsEmpty()) {
-    return ValidatorResult::JavaScript;
-  }
-
-  if (StringBeginsWith(NS_ConvertUTF8toUTF16(mSourceBytes), u"{"_ns)) {
-    return ValidatorResult::JSON;
-  }
-
-  return ValidatorResult::JavaScript;
+  //
+  // TODO(sefeng): THIS IS A VERY TEMPORARY SOLUTION
+  return !mSourceBytes.IsEmpty()
+             ? !StringBeginsWith(NS_ConvertUTF8toUTF16(mSourceBytes), u"{"_ns)
+             : true;
 }
