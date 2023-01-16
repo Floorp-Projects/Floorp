@@ -9,11 +9,9 @@ var EXPORTED_SYMBOLS = ["PromptParent"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromptUtils",
-  "resource://gre/modules/SharedPromptUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
+});
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );

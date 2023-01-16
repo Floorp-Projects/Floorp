@@ -56,11 +56,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PromptUtils",
-  "resource://gre/modules/SharedPromptUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
+});
 
 var PrintUtils = {
   SAVE_TO_PDF_PRINTER: "Mozilla Save to PDF",

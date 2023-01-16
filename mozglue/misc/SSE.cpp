@@ -147,6 +147,10 @@ bool sse4_1_enabled = has_cpuid_bits(1u, ecx, (1u << 19));
 bool sse4_2_enabled = has_cpuid_bits(1u, ecx, (1u << 20));
 #  endif
 
+#  if !defined(MOZILLA_PRESUME_FMA3)
+bool fma3_enabled = has_cpuid_bits(1u, ecx, (1u << 12));
+#  endif
+
 #  if !defined(MOZILLA_PRESUME_AVX) || !defined(MOZILLA_PRESUME_AVX2)
 static bool has_avx() {
 #    if defined(MOZILLA_PRESUME_AVX)

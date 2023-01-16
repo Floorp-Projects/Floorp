@@ -7,8 +7,8 @@
 // Load a web page containing an iframe that requires authentication but includes the X-Frame-Options: SAMEORIGIN header.
 // Make sure that we don't needlessly show an authentication prompt for it.
 
-const { PromptTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromptTestUtils.jsm"
+const { PromptTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 add_task(async function() {
