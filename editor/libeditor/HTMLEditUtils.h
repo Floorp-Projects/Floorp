@@ -2002,6 +2002,14 @@ class HTMLEditUtils final {
       const Element& aEditingHost);
 
   /**
+   * GetBetterCaretPositionToInsertText() returns better point to put caret
+   * if aPoint is near a text node or in non-container node.
+   */
+  template <typename EditorDOMPointType, typename EditorDOMPointTypeInput>
+  static EditorDOMPointType GetBetterCaretPositionToInsertText(
+      const EditorDOMPointTypeInput& aPoint, const Element& aEditingHost);
+
+  /**
    * ComputePointToPutCaretInElementIfOutside() returns a good point in aElement
    * to put caret if aCurrentPoint is outside of aElement.
    *
