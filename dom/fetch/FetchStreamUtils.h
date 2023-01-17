@@ -40,8 +40,7 @@ ParentToParentStream ToParentToParentStream(
 // process. Can only be called in the parent process.
 ParentToChildStream ToParentToChildStream(
     const NotNull<nsCOMPtr<nsIInputStream>>& aStream, int64_t aStreamSize,
-    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent,
-    bool aSerializeAsLazy = true);
+    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent);
 
 // Convert a ParentToParentStream to a ParentToChildStream. Can only be called
 // in the parent process.
