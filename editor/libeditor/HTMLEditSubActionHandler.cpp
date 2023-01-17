@@ -6172,9 +6172,6 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
     insertNewTextNodeResult.inspect().IgnoreCaretPointSuggestion();
     pointToPutCaret.Set(newEmptyTextNode, 0u);
 
-    // FIXME: If the stylesToSet have background-color style, it may
-    // be applied shorter because outer <span> element height is not
-    // computed with inner element's height.
     HTMLEditor::FontSize incrementOrDecrement =
         relFontSize > 0 ? HTMLEditor::FontSize::incr
                         : HTMLEditor::FontSize::decr;
