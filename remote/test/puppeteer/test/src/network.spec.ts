@@ -22,9 +22,6 @@ import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-  itFailsFirefox,
-  itChromeOnly,
-  itFirefoxOnly,
 } from './mocha-utils.js';
 import {HTTPRequest} from '../../lib/cjs/puppeteer/common/HTTPRequest.js';
 import {HTTPResponse} from '../../lib/cjs/puppeteer/common/HTTPResponse.js';
@@ -114,13 +111,13 @@ describe('network', function () {
   });
 
   describe('Request.headers', function () {
-    itChromeOnly('should define Chrome as user agent header', async () => {
+    it('should define Chrome as user agent header', async () => {
       const {page, server} = getTestState();
       const response = (await page.goto(server.EMPTY_PAGE))!;
       expect(response.request().headers()['user-agent']).toContain('Chrome');
     });
 
-    itFirefoxOnly('should define Firefox as user agent header', async () => {
+    it('should define Firefox as user agent header', async () => {
       const {page, server} = getTestState();
 
       const response = (await page.goto(server.EMPTY_PAGE))!;
@@ -655,10 +652,7 @@ describe('network', function () {
       expect(requests.get('script.js').isNavigationRequest()).toBe(false);
       expect(requests.get('style.css').isNavigationRequest()).toBe(false);
     });
-    // This `itFailsFirefox` should be preserved in mozilla-central (Firefox).
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1748254
-    // or https://github.com/puppeteer/puppeteer/pull/7846
-    itFailsFirefox('should work when navigating to image', async () => {
+    it('should work when navigating to image', async () => {
       const {page, server} = getTestState();
 
       const requests: HTTPRequest[] = [];

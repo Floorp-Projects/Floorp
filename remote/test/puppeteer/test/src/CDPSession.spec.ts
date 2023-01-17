@@ -20,11 +20,10 @@ import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-  describeChromeOnly,
 } from './mocha-utils.js';
 import {isErrorLike} from '../../lib/cjs/puppeteer/util/ErrorLike.js';
 
-describeChromeOnly('Target.createCDPSession', function () {
+describe('Target.createCDPSession', function () {
   setupTestBrowserHooks();
   setupTestPageAndContextHooks();
 

@@ -1,4 +1,3 @@
-schema: 1
 bugzilla:
   component: Agent
   product: Remote Protocol
@@ -6,5 +5,6 @@ origin:
   description: Headless Chrome Node API
   license: Apache-2.0
   name: puppeteer
-  release: 0d2d99efeca73fba255fb10b28b5d3f50c2e20e4
-  url: https://github.com/puppeteer/puppeteer
+  release: 7d6927209e5d557891bd618ddb01d54bc3566307
+  url: /Users/alexandraborovova/Projects/puppeteer
+schema: 1

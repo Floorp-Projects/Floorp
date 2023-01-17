@@ -16,17 +16,11 @@
 
 import utils from './utils.js';
 import expect from 'expect';
-import {
-  getTestState,
-  describeChromeOnly,
-} from './mocha-utils.js';
-import {
-  Browser,
-  BrowserContext,
-} from '../../lib/cjs/puppeteer/common/Browser.js';
+import {getTestState} from './mocha-utils.js';
+import {Browser, BrowserContext} from '../../lib/cjs/puppeteer/api/Browser.js';
 import {Page} from '../../lib/cjs/puppeteer/common/Page.js';
 
-describeChromeOnly('OOPIF', function () {
+describe('OOPIF', function () {
   /* We use a special browser for this test as we need the --site-per-process flag */
   let browser: Browser;
   let context: BrowserContext;
@@ -206,6 +200,7 @@ describeChromeOnly('OOPIF', function () {
     await utils.navigateFrame(page, 'frame1', server.EMPTY_PAGE);
     expect(frame.url()).toBe(server.EMPTY_PAGE);
   });
+
   it('should support evaluating in oop iframes', async () => {
     const {server} = getTestState();
 

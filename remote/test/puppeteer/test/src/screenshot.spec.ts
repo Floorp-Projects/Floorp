@@ -19,8 +19,6 @@ import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-  itHeadfulOnly,
-  itChromeOnly,
 } from './mocha-utils.js';
 
 describe('Screenshots', function () {
@@ -67,23 +65,20 @@ describe('Screenshots', function () {
       });
       expect(screenshot).toBeGolden('screenshot-clip-rect-scale2.png');
     });
-    it(
-      'should get screenshot bigger than the viewport',
-      async () => {
-        const {page, server} = getTestState();
-        await page.setViewport({width: 50, height: 50});
-        await page.goto(server.PREFIX + '/grid.html');
-        const screenshot = await page.screenshot({
-          clip: {
-            x: 25,
-            y: 25,
-            width: 100,
-            height: 100,
-          },
-        });
-        expect(screenshot).toBeGolden('screenshot-offscreen-clip.png');
-      }
-    );
+    it('should get screenshot bigger than the viewport', async () => {
+      const {page, server} = getTestState();
+      await page.setViewport({width: 50, height: 50});
+      await page.goto(server.PREFIX + '/grid.html');
+      const screenshot = await page.screenshot({
+        clip: {
+          x: 25,
+          y: 25,
+          width: 100,
+          height: 100,
+        },
+      });
+      expect(screenshot).toBeGolden('screenshot-offscreen-clip.png');
+    });
     it('should run in parallel', async () => {
       const {page, server} = getTestState();
 
@@ -205,7 +200,7 @@ describe('Screenshots', function () {
         'screenshot-sanity.png'
       );
     });
-    itHeadfulOnly('should work in "fromSurface: false" mode', async () => {
+    it('should work in "fromSurface: false" mode', async () => {
       const {page, server} = getTestState();
 
       await page.setViewport({width: 500, height: 500});
@@ -230,7 +225,7 @@ describe('Screenshots', function () {
       const screenshot = await elementHandle.screenshot();
       expect(screenshot).toBeGolden('screenshot-element-bounding-box.png');
     });
-    itChromeOnly('should work with a null viewport', async () => {
+    it('should work with a null viewport', async () => {
       const {defaultBrowserOptions, puppeteer, server} = getTestState();
 
       const browser = await puppeteer.launch({
@@ -270,14 +265,12 @@ describe('Screenshots', function () {
       const screenshot = await elementHandle.screenshot();
       expect(screenshot).toBeGolden('screenshot-element-padding-border.png');
     });
-    it(
-      'should capture full element when larger than viewport',
-      async () => {
-        const {page} = getTestState();
+    it('should capture full element when larger than viewport', async () => {
+      const {page} = getTestState();
 
-        await page.setViewport({width: 500, height: 500});
+      await page.setViewport({width: 500, height: 500});
 
-        await page.setContent(`
+      await page.setContent(`
           something above
           <style>
           div.to-screenshot {
@@ -292,22 +285,21 @@ describe('Screenshots', function () {
           </style>
           <div class="to-screenshot"></div>
         `);
-        const elementHandle = (await page.$('div.to-screenshot'))!;
-        const screenshot = await elementHandle.screenshot();
-        expect(screenshot).toBeGolden(
-          'screenshot-element-larger-than-viewport.png'
-        );
+      const elementHandle = (await page.$('div.to-screenshot'))!;
+      const screenshot = await elementHandle.screenshot();
+      expect(screenshot).toBeGolden(
+        'screenshot-element-larger-than-viewport.png'
+      );
 
-        expect(
-          await page.evaluate(() => {
-            return {
-              w: window.innerWidth,
-              h: window.innerHeight,
-            };
-          })
-        ).toEqual({w: 500, h: 500});
-      }
-    );
+      expect(
+        await page.evaluate(() => {
+          return {
+            w: window.innerWidth,
+            h: window.innerHeight,
+          };
+        })
+      ).toEqual({w: 500, h: 500});
+    });
     it('should scroll element into view', async () => {
       const {page} = getTestState();
 

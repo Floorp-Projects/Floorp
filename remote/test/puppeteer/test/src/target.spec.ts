@@ -20,11 +20,11 @@ import {Page} from '../../lib/cjs/puppeteer/common/Page.js';
 import {Target} from '../../lib/cjs/puppeteer/common/Target.js';
 import {
   getTestState,
-  itFailsFirefox,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
 import utils from './utils.js';
+
 const {waitEvent} = utils;
 
 describe('Target', function () {
@@ -79,10 +79,7 @@ describe('Target', function () {
     ).toBe('Hello world');
     expect(await originalPage.$('body')).toBeTruthy();
   });
-  // This test should be skipped in mozilla-central (Firefox).
-  // It intermittently makes some tests fail and triggers errors in the test hooks.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1748255
-  itFailsFirefox('should be able to use async waitForTarget', async () => {
+  it('should be able to use async waitForTarget', async () => {
     const {page, server, context} = getTestState();
 
     const [otherPage] = await Promise.all([
@@ -104,88 +101,82 @@ describe('Target', function () {
     );
     expect(page).not.toEqual(otherPage);
   });
-  it(
-    'should report when a new page is created and closed',
-    async () => {
-      const {page, server, context} = getTestState();
+  it('should report when a new page is created and closed', async () => {
+    const {page, server, context} = getTestState();
 
-      const [otherPage] = await Promise.all([
-        context
-          .waitForTarget(target => {
-            return target.url() === server.CROSS_PROCESS_PREFIX + '/empty.html';
-          })
-          .then(target => {
-            return target.page();
-          }),
-        page.evaluate((url: string) => {
-          return window.open(url);
-        }, server.CROSS_PROCESS_PREFIX + '/empty.html'),
-      ]);
-      expect(otherPage!.url()).toContain(server.CROSS_PROCESS_PREFIX);
-      expect(
-        await otherPage!.evaluate(() => {
-          return ['Hello', 'world'].join(' ');
+    const [otherPage] = await Promise.all([
+      context
+        .waitForTarget(target => {
+          return target.url() === server.CROSS_PROCESS_PREFIX + '/empty.html';
         })
-      ).toBe('Hello world');
-      expect(await otherPage!.$('body')).toBeTruthy();
-
-      let allPages = await context.pages();
-      expect(allPages).toContain(page);
-      expect(allPages).toContain(otherPage);
-
-      const closePagePromise = new Promise(fulfill => {
-        return context.once('targetdestroyed', target => {
-          return fulfill(target.page());
-        });
-      });
-      await otherPage!.close();
-      expect(await closePagePromise).toBe(otherPage);
-
-      allPages = (await Promise.all(
-        context.targets().map(target => {
+        .then(target => {
           return target.page();
-        })
-      )) as Page[];
-      expect(allPages).toContain(page);
-      expect(allPages).not.toContain(otherPage);
-    }
-  );
-  it(
-    'should report when a service worker is created and destroyed',
-    async () => {
-      const {page, server, context} = getTestState();
+        }),
+      page.evaluate((url: string) => {
+        return window.open(url);
+      }, server.CROSS_PROCESS_PREFIX + '/empty.html'),
+    ]);
+    expect(otherPage!.url()).toContain(server.CROSS_PROCESS_PREFIX);
+    expect(
+      await otherPage!.evaluate(() => {
+        return ['Hello', 'world'].join(' ');
+      })
+    ).toBe('Hello world');
+    expect(await otherPage!.$('body')).toBeTruthy();
 
-      await page.goto(server.EMPTY_PAGE);
-      const createdTarget = new Promise<Target>(fulfill => {
-        return context.once('targetcreated', target => {
-          return fulfill(target);
-        });
+    let allPages = await context.pages();
+    expect(allPages).toContain(page);
+    expect(allPages).toContain(otherPage);
+
+    const closePagePromise = new Promise(fulfill => {
+      return context.once('targetdestroyed', target => {
+        return fulfill(target.page());
       });
+    });
+    await otherPage!.close();
+    expect(await closePagePromise).toBe(otherPage);
 
-      await page.goto(server.PREFIX + '/serviceworkers/empty/sw.html');
+    allPages = (await Promise.all(
+      context.targets().map(target => {
+        return target.page();
+      })
+    )) as Page[];
+    expect(allPages).toContain(page);
+    expect(allPages).not.toContain(otherPage);
+  });
+  it('should report when a service worker is created and destroyed', async () => {
+    const {page, server, context} = getTestState();
 
-      expect((await createdTarget).type()).toBe('service_worker');
-      expect((await createdTarget).url()).toBe(
-        server.PREFIX + '/serviceworkers/empty/sw.js'
-      );
-
-      const destroyedTarget = new Promise(fulfill => {
-        return context.once('targetdestroyed', target => {
-          return fulfill(target);
-        });
+    await page.goto(server.EMPTY_PAGE);
+    const createdTarget = new Promise<Target>(fulfill => {
+      return context.once('targetcreated', target => {
+        return fulfill(target);
       });
-      await page.evaluate(() => {
-        return (
-          globalThis as unknown as {
-            registrationPromise: Promise<{unregister: () => void}>;
-          }
-        ).registrationPromise.then((registration: any) => {
-          return registration.unregister();
-        });
+    });
+
+    await page.goto(server.PREFIX + '/serviceworkers/empty/sw.html');
+
+    expect((await createdTarget).type()).toBe('service_worker');
+    expect((await createdTarget).url()).toBe(
+      server.PREFIX + '/serviceworkers/empty/sw.js'
+    );
+
+    const destroyedTarget = new Promise(fulfill => {
+      return context.once('targetdestroyed', target => {
+        return fulfill(target);
       });
-      expect(await destroyedTarget).toBe(await createdTarget);
-    }
-  );
+    });
+    await page.evaluate(() => {
+      return (
+        globalThis as unknown as {
+          registrationPromise: Promise<{unregister: () => void}>;
+        }
+      ).registrationPromise.then((registration: any) => {
+        return registration.unregister();
+      });
+    });
+    expect(await destroyedTarget).toBe(await createdTarget);
+  });
   it('should create a worker from a service worker', async () => {
     const {page, server, context} = getTestState();
 
@@ -271,36 +262,33 @@ describe('Target', function () {
     expect(targetChanged).toBe(false);
     context.removeListener('targetchanged', listener);
   });
-  it(
-    'should not crash while redirecting if original request was missed',
-    async () => {
-      const {page, server, context} = getTestState();
+  it('should not crash while redirecting if original request was missed', async () => {
+    const {page, server, context} = getTestState();
 
-      let serverResponse!: ServerResponse;
-      server.setRoute('/one-style.css', (_req, res) => {
-        return (serverResponse = res);
-      });
-      // Open a new page. Use window.open to connect to the page later.
-      await Promise.all([
-        page.evaluate((url: string) => {
-          return window.open(url);
-        }, server.PREFIX + '/one-style.html'),
-        server.waitForRequest('/one-style.css'),
-      ]);
-      // Connect to the opened page.
-      const target = await context.waitForTarget(target => {
-        return target.url().includes('one-style.html');
-      });
-      const newPage = (await target.page())!;
-      // Issue a redirect.
-      serverResponse.writeHead(302, {location: '/injectedstyle.css'});
-      serverResponse.end();
-      // Wait for the new page to load.
-      await waitEvent(newPage, 'load');
-      // Cleanup.
-      await newPage.close();
-    }
-  );
+    let serverResponse!: ServerResponse;
+    server.setRoute('/one-style.css', (_req, res) => {
+      return (serverResponse = res);
+    });
+    // Open a new page. Use window.open to connect to the page later.
+    await Promise.all([
+      page.evaluate((url: string) => {
+        return window.open(url);
+      }, server.PREFIX + '/one-style.html'),
+      server.waitForRequest('/one-style.css'),
+    ]);
+    // Connect to the opened page.
+    const target = await context.waitForTarget(target => {
+      return target.url().includes('one-style.html');
+    });
+    const newPage = (await target.page())!;
+    // Issue a redirect.
+    serverResponse.writeHead(302, {location: '/injectedstyle.css'});
+    serverResponse.end();
+    // Wait for the new page to load.
+    await waitEvent(newPage, 'load');
+    // Cleanup.
+    await newPage.close();
+  });
   it('should have an opener', async () => {
     const {page, server, context} = getTestState();
 

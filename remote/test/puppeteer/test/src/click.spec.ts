@@ -51,24 +51,21 @@ describe('Page.click', function () {
       })
     ).toBe(42);
   });
-  it(
-    'should click the button if window.Node is removed',
-    async () => {
-      const {page, server} = getTestState();
+  it('should click the button if window.Node is removed', async () => {
+    const {page, server} = getTestState();
 
-      await page.goto(server.PREFIX + '/input/button.html');
+    await page.goto(server.PREFIX + '/input/button.html');
+    await page.evaluate(() => {
+      // @ts-expect-error Expected.
+      return delete window.Node;
+    });
+    await page.click('button');
+    expect(
       await page.evaluate(() => {
-        // @ts-expect-error Expected.
-        return delete window.Node;
-      });
-      await page.click('button');
-      expect(
-        await page.evaluate(() => {
-          return (globalThis as any).result;
-        })
-      ).toBe('Clicked');
-    }
-  );
+        return (globalThis as any).result;
+      })
+    ).toBe('Clicked');
+  });
   // @see https://github.com/puppeteer/puppeteer/issues/4281
   it('should click on a span with an inline element inside', async () => {
     const {page} = getTestState();
@@ -421,7 +418,7 @@ describe('Page.click', function () {
     ).toBe('Clicked');
   });
   // @see https://github.com/puppeteer/puppeteer/issues/4110
-  xit('should click the button with fixed position inside an iframe', async () => {
+  it.skip('should click the button with fixed position inside an iframe', async () => {
     const {page, server} = getTestState();
 
     await page.goto(server.EMPTY_PAGE);

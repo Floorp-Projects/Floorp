@@ -17,14 +17,10 @@
 import Protocol from 'devtools-protocol';
 import expect from 'expect';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import rimraf from 'rimraf';
 import sinon from 'sinon';
-import {
-  Browser,
-  BrowserContext,
-} from '../../lib/cjs/puppeteer/common/Browser.js';
+import {Browser, BrowserContext} from '../../lib/cjs/puppeteer/api/Browser.js';
 import {Page} from '../../lib/cjs/puppeteer/common/Page.js';
 import {isErrorLike} from '../../lib/cjs/puppeteer/util/ErrorLike.js';
 import {
@@ -34,6 +30,7 @@ import {
 import puppeteer from '../../lib/cjs/puppeteer/puppeteer.js';
 import {TestServer} from '../../utils/testserver/lib/index.js';
 import {extendExpectWithToBeGolden} from './utils.js';
+import * as Mocha from 'mocha';
 
 const setupServer = async () => {
   const assetsPath = path.join(__dirname, '../assets');
@@ -63,14 +60,15 @@ export const getTestState = (): PuppeteerTestState => {
 };
 
 const product =
-  process.env['PRODUCT'] || process.env['PUPPETEER_PRODUCT'] || 'Chromium';
+  process.env['PRODUCT'] || process.env['PUPPETEER_PRODUCT'] || 'chrome';
 
 const alternativeInstall = process.env['PUPPETEER_ALT_INSTALL'] || false;
 
 const headless = (process.env['HEADLESS'] || 'true').trim().toLowerCase();
 const isHeadless = headless === 'true' || headless === 'chrome';
 const isFirefox = product === 'firefox';
-const isChrome = product === 'Chromium';
+const isChrome = product === 'chrome';
+const protocol = process.env['PUPPETEER_PROTOCOL'] || 'cdp';
 
 let extraLaunchOptions = {};
 try {
@@ -91,6 +89,7 @@ const defaultBrowserOptions = Object.assign(
     executablePath: process.env['BINARY'],
     headless: headless === 'chrome' ? ('chrome' as const) : isHeadless,
     dumpio: !!process.env['DUMPIO'],
+    protocol: protocol as 'cdp' | 'webDriverBiDi',
   },
   extraLaunchOptions
 );
@@ -125,7 +124,11 @@ declare module 'expect/build/types' {
 }
 
 const setupGoldenAssertions = (): void => {
-  const suffix = product.toLowerCase();
+  let suffix = product.toLowerCase();
+  if (suffix === 'chrome') {
+    // TODO: to avoid moving golden folders.
+    suffix = 'chromium';
+  }
   const GOLDEN_DIR = path.join(__dirname, `../golden-${suffix}`);
   const OUTPUT_DIR = path.join(__dirname, `../output-${suffix}`);
   if (fs.existsSync(OUTPUT_DIR)) {
@@ -152,116 +155,21 @@ interface PuppeteerTestState {
 }
 const state: Partial<PuppeteerTestState> = {};
 
-export const itFailsFirefox = (
-  description: string,
-  body: Mocha.Func
-): Mocha.Test => {
-  if (isFirefox) {
-    return xit(description, body);
-  } else {
-    return it(description, body);
-  }
-};
-
-export const itChromeOnly = (
-  description: string,
-  body: Mocha.Func
-): Mocha.Test => {
-  if (isChrome) {
-    return it(description, body);
-  } else {
-    return xit(description, body);
-  }
-};
-
-export const itHeadlessOnly = (
-  description: string,
-  body: Mocha.Func
-): Mocha.Test => {
-  if (isChrome && isHeadless === true) {
-    return it(description, body);
-  } else {
-    return xit(description, body);
-  }
-};
-
-export const itHeadfulOnly = (
-  description: string,
-  body: Mocha.Func
-): Mocha.Test => {
-  if (isChrome && isHeadless === false) {
-    return it(description, body);
-  } else {
-    return xit(description, body);
-  }
-};
-
-export const itFirefoxOnly = (
-  description: string,
-  body: Mocha.Func
-): Mocha.Test => {
-  if (isFirefox) {
-    return it(description, body);
-  } else {
-    return xit(description, body);
-  }
-};
-
 export const itOnlyRegularInstall = (
   description: string,
-  body: Mocha.Func
+  body: Mocha.AsyncFunc
 ): Mocha.Test => {
   if (alternativeInstall || process.env['BINARY']) {
-    return xit(description, body);
+    return it.skip(description, body);
   } else {
     return it(description, body);
   }
 };
 
-export const itFailsWindowsUntilDate = (
-  date: Date,
-  description: string,
-  body: Mocha.Func
-): Mocha.Test => {
-  if (os.platform() === 'win32' && Date.now() < date.getTime()) {
-    // we are within the deferred time so skip the test
-    return xit(description, body);
-  }
-
-  return it(description, body);
-};
-
-export const itFailsWindows = (
-  description: string,
-  body: Mocha.Func
-): Mocha.Test => {
-  if (os.platform() === 'win32') {
-    return xit(description, body);
-  }
-  return it(description, body);
-};
-
-export const describeFailsFirefox = (
-  description: string,
-  body: (this: Mocha.Suite) => void
-): void | Mocha.Suite => {
-  if (isFirefox) {
-    return xdescribe(description, body);
-  } else {
-    return describe(description, body);
-  }
-};
-
-export const describeChromeOnly = (
-  description: string,
-  body: (this: Mocha.Suite) => void
-): Mocha.Suite | void => {
-  if (isChrome) {
-    return describe(description, body);
-  }
-};
-
-if (process.env['MOCHA_WORKER_ID'] === '0') {
+if (
+  process.env['MOCHA_WORKER_ID'] === undefined ||
+  process.env['MOCHA_WORKER_ID'] === '0'
+) {
   console.log(
     `Running unit tests with:
   -> product: ${product}
@@ -290,7 +198,7 @@ export const setupTestBrowserHooks = (): void => {
   });
 
   after(async () => {
-    await state.browser!.close();
+    await state.browser?.close();
     state.browser = undefined;
   });
 };
@@ -302,7 +210,7 @@ export const setupTestPageAndContextHooks = (): void => {
   });
 
   afterEach(async () => {
-    await state.context!.close();
+    await state.context?.close();
     state.context = undefined;
     state.page = undefined;
   });
@@ -386,4 +294,15 @@ export const shortWaitForArrayToHaveAtLeastNElements = async (
       return setTimeout(resolve, timeout);
     });
   }
+};
+
+export const createTimeout = <T>(
+  n: number,
+  value?: T
+): Promise<T | undefined> => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      return resolve(value);
+    }, n);
+  });
 };

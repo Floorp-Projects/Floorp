@@ -1,0 +1,54 @@
+{
+  "testSuites": [
+    {
+      "id": "chrome-headless",
+      "platforms": ["linux", "win32", "darwin"],
+      "parameters": ["chrome", "headless"],
+      "expectedLineCoverage": 93
+    },
+    {
+      "id": "chrome-headful",
+      "platforms": ["linux"],
+      "parameters": ["chrome", "headful"],
+      "expectedLineCoverage": 93
+    },
+    {
+      "id": "chrome-new-headless",
+      "platforms": ["linux"],
+      "parameters": ["chrome", "chrome-headless"],
+      "expectedLineCoverage": 93
+    },
+    {
+      "id": "firefox-headless",
+      "platforms": ["linux"],
+      "parameters": ["firefox", "headless"],
+      "expectedLineCoverage": 80
+    },
+    {
+      "id": "firefox-bidi",
+      "platforms": ["linux"],
+      "parameters": ["firefox", "headless", "webDriverBiDi"],
+      "expectedLineCoverage": 56
+    }
+  ],
+  "parameterDefinitons": {
+    "chrome": {
+      "PUPPETEER_PRODUCT": "chrome"
+    },
+    "firefox": {
+      "PUPPETEER_PRODUCT": "firefox"
+    },
+    "headless": {
+      "HEADLESS": "true"
+    },
+    "headful": {
+      "HEADLESS": "false"
+    },
+    "chrome-headless": {
+      "HEADLESS": "chrome"
+    },
+    "webDriverBiDi": {
+      "PUPPETEER_PROTOCOL": "webDriverBiDi"
+    }
+  }
+}
