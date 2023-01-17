@@ -88,18 +88,17 @@ async function testNodePrincipal() {
   is(source, localizedSource, "Should include source for node principal");
 }
 
-function runTest() {
+  async function runTest() {
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application");
     return;
   }
 
-  if ("@mozilla.org/system-alerts-service;1" in Cc) {
-    todo(false, "Native alerts service exists in this application");
-    return;
-  }
-
   ok(true, "Alerts service exists in this application");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["alerts.useSystemBackend", false]],
+  });
 
   // sendSyncMessage returns an array of arrays. See the comments in
   // test_alerts_noobserve.html and test_SpecialPowersLoadChromeScript.html.
