@@ -471,3 +471,54 @@ add_task(async function test_multistage_aboutwelcome_transitions_off() {
 
   await doExperimentCleanup();
 });
+
+/* Test multistage custom backdrop
+ */
+add_task(async function test_multistage_aboutwelcome_backdrop() {
+  const sandbox = sinon.createSandbox();
+  const TEST_BACKDROP = "blue";
+
+  const TEST_CONTENT = [
+    {
+      id: "TEST_SCREEN",
+      content: {
+        position: "split",
+        logo: {},
+        title: "test",
+      },
+    },
+  ];
+  await setAboutWelcomePref(true);
+  await ExperimentAPI.ready();
+  await pushPrefs(["browser.aboutwelcome.backdrop", TEST_BACKDROP]);
+
+  const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: {
+      id: "my-mochitest-experiment",
+      screens: TEST_CONTENT,
+    },
+  });
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:welcome",
+    true
+  );
+
+  const browser = tab.linkedBrowser;
+
+  registerCleanupFunction(() => {
+    BrowserTestUtils.removeTab(tab);
+    sandbox.restore();
+  });
+
+  await test_screen_content(
+    browser,
+    "multistage step 1",
+    // Expected selectors:
+    [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP}']`]
+  );
+
+  await doExperimentCleanup();
+});

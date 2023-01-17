@@ -268,6 +268,11 @@ aboutwelcome:
       fallbackPref: browser.aboutwelcome.showModal
       description: >-
         Should users see window modal onboarding
+    backdrop:
+      type: string
+      fallbackPref: browser.aboutwelcome.backdrop
+      description: >-
+        Specify the color to be used to update the background color
 
 moreFromMozilla:
   description: "New page on about:preferences to suggest more Mozilla products"
