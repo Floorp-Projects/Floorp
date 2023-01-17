@@ -73,7 +73,7 @@ add_task(async function testModalPrintDialogCancelled() {
     helper.assertDialogHidden();
 
     await helper.withClosingFn(() => {
-      helper.rejectShowSystemDialog();
+      helper.resolveShowSystemDialog(false);
     });
 
     helper.assertDialogClosed();

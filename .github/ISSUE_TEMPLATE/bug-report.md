@@ -1,14 +1,21 @@
 ---
 name: "\U0001F41B Bug report"
-about: Create a report to help us improve
+about: Please post any bugs you find while using Floorp here
 title: ''
 labels: bug
 assignees: ''
 
 ---
 
-<!-- Please make sure to adhere to the template below when posting an Issue to minimize work.
-The developer will have an easier time understanding the specifics of the bug if they adhere to the template. -->
+<!--
+Be sure to follow the template below
+We are students and engineers, and we have limited time to develop to the best of our ability.
+Please describe your Issue correctly and concisely.
+
+Please do not create an Issue for anything other than a bug or feature request, and contact support.ablaze.one .
+
+For Japanese: 日本人の場合、日本語でIssueを書いても構いません。
+ -->
 
 ## Describe the bug
 A clear and concise description of what the bug is.

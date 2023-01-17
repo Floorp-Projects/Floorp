@@ -853,23 +853,18 @@ var Policies = {
 
   DisplayBookmarksToolbar: {
     onBeforeUIStartup(manager, param) {
-      let value = (!param).toString();
+      let visibility;
+      if (typeof param === "boolean") {
+        visibility = param ? "always" : "newtab";
+      } else {
+        visibility = param;
+      }
       // This policy is meant to change the default behavior, not to force it.
-      // If this policy was alreay applied and the user chose to re-hide the
+      // If this policy was already applied and the user chose to re-hide the
       // bookmarks toolbar, do not show it again.
-      runOncePerModification("displayBookmarksToolbar", value, () => {
-        // Set the preference to keep the bookmarks bar open and also
-        // declaratively open the bookmarks toolbar. Otherwise, default
-        // to showing it on the New Tab Page.
+      runOncePerModification("displayBookmarksToolbar", visibility, () => {
         let visibilityPref = "browser.toolbars.bookmarks.visibility";
-        let visibility = param ? "always" : "newtab";
         Services.prefs.setCharPref(visibilityPref, visibility);
-        gXulStore.setValue(
-          BROWSER_DOCUMENT_URL,
-          "PersonalToolbar",
-          "collapsed",
-          value
-        );
       });
     },
   },

@@ -28,10 +28,15 @@ tab-width = Minimum width of tabs
 enable-multitab = 
  .label = Enable multi-row tabs
 multirow-tabs-value = Number of Rows When Multi-row Tabs Are Enabled 
+enable-tab-sleep = 
+ .label = Enable Tab Sleep
+tab-sleep-timeout-value = Grace time to sleep inactive tabs (seconds)
 enable-tab-scroll-change = 
  .label = Switch Tabs by Scrolling
 enable-doble-click-block = 
  .label = Double-click to Close the Tab
+enable-show-pinned-tabs-title =
+ .label = Show the title of pinned tabs
 operation-settings = 
   .label = Browser Operation Settings
 Mouse-side-button = 
@@ -559,3 +564,48 @@ import-from-vivaldi =
 status-bar =
     .label = Status Bar
      .accesskey = S
+
+##################################################################### Gesturefy ###############################################################
+
+gf-floorp-open-tree-style-tab-name = [Floorp] Open Tree Style Tab Panel
+gf-floorp-open-tree-style-tab-description = Open Tree Style Tab Panel of Sidebar
+
+gf-floorp-open-bookmarks-sidebar-name = [Floorp] Open Bookmarks Panel of Sidebar
+gf-floorp-open-bookmarks-sidebar-description = Open Bookmarks Panel of Sidebar
+
+gf-floorp-open-history-sidebar-name = [Floorp] Open History Panel of Sidebar
+gf-floorp-open-history-sidebar-description = Open History Panel of Sidebar
+
+gf-floorp-open-synctabs-sidebar-name = [Floorp] Open Synced Tabs Panel of Sidebar
+gf-floorp-open-synctabs-sidebar-description = Open Synced Tabs Panel of Sidebar
+
+gf-floorp-close-sidebar-name = [Floorp] Close Sidebar
+gf-floorp-close-sidebar-description = Close Sidebar
+
+
+gf-floorp-open-browser-manager-sidebar-name = [Floorp] Open BMS
+gf-floorp-open-browser-manager-sidebar-description = Open Browser Manager Sidebar
+
+gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
+gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar
+
+gf-floorp-show-statusbar-name = [Floorp] Show Status Bar
+gf-floorp-show-statusbar-description = Show Status Bar
+
+gf-floorp-hide-statusbar-name = [Floorp] Hide Status Bar
+gf-floorp-hide-statusbar-description = Hide Status Bar
+
+gf-floorp-toggle-statusbar-name = [Floorp] Toggle Status Bar
+gf-floorp-toggle-statusbar-description = Show or Hide Status Bar
+
+##################################################################### Floorp System Update Portable Version ###############################################################
+
+update-portable-notification-found-title = Updates found!
+update-portable-notification-found-message = Downloading updates...
+update-portable-notification-ready-title = Ready to update!
+update-portable-notification-ready-message = The next time the browser is launched, the update will begin.
+update-portable-notification-success-title = Update succeeded!
+update-portable-notification-success-message = Update succeeded! Hope you enjoy the new version of Floorp!
+update-portable-notification-failed-title = Update failed.
+update-portable-notification-failed-redirector-message = Update failed. Restarting your browser may solve the problem.
+update-portable-notification-failed-prepare-message = Failed to prepare update.

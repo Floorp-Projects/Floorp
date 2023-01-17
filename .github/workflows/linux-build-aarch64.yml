@@ -7,7 +7,11 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
     - name: Setup Disk & Swap Space 💿
       run: |
         echo Before:

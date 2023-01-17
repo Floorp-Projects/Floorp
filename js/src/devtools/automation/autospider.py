@@ -492,7 +492,9 @@ if not args.nobuild:
 
 COMMAND_PREFIX = []
 # On Linux, disable ASLR to make shell builds a bit more reproducible.
-if subprocess.call("type setarch >/dev/null 2>&1", shell=True) == 0:
+# Bug 1795718 - Disable in automation for now as call to setarch requires extra
+# docker privileges.
+if not AUTOMATION and subprocess.call("type setarch >/dev/null 2>&1", shell=True) == 0:
     COMMAND_PREFIX.extend(["setarch", platform.machine(), "-R"])
 
 

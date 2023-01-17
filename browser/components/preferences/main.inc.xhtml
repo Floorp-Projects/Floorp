@@ -84,10 +84,6 @@
     <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"
               preference="browser.taskbar.previews.enable"/>
 #endif
-    <hbox>
-      <description flex="1" data-l10n-id="tab-width"/>
-      <html:input type="number" min="50" value="0" id="tabWidthValue"/>
-    </hbox>
     <checkbox  data-l10n-id="enable-multitab" preference="floorp.enable.multitab"
                id="multitabar" class="needeboot"/>
     <hbox>
@@ -95,11 +91,26 @@
       <html:input type="number" min="1" value="0" id="MultirowValue"/>
     </hbox>
 
+    <checkbox  data-l10n-id="enable-tab-sleep"
+               id="tab-sleep" preference="floorp.tabsleep.enabled"/>
+    <hbox>
+      <description flex="1" data-l10n-id="tab-sleep-timeout-value"/>
+      <html:input type="number" min="0" value="0" id="tabSleepTimeoutSecondsValue"/>
+    </hbox>
+
     <checkbox  data-l10n-id="enable-tab-scroll-change"
                id="tabscroll" preference="toolkit.tabbox.switchByScrolling"/>
 
     <checkbox  data-l10n-id="enable-doble-click-block" 
                id="dobleClockClose" preference="browser.tabs.closeTabByDblclick"/>
+
+    <checkbox  data-l10n-id="enable-show-pinned-tabs-title"
+               id="showPinnedTabsTitle" preference="floorp.tabs.showPinnedTabsTitle"/>
+
+    <hbox>
+      <description flex="1" data-l10n-id="tab-width"/>
+      <html:input type="number" min="50" value="0" id="tabWidthValue"/>
+    </hbox>
 
     <vbox id="browserContainersbox" hidden="true">
       <hbox id="browserContainersExtensionContent"
@@ -229,11 +240,10 @@
             data-l10n-id="lepton-preference-button"/>
       </hbox>
     
-      <radio value="4" class="themes"  data-l10n-id="floorp-legacy"/>
+      <radio value="8" class="themes" data-l10n-id="floorp-fluerialUI"/>
       <label>
-        <div id="floorplegacy"></div>  
+        <div id="fluerialUI"></div>  
       </label>
-
       
       <div id="Windows-only">
       <radio value="5" class="themes" data-l10n-id="floorp-fluentUI"/>
@@ -250,24 +260,25 @@
       </label>
       </div>
       
-      <radio value="8" class="themes" data-l10n-id="floorp-fluerialUI"/>
+      <radio value="4" class="themes"  data-l10n-id="floorp-legacy"/>
       <label>
-        <div id="fluerialUI"></div>  
+        <div id="floorplegacy"></div>  
       </label>
 
     </radiogroup>
 
   <label><html:h2 data-l10n-id="other-preference"/></label>
-  <hbox>
+  <hbox align="center">
     <checkbox preference="floorp.enable.dualtheme"
               id="dualtheme_enable" data-l10n-id="dualtheme-enable"/> 
+    <label class="learnMore" is="text-link" href="https://blog.ablaze.one/2449/2022-10-10/" data-l10n-id="do-not-track-learn-more"></label>
   </hbox>
 
   <html:h2 data-l10n-id="operation-settings"/>
      <checkbox preference="floorp.optimized.msbutton.ope"
                id="MouseSideButton"  data-l10n-id="Mouse-side-button"/>
   #ifdef XP_WIN
-  <hbox>
+  <hbox align="center">
     <checkbox preference="floorp.material.effect.enable"
               id="micaforeveryone" data-l10n-id="material-effect"/>
     <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/mica-for-everyone" data-l10n-id="do-not-track-learn-more"></label>

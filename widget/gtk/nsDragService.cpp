@@ -745,15 +745,9 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       // Dragging and dropping from the file manager would cause us
       // to parse the source text as a nsIFile URL.
       if (flavorStr.EqualsLiteral(kFileMime)) {
-        gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
-        LOGDRAGSERVICE(("  conversion %s => %s", kFileMime, kTextMime));
+        LOGDRAGSERVICE(("  conversion %s => %s", kFileMime, gTextUriListType));
+        gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
         GetTargetDragData(gdkFlavor, dragFlavors);
-        if (!mTargetDragData) {
-          LOGDRAGSERVICE(
-              ("  conversion %s => %s", kFileMime, gTextUriListType));
-          gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-          GetTargetDragData(gdkFlavor, dragFlavors);
-        }
         if (mTargetDragData) {
           const char* text = static_cast<char*>(mTargetDragData);
           char16_t* convertedText = nullptr;
@@ -1002,8 +996,7 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     }
     // check for auto text/plain -> text/unicode mapping
     else if (strcmp(name.get(), kTextMime) == 0 &&
-             ((strcmp(aDataFlavor, kUnicodeMime) == 0) ||
-              (strcmp(aDataFlavor, kFileMime) == 0))) {
+             (strcmp(aDataFlavor, kUnicodeMime) == 0)) {
       *_retval = true;
     }
 

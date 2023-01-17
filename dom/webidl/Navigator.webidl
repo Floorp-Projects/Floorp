@@ -209,7 +209,7 @@ partial interface Navigator {
   sequence<Gamepad?> getGamepads();
 };
 partial interface Navigator {
-  [Pref="dom.gamepad.test.enabled"]
+  [Throws, Pref="dom.gamepad.test.enabled"]
   GamepadServiceTest requestGamepadServiceTest();
 };
 
@@ -228,7 +228,7 @@ partial interface Navigator {
   void requestVRPresentation(VRDisplay display);
 };
 partial interface Navigator {
-  [Pref="dom.vr.puppet.enabled"]
+  [Throws, Pref="dom.vr.puppet.enabled"]
   VRServiceTest requestVRServiceTest();
 };
 

@@ -322,7 +322,8 @@ class Http2Session final : public ASpdySession,
   void GenerateGoAway(uint32_t);
   void CleanupStream(Http2Stream*, nsresult, errorType);
   void CleanupStream(uint32_t, nsresult, errorType);
-  void CloseStream(Http2Stream*, nsresult);
+  void CloseStream(Http2Stream* aStream, nsresult aResult,
+                   bool aRemoveFromQueue = true);
   void SendHello();
   void RemoveStreamFromQueues(Http2Stream*);
   [[nodiscard]] nsresult ParsePadding(uint8_t&, uint16_t&);

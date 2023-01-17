@@ -3,15 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let os_languages = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
-let prefBranch = Services.prefs.getDefaultBranch(null);
-prefBranch.setStringPref(
-  "floorp.browser.sidebar.useIconProvider",
-  os_languages.includes("zh-CN") ?
-    "yandex" :
-    "duckduckgo"
-);
-
 function enableRestMode() {
   if (Services.prefs.getBoolPref("floorp.browser.rest.mode", false)) {
     var Tag = document.createElement("style");
@@ -118,13 +109,14 @@ function setSidebarMode() {
 }
 
 function setSidebarPageSetting(webpanel_id){
-  const webpanelURL = BROWSER_SIDEBAR_DATA.data[webpanel_id].url
+    var webpandata = BROWSER_SIDEBAR_DATA.data[webpanel_id]
+    var webpanobject = document.getElementById(`webpanel${webpanel_id}`)
+    const webpanelURL = webpandata.url
     const sidebar2elem = document.getElementById("sidebar2");
-    const wibpanel_usercontext = BROWSER_SIDEBAR_DATA.data[webpanel_id].usercontext ?? 0
-    const webpanel_userAgent = BROWSER_SIDEBAR_DATA.data[webpanel_id].userAgent ?? false
-
-
-setSidebarWidth(webpanel_id)
+    const wibpanel_usercontext = webpandata.usercontext ?? 0
+    const webpanel_userAgent = webpandata.userAgent ?? false
+    
+    setSidebarWidth(webpanel_id)
 
     switch (webpanelURL) {
       case "floorp//bmt":
@@ -149,8 +141,8 @@ setSidebarWidth(webpanel_id)
         break;
       default:
         showSidebarNodes(2);
-         if(document.getElementById(`webpanel${webpanel_id}`) != null && document.getElementById(`webpanel${webpanel_id}`).getAttribute("usercontextid") != wibpanel_usercontext) document.getElementById(`webpanel${webpanel_id}`).remove()
-         if(document.getElementById(`webpanel${webpanel_id}`) == null){
+         if(webpanobject != null && webpanobject.getAttribute("usercontextid") != wibpanel_usercontext) webpanobject.remove()
+         if(webpanobject == null){
           let browserManagerSidebarWebpanel = document.createXULElement("browser");
           browserManagerSidebarWebpanel.setAttribute("usercontextid", wibpanel_usercontext);
           browserManagerSidebarWebpanel.setAttribute("xmlns", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -175,11 +167,11 @@ setSidebarWidth(webpanel_id)
           document.getElementById("sidebar2-box").appendChild(browserManagerSidebarWebpanel);
         break;
         } else {
-          document.getElementById(`webpanel${webpanel_id}`).setAttribute("src", webpanelURL);
-          if(document.getElementById(`webpanel${webpanel_id}`).getAttribute("changeuseragent") != String(webpanel_userAgent) || document.getElementById(`webpanel${webpanel_id}`).getAttribute("usercontextid") != wibpanel_usercontext){
-            document.getElementById(`webpanel${webpanel_id}`).setAttribute("usercontextid", wibpanel_usercontext);
-            document.getElementById(`webpanel${webpanel_id}`).setAttribute("changeuseragent", String(webpanel_userAgent));
-            document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE)
+          webpanobject.setAttribute("src", webpanelURL);
+          if(webpanobject.getAttribute("changeuseragent") != String(webpanel_userAgent) || webpanobject.getAttribute("usercontextid") != wibpanel_usercontext){
+            webpanobject.setAttribute("usercontextid", wibpanel_usercontext);
+            webpanobject.setAttribute("changeuseragent", String(webpanel_userAgent));
+            webpanobject.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE)
           }
 
         }
@@ -634,53 +626,6 @@ setUserContextLine(data.id.replace("BSB-",""))
     }
   }
 
-/*---------------------------------------------------------------- design ----------------------------------------------------------------*/
-
-function setBrowserDesign() {
-  let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
-  let updateNumberDate = new Date()
-  let updateNumber = `${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}${Math.floor(Math.random()*1000)}`
-  const ThemeCSS = {
-    ProtonfixUI: `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
-    LeptonUI:    `@import url(chrome://browser/skin/lepton/userChrome.css?${updateNumber});
-                   @import url(chrome://browser/skin/lepton/userChrome.css?${updateNumber});`,
-    LeptonUIMultitab: `@import url(chrome://browser/skin/lepton/photonChrome-multitab.css?${updateNumber});
-                    @import url(chrome://browser/skin/lepton/photonContent-multitab.css?${updateNumber});`,
-    MaterialUI: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
-    MaterialUIMultitab: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);
-    .tabbrowser-tab { margin-top: 0.7em !important;  position: relative !important;  top: -0.34em !important; }`,
-    fluentUI: `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
-    gnomeUI: `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
-    FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css);`,
-  }
-  var Tag = document.createElement('style');
-  Tag.setAttribute("id", "browserdesgin");
-  switch (floorpinterfacenum) {
-    //ProtonUI 
-    case 1:
-      break;
-    case 2:
-      Tag.innerText = ThemeCSS.ProtonfixUI;
-      break;
-    case 3:
-      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.LeptonUIMultitab : ThemeCSS.LeptonUI; ;
-      break;
-    case 4:
-      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.MaterialUIMultitab : ThemeCSS.MaterialUI;
-      break;
-    case 5:
-      if (AppConstants.platform != "linux") Tag.innerText = ThemeCSS.fluentUI;
-      break;
-    case 6:
-      if (AppConstants.platform == "linux") Tag.innerText = ThemeCSS.gnomeUI;
-      break;
-    case 8: 
-      Tag.innerText = ThemeCSS.FluerialUI;
-      break;
-  }
-  document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-}
-
 /*---------------------------------------------------------------- Context Menu ----------------------------------------------------------------*/
 function addContextBox(id,l10n,insert,runFunction){
   let contextMenu = document.createXULElement("menuitem");
@@ -700,68 +645,4 @@ function contextMenuObserverFunc(){
 function contextMenuObserverAdd(id){
   contextMenuObserver.observe(document.getElementById(id), {attributes:true})
   contextMenuObserverFunc()
-}
-
-/*---------------------------------------------------------------- URLbar recalculation ----------------------------------------------------------------*/
-
-function URLbarrecalculation() {
-  setTimeout(function () {
-    gURLBar._updateLayoutBreakoutDimensions();
-  }, 100);
-  setTimeout(function () {
-    gURLBar._updateLayoutBreakoutDimensions();
-  }, 500);
-}
-
-/*---------------------------------------------------------------- Tabbar ----------------------------------------------------------------*/
-function setTabbarMode() {
-  const tabbarCSS = {
-    HideTabBrowser: "@import url(chrome://browser/skin/tabbar/hide-tabbrowser.css);",
-    VerticalTab: "@import url(chrome://browser/skin/tabbar/verticaltab.css);",
-    BottomTabs: "@import url(chrome://browser/skin/tabbar/tabs_on_bottom.css);",
-    WindowBottomTabs: "@import url(chrome://browser/skin/tabbar/tabbar_on_window_bottom.css);"
-  }
-  const tabbarPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings");
-  var Tag = document.createElement("style");
-  Tag.setAttribute("id", "tabbardesgin");
-  switch (tabbarPref) { //hide tabbrowser
-    case 1:
-      Tag.innerText = tabbarCSS.HideTabBrowser
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      break;
-    // vertical tab CSS
-    case 2:
-      Tag.innerText = tabbarCSS.VerticalTab
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      window.setTimeout(function () { document.getElementById("titlebar").before(document.getElementById("toolbar-menubar")); }, 500);
-      break;
-    //tabs_on_bottom
-    case 3:
-      Tag.innerText = tabbarCSS.BottomTabs
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      break;
-    case 4:
-      Tag.innerText = tabbarCSS.WindowBottomTabs
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      var script = document.createElement("script");
-      script.setAttribute("id", "tabbar-script");
-      script.src = "chrome://browser/skin/tabbar/tabbar_on_window_bottom.js";
-      document.head.appendChild(script);
-      break;
-  }
-}
-/*---------------------------------------------------------------- Multirow-Tab ----------------------------------------------------------------*/
-
-function setMultirowTabMaxHeight() {
-  try{document.querySelector("#tabbrowser-arrowscrollbox").shadowRoot.querySelector("[part=scrollbox]").removeAttribute("style")}catch(e){};
-
-  let rowValue = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row");
-  let tabHeight = document.querySelector(".tabbrowser-tab").clientHeight;
-  document.querySelector("#tabbrowser-arrowscrollbox").shadowRoot.querySelector("[part=scrollbox]").
-    setAttribute("style", "max-height: " + tabHeight*rowValue + "px !important;");
-}
-
-function removeMultirowTabMaxHeight() {
-  document.querySelector("#tabbrowser-arrowscrollbox").shadowRoot.querySelector("[part=scrollbox]").
-    removeAttribute("style");
 }

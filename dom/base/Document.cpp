@@ -15271,12 +15271,12 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
 
   // The origin which is fullscreen gets changed. Trigger an event so
   // that the chrome knows to pop up a warning UI. Note that
-  // previousFullscreenDoc == nullptr upon first entry, so we always
-  // take this path on the first entry. Also note that, in a multi-
-  // process browser, the code in content process is responsible for
-  // sending message with the origin to its parent, and the parent
-  // shouldn't rely on this event itself.
-  if (aRequest->mShouldNotifyNewOrigin &&
+  // previousFullscreenDoc == nullptr upon first entry, we show the warning UI
+  // directly as soon as chrome document goes into fullscreen state. Also note
+  // that, in a multi-process browser, the code in content process is
+  // responsible for sending message with the origin to its parent, and the
+  // parent shouldn't rely on this event itself.
+  if (aRequest->mShouldNotifyNewOrigin && previousFullscreenDoc &&
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
     DispatchFullscreenNewOriginEvent(this);
   }

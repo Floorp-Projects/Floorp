@@ -7,6 +7,7 @@
 DIRS += [
     "fake-gesturefy",
     "fake-translate",
+    "floorp-actions",
     "treestyletab",
     "official-site-ua",
     "webpanel-ua",

@@ -57,7 +57,7 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveToFileName     = 0x00400000;
   const unsigned long kInitSavePageDelay      = 0x00800000;
   const unsigned long kInitSaveMargins        = 0x01000000;
-  const unsigned long kInitSaveNativeData     = 0x02000000;
+  /* Flag 0x02000000 is unused */
 
   const unsigned long kInitSaveShrinkToFit    = 0x08000000;
   const unsigned long kInitSaveScaling        = 0x10000000;
@@ -71,6 +71,14 @@ interface nsIPrintSettings : nsISupports
       kInitSaveFooterLeft | kInitSaveFooterCenter | kInitSaveFooterRight |
       kInitSaveEdges | kInitSaveReversed | kInitSaveInColor |
       kInitSaveBGColors | kInitSaveBGImages | kInitSaveShrinkToFit;
+
+  // These settings may be changed by native print dialog and should be
+  // persisted when changed.
+  const unsigned long kPrintDialogPersistSettings =
+      kGlobalSettings | kInitSavePaperSize | kInitSaveDuplex |
+      kInitSaveEdges | kInitSaveReversed | kInitSaveInColor |
+      kInitSaveOrientation | kInitSavePageDelay | kInitSaveMargins |
+      kInitSaveShrinkToFit | kInitSaveScaling;
 
   /* Justification Enums */
   const long kJustLeft   = 0;

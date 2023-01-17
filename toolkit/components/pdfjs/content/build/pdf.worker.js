@@ -29716,6 +29716,10 @@ const CFFParser = function CFFParserClosure() {
       const privateDict = this.createDict(CFFPrivateDict, dict, parentDict.strings);
       parentDict.privateDict = privateDict;
 
+      if (privateDict.getByName("ExpansionFactor") === 0) {
+        privateDict.setByName("ExpansionFactor", 0.06);
+      }
+
       if (!privateDict.getByName("Subrs")) {
         return;
       }

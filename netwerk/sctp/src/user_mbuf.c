@@ -80,8 +80,6 @@ static void	mb_dtor_clust(void *, void *);
 static int mbuf_constructor_dup(struct mbuf *m, int pkthdr, short type)
 {
 	int flags = pkthdr;
-	if (type == MT_NOINIT)
-		return (0);
 
 	m->m_next = NULL;
 	m->m_nextpkt = NULL;
@@ -506,7 +504,7 @@ mbuf_initialize(void *dummy)
 #else
 	zone_mbuf = umem_cache_create(MBUF_MEM_NAME, MSIZE, 0,
 	                              mb_ctor_mbuf, mb_dtor_mbuf, NULL,
-	                              NUULL,
+	                              NULL,
 	                              NULL, 0);
 #endif
 	/*zone_ext_refcnt = umem_cache_create(MBUF_EXTREFCNT_MEM_NAME, sizeof(u_int), 0,
@@ -576,13 +574,6 @@ mb_ctor_mbuf(void *mem, void *arg, int flgs)
 	args = (struct mb_args *)arg;
 	flags = args->flags;
 	type = args->type;
-
-	/*
-	 * The mbuf is initialized later.
-	 *
-	 */
-	if (type == MT_NOINIT)
-		return (0);
 
 	m->m_next = NULL;
 	m->m_nextpkt = NULL;
@@ -1310,6 +1301,38 @@ out:	if (((m = m0)->m_flags & M_PKTHDR) && (m->m_pkthdr.len < totlen))
 		m->m_pkthdr.len = totlen;
 }
 
+/*
+ * Apply function f to the data in an mbuf chain starting "off" bytes from
+ * the beginning, continuing for "len" bytes.
+ */
+int
+m_apply(struct mbuf *m, int off, int len,
+        int (*f)(void *, void *, u_int), void *arg)
+{
+	u_int count;
+	int rval;
+
+	KASSERT(off >= 0, ("m_apply, negative off %d", off));
+	KASSERT(len >= 0, ("m_apply, negative len %d", len));
+	while (off > 0) {
+		KASSERT(m != NULL, ("m_apply, offset > size of mbuf chain"));
+		if (off < m->m_len)
+			break;
+		off -= m->m_len;
+		m = m->m_next;
+	}
+	while (len > 0) {
+		KASSERT(m != NULL, ("m_apply, offset > size of mbuf chain"));
+		count = min(m->m_len - off, len);
+		rval = (*f)(arg, mtod(m, caddr_t) + off, count);
+		if (rval)
+			return (rval);
+		len -= count;
+		off = 0;
+		m = m->m_next;
+	}
+	return (0);
+}
 
 /*
  * Lesser-used path for M_PREPEND:

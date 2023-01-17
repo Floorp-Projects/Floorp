@@ -424,46 +424,49 @@ const CurlUtils = {
    */
   escapeStringWin: function(str) {
     /*
-       Replace the backtick character ` with `` in order to escape it.
-       The backtick character is an escape character in PowerShell and
-       can, among other things, be used to disable the effect of some
-       of the other escapes created below.
-       Also see http://www.rlmueller.net/PowerShellEscape.htm for
-       useful details.
-
-       Replace dollar sign because of commands in powershell when using
-       double quotes. e.g $(calc.exe) Also see
-       http://www.rlmueller.net/PowerShellEscape.htm for details.
-
-       Replace quote by double quote (but not by \") because it is
-       recognized by both cmd.exe and MS Crt arguments parser.
-
-       Replace % by "%" because it could be expanded to an environment
-       variable value. So %% becomes "%""%". Even if an env variable ""
-       (2 doublequotes) is declared, the cmd.exe will not
-       substitute it with its value.
-
-       Replace each backslash with double backslash to make sure
-       MS Crt arguments parser won't collapse them.
-
-       Replace new line outside of quotes since cmd.exe doesn't let
-       to do it inside. At the same time it gets duplicated,
-       because first newline is consumed by ^.
-       So for quote: `"Text-start\r\ntext-continue"`,
-       we get: `"Text-start"^\r\n\r\n"text-continue"`,
-       where `^\r\n` is just breaking the command, the `\r\n` right
-       after is actual escaped newline.
+      Because cmd.exe parser and MS Crt arguments parsers use some of the
+      same escape characters, they can interact with each other in
+      horrible ways, the order of operations is critical.
     */
+    const encapsChars = '"';
     return (
-      '"' +
+      encapsChars +
       str
-        .replaceAll("`", "``")
-        .replaceAll("$", "`$")
-        .replaceAll('"', '""')
-        .replaceAll("%", '"%"')
+
+        //  Replace \ with \\ first because it is an escape character for certain
+        // conditions in both parsers.
         .replace(/\\/g, "\\\\")
-        .replace(/[\r\n]{1,2}/g, '"^$&$&"') +
-      '"'
+
+        // Replace double quote chars with two double quotes (not by escaping with \") because it is
+        // recognized by both cmd.exe and MS Crt arguments parser.
+        .replace(/"/g, '""')
+
+        // Escape ` and $ so commands do not get executed e.g $(calc.exe) or `\$(calc.exe)
+        .replace(/[`$]/g, "\\$&")
+
+        // Then escape all characters we are not sure about with ^ to ensure it
+        // gets to MS Crt parser safely.
+        .replace(/[^a-zA-Z0-9\s_\-:=+~\/.',?;()*\$&\\{}\"`]/g, "^$&")
+
+        // The % character is special because MS Crt parser will try and look for
+        // ENV variables and fill them in its place. We cannot escape them with %
+        // and cannot escape them with ^ (because it's cmd.exe's escape not MS Crt
+        // parser); So we can get cmd.exe parser to escape the character after it,
+        // if it is followed by a valid beginning character of an ENV variable.
+        // This ensures we do not try and double escape another ^ if it was placed
+        // by the previous replace.
+        .replace(/%(?=[a-zA-Z0-9_])/g, "%^")
+
+        // We replace \r and \r\n with \n, this allows to consistently escape all new
+        // lines in the next replace
+        .replace(/\r\n?/g, "\n")
+
+        // Lastly we replace new lines with ^ and TWO new lines because the first
+        // new line is there to enact the escape command the second is the character
+        // to escape (in this case new line).
+        // The extra " enables escaping new lines with ^ within quotes in cmd.exe.
+        .replace(/\n/g, '"^\r\n\r\n"') +
+      encapsChars
     );
   },
 };

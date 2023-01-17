@@ -32,7 +32,7 @@
 #include <sys/timeb.h>
 #include <iphlpapi.h>
 #if !defined(__MINGW32__)
-#pragma comment(lib, "IPHLPAPI.lib")
+#pragma comment(lib, "iphlpapi.lib")
 #endif
 #endif
 #include <netinet/sctp_os_userspace.h>
@@ -96,7 +96,7 @@ sctp_userspace_set_threadname(const char *name)
 
 #if !defined(_WIN32) && !defined(__native_client__)
 int
-sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
+sctp_userspace_get_mtu_from_ifn(uint32_t if_index)
 {
 #if defined(INET) || defined(INET6)
 	struct ifreq ifr;
@@ -104,34 +104,26 @@ sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 #endif
 	int mtu;
 
-	switch (af) {
-#if defined(INET)
-	case AF_INET:
-#endif
-#if defined(INET6)
-	case AF_INET6:
-#endif
+	if (if_index == 0xffffffff) {
+		mtu = 1280;
+	} else {
+		mtu = 0;
 #if defined(INET) || defined(INET6)
 		memset(&ifr, 0, sizeof(struct ifreq));
-		mtu = 0;
 		if (if_indextoname(if_index, ifr.ifr_name) != NULL) {
 			/* TODO can I use the raw socket here and not have to open a new one with each query? */
-			if ((fd = socket(af, SOCK_DGRAM, 0)) < 0) {
-				break;
-			}
-			if (ioctl(fd, SIOCGIFMTU, &ifr) >= 0) {
-				mtu = ifr.ifr_mtu;
-			}
-			close(fd);
-		}
-		break;
+#if defined(INET)
+			if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0) {
+#else
+			if ((fd = socket(AF_INET6, SOCK_DGRAM, 0)) >= 0) {
 #endif
-	case AF_CONN:
-		mtu = 1280;
-		break;
-	default:
-		mtu = 0;
-		break;
+				if (ioctl(fd, SIOCGIFMTU, &ifr) >= 0) {
+					mtu = ifr.ifr_mtu;
+				}
+				close(fd);
+			}
+		}
+#endif
 	}
 	return (mtu);
 }
@@ -139,13 +131,13 @@ sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 
 #if defined(__native_client__)
 int
-sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
+sctp_userspace_get_mtu_from_ifn(uint32_t if_index)
 {
 	return 1280;
 }
 #endif
 
-#if defined(__APPLE__) || defined(__DragonFly__) || defined(__linux__) || defined(__native_client__) || defined(__NetBSD__) || defined(_WIN32) || defined(__Fuchsia__)
+#if defined(__APPLE__) || defined(__DragonFly__) || defined(__linux__) || defined(__native_client__) || defined(__NetBSD__) || defined(__QNX__) || defined(_WIN32) || defined(__Fuchsia__) || defined(__EMSCRIPTEN__)
 int
 timingsafe_bcmp(const void *b1, const void *b2, size_t n)
 {
@@ -160,7 +152,7 @@ timingsafe_bcmp(const void *b1, const void *b2, size_t n)
 
 #ifdef _WIN32
 int
-sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
+sctp_userspace_get_mtu_from_ifn(uint32_t if_index)
 {
 #if defined(INET) || defined(INET6)
 	PIP_ADAPTER_ADDRESSES pAdapterAddrs, pAdapt;
@@ -168,15 +160,11 @@ sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 #endif
 	int mtu;
 
-	switch (af) {
-#if defined(INET)
-	case AF_INET:
-#endif
-#if defined(INET6)
-	case AF_INET6:
-#endif
-#if defined(INET) || defined(INET6)
+	if (if_index == 0xffffffff) {
+		mtu = 1280;
+	} else {
 		mtu = 0;
+#if defined(INET) || defined(INET6)
 		AdapterAddrsSize = 0;
 		pAdapterAddrs = NULL;
 		if ((Err = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, NULL, &AdapterAddrsSize)) != 0) {
@@ -206,14 +194,7 @@ sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 		if (pAdapterAddrs != NULL) {
 			GlobalFree(pAdapterAddrs);
 		}
-		break;
 #endif
-	case AF_CONN:
-		mtu = 1280;
-		break;
-	default:
-		mtu = 0;
-		break;
 	}
 	return (mtu);
 }

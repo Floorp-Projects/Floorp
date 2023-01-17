@@ -56,11 +56,17 @@
 #endif
 #endif
 #endif
-#if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__)
-#include <net/route.h>
+#if defined(HAVE_NET_ROUTE_H)
+# include <net/route.h>
+#elif defined(__APPLE__)
+/* Apple SDKs for iOS, tvOS, watchOS, etc. don't ship this header */
+# define RTM_NEWADDR 0xc
+# define RTM_DELADDR 0xd
+# define RTAX_IFA 5
+# define RTAX_MAX 8
 #endif
 /* local macros and datatypes used to get IP addresses system independently */
-#if !defined(IP_PKTINFO ) && !defined(IP_RECVDSTADDR)
+#if !defined(IP_PKTINFO) && !defined(IP_RECVDSTADDR)
 # error "Can't determine socket option to use to get UDP IP"
 #endif
 
@@ -274,6 +280,7 @@ recv_function_raw(void *arg)
 	struct sctp_chunkhdr *ch;
 	struct sockaddr_in src, dst;
 #if !defined(_WIN32)
+	ssize_t res;
 	unsigned int ncounter;
 	struct msghdr msg;
 	struct iovec recv_iovec[MAXLEN_MBUF_CHAIN];
@@ -340,14 +347,16 @@ recv_function_raw(void *arg)
 		msg.msg_iovlen = MAXLEN_MBUF_CHAIN;
 		msg.msg_control = NULL;
 		msg.msg_controllen = 0;
-		ncounter = n = recvmsg(SCTP_BASE_VAR(userspace_rawsctp), &msg, 0);
-		if (n < 0) {
+		res = recvmsg(SCTP_BASE_VAR(userspace_rawsctp), &msg, 0);
+		if (res < 0) {
 			if (errno == EAGAIN || errno == EINTR) {
 				continue;
 			} else {
 				break;
 			}
 		}
+		ncounter = (unsigned int)res;
+		n = (int)res;
 #endif
 		SCTP_HEADER_LEN(recvmbuf[0]) = n; /* length of total packet */
 		SCTP_STAT_INCR(sctps_recvpackets);
@@ -371,13 +380,20 @@ recv_function_raw(void *arg)
 			} while (ncounter > 0);
 		}
 
+		offset = sizeof(struct ip) + sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr);
+		if (SCTP_BUF_LEN(recvmbuf[0]) < offset) {
+				if ((recvmbuf[0] = m_pullup(recvmbuf[0], offset)) == NULL) {
+				SCTP_STAT_INCR(sctps_hdrops);
+				continue;
+			}
+		}
 		iphdr = mtod(recvmbuf[0], struct ip *);
 		sh = (struct sctphdr *)((caddr_t)iphdr + sizeof(struct ip));
 		ch = (struct sctp_chunkhdr *)((caddr_t)sh + sizeof(struct sctphdr));
-		offset = sizeof(struct ip) + sizeof(struct sctphdr);
+		offset -= sizeof(struct sctp_chunkhdr);
 
 		if (iphdr->ip_tos != 0) {
-			ecn = iphdr->ip_tos & 0x02;
+			ecn = iphdr->ip_tos & 0x03;
 		}
 
 		dst.sin_family = AF_INET;
@@ -444,7 +460,8 @@ recv_function_raw6(void *arg)
 {
 	struct mbuf **recvmbuf6;
 #if !defined(_WIN32)
-	unsigned int ncounter = 0;
+	ssize_t res;
+	unsigned int ncounter;
 	struct iovec recv_iovec[MAXLEN_MBUF_CHAIN];
 	struct msghdr msg;
 	struct cmsghdr *cmsgptr;
@@ -531,15 +548,16 @@ recv_function_raw6(void *arg)
 		msg.msg_control = (void *)cmsgbuf;
 		msg.msg_controllen = (socklen_t)CMSG_SPACE(sizeof (struct in6_pktinfo));
 		msg.msg_flags = 0;
-
-		ncounter = n = recvmsg(SCTP_BASE_VAR(userspace_rawsctp6), &msg, 0);
-		if (n < 0) {
+		res = recvmsg(SCTP_BASE_VAR(userspace_rawsctp6), &msg, 0);
+		if (res < 0) {
 			if (errno == EAGAIN || errno == EINTR) {
 				continue;
 			} else {
 				break;
 			}
 		}
+		ncounter = (unsigned int)res;
+		n = (int)res;
 #endif
 		SCTP_HEADER_LEN(recvmbuf6[0]) = n; /* length of total packet */
 		SCTP_STAT_INCR(sctps_recvpackets);
@@ -579,9 +597,16 @@ recv_function_raw6(void *arg)
 			continue;
 		}
 
+		offset = sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr);
+		if (SCTP_BUF_LEN(recvmbuf6[0]) < offset) {
+			if ((recvmbuf6[0] = m_pullup(recvmbuf6[0], offset)) == NULL) {
+				SCTP_STAT_INCR(sctps_hdrops);
+				continue;
+			}
+		}
 		sh = mtod(recvmbuf6[0], struct sctphdr *);
 		ch = (struct sctp_chunkhdr *)((caddr_t)sh + sizeof(struct sctphdr));
-		offset = sizeof(struct sctphdr);
+		offset -= sizeof(struct sctp_chunkhdr);
 
 		dst.sin6_family = AF_INET6;
 #ifdef HAVE_SIN6_LEN
@@ -648,6 +673,7 @@ recv_function_udp(void *arg)
 #endif
 	int compute_crc = 1;
 #if !defined(_WIN32)
+	ssize_t res;
 	unsigned int ncounter;
 	struct iovec iov[MAXLEN_MBUF_CHAIN];
 	struct msghdr msg;
@@ -701,14 +727,16 @@ recv_function_udp(void *arg)
 		msg.msg_controllen = sizeof(cmsgbuf);
 		msg.msg_flags = 0;
 
-		ncounter = n = recvmsg(SCTP_BASE_VAR(userspace_udpsctp), &msg, 0);
-		if (n < 0) {
+		res = recvmsg(SCTP_BASE_VAR(userspace_udpsctp), &msg, 0);
+		if (res < 0) {
 			if (errno == EAGAIN || errno == EINTR) {
 				continue;
 			} else {
 				break;
 			}
 		}
+		ncounter = (unsigned int)res;
+		n = (int)res;
 #else
 		nResult = WSAIoctl(SCTP_BASE_VAR(userspace_udpsctp), SIO_GET_EXTENSION_FUNCTION_POINTER,
 		 &WSARecvMsg_GUID, sizeof WSARecvMsg_GUID,
@@ -793,10 +821,17 @@ recv_function_udp(void *arg)
 			continue;
 		}
 
-		/*offset = sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr);*/
+		offset = sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr);
+		if (SCTP_BUF_LEN(udprecvmbuf[0]) < offset) {
+			if ((udprecvmbuf[0] = m_pullup(udprecvmbuf[0], offset)) == NULL) {
+				SCTP_STAT_INCR(sctps_hdrops);
+				continue;
+			}
+		}
 		sh = mtod(udprecvmbuf[0], struct sctphdr *);
 		ch = (struct sctp_chunkhdr *)((caddr_t)sh + sizeof(struct sctphdr));
-		offset = sizeof(struct sctphdr);
+		offset -= sizeof(struct sctp_chunkhdr);
+
 		port = src.sin_port;
 		src.sin_port = sh->src_port;
 		dst.sin_port = sh->dest_port;
@@ -853,6 +888,7 @@ recv_function_udp6(void *arg)
 	struct iovec iov[MAXLEN_MBUF_CHAIN];
 	struct msghdr msg;
 	struct cmsghdr *cmsgptr;
+	ssize_t res;
 	unsigned int ncounter;
 #else
 	GUID WSARecvMsg_GUID = WSAID_WSARECVMSG;
@@ -903,14 +939,16 @@ recv_function_udp6(void *arg)
 		msg.msg_controllen = (socklen_t)CMSG_SPACE(sizeof (struct in6_pktinfo));
 		msg.msg_flags = 0;
 
-		ncounter = n = recvmsg(SCTP_BASE_VAR(userspace_udpsctp6), &msg, 0);
-		if (n < 0) {
+		res = recvmsg(SCTP_BASE_VAR(userspace_udpsctp6), &msg, 0);
+		if (res < 0) {
 			if (errno == EAGAIN || errno == EINTR) {
 				continue;
 			} else {
 				break;
 			}
 		}
+		ncounter = (unsigned int)res;
+		n = (int)res;
 #else
 		nResult = WSAIoctl(SCTP_BASE_VAR(userspace_udpsctp6), SIO_GET_EXTENSION_FUNCTION_POINTER,
 		                   &WSARecvMsg_GUID, sizeof WSARecvMsg_GUID,
@@ -981,9 +1019,16 @@ recv_function_udp6(void *arg)
 			continue;
 		}
 
+		offset = sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr);
+		if (SCTP_BUF_LEN(udprecvmbuf6[0]) < offset) {
+			if ((udprecvmbuf6[0] = m_pullup(udprecvmbuf6[0], offset)) == NULL) {
+				SCTP_STAT_INCR(sctps_hdrops);
+				continue;
+			}
+		}
 		sh = mtod(udprecvmbuf6[0], struct sctphdr *);
 		ch = (struct sctp_chunkhdr *)((caddr_t)sh + sizeof(struct sctphdr));
-		offset = sizeof(struct sctphdr);
+		offset -= sizeof(struct sctp_chunkhdr);
 
 		port = src.sin6_port;
 		src.sin6_port = sh->src_port;
@@ -1172,7 +1217,7 @@ recv_thread_init(void)
 			}
 		}
 	}
-	if (SCTP_BASE_VAR(userspace_udpsctp) == -1) {
+	if ((SCTP_BASE_VAR(userspace_udpsctp) == -1) && (SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) != 0)) {
 		if ((SCTP_BASE_VAR(userspace_udpsctp) = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
 #if defined(_WIN32)
 			SCTPDBG(SCTP_DEBUG_USR, "Can't create socket for SCTP/UDP/IPv4 (errno = %d).\n", WSAGetLastError());
@@ -1309,7 +1354,7 @@ recv_thread_init(void)
 			}
 		}
 	}
-	if (SCTP_BASE_VAR(userspace_udpsctp6) == -1) {
+	if ((SCTP_BASE_VAR(userspace_udpsctp6) == -1) && (SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) != 0)) {
 		if ((SCTP_BASE_VAR(userspace_udpsctp6) = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
 #if defined(_WIN32)
 			SCTPDBG(SCTP_DEBUG_USR, "Can't create socket for SCTP/UDP/IPv6 (errno = %d).\n", WSAGetLastError());

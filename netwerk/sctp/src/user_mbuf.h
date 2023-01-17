@@ -113,6 +113,7 @@ void  m_freem(struct mbuf *);
 struct m_tag	*m_tag_alloc(uint32_t, int, int, int);
 struct mbuf	*m_copym(struct mbuf *, int, int, int);
 void		 m_copyback(struct mbuf *, int, int, caddr_t);
+int		 m_apply(struct mbuf *, int, int, int (*)(void *, void *, u_int), void *arg);
 struct mbuf	*m_pullup(struct mbuf *, int);
 struct mbuf	*m_pulldown(struct mbuf *, int off, int len, int *offp);
 int		 m_dup_pkthdr(struct mbuf *, struct mbuf *, int);
@@ -124,9 +125,6 @@ void		 m_copydata(const struct mbuf *, int, int, caddr_t);
 #define MBUF_MEM_NAME "mbuf"
 #define MBUF_CLUSTER_MEM_NAME "mbuf_cluster"
 #define	MBUF_EXTREFCNT_MEM_NAME	"mbuf_ext_refcnt"
-
-#define	MT_NOINIT	255	/* Not a type but a flag to allocate
-				   a non-initialized mbuf */
 
 /*
  * Mbufs are of a single size, MSIZE (sys/param.h), which includes overhead.
@@ -293,9 +291,6 @@ struct mbuf {
 #define	MT_OOBDATA	15	/* expedited data  */
 #define	MT_NTYPES	16	/* number of mbuf types for mbtypes[] */
 
-#define	MT_NOINIT	255	/* Not a type but a flag to allocate
-				   a non-initialized mbuf */
-
 /*
  * __Userspace__ flags like M_NOWAIT are defined in malloc.h
  * Flags like these are used in functions like uma_zalloc()
@@ -332,6 +327,10 @@ extern int max_protohdr; /* Size of largest protocol layer header. See user_mbuf
 			 (!(((m)->m_flags & M_EXT)) ||			\
 			 (*((m)->m_ext.ref_cnt) == 1)) )		\
 
+/* Check if the supplied mbuf has a packet header, or else panic. */
+#define M_ASSERTPKTHDR(m)						\
+	KASSERT((m) != NULL && (m)->m_flags & M_PKTHDR,			\
+	    ("%s: no mbuf packet header!", __func__))
 
 /*
  * Compute the amount of space available before the current start of data in

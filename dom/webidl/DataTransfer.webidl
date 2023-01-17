@@ -152,6 +152,13 @@ partial interface DataTransfer {
   readonly attribute Node? mozSourceNode;
 
   /**
+   * The window context that mouse was pressed over to begin the drag. For
+   * external drags, this will be null.
+   */
+  [ChromeOnly]
+  readonly attribute WindowContext? sourceWindowContext;
+
+  /**
    * The URI spec of the triggering principal.  This may be different than
    * sourceNode's principal when sourceNode is xul:browser and the drag is
    * triggered in a browsing context inside it.
