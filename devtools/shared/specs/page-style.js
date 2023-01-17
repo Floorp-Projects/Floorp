@@ -70,7 +70,6 @@ const pageStyleSpec = generateActorSpec({
       response: RetVal(
         types.addDictType("matchedselectorresponse", {
           rules: "array:domstylerule",
-          sheets: "array:stylesheet",
           matched: "array:matchedselector",
         })
       ),

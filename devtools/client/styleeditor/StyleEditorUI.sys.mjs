@@ -1161,19 +1161,19 @@ export class StyleEditorUI extends EventEmitter {
   }
 
   /**
-   * Given an URL, find a stylesheet front with that URL, if one has been
+   * Given an URL, find a stylesheet resource with that URL, if one has been
    * loaded into the editor.js
    *
-   * Do not use this unless you have no other way to get a StyleSheetFront
+   * Do not use this unless you have no other way to get a StyleSheet resource
    * multiple sheets could share the same URL, so this will give you _one_
    * of possibly many sheets with that URL.
    *
    * @param {string} url
    *        An arbitrary URL to search for.
    *
-   * @return {StyleSheetFront|null}
+   * @return {StyleSheetResource|null}
    */
-  getStylesheetFrontForGeneratedURL(url) {
+  getStylesheetResourceForGeneratedURL(url) {
     for (const styleSheet of this.#seenSheets.keys()) {
       const sheetURL = styleSheet.href || styleSheet.nodeHref;
       if (!styleSheet.isOriginalSource && sheetURL === url) {
@@ -1186,11 +1186,11 @@ export class StyleEditorUI extends EventEmitter {
   /**
    * selects a stylesheet and optionally moves the cursor to a selected line
    *
-   * @param {StyleSheetFront} [stylesheet]
+   * @param {StyleSheetResource} stylesheet
    *        Stylesheet to select or href of stylesheet to select
-   * @param {Number} [line]
+   * @param {Number} line
    *        Line to which the caret should be moved (zero-indexed).
-   * @param {Number} [col]
+   * @param {Number} col
    *        Column to which the caret should be moved (zero-indexed).
    * @return {Promise}
    *         Promise that will resolve when the editor is selected and ready

@@ -4312,8 +4312,8 @@ Toolbox.prototype = {
    * If the stylesheet has a sourcemap, we will attempt to open the original
    * version of the file instead of the generated version.
    */
-  async viewSourceInStyleEditorByFront(stylesheetFront, line, column) {
-    if (!stylesheetFront || typeof stylesheetFront !== "object") {
+  async viewSourceInStyleEditorByResource(stylesheetResource, line, column) {
+    if (!stylesheetResource || typeof stylesheetResource !== "object") {
       console.warn("Failed to open source, no stylesheet given");
       return false;
     }
@@ -4323,14 +4323,14 @@ Toolbox.prototype = {
       );
 
       // This is a fallback in case of programming errors, but in a perfect
-      // world, viewSourceInStyleEditorByFront would always get a line/colum.
+      // world, viewSourceInStyleEditorByResource would always get a line/colum.
       line = 1;
       column = null;
     }
 
     return viewSource.viewSourceInStyleEditor(
       this,
-      stylesheetFront,
+      stylesheetResource,
       line,
       column
     );

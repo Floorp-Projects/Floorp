@@ -100,14 +100,11 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     this.styleElements = new WeakMap();
 
     this.onFrameUnload = this.onFrameUnload.bind(this);
-    this.onStyleSheetAdded = this.onStyleSheetAdded.bind(this);
 
     this.inspector.targetActor.on("will-navigate", this.onFrameUnload);
-    this.inspector.targetActor.on("stylesheet-added", this.onStyleSheetAdded);
 
     this._observedRules = [];
     this._styleApplied = this._styleApplied.bind(this);
-    this._watchedSheets = new Set();
 
     this.styleSheetsManager = this.inspector.targetActor.getStyleSheetManager();
 
@@ -121,7 +118,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     }
     protocol.Actor.prototype.destroy.call(this);
     this.inspector.targetActor.off("will-navigate", this.onFrameUnload);
-    this.inspector.targetActor.off("stylesheet-added", this.onStyleSheetAdded);
     this.inspector = null;
     this.walker = null;
     this.refMap = null;
@@ -129,12 +125,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     this.cssLogic = null;
     this.styleElements = null;
 
-    for (const sheet of this._watchedSheets) {
-      sheet.off("style-applied", this._styleApplied);
-    }
-
     this._observedRules = [];
-    this._watchedSheets.clear();
   },
 
   get conn() {
@@ -471,7 +462,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     this.cssLogic.highlight(node.rawNode);
 
     const rules = new Set();
-    const sheets = new Set();
 
     const matched = [];
     const propInfo = this.cssLogic.getPropertyInfo(property);
@@ -492,12 +482,11 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       });
     }
 
-    this.expandSets(rules, sheets);
+    this._expandRules(rules);
 
     return {
       matched,
       rules: [...rules],
-      sheets: [...sheets],
     };
   },
 
@@ -905,21 +894,19 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     }
 
     const rules = new Set();
-    const sheets = new Set();
     entries.forEach(entry => rules.add(entry.rule));
-    this.expandSets(rules, sheets);
+    this._expandRules(rules);
 
     return {
       entries,
       rules: [...rules],
-      sheets: [...sheets],
     };
   },
 
   /**
-   * Expand Sets of rules and sheets to include all parent rules and sheets.
+   * Expand a set of rules to include all parent rules.
    */
-  expandSets(ruleSet, sheetSet) {
+  _expandRules(ruleSet) {
     // Sets include new items in their iteration
     for (const rule of ruleSet) {
       if (rule.rawRule.parentRule) {
@@ -1020,18 +1007,6 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    */
   onFrameUnload() {
     this.styleElements = new WeakMap();
-  },
-
-  /**
-   * When a stylesheet is added, handle the related StyleSheetActor to listen for changes.
-   * @param  {StyleSheetActor} actor
-   *         The actor for the added stylesheet.
-   */
-  onStyleSheetAdded(actor) {
-    if (!this._watchedSheets.has(actor)) {
-      this._watchedSheets.add(actor);
-      actor.on("style-applied", this._styleApplied);
-    }
   },
 
   _onStylesheetUpdated({ resourceId, updateKind, updates = {} }) {

@@ -51,7 +51,6 @@ DevToolsModules(
     "storage.js",
     "string.js",
     "style-rule.js",
-    "style-sheet.js",
     "style-sheets.js",
     "symbol-iterator.js",
     "symbol.js",

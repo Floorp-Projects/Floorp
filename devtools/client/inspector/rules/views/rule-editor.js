@@ -372,7 +372,7 @@ RuleEditor.prototype = {
 
     const { inspector } = this.ruleView;
     if (Tools.styleEditor.isToolSupported(inspector.toolbox)) {
-      inspector.toolbox.viewSourceInStyleEditorByFront(
+      inspector.toolbox.viewSourceInStyleEditorByResource(
         this.rule.sheet,
         this.rule.ruleLine,
         this.rule.ruleColumn
@@ -448,7 +448,7 @@ RuleEditor.prototype = {
         this._unsubscribeSourceMap();
       }
       this._unsubscribeSourceMap = this.sourceMapURLService.subscribeByID(
-        this.rule.sheet.resourceId || this.rule.sheet.actorID,
+        this.rule.sheet.resourceId,
         this.rule.ruleLine,
         this.rule.ruleColumn,
         this._updateLocation
