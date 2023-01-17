@@ -6,12 +6,9 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.preference.CheckBoxPreference
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
@@ -32,7 +29,6 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
@@ -40,7 +36,6 @@ import org.robolectric.Robolectric
 @RunWith(FenixRobolectricTestRunner::class)
 internal class HomeSettingsFragmentTest {
     private lateinit var homeSettingsFragment: HomeSettingsFragment
-    private lateinit var sponsoredStoriesSetting: CheckBoxPreference
     private lateinit var appSettings: Settings
     private lateinit var appPrefs: SharedPreferences
     private lateinit var appPrefsEditor: SharedPreferences.Editor
@@ -50,7 +45,6 @@ internal class HomeSettingsFragmentTest {
     @Before
     fun setup() {
         mockkStatic("org.mozilla.fenix.ext.FragmentKt")
-        every { any<Fragment>().showToolbar(any()) } just Runs
         mockkStatic("org.mozilla.fenix.ext.ContextKt")
         appPrefsEditor = mockk(relaxed = true)
         appPrefs = mockk(relaxed = true) {
@@ -68,15 +62,6 @@ internal class HomeSettingsFragmentTest {
         }
 
         homeSettingsFragment = HomeSettingsFragment()
-
-        val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
-        activity.supportFragmentManager.beginTransaction()
-            .add(homeSettingsFragment, "HomeSettingFragmentTest")
-            .commitNow()
-
-        sponsoredStoriesSetting = homeSettingsFragment.findPreference(
-            homeSettingsFragment.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
-        )!!
     }
 
     @After
@@ -87,27 +72,23 @@ internal class HomeSettingsFragmentTest {
 
     @Test
     fun `GIVEN the Pocket sponsored stories feature is disabled for the app WHEN accessing settings THEN the settings for it are not visible`() {
-        every { any<Context>().settings() } returns mockk(relaxed = true)
-
         mockkObject(FeatureFlags) {
             every { FeatureFlags.isPocketSponsoredStoriesFeatureEnabled(any()) } returns false
 
-            homeSettingsFragment.onResume()
+            activateFragment()
 
-            assertFalse(sponsoredStoriesSetting.isVisible)
+            assertFalse(getSponsoredStoriesPreference().isVisible)
         }
     }
 
     @Test
     fun `GIVEN the Pocket sponsored stories feature is enabled for the app WHEN accessing settings THEN the settings for it are visible`() {
-        every { any<Context>().settings() } returns mockk(relaxed = true)
-
         mockkObject(FeatureFlags) {
             every { FeatureFlags.isPocketSponsoredStoriesFeatureEnabled(any()) } returns true
 
-            homeSettingsFragment.onResume()
+            activateFragment()
 
-            assertTrue(sponsoredStoriesSetting.isVisible)
+            assertTrue(getSponsoredStoriesPreference().isVisible)
         }
     }
 
@@ -115,25 +96,25 @@ internal class HomeSettingsFragmentTest {
     fun `GIVEN the Pocket sponsored stories preference is false WHEN accessing settings THEN the setting for it is unchecked`() {
         every { appSettings.showPocketSponsoredStories } returns false
 
-        homeSettingsFragment.onResume()
+        activateFragment()
 
-        assertFalse(sponsoredStoriesSetting.isChecked)
+        assertFalse(getSponsoredStoriesPreference().isChecked)
     }
 
     @Test
     fun `GIVEN the Pocket sponsored stories preference is true WHEN accessing settings THEN the setting for it is checked`() {
         every { appSettings.showPocketSponsoredStories } returns true
 
-        homeSettingsFragment.onResume()
+        activateFragment()
 
-        assertTrue(sponsoredStoriesSetting.isChecked)
+        assertTrue(getSponsoredStoriesPreference().isChecked)
     }
 
     @Test
     fun `GIVEN the setting for Pocket sponsored stories is unchecked WHEN tapping it THEN toggle it and start downloading stories`() {
-        homeSettingsFragment.onResume()
+        activateFragment()
 
-        val result = sponsoredStoriesSetting.callChangeListener(true)
+        val result = getSponsoredStoriesPreference().callChangeListener(true)
 
         assertTrue(result)
         verify { appPrefsEditor.putBoolean(testContext.getString(R.string.pref_key_pocket_sponsored_stories), true) }
@@ -142,13 +123,25 @@ internal class HomeSettingsFragmentTest {
 
     @Test
     fun `GIVEN the setting for Pocket sponsored stories is checked WHEN tapping it THEN toggle it, delete Pocket profile and remove sponsored stories from showing`() {
-        homeSettingsFragment.onResume()
+        activateFragment()
 
-        val result = sponsoredStoriesSetting.callChangeListener(false)
+        val result = getSponsoredStoriesPreference().callChangeListener(false)
 
         assertTrue(result)
         verify { appPrefsEditor.putBoolean(testContext.getString(R.string.pref_key_pocket_sponsored_stories), false) }
         verify { pocketService.deleteProfile() }
         verify { appStore.dispatch(AppAction.PocketSponsoredStoriesChange(emptyList())) }
     }
+
+    private fun activateFragment() {
+        val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
+        activity.supportFragmentManager.beginTransaction()
+            .add(homeSettingsFragment, "HomeSettingFragmentTest")
+            .commitNow()
+    }
+
+    private fun getSponsoredStoriesPreference(): CheckBoxPreference =
+        homeSettingsFragment.findPreference(
+            homeSettingsFragment.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
+        )!!
 }

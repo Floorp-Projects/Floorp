@@ -26,12 +26,12 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.home_preferences, rootKey)
+        setupPreferences()
     }
 
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_home_2))
-        setupPreferences()
     }
 
     private fun setupPreferences() {

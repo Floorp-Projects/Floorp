@@ -57,7 +57,6 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.ProfilerViewModel
 import org.mozilla.fenix.settings.account.AccountUiView
-import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
 import kotlin.system.exitProcess
 
@@ -598,11 +597,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 getString(R.string.preferences_https_only_off)
             }
         }
-    }
-
-    private fun isFirefoxDefaultBrowser(): Boolean {
-        val browsers = BrowsersCache.all(requireContext())
-        return browsers.isFirefoxDefaultBrowser
     }
 
     private fun updateProfilerUI(profilerStatus: Boolean) {
