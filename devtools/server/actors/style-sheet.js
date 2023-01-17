@@ -8,9 +8,6 @@ const protocol = require("resource://devtools/shared/protocol.js");
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
-const {
-  MediaRuleActor,
-} = require("resource://devtools/server/actors/media-rule.js");
 const { fetch } = require("resource://devtools/shared/DevToolsUtils.js");
 const {
   styleSheetSpec,
@@ -457,41 +454,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   },
 
   /**
-   * Protocol method to get the media rules for the stylesheet.
-   */
-  getMediaRules() {
-    return this._getMediaRules();
-  },
-
-  /**
-   * Get all the @media rules in this stylesheet.
-   *
-   * @return {promise}
-   *         A promise that resolves with an array of MediaRuleActors.
-   */
-  _getMediaRules() {
-    const mediaRules = [];
-    const traverseRules = ruleList => {
-      for (const rule of ruleList) {
-        if (rule.type === CSSRule.MEDIA_RULE) {
-          const actor = new MediaRuleActor(rule, this);
-          this.manage(actor);
-          mediaRules.push(actor);
-        }
-
-        if (rule.cssRules) {
-          traverseRules(rule.cssRules);
-        }
-      }
-    };
-
-    return this.getCSSRules().then(rules => {
-      traverseRules(rules);
-      return mediaRules;
-    });
-  },
-
-  /**
    * Update the style sheet in place with new text.
    *
    * @param {string} text: new text
@@ -515,10 +477,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     } else {
       this.emit("style-applied", kind, this, cause);
     }
-
-    this._getMediaRules().then(rules => {
-      this.emit("media-rules-changed", rules);
-    });
   },
 
   /**

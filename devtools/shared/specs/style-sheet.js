@@ -10,9 +10,6 @@ const {
   types,
 } = require("resource://devtools/shared/protocol.js");
 
-// Load the "mediarule" type used in this file.
-require("resource://devtools/shared/specs/media-rule.js");
-
 types.addActorType("stylesheet");
 
 const styleSheetSpec = generateActorSpec({
@@ -30,10 +27,6 @@ const styleSheetSpec = generateActorSpec({
       styleSheet: Arg(1, "stylesheet"),
       cause: Arg(2, "nullable:string"),
     },
-    "media-rules-changed": {
-      type: "mediaRulesChanged",
-      rules: Arg(0, "array:mediarule"),
-    },
   },
 
   methods: {
@@ -44,12 +37,6 @@ const styleSheetSpec = generateActorSpec({
     getText: {
       response: {
         text: RetVal("longstring"),
-      },
-    },
-    getMediaRules: {
-      request: {},
-      response: {
-        mediaRules: RetVal("nullable:array:mediarule"),
       },
     },
   },
