@@ -21,7 +21,6 @@ SimpleTest.registerCleanupFunction(() => {
 
 function assertTarget(target, url, chrome = false) {
   is(target.url, url);
-  is(target.isLocalTab, false);
   is(target.chrome, chrome);
   is(target.isBrowsingContext, true);
 }
@@ -45,7 +44,18 @@ add_task(async function() {
   );
   // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
   await commands.targetCommand.startListening();
+
+  // For now, we can't spawn a commands flagged as 'local tab' via URL query params
+  // The only way to has isLocalTab is to create the toolbox via showToolboxForTab
+  // and spawn the command via CommandsFactory.forTab.
+  is(
+    commands.descriptorFront.isLocalTab,
+    false,
+    "Even if we refer to a local tab, isLocalTab is false (for now)"
+  );
+
   target = await commands.descriptorFront.getTarget();
+
   assertTarget(target, TEST_URI);
   await commands.destroy();
 
