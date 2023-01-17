@@ -180,4 +180,13 @@ partial interface DataTransfer {
    */
   [Throws, ChromeOnly]
   DataTransfer mozCloneForEvent(DOMString event);
+
+  /**
+   * Whether to show the "fail" animation that returns a dragged item
+   * to its source. Only works on macOS, and has to be set early in the drag
+   * on that platform.
+   * Defaults to true.
+   */
+  [ChromeOnly]
+  attribute boolean mozShowFailAnimation;
 };

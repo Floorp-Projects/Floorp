@@ -325,6 +325,11 @@
     }
 
     on_dragstart(event) {
+      // We use "failed" drag end events that weren't cancelled by the user
+      // to detach tabs. Ensure that we do not show the drag image returning
+      // to its point of origin when this happens, as it makes the drag
+      // finishing feel very slow.
+      event.dataTransfer.mozShowFailAnimation = false;
       if (event.eventPhase == Event.CAPTURING_PHASE) {
         this.style.MozUserFocus = "";
       } else if (

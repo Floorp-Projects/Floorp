@@ -245,7 +245,8 @@ nsresult nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
       beginDraggingSessionWithItems:[NSArray arrayWithObject:[dragItem autorelease]]
                               event:mNativeDragEvent
                              source:mNativeDragView];
-  draggingSession.animatesToStartingPositionsOnCancelOrFail = YES;
+  draggingSession.animatesToStartingPositionsOnCancelOrFail =
+      !mDataTransfer || mDataTransfer->MozShowFailAnimation();
 
   return NS_OK;
 
