@@ -414,9 +414,8 @@
         ".wizard-header-label"
       );
       // First deal with fluent. Ideally, we'd stop supporting anything else,
-      // but right now the migration wizard still uses non-fluent l10n
-      // (fixing is bug 1518234), as do some comm-central consumers
-      // (bug 1627049). Removing the DTD support is bug 1627051.
+      // but some comm-central consumers still use DTDs. (bug 1627049).
+      // Removing the DTD support is bug 1627051.
       if (this.currentPage.hasAttribute("data-header-label-id")) {
         let id = this.currentPage.getAttribute("data-header-label-id");
         document.l10n.setAttributes(labelElement, id);
