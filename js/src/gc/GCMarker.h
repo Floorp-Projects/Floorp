@@ -25,7 +25,12 @@ class WeakMapBase;
 
 static const size_t MARK_STACK_BASE_CAPACITY = 4096;
 
-enum class SlotsOrElementsKind { Elements, FixedSlots, DynamicSlots };
+enum class SlotsOrElementsKind {
+  Unused = 0,  // Must match SlotsOrElementsRangeTag
+  Elements,
+  FixedSlots,
+  DynamicSlots
+};
 
 namespace gc {
 
@@ -89,7 +94,7 @@ class MarkStack {
    * the context of push or pop operation.
    */
   enum Tag {
-    SlotsOrElementsRangeTag,
+    SlotsOrElementsRangeTag = 0,  // Must match SlotsOrElementsKind::Unused.
     ObjectTag,
     JitCodeTag,
     ScriptTag,
@@ -232,6 +237,12 @@ class MarkStack {
   mutable size_t iteratorCount_ = 0;
 #endif
 };
+
+static_assert(unsigned(SlotsOrElementsKind::Unused) ==
+                  unsigned(MarkStack::SlotsOrElementsRangeTag),
+              "To split the mark stack we depend on being able to tell the "
+              "difference between SlotsOrElementsRange::startAndKind_ and a "
+              "tagged SlotsOrElementsRange");
 
 // Bitmask of options to parameterize MarkingTracerT.
 namespace MarkingOptions {
