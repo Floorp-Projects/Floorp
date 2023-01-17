@@ -1142,29 +1142,9 @@ InitializeFrameWithResourceAndSize(
 }
 
 // https://w3c.github.io/webcodecs/#videoframe-initialize-frame-from-other-frame
-struct VideoFrameData {
-  VideoFrameData(layers::Image* aImage, const VideoPixelFormat& aFormat,
-                 gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-                 Maybe<uint64_t> aDuration, int64_t aTimestamp,
-                 const VideoColorSpaceInit& aColorSpace)
-      : mImage(aImage),
-        mFormat(aFormat),
-        mVisibleRect(aVisibleRect),
-        mDisplaySize(aDisplaySize),
-        mDuration(aDuration),
-        mTimestamp(aTimestamp),
-        mColorSpace(aColorSpace) {}
-
-  RefPtr<layers::Image> mImage;
-  VideoFrame::Format mFormat;
-  const gfx::IntRect mVisibleRect;
-  const gfx::IntSize mDisplaySize;
-  const Maybe<uint64_t> mDuration;
-  const int64_t mTimestamp;
-  const VideoColorSpaceInit mColorSpace;
-};
 static Result<already_AddRefed<VideoFrame>, nsCString>
-InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
+InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal,
+                              VideoFrame::FrameData&& aData,
                               const VideoFrameInit& aInit) {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aData.mImage);
@@ -1453,9 +1433,9 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   // TODO: Retrive/infer the duration, and colorspace.
   auto r = InitializeFrameFromOtherFrame(
       global.get(),
-      VideoFrameData(image.get(), format.ref(), image->GetPictureRect(),
-                     image->GetSize(), Nothing(),
-                     static_cast<int64_t>(aVideoElement.CurrentTime()), {}),
+      FrameData(image.get(), format.ref(), image->GetPictureRect(),
+                image->GetSize(), Nothing(),
+                static_cast<int64_t>(aVideoElement.CurrentTime()), {}),
       aInit);
   if (r.isErr()) {
     aRv.ThrowTypeError(r.unwrapErr());
@@ -1591,11 +1571,11 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 
   auto r = InitializeFrameFromOtherFrame(
       global.get(),
-      VideoFrameData(aVideoFrame.mResource->mImage.get(),
-                     aVideoFrame.mResource->mFormat.PixelFormat(),
-                     aVideoFrame.mVisibleRect, aVideoFrame.mDisplaySize,
-                     aVideoFrame.mDuration, aVideoFrame.mTimestamp,
-                     aVideoFrame.mColorSpace),
+      FrameData(aVideoFrame.mResource->mImage.get(),
+                aVideoFrame.mResource->mFormat.PixelFormat(),
+                aVideoFrame.mVisibleRect, aVideoFrame.mDisplaySize,
+                aVideoFrame.mDuration, aVideoFrame.mTimestamp,
+                aVideoFrame.mColorSpace),
       aInit);
   if (r.isErr()) {
     aRv.ThrowTypeError(r.unwrapErr());
@@ -2016,6 +1996,36 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
       NS_WARN_IF(!JS_WriteBytes(aWriter, &colorSpaceMatrix, 1)) ||
       NS_WARN_IF(!JS_WriteBytes(aWriter, &colorSpacePrimaries, 1)) ||
       NS_WARN_IF(!JS_WriteBytes(aWriter, &colorSpaceTransfer, 1)));
+}
+
+// https://w3c.github.io/webcodecs/#ref-for-transfer-steps%E2%91%A0
+UniquePtr<VideoFrame::TransferredData> VideoFrame::Transfer() {
+  AssertIsOnOwningThread();
+
+  // TODO: Throw error if this is _detached_ instead of checking resource (bug
+  // 1774306).
+  if (!mResource) {
+    return nullptr;
+  }
+
+  Resource r = mResource.extract();
+  auto frame = MakeUnique<TransferredData>(
+      r.mImage.get(), r.mFormat.PixelFormat(), mVisibleRect, mDisplaySize,
+      mDuration, mTimestamp, mColorSpace);
+  Close();
+  return frame;
+}
+
+// https://w3c.github.io/webcodecs/#ref-for-transfer-receiving-steps%E2%91%A0
+/* static */
+already_AddRefed<VideoFrame> VideoFrame::FromTransferred(
+    nsIGlobalObject* aGlobal, TransferredData* aData) {
+  MOZ_ASSERT(aData);
+
+  return MakeAndAddRef<VideoFrame>(
+      aGlobal, aData->mImage, aData->mFormat.PixelFormat(),
+      aData->mImage->GetSize(), aData->mVisibleRect, aData->mDisplaySize,
+      aData->mDuration.take(), aData->mTimestamp, aData->mColorSpace);
 }
 
 /*
