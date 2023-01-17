@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-01-17T13:18:28.941669'
+updated_at: '2023-01-17T15:01:58.068250'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3276,6 +3276,7 @@ modules:
         owners:
           - *Gijs
         peers:
+          - *mconley
           - *mak
           - *MattN
         machine_name: profile_migration
@@ -3718,5 +3719,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: e0eb0dc58ddc304bb266a64c8361471a6466712b
-  export: 5dd737fd64251e5a36c47b976f422da743c270f1
+  config: 15f783a421d59e86d1ef47ee601582a8b8e4ba2f
+  export: d4fdff8491abb261146c90aab4ae653544790be2
