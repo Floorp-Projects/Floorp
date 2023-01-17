@@ -92,10 +92,6 @@ make_add_instruction() {
 check_for_add_if_not_update() {
   add_if_not_file_chk="$1"
 
-  # XXX unconditional add-if for channel-prefs.js to fix mac signature on old installs (bug 1804303)
-  if [ "$add_if_not_file_chk" = "Contents/Resources/defaults/pref/channel-prefs.js" ]; then
-    return 1
-  fi
   if [ `basename $add_if_not_file_chk` = "channel-prefs.js" -o \
        `basename $add_if_not_file_chk` = "update-settings.ini" ]; then
     ## "true" *giggle*
