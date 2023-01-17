@@ -84,15 +84,14 @@ something like this code to the file:
 ## Analyzing GC and CC logs
 
 There are numerous scripts that analyze GC and CC logs on
-[GitHub](https://github.com/amccreight/heapgraph/tree/master/cc)
+[GitHub](https://github.com/amccreight/heapgraph/)
 
 
-To find out why an object is being kept alive, the relevant scripts are
-`find_roots.py` and `parse_cc_graph.py` (which is called by
-`find_roots.py`). Calling `find_roots.py` on a CC log with a specific
-object or kind of object will produce paths from rooting objects to the
-specified objects. Most big leaks include an `nsGlobalWindow`, so
-that's a good class to try if you don't have any better idea.
+To find out why an object is being kept alive, you should use `find_roots.py`
+in the root of the github repository. Calling `find_roots.py` on a CC log
+with a specific object or kind of object will produce paths from rooting
+objects to the specified objects. Most big leaks include an `nsGlobalWindow`,
+so that's a good class to try if you don't have any better idea.
 
 To fix a leak, the next step is to figure out why the rooting object is
 alive. For a C++ object, you need to figure out where the missing
@@ -108,5 +107,3 @@ There are two add-ons that can be used to create and analyze CC graphs.
 
 -   [about:cc](https://bugzilla.mozilla.org/show_bug.cgi?id=726346)
     is simple, ugly, but rather powerful.
--   [about:ccdump](https://addons.mozilla.org/en-US/firefox/addon/cycle-collector-analyzer/?src=ss)
-    is prettier but a bit slower.
