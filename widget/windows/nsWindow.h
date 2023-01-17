@@ -785,13 +785,6 @@ class nsWindow final : public nsBaseWidget {
   HWND mLastKillFocusWindow = nullptr;
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate = nullptr;
 
-  LayoutDeviceIntMargin NonClientSizeMargin() const {
-    return NonClientSizeMargin(mNonClientOffset);
-  }
-  LayoutDeviceIntMargin NonClientSizeMargin(
-      const LayoutDeviceIntMargin& aNonClientOffset) const;
-  LayoutDeviceIntMargin NormalWindowNonClientOffset() const;
-
   // Non-client margin settings
   // Pre-calculated outward offset applied to default frames
   LayoutDeviceIntMargin mNonClientOffset;
