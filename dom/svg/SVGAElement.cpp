@@ -31,10 +31,6 @@ SVGElement::StringInfo SVGAElement::sStringInfo[3] = {
     {nsGkAtoms::href, kNameSpaceID_XLink, true},
     {nsGkAtoms::target, kNameSpaceID_None, true}};
 
-// static
-const DOMTokenListSupportedToken SVGAElement::sSupportedRelValues[] = {
-    "noreferrer", "noopener", nullptr};
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
