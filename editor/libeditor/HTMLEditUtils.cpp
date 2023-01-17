@@ -106,6 +106,15 @@ template EditorRawDOMPoint HTMLEditUtils::GetBetterInsertionPointFor(
     const nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     const Element& aEditingHost);
 
+template EditorDOMPoint HTMLEditUtils::GetBetterCaretPositionToInsertText(
+    const EditorDOMPoint& aPoint, const Element& aEditingHost);
+template EditorDOMPoint HTMLEditUtils::GetBetterCaretPositionToInsertText(
+    const EditorRawDOMPoint& aPoint, const Element& aEditingHost);
+template EditorRawDOMPoint HTMLEditUtils::GetBetterCaretPositionToInsertText(
+    const EditorDOMPoint& aPoint, const Element& aEditingHost);
+template EditorRawDOMPoint HTMLEditUtils::GetBetterCaretPositionToInsertText(
+    const EditorRawDOMPoint& aPoint, const Element& aEditingHost);
+
 template Result<EditorDOMPoint, nsresult>
 HTMLEditUtils::ComputePointToPutCaretInElementIfOutside(
     const Element& aElement, const EditorDOMPoint& aCurrentPoint);
@@ -2034,7 +2043,44 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
       .template PointAfterContent<EditorDOMPointType>();
 }
 
-//  static
+// static
+template <typename EditorDOMPointType, typename EditorDOMPointTypeInput>
+EditorDOMPointType HTMLEditUtils::GetBetterCaretPositionToInsertText(
+    const EditorDOMPointTypeInput& aPoint, const Element& aEditingHost) {
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+  MOZ_ASSERT(
+      aPoint.GetContainer()->IsInclusiveFlatTreeDescendantOf(&aEditingHost));
+
+  if (aPoint.IsInTextNode()) {
+    return aPoint.template To<EditorDOMPointType>();
+  }
+  if (!aPoint.IsEndOfContainer() && aPoint.GetChild() &&
+      aPoint.GetChild()->IsText()) {
+    return EditorDOMPointType(aPoint.GetChild(), 0u);
+  }
+  if (aPoint.IsEndOfContainer()) {
+    WSRunScanner scanner(&aEditingHost, aPoint);
+    WSScanResult previousThing =
+        scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
+    if (previousThing.InVisibleOrCollapsibleCharacters()) {
+      return EditorDOMPointType::AtEndOf(*previousThing.TextPtr());
+    }
+  }
+  if (HTMLEditUtils::CanNodeContain(*aPoint.GetContainer(),
+                                    *nsGkAtoms::textTagName)) {
+    return aPoint.template To<EditorDOMPointType>();
+  }
+  if (MOZ_UNLIKELY(aPoint.GetContainer() == &aEditingHost ||
+                   !aPoint.template GetContainerParentAs<nsIContent>() ||
+                   !HTMLEditUtils::CanNodeContain(
+                       *aPoint.template ContainerParentAs<nsIContent>(),
+                       *nsGkAtoms::textTagName))) {
+    return EditorDOMPointType();
+  }
+  return aPoint.ParentPoint().template To<EditorDOMPointType>();
+}
+
+// static
 template <typename EditorDOMPointType, typename EditorDOMPointTypeInput>
 Result<EditorDOMPointType, nsresult>
 HTMLEditUtils::ComputePointToPutCaretInElementIfOutside(
