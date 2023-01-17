@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1.0">
+<title>
+  Tests that the overscroll gutter in a sub scroll container is restored if it's
+  no longer target scroll container
+</title>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+  html {
+    overflow: scroll;
+  }
+
+  .content {
+    height: 500px;
+    width: 300px;
+    overflow-y: scroll;
+    background-color: red;
+  }
+</style>
+<!-- a sub scroll container -->
+<div class="content">
+  <div style="height:100vh; background-color: white;"></div>
+</div>
+<div style="height:200vh"></div>
+<script>
+  document.documentElement.addEventListener(
+    "wheel",
+    e => {
+      if (!e.target.closest(`div[class="content"]`)) {
+        e.preventDefault();
+      }
+    },
+    {
+      passive: false,
+    }
+  );
+
+  const subScroller = document.querySelector(`div[class="content"]`);
+  // Make the sub scroll container overscrollable at the top edge.
+  // A `waitUntilApzStable()` call below ensures that this scroll position
+  // has been informed into APZ before starting this test.
+  subScroller.scrollTop = 1;
+
+  // A utility function to collect overscrolled scroll container information.
+  function collectOverscrolledData() {
+    const apzData = SpecialPowers.DOMWindowUtils.getCompositorAPZTestData().additionalData;
+    return apzData.filter(data => {
+      return SpecialPowers.wrap(data).value.split(",").includes("overscrolled");
+    });
+  }
+
+  async function test() {
+    const oneScrollPromise = new Promise(resolve => {
+      subScroller.addEventListener("scroll", () => {
+        resolve();
+      }, { once: true });
+    });
+
+    // Start a pan upward gesture to try oversrolling on the sub scroll
+    // container.
+    await NativePanHandler.promiseNativePanEvent(
+      subScroller,
+      100,
+      100,
+      0,
+      -NativePanHandler.delta,
+      NativePanHandler.beginPhase
+    );
+
+    const rootScrollId =
+      SpecialPowers.DOMWindowUtils.getViewId(document.scrollingElement);
+    const subScrollId =
+      SpecialPowers.DOMWindowUtils.getViewId(subScroller);
+
+    await promiseApzFlushedRepaints();
+    await oneScrollPromise;
+
+    let overscrolledData = collectOverscrolledData();
+    ok(overscrolledData.length >= 1,
+       "There should be at least one overscrolled scroll container");
+    ok(overscrolledData.every(data => SpecialPowers.wrap(data).key == subScrollId),
+       "The overscrolled scroll container should be the sub scroll container");
+
+    let twoScrollEndPromise = new Promise(resolve => {
+      let count = 0;
+      subScroller.addEventListener("scrollend", () => {
+        count++;
+        ok(count <= 2, "There should never be more than two scrollend events");
+        if (count == 2) {
+          resolve();
+        }
+      });
+    });
+
+    // Finish the pan upward gesture.
+    await NativePanHandler.promiseNativePanEvent(
+      subScroller,
+      100,
+      100,
+      0,
+      0,
+      NativePanHandler.endPhase
+    );
+
+    await promiseApzFlushedRepaints();
+
+    // Now do another pan upward gesture again.
+    await NativePanHandler.promiseNativePanEvent(
+      subScroller,
+      100,
+      100,
+      0,
+      -NativePanHandler.delta,
+      NativePanHandler.beginPhase
+    );
+
+    // Wait two `apz-repaints-flushed`s to give a chance to overscroll the root
+    // scroll container.
+    await promiseApzFlushedRepaints();
+    await promiseApzFlushedRepaints();
+
+    overscrolledData = collectOverscrolledData();
+    ok(overscrolledData.length >= 2,
+       "There should be at least two overscrolled scroll containers");
+    ok(overscrolledData.some(data => SpecialPowers.wrap(data).key == rootScrollId),
+       "The root scroll container should be overscrolled");
+    ok(overscrolledData.some(data => SpecialPowers.wrap(data).key == subScrollId),
+       "The sub scroll container should also be overscrolled");
+
+    // While the root scroll container is still being overscrolled because the
+    // new pan gesture is still on-going, the sub scroll container should be
+    // restored.
+    // Note that this test relies on the fact that two scrollend events get
+    // fired when overscrolling happens, one gets fired when the scroll position
+    // reached to the edge of the scrollport (i.e. just about to start
+    // overscrolling), the other one gets fired when overscrolling ends.
+    await twoScrollEndPromise;
+    info("Got two scroll end events on the sub scroll container");
+
+    await promiseApzFlushedRepaints();
+
+    overscrolledData = collectOverscrolledData();
+    ok(overscrolledData.length >= 1,
+       "There should be at least one overscrolled scroll container");
+    ok(overscrolledData.every(data => SpecialPowers.wrap(data).key == rootScrollId),
+       "The root scroll container should still be overscrolled");
+
+    // Finish the pan upward gesture.
+    await NativePanHandler.promiseNativePanEvent(
+      subScroller,
+      100,
+      100,
+      0,
+      0,
+      NativePanHandler.endPhase
+    );
+  }
+
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+</script>

@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for overscroll</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var prefs = [
+  ["apz.overscroll.enabled", true],
+  ["apz.overscroll.test_async_scroll_offset.enabled", true],
+  ["apz.test.logging_enabled", true],
+];
+
+var subtests = [
+  {"file": "helper_overscroll_in_subscroller.html",
+   "prefs": [ ...prefs,
+              ["apz.overscroll.damping", 10.0] /* Make overscroll animations slower */ ] },
+];
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>
