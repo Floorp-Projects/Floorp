@@ -25,7 +25,8 @@ class JSValidatorParent final : public PJSValidatorParent {
   static already_AddRefed<JSValidatorParent> Create();
 
   void IsOpaqueResponseAllowed(
-      const std::function<void(bool, Maybe<mozilla::ipc::Shmem>)>& aCallback);
+      const std::function<void(Maybe<mozilla::ipc::Shmem>, ValidatorResult)>&
+          aCallback);
 
   void OnDataAvailable(const nsACString& aData);
 

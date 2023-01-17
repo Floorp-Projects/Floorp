@@ -8,7 +8,8 @@
 #ifndef mozilla_net_OpaqueResponseUtils_h
 #define mozilla_net_OpaqueResponseUtils_h
 
-#include "mozilla/dom/JSValidatorParent.h"
+#include "ipc/EnumSerializer.h"
+#include "mozilla/TimeStamp.h"
 #include "nsIContentPolicy.h"
 #include "nsIStreamListener.h"
 #include "nsUnknownDecoder.h"
@@ -24,6 +25,14 @@
 
 class nsIContentSniffer;
 static mozilla::LazyLogModule gORBLog("ORB");
+
+namespace mozilla::dom {
+class JSValidatorParent;
+}
+
+namespace mozilla::ipc {
+class Shmem;
+}
 
 namespace mozilla::net {
 
@@ -70,6 +79,14 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
 
   nsresult EnsureOpaqueResponseIsAllowedAfterSniff(nsIRequest* aRequest);
 
+  // The four possible results for validation. `JavaScript` and `JSON` are
+  // self-explanatory. `JavaScript` is the only successful result, in the sense
+  // that it will allow the opaque response, whereas `JSON` will block. `Other`
+  // is the case where validation fails, because the response is neither
+  // `JavaScript` nor `JSON`, but the framework itself works as intended.
+  // `Failure` implies that something has gone wrong, such as allocation, etc.
+  enum class ValidatorResult : uint32_t { JavaScript, JSON, Other, Failure };
+
  private:
   virtual ~OpaqueResponseBlocker() = default;
 
@@ -88,6 +105,8 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
 
   State mState = State::Sniffing;
   nsresult mStatus = NS_OK;
+
+  TimeStamp mStartOfJavaScriptValidation;
 
   RefPtr<dom::JSValidatorParent> mJSValidator;
 
@@ -141,5 +160,14 @@ class nsCompressedAudioVideoImageDetector : public nsUnknownDecoder {
   }
 };
 }  // namespace mozilla::net
+
+namespace IPC {
+template <>
+struct ParamTraits<mozilla::net::OpaqueResponseBlocker::ValidatorResult>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::net::OpaqueResponseBlocker::ValidatorResult,
+          mozilla::net::OpaqueResponseBlocker::ValidatorResult::JavaScript,
+          mozilla::net::OpaqueResponseBlocker::ValidatorResult::Failure> {};
+}  // namespace IPC
 
 #endif  // mozilla_net_OpaqueResponseUtils_h
