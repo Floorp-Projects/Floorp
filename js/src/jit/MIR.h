@@ -663,7 +663,7 @@ class MDefinition : public MNode {
   // called on the same instruction to mutate the instruction, such as
   // updating the return type, the range and the specialization of the
   // instruction.
-  virtual bool needTruncation(TruncateKind kind) const;
+  virtual bool needTruncation() const;
   virtual void truncate(TruncateKind kind);
 
   // Determine what kind of truncate this node prefers for the operand at the
@@ -1301,7 +1301,7 @@ class MLimitedTruncate : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
   TruncateKind truncateKind() const { return truncate_; }
@@ -1386,7 +1386,7 @@ class MConstant : public MNullaryInstruction {
   }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
 
   bool canProduceFloat32() const override;
@@ -2811,7 +2811,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
   void trySpecializeFloat32(TempAllocator& alloc) override;
   bool isFloat32Commutative() const override { return true; }
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -3298,7 +3298,7 @@ class MToDouble : public MToFPInstruction {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -5031,7 +5031,7 @@ class MAdd : public MBinaryArithInstruction {
 
   bool fallible() const;
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -5068,7 +5068,7 @@ class MSub : public MBinaryArithInstruction {
 
   bool fallible() const;
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -5161,7 +5161,7 @@ class MMul : public MBinaryArithInstruction {
   bool isFloat32Commutative() const override { return true; }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -5272,7 +5272,7 @@ class MDiv : public MBinaryArithInstruction {
 
   void computeRange(TempAllocator& alloc) override;
   bool fallible() const;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   void collectRangeInfoPreTrunc() override;
   TruncateKind operandTruncateKind(size_t index) const override;
@@ -5451,7 +5451,7 @@ class MMod : public MBinaryArithInstruction {
   bool fallible() const;
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
   void collectRangeInfoPreTrunc() override;
   TruncateKind operandTruncateKind(size_t index) const override;
@@ -6128,7 +6128,7 @@ class MPhi final : public MDefinition,
   void setCanConsumeFloat32(bool can) { canConsumeFloat32_ = can; }
 
   TruncateKind operandTruncateKind(size_t index) const override;
-  bool needTruncation(TruncateKind kind) const override;
+  bool needTruncation() const override;
   void truncate(TruncateKind kind) override;
 
   PhiUsage getUsageAnalysis() const { return usageAnalysis_; }
