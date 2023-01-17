@@ -12,7 +12,6 @@
 #include "mozilla/OriginTrials.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ChannelInfo.h"
-#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/dom/WorkerCommon.h"
 
@@ -62,10 +61,6 @@ struct WorkerLoadInfoData {
 
   // Taken from the parent context.
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
-
-  // The CookieJarSettingsArgs of mCookieJarSettings.
-  // This is specific for accessing on worker thread.
-  net::CookieJarSettingsArgs mCookieJarSettingsArgs;
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;

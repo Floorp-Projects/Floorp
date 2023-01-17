@@ -178,6 +178,10 @@ add_task(async function test_network_markers_service_worker_use() {
     const contentStopMarkers = contentPairs.map(
       ([_, stopMarker]) => stopMarker
     );
+    const serviceWorkerStopMarkers = serviceWorkerPairs.map(
+      ([_, stopMarker]) => stopMarker
+    );
+
     // In this test we have very different results in the various threads, so
     // we'll assert every case separately.
     // A simple function to help constructing better assertions:
@@ -390,7 +394,11 @@ add_task(async function test_network_markers_service_worker_use() {
     // The "1" requests are the initial requests that are intercepted, coming
     // from the web page, while the "2" requests are the requests coming from
     // the service worker.
-    let htmlFetch1, generatedSvgFetch1, firefoxSvgFetch1;
+    let htmlFetch1,
+      htmlFetch2,
+      generatedSvgFetch1,
+      firefoxSvgFetch1,
+      firefoxSvgFetch2;
 
     // First, let's handle the case where the threads are different:
     if (serviceWorkerParentThread !== contentThread) {
@@ -410,6 +418,18 @@ add_task(async function test_network_markers_service_worker_use() {
       );
 
       [htmlFetch1, generatedSvgFetch1, firefoxSvgFetch1] = contentStopMarkers;
+
+      // In the service worker parent thread, we have 2 network markers:
+      // - the HTML file
+      // - the firefox SVG file.
+      // Remember that the generated SVG file is returned directly by the SW.
+      Assert.equal(
+        serviceWorkerStopMarkers.length,
+        2,
+        "There should be 2 stop markers in the service worker thread."
+      );
+
+      [htmlFetch2, firefoxSvgFetch2] = serviceWorkerStopMarkers;
     } else {
       // Else case: the service worker parent thread IS the content thread
       // (note: this is always the case with fission). In that case all network
@@ -428,9 +448,11 @@ add_task(async function test_network_markers_service_worker_use() {
         // everything happens first in the main process, possibly before a
         // content process even exists, and the content process is merely
         // notified at the end.
+        htmlFetch2,
         htmlFetch1,
         generatedSvgFetch1,
         firefoxSvgFetch1,
+        firefoxSvgFetch2,
       ] = contentStopMarkers;
     }
 
@@ -477,6 +499,59 @@ add_task(async function test_network_markers_service_worker_use() {
         id: Expect.number(),
         pri: Expect.number(),
         innerWindowID: Expect.number(),
+      }),
+    });
+
+    // Now let's test the markers coming from the service worker.
+    Assert.objectContains(htmlFetch2, {
+      name: Expect.stringMatches(/Load \d+:.*serviceworker_simple.html/),
+      data: Expect.objectContainsOnly({
+        type: "Network",
+        status: "STATUS_STOP",
+        URI: fullUrl("serviceworker_simple.html"),
+        requestMethod: "GET",
+        contentType: "text/html",
+        startTime: Expect.number(),
+        endTime: Expect.number(),
+        domainLookupStart: Expect.number(),
+        domainLookupEnd: Expect.number(),
+        connectStart: Expect.number(),
+        tcpConnectEnd: Expect.number(),
+        connectEnd: Expect.number(),
+        requestStart: Expect.number(),
+        responseStart: Expect.number(),
+        responseEnd: Expect.number(),
+        id: Expect.number(),
+        count: Expect.number(),
+        pri: Expect.number(),
+        // Note: no innerWindowID here, is that a bug?
+        // Note: no cache either, this is bug 1544821.
+      }),
+    });
+
+    Assert.objectContains(firefoxSvgFetch2, {
+      name: Expect.stringMatches(/Load \d+:.*firefox-logo-nightly.svg/),
+      data: Expect.objectContainsOnly({
+        type: "Network",
+        status: "STATUS_STOP",
+        URI: fullUrl("firefox-logo-nightly.svg"),
+        requestMethod: "GET",
+        contentType: "image/svg+xml",
+        startTime: Expect.number(),
+        endTime: Expect.number(),
+        domainLookupStart: Expect.number(),
+        domainLookupEnd: Expect.number(),
+        connectStart: Expect.number(),
+        tcpConnectEnd: Expect.number(),
+        connectEnd: Expect.number(),
+        requestStart: Expect.number(),
+        responseStart: Expect.number(),
+        responseEnd: Expect.number(),
+        id: Expect.number(),
+        count: Expect.number(),
+        pri: Expect.number(),
+        // Note: no innerWindowID here, is that a bug?
+        // Note: no cache either, this is bug 1544821.
       }),
     });
   });

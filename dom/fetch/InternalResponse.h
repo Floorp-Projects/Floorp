@@ -57,9 +57,6 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   ParentToParentInternalResponse ToParentToParentInternalResponse();
 
-  ParentToChildInternalResponse ToParentToChildInternalResponse(
-      NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent);
-
   enum CloneType {
     eCloneInputStream,
     eDontCloneInputStream,
@@ -311,9 +308,6 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   bool HasBeenCloned() const { return mCloned; }
 
-  void SetSerializeAsLazy(bool aAllow) { mSerializeAsLazy = aAllow; }
-  bool CanSerializeAsLazy() const { return mSerializeAsLazy; }
-
   void InitChannelInfo(nsIChannel* aChannel) {
     mChannelInfo.InitFromChannel(aChannel);
   }
@@ -343,15 +337,6 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   SafeRefPtr<InternalResponse> Unfiltered();
 
-  InternalResponseMetadata GetMetadata();
-
-  RequestCredentials GetCredentialsMode() const {
-    if (mWrappedResponse) {
-      return mWrappedResponse->GetCredentialsMode();
-    }
-    return mCredentialsMode;
-  }
-
   ~InternalResponse();
 
  private:
@@ -365,6 +350,8 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   template <typename T>
   static SafeRefPtr<InternalResponse> FromIPCTemplate(const T& aIPCResponse);
+
+  InternalResponseMetadata GetMetadata();
 
   ResponseType mType;
   // A response has an associated url list (a list of zero or more fetch URLs).
@@ -390,7 +377,6 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   nsCOMPtr<nsIInputStream> mAlternativeBody;
   nsMainThreadPtrHandle<nsICacheInfoChannel> mCacheInfoChannel;
   bool mCloned;
-  bool mSerializeAsLazy{true};
 
  public:
   static constexpr int64_t UNKNOWN_BODY_SIZE = -1;
