@@ -12,6 +12,7 @@ import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.DISABLED
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.StorageController
 
@@ -81,16 +82,27 @@ class GeckoCookieBannersStorage(
     }
 
     @VisibleForTesting
+    @Suppress("TooGenericExceptionCaught")
     internal suspend fun queryExceptionInGecko(
         uri: String,
         privateBrowsing: Boolean,
     ): CookieBannerHandlingMode {
-        return withContext(mainScope.coroutineContext) {
-            geckoStorage.getCookieBannerModeForDomain(uri, privateBrowsing).await()
-                ?.toCookieBannerHandlingMode() ?: throw IllegalArgumentException(
-                "An error happened trying to find cookie banners mode for the " +
-                    "uri $uri and private browsing mode $privateBrowsing",
-            )
+        return try {
+            withContext(mainScope.coroutineContext) {
+                geckoStorage.getCookieBannerModeForDomain(uri, privateBrowsing).await()
+                    ?.toCookieBannerHandlingMode() ?: throw IllegalArgumentException(
+                    "An error happened trying to find cookie banners mode for the " +
+                        "uri $uri and private browsing mode $privateBrowsing",
+                )
+            }
+        } catch (e: Exception) {
+            if ((e.message ?: "").contains("NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS")) {
+                // This normally happen on internal sites like about:config
+                Logger("GeckoCookieBannersStorage").error("Unable to query cookie banners exception", e)
+                DISABLED
+            } else {
+                throw e
+            }
         }
     }
 }
