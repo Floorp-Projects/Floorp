@@ -10,6 +10,7 @@
 #include "HashStore.h"
 #include "ProtocolParser.h"
 #include "LookupCache.h"
+#include "mozilla/Atomics.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIFile.h"
@@ -239,7 +240,7 @@ class Classifier {
   bool mUpdateInterrupted;
 
   // True once CLose() has been called
-  bool mIsClosed;
+  Atomic<bool> mIsClosed;
 
   nsCOMPtr<nsIThread> mUpdateThread;  // For async update.
 
