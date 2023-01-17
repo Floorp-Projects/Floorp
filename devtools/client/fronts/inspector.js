@@ -58,22 +58,19 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     // to watch for them before instanciating the pageStyle actor (which does use the
     // watcher and assume we're already watching for stylesheets).
     const { resourceCommand } = this.targetFront.commands;
-    if (
-      resourceCommand?.hasResourceCommandSupport(
-        resourceCommand.TYPES.STYLESHEET
-      )
-    ) {
-      // Store `resourceCommand` on the inspector front as we need it later, and we might not be able to retrieve it from
-      // the targetFront as its resourceCommand property is nullified by ResourceCommand.onTargetDestroyed.
-      this.resourceCommand = resourceCommand;
-      await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
-        // we simply want to start the watcher, we don't have to do anything with those resources.
-        onAvailable: this.noopStylesheetListener,
-      });
-      // Bail out if the inspector is closed while watchResources was pending
-      if (this.isDestroyed()) {
-        return null;
-      }
+
+    // Store `resourceCommand` on the inspector front as we need it later, and we might not be able to retrieve it from
+    // the targetFront as its resourceCommand property is nullified by ResourceCommand.onTargetDestroyed.
+    this.resourceCommand = resourceCommand;
+
+    await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
+      // we simply want to start the watcher, we don't have to do anything with those resources.
+      onAvailable: this.noopStylesheetListener,
+    });
+
+    // Bail out if the inspector is closed while watchResources was pending
+    if (this.isDestroyed()) {
+      return null;
     }
 
     this.initialized = await Promise.all([
@@ -120,15 +117,12 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     }
     this._compatibility = null;
 
-    // We might not have started watching for STYLESHEET if the debugged context
-    // doesn't support the watcher codepath
-    if (this.resourceCommand) {
-      const { resourceCommand } = this;
-      resourceCommand.unwatchResources([resourceCommand.TYPES.STYLESHEET], {
-        onAvailable: this.noopStylesheetListener,
-      });
-      this.resourceCommand = null;
-    }
+    const { resourceCommand } = this;
+    resourceCommand.unwatchResources([resourceCommand.TYPES.STYLESHEET], {
+      onAvailable: this.noopStylesheetListener,
+    });
+    this.resourceCommand = null;
+
     this.walker = null;
 
     // CustomHighlighter fronts are managed by InspectorFront and so will be
