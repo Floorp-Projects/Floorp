@@ -65,14 +65,6 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
   // channel.
   void NotifyStop(nsresult aStatus);
 
-  // Called when this currently existing load has to be asynchronously
-  // revalidated before it can be used.  This prevents link preload DOM nodes
-  // being notified until the validation is resolved.
-  void NotifyValidating();
-  // Called when the validation process has been done.  This will notify
-  // associated link DOM nodes.
-  void NotifyValidated(nsresult aStatus);
-
   // Called by resource loaders or any suitable component to notify the preload
   // has been used for an actual load.  This is intended to stop any usage
   // timers.
