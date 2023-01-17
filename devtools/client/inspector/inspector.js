@@ -485,40 +485,26 @@ Inspector.prototype = {
     return this._highlighters;
   },
 
+  get _3PanePrefName() {
+    // All other contexts: webextension and browser toolbox
+    // are considered as "chrome"
+    return this.commands.descriptorFront.isTabDescriptor
+      ? THREE_PANE_ENABLED_PREF
+      : THREE_PANE_CHROME_ENABLED_PREF;
+  },
+
   get is3PaneModeEnabled() {
-    if (this.currentTarget.chrome) {
-      if (!this._is3PaneModeChromeEnabled) {
-        this._is3PaneModeChromeEnabled = Services.prefs.getBoolPref(
-          THREE_PANE_CHROME_ENABLED_PREF
-        );
-      }
-
-      return this._is3PaneModeChromeEnabled;
-    }
-
     if (!this._is3PaneModeEnabled) {
       this._is3PaneModeEnabled = Services.prefs.getBoolPref(
-        THREE_PANE_ENABLED_PREF
+        this._3PanePrefName
       );
     }
-
     return this._is3PaneModeEnabled;
   },
 
   set is3PaneModeEnabled(value) {
-    if (this.currentTarget.chrome) {
-      this._is3PaneModeChromeEnabled = value;
-      Services.prefs.setBoolPref(
-        THREE_PANE_CHROME_ENABLED_PREF,
-        this._is3PaneModeChromeEnabled
-      );
-    } else {
-      this._is3PaneModeEnabled = value;
-      Services.prefs.setBoolPref(
-        THREE_PANE_ENABLED_PREF,
-        this._is3PaneModeEnabled
-      );
-    }
+    this._is3PaneModeEnabled = value;
+    Services.prefs.setBoolPref(this._3PanePrefName, this._is3PaneModeEnabled);
   },
 
   get search() {
@@ -1765,7 +1751,6 @@ Inspector.prototype = {
     // any object (bug 1729925)
     this.splitBox = null;
 
-    this._is3PaneModeChromeEnabled = null;
     this._is3PaneModeEnabled = null;
     this._markupBox = null;
     this._markupFrame = null;
