@@ -129,6 +129,8 @@ class VideoFramePool<LIBAV_VER> {
   // We may fail to create texture over DMABuf memory due to driver bugs so
   // check that before we export first DMABuf video frame.
   Maybe<bool> mTextureCreationWorks;
+  // Copy decoded dmabuf surfaces so we can return them to ffmpeg immediately.
+  const bool mSurfaceCopy;
 };
 
 }  // namespace mozilla
