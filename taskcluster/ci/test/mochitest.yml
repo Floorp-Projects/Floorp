@@ -651,8 +651,14 @@ mochitest-media:
                 windows10-64-2004.*: false
                 default: true
         extra-options:
-            - --setpref=webgl.out-of-process=false
-            - --setpref=security.sandbox.content.headless=false
+            by-test-platform:
+                android-em-7.*:
+                    - --setpref=webgl.out-of-process=false
+                    - --setpref=security.sandbox.content.headless=false
+                    - --setpref=gfx.canvas.accelerated=false
+                default:
+                    - --setpref=webgl.out-of-process=false
+                    - --setpref=security.sandbox.content.headless=false
     tier:
         by-test-platform:
             .*ccov.*: 2
