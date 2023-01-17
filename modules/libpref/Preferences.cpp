@@ -6037,7 +6037,6 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("browser.newtabpage.activity-stream.discoverystream."),
     PREF_LIST_ENTRY("browser.sessionstore.upgradeBackup.latestBuildID"),
     PREF_LIST_ENTRY("browser.shell.mostRecentDateSetAsDefault"),
-    PREF_LIST_ENTRY("fission.experiment.max-origins.last-"),
     PREF_LIST_ENTRY("idle.lastDailyNotification"),
     PREF_LIST_ENTRY("media.gmp-gmpopenh264.lastUpdate"),
     PREF_LIST_ENTRY("media.gmp-manager.lastCheck"),

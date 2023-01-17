@@ -4980,18 +4980,6 @@
   value: @IS_NOT_ANDROID@
   mirror: never
 
-# Prefs used by normandy to orchestrate the fission experiment. For more
-# details, see the comments in nsAppRunner.cpp.
-- name: fission.experiment.enrollmentStatus
-  type: uint32_t
-  value: 0
-  mirror: never
-
-- name: fission.experiment.startupEnrollmentStatus
-  type: uint32_t
-  value: 0
-  mirror: never
-
 # This pref has no effect within fission windows, it only controls the
 # behaviour within non-fission windows. If true, preserve browsing contexts
 # between process swaps.

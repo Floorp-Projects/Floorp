@@ -47,7 +47,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [profileRestartCount](#profilerestartcount)
 * [homePageSettings](#homepagesettings)
 * [newtabSettings](#newtabsettings)
-* [isFissionExperimentEnabled](#isfissionexperimentenabled)
 * [activeNotifications](#activenotifications)
 * [isMajorUpgrade](#ismajorupgrade)
 * [hasActiveEnterprisePolicies](#hasactiveenterprisepolicies)
@@ -821,10 +820,6 @@ Object {
   host: "",
 }
 ```
-
-### `isFissionExperimentEnabled`
-
-A boolean. `true` if we're running Fission experiment, `false` otherwise.
 
 ### `activeNotifications`
 

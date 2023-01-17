@@ -686,12 +686,6 @@ const TargetingGetters = {
       host: urls[0].host,
     };
   },
-  get isFissionExperimentEnabled() {
-    return (
-      Services.appinfo.fissionExperimentStatus ===
-      Ci.nsIXULRuntime.eExperimentStatusTreatment
-    );
-  },
   get activeNotifications() {
     let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
       Ci.nsIBackgroundTasks

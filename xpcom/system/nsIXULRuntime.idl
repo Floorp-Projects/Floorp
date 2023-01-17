@@ -155,17 +155,6 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean fissionAutostart;
 
   /**
-   * The user's enrollment status in the Fission experiment at process startup.
-   * See `ExperimentStatus` for the potential values.
-   *
-   * Only available in the parent process.
-   *
-   * This value is guaranteed to remain constant for the length of a browser
-   * session.
-   */
-  readonly attribute nsIXULRuntime_ExperimentStatus fissionExperimentStatus;
-
-  /**
    * The deciding factor which caused Fission to be enabled or disabled in
    * this session. The string version is the same of the name of the constant,
    * without the leading `eFission`, and with an initial lower-case letter.
