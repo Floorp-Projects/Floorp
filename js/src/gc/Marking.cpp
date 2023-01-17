@@ -1719,7 +1719,7 @@ bool MarkStack::hasEntries(MarkColor color) const {
   return color == MarkColor::Black ? hasBlackEntries() : hasGrayEntries();
 }
 
-MOZ_ALWAYS_INLINE bool MarkStack::hasStealableWork() const {
+bool MarkStack::hasStealableWork() const {
   // Always leave ourselves with at least one stack entry.
   return wordCountForCurrentColor() > ValueRangeWords;
 }
@@ -1731,7 +1731,7 @@ void MarkStack::stealWorkFrom(MarkStack& other) {
 
   MOZ_ASSERT(markColor() == other.markColor());
   MOZ_ASSERT(!hasEntries(markColor()));
-  MOZ_ASSERT(other.hasEntries(markColor()));
+  MOZ_ASSERT(other.hasStealableWork());
 
   size_t base = other.basePositionForCurrentColor();
   size_t totalWords = other.position() - base;
