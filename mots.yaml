@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-12-19T13:47:32.916417'
+updated_at: '2023-01-17T13:18:28.941669'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -39,9 +39,6 @@ people:
     bmo_id: 382067
     name: Andrew Halberstadt
     nick: ahal
-  - bmo_id: 329611
-    name: Aki Sasaki
-    nick: aki
   - &allstarschh
     bmo_id: 434670
     name: Yoshi Cheng-Hao Huang
@@ -317,7 +314,7 @@ people:
     nick: erahm
   - &evilpie
     bmo_id: 393835
-    name: Tom Schuster
+    name: Tom S
     nick: evilpie
   - &farre
     bmo_id: 566192
@@ -442,7 +439,7 @@ people:
     nick: jgraham
   - &jhirsch
     bmo_id: 446735
-    name: ''
+    name: Jared Hirsch
     nick: jhirsch
   - &jhlin
     bmo_id: 463180
@@ -766,6 +763,10 @@ people:
     bmo_id: 443354
     name: ''
     nick: scaraveo
+  - &sclements
+    bmo_id: 603840
+    name: Sarah Clements
+    nick: sclements
   - &serg
     bmo_id: 691597
     name: Sergey Galich
@@ -3128,6 +3129,17 @@ modules:
           - *emcminn
         machine_name: normandy
 
+      - machine_name: firefox_view
+        name: Firefox View
+        description: The Firefox View page and its modules.
+        includes:
+          - browser/components/firefoxview/**/*
+        excludes: []
+        owners:
+          - *sclements
+        peers:
+          - *sfoster
+        meta:
       - name: Form Autofill
         description: Form detection and autocomplete.
         includes:
@@ -3706,5 +3718,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 2e6a207c15f7ebd3e3f264737394d799da175f89
-  export: bf7d0718b73a89e66c3b54a155eac7f41c31cf19
+  config: e0eb0dc58ddc304bb266a64c8361471a6466712b
+  export: 5dd737fd64251e5a36c47b976f422da743c270f1
