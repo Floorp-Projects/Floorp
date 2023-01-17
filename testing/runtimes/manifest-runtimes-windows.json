@@ -104,7 +104,8 @@
     "dom/media/autoplay/test/browser.ini": 0.0,
     "dom/media/doctor/test/browser.ini": 0.0,
     "dom/media/mediacontrol/tests/browser.ini": 30.2,
-    "dom/media/mediasession/test/browser.ini": 2.37
+    "dom/media/mediasession/test/browser.ini": 2.37,
+    "dom/media/test/browser/wmfme/browser.ini": 0.0
   },
   "mochitest-browser-chrome": {
     "browser/base/content/test/about/browser.ini": 93.84,

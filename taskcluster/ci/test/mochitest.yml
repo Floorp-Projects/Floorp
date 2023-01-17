@@ -301,10 +301,19 @@ mochitest-browser-media:
     treeherder-symbol: M(mda-bc)
     schedules-component: mochitest-browser-media
     loopback-video: true
+    test-manifest-loader: null
+    variants: ["wmf-media-engine"]
     run-on-projects:
-        by-test-platform:
-            android.*: []
-            default: built-projects
+        by-variant:
+            wmf-media-engine:
+                by-test-platform:
+                    .*asan.*: []
+                    windows10-64-2004.*: ['autoland', 'mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    android.*: []
+                    default: built-projects
     tier: default
     max-run-time:
         by-test-platform:
