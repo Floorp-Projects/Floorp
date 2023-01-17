@@ -1,4 +1,11 @@
 class FfiConverterString extends FfiConverter {
+    static checkType(value) {
+        super.checkType(value);
+        if (typeof value !== "string") {
+            throw new UniFFITypeError(`${value} is not a string`);
+        }
+    }
+
     static lift(buf) {
         const decoder = new TextDecoder();
         const utf8Arr = new Uint8Array(buf);

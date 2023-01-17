@@ -30,3 +30,7 @@ EXPORTS.mozilla.dom += [
     "UniFFIRust.h",
     "UniFFIScaffolding.h",
 ]
+
+EXTRA_JS_MODULES += [
+    "js/UniFFI.sys.mjs",
+]

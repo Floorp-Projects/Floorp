@@ -25,7 +25,14 @@
         {%- endmatch %}
         const functionCall = () => {
             {%- for arg in func.arguments() %}
-            {{ arg.check_type() }};
+            try {
+                {{ arg.ffi_converter() }}.checkType({{ arg.nm() }})
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("{{ arg.nm() }}");
+                }
+                throw e;
+            }
             {%- endfor %}
 
             {%- if is_async %}

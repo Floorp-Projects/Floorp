@@ -34,6 +34,12 @@ class {{ ffi_converter }} extends FfiConverterArrayBuffer {
     static computeSize(value) {
         return 4;
     }
+
+    static checkType(value) {
+      if (!Number.isInteger(value) || value < 1 || value > {{ enum_.variants().len() }}) {
+          throw new UniFFITypeError(`${value} is not a valid value for {{ enum_.nm() }}`);
+      }
+    }
 }
 
 {%- else -%}
@@ -95,6 +101,12 @@ class {{ ffi_converter }} extends FfiConverterArrayBuffer {
         }
         {%- endfor %}
         return new Error("Unknown {{ enum_.nm() }} variant");
+    }
+
+    static checkType(value) {
+      if (!(value instanceof {{ enum_.nm() }})) {
+        throw new UniFFITypeError(`${value} is not a subclass instance of {{ enum_.nm() }}`);
+      }
     }
 }
 

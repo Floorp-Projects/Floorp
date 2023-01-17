@@ -2,7 +2,14 @@
 class {{ record.nm() }} {
     constructor({{ record.constructor_field_list() }}) {
         {%- for field in record.fields() %}
-        {{ field.check_type() }};
+        try {
+            {{ field.ffi_converter() }}.checkType({{ field.nm() }})
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("{{ field.nm() }}");
+            }
+            throw e;
+        }
         {%- endfor %}
 
         {%- for field in record.fields() %}
@@ -18,16 +25,7 @@ class {{ record.nm() }} {
     }
 }
 
-class {{ ffi_converter }} extends FfiConverter {
-    static lift(buf) {
-        return this.read(new ArrayBufferDataStream(buf));
-    }
-    static lower(value) {
-        const buf = new ArrayBuffer(this.computeSize(value));
-        const dataStream = new ArrayBufferDataStream(buf);
-        this.write(dataStream, value);
-        return buf;
-    }
+class {{ ffi_converter }} extends FfiConverterArrayBuffer {
     static read(dataStream) {
         return new {{record.nm()}}(
             {%- for field in record.fields() %}
@@ -48,6 +46,20 @@ class {{ ffi_converter }} extends FfiConverter {
         totalSize += {{ field.ffi_converter() }}.computeSize(value.{{ field.nm() }});
         {%- endfor %}
         return totalSize
+    }
+
+    static checkType(value) {
+        super.checkType(value);
+        {%- for field in record.fields() %}
+        try {
+            {{ field.ffi_converter() }}.checkType(value.{{ field.nm() }});
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".{{ field.nm() }}");
+            }
+            throw e;
+        }
+        {%- endfor %}
     }
 }
 
