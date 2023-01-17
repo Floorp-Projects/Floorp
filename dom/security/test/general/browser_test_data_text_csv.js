@@ -49,7 +49,7 @@ add_task(async function test_with_pref_enabled() {
   BrowserTestUtils.loadURI(gBrowser, kTestURI);
   let win = await windowPromise;
 
-  let expectedValue = "text/csv;foo,bar,foobar";
+  let expectedValue = "index.csv";
   is(
     win.document.getElementById("location").value,
     expectedValue,
@@ -70,7 +70,7 @@ add_task(async function test_with_pref_disabled() {
   });
   let downloadsPanelPromise = promisePanelOpened();
   let downloadsPromise = Downloads.getList(Downloads.PUBLIC);
-  let expectedValue = "text/csv;foo,bar,foobar";
+  let sourceURLBit = "text/csv;foo,bar,foobar";
 
   info("Loading URI for pref enabled");
   BrowserTestUtils.loadURI(gBrowser, kTestURI);
@@ -90,7 +90,7 @@ add_task(async function test_with_pref_disabled() {
   is(download.contentType, "text/csv", "File contentType should be correct.");
   is(
     download.source.url,
-    `data:${expectedValue}`,
+    `data:${sourceURLBit}`,
     "File name should be correct."
   );
 
