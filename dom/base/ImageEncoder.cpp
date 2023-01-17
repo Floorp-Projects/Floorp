@@ -52,7 +52,7 @@ class SurfaceHelper : public Runnable {
   }
 
   already_AddRefed<gfx::DataSourceSurface> GetDataSurfaceSafe() {
-    nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
+    nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
     MOZ_ASSERT(mainTarget);
     SyncRunnable::DispatchToThread(mainTarget, this, false);
 
@@ -88,9 +88,9 @@ class EncodingCompleteEvent final : public DiscardableRunnable {
         mEncodeCompleteCallback(aEncodeCompleteCallback),
         mFailed(false) {
     if (!NS_IsMainThread() && IsCurrentThreadRunningWorker()) {
-      mCreationEventTarget = GetCurrentSerialEventTarget();
+      mCreationEventTarget = GetCurrentEventTarget();
     } else {
-      mCreationEventTarget = GetMainThreadSerialEventTarget();
+      mCreationEventTarget = GetMainThreadEventTarget();
     }
   }
 

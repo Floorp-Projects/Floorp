@@ -1390,8 +1390,8 @@ nsresult nsHttpChannel::SetupTransaction() {
   mTransaction->SetIsForWebTransport(mIsForWebTransport);
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
-      LoadUploadStreamHasHeaders(), GetCurrentSerialEventTarget(), callbacks,
-      this, mTopBrowsingContextId, category, mRequestContext, mClassOfService,
+      LoadUploadStreamHasHeaders(), GetCurrentEventTarget(), callbacks, this,
+      mTopBrowsingContextId, category, mRequestContext, mClassOfService,
       mInitialRwin, LoadResponseTimeoutEnabled(), mChannelId,
       std::move(observer), std::move(pushCallback), mTransWithPushedStream,
       mPushedStreamId);
@@ -7971,7 +7971,7 @@ nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 
     // If retarget fails for transaction pump, we must restore mCachePump.
     if (NS_FAILED(rv) && retargetableCachePump) {
-      nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
+      nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
       NS_ENSURE_TRUE(main, NS_ERROR_UNEXPECTED);
       rv = retargetableCachePump->RetargetDeliveryTo(main);
     }
@@ -8734,7 +8734,7 @@ void nsHttpChannel::UpdateAggregateCallbacks() {
   }
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
-                                         GetCurrentSerialEventTarget(),
+                                         GetCurrentEventTarget(),
                                          getter_AddRefs(callbacks));
   mTransaction->SetSecurityCallbacks(callbacks);
 }

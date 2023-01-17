@@ -2853,7 +2853,7 @@ nsresult WebSocketChannel::DoAdmissionDNS() {
   if (mPort == -1) mPort = (mEncrypted ? kDefaultWSSPort : kDefaultWSPort);
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
   nsCOMPtr<nsICancelable> cancelable;
   rv = dns->AsyncResolveNative(hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
                                nsIDNSService::RESOLVE_DEFAULT_FLAGS, nullptr,
@@ -3405,7 +3405,7 @@ WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
   {
     auto lock = mTargetThread.Lock();
     if (!lock.ref()) {
-      lock.ref() = GetMainThreadSerialEventTarget();
+      lock.ref() = GetMainThreadEventTarget();
     }
   }
 

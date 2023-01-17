@@ -178,9 +178,7 @@ class WebTransportStreamCallbackWrapper final {
 
   explicit WebTransportStreamCallbackWrapper(
       nsIWebTransportStreamCallback* aCallback, bool aBidi)
-      : mCallback(aCallback),
-        mTarget(GetCurrentSerialEventTarget()),
-        mBidi(aBidi) {}
+      : mCallback(aCallback), mTarget(GetCurrentEventTarget()), mBidi(aBidi) {}
 
   void CallOnError(nsresult aError) {
     if (!mTarget->IsOnCurrentThread()) {

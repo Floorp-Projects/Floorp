@@ -183,7 +183,7 @@ Nullable<WindowProxyHolder> InProcessBrowserChildMessageManager::GetContent(
 
 already_AddRefed<nsIEventTarget>
 InProcessBrowserChildMessageManager::GetTabEventTarget() {
-  nsCOMPtr<nsIEventTarget> target = GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
   return target.forget();
 }
 

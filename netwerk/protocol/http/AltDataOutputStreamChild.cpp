@@ -180,7 +180,7 @@ void AltDataOutputStreamChild::NotifyListener() {
   MOZ_ASSERT(mCallback);
 
   if (!mCallbackTarget) {
-    mCallbackTarget = GetMainThreadSerialEventTarget();
+    mCallbackTarget = GetMainThreadEventTarget();
   }
 
   nsCOMPtr<nsIOutputStreamCallback> asyncCallback =

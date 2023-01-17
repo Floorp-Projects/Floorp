@@ -392,7 +392,7 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
     mProxyInfo = aProxyInfo;
   }
 
-  mCurrentThread = GetCurrentSerialEventTarget();
+  mCurrentThread = GetCurrentEventTarget();
   return rv;
 }
 

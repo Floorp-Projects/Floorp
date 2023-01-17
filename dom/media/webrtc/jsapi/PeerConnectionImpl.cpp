@@ -1406,7 +1406,7 @@ void PeerConnectionImpl::UpdateNegotiationNeeded() {
   }
 
   // Queue a task to run the following steps:
-  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this)] {
         // If connection.[[IsClosed]] is true, abort these steps.
         if (IsClosed()) {
@@ -1530,7 +1530,7 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
 
   STAMP_TIMECARD(mTimeCard, "Create Offer");
 
-  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), aOptions] {
         std::string offer;
 
@@ -1570,7 +1570,7 @@ PeerConnectionImpl::CreateAnswer() {
   // add it as a param to CreateAnswer, and convert it here.
   JsepAnswerOptions options;
 
-  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), options] {
         std::string answer;
         SyncToJsep();
@@ -1889,7 +1889,7 @@ PeerConnectionImpl::AddIceCandidate(
       mRawTrickledCandidates.push_back(aCandidate);
     }
     // Spec says we queue a task for these updates
-    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__, [this, self = RefPtr<PeerConnectionImpl>(this)] {
           if (IsClosed()) {
             return;
@@ -1910,7 +1910,7 @@ PeerConnectionImpl::AddIceCandidate(
                 static_cast<unsigned>(*result.mError), aCandidate,
                 level.valueOr(-1), errorString.c_str());
 
-    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+    GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
         __func__,
         [this, self = RefPtr<PeerConnectionImpl>(this), errorString, result] {
           if (IsClosed()) {
@@ -2577,7 +2577,7 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::OnSetDescriptionSuccess(
 void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
     dom::RTCSdpType aSdpType, bool aRemote, const RefPtr<dom::Promise>& aP) {
   // Spec says we queue a task for all the stuff that ends up back in JS
-  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__,
       [this, self = RefPtr<PeerConnectionImpl>(this), aSdpType, aRemote, aP] {
         if (IsClosed()) {
@@ -3829,7 +3829,7 @@ void PeerConnectionImpl::AddIceCandidate(const std::string& aCandidate,
           cand.mUfrag = aUfrag;
           mQueriedMDNSHostnames[addr].push_back(cand);
 
-          GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+          GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
               "PeerConnectionImpl::SendQueryMDNSHostname",
               [self = RefPtr<PeerConnectionImpl>(this), addr]() mutable {
                 if (self->mStunAddrsRequest) {
@@ -4033,7 +4033,7 @@ void PeerConnectionImpl::SignalHandler::IceGatheringStateChange_s(
     dom::RTCIceGatheringState aState) {
   ASSERT_ON_THREAD(mSTSThread);
 
-  GetMainThreadSerialEventTarget()->Dispatch(
+  GetMainThreadEventTarget()->Dispatch(
       NS_NewRunnableFunction(__func__,
                              [handle = mHandle, aState] {
                                PeerConnectionWrapper wrapper(handle);
@@ -4049,7 +4049,7 @@ void PeerConnectionImpl::SignalHandler::IceConnectionStateChange_s(
     dom::RTCIceConnectionState aState) {
   ASSERT_ON_THREAD(mSTSThread);
 
-  GetMainThreadSerialEventTarget()->Dispatch(
+  GetMainThreadEventTarget()->Dispatch(
       NS_NewRunnableFunction(__func__,
                              [handle = mHandle, aState] {
                                PeerConnectionWrapper wrapper(handle);
@@ -4068,7 +4068,7 @@ void PeerConnectionImpl::SignalHandler::OnCandidateFound_s(
 
   MOZ_ASSERT(!aCandidateInfo.mUfrag.empty());
 
-  GetMainThreadSerialEventTarget()->Dispatch(
+  GetMainThreadEventTarget()->Dispatch(
       NS_NewRunnableFunction(__func__,
                              [handle = mHandle, aTransportId, aCandidateInfo] {
                                PeerConnectionWrapper wrapper(handle);
@@ -4083,7 +4083,7 @@ void PeerConnectionImpl::SignalHandler::OnCandidateFound_s(
 void PeerConnectionImpl::SignalHandler::AlpnNegotiated_s(
     const std::string& aAlpn, bool aPrivacyRequested) {
   MOZ_DIAGNOSTIC_ASSERT((aAlpn == "c-webrtc") == aPrivacyRequested);
-  GetMainThreadSerialEventTarget()->Dispatch(
+  GetMainThreadEventTarget()->Dispatch(
       NS_NewRunnableFunction(__func__,
                              [handle = mHandle, aPrivacyRequested] {
                                PeerConnectionWrapper wrapper(handle);

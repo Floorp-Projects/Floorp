@@ -29,9 +29,6 @@ class nsThreadPool final : public mozilla::Runnable, public nsIThreadPool {
 
   nsThreadPool();
 
-  static void InitTLS();
-  static nsThreadPool* GetCurrentThreadPool();
-
  private:
   ~nsThreadPool();
 

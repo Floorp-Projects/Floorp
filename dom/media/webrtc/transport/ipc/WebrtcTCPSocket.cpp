@@ -58,7 +58,7 @@ WebrtcTCPSocket::WebrtcTCPSocket(WebrtcTCPSocketCallback* aCallbacks)
       mSocketIn(nullptr),
       mSocketOut(nullptr) {
   LOG(("WebrtcTCPSocket::WebrtcTCPSocket %p\n", this));
-  mMainThread = GetMainThreadSerialEventTarget();
+  mMainThread = GetMainThreadEventTarget();
   mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
   MOZ_RELEASE_ASSERT(mMainThread, "no main thread");
   MOZ_RELEASE_ASSERT(mSocketThread, "no socket thread");

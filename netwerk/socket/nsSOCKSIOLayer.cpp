@@ -420,7 +420,7 @@ PRStatus nsSOCKSSocketInfo::StartDNS(PRFileDesc* fd) {
   nsresult rv = dns->AsyncResolveNative(
       proxyHost, nsIDNSService::RESOLVE_TYPE_DEFAULT,
       nsIDNSService::RESOLVE_IGNORE_SOCKS_DNS, nullptr, this,
-      mozilla::GetCurrentSerialEventTarget(), attrs, getter_AddRefs(mLookup));
+      mozilla::GetCurrentEventTarget(), attrs, getter_AddRefs(mLookup));
 
   if (NS_FAILED(rv)) {
     LOGERROR(("socks: DNS lookup for SOCKS proxy %s failed", proxyHost.get()));

@@ -563,7 +563,7 @@ nsCOMPtr<nsISerialEventTarget> GMPParent::GMPEventTarget() {
   // nullptr if the GeckoMediaPluginService has started shutdown.
   nsCOMPtr<nsIThread> gmpThread;
   mps->GetThread(getter_AddRefs(gmpThread));
-  return gmpThread;
+  return gmpThread ? gmpThread->SerialEventTarget() : nullptr;
 }
 
 /* static */

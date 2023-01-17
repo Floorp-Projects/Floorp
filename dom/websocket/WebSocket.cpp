@@ -2755,7 +2755,7 @@ WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) {
   if (mIsMainThread) {
     return mMainThreadEventTarget
                ? mMainThreadEventTarget->Dispatch(event_ref.forget())
-               : GetMainThreadSerialEventTarget()->Dispatch(event_ref.forget());
+               : GetMainThreadEventTarget()->Dispatch(event_ref.forget());
   }
 
   MutexAutoLock lock(mMutex);

@@ -161,13 +161,13 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
 
   // Create a FetchDriver instance
   mFetchDriver = MakeRefPtr<FetchDriver>(
-      mRequest.clonePtr(),               // Fetch Request
-      mPrincipal,                        // Principal
-      mLoadGroup,                        // LoadGroup
-      GetMainThreadSerialEventTarget(),  // MainThreadEventTarget
-      mCookieJarSettings,                // CookieJarSettings
-      mPerformanceStorage,               // PerformanceStorage
-      false                              // IsTrackingFetch
+      mRequest.clonePtr(),         // Fetch Request
+      mPrincipal,                  // Principal
+      mLoadGroup,                  // LoadGroup
+      GetMainThreadEventTarget(),  // MainThreadEventTarget
+      mCookieJarSettings,          // CookieJarSettings
+      mPerformanceStorage,         // PerformanceStorage
+      false                        // IsTrackingFetch
   );
 
   // Call FetchDriver::Fetch to start fetching.

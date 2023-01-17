@@ -93,7 +93,7 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
 
   ClearPromises();
 
-  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       "java::WebAuthnTokenManager::WebAuthnMakeCredential",
       [self = RefPtr{this}, aInfo, aForceNoneAttestation]() {
         AssertIsOnMainThread();
@@ -282,7 +282,7 @@ RefPtr<U2FSignPromise> AndroidWebAuthnTokenManager::Sign(
 
   ClearPromises();
 
-  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       "java::WebAuthnTokenManager::WebAuthnGetAssertion",
       [self = RefPtr{this}, aInfo]() {
         AssertIsOnMainThread();

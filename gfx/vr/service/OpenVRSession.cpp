@@ -1380,8 +1380,7 @@ void OpenVRSession::StartHapticTimer() {
   if (!mHapticTimer && mHapticThread) {
     mLastHapticUpdate = TimeStamp();
     mHapticTimer = NS_NewTimer();
-    nsCOMPtr<nsIThread> thread = mHapticThread->GetThread();
-    mHapticTimer->SetTarget(thread);
+    mHapticTimer->SetTarget(mHapticThread->GetThread()->EventTarget());
     mHapticTimer->InitWithNamedFuncCallback(
         HapticTimerCallback, this, kVRHapticUpdateInterval,
         nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,

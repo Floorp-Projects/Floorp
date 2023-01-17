@@ -288,7 +288,7 @@ MutableBlobStorage::MutableBlobStorage(MutableBlobStorageType aType,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mEventTarget) {
-    mEventTarget = GetMainThreadSerialEventTarget();
+    mEventTarget = GetMainThreadEventTarget();
   }
 
   if (aMaxMemory == 0 && aType == eCouldBeInTemporaryFile) {

@@ -33,13 +33,13 @@ using namespace mozilla::ipc;
 // IPC between other processes will interfere with our fuzzing in the meantime
 // but blocking could also cause hangs when such IPC is required during the
 // fuzzing runtime for some reason.
-// #define MOZ_FUZZ_IPC_SYNC_INJECT 1
+//#define MOZ_FUZZ_IPC_SYNC_INJECT 1
 
 // For debugging purposes, it can be helpful to synchronize after each message
 // rather than after each iteration, to see which messages are particularly
 // slow or cause a hang. Without this, synchronization will occur at the end
 // of each iteration as well as after each constructor message.
-// #define MOZ_FUZZ_IPC_SYNC_AFTER_EACH_MSG
+//#define MOZ_FUZZ_IPC_SYNC_AFTER_EACH_MSG
 
 namespace mozilla {
 namespace fuzzing {
@@ -621,7 +621,7 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
   IPCFuzzController::instance().runnableDone = false;
 
   SyncRunnable::DispatchToThread(
-      GetMainThreadSerialEventTarget(),
+      GetMainThreadEventTarget(),
       NS_NewRunnableFunction("IPCFuzzController::StartFuzzing", [&]() -> void {
         MOZ_FUZZING_NYX_PRINT("INFO: Main thread runnable start.\n");
         NS_ProcessPendingEvents(NS_GetCurrentThread());

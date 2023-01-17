@@ -87,11 +87,7 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
   LogRunnable::LogDispatch(event.get());
 
   if (aFlags & DISPATCH_SYNC) {
-    // NOTE: Get the current thread specifically, as `SpinEventLoopUntil` can
-    // only spin that event target's loop. The reply will specify
-    // NS_DISPATCH_IGNORE_BLOCK_DISPATCH to ensure the reply is received even if
-    // the caller is a threadpool thread.
-    nsCOMPtr<nsIThread> current = NS_GetCurrentThread();
+    nsCOMPtr<nsIEventTarget> current = GetCurrentEventTarget();
     if (NS_WARN_IF(!current)) {
       return NS_ERROR_NOT_AVAILABLE;
     }

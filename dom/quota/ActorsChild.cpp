@@ -37,7 +37,7 @@ QuotaChild::QuotaChild(QuotaManagerService* aService)
     : mService(aService)
 #ifdef DEBUG
       ,
-      mOwningThread(GetCurrentSerialEventTarget())
+      mOwningThread(GetCurrentEventTarget())
 #endif
 {
   AssertIsOnOwningThread();

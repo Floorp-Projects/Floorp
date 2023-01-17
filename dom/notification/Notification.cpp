@@ -2322,7 +2322,7 @@ nsresult Notification::DispatchToMainThread(
                               nsIEventTarget::DISPATCH_NORMAL);
     }
   }
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
   MOZ_ASSERT(mainTarget);
   return mainTarget->Dispatch(std::move(aRunnable),
                               nsIEventTarget::DISPATCH_NORMAL);

@@ -1959,7 +1959,8 @@ void Manager::Init(Maybe<Manager&> aOldManager) {
   // per Manager now, this lets us cleanly call Factory::Remove() once the
   // Context goes away.
   SafeRefPtr<Context> ref = Context::Create(
-      SafeRefPtrFromThis(), mIOThread, MakeSafeRefPtr<SetupAction>(),
+      SafeRefPtrFromThis(), mIOThread->SerialEventTarget(),
+      MakeSafeRefPtr<SetupAction>(),
       aOldManager ? SomeRef(*aOldManager->mContext) : Nothing());
   mContext = ref.unsafeGetRawPtr();
 }

@@ -353,9 +353,9 @@ RefPtr<UntrustedModulesPromise> UntrustedModulesProcessor::GetProcessedData() {
   BackgroundPriorityRegion::Clear(mThread);
 
   RefPtr<UntrustedModulesProcessor> self(this);
-  return InvokeAsync(mThread, __func__, [self = std::move(self)]() {
-    return self->GetProcessedDataInternal();
-  });
+  return InvokeAsync(
+      mThread->SerialEventTarget(), __func__,
+      [self = std::move(self)]() { return self->GetProcessedDataInternal(); });
 }
 
 RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrust(
@@ -377,12 +377,12 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrust(
     // Clear any background priority in case background processing is running.
     BackgroundPriorityRegion::Clear(mThread);
 
-    return InvokeAsync(mThread, __func__, std::move(run));
+    return InvokeAsync(mThread->SerialEventTarget(), __func__, std::move(run));
   }
 
   RefPtr<ModulesTrustPromise::Private> p(
       new ModulesTrustPromise::Private(__func__));
-  nsCOMPtr<nsISerialEventTarget> evtTarget(mThread);
+  nsCOMPtr<nsISerialEventTarget> evtTarget(mThread->SerialEventTarget());
   const char* source = __func__;
 
   auto runWrap = [evtTarget = std::move(evtTarget), p, source,
@@ -443,7 +443,7 @@ UntrustedModulesProcessor::GetProcessedDataInternalChildProcess() {
   RefPtr<UntrustedModulesProcessor> self(this);
   RefPtr<UntrustedModulesPromise::Private> p(
       new UntrustedModulesPromise::Private(__func__));
-  nsCOMPtr<nsISerialEventTarget> evtTarget(mThread);
+  nsCOMPtr<nsISerialEventTarget> evtTarget(mThread->SerialEventTarget());
 
   const char* source = __func__;
   auto completionRoutine = [evtTarget = std::move(evtTarget), p,
@@ -542,7 +542,7 @@ void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueueChildProcess() {
       ProcessModuleLoadQueueChildProcess(Priority::Background));
 
   RefPtr<UntrustedModulesProcessor> self(this);
-  nsCOMPtr<nsISerialEventTarget> evtTarget(mThread);
+  nsCOMPtr<nsISerialEventTarget> evtTarget(mThread->SerialEventTarget());
 
   const char* source = __func__;
   auto completionRoutine = [evtTarget = std::move(evtTarget),
