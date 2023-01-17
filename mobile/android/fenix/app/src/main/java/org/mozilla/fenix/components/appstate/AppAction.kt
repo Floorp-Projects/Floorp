@@ -22,6 +22,7 @@ import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.library.history.PendingDeletionHistory
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.wallpapers.Wallpaper
 
 /**
@@ -137,7 +138,7 @@ sealed class AppAction : Action {
         /**
          * Evaluates if a new messages should be shown to users.
          */
-        object Evaluate : MessagingAction()
+        data class Evaluate(val surface: MessageSurfaceId) : MessagingAction()
 
         /**
          * Updates [MessagingState.messageToShow] with the given [message].
@@ -147,7 +148,7 @@ sealed class AppAction : Action {
         /**
          * Updates [MessagingState.messageToShow] with the given [message].
          */
-        object ConsumeMessageToShow : MessagingAction()
+        data class ConsumeMessageToShow(val surface: MessageSurfaceId) : MessagingAction()
 
         /**
          * Updates [MessagingState.messages] with the given [messages].

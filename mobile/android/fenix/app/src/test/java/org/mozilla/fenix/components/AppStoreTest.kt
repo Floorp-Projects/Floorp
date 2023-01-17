@@ -20,8 +20,6 @@ import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -34,6 +32,7 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.filterOut
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
+import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.home.CurrentMode
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -45,6 +44,8 @@ import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
+import org.mozilla.fenix.nimbus.MessageData
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
 class AppStoreTest {
@@ -113,11 +114,19 @@ class AppStoreTest {
     @Test
     fun `GIVEN a new value for messageToShow WHEN NimbusMessageChange is called THEN update the current value`() =
         runTest {
-            assertNull(appStore.state.messaging.messageToShow)
+            assertTrue(appStore.state.messaging.messageToShow.isEmpty())
 
-            appStore.dispatch(UpdateMessageToShow(mockk())).join()
+            val message = Message(
+                "message",
+                MessageData(surface = MessageSurfaceId.HOMESCREEN),
+                "action",
+                mockk(),
+                emptyList(),
+                mockk(),
+            )
+            appStore.dispatch(UpdateMessageToShow(message)).join()
 
-            assertNotNull(appStore.state.messaging.messageToShow)
+            assertFalse(appStore.state.messaging.messageToShow.isEmpty())
         }
 
     @Test

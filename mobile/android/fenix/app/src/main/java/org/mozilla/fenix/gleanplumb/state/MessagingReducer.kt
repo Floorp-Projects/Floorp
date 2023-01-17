@@ -17,9 +17,11 @@ import org.mozilla.fenix.gleanplumb.MessagingState
 internal object MessagingReducer {
     fun reduce(state: AppState, action: AppAction.MessagingAction): AppState = when (action) {
         is UpdateMessageToShow -> {
+            val messageToShow = state.messaging.messageToShow.toMutableMap()
+            messageToShow[action.message.surface] = action.message
             state.copy(
                 messaging = state.messaging.copy(
-                    messageToShow = action.message,
+                    messageToShow = messageToShow,
                 ),
             )
         }
@@ -31,9 +33,11 @@ internal object MessagingReducer {
             )
         }
         is ConsumeMessageToShow -> {
+            val messageToShow = state.messaging.messageToShow.toMutableMap()
+            messageToShow.remove(action.surface)
             state.copy(
                 messaging = state.messaging.copy(
-                    messageToShow = null,
+                    messageToShow = messageToShow,
                 ),
             )
         }

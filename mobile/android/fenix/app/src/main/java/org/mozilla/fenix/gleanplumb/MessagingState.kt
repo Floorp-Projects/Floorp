@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.gleanplumb
 
+import org.mozilla.fenix.nimbus.MessageSurfaceId
+
 /**
  * Represent all the state related to the Messaging framework.
  * @param messages Indicates all the available messages.
@@ -12,5 +14,5 @@ package org.mozilla.fenix.gleanplumb
  */
 data class MessagingState(
     val messages: List<Message> = emptyList(),
-    val messageToShow: Message? = null,
+    val messageToShow: Map<MessageSurfaceId, Message> = emptyMap(),
 )

@@ -13,6 +13,7 @@ import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.fenix.nimbus.ControlMessageBehavior
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.nimbus.Messaging
 import org.mozilla.fenix.nimbus.StyleData
 
@@ -63,34 +64,35 @@ class NimbusMessagingStorage(
         val defaultStyle = StyleData()
         val storageMetadata = metadataStorage.getMetadata()
 
-        return nimbusMessages.mapNotNull { (key, value) ->
-            val action = sanitizeAction(key, value.action, nimbusActions, value.isControl) ?: return@mapNotNull null
-            Message(
-                id = key,
-                data = value,
-                action = action,
-                style = nimbusStyles[value.style] ?: defaultStyle,
-                metadata = storageMetadata[key] ?: addMetadata(key),
-                triggers = sanitizeTriggers(key, value.trigger, nimbusTriggers)
-                    ?: return@mapNotNull null,
-            )
-        }.filter {
-            it.maxDisplayCount >= it.metadata.displayCount &&
-                !it.metadata.dismissed &&
-                !it.metadata.pressed
-        }.sortedByDescending {
-            it.style.priority
-        }
+        return nimbusMessages
+            .mapNotNull { (key, value) ->
+                val action = sanitizeAction(key, value.action, nimbusActions, value.isControl) ?: return@mapNotNull null
+                Message(
+                    id = key,
+                    data = value,
+                    action = action,
+                    style = nimbusStyles[value.style] ?: defaultStyle,
+                    metadata = storageMetadata[key] ?: addMetadata(key),
+                    triggers = sanitizeTriggers(key, value.trigger, nimbusTriggers)
+                        ?: return@mapNotNull null,
+                )
+            }.filter {
+                it.maxDisplayCount >= it.metadata.displayCount &&
+                    !it.metadata.dismissed &&
+                    !it.metadata.pressed
+            }.sortedByDescending {
+                it.style.priority
+            }
     }
 
     /**
      * Returns the next higher priority message which all their triggers are true.
      */
-    fun getNextMessage(availableMessages: List<Message>): Message? {
+    fun getNextMessage(surface: MessageSurfaceId, availableMessages: List<Message>): Message? {
         val jexlCache = HashMap<String, Boolean>()
         val helper = gleanPlumb.createMessageHelper(customAttributes)
         val message = availableMessages.firstOrNull {
-            isMessageEligible(it, helper, jexlCache)
+            surface == it.surface && isMessageEligible(it, helper, jexlCache)
         } ?: return null
 
         // Check this isn't an experimental message. If not, we can go ahead and return it.

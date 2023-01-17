@@ -9,6 +9,8 @@ channels:
   - beta
   - nightly
   - developer
+includes:
+  - ./messaging.fml.yaml
 features:
   homescreen:
     description: The homescreen that the user goes to when they press home or new tab.
@@ -73,121 +75,6 @@ features:
       - channel: developer
         value:
           enabled: true
-  messaging:
-    description: |
-      Configuration for the messaging system.
-
-      In practice this is a set of growable lookup tables for the
-      message controller to piece together.
-
-    variables:
-      message-under-experiment:
-        description: Id or prefix of the message under experiment.
-        type: Option<String>
-        default: null
-
-      messages:
-        description: A growable collection of messages
-        type: Map<String, MessageData>
-        default: {}
-
-      triggers:
-        description: >
-          A collection of out the box trigger
-          expressions. Each entry maps to a
-          valid JEXL expression.
-        type: Map<String, String>
-        default: {}
-      styles:
-        description: >
-          A map of styles to configure message
-          appearance.
-        type: Map<String, StyleData>
-        default: {}
-
-      actions:
-        type: Map<String, String>
-        description: A growable map of action URLs.
-        default: {}
-      on-control:
-        type: ControlMessageBehavior
-        description: What should be displayed when a control message is selected.
-        default: show-next-message
-      notification-config:
-        description: Configuration of the notification worker for all notification messages.
-        type: NotificationConfig
-        default: {}
-    defaults:
-      - value:
-          triggers:
-            USER_RECENTLY_INSTALLED: days_since_install < 7
-            USER_RECENTLY_UPDATED: days_since_update < 7 && days_since_install != days_since_update
-            USER_TIER_ONE_COUNTRY: ('US' in locale || 'GB' in locale || 'CA' in locale || 'DE' in locale || 'FR' in locale)
-            USER_EN_SPEAKER: "'en' in locale"
-            USER_DE_SPEAKER: "'de' in locale"
-            USER_FR_SPEAKER: "'fr' in locale"
-            DEVICE_ANDROID: os == 'Android'
-            DEVICE_IOS: os == 'iOS'
-            ALWAYS: "true"
-            NEVER: "false"
-            I_AM_DEFAULT_BROWSER: "is_default_browser"
-            I_AM_NOT_DEFAULT_BROWSER: "is_default_browser == false"
-            USER_ESTABLISHED_INSTALL: "number_of_app_launches >=4"
-          actions:
-            ENABLE_PRIVATE_BROWSING: ://enable_private_browsing
-            INSTALL_SEARCH_WIDGET: ://install_search_widget
-            MAKE_DEFAULT_BROWSER: ://make_default_browser
-            VIEW_BOOKMARKS: ://urls_bookmarks
-            VIEW_COLLECTIONS: ://home_collections
-            VIEW_HISTORY: ://urls_history
-            VIEW_HOMESCREEN: ://home
-            OPEN_SETTINGS_ACCESSIBILITY: ://settings_accessibility
-            OPEN_SETTINGS_ADDON_MANAGER: ://settings_addon_manager
-            OPEN_SETTINGS_DELETE_BROWSING_DATA: ://settings_delete_browsing_data
-            OPEN_SETTINGS_LOGINS: ://settings_logins
-            OPEN_SETTINGS_NOTIFICATIONS: ://settings_notifications
-            OPEN_SETTINGS_PRIVACY: ://settings_privacy
-            OPEN_SETTINGS_SEARCH_ENGINE: ://settings_search_engine
-            OPEN_SETTINGS_TRACKING_PROTECTION: ://settings_tracking_protection
-            OPEN_SETTINGS_WALLPAPERS: ://settings_wallpapers
-            OPEN_SETTINGS: ://settings
-            TURN_ON_SYNC: ://turn_on_sync
-          styles:
-            DEFAULT:
-              priority: 50
-              max-display-count: 5
-            SURVEY:
-              priority: 55
-              max-display-count: 10
-            PERSISTENT:
-              priority: 50
-              max-display-count: 20
-            WARNING:
-              priority: 60
-              max-display-count: 10
-            URGENT:
-              priority: 100
-              max-display-count: 10
-          messages:
-            default-browser:
-              text: default_browser_experiment_card_text
-              action: "MAKE_DEFAULT_BROWSER"
-              trigger: [ "I_AM_NOT_DEFAULT_BROWSER","USER_ESTABLISHED_INSTALL" ]
-              style: "PERSISTENT"
-              button-label: preferences_set_as_default_browser
-
-      - channel: developer
-        value:
-          styles:
-            DEFAULT:
-              priority: 50
-              max-display-count: 100
-            EXPIRES_QUICKLY:
-              priority: 100
-              max-display-count: 1
-          notification-config:
-            polling-interval: 180 # 3 minutes
-
   mr2022:
     description: Features for MR 2022.
     variables:
@@ -287,88 +174,9 @@ features:
         default: true
 
 types:
-  objects:
-    MessageData:
-      description: >
-        An object to describe a message. It uses human
-        readable strings to describe the triggers, action and
-        style of the message as well as the text of the message
-        and call to action.
-      fields:
-        action:
-          type: Text
-          description: >
-            A URL of a page or a deeplink.
-            This may have substitution variables in.
-          # This should never be defaulted.
-          default: empty_string
-        title:
-          type: Option<Text>
-          description: "The title text displayed to the user"
-          default: null
-        text:
-          type: Text
-          description: "The message text displayed to the user"
-          # This should never be defaulted.
-          default: empty_string
-        is-control:
-          type: Boolean
-          description: "Indicates if this message is the control message, if true shouldn't be displayed"
-          default: false
-        button-label:
-          type: Option<Text>
-          description: >
-            The text on the button. If no text
-            is present, the whole message is clickable.
-          default: null
-        style:
-          type: String
-          description: >
-            The style as described in a
-            `StyleData` from the styles table.
-          default: DEFAULT
-        trigger:
-          type: List<String>
-          description: >
-            A list of strings corresponding to
-            targeting expressions. The message will be
-            shown if all expressions `true`.
-          default: []
-    StyleData:
-      description: >
-        A group of properities (predominantly visual) to
-        describe the style of the message.
-      fields:
-        priority:
-          type: Int
-          description: >
-            The importance of this message.
-            0 is not very important, 100 is very important.
-          default: 50
-        max-display-count:
-          type: Int
-          description: >
-            How many sessions will this message be shown to the user
-            before it is expired.
-          default: 5
-    NotificationConfig:
-      description: Attributes controlling the global configuration of notification messages.
-      fields:
-        polling-interval:
-          type: Int
-          description: >
-            How often, in seconds, the notification message worker will wake up and check for new
-            messages.
-          default: 3600
+  objects: {}
 
   enums:
-    ControlMessageBehavior:
-      description: An enum to influence what should be displayed when a control message is selected.
-      variants:
-        show-next-message:
-          description: The next eligible message should be shown.
-        show-none:
-          description: The surface should show no message.
     HomeScreenSection:
       description: The identifiers for the sections of the homescreen.
       variants:
@@ -384,15 +192,7 @@ types:
           description: The pocket section. This should only be available in the US.
         pocket-sponsored-stories:
           description: Subsection of the Pocket homescreen section which shows sponsored stories.
-    MessageSurfaceId:
-      description: The identity of a message surface, used in the default browser experiments
-      variants:
-        app-menu-item:
-          description: An item in the default toolbar menu.
-        settings:
-          description: A setting in the settings screen.
-        homescreen-banner:
-          description: A banner in the homescreen.
+
     MR2022Section:
       description: The identifiers for the sections of the MR 2022.
       variants:

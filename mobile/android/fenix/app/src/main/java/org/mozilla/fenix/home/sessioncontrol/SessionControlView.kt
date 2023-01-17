@@ -23,6 +23,7 @@ import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.onboarding.HomeCFRPresenter
 import org.mozilla.fenix.utils.Settings
 
@@ -167,7 +168,7 @@ private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when
         expandedCollections,
         recentBookmarks,
         showCollectionPlaceholder,
-        messaging.messageToShow,
+        messaging.messageToShow[MessageSurfaceId.HOMESCREEN],
         shouldShowRecentTabs(settings),
         shouldShowRecentSyncedTabs(settings),
         recentHistory,

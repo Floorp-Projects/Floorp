@@ -15,7 +15,11 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMes
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessages
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.AppStoreReducer
+import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.gleanplumb.MessagingState
+import org.mozilla.fenix.nimbus.MessageData
+import org.mozilla.fenix.nimbus.MessageSurfaceId
+import org.mozilla.fenix.nimbus.StyleData
 
 class MessagingReducerTest {
 
@@ -23,21 +27,33 @@ class MessagingReducerTest {
     fun `GIVEN a new value for messageToShow WHEN UpdateMessageToShow is called THEN update the current value`() {
         val initialState = AppState(
             messaging = MessagingState(
-                messageToShow = null,
+                messageToShow = mapOf(),
             ),
         )
 
+        val m = createMessage("message1")
+
         var updatedState = MessagingReducer.reduce(
             initialState,
-            UpdateMessageToShow(mockk()),
+            UpdateMessageToShow(m),
         )
 
-        assertNotNull(updatedState.messaging.messageToShow)
+        assertNotNull(updatedState.messaging.messageToShow[m.surface])
 
-        updatedState = AppStoreReducer.reduce(updatedState, ConsumeMessageToShow)
+        updatedState = AppStoreReducer.reduce(updatedState, ConsumeMessageToShow(m.surface))
 
-        assertNull(updatedState.messaging.messageToShow)
+        assertNull(updatedState.messaging.messageToShow[m.surface])
     }
+
+    private fun createMessage(id: String, action: String = "action-1", surface: MessageSurfaceId = MessageSurfaceId.HOMESCREEN): Message =
+        Message(
+            id = id,
+            data = MessageData(surface = surface),
+            action = action,
+            style = StyleData(),
+            triggers = listOf(),
+            metadata = Message.Metadata(id = id),
+        )
 
     @Test
     fun `GIVEN a new value for messages WHEN UpdateMessages is called THEN update the current value`() {

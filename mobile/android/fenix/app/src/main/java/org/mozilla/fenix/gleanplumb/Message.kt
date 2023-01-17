@@ -5,6 +5,7 @@
 package org.mozilla.fenix.gleanplumb
 
 import org.mozilla.fenix.nimbus.MessageData
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.nimbus.StyleData
 
 /**
@@ -32,6 +33,9 @@ data class Message(
 
     val priority: Int
         get() = style.priority
+
+    val surface: MessageSurfaceId
+        get() = data.surface
 
     /**
      * A data class that holds metadata that help to identify if a message should shown.

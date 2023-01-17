@@ -37,6 +37,7 @@ import org.mozilla.fenix.gleanplumb.MessagingState
 import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.nimbus.MessageData
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.nimbus.StyleData
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -85,9 +86,9 @@ class MessagingMiddlewareTest {
         every { messagingState.messages } returns emptyList()
         every { appState.messaging } returns messagingState
         every { middlewareContext.state } returns appState
-        every { messagingStorage.getNextMessage(any()) } returns message
+        every { messagingStorage.getNextMessage(MessageSurfaceId.HOMESCREEN, any()) } returns message
 
-        middleware.invoke(middlewareContext, {}, Evaluate)
+        middleware.invoke(middlewareContext, {}, Evaluate(MessageSurfaceId.HOMESCREEN))
 
         verify { middlewareContext.dispatch(UpdateMessageToShow(message)) }
     }
@@ -218,7 +219,7 @@ class MessagingMiddlewareTest {
     fun `WHEN consumeMessageToShowIfNeeded THEN consume the message`() = runTestOnMain {
         val message = Message(
             "control-id",
-            mockk(relaxed = true),
+            MessageData(),
             action = "action",
             mockk(relaxed = true),
             listOf("trigger"),
@@ -227,20 +228,20 @@ class MessagingMiddlewareTest {
         val appState: AppState = mockk(relaxed = true)
         val messagingState: MessagingState = mockk(relaxed = true)
 
-        every { messagingState.messageToShow } returns message
+        every { messagingState.messageToShow } returns mapOf(message.surface to message)
         every { appState.messaging } returns messagingState
         every { middlewareContext.state } returns appState
 
         middleware.consumeMessageToShowIfNeeded(middlewareContext, message)
 
-        verify { middlewareContext.dispatch(ConsumeMessageToShow) }
+        verify { middlewareContext.dispatch(ConsumeMessageToShow(message.surface)) }
     }
 
     @Test
     fun `WHEN updateMessage THEN update available messages`() = runTestOnMain {
         val oldMessage = Message(
             "oldMessage",
-            mockk(relaxed = true),
+            MessageData(),
             action = "action",
             mockk(relaxed = true),
             listOf("trigger"),
@@ -249,7 +250,7 @@ class MessagingMiddlewareTest {
 
         val updatedMessage = Message(
             "oldMessage",
-            mockk(relaxed = true),
+            MessageData(),
             action = "action",
             mockk(relaxed = true),
             listOf("trigger"),
@@ -261,7 +262,7 @@ class MessagingMiddlewareTest {
         val appState: AppState = mockk(relaxed = true)
         val messagingState: MessagingState = mockk(relaxed = true)
 
-        every { messagingState.messageToShow } returns oldMessage
+        every { messagingState.messageToShow } returns mapOf(oldMessage.surface to oldMessage)
         every { appState.messaging } returns messagingState
         every { middlewareContext.state } returns appState
         every { spiedMiddleware.removeMessage(middlewareContext, oldMessage) } returns emptyList()
