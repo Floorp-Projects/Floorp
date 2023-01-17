@@ -54,7 +54,7 @@ fi
 
 # EXTRA_PARAMS is optional
 # shellcheck disable=SC2086
-python3.8 /home/worker/bin/funsize.py \
+python3 /home/worker/bin/funsize.py \
     --artifacts-dir "$ARTIFACTS_DIR" \
     --task-definition /home/worker/task.json \
     --signing-cert "/home/worker/keys/${SIGNING_CERT}.pubkey" \

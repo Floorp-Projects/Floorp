@@ -1,5 +1,4 @@
-FROM ubuntu:18.04
-MAINTAINER Simon Fraser <sfraser@mozilla.com>
+FROM debian:11
 
 # Required software
 ENV DEBIAN_FRONTEND noninteractive
@@ -14,9 +13,10 @@ RUN apt-get update -q && \
     libgetopt-simple-perl \
     liblzma-dev \
     locales \
-    python3.8 \
-    libpython3.8-dev \
+    python3 \
+    libpython3-dev \
     python3-dev \
+    python3-pip \
     xz-utils
 RUN useradd -d /home/worker -s /bin/bash -m worker
 COPY requirements.txt /
@@ -26,10 +26,6 @@ ENV LANG en_CA.UTF-8
 ENV LANGUAGE en_CA.UTF-8
 ENV LANG_ALL en_CA.UTF-8
 ENV LC_ALL en_CA.UTF-8
-
-# python-pip installs a lot of dependencies increasing the size of an image
-# drastically. Install it like this saves us almost 200M.
-RUN bash -c "curl -L https://bootstrap.pypa.io/get-pip.py | python3.8"
 
 RUN ["pip", "install", "-r", "/requirements.txt"]
 
