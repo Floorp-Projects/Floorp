@@ -125,6 +125,7 @@ class RangeAnalysis {
   [[nodiscard]] bool truncate();
   [[nodiscard]] bool removeUnnecessaryBitops();
 
+ private:
   bool canTruncate(MDefinition* def, TruncateKind kind) const;
   void adjustTruncatedInputs(MDefinition* def);
 

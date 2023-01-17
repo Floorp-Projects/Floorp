@@ -2595,11 +2595,7 @@ void MConstant::truncate(TruncateKind kind) {
 }
 
 bool MPhi::needTruncation() const {
-  if (type() == MIRType::Double || type() == MIRType::Int32) {
-    return true;
-  }
-
-  return false;
+  return type() == MIRType::Double || type() == MIRType::Int32;
 }
 
 void MPhi::truncate(TruncateKind kind) {
