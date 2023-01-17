@@ -71,6 +71,8 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
 
   // This is guaranteed always being alive in our lifetime.
   NotNull<FrameStatistics*> const MOZ_NON_OWNING_REF mFrameStats;
+
+  bool mShutdown = false;
 };
 
 /**

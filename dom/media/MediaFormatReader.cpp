@@ -2439,6 +2439,18 @@ void MediaFormatReader::Update(TrackType aTrack) {
          NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR)) {
       needsNewDecoder = true;
     }
+    // For MF CDM crash, it needs to be handled differently. We need to shutdown
+    // current decoder and report that error to the state machine in order to
+    // let it to determine if playback can keep going or not.
+    if (decoder.mError.ref() ==
+        NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR) {
+      LOG("Error: notify MF CDM crash and shutdown %s decoder",
+          TrackTypeToStr(aTrack));
+      ShutdownDecoder(aTrack);
+      decoder.RejectPromise(decoder.mError.ref(), __func__);
+      decoder.mError.reset();
+      return;
+    }
 #ifdef XP_LINUX
     // We failed to decode on Linux with HW decoder,
     // give it another try without HW decoder.
@@ -2472,6 +2484,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
       NotifyError(aTrack, decoder.mError.ref());
       return;
     }
+
     if (firstFrameDecodingFailedWithHardware) {
       decoder.mHardwareDecodingDisabled = true;
     }
