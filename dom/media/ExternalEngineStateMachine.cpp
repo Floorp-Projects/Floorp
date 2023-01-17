@@ -96,9 +96,9 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
                     aNextState == State::ShutdownEngine ||
                     aNextState == State::RecoverEngine);
   MOZ_ASSERT_IF(mState.IsShutdownEngine(), aNextState == State::ShutdownEngine);
-  MOZ_ASSERT_IF(mState.IsRecoverEngine(),
-                aNextState == State::RunningEngine ||
-                    aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(
+      mState.IsRecoverEngine(),
+      aNextState == State::SeekingData || aNextState == State::ShutdownEngine);
   if (aNextState == State::SeekingData) {
     mState = StateObject({StateObject::SeekingData()});
   } else if (aNextState == State::ReadingMetadata) {
@@ -157,7 +157,12 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   // info to the new CDM process.
   MOZ_ASSERT(mInfo);
   mEngine->SetMediaInfo(*mInfo);
-  StartRunningEngine();
+  SeekTarget target(mCurrentPosition.Ref(), SeekTarget::Type::Accurate);
+  Seek(target);
+  // If the engine was playing before, ask the new engine to play as well.
+  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
+    mEngine->Play();
+  }
 }
 
 void ExternalEngineStateMachine::OnEngineInitFailure() {
@@ -256,7 +261,8 @@ bool ExternalEngineStateMachine::IsFormatSupportedByExternalEngine(
 RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
     const SeekTarget& aTarget) {
   AssertOnTaskQueue();
-  if (!mState.IsRunningEngine() && !mState.IsSeekingData()) {
+  if (!mState.IsRunningEngine() && !mState.IsSeekingData() &&
+      !mState.IsRecoverEngine()) {
     MOZ_ASSERT(false, "Can't seek due to unsupported state.");
     return MediaDecoder::SeekPromise::CreateAndReject(true, __func__);
   }
@@ -269,7 +275,7 @@ RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
   LOG("Start seeking to %" PRId64, aTarget.GetTime().ToMicroseconds());
   auto* state = mState.AsSeekingData();
   if (!state) {
-    // We're in the running engine state, and change the state to seeking.
+    // We're in other states, so change the state to seeking.
     ChangeStateTo(State::SeekingData);
     state = mState.AsSeekingData();
   }
@@ -988,10 +994,11 @@ void ExternalEngineStateMachine::NotifyErrorInternal(
 
 void ExternalEngineStateMachine::RecoverFromCDMProcessCrashIfNeeded() {
   AssertOnTaskQueue();
-  LOG("CDM process has crashed, recover the engine again");
   if (mState.IsRecoverEngine()) {
     return;
   }
+  LOG("CDM process crashed, recover the engine again (last time=%" PRId64 ")",
+      mCurrentPosition.Ref().ToMicroseconds());
   ChangeStateTo(State::RecoverEngine);
   if (HasVideo()) {
     mVideoDataRequest.DisconnectIfExists();
