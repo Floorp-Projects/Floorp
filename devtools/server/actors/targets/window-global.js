@@ -69,15 +69,14 @@ ChromeUtils.defineModuleGetter(lazy, "ExtensionContent", EXTENSION_CONTENT_JSM);
 
 loader.lazyRequireGetter(
   this,
-  ["getSheetText"],
-  "resource://devtools/server/actors/style-sheet.js",
-  true
-);
-
-loader.lazyRequireGetter(
-  this,
   "TouchSimulator",
   "resource://devtools/server/actors/emulation/touch-simulator.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  ["getStyleSheetText"],
+  "resource://devtools/server/actors/utils/stylesheet-utils.js",
   true
 );
 
@@ -1246,7 +1245,7 @@ const windowGlobalTargetPrototype = {
           continue;
         }
         // Reparse the sheet so that we see the existing errors.
-        const onStyleSheetParsed = getSheetText(sheet)
+        const onStyleSheetParsed = getStyleSheetText(sheet)
           .then(text => {
             InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
           })

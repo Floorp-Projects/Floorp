@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
-const { fetch } = require("resource://devtools/shared/DevToolsUtils.js");
 const InspectorUtils = require("InspectorUtils");
 const {
   getSourcemapBaseURL,
@@ -25,8 +24,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["getSheetOwnerNode"],
-  "resource://devtools/server/actors/style-sheet.js",
+  ["getStyleSheetOwnerNode", "getStyleSheetText"],
+  "resource://devtools/server/actors/utils/stylesheet-utils.js",
   true
 );
 
@@ -274,17 +273,7 @@ class StyleSheetsManager extends EventEmitter {
       return modifiedText;
     }
 
-    if (!styleSheet.href) {
-      if (styleSheet.ownerNode) {
-        // this is an inline <style> sheet
-        return styleSheet.ownerNode.textContent;
-      }
-      // Constructed stylesheet.
-      // TODO(bug 176993): Maybe preserve authored text?
-      return "";
-    }
-
-    return this._fetchStyleSheet(styleSheet);
+    return getStyleSheetText(styleSheet);
   }
 
   /**
@@ -422,82 +411,6 @@ class StyleSheetsManager extends EventEmitter {
         event: { kind, cause },
       },
     });
-  }
-
-  /**
-   * Retrieve the content of a given stylesheet
-   *
-   * @param {StyleSheet} styleSheet
-   * @returns {String}
-   */
-  async _fetchStyleSheet(styleSheet) {
-    const href = styleSheet.href;
-
-    const options = {
-      loadFromCache: true,
-      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
-      charset: this._getCSSCharset(styleSheet),
-    };
-
-    // Bug 1282660 - We use the system principal to load the default internal
-    // stylesheets instead of the content principal since such stylesheets
-    // require system principal to load. At meanwhile, we strip the loadGroup
-    // for preventing the assertion of the userContextId mismatching.
-
-    // chrome|file|resource|moz-extension protocols rely on the system principal.
-    const excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
-    if (!excludedProtocolsRe.test(href)) {
-      // Stylesheets using other protocols should use the content principal.
-      const ownerNode = getSheetOwnerNode(styleSheet);
-      if (ownerNode) {
-        // eslint-disable-next-line mozilla/use-ownerGlobal
-        options.window = ownerNode.ownerDocument.defaultView;
-        options.principal = ownerNode.ownerDocument.nodePrincipal;
-      }
-    }
-
-    let result;
-
-    try {
-      result = await fetch(href, options);
-    } catch (e) {
-      // The list of excluded protocols can be missing some protocols, try to use the
-      // system principal if the first fetch failed.
-      console.error(
-        `stylesheets: fetch failed for ${href},` +
-          ` using system principal instead.`
-      );
-      options.window = undefined;
-      options.principal = undefined;
-      result = await fetch(href, options);
-    }
-
-    return result.content;
-  }
-
-  /**
-   * Get charset of a given stylesheet
-   *
-   * @param {StyleSheet} styleSheet
-   * @returns {String}
-   */
-  _getCSSCharset(styleSheet) {
-    if (styleSheet) {
-      // charset attribute of <link> or <style> element, if it exists
-      if (styleSheet.ownerNode?.getAttribute) {
-        const linkCharset = styleSheet.ownerNode.getAttribute("charset");
-        if (linkCharset != null) {
-          return linkCharset;
-        }
-      }
-
-      // charset of referring document.
-      if (styleSheet.ownerNode?.ownerDocument.characterSet) {
-        return styleSheet.ownerNode.ownerDocument.characterSet;
-      }
-    }
-
-    return "UTF-8";
   }
 
   /**
@@ -721,7 +634,7 @@ class StyleSheetsManager extends EventEmitter {
     // When the style is injected via nsIDOMWindowUtils.loadSheet, even
     // the parent style sheet has no owner, so default back to target actor
     // document
-    const ownerNode = getSheetOwnerNode(styleSheet);
+    const ownerNode = getStyleSheetOwnerNode(styleSheet);
     const ownerDocument = ownerNode
       ? ownerNode.ownerDocument
       : this._targetActor.window;

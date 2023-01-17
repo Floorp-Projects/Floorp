@@ -6,40 +6,20 @@
 
 const { fetch } = require("resource://devtools/shared/DevToolsUtils.js");
 
-// If the user edits a style sheet, we stash a copy of the edited text
-// here, keyed by the style sheet.  This way, if the tools are closed
-// and then reopened, the edited text will be available.  A weak map
-// is used so that navigation by the user will eventually cause the
-// edited text to be collected.
-const modifiedStyleSheets = new WeakMap();
-
-function getSheetText(sheet) {
-  const cssText = modifiedStyleSheets.get(sheet);
-  if (cssText !== undefined) {
-    return Promise.resolve(cssText);
-  }
-
-  if (!sheet.href) {
-    // this is an inline <style> sheet
-    const content = sheet.ownerNode.textContent;
-    return Promise.resolve(content);
-  }
-
-  return fetchStylesheet(sheet).then(({ content }) => content);
-}
-
-exports.getSheetText = getSheetText;
-
 /**
  * For imported stylesheets, `ownerNode` is null.
+ *
  * To resolve the ownerNode for an imported stylesheet, loop on `parentStylesheet`
  * until we reach the topmost stylesheet, which should have a valid ownerNode.
  *
+ * Constructable stylesheets do not have an owner node and this method will
+ * return null.
+ *
  * @param {StyleSheet}
  *        The stylesheet for which we want to retrieve the ownerNode.
- * @return {DOMNode} The ownerNode
+ * @return {DOMNode|null} The ownerNode or null for constructable stylesheets.
  */
-function getSheetOwnerNode(sheet) {
+function getStyleSheetOwnerNode(sheet) {
   // If this is not an imported stylesheet and we have an ownerNode available
   // bail out immediately.
   if (sheet.ownerNode) {
@@ -56,47 +36,49 @@ function getSheetOwnerNode(sheet) {
 
   return parentStyleSheet.ownerNode;
 }
-exports.getSheetOwnerNode = getSheetOwnerNode;
+
+exports.getStyleSheetOwnerNode = getStyleSheetOwnerNode;
 
 /**
- * Get the charset of the stylesheet.
+ * Get the text of a stylesheet.
+ *
+ * TODO: A call site in window-global.js expects this method to return a promise
+ * so it is mandatory to keep it as an async function even if we are not using
+ * await explicitly. Bug 1810572.
+ *
+ * @param {StyleSheet}
+ *        The stylesheet for which we want to retrieve the text.
+ * @returns {Promise}
  */
-function getCSSCharset(sheet) {
-  if (sheet) {
-    // charset attribute of <link> or <style> element, if it exists
-    if (sheet.ownerNode?.getAttribute) {
-      const linkCharset = sheet.ownerNode.getAttribute("charset");
-      if (linkCharset != null) {
-        return linkCharset;
-      }
+async function getStyleSheetText(styleSheet) {
+  if (!styleSheet.href) {
+    if (styleSheet.ownerNode) {
+      // this is an inline <style> sheet
+      return styleSheet.ownerNode.textContent;
     }
-
-    // charset of referring document.
-    if (sheet.ownerNode?.ownerDocument.characterSet) {
-      return sheet.ownerNode.ownerDocument.characterSet;
-    }
+    // Constructed stylesheet.
+    // TODO(bug 1769933, bug 1809108): Maybe preserve authored text?
+    return "";
   }
 
-  return "UTF-8";
+  return fetchStyleSheetText(styleSheet);
 }
 
+exports.getStyleSheetText = getStyleSheetText;
+
 /**
- * Fetch a stylesheet at the provided URL. Returns a promise that will resolve the
- * result of the fetch command.
+ * Retrieve the content of a given stylesheet
  *
- * @return {Promise} a promise that resolves with an object with the following members
- *         on success:
- *           - content: the document at that URL, as a string,
- *           - contentType: the content type of the document
- *         If an error occurs, the promise is rejected with that error.
+ * @param {StyleSheet} styleSheet
+ * @returns {String}
  */
-async function fetchStylesheet(sheet) {
-  const href = sheet.href;
+async function fetchStyleSheetText(styleSheet) {
+  const href = styleSheet.href;
 
   const options = {
     loadFromCache: true,
     policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
-    charset: getCSSCharset(sheet),
+    charset: getCSSCharset(styleSheet),
   };
 
   // Bug 1282660 - We use the system principal to load the default internal
@@ -108,7 +90,7 @@ async function fetchStylesheet(sheet) {
   const excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
   if (!excludedProtocolsRe.test(href)) {
     // Stylesheets using other protocols should use the content principal.
-    const ownerNode = getSheetOwnerNode(sheet);
+    const ownerNode = getStyleSheetOwnerNode(styleSheet);
     if (ownerNode) {
       // eslint-disable-next-line mozilla/use-ownerGlobal
       options.window = ownerNode.ownerDocument.defaultView;
@@ -124,7 +106,7 @@ async function fetchStylesheet(sheet) {
     // The list of excluded protocols can be missing some protocols, try to use the
     // system principal if the first fetch failed.
     console.error(
-      `stylesheets actor: fetch failed for ${href},` +
+      `stylesheets: fetch failed for ${href},` +
         ` using system principal instead.`
     );
     options.window = undefined;
@@ -132,5 +114,30 @@ async function fetchStylesheet(sheet) {
     result = await fetch(href, options);
   }
 
-  return result;
+  return result.content;
+}
+
+/**
+ * Get charset of a given stylesheet
+ *
+ * @param {StyleSheet} styleSheet
+ * @returns {String}
+ */
+function getCSSCharset(styleSheet) {
+  if (styleSheet) {
+    // charset attribute of <link> or <style> element, if it exists
+    if (styleSheet.ownerNode?.getAttribute) {
+      const linkCharset = styleSheet.ownerNode.getAttribute("charset");
+      if (linkCharset != null) {
+        return linkCharset;
+      }
+    }
+
+    // charset of referring document.
+    if (styleSheet.ownerNode?.ownerDocument.characterSet) {
+      return styleSheet.ownerNode.ownerDocument.characterSet;
+    }
+  }
+
+  return "UTF-8";
 }
