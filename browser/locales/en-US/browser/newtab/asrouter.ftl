@@ -139,15 +139,6 @@ cfr-doorhanger-doh-primary-button-2 = Okay
 cfr-doorhanger-doh-secondary-button = Disable
   .accesskey = D
 
-## Fission Experiment Message
-
-cfr-doorhanger-fission-body-approved = Your privacy matters. { -brand-short-name } now isolates, or sandboxes, websites from each other, which makes it harder for hackers to steal passwords, credit card numbers, and other sensitive information.
-cfr-doorhanger-fission-header = Site Isolation
-cfr-doorhanger-fission-primary-button = OK, Got it
-  .accesskey = O
-cfr-doorhanger-fission-secondary-button = Learn more
-  .accesskey = L
-
 ## Full Video Support CFR message
 
 cfr-doorhanger-video-support-body = Videos on this site may not play correctly on this version of { -brand-short-name }. For full video support, update { -brand-short-name } now.

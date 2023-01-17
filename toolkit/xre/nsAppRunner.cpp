@@ -896,25 +896,6 @@ nsIXULRuntime::ContentWin32kLockdownState GetWin32kLockdownState() {
 //
 // - The 'fission.autostart' preference, if it has been configured by the user.
 static const char kPrefFissionAutostart[] = "fission.autostart";
-//
-// - The fission experiment enrollment status set during the previous run, which
-//   is controlled by the following preferences:
-//
-// The current enrollment status as controlled by Normandy. This value is only
-// stored in the default preference branch, and is not persisted across
-// sessions by the preference service. It therefore isn't available early
-// enough at startup, and needs to be synced to a preference in the user
-// branch which is persisted across sessions.
-static const char kPrefFissionExperimentEnrollmentStatus[] =
-    "fission.experiment.enrollmentStatus";
-//
-// The enrollment status to be used at browser startup. This automatically
-// synced from the above enrollmentStatus preference whenever the latter is
-// changed. It can have any of the values defined in the
-// `nsIXULRuntime_ExperimentStatus` enum. Meanings are documented in
-// the declaration of `nsIXULRuntime.fissionExperimentStatus`
-static const char kPrefFissionExperimentStartupEnrollmentStatus[] =
-    "fission.experiment.startupEnrollmentStatus";
 
 // The computed FissionAutostart value for the session, read by content
 // processes to initialize gFissionAutostart.
@@ -923,68 +904,13 @@ static const char kPrefFissionExperimentStartupEnrollmentStatus[] =
 // never be persisted in a profile.
 static const char kPrefFissionAutostartSession[] = "fission.autostart.session";
 
-static nsIXULRuntime::ExperimentStatus gFissionExperimentStatus =
-    nsIXULRuntime::eExperimentStatusUnenrolled;
+//
+// The computed FissionAutostart value for the session, read by content
+// processes to initialize gFissionAutostart.
+
 static bool gFissionAutostart = false;
 static bool gFissionAutostartInitialized = false;
 static nsIXULRuntime::FissionDecisionStatus gFissionDecisionStatus;
-
-namespace mozilla {
-
-bool FissionExperimentEnrolled() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  return gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl ||
-         gFissionExperimentStatus ==
-             nsIXULRuntime::eExperimentStatusTreatment ||
-         gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusRollout;
-}
-
-}  // namespace mozilla
-
-static void FissionExperimentDisqualify() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  // Setting this pref's user value will be detected by Normandy, causing the
-  // client to be unenrolled from the experiment.
-  Preferences::SetUint(kPrefFissionExperimentEnrollmentStatus,
-                       nsIXULRuntime::eExperimentStatusDisqualified);
-}
-
-static void OnFissionEnrollmentStatusChanged(const char* aPref, void* aData) {
-  Preferences::SetUint(
-      kPrefFissionExperimentStartupEnrollmentStatus,
-      Preferences::GetUint(kPrefFissionExperimentEnrollmentStatus,
-                           nsIXULRuntime::eExperimentStatusUnenrolled));
-}
-
-namespace {
-// This observer is notified during `profile-before-change`, and ensures that
-// the experiment enrollment status is synced over before the browser shuts
-// down, even if it was not modified since FissionAutostart was initialized.
-class FissionEnrollmentStatusShutdownObserver final : public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                     const char16_t* aData) override {
-    MOZ_ASSERT(!strcmp("profile-before-change", aTopic));
-    OnFissionEnrollmentStatusChanged(kPrefFissionExperimentEnrollmentStatus,
-                                     nullptr);
-    return NS_OK;
-  }
-
- private:
-  ~FissionEnrollmentStatusShutdownObserver() = default;
-};
-NS_IMPL_ISUPPORTS(FissionEnrollmentStatusShutdownObserver, nsIObserver)
-}  // namespace
-
-static void OnFissionAutostartChanged(const char* aPref, void* aData) {
-  MOZ_ASSERT(FissionExperimentEnrolled());
-  if (Preferences::HasUserValue(kPrefFissionAutostart)) {
-    FissionExperimentDisqualify();
-  }
-}
-
 static void EnsureFissionAutostartInitialized() {
   if (gFissionAutostartInitialized) {
     return;
@@ -996,48 +922,6 @@ static void EnsureFissionAutostartInitialized() {
     gFissionAutostart = Preferences::GetBool(kPrefFissionAutostartSession,
                                              false, PrefValueKind::Default);
     return;
-  }
-
-  // Initialize the fission experiment, configuring fission.autostart's
-  // default, before checking other overrides. This allows opting-out of a
-  // fission experiment through about:preferences or about:config from a
-  // safemode session.
-  uint32_t experimentRaw =
-      Preferences::GetUint(kPrefFissionExperimentStartupEnrollmentStatus,
-                           nsIXULRuntime::eExperimentStatusUnenrolled);
-  gFissionExperimentStatus =
-      experimentRaw < nsIXULRuntime::eExperimentStatusCount
-          ? nsIXULRuntime::ExperimentStatus(experimentRaw)
-          : nsIXULRuntime::eExperimentStatusDisqualified;
-
-  // Watch the experiment enrollment status pref to detect experiment
-  // disqualification, and ensure it is propagated for the next restart.
-  Preferences::RegisterCallback(&OnFissionEnrollmentStatusChanged,
-                                kPrefFissionExperimentEnrollmentStatus);
-  if (nsCOMPtr<nsIObserverService> observerService =
-          mozilla::services::GetObserverService()) {
-    nsCOMPtr<nsIObserver> shutdownObserver =
-        new FissionEnrollmentStatusShutdownObserver();
-    observerService->AddObserver(shutdownObserver, "profile-before-change",
-                                 false);
-  }
-
-  // If the user has overridden an active experiment by setting a user value for
-  // "fission.autostart", disqualify the user from the experiment.
-  if (Preferences::HasUserValue(kPrefFissionAutostart) &&
-      FissionExperimentEnrolled()) {
-    FissionExperimentDisqualify();
-    gFissionExperimentStatus = nsIXULRuntime::eExperimentStatusDisqualified;
-  }
-
-  // Configure the default branch for "fission.autostart" based on experiment
-  // enrollment status.
-  if (FissionExperimentEnrolled()) {
-    bool isTreatment =
-        gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment ||
-        gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusRollout;
-    Preferences::SetBool(kPrefFissionAutostart, isTreatment,
-                         PrefValueKind::Default);
   }
 
   if (!BrowserTabsRemoteAutostart()) {
@@ -1057,15 +941,7 @@ static void EnsureFissionAutostartInitialized() {
     // NOTE: This will take into account changes to the default due to
     // `InitializeFissionExperimentStatus`.
     gFissionAutostart = Preferences::GetBool(kPrefFissionAutostart, false);
-    if (gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl) {
-      gFissionDecisionStatus = nsIXULRuntime::eFissionExperimentControl;
-    } else if (gFissionExperimentStatus ==
-               nsIXULRuntime::eExperimentStatusTreatment) {
-      gFissionDecisionStatus = nsIXULRuntime::eFissionExperimentTreatment;
-    } else if (gFissionExperimentStatus ==
-               nsIXULRuntime::eExperimentStatusRollout) {
-      gFissionDecisionStatus = nsIXULRuntime::eFissionEnabledByRollout;
-    } else if (Preferences::HasUserValue(kPrefFissionAutostart)) {
+    if (Preferences::HasUserValue(kPrefFissionAutostart)) {
       gFissionDecisionStatus = gFissionAutostart
                                    ? nsIXULRuntime::eFissionEnabledByUserPref
                                    : nsIXULRuntime::eFissionDisabledByUserPref;
@@ -1086,13 +962,6 @@ static void EnsureFissionAutostartInitialized() {
   Preferences::SetBool(kPrefFissionAutostartSession, gFissionAutostart,
                        PrefValueKind::Default);
   Preferences::Lock(kPrefFissionAutostartSession);
-
-  // If we're actively enrolled in the fission experiment, disqualify the user
-  // from the experiment if the fission pref is modified.
-  if (FissionExperimentEnrolled()) {
-    Preferences::RegisterCallback(&OnFissionAutostartChanged,
-                                  kPrefFissionAutostart);
-  }
 }
 
 namespace mozilla {
@@ -1449,17 +1318,6 @@ nsXULAppInfo::GetWin32kSessionStatus(
 
   EnsureWin32kInitialized();
   *aResult = gWin32kStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetFissionExperimentStatus(ExperimentStatus* aResult) {
-  if (!XRE_IsParentProcess()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  EnsureFissionAutostartInitialized();
-  *aResult = gFissionExperimentStatus;
   return NS_OK;
 }
 

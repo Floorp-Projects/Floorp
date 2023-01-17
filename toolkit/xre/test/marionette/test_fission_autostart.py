@@ -11,8 +11,6 @@ class ExperimentStatus:
 
 
 class Prefs:
-    ENROLLMENT_STATUS = "fission.experiment.enrollmentStatus"
-    STARTUP_ENROLLMENT_STATUS = "fission.experiment.startupEnrollmentStatus"
     FISSION_AUTOSTART = "fission.autostart"
     FISSION_AUTOSTART_SESSION = "fission.autostart.session"
 
@@ -51,7 +49,6 @@ class TestFissionAutostart(MarionetteTestCase):
           let win = Services.wm.getMostRecentWindow("navigator:browser");
           return {
             fissionAutostart: Services.appinfo.fissionAutostart,
-            fissionExperimentStatus: Services.appinfo.fissionExperimentStatus,
             decisionStatus: Services.appinfo.fissionDecisionStatus,
             decisionStatusString: Services.appinfo.fissionDecisionStatusString,
             useRemoteSubframes: win.docShell.nsILoadContext.useRemoteSubframes,
@@ -61,13 +58,12 @@ class TestFissionAutostart(MarionetteTestCase):
         """
         )
 
-    def check_fission_status(self, enabled, experiment, decision, dynamic=None):
+    def check_fission_status(self, enabled, decision, dynamic=None):
         if dynamic is None:
             dynamic = enabled
 
         expected = {
             "fissionAutostart": enabled,
-            "fissionExperimentStatus": experiment,
             "decisionStatus": DECISION_STATUS[decision],
             "decisionStatusString": decision,
             "useRemoteSubframes": enabled,
@@ -92,17 +88,6 @@ class TestFissionAutostart(MarionetteTestCase):
 
     def get_env(self, env):
         return self.execute_script("return env.get(arguments[0]);", script_args=(env,))
-
-    def set_enrollment_status(self, status):
-        self.marionette.set_pref(Prefs.ENROLLMENT_STATUS, status, default_branch=True)
-
-        startup_status = self.marionette.get_pref(Prefs.STARTUP_ENROLLMENT_STATUS)
-        self.assertEqual(
-            startup_status,
-            status,
-            "Startup enrollment status (%r) should match new "
-            "session status (%r)" % (startup_status, status),
-        )
 
     def restart(self, prefs=None, env=None):
         if prefs:
@@ -166,7 +151,6 @@ class TestFissionAutostart(MarionetteTestCase):
         # Fission status must start out with `enabledByDefault`
         self.check_fission_status(
             enabled=True,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="enabledByDefault",
         )
 
@@ -185,7 +169,6 @@ class TestFissionAutostart(MarionetteTestCase):
 
         self.check_fission_status(
             enabled=True,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="enabledByDefault",
         )
 
@@ -193,21 +176,12 @@ class TestFissionAutostart(MarionetteTestCase):
 
         self.check_fission_status(
             enabled=False,
-            experiment=ExperimentStatus.UNENROLLED,
-            decision="disabledByUserPref",
-        )
-
-        self.set_enrollment_status(ExperimentStatus.ENROLLED_CONTROL)
-        self.check_fission_status(
-            enabled=False,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="disabledByUserPref",
         )
 
         self.marionette.set_pref(Prefs.FISSION_AUTOSTART, True)
         self.check_fission_status(
             enabled=False,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="disabledByUserPref",
             dynamic=True,
         )
@@ -215,38 +189,19 @@ class TestFissionAutostart(MarionetteTestCase):
         self.marionette.clear_pref(Prefs.FISSION_AUTOSTART)
         self.check_fission_status(
             enabled=False,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="disabledByUserPref",
             dynamic=True,
         )
 
         self.restart()
         self.check_fission_status(
-            enabled=False,
-            experiment=ExperimentStatus.ENROLLED_CONTROL,
-            decision="experimentControl",
-        )
-
-        self.marionette.set_pref(
-            Prefs.ENROLLMENT_STATUS, ExperimentStatus.UNENROLLED, default_branch=True
-        )
-        self.check_fission_status(
-            enabled=False,
-            experiment=ExperimentStatus.ENROLLED_CONTROL,
-            decision="experimentControl",
-        )
-
-        self.set_env(ENV_ENABLE_FISSION, "1")
-        self.check_fission_status(
-            enabled=False,
-            experiment=ExperimentStatus.ENROLLED_CONTROL,
-            decision="experimentControl",
+            enabled=True,
+            decision="enabledByDefault",
         )
 
     def test_fission_precedence(self):
         self.check_fission_status(
             enabled=True,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="enabledByDefault",
         )
 
@@ -255,7 +210,6 @@ class TestFissionAutostart(MarionetteTestCase):
         )
         self.check_fission_status(
             enabled=True,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="enabledByEnv",
             dynamic=False,
         )
@@ -266,7 +220,6 @@ class TestFissionAutostart(MarionetteTestCase):
         )
         self.check_fission_status(
             enabled=False,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="disabledByEnv",
             dynamic=True,
         )
@@ -276,135 +229,19 @@ class TestFissionAutostart(MarionetteTestCase):
         )
         self.check_fission_status(
             enabled=False,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="disabledByUserPref",
         )
 
         self.restart(prefs={Prefs.FISSION_AUTOSTART: None})
         self.check_fission_status(
             enabled=True,
-            experiment=ExperimentStatus.UNENROLLED,
             decision="enabledByDefault",
-        )
-
-        self.set_enrollment_status(ExperimentStatus.ENROLLED_TREATMENT)
-        self.restart()
-        self.check_fission_status(
-            enabled=True,
-            experiment=ExperimentStatus.ENROLLED_TREATMENT,
-            decision="experimentTreatment",
-        )
-
-        self.set_enrollment_status(ExperimentStatus.ENROLLED_CONTROL)
-        self.restart()
-        self.check_fission_status(
-            enabled=False,
-            experiment=ExperimentStatus.ENROLLED_CONTROL,
-            decision="experimentControl",
-        )
-
-        self.marionette.set_pref(Prefs.FISSION_AUTOSTART, True)
-        self.check_fission_status(
-            enabled=False,
-            experiment=ExperimentStatus.ENROLLED_CONTROL,
-            decision="experimentControl",
-            dynamic=True,
-        )
-
-        self.assertEqual(
-            self.marionette.get_pref(Prefs.ENROLLMENT_STATUS),
-            ExperimentStatus.DISQUALIFIED,
-            "Setting fission.autostart should disqualify",
-        )
-
-        self.restart()
-        self.check_fission_status(
-            enabled=True,
-            experiment=ExperimentStatus.DISQUALIFIED,
-            decision="enabledByUserPref",
         )
 
         app_version = self.execute_script("return Services.appinfo.version")
         self.restart(env={ENV_DISABLE_E10S: app_version})
         self.check_fission_status(
             enabled=False,
-            experiment=ExperimentStatus.DISQUALIFIED,
             decision="disabledByE10sEnv",
             dynamic=True,
-        )
-
-    def test_fission_startup(self):
-        # Starting the browser with STARTUP_ENROLLMENT_STATUS set to treatment
-        # should make the current session run under treatment.
-        with self.full_restart() as profile:
-            profile.set_preferences(
-                {
-                    Prefs.STARTUP_ENROLLMENT_STATUS: ExperimentStatus.ENROLLED_TREATMENT,
-                },
-                filename="prefs.js",
-            )
-
-        self.assertEqual(
-            self.marionette.get_pref(Prefs.ENROLLMENT_STATUS),
-            ExperimentStatus.UNENROLLED,
-            "Dynamic pref should be unenrolled",
-        )
-        self.assertEqual(
-            self.marionette.get_pref(Prefs.STARTUP_ENROLLMENT_STATUS),
-            ExperimentStatus.ENROLLED_TREATMENT,
-            "Startup pref should be in treatment",
-        )
-        self.check_fission_status(
-            enabled=True,
-            experiment=ExperimentStatus.ENROLLED_TREATMENT,
-            decision="experimentTreatment",
-        )
-
-        # If normandy doesn't re-set `ENROLLMENT_STATUS` during the session, it
-        # should be cleared back to disabled after a restart.
-        self.marionette.restart(in_app=True, clean=False)
-
-        self.assertEqual(
-            self.marionette.get_pref(Prefs.ENROLLMENT_STATUS),
-            ExperimentStatus.UNENROLLED,
-            "Should unenroll dynamic pref after shutdown",
-        )
-        self.assertEqual(
-            self.marionette.get_pref(Prefs.STARTUP_ENROLLMENT_STATUS),
-            ExperimentStatus.UNENROLLED,
-            "Should unenroll startup pref after shutdown",
-        )
-        self.check_fission_status(
-            enabled=True,
-            experiment=ExperimentStatus.UNENROLLED,
-            decision="enabledByDefault",
-        )
-
-        # If the browser is started with a customized `fisison.autostart`,
-        # while also enrolled in an experiment, the experiment should be
-        # disqualified at startup.
-        with self.full_restart() as profile:
-            profile.set_preferences(
-                {
-                    Prefs.FISSION_AUTOSTART: True,
-                    Prefs.STARTUP_ENROLLMENT_STATUS: ExperimentStatus.ENROLLED_TREATMENT,
-                },
-                filename="prefs.js",
-            )
-
-        self.assertEqual(
-            self.marionette.get_pref(Prefs.ENROLLMENT_STATUS),
-            ExperimentStatus.DISQUALIFIED,
-            "Should disqualify dynamic pref on startup",
-        )
-        self.assertEqual(
-            self.marionette.get_pref(Prefs.STARTUP_ENROLLMENT_STATUS),
-            ExperimentStatus.DISQUALIFIED,
-            "Should disqualify startup pref on startup",
-        )
-
-        self.check_fission_status(
-            enabled=True,
-            experiment=ExperimentStatus.DISQUALIFIED,
-            decision="enabledByUserPref",
         )
