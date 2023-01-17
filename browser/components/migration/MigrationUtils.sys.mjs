@@ -500,31 +500,41 @@ class MigrationUtils {
    *   An identifier for the profile to use when migrating.
    */
   showMigrationWizard(aOpener, aOptions) {
-    const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
-    let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
-    if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
-      let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
-      if (win) {
-        win.focus();
-        return;
-      }
-      // On mac, the migration wiazrd should only be modal in the case of
-      // startup-migration.
-      features = "centerscreen,chrome,resizable=no";
-    }
-
     if (
-      Services.prefs.getBoolPref(
-        "browser.migrate.content-modal.enabled",
-        false
-      ) &&
-      aOpener &&
-      aOpener.gBrowser
+      Services.prefs.getBoolPref("browser.migrate.content-modal.enabled", false)
     ) {
-      const { gBrowser } = aOpener;
-      const { selectedBrowser } = gBrowser;
-      gBrowser.getTabDialogBox(selectedBrowser).open(DIALOG_URL, aOptions);
+      const DIALOG_URL =
+        "chrome://browser/content/migration/migration-dialog.html";
+      if (aOpener?.gBrowser) {
+        const { gBrowser } = aOpener;
+        const { selectedBrowser } = gBrowser;
+        gBrowser
+          .getTabDialogBox(selectedBrowser)
+          .open(DIALOG_URL, { features: "resizable=no" }, aOptions);
+      } else {
+        const FEATURES = "dialog,centerscreen,resizable=no";
+        Services.ww.openWindow(
+          aOpener,
+          DIALOG_URL,
+          "_blank",
+          FEATURES,
+          aOptions
+        );
+      }
     } else {
+      // Legacy migration dialog
+      const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
+      let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
+      if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
+        let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
+        if (win) {
+          win.focus();
+          return;
+        }
+        // On mac, the migration wiazrd should only be modal in the case of
+        // startup-migration.
+        features = "centerscreen,chrome,resizable=no";
+      }
       Services.ww.openWindow(aOpener, DIALOG_URL, "_blank", features, aOptions);
     }
   }
