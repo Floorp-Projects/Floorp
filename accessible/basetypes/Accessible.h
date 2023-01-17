@@ -346,6 +346,11 @@ class Accessible {
    */
   virtual Relation RelationByType(RelationType aType) const = 0;
 
+  /**
+   * Get the language associated with the accessible.
+   */
+  virtual void Language(nsAString& aLocale) = 0;
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;

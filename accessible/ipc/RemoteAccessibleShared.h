@@ -191,7 +191,7 @@ Accessible* ChildAtPoint(
 LayoutDeviceIntRect Bounds() const override;
 virtual nsIntRect BoundsInCSSPixels() const override;
 
-void Language(nsString& aLocale);
+virtual void Language(nsAString& aLocale) override;
 void DocType(nsString& aType);
 void Title(nsString& aTitle);
 void MimeType(nsString aMime);

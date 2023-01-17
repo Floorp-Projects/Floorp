@@ -1734,6 +1734,16 @@ Maybe<int32_t> RemoteAccessibleBase<Derived>::GetIntARIAAttr(
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::Language(nsAString& aLocale) {
+  if (!IsHyperText()) {
+    return;
+  }
+  if (auto attrs = GetCachedTextAttributes()) {
+    attrs->GetAttribute(nsGkAtoms::language, aLocale);
+  }
+}
+
+template <class Derived>
 size_t RemoteAccessibleBase<Derived>::SizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);

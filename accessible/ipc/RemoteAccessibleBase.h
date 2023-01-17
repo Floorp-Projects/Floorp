@@ -217,6 +217,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual Maybe<int32_t> GetIntARIAAttr(nsAtom* aAttrName) const override;
 
+  virtual void Language(nsAString& aLocale) override;
+
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
 
