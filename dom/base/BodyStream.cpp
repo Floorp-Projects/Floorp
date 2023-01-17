@@ -87,6 +87,59 @@ class BodyStream::WorkerShutdown final : public WorkerControlRunnable {
 NS_IMPL_ISUPPORTS(BodyStream, nsIInputStreamCallback, nsIObserver,
                   nsISupportsWeakReference)
 
+class BodyStreamUnderlyingSourceAlgorithms final
+    : public UnderlyingSourceAlgorithmsWrapper {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BodyStreamUnderlyingSourceAlgorithms,
+                                           UnderlyingSourceAlgorithmsBase)
+
+  BodyStreamUnderlyingSourceAlgorithms(nsIGlobalObject& aGlobal,
+                                       BodyStreamHolder& aUnderlyingSource)
+      : mGlobal(&aGlobal), mUnderlyingSource(&aUnderlyingSource) {}
+
+  already_AddRefed<Promise> PullCallbackImpl(
+      JSContext* aCx, ReadableStreamController& aController,
+      ErrorResult& aRv) override {
+    RefPtr<BodyStream> bodyStream = mUnderlyingSource->GetBodyStream();
+    return bodyStream->PullCallback(aCx, aController, aRv);
+  }
+
+  already_AddRefed<Promise> CancelCallbackImpl(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) override {
+    return Promise::CreateResolvedWithUndefined(mGlobal, aRv);
+  }
+
+  void ReleaseObjects() override {
+    RefPtr<BodyStreamHolder> holder = mUnderlyingSource.forget();
+    // BodyStream may not be available if this cleanup happened first from
+    // BodyStream side.
+    if (RefPtr<BodyStream> bodyStream = holder->GetBodyStream()) {
+      bodyStream->CloseInputAndReleaseObjects();
+    }
+  }
+
+  BodyStreamHolder* GetBodyStreamHolder() override { return mUnderlyingSource; }
+
+ protected:
+  ~BodyStreamUnderlyingSourceAlgorithms() override = default;
+
+ private:
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<BodyStreamHolder> mUnderlyingSource;
+};
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(BodyStreamUnderlyingSourceAlgorithms,
+                                   UnderlyingSourceAlgorithmsBase, mGlobal,
+                                   mUnderlyingSource)
+NS_IMPL_ADDREF_INHERITED(BodyStreamUnderlyingSourceAlgorithms,
+                         UnderlyingSourceAlgorithmsBase)
+NS_IMPL_RELEASE_INHERITED(BodyStreamUnderlyingSourceAlgorithms,
+                          UnderlyingSourceAlgorithmsBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BodyStreamUnderlyingSourceAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsBase)
+
 /* static */
 void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
                         nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
@@ -130,8 +183,10 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
     stream->mWorkerRef = std::move(workerRef);
   }
 
-  RefPtr<ReadableStream> body =
-      ReadableStream::Create(aCx, aGlobal, aStreamHolder, aRv);
+  auto algorithms = MakeRefPtr<BodyStreamUnderlyingSourceAlgorithms>(
+      *aGlobal, *aStreamHolder);
+  RefPtr<ReadableStream> body = ReadableStream::CreateByteNative(
+      aCx, aGlobal, *algorithms, Nothing(), aRv);
   if (aRv.Failed()) {
     return;
   }

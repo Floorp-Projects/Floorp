@@ -1166,20 +1166,4 @@ void ReadableStream::EnqueueNative(JSContext* aCx, JS::Handle<JS::Value> aChunk,
   ReadableByteStreamControllerEnqueue(aCx, controller, chunk, aRv);
 }
 
-already_AddRefed<ReadableStream> ReadableStream::Create(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv) {
-  RefPtr<ReadableStream> stream = new ReadableStream(aGlobal);
-
-  SetUpReadableByteStreamControllerFromBodyStreamUnderlyingSource(
-      aCx, stream, aUnderlyingSource, aRv);
-
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Step 5. Return stream.
-  return stream.forget();
-}
-
 }  // namespace mozilla::dom
