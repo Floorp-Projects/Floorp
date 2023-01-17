@@ -120,42 +120,6 @@ function TargetMixin(parentClass) {
       return true;
     }
 
-    /**
-     * Get the descriptor front for this target.
-     *
-     * TODO: Should be removed. This is misleading as only the top level target should have a descriptor.
-     * This will return null for targets created by the Watcher actor and will still be defined
-     * by targets created by RootActor methods (listSomething methods).
-     */
-    get descriptorFront() {
-      if (this.isDestroyed()) {
-        throw new Error("Descriptor already destroyed for target: " + this);
-      }
-
-      if (this.isWorkerTarget) {
-        return this;
-      }
-
-      if (this._descriptorFront) {
-        return this._descriptorFront;
-      }
-
-      if (this.parentFront.typeName.endsWith("Descriptor")) {
-        return this.parentFront;
-      }
-      throw new Error("Missing descriptor for target: " + this);
-    }
-
-    /**
-     * Top-level targets created on the server will not be created and managed
-     * by a descriptor front. Instead they are created by the Watcher actor.
-     * On the client side we manually re-establish a link between the descriptor
-     * and the new top-level target.
-     */
-    setDescriptor(descriptorFront) {
-      this._descriptorFront = descriptorFront;
-    }
-
     get targetType() {
       return this._targetType;
     }
@@ -270,24 +234,6 @@ function TargetMixin(parentClass) {
       }
 
       return this.client.traits[traitName];
-    }
-
-    get isLocalTab() {
-      // Worker Target is also the Descriptor,
-      // so avoid infinite loop.
-      if (this.isWorkerTarget) {
-        return false;
-      }
-      return !!this.descriptorFront?.isLocalTab;
-    }
-
-    get localTab() {
-      // Worker Target is also the Descriptor,
-      // so avoid infinite loop.
-      if (this.isWorkerTarget) {
-        return null;
-      }
-      return this.descriptorFront?.localTab || null;
     }
 
     // Get a promise of the RootActor's form
