@@ -1487,6 +1487,10 @@ void WindowGlobalParent::DidBecomeCurrentWindowGlobal(bool aCurrent) {
     top->mOriginCounter->UpdateSiteOriginsFrom(this,
                                                /* aIncrease = */ aCurrent);
   }
+
+  if (!aCurrent && Fullscreen()) {
+    ExitTopChromeDocumentFullscreen();
+  }
 }
 
 bool WindowGlobalParent::ShouldTrackSiteOriginTelemetry() {
@@ -1533,6 +1537,19 @@ bool WindowGlobalParent::HasActivePeerConnections() {
              "mNumOfProcessesWithActivePeerConnections is set only "
              "in the top window context");
   return mNumOfProcessesWithActivePeerConnections > 0;
+}
+
+void WindowGlobalParent::ExitTopChromeDocumentFullscreen() {
+  RefPtr<CanonicalBrowsingContext> chromeTop =
+      BrowsingContext()->TopCrossChromeBoundary();
+  if (Document* chromeDoc = chromeTop->GetDocument()) {
+    Document::ClearPendingFullscreenRequests(chromeDoc);
+    if (chromeDoc->Fullscreen()) {
+      // This only clears the DOM fullscreen, will not exit from browser UI
+      // fullscreen mode.
+      Document::AsyncExitFullscreen(chromeDoc);
+    }
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,

@@ -220,6 +220,11 @@ class WindowGlobalParent final : public WindowContext,
 
   bool HasActivePeerConnections();
 
+  bool Fullscreen() { return mFullscreen; }
+  void SetFullscreen(bool aFullscreen) { mFullscreen = aFullscreen; }
+
+  void ExitTopChromeDocumentFullscreen();
+
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,
                                         const nsACString& aName,
@@ -399,6 +404,9 @@ class WindowGlobalParent final : public WindowContext,
   // Note: We ignore favicon loads when considering the requests in the
   // loadgroup.
   Maybe<uint64_t> mSingleChannelId;
+
+  // True if the current loaded document is in fullscreen.
+  bool mFullscreen = false;
 };
 
 }  // namespace dom

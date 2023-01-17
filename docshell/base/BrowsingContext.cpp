@@ -3004,6 +3004,13 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
         doc->NotifyActivityChanged();
       }
     });
+
+    if (XRE_IsParentProcess()) {
+      if (mCurrentWindowContext &&
+          mCurrentWindowContext->Canonical()->Fullscreen()) {
+        mCurrentWindowContext->Canonical()->ExitTopChromeDocumentFullscreen();
+      }
+    }
   }
 }
 
