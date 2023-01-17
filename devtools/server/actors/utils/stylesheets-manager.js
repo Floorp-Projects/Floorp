@@ -822,7 +822,7 @@ class StyleSheetsManager extends EventEmitter {
   }
 
   /**
-   * The StyleSheetManager instance is managed by the target, so this will be called when
+   * The StyleSheetsManager instance is managed by the target, so this will be called when
    * the target gets destroyed.
    */
   destroy() {

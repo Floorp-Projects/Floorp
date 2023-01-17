@@ -77,7 +77,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   _getStyleSheetsManager() {
-    return this.parentActor.getStyleSheetManager();
+    return this.parentActor.getStyleSheetsManager();
   },
 
   toggleDisabled(resourceId) {
