@@ -417,10 +417,14 @@ RemoteDecoderManagerChild::Construct(RefPtr<RemoteDecoderChild>&& aChild,
           [aLocation](const mozilla::ipc::ResponseRejectReason& aReason) {
             // The parent has died.
             nsresult err =
-                ((aLocation == RemoteDecodeIn::GpuProcess) ||
-                 (aLocation == RemoteDecodeIn::RddProcess))
-                    ? NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR
-                    : NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR;
+                NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR;
+            if (aLocation == RemoteDecodeIn::GpuProcess ||
+                aLocation == RemoteDecodeIn::RddProcess) {
+              err = NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR;
+            } else if (aLocation ==
+                       RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
+              err = NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR;
+            }
             return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
                 err, __func__);
           });
