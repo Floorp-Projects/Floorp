@@ -336,18 +336,19 @@ void PointerEventHandler::CheckPointerCaptureState(WidgetPointerEvent* aEvent) {
   // content to set pointer capture other than the spoofed one. Thus, it must be
   // from chrome if the capture info exists in this case. And we don't have to
   // do anything if the pointer id is the same as the spoofed one.
-  if (nsContentUtils::ShouldResistFingerprinting() &&
+  if (nsContentUtils::ShouldResistFingerprinting("Efficiency Check") &&
       aEvent->pointerId != (uint32_t)GetSpoofedPointerIdForRFP() &&
       !captureInfo) {
     PointerCaptureInfo* spoofedCaptureInfo =
         GetPointerCaptureInfo(GetSpoofedPointerIdForRFP());
 
-    // We need to check the target element is content or chrome. If it is chrome
-    // we don't need to send a capture event since the capture info of the
-    // original pointer id doesn't exist in the case.
-    if (!spoofedCaptureInfo ||
-        (spoofedCaptureInfo->mPendingElement &&
-         spoofedCaptureInfo->mPendingElement->IsInChromeDocument())) {
+    // We need to check the target element's document should resist
+    // fingerprinting. If not, we don't need to send a capture event
+    // since the capture info of the original pointer id doesn't exist
+    // in this case.
+    if (!spoofedCaptureInfo || !spoofedCaptureInfo->mPendingElement ||
+        !spoofedCaptureInfo->mPendingElement->OwnerDoc()
+             ->ShouldResistFingerprinting()) {
       return;
     }
 
