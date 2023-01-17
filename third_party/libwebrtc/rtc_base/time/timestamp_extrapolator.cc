@@ -15,6 +15,10 @@
 #include "absl/types/optional.h"
 #include "modules/include/module_common_types_public.h"
 
+#ifdef DEBUG
+#  include <iostream>
+#endif
+
 namespace webrtc {
 
 namespace {
@@ -142,6 +146,12 @@ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
   } else {
     double timestampDiff = unwrapped_ts90khz - *first_unwrapped_timestamp_;
     auto diff_ms = static_cast<int64_t>((timestampDiff - w_[1]) / w_[0] + 0.5);
+#if defined(DEBUG) && defined(NIGHTLY_BUILD)
+    std::cerr << "##### TimestampExtrapolator DEBUG start_ = " << start_.ms()
+              << "ms; diff_ms = (" << unwrapped_ts90khz << " - "
+              << *first_unwrapped_timestamp_ << " - " << w_[1] << ") / "
+              << w_[0] << " + 0.5 = " << diff_ms << "ms" << std::endl;
+#endif
     if (diff_ms < 0) {
       RTC_DCHECK_GE(start_.ms(), -diff_ms);
     }
