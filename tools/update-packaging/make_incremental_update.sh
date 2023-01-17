@@ -78,8 +78,7 @@ if [ $# = 0 ]; then
   exit 1
 fi
 
-# force update to channel-prefs.js for bug 1804303
-requested_forced_updates='Contents/MacOS/firefox Contents/Resources/defaults/pref/channel-prefs.js'
+requested_forced_updates='Contents/MacOS/firefox'
 
 while getopts "hqf:" flag
 do
