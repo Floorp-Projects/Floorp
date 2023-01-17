@@ -9871,12 +9871,6 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
-# Copy decoded VA-API frames and return them to ffmpeg.
-# It may fix rendering/decoding bugs on some drivers.
-- name: media.ffmpeg.vaapi.surface-copy.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
 #endif # MOZ_WIDGET_GTK
 #endif  # MOZ_FFMPEG
 
