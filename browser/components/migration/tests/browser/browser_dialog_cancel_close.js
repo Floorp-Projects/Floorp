@@ -15,7 +15,7 @@ add_task(async function test_cancel_close() {
     window,
     "MigrationWizard:Ready"
   );
-  let dialogPromise = dialogBox.open(DIALOG_URL);
+  let dialogPromise = dialogBox.open(DIALOG_URL, {}, { onResize: () => {} });
   let dialogs = dialogBox.getTabDialogManager()._dialogs;
 
   Assert.equal(dialogs.length, 1, "Dialog manager has a dialog.");
@@ -53,7 +53,7 @@ add_task(async function test_cancel_close() {
     DIALOG_URL,
     "_blank",
     "dialog,centerscreen",
-    {}
+    { onResize: () => {} }
   );
   await promiseWinLoaded;
 

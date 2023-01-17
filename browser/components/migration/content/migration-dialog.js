@@ -9,6 +9,18 @@
  * in either a TabDialogBox or a top-level dialog window. It's main
  * responsibility is to listen for dialog-specific events from the
  * embedded MigrationWizard and to respond appropriately to them.
+ *
+ * A single object argument is expected to be passed when opening
+ * this dialog.
+ *
+ * @param {object} window.arguments.0
+ * @param {Function} window.arguments.0.onResize
+ *   A callback to resize the container of this document when the
+ *   MigrationWizard resizes.
+ * @param {object} window.arguments.0.options
+ *   A series of options for configuring the dialog. See
+ *   MigrationUtils.showMigrationWizard for a description of this
+ *   object.
  */
 
 const MigrationDialog = {
@@ -21,6 +33,23 @@ const MigrationDialog = {
   onLoad() {
     this._wiz = document.getElementById("wizard");
     this._wiz.addEventListener("MigrationWizard:Close", this);
+
+    let args = window.arguments[0];
+    // When opened via nsIWindowWatcher.openWindow, the arguments are
+    // passed through C++, and they arrive to us wrapped as an XPCOM
+    // object. We use wrappedJSObject to get at the underlying JS
+    // object.
+    if (args instanceof Ci.nsISupports) {
+      args = args.wrappedJSObject;
+    }
+
+    // We have to inform the container of this document that the
+    // MigrationWizard has changed size in order for it to update
+    // its dimensions too.
+    let observer = new ResizeObserver(() => {
+      args.onResize();
+    });
+    observer.observe(this._wiz);
   },
 
   handleEvent(event) {
