@@ -738,7 +738,7 @@ function makeExpectedResult(temperatureUnit = undefined) {
     payload: {
       temperatureUnit,
       url: WEATHER_SUGGESTION.url,
-      icon: "chrome://global/skin/icons/highlights.svg",
+      iconId: "6",
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: "firefox-suggest-urlbar-learn-more",
