@@ -8,36 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/desktop_capture_options.h"
-#include "modules/desktop_capture/desktop_capturer.h"
-
 #include "tab_capturer.h"
 
-#include <memory>
-#include <string>
-#include <utility>
-
+#include "desktop_device_info.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_frame.h"
 #include "mozilla/Logging.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "nsThreadUtils.h"
-#include "nsIBrowserWindowTracker.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsImportModule.h"
-#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/StaticPrefs_media.h"
-#include "mozilla/SyncRunnable.h"
-#include "desktop_device_info.h"
-
-#include "MediaUtils.h"
+#include "mozilla/TaskQueue.h"
+#include "nsThreadUtils.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 
 mozilla::LazyLogModule gTabShareLog("TabShare");
 
