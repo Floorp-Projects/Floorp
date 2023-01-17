@@ -106,7 +106,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     this._observedRules = [];
     this._styleApplied = this._styleApplied.bind(this);
 
-    this.styleSheetsManager = this.inspector.targetActor.getStyleSheetManager();
+    this.styleSheetsManager = this.inspector.targetActor.getStyleSheetsManager();
 
     this._onStylesheetUpdated = this._onStylesheetUpdated.bind(this);
     this.styleSheetsManager.on("stylesheet-updated", this._onStylesheetUpdated);

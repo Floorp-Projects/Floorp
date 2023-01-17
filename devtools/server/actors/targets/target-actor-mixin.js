@@ -99,11 +99,11 @@ module.exports = function(targetType, targetActorSpec, implementation) {
       );
     },
 
-    getStyleSheetManager() {
-      if (!this._styleSheetManager) {
-        this._styleSheetManager = new StyleSheetsManager(this);
+    getStyleSheetsManager() {
+      if (!this._styleSheetsManager) {
+        this._styleSheetsManager = new StyleSheetsManager(this);
       }
-      return this._styleSheetManager;
+      return this._styleSheetsManager;
     },
   };
   // Use getOwnPropertyDescriptors in order to prevent calling getter from implementation
@@ -117,9 +117,9 @@ module.exports = function(targetType, targetActorSpec, implementation) {
     }
   };
   proto.destroy = function() {
-    if (this._styleSheetManager) {
-      this._styleSheetManager.destroy();
-      this._styleSheetManager = null;
+    if (this._styleSheetsManager) {
+      this._styleSheetsManager.destroy();
+      this._styleSheetsManager = null;
     }
 
     if (typeof implementation.destroy == "function") {
