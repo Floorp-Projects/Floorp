@@ -2728,14 +2728,6 @@ void MLimitedTruncate::truncate(TruncateKind kind) {
 }
 
 bool MCompare::needTruncation() const {
-  // If we're compiling wasm, don't try to optimize the comparison type, as
-  // the code presumably is already using the type it wants. Also, wasm
-  // doesn't support bailouts, so we woudn't be able to rely on
-  // TruncateAfterBailouts to convert our inputs.
-  if (block()->info().compilingWasm()) {
-    return false;
-  }
-
   if (!isDoubleComparison()) {
     return false;
   }
