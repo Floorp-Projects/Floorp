@@ -3071,6 +3071,7 @@ Migrating data from other browsers.
         | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
     * - Peer(s)
       -
+        | `Mike Conley (mconley) <https://people.mozilla.org/s?query=mconley>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
         | `Matthew N (MattN) <https://people.mozilla.org/s?query=MattN>`__
     * - Includes
