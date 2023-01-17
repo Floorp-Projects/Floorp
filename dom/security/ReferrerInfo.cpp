@@ -1151,8 +1151,10 @@ static ReferrerPolicy ReferrerPolicyFromAttribute(const Element& aElement) {
 }
 
 static bool HasRelNoReferrer(const Element& aElement) {
-  // rel=noreferrer is only support in <a> and <area>
-  if (!aElement.IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area)) {
+  // rel=noreferrer is only supported in <a>, <area>, and <form>
+  if (!aElement.IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area,
+                                    nsGkAtoms::form) &&
+      !aElement.IsSVGElement(nsGkAtoms::a)) {
     return false;
   }
 
