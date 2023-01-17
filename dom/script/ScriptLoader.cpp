@@ -1384,6 +1384,48 @@ ReferrerPolicy ScriptLoader::GetReferrerPolicy(nsIScriptElement* aElement) {
   return mDocument->GetReferrerPolicy();
 }
 
+namespace {
+
+class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
+  RefPtr<ScriptLoadRequest> mRequest;
+  RefPtr<ScriptLoader> mLoader;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
+  JS::OffThreadToken* mToken;
+
+ public:
+  ScriptLoadRequest* GetScriptLoadRequest() { return mRequest; }
+
+  NotifyOffThreadScriptLoadCompletedRunnable(ScriptLoadRequest* aRequest,
+                                             ScriptLoader* aLoader)
+      : Runnable("dom::NotifyOffThreadScriptLoadCompletedRunnable"),
+        mRequest(aRequest),
+        mLoader(aLoader),
+        mToken(nullptr) {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (DocGroup* docGroup = aLoader->GetDocGroup()) {
+      mEventTarget = docGroup->EventTargetFor(TaskCategory::Other);
+    }
+  }
+
+  virtual ~NotifyOffThreadScriptLoadCompletedRunnable();
+
+  void SetToken(JS::OffThreadToken* aToken) {
+    MOZ_ASSERT(aToken && !mToken);
+    mToken = aToken;
+  }
+
+  static void Dispatch(
+      already_AddRefed<NotifyOffThreadScriptLoadCompletedRunnable>&& aSelf) {
+    RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> self = aSelf;
+    nsCOMPtr<nsISerialEventTarget> eventTarget = self->mEventTarget;
+    eventTarget->Dispatch(self.forget());
+  }
+
+  NS_DECL_NSIRUNNABLE
+};
+
+} /* anonymous namespace */
+
 void ScriptLoader::CancelScriptLoadRequests() {
   // Cancel all requests that have not been executed.
   if (mParserBlockingRequest) {
@@ -1423,298 +1465,8 @@ void ScriptLoader::CancelScriptLoadRequests() {
   mOffThreadCompilingRequests.CancelRequestsAndClear();
 }
 
-nsresult ScriptLoader::CompileOffThreadOrProcessRequest(
-    ScriptLoadRequest* aRequest) {
-  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
-               "Processing requests when running scripts is unsafe.");
-
-  if (!aRequest->GetScriptLoadContext()->mOffThreadToken &&
-      !aRequest->GetScriptLoadContext()->CompileStarted()) {
-    bool couldCompile = false;
-    nsresult rv = AttemptOffThreadScriptCompile(aRequest, &couldCompile);
-    if (NS_FAILED(rv)) {
-      HandleLoadError(aRequest, rv);
-      return rv;
-    }
-
-    if (couldCompile) {
-      return NS_OK;
-    }
-  }
-
-  return ProcessRequest(aRequest);
-}
-
-namespace {
-
-class OffThreadCompilationCompleteRunnable : public Runnable {
-  nsMainThreadPtrHandle<ScriptLoadRequest> mRequest;
-  nsMainThreadPtrHandle<ScriptLoader> mLoader;
-  nsCOMPtr<nsISerialEventTarget> mEventTarget;
-  JS::OffThreadToken* mToken;
-  TimeStamp mStartTime;
-  TimeStamp mStopTime;
-
- public:
-  OffThreadCompilationCompleteRunnable(ScriptLoadRequest* aRequest,
-                                       ScriptLoader* aLoader)
-      : Runnable("dom::OffThreadCompilationCompleteRunnable"),
-        mRequest(new nsMainThreadPtrHolder("mRequest", aRequest)),
-        mLoader(new nsMainThreadPtrHolder("mLoader", aLoader)),
-        mToken(nullptr) {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (DocGroup* docGroup = aLoader->GetDocGroup()) {
-      mEventTarget = docGroup->EventTargetFor(TaskCategory::Other);
-    }
-  }
-
-  void RecordStartTime() { mStartTime = TimeStamp::Now(); }
-  void RecordStopTime() { mStopTime = TimeStamp::Now(); }
-
-  void SetToken(JS::OffThreadToken* aToken) {
-    MOZ_ASSERT(aToken && !mToken);
-    mToken = aToken;
-  }
-
-  static void Dispatch(
-      already_AddRefed<OffThreadCompilationCompleteRunnable>&& aSelf) {
-    RefPtr<OffThreadCompilationCompleteRunnable> self = aSelf;
-    nsCOMPtr<nsISerialEventTarget> eventTarget = self->mEventTarget;
-    eventTarget->Dispatch(self.forget());
-  }
-
-  NS_DECL_NSIRUNNABLE
-};
-
-} /* anonymous namespace */
-
-nsresult ScriptLoader::AttemptOffThreadScriptCompile(
-    ScriptLoadRequest* aRequest, bool* aCouldCompileOut) {
-  // If speculative parsing is enabled, the request may not be ready to run if
-  // the element is not yet available.
-  MOZ_ASSERT_IF(!SpeculativeOMTParsingEnabled() && !aRequest->IsModuleRequest(),
-                aRequest->IsReadyToRun());
-  MOZ_ASSERT(!aRequest->GetScriptLoadContext()->mWasCompiledOMT);
-  MOZ_ASSERT(aCouldCompileOut && !*aCouldCompileOut);
-
-  // Don't off-thread compile inline scripts.
-  if (aRequest->GetScriptLoadContext()->mIsInline) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
-  if (!globalObject) {
-    return NS_ERROR_FAILURE;
-  }
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(globalObject)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSContext* cx = jsapi.cx();
-  JS::CompileOptions options(cx);
-
-  // Introduction script will actually be computed and set when the script is
-  // collected from offthread
-  JS::Rooted<JSScript*> dummyIntroductionScript(cx);
-  nsresult rv = FillCompileOptionsForRequest(cx, aRequest, &options,
-                                             &dummyIntroductionScript);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (aRequest->IsTextSource()) {
-    if (!JS::CanCompileOffThread(cx, options, aRequest->ScriptTextLength())) {
-      TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                     "scriptloader_main_thread_compile");
-      return NS_OK;
-    }
-  } else {
-    MOZ_ASSERT(aRequest->IsBytecode());
-
-    size_t length =
-        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
-    JS::DecodeOptions decodeOptions(options);
-    if (!JS::CanDecodeOffThread(cx, decodeOptions, length)) {
-      return NS_OK;
-    }
-  }
-
-  RefPtr<OffThreadCompilationCompleteRunnable> runnable =
-      new OffThreadCompilationCompleteRunnable(aRequest, this);
-
-  // Emulate dispatch. CompileOffThreadModule will call
-  // OffThreadCompilationCompleteCallback were we will emulate run.
-  LogRunnable::LogDispatch(runnable);
-
-  runnable->RecordStartTime();
-
-  JS::OffThreadToken* token = nullptr;
-  rv = StartOffThreadCompilation(cx, aRequest, options, runnable, &token);
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ASSERT(token);
-
-  aRequest->GetScriptLoadContext()->mOffThreadToken = token;
-  aRequest->GetScriptLoadContext()->mRunnable = runnable;
-
-  aRequest->GetScriptLoadContext()->BlockOnload(mDocument);
-
-  // Once the compilation is finished, a callback will dispatch the runnable to
-  // the main thread to call ScriptLoader::ProcessOffThreadRequest for the
-  // request.
-  aRequest->mState = ScriptLoadRequest::State::Compiling;
-
-  // Requests that are not tracked elsewhere are added to a list while they are
-  // being compiled off-thread, so we can cancel the compilation later if
-  // necessary.
-  //
-  // Non-top-level modules not tracked because these are cancelled from their
-  // importing module.
-  if (aRequest->IsTopLevel() && !aRequest->isInList()) {
-    mOffThreadCompilingRequests.AppendElement(aRequest);
-    aRequest->GetScriptLoadContext()->mInCompilingList = true;
-  }
-
-  *aCouldCompileOut = true;
-
-  return NS_OK;
-}
-
-static inline nsresult CompileResultForToken(void* aToken) {
-  return aToken ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-nsresult ScriptLoader::StartOffThreadCompilation(
-    JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions& aOptions,
-    Runnable* aRunnable, JS::OffThreadToken** aTokenOut) {
-  const JS::OffThreadCompileCallback callback =
-      OffThreadCompilationCompleteCallback;
-
-  if (aRequest->IsBytecode()) {
-    JS::DecodeOptions decodeOptions(aOptions);
-    *aTokenOut = JS::DecodeStencilOffThread(
-        aCx, decodeOptions, aRequest->mScriptBytecode,
-        aRequest->mBytecodeOffset, callback, aRunnable);
-    return CompileResultForToken(*aTokenOut);
-  }
-
-  MaybeSourceText maybeSource;
-  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aRequest->IsModuleRequest()) {
-    auto compile = [&](auto& source) {
-      return JS::CompileModuleToStencilOffThread(aCx, aOptions, source,
-                                                 callback, aRunnable);
-    };
-
-    MOZ_ASSERT(!maybeSource.empty());
-    *aTokenOut = maybeSource.mapNonEmpty(compile);
-    return CompileResultForToken(*aTokenOut);
-  }
-
-  if (ShouldApplyDelazifyStrategy(aRequest)) {
-    ApplyDelazifyStrategy(&aOptions);
-    mTotalFullParseSize +=
-        aRequest->ScriptTextLength() > 0
-            ? static_cast<uint32_t>(aRequest->ScriptTextLength())
-            : 0;
-
-    LOG(
-        ("ScriptLoadRequest (%p): non-on-demand-only Parsing Enabled for "
-         "url=%s mTotalFullParseSize=%u",
-         aRequest, aRequest->mURI->GetSpecOrDefault().get(),
-         mTotalFullParseSize));
-  }
-
-  if (StaticPrefs::dom_expose_test_interfaces()) {
-    switch (aOptions.eagerDelazificationStrategy()) {
-      case JS::DelazificationOption::OnDemandOnly:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_on_demand_only");
-        break;
-      case JS::DelazificationOption::CheckConcurrentWithOnDemand:
-      case JS::DelazificationOption::ConcurrentDepthFirst:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_concurrent_depth_first");
-        break;
-      case JS::DelazificationOption::ConcurrentLargeFirst:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_concurrent_large_first");
-        break;
-      case JS::DelazificationOption::ParseEverythingEagerly:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_parse_everything_eagerly");
-        break;
-    }
-  }
-
-  auto compile = [&](auto& source) {
-    return JS::CompileToStencilOffThread(aCx, aOptions, source, callback,
-                                         aRunnable);
-  };
-
-  MOZ_ASSERT(!maybeSource.empty());
-  *aTokenOut = maybeSource.mapNonEmpty(compile);
-  return CompileResultForToken(*aTokenOut);
-}
-
-void ScriptLoader::OffThreadCompilationCompleteCallback(
-    JS::OffThreadToken* aToken, void* aCallbackData) {
-  RefPtr<OffThreadCompilationCompleteRunnable> aRunnable =
-      static_cast<OffThreadCompilationCompleteRunnable*>(aCallbackData);
-
-  LogRunnable::Run run(aRunnable);
-
-  aRunnable->RecordStopTime();
-  aRunnable->SetToken(aToken);
-
-  OffThreadCompilationCompleteRunnable::Dispatch(aRunnable.forget());
-}
-
-NS_IMETHODIMP
-OffThreadCompilationCompleteRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<ScriptLoadContext> context = mRequest->GetScriptLoadContext();
-  MOZ_ASSERT_IF(context->mRunnable, context->mRunnable == this);
-  MOZ_ASSERT_IF(context->mOffThreadToken, context->mOffThreadToken == mToken);
-
-  // Clear the pointer to the runnable. The final reference will be released
-  // when this method returns.
-  context->mRunnable = nullptr;
-
-  if (!context->mOffThreadToken) {
-    // Request has been cancelled by MaybeCancelOffThreadScript.
-    return NS_OK;
-  }
-
-  if (profiler_is_active()) {
-    ProfilerString8View scriptSourceString;
-    if (mRequest->IsTextSource()) {
-      scriptSourceString = "ScriptCompileOffThread";
-    } else {
-      MOZ_ASSERT(mRequest->IsBytecode());
-      scriptSourceString = "BytecodeDecodeOffThread";
-    }
-
-    nsAutoCString profilerLabelString;
-    mRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
-    PROFILER_MARKER_TEXT(scriptSourceString, JS,
-                         MarkerTiming::Interval(mStartTime, mStopTime),
-                         profilerLabelString);
-  }
-
-  nsresult rv = mLoader->ProcessOffThreadRequest(mRequest);
-
-  mRequest = nullptr;
-  mLoader = nullptr;
-  return rv;
-}
-
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->IsCompiling());
+  MOZ_ASSERT(aRequest->mState == ScriptLoadRequest::State::Compiling);
   MOZ_ASSERT(!aRequest->GetScriptLoadContext()->mWasCompiledOMT);
 
   if (aRequest->IsCanceled()) {
@@ -1772,6 +1524,282 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   // Process other scripts in the proper order.
   ProcessPendingRequests();
   return NS_OK;
+}
+
+NotifyOffThreadScriptLoadCompletedRunnable::
+    ~NotifyOffThreadScriptLoadCompletedRunnable() {
+  if (MOZ_UNLIKELY(mRequest || mLoader) && !NS_IsMainThread()) {
+    NS_ReleaseOnMainThread(
+        "NotifyOffThreadScriptLoadCompletedRunnable::mRequest",
+        mRequest.forget());
+    NS_ReleaseOnMainThread(
+        "NotifyOffThreadScriptLoadCompletedRunnable::mLoader",
+        mLoader.forget());
+  }
+}
+
+NS_IMETHODIMP
+NotifyOffThreadScriptLoadCompletedRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // We want these to be dropped on the main thread, once we return from this
+  // function.
+  RefPtr<ScriptLoadRequest> request = std::move(mRequest);
+
+  // Runnable pointer should have been cleared in the offthread callback.
+  MOZ_ASSERT(!request->GetScriptLoadContext()->mRunnable);
+
+  if (profiler_is_active()) {
+    ProfilerString8View scriptSourceString;
+    if (request->IsTextSource()) {
+      scriptSourceString = "ScriptCompileOffThread";
+    } else {
+      MOZ_ASSERT(request->IsBytecode());
+      scriptSourceString = "BytecodeDecodeOffThread";
+    }
+
+    nsAutoCString profilerLabelString;
+    request->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
+    PROFILER_MARKER_TEXT(
+        scriptSourceString, JS,
+        MarkerTiming::Interval(
+            request->GetScriptLoadContext()->mOffThreadParseStartTime,
+            request->GetScriptLoadContext()->mOffThreadParseStopTime),
+        profilerLabelString);
+  }
+
+  RefPtr<ScriptLoader> loader = std::move(mLoader);
+
+  // Request was already cancelled at some earlier point.
+  if (!request->GetScriptLoadContext()->mOffThreadToken) {
+    return NS_OK;
+  }
+
+  return loader->ProcessOffThreadRequest(request);
+}
+
+static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
+                                          void* aCallbackData) {
+  RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> aRunnable = dont_AddRef(
+      static_cast<NotifyOffThreadScriptLoadCompletedRunnable*>(aCallbackData));
+  MOZ_ASSERT(
+      aRunnable.get() ==
+      aRunnable->GetScriptLoadRequest()->GetScriptLoadContext()->mRunnable);
+
+  aRunnable->GetScriptLoadRequest()
+      ->GetScriptLoadContext()
+      ->mOffThreadParseStopTime = TimeStamp::Now();
+
+  LogRunnable::Run run(aRunnable);
+
+  aRunnable->SetToken(aToken);
+
+  // If mRunnable was cleared then request was canceled so do nothing.
+  if (!aRunnable->GetScriptLoadRequest()
+           ->GetScriptLoadContext()
+           ->mRunnable.exchange(nullptr)) {
+    return;
+  }
+
+  NotifyOffThreadScriptLoadCompletedRunnable::Dispatch(aRunnable.forget());
+}
+
+nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
+                                                 bool* aCouldCompileOut) {
+  // If speculative parsing is enabled, the request may not be ready to run if
+  // the element is not yet available.
+  MOZ_ASSERT_IF(!SpeculativeOMTParsingEnabled() && !aRequest->IsModuleRequest(),
+                aRequest->IsReadyToRun());
+  MOZ_ASSERT(!aRequest->GetScriptLoadContext()->mWasCompiledOMT);
+  MOZ_ASSERT(aCouldCompileOut && !*aCouldCompileOut);
+
+  // Don't off-thread compile inline scripts.
+  if (aRequest->GetScriptLoadContext()->mIsInline) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
+  if (!globalObject) {
+    return NS_ERROR_FAILURE;
+  }
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::CompileOptions options(cx);
+
+  // Introduction script will actually be computed and set when the script is
+  // collected from offthread
+  JS::Rooted<JSScript*> dummyIntroductionScript(cx);
+  nsresult rv = FillCompileOptionsForRequest(cx, aRequest, &options,
+                                             &dummyIntroductionScript);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aRequest->IsTextSource()) {
+    if (!JS::CanCompileOffThread(cx, options, aRequest->ScriptTextLength())) {
+      TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
+                     "scriptloader_main_thread_compile");
+      return NS_OK;
+    }
+  } else {
+    MOZ_ASSERT(aRequest->IsBytecode());
+
+    size_t length =
+        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
+    JS::DecodeOptions decodeOptions(options);
+    if (!JS::CanDecodeOffThread(cx, decodeOptions, length)) {
+      return NS_OK;
+    }
+  }
+
+  RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> runnable =
+      new NotifyOffThreadScriptLoadCompletedRunnable(aRequest, this);
+
+  // Emulate dispatch.  CompileOffThreadModule will call
+  // OffThreadScriptLoaderCallback were we will emulate run.
+  LogRunnable::LogDispatch(runnable);
+
+  aRequest->GetScriptLoadContext()->mOffThreadParseStartTime = TimeStamp::Now();
+
+  // Save the runnable so it can be properly cleared during cancellation.
+  aRequest->GetScriptLoadContext()->mRunnable = runnable.get();
+  auto signalOOM = mozilla::MakeScopeExit(
+      [&aRequest]() { aRequest->GetScriptLoadContext()->mRunnable = nullptr; });
+
+  // The conditions should match ScriptLoadContext::MaybeCancelOffThreadScript.
+  if (aRequest->IsBytecode()) {
+    JS::DecodeOptions decodeOptions(options);
+    aRequest->GetScriptLoadContext()->mOffThreadToken =
+        JS::DecodeStencilOffThread(cx, decodeOptions, aRequest->mScriptBytecode,
+                                   aRequest->mBytecodeOffset,
+                                   OffThreadScriptLoaderCallback,
+                                   static_cast<void*>(runnable));
+    if (!aRequest->GetScriptLoadContext()->mOffThreadToken) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else if (aRequest->IsModuleRequest()) {
+    MOZ_ASSERT(aRequest->IsTextSource());
+    MaybeSourceText maybeSource;
+    nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    auto compile = [&](auto& source) {
+      return JS::CompileModuleToStencilOffThread(
+          cx, options, source, OffThreadScriptLoaderCallback, runnable.get());
+    };
+
+    MOZ_ASSERT(!maybeSource.empty());
+    JS::OffThreadToken* token = maybeSource.mapNonEmpty(compile);
+    if (!token) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    aRequest->GetScriptLoadContext()->mOffThreadToken = token;
+  } else {
+    MOZ_ASSERT(aRequest->IsTextSource());
+
+    if (ShouldApplyDelazifyStrategy(aRequest)) {
+      ApplyDelazifyStrategy(&options);
+      mTotalFullParseSize +=
+          aRequest->ScriptTextLength() > 0
+              ? static_cast<uint32_t>(aRequest->ScriptTextLength())
+              : 0;
+
+      LOG(
+          ("ScriptLoadRequest (%p): non-on-demand-only Parsing Enabled for "
+           "url=%s mTotalFullParseSize=%u",
+           aRequest, aRequest->mURI->GetSpecOrDefault().get(),
+           mTotalFullParseSize));
+    }
+
+    MaybeSourceText maybeSource;
+    nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (StaticPrefs::dom_expose_test_interfaces()) {
+      switch (options.eagerDelazificationStrategy()) {
+        case JS::DelazificationOption::OnDemandOnly:
+          TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
+                         "delazification_on_demand_only");
+          break;
+        case JS::DelazificationOption::CheckConcurrentWithOnDemand:
+        case JS::DelazificationOption::ConcurrentDepthFirst:
+          TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
+                         "delazification_concurrent_depth_first");
+          break;
+        case JS::DelazificationOption::ConcurrentLargeFirst:
+          TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
+                         "delazification_concurrent_large_first");
+          break;
+        case JS::DelazificationOption::ParseEverythingEagerly:
+          TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
+                         "delazification_parse_everything_eagerly");
+          break;
+      }
+    }
+
+    auto compile = [&](auto& source) {
+      return JS::CompileToStencilOffThread(
+          cx, options, source, OffThreadScriptLoaderCallback, runnable.get());
+    };
+
+    MOZ_ASSERT(!maybeSource.empty());
+    JS::OffThreadToken* token = maybeSource.mapNonEmpty(compile);
+    if (!token) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    aRequest->GetScriptLoadContext()->mOffThreadToken = token;
+  }
+  signalOOM.release();
+
+  aRequest->GetScriptLoadContext()->BlockOnload(mDocument);
+
+  // Once the compilation is finished, an event would be added to the event loop
+  // to call ScriptLoader::ProcessOffThreadRequest with the same request.
+  aRequest->mState = ScriptLoadRequest::State::Compiling;
+
+  // Requests that are not tracked elsewhere are added to a list while they are
+  // being compiled off-thread, so we can cancel the compilation later if
+  // necessary.
+  //
+  // Non-top-level modules not tracked because these are cancelled from their
+  // importing module.
+  if (aRequest->IsTopLevel() && !aRequest->isInList()) {
+    mOffThreadCompilingRequests.AppendElement(aRequest);
+    aRequest->GetScriptLoadContext()->mInCompilingList = true;
+  }
+
+  *aCouldCompileOut = true;
+  Unused << runnable.forget();
+  return NS_OK;
+}
+
+nsresult ScriptLoader::CompileOffThreadOrProcessRequest(
+    ScriptLoadRequest* aRequest) {
+  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+               "Processing requests when running scripts is unsafe.");
+
+  if (!aRequest->GetScriptLoadContext()->mOffThreadToken &&
+      !aRequest->GetScriptLoadContext()->CompileStarted()) {
+    bool couldCompile = false;
+    nsresult rv = AttemptAsyncScriptCompile(aRequest, &couldCompile);
+    if (NS_FAILED(rv)) {
+      HandleLoadError(aRequest, rv);
+      return rv;
+    }
+
+    if (couldCompile) {
+      return NS_OK;
+    }
+  }
+
+  return ProcessRequest(aRequest);
 }
 
 nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
@@ -3446,7 +3474,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
 
     // Attempt to compile off main thread.
     bool couldCompile = false;
-    rv = AttemptOffThreadScriptCompile(request, &couldCompile);
+    rv = AttemptAsyncScriptCompile(request, &couldCompile);
     NS_ENSURE_SUCCESS(rv, rv);
     if (couldCompile) {
       return NS_OK;
@@ -3465,7 +3493,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   if (ShouldCompileOffThread(aRequest)) {
     MOZ_ASSERT(!aRequest->IsModuleRequest());
     bool couldCompile = false;
-    nsresult rv = AttemptOffThreadScriptCompile(aRequest, &couldCompile);
+    nsresult rv = AttemptAsyncScriptCompile(aRequest, &couldCompile);
     NS_ENSURE_SUCCESS(rv, rv);
     if (couldCompile) {
       MOZ_ASSERT(aRequest->mState == ScriptLoadRequest::State::Compiling,

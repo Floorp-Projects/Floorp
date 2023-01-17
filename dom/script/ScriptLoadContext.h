@@ -153,6 +153,9 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   void MaybeCancelOffThreadScript();
 
+  TimeStamp mOffThreadParseStartTime;
+  TimeStamp mOffThreadParseStopTime;
+
   ScriptMode mScriptMode;  // Whether this is a blocking, defer or async script.
   bool mScriptFromHead;    // Synchronous head script block loading of other non
                            // js/css content.
@@ -169,13 +172,11 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   bool mWasCompiledOMT;   // True if the script has been compiled off main
                           // thread.
 
-  // Off-thread parsing token. Set at the start of off-thread parsing and
-  // cleared when the result of the parse is used.
-  JS::OffThreadToken* mOffThreadToken;
+  JS::OffThreadToken* mOffThreadToken;  // Off-thread parsing token.
 
-  // Runnable that is dispatched to the main thread when off-thread compilation
-  // completes.
-  RefPtr<Runnable> mRunnable;
+  Atomic<Runnable*> mRunnable;  // Runnable created when dispatching off thread
+                                // compile. Tracked here so that it can be
+                                // properly released during cancellation.
 
   int32_t mLineNo;
 
