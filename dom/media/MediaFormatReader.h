@@ -513,6 +513,9 @@ class MediaFormatReader final
         // TODO: Telemetry?
         return tooManyConsecutiveCrashes ||
                StaticPrefs::media_playback_warnings_as_errors();
+      } else if (mError.ref() ==
+                 NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR) {
+        return false;
       } else {
         // All other error types are fatal
         return true;

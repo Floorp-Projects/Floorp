@@ -105,6 +105,7 @@ class ExternalEngineStateMachine final
       RunningEngine,
       SeekingData,
       ShutdownEngine,
+      RecoverEngine,
     };
     struct InitEngine {
       InitEngine() = default;
@@ -159,6 +160,9 @@ class ExternalEngineStateMachine final
     struct ShutdownEngine {
       RefPtr<ShutdownPromise> mShutdown;
     };
+    // This state is used to recover the media engine after the MF CDM process
+    // crashes.
+    struct RecoverEngine : public InitEngine {};
 
     StateObject() : mData(InitEngine()), mName(State::InitEngine){};
     explicit StateObject(ReadingMetadata&& aArg)
@@ -169,15 +173,24 @@ class ExternalEngineStateMachine final
         : mData(std::move(aArg)), mName(State::SeekingData){};
     explicit StateObject(ShutdownEngine&& aArg)
         : mData(std::move(aArg)), mName(State::ShutdownEngine){};
+    explicit StateObject(RecoverEngine&& aArg)
+        : mData(std::move(aArg)), mName(State::RecoverEngine){};
 
     bool IsInitEngine() const { return mData.is<InitEngine>(); }
     bool IsReadingMetadata() const { return mData.is<ReadingMetadata>(); }
     bool IsRunningEngine() const { return mData.is<RunningEngine>(); }
     bool IsSeekingData() const { return mData.is<SeekingData>(); }
     bool IsShutdownEngine() const { return mData.is<ShutdownEngine>(); }
+    bool IsRecoverEngine() const { return mData.is<RecoverEngine>(); }
 
     InitEngine* AsInitEngine() {
-      return IsInitEngine() ? &mData.as<InitEngine>() : nullptr;
+      if (IsInitEngine()) {
+        return &mData.as<InitEngine>();
+      }
+      if (IsRecoverEngine()) {
+        return &mData.as<RecoverEngine>();
+      }
+      return nullptr;
     }
     ReadingMetadata* AsReadingMetadata() {
       return IsReadingMetadata() ? &mData.as<ReadingMetadata>() : nullptr;
@@ -190,7 +203,7 @@ class ExternalEngineStateMachine final
     }
 
     Variant<InitEngine, ReadingMetadata, RunningEngine, SeekingData,
-            ShutdownEngine>
+            ShutdownEngine, RecoverEngine>
         mData;
     State mName;
   } mState;
@@ -213,6 +226,7 @@ class ExternalEngineStateMachine final
   void SetCanPlayThrough(bool aCanPlayThrough) override {}
   void SetFragmentEndTime(const media::TimeUnit& aFragmentEndTime) override {}
 
+  void InitEngine();
   void OnEngineInitSuccess();
   void OnEngineInitFailure();
 
@@ -261,6 +275,8 @@ class ExternalEngineStateMachine final
   bool ShouldRunEngineUpdateForRequest();
 
   void UpdateSecondaryVideoContainer() override;
+
+  void RecoverFromCDMProcessCrashIfNeeded();
 
   UniquePtr<ExternalPlaybackEngine> mEngine;
 

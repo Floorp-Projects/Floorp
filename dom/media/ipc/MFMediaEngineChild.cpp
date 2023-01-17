@@ -202,14 +202,22 @@ void MFMediaEngineChild::OwnerDestroyed() {
 
 void MFMediaEngineChild::IPDLActorDestroyed() {
   AssertOnManagerThread();
+  if (!mShutdown) {
+    CLOG("Destroyed actor without shutdown, remote process has crashed!");
+    mOwner->NotifyError(NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR);
+  }
   mIPDLSelfRef = nullptr;
 }
 
 void MFMediaEngineChild::Shutdown() {
   AssertOnManagerThread();
+  if (mShutdown) {
+    return;
+  }
   SendShutdown();
   mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
   mInitEngineRequest.DisconnectIfExists();
+  mShutdown = true;
 }
 
 MFMediaEngineWrapper::MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner,

@@ -66,6 +66,7 @@ const char* ExternalEngineStateMachine::StateToStr(State aNextState) {
     STATE_TO_STR(RunningEngine);
     STATE_TO_STR(SeekingData);
     STATE_TO_STR(ShutdownEngine);
+    STATE_TO_STR(RecoverEngine);
     default:
       MOZ_ASSERT_UNREACHABLE("Undefined state!");
       return "Undefined";
@@ -86,13 +87,18 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
   MOZ_ASSERT_IF(mState.IsReadingMetadata(),
                 aNextState == State::RunningEngine ||
                     aNextState == State::ShutdownEngine);
-  MOZ_ASSERT_IF(
-      mState.IsRunningEngine(),
-      aNextState == State::SeekingData || aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(mState.IsRunningEngine(),
+                aNextState == State::SeekingData ||
+                    aNextState == State::ShutdownEngine ||
+                    aNextState == State::RecoverEngine);
   MOZ_ASSERT_IF(mState.IsSeekingData(),
                 aNextState == State::RunningEngine ||
-                    aNextState == State::ShutdownEngine);
+                    aNextState == State::ShutdownEngine ||
+                    aNextState == State::RecoverEngine);
   MOZ_ASSERT_IF(mState.IsShutdownEngine(), aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(mState.IsRecoverEngine(),
+                aNextState == State::RunningEngine ||
+                    aNextState == State::ShutdownEngine);
   if (aNextState == State::SeekingData) {
     mState = StateObject({StateObject::SeekingData()});
   } else if (aNextState == State::ReadingMetadata) {
@@ -101,6 +107,8 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
     mState = StateObject({StateObject::RunningEngine()});
   } else if (aNextState == State::ShutdownEngine) {
     mState = StateObject({StateObject::ShutdownEngine()});
+  } else if (aNextState == State::RecoverEngine) {
+    mState = StateObject({StateObject::RecoverEngine()});
   } else {
     MOZ_ASSERT_UNREACHABLE("Wrong state!");
   }
@@ -111,6 +119,11 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
     : MediaDecoderStateMachineBase(aDecoder, aReader) {
   LOG("Created ExternalEngineStateMachine");
   MOZ_ASSERT(mState.IsInitEngine());
+  InitEngine();
+}
+
+void ExternalEngineStateMachine::InitEngine() {
+  MOZ_ASSERT(mState.IsInitEngine() || mState.IsRecoverEngine());
 #ifdef MOZ_WMF_MEDIA_ENGINE
   mEngine.reset(new MFMediaEngineWrapper(this, mFrameStats));
 #endif
@@ -129,21 +142,27 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   AssertOnTaskQueue();
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::OnEngineInitSuccess",
                       MEDIA_PLAYBACK);
-  MOZ_ASSERT(mState.IsInitEngine());
-  LOG("Initialized the external playback engine %" PRIu64
-      ", start reading metadata",
-      mEngine->Id());
+  MOZ_ASSERT(mState.IsInitEngine() || mState.IsRecoverEngine());
+  LOG("Initialized the external playback engine %" PRIu64, mEngine->Id());
   auto* state = mState.AsInitEngine();
   state->mEngineInitRequest.Complete();
   mReader->UpdateMediaEngineId(mEngine->Id());
   state->mInitPromise = nullptr;
-  ChangeStateTo(State::ReadingMetadata);
-  ReadMetadata();
+  if (mState.IsInitEngine()) {
+    ChangeStateTo(State::ReadingMetadata);
+    ReadMetadata();
+    return;
+  }
+  // We just recovered from CDM process crash, so we need to update the media
+  // info to the new CDM process.
+  MOZ_ASSERT(mInfo);
+  mEngine->SetMediaInfo(*mInfo);
+  StartRunningEngine();
 }
 
 void ExternalEngineStateMachine::OnEngineInitFailure() {
   AssertOnTaskQueue();
-  MOZ_ASSERT(mState.IsInitEngine());
+  MOZ_ASSERT(mState.IsInitEngine() || mState.IsRecoverEngine());
   LOGE("Failed to initialize the external playback engine");
   auto* state = mState.AsInitEngine();
   state->mEngineInitRequest.Complete();
@@ -691,6 +710,10 @@ void ExternalEngineStateMachine::OnRequestAudio() {
                 LOG("Reach to the end, no more audio data");
                 EndOfStream(MediaData::Type::AUDIO_DATA);
                 break;
+              case NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR:
+                // We will handle the process crash in `NotifyErrorInternal()`
+                // so here just silently ignore this.
+                break;
               default:
                 DecodeError(aError);
             }
@@ -762,6 +785,10 @@ void ExternalEngineStateMachine::OnRequestVideo() {
               case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
                 LOG("Reach to the end, no more video data");
                 EndOfStream(MediaData::Type::VIDEO_DATA);
+                break;
+              case NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR:
+                // We will handle the process crash in `NotifyErrorInternal()`
+                // so here just silently ignore this.
                 break;
               default:
                 DecodeError(aError);
@@ -952,9 +979,32 @@ void ExternalEngineStateMachine::NotifyErrorInternal(
     // to use our own state machine again.
     DecodeError(
         MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
+  } else if (aError == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR) {
+    RecoverFromCDMProcessCrashIfNeeded();
   } else {
     DecodeError(aError);
   }
+}
+
+void ExternalEngineStateMachine::RecoverFromCDMProcessCrashIfNeeded() {
+  AssertOnTaskQueue();
+  LOG("CDM process has crashed, recover the engine again");
+  if (mState.IsRecoverEngine()) {
+    return;
+  }
+  ChangeStateTo(State::RecoverEngine);
+  if (HasVideo()) {
+    mVideoDataRequest.DisconnectIfExists();
+    mVideoWaitRequest.DisconnectIfExists();
+  }
+  if (HasAudio()) {
+    mAudioDataRequest.DisconnectIfExists();
+    mAudioWaitRequest.DisconnectIfExists();
+  }
+  // Ask the reader to shutdown current decoders which are no longer available
+  // due to the remote process crash.
+  mReader->ReleaseResources();
+  InitEngine();
 }
 
 media::TimeUnit ExternalEngineStateMachine::GetVideoThreshold() {
