@@ -1066,6 +1066,21 @@ void ReadableStream::CloseNative(JSContext* aCx, ErrorResult& aRv) {
   ReadableStreamDefaultControllerClose(aCx, controller, aRv);
 }
 
+// https://streams.spec.whatwg.org/#readablestream-error
+void ReadableStream::ErrorNative(JSContext* aCx, JS::Handle<JS::Value> aError,
+                                 ErrorResult& aRv) {
+  // Step 1: If stream.[[controller]] implements ReadableByteStreamController,
+  // then perform ! ReadableByteStreamControllerError(stream.[[controller]], e).
+  if (mController->IsByte()) {
+    ReadableByteStreamControllerError(mController->AsByte(), aError, aRv);
+    return;
+  }
+  // Step 2: Otherwise, perform !
+  // ReadableStreamDefaultControllerError(stream.[[controller]], e).
+  ReadableStreamDefaultControllerError(aCx, mController->AsDefault(), aError,
+                                       aRv);
+}
+
 // https://streams.spec.whatwg.org/#readablestream-current-byob-request-view
 static void CurrentBYOBRequestView(JSContext* aCx,
                                    ReadableByteStreamController& aController,

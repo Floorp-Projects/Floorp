@@ -398,12 +398,10 @@ void BodyStream::ErrorPropagation(JSContext* aCx,
 
   {
     MutexSingleWriterAutoUnlock unlock(mMutex);
-    // Don't re-error an already errored stream.
-    if (aStream->State() == ReadableStream::ReaderState::Readable) {
-      IgnoredErrorResult rv;
-      ReadableStreamError(aCx, aStream, errorValue, rv);
-      NS_WARNING_ASSERTION(!rv.Failed(), "Failed to error BodyStream");
-    }
+    // This will be ignored if it's already errored.
+    IgnoredErrorResult rv;
+    aStream->ErrorNative(aCx, errorValue, rv);
+    NS_WARNING_ASSERTION(!rv.Failed(), "Failed to error BodyStream");
   }
 
   if (mState == eInitializing) {

@@ -119,6 +119,10 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   // https://streams.spec.whatwg.org/#readablestream-close
   MOZ_CAN_RUN_SCRIPT void CloseNative(JSContext* aCx, ErrorResult& aRv);
 
+  // https://streams.spec.whatwg.org/#readablestream-error
+  void ErrorNative(JSContext* aCx, JS::Handle<JS::Value> aError,
+                   ErrorResult& aRv);
+
   // https://streams.spec.whatwg.org/#readablestream-enqueue
   MOZ_CAN_RUN_SCRIPT void EnqueueNative(JSContext* aCx,
                                         JS::Handle<JS::Value> aChunk,
@@ -151,7 +155,7 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
       ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PipeTo(
-      WritableStream& aDestinaton, const StreamPipeOptions& aOptions,
+      WritableStream& aDestination, const StreamPipeOptions& aOptions,
       ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void Tee(JSContext* aCx,
