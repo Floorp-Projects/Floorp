@@ -9,7 +9,10 @@
  * execution context.
  */
 add_task(async function test_migration_dialog_open_in_tab_dialog_box() {
-  let wizardReady = BrowserTestUtils.waitForEvent(window, "MigrationWizard:Ready");
+  let wizardReady = BrowserTestUtils.waitForEvent(
+    window,
+    "MigrationWizard:Ready"
+  );
   let dialogPromise = TestUtils.topicObserved("subdialog-loaded");
   MigrationUtils.showMigrationWizard(window, {});
   await dialogPromise;
