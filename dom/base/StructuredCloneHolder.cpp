@@ -1283,7 +1283,12 @@ StructuredCloneHolder::CustomReadTransferHandler(
         static_cast<VideoFrame::TransferredData*>(aContent);
     nsCOMPtr<nsIGlobalObject> global = mGlobal;
     RefPtr<VideoFrame> frame = VideoFrame::FromTransferred(global.get(), data);
+    // aContent will be released in CustomFreeTransferHandler if frame is null.
+    if (!frame) {
+      return false;
+    }
     delete data;
+    aContent = nullptr;
 
     JS::Rooted<JS::Value> value(aCx);
     if (!GetOrCreateDOMReflector(aCx, frame, &value)) {
@@ -1523,10 +1528,11 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
   if (StaticPrefs::dom_media_webcodecs_enabled() &&
       aTag == SCTAG_DOM_VIDEOFRAME &&
       CloneScope() == StructuredCloneScope::SameProcess) {
-    MOZ_ASSERT(aContent);
-    VideoFrame::TransferredData* data =
-        static_cast<VideoFrame::TransferredData*>(aContent);
-    delete data;
+    if (aContent) {
+      VideoFrame::TransferredData* data =
+          static_cast<VideoFrame::TransferredData*>(aContent);
+      delete data;
+    }
     return;
   }
 }
