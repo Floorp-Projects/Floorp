@@ -323,6 +323,7 @@ class GCMarker {
   bool isDrained() const { return stack.isEmpty(); }
 
   bool hasEntries(gc::MarkColor color) const { return stack.hasEntries(color); }
+  bool hasStealableWork() const { return stack.hasStealableWork(); }
 
   void start();
   void stop();
