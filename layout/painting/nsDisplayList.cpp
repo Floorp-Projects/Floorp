@@ -3186,8 +3186,9 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   // for background-color animations.
   if ((drawBackgroundColor && color != NS_RGBA(0, 0, 0, 0)) ||
       aBuilder->IsForEventDelivery() ||
-      EffectCompositor::HasAnimationsForCompositor(
-          aFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
+      (EffectCompositor::HasAnimationsForCompositor(
+           aFrame, DisplayItemType::TYPE_BACKGROUND_COLOR) &&
+       !isThemed)) {
     if (aAutoBuildingDisplayList && !*aAutoBuildingDisplayList) {
       nsPoint offset = aBuilder->GetCurrentFrame()->GetOffsetTo(aFrame);
       aAutoBuildingDisplayList->emplace(aBuilder, aFrame,
