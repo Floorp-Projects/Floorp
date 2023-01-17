@@ -420,7 +420,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     final List<String> found =
         findMatchingCodecNames(fmt, flags == MediaCodec.CONFIGURE_FLAG_ENCODE);
     for (final String name : found) {
-      final AsyncCodec codec = configureCodec(name, fmt, surface, flags, drmStubId);
+      final AsyncCodec codec =
+          configureCodec(
+              name, fmt, surface != null ? surface.getSurface() : null, flags, drmStubId);
       if (codec == null) {
         Log.w(LOGTAG, "unable to configure " + name + ". Try next.");
         continue;

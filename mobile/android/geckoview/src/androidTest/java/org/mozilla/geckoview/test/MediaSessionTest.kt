@@ -790,7 +790,7 @@ class MediaSessionTest : BaseSessionTest() {
 
     @Test
     fun fullscreenVideoElementMetadata() {
-        // TODO: bug 1706656
+        // TODO: bug 1810736
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         sessionRule.setPrefsUntilTestEnd(

@@ -185,6 +185,9 @@ class PermissionDelegateTest : BaseSessionTest() {
     }
 
     @Test fun geolocation() {
+        // Bug 1810736
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         assertInAutomationThat(
             "Should have location permission",
             hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),

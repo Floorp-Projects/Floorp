@@ -70,6 +70,8 @@ class ContentDelegateChildTest : BaseSessionTest() {
     @WithDisplay(width = 100, height = 100)
     @Test
     fun requestContextMenuOnBlobBuffered() {
+        // Bug 1810736
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         mainSession.loadTestPath(CONTEXT_MENU_BLOB_BUFFERED_HTML_PATH)
         mainSession.waitForPageStop()
         mainSession.waitForRoundTrip()
