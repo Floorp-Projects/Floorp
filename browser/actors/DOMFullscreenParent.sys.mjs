@@ -132,6 +132,7 @@ export class DOMFullscreenParent extends JSWindowActorParent {
     let window = browser.ownerGlobal;
     switch (aMessage.name) {
       case "DOMFullscreen:Request": {
+        this.manager.fullscreen = true;
         this.waitingForChildExitFullscreen = false;
         this.requestOrigin = this;
         this.addListeners(window);
@@ -149,6 +150,7 @@ export class DOMFullscreenParent extends JSWindowActorParent {
         break;
       }
       case "DOMFullscreen:Entered": {
+        this.manager.fullscreen = true;
         this.nextMsgRecipient = null;
         this.waitingForChildEnterFullscreen = false;
         window.FullScreen.enterDomFullscreen(browser, this);
@@ -156,11 +158,13 @@ export class DOMFullscreenParent extends JSWindowActorParent {
         break;
       }
       case "DOMFullscreen:Exit": {
+        this.manager.fullscreen = false;
         this.waitingForChildEnterFullscreen = false;
         window.windowUtils.remoteFrameFullscreenReverted();
         break;
       }
       case "DOMFullscreen:Exited": {
+        this.manager.fullscreen = false;
         this.waitingForChildExitFullscreen = false;
         this.cleanupDomFullscreen(window);
         this.updateFullscreenWindowReference(window);
