@@ -7,15 +7,15 @@ package org.mozilla.gecko.gfx;
 
 import static org.mozilla.geckoview.BuildConfig.DEBUG_BUILD;
 
-import android.graphics.SurfaceTexture;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.Surface;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
-public final class GeckoSurface extends Surface {
+public final class GeckoSurface implements Parcelable {
   private static final String LOGTAG = "GeckoSurface";
 
+  private Surface mSurface;
   private long mHandle;
   private boolean mIsSingleBuffer;
   private volatile boolean mIsAvailable;
@@ -28,32 +28,25 @@ public final class GeckoSurface extends Surface {
 
   @WrapForJNI(exceptionMode = "nsresult")
   public GeckoSurface(final GeckoSurfaceTexture gst) {
-    super(gst);
+    mSurface = new Surface(gst);
     mHandle = gst.getHandle();
     mIsSingleBuffer = gst.isSingleBuffer();
     mIsAvailable = true;
     mMyPid = android.os.Process.myPid();
   }
 
-  public GeckoSurface(final Parcel p, final SurfaceTexture dummy) {
-    // A no-arg constructor exists, but is hidden in the SDK. We need to create a dummy
-    // SurfaceTexture here in order to create the instance. This is used to transfer the
-    // GeckoSurface across binder.
-    super(dummy);
-
-    readFromParcel(p);
+  public GeckoSurface(final Parcel p) {
+    mSurface = Surface.CREATOR.createFromParcel(p);
     mHandle = p.readLong();
     mIsSingleBuffer = p.readByte() == 1 ? true : false;
     mIsAvailable = (p.readByte() == 1 ? true : false);
     mMyPid = p.readInt();
-
-    dummy.release();
   }
 
   public static final Parcelable.Creator<GeckoSurface> CREATOR =
       new Parcelable.Creator<GeckoSurface>() {
         public GeckoSurface createFromParcel(final Parcel p) {
-          return new GeckoSurface(p, new SurfaceTexture(0));
+          return new GeckoSurface(p);
         }
 
         public GeckoSurface[] newArray(final int size) {
@@ -62,8 +55,13 @@ public final class GeckoSurface extends Surface {
       };
 
   @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
   public void writeToParcel(final Parcel out, final int flags) {
-    super.writeToParcel(out, flags);
+    mSurface.writeToParcel(out, flags);
     if ((flags & Parcelable.PARCELABLE_WRITE_RETURN_VALUE) == 0) {
       // GeckoSurface can be passed across processes as a return value or
       // an argument, and should always tranfers its ownership (move) to
@@ -72,7 +70,7 @@ public final class GeckoSurface extends Surface {
       // write flags is provided. (See Surface.writeToParcel().)
       // The superclass method must be called here to ensure the local instance
       // is truely forgotten.
-      super.release();
+      mSurface.release();
     }
     mOwned = false;
 
@@ -82,7 +80,6 @@ public final class GeckoSurface extends Surface {
     out.writeInt(mMyPid);
   }
 
-  @Override
   public void release() {
     if (mIsReleased) {
       return;
@@ -99,13 +96,18 @@ public final class GeckoSurface extends Surface {
     }
 
     if (mOwned) {
-      super.release();
+      mSurface.release();
     }
   }
 
   @WrapForJNI
   public long getHandle() {
     return mHandle;
+  }
+
+  @WrapForJNI
+  public Surface getSurface() {
+    return mSurface;
   }
 
   @WrapForJNI
@@ -138,10 +140,13 @@ public final class GeckoSurface extends Surface {
     }
     final GeckoSurfaceTexture texture =
         GeckoSurfaceTexture.acquire(GeckoSurfaceTexture.isSingleBufferSupported(), mHandle);
-    texture.setDefaultBufferSize(width, height);
-    texture.track(mHandle);
-    mSyncSurface = new GeckoSurface(texture);
+    if (texture != null) {
+      texture.setDefaultBufferSize(width, height);
+      texture.track(mHandle);
+      mSyncSurface = new GeckoSurface(texture);
+      return new SyncConfig(mHandle, mSyncSurface, width, height);
+    }
 
-    return new SyncConfig(mHandle, mSyncSurface, width, height);
+    return null;
   }
 }

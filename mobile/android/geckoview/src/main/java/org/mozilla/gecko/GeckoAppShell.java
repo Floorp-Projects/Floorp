@@ -1604,4 +1604,14 @@ public class GeckoAppShell {
    */
   @WrapForJNI
   public static native GeckoResult<Boolean> isGpuProcessEnabled();
+
+  @SuppressLint("NewApi")
+  public static boolean isIsolatedProcess() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+      return false;
+    }
+    // This method was added in SDK 16 but remained hidden until SDK 28, meaning we are okay to call
+    // this on any SDK level but must suppress the new API lint.
+    return android.os.Process.isIsolated();
+  }
 }
