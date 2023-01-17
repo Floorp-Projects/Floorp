@@ -20,7 +20,6 @@ DevToolsModules(
     "session-storage.js",
     "source.js",
     "storage-utils.js",
-    "stylesheet.js",
     "thread-states.js",
     "websocket.js",
 )
