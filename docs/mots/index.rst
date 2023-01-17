@@ -613,7 +613,7 @@ Streams Specification implementation
     * - Peer(s)
       -
         | `Olli Pettay (smaug) <https://people.mozilla.org/s?query=smaug>`__
-        | `Tom Schuster (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
+        | `Tom S (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
         | `Kagami (saschanaz) <https://people.mozilla.org/s?query=saschanaz>`__
     * - Includes
       -
@@ -1009,7 +1009,7 @@ JavaScript engine (SpiderMonkey)
         | `Bobby Holley (bholley) <https://people.mozilla.org/s?query=bholley>`__
         | `Bryan Thrall (bthrall) <https://people.mozilla.org/s?query=bthrall>`__
         | `Dan Minor (dminor) <https://people.mozilla.org/s?query=dminor>`__
-        | `Tom Schuster (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
+        | `Tom S (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
         | `Iain Ireland (iain) <https://people.mozilla.org/s?query=iain>`__
         | `Jon Coppeard (jonco) <https://people.mozilla.org/s?query=jonco>`__
         | `Julian Seward (jseward) <https://people.mozilla.org/s?query=jseward>`__
@@ -1054,7 +1054,7 @@ JavaScript engine's JIT compilers (IonMonkey, Baseline)
         | `Brian Hackett (bhackett1024) <https://people.mozilla.org/s?query=bhackett1024>`__
         | `Iain Ireland (iain) <https://people.mozilla.org/s?query=iain>`__
         | `Nicolas B (nbp) <https://people.mozilla.org/s?query=nbp>`__
-        | `Tom Schuster (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
+        | `Tom S (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
         | `Sean Stangl (sstangl) <https://people.mozilla.org/s?query=sstangl>`__
         | `Kannan Vijayan (djvj) <https://people.mozilla.org/s?query=djvj>`__
         | `Luke Wagner (luke) <https://people.mozilla.org/s?query=luke>`__
@@ -2840,6 +2840,26 @@ Desktop clients for our experiments and off-train deployments systems.
       - Firefox::Normandy, Firefox::Nimbus Desktop Client
 
 
+Firefox View
+============
+The Firefox View page and its modules.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Sarah Clements (sclements) <https://people.mozilla.org/s?query=sclements>`__
+    * - Peer(s)
+      -
+        | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
+    * - Includes
+      -
+        | `browser/components/firefoxview/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/firefoxview/\*\*/\*>`__
+
+
 Form Autofill
 =============
 Form detection and autocomplete.
@@ -3072,7 +3092,7 @@ Code relating to Screenshots functionality
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
     * - Peer(s)
       -
-        | `jhirsch <https://people.mozilla.org/s?query=jhirsch>`__
+        | `Jared Hirsch (jhirsch) <https://people.mozilla.org/s?query=jhirsch>`__
         | `Niklas Baumgardner (niklas) <https://people.mozilla.org/s?query=niklas>`__
     * - Owner(s) Emeritus
       - Emma Malysz, Ian Bicking
