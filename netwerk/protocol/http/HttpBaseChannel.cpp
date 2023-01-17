@@ -3099,6 +3099,11 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
     return OpaqueResponse::Allow;
   }
 
+  Telemetry::ScalarAdd(
+      Telemetry::ScalarID::
+          OPAQUE_RESPONSE_BLOCKING_CROSS_ORIGIN_OPAQUE_RESPONSE_COUNT,
+      1);
+
   // https://whatpr.org/fetch/1442.html#orb-algorithm
   // Step 1
   nsAutoCString contentType;
