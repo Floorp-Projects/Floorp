@@ -406,7 +406,7 @@ class CDMStorageTest {
           nsCString failureReason;
           self->mCDM
               ->Init(self->mCallback.get(), false, true,
-                     GetMainThreadSerialEventTarget())
+                     GetMainThreadEventTarget())
               ->Then(
                   thread, __func__,
                   [self, updates = std::move(updates)] {

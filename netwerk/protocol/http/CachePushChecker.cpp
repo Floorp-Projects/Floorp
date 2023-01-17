@@ -29,7 +29,7 @@ CachePushChecker::CachePushChecker(nsIURI* aPushedURL,
       mOriginAttributes(aOriginAttributes),
       mRequestString(aRequestString),
       mCallback(std::move(aCallback)),
-      mCurrentEventTarget(GetCurrentSerialEventTarget()) {}
+      mCurrentEventTarget(GetCurrentEventTarget()) {}
 
 nsresult CachePushChecker::DoCheck() {
   if (XRE_IsSocketProcess()) {

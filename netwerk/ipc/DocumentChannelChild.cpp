@@ -350,9 +350,8 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   mRedirectChannel = newChannel;
   mStreamFilterEndpoints = std::move(aEndpoints);
 
-  rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel,
-                                            aArgs.redirectFlags(),
-                                            GetMainThreadSerialEventTarget());
+  rv = gHttpHandler->AsyncOnChannelRedirect(
+      this, newChannel, aArgs.redirectFlags(), GetMainThreadEventTarget());
 
   if (NS_SUCCEEDED(rv)) {
     scopeExit.release();

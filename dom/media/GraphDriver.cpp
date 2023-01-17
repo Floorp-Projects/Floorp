@@ -142,7 +142,7 @@ void ThreadedDriver::Start() {
   // See AudioInitTask
   nsresult rv = NS_NewNamedThread("MediaTrackGrph", getter_AddRefs(mThread));
   if (NS_SUCCEEDED(rv)) {
-    mThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+    mThread->EventTarget()->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
   }
 }
 

@@ -158,7 +158,7 @@ void MediaKeys::OnInnerWindowDestroy() {
   // Don't call shutdown directly because (at time of writing) mProxy can
   // spin the event loop when it's shutdown. This can change the world state
   // in the middle of window destruction, which we do not want.
-  GetMainThreadSerialEventTarget()->Dispatch(
+  GetMainThreadEventTarget()->Dispatch(
       NewRunnableMethod("MediaKeys::Shutdown", this, &MediaKeys::Shutdown));
 }
 

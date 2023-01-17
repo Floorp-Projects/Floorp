@@ -106,7 +106,7 @@ void HTTPSRecordResolver::PrefetchAddrRecord(const nsACString& aTargetName,
   Unused << dns->AsyncResolveNative(
       aTargetName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
       flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, this,
-      GetCurrentSerialEventTarget(),
+      GetCurrentEventTarget(),
       mTransaction->ConnectionInfo()->GetOriginAttributes(),
       getter_AddRefs(tmpOutstanding));
 }

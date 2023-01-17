@@ -892,7 +892,7 @@ void AltSvcCache::EnsureStorageInited() {
     return;
   }
 
-  nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
   if (!main) {
     return;
   }

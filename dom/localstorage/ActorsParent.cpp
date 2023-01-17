@@ -1187,7 +1187,7 @@ class DatastoreOperationBase : public Runnable {
  protected:
   DatastoreOperationBase()
       : Runnable("dom::DatastoreOperationBase"),
-        mOwningEventTarget(GetCurrentSerialEventTarget()),
+        mOwningEventTarget(GetCurrentEventTarget()),
         mResultCode(NS_OK),
         mMayProceedOnNonOwningThread(true),
         mMayProceed(true) {}

@@ -554,10 +554,9 @@ nsresult nsPACMan::LoadPACFromURI(const nsACString& aSpec,
   if (!mLoadPending) {
     nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
         "nsPACMan::StartLoading", this, &nsPACMan::StartLoading);
-    nsresult rv =
-        NS_IsMainThread()
-            ? Dispatch(runnable.forget())
-            : GetCurrentSerialEventTarget()->Dispatch(runnable.forget());
+    nsresult rv = NS_IsMainThread()
+                      ? Dispatch(runnable.forget())
+                      : GetCurrentEventTarget()->Dispatch(runnable.forget());
     if (NS_FAILED(rv)) return rv;
     mLoadPending = true;
   }

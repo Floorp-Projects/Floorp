@@ -40,7 +40,7 @@ class MainThreadChannelEvent : public ChannelEvent {
   already_AddRefed<nsIEventTarget> GetEventTarget() override {
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    return do_AddRef(GetMainThreadSerialEventTarget());
+    return do_AddRef(GetMainThreadEventTarget());
   }
 };
 

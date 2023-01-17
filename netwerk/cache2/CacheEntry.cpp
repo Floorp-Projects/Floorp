@@ -86,7 +86,7 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry,
                                bool aSecret)
     : mEntry(aEntry),
       mCallback(aCallback),
-      mTarget(GetCurrentSerialEventTarget()),
+      mTarget(GetCurrentEventTarget()),
       mReadOnly(aReadOnly),
       mRevalidating(false),
       mCheckOnAnyThread(aCheckOnAnyThread),

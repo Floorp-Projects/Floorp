@@ -445,7 +445,7 @@ class ThreadedDriver : public GraphDriver {
   nsIThread* Thread() const { return mThread; }
 
   bool OnThread() const override {
-    return !mThread || mThread->IsOnCurrentThread();
+    return !mThread || mThread->EventTarget()->IsOnCurrentThread();
   }
 
   bool ThreadRunning() const override { return mThreadRunning; }

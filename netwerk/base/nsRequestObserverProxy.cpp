@@ -167,7 +167,7 @@ nsRequestObserverProxy::Init(nsIRequestObserver* observer,
 //-----------------------------------------------------------------------------
 
 nsresult nsRequestObserverProxy::FireEvent(nsARequestObserverEvent* event) {
-  nsCOMPtr<nsIEventTarget> mainThread(GetMainThreadSerialEventTarget());
+  nsCOMPtr<nsIEventTarget> mainThread(GetMainThreadEventTarget());
   return mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 

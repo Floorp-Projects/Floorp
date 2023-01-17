@@ -70,7 +70,7 @@ void WebTransportParent::Create(
     return;
   }
 
-  parent->mOwningEventTarget = GetCurrentSerialEventTarget();
+  parent->mOwningEventTarget = GetCurrentEventTarget();
 
   MOZ_ASSERT(aPrincipal);
   nsCOMPtr<nsIURI> uri;

@@ -253,8 +253,7 @@ bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
     } else {
       nsCOMPtr<nsIRunnable> runnable =
           NS_NewRunnableFunction("WMFDecoderModule::Init", [&]() { Init(); });
-      SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(),
-                                     runnable);
+      SyncRunnable::DispatchToThread(GetMainThreadEventTarget(), runnable);
     }
   }
 

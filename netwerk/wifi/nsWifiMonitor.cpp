@@ -179,7 +179,7 @@ NS_IMETHODIMP nsWifiMonitor::Run() {
   }
 
   if (doError) {
-    nsCOMPtr<nsIEventTarget> target = GetMainThreadSerialEventTarget();
+    nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
     if (!target) return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIRunnable> runnable(

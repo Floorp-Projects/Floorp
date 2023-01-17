@@ -20,8 +20,7 @@ NS_IMPL_ISUPPORTS0(WebSocketConnectionParent)
 
 WebSocketConnectionParent::WebSocketConnectionParent(
     nsIHttpUpgradeListener* aListener)
-    : mUpgradeListener(aListener),
-      mBackgroundThread(GetCurrentSerialEventTarget()) {
+    : mUpgradeListener(aListener), mBackgroundThread(GetCurrentEventTarget()) {
   LOG(("WebSocketConnectionParent ctor %p\n", this));
   MOZ_ASSERT(mUpgradeListener);
 }

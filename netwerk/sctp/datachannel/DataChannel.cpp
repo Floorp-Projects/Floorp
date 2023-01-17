@@ -410,7 +410,7 @@ void DataChannelConnection::DestroyOnSTS(struct socket* aMasterSocket,
 
   disconnect_all();
   mTransportHandler = nullptr;
-  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       "DataChannelConnection::Destroy",
       [id = mId]() { DataChannelRegistry::Deregister(id); }));
 }

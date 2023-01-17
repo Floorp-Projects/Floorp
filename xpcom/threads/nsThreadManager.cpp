@@ -218,7 +218,6 @@ void NS_SetMainThread() {
   // needs to be initialized around the same time you would initialize
   // sTLSIsMainThread.
   SerialEventTargetGuard::InitTLS();
-  nsThreadPool::InitTLS();
 }
 
 #ifdef DEBUG

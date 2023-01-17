@@ -53,7 +53,9 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   void DoBeforeSleep();
   void DoAfterSleep();
 
-  bool IsOnTimerThread() const { return mThread->IsOnCurrentThread(); }
+  bool IsOnTimerThread() const {
+    return mThread->SerialEventTarget()->IsOnCurrentThread();
+  }
 
   uint32_t AllowedEarlyFiringMicroseconds();
 

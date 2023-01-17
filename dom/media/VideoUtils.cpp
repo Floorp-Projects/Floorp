@@ -827,7 +827,7 @@ nsresult SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs,
   if (aTarget) {
     target = aTarget;
   } else {
-    target = GetMainThreadSerialEventTarget();
+    target = GetMainThreadEventTarget();
     if (!target) {
       return NS_ERROR_NOT_AVAILABLE;
     }

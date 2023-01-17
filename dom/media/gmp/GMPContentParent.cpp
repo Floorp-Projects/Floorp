@@ -142,7 +142,7 @@ nsCOMPtr<nsISerialEventTarget> GMPContentParent::GMPEventTarget() {
     mps->GetThread(getter_AddRefs(gmpThread));
     MOZ_ASSERT(gmpThread);
 
-    mGMPEventTarget = gmpThread;
+    mGMPEventTarget = gmpThread->SerialEventTarget();
   }
 
   return mGMPEventTarget;

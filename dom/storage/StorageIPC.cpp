@@ -660,7 +660,7 @@ class StorageDBParent::ObserverSink : public StorageObserverSink {
 
  public:
   explicit ObserverSink(StorageDBParent* aActor)
-      : mOwningEventTarget(GetCurrentSerialEventTarget()), mActor(aActor) {
+      : mOwningEventTarget(GetCurrentEventTarget()), mActor(aActor) {
     ::mozilla::ipc::AssertIsOnBackgroundThread();
     MOZ_ASSERT(aActor);
   }

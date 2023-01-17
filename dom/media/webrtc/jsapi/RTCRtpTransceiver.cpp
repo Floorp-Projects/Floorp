@@ -254,8 +254,8 @@ void RTCRtpTransceiver::RollbackToStableDtlsTransport() {
 
 void RTCRtpTransceiver::UpdateDtlsTransportState(
     const std::string& aTransportId, TransportLayer::State aState) {
-  if (!GetMainThreadSerialEventTarget()->IsOnCurrentThread()) {
-    GetMainThreadSerialEventTarget()->Dispatch(
+  if (!GetMainThreadEventTarget()->IsOnCurrentThread()) {
+    GetMainThreadEventTarget()->Dispatch(
         WrapRunnable(this, &RTCRtpTransceiver::UpdateDtlsTransportState,
                      aTransportId, aState),
         NS_DISPATCH_NORMAL);

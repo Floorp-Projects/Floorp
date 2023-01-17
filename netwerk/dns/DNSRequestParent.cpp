@@ -45,7 +45,7 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
   mFlags = flags;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
+    nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
     nsCOMPtr<nsICancelable> unused;
     RefPtr<DNSAdditionalInfo> info;
     if (!trrServer.IsEmpty() || port != -1) {

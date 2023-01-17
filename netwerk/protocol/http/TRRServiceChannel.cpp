@@ -89,7 +89,7 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 TRRServiceChannel::TRRServiceChannel()
     : HttpAsyncAborter<TRRServiceChannel>(this),
       mProxyRequest(nullptr, "TRRServiceChannel::mProxyRequest"),
-      mCurrentEventTarget(GetCurrentSerialEventTarget()) {
+      mCurrentEventTarget(GetCurrentEventTarget()) {
   LOG(("TRRServiceChannel ctor [this=%p]\n", this));
 }
 

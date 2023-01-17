@@ -1977,7 +1977,7 @@ static bool DispatchToEventLoop(void* closure,
   // simply NS_DispatchToMainThread. Failure during shutdown is expected and
   // properly handled by the JS engine.
 
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
   if (!mainTarget) {
     return false;
   }
