@@ -1094,7 +1094,7 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
 
   // for every property that is set, insert a new inline style node
   Result<EditorDOMPoint, nsresult> setStyleResult =
-      CreateStyleForInsertText(pointToInsert, *editingHost);
+      CreateStyleForInsertText(pointToInsert);
   if (MOZ_UNLIKELY(setStyleResult.isErr())) {
     NS_WARNING("HTMLEditor::CreateStyleForInsertText() failed");
     return setStyleResult.propagateErr();
@@ -2258,7 +2258,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::HandleInsertLinefeed(
   //       should be merged when we fix bug 92921.
 
   Result<EditorDOMPoint, nsresult> setStyleResult =
-      CreateStyleForInsertText(aPointToBreak, aEditingHost);
+      CreateStyleForInsertText(aPointToBreak);
   if (MOZ_UNLIKELY(setStyleResult.isErr())) {
     NS_WARNING("HTMLEditor::CreateStyleForInsertText() failed");
     return setStyleResult.propagateErr();
@@ -6078,7 +6078,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::ChangeListElementType(
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
-    const EditorDOMPoint& aPointToInsertText, const Element& aEditingHost) {
+    const EditorDOMPoint& aPointToInsertText) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsertText.IsSetAndValid());
   MOZ_ASSERT(mPendingStylesToApplyToNewContent);
@@ -6116,17 +6116,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
   // then process setting any styles
   const int32_t relFontSize =
       mPendingStylesToApplyToNewContent->TakeRelativeFontSize();
-  AutoTArray<EditorInlineStyleAndValue, 32> stylesToSet;
-  mPendingStylesToApplyToNewContent->TakeAllPreservedStyles(stylesToSet);
-  if (stylesToSet.IsEmpty() && !relFontSize) {
-    return pointToPutCaret;
-  }
+  pendingStyle = mPendingStylesToApplyToNewContent->TakePreservedStyle();
 
-  // We're in chrome, e.g., the email composer of Thunderbird, and there is
-  // relative font size changes, we need to keep using legacy path until we port
-  // IncrementOrDecrementFontSizeAsSubAction() to work with
-  // AutoInlineStyleSetter.
-  if (relFontSize) {
+  if (pendingStyle || relFontSize) {
     // we have at least one style to add; make a new text node to insert style
     // nodes above.
     EditorDOMPoint pointToInsertTextNode(pointToPutCaret);
@@ -6172,26 +6164,34 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
     insertNewTextNodeResult.inspect().IgnoreCaretPointSuggestion();
     pointToPutCaret.Set(newEmptyTextNode, 0u);
 
-    HTMLEditor::FontSize incrementOrDecrement =
-        relFontSize > 0 ? HTMLEditor::FontSize::incr
-                        : HTMLEditor::FontSize::decr;
-    for ([[maybe_unused]] uint32_t j : IntegerRange(Abs(relFontSize))) {
-      Result<CreateElementResult, nsresult> wrapTextInBigOrSmallElementResult =
-          SetFontSizeOnTextNode(*newEmptyTextNode, 0, UINT32_MAX,
-                                incrementOrDecrement);
-      if (MOZ_UNLIKELY(wrapTextInBigOrSmallElementResult.isErr())) {
-        NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
-        return wrapTextInBigOrSmallElementResult.propagateErr();
+    if (relFontSize) {
+      HTMLEditor::FontSize incrementOrDecrement =
+          relFontSize > 0 ? HTMLEditor::FontSize::incr
+                          : HTMLEditor::FontSize::decr;
+      for ([[maybe_unused]] uint32_t j : IntegerRange(Abs(relFontSize))) {
+        Result<CreateElementResult, nsresult>
+            wrapTextInBigOrSmallElementResult = SetFontSizeOnTextNode(
+                *newEmptyTextNode, 0, UINT32_MAX, incrementOrDecrement);
+        if (MOZ_UNLIKELY(wrapTextInBigOrSmallElementResult.isErr())) {
+          NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
+          return wrapTextInBigOrSmallElementResult.propagateErr();
+        }
+        // We don't need to update here because we'll suggest caret position
+        // which is computed above.
+        MOZ_ASSERT(pointToPutCaret.IsSet());
+        wrapTextInBigOrSmallElementResult.inspect()
+            .IgnoreCaretPointSuggestion();
       }
-      // We don't need to update here because we'll suggest caret position
-      // which is computed above.
-      MOZ_ASSERT(pointToPutCaret.IsSet());
-      wrapTextInBigOrSmallElementResult.inspect().IgnoreCaretPointSuggestion();
     }
 
-    for (const EditorInlineStyleAndValue& styleToSet : stylesToSet) {
-      AutoInlineStyleSetter inlineStyleSetter(styleToSet);
-      // MOZ_KnownLive(...ContainerAs<nsIContent>()) because pointToPutCaret
+    while (pendingStyle) {
+      AutoInlineStyleSetter inlineStyleSetter(
+          pendingStyle->GetAttribute()
+              ? EditorInlineStyleAndValue(
+                    *pendingStyle->GetTag(), *pendingStyle->GetAttribute(),
+                    pendingStyle->AttributeValueOrCSSValueRef())
+              : EditorInlineStyleAndValue(*pendingStyle->GetTag()));
+      // MOZ_KnownLive(...ContainerAs<nsIContent>()) because pointToPutCaret()
       // grabs the result.
       Result<CaretPoint, nsresult> setStyleResult =
           inlineStyleSetter.ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle(
@@ -6204,43 +6204,10 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
       // is computed above.
       MOZ_ASSERT(pointToPutCaret.IsSet());
       setStyleResult.unwrap().IgnoreCaretPointSuggestion();
+      pendingStyle = mPendingStylesToApplyToNewContent->TakePreservedStyle();
     }
-    return pointToPutCaret;
   }
 
-  // If we have preserved commands except relative font style changes, we can
-  // use inline style setting code which reuse ancestors better.
-  AutoRangeArray ranges(pointToPutCaret);
-  if (MOZ_UNLIKELY(ranges.Ranges().IsEmpty())) {
-    NS_WARNING("AutoRangeArray::AutoRangeArray() failed");
-    return Err(NS_ERROR_FAILURE);
-  }
-  nsresult rv =
-      SetInlinePropertiesAroundRanges(ranges, stylesToSet, aEditingHost);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::SetInlinePropertiesAroundRanges() failed");
-    return Err(rv);
-  }
-  if (NS_WARN_IF(ranges.Ranges().IsEmpty())) {
-    return Err(NS_ERROR_FAILURE);
-  }
-  // Now `ranges` selects new styled contents and the range may not be
-  // collapsed.  We should use the deepest editable start point of the range
-  // to insert text.
-  nsINode* container = ranges.FirstRangeRef()->GetStartContainer();
-  if (MOZ_UNLIKELY(!container->IsContent())) {
-    container = ranges.FirstRangeRef()->GetChildAtStartOffset();
-    if (MOZ_UNLIKELY(!container)) {
-      NS_WARNING("How did we get lost insertion point?");
-      return Err(NS_ERROR_FAILURE);
-    }
-  }
-  pointToPutCaret =
-      HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
-          *container->AsContent());
-  if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
-    return Err(NS_ERROR_FAILURE);
-  }
   return pointToPutCaret;
 }
 

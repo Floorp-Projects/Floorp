@@ -408,21 +408,6 @@ void PendingStyles::ClearStyleInternal(
       aHTMLProperty, aAttribute, u""_ns, aSpecifiedStyle));
 }
 
-void PendingStyles::TakeAllPreservedStyles(
-    nsTArray<EditorInlineStyleAndValue>& aOutStylesAndValues) {
-  aOutStylesAndValues.SetCapacity(aOutStylesAndValues.Length() +
-                                  mPreservingStyles.Length());
-  for (UniquePtr<PendingStyle> preservedStyle = TakePreservedStyle();
-       preservedStyle; preservedStyle = TakePreservedStyle()) {
-    aOutStylesAndValues.AppendElement(
-        preservedStyle->GetAttribute()
-            ? EditorInlineStyleAndValue(
-                  *preservedStyle->GetTag(), *preservedStyle->GetAttribute(),
-                  preservedStyle->AttributeValueOrCSSValueRef())
-            : EditorInlineStyleAndValue(*preservedStyle->GetTag()));
-  }
-}
-
 /**
  * TakeRelativeFontSize() hands back relative font value, which is then
  * cleared out.
