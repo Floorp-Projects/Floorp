@@ -78,6 +78,7 @@ def bootstrap_tasks(config, tasks):
                     "kind": "other",
                     "tier": 2,
                 },
+                "run-on-projects": ["trunk"],
                 "worker-type": "b-linux-gcp",
                 "worker": {
                     "implementation": "docker-worker",
