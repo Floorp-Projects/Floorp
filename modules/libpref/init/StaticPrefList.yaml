@@ -11005,6 +11005,20 @@
   value: true
   mirror: always
 
+# Whether to strip auth headers for redirected fetch/xhr channels
+# https://fetch.spec.whatwg.org/#http-redirect-fetch
+- name: network.fetch.redirect.stripAuthHeader
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Whether to strip auth headers for redirected http channels
+# https://fetch.spec.whatwg.org/#http-redirect-fetch
+- name: network.http.redirect.stripAuthHeader
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Prefs allowing granular control of referers.
 # 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 - name: network.http.sendRefererHeader

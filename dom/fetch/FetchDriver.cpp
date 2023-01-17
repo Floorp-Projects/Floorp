@@ -8,6 +8,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/FetchDriver.h"
 
+#include "mozilla/dom/ReferrerInfo.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/dom/Document.h"
 #include "nsICookieJarSettings.h"
@@ -713,7 +714,7 @@ nsresult FetchDriver::HttpFetch(
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set the same headers.
-    SetRequestHeaders(httpChan, false);
+    SetRequestHeaders(httpChan, false, false);
 
     // Step 5 of https://fetch.spec.whatwg.org/#main-fetch
     // If request's referrer policy is the empty string and request's client is
@@ -1529,7 +1530,14 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     Unused << oldHttpChannel->ShouldStripRequestBodyHeader(method,
                                                            &rewriteToGET);
 
-    SetRequestHeaders(newHttpChannel, rewriteToGET);
+    // we need to strip Authentication headers for cross-origin requests
+    // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
+    bool skipAuthHeader = false;
+    if (StaticPrefs::network_fetch_redirect_stripAuthHeader()) {
+      skipAuthHeader = ReferrerInfo::IsCrossOriginRequest(oldHttpChannel);
+    }
+
+    SetRequestHeaders(newHttpChannel, rewriteToGET, skipAuthHeader);
   }
 
   // "HTTP-redirect fetch": step 14 "Append locationURL to request's URL list."
@@ -1637,7 +1645,8 @@ PerformanceTimingData* FetchDriver::GetPerformanceTimingData(
 }
 
 void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel,
-                                    bool aStripRequestBodyHeader) const {
+                                    bool aStripRequestBodyHeader,
+                                    bool aStripAuthHeader) const {
   MOZ_ASSERT(aChannel);
 
   // nsIHttpChannel has a set of pre-configured headers (Accept,
@@ -1655,6 +1664,11 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel,
          headers[i].mName.LowerCaseEqualsASCII("content-encoding") ||
          headers[i].mName.LowerCaseEqualsASCII("content-language") ||
          headers[i].mName.LowerCaseEqualsASCII("content-location"))) {
+      continue;
+    }
+
+    if (aStripAuthHeader &&
+        headers[i].mName.LowerCaseEqualsASCII("authorization")) {
       continue;
     }
 
