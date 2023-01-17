@@ -25,7 +25,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["getSheetOwnerNode", "UPDATE_GENERAL", "UPDATE_PRESERVING_RULES"],
+  ["getSheetOwnerNode"],
   "resource://devtools/server/actors/style-sheet.js",
   true
 );
@@ -44,6 +44,13 @@ const TRANSITION_SHEET =
     transition-property: all !important;
   }
 `);
+
+// The possible kinds of style-applied events.
+// UPDATE_PRESERVING_RULES means that the update is guaranteed to
+// preserve the number and order of rules on the style sheet.
+// UPDATE_GENERAL covers any other kind of change to the style sheet.
+const UPDATE_PRESERVING_RULES = 0;
+const UPDATE_GENERAL = 1;
 
 // If the user edits a stylesheet, we stash a copy of the edited text
 // here, keyed by the stylesheet.  This way, if the tools are closed
@@ -935,4 +942,6 @@ class StyleSheetsManager extends EventEmitter {
 
 module.exports = {
   StyleSheetsManager,
+  UPDATE_GENERAL,
+  UPDATE_PRESERVING_RULES,
 };
