@@ -89,10 +89,7 @@ import org.mozilla.gecko.process.GeckoServiceChildProcess;
       sSurfaces.put(surface.getHandle(), surface);
 
       if (!surface.inProcess()) {
-        final SyncConfig config = surface.initSyncSurface(width, height);
-        if (config != null) {
-          sAllocator.configureSync(config);
-        }
+        sAllocator.configureSync(surface.initSyncSurface(width, height));
       }
       return surface;
     } catch (final RemoteException e) {
