@@ -4,8 +4,9 @@
 
 # Setup for build cache
 
-# Thunderbird builds will have this set prior to including this file
+# Thunderbird builds will set prior to including this file
 aws_prefix=${aws_prefix:-taskcluster}
+gcp_prefix=${gcp_prefix:-sccache}
 
 # builds where buildprops didn't have the data (eg: taskcluster) and without sccache disabled:
 if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
@@ -42,7 +43,7 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
         elif test -n "$cloud"; then
             case $cloud in
             google)
-                bucket=sccache-l${MOZ_SCM_LEVEL}-${region}
+                bucket=${gcp_prefix}-l${MOZ_SCM_LEVEL}-${region}
                 ;;
             aws)
                 bucket=${aws_prefix}-level-${MOZ_SCM_LEVEL}-sccache-${region}
