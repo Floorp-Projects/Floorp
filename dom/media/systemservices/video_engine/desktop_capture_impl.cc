@@ -47,7 +47,7 @@ namespace webrtc {
 
 int32_t ScreenDeviceInfoImpl::Init() {
   mDesktopDeviceInfo =
-      std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfoImpl::Create());
+      std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfo::Create());
   return 0;
 }
 
@@ -137,7 +137,7 @@ VideoCaptureModule* DesktopCaptureImpl::Create(const int32_t aModuleId,
 
 int32_t WindowDeviceInfoImpl::Init() {
   mDesktopDeviceInfo =
-      std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfoImpl::Create());
+      std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfo::Create());
   return 0;
 }
 
@@ -222,7 +222,7 @@ int32_t WindowDeviceInfoImpl::GetOrientation(const char* aDeviceUniqueIdUTF8,
 
 int32_t BrowserDeviceInfoImpl::Init() {
   mDesktopDeviceInfo =
-      std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfoImpl::Create());
+      std::unique_ptr<DesktopDeviceInfo>(DesktopDeviceInfo::Create());
   return 0;
 }
 

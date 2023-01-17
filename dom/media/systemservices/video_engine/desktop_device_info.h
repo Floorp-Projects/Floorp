@@ -15,105 +15,69 @@ class DesktopDisplayDevice {
   DesktopDisplayDevice();
   ~DesktopDisplayDevice();
 
-  void setScreenId(const ScreenId screenId);
-  void setDeviceName(const char* deviceNameUTF8);
-  void setUniqueIdName(const char* deviceUniqueIdUTF8);
-  void setPid(pid_t pid);
+  void setScreenId(const ScreenId aScreenId);
+  void setDeviceName(const char* aDeviceNameUTF8);
+  void setUniqueIdName(const char* aDeviceUniqueIdUTF8);
+  void setPid(pid_t aPid);
 
   ScreenId getScreenId();
   const char* getDeviceName();
   const char* getUniqueIdName();
   pid_t getPid();
 
-  DesktopDisplayDevice& operator=(DesktopDisplayDevice& other);
+  DesktopDisplayDevice& operator=(DesktopDisplayDevice& aOther);
 
  protected:
-  ScreenId screenId_;
-  char* deviceNameUTF8_;
-  char* deviceUniqueIdUTF8_;
-  pid_t pid_;
+  ScreenId mScreenId;
+  char* mDeviceNameUTF8;
+  char* mDeviceUniqueIdUTF8;
+  pid_t mPid;
 };
 
-typedef std::map<intptr_t, DesktopDisplayDevice*> DesktopDisplayDeviceList;
+using DesktopDisplayDeviceList = std::map<intptr_t, DesktopDisplayDevice*>;
 
 class DesktopTab {
  public:
   DesktopTab();
   ~DesktopTab();
 
-  void setTabBrowserId(uint64_t tabBrowserId);
-  void setUniqueIdName(const char* tabUniqueIdUTF8);
-  void setTabName(const char* tabNameUTF8);
-  void setTabCount(const uint32_t count);
+  void setTabBrowserId(uint64_t aTabBrowserId);
+  void setUniqueIdName(const char* aTabUniqueIdUTF8);
+  void setTabName(const char* aTabNameUTF8);
+  void setTabCount(const uint32_t aCount);
 
   uint64_t getTabBrowserId();
   const char* getUniqueIdName();
   const char* getTabName();
   uint32_t getTabCount();
 
-  DesktopTab& operator=(DesktopTab& other);
+  DesktopTab& operator=(DesktopTab& aOther);
 
  protected:
-  uint64_t tabBrowserId_;
-  char* tabNameUTF8_;
-  char* tabUniqueIdUTF8_;
-  uint32_t tabCount_;
+  uint64_t mTabBrowserId;
+  char* mTabNameUTF8;
+  char* mTabUniqueIdUTF8;
+  uint32_t mTabCount;
 };
 
-typedef std::map<intptr_t, DesktopTab*> DesktopTabList;
+using DesktopTabList = std::map<intptr_t, DesktopTab*>;
 
 class DesktopDeviceInfo {
  public:
-  virtual ~DesktopDeviceInfo(){};
+  virtual ~DesktopDeviceInfo() = default;
 
   virtual int32_t Init() = 0;
   virtual int32_t Refresh() = 0;
   virtual int32_t getDisplayDeviceCount() = 0;
   virtual int32_t getDesktopDisplayDeviceInfo(
-      int32_t nIndex, DesktopDisplayDevice& desktopDisplayDevice) = 0;
+      uint32_t aIndex, DesktopDisplayDevice& aDesktopDisplayDevice) = 0;
   virtual int32_t getWindowCount() = 0;
-  virtual int32_t getWindowInfo(int32_t nindex,
-                                DesktopDisplayDevice& windowDevice) = 0;
-  virtual int32_t getTabCount() = 0;
-  virtual int32_t getTabInfo(int32_t nIndex, DesktopTab& desktopTab) = 0;
-};
+  virtual int32_t getWindowInfo(uint32_t aIndex,
+                                DesktopDisplayDevice& aWindowDevice) = 0;
+  virtual uint32_t getTabCount() = 0;
+  virtual int32_t getTabInfo(uint32_t aIndex, DesktopTab& aDesktopTab) = 0;
 
-class DesktopDeviceInfoImpl : public DesktopDeviceInfo {
- public:
-  DesktopDeviceInfoImpl();
-  ~DesktopDeviceInfoImpl();
-
-  int32_t Init() override;
-  int32_t Refresh() override;
-  int32_t getDisplayDeviceCount() override;
-  int32_t getDesktopDisplayDeviceInfo(
-      int32_t nIndex, DesktopDisplayDevice& desktopDisplayDevice) override;
-  int32_t getWindowCount() override;
-  int32_t getWindowInfo(int32_t nindex,
-                        DesktopDisplayDevice& windowDevice) override;
-  int32_t getTabCount() override;
-  int32_t getTabInfo(int32_t nIndex, DesktopTab& desktopTab) override;
   static DesktopDeviceInfo* Create();
-
- protected:
-  DesktopDisplayDeviceList desktop_display_list_;
-  DesktopDisplayDeviceList desktop_window_list_;
-  DesktopTabList desktop_tab_list_;
-
-  void CleanUp();
-  void CleanUpWindowList();
-  void CleanUpTabList();
-  void CleanUpScreenList();
-
-  void InitializeWindowList();
-  virtual void InitializeTabList();
-  void InitializeScreenList();
-
-  void RefreshWindowList();
-  void RefreshTabList();
-  void RefreshScreenList();
-
-  void DummyTabList(DesktopTabList& list);
 };
 };  // namespace webrtc
 
