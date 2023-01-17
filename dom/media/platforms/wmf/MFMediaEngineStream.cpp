@@ -149,12 +149,13 @@ HRESULT MFMediaEngineStream::Start(const PROPVARIANT* aPosition) {
     return MF_E_SHUTDOWN;
   }
   SLOG("Start");
+  const bool isFromCurrentPosition = aPosition->vt == VT_EMPTY;
   RETURN_IF_FAILED(QueueEvent(MEStreamStarted, GUID_NULL, S_OK, aPosition));
   MOZ_ASSERT(mTaskQueue);
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
-      "MFMediaEngineStream::Start", [self = RefPtr{this}, aPosition, this]() {
-        if (const bool isFromCurrentPosition = aPosition->vt == VT_EMPTY;
-            !isFromCurrentPosition && IsEnded()) {
+      "MFMediaEngineStream::Start",
+      [self = RefPtr{this}, isFromCurrentPosition, this]() {
+        if (!isFromCurrentPosition && IsEnded()) {
           SLOG("Stream restarts again from a new position, reset EOS");
           mReceivedEOS = false;
         }
