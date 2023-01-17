@@ -215,7 +215,6 @@ class nsDMABufDevice {
 };
 
 nsDMABufDevice* GetDMABufDevice();
-nsDMABufDevice* GetAndConfigureDMABufDevice();
 
 }  // namespace widget
 }  // namespace mozilla
