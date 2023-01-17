@@ -139,21 +139,19 @@ class ScrollAnchorContainer final {
   // anchoring on this scroller altogether based on various prefs.
   void AdjustmentMade(nscoord aAdjustment);
 
-  // The owner of this scroll anchor container
-  ScrollFrameHelper* mScrollFrame;
-
-  ScrollFrameHelper* ScrollFrame() const { return mScrollFrame; }
+  // The owner of this scroll anchor container.
+  ScrollFrameHelper* ScrollFrame() const;
 
   // The anchor node that we will scroll to keep in the same relative position
   // after reflows. This may be null if we were not able to select a valid
   // scroll anchor
-  nsIFrame* mAnchorNode;
+  nsIFrame* mAnchorNode = nullptr;
 
   // The last offset of the scroll anchor node's scrollable overflow rect start
   // edge relative to the scroll-port start edge, in the block axis of the
   // scroll frame. This is used for calculating the distance to scroll to keep
   // the anchor node in the same relative position
-  nscoord mLastAnchorOffset;
+  nscoord mLastAnchorOffset = 0;
 
   struct DisablingHeuristic {
     // The number of consecutive scroll anchoring adjustments that have happened

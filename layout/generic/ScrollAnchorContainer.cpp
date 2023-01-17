@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScrollAnchorContainer.h"
+#include <cstddef>
 
 #include "mozilla/dom/Text.h"
 #include "mozilla/ScopeExit.h"
@@ -44,15 +45,19 @@ static mozilla::LazyLogModule sAnchorLog("scrollanchor");
 
 namespace mozilla::layout {
 
+inline ScrollFrameHelper* ScrollAnchorContainer::ScrollFrame() const {
+  return reinterpret_cast<ScrollFrameHelper*>(
+      ((char*)this) - offsetof(ScrollFrameHelper, mAnchor));
+}
+
 ScrollAnchorContainer::ScrollAnchorContainer(ScrollFrameHelper* aScrollFrame)
-    : mScrollFrame(aScrollFrame),
-      mAnchorNode(nullptr),
-      mLastAnchorOffset(0),
-      mDisabled(false),
+    : mDisabled(false),
       mAnchorMightBeSubOptimal(false),
       mAnchorNodeIsDirty(true),
       mApplyingAnchorAdjustment(false),
-      mSuppressAnchorAdjustment(false) {}
+      mSuppressAnchorAdjustment(false) {
+  MOZ_ASSERT(aScrollFrame == ScrollFrame());
+}
 
 ScrollAnchorContainer::~ScrollAnchorContainer() = default;
 
@@ -70,7 +75,7 @@ ScrollAnchorContainer* ScrollAnchorContainer::FindFor(nsIFrame* aFrame) {
   return nullptr;
 }
 
-nsIFrame* ScrollAnchorContainer::Frame() const { return mScrollFrame->mOuter; }
+nsIFrame* ScrollAnchorContainer::Frame() const { return ScrollFrame()->mOuter; }
 
 nsIScrollableFrame* ScrollAnchorContainer::ScrollableFrame() const {
   return Frame()->GetScrollTargetFrame();
@@ -230,7 +235,7 @@ bool ScrollAnchorContainer::CanMaintainAnchor() const {
   // is not in the specification [1], but Blink does this.
   //
   // [1] https://github.com/w3c/csswg-drafts/issues/3319
-  if (mScrollFrame->GetLogicalScrollPosition() == nsPoint()) {
+  if (ScrollFrame()->GetLogicalScrollPosition() == nsPoint()) {
     return false;
   }
 
@@ -247,23 +252,23 @@ bool ScrollAnchorContainer::CanMaintainAnchor() const {
 }
 
 void ScrollAnchorContainer::SelectAnchor() {
-  MOZ_ASSERT(mScrollFrame->mScrolledFrame);
+  MOZ_ASSERT(ScrollFrame()->mScrolledFrame);
   MOZ_ASSERT(mAnchorNodeIsDirty);
 
   AUTO_PROFILER_LABEL("ScrollAnchorContainer::SelectAnchor", LAYOUT);
   ANCHOR_LOG(
       "Selecting anchor with scroll-port=%s.\n",
-      mozilla::ToString(mScrollFrame->GetVisualOptimalViewingRect()).c_str());
+      mozilla::ToString(ScrollFrame()->GetVisualOptimalViewingRect()).c_str());
 
   // Select a new scroll anchor
   nsIFrame* oldAnchor = mAnchorNode;
   if (CanMaintainAnchor()) {
     MOZ_DIAGNOSTIC_ASSERT(
-        !mScrollFrame->mScrolledFrame->IsInScrollAnchorChain(),
+        !ScrollFrame()->mScrolledFrame->IsInScrollAnchorChain(),
         "Our scrolled frame can't serve as or contain an anchor for an "
         "ancestor if it can maintain its own anchor");
     ANCHOR_LOG("Beginning selection.\n");
-    mAnchorNode = FindAnchorIn(mScrollFrame->mScrolledFrame);
+    mAnchorNode = FindAnchorIn(ScrollFrame()->mScrolledFrame);
   } else {
     ANCHOR_LOG("Skipping selection, doesn't maintain a scroll anchor.\n");
     mAnchorNode = nullptr;
@@ -278,7 +283,7 @@ void ScrollAnchorContainer::SelectAnchor() {
 
     // Unset all flags for the old scroll anchor
     if (oldAnchor) {
-      SetAnchorFlags(mScrollFrame->mScrolledFrame, oldAnchor, false);
+      SetAnchorFlags(ScrollFrame()->mScrolledFrame, oldAnchor, false);
     }
 
     // Set all flags for the new scroll anchor
@@ -286,7 +291,7 @@ void ScrollAnchorContainer::SelectAnchor() {
       // Anchor selection will never select a descendant of a nested scroll
       // frame which maintains an anchor, so we can set flags without
       // conflicting with other scroll anchor containers.
-      SetAnchorFlags(mScrollFrame->mScrolledFrame, mAnchorNode, true);
+      SetAnchorFlags(ScrollFrame()->mScrolledFrame, mAnchorNode, true);
     }
   } else {
     ANCHOR_LOG("Anchor node has remained (%p).\n", mAnchorNode);
@@ -295,7 +300,7 @@ void ScrollAnchorContainer::SelectAnchor() {
   // Calculate the position to use for scroll adjustments
   if (mAnchorNode) {
     mLastAnchorOffset =
-        FindScrollAnchoringBoundingOffset(mScrollFrame, mAnchorNode);
+        FindScrollAnchoringBoundingOffset(ScrollFrame(), mAnchorNode);
     ANCHOR_LOG("Using last anchor offset = %d.\n", mLastAnchorOffset);
   } else {
     mLastAnchorOffset = 0;
@@ -419,8 +424,8 @@ void ScrollAnchorContainer::InvalidateAnchor(ScheduleSelection aSchedule) {
   ANCHOR_LOG("Invalidating scroll anchor %p for %p.\n", mAnchorNode, this);
 
   if (mAnchorNode) {
-    SetAnchorFlags(mScrollFrame->mScrolledFrame, mAnchorNode, false);
-  } else if (mScrollFrame->mScrolledFrame->IsInScrollAnchorChain()) {
+    SetAnchorFlags(ScrollFrame()->mScrolledFrame, mAnchorNode, false);
+  } else if (ScrollFrame()->mScrolledFrame->IsInScrollAnchorChain()) {
     ANCHOR_LOG(" > Forwarding to parent anchor\n");
     // We don't maintain an anchor, and our scrolled frame is in the anchor
     // chain of an ancestor. Invalidate that anchor.
@@ -447,22 +452,22 @@ void ScrollAnchorContainer::Destroy() {
 
 void ScrollAnchorContainer::ApplyAdjustments() {
   if (!mAnchorNode || mAnchorNodeIsDirty || mDisabled ||
-      mScrollFrame->HasPendingScrollRestoration() ||
-      mScrollFrame->IsProcessingScrollEvent() ||
-      mScrollFrame->ScrollAnimationState().contains(
+      ScrollFrame()->HasPendingScrollRestoration() ||
+      ScrollFrame()->IsProcessingScrollEvent() ||
+      ScrollFrame()->ScrollAnimationState().contains(
           nsIScrollableFrame::AnimationState::TriggeredByScript) ||
-      mScrollFrame->GetScrollPosition() == nsPoint()) {
+      ScrollFrame()->GetScrollPosition() == nsPoint()) {
     ANCHOR_LOG(
         "Ignoring post-reflow (anchor=%p, dirty=%d, disabled=%d, "
         "pendingRestoration=%d, scrollevent=%d, scriptAnimating=%d, "
         "zeroScrollPos=%d pendingSuppression=%d, "
         "container=%p).\n",
         mAnchorNode, mAnchorNodeIsDirty, mDisabled,
-        mScrollFrame->HasPendingScrollRestoration(),
-        mScrollFrame->IsProcessingScrollEvent(),
-        mScrollFrame->ScrollAnimationState().contains(
+        ScrollFrame()->HasPendingScrollRestoration(),
+        ScrollFrame()->IsProcessingScrollEvent(),
+        ScrollFrame()->ScrollAnimationState().contains(
             nsIScrollableFrame::AnimationState::TriggeredByScript),
-        mScrollFrame->GetScrollPosition() == nsPoint(),
+        ScrollFrame()->GetScrollPosition() == nsPoint(),
         mSuppressAnchorAdjustment, this);
     if (mSuppressAnchorAdjustment) {
       mSuppressAnchorAdjustment = false;
@@ -472,7 +477,7 @@ void ScrollAnchorContainer::ApplyAdjustments() {
   }
 
   nscoord current =
-      FindScrollAnchoringBoundingOffset(mScrollFrame, mAnchorNode);
+      FindScrollAnchoringBoundingOffset(ScrollFrame(), mAnchorNode);
   nscoord logicalAdjustment = current - mLastAnchorOffset;
   WritingMode writingMode = Frame()->GetWritingMode();
 
@@ -525,19 +530,20 @@ void ScrollAnchorContainer::ApplyAdjustments() {
   MOZ_RELEASE_ASSERT(!mApplyingAnchorAdjustment);
   // We should use AutoRestore here, but that doesn't work with bitfields
   mApplyingAnchorAdjustment = true;
-  mScrollFrame->ScrollTo(mScrollFrame->GetScrollPosition() + physicalAdjustment,
-                         ScrollMode::Instant, ScrollOrigin::Relative);
+  ScrollFrame()->ScrollTo(
+      ScrollFrame()->GetScrollPosition() + physicalAdjustment,
+      ScrollMode::Instant, ScrollOrigin::Relative);
   mApplyingAnchorAdjustment = false;
 
   nsPresContext* pc = Frame()->PresContext();
-  if (mScrollFrame->mIsRoot) {
+  if (ScrollFrame()->mIsRoot) {
     pc->PresShell()->RootScrollFrameAdjusted(physicalAdjustment.y);
   }
 
   // The anchor position may not be in the same relative position after
   // adjustment. Update ourselves so we have consistent state.
   mLastAnchorOffset =
-      FindScrollAnchoringBoundingOffset(mScrollFrame, mAnchorNode);
+      FindScrollAnchoringBoundingOffset(ScrollFrame(), mAnchorNode);
 }
 
 ScrollAnchorContainer::ExamineResult
@@ -648,8 +654,8 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
   //
   // [1] https://github.com/w3c/csswg-drafts/issues/3483
   nsRect visibleRect;
-  if (!visibleRect.IntersectRect(rect,
-                                 mScrollFrame->GetVisualOptimalViewingRect())) {
+  if (!visibleRect.IntersectRect(
+          rect, ScrollFrame()->GetVisualOptimalViewingRect())) {
     return ExamineResult::Exclude;
   }
 
