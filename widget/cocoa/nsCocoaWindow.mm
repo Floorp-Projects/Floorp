@@ -2224,23 +2224,22 @@ LayoutDeviceIntPoint nsCocoaWindow::GetClientOffset() {
   NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
 }
 
-LayoutDeviceIntMargin nsCocoaWindow::ClientToWindowMargin() {
+LayoutDeviceIntSize nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!mWindow) {
-    return {};
+    return LayoutDeviceIntSize(0, 0);
   }
 
-  NSRect clientNSRect = [mWindow contentLayoutRect];
-  NSRect frameNSRect = [mWindow frameRectForContentRect:clientNSRect];
-
   CGFloat backingScale = BackingScaleFactor();
-  const auto clientRect = nsCocoaUtils::CocoaRectToGeckoRectDevPix(clientNSRect, backingScale);
-  const auto frameRect = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frameNSRect, backingScale);
+  LayoutDeviceIntRect r(0, 0, aClientSize.width, aClientSize.height);
+  NSRect rect = nsCocoaUtils::DevPixelsToCocoaPoints(r, backingScale);
 
-  return frameRect - clientRect;
+  NSRect maybeInflatedRect = [mWindow frameRectForContentRect:rect];
+  r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(maybeInflatedRect, backingScale);
+  return r.Size();
 
-  NS_OBJC_END_TRY_BLOCK_RETURN({});
+  NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntSize(0, 0));
 }
 
 nsMenuBarX* nsCocoaWindow::GetMenuBar() { return mMenuBar; }

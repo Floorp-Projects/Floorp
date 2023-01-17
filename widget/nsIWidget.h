@@ -1329,13 +1329,12 @@ class nsIWidget : public nsISupports {
   }
 
   /**
-   * Returns the margins that are applied to go from client sizes to window
-   * sizes (which includes window borders and titlebar).
-   * This method should work even when the window is not yet visible.
+   * Given the specified client size, return the corresponding window size,
+   * which includes the area for the borders and titlebar. This method
+   * should work even when the window is not yet visible.
    */
-  virtual LayoutDeviceIntMargin ClientToWindowMargin() { return {}; }
-
-  LayoutDeviceIntSize ClientToWindowSizeDifference();
+  virtual LayoutDeviceIntSize ClientToWindowSize(
+      const LayoutDeviceIntSize& aClientSize) = 0;
 
   /**
    * Dispatches an event to the widget
