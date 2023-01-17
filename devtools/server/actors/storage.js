@@ -1662,6 +1662,16 @@ const extensionStorageHelpers = {
   // they use different storage backends.
   async setupStorageInParent(addonId) {
     const { extension } = WebExtensionPolicy.getByID(addonId);
+    try {
+      // Make sure the extension storage APIs have been loaded,
+      // otherwise the DevTools storage panel would not be updated
+      // automatically when the extension storage data is being changed
+      // if the parent ext-storage.js module wasn't already loaded
+      // (See Bug 1802929).
+      await extension.apiManager.asyncGetAPI("storage", extension);
+    } catch (err) {
+      console.error(err);
+    }
     const parentResult = await ExtensionStorageIDB.selectBackend({ extension });
     const result = {
       ...parentResult,

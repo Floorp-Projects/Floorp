@@ -9,6 +9,10 @@ const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
 
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
+
 const {
   createMissingIndexedDBDirs,
   extensionScriptWithMessageListener,
@@ -29,6 +33,9 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
 PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Message manager disconnected/
 );
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /sendRemoveListener on closed conduit/
+);
 
 const { createAppInfo, promiseStartupManager } = AddonTestUtils;
 
@@ -48,7 +55,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(EXTENSION_STORAGE_ENABLED_PREF);
 });
 
-add_task(async function setup() {
+add_setup(async function setup() {
   await promiseStartupManager();
   const dir = createMissingIndexedDBDirs();
 
@@ -1056,6 +1063,100 @@ add_task(
     await shutdown(extension, target);
   }
 );
+
+// This test verifies that Bug 1802929 fix doesn't regress.
+add_task(async function test_live_update_with_no_extension_listener() {
+  const EXTENSION_ID = "test_with_no_listeners@xpcshell.mozilla.org";
+  let manifest = {
+    version: "1.0",
+    browser_specific_settings: {
+      gecko: {
+        id: EXTENSION_ID,
+      },
+    },
+  };
+
+  function background() {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      if (msg !== "storage-local-api-call") {
+        browser.test.fail(`Got unexpected test message: ${msg}`);
+        return;
+      }
+
+      const [{ method, methodArgs }] = args;
+      const res = await browser.storage.local[method](...methodArgs);
+      browser.test.sendMessage(`${msg}:done`, res);
+    });
+  }
+
+  const extension = await startupExtension(
+    getExtensionConfig({ manifest, background })
+  );
+
+  const { target, extensionStorage } = await openAddonStoragePanel(
+    extension.id
+  );
+
+  const { baseURI } = extension.extension;
+  const host = `${baseURI.scheme}://${baseURI.host}`;
+
+  let { data } = await extensionStorage.getStoreObjects(host);
+  Assert.deepEqual(data, [], "Got the expected results on empty storage.local");
+
+  async function testStorageLocalUpdate(storageValue) {
+    info("Store extension data");
+    await extension.sendMessage("storage-local-api-call", {
+      method: "set",
+      methodArgs: [{ storageKeyName: storageValue }],
+    });
+    await extension.awaitMessage("storage-local-api-call:done");
+
+    info("Verify stored extension data");
+    await extension.sendMessage("storage-local-api-call", {
+      method: "get",
+      methodArgs: [],
+    });
+
+    Assert.deepEqual(
+      await extension.awaitMessage("storage-local-api-call:done"),
+      { storageKeyName: storageValue },
+      "Got the expected value from browser.storage.local.get"
+    );
+
+    await TestUtils.waitForCondition(async () => {
+      const res = await extensionStorage.getStoreObjects(host);
+      return res.data?.length > 0;
+    }, "Wait for the extension storage panel updates");
+
+    data = (await extensionStorage.getStoreObjects(host)).data;
+    Assert.deepEqual(
+      data,
+      [
+        {
+          area: "local",
+          name: "storageKeyName",
+          value: { str: `${storageValue}` },
+          isValueEditable: true,
+        },
+      ],
+      "Expected DevTools Storage panel data to have been updated"
+    );
+  }
+
+  await testStorageLocalUpdate("aStorageValue 01");
+
+  manifest = {
+    ...manifest,
+    version: "2.0",
+  };
+  // "Reload" is most similar to an upgrade, as e.g. storage data is preserved
+  info("Update to version 2.0");
+  await extension.upgrade(getExtensionConfig({ manifest, background }));
+
+  await testStorageLocalUpdate("aStorageValue 02");
+
+  await shutdown(extension, target);
+});
 
 /*
  * This task should be last, as it sets a pref to disable the extensionStorage
