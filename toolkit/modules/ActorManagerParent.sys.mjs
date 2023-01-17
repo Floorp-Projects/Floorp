@@ -330,10 +330,10 @@ let JSWINDOWACTORS = {
 
   NetError: {
     parent: {
-      moduleURI: "resource://gre/actors/NetErrorParent.jsm",
+      esModuleURI: "resource://gre/actors/NetErrorParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/NetErrorChild.jsm",
+      esModuleURI: "resource://gre/actors/NetErrorChild.sys.mjs",
       events: {
         DOMDocElementInserted: {},
         click: {},

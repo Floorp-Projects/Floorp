@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["NetErrorChild"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -15,7 +13,7 @@ const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
 
-class NetErrorChild extends RemotePageChild {
+export class NetErrorChild extends RemotePageChild {
   actorCreated() {
     super.actorCreated();
 

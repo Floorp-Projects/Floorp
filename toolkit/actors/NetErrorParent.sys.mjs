@@ -3,19 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["NetErrorParent"];
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
-
-const { TelemetryController } = ChromeUtils.importESModule(
-  "resource://gre/modules/TelemetryController.sys.mjs"
-);
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
+import { TelemetryController } from "resource://gre/modules/TelemetryController.sys.mjs";
 
 const PREF_SSL_IMPACT_ROOTS = [
   "security.tls.version.",
@@ -59,7 +50,7 @@ class CaptivePortalObserver {
   }
 }
 
-class NetErrorParent extends JSWindowActorParent {
+export class NetErrorParent extends JSWindowActorParent {
   constructor() {
     super();
     this.captivePortalObserver = new CaptivePortalObserver(this);

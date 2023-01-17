@@ -52,7 +52,7 @@ var gExceptionPaths = [
   "resource://gre/modules/services-automation/",
   "resource://services-automation/ServicesAutomation.jsm",
 
-  // Paths from this folder are constructed in NetErrorParent.jsm based on
+  // Paths from this folder are constructed in NetErrorParent.sys.mjs based on
   // the type of cert or net error the user is encountering.
   "chrome://global/content/neterror/supportpages/",
 
