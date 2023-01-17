@@ -8982,8 +8982,8 @@
   mirror: always
 
 # Pref to control how many consecutive scroll-anchoring adjustments (since the
-# most recent user scroll) we'll average, before we consider whether to
-# automatically turn off scroll anchoring. When we hit this threshold, the
+# most recent user scroll or timeout) we'll average, before we consider whether
+# to automatically turn off scroll anchoring. When we hit this threshold, the
 # actual decision to disable also depends on the
 # min-average-adjustment-threshold pref, see below for more details.
 #
@@ -8991,6 +8991,16 @@
 - name: layout.css.scroll-anchoring.max-consecutive-adjustments
   type: uint32_t
   value: 10
+  mirror: always
+
+# The time after which we reset the max-consecutive-adjustments period, in
+# milliseconds.
+#
+# This prevents sporadic back-and-forth scroll anchoring to trigger the
+# max-consecutive-adjustments heuristic.
+- name: layout.css.scroll-anchoring.max-consecutive-adjustments-timeout-ms
+  type: uint32_t
+  value: 500
   mirror: always
 
 # Pref to control whether we should disable scroll anchoring on a scroller
@@ -9003,7 +9013,7 @@
 # average offset difference between them amount to less than 3 CSS pixels.
 - name: layout.css.scroll-anchoring.min-average-adjustment-threshold
   type: uint32_t
-  value: 3
+  value: 2
   mirror: always
 
 # Pref to control disabling scroll anchoring suppression triggers, see
