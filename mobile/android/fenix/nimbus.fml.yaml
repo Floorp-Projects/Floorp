@@ -130,8 +130,8 @@ features:
             DEVICE_IOS: os == 'iOS'
             ALWAYS: "true"
             NEVER: "false"
-            I_AM_DEFAULT_BROWSER: "is_default_browser_string == 'true'"
-            I_AM_NOT_DEFAULT_BROWSER: "is_default_browser_string == 'false'"
+            I_AM_DEFAULT_BROWSER: "is_default_browser"
+            I_AM_NOT_DEFAULT_BROWSER: "is_default_browser == false"
             USER_ESTABLISHED_INSTALL: "number_of_app_launches >=4"
           actions:
             ENABLE_PRIVATE_BROWSING: ://enable_private_browsing

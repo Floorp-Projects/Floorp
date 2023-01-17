@@ -9,12 +9,12 @@ import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusBuilder
 import mozilla.components.support.base.log.logger.Logger
-import org.json.JSONObject
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.gleanplumb.CustomAttributeProvider
 import org.mozilla.fenix.nimbus.FxNimbus
 
 /**
@@ -29,19 +29,12 @@ private const val TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS = 200L
  * Create the Nimbus singleton object for the Fenix app.
  */
 fun createNimbus(context: Context, urlString: String?): NimbusApi {
+    // These values can be used in the JEXL expressions when targeting experiments.
+    val customTargetingAttributes = CustomAttributeProvider.getCustomTargetingAttributes(context)
+
     val isAppFirstRun = context.settings().isFirstNimbusRun
     if (isAppFirstRun) {
         context.settings().isFirstNimbusRun = false
-    }
-
-    // These values can be used in the JEXL expressions when targeting experiments.
-    val customTargetingAttributes = JSONObject().apply {
-        // By convention, we should use snake case.
-        put("is_first_run", isAppFirstRun)
-
-        // This camelCase attribute is a boolean value represented as a string.
-        // This is left for backwards compatibility.
-        put("isFirstRun", isAppFirstRun.toString())
     }
 
     // The name "fenix" here corresponds to the app_name defined for the family of apps
