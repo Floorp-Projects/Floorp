@@ -1275,6 +1275,25 @@ StructuredCloneHolder::CustomReadTransferHandler(
                                             aReturnObject);
   }
 
+  if (StaticPrefs::dom_media_webcodecs_enabled() &&
+      aTag == SCTAG_DOM_VIDEOFRAME &&
+      CloneScope() == StructuredCloneScope::SameProcess) {
+    MOZ_ASSERT(aContent);
+    VideoFrame::TransferredData* data =
+        static_cast<VideoFrame::TransferredData*>(aContent);
+    nsCOMPtr<nsIGlobalObject> global = mGlobal;
+    RefPtr<VideoFrame> frame = VideoFrame::FromTransferred(global.get(), data);
+    delete data;
+
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, frame, &value)) {
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+    aReturnObject.set(&value.toObject());
+    return true;
+  }
+
   return false;
 }
 
@@ -1352,6 +1371,27 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         bitmap->Close();
 
         return true;
+      }
+
+      if (StaticPrefs::dom_media_webcodecs_enabled()) {
+        VideoFrame* videoFrame = nullptr;
+        rv = UNWRAP_OBJECT(VideoFrame, &obj, videoFrame);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_ASSERT(videoFrame);
+
+          *aExtraData = 0;
+          *aTag = SCTAG_DOM_VIDEOFRAME;
+          *aOwnership = JS::SCTAG_TMO_CUSTOM;
+          *aContent = nullptr;
+
+          UniquePtr<VideoFrame::TransferredData> data = videoFrame->Transfer();
+          if (!data) {
+            return false;
+          }
+          *aContent = data.release();
+          MOZ_ASSERT(*aContent);
+          return true;
+        }
       }
     }
 
@@ -1479,6 +1519,16 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
     MessagePort::ForceClose(mPortIdentifiers[aExtraData + 1]);
     return;
   }
+
+  if (StaticPrefs::dom_media_webcodecs_enabled() &&
+      aTag == SCTAG_DOM_VIDEOFRAME &&
+      CloneScope() == StructuredCloneScope::SameProcess) {
+    MOZ_ASSERT(aContent);
+    VideoFrame::TransferredData* data =
+        static_cast<VideoFrame::TransferredData*>(aContent);
+    delete data;
+    return;
+  }
 }
 
 bool StructuredCloneHolder::CustomCanTransferHandler(
@@ -1551,6 +1601,15 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
       // throw a "DataCloneError" DOMException.
       return !IsReadableStreamLocked(stream->Readable()) &&
              !IsWritableStreamLocked(stream->Writable());
+    }
+  }
+
+  if (StaticPrefs::dom_media_webcodecs_enabled()) {
+    VideoFrame* videoframe = nullptr;
+    nsresult rv = UNWRAP_OBJECT(VideoFrame, &obj, videoframe);
+    if (NS_SUCCEEDED(rv)) {
+      SameProcessScopeRequired(aSameProcessScopeRequired);
+      return CloneScope() == StructuredCloneScope::SameProcess;
     }
   }
 

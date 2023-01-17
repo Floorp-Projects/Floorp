@@ -151,6 +151,15 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter,
                             StructuredCloneHolder* aHolder) const;
 
+  // [Transferable] implementations: Transfer, FromTransferred
+  struct FrameData;
+  using TransferredData = FrameData;
+
+  UniquePtr<TransferredData> Transfer();
+
+  static already_AddRefed<VideoFrame> FromTransferred(nsIGlobalObject* aGlobal,
+                                                      TransferredData* aData);
+
  public:
   // A VideoPixelFormat wrapper providing utilities for VideoFrame.
   class Format final {
@@ -174,6 +183,28 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
    private:
     bool IsYUV() const;
     VideoPixelFormat mFormat;
+  };
+
+  struct FrameData {
+    FrameData(layers::Image* aImage, const VideoPixelFormat& aFormat,
+              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
+              Maybe<uint64_t> aDuration, int64_t aTimestamp,
+              const VideoColorSpaceInit& aColorSpace)
+        : mImage(aImage),
+          mFormat(aFormat),
+          mVisibleRect(aVisibleRect),
+          mDisplaySize(aDisplaySize),
+          mDuration(aDuration),
+          mTimestamp(aTimestamp),
+          mColorSpace(aColorSpace) {}
+
+    RefPtr<layers::Image> mImage;
+    VideoFrame::Format mFormat;
+    const gfx::IntRect mVisibleRect;
+    const gfx::IntSize mDisplaySize;
+    Maybe<uint64_t> mDuration;
+    int64_t mTimestamp;
+    const VideoColorSpaceInit mColorSpace;
   };
 
  private:
