@@ -485,24 +485,20 @@ RuleRewriter.prototype = {
       return null;
     }
 
-    if (this.rule.parentStyleSheet.resourceId) {
-      const prefIndent = getIndentationFromPrefs();
-      if (prefIndent) {
-        const { indentUnit, indentWithTabs } = prefIndent;
-        return indentWithTabs ? "\t" : " ".repeat(indentUnit);
-      }
-
-      const styleSheetsFront = await this.rule.targetFront.getFront(
-        "stylesheets"
-      );
-      const { str: source } = await styleSheetsFront.getText(
-        this.rule.parentStyleSheet.resourceId
-      );
-      const { indentUnit, indentWithTabs } = getIndentationFromString(source);
+    const prefIndent = getIndentationFromPrefs();
+    if (prefIndent) {
+      const { indentUnit, indentWithTabs } = prefIndent;
       return indentWithTabs ? "\t" : " ".repeat(indentUnit);
     }
 
-    return this.rule.parentStyleSheet.guessIndentation();
+    const styleSheetsFront = await this.rule.targetFront.getFront(
+      "stylesheets"
+    );
+    const { str: source } = await styleSheetsFront.getText(
+      this.rule.parentStyleSheet.resourceId
+    );
+    const { indentUnit, indentWithTabs } = getIndentationFromString(source);
+    return indentWithTabs ? "\t" : " ".repeat(indentUnit);
   },
 
   /**

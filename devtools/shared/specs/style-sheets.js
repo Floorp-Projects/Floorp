@@ -9,18 +9,16 @@ const {
   generateActorSpec,
 } = require("resource://devtools/shared/protocol.js");
 
-// Load the "stylesheet" type used in this file.
-require("resource://devtools/shared/specs/style-sheet.js");
-
 const styleSheetsSpec = generateActorSpec({
   typeName: "stylesheets",
 
   events: {
+    // @backward-compat { version 111 } This event is no longer emitted by
+    // recent servers, keep the definition so that protocol.js recognizes the
+    // event payloads coming from older servers. Can be removed when 111 reaches
+    // the release channel.
     "stylesheet-added": {
       type: "stylesheetAdded",
-      sheet: Arg(0, "stylesheet"),
-      isNew: Arg(1, "boolean"),
-      fileName: Arg(2, "nullable:string"),
     },
   },
 
@@ -28,10 +26,6 @@ const styleSheetsSpec = generateActorSpec({
     getTraits: {
       request: {},
       response: { traits: RetVal("json") },
-    },
-    getStyleSheets: {
-      request: {},
-      response: { styleSheets: RetVal("array:stylesheet") },
     },
     addStyleSheet: {
       request: {

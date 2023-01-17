@@ -12,7 +12,7 @@
  * Firefox View Source is the fallback.
  *
  * @param {Toolbox} toolbox
- * @param {string|Object} stylesheetFrontOrGeneratedURL
+ * @param {string|Object} stylesheetResourceOrGeneratedURL
  * @param {number} generatedLine
  * @param {number} generatedColumn
  *
@@ -20,7 +20,7 @@
  */
 exports.viewSourceInStyleEditor = async function(
   toolbox,
-  stylesheetFrontOrGeneratedURL,
+  stylesheetResourceOrGeneratedURL,
   generatedLine,
   generatedColumn
 ) {
@@ -32,25 +32,25 @@ exports.viewSourceInStyleEditor = async function(
       // initialization faster in case we already have a stylesheet resource. We still
       // need the rest of this function to handle subsequent calls and sourcemapped stylesheets.
       stylesheetToSelect: {
-        stylesheet: stylesheetFrontOrGeneratedURL,
+        stylesheet: stylesheetResourceOrGeneratedURL,
         line: generatedLine,
         column: generatedColumn,
       },
     });
 
-    let stylesheetFront;
-    if (typeof stylesheetFrontOrGeneratedURL === "string") {
-      stylesheetFront = panel.getStylesheetFrontForGeneratedURL(
-        stylesheetFrontOrGeneratedURL
+    let stylesheetResource;
+    if (typeof stylesheetResourceOrGeneratedURL === "string") {
+      stylesheetResource = panel.getStylesheetResourceForGeneratedURL(
+        stylesheetResourceOrGeneratedURL
       );
     } else {
-      stylesheetFront = stylesheetFrontOrGeneratedURL;
+      stylesheetResource = stylesheetResourceOrGeneratedURL;
     }
 
-    const originalLocation = stylesheetFront
+    const originalLocation = stylesheetResource
       ? await getOriginalLocation(
           toolbox,
-          stylesheetFront.resourceId,
+          stylesheetResource.resourceId,
           generatedLine,
           generatedColumn
         )
@@ -65,9 +65,9 @@ exports.viewSourceInStyleEditor = async function(
       return true;
     }
 
-    if (stylesheetFront) {
+    if (stylesheetResource) {
       await panel.selectStyleSheet(
-        stylesheetFront,
+        stylesheetResource,
         generatedLine,
         generatedColumn
       );
@@ -81,10 +81,10 @@ exports.viewSourceInStyleEditor = async function(
   // view-source tab
   exports.viewSource(
     toolbox,
-    typeof stylesheetFrontOrGeneratedURL === "string"
-      ? stylesheetFrontOrGeneratedURL
-      : stylesheetFrontOrGeneratedURL.href ||
-          stylesheetFrontOrGeneratedURL.nodeHref,
+    typeof stylesheetResourceOrGeneratedURL === "string"
+      ? stylesheetResourceOrGeneratedURL
+      : stylesheetResourceOrGeneratedURL.href ||
+          stylesheetResourceOrGeneratedURL.nodeHref,
     generatedLine
   );
 

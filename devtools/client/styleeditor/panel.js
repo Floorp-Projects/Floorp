@@ -99,8 +99,8 @@ StyleEditorPanel.prototype = {
   /**
    * Select a stylesheet.
    *
-   * @param {StyleSheetFront} front
-   *        The front of stylesheet to find and select in editor.
+   * @param {StyleSheetResource} stylesheet
+   *        The resource for the stylesheet to find and select in editor.
    * @param {number} line
    *        Line number to jump to after selecting. One-indexed
    * @param {number} col
@@ -109,12 +109,12 @@ StyleEditorPanel.prototype = {
    *         Promise that will resolve when the editor is selected and ready
    *         to be used.
    */
-  selectStyleSheet(front, line, col) {
+  selectStyleSheet(stylesheet, line, col) {
     if (!this.UI) {
       return null;
     }
 
-    return this.UI.selectStyleSheet(front, line - 1, col ? col - 1 : 0);
+    return this.UI.selectStyleSheet(stylesheet, line - 1, col ? col - 1 : 0);
   },
 
   /**
@@ -139,12 +139,12 @@ StyleEditorPanel.prototype = {
     return this.UI.selectStyleSheet(originalSheet, line - 1, col ? col - 1 : 0);
   },
 
-  getStylesheetFrontForGeneratedURL(url) {
+  getStylesheetResourceForGeneratedURL(url) {
     if (!this.UI) {
       return null;
     }
 
-    return this.UI.getStylesheetFrontForGeneratedURL(url);
+    return this.UI.getStylesheetResourceForGeneratedURL(url);
   },
 
   /**

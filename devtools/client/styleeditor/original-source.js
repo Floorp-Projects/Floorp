@@ -66,8 +66,8 @@ OriginalSource.prototype = {
    * column, return the corresponding original location in this style
    * sheet.
    *
-   * @param {StyleSheetFront} relatedSheet
-   *        The generated style sheet's actor
+   * @param {StyleSheetResource} relatedSheet
+   *        The generated style sheet's resource
    * @param {Number} line
    *        Line number.
    * @param {Number} column

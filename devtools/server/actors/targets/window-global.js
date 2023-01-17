@@ -69,7 +69,7 @@ ChromeUtils.defineModuleGetter(lazy, "ExtensionContent", EXTENSION_CONTENT_JSM);
 
 loader.lazyRequireGetter(
   this,
-  ["StyleSheetActor", "getSheetText"],
+  ["getSheetText"],
   "resource://devtools/server/actors/style-sheet.js",
   true
 );
@@ -218,10 +218,6 @@ const windowGlobalTargetPrototype = {
    *    This event fires when we switch the actor's targeted document
    *    to one of its iframes, or back to its original top document.
    *    It is dispatched between window-destroyed and window-ready.
-   *  - stylesheet-added
-   *    This event is fired when a StyleSheetActor is created.
-   *    It contains the following attribute:
-   *     * actor (StyleSheetActor) The created actor.
    *
    * Note that *all* these events are dispatched in the following order
    * when we switch the context of the actor to a given iframe:
@@ -294,9 +290,6 @@ const windowGlobalTargetPrototype = {
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
     this._sourcesManager = null;
-
-    // Map of DOM stylesheets to StyleSheetActors
-    this._styleSheetActors = new Map();
 
     this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(
       this
@@ -698,7 +691,6 @@ const windowGlobalTargetPrototype = {
     this._destroyThreadActor();
 
     // Shut down actors that belong to this target's pool.
-    this._styleSheetActors.clear();
     if (this._targetScopedActorPool) {
       this._targetScopedActorPool.destroy();
       this._targetScopedActorPool = null;
@@ -1573,33 +1565,6 @@ const windowGlobalTargetPrototype = {
       state: "stop",
       isFrameSwitching,
     });
-  },
-
-  /**
-   * Create or return the StyleSheetActor for a style sheet. This method
-   * is here because the Style Editor and Inspector share style sheet actors.
-   *
-   * @param DOMStyleSheet styleSheet
-   *        The style sheet to create an actor for.
-   * @return StyleSheetActor actor
-   *         The actor for this style sheet.
-   *
-   */
-  createStyleSheetActor(styleSheet) {
-    assert(
-      !this.isDestroyed(),
-      "Target must not be destroyed to create a sheet actor."
-    );
-    if (this._styleSheetActors.has(styleSheet)) {
-      return this._styleSheetActors.get(styleSheet);
-    }
-    const actor = new StyleSheetActor(styleSheet, this);
-    this._styleSheetActors.set(styleSheet, actor);
-
-    this._targetScopedActorPool.manage(actor);
-    this.emit("stylesheet-added", actor);
-
-    return actor;
   },
 
   removeActorByName(name) {

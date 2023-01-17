@@ -1402,8 +1402,7 @@ function SelectorView(tree, selectorInfo) {
     };
     this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
     this._unsubscribeCallback = this.sourceMapURLService.subscribeByID(
-      this.generatedLocation.sheet.resourceId ||
-        this.generatedLocation.sheet.actorID,
+      this.generatedLocation.sheet.resourceId,
       this.generatedLocation.line,
       this.generatedLocation.column,
       this._updateLocation
@@ -1553,7 +1552,7 @@ SelectorView.prototype = {
 
     const { sheet, line, column } = this.generatedLocation;
     if (ToolDefinitions.styleEditor.isToolSupported(inspector.toolbox)) {
-      inspector.toolbox.viewSourceInStyleEditorByFront(sheet, line, column);
+      inspector.toolbox.viewSourceInStyleEditorByResource(sheet, line, column);
     }
   },
 

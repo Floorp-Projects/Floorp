@@ -33,7 +33,6 @@ types.addDictType("matchedselector", {
 types.addDictType("appliedStylesReturn", {
   entries: "array:appliedstyle",
   rules: "array:domstylerule",
-  sheets: "array:stylesheet",
 });
 
 types.addDictType("modifiedStylesReturn", {

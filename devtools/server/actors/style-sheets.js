@@ -11,7 +11,6 @@ const {
 const {
   styleSheetsSpec,
 } = require("resource://devtools/shared/specs/style-sheets.js");
-const InspectorUtils = require("InspectorUtils");
 
 loader.lazyRequireGetter(
   this,
@@ -43,20 +42,6 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     protocol.Actor.prototype.initialize.call(this, targetActor.conn);
 
     this.parentActor = targetActor;
-
-    this._onApplicableStateChanged = this._onApplicableStateChanged.bind(this);
-    this._onNewStyleSheetActor = this._onNewStyleSheetActor.bind(this);
-    this._onWindowReady = this._onWindowReady.bind(this);
-    this._transitionSheetLoaded = false;
-
-    this.parentActor.on("stylesheet-added", this._onNewStyleSheetActor);
-    this.parentActor.on("window-ready", this._onWindowReady);
-
-    this.parentActor.chromeEventHandler.addEventListener(
-      "StyleSheetApplicableStateChanged",
-      this._onApplicableStateChanged,
-      true
-    );
   },
 
   getTraits() {
@@ -72,212 +57,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       win.document.styleSheetChangeEventsEnabled = false;
     }
 
-    this.parentActor.off("stylesheet-added", this._onNewStyleSheetActor);
-    this.parentActor.off("window-ready", this._onWindowReady);
-
-    this.parentActor.chromeEventHandler.removeEventListener(
-      "StyleSheetApplicableStateChanged",
-      this._onApplicableStateChanged,
-      true
-    );
-
     protocol.Actor.prototype.destroy.call(this);
-  },
-
-  /**
-   * Event handler that is called when a the target actor emits window-ready.
-   *
-   * @param {Event} evt
-   *        The triggering event.
-   */
-  _onWindowReady(evt) {
-    this._addStyleSheets(evt.window);
-  },
-
-  /**
-   * Event handler that is called when a the target actor emits stylesheet-added.
-   *
-   * @param {StyleSheetActor} actor
-   *        The new style sheet actor.
-   */
-  _onNewStyleSheetActor(actor) {
-    const info = this._addingStyleSheetInfo?.get(actor.rawSheet);
-    this._addingStyleSheetInfo?.delete(actor.rawSheet);
-
-    // Forward it to the client side.
-    this.emit(
-      "stylesheet-added",
-      actor,
-      info ? info.isNew : false,
-      info ? info.fileName : null
-    );
-  },
-
-  /**
-   * Protocol method for getting a list of StyleSheetActors representing
-   * all the style sheets in this document.
-   */
-  async getStyleSheets() {
-    let actors = [];
-
-    const windows = this.parentActor.windows;
-    for (const win of windows) {
-      const sheets = await this._addStyleSheets(win);
-      actors = actors.concat(sheets);
-    }
-    return actors;
-  },
-
-  /**
-   * Check if we should be showing this stylesheet.
-   *
-   * @param {DOMCSSStyleSheet} sheet
-   *        Stylesheet we're interested in
-   *
-   * @return boolean
-   *         Whether the stylesheet should be listed.
-   */
-  _shouldListSheet(sheet) {
-    // Special case about:PreferenceStyleSheet, as it is generated on the
-    // fly and the URI is not registered with the about: handler.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-    if (sheet.href?.toLowerCase() === "about:preferencestylesheet") {
-      return false;
-    }
-
-    return true;
-  },
-
-  /**
-   * Event handler that is called when the state of applicable of style sheet is changed.
-   *
-   * For now, StyleSheetApplicableStateChanged event will be called at following timings.
-   * - Append <link> of stylesheet to document
-   * - Append <style> to document
-   * - Change disable attribute of stylesheet object
-   * - Change disable attribute of <link> to false
-   * When appending <link>, <style> or changing `disable` attribute to false, `applicable`
-   * is passed as true. The other hand, when changing `disable` to true, this will be
-   * false.
-   * NOTE: For now, StyleSheetApplicableStateChanged will not be called when removing the
-   *       link and style element.
-   *
-   * @param {StyleSheetApplicableStateChanged}
-   *        The triggering event.
-   */
-  _onApplicableStateChanged({ applicable, stylesheet }) {
-    if (
-      // Have interest in applicable stylesheet only.
-      applicable &&
-      // No ownerNode means that this stylesheet is *not* associated to a DOM Element.
-      stylesheet.ownerNode &&
-      this._shouldListSheet(stylesheet) &&
-      !this._haveAncestorWithSameURL(stylesheet)
-    ) {
-      this.parentActor.createStyleSheetActor(stylesheet);
-    }
-  },
-
-  /**
-   * Add all the stylesheets for the document in this window to the map and
-   * create an actor for each one if not already created.
-   *
-   * @param {Window} win
-   *        Window for which to add stylesheets
-   *
-   * @return {Promise}
-   *         Promise that resolves to an array of StyleSheetActors
-   */
-  _addStyleSheets(win) {
-    return async function() {
-      const doc = win.document;
-      // We have to set this flag in order to get the
-      // StyleSheetApplicableStateChanged events.  See Document.webidl.
-      doc.styleSheetChangeEventsEnabled = true;
-
-      const documentOnly = !doc.nodePrincipal.isSystemPrincipal;
-      const styleSheets = InspectorUtils.getAllStyleSheets(doc, documentOnly);
-
-      let actors = [];
-      for (let i = 0; i < styleSheets.length; i++) {
-        const sheet = styleSheets[i];
-        if (!this._shouldListSheet(sheet)) {
-          continue;
-        }
-
-        const actor = this.parentActor.createStyleSheetActor(sheet);
-        actors.push(actor);
-
-        // Get all sheets, including imported ones
-        const imports = await this._getImported(doc, actor);
-        actors = actors.concat(imports);
-      }
-      return actors;
-    }.bind(this)();
-  },
-
-  /**
-   * Get all the stylesheets @imported from a stylesheet.
-   *
-   * @param  {Document} doc
-   *         The document including the stylesheet
-   * @param  {DOMStyleSheet} styleSheet
-   *         Style sheet to search
-   * @return {Promise}
-   *         A promise that resolves with an array of StyleSheetActors
-   */
-  _getImported(doc, styleSheet) {
-    return async function() {
-      const rules = await styleSheet.getCSSRules();
-      let imported = [];
-
-      for (let i = 0; i < rules.length; i++) {
-        const rule = rules[i];
-        if (rule.type == CSSRule.IMPORT_RULE) {
-          // With the Gecko style system, the associated styleSheet may be null
-          // if it has already been seen because an import cycle for the same
-          // URL.  With Stylo, the styleSheet will exist (which is correct per
-          // the latest CSSOM spec), so we also need to check ancestors for the
-          // same URL to avoid cycles.
-          const sheet = rule.styleSheet;
-          if (
-            !sheet ||
-            this._haveAncestorWithSameURL(sheet) ||
-            !this._shouldListSheet(sheet)
-          ) {
-            continue;
-          }
-          const actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
-          imported.push(actor);
-
-          // recurse imports in this stylesheet as well
-          const children = await this._getImported(doc, actor);
-          imported = imported.concat(children);
-        } else if (rule.type != CSSRule.CHARSET_RULE) {
-          // @import rules must precede all others except @charset
-          break;
-        }
-      }
-
-      return imported;
-    }.bind(this)();
-  },
-
-  /**
-   * Check all ancestors to see if this sheet's URL matches theirs as a way to
-   * detect an import cycle.
-   *
-   * @param {DOMStyleSheet} sheet
-   */
-  _haveAncestorWithSameURL(sheet) {
-    const sheetHref = sheet.href;
-    while (sheet.parentStyleSheet) {
-      if (sheet.parentStyleSheet.href == sheetHref) {
-        return true;
-      }
-      sheet = sheet.parentStyleSheet;
-    }
-    return false;
   },
 
   /**
@@ -294,10 +74,6 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   async addStyleSheet(text, fileName = null) {
     const styleSheetsManager = this._getStyleSheetsManager();
     await styleSheetsManager.addStyleSheet(this.document, text, fileName);
-  },
-
-  _getStyleSheetActor(resourceId) {
-    return this.parentActor._targetScopedActorPool.getActorByID(resourceId);
   },
 
   _getStyleSheetsManager() {

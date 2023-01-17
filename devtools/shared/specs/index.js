@@ -254,11 +254,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/style-rule",
   },
   {
-    types: ["stylesheet"],
-    spec: "devtools/shared/specs/style-sheet",
-    front: "devtools/client/fronts/style-sheet",
-  },
-  {
     types: ["stylesheets"],
     spec: "devtools/shared/specs/style-sheets",
     front: "devtools/client/fronts/style-sheets",
