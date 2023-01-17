@@ -98,12 +98,6 @@ loader.lazyRequireGetter(
   "resource://devtools/server/actors/utils/walker-search.js",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "hasStyleSheetWatcherSupportForTarget",
-  "resource://devtools/server/actors/utils/stylesheets-manager.js",
-  true
-);
 
 // ContentDOMReference requires ChromeUtils, which isn't available in worker context.
 const lazy = {};
@@ -2666,23 +2660,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * Given a StyleSheetActor (identified by its ID), commonly used in the
-   * style-editor, get its ownerNode and return the corresponding walker's
-   * NodeActor.
+   * Given a StyleSheet resource ID, commonly used in the style-editor, get its
+   * ownerNode and return the corresponding walker's NodeActor.
    * Note that getNodeFromActor was added later and can now be used instead.
    */
   getStyleSheetOwnerNode(resourceId) {
-    if (hasStyleSheetWatcherSupportForTarget(this.targetActor)) {
-      const manager = this.targetActor.getStyleSheetManager();
-      const ownerNode = manager.getOwnerNode(resourceId);
-      return this.attachElement(ownerNode);
-    }
-
-    // Following code can be removed once we enable STYLESHEET resource on the watcher/server
-    // side by default. For now it is being preffed off and we have to support the two
-    // codepaths. Once enabled we will only support the stylesheet watcher codepath.
-    const actorBasedNode = this.getNodeFromActor(resourceId, ["ownerNode"]);
-    return actorBasedNode;
+    const manager = this.targetActor.getStyleSheetManager();
+    const ownerNode = manager.getOwnerNode(resourceId);
+    return this.attachElement(ownerNode);
   },
 
   /**

@@ -86,7 +86,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     this.pageStyle = pageStyle;
     this.rawStyle = item.style;
     this._parentSheet = null;
-    this._onStyleApplied = this._onStyleApplied.bind(this);
     // Parsed CSS declarations from this.form().declarations used to check CSS property
     // names and values before tracking changes. Using cached values instead of accessing
     // this.form().declarations on demand because that would cause needless re-parsing.
@@ -105,10 +104,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
-        if (!this.pageStyle.hasStyleSheetWatcherSupport) {
-          this.sheetActor = this.pageStyle._sheetRef(this._parentSheet);
-          this.sheetActor.on("style-applied", this._onStyleApplied);
-        }
       }
     } else {
       // Fake a rule
@@ -137,9 +132,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     this.rawNode = null;
     this.rawRule = null;
     this._declarations = null;
-    if (this.sheetActor) {
-      this.sheetActor.off("style-applied", this._onStyleApplied);
-    }
   },
 
   // Objects returned by this actor are owned by the PageStyleActor
@@ -252,36 +244,23 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // Used to differentiate between changes to rules with identical selectors.
       data.ruleIndex = this._ruleIndex;
 
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
-        const sheet = this._parentSheet;
-        const inspectorActor = this.pageStyle.inspector;
-        const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-          sheet
-        );
-        const styleSheetIndex = this.pageStyle.styleSheetsManager.getStyleSheetIndex(
-          resourceId
-        );
-        data.source = {
-          // Inline stylesheets have a null href; Use window URL instead.
-          type: sheet.href ? "stylesheet" : "inline",
-          href: sheet.href || inspectorActor.window.location.toString(),
-          id: resourceId,
-          index: styleSheetIndex,
-          // Whether the stylesheet lives in a different frame than the host document.
-          isFramed: inspectorActor.window !== inspectorActor.window.top,
-        };
-      } else {
-        data.source = {
-          // Inline stylesheets have a null href; Use window URL instead.
-          type: this.sheetActor.href ? "stylesheet" : "inline",
-          href:
-            this.sheetActor.href || this.sheetActor.window.location.toString(),
-          id: this.sheetActor.actorID,
-          index: this.sheetActor.styleSheetIndex,
-          // Whether the stylesheet lives in a different frame than the host document.
-          isFramed: this.sheetActor.ownerWindow !== this.sheetActor.window,
-        };
-      }
+      const sheet = this._parentSheet;
+      const inspectorActor = this.pageStyle.inspector;
+      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+        sheet
+      );
+      const styleSheetIndex = this.pageStyle.styleSheetsManager.getStyleSheetIndex(
+        resourceId
+      );
+      data.source = {
+        // Inline stylesheets have a null href; Use window URL instead.
+        type: sheet.href ? "stylesheet" : "inline",
+        href: sheet.href || inspectorActor.window.location.toString(),
+        id: resourceId,
+        index: styleSheetIndex,
+        // Whether the stylesheet lives in a different frame than the host document.
+        isFramed: inspectorActor.window !== inspectorActor.window.top,
+      };
     }
 
     return data;
@@ -349,15 +328,9 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     if (this._parentSheet) {
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
-        form.parentStyleSheet = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-          this._parentSheet
-        );
-      } else {
-        form.parentStyleSheet = this.pageStyle._sheetRef(
-          this._parentSheet
-        ).actorID;
-      }
+      form.parentStyleSheet = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+        this._parentSheet
+      );
 
       // If the rule is in a imported stylesheet with a specified layer, put it at the top
       // of the ancestor data array.
@@ -561,17 +534,16 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   /**
-   * This is attached to the parent style sheet actor's
-   * "style-applied" event.
+   * Called from PageStyle actor _onStylesheetUpdated.
    */
-  _onStyleApplied(kind) {
+  onStyleApplied(kind) {
     if (kind === UPDATE_GENERAL) {
-      // A general change means that the rule actors are invalidated,
-      // so stop listening to events now.
-      if (this.sheetActor) {
-        this.sheetActor.off("style-applied", this._onStyleApplied);
-      }
-    } else if (this._ruleIndex) {
+      // A general change means that the rule actors are invalidated, nothing
+      // to do here.
+      return;
+    }
+
+    if (this._ruleIndex) {
       // The sheet was updated by this actor, in a way that preserves
       // the rules.  Now, recompute our new rule from the style sheet,
       // so that we aren't left with a reference to a dangling rule.
@@ -615,28 +587,15 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       return Promise.resolve(this.authoredText);
     }
 
-    if (this.pageStyle.hasStyleSheetWatcherSupport) {
-      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-        this._parentSheet
-      );
-      const cssText = await this.pageStyle.styleSheetsManager.getText(
-        resourceId
-      );
-      const { text } = getRuleText(cssText, this.line, this.column);
+    const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+      this._parentSheet
+    );
+    const cssText = await this.pageStyle.styleSheetsManager.getText(resourceId);
+    const { text } = getRuleText(cssText, this.line, this.column);
 
-      // Cache the result on the rule actor to avoid parsing again next time
-      this.authoredText = text;
-      return this.authoredText;
-    }
-
-    return this.sheetActor.getText().then(longStr => {
-      const cssText = longStr.str;
-      const { text } = getRuleText(cssText, this.line, this.column);
-
-      // Cache the result on the rule actor to avoid parsing again next time
-      this.authoredText = text;
-      return this.authoredText;
-    });
+    // Cache the result on the rule actor to avoid parsing again next time
+    this.authoredText = text;
+    return this.authoredText;
   },
 
   /**
@@ -670,18 +629,12 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // Get the rule's authored text and skip any cached value.
       ruleBodyText = await this.getAuthoredCssText(true);
 
-      let stylesheetText = null;
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
-        const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-          this._parentSheet
-        );
-        stylesheetText = await this.pageStyle.styleSheetsManager.getText(
-          resourceId
-        );
-      } else {
-        const { str } = await this.sheetActor.getText();
-        stylesheetText = str;
-      }
+      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+        this._parentSheet
+      );
+      const stylesheetText = await this.pageStyle.styleSheetsManager.getText(
+        resourceId
+      );
 
       const [start, end] = getSelectorOffsets(
         stylesheetText,
@@ -737,7 +690,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
       this.rawNode.setAttributeDevtools("style", newText);
-    } else if (this.pageStyle.hasStyleSheetWatcherSupport) {
+    } else {
       const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
         this._parentSheet
       );
@@ -754,18 +707,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         cssText,
         { kind: UPDATE_PRESERVING_RULES }
       );
-    } else {
-      // For stylesheet rules, set the text in the stylesheet.
-      const parentStyleSheet = this.pageStyle._sheetRef(this._parentSheet);
-      let { str: cssText } = await parentStyleSheet.getText();
-
-      const { offset, text } = getRuleText(cssText, this.line, this.column);
-      cssText =
-        cssText.substring(0, offset) +
-        newText +
-        cssText.substring(offset + text.length);
-
-      await parentStyleSheet.update(cssText, false, UPDATE_PRESERVING_RULES);
     }
 
     this.authoredText = newText;
@@ -871,45 +812,28 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         return null;
       }
 
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
-        const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-          this._parentSheet
-        );
-        let authoredText = await this.pageStyle.styleSheetsManager.getText(
-          resourceId
-        );
+      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+        this._parentSheet
+      );
+      let authoredText = await this.pageStyle.styleSheetsManager.getText(
+        resourceId
+      );
 
-        const [startOffset, endOffset] = getSelectorOffsets(
-          authoredText,
-          this.line,
-          this.column
-        );
-        authoredText =
-          authoredText.substring(0, startOffset) +
-          value +
-          authoredText.substring(endOffset);
+      const [startOffset, endOffset] = getSelectorOffsets(
+        authoredText,
+        this.line,
+        this.column
+      );
+      authoredText =
+        authoredText.substring(0, startOffset) +
+        value +
+        authoredText.substring(endOffset);
 
-        await this.pageStyle.styleSheetsManager.setStyleSheetText(
-          resourceId,
-          authoredText,
-          { kind: UPDATE_PRESERVING_RULES }
-        );
-      } else {
-        const sheetActor = this.pageStyle._sheetRef(parentStyleSheet);
-        let { str: authoredText } = await sheetActor.getText();
-
-        const [startOffset, endOffset] = getSelectorOffsets(
-          authoredText,
-          this.line,
-          this.column
-        );
-        authoredText =
-          authoredText.substring(0, startOffset) +
-          value +
-          authoredText.substring(endOffset);
-
-        await sheetActor.update(authoredText, false, UPDATE_PRESERVING_RULES);
-      }
+      await this.pageStyle.styleSheetsManager.setStyleSheetText(
+        resourceId,
+        authoredText,
+        { kind: UPDATE_PRESERVING_RULES }
+      );
     } else {
       const cssRules = parentStyleSheet.cssRules;
       const cssText = rule.cssText;
