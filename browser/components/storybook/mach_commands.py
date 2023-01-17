@@ -34,7 +34,12 @@ def storybook_run(command_context):
 
 @SubCommand("storybook", "launch", description="Start Storybook in your local build.")
 def storybook_launch(command_context):
-    return run_mach(command_context, "run", argv=["http://localhost:5703"])
+    return run_mach(
+        command_context,
+        "run",
+        argv=["http://localhost:5703"],
+        setpref=["svg.context-properties.content.enabled=true"],
+    )
 
 
 @SubCommand(
