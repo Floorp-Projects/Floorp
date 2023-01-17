@@ -78,7 +78,39 @@ async function runReport(
   }
 }
 
-add_task(async function testInstallationTelemetry() {
+let condition = {
+  skip_if: () =>
+    AppConstants.platform !== "win" ||
+    !Services.sysinfo.getProperty("hasWinPackageId"),
+};
+add_task(condition, async function testInstallationTelemetryMSIX() {
+  // Unfortunately, we have no way to inject different installation ping data
+  // into the system in a way that doesn't just completely override the code
+  // under test - so other than a basic test of the happy path, there's
+  // nothing we can do here.
+  let msixExtra = {
+    version: AppConstants.MOZ_APP_VERSION,
+    build_id: AppConstants.MOZ_BULIDID,
+    admin_user: "false",
+    from_msi: "false",
+    silent: "false",
+    default_path: "true",
+    install_existed: "false",
+    other_inst: "false",
+    other_msix_inst: "false",
+    profdir_existed: "false",
+  };
+
+  await runReport("fake", "msix", {
+    expectExtra: msixExtra,
+  });
+});
+condition = {
+  skip_if: () =>
+    AppConstants.platform === "win" &&
+    Services.sysinfo.getProperty("hasWinPackageId"),
+};
+add_task(condition, async function testInstallationTelemetry() {
   let dataFilePath = await IOUtils.createUniqueFile(
     Services.dirsvc.get("TmpD", Ci.nsIFile).path,
     "installation-telemetry-test-data" + Math.random() + ".json"
@@ -199,7 +231,4 @@ add_task(async function testInstallationTelemetry() {
   // Missing file, should return with no exception
   await IOUtils.remove(dataFilePath);
   await runReport(dataFile, "stub", { setTS: "3", expectTS: "3" });
-
-  // bug 1750581 tracks testing this when we're able to run tests in
-  // an MSIX package environment
 });
