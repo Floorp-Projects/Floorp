@@ -226,7 +226,12 @@ web-platform-tests-wdspec:
             default: 3
     mozharness:
         extra-options:
-            - --test-type=wdspec
+            by-test-platform:
+                android-em-7.*:
+                    - --test-type=wdspec
+                    - --setpref=gfx.canvas.accelerated=false
+                default:
+                    - --test-type=wdspec
     variants:
         - no-fission
         - webrender-sw+no-fission
