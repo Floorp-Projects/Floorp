@@ -241,6 +241,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mParent;
 
   // Use Maybe instead of UniquePtr to allow copy ctor.
+  // The mResource's existence is used as the [[Detached]] for [Transferable].
   Maybe<const Resource> mResource;  // Nothing() after `Close()`d
 
   // TODO: Replace this by mResource->mImage->GetSize()?
