@@ -259,6 +259,13 @@
   text-align: center;
 }
 
+@media (prefers-color-scheme: dark) {
+  .urlbarView-dynamic-weather-currentConditions {
+    background-color: var(--autocomplete-popup-highlight-background);
+    color: var(--autocomplete-popup-highlight-color);
+  }
+}
+
 .urlbarView-dynamic-weather-currently {
   font-size: 0.85em;
   margin-bottom: 0.53em;
@@ -275,6 +282,133 @@
      Therefore, the temperature is 1.385em units.
   */
   font-size: 1.385em;
+  vertical-align: middle;
+}
+
+.urlbarView-dynamic-weather-weatherIcon {
+  vertical-align: middle;
+}
+
+/* Weather Icon color for high contrast mode */
+@media (prefers-contrast) {
+  .urlbarView-dynamic-weather-weatherIcon {
+    -moz-context-properties: fill, stroke;
+    fill: currentColor;
+    stroke: currentColor;
+  }
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="1"] {
+  content: url("chrome://browser/skin/weather/sunny.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="2"] {
+  content: url("chrome://browser/skin/weather/mostly-sunny.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="3"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="4"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="6"] {
+  content: url("chrome://browser/skin/weather/partly-sunny.svg");
+}
+
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="5"] {
+  content: url("chrome://browser/skin/weather/hazy-sunshine.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="7"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="8"] {
+  content: url("chrome://browser/skin/weather/cloudy.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="11"] {
+  content: url("chrome://browser/skin/weather/fog.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="12"] {
+  content: url("chrome://browser/skin/weather/showers.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="13"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="14"] {
+  content: url("chrome://browser/skin/weather/mostly-cloudy-with-showers.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="15"] {
+  content: url("chrome://browser/skin/weather/thunderstorms.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="16"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="17"] {
+  content: url("chrome://browser/skin/weather/mostly-cloudy-with-thunderstorms.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="18"] {
+  content: url("chrome://browser/skin/weather/rain.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="19"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="20"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="25"] {
+  content: url("chrome://browser/skin/weather/flurries.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="21"] {
+  content: url("chrome://browser/skin/weather/partly-sunny-with-flurries.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="22"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="23"] {
+  content: url("chrome://browser/skin/weather/snow.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="24"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="31"] {
+  content: url("chrome://browser/skin/weather/ice.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="26"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="29"] {
+  content: url("chrome://browser/skin/weather/freezing-rain.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="30"] {
+  content: url("chrome://browser/skin/weather/hot.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="32"] {
+  content: url("chrome://browser/skin/weather/windy.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="33"] {
+  content: url("chrome://browser/skin/weather/night-clear.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="34"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="35"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="36"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="38"] {
+  content: url("chrome://browser/skin/weather/night-mostly-clear.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="37"] {
+  content: url("chrome://browser/skin/weather/night-hazy-moonlight.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="39"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="40"] {
+  content: url("chrome://browser/skin/weather/night-partly-cloudy-with-showers.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="41"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="42"] {
+  content: url("chrome://browser/skin/weather/night-partly-cloudy-with-thunderstorms.svg");
+}
+
+.urlbarView-dynamic-weather-weatherIcon[iconId="43"],
+.urlbarView-dynamic-weather-weatherIcon[iconId="44"] {
+  content: url("chrome://browser/skin/weather/night-mostly-cloudy-with-flurries.svg");
 }
 
 .urlbarView-dynamic-weather-summary {
@@ -333,4 +467,12 @@
   font-size: 0.85em;
   margin-top: 0.40em;
   opacity: 0.6;
+}
+
+.urlbarView-row[dynamicType=weather] > .urlbarView-row-inner[selected] > .urlbarView-dynamic-weather-summary > .urlbarView-dynamic-weather-top > .urlbarView-url {
+  color: inherit;
+}
+
+.urlbarView-row[dynamicType=weather] > .urlbarView-row-inner[selected] > .urlbarView-dynamic-weather-summary > .urlbarView-dynamic-weather-bottom {
+  opacity: 1;
 }
