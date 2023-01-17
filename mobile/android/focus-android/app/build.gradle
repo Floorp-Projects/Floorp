@@ -346,7 +346,7 @@ dependencies {
     testImplementation project(':lib-fetch-okhttp')
 
     androidTestImplementation FocusDependencies.fastlane
-    implementation FocusDependencies.falcon // Required by fastlane
+    androidTestImplementation FocusDependencies.falcon // Required by fastlane
 
     androidTestImplementation FocusDependencies.espresso_contrib, {
         exclude module: 'appcompat-v7'
