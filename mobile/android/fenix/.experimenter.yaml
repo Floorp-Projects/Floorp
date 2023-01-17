@@ -74,6 +74,14 @@ nimbus-validation:
     settings-title:
       type: string
       description: The title of displayed in the Settings screen and app menu.
+onboarding:
+  description: "A feature that configures the new user onboarding page. Note that onboarding is a **first run** feature, and should only be modified by first run experiments."
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    order:
+      type: json
+      description: Determines the order of the onboarding page panels
 pre-permission-notification-prompt:
   description: A feature that shows the pre-permission notification prompt.
   hasExposure: true

@@ -71,7 +71,7 @@ class ModeTest {
         every { onboarding.userHasBeenOnboarded() } returns false
         every { accountManager.authenticatedAccount() } returns mockk()
 
-        assertEquals(Mode.Onboarding(OnboardingState.SignedIn), currentMode.getCurrentMode())
+        assertEquals(Mode.Onboarding(OnboardingState.SignedIn, onboarding.config), currentMode.getCurrentMode())
     }
 
     @Test
@@ -80,7 +80,7 @@ class ModeTest {
         every { accountManager.authenticatedAccount() } returns null
         every { accountManager.shareableAccounts(context) } returns emptyList()
 
-        assertEquals(Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn), currentMode.getCurrentMode())
+        assertEquals(Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn, onboarding.config), currentMode.getCurrentMode())
     }
 
     @Test

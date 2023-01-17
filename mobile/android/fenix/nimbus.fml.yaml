@@ -167,6 +167,15 @@ features:
         type: Boolean
         default: true
 
+  onboarding:
+    description: "A feature that configures the new user onboarding page.
+    Note that onboarding is a **first run** feature, and should only be modified by first run experiments."
+    variables:
+      order:
+        description: Determines the order of the onboarding page panels
+        type: List<OnboardingPanel>
+        default: ["themes", "toolbar-placement", "sync", "tcp", "privacy-notice"]
+
 types:
   objects: {}
 
@@ -213,3 +222,16 @@ types:
           description: Indicates after how many hours of interaction, the dialog should show again.
         dialog-text-variant:
           description: Indicates which text variant should be used in the dialog.
+    OnboardingPanel:
+      description: The types of onboarding panels in the onboarding page
+      variants:
+        themes:
+          description: The themes onboarding panel where users pick themes
+        toolbar-placement:
+          description: The onboarding panel where users choose their toolbar placement (bottom or top)
+        sync:
+          description: The onboarding panel where users can sign in to sync
+        tcp:
+          description: The onboarding panel where users can choose their total cookie protection settings
+        privacy-notice:
+          description: The onboarding panel where users can tap to view our privacy notice.
