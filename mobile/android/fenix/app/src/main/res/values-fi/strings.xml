@@ -390,8 +390,14 @@
     <string name="reduce_cookie_banner_dialog_snackbar_text">Näet vähemmän evästepyyntöjä</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Näytä vähemmän evästeilmoituksia</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Vastaa automaattisesti evästeiden ponnahduspyyntöihin häiriöttömän selaamisen varmistamiseksi. %1$s hylkää kaikki pyynnöt, jos mahdollista, tai hyväksyy kaikki, jos hylkääminen ei ole mahdollista.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Hylkää ponnahduspyynnöt</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Evästeilmoitusten vähennys</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Saako %1$s hylätä sivuston evästeen suostumuspyynnön, jos mahdollista, tai hyväksyä evästeiden käytön, jos hylkääminen ei ole mahdollista?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Salli</string>
 
