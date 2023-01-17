@@ -1419,6 +1419,10 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
           end = initlen;
           break;
         }
+
+        case SlotsOrElementsKind::Unused: {
+          MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unused SlotsOrElementsKind");
+        }
       }
 
       goto scan_value_range;
