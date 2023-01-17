@@ -135,11 +135,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/manifest",
   },
   {
-    types: ["mediarule"],
-    spec: "devtools/shared/specs/media-rule",
-    front: "devtools/client/fronts/media-rule",
-  },
-  {
     types: ["memory"],
     spec: "devtools/shared/specs/memory",
     front: "devtools/client/fronts/memory",

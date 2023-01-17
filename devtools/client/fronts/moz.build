@@ -28,7 +28,6 @@ DevToolsModules(
     "inspector.js",
     "layout.js",
     "manifest.js",
-    "media-rule.js",
     "memory.js",
     "network-content.js",
     "network-parent.js",

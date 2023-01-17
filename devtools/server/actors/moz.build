@@ -41,7 +41,6 @@ DevToolsModules(
     "highlighters.js",
     "layout.js",
     "manifest.js",
-    "media-rule.js",
     "memory.js",
     "object.js",
     "page-style.js",
