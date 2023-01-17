@@ -881,8 +881,9 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     for (const resource of resources) {
       const { targetFront } = resource;
       if (targetFront.isTopLevel && resource.name === "dom-complete") {
+        const url = targetFront.localTab.linkedBrowser.currentURI.spec;
         for (const listener of this._onNavigatedListeners) {
-          listener(targetFront.url);
+          listener(url);
         }
       }
     }

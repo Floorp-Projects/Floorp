@@ -280,9 +280,7 @@ Tools.performance = {
     // use the performance panel; about:debugging provides a "Profile performance" button
     // which can be used instead, without having the overhead of starting a remote toolbox.
     // Also accept the Browser Toolbox, so that we can profile its process via a second browser toolbox.
-    return (
-      toolbox.commands.descriptorFront.isLocalTab || toolbox.isBrowserToolbox
-    );
+    return toolbox.target.isLocalTab || toolbox.isBrowserToolbox;
   },
   build(frame, toolbox, commands) {
     return new NewPerformancePanel(frame, toolbox, commands);
@@ -300,11 +298,7 @@ Tools.memory = {
   tooltip: l10n("memory.tooltip"),
 
   isToolSupported(toolbox) {
-    const { descriptorFront } = toolbox.commands;
-    return (
-      !descriptorFront.isWebExtensionDescriptor &&
-      !descriptorFront.isWorkerDescriptor
-    );
+    return !toolbox.target.isAddon && !toolbox.target.isWorkerTarget;
   },
 
   build(frame, toolbox, commands) {
@@ -496,7 +490,7 @@ exports.ToolboxButtons = [
       "toolbox.buttons.responsive",
       osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M"
     ),
-    isToolSupported: toolbox => toolbox.commands.descriptorFront.isLocalTab,
+    isToolSupported: toolbox => toolbox.target.isLocalTab,
     onClick(event, toolbox) {
       const { localTab } = toolbox.commands.descriptorFront;
       const browserWindow = localTab.ownerDocument.defaultView;
@@ -584,8 +578,7 @@ function createHighlightButton(highlighterName, id) {
   return {
     id: `command-button-${id}`,
     description: l10n(`toolbox.buttons.${id}`),
-    isToolSupported: toolbox =>
-      toolbox.commands.descriptorFront.isTabDescriptor,
+    isToolSupported: toolbox => !toolbox.target.chrome,
     async onClick(event, toolbox) {
       const inspectorFront = await toolbox.target.getFront("inspector");
       const highlighter = await inspectorFront.getOrCreateHighlighterByType(
