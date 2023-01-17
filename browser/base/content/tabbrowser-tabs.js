@@ -1038,6 +1038,25 @@
       return children;
     }
 
+    _getVisibleTabs() {
+      if (!this._visibleTabs) {
+        this._visibleTabs = Array.prototype.filter.call(
+          this.allTabs,
+          tab => !tab.hidden && !tab.closing
+        );
+      }
+      return this._visibleTabs;
+    }
+
+    _invalidateCachedTabs() {
+      this._allTabs = null;
+      this._visibleTabs = null;
+    }
+
+    _invalidateCachedVisibleTabs() {
+      this._visibleTabs = null;
+    }
+
     appendChild(tab) {
       return this.insertBefore(tab, null);
     }
@@ -1196,16 +1215,6 @@
 
           break;
       }
-    }
-
-    _getVisibleTabs() {
-      if (!this._visibleTabs) {
-        this._visibleTabs = Array.prototype.filter.call(
-          this.allTabs,
-          tab => !tab.hidden && !tab.closing
-        );
-      }
-      return this._visibleTabs;
     }
 
     _setPositionalAttributes() {
