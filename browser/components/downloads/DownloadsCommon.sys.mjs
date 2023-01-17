@@ -127,7 +127,6 @@ var PrefObserver = {
 
 PrefObserver.register({
   // prefName: defaultValue
-  animateNotifications: true,
   openInSystemViewerContextMenuItem: true,
   alwaysOpenInSystemViewerContextMenuItem: true,
 });
@@ -185,14 +184,6 @@ export var DownloadsCommon = {
     }
     delete this.strings;
     return (this.strings = strings);
-  },
-
-  /**
-   * Indicates whether we should show visual notification on the indicator
-   * when a download event is triggered.
-   */
-  get animateNotifications() {
-    return PrefObserver.animateNotifications;
   },
 
   /**
