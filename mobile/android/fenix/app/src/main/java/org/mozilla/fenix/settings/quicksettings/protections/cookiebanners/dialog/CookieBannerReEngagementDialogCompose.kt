@@ -17,10 +17,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.button.TextButton
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.defaultTypography
 
@@ -130,25 +129,13 @@ fun CookieBannerReEngagementDialogCompose(
                     ),
                 ) {
                     TextButton(
+                        text = declineButtonText,
                         onClick = onNotNowButtonClicked,
-                        shape = MaterialTheme.shapes.large,
-                    ) {
-                        Text(
-                            text = declineButtonText.uppercase(),
-                            fontSize = 14.sp,
-                            style = MaterialTheme.typography.button,
-                        )
-                    }
+                    )
                     TextButton(
+                        text = allowButtonText,
                         onClick = onAllowButtonClicked,
-                        shape = MaterialTheme.shapes.large,
-                    ) {
-                        Text(
-                            text = allowButtonText.uppercase(),
-                            fontSize = 14.sp,
-                            style = MaterialTheme.typography.button,
-                        )
-                    }
+                    )
                 }
             }
         }
