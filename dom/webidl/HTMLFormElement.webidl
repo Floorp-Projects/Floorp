@@ -34,10 +34,6 @@ interface HTMLFormElement : HTMLElement {
            attribute boolean noValidate;
            [CEReactions, Pure, SetterThrows]
            attribute DOMString target;
-           [CEReactions, Pure, SetterThrows]
-           attribute DOMString rel;
-           [PutForwards=value]
-           readonly attribute DOMTokenList relList;
 
   [Constant]
   readonly attribute HTMLCollection elements;

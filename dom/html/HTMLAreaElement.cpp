@@ -58,7 +58,8 @@ void HTMLAreaElement::GetLinkTarget(nsAString& aTarget) {
 
 nsDOMTokenList* HTMLAreaElement::RelList() {
   if (!mRelList) {
-    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
+    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,
+                                  HTMLAnchorElement::sSupportedRelValues);
   }
   return mRelList;
 }

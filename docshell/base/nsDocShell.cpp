@@ -12958,12 +12958,10 @@ bool nsDocShell::ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,
              : !linkHost.Equals("www."_ns + docHost);
 }
 
-static bool ElementCanHaveNoopener(nsIContent* aContent) {
-  // Make sure we are dealing with either an <A>, <AREA>, or <FORM> element in
-  // the HTML, XHTML, or SVG namespace.
-  return aContent->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area,
-                                       nsGkAtoms::form) ||
-         aContent->IsSVGElement(nsGkAtoms::a);
+static bool IsElementAnchorOrArea(nsIContent* aContent) {
+  // Make sure we are dealing with either an <A> or <AREA> element in the HTML
+  // or XHTML namespace.
+  return aContent->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area);
 }
 
 nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
@@ -13022,11 +13020,11 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   }
 
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
-  bool elementCanHaveNoopener = ElementCanHaveNoopener(aContent);
+  bool isElementAnchorOrArea = IsElementAnchorOrArea(aContent);
   bool triggeringPrincipalIsSystemPrincipal =
       aLoadState->TriggeringPrincipal()->IsSystemPrincipal();
-  if (elementCanHaveNoopener) {
-    MOZ_ASSERT(aContent->IsHTMLElement() || aContent->IsSVGElement());
+  if (isElementAnchorOrArea) {
+    MOZ_ASSERT(aContent->IsHTMLElement());
     nsAutoString relString;
     aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::rel,
                                    relString);
@@ -13109,8 +13107,8 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   uint32_t loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      elementCanHaveNoopener ? new ReferrerInfo(*aContent->AsElement())
-                             : new ReferrerInfo(*referrerDoc);
+      isElementAnchorOrArea ? new ReferrerInfo(*aContent->AsElement())
+                            : new ReferrerInfo(*referrerDoc);
   RefPtr<WindowContext> context = mBrowsingContext->GetCurrentWindowContext();
 
   aLoadState->SetTriggeringSandboxFlags(triggeringSandboxFlags);
