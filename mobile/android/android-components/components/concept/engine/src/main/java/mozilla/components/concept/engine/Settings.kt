@@ -66,6 +66,11 @@ abstract class Settings {
     open var safeBrowsingPolicy: Array<SafeBrowsingPolicy> by UnsupportedSetting()
 
     /**
+     * Setting to control the cookie banner handling feature detect only mode.
+     */
+    open var cookieBannerHandlingDetectOnlyMode: Boolean by UnsupportedSetting()
+
+    /**
      * Setting to intercept and override requests.
      */
     open var requestInterceptor: RequestInterceptor? by UnsupportedSetting()
@@ -241,6 +246,7 @@ data class DefaultSettings(
     override var cookieBannerHandlingMode: CookieBannerHandlingMode = CookieBannerHandlingMode.DISABLED,
     override var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode =
         CookieBannerHandlingMode.DISABLED,
+    override var cookieBannerHandlingDetectOnlyMode: Boolean = false,
 ) : Settings()
 
 class UnsupportedSetting<T> {

@@ -549,11 +549,6 @@ abstract class EngineSession(
          * Reject cookies if possible. If rejecting is not possible, accept cookies
          */
         REJECT_OR_ACCEPT_ALL(2),
-
-        /**
-         * Detect cookie banners but do not handle them.
-         */
-        DETECT_ONLY(3),
     }
 
     /**

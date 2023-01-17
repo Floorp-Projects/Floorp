@@ -34,11 +34,19 @@ class TrackingProtectionPolicyKtTest {
         assertEquals(setting.cookiePurging, policy.cookiePurging)
         assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED.mode, setting.cookieBannerMode)
         assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode, setting.cookieBannerModePrivateBrowsing)
+        assertFalse(setting.cookieBannerDetectOnlyMode)
 
-        val policyWithSafeBrowsing = TrackingProtectionPolicy.recommended().toContentBlockingSetting(emptyArray(), cookieBannerSetting, cookieBannerSettingPrivateBrowsing)
+        val policyWithSafeBrowsing =
+            TrackingProtectionPolicy.recommended().toContentBlockingSetting(
+                safeBrowsingPolicy = emptyArray(),
+                cookieBannerHandlingMode = cookieBannerSetting,
+                cookieBannerHandlingModePrivateBrowsing = cookieBannerSettingPrivateBrowsing,
+                cookieBannerHandlingDetectOnlyMode = true,
+            )
         assertEquals(0, policyWithSafeBrowsing.safeBrowsingCategories)
         assertEquals(cookieBannerSetting.mode, policyWithSafeBrowsing.cookieBannerMode)
         assertEquals(cookieBannerSettingPrivateBrowsing.mode, policyWithSafeBrowsing.cookieBannerModePrivateBrowsing)
+        assertTrue(policyWithSafeBrowsing.cookieBannerDetectOnlyMode)
     }
 
     @Test
