@@ -11,21 +11,19 @@
 #ifndef MODULES_DESKTOP_CAPTURE_TAB_CAPTURER_H_
 #define MODULES_DESKTOP_CAPTURE_TAB_CAPTURER_H_
 
-#include <memory>
-#include <string>
-
-#include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
-#include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/TaskQueue.h"
 #include "nsDeque.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
+namespace dom {
+class ImageBitmap;
+}
 
 class CaptureFrameRequest;
 class TabCapturedHandler;
+class TaskQueue;
 
 class TabCapturerWebrtc : public webrtc::DesktopCapturer {
  private:
