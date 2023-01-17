@@ -208,8 +208,8 @@ void gfxSVGGlyphs::RenderGlyph(gfxContext* aContext, uint32_t aGlyphId,
   Element* glyph = mGlyphIdMap.Get(aGlyphId);
   MOZ_ASSERT(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
-  AutoSetRestoreSVGContextPaint autoSetRestore(
-      *aContextPaint, *glyph->OwnerDoc()->AsSVGDocument());
+  AutoSetRestoreSVGContextPaint autoSetRestore(aContextPaint,
+                                               glyph->OwnerDoc());
 
   SVGUtils::PaintSVGGlyph(glyph, aContext);
 

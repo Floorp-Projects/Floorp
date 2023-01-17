@@ -27,7 +27,7 @@ namespace mozilla {
 class SVGPaintServerFrame;
 
 namespace dom {
-class SVGDocument;
+class Document;
 }
 
 /**
@@ -127,12 +127,12 @@ class SVGContextPaint : public RefCounted<SVGContextPaint> {
  */
 class MOZ_RAII AutoSetRestoreSVGContextPaint {
  public:
-  AutoSetRestoreSVGContextPaint(const SVGContextPaint& aContextPaint,
-                                dom::SVGDocument& aSVGDocument);
+  AutoSetRestoreSVGContextPaint(const SVGContextPaint* aContextPaint,
+                                dom::Document* aDocument);
   ~AutoSetRestoreSVGContextPaint();
 
  private:
-  dom::SVGDocument& mSVGDocument;
+  dom::Document* mDocument;
   // The context paint that needs to be restored by our dtor after it removes
   // aContextPaint:
   const SVGContextPaint* mOuterContextPaint;

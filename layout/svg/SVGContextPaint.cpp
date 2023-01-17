@@ -11,7 +11,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/SVGDocument.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -200,15 +199,10 @@ void SVGContextPaint::InitStrokeGeometry(gfxContext* aContext,
 
 SVGContextPaint* SVGContextPaint::GetContextPaint(nsIContent* aContent) {
   dom::Document* ownerDoc = aContent->OwnerDoc();
-  if (!ownerDoc->IsSVGDocument()) {
-    return nullptr;
-  }
 
-  const auto* contextPaint =
-      ownerDoc->AsSVGDocument()->GetCurrentContextPaint();
-  MOZ_ASSERT_IF(contextPaint, ownerDoc->IsBeingUsedAsImage());
+  const auto* contextPaint = ownerDoc->GetCurrentContextPaint();
 
-  // XXX The SVGContextPaint that SVGDocument keeps around is const. We could
+  // XXX The SVGContextPaint that Document keeps around is const. We could
   // and should keep that constness to the SVGContextPaint that we get here
   // (SVGImageContext is never changed after it is initialized).
   //
@@ -300,17 +294,14 @@ already_AddRefed<gfxPattern> SVGContextPaintImpl::Paint::GetPattern(
 }
 
 AutoSetRestoreSVGContextPaint::AutoSetRestoreSVGContextPaint(
-    const SVGContextPaint& aContextPaint, dom::SVGDocument& aSVGDocument)
-    : mSVGDocument(aSVGDocument),
-      mOuterContextPaint(aSVGDocument.GetCurrentContextPaint()) {
-  MOZ_ASSERT(aSVGDocument.IsBeingUsedAsImage(),
-             "SVGContextPaint::GetContextPaint assumes this");
-
-  mSVGDocument.SetCurrentContextPaint(&aContextPaint);
+    const SVGContextPaint* aContextPaint, dom::Document* aDocument)
+    : mDocument(aDocument),
+      mOuterContextPaint(aDocument->GetCurrentContextPaint()) {
+  mDocument->SetCurrentContextPaint(aContextPaint);
 }
 
 AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint() {
-  mSVGDocument.SetCurrentContextPaint(mOuterContextPaint);
+  mDocument->SetCurrentContextPaint(mOuterContextPaint);
 }
 
 // SVGEmbeddingContextPaint
