@@ -26,7 +26,8 @@ class AndroidNativeWindow final {
   }
 
   explicit AndroidNativeWindow(java::GeckoSurface::Param aSurface) {
-    java::sdk::Surface::LocalRef surf = aSurface->GetSurface();
+    auto surf =
+        java::sdk::Surface::LocalRef(java::sdk::Surface::Ref::From(aSurface));
     mNativeWindow =
         ANativeWindow_fromSurface(jni::GetEnvForThread(), surf.Get());
   }

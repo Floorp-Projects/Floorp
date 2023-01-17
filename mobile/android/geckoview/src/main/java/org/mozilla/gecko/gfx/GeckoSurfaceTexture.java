@@ -12,7 +12,6 @@ import android.util.LongSparseArray;
 import androidx.annotation.RequiresApi;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
@@ -235,12 +234,6 @@ import org.mozilla.gecko.mozglue.JNIObject;
   public static GeckoSurfaceTexture acquire(final boolean singleBufferMode, final long handle) {
     if (singleBufferMode && !isSingleBufferSupported()) {
       throw new IllegalArgumentException("single buffer mode not supported on API version < 19");
-    }
-
-    // Attempting to create a SurfaceTexture from an isolated process on Android versions prior to
-    // 8.0 results in an indefinite hang. See bug 1706656.
-    if (GeckoAppShell.isIsolatedProcess() && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-      return null;
     }
 
     synchronized (sSurfaceTextures) {
