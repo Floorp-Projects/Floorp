@@ -55,3 +55,6 @@ screenshots-private-window-error-details = Sorry for the inconvenience. We are w
 
 screenshots-generic-error-title = Whoa! { -screenshots-brand-name } went haywire.
 screenshots-generic-error-details = We’re not sure what just happened. Care to try again or take a shot of a different page?
+
+screenshots-too-large-error-title = Your screenshot was cropped because it was too large
+screenshots-too-large-error-details = Try selecting a region that’s smaller than 32,700 pixels on its longest side or 124,900,000 pixels total area.
