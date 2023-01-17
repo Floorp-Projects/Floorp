@@ -56,7 +56,6 @@ DevToolsModules(
     "storage.js",
     "string.js",
     "style-rule.js",
-    "style-sheet.js",
     "style-sheets.js",
     "target-configuration.js",
     "thread-configuration.js",
