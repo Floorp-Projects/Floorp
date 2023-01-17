@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<head>
+  <meta charset=iso-8859-1><!-- must be non-UTF-8 -->
+  <title>Test for off the main thread non-UTF-8 javascript: URL</title>
+</head>
+<body>
+<script>
+new Worker("javascript:foo").onerror = () => {
+  document.documentElement.className = "";
+};
+</script>
+</body>
+</html>
