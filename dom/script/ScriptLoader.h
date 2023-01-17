@@ -576,8 +576,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   void ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest);
 
-  nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
-                                     bool* aCouldCompileOut);
+  nsresult AttemptOffThreadScriptCompile(ScriptLoadRequest* aRequest,
+                                         bool* aCouldCompileOut);
 
   nsresult StartOffThreadCompilation(JSContext* aCx,
                                      ScriptLoadRequest* aRequest,
