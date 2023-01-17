@@ -18,6 +18,9 @@ const { AppConstants } = ChromeUtils.import(
 const { AddonManager } = ChromeUtils.import(
     "resource://gre/modules/AddonManager.jsm"
 );
+const { OS } = ChromeUtils.import(
+    "resource://gre/modules/osfile.jsm"
+);
 
 // Check information about startup.
 let isFirstRun = false;
@@ -79,6 +82,89 @@ async function onFinalUIStartup() {
         }
         Services.prefs.setBoolPref("floorp.extensions.translate.migrateFromSystemAddonToUserAddon.ended", true);
     } catch (e) { console.error(e) }
+
+
+    // Write CSS.
+    if (isFirstRun) {
+        let userChromecssPath = OS.Path.join(OS.Constants.Path.profileDir, "chrome");
+        let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
+        IOUtils.writeUTF8(uccpth,`
+/*************************************************************************************************************************************************************************************************************************************************************
+
+userChrome.cssは、スタイルシートであり、Floorp のユーザーインターフェースに適用され、デフォルトの Floorp のスタイルルールをオーバーライドできます。 残念ながら、userChrome.cssを使用して Floorp の機能操作を変更することはできません。
+
+userChrome.cssファイルを作成し、スタイルルールを追加すると、フォントや色を変更したり、不要なアイテムを非表示にしたり、間隔を調整したり、Firefoxの外観を変更したりできます。
+
+タブバーを削除する
+******************************************
+#tabbrowser-tabs{
+  display: none;
+}
+
+******************************************
+このように、要素の非表示などを行うことができます。自分が気に入らない要素を非表示にできるので、とても便利です。ネットにはこの実装例が公開されていることがあります。
+
+また、userChrome.css はブラウザーのツールバーに適用する CSS のことを指し、userContent.css はブラウザー内部サイトに対して CSS を適用できます。
+詳しくは、同じディレクトリに存在するファイルを参照してください
+
+NOTE:適用に、about:config の操作は不要です。
+
+参考: https://userChrome.org | https://github.com/topics/userchrome 
+
+************************************************************************************************************************************************************************************************************************************************************/
+
+@charset "UTF-8";
+@-moz-document url(chrome://browser/content/browser.xhtml) {
+/*この下にCSSを書いてください*/
+
+
+}
+`);
+
+        let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
+        IOUtils.writeUTF8(ucconpth,`
+/*************************************************************************************************************************************************************************************************************************************************************
+ 
+userContent.css は userChrome.css と同じく、chrome 特権を用いてブラウザーに対して CSS スタイルルールを指定できる特殊なCSSファイルです。
+ただし、userChrome.css と適用範囲はことなるので正しく理解しておく必要があります。
+
+userChrome.css は、ツールバーなどのブラウザーを制御する場所に適用するのに対し、userContent.css はブラウザー内部サイトにスタイルルールを定義できます。ただし、指定先をただしくURLで指定する必要があります。
+
+新しいタブに CSS を書く場合
+***********************************
+@-moz-document url-prefix("about:newtab"), url-prefix("about:home") {
+
+/*ここに CSS を書いていく*/
+
+}
+***********************************
+
+以上です。後の使い方はuserChrome.css と変わりません。Floorp をお楽しみください。
+
+
+************************************************************************************************************************************************************************************************************************************************************/
+
+@charset "UTF-8";
+
+`);
+
+    }
+
+
+    // Setup for Undo Close Tab
+    if (isFirstRun) {
+        let { CustomizableUI } = ChromeUtils.import(
+            "resource:///modules/CustomizableUI.jsm"
+        );
+        CustomizableUI.addWidgetToArea("undo-closed-tab", CustomizableUI.AREA_NAVBAR, -1);
+    }
+
+
+    if (isFirstRun) {
+        setTimeout(() => {
+            Services.prefs.setStringPref("browser.contentblocking.category", "strict")
+        }, 5000);
+    }
 }
 Services.obs.addObserver(onFinalUIStartup, "final-ui-startup");
 
@@ -113,6 +199,20 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
                 "yandex" : // Setup for China
                 "duckduckgo"
         );
+}
+
+
+// Use the system's language settings.
+if (isFirstRun) {
+    let systemLocale;
+    try {
+        systemLocale = Cc["@mozilla.org/intl/ospreferences;1"].getService(
+            Ci.mozIOSPreferences
+        ).systemLocale;
+    } catch (e) { console.error(e) }
+    if (systemLocale) {
+        Services.prefs.setStringPref("intl.locale.requested", systemLocale);
+    }
 }
 
 
