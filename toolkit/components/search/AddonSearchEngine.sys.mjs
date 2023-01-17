@@ -50,6 +50,7 @@ export class AddonSearchEngine extends SearchEngine {
       id,
     });
 
+    this._extensionID = extensionId;
     this.#isAppProvided = isAppProvided;
 
     if (details) {
@@ -61,7 +62,6 @@ export class AddonSearchEngine extends SearchEngine {
       }
 
       this.#initFromManifest(
-        details.extensionID,
         details.extensionBaseURI,
         details.manifest,
         details.locale,
@@ -76,8 +76,6 @@ export class AddonSearchEngine extends SearchEngine {
    * Update this engine based on new manifest, used during
    * webextension upgrades.
    *
-   * @param {string} extensionID
-   *   The WebExtension ID.
    * @param {string} extensionBaseURI
    *   The Base URI of the WebExtension.
    * @param {object} manifest
@@ -88,22 +86,10 @@ export class AddonSearchEngine extends SearchEngine {
    *   The search engine configuration for application provided engines, that
    *   may be overriding some of the WebExtension's settings.
    */
-  updateFromManifest(
-    extensionID,
-    extensionBaseURI,
-    manifest,
-    locale,
-    configuration = {}
-  ) {
+  updateFromManifest(extensionBaseURI, manifest, locale, configuration = {}) {
     this._urls = [];
     this._iconMapObj = null;
-    this.#initFromManifest(
-      extensionID,
-      extensionBaseURI,
-      manifest,
-      locale,
-      configuration
-    );
+    this.#initFromManifest(extensionBaseURI, manifest, locale, configuration);
     lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 
@@ -156,8 +142,6 @@ export class AddonSearchEngine extends SearchEngine {
   /**
    * Initializes the engine based on the manifest and other values.
    *
-   * @param {string} extensionID
-   *   The WebExtension ID.
    * @param {string} extensionBaseURI
    *   The Base URI of the WebExtension.
    * @param {object} manifest
@@ -168,16 +152,9 @@ export class AddonSearchEngine extends SearchEngine {
    *   The search engine configuration for application provided engines, that
    *   may be overriding some of the WebExtension's settings.
    */
-  #initFromManifest(
-    extensionID,
-    extensionBaseURI,
-    manifest,
-    locale,
-    configuration = {}
-  ) {
+  #initFromManifest(extensionBaseURI, manifest, locale, configuration = {}) {
     let searchProvider = manifest.chrome_settings_overrides.search_provider;
 
-    this._extensionID = extensionID;
     this._locale = locale;
 
     // We only set _telemetryId for app-provided engines. See also telemetryId
@@ -186,7 +163,7 @@ export class AddonSearchEngine extends SearchEngine {
       if (configuration.telemetryId) {
         this._telemetryId = configuration.telemetryId;
       } else {
-        let telemetryId = extensionID.split("@")[0];
+        let telemetryId = this._extensionID.split("@")[0];
         if (locale != lazy.SearchUtils.DEFAULT_TAG) {
           telemetryId += "-" + locale;
         }
