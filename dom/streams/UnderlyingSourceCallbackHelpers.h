@@ -120,6 +120,34 @@ class UnderlyingSourceAlgorithms final : public UnderlyingSourceAlgorithmsBase {
   MOZ_KNOWN_LIVE RefPtr<UnderlyingSourceCancelCallback> mCancelCallback;
 };
 
+// Wrappers defined by the "Set up" methods in the spec. This helps you just
+// return nullptr when an error occurred as this wrapper converts it to a
+// rejected promise.
+// Note that StartCallback is only for JS consumers to access
+// the controller, and thus is no-op here since native consumers can call
+// `EnqueueNative()` etc. without direct controller access.
+class UnderlyingSourceAlgorithmsWrapper
+    : public UnderlyingSourceAlgorithmsBase {
+  void StartCallback(JSContext*, ReadableStreamController&,
+                     JS::MutableHandle<JS::Value> aRetVal, ErrorResult&) final;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PullCallback(
+      JSContext* aCx, ReadableStreamController& aController,
+      ErrorResult& aRv) final;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelCallback(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) final;
+
+  virtual already_AddRefed<Promise> PullCallbackImpl(
+      JSContext* aCx, ReadableStreamController& aController,
+      ErrorResult& aRv) = 0;
+
+  virtual already_AddRefed<Promise> CancelCallbackImpl(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) = 0;
+};
+
 }  // namespace mozilla::dom
 
 #endif

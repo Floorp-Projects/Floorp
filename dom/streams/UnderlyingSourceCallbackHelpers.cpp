@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "StreamUtils.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
@@ -104,6 +105,43 @@ already_AddRefed<Promise> UnderlyingSourceAlgorithms::CancelCallback(
                             CallbackFunction::eRethrowExceptions);
 
   return promise.forget();
+}
+
+// Shared between:
+// https://streams.spec.whatwg.org/#readablestream-set-up
+// https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
+// Step 1: Let startAlgorithm be an algorithm that returns undefined.
+void UnderlyingSourceAlgorithmsWrapper::StartCallback(
+    JSContext*, ReadableStreamController&, JS::MutableHandle<JS::Value> aRetVal,
+    ErrorResult&) {
+  aRetVal.setUndefined();
+}
+
+// Shared between:
+// https://streams.spec.whatwg.org/#readablestream-set-up
+// https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
+// Step 2: Let pullAlgorithmWrapper be an algorithm that runs these steps:
+already_AddRefed<Promise> UnderlyingSourceAlgorithmsWrapper::PullCallback(
+    JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = aController.GetParentObject();
+  return PromisifyAlgorithm(
+      global,
+      [&](ErrorResult& aRv) { return PullCallbackImpl(aCx, aController, aRv); },
+      aRv);
+}
+
+// Shared between:
+// https://streams.spec.whatwg.org/#readablestream-set-up
+// https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
+// Step 3: Let cancelAlgorithmWrapper be an algorithm that runs these steps:
+already_AddRefed<Promise> UnderlyingSourceAlgorithmsWrapper::CancelCallback(
+    JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+  return PromisifyAlgorithm(
+      global,
+      [&](ErrorResult& aRv) { return CancelCallbackImpl(aCx, aReason, aRv); },
+      aRv);
 }
 
 }  // namespace mozilla::dom
