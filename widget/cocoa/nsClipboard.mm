@@ -621,7 +621,9 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
       if (!url || ![url absoluteString]) {
         continue;
       }
-      [pasteboardOutputDict setObject:[url absoluteString] forKey:fileUTType];
+      [pasteboardOutputDict setObject:[[NSString stringWithString:[url absoluteString]]
+                                          dataUsingEncoding:NSUTF8StringEncoding]
+                               forKey:fileUTType];
     } else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       NSString* urlPromise =
           [UTIHelper stringFromPboardType:(NSString*)kPasteboardTypeFileURLPromise];
