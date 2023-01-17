@@ -271,6 +271,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
       ...featureConfig,
       templateMR: useTemplateMR,
       screens: featureConfig.screens ?? defaults.screens,
+      backdrop: featureConfig.backdrop ?? defaults.backdrop,
     });
 
     return Cu.cloneInto(content, this.contentWindow);
