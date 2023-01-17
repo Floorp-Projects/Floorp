@@ -252,7 +252,7 @@
 # notifications are used.
 - name: alerts.useSystemBackend
   type: bool
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(NIGHTLY_BUILD)
   # Linux and macOS turn on system level notification as default, but Windows is
   # disabled due to instability (dependencies of bug 1497425).
   value: false
@@ -261,6 +261,14 @@
 #endif
   mirror: always
 
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+ # On Windows, a COM Surrogate notification server receives notification events
+ # and can relaunch the application after it has been closed.
+- name: alerts.useSystemBackend.windows.notificationserver.enabled
+  type: bool
+  value: true
+  mirror: never
+#endif
 
 #ifdef ANDROID
   #---------------------------------------------------------------------------
