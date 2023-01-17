@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # tooltool is a lookaside cache implemented in Python
 # Copyright (C) 2011 John H. Ford <john@johnford.info>
@@ -40,14 +40,11 @@ import tempfile
 import threading
 import time
 import zipfile
-from contextlib import contextmanager, closing
+from contextlib import closing, contextmanager
 from functools import wraps
-
-from io import open
-from io import BytesIO
+from io import BytesIO, open
 from random import random
-from subprocess import PIPE
-from subprocess import Popen
+from subprocess import PIPE, Popen
 
 __version__ = "1.3.0"
 
@@ -67,16 +64,16 @@ if PY3:
         str  # Silence `pyflakes` from reporting `undefined name 'unicode'` in Python 3.
     )
     import urllib.request as urllib2
-    from http.client import HTTPSConnection, HTTPConnection
-    from urllib.parse import urlparse, urljoin
-    from urllib.request import Request
+    from http.client import HTTPConnection, HTTPSConnection
     from urllib.error import HTTPError, URLError
+    from urllib.parse import urljoin, urlparse
+    from urllib.request import Request
 else:
     six_binary_type = str
     import urllib2
-    from httplib import HTTPSConnection, HTTPConnection
-    from urllib2 import Request, HTTPError, URLError
-    from urlparse import urlparse, urljoin
+    from httplib import HTTPConnection, HTTPSConnection
+    from urllib2 import HTTPError, Request, URLError
+    from urlparse import urljoin, urlparse
 
 
 log = logging.getLogger(__name__)
@@ -494,19 +491,6 @@ class FileRecord(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __hash__(self):
-        # pylint --py3k: W1641
-        return hash(
-            (
-                self.filename,
-                self.size,
-                self.digest,
-                self.algorithm,
-                self.version,
-                self.visibility,
-            )
-        )
-
     def __str__(self):
         return repr(self)
 
@@ -678,10 +662,6 @@ class Manifest(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
-    def __hash__(self):
-        # pylint --py3k: W1641
-        return hash(tuple(sorted((fr.filename, fr) for fr in self.file_records)))
 
     def __deepcopy__(self, memo):
         # This is required for a deep copy
@@ -977,7 +957,7 @@ CHECKSUM_SUFFIX = ".checksum"
 
 def unpack_file(filename):
     """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
-    xz, gzip, or unzip a zip file. The file is assumed to contain a single
+    xz, gzip, zst, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
     Xz support is handled by shelling out to 'tar'."""
     if os.path.isfile(filename) and tarfile.is_tarfile(filename):
@@ -1003,6 +983,17 @@ def unpack_file(filename):
         tar = tarfile.open(fileobj=fileobj, mode="r|")
         tar.extractall()
         tar.close()
+    elif os.path.isfile(filename) and filename.endswith(".tar.zst"):
+        import zstandard
+
+        base_file = filename.replace(".tar.zst", "")
+        clean_path(base_file)
+        log.info('untarring "%s"' % filename)
+        dctx = zstandard.ZstdDecompressor()
+        with dctx.stream_reader(open(filename, "rb")) as fileobj:
+            tar = tarfile.open(fileobj=fileobj, mode="r|")
+            tar.extractall()
+            tar.close()
     elif os.path.isfile(filename) and zipfile.is_zipfile(filename):
         base_file = filename.replace(".zip", "")
         clean_path(base_file)
