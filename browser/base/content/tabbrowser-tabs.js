@@ -55,6 +55,8 @@
         "browser.tabs.tabClipWidth"
       );
       this._hiddenSoundPlayingTabs = new Set();
+      this._allTabs = null;
+      this._visibleTabs = null;
 
       var tab = this.allTabs[0];
       tab.label = this.emptyTabTitle;
@@ -1027,8 +1029,12 @@
     // Accessor for tabs.  arrowScrollbox has a container for non-tab elements
     // at the end, everything else is <tab>s.
     get allTabs() {
+      if (this._allTabs) {
+        return this._allTabs;
+      }
       let children = Array.from(this.arrowScrollbox.children);
       children.pop();
+      this._allTabs = children;
       return children;
     }
 
@@ -1193,12 +1199,13 @@
     }
 
     _getVisibleTabs() {
-      // Cannot access gBrowser before it's initialized.
-      if (!gBrowser) {
-        return this.allTabs[0];
+      if (!this._visibleTabs) {
+        this._visibleTabs = Array.prototype.filter.call(
+          this.allTabs,
+          tab => !tab.hidden && !tab.closing
+        );
       }
-
-      return gBrowser.visibleTabs;
+      return this._visibleTabs;
     }
 
     _setPositionalAttributes() {

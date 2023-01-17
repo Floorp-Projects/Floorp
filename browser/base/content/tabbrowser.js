@@ -94,10 +94,6 @@
       MULTI_SELECTED: 4,
     },
 
-    _visibleTabs: null,
-
-    _tabs: null,
-
     _lastRelatedTabMap: new WeakMap(),
 
     mProgressListeners: [],
@@ -259,10 +255,7 @@
     },
 
     get tabs() {
-      if (!this._tabs) {
-        this._tabs = this.tabContainer.allTabs;
-      }
-      return this._tabs;
+      return this.tabContainer.allTabs;
     },
 
     get tabbox() {
@@ -288,13 +281,7 @@
     },
 
     get visibleTabs() {
-      if (!this._visibleTabs) {
-        this._visibleTabs = Array.prototype.filter.call(
-          this.tabs,
-          tab => !tab.hidden && !tab.closing
-        );
-      }
-      return this._visibleTabs;
+      return this.tabContainer._getVisibleTabs();
     },
 
     get _numPinnedTabs() {
@@ -607,12 +594,12 @@
     },
 
     _invalidateCachedTabs() {
-      this._tabs = null;
-      this._visibleTabs = null;
+      this.tabContainer._allTabs = null;
+      this.tabContainer._visibleTabs = null;
     },
 
     _invalidateCachedVisibleTabs() {
-      this._visibleTabs = null;
+      this.tabContainer._visibleTabs = null;
     },
 
     _setFindbarData() {
