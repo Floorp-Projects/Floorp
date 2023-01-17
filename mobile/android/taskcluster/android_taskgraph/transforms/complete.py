@@ -3,10 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import os
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
-from taskgraph.util.vcs import get_repository
 
 
 transforms = TransformSequence()
@@ -27,19 +25,13 @@ def resolve_keys(config, tasks):
         yield task
 
 
-def _get_commit_message(config):
-    rev = config.params["head_rev"]
-    repository = get_repository(os.getcwd())
-    message = repository.get_commit_message(rev)
-    return message.splitlines()[0]
-
-
 def _get_geckoview_bump(config, task):
     if all(
         (
-            task["name"] == "push",  # Filter out push-1 and push-2
+            task["name"] == "pr",  # Filter out pr-1 and pr-2
             config.params["owner"] == "github-actions[bot]@users.noreply.github.com",
-            config.params["tasks_for"] == "github-push",
+            config.params["head_repository"] == config.params["base_repository"],
+            config.params["tasks_for"] == "github-pull-request-untrusted",
             config.params["head_ref"] == "relbot/upgrade-geckoview-ac-main",
         )
     ):
@@ -55,16 +47,13 @@ def add_notifications(config, tasks):
     for task in tasks:
         notifications = task.pop("notifications", None)
         if notifications:
-            commit_message = _get_commit_message(config)
             emails = notifications["emails"]
             subject = notifications["subject"].format(
-                commit=config.params["head_rev"],
-                commit_message=commit_message,
+                pull_request_number=config.params["pull_request_number"]
             )
             message = notifications["message"].format(
                 repository=config.params["base_repository"],
-                commit=config.params["head_rev"],
-                commit_message=commit_message,
+                pull_request_number=config.params["pull_request_number"],
             )
 
             status_types = notifications.get("status-types", ["on-failed"])
