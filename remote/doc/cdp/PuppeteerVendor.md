@@ -44,33 +44,27 @@ process interspersed with some tips.
 	 if you want to skip this step; for example, if you want to run installation
 	 separately at a later point.
 
-4. Go through the changes under `remote/test/puppeteer/test` and [unskip] any
-	 newly-skipped tests (e.g. change `itFailsFirefox` to `it`).
-	 A mass-change with `awk` might be useful here.
-
-	 Why do we do this? The Puppeteer team runs their unit tests against Firefox
-	 in their CI with many tests skipped. In contrast, we leave these tests
-	 unskipped in Mozilla CI and track test expectation metadata
-	 in [puppeteer-expected.json] instead.
-
-5. Use `./mach puppeteer-test` (see [Testing]) to run Puppeteer tests against
+4. Use `./mach puppeteer-test` (see [Testing]) to run Puppeteer tests against
    both Chromium and Firefox in headless mode. Again, only running a subset of
 	 tests against Firefox is fine -- at this point you just want to check that
 	 the typescript compiles and the browser binaries are launched successfully.
 
-6. Next you want to update the test expectation metadata: test results might
-   have changed, tests may have been renamed, removed or added. The
-	 easiest way to do this is to run the Puppeteer test job on try
-	 (see [Testing]). You will find the new test metadata as an artifact on that
-	 job and you can copy it over into your sync patch if it looks reasonable.
+	 If something at this stage fails, you might want to check changes
+	 in `remote/test/puppeteer/package.json` and update `remote/mach_commands.py`
+	 with new npm scripts.
 
-	 Examine the job logs and makes sure the run didn't get interrupted early
-	 by a crash or a hang, especially if you see a lot of
-	 `TEST-UNEXPECTED-MISSING` in the Treeherder Failure Summary. You might need
-	 to add new test skips (especially for these tests as designed for Chrome only)
-	 or fix some new bug in the unit tests. This is the fun part.
+5. Next, you want to make sure that expectation meta data is correct.
+	Check changes in `remote/test/puppeteer/test/TestExpectations.json`,
+	if there are newly skipped tests for Firefox, you might need to update these expectations. To do this, run the Puppeteer test job on try (see [Testing]). If these tests are specific for Chrome or time out, we want to keep them skipped, if they fail we want to have `FAIL` status in the
+	expectation meta data. You can see, if the meta data needs to be updated, at the end of the log file.
 
-7. Once you are happy with the metadata and are ready to submit the sync patch
+	Examine the job logs and makes sure the run didn't get interrupted early
+	by a crash or a hang, especially if you see a lot of `TEST-UNEXPECTED-MISSING` in the Treeherder Failure Summary.
+	You might need fix some new bug in the unit tests. This is the fun part.
+
+	Some tests can also unexpectedly pass. Make sure it's correct, and if needed update the expectation data
+	by following the instructions at the end of the log file.
+6. Once you are happy with the metadata and are ready to submit the sync patch
    up for review, run the Puppeteer test job on try again with `--rebuild 10`
 	 to check for stability.
 
