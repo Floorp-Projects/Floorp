@@ -263,7 +263,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
         },
       },
       weatherIcon: {
-        attributes: { src: result.payload.icon },
+        attributes: { iconId: result.payload.iconId },
       },
       title: {
         l10n: {
@@ -911,7 +911,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       {
         url: suggestion.url,
-        icon: "chrome://global/skin/icons/highlights.svg",
+        iconId: suggestion.current_conditions.icon_id,
         helpUrl: lazy.QuickSuggest.HELP_URL,
         helpL10n: {
           id: lazy.UrlbarPrefs.get("resultMenu")
