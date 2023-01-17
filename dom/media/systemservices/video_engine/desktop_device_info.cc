@@ -270,9 +270,19 @@ void DesktopDeviceInfoImpl::CleanUpWindowList() {
 }
 
 void DesktopDeviceInfoImpl::InitializeWindowList() {
+  DesktopCaptureOptions options;
+// Help avoid an X11 deadlock, see bug 1456101.
+#ifdef MOZ_X11
+  MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
+      mozilla::GetMainThreadSerialEventTarget(),
+      NS_NewRunnableFunction(__func__, [&] {
+        options = DesktopCaptureOptions::CreateDefault();
+      })));
+#else
+  options = DesktopCaptureOptions::CreateDefault();
+#endif
   std::unique_ptr<DesktopCapturer> winCap =
-      DesktopCapturer::CreateWindowCapturer(
-          DesktopCaptureOptions::CreateDefault());
+      DesktopCapturer::CreateWindowCapturer(options);
   DesktopCapturer::SourceList list;
   if (winCap && winCap->GetSourceList(&list)) {
     DesktopCapturer::SourceList::iterator itr;
@@ -379,9 +389,19 @@ void DesktopDeviceInfoImpl::CleanUpScreenList() {
 }
 
 void DesktopDeviceInfoImpl::InitializeScreenList() {
+  DesktopCaptureOptions options;
+// Help avoid an X11 deadlock, see bug 1456101.
+#ifdef MOZ_X11
+  MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
+      mozilla::GetMainThreadSerialEventTarget(),
+      NS_NewRunnableFunction(__func__, [&] {
+        options = DesktopCaptureOptions::CreateDefault();
+      })));
+#else
+  options = DesktopCaptureOptions::CreateDefault();
+#endif
   std::unique_ptr<DesktopCapturer> screenCapturer =
-      DesktopCapturer::CreateScreenCapturer(
-          DesktopCaptureOptions::CreateDefault());
+      DesktopCapturer::CreateScreenCapturer(options);
   DesktopCapturer::SourceList list;
   if (screenCapturer && screenCapturer->GetSourceList(&list)) {
     DesktopCapturer::SourceList::iterator itr;
