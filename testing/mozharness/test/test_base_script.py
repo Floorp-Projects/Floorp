@@ -320,6 +320,13 @@ class TestScript(unittest.TestCase):
                     extract_to=self.tmpdir,
                 )
 
+        for archive in ("archive-setuid.tar", "archive-escape.tar"):
+            with self.assertRaises(Exception):
+                self.s.download_unpack(
+                    url=os.path.join(archives_path, archive),
+                    extract_to=self.tmpdir,
+                )
+
     def test_unpack(self):
         self.s = get_debug_script_obj()
 
@@ -363,6 +370,10 @@ class TestScript(unittest.TestCase):
                     os.path.join(archives_path, "archive_invalid_filename.zip"),
                     self.tmpdir,
                 )
+
+        for archive in ("archive-setuid.tar", "archive-escape.tar"):
+            with self.assertRaises(Exception):
+                self.s.unpack(os.path.join(archives_path, archive), self.tmpdir)
 
 
 # TestHelperFunctions {{{1
