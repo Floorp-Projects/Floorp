@@ -263,6 +263,13 @@ class PendingStyles final {
   }
 
   /**
+   * TakeAllPreservedStyles() moves all preserved styles and values to
+   * aOutStylesAndValues.
+   */
+  void TakeAllPreservedStyles(
+      nsTArray<EditorInlineStyleAndValue>& aOutStylesAndValues);
+
+  /**
    * TakeRelativeFontSize() hands back relative font value, which is then
    * cleared out.
    */

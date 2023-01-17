@@ -76,7 +76,8 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInlineStyleSetter final
    * See comments in the definition what this does.
    */
   Result<EditorRawDOMRange, nsresult> ExtendOrShrinkRangeToApplyTheStyle(
-      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) const;
+      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange,
+      const Element& aEditingHost) const;
 
   /**
    * Returns next/previous sibling of aContent or an ancestor of it if it's
@@ -86,6 +87,32 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInlineStyleSetter final
       const nsIContent& aContent, const nsINode* aLimiter = nullptr);
   [[nodiscard]] static nsIContent* GetPreviousEditableInlineContent(
       const nsIContent& aContent, const nsINode* aLimiter = nullptr);
+
+  /**
+   * GetEmptyTextNodeToApplyNewStyle creates new empty text node to insert
+   * a new element which will contain newly inserted text or returns existing
+   * empty text node if aCandidatePointToInsert is around it.
+   *
+   * NOTE: Unfortunately, editor does not want to insert text into empty inline
+   * element in some places (e.g., automatically adjusting caret position to
+   * nearest text node).  Therefore, we need to create new empty text node to
+   * prepare new styles for inserting text.  This method is designed for the
+   * preparation.
+   *
+   * @param aHTMLEditor                 The editor.
+   * @param aCandidatePointToInsert     The point where the caller wants to
+   *                                    insert new text.
+   * @param aEditingHost                The editing host.
+   * @return            If this creates new empty text node returns it.
+   *                    If this couldn't create new empty text node due to
+   *                    the point or aEditingHost cannot have text node,
+   *                    returns nullptr.
+   *                    Otherwise, returns error.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<RefPtr<Text>, nsresult>
+  GetEmptyTextNodeToApplyNewStyle(HTMLEditor& aHTMLEditor,
+                                  const EditorDOMPoint& aCandidatePointToInsert,
+                                  const Element& aEditingHost);
 
  private:
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult> ApplyStyle(
