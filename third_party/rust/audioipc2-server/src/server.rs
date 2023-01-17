@@ -20,7 +20,7 @@ use std::ffi::CStr;
 use std::mem::size_of;
 use std::os::raw::{c_long, c_void};
 use std::rc::Rc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::{cell::RefCell, sync::Mutex};
 use std::{panic, slice};
 
@@ -215,6 +215,10 @@ struct ServerStreamCallbacks {
     state_callback_rpc: rpccore::Proxy<CallbackReq, CallbackResp>,
     /// RPC interface for device_change_callback (on any thread) to server callback thread
     device_change_callback_rpc: rpccore::Proxy<CallbackReq, CallbackResp>,
+    /// Indicates stream is connected to client side.  Callbacks received before
+    /// the stream is in the connected state cannot be sent to the client side, so
+    /// are logged and otherwise ignored.
+    connected: AtomicBool,
 }
 
 impl ServerStreamCallbacks {
@@ -225,6 +229,10 @@ impl ServerStreamCallbacks {
             input.len(),
             output.len()
         );
+        if !self.connected.load(Ordering::Acquire) {
+            warn!("Stream data callback triggered before stream connected");
+            return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
+        }
 
         if self.input_frame_size != 0 {
             if input.len() > self.shm.get_size() {
@@ -277,6 +285,11 @@ impl ServerStreamCallbacks {
 
     fn state_callback(&self, state: cubeb::State) {
         trace!("Stream state callback: {:?}", state);
+        if !self.connected.load(Ordering::Acquire) {
+            warn!("Stream state callback triggered before stream connected");
+            return;
+        }
+
         let r = self
             .state_callback_rpc
             .call(CallbackReq::State(state.into()));
@@ -290,6 +303,10 @@ impl ServerStreamCallbacks {
 
     fn device_change_callback(&self) {
         trace!("Stream device change callback");
+        if !self.connected.load(Ordering::Acquire) {
+            warn!("Stream device_change callback triggered before stream connected");
+            return;
+        }
         let r = self
             .device_change_callback_rpc
             .call(CallbackReq::DeviceChange);
@@ -727,6 +744,7 @@ impl CubebServer {
             state_callback_rpc: rpc.try_clone()?,
             device_change_callback_rpc: rpc.try_clone()?,
             data_callback_rpc: rpc,
+            connected: AtomicBool::new(false),
         });
 
         let entry = self.streams.vacant_entry();
@@ -824,6 +842,7 @@ impl CubebServer {
             .client_pipe
             .take()
             .expect("invalid state after StreamCreated");
+        server_stream.cbs.connected.store(true, Ordering::Release);
         Ok(ClientMessage::StreamInitialized(SerializableHandle::new(
             client_pipe,
             self.remote_pid.unwrap(),
