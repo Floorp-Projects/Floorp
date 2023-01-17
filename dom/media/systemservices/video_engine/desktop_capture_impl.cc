@@ -34,6 +34,7 @@
 #include "modules/video_capture/video_capture.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/SyncRunnable.h"
 
 #include "PerformanceRecorder.h"
 
@@ -333,7 +334,18 @@ const char* DesktopCaptureImpl::CurrentDeviceName() const {
 }
 
 static DesktopCaptureOptions CreateDesktopCaptureOptions() {
-  DesktopCaptureOptions options = DesktopCaptureOptions::CreateDefault();
+  DesktopCaptureOptions options;
+// Help avoid an X11 deadlock, see bug 1456101.
+#ifdef MOZ_X11
+  MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
+      mozilla::GetMainThreadSerialEventTarget(),
+      NS_NewRunnableFunction(__func__, [&] {
+        options = DesktopCaptureOptions::CreateDefault();
+      })));
+#else
+  options = DesktopCaptureOptions::CreateDefault();
+#endif
+
   // Leave desktop effects enabled during WebRTC captures.
   options.set_disable_effects(false);
 
