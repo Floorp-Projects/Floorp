@@ -359,10 +359,6 @@ const DownloadsIndicatorView = {
       return;
     }
 
-    if (!DownloadsCommon.animateNotifications) {
-      return;
-    }
-
     // enqueue this notification while the current one is being displayed
     if (this._currentNotificationType) {
       // only queue up the notification if it is different to the current one
@@ -385,6 +381,11 @@ const DownloadsIndicatorView = {
     let anchor = DownloadsButton._placeholder;
     if (!anchor || !isElementVisible(anchor.parentNode)) {
       // Our container isn't visible, so can't show the animation:
+      return;
+    }
+
+    if (anchor.ownerGlobal.matchMedia("(prefers-reduced-motion)").matches) {
+      // User has prefers-reduced-motion enabled, so we shouldn't show the animation.
       return;
     }
 
