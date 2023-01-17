@@ -233,10 +233,6 @@ this.DateTimeBoxWidget = class {
   }
 
   generateContent() {
-    /*
-     * Pass the markup through XML parser purely for the reason of loading the localization DTD.
-     * Remove it when migrate to Fluent (bug 1504363).
-     */
     const parser = new this.window.DOMParser();
     let parserDoc = parser.parseFromString(
       `<div class="datetimebox" xmlns="http://www.w3.org/1999/xhtml" role="none">
