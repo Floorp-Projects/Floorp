@@ -4900,6 +4900,16 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
+  // we need to strip Authentication headers for cross-origin requests
+  // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
+  nsAutoCString authHeader;
+  if (StaticPrefs::network_http_redirect_stripAuthHeader() &&
+      NS_SUCCEEDED(
+          httpChannel->GetRequestHeader("Authorization"_ns, authHeader))) {
+    rv = httpChannel->SetRequestHeader("Authorization"_ns, ""_ns, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
   return NS_OK;
 }
 

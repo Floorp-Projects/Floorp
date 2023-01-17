@@ -2567,7 +2567,7 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
       mAuthorRequestHeaders.Set("accept", "*/*"_ns);
     }
 
-    mAuthorRequestHeaders.ApplyToChannel(httpChannel, false);
+    mAuthorRequestHeaders.ApplyToChannel(httpChannel, false, false);
 
     if (!IsSystemXHR()) {
       nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
@@ -3374,9 +3374,17 @@ nsresult XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result) {
 
     nsCOMPtr<nsIHttpChannel> newHttpChannel(do_QueryInterface(mChannel));
     if (newHttpChannel) {
+      // we need to strip Authentication headers for cross-origin requests
+      // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
+      bool skipAuthHeader = false;
+      if (StaticPrefs::network_fetch_redirect_stripAuthHeader()) {
+        skipAuthHeader = ReferrerInfo::IsCrossOriginRequest(oldHttpChannel);
+      }
+
       // Ensure all original headers are duplicated for the new channel (bug
       // #553888)
-      mAuthorRequestHeaders.ApplyToChannel(newHttpChannel, rewriteToGET);
+      mAuthorRequestHeaders.ApplyToChannel(newHttpChannel, rewriteToGET,
+                                           skipAuthHeader);
     }
   } else {
     mErrorLoad = ErrorType::eRedirect;
@@ -4069,7 +4077,8 @@ void RequestHeaders::MergeOrSet(const nsACString& aName,
 void RequestHeaders::Clear() { mHeaders.Clear(); }
 
 void RequestHeaders::ApplyToChannel(nsIHttpChannel* aChannel,
-                                    bool aStripRequestBodyHeader) const {
+                                    bool aStripRequestBodyHeader,
+                                    bool aStripAuthHeader) const {
   for (const RequestHeader& header : mHeaders) {
     if (aStripRequestBodyHeader &&
         (header.mName.LowerCaseEqualsASCII("content-type") ||
@@ -4078,6 +4087,12 @@ void RequestHeaders::ApplyToChannel(nsIHttpChannel* aChannel,
          header.mName.LowerCaseEqualsASCII("content-location"))) {
       continue;
     }
+
+    if (aStripAuthHeader &&
+        header.mName.LowerCaseEqualsASCII("authorization")) {
+      continue;
+    }
+
     // Update referrerInfo to override referrer header in system privileged.
     if (header.mName.LowerCaseEqualsASCII("referer")) {
       DebugOnly<nsresult> rv = aChannel->SetNewReferrerInfo(
