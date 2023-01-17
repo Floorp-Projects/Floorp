@@ -534,27 +534,27 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Enables the print and color scheme simulation only for local and remote tab debugging.
+   * Enables the print and color scheme simulation if they are supported in the
+   * current target.
    */
   async _initSimulationFeatures() {
-    if (!this.inspector.commands.descriptorFront.isTabDescriptor) {
-      return;
+    if (!this.currentTarget.chrome) {
+      this.colorSchemeLightSimulationButton.removeAttribute("hidden");
+      this.colorSchemeDarkSimulationButton.removeAttribute("hidden");
+      this.printSimulationButton.removeAttribute("hidden");
+      this.printSimulationButton.addEventListener(
+        "click",
+        this._onTogglePrintSimulation
+      );
+      this.colorSchemeLightSimulationButton.addEventListener(
+        "click",
+        this._onToggleLightColorSchemeSimulation
+      );
+      this.colorSchemeDarkSimulationButton.addEventListener(
+        "click",
+        this._onToggleDarkColorSchemeSimulation
+      );
     }
-    this.colorSchemeLightSimulationButton.removeAttribute("hidden");
-    this.colorSchemeDarkSimulationButton.removeAttribute("hidden");
-    this.printSimulationButton.removeAttribute("hidden");
-    this.printSimulationButton.addEventListener(
-      "click",
-      this._onTogglePrintSimulation
-    );
-    this.colorSchemeLightSimulationButton.addEventListener(
-      "click",
-      this._onToggleLightColorSchemeSimulation
-    );
-    this.colorSchemeDarkSimulationButton.addEventListener(
-      "click",
-      this._onToggleDarkColorSchemeSimulation
-    );
   },
 
   /**

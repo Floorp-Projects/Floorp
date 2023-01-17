@@ -764,7 +764,7 @@ Register a tool
     },
 
     isToolSupported: function(toolbox) {
-      return toolbox.commands.descriptorFront.isLocalTab;
+      return toolbox.target.isLocalTab;
     },
 
     build: function(iframeWindow, toolbox, node) {
