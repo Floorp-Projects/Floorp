@@ -118,6 +118,7 @@ class MarkStack {
     TaggedPtr() = default;
     TaggedPtr(Tag tag, Cell* ptr);
     Tag tag() const;
+    uintptr_t tagUnchecked() const;
     template <typename T>
     T* as() const;
 
@@ -213,6 +214,7 @@ class MarkStack {
 
   size_t basePositionForCurrentColor() const;
   size_t wordCountForCurrentColor() const;
+  bool indexIsEntryBase(size_t index) const;
 
   void assertGrayPositionValid() const;
 
