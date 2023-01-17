@@ -253,12 +253,6 @@ void PreloaderBase::NotifyStop(nsresult aStatus) {
   mChannel = nullptr;
 }
 
-void PreloaderBase::NotifyValidating() { mOnStopStatus.reset(); }
-
-void PreloaderBase::NotifyValidated(nsresult aStatus) {
-  NotifyStop(nullptr, aStatus);
-}
-
 void PreloaderBase::AddLinkPreloadNode(nsINode* aNode) {
   if (mOnStopStatus) {
     return NotifyNodeEvent(aNode);
