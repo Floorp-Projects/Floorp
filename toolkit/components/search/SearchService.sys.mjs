@@ -1781,7 +1781,9 @@ export class SearchService {
           continue;
         }
 
-        policy = await this.#getExtensionPolicy(engine._extensionID);
+        policy = await lazy.AddonSearchEngine.getExtensionPolicy(
+          engine._extensionID
+        );
         locale =
           replacementEngines[0].webExtension.locale ||
           lazy.SearchUtils.DEFAULT_TAG;
@@ -1808,7 +1810,9 @@ export class SearchService {
       } else {
         // This is an existing engine that we should update (we don't know if
         // the configuration for this engine has changed or not).
-        policy = await this.#getExtensionPolicy(engine._extensionID);
+        policy = await lazy.AddonSearchEngine.getExtensionPolicy(
+          engine._extensionID
+        );
         locale = engine._locale;
         manifest = await this.#getManifestForLocale(policy.extension, locale);
       }
@@ -2466,68 +2470,8 @@ export class SearchService {
     lazy.logConsole.debug("Running check on WebExtension engines");
 
     for (let engine of this._engines.values()) {
-      if (
-        engine.isAppProvided ||
-        !engine._extensionID ||
-        engine._extensionID == "set-via-policy" ||
-        engine._extensionID == "set-via-user"
-      ) {
-        continue;
-      }
-
-      let addon = await lazy.AddonManager.getAddonByID(engine._extensionID);
-
-      if (!addon) {
-        lazy.logConsole.debug(
-          `Add-on ${engine._extensionID} for search engine ${engine.name} is not installed!`
-        );
-        Services.telemetry.keyedScalarSet(
-          "browser.searchinit.engine_invalid_webextension",
-          engine._extensionID,
-          1
-        );
-      } else if (!addon.isActive) {
-        lazy.logConsole.debug(
-          `Add-on ${engine._extensionID} for search engine ${engine.name} is not active!`
-        );
-        Services.telemetry.keyedScalarSet(
-          "browser.searchinit.engine_invalid_webextension",
-          engine._extensionID,
-          2
-        );
-      } else {
-        let policy = await this.#getExtensionPolicy(engine._extensionID);
-        let providerSettings =
-          policy.extension.manifest?.chrome_settings_overrides?.search_provider;
-
-        if (!providerSettings) {
-          lazy.logConsole.debug(
-            `Add-on ${engine._extensionID} for search engine ${engine.name} no longer has an engine defined`
-          );
-          Services.telemetry.keyedScalarSet(
-            "browser.searchinit.engine_invalid_webextension",
-            engine._extensionID,
-            4
-          );
-        } else if (engine.name != providerSettings.name) {
-          lazy.logConsole.debug(
-            `Add-on ${engine._extensionID} for search engine ${engine.name} has a different name!`
-          );
-          Services.telemetry.keyedScalarSet(
-            "browser.searchinit.engine_invalid_webextension",
-            engine._extensionID,
-            5
-          );
-        } else if (!engine.checkSearchUrlMatchesManifest(providerSettings)) {
-          lazy.logConsole.debug(
-            `Add-on ${engine._extensionID} for search engine ${engine.name} has out-of-date manifest!`
-          );
-          Services.telemetry.keyedScalarSet(
-            "browser.searchinit.engine_invalid_webextension",
-            engine._extensionID,
-            6
-          );
-        }
+      if (engine instanceof lazy.AddonSearchEngine && !engine.isAppProvided) {
+        await engine.checkAndReportIfSettingsValid();
       }
     }
     lazy.logConsole.debug("WebExtension engine check complete");
@@ -3278,27 +3222,6 @@ export class SearchService {
     }
   }
 
-  /**
-   * Gets the WebExtensionPolicy for an add-on.
-   *
-   * @param {string} id
-   *   The WebExtension id.
-   * @returns {WebExtensionPolicy}
-   */
-  async #getExtensionPolicy(id) {
-    let policy = WebExtensionPolicy.getByID(id);
-    if (!policy) {
-      let idPrefix = id.split("@")[0];
-      let path = `resource://search-extensions/${idPrefix}/`;
-      await lazy.AddonManager.installBuiltinAddon(path);
-      policy = WebExtensionPolicy.getByID(id);
-    }
-    // On startup the extension may have not finished parsing the
-    // manifest, wait for that here.
-    await policy.readyPromise;
-    return policy;
-  }
-
   #nimbusSearchUpdatedFun = null;
 
   async #nimbusSearchUpdated() {
@@ -3536,7 +3459,9 @@ export class SearchService {
    */
   async _makeEngineFromConfig(config) {
     lazy.logConsole.debug("_makeEngineFromConfig:", config);
-    let policy = await this.#getExtensionPolicy(config.webExtension.id);
+    let policy = await lazy.AddonSearchEngine.getExtensionPolicy(
+      config.webExtension.id
+    );
     let locale =
       "locale" in config.webExtension
         ? config.webExtension.locale
