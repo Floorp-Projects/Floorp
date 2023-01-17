@@ -508,17 +508,29 @@ class MigrationUtils {
       if (aOpener?.gBrowser) {
         const { gBrowser } = aOpener;
         const { selectedBrowser } = gBrowser;
-        gBrowser
-          .getTabDialogBox(selectedBrowser)
-          .open(DIALOG_URL, { features: "resizable=no" }, aOptions);
+        const { dialog } = gBrowser.getTabDialogBox(selectedBrowser).open(
+          DIALOG_URL,
+          { features: "resizable=no" },
+          {
+            onResize: () => {
+              dialog.resizeVertically();
+            },
+            options: aOptions,
+          }
+        );
       } else {
         const FEATURES = "dialog,centerscreen,resizable=no";
-        Services.ww.openWindow(
+        const win = Services.ww.openWindow(
           aOpener,
           DIALOG_URL,
           "_blank",
           FEATURES,
-          aOptions
+          {
+            onResize: () => {
+              win.sizeToContent();
+            },
+            options: aOptions,
+          }
         );
       }
     } else {
