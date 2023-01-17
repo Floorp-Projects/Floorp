@@ -15,15 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
-  return console.createInstance({
-    prefix: "AddonSearchEngine",
-    maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",
-  });
 });
 
 /**
@@ -58,7 +50,6 @@ export class AddonSearchEngine extends SearchEngine {
       id,
     });
 
-    this._extensionID = extensionId;
     this.#isAppProvided = isAppProvided;
 
     if (details) {
@@ -70,6 +61,7 @@ export class AddonSearchEngine extends SearchEngine {
       }
 
       this.#initFromManifest(
+        details.extensionID,
         details.extensionBaseURI,
         details.manifest,
         details.locale,
@@ -84,6 +76,8 @@ export class AddonSearchEngine extends SearchEngine {
    * Update this engine based on new manifest, used during
    * webextension upgrades.
    *
+   * @param {string} extensionID
+   *   The WebExtension ID.
    * @param {string} extensionBaseURI
    *   The Base URI of the WebExtension.
    * @param {object} manifest
@@ -94,10 +88,22 @@ export class AddonSearchEngine extends SearchEngine {
    *   The search engine configuration for application provided engines, that
    *   may be overriding some of the WebExtension's settings.
    */
-  updateFromManifest(extensionBaseURI, manifest, locale, configuration = {}) {
+  updateFromManifest(
+    extensionID,
+    extensionBaseURI,
+    manifest,
+    locale,
+    configuration = {}
+  ) {
     this._urls = [];
     this._iconMapObj = null;
-    this.#initFromManifest(extensionBaseURI, manifest, locale, configuration);
+    this.#initFromManifest(
+      extensionID,
+      extensionBaseURI,
+      manifest,
+      locale,
+      configuration
+    );
     lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 
@@ -148,71 +154,10 @@ export class AddonSearchEngine extends SearchEngine {
   }
 
   /**
-   * Checks to see if this engine's settings are in sync with what the add-on
-   * manager has, and reports the results to telemetry.
-   */
-  async checkAndReportIfSettingsValid() {
-    let addon = await lazy.AddonManager.getAddonByID(this._extensionID);
-
-    if (!addon) {
-      lazy.logConsole.debug(
-        `Add-on ${this._extensionID} for search engine ${this.name} is not installed!`
-      );
-      Services.telemetry.keyedScalarSet(
-        "browser.searchinit.engine_invalid_webextension",
-        this._extensionID,
-        1
-      );
-    } else if (!addon.isActive) {
-      lazy.logConsole.debug(
-        `Add-on ${this._extensionID} for search engine ${this.name} is not active!`
-      );
-      Services.telemetry.keyedScalarSet(
-        "browser.searchinit.engine_invalid_webextension",
-        this._extensionID,
-        2
-      );
-    } else {
-      let policy = await AddonSearchEngine.getExtensionPolicy(
-        this._extensionID
-      );
-      let providerSettings =
-        policy.extension.manifest?.chrome_settings_overrides?.search_provider;
-
-      if (!providerSettings) {
-        lazy.logConsole.debug(
-          `Add-on ${this._extensionID} for search engine ${this.name} no longer has an engine defined`
-        );
-        Services.telemetry.keyedScalarSet(
-          "browser.searchinit.engine_invalid_webextension",
-          this._extensionID,
-          4
-        );
-      } else if (this.name != providerSettings.name) {
-        lazy.logConsole.debug(
-          `Add-on ${this._extensionID} for search engine ${this.name} has a different name!`
-        );
-        Services.telemetry.keyedScalarSet(
-          "browser.searchinit.engine_invalid_webextension",
-          this._extensionID,
-          5
-        );
-      } else if (!this.checkSearchUrlMatchesManifest(providerSettings)) {
-        lazy.logConsole.debug(
-          `Add-on ${this._extensionID} for search engine ${this.name} has out-of-date manifest!`
-        );
-        Services.telemetry.keyedScalarSet(
-          "browser.searchinit.engine_invalid_webextension",
-          this._extensionID,
-          6
-        );
-      }
-    }
-  }
-
-  /**
    * Initializes the engine based on the manifest and other values.
    *
+   * @param {string} extensionID
+   *   The WebExtension ID.
    * @param {string} extensionBaseURI
    *   The Base URI of the WebExtension.
    * @param {object} manifest
@@ -223,9 +168,16 @@ export class AddonSearchEngine extends SearchEngine {
    *   The search engine configuration for application provided engines, that
    *   may be overriding some of the WebExtension's settings.
    */
-  #initFromManifest(extensionBaseURI, manifest, locale, configuration = {}) {
+  #initFromManifest(
+    extensionID,
+    extensionBaseURI,
+    manifest,
+    locale,
+    configuration = {}
+  ) {
     let searchProvider = manifest.chrome_settings_overrides.search_provider;
 
+    this._extensionID = extensionID;
     this._locale = locale;
 
     // We only set _telemetryId for app-provided engines. See also telemetryId
@@ -234,7 +186,7 @@ export class AddonSearchEngine extends SearchEngine {
       if (configuration.telemetryId) {
         this._telemetryId = configuration.telemetryId;
       } else {
-        let telemetryId = this._extensionID.split("@")[0];
+        let telemetryId = extensionID.split("@")[0];
         if (locale != lazy.SearchUtils.DEFAULT_TAG) {
           telemetryId += "-" + locale;
         }
@@ -280,26 +232,5 @@ export class AddonSearchEngine extends SearchEngine {
       { ...searchProvider, iconURL, description: manifest.description },
       configuration
     );
-  }
-
-  /**
-   * Gets the WebExtensionPolicy for an add-on.
-   *
-   * @param {string} id
-   *   The WebExtension id.
-   * @returns {WebExtensionPolicy}
-   */
-  static async getExtensionPolicy(id) {
-    let policy = WebExtensionPolicy.getByID(id);
-    if (!policy) {
-      let idPrefix = id.split("@")[0];
-      let path = `resource://search-extensions/${idPrefix}/`;
-      await lazy.AddonManager.installBuiltinAddon(path);
-      policy = WebExtensionPolicy.getByID(id);
-    }
-    // On startup the extension may have not finished parsing the
-    // manifest, wait for that here.
-    await policy.readyPromise;
-    return policy;
   }
 }
