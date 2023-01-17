@@ -26,7 +26,7 @@ features:
             "recently-saved": true,
             "recent-explorations": true,
             "pocket": true,
-            "pocket-sponsored-stories": false,
+            "pocket-sponsored-stories": true,
           }
     defaults:
       - channel: nightly
@@ -37,12 +37,6 @@ features:
             "recently-saved": true,
             "recent-explorations": true,
             "pocket": true,
-          }
-        }
-      - channel: developer
-        value: {
-          "sections-enabled": {
-            "pocket-sponsored-stories": true,
           }
         }
   nimbus-validation:
