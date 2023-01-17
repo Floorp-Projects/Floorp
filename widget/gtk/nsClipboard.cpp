@@ -300,6 +300,13 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
       continue;
     }
 
+    if (flavorStr.EqualsLiteral(kFileMime)) {
+      LOGCLIP("    adding text/uri-list target\n");
+      GdkAtom atom = gdk_atom_intern(kURIListMime, FALSE);
+      gtk_target_list_add(list, atom, 0, 0);
+      continue;
+    }
+
     // Add this to our list of valid targets
     LOGCLIP("    adding OTHER target %s\n", flavorStr.get());
     GdkAtom atom = gdk_atom_intern(flavorStr.get(), FALSE);
@@ -1210,10 +1217,44 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     html.AppendLiteral(kHTMLMarkupPrefix);
     AppendUTF16toUTF8(ucs2string, html);
 
-    LOGCLIP("  Setting %zd bytest of %s data\n", html.Length(),
+    LOGCLIP("  Setting %zd bytes of %s data\n", html.Length(),
             GUniquePtr<gchar>(gdk_atom_name(selectionTarget)).get());
     gtk_selection_data_set(aSelectionData, selectionTarget, 8,
                            (const guchar*)html.get(), html.Length());
+    return;
+  }
+
+  // We put kFileMime onto the clipboard as kURIListMime.
+  if (selectionTarget == gdk_atom_intern(kURIListMime, FALSE)) {
+    LOGCLIP("  providing %s data\n", kURIListMime);
+    rv = trans->GetTransferData(kFileMime, getter_AddRefs(item));
+    if (NS_FAILED(rv) || !item) {
+      LOGCLIP("  failed to get %s data by GetTransferData()!\n", kFileMime);
+      return;
+    }
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(item);
+    if (!file) {
+      LOGCLIP("  failed to get nsIFile interface!");
+      return;
+    }
+
+    nsCOMPtr<nsIURI> fileURI;
+    rv = NS_NewFileURI(getter_AddRefs(fileURI), file);
+    if (NS_FAILED(rv)) {
+      LOGCLIP("  failed to get fileURI\n");
+      return;
+    }
+
+    nsAutoCString uri;
+    if (NS_FAILED(fileURI->GetSpec(uri))) {
+      LOGCLIP("  failed to get fileURI spec\n");
+      return;
+    }
+
+    LOGCLIP("  Setting %zd bytes of data\n", uri.Length());
+    gtk_selection_data_set(aSelectionData, selectionTarget, 8,
+                           (const guchar*)uri.get(), uri.Length());
     return;
   }
 

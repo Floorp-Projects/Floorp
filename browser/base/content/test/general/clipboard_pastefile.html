@@ -1,28 +1,52 @@
 <html><body>
 <script>
-function checkPaste(event) {
-  let output = document.getElementById("output");
-  output.textContent = checkPasteHelper(event);
-}
-
-function checkPasteHelper(event) {
-  let dt = event.clipboardData;
-  if (dt.types.length != 2)
-    return "Wrong number of types; got " + dt.types.length;
-
-  for (let type of dt.types) {
-    if (type != "Files" && type != "application/x-moz-file")
-      return "Invalid type for types; got" + type;
+async function checkPaste(event) {
+  let result = null;
+  try {
+    result = await checkPasteHelper(event);
+  } catch (e) {
+    result = e.toString();
   }
 
-  if (dt.getData("text/plain"))
-    return "text/plain found with getData";
+  document.dispatchEvent(new CustomEvent('testresult', {
+    detail: { result }
+  }));
+}
 
-  return "Passed";
+function is(a, b, msg) {
+  if (!Object.is(a, b)) {
+    throw new Error(`FAIL: expected ${b} got ${a} - ${msg}`);
+  }
+}
+
+async function checkPasteHelper(event) {
+  let dt = event.clipboardData;
+
+  is(dt.types.length, 2, "Correct number of types");
+
+  // TODO: Remove application/x-moz-file from content.
+  is(dt.types[0], "application/x-moz-file", "First type")
+  is(dt.types[1], "Files", "Last type must be Files");
+
+  is(dt.getData("text/plain"), "", "text/plain found with getData");
+  is(dt.getData("application/x-moz-file"), "", "application/x-moz-file found with getData");
+
+  is(dt.files.length, 1, "Correct number of files");
+  is(dt.files[0].name, "test-file.txt", "Correct file name");
+  is(dt.files[0].type, "text/plain", "Correct file type");
+
+  is(dt.items.length, 1, "Correct number of items");
+  is(dt.items[0].kind, "file", "Correct item kind");
+  is(dt.items[0].type, "text/plain", "Correct item type");
+
+  let file = dt.files[0];
+  is(await file.text(), "Hello World!", "Pasted file contains right text");
+
+  return file.name;
 }
 </script>
 
 <input id="input" onpaste="checkPaste(event)">
-<div id="output"></div>
+
 
 </body></html>
