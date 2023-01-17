@@ -11679,8 +11679,6 @@ static void DispatchFullscreenChange(Document& aDocument, nsINode* aTarget) {
   }
 }
 
-static void ClearPendingFullscreenRequests(Document* aDoc);
-
 void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup) {
   if (MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug)) {
@@ -15043,7 +15041,8 @@ bool Document::HandlePendingFullscreenRequests(Document* aDoc) {
   return handled;
 }
 
-static void ClearPendingFullscreenRequests(Document* aDoc) {
+/* static */
+void Document::ClearPendingFullscreenRequests(Document* aDoc) {
   PendingFullscreenChangeList::Iterator<FullscreenRequest> iter(
       aDoc, PendingFullscreenChangeList::eInclusiveDescendants);
   while (!iter.AtEnd()) {
