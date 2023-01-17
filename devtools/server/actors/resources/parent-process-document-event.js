@@ -120,12 +120,18 @@ class ParentProcessDocumentEventWatcher {
         return;
       }
 
-      // Ignore remote iframe targets which are restoring from the bfcache.
-      // onStateChange is called before the related target is instantiated
-      // and this isn't quite a navigation, we will respawn a new target.
+      // Only emit will-navigate for top-level targets.
+      if (
+        this.watcherActor.sessionContext.type == "all" &&
+        browsingContext.isContent
+      ) {
+        // Never emit will-navigate for content browsing contexts in the Browser Toolbox.
+        // They might verify `browsingContext.top == browsingContext` because of the chrome/content
+        // boundary, but they do not represent a top-level target for this DevTools session.
+        return;
+      }
       const isTopLevel = browsingContext.top == browsingContext;
-      const isRestoring = flag & Ci.nsIWebProgressListener.STATE_RESTORING;
-      if (!isTopLevel && isRestoring) {
+      if (!isTopLevel) {
         return;
       }
 
