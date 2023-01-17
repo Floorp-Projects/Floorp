@@ -427,6 +427,9 @@ details[open] > .page-section-header > .twisty {
 .page-section-header > .section-description {
   grid-area: desc;
   margin-block: 4px 8px;
+  font-weight: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .card-body {
