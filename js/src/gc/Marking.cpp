@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 
 #include <algorithm>
@@ -1596,6 +1597,10 @@ inline MarkStack::TaggedPtr::TaggedPtr(Tag tag, Cell* ptr)
   assertValid();
 }
 
+inline uintptr_t MarkStack::TaggedPtr::tagUnchecked() const {
+  return bits & TagMask;
+}
+
 inline MarkStack::Tag MarkStack::TaggedPtr::tag() const {
   auto tag = Tag(bits & TagMask);
   MOZ_ASSERT(tag <= LastTag);
@@ -1728,6 +1733,27 @@ bool MarkStack::hasStealableWork() const {
   return wordCountForCurrentColor() > ValueRangeWords;
 }
 
+MOZ_ALWAYS_INLINE bool MarkStack::indexIsEntryBase(size_t index) const {
+  // The mark stack holds both TaggedPtr and SlotsOrElementsRange entries, which
+  // are one or two words long respectively. Determine whether |index| points to
+  // the base of an entry (i.e. the lowest word in memory).
+  //
+  // The possible cases are that |index| points to:
+  //  1. a single word TaggedPtr entry => true
+  //  2. the startAndKind_ word of SlotsOrElementsRange => true
+  //     (startAndKind_ is a uintptr_t tagged with SlotsOrElementsKind)
+  //  3. the ptr_ word of SlotsOrElementsRange (itself a TaggedPtr) => false
+  //
+  // To check for case 3, interpret the word as a TaggedPtr: if it is tagged as
+  // a SlotsOrElementsRange tagged pointer then we are inside such a range and
+  // |index| does not point to the base of an entry. This requires that no
+  // startAndKind_ word can be interpreted as such, which is arranged by making
+  // SlotsOrElementsRangeTag zero and all SlotsOrElementsKind tags non-zero.
+
+  MOZ_ASSERT(index >= basePositionForCurrentColor() && index < position());
+  return stack()[index].tagUnchecked() != SlotsOrElementsRangeTag;
+}
+
 void MarkStack::stealWorkFrom(MarkStack& other) {
   // When this method runs during parallel marking, we are on the thread that
   // owns |other|, and the thread that owns |this| is blocked waiting on the
@@ -1744,25 +1770,35 @@ void MarkStack::stealWorkFrom(MarkStack& other) {
   size_t targetPos = other.position() - wordsToSteal;
   MOZ_ASSERT(other.position() >= base);
 
-  if (!ensureSpace(wordsToSteal + 1)) {
+  // Adjust the target position in case it points to the middle of a two word
+  // entry.
+  if (!other.indexIsEntryBase(targetPos)) {
+    targetPos--;
+    wordsToSteal++;
+  }
+  MOZ_ASSERT(other.indexIsEntryBase(targetPos));
+  MOZ_ASSERT(targetPos < other.position());
+  MOZ_ASSERT(targetPos > base);
+  MOZ_ASSERT(wordsToSteal == other.position() - targetPos);
+
+  if (!ensureSpace(wordsToSteal)) {
     return;
   }
 
-  // TODO: This could be optimised to use memcpy if we could tell the difference
-  // between a single tagged pointer and a word that's part of a value range
-  // entry. This could be done by changing the way the entries are tagged.
-  //
   // TODO: This doesn't have good cache behaviour when moving work between
   // threads. It might be better if the original thread ended up with the top
   // part of the stack, in other words if this method stole from the bottom of
   // the stack rather than the top.
-  while (other.position() > targetPos) {
-    if (other.peekTag() == MarkStack::SlotsOrElementsRangeTag) {
-      infalliblePush(other.popSlotsOrElementsRange());
-    } else {
-      infalliblePush(other.popPtr());
-    }
-  }
+
+  mozilla::PodCopy(topPtr(), other.stack().begin() + targetPos, wordsToSteal);
+  topIndex_ += wordsToSteal;
+  peekPtr().assertValid();
+
+  other.topIndex_ = targetPos;
+#ifdef DEBUG
+  other.poisonUnused();
+#endif
+  other.peekPtr().assertValid();
 }
 
 MOZ_ALWAYS_INLINE size_t MarkStack::basePositionForCurrentColor() const {
