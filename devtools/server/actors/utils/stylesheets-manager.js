@@ -10,9 +10,6 @@ const InspectorUtils = require("InspectorUtils");
 const {
   getSourcemapBaseURL,
 } = require("resource://devtools/server/actors/utils/source-map-utils.js");
-const {
-  TYPES,
-} = require("resource://devtools/server/actors/resources/index.js");
 
 loader.lazyRequireGetter(
   this,
@@ -936,13 +933,6 @@ class StyleSheetsManager extends EventEmitter {
   }
 }
 
-function hasStyleSheetWatcherSupportForTarget(targetActor) {
-  return (
-    targetActor.sessionContext.supportedResources?.[TYPES.STYLESHEET] || false
-  );
-}
-
 module.exports = {
   StyleSheetsManager,
-  hasStyleSheetWatcherSupportForTarget,
 };
