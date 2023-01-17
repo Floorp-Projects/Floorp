@@ -37,7 +37,7 @@ class GeckoProfile(object):
         gecko_profile_interval = test_config.get("gecko_profile_interval", 1)
         gecko_profile_entries = test_config.get("gecko_profile_entries", 1000000)
         gecko_profile_features = test_config.get(
-            "gecko_profile_features", "js,stackwalk,cpu"
+            "gecko_profile_features", "js,stackwalk,cpu,screenshots"
         )
         gecko_profile_threads = test_config.get(
             "gecko_profile_threads", "GeckoMain,Compositor"
