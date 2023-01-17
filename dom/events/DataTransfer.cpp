@@ -205,7 +205,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
                            bool aIsCrossDomainSubFrameDrop,
                            int32_t aClipboardType, DataTransferItemList* aItems,
                            Element* aDragImage, uint32_t aDragImageX,
-                           uint32_t aDragImageY)
+                           uint32_t aDragImageY, bool aShowFailAnimation)
     : mParent(aParent),
       mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
       mEffectAllowed(aEffectAllowed),
@@ -218,7 +218,8 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
       mClipboardType(aClipboardType),
       mDragImage(aDragImage),
       mDragImageX(aDragImageX),
-      mDragImageY(aDragImageY) {
+      mDragImageY(aDragImageY),
+      mShowFailAnimation(aShowFailAnimation) {
   MOZ_ASSERT(mParent);
   MOZ_ASSERT(aItems);
 
@@ -832,7 +833,7 @@ nsresult DataTransfer::Clone(nsISupports* aParent, EventMessage aEventMessage,
   RefPtr<DataTransfer> newDataTransfer = new DataTransfer(
       aParent, aEventMessage, mEffectAllowed, mCursorState, mIsExternal,
       aUserCancelled, aIsCrossDomainSubFrameDrop, mClipboardType, mItems,
-      mDragImage, mDragImageX, mDragImageY);
+      mDragImage, mDragImageX, mDragImageY, mShowFailAnimation);
 
   newDataTransfer.forget(aNewDataTransfer);
   return NS_OK;
