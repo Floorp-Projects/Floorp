@@ -156,7 +156,7 @@ class ParentDevToolsPanel extends BaseDevToolsPanel {
       // panelLabel is used to set the aria-label attribute (See Bug 1570645).
       panelLabel: title,
       tooltip: `DevTools Panel added by "${extensionName}" add-on.`,
-      isToolSupported: toolbox => toolbox.commands.descriptorFront.isLocalTab,
+      isToolSupported: toolbox => toolbox.target.isLocalTab,
       build: (window, toolbox) => {
         if (toolbox !== this.toolbox) {
           throw new Error(

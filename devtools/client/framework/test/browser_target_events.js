@@ -16,18 +16,11 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  const commands = await CommandsFactory.forTab(gBrowser.selectedTab);
-  is(
-    commands.descriptorFront.localTab,
-    gBrowser.selectedTab,
-    "Target linked to the right tab."
-  );
+  const target = await createAndAttachTargetForTab(gBrowser.selectedTab);
+  is(target.localTab, gBrowser.selectedTab, "Target linked to the right tab.");
 
-  await commands.targetCommand.startListening();
-  const { targetFront } = commands.targetCommand;
-
-  const willNavigate = once(targetFront, "will-navigate");
-  const navigate = once(targetFront, "navigate");
+  const willNavigate = once(target, "will-navigate");
+  const navigate = once(target, "navigate");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.location = "data:text/html,<meta charset='utf8'/>test navigation";
   });
@@ -36,10 +29,8 @@ add_task(async function() {
   await navigate;
   ok(true, "navigate event received");
 
-  const onTargetDestroyed = once(targetFront, "target-destroyed");
+  const onTargetDestroyed = once(target, "target-destroyed");
   gBrowser.removeCurrentTab();
   await onTargetDestroyed;
   ok(true, "target destroyed received");
-
-  await commands.destroy();
 });

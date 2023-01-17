@@ -20,12 +20,9 @@ const TEST_URL =
 
 add_task(async function() {
   info("Creating the test tab and opening the rule-view");
-  let {
-    tab,
-    toolbox,
-    inspector,
-    highlighterTestFront,
-  } = await openInspectorForURL(TEST_URL);
+  let { toolbox, inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
 
   info("Selecting the ruleview sidebar");
   inspector.sidebar.select("ruleview");
@@ -83,6 +80,7 @@ add_task(async function() {
   );
 
   info("Destroying the toolbox");
+  const tab = toolbox.target.localTab;
   await toolbox.destroy();
 
   // As the toolbox get destroyed, we need to fetch a new test-actor

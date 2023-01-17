@@ -19,8 +19,10 @@ SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
 });
 
-function assertTarget(target, url) {
+function assertTarget(target, url, chrome = false) {
   is(target.url, url);
+  is(target.isLocalTab, false);
+  is(target.chrome, chrome);
   is(target.isBrowsingContext, true);
 }
 
@@ -43,18 +45,7 @@ add_task(async function() {
   );
   // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
   await commands.targetCommand.startListening();
-
-  // For now, we can't spawn a commands flagged as 'local tab' via URL query params
-  // The only way to has isLocalTab is to create the toolbox via showToolboxForTab
-  // and spawn the command via CommandsFactory.forTab.
-  is(
-    commands.descriptorFront.isLocalTab,
-    false,
-    "Even if we refer to a local tab, isLocalTab is false (for now)"
-  );
-
   target = await commands.descriptorFront.getTarget();
-
   assertTarget(target, TEST_URI);
   await commands.destroy();
 
@@ -70,7 +61,7 @@ add_task(async function() {
   commands = await commandsFromURL(new URL("https://foo?type=process"));
   target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertTarget(target, topWindow.location.href);
+  assertTarget(target, topWindow.location.href, true);
   await commands.destroy();
 
   await testRemoteTCP();
@@ -126,7 +117,7 @@ async function testRemoteTCP() {
   );
   const target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertTarget(target, topWindow.location.href);
+  assertTarget(target, topWindow.location.href, true);
 
   const settings = commands.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
@@ -149,7 +140,7 @@ async function testRemoteWebSocket() {
   );
   const target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertTarget(target, topWindow.location.href);
+  assertTarget(target, topWindow.location.href, true);
 
   const settings = commands.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
