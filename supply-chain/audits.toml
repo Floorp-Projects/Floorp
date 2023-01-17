@@ -119,6 +119,12 @@ Just contains some traits and re-exports for use by a broader package of related
 crates. No unsafe code or ambient capability usage.
 """
 
+[[audits.async-task]]
+who = "Nika Layzell <nika@thelayzells.com>"
+criteria = "safe-to-deploy"
+delta = "4.0.3 -> 4.0.3@git:f6488e35beccb26eb6e85847b02aa78a42cd3d0e"
+notes = "Recorded by bholley, confirmed over slack."
+
 [[audits.async-trait]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -227,11 +233,21 @@ criteria = "safe-to-deploy"
 version = "0.1.9"
 notes = "I, Henri Sivonen, wrote this (safe-code-only) crate for Gecko even though the crate is published via crates.io."
 
+[[audits.chardetng]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.9 -> 0.1.9@git:3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
+
 [[audits.chardetng_c]]
 who = "Henri Sivonen <hsivonen@hsivonen.fi>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
 notes = "I, Henri Sivonen, wrote this crate for Gecko even though it is published via crates.io. The buffer input assumes Rust slice constraints for the start pointer. In Gecko, this is taken care of by mozilla::Span, but the C API doesn't conform to idiomatic C constraints on this point."
+
+[[audits.chardetng_c]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.2 -> 0.1.2@git:ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
 
 [[audits.clang-sys]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -1171,6 +1187,11 @@ criteria = "safe-to-deploy"
 delta = "0.23.1 -> 0.24.0"
 notes = "This audit treats Dzmitry Malyshau (kvark) as a trusted reviewer."
 
+[[audits.midir]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.7.0 -> 0.7.0@git:519e651241e867af3391db08f9ae6400bc023e18"
+
 [[audits.minidump-common]]
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -1182,6 +1203,11 @@ who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.7.0"
 notes = "The code in this crate was written or reviewed by Mozilla employees, the crate it evolved from was written specifically for gecko."
+
+[[audits.minidump-writer]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.7.0 -> 0.7.0@git:7d76616d27b9dc87fe3a94639b8b4f947d52a6aa"
 
 [[audits.miniz_oxide]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -1382,6 +1408,11 @@ delta = "6.3.0 -> 6.4.1"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.7 -> 0.3.8"
+
+[[audits.packed_simd_2]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.8 -> 0.3.8@git:412f9a0aa556611de021bde89dee8fefe6e0fbbd"
 
 [[audits.parking_lot_core]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2336,6 +2367,11 @@ notes = "Very small crate, just hosts the Void type for easier cross-crate inter
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.3.2 -> 0.3.3"
+
+[[audits.warp]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-run"
+delta = "0.3.3 -> 0.3.3@git:4af45fae95bc98b0eba1ef0db17e1dac471bb23d"
 
 [[audits.wasm-encoder]]
 who = "Ryan Hunt <rhunt@eqrion.net>"

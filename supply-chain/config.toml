@@ -7,10 +7,6 @@ url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-c
 [imports.embark]
 url = "https://raw.githubusercontent.com/EmbarkStudios/rust-ecosystem/main/audits.toml"
 
-[policy.alsa]
-audit-as-crates-io = true
-notes = "This is a third-party crate, with an extra patch."
-
 [policy.async-task]
 audit-as-crates-io = true
 notes = "This is the upstream code plus an extra fix that hasn't been released yet, see bug 1746533."
@@ -38,10 +34,6 @@ notes = "This is a crate Henri wrote which is also published. We should probably
 [policy.coremidi]
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
-
-[policy.d3d12]
-audit-as-crates-io = true
-notes = "wgpu-hal pins this crate."
 
 [policy.geckodriver]
 audit-as-crates-io = false
@@ -85,10 +77,6 @@ notes = "This override is an api-compatible fork with an orthogonal implementati
 [policy.marionette]
 audit-as-crates-io = true
 notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
-
-[policy.metal]
-audit-as-crates-io = true
-notes = "wgpu-hal pins this crate."
 
 [policy.midir]
 audit-as-crates-io = true
@@ -190,10 +178,6 @@ notes = "This is a third-party crate, with an extra patch."
 audit-as-crates-io = false
 criteria = "safe-to-run"
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here. It's also used only for automation, so its subtree can be safe-to-run."
-
-[policy.wgpu]
-audit-as-crates-io = true
-notes = "Upstream project which we pin."
 
 [policy.wgpu-core]
 audit-as-crates-io = true
@@ -376,7 +360,7 @@ version = "0.2.10"
 criteria = "safe-to-deploy"
 
 [[exemptions.coremidi]]
-version = "0.6.0"
+version = "0.6.0@git:fc68464b5445caf111e41f643a2e69ccce0b4f83"
 criteria = "safe-to-deploy"
 
 [[exemptions.coremidi-sys]]
@@ -868,6 +852,11 @@ criteria = "safe-to-run"
 [[exemptions.murmurhash3]]
 version = "0.0.5"
 criteria = "safe-to-deploy"
+
+[[exemptions.naga]]
+version = "0.10.0@git:e7fc8e64f2f23397b149217ecce6e123c5aa5092"
+criteria = "safe-to-deploy"
+notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
 
 [[exemptions.net2]]
 version = "0.2.37"
@@ -1368,6 +1357,21 @@ criteria = "safe-to-deploy"
 [[exemptions.webrtc-sdp]]
 version = "0.3.9"
 criteria = "safe-to-deploy"
+
+[[exemptions.wgpu-core]]
+version = "0.14.0@git:186a29c34d54d8628bbebb998a537210ac565b71"
+criteria = "safe-to-deploy"
+notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
+
+[[exemptions.wgpu-hal]]
+version = "0.14.0@git:186a29c34d54d8628bbebb998a537210ac565b71"
+criteria = "safe-to-deploy"
+notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
+
+[[exemptions.wgpu-types]]
+version = "0.14.0@git:186a29c34d54d8628bbebb998a537210ac565b71"
+criteria = "safe-to-deploy"
+notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
 
 [[exemptions.winapi]]
 version = "0.3.9"
