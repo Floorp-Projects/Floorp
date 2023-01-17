@@ -18,10 +18,10 @@ module.exports = {
   reporter: 'dot',
   logLevel: 'debug',
   require: ['./test/build/mocha-utils.js', 'source-map-support/register'],
-  spec: 'test/build/*.spec.js',
+  spec: 'test/build/**/*.spec.js',
   exit: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   parallel: !!process.env.PARALLEL,
-  timeout: 25 * 1000,
+  timeout: 25_000,
   reporter: process.env.CI ? 'spec' : 'dot',
 };

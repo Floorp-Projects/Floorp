@@ -1,15 +1,37 @@
+/**
+ * Copyright 2022 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {assert} from '../util/assert.js';
 import {
   createDeferredPromise,
   DeferredPromise,
 } from '../util/DeferredPromise.js';
-import {assert} from '../util/assert.js';
 
-interface Poller<T> {
-  start(): Promise<T>;
+/**
+ * @internal
+ */
+export interface Poller<T> {
+  start(): Promise<void>;
   stop(): Promise<void>;
   result(): Promise<T>;
 }
 
+/**
+ * @internal
+ */
 export class MutationPoller<T> implements Poller<T> {
   #fn: () => Promise<T>;
 
@@ -22,12 +44,12 @@ export class MutationPoller<T> implements Poller<T> {
     this.#root = root;
   }
 
-  async start(): Promise<T> {
+  async start(): Promise<void> {
     const promise = (this.#promise = createDeferredPromise<T>());
     const result = await this.#fn();
     if (result) {
       promise.resolve(result);
-      return result;
+      return;
     }
 
     this.#observer = new MutationObserver(async () => {
@@ -43,8 +65,6 @@ export class MutationPoller<T> implements Poller<T> {
       subtree: true,
       attributes: true,
     });
-
-    return this.#promise;
   }
 
   async stop(): Promise<void> {
@@ -54,6 +74,7 @@ export class MutationPoller<T> implements Poller<T> {
     }
     if (this.#observer) {
       this.#observer.disconnect();
+      this.#observer = undefined;
     }
   }
 
@@ -70,12 +91,12 @@ export class RAFPoller<T> implements Poller<T> {
     this.#fn = fn;
   }
 
-  async start(): Promise<T> {
+  async start(): Promise<void> {
     const promise = (this.#promise = createDeferredPromise<T>());
     const result = await this.#fn();
     if (result) {
       promise.resolve(result);
-      return result;
+      return;
     }
 
     const poll = async () => {
@@ -91,8 +112,6 @@ export class RAFPoller<T> implements Poller<T> {
       await this.stop();
     };
     window.requestAnimationFrame(poll);
-
-    return this.#promise;
   }
 
   async stop(): Promise<void> {
@@ -119,12 +138,12 @@ export class IntervalPoller<T> implements Poller<T> {
     this.#ms = ms;
   }
 
-  async start(): Promise<T> {
+  async start(): Promise<void> {
     const promise = (this.#promise = createDeferredPromise<T>());
     const result = await this.#fn();
     if (result) {
       promise.resolve(result);
-      return result;
+      return;
     }
 
     this.#interval = setInterval(async () => {
@@ -135,8 +154,6 @@ export class IntervalPoller<T> implements Poller<T> {
       promise.resolve(result);
       await this.stop();
     }, this.#ms);
-
-    return this.#promise;
   }
 
   async stop(): Promise<void> {
@@ -146,6 +163,7 @@ export class IntervalPoller<T> implements Poller<T> {
     }
     if (this.#interval) {
       clearInterval(this.#interval);
+      this.#interval = undefined;
     }
   }
 

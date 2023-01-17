@@ -19,8 +19,8 @@ import {assert} from '../util/assert.js';
 import {CDPSession} from './Connection.js';
 import {ElementHandle} from './ElementHandle.js';
 import {Frame} from './Frame.js';
-import {MAIN_WORLD, PageBinding, PUPPETEER_WORLD} from './IsolatedWorld.js';
-import {InternalQueryHandler} from './QueryHandler.js';
+import {MAIN_WORLD, PUPPETEER_WORLD} from './IsolatedWorld.js';
+import {PuppeteerQueryHandler} from './QueryHandler.js';
 
 async function queryAXTree(
   client: CDPSession,
@@ -95,7 +95,7 @@ const queryOneId = async (element: ElementHandle<Node>, selector: string) => {
   return res[0].backendDOMNodeId;
 };
 
-const queryOne: InternalQueryHandler['queryOne'] = async (
+const queryOne: PuppeteerQueryHandler['queryOne'] = async (
   element,
   selector
 ) => {
@@ -108,7 +108,7 @@ const queryOne: InternalQueryHandler['queryOne'] = async (
   )) as ElementHandle<Node>;
 };
 
-const waitFor: InternalQueryHandler['waitFor'] = async (
+const waitFor: PuppeteerQueryHandler['waitFor'] = async (
   elementOrFrame,
   selector,
   options
@@ -121,21 +121,20 @@ const waitFor: InternalQueryHandler['waitFor'] = async (
     frame = elementOrFrame.frame;
     element = await frame.worlds[PUPPETEER_WORLD].adoptHandle(elementOrFrame);
   }
-  const binding: PageBinding = {
-    name: 'ariaQuerySelector',
-    pptrFunction: async (selector: string) => {
-      const id = await queryOneId(
-        element || (await frame.worlds[PUPPETEER_WORLD].document()),
-        selector
-      );
-      if (!id) {
-        return null;
-      }
-      return (await frame.worlds[PUPPETEER_WORLD].adoptBackendNode(
-        id
-      )) as ElementHandle<Node>;
-    },
+
+  const ariaQuerySelector = async (selector: string) => {
+    const id = await queryOneId(
+      element || (await frame.worlds[PUPPETEER_WORLD].document()),
+      selector
+    );
+    if (!id) {
+      return null;
+    }
+    return (await frame.worlds[PUPPETEER_WORLD].adoptBackendNode(
+      id
+    )) as ElementHandle<Node>;
   };
+
   const result = await frame.worlds[PUPPETEER_WORLD]._waitForSelectorInPage(
     (_: Element, selector: string) => {
       return (
@@ -147,22 +146,19 @@ const waitFor: InternalQueryHandler['waitFor'] = async (
     element,
     selector,
     options,
-    binding
+    new Set([ariaQuerySelector])
   );
   if (element) {
     await element.dispose();
   }
-  if (!result) {
-    return null;
-  }
   if (!(result instanceof ElementHandle)) {
-    await result.dispose();
+    await result?.dispose();
     return null;
   }
   return result.frame.worlds[MAIN_WORLD].transferHandle(result);
 };
 
-const queryAll: InternalQueryHandler['queryAll'] = async (
+const queryAll: PuppeteerQueryHandler['queryAll'] = async (
   element,
   selector
 ) => {
@@ -182,7 +178,7 @@ const queryAll: InternalQueryHandler['queryAll'] = async (
 /**
  * @internal
  */
-export const ariaHandler: InternalQueryHandler = {
+export const ariaHandler: PuppeteerQueryHandler = {
   queryOne,
   waitFor,
   queryAll,

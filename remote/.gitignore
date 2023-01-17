@@ -15,4 +15,6 @@ test/puppeteer/src/generated
 test/puppeteer/test/build
 test/puppeteer/test/output-firefox
 test/puppeteer/test/output-chromium
+test/puppeteer/testserver/lib/
+test/puppeteer/utils/mochaRunner/lib/
 test/puppeteer/website

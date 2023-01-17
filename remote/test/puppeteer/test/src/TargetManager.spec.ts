@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-import {describeChromeOnly, getTestState} from './mocha-utils'; // eslint-disable-line import/extensions
+import {getTestState} from './mocha-utils'; // eslint-disable-line import/extensions
 import utils from './utils.js';
 
 import expect from 'expect';
 
 import {
-  Browser,
-  BrowserContext,
+  CDPBrowser,
+  CDPBrowserContext,
 } from '../../lib/cjs/puppeteer/common/Browser.js';
 
-describeChromeOnly('TargetManager', () => {
+describe('TargetManager', () => {
   /* We use a special browser for this test as we need the --site-per-process flag */
-  let browser: Browser;
-  let context: BrowserContext;
+  let browser: CDPBrowser;
+  let context: CDPBrowserContext;
 
   before(async () => {
     const {puppeteer, defaultBrowserOptions} = getTestState();
-    browser = await puppeteer.launch(
+    browser = (await puppeteer.launch(
       Object.assign({}, defaultBrowserOptions, {
         args: (defaultBrowserOptions.args || []).concat([
           '--site-per-process',
@@ -39,7 +39,7 @@ describeChromeOnly('TargetManager', () => {
           '--host-rules=MAP * 127.0.0.1',
         ]),
       })
-    );
+    )) as CDPBrowser;
   });
 
   beforeEach(async () => {

@@ -17,7 +17,6 @@ import mozprofile
 from mach.decorators import Command, CommandArgument, SubCommand
 from mozbuild import nodeutil
 from mozbuild.base import BinaryNotFoundException, MozbuildObject
-from six import iteritems
 
 EX_CONFIG = 78
 EX_SOFTWARE = 70
@@ -261,8 +260,10 @@ class MochaOutputHandler(object):
             if not status and not test_start:
                 return
             test_info = event[1]
-            test_name = test_info.get("fullTitle", "")
+            test_full_title = test_info.get("fullTitle", "")
+            test_name = test_full_title
             test_path = test_info.get("file", "")
+            test_file_name = os.path.basename(test_path).replace(".js", "")
             test_err = test_info.get("err")
             if status == "FAIL" and test_err:
                 if "timeout" in test_err.lower():
@@ -276,7 +277,32 @@ class MochaOutputHandler(object):
             if test_start:
                 self.logger.test_start(test_name)
                 return
-            expected = self.expected.get(test_name, ["PASS"])
+            expected_name = "[{}] {}".format(test_file_name, test_full_title)
+            expected_item = next(
+                (
+                    expectation
+                    for expectation in list(self.expected)
+                    if expectation["testIdPattern"] == expected_name
+                ),
+                None,
+            )
+            if expected_item is None:
+                # if there is no expectation data for a specific test case,
+                # try to find data for a whole file.
+                expected_item_for_file = next(
+                    (
+                        expectation
+                        for expectation in list(self.expected)
+                        if expectation["testIdPattern"] == f"[{test_file_name}]"
+                    ),
+                    None,
+                )
+                if expected_item_for_file is None:
+                    expected = ["PASS"]
+                else:
+                    expected = expected_item_for_file["expectations"]
+            else:
+                expected = expected_item["expectations"]
             # mozlog doesn't really allow unexpected skip,
             # so if a test is disabled just expect that and note the unexpected skip
             # Also, mocha doesn't log test-start for skipped tests
@@ -308,34 +334,7 @@ class MochaOutputHandler(object):
                 known_intermittent=known_intermittent,
             )
 
-    def new_expected(self):
-        new_expected = OrderedDict()
-        for test_name, status in iteritems(self.test_results):
-            if test_name not in self.expected:
-                new_status = [status]
-            else:
-                if status in self.expected[test_name]:
-                    new_status = self.expected[test_name]
-                else:
-                    new_status = [status]
-            new_expected[test_name] = new_status
-        return new_expected
-
-    def after_end(self, subset=False):
-        if not subset:
-            missing = set(self.expected) - set(self.test_results)
-            extra = set(self.test_results) - set(self.expected)
-            if missing:
-                self.has_unexpected = True
-                for test_name in missing:
-                    self.logger.error("TEST-UNEXPECTED-MISSING %s" % (test_name,))
-            if self.expected and extra:
-                self.has_unexpected = True
-                for test_name in extra:
-                    self.logger.error(
-                        "TEST-UNEXPECTED-MISSING Unknown new test %s" % (test_name,)
-                    )
-
+    def after_end(self):
         if self.unexpected_skips:
             self.has_unexpected = True
             for test_name in self.unexpected_skips:
@@ -392,8 +391,6 @@ class PuppeteerRunner(MozbuildObject):
           before invoking npm.  Overrides default preferences.
         `enable_webrender`:
           Boolean to indicate whether to enable WebRender compositor in Gecko.
-        `write_results`:
-          Path to write the results json file
         `subset`
           Indicates only a subset of tests are being run, so we should
           skip the check for missing results
@@ -425,6 +422,7 @@ class PuppeteerRunner(MozbuildObject):
             "--timeout",
             "20000",
             "--no-parallel",
+            "--no-coverage",
         ]
         env["HEADLESS"] = str(params.get("headless", False))
 
@@ -454,15 +452,31 @@ class PuppeteerRunner(MozbuildObject):
             env["EXTRA_LAUNCH_OPTIONS"] = json.dumps(extra_options)
 
         expected_path = os.path.join(
-            os.path.dirname(__file__), "test", "puppeteer-expected.json"
+            os.path.dirname(__file__),
+            "test",
+            "puppeteer",
+            "test",
+            "TestExpectations.json",
         )
-        if product == "firefox" and os.path.exists(expected_path):
+        if os.path.exists(expected_path):
             with open(expected_path) as f:
                 expected_data = json.load(f)
         else:
-            expected_data = {}
+            expected_data = []
+        # Filter expectation data for the selected browser,
+        # headless or headful mode, and the operating system.
+        platform = os.uname().sysname.lower() if os.uname() else "win32"
+        expectations = filter(
+            lambda el: product in el["parameters"]
+            and (
+                (env["HEADLESS"] == "False" and "headless" not in el["parameters"])
+                or "headful" not in el["parameters"]
+            )
+            and platform in el["platforms"],
+            expected_data,
+        )
 
-        output_handler = MochaOutputHandler(logger, expected_data)
+        output_handler = MochaOutputHandler(logger, list(expectations))
         proc = npm(
             *command,
             cwd=self.puppeteer_dir,
@@ -476,19 +490,13 @@ class PuppeteerRunner(MozbuildObject):
         # failure, so use an output_timeout as a fallback
         wait_proc(proc, "npm", output_timeout=60, exit_on_fail=False)
 
-        output_handler.after_end(params.get("subset", False))
+        output_handler.after_end()
 
         # Non-zero return codes are non-fatal for now since we have some
         # issues with unresolved promises that shouldn't otherwise block
         # running the tests
         if proc.returncode != 0:
             logger.warning("npm exited with code %s" % proc.returncode)
-
-        if params["write_results"]:
-            with open(params["write_results"], "w") as f:
-                json.dump(
-                    output_handler.new_expected(), f, indent=2, separators=(",", ": ")
-                )
 
         if output_handler.has_unexpected:
             exit(1, "Got unexpected results")
@@ -548,18 +556,6 @@ def create_parser_puppeteer():
         "and to not truncate long trace messages with -vvv",
     )
     p.add_argument(
-        "--write-results",
-        action="store",
-        nargs="?",
-        default=None,
-        const=os.path.join(
-            os.path.dirname(__file__), "test", "puppeteer-expected.json"
-        ),
-        help="Path to write updated results to (defaults to the "
-        "expectations file if the argument is provided but "
-        "no path is passed)",
-    )
-    p.add_argument(
         "--subset",
         action="store_true",
         default=False,
@@ -597,7 +593,6 @@ def puppeteer_test(
     verbosity=0,
     tests=None,
     product="firefox",
-    write_results=None,
     subset=False,
     **kwargs,
 ):
@@ -657,7 +652,6 @@ def puppeteer_test(
         "extra_prefs": prefs,
         "product": product,
         "extra_launcher_options": options,
-        "write_results": write_results,
         "subset": subset,
     }
     puppeteer = command_context._spawn(PuppeteerRunner)

@@ -37,7 +37,7 @@ describe('Evaluation specs', function () {
       });
       expect(result).toBe(21);
     });
-    (bigint ? it : xit)('should transfer BigInt', async () => {
+    (bigint ? it : it.skip)('should transfer BigInt', async () => {
       const {page} = getTestState();
 
       const result = await page.evaluate((a: bigint) => {
@@ -113,18 +113,15 @@ describe('Evaluation specs', function () {
       await page.goto(server.PREFIX + '/global-var.html');
       expect(await page.evaluate('globalVar')).toBe(123);
     });
-    it(
-      'should return undefined for objects with symbols',
-      async () => {
-        const {page} = getTestState();
+    it('should return undefined for objects with symbols', async () => {
+      const {page} = getTestState();
 
-        expect(
-          await page.evaluate(() => {
-            return [Symbol('foo4')];
-          })
-        ).toBe(undefined);
-      }
-    );
+      expect(
+        await page.evaluate(() => {
+          return [Symbol('foo4')];
+        })
+      ).toBe(undefined);
+    });
     it('should work with function shorthands', async () => {
       const {page} = getTestState();
 
@@ -261,7 +258,7 @@ describe('Evaluation specs', function () {
       expect(result).not.toBe(object);
       expect(result).toEqual(object);
     });
-    (bigint ? it : xit)('should return BigInt', async () => {
+    (bigint ? it : it.skip)('should return BigInt', async () => {
       const {page} = getTestState();
 
       const result = await page.evaluate(() => {
@@ -322,18 +319,15 @@ describe('Evaluation specs', function () {
         })
       ).toEqual({});
     });
-    it(
-      'should return undefined for non-serializable objects',
-      async () => {
-        const {page} = getTestState();
+    it('should return undefined for non-serializable objects', async () => {
+      const {page} = getTestState();
 
-        expect(
-          await page.evaluate(() => {
-            return window;
-          })
-        ).toBe(undefined);
-      }
-    );
+      expect(
+        await page.evaluate(() => {
+          return window;
+        })
+      ).toBe(undefined);
+    });
     it('should fail for circular object', async () => {
       const {page} = getTestState();
 
@@ -408,27 +402,24 @@ describe('Evaluation specs', function () {
         });
       expect(error.message).toContain('JSHandle is disposed');
     });
-    it(
-      'should throw if elementHandles are from other frames',
-      async () => {
-        const {page, server} = getTestState();
+    it('should throw if elementHandles are from other frames', async () => {
+      const {page, server} = getTestState();
 
-        await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
-        const bodyHandle = await page.frames()[1]!.$('body');
-        let error!: Error;
-        await page
-          .evaluate(body => {
-            return body?.innerHTML;
-          }, bodyHandle)
-          .catch(error_ => {
-            return (error = error_);
-          });
-        expect(error).toBeTruthy();
-        expect(error.message).toContain(
-          'JSHandles can be evaluated only in the context they were created'
-        );
-      }
-    );
+      await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
+      const bodyHandle = await page.frames()[1]!.$('body');
+      let error!: Error;
+      await page
+        .evaluate(body => {
+          return body?.innerHTML;
+        }, bodyHandle)
+        .catch(error_ => {
+          return (error = error_);
+        });
+      expect(error).toBeTruthy();
+      expect(error.message).toContain(
+        'JSHandles can be evaluated only in the context they were created'
+      );
+    });
     it('should simulate a user gesture', async () => {
       const {page} = getTestState();
 
@@ -459,19 +450,16 @@ describe('Evaluation specs', function () {
         });
       expect((error as Error).message).toContain('navigation');
     });
-    it(
-      'should not throw an error when evaluation does a navigation',
-      async () => {
-        const {page, server} = getTestState();
+    it('should not throw an error when evaluation does a navigation', async () => {
+      const {page, server} = getTestState();
 
-        await page.goto(server.PREFIX + '/one-style.html');
-        const result = await page.evaluate(() => {
-          (window as any).location = '/empty.html';
-          return [42];
-        });
-        expect(result).toEqual([42]);
-      }
-    );
+      await page.goto(server.PREFIX + '/one-style.html');
+      const result = await page.evaluate(() => {
+        (window as any).location = '/empty.html';
+        return [42];
+      });
+      expect(result).toEqual([42]);
+    });
     it('should transfer 100Mb of data from page to node.js', async function () {
       const {page} = getTestState();
 

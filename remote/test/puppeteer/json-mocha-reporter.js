@@ -15,10 +15,11 @@ to the project.
 
 function JSONExtra(runner, options) {
   mocha.reporters.Base.call(this, runner, options);
+  mocha.reporters.JSON.call(this, runner, options);
   const self = this;
 
   runner.once(constants.EVENT_RUN_BEGIN, function () {
-    writeEvent(['start', { total: runner.total }]);
+    writeEvent(['start', {total: runner.total}]);
   });
 
   runner.on(constants.EVENT_TEST_PASS, function (test) {

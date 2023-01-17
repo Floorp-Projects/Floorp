@@ -21,10 +21,9 @@ import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-  describeFailsFirefox,
 } from './mocha-utils.js';
 
-describeFailsFirefox('Accessibility', function () {
+describe('Accessibility', function () {
   setupTestBrowserHooks();
   setupTestPageAndContextHooks();
 
@@ -346,7 +345,7 @@ describeFailsFirefox('Accessibility', function () {
     });
 
     // Firefox does not support contenteditable="plaintext-only".
-    describeFailsFirefox('plaintext contenteditable', function () {
+    describe('plaintext contenteditable', function () {
       it('plain text field with role should not have children', async () => {
         const {page} = getTestState();
 

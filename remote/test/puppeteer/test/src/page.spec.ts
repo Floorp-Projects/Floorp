@@ -23,7 +23,6 @@ import {ConsoleMessage} from '../../lib/cjs/puppeteer/common/ConsoleMessage.js';
 import {Metrics, Page} from '../../lib/cjs/puppeteer/common/Page.js';
 import {
   getTestState,
-  itFailsFirefox,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
@@ -546,39 +545,69 @@ describe('Page', function () {
     it('should work', async () => {
       const {page} = getTestState();
 
-      // Instantiate an object
-      await page.evaluate(() => {
-        return ((globalThis as any).set = new Set(['hello', 'world']));
+      // Create a custom class
+      const classHandle = await page.evaluateHandle(() => {
+        return class CustomClass {};
       });
-      const prototypeHandle = await page.evaluateHandle(() => {
-        return Set.prototype;
-      });
-      const objectsHandle = await page.queryObjects(prototypeHandle);
-      const count = await page.evaluate(objects => {
-        return objects.length;
-      }, objectsHandle);
-      expect(count).toBe(1);
-      const values = await page.evaluate(objects => {
-        return Array.from(objects[0]!.values());
-      }, objectsHandle);
-      expect(values).toEqual(['hello', 'world']);
-    });
-    it('should work for non-blank page', async () => {
-      const {page, server} = getTestState();
 
-      // Instantiate an object
-      await page.goto(server.EMPTY_PAGE);
-      await page.evaluate(() => {
-        return ((globalThis as any).set = new Set(['hello', 'world']));
-      });
-      const prototypeHandle = await page.evaluateHandle(() => {
-        return Set.prototype;
-      });
+      // Create an instance.
+      await page.evaluate(CustomClass => {
+        // @ts-expect-error: Different context.
+        self.customClass = new CustomClass();
+      }, classHandle);
+
+      // Validate only one has been added.
+      const prototypeHandle = await page.evaluateHandle(CustomClass => {
+        return CustomClass.prototype;
+      }, classHandle);
       const objectsHandle = await page.queryObjects(prototypeHandle);
-      const count = await page.evaluate(objects => {
-        return objects.length;
-      }, objectsHandle);
-      expect(count).toBe(1);
+      await expect(
+        page.evaluate(objects => {
+          return objects.length;
+        }, objectsHandle)
+      ).resolves.toBe(1);
+
+      // Check that instances.
+      await expect(
+        page.evaluate(objects => {
+          // @ts-expect-error: Different context.
+          return objects[0] === self.customClass;
+        }, objectsHandle)
+      ).resolves.toBeTruthy();
+    });
+    it('should work for non-trivial page', async () => {
+      const {page, server} = getTestState();
+      await page.goto(server.EMPTY_PAGE);
+
+      // Create a custom class
+      const classHandle = await page.evaluateHandle(() => {
+        return class CustomClass {};
+      });
+
+      // Create an instance.
+      await page.evaluate(CustomClass => {
+        // @ts-expect-error: Different context.
+        self.customClass = new CustomClass();
+      }, classHandle);
+
+      // Validate only one has been added.
+      const prototypeHandle = await page.evaluateHandle(CustomClass => {
+        return CustomClass.prototype;
+      }, classHandle);
+      const objectsHandle = await page.queryObjects(prototypeHandle);
+      await expect(
+        page.evaluate(objects => {
+          return objects.length;
+        }, objectsHandle)
+      ).resolves.toBe(1);
+
+      // Check that instances.
+      await expect(
+        page.evaluate(objects => {
+          // @ts-expect-error: Different context.
+          return objects[0] === self.customClass;
+        }, objectsHandle)
+      ).resolves.toBeTruthy();
     });
     it('should fail for disposed handles', async () => {
       const {page} = getTestState();
@@ -1651,7 +1680,7 @@ describe('Page', function () {
       await page.addScriptTag({url: '/es6/es6import.js', type: 'module'});
       expect(
         await page.evaluate(() => {
-          return (globalThis as any).__es6injected;
+          return (window as unknown as {__es6injected: number}).__es6injected;
         })
       ).toBe(42);
     });
@@ -1664,10 +1693,12 @@ describe('Page', function () {
         path: path.join(__dirname, '../assets/es6/es6pathimport.js'),
         type: 'module',
       });
-      await page.waitForFunction('window.__es6injected');
+      await page.waitForFunction(() => {
+        return (window as unknown as {__es6injected: number}).__es6injected;
+      });
       expect(
         await page.evaluate(() => {
-          return (globalThis as any).__es6injected;
+          return (window as unknown as {__es6injected: number}).__es6injected;
         })
       ).toBe(42);
     });
@@ -1680,10 +1711,12 @@ describe('Page', function () {
         content: `import num from '/es6/es6module.js';window.__es6injected = num;`,
         type: 'module',
       });
-      await page.waitForFunction('window.__es6injected');
+      await page.waitForFunction(() => {
+        return (window as unknown as {__es6injected: number}).__es6injected;
+      });
       expect(
         await page.evaluate(() => {
-          return (globalThis as any).__es6injected;
+          return (window as unknown as {__es6injected: number}).__es6injected;
         })
       ).toBe(42);
     });
@@ -1758,7 +1791,7 @@ describe('Page', function () {
     });
 
     // @see https://github.com/puppeteer/puppeteer/issues/4840
-    xit('should throw when added with content to the CSP page', async () => {
+    it.skip('should throw when added with content to the CSP page', async () => {
       const {page, server} = getTestState();
 
       await page.goto(server.PREFIX + '/csp.html');
@@ -1854,7 +1887,7 @@ describe('Page', function () {
         path: path.join(__dirname, '../assets/injectedstyle.css'),
       });
       const styleHandle = (await page.$('style'))!;
-      const styleContent = await page.evaluate(style => {
+      const styleContent = await page.evaluate((style: HTMLStyleElement) => {
         return style.innerHTML;
       }, styleHandle);
       expect(styleContent).toContain(path.join('assets', 'injectedstyle.css'));
@@ -2002,10 +2035,7 @@ describe('Page', function () {
       expect(size).toBeGreaterThan(0);
     });
 
-    // This test should be skipped in mozilla-central (Firefox).
-    // It intermittently makes the whole test suite fail.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1748255
-    itFailsFirefox('should respect timeout', async () => {
+    it('should respect timeout', async () => {
       const {isHeadless, page, server, puppeteer} = getTestState();
       if (!isHeadless) {
         return;
@@ -2236,7 +2266,7 @@ describe('Page', function () {
   });
 
   describe('Page.Events.Close', function () {
-    itFailsFirefox('should work with window.close', async () => {
+    it('should work with window.close', async () => {
       const {page, context} = getTestState();
 
       const newPagePromise = new Promise<Page>(fulfill => {

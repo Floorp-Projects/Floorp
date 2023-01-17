@@ -119,21 +119,18 @@ describe('Keyboard', function () {
       })
     ).toBe('a');
   });
-  it(
-    'ElementHandle.press should support |text| option',
-    async () => {
-      const {page, server} = getTestState();
+  it('ElementHandle.press should support |text| option', async () => {
+    const {page, server} = getTestState();
 
-      await page.goto(server.PREFIX + '/input/textarea.html');
-      const textarea = (await page.$('textarea'))!;
-      await textarea.press('a', {text: 'ё'});
-      expect(
-        await page.evaluate(() => {
-          return document.querySelector('textarea')!.value;
-        })
-      ).toBe('ё');
-    }
-  );
+    await page.goto(server.PREFIX + '/input/textarea.html');
+    const textarea = (await page.$('textarea'))!;
+    await textarea.press('a', {text: 'ё'});
+    expect(
+      await page.evaluate(() => {
+        return document.querySelector('textarea')!.value;
+      })
+    ).toBe('ё');
+  });
   it('should send a character with sendCharacter', async () => {
     const {page, server} = getTestState();
 
