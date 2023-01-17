@@ -45,9 +45,11 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
   );
   const toolbox = getToolbox(devtoolsWindow);
 
+  ok(
+    toolbox.commands.descriptorFront.isWebExtensionDescriptor,
+    "Toolbox is debugging an addon"
+  );
   const targetName = toolbox.target.name;
-  const isAddonTarget = toolbox.target.isAddon;
-  ok(isAddonTarget, "Toolbox target is an addon");
   is(targetName, ADDON_NOBG_NAME, "Toolbox has the expected target");
 
   const inspector = await toolbox.selectTool("inspector");
