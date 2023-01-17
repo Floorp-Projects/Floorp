@@ -395,7 +395,7 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
     mWasmModuleArray.Clear();
     mClonedSurfaces.Clear();
     mInputStreamArray.Clear();
-    mVideoFrameImages.Clear();
+    mVideoFrames.Clear();
     Clear();
   }
 }
@@ -1025,7 +1025,7 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
       aTag == SCTAG_DOM_VIDEOFRAME &&
       CloneScope() == StructuredCloneScope::SameProcess) {
     return VideoFrame::ReadStructuredClone(aCx, mGlobal, aReader,
-                                           VideoFrameImages()[aIndex]);
+                                           VideoFrames()[aIndex]);
   }
 
   return ReadFullySerializableObjects(aCx, aReader, aTag);
