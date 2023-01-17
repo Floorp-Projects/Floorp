@@ -190,8 +190,8 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
     case CaptureDeviceType::Window:
     case CaptureDeviceType::Screen: {
 #if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
-      mDeviceInfo.reset(webrtc::DesktopCaptureImpl::CreateDeviceInfo(
-          mId, mCaptureDevInfo.type));
+      mDeviceInfo = webrtc::DesktopCaptureImpl::CreateDeviceInfo(
+          mId, mCaptureDevInfo.type);
       LOG(("screen capture: Finished creating new device."));
 #else
       MOZ_ASSERT(
