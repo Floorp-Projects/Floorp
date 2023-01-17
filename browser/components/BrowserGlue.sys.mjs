@@ -4381,6 +4381,7 @@ BrowserGlue.prototype = {
         content: {
           template: "multistage",
           id: data?.id || "ABOUT_WELCOME_MODAL",
+          backdrop: data?.backdrop,
           screens: data?.screens,
         },
       },
