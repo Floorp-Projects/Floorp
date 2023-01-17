@@ -49,6 +49,7 @@ struct MonitorConfig {
   int height = 0;
   int scale = 0;
   int refresh = 0;
+  int transform = 0;
 
   explicit MonitorConfig(int aId) : id(aId) {}
 };
@@ -252,6 +253,7 @@ static void output_handle_geometry(void* data, struct wl_output* wl_output,
   monitor->y = y;
   monitor->width_mm = physical_width;
   monitor->height_mm = physical_height;
+  monitor->transform = transform;
 }
 
 static void output_handle_done(void* data, struct wl_output* wl_output) {
@@ -378,18 +380,63 @@ already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
     dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
   }
 
+  bool defaultIsLandscape;
+  if (monitor->transform == WL_OUTPUT_TRANSFORM_90 ||
+      monitor->transform == WL_OUTPUT_TRANSFORM_270) {
+    defaultIsLandscape = rect.width < rect.height;
+  } else {
+    defaultIsLandscape = rect.width >= rect.height;
+  }
+
+  hal::ScreenOrientation orientation;
+  Screen::OrientationAngle angle;
+  // transform is counter-clockwise, but Screen Orientation API is clockwise.
+  switch (monitor->transform) {
+    case WL_OUTPUT_TRANSFORM_NORMAL:
+      orientation = defaultIsLandscape
+                        ? hal::ScreenOrientation::LandscapePrimary
+                        : hal::ScreenOrientation::PortraitPrimary;
+      angle = 0;
+      break;
+    case WL_OUTPUT_TRANSFORM_90:
+      orientation = defaultIsLandscape
+                        ? hal::ScreenOrientation::PortraitPrimary
+                        : hal::ScreenOrientation::LandscapeSecondary;
+      angle = 270;
+      break;
+    case WL_OUTPUT_TRANSFORM_180:
+      orientation = defaultIsLandscape
+                        ? hal::ScreenOrientation::LandscapeSecondary
+                        : hal::ScreenOrientation::PortraitSecondary;
+      angle = 180;
+      break;
+    case WL_OUTPUT_TRANSFORM_270:
+      orientation = defaultIsLandscape
+                        ? hal::ScreenOrientation::PortraitSecondary
+                        : hal::ScreenOrientation::LandscapePrimary;
+      angle = 90;
+      break;
+    default:
+      // WL_OUTPUT_TRANSFORM_FLIPPED_* is ignore since this is unused on normal
+      // situation.
+      orientation = hal::ScreenOrientation::None;
+      angle = 0;
+      break;
+  }
+
   LOG_SCREEN(
       "Monitor %d [%d %d -> %d x %d depth %d content scale %f css scale %f "
-      "DPI %f, refresh %d]",
+      "DPI %f, refresh %d, orientation %u, angle %u]",
       aMonitor, rect.x, rect.y, rect.width, rect.height, pixelDepth,
-      contentsScale.scale, defaultCssScale.scale, dpi, monitor->refresh);
+      contentsScale.scale, defaultCssScale.scale, dpi, monitor->refresh,
+      static_cast<uint32_t>(orientation), angle);
 
   // We report zero screen shift on Wayland. All popups positions are relative
   // to toplevel and we can't get toplevel position from Wayland compositor.
   rect.x = rect.y = 0;
-  return MakeAndAddRef<Screen>(rect, rect, pixelDepth, pixelDepth,
-                               monitor->refresh, contentsScale, defaultCssScale,
-                               dpi, Screen::IsPseudoDisplay::No);
+  return MakeAndAddRef<Screen>(
+      rect, rect, pixelDepth, pixelDepth, monitor->refresh, contentsScale,
+      defaultCssScale, dpi, Screen::IsPseudoDisplay::No, orientation, angle);
 }
 
 void ScreenGetterWayland::RefreshScreens() {
