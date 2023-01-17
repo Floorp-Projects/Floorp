@@ -8,7 +8,6 @@
 #define mozilla_dom_HTMLAnchorElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/AnchorAreaFormRelValues.h"
 #include "mozilla/dom/Link.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "nsGenericHTMLElement.h"
@@ -21,8 +20,7 @@ namespace dom {
 
 class HTMLAnchorElement final : public nsGenericHTMLElement,
                                 public Link,
-                                public SupportsDNSPrefetch,
-                                public AnchorAreaFormRelValues {
+                                public SupportsDNSPrefetch {
  public:
   using Element::GetText;
 
@@ -194,6 +192,8 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
     ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }
+
+  static DOMTokenListSupportedToken sSupportedRelValues[];
 
  protected:
   virtual ~HTMLAnchorElement();

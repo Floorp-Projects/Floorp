@@ -10,7 +10,6 @@
 #include "Link.h"
 #include "nsDOMTokenList.h"
 #include "SVGAnimatedString.h"
-#include "mozilla/dom/AnchorAreaFormRelValues.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
 
 nsresult NS_NewSVGAElement(
@@ -25,9 +24,7 @@ namespace dom {
 
 using SVGAElementBase = SVGGraphicsElement;
 
-class SVGAElement final : public SVGAElementBase,
-                          public Link,
-                          public AnchorAreaFormRelValues {
+class SVGAElement final : public SVGAElementBase, public Link {
  protected:
   using Element::GetText;
 
@@ -103,6 +100,7 @@ class SVGAElement final : public SVGAElementBase,
   static StringInfo sStringInfo[3];
 
   RefPtr<nsDOMTokenList> mRelList;
+  static DOMTokenListSupportedToken sSupportedRelValues[];
 };
 
 }  // namespace dom
