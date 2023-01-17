@@ -10,7 +10,6 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/AnchorAreaFormRelValues.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/RadioGroupManager.h"
@@ -40,7 +39,6 @@ class FormData;
 
 class HTMLFormElement final : public nsGenericHTMLElement,
                               public nsIRadioGroupContainer,
-                              public AnchorAreaFormRelValues,
                               RadioGroupManager {
   friend class HTMLFormControlsCollection;
 
@@ -331,12 +329,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
     SetHTMLAttr(nsGkAtoms::target, aValue, aRv);
   }
 
-  void GetRel(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::rel, aValue); }
-  void SetRel(const nsAString& aRel, ErrorResult& aError) {
-    SetHTMLAttr(nsGkAtoms::rel, aRel, aError);
-  }
-  nsDOMTokenList* RelList();
-
   // it's only out-of-line because the class definition is not available in the
   // header
   nsIHTMLCollection* Elements();
@@ -589,8 +581,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   /** Keep track of what the popup state was when the submit was initiated */
   PopupBlocker::PopupControlState mSubmitPopupState;
-
-  RefPtr<nsDOMTokenList> mRelList;
 
   /**
    * Number of invalid and candidate for constraint validation elements in the
