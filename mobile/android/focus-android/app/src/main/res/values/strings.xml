@@ -696,11 +696,11 @@
     <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s can try to automatically reject cookie requests.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
-    <string name="cfr_for_cookie_banner" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s tries to reject cookie requests to dismiss annoying cookie banners.\n\nManage cookie banner preferences in settings.</string>
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s tries to reject cookie requests to dismiss annoying cookie banners.\n\nManage cookie banner preferences in settings.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
     <string name="cfr_cookie_banner">%1$s tries to reject cookie requests to dismiss annoying cookie banners.\n\nManage cookie banner preferences in %2$s.</string>
 
-    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="110" tools:ignore="UnusedResources">settings</string>
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">settings</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">settings</string>
 
