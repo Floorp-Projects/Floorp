@@ -53,6 +53,9 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
  private:
   ~MFMediaEngineChild() = default;
 
+  uint64_t GetUpdatedRenderedFrames(const StatisticData& aData);
+  uint64_t GetUpdatedDroppedFrames(const StatisticData& aData);
+
   // Only modified on the manager thread.
   MFMediaEngineWrapper* MOZ_NON_OWNING_REF mOwner;
 
@@ -73,6 +76,13 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
   NotNull<FrameStatistics*> const MOZ_NON_OWNING_REF mFrameStats;
 
   bool mShutdown = false;
+
+  // Whenever the remote media engine process crashes, we will create a new
+  // engine child to rebuild the connection. These engine child shares the same
+  // frame stats data so we need to keep accumulate same data from previous
+  // engine.
+  Maybe<uint64_t> mAccumulatedPresentedFramesFromPrevEngine;
+  Maybe<uint64_t> mAccumulatedDroppedFramesFromPrevEngine;
 };
 
 /**
