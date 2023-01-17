@@ -952,8 +952,13 @@ nsIntRect RemoteAccessible::BoundsInCSSPixels() const {
   return rect;
 }
 
-void RemoteAccessible::Language(nsString& aLocale) {
-  Unused << mDoc->SendLanguage(mID, &aLocale);
+void RemoteAccessible::Language(nsAString& aLocale) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::Language(aLocale);
+  }
+  nsString locale;
+  Unused << mDoc->SendLanguage(mID, &locale);
+  aLocale = std::move(locale);
 }
 
 void RemoteAccessible::DocType(nsString& aType) {

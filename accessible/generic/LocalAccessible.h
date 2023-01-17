@@ -138,10 +138,7 @@ class LocalAccessible : public nsISupports, public Accessible {
     return IsDoc() ? 0 : reinterpret_cast<uintptr_t>(this);
   }
 
-  /**
-   * Return language associated with the accessible.
-   */
-  void Language(nsAString& aLocale);
+  virtual void Language(nsAString& aLocale) override;
 
   /**
    * Get the description of this accessible.
