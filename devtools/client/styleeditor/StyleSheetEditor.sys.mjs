@@ -200,7 +200,7 @@ StyleSheetEditor.prototype = {
     }
 
     if (!this.styleSheet.href) {
-      // TODO(bug 176993): Probably a different index + string for
+      // TODO(bug 1809107): Probably a different index + string for
       // constructable stylesheets, they can't be meaningfully edited right now
       // because we don't have their original text.
       const index = this.styleSheetFriendlyIndex + 1 || 0;
