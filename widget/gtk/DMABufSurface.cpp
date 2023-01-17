@@ -67,13 +67,14 @@ RefPtr<GLContext> ClaimSnapshotGLContext() {
     nsCString discardFailureId;
     sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
     if (!sSnapshotContext) {
-      LOGDMABUF(("GetAsSourceSurface: Failed to create snapshot GLContext."));
+      LOGDMABUF(
+          ("ClaimSnapshotGLContext: Failed to create snapshot GLContext."));
       return nullptr;
     }
     sSnapshotContext->mOwningThreadId = Nothing();  // No singular owner.
   }
   if (!sSnapshotContext->MakeCurrent()) {
-    LOGDMABUF(("GetAsSourceSurface: Failed to make GLContext current."));
+    LOGDMABUF(("ClaimSnapshotGLContext: Failed to make GLContext current."));
     return nullptr;
   }
   return sSnapshotContext;
@@ -84,6 +85,7 @@ void ReturnSnapshotGLContext(RefPtr<GLContext> aGLContext) {
   // it's not used.
   MOZ_ASSERT(!aGLContext->mUseTLSIsCurrent);
   if (!aGLContext->IsCurrent()) {
+    LOGDMABUF(("ReturnSnapshotGLContext() failed, is not current!"));
     return;
   }
   const auto& gle = gl::GLContextEGL::Cast(aGLContext);
