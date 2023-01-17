@@ -585,6 +585,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                                      Runnable* aRunnable,
                                      JS::OffThreadToken** aTokenOut);
 
+  static void OffThreadCompilationCompleteCallback(JS::OffThreadToken* aToken,
+                                                   void* aCallbackData);
+
   nsresult ProcessRequest(ScriptLoadRequest* aRequest);
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult, ScriptLoadRequest* aRequest);
