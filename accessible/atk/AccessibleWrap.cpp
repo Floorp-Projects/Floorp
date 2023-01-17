@@ -669,11 +669,13 @@ AtkAttributeSet* getAttributesCB(AtkObject* aAtkObj) {
 }
 
 const gchar* GetLocaleCB(AtkObject* aAtkObj) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (!accWrap) return nullptr;
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc) {
+    return nullptr;
+  }
 
   nsAutoString locale;
-  accWrap->Language(locale);
+  acc->Language(locale);
   return AccessibleWrap::ReturnString(locale);
 }
 

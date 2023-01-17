@@ -387,12 +387,9 @@ ia2Accessible::get_locale(IA2Locale* aLocale) {
   // Two-letter primary codes are reserved for [ISO639] language abbreviations.
   // Any two-letter subcode is understood to be a [ISO3166] country code.
 
-  if (!Acc()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    return CO_E_OBJNOTCONNECTED;
   }
 
   nsAutoString lang;

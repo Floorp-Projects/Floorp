@@ -44,11 +44,9 @@ void documentInterfaceInitCB(AtkDocumentIface* aIface) {
 
 const gchar* getDocumentLocaleCB(AtkDocument* aDocument) {
   nsAutoString locale;
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-  if (accWrap) {
-    accWrap->Language(locale);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
-    proxy->Language(locale);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aDocument));
+  if (acc) {
+    acc->Language(locale);
   }
 
   return locale.IsEmpty() ? nullptr : AccessibleWrap::ReturnString(locale);

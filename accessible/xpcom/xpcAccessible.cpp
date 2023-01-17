@@ -267,11 +267,7 @@ xpcAccessible::GetLanguage(nsAString& aLanguage) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
   nsAutoString lang;
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-    proxy->Language(lang);
-  } else {
-    Intl()->Language(lang);
-  }
+  IntlGeneric()->Language(lang);
 
   aLanguage.Assign(lang);
   return NS_OK;
