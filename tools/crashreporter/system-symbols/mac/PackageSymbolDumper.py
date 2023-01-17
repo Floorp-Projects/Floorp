@@ -90,7 +90,7 @@ def expand_zip(zip_path, out_path):
     @param out_path: a path to hold the archive contents
     """
     subprocess.check_call(
-        ["unzip", "-d", out_path, zip_path], stdout=open(subprocess.DEVNULL, "wb")
+        ["unzip", "-d", out_path, zip_path], stdout=subprocess.DEVNULL
     )
 
 
