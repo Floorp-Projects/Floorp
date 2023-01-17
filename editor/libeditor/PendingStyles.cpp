@@ -373,29 +373,8 @@ void PendingStyles::PreserveStyle(nsStaticAtom& aHTMLProperty,
     return;
   }
 
-  // font-size and font-family need to be applied outer-most because height of
-  // outer inline elements of them are computed without these styles.  E.g.,
-  // background-color may be applied bottom-half of the text.  Therefore, we
-  // need to apply the font styles first.
-  uint32_t fontStyleCount = 0;
-  for (const UniquePtr<PendingStyle>& style : Reversed(mPreservingStyles)) {
-    if (style->GetTag() != nsGkAtoms::font ||
-        style->GetAttribute() == nsGkAtoms::bgcolor) {
-      break;
-    }
-    MOZ_ASSERT(style->GetAttribute() == nsGkAtoms::color ||
-               style->GetAttribute() == nsGkAtoms::face ||
-               style->GetAttribute() == nsGkAtoms::size);
-    fontStyleCount++;
-  }
-  UniquePtr<PendingStyle> style = MakeUnique<PendingStyle>(
-      &aHTMLProperty, aAttribute, aAttributeValueOrCSSValue);
-  if (fontStyleCount) {
-    mPreservingStyles.InsertElementAt(
-        mPreservingStyles.Length() - fontStyleCount, std::move(style));
-  } else {
-    mPreservingStyles.AppendElement(std::move(style));
-  }
+  mPreservingStyles.AppendElement(MakeUnique<PendingStyle>(
+      &aHTMLProperty, aAttribute, aAttributeValueOrCSSValue));
 
   CancelClearingStyle(aHTMLProperty, aAttribute);
 }
