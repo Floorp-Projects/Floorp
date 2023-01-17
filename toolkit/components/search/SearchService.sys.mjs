@@ -1813,7 +1813,6 @@ export class SearchService {
         manifest = await this.#getManifestForLocale(policy.extension, locale);
       }
       engine.updateFromManifest(
-        policy.extension.id,
         policy.extension.baseURI,
         manifest,
         locale,
@@ -2693,7 +2692,6 @@ export class SearchService {
       let isDefaultPrivate = engine == this.defaultPrivateEngine;
 
       engine.updateFromManifest(
-        extension.id,
         extension.baseURI,
         manifest,
         locale,
