@@ -2893,7 +2893,7 @@
 # Is support for HTMLElement.autocapitalize enabled?
 - name: dom.forms.autocapitalize
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Support for input type=month, type=week. By default, disabled.
