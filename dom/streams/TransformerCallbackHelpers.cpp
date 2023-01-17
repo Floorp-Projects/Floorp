@@ -6,6 +6,7 @@
 
 #include "TransformerCallbackHelpers.h"
 
+#include "StreamUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TransformStreamDefaultController.h"
 
@@ -84,30 +85,11 @@ already_AddRefed<Promise> TransformerAlgorithms::FlushCallback(
              CallbackObject::eRethrowExceptions);
 }
 
-// https://streams.spec.whatwg.org/#transformstream-set-up
-// Step 5 and 6.
-template <typename T>
-MOZ_CAN_RUN_SCRIPT static already_AddRefed<Promise> Promisify(
-    nsIGlobalObject* aGlobal, T aFunc, mozilla::ErrorResult& aRv) {
-  // Step 1. Let result be the result of running (algorithm). If this throws an
-  // exception e, return a promise rejected with e.
-  aFunc(aRv);
-  if (aRv.Failed()) {
-    return Promise::CreateRejectedWithErrorResult(aGlobal, aRv);
-  }
-
-  // Step 2. If result is a Promise, then return result.
-  // (This supports no return value since currently no subclass needs one)
-
-  // Step 3. Return a promise resolved with undefined.
-  return Promise::CreateResolvedWithUndefined(aGlobal, aRv);
-}
-
 already_AddRefed<Promise> TransformerAlgorithmsWrapper::TransformCallback(
     JSContext*, JS::Handle<JS::Value> aChunk,
     TransformStreamDefaultController& aController, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = aController.GetParentObject();
-  return Promisify(
+  return PromisifyAlgorithm(
       global,
       [this, &aChunk, &aController](ErrorResult& aRv)
           MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
@@ -120,7 +102,7 @@ already_AddRefed<Promise> TransformerAlgorithmsWrapper::FlushCallback(
     JSContext*, TransformStreamDefaultController& aController,
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = aController.GetParentObject();
-  return Promisify(
+  return PromisifyAlgorithm(
       global,
       [this, &aController](ErrorResult& aRv) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
         return FlushCallbackImpl(aController, aRv);
