@@ -97,6 +97,9 @@ interface WindowGlobalParent : WindowContext {
   readonly attribute DOMString documentTitle;
   readonly attribute nsICookieJarSettings? cookieJarSettings;
 
+  // True if the the currently loaded document is in fullscreen.
+  attribute boolean fullscreen;
+
   // Bit mask containing content blocking events that are recorded in
   // the document's content blocking log.
   readonly attribute unsigned long contentBlockingEvents;

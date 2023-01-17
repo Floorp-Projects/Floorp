@@ -41,12 +41,34 @@ add_task(async function navigation() {
       </script>`,
     },
     async function(browser) {
-      let promiseFsState = waitForFullscreenState(document, false, true);
       BrowserTestUtils.synthesizeMouseAtCenter("#button", {}, browser);
-      await promiseFsState;
+
+      // Give some time for fullscreen transition.
+      await new Promise(aResolve => {
+        SimpleTest.executeSoon(() => {
+          SimpleTest.executeSoon(aResolve);
+        });
+      });
+
+      // Wait fullscreen exit event if browser is still in fullscreen mode.
+      if (
+        window.fullScreen ||
+        document.documentElement.hasAttribute("inFullscreen")
+      ) {
+        info("The widget is still in fullscreen, wait again");
+        await waitWidgetFullscreenEvent(window, false, true);
+      }
+      if (document.documentElement.hasAttribute("inDOMFullscreen")) {
+        info("The chrome document is still in fullscreen, wait again");
+        await waitForFullScreenObserver(window, false, true);
+      }
 
       // Ensure the browser exits fullscreen state.
-      ok(!window.fullScreen, "The chrome window should not be in fullscreen");
+      ok(!window.fullScreen, "The widget should not be in fullscreen");
+      ok(
+        !document.documentElement.hasAttribute("inFullscreen"),
+        "The chrome window should not be in fullscreen"
+      );
       ok(
         !document.documentElement.hasAttribute("inDOMFullscreen"),
         "The chrome document should not be in fullscreen"
