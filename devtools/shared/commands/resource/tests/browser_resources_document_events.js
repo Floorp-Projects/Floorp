@@ -239,11 +239,11 @@ async function testIframeNavigation() {
 
   // We are switching to a new target only when fission is enabled...
   if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
-    await waitFor(() => documentEvents.length >= 4);
+    await waitFor(() => documentEvents.length >= 3);
     is(
       documentEvents.length,
-      4,
-      "With fission/EFT, we switch to a new target and get a will-navigate followed by a new set of events: dom-loading, dom-interactive, dom-complete"
+      3,
+      "With fission/EFT, we switch to a new target and get: dom-loading, dom-interactive, dom-complete (but no will-navigate as that's only for the top BrowsingContext)"
     );
     const [, newIframeTarget] = await commands.targetCommand.getAllTargets([
       commands.targetCommand.TYPES.FRAME,
@@ -251,7 +251,7 @@ async function testIframeNavigation() {
     assertEvents({
       commands,
       targetBeforeNavigation: iframeTarget,
-      documentEvents,
+      documentEvents: [null /* no will-navigate */, ...documentEvents],
       expectedTargetFront: newIframeTarget,
       expectedNewURI: secondPageUrl,
     });
