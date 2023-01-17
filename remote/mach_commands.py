@@ -674,22 +674,20 @@ def puppeteer_test(
 def install_puppeteer(command_context, product, ci):
     setup()
     env = {"HUSKY": "0"}
-    from mozversioncontrol import get_repository_object
 
-    repo = get_repository_object(command_context.topsrcdir)
     puppeteer_dir = os.path.join("remote", "test", "puppeteer")
-    changed_files = False
-    for f in repo.get_changed_files():
-        if f.startswith(puppeteer_dir) and f.endswith(".ts"):
-            changed_files = True
-            break
 
     if product != "chrome":
         env["PUPPETEER_SKIP_DOWNLOAD"] = "1"
-    lib_dir = os.path.join(command_context.topsrcdir, puppeteer_dir, "lib")
-    if changed_files and os.path.isdir(lib_dir):
-        # clobber lib to force `tsc compile` step
-        shutil.rmtree(lib_dir)
+
+    if not ci:
+        npm(
+            "run",
+            "clean",
+            cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
+            env=env,
+            exit_on_fail=False,
+        )
 
     command = "ci" if ci else "install"
     npm(command, cwd=os.path.join(command_context.topsrcdir, puppeteer_dir), env=env)
