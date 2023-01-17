@@ -172,15 +172,6 @@ pub impl Field {
     fn ffi_converter(&self) -> String {
         self.type_().ffi_converter()
     }
-
-    fn check_type(&self) -> String {
-        format!(
-            "{}.checkType(\"{}\", {})",
-            self.type_().ffi_converter(),
-            self.nm(),
-            self.nm()
-        )
-    }
 }
 
 #[ext(name=ArgumentJSExt)]
@@ -211,15 +202,6 @@ pub impl Argument {
 
     fn ffi_converter(&self) -> String {
         self.type_().ffi_converter()
-    }
-
-    fn check_type(&self) -> String {
-        format!(
-            "{}.checkType(\"{}\", {})",
-            self.type_().ffi_converter(),
-            self.nm(),
-            self.nm()
-        )
     }
 }
 

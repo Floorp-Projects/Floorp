@@ -28,5 +28,27 @@ class {{ ffi_converter }} extends FfiConverterArrayBuffer {
         }
         return size;
     }
+
+    static checkType(value) {
+        for (const key in value) {
+            try {
+                {{ key_type.ffi_converter() }}.checkType(key);
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("(key)");
+                }
+                throw e;
+            }
+
+            try {
+                {{ value_type.ffi_converter() }}.checkType(value[key]);
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart(`[${key}]`);
+                }
+                throw e;
+            }
+        }
+    }
 }
 

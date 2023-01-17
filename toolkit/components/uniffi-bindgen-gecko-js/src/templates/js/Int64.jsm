@@ -1,8 +1,8 @@
 class {{ ffi_converter }} extends FfiConverter {
-    static checkType(name, value) {
-        super.checkType(name, value);
+    static checkType(value) {
+        super.checkType(value);
         if (!Number.isSafeInteger(value)) {
-            throw TypeError(`${name} exceeds the safe integer bounds (${value})`);
+            throw new UniFFITypeError(`${value} exceeds the safe integer bounds`);
         }
     }
     static computeSize() {

@@ -1,11 +1,11 @@
 class {{ ffi_converter }} extends FfiConverter {
-    static checkType(name, value) {
-        super.checkType(name, value);
+    static checkType(value) {
+        super.checkType(value);
         if (!Number.isInteger(value)) {
-            throw TypeError(`${name} is not an integer(${value})`);
+            throw new UniFFITypeError(`${value} is not an integer`);
         }
         if (value < 0 || value > 65535) {
-            throw TypeError(`${name} exceeds the U16 bounds (${value})`);
+            throw new UniFFITypeError(`${value} exceeds the U16 bounds`);
         }
     }
     static computeSize() {
