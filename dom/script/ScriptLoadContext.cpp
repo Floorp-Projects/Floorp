@@ -37,9 +37,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptLoadContext,
                                                 JS::loader::LoadContextBase)
-  if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
-    runnable->Release();
-  }
+  MOZ_ASSERT(!tmp->mOffThreadToken);
+  MOZ_ASSERT(!tmp->mRunnable);
   tmp->MaybeUnblockOnload();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -70,16 +69,12 @@ ScriptLoadContext::ScriptLoadContext()
       mUnreportedPreloadError(NS_OK) {}
 
 ScriptLoadContext::~ScriptLoadContext() {
-  // When speculative parsing is enabled, it is possible to off-main-thread
-  // compile scripts that are never executed.  These should be cleaned up here
-  // if they exist.
-  mRequest = nullptr;
-  MOZ_ASSERT_IF(
-      !StaticPrefs::
-          dom_script_loader_external_scripts_speculative_omt_parse_enabled(),
-      !mOffThreadToken);
+  MOZ_ASSERT(NS_IsMainThread());
 
-  MaybeCancelOffThreadScript();
+  // Off-thread parsing must have completed by this point.
+  MOZ_DIAGNOSTIC_ASSERT(!mOffThreadToken && !mRunnable);
+
+  mRequest = nullptr;
 
   MaybeUnblockOnload();
 }
@@ -104,17 +99,18 @@ void ScriptLoadContext::MaybeCancelOffThreadScript() {
     return;
   }
 
+  // Cancel parse if it hasn't been started yet or wait for it to finish and
+  // clean up finished parse data.
   JSContext* cx = danger::GetJSContext();
   JS::CancelOffThreadToken(cx, mOffThreadToken);
+  mOffThreadToken = nullptr;
 
-  // Cancellation request above should guarantee removal of the parse task, so
-  // releasing the runnable should be safe to do here.
-  if (Runnable* runnable = mRunnable.exchange(nullptr)) {
-    runnable->Release();
-  }
+  // Clear the pointer to the runnable. It may still run later if we didn't
+  // cancel in time. In this case the runnable is held live by the reference
+  // passed to Dispatch, which is dropped after it runs.
+  mRunnable = nullptr;
 
   MaybeUnblockOnload();
-  mOffThreadToken = nullptr;
 }
 
 void ScriptLoadContext::SetScriptMode(bool aDeferAttr, bool aAsyncAttr,

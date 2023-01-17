@@ -578,6 +578,13 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
                                      bool* aCouldCompileOut);
+
+  nsresult StartOffThreadCompilation(JSContext* aCx,
+                                     ScriptLoadRequest* aRequest,
+                                     JS::CompileOptions& aOptions,
+                                     Runnable* aRunnable,
+                                     JS::OffThreadToken** aTokenOut);
+
   nsresult ProcessRequest(ScriptLoadRequest* aRequest);
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult, ScriptLoadRequest* aRequest);
