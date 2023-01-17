@@ -6,15 +6,6 @@
 
 const { fetch } = require("resource://devtools/shared/DevToolsUtils.js");
 
-// The possible kinds of style-applied events.
-// UPDATE_PRESERVING_RULES means that the update is guaranteed to
-// preserve the number and order of rules on the style sheet.
-// UPDATE_GENERAL covers any other kind of change to the style sheet.
-const UPDATE_PRESERVING_RULES = 0;
-exports.UPDATE_PRESERVING_RULES = UPDATE_PRESERVING_RULES;
-const UPDATE_GENERAL = 1;
-exports.UPDATE_GENERAL = UPDATE_GENERAL;
-
 // If the user edits a style sheet, we stash a copy of the edited text
 // here, keyed by the style sheet.  This way, if the tools are closed
 // and then reopened, the edited text will be available.  A weak map

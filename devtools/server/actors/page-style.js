@@ -51,7 +51,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "UPDATE_GENERAL",
-  "resource://devtools/server/actors/style-sheet.js",
+  "resource://devtools/server/actors/utils/stylesheets-manager.js",
   true
 );
 
