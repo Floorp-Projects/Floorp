@@ -9,6 +9,7 @@
 
 #include "nsPoint.h"
 #include "mozilla/Saturate.h"
+#include "mozilla/TimeStamp.h"
 
 class nsFrameList;
 class nsIFrame;
@@ -18,8 +19,7 @@ namespace mozilla {
 class ScrollFrameHelper;
 }  // namespace mozilla
 
-namespace mozilla {
-namespace layout {
+namespace mozilla::layout {
 
 /**
  * A scroll anchor container finds a descendent element of a scrollable frame
@@ -142,6 +142,8 @@ class ScrollAnchorContainer final {
   // The owner of this scroll anchor container
   ScrollFrameHelper* mScrollFrame;
 
+  ScrollFrameHelper* ScrollFrame() const { return mScrollFrame; }
+
   // The anchor node that we will scroll to keep in the same relative position
   // after reflows. This may be null if we were not able to select a valid
   // scroll anchor
@@ -153,14 +155,23 @@ class ScrollAnchorContainer final {
   // the anchor node in the same relative position
   nscoord mLastAnchorOffset;
 
-  // The number of consecutive scroll anchoring adjustments that have happened
-  // without a user scroll.
-  SaturateUint32 mConsecutiveScrollAnchoringAdjustments{0};
+  struct DisablingHeuristic {
+    // The number of consecutive scroll anchoring adjustments that have happened
+    // without a user scroll.
+    SaturateUint32 mConsecutiveScrollAnchoringAdjustments{0};
 
-  // The total length that has been adjusted by all the consecutive adjustments
-  // referenced above. Note that this is a sum, so that oscillating adjustments
-  // average towards zero.
-  nscoord mConsecutiveScrollAnchoringAdjustmentLength{0};
+    // The total length that has been adjusted by all the consecutive
+    // adjustments referenced above. Note that this is a sum, so that
+    // oscillating adjustments average towards zero.
+    nscoord mConsecutiveScrollAnchoringAdjustmentLength{0};
+
+    // The time we started checking for adjustments.
+    TimeStamp mTimeStamp;
+
+    // Returns whether anchoring should get disabled.
+    bool AdjustmentMade(const ScrollAnchorContainer&, nscoord aAdjustment);
+    void Reset();
+  } mHeuristic;
 
   // True if we've been disabled by the heuristic controlled by
   // layout.css.scroll-anchoring.max-consecutive-adjustments and
@@ -178,7 +189,6 @@ class ScrollAnchorContainer final {
   bool mSuppressAnchorAdjustment : 1;
 };
 
-}  // namespace layout
-}  // namespace mozilla
+}  // namespace mozilla::layout
 
 #endif  // mozilla_layout_ScrollAnchorContainer_h_
