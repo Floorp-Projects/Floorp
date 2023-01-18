@@ -165,7 +165,8 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   // The nullptr here is not used, but is required to make the override method
   // have the same signature as other GetModuleLoader methods on globals.
-  JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) override {
+  JS::loader::ModuleLoaderBase* GetModuleLoader(
+      JSContext* aCx = nullptr) override {
     return mModuleLoader;
   };
 
