@@ -2806,22 +2806,106 @@ void MacroAssembler::speculationBarrier() {
 
 void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
                                          Label* fail) {
-  floorf(src, dest, fail);
+  Label handleZero;
+  // Label handleNeg;
+  Label fin;
+  ARMFPRegister iFlt(src, 32);
+  ARMRegister o64(dest, 64);
+  ARMRegister o32(dest, 32);
+  Fcmp(iFlt, 0.0);
+  B(Assembler::Equal, &handleZero);
+  // B(Assembler::Signed, &handleNeg);
+  // NaN is always a bail condition, just bail directly.
+  B(Assembler::Overflow, fail);
+  Fcvtms(o64, iFlt);
+  Cmp(o64, Operand(o64, vixl::SXTW));
+  B(NotEqual, fail);
+  Mov(o32, o32);
+  B(&fin);
+
+  bind(&handleZero);
+  // Move the top word of the double into the output reg, if it is non-zero,
+  // then the original value was -0.0.
+  Fmov(o32, iFlt);
+  Cbnz(o32, fail);
+  bind(&fin);
 }
 
 void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
-  floor(src, dest, fail);
+  Label handleZero;
+  // Label handleNeg;
+  Label fin;
+  ARMFPRegister iDbl(src, 64);
+  ARMRegister o64(dest, 64);
+  ARMRegister o32(dest, 32);
+  Fcmp(iDbl, 0.0);
+  B(Assembler::Equal, &handleZero);
+  // B(Assembler::Signed, &handleNeg);
+  // NaN is always a bail condition, just bail directly.
+  B(Assembler::Overflow, fail);
+  Fcvtms(o64, iDbl);
+  Cmp(o64, Operand(o64, vixl::SXTW));
+  B(NotEqual, fail);
+  Mov(o32, o32);
+  B(&fin);
+
+  bind(&handleZero);
+  // Move the top word of the double into the output reg, if it is non-zero,
+  // then the original value was -0.0.
+  Fmov(o64, iDbl);
+  Cbnz(o64, fail);
+  bind(&fin);
 }
 
 void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
-  ceilf(src, dest, fail);
+  Label handleZero;
+  Label fin;
+  ARMFPRegister iFlt(src, 32);
+  ARMRegister o64(dest, 64);
+  ARMRegister o32(dest, 32);
+  Fcmp(iFlt, 0.0);
+
+  // NaN is always a bail condition, just bail directly.
+  B(Assembler::Overflow, fail);
+  Fcvtps(o64, iFlt);
+  Cmp(o64, Operand(o64, vixl::SXTW));
+  B(NotEqual, fail);
+  Cbz(o64, &handleZero);
+  Mov(o32, o32);
+  B(&fin);
+
+  bind(&handleZero);
+  // Move the top word of the double into the output reg, if it is non-zero,
+  // then the original value was -0.0.
+  Fmov(o32, iFlt);
+  Cbnz(o32, fail);
+  bind(&fin);
 }
 
 void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
                                        Label* fail) {
-  ceil(src, dest, fail);
+  Label handleZero;
+  Label fin;
+  ARMFPRegister iDbl(src, 64);
+  ARMRegister o64(dest, 64);
+  ARMRegister o32(dest, 32);
+  Fcmp(iDbl, 0.0);
+  B(Assembler::Overflow, fail);
+  Fcvtps(o64, iDbl);
+  Cmp(o64, Operand(o64, vixl::SXTW));
+  B(NotEqual, fail);
+  Cbz(o64, &handleZero);
+  Mov(o32, o32);
+  B(&fin);
+
+  bind(&handleZero);
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch = temps.AcquireX();
+  Fmov(scratch, iDbl);
+  Cbnz(scratch, fail);
+  bind(&fin);
 }
 
 void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
