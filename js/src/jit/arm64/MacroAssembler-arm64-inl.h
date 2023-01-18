@@ -51,7 +51,7 @@ void MacroAssembler::move64To32(Register64 src, Register dest) {
 }
 
 void MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest) {
-  Mov(ARMRegister(dest.reg, 32), ARMRegister(src, 32));
+  Uxtw(ARMRegister(dest.reg, 64), ARMRegister(src, 64));
 }
 
 void MacroAssembler::move8To64SignExtend(Register src, Register64 dest) {
@@ -71,7 +71,7 @@ void MacroAssembler::move32SignExtendToPtr(Register src, Register dest) {
 }
 
 void MacroAssembler::move32ZeroExtendToPtr(Register src, Register dest) {
-  Mov(ARMRegister(dest, 32), ARMRegister(src, 32));
+  Uxtw(ARMRegister(dest, 64), ARMRegister(src, 64));
 }
 
 // ===============================================================
@@ -434,7 +434,7 @@ void MacroAssembler::mul32(Register src1, Register src2, Register dest,
     B(onOver, NotEqual);
 
     // Clear upper 32 bits.
-    Mov(ARMRegister(dest, 32), ARMRegister(dest, 32));
+    Uxtw(ARMRegister(dest, 64), ARMRegister(dest, 64));
   } else {
     Mul(ARMRegister(dest, 32), ARMRegister(src1, 32), ARMRegister(src2, 32));
   }
@@ -1356,7 +1356,7 @@ void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
   B(fail, Assembler::Above);
 
   // Clear upper 32 bits.
-  And(dest64, dest64, Operand(0xffff'ffff));
+  Uxtw(dest64, dest64);
 }
 
 void MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src,
@@ -1421,7 +1421,7 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
   B(fail, Assembler::Above);
 
   // Clear upper 32 bits.
-  And(dest64, dest64, Operand(0xffff'ffff));
+  Uxtw(dest64, dest64);
 }
 
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
@@ -1440,7 +1440,7 @@ void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
   B(fail, Assembler::NotEqual);
 
   // Clear upper 32 bits.
-  Mov(dest32, dest32);
+  Uxtw(dest64, dest64);
 }
 
 template <typename T>
