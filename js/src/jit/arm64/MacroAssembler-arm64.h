@@ -647,7 +647,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
       Cbnz(dest32, fail);
       bind(&nonzero);
     }
-    And(dest64, dest64, Operand(0xffffffff));
+    And(dest64, dest64, Operand(0xffff'ffff));
   }
 
   void convertDoubleToPtr(FloatRegister src, Register dest, Label* fail,
