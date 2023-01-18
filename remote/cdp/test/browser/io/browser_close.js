@@ -6,10 +6,13 @@
 add_task(async function fileRemovedAfterClose({ client }) {
   const { IO } = client;
   const contents = "Lorem ipsum";
-  const { handle, path } = await registerFileStream(contents);
+  const { handle, stream } = await registerFileStream(contents);
 
   await IO.close({ handle });
-  ok(!(await OS.File.exists(path)), "Discarded the temporary backing storage");
+  ok(
+    !(await IOUtils.exists(stream.path)),
+    "Discarded the temporary backing storage"
+  );
 });
 
 add_task(async function unknownHandle({ client }) {

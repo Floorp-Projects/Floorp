@@ -2,16 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { Domain } from "chrome://remote/content/cdp/domains/Domain.sys.mjs";
 import { StreamRegistry } from "chrome://remote/content/cdp/StreamRegistry.sys.mjs";
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  OS: "resource://gre/modules/osfile.jsm",
-});
 
 const DEFAULT_CHUNK_SIZE = 10 * 1024 * 1024;
 
@@ -63,20 +55,16 @@ export class IO extends Domain {
     }
 
     const stream = streamRegistry.get(handle);
-    const fileInfo = await stream.stat();
 
     if (typeof offset != "undefined") {
       if (typeof offset != "number") {
         throw new TypeError(`offset: integer value expected`);
       }
 
-      // To keep compatibility with Chrome clip invalid offsets
-      const seekTo = Math.max(0, Math.min(offset, fileInfo.size));
-      await stream.setPosition(seekTo, lazy.OS.File.POS_START);
+      await stream.seek(offset);
     }
 
-    const curPos = await stream.getPosition();
-    const remainingBytes = fileInfo.size - curPos;
+    const remainingBytes = await stream.available();
 
     let chunkSize;
     if (typeof size != "undefined") {
@@ -91,7 +79,8 @@ export class IO extends Domain {
       chunkSize = Math.min(DEFAULT_CHUNK_SIZE, remainingBytes);
     }
 
-    const bytes = await stream.read(chunkSize);
+    const bytes = await stream.readBytes(chunkSize);
+
     // Each UCS2 character has an upper byte of 0 and a lower byte matching
     // the binary data. Using a loop here prevents us from hitting the browser's
     // internal `arguments.length` limit.
