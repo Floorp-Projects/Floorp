@@ -206,16 +206,20 @@ nsresult EncodeInputStream(nsIInputStream* aInputStream, T& aDest,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!aDest.SetLength(base64LenOrErr.inspect(), mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  auto handleOrErr = aDest.BulkWrite(base64LenOrErr.inspect(), aOffset, false);
+  if (handleOrErr.isErr()) {
+    return handleOrErr.unwrapErr();
   }
 
-  EncodeInputStream_State<T> state;
-  state.charsOnStack = 0;
-  state.c[2] = '\0';
-  state.buffer = aOffset + aDest.BeginWriting();
+  auto handle = handleOrErr.unwrap();
 
-  while (true) {
+  EncodeInputStream_State<T> state{
+      .c = {'\0', '\0', '\0'},
+      .charsOnStack = 0,
+      .buffer = handle.Elements() + aOffset,
+  };
+
+  while (aCount > 0) {
     uint32_t read = 0;
 
     rv = aInputStream->ReadSegments(&EncodeInputStream_Encoder<T>,
@@ -233,18 +237,20 @@ nsresult EncodeInputStream(nsIInputStream* aInputStream, T& aDest,
     if (!read) {
       break;
     }
+
+    aCount -= read;
   }
 
   // Finish encoding if anything is left
   if (state.charsOnStack) {
     Encode(state.c, state.charsOnStack, state.buffer);
+    state.buffer += 4;
   }
 
-  if (aDest.Length()) {
-    // May belong to an nsCString with an unallocated buffer, so only null
-    // terminate if there is a need to.
-    *aDest.EndWriting() = '\0';
-  }
+  // If we encountered EOF before reading aCount bytes, the resulting string
+  // could be shorter than predicted, so determine the length from the state.
+  size_t trueLength = state.buffer - handle.Elements();
+  handle.Finish(trueLength, false);
 
   return NS_OK;
 }
