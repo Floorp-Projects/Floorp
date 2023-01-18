@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifySequence
 import mozilla.components.browser.state.state.TabSessionState
@@ -12,41 +13,45 @@ import org.junit.Test
 class DefaultTabsTrayInteractorTest {
 
     val controller: TabsTrayController = mockk(relaxed = true)
-    val trayInteractor = DefaultTabsTrayInteractor(controller)
+    val interactor = DefaultTabsTrayInteractor(controller)
 
     @Test
-    fun `GIVEN user selecting a new tray page WHEN onTrayPositionSelected is called THEN the Interactor delegates the controller`() {
-        trayInteractor.onTrayPositionSelected(14, true)
+    fun `WHEN user selects a new tray page THEN the Interactor delegates to the controller`() {
+        interactor.onTrayPositionSelected(14, true)
 
         verifySequence { controller.handleTrayScrollingToPosition(14, true) }
     }
 
     @Test
-    fun `GIVEN user selecting a new browser tab WHEN onBrowserTabSelected is called THEN the Interactor delegates the controller`() {
-        trayInteractor.onBrowserTabSelected()
+    fun `WHEN user selects a new browser tab THEN the Interactor delegates to the controller`() {
+        val tab: TabSessionState = mockk()
+        interactor.onTabSelected(tab, null)
 
-        verifySequence { controller.handleNavigateToBrowser() }
+        verifySequence { controller.handleTabSelected(tab, null) }
     }
 
     @Test
-    fun `GIVEN user deleted one browser tab page WHEN onDeleteTab is called THEN the Interactor delegates the controller`() {
-        trayInteractor.onDeleteTab("testTabId")
+    fun `WHEN user deletes one browser tab page THEN the Interactor delegates to the controller`() {
+        val tab: TabSessionState = mockk()
+        val id = "testTabId"
+        every { tab.id } returns id
+        interactor.onTabClosed(tab)
 
-        verifySequence { controller.handleTabDeletion("testTabId") }
+        verifySequence { controller.handleTabDeletion(id) }
     }
 
     @Test
-    fun `GIVEN user confirmed downloads cancellation WHEN onDeletePrivateTabWarningAccepted is called THEN the Interactor delegates the controller`() {
-        trayInteractor.onDeletePrivateTabWarningAccepted("testTabId")
+    fun `WHEN user confirms downloads cancellation THEN the Interactor delegates to the controller`() {
+        interactor.onDeletePrivateTabWarningAccepted("testTabId")
 
         verifySequence { controller.handleDeleteTabWarningAccepted("testTabId") }
     }
 
     @Test
-    fun `GIVEN user deleted multiple browser tabs WHEN onDeleteTabs is called THEN the Interactor delegates the controller`() {
+    fun `WHEN user deletes multiple browser tabs THEN the Interactor delegates to the controller`() {
         val tabsToDelete = listOf<TabSessionState>(mockk(), mockk())
 
-        trayInteractor.onDeleteTabs(tabsToDelete)
+        interactor.onDeleteTabs(tabsToDelete)
 
         verifySequence { controller.handleMultipleTabsDeletion(tabsToDelete) }
     }

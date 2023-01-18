@@ -17,20 +17,24 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState
+import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.DelicateAction
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.home.HomeFragment
+import org.mozilla.fenix.selection.SelectionHolder
+import org.mozilla.fenix.tabstray.browser.SelectTabUseCaseWrapper
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
+import org.mozilla.fenix.tabstray.ext.isSelect
 import java.util.concurrent.TimeUnit
 import org.mozilla.fenix.GleanMetrics.Tab as GleanTab
 
@@ -60,7 +64,6 @@ interface TabsTrayController : SyncedTabsController {
     /**
      * Deletes the [TabSessionState] with the specified [tabId] or calls [DownloadCancelDialogFragment]
      * if user tries to close the last private tab while private downloads are active.
-     * Tracks [Event.ClosedExistingTab] in case of deletion.
      *
      * @param tabId The id of the [TabSessionState] to be removed from TabsTray.
      * @param source app feature from which the tab with [tabId] was closed.
@@ -69,7 +72,6 @@ interface TabsTrayController : SyncedTabsController {
 
     /**
      * Deletes the [TabSessionState] with the specified [tabId]
-     * Tracks [Event.ClosedExistingTab] in case of deletion.
      *
      * @param tabId The id of the [TabSessionState] to be removed from TabsTray.
      * @param source app feature from which the tab with [tabId] was closed.
@@ -86,9 +88,9 @@ interface TabsTrayController : SyncedTabsController {
     /**
      * Moves [tabId] next to before/after [targetId]
      *
-     * @param tabId The tabs to be moved
-     * @param targetId The id of the tab that the [tab] will be placed next to
-     * @param placeAfter Place [tabs] before or after the target
+     * @param tabId The tab to be moved.
+     * @param targetId The id of the tab that the moved tab will be placed next to.
+     * @param placeAfter [Boolean] indicating whether to place the tab before or after the target.
      */
     fun handleTabsMove(tabId: String, targetId: String?, placeAfter: Boolean)
 
@@ -113,13 +115,62 @@ interface TabsTrayController : SyncedTabsController {
      * Handles when a tab item is click either to play/pause.
      */
     fun handleMediaClicked(tab: SessionState)
+
+    /**
+     * Handles a user's tab click while in multi select mode.
+     *
+     * @param tab [TabSessionState] that was clicked.
+     * @param holder [SelectionHolder] used to access the current selection of tabs.
+     * @param source App feature from which the tab was clicked.
+     */
+    fun handleMultiSelectClicked(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>,
+        source: String?,
+    )
+
+    /**
+     * Adds the provided tab to the current selection of tabs.
+     *
+     * @param tab [TabSessionState] that was long clicked.
+     * @param holder [SelectionHolder] used to access the current selection of tabs.
+     */
+    fun handleTabLongClick(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>,
+    ): Boolean
+
+    /**
+     * Adds the provided tab to the current selection of tabs.
+     *
+     * @param tab [TabSessionState] to be selected.
+     * @param source App feature from which the tab was selected.
+     */
+    fun handleTabSelected(
+        tab: TabSessionState,
+        source: String?,
+    )
+
+    /**
+     * Removes the provided tab from the current selection of tabs.
+     *
+     * @param tab [TabSessionState] to be unselected.
+     */
+    fun handleTabUnselected(tab: TabSessionState)
+
+    /**
+     * Exits multi select mode when the back button was pressed.
+     *
+     * @return true if the button press was consumed.
+     */
+    fun handleBackPressed(): Boolean
 }
 
 /**
  * Default implementation of [TabsTrayController].
  *
  * @property activity [HomeActivity] used to perform top-level app actions.
- * @property trayStore [TabsTrayStore] used to read/update the [TabsTrayState].
+ * @property tabsTrayStore [TabsTrayStore] used to read/update the [TabsTrayState].
  * @property browserStore [BrowserStore] used to read/update the current [BrowserState].
  * @property browsingModeManager [BrowsingModeManager] used to read/update the current [BrowsingMode].
  * @property navController [NavController] used to navigate away from the tabs tray.
@@ -134,7 +185,7 @@ interface TabsTrayController : SyncedTabsController {
 @Suppress("TooManyFunctions", "LongParameterList")
 class DefaultTabsTrayController(
     private val activity: HomeActivity,
-    private val trayStore: TabsTrayStore,
+    private val tabsTrayStore: TabsTrayStore,
     private val browserStore: BrowserStore,
     private val browsingModeManager: BrowsingModeManager,
     private val navController: NavController,
@@ -147,6 +198,12 @@ class DefaultTabsTrayController(
     private val showUndoSnackbarForTab: (Boolean) -> Unit,
     internal val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -> Unit,
 ) : TabsTrayController {
+
+    private val selectTabWrapper by lazy {
+        SelectTabUseCaseWrapper(tabsUseCases.selectTab) {
+            handleNavigateToBrowser()
+        }
+    }
 
     override fun handleOpeningNewTab(isPrivate: Boolean) {
         val startTime = profiler?.getProfilerTime()
@@ -164,7 +221,7 @@ class DefaultTabsTrayController(
 
     override fun handleTrayScrollingToPosition(position: Int, smoothScroll: Boolean) {
         selectTabPosition(position, smoothScroll)
-        trayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(position)))
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(position)))
     }
 
     /**
@@ -242,13 +299,6 @@ class DefaultTabsTrayController(
         showUndoSnackbarForTab(isPrivate)
     }
 
-    /**
-     * Moves [tabId] next to before/after [targetId]
-     *
-     * @param tabId The tabs to be moved
-     * @param targetId The id of the tab that the [tab] will be placed next to
-     * @param placeAfter Place [tabs] before or after the target
-     */
     override fun handleTabsMove(
         tabId: String,
         targetId: String?,
@@ -329,5 +379,49 @@ class DefaultTabsTrayController(
             newTab = true,
             from = BrowserDirection.FromTabsTray,
         )
+    }
+
+    override fun handleMultiSelectClicked(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>,
+        source: String?,
+    ) {
+        val selected = holder.selectedItems
+        when {
+            selected.isEmpty() && tabsTrayStore.state.mode.isSelect().not() -> {
+                handleTabSelected(tab, source)
+            }
+            tab.id in selected.map { it.id } -> handleTabUnselected(tab)
+            else -> tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
+        }
+    }
+
+    override fun handleTabLongClick(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>,
+    ): Boolean {
+        return if (holder.selectedItems.isEmpty()) {
+            Collections.longPress.record(NoExtras())
+            tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
+            true
+        } else {
+            false
+        }
+    }
+
+    override fun handleTabSelected(tab: TabSessionState, source: String?) {
+        selectTabWrapper.invoke(tab.id, source)
+    }
+
+    override fun handleTabUnselected(tab: TabSessionState) {
+        tabsTrayStore.dispatch(TabsTrayAction.RemoveSelectTab(tab))
+    }
+
+    override fun handleBackPressed(): Boolean {
+        if (tabsTrayStore.state.mode is TabsTrayState.Mode.Select) {
+            tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
+            return true
+        }
+        return false
     }
 }

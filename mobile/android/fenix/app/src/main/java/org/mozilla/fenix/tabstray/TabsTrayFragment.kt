@@ -49,8 +49,6 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.share.ShareFragment
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultInactiveTabsController
 import org.mozilla.fenix.tabstray.browser.DefaultInactiveTabsInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
@@ -80,7 +78,6 @@ enum class TabsTrayAccessPoint {
 class TabsTrayFragment : AppCompatDialogFragment() {
 
     @VisibleForTesting internal lateinit var tabsTrayStore: TabsTrayStore
-    private lateinit var browserTrayInteractor: BrowserTrayInteractor
     private lateinit var tabsTrayInteractor: TabsTrayInteractor
     private lateinit var tabsTrayController: DefaultTabsTrayController
     private lateinit var inactiveTabsInteractor: DefaultInactiveTabsInteractor
@@ -120,7 +117,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) =
-        TabsTrayDialog(requireContext(), theme) { browserTrayInteractor }
+        TabsTrayDialog(requireContext(), theme) { tabsTrayInteractor }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -213,7 +210,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
         tabsTrayController = DefaultTabsTrayController(
             activity = activity,
-            trayStore = tabsTrayStore,
+            tabsTrayStore = tabsTrayStore,
             browserStore = requireComponents.core.store,
             browsingModeManager = activity.browsingModeManager,
             navController = findNavController(),
@@ -227,13 +224,8 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             showCancelledDownloadWarning = ::showCancelledDownloadWarning,
         )
 
-        tabsTrayInteractor = DefaultTabsTrayInteractor(tabsTrayController)
-
-        browserTrayInteractor = DefaultBrowserTrayInteractor(
-            tabsTrayStore,
-            tabsTrayInteractor,
-            tabsTrayController,
-            requireComponents.useCases.tabsUseCases.selectTab,
+        tabsTrayInteractor = DefaultTabsTrayInteractor(
+            controller = tabsTrayController,
         )
 
         inactiveTabsInteractor = DefaultInactiveTabsInteractor(
@@ -244,7 +236,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 tabsUseCases = requireComponents.useCases.tabsUseCases,
                 showUndoSnackbar = ::showUndoSnackbarForTab,
             ),
-            browserInteractor = browserTrayInteractor,
+            tabsTrayInteractor = tabsTrayInteractor,
         )
 
         setupMenu(navigationInteractor)
@@ -253,8 +245,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             lifecycleOwner = viewLifecycleOwner,
             store = tabsTrayStore,
             trayInteractor = tabsTrayInteractor,
-            browserInteractor = browserTrayInteractor,
-            navigationInteractor = navigationInteractor,
             inactiveTabsInteractor = inactiveTabsInteractor,
         )
 
@@ -332,7 +322,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             feature = FloatingActionButtonBinding(
                 store = tabsTrayStore,
                 actionButton = fabButtonBinding.newTabButton,
-                interactor = browserTrayInteractor,
+                interactor = tabsTrayInteractor,
             ),
             owner = this,
             view = view,
@@ -495,8 +485,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         lifecycleOwner: LifecycleOwner,
         store: TabsTrayStore,
         trayInteractor: TabsTrayInteractor,
-        browserInteractor: BrowserTrayInteractor,
-        navigationInteractor: NavigationInteractor,
         inactiveTabsInteractor: InactiveTabsInteractor,
     ) {
         tabsTrayBinding.tabsTray.apply {
@@ -504,8 +492,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 context = context,
                 lifecycleOwner = lifecycleOwner,
                 tabsTrayStore = store,
-                browserInteractor = browserInteractor,
-                navInteractor = navigationInteractor,
                 tabsTrayInteractor = trayInteractor,
                 browserStore = requireComponents.core.store,
                 appStore = requireComponents.appStore,

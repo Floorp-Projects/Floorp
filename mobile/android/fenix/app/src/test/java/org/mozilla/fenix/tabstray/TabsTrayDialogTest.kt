@@ -8,13 +8,12 @@ import android.content.Context
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 class TabsTrayDialogTest {
     @Test
     fun `WHEN onBackPressed THEN invoke interactor`() {
         val context = mockk<Context>(relaxed = true)
-        val interactor = mockk<BrowserTrayInteractor>(relaxed = true)
+        val interactor = mockk<TabsTrayInteractor>(relaxed = true)
         val dialog = TabsTrayDialog(context, 0) { interactor }
 
         @Suppress("DEPRECATION")

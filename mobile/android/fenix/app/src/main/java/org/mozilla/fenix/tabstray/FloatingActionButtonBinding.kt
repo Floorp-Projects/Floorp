@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.R
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 /**
  * A binding that show a FAB in tab tray used to open a new tab.
@@ -20,7 +19,7 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 class FloatingActionButtonBinding(
     private val store: TabsTrayStore,
     private val actionButton: ExtendedFloatingActionButton,
-    private val interactor: BrowserTrayInteractor,
+    private val interactor: TabsTrayInteractor,
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {

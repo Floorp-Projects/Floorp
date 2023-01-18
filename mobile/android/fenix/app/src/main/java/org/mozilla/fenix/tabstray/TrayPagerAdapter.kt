@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
 import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
 import org.mozilla.fenix.tabstray.viewholders.AbstractPageViewHolder
@@ -27,8 +26,6 @@ class TrayPagerAdapter(
     internal val context: Context,
     internal val lifecycleOwner: LifecycleOwner,
     internal val tabsTrayStore: TabsTrayStore,
-    internal val browserInteractor: BrowserTrayInteractor,
-    internal val navInteractor: NavigationInteractor,
     internal val tabsTrayInteractor: TabsTrayInteractor,
     internal val browserStore: BrowserStore,
     internal val appStore: AppStore,
@@ -48,14 +45,14 @@ class TrayPagerAdapter(
                 inactiveTabsInteractor = inactiveTabsInteractor,
                 featureName = INACTIVE_TABS_FEATURE_NAME,
             ),
-            BrowserTabsAdapter(context, browserInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME, lifecycleOwner),
+            BrowserTabsAdapter(context, tabsTrayInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME, lifecycleOwner),
         )
     }
 
     private val privateAdapter by lazy {
         BrowserTabsAdapter(
             context,
-            browserInteractor,
+            tabsTrayInteractor,
             tabsTrayStore,
             TABS_TRAY_FEATURE_NAME,
             lifecycleOwner,

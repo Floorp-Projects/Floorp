@@ -17,14 +17,14 @@ import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.compose.tabstray.TabListItem
 import org.mozilla.fenix.selection.SelectionHolder
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 /**
  * A Compose ViewHolder implementation for "tab" items with list layout.
  *
- * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
+ * @param interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
  * @param tabsTrayStore [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
  * @param selectionHolder [SelectionHolder]<[TabSessionState]> for helping with selecting
  * any number of displayed [TabSessionState]s.
@@ -33,7 +33,7 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
  */
 class ComposeListViewHolder(
-    private val interactor: BrowserTrayInteractor,
+    private val interactor: TabsTrayInteractor,
     private val tabsTrayStore: TabsTrayStore,
     private val selectionHolder: SelectionHolder<TabSessionState>? = null,
     composeItemView: ComposeView,
@@ -82,7 +82,7 @@ class ComposeListViewHolder(
 
     private fun onLongClick(tab: TabSessionState) {
         val holder = selectionHolder ?: return
-        interactor.onLongClicked(tab, holder)
+        interactor.onTabLongClicked(tab, holder)
     }
 
     @Composable

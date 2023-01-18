@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.browser
 
 import mozilla.components.browser.state.state.TabSessionState
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
 
 /**
@@ -53,12 +54,12 @@ interface InactiveTabsInteractor {
  *
  * @param controller An instance of [InactiveTabsController] which will be delegated for all
  * user interactions.
- * @param browserInteractor [BrowserTrayInteractor] used to respond to interactions with specific
+ * @param tabsTrayInteractor [TabsTrayInteractor] used to respond to interactions with specific
  * inactive tabs.
  */
 class DefaultInactiveTabsInteractor(
     private val controller: InactiveTabsController,
-    private val browserInteractor: BrowserTrayInteractor,
+    private val tabsTrayInteractor: TabsTrayInteractor,
 ) : InactiveTabsInteractor {
 
     /**
@@ -87,7 +88,7 @@ class DefaultInactiveTabsInteractor(
      */
     override fun onInactiveTabClicked(tab: TabSessionState) {
         controller.handleInactiveTabClicked(tab)
-        browserInteractor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME)
+        tabsTrayInteractor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME)
     }
 
     /**
@@ -95,7 +96,7 @@ class DefaultInactiveTabsInteractor(
      */
     override fun onInactiveTabClosed(tab: TabSessionState) {
         controller.handleCloseInactiveTabClicked(tab)
-        browserInteractor.onTabClosed(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME)
+        tabsTrayInteractor.onTabClosed(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME)
     }
 
     /**

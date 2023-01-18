@@ -39,6 +39,7 @@ import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.selection.SelectionHolder
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -73,7 +74,7 @@ abstract class AbstractBrowserTabViewHolder(
     internal val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val playPauseButtonView: ImageButton = itemView.findViewById(R.id.play_pause_button)
 
-    abstract val interactor: BrowserTrayInteractor
+    abstract val interactor: TabsTrayInteractor
     abstract val thumbnailSize: Int
 
     override var tab: TabSessionState? = null
@@ -207,14 +208,14 @@ abstract class AbstractBrowserTabViewHolder(
     private fun setSelectionInteractor(
         item: TabSessionState,
         holder: SelectionHolder<TabSessionState>,
-        interactor: BrowserTrayInteractor,
+        interactor: TabsTrayInteractor,
     ) {
         itemView.setOnClickListener {
             interactor.onMultiSelectClicked(item, holder, featureName)
         }
 
         itemView.setOnLongClickListener {
-            interactor.onLongClicked(item, holder)
+            interactor.onTabLongClicked(item, holder)
         }
         setDragInteractor(item, holder, interactor)
     }
@@ -223,7 +224,7 @@ abstract class AbstractBrowserTabViewHolder(
     private fun setDragInteractor(
         item: TabSessionState,
         holder: SelectionHolder<TabSessionState>,
-        interactor: BrowserTrayInteractor,
+        interactor: TabsTrayInteractor,
     ) {
         // Since I immediately pass the event to onTouchEvent if it's not a move
         // The ClickableViewAccessibility warning isn't useful
@@ -248,7 +249,7 @@ abstract class AbstractBrowserTabViewHolder(
                         // Only start deselect+drag if the user drags far enough
                         val dist = PointF.length(touchStart.x - motionEvent.x, touchStart.y - motionEvent.y)
                         if (dist > ViewConfiguration.get(parent.context).scaledTouchSlop) {
-                            interactor.deselect(item) // Exit selection mode
+                            interactor.onTabUnselected(item) // Exit selection mode
                             touchStartPoint = null
                             val dragOffset = PointF(motionEvent.x, motionEvent.y)
                             val shadow = BlankDragShadowBuilder()

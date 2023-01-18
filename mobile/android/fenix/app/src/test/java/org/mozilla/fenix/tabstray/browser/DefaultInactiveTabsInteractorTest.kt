@@ -9,12 +9,13 @@ import io.mockk.verify
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Test
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
 
 class DefaultInactiveTabsInteractorTest {
 
     private val controller: InactiveTabsController = mockk(relaxed = true)
-    private val browserInteractor: BrowserTrayInteractor = mockk(relaxed = true)
+    private val interactor: TabsTrayInteractor = mockk(relaxed = true)
 
     @Test
     fun `WHEN the inactive tabs header is clicked THEN update the expansion state of the inactive tabs card`() {
@@ -49,7 +50,7 @@ class DefaultInactiveTabsInteractorTest {
         createInteractor().onInactiveTabClicked(tab)
 
         verify { controller.handleInactiveTabClicked(tab) }
-        verify { browserInteractor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
+        verify { interactor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
     }
 
     @Test
@@ -64,7 +65,7 @@ class DefaultInactiveTabsInteractorTest {
         createInteractor().onInactiveTabClosed(tab)
 
         verify { controller.handleCloseInactiveTabClicked(tab) }
-        verify { browserInteractor.onTabClosed(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
+        verify { interactor.onTabClosed(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
     }
 
     @Test
@@ -77,7 +78,7 @@ class DefaultInactiveTabsInteractorTest {
     private fun createInteractor(): DefaultInactiveTabsInteractor {
         return DefaultInactiveTabsInteractor(
             controller = controller,
-            browserInteractor = browserInteractor,
+            tabsTrayInteractor = interactor,
         )
     }
 }

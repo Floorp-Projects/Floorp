@@ -23,21 +23,19 @@ import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.AbstractBrowserTrayList
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AbstractBrowserPageViewHolderTest {
     val tabsTrayStore: TabsTrayStore = TabsTrayStore()
     val browserStore = BrowserStore()
     val interactor = mockk<TabsTrayInteractor>(relaxed = true)
-    val browserTrayInteractor = mockk<BrowserTrayInteractor>(relaxed = true)
     init {
         every { testContext.components.core.thumbnailStorage } returns mockk()
         every { testContext.components.settings } returns mockk(relaxed = true)
     }
 
     val adapter =
-        BrowserTabsAdapter(testContext, browserTrayInteractor, tabsTrayStore, "Test", mockk())
+        BrowserTabsAdapter(testContext, interactor, tabsTrayStore, "Test", mockk())
 
     @Test
     fun `WHEN tabs inserted THEN show tray`() {

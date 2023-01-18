@@ -21,13 +21,14 @@ import org.mozilla.fenix.databinding.TabTrayItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.selection.SelectionHolder
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
 @RunWith(FenixRobolectricTestRunner::class)
 class BrowserTabsAdapterTest {
 
     private val context = testContext
-    private val interactor = mockk<BrowserTrayInteractor>(relaxed = true)
+    private val interactor = mockk<TabsTrayInteractor>(relaxed = true)
     private val store = TabsTrayStore()
 
     @Test
