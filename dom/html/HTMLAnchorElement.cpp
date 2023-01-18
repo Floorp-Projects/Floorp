@@ -24,10 +24,6 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
 namespace mozilla::dom {
 
-// static
-const DOMTokenListSupportedToken HTMLAnchorElement::sSupportedRelValues[] = {
-    "noreferrer", "noopener", nullptr};
-
 HTMLAnchorElement::~HTMLAnchorElement() {
   SupportsDNSPrefetch::Destroyed(*this);
 }
