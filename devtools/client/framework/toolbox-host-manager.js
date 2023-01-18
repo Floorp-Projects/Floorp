@@ -81,7 +81,6 @@ function ToolboxHostManager(commands, hostType, hostOptions) {
   this.host = this.createHost(hostType, hostOptions);
   this.hostType = hostType;
   this.setMinWidthWithZoom = this.setMinWidthWithZoom.bind(this);
-  this._onToolboxUnload = this._onToolboxUnload.bind(this);
   this._onMessage = this._onMessage.bind(this);
   Services.prefs.addObserver(ZOOM_VALUE_PREF, this.setMinWidthWithZoom);
 }
@@ -107,7 +106,7 @@ ToolboxHostManager.prototype = {
       this.host.frame.contentWindow,
       this.frameId
     );
-    toolbox.once("toolbox-unload", this._onToolboxUnload);
+    toolbox.once("destroyed", this._onToolboxDestroyed.bind(this));
 
     // Prevent reloading the toolbox when loading the tools in a tab
     // (e.g. from about:debugging)
@@ -143,10 +142,10 @@ ToolboxHostManager.prototype = {
     }
   },
 
-  _onToolboxUnload() {
-    // The "toolbox-unload" event is currently emitted right before destroying
-    // the target. Run destroy() in the next tick to allow the target to be
-    // destroyed.
+  _onToolboxDestroyed() {
+    // Delay self-destruction to let the debugger complete async destruction.
+    // Otherwise it throws when running browser_dbg-breakpoints-in-evaled-sources.js
+    // because the promise middleware delay each promise action using setTimeout...
     DevToolsUtils.executeSoon(() => {
       this.destroy();
     });

@@ -11,6 +11,12 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Component not initialized/);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
+/* import-globals-from ../../debugger/test/mochitest/shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
+  this
+);
+
 /**
  * Tests if on clicking the stack frame, UI switches to the Debugger panel.
  */
@@ -65,18 +71,11 @@ async function checkClickOnNode(toolbox, frameLinkNode) {
   const line = frameLinkNode.getAttribute("data-line");
   ok(line, `source line found ("${line}")`);
 
-  // create the promise
-  const onJsDebuggerSelected = toolbox.once("jsdebugger-selected");
   // Fire the click event
   frameLinkNode.querySelector(".frame-link-source").click();
-  // wait for the promise to resolve
-  await onJsDebuggerSelected;
 
-  const dbg = await toolbox.getPanelWhenReady("jsdebugger");
-  await waitUntil(() => dbg._selectors.getSelectedSource(dbg._getState()));
-  is(
-    dbg._selectors.getSelectedSource(dbg._getState()).url,
-    url,
-    "expected source url"
-  );
+  // Wait for the debugger to have fully processed the opened source
+  await toolbox.getPanelWhenReady("jsdebugger");
+  const dbg = createDebuggerContext(toolbox);
+  await waitForSelectedSource(dbg, url);
 }

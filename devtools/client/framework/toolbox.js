@@ -4139,9 +4139,6 @@ Toolbox.prototype = {
 
             this._store = null;
 
-            // Notify toolbox-host-manager that the host can be destroyed.
-            this.emit("toolbox-unload");
-
             // All Commands need to be destroyed.
             // This is done after other destruction tasks since it may tear down
             // fronts and the debugger transport which earlier destroy methods may

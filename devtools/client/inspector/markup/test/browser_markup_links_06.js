@@ -8,6 +8,12 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
+/* import-globals-from ../../../debugger/test/mochitest/shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
+  this
+);
+
 add_task(async function() {
   const { toolbox, inspector } = await openInspectorForURL(TEST_URL);
 
@@ -42,9 +48,12 @@ add_task(async function() {
   });
 
   info("Follow the link and wait for the debugger to open");
-  const onDebuggerReady = toolbox.once("jsdebugger-ready");
   inspector.markup.contextMenu._onFollowLink();
-  await onDebuggerReady;
+
+  // Wait for the debugger to have fully processed the opened source
+  await toolbox.getPanelWhenReady("jsdebugger");
+  const dbg = createDebuggerContext(toolbox);
+  await waitForSelectedSource(dbg, URL_ROOT + "lib_jquery_1.0.js");
 
   // No real need to test that the debugger opened on the right file here as
   // this is already tested in /framework/test/browser_toolbox_view_source_*
