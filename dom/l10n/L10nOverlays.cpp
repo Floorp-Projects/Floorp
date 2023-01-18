@@ -10,6 +10,7 @@
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "nsHtml5StringParser.h"
 #include "nsTextNode.h"
+#include "nsIParserUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla;
@@ -525,9 +526,16 @@ void L10nOverlays::TranslateElement(Element& aElement,
       RefPtr<DocumentFragment> fragment =
           new (aElement.OwnerDoc()->NodeInfoManager())
               DocumentFragment(aElement.OwnerDoc()->NodeInfoManager());
+      // Note: these flags should be no less restrictive than the ones in
+      // nsContentUtils::ParseFragmentHTML .
+      // We supply the flags here because otherwise the parsing of HTML can
+      // trip DEBUG-only crashes, see bug 1809902 for details.
+      auto sanitizationFlags = nsIParserUtils::SanitizerDropForms |
+                               nsIParserUtils::SanitizerLogRemovals;
       nsContentUtils::ParseFragmentHTML(
           NS_ConvertUTF8toUTF16(aTranslation.mValue), fragment,
-          nsGkAtoms::_template, kNameSpaceID_XHTML, false, true);
+          nsGkAtoms::_template, kNameSpaceID_XHTML, false, true,
+          sanitizationFlags);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
