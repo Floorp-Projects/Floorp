@@ -492,7 +492,7 @@ static int blendTextureNearestFast(S sampler, vec2 uv, int span,
   // bounds.
   P* row =
       &((P*)sampler
-            ->buf)[clamp(clampCoord(i.y, sampler->height), minUV.y, maxUV.y) *
+            ->buf)[clampCoord(clamp(i.y, minUV.y, maxUV.y), sampler->height) *
                    sampler->stride];
   // Find clamped X bounds within the row.
   int minX = clamp(minUV.x, 0, sampler->width - 1);
