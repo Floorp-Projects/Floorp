@@ -2421,10 +2421,21 @@ with only_when(requires_wasm_sandboxing & compile_environment):
     @depends(
         "--with-wasi-sysroot",
         bootstrap_path("sysroot-wasm32-wasi", when=bootstrap_wasi_sysroot),
+        "--with-wasm-sandboxed-libraries",
     )
     @imports("os")
-    def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot):
+    def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot, sandboxed_libs):
         if not wasi_sysroot:
+            if not bootstrapped_sysroot:
+                suggest_disable = ""
+                if sandboxed_libs.origin == "default":
+                    suggest_disable = (
+                        " Or build with --without-wasm-sandboxed-libraries."
+                    )
+                die(
+                    "Cannot find a wasi sysroot. Please give its location with "
+                    "--with-wasi-sysroot." + suggest_disable
+                )
             return bootstrapped_sysroot
 
         wasi_sysroot = wasi_sysroot[0]
@@ -2435,59 +2446,24 @@ with only_when(requires_wasm_sandboxing & compile_environment):
 
         return wasi_sysroot
 
-    @depends(wasi_sysroot)
-    def wasi_sysroot_flags(wasi_sysroot):
-        if wasi_sysroot:
-            log.info("Using wasi sysroot in %s", wasi_sysroot)
-            return ["--sysroot=%s" % wasi_sysroot]
-        return []
-
     set_config("WASI_SYSROOT", wasi_sysroot)
 
-    def wasm_compiler_with_flags(compiler, sysroot_flags):
-        if compiler:
+    def wasm_compiler_with_flags(compiler, sysroot):
+        if not sysroot:
+            return
+        elif compiler:
             return (
-                compiler.wrapper + [compiler.compiler] + compiler.flags + sysroot_flags
+                compiler.wrapper
+                + [compiler.compiler]
+                + compiler.flags
+                + ["--sysroot=%s" % sysroot]
             )
 
-    @template
-    def wasm_compiler_error(msg):
-        @depends("--with-wasm-sandboxed-libraries")
-        def wasm_compiler_error(sandboxed_libs):
-            suggest_disable = ""
-            if sandboxed_libs.origin == "default":
-                suggest_disable = " Or build with --without-wasm-sandboxed-libraries."
-            return lambda: die(msg + suggest_disable)
-
-        return wasm_compiler_error
-
-    @template
-    def check_wasm_compiler(compiler, language):
-        compiler.try_compile(
-            includes=["cstring" if language == "C++" else "string.h"],
-            flags=wasi_sysroot_flags,
-            check_msg="the wasm %s compiler can find wasi headers" % language,
-            onerror=wasm_compiler_error(
-                "Cannot find wasi headers or problem with the wasm compiler. "
-                "Please fix the problem."
-            ),
-        )
-
-        compiler.try_run(
-            flags=wasi_sysroot_flags,
-            check_msg="the wasm %s linker can find wasi libraries" % language,
-            onerror=wasm_compiler_error(
-                "Cannot find wasi libraries or problem with the wasm linker. "
-                "Please fix the problem."
-            ),
-        )
-
     wasm_cc = compiler("C", wasm, other_compiler=c_compiler)
-    check_wasm_compiler(wasm_cc, "C")
 
-    @depends(wasm_cc, wasi_sysroot_flags)
-    def wasm_cc_with_flags(wasm_cc, wasi_sysroot_flags):
-        return wasm_compiler_with_flags(wasm_cc, wasi_sysroot_flags)
+    @depends(wasm_cc, wasi_sysroot)
+    def wasm_cc_with_flags(wasm_cc, wasi_sysroot):
+        return wasm_compiler_with_flags(wasm_cc, wasi_sysroot)
 
     set_config("WASM_CC", wasm_cc_with_flags)
 
@@ -2498,11 +2474,10 @@ with only_when(requires_wasm_sandboxing & compile_environment):
         other_compiler=cxx_compiler,
         other_c_compiler=c_compiler,
     )
-    check_wasm_compiler(wasm_cxx, "C++")
 
-    @depends(wasm_cxx, wasi_sysroot_flags)
-    def wasm_cxx_with_flags(wasm_cxx, wasi_sysroot_flags):
-        return wasm_compiler_with_flags(wasm_cxx, wasi_sysroot_flags)
+    @depends(wasm_cxx, wasi_sysroot)
+    def wasm_cxx_with_flags(wasm_cxx, wasi_sysroot):
+        return wasm_compiler_with_flags(wasm_cxx, wasi_sysroot)
 
     set_config("WASM_CXX", wasm_cxx_with_flags)
 
