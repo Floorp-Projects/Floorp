@@ -18,10 +18,6 @@ add_setup(async function() {
       ["browser.urlbar.showSearchTerms.featureGate", true],
       ["browser.urlbar.showSearchTerms.enabled", true],
       ["browser.search.widget.inNavBar", false],
-      [
-        "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs",
-        100,
-      ],
     ],
   });
 });
