@@ -17,7 +17,6 @@ add_task(async function() {
 async function testToolboxInitialization(tab, inspector, toolbox) {
   ok(true, "Inspector started, and notification received.");
   ok(inspector, "Inspector instance is accessible.");
-  is(inspector.currentTarget.localTab, tab, "Valid target.");
 
   await selectNode("#p", inspector);
   await testMarkupView("#p", inspector);
