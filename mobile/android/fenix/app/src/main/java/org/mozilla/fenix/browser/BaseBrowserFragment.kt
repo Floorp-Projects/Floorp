@@ -122,6 +122,8 @@ import org.mozilla.fenix.crashes.CrashContentIntegration
 import org.mozilla.fenix.databinding.FragmentBrowserBinding
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
+import org.mozilla.fenix.downloads.FirstPartyDownloadDialog
+import org.mozilla.fenix.downloads.StartDownloadDialog
 import org.mozilla.fenix.ext.accessibilityManager
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
@@ -215,6 +217,8 @@ abstract class BaseBrowserFragment :
 
     @VisibleForTesting
     internal val onboarding by lazy { FenixOnboarding(requireContext()) }
+
+    private var currentStartDownloadDialog: StartDownloadDialog? = null
 
     @CallSuper
     override fun onCreateView(
@@ -509,6 +513,19 @@ abstract class BaseBrowserFragment :
             ),
             onNeedToRequestPermissions = { permissions ->
                 requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+            },
+            customFirstPartyDownloadDialog = { filename, contentSize, positiveAction, negativeAction ->
+                FirstPartyDownloadDialog(
+                    activity = requireActivity(),
+                    filename = filename.value,
+                    contentSize = contentSize.value,
+                    positiveButtonAction = positiveAction.value,
+                    negativeButtonAction = negativeAction.value,
+                ).onDismiss {
+                    currentStartDownloadDialog = null
+                }.show(binding.startDownloadDialogContainer).also {
+                    currentStartDownloadDialog = it
+                }
             },
         )
 
@@ -1062,6 +1079,7 @@ abstract class BaseBrowserFragment :
                     it.selectedTab
                 }
                 .collect {
+                    currentStartDownloadDialog?.dismiss()
                     handleTabSelected(it)
                 }
         }
@@ -1130,6 +1148,7 @@ abstract class BaseBrowserFragment :
     override fun onStop() {
         super.onStop()
         initUIJob?.cancel()
+        currentStartDownloadDialog?.dismiss()
 
         requireComponents.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)
             ?.let { session ->
@@ -1145,6 +1164,10 @@ abstract class BaseBrowserFragment :
         return findInPageIntegration.onBackPressed() ||
             fullScreenFeature.onBackPressed() ||
             promptsFeature.onBackPressed() ||
+            currentStartDownloadDialog?.let {
+                it.dismiss()
+                true
+            } ?: false ||
             sessionFeature.onBackPressed() ||
             removeSessionIfNeeded()
     }

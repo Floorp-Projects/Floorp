@@ -86,6 +86,8 @@
     <!--The size of the gap between the tab preview and content layout.-->
     <dimen name="browser_fragment_gesture_preview_offset">48dp</dimen>
     <dimen name="browser_fragment_toolbar_elevation">16dp</dimen>
+    <!-- The download dialogs are shown above the toolbar so they need a bigger elevation. -->
+    <dimen name="browser_fragment_download_dialog_elevation">17dp</dimen>
 
     <!-- Search Fragment -->
     <dimen name="search_fragment_clipboard_item_height">56dp</dimen>

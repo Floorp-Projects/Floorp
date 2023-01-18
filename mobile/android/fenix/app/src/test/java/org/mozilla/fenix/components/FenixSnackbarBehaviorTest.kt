@@ -73,9 +73,73 @@ class FenixSnackbarBehaviorTest {
     }
 
     @Test
+    fun `GIVEN a toolbar, a download dialog and a dynamic download dialog are shown WHEN the snackbar is shown THEN place the snackbar above the download dialog`() {
+        listOf(R.id.viewDynamicDownloadDialog, R.id.toolbar, R.id.startDownloadDialogContainer).forEach {
+            parent.addView(View(testContext).apply { id = it })
+        }
+        val behavior = FenixSnackbarBehavior<ViewGroup>(testContext, ToolbarPosition.BOTTOM)
+
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+
+        assertSnackbarPlacementAboveAnchor(parent.findViewById(R.id.startDownloadDialogContainer))
+    }
+
+    @Test
     fun `GIVEN the snackbar is anchored to the dynamic download dialog and a bottom toolbar is shown WHEN the dialog is not shown anymore THEN place the snackbar above the toolbar`() {
         val dialog = View(testContext)
             .apply { id = R.id.viewDynamicDownloadDialog }
+            .also { parent.addView(it) }
+        val toolbar = View(testContext)
+            .apply { id = R.id.toolbar }
+            .also { parent.addView(it) }
+        val behavior = FenixSnackbarBehavior<ViewGroup>(testContext, ToolbarPosition.BOTTOM)
+
+        // Test the scenario where the dialog is invisible.
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(dialog)
+        dialog.visibility = View.GONE
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(toolbar)
+
+        // Test the scenario where the dialog is removed from parent.
+        dialog.visibility = View.VISIBLE
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(dialog)
+        parent.removeView(dialog)
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(toolbar)
+    }
+
+    @Test
+    fun `GIVEN the snackbar is anchored to a download dialog and another dynamic dialog is shown WHEN the dialog is not shown anymore THEN place the snackbar above the dynamic dialog`() {
+        val dialog = View(testContext)
+            .apply { id = R.id.startDownloadDialogContainer }
+            .also { parent.addView(it) }
+        val dynamicDialog = View(testContext)
+            .apply { id = R.id.viewDynamicDownloadDialog }
+            .also { parent.addView(it) }
+        val behavior = FenixSnackbarBehavior<ViewGroup>(testContext, ToolbarPosition.BOTTOM)
+
+        // Test the scenario where the dialog is invisible.
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(dialog)
+        dialog.visibility = View.GONE
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(dynamicDialog)
+
+        // Test the scenario where the dialog is removed from parent.
+        dialog.visibility = View.VISIBLE
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(dialog)
+        parent.removeView(dialog)
+        behavior.layoutDependsOn(parent, snackbarContainer, dependency)
+        assertSnackbarPlacementAboveAnchor(dynamicDialog)
+    }
+
+    @Test
+    fun `GIVEN the snackbar is anchored to a download dialog and a bottom toolbar is shown WHEN the dialog is not shown anymore THEN place the snackbar above the toolbar`() {
+        val dialog = View(testContext)
+            .apply { id = R.id.startDownloadDialogContainer }
             .also { parent.addView(it) }
         val toolbar = View(testContext)
             .apply { id = R.id.toolbar }

@@ -28,11 +28,12 @@ class FenixSnackbarBehavior<V : View>(
 ) : CoordinatorLayout.Behavior<V>(context, null) {
 
     private val dependenciesIds = listOf(
+        R.id.startDownloadDialogContainer,
         R.id.viewDynamicDownloadDialog,
         R.id.toolbar,
     )
 
-    private var currentAnchorId = View.NO_ID
+    private var currentAnchorId: Int? = View.NO_ID
 
     override fun layoutDependsOn(
         parent: CoordinatorLayout,
@@ -55,9 +56,9 @@ class FenixSnackbarBehavior<V : View>(
         }
     }
 
-    private fun positionSnackbar(child: View, dependency: View?) {
+    private fun positionSnackbar(snackbar: View, dependency: View?) {
         currentAnchorId = dependency?.id ?: View.NO_ID
-        val params = child.layoutParams as CoordinatorLayout.LayoutParams
+        val params = snackbar.layoutParams as CoordinatorLayout.LayoutParams
 
         if (dependency == null || (dependency.id == R.id.toolbar && toolbarPosition == ToolbarPosition.TOP)) {
             // Position the snackbar at the bottom of the screen.
@@ -71,6 +72,6 @@ class FenixSnackbarBehavior<V : View>(
             params.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
         }
 
-        child.layoutParams = params
+        snackbar.layoutParams = params
     }
 }

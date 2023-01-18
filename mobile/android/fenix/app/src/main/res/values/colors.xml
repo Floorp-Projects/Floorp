@@ -337,4 +337,7 @@
 
     <!-- App Spinners colors -->
     <color name="spinner_selected_item">#1415141A</color>
+
+    <!-- Material Design colors -->
+    <color name="material_scrim_color">#52000000</color>
 </resources>
