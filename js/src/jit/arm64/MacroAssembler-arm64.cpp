@@ -2820,7 +2820,7 @@ void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
   Fcvtms(o64, iFlt);
   Cmp(o64, Operand(o64, vixl::SXTW));
   B(NotEqual, fail);
-  Mov(o32, o32);
+  Uxtw(o64, o64);
   B(&fin);
 
   bind(&handleZero);
@@ -2847,7 +2847,7 @@ void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
   Fcvtms(o64, iDbl);
   Cmp(o64, Operand(o64, vixl::SXTW));
   B(NotEqual, fail);
-  Mov(o32, o32);
+  Uxtw(o64, o64);
   B(&fin);
 
   bind(&handleZero);
@@ -2873,7 +2873,7 @@ void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
   Cmp(o64, Operand(o64, vixl::SXTW));
   B(NotEqual, fail);
   Cbz(o64, &handleZero);
-  Mov(o32, o32);
+  Uxtw(o64, o64);
   B(&fin);
 
   bind(&handleZero);
@@ -2897,7 +2897,7 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
   Cmp(o64, Operand(o64, vixl::SXTW));
   B(NotEqual, fail);
   Cbz(o64, &handleZero);
-  Mov(o32, o32);
+  Uxtw(o64, o64);
   B(&fin);
 
   bind(&handleZero);
