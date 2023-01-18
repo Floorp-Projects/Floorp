@@ -158,6 +158,10 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
