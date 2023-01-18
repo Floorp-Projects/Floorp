@@ -6,6 +6,7 @@ package org.mozilla.focus.fragment.onboarding
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.transition.TransitionInflater
 import android.view.LayoutInflater
@@ -15,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
+import mozilla.components.support.utils.Browsers
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.focus.GleanMetrics.Onboarding
 import org.mozilla.focus.R
@@ -70,6 +72,17 @@ class OnboardingSecondFragment : Fragment() {
                 }
             }
             isTransitionGroup = true
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // check if the default browser was changed from OS settings for devices with Android 7,8 and 9.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+            Browsers.all(requireContext()).isDefaultBrowser
+        ) {
+            onboardingInteractor.onFinishOnBoarding()
         }
     }
 }
