@@ -100,6 +100,7 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
         }
     }
 
+    @SuppressWarnings("LongMethod")
     @Composable
     private fun StartCard(
         viewStateObserver: MutableState<CardState>,
@@ -126,25 +127,37 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                 ProfilerLabeledRadioButton(
                     text = stringResource(R.string.profiler_filter_firefox),
                     subText = stringResource(R.string.profiler_filter_firefox_explain),
-                    state = featureAndThreadsObserver,
+                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_firefox),
+                    onClick = {
+                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_firefox)
+                    },
                 )
 
                 ProfilerLabeledRadioButton(
                     text = stringResource(R.string.profiler_filter_graphics),
                     subText = stringResource(R.string.profiler_filter_graphics_explain),
-                    state = featureAndThreadsObserver,
+                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_graphics),
+                    onClick = {
+                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_graphics)
+                    },
                 )
 
                 ProfilerLabeledRadioButton(
                     text = stringResource(R.string.profiler_filter_media),
                     subText = stringResource(R.string.profiler_filter_media_explain),
-                    state = featureAndThreadsObserver,
+                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_media),
+                    onClick = {
+                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_media)
+                    },
                 )
 
                 ProfilerLabeledRadioButton(
                     text = stringResource(R.string.profiler_filter_networking),
                     subText = stringResource(R.string.profiler_filter_networking_explain),
-                    state = featureAndThreadsObserver,
+                    selected = featureAndThreadsObserver.value == stringResource(R.string.profiler_filter_networking),
+                    onClick = {
+                        featureAndThreadsObserver.value = getString(R.string.profiler_filter_networking)
+                    },
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
