@@ -276,16 +276,6 @@ function TargetMixin(parentClass) {
       return this._client;
     }
 
-    // Tells us if we are debugging content document
-    // or if we are debugging chrome stuff.
-    // Allows to controls which features are available against
-    // a chrome or a content document.
-    get chrome() {
-      return (
-        this.isWebExtension || this.isContentProcess || this.isParentProcess
-      );
-    }
-
     // Tells us if the related actor implements WindowGlobalTargetActor
     // interface and requires to call `attach` request before being used and
     // `detach` during cleanup.

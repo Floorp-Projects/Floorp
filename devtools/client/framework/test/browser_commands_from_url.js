@@ -19,9 +19,8 @@ SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
 });
 
-function assertTarget(target, url, chrome = false) {
+function assertTarget(target, url) {
   is(target.url, url);
-  is(target.chrome, chrome);
   is(target.isBrowsingContext, true);
 }
 
@@ -71,7 +70,7 @@ add_task(async function() {
   commands = await commandsFromURL(new URL("https://foo?type=process"));
   target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href);
   await commands.destroy();
 
   await testRemoteTCP();
@@ -127,7 +126,7 @@ async function testRemoteTCP() {
   );
   const target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href);
 
   const settings = commands.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
@@ -150,7 +149,7 @@ async function testRemoteWebSocket() {
   );
   const target = await commands.descriptorFront.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  assertTarget(target, topWindow.location.href, true);
+  assertTarget(target, topWindow.location.href);
 
   const settings = commands.client._transport.connectionSettings;
   is(settings.host, "127.0.0.1");
