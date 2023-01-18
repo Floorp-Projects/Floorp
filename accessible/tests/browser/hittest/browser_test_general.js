@@ -204,20 +204,19 @@ addAccessibleTask(
     const a = findAccessibleChildByID(accDoc, "a");
     const aa = findAccessibleChildByID(accDoc, "aa");
     const dpr = await getContentDPR(browser);
-    // eslint-disable-next-line no-unused-vars
-    const [_, y, w] = Layout.getBounds(a, dpr);
+    const [, , w, h] = Layout.getBounds(a, dpr);
     // test upper left of `a`
     await testChildAtPoint(dpr, 1, 1, a, aa, aa);
     // test upper right of `a`
     await testChildAtPoint(dpr, w - 1, 1, a, a, a);
     // test just outside upper left of `a`
-    await testChildAtPoint(dpr, 1, y - 1, a, null, null);
-    if (isCacheEnabled) {
-      // test halfway down/left of `a`
-      await testChildAtPoint(dpr, 1, Math.round(y / 2), a, null, null);
-    }
+    await testChildAtPoint(dpr, 1, -1, a, null, null);
+    // test halfway down/left of `a`
+    await testChildAtPoint(dpr, 1, Math.round(h / 2), a, a, a);
   },
   {
+    chrome: true,
+    topLevel: true,
     iframe: false,
     remoteIframe: false,
     // Ensure that all hittest elements are in view.
