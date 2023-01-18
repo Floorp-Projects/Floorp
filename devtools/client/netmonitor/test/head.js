@@ -363,7 +363,7 @@ function restartNetMonitor(monitor, { requestCount }) {
   info("Restarting the specified network monitor.");
 
   return (async function() {
-    const tab = monitor.toolbox.target.localTab;
+    const tab = monitor.commands.descriptorFront.localTab;
     const url = tab.linkedBrowser.currentURI.spec;
 
     await waitForAllNetworkUpdateEvents();
