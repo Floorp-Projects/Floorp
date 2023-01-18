@@ -314,13 +314,6 @@ var gMainPane = {
     });
     this.updatePerformanceSettingsBox({ duringChangeEvent: false });
     this.displayUseSystemLocale();
-    let connectionSettingsLink = document.getElementById(
-      "connectionSettingsLearnMore"
-    );
-    let connectionSettingsUrl =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "prefs-connection-settings";
-    connectionSettingsLink.setAttribute("href", connectionSettingsUrl);
     this.updateProxySettingsUI();
     initializeProxyUI(gMainPane);
 
