@@ -16,7 +16,7 @@ import mozilla.components.feature.downloads.R
 /**
  * An adapter for displaying the applications that can perform downloads.
  */
-internal class DownloaderAppAdapter(
+class DownloaderAppAdapter(
     context: Context,
     private val apps: List<DownloaderApp>,
     val onAppSelected: ((DownloaderApp) -> Unit),
@@ -49,11 +49,14 @@ internal class DownloaderAppAdapter(
 /**
  * View holder for a [DownloaderApp] item.
  */
-internal class DownloaderAppViewHolder(
+class DownloaderAppViewHolder(
     itemView: View,
     val nameLabel: TextView,
     val iconImage: ImageView,
 ) : RecyclerView.ViewHolder(itemView) {
+    /**
+     * Show a certain downloader application in the current View.
+     */
     fun bind(app: DownloaderApp, onAppSelected: ((DownloaderApp) -> Unit)) {
         itemView.app = app
         itemView.setOnClickListener {
