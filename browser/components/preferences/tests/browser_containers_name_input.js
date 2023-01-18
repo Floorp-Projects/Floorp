@@ -62,4 +62,11 @@ add_task(async function() {
     btnApplyChanges.disabled,
     "The done button should be disabled when the value is empty"
   );
+
+  setName("\u0009\u000B\u000C\u0020\u00A0\uFEFF\u000A\u000D\u2028\u2029");
+
+  Assert.ok(
+    btnApplyChanges.disabled,
+    "The done button should be disabled when the value contains only whitespaces"
+  );
 });
