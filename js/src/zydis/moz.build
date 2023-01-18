@@ -42,8 +42,3 @@ if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']:
 
     # Suppress warnings in third-party code.
     SOURCES['Zydis/SharedData.c'].flags += ['-Wno-sign-compare']
-
-    # clang -Wtautological-constant-in-range-compare implicitly enables
-    # -Wtautological-value-range-compare, but we need to disable it for Zydis.
-    if "-Wtautological-constant-in-range-compare" in CONFIG["WARNINGS_CFLAGS"]:
-        CFLAGS += ["-Wno-tautological-value-range-compare"]
