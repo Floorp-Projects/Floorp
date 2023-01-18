@@ -4734,23 +4734,25 @@ var XPIInstall = {
         aAddon.location.removeAddon(aAddon.id);
         AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
 
-        // Migrate back to the existing addon, unless it was a builtin colorway theme.
-        if (
-          existing &&
-          !(
+        if (existing) {
+          // Migrate back to the existing addon, unless it was a builtin colorway theme,
+          // in that case we also make sure to remove the addon from the builtin location.
+          if (
             existing.isBuiltinColorwayTheme &&
             lazy.BuiltInThemesHelpers.isColorwayMigrationEnabled
-          )
-        ) {
-          lazy.XPIDatabase.makeAddonVisible(existing);
-          AddonManagerPrivate.callAddonListeners(
-            "onInstalling",
-            existing.wrapper,
-            false
-          );
+          ) {
+            existing.location.removeAddon(existing.id);
+          } else {
+            lazy.XPIDatabase.makeAddonVisible(existing);
+            AddonManagerPrivate.callAddonListeners(
+              "onInstalling",
+              existing.wrapper,
+              false
+            );
 
-          if (!existing.disabled) {
-            lazy.XPIDatabase.updateAddonActive(existing, true);
+            if (!existing.disabled) {
+              lazy.XPIDatabase.updateAddonActive(existing, true);
+            }
           }
         }
       };
