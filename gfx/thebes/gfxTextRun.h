@@ -947,8 +947,10 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // Initiates userfont loads if userfont not loaded.
   // aGeneric: if non-null, returns the CSS generic type that was mapped to
   //           this font
+  // aIsFirst: if non-null, returns whether the font was first in the list
   already_AddRefed<gfxFont> GetFirstValidFont(
-      uint32_t aCh = 0x20, mozilla::StyleGenericFontFamily* aGeneric = nullptr);
+      uint32_t aCh = 0x20, mozilla::StyleGenericFontFamily* aGeneric = nullptr,
+      bool* aIsFirst = nullptr);
 
   // Returns the first font in the font-group that has an OpenType MATH table,
   // or null if no such font is available. The GetMathConstant methods may be
@@ -1103,6 +1105,14 @@ class gfxFontGroup final : public gfxTextRunFactory {
   }
 
   nsAtom* Language() const { return mLanguage.get(); }
+
+  // Get font metrics to be used as the basis for CSS font-relative units.
+  // Note that these may be a "composite" of metrics from multiple fonts,
+  // because the 'ch' and 'ic' units depend on the font that would be used
+  // to render specific characters, not simply the "first available" font.
+  // https://drafts.csswg.org/css-values-4/#ch
+  // https://drafts.csswg.org/css-values-4/#ic
+  gfxFont::Metrics GetMetricsForCSSUnits(gfxFont::Orientation aOrientation);
 
  protected:
   friend class mozilla::PostTraversalTask;
