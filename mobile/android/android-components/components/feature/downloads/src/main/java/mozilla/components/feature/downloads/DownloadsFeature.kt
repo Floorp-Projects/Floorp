@@ -25,6 +25,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
+import mozilla.components.feature.downloads.ext.realFilenameOrGuessed
 import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.manager.noop
@@ -41,6 +42,31 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.isSameOriginAs
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.utils.Browsers
+
+/**
+ * The name of the file to be downloaded.
+ */
+@JvmInline
+value class Filename(val value: String)
+
+/**
+ * The size of the file to be downloaded expressed as the number of `bytes`.
+ * The value will be `0` if the size is unknown.
+ */
+@JvmInline
+value class ContentSize(val value: Long)
+
+/**
+ * Action for when the positive button of a download dialog was tapped.
+ */
+@JvmInline
+value class PositiveActionCallback(val value: () -> Unit)
+
+/**
+ * Action for when the negative button of a download dialog was tapped.
+ */
+@JvmInline
+value class NegativeActionCallback(val value: () -> Unit)
 
 /**
  * Feature implementation to provide download functionality for the selected
@@ -61,6 +87,7 @@ import mozilla.components.support.utils.Browsers
  * @property promptsStyling styling properties for the dialog.
  * @property shouldForwardToThirdParties Indicates if downloads should be forward to third party apps,
  * if there are multiple apps a chooser dialog will shown.
+ * @property customDownloadDialog An optional delegate for showing a download dialog.
  */
 @Suppress("LongParameterList", "LargeClass")
 class DownloadsFeature(
@@ -75,6 +102,7 @@ class DownloadsFeature(
     private val fragmentManager: FragmentManager? = null,
     private val promptsStyling: PromptsStyling? = null,
     private val shouldForwardToThirdParties: () -> Boolean = { false },
+    private val customDownloadDialog: ((Filename, ContentSize, PositiveActionCallback, NegativeActionCallback) -> Unit)? = null,
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadStopped: onDownloadStopped
@@ -165,12 +193,29 @@ class DownloadsFeature(
             false
         } else {
             if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
-                if (fragmentManager != null && !download.skipConfirmation) {
-                    showDownloadDialog(tab, download)
-                    false
-                } else {
-                    useCases.consumeDownload(tab.id, download.id)
-                    startDownload(download)
+                when {
+                    customDownloadDialog != null && !download.skipConfirmation -> {
+                        customDownloadDialog.invoke(
+                            Filename(download.realFilenameOrGuessed),
+                            ContentSize(download.contentLength ?: 0),
+                            PositiveActionCallback {
+                                startDownload(download)
+                                useCases.consumeDownload.invoke(tab.id, download.id)
+                            },
+                            NegativeActionCallback {
+                                useCases.cancelDownloadRequest.invoke(tab.id, download.id)
+                            },
+                        )
+                        false
+                    }
+                    fragmentManager != null && !download.skipConfirmation -> {
+                        showDownloadDialog(tab, download)
+                        false
+                    }
+                    else -> {
+                        useCases.consumeDownload(tab.id, download.id)
+                        startDownload(download)
+                    }
                 }
             } else {
                 onNeedToRequestPermissions(downloadManager.permissions)

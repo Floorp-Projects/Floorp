@@ -12,6 +12,10 @@ permalink: /changelog/
 * **browser-toolbar**
   * ⚠️ **This is a breaking change**: `BrowserToolbarBehavior` will not position the `Snackbar.SnackbarLayout` anymore. The ownership for the positioning behavior should be reversed with the snackbar choosing whether it want to be shown above the toolbar and exactly how.
 
+* **feature-downloads**:
+  * 🌟️ `DownloadsFeature` now allows passing a download dialog delegate for 1st party downloads through a new `customDownloadDialog` parameter.
+
+
 # 110.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v109.0.0...v110.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v110.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
