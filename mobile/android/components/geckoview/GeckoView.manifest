@@ -1,4 +1,4 @@
 # GeckoViewStartup.js
-category app-startup GeckoViewStartup service,@mozilla.org/geckoview/startup;1 process=main
+category app-startup GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main
 category content-process-ready-for-script GeckoViewStartup @mozilla.org/geckoview/startup;1 process=content
 category profile-after-change GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main
