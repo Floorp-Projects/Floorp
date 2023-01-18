@@ -675,6 +675,24 @@
           }
         ]
       }
-    ]
+    ],
+    "properties": {
+      "GUARANTEED_MINIMUM_STATIC_RULES": {
+        "type": "number",
+        "description": "The minimum number of static rules guaranteed to an extension across its enabled static rulesets. Any rules above this limit will count towards the global static rule limit."
+      },
+      "MAX_NUMBER_OF_STATIC_RULESETS": {
+        "type": "number",
+        "description": "The maximum number of static Rulesets an extension can specify as part of the rule_resources manifest key."
+      },
+      "MAX_NUMBER_OF_ENABLED_STATIC_RULESETS": {
+        "type": "number",
+        "description": "The maximum number of static Rulesets an extension can enable at any one time."
+      },
+      "MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES": {
+        "type": "number",
+        "description": "The maximum number of dynamic and session rules an extension can add. NOTE: in the Firefox we are enforcing this limit to the session and dynamic rules count separately, instead of enforcing it to the rules count for both combined as the Chrome implementation does."
+      }
+    }
   }
 ]

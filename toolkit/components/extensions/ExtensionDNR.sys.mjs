@@ -78,46 +78,9 @@ ChromeUtils.defineModuleGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
 });
-
-/**
- * The minimum number of static rules guaranteed to an extension across its
- * enabled static rulesets. Any rules above this limit will count towards the
- * global static rule limit.
- */
-const GUARANTEED_MINIMUM_STATIC_RULES = 30000;
-
-/**
- * The maximum number of static Rulesets an extension can specify as part of
- * the "rule_resources" manifest key.
- *
- * NOTE: this limit may be increased in the future, see https://github.com/w3c/webextensions/issues/318
- */
-const MAX_NUMBER_OF_STATIC_RULESETS = 50;
-
-/**
- * The maximum number of static Rulesets an extension can enable at any one time.
- *
- * NOTE: this limit may be increased in the future, see https://github.com/w3c/webextensions/issues/318
- */
-const MAX_NUMBER_OF_ENABLED_STATIC_RULESETS = 10;
-
-/**
- * The maximum number of dynamic and session rules an extension can add.
- * NOTE: in the Firefox we are enforcing this limit to the session and dynamic rules count separately,
- * instead of enforcing it to the rules count for both combined as the Chrome implementation does.
- *
- * NOTE: this limit may be increased in the future, see https://github.com/w3c/webextensions/issues/319
- */
-const MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES = 5000;
-
-// TODO(Bug 1803370): allow extension to exceed the GUARANTEED_MINIMUM_STATIC_RULES limit.
-//
-// The maximum number of static rules exceeding the per-extension
-// GUARANTEED_MINIMUM_STATIC_RULES across every extensions.
-//
-// const MAX_GLOBAL_NUMBER_OF_STATIC_RULES = 300000;
 
 // As documented above:
 // Ruleset precedence: session > dynamic > static (order from manifest.json).
@@ -1645,7 +1608,7 @@ class RuleManager {
 
   get availableStaticRuleCount() {
     return Math.max(
-      GUARANTEED_MINIMUM_STATIC_RULES -
+      lazy.ExtensionDNRLimits.GUARANTEED_MINIMUM_STATIC_RULES -
         this.enabledStaticRules.reduce(
           (acc, ruleset) => acc + ruleset.rules.length,
           0
@@ -1823,6 +1786,7 @@ function validateManifestEntry(extension) {
   const getWarningMessage = msg =>
     `Warning processing declarative_net_request: ${msg}`;
 
+  const { MAX_NUMBER_OF_STATIC_RULESETS } = lazy.ExtensionDNRLimits;
   if (ruleResourcesArray.length > MAX_NUMBER_OF_STATIC_RULESETS) {
     extension.manifestWarning(
       getWarningMessage(
@@ -1876,6 +1840,8 @@ function validateManifestEntry(extension) {
     );
   }
 
+  const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } = lazy.ExtensionDNRLimits;
+
   const enabledRulesets = ruleResourcesArray.filter(rs => rs.enabled);
   if (enabledRulesets.length > MAX_NUMBER_OF_ENABLED_STATIC_RULESETS) {
     const exceedingRulesetIds = enabledRulesets
@@ -1913,14 +1879,6 @@ export const ExtensionDNR = {
   updateDynamicRules,
   updateEnabledStaticRulesets,
   validateManifestEntry,
-  // TODO(Bug 1803370): consider allowing changing DNR limits through about:config prefs).
-  limits: {
-    GUARANTEED_MINIMUM_STATIC_RULES,
-    MAX_NUMBER_OF_STATIC_RULESETS,
-    MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
-    MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
-  },
-
   beforeWebRequestEvent,
   handleRequest,
 };

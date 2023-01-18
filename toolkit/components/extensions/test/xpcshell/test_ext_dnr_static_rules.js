@@ -4,7 +4,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
+  ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
@@ -874,7 +874,7 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
   Services.prefs.setBoolPref("extensions.background.idle.enabled", false);
 
   const dnrStore = ExtensionDNRStore._getStoreForTesting();
-  const { GUARANTEED_MINIMUM_STATIC_RULES } = ExtensionDNR.limits;
+  const { GUARANTEED_MINIMUM_STATIC_RULES } = ExtensionDNRLimits;
   equal(
     typeof GUARANTEED_MINIMUM_STATIC_RULES,
     "number",
@@ -1092,7 +1092,7 @@ add_task(async function test_static_rulesets_limits() {
   const {
     MAX_NUMBER_OF_STATIC_RULESETS,
     MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
-  } = ExtensionDNR.limits;
+  } = ExtensionDNRLimits;
 
   equal(
     typeof MAX_NUMBER_OF_STATIC_RULESETS,

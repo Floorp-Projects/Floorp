@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
+  ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
 });
 
 const { DefaultMap, ExtensionError } = ExtensionUtils;
@@ -263,7 +264,7 @@ class RulesetsStore {
   }
 
   async getAvailableStaticRuleCount(extension) {
-    const { GUARANTEED_MINIMUM_STATIC_RULES } = lazy.ExtensionDNR.limits;
+    const { GUARANTEED_MINIMUM_STATIC_RULES } = lazy.ExtensionDNRLimits;
 
     const ruleResources =
       extension.manifest.declarative_net_request?.rule_resources;
@@ -544,7 +545,7 @@ class RulesetsStore {
     extension,
     {
       enabledRulesetIds = null,
-      availableStaticRuleCount = lazy.ExtensionDNR.limits
+      availableStaticRuleCount = lazy.ExtensionDNRLimits
         .GUARANTEED_MINIMUM_STATIC_RULES,
       isUpdateEnabledRulesets = false,
     } = {}
@@ -563,7 +564,7 @@ class RulesetsStore {
       // Warnings on MAX_NUMBER_OF_STATIC_RULESETS are already
       // reported (see ExtensionDNR.validateManifestEntry, called
       // from the DNR API onManifestEntry callback).
-    } = lazy.ExtensionDNR.limits;
+    } = lazy.ExtensionDNRLimits;
 
     for (let [idx, { id, enabled, path }] of ruleResources.entries()) {
       // Retrieve the file path from the normalized path.
@@ -955,7 +956,7 @@ class RulesetsStore {
 
       const {
         MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
-      } = lazy.ExtensionDNR.limits;
+      } = lazy.ExtensionDNRLimits;
 
       if (
         validatedDynamicRules.length > MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES
@@ -1076,9 +1077,7 @@ class RulesetsStore {
       throw new ExtensionError(failures[0].message);
     }
 
-    const {
-      MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
-    } = lazy.ExtensionDNR.limits;
+    const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = lazy.ExtensionDNRLimits;
     const validatedRules = ruleValidator.getValidatedRules();
 
     if (validatedRules.length > MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES) {
@@ -1148,7 +1147,7 @@ class RulesetsStore {
     const {
       MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
       GUARANTEED_MINIMUM_STATIC_RULES,
-    } = lazy.ExtensionDNR.limits;
+    } = lazy.ExtensionDNRLimits;
 
     const maxNewRulesetsCount =
       MAX_NUMBER_OF_ENABLED_STATIC_RULESETS - updatedEnabledRulesets.size;
