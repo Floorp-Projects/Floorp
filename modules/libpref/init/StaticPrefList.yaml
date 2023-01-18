@@ -10477,7 +10477,11 @@
 # implementation will remain hidden behind this pref (Bug 1152401, Bug 934425).
 - name: media.setsinkid.enabled
   type: bool
-  value: false
+#if defined(MOZ_WIDGET_ANDROID)
+  value: false # bug 1473346
+#else
+  value: @IS_NIGHTLY_BUILD@
+#endif
   mirror: always
 
 # Turn on this pref can enable test-only events for media element.
