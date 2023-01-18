@@ -33,7 +33,8 @@ const DEFERRED_KEY_CODES = new Set([
 const QUERY_STATUS = {
   UKNOWN: 0,
   RUNNING: 1,
-  COMPLETE: 2,
+  RUNNING_GOT_RESULTS: 2,
+  COMPLETE: 3,
 };
 
 /**
@@ -110,6 +111,7 @@ export class UrlbarEventBufferer {
   }
 
   onQueryResults(queryContext) {
+    this._lastQuery.status = QUERY_STATUS.RUNNING_GOT_RESULTS;
     // Ensure this runs after other results handling code.
     Services.tm.dispatchToMainThread(() => {
       this.replayDeferredEvents(true);
@@ -305,15 +307,15 @@ export class UrlbarEventBufferer {
    * @returns {boolean} Whether the event can be played.
    */
   isSafeToPlayDeferredEvent(event) {
-    if (this._lastQuery.status != QUERY_STATUS.RUNNING) {
+    if (
+      this._lastQuery.status != QUERY_STATUS.RUNNING &&
+      this._lastQuery.status != QUERY_STATUS.RUNNING_GOT_RESULTS
+    ) {
       // The view can't get any more results, so there's no need to further
       // defer events.
       return true;
     }
-
-    let waitingFirstResult =
-      this._lastQuery.status == QUERY_STATUS.RUNNING &&
-      !this._lastQuery.context.results.length;
+    let waitingFirstResult = this._lastQuery.status == QUERY_STATUS.RUNNING;
     if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
       // Check if we're waiting for providers that requested deferring.
       if (this.waitingDeferUserSelectionProviders) {
