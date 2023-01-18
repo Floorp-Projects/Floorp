@@ -5,62 +5,38 @@
 
 // Test the Glean telemetry behavior with its preferences.
 
+add_setup(async function() {
+  await initPreferencesTest();
+});
+
 add_task(async function enabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.searchEngagementTelemetry.enabled", true]],
+  await doSearchEngagementTelemetryTest({
+    enabled: true,
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([{ sap: "urlbar_newtab" }]),
   });
-
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await doEnter();
-
-    assertEngagementTelemetry([{ selected_result: "url" }]);
-  });
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function disabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.searchEngagementTelemetry.enabled", false]],
+  await doSearchEngagementTelemetryTest({
+    enabled: false,
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([]),
   });
-
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await doEnter();
-
-    assertEngagementTelemetry([]);
-  });
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function nimbusEnabled() {
-  const doCleanup = await setupNimbus({
-    searchEngagementTelemetryEnabled: true,
+  await doNimbusTest({
+    enabled: true,
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([{ sap: "urlbar_newtab" }]),
   });
-
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await doEnter();
-
-    assertEngagementTelemetry([{ selected_result: "url" }]);
-  });
-
-  doCleanup();
 });
 
 add_task(async function nimbusDisabled() {
-  const doCleanup = await setupNimbus({
-    searchEngagementTelemetryEnabled: false,
+  await doNimbusTest({
+    enabled: false,
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([]),
   });
-
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await doEnter();
-
-    assertEngagementTelemetry([]);
-  });
-
-  doCleanup();
 });

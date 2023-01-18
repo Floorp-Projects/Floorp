@@ -5,34 +5,42 @@
 
 // Test the impression telemetry behavior with its preferences.
 
+add_setup(async function() {
+  await initPreferencesTest();
+});
+
 add_task(async function enabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.searchEngagementTelemetry.enabled", true]],
+  await doSearchEngagementTelemetryTest({
+    enabled: true,
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_newtab" }]),
   });
-
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_newtab" }]);
-  });
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function disabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.searchEngagementTelemetry.enabled", false]],
+  await doSearchEngagementTelemetryTest({
+    enabled: false,
+    trigger: () => waitForPauseImpression(),
+    assert: () => assertImpressionTelemetry([]),
   });
+});
 
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([]);
+add_task(async function nimbusEnabled() {
+  await doNimbusTest({
+    enabled: true,
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_newtab" }]),
   });
+});
 
-  await SpecialPowers.popPrefEnv();
+add_task(async function nimbusDisabled() {
+  await doNimbusTest({
+    enabled: false,
+    trigger: () => waitForPauseImpression(),
+    assert: () => assertImpressionTelemetry([]),
+  });
 });
 
 add_task(async function pauseImpressionIntervalMs() {
@@ -65,34 +73,4 @@ add_task(async function pauseImpressionIntervalMs() {
   });
 
   await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function nimbusEnabled() {
-  const doCleanup = await setupNimbus({
-    searchEngagementTelemetryEnabled: true,
-  });
-
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_newtab" }]);
-  });
-
-  doCleanup();
-});
-
-add_task(async function nimbusDisabled() {
-  const doCleanup = await setupNimbus({
-    searchEngagementTelemetryEnabled: false,
-  });
-
-  await doTest(async browser => {
-    await openPopup("https://example.com");
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([]);
-  });
-
-  doCleanup();
 });
