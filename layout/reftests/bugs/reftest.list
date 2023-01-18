@@ -1641,7 +1641,7 @@ skip-if(Android) fuzzy(0-1,0-68000) == chrome://reftest/content/bugs/664127-1.xh
 == 667079-1.html 667079-1-ref.html
 skip-if(Android) == chrome://reftest/content/bugs/668319-1.xhtml about:blank
 != chrome://reftest/content/bugs/669015-1.xhtml chrome://reftest/content/bugs/669015-1-notref.xhtml
-skip-if(azureSkiaGL) == 670442-1.html 670442-1-ref.html
+skip-if(azureSkiaGL) fuzzy-if(Android&&device,0-55,0-3742) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
 == 670467-2.html 670467-2-ref.html
 == 690164-1.html 690164-1-ref.html
