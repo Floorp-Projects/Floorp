@@ -117,6 +117,7 @@ enum class EGLExtension {
   EXT_image_dma_buf_import,
   EXT_image_dma_buf_import_modifiers,
   MESA_image_dma_buf_export,
+  KHR_no_config_context,
   Max
 };
 

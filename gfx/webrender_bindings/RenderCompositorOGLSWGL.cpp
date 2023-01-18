@@ -131,7 +131,7 @@ EGLSurface RenderCompositorOGLSWGL::CreateEGLSurface() {
 
   EGLSurface surface = EGL_NO_SURFACE;
   surface = gl::GLContextEGL::CreateEGLSurfaceForCompositorWidget(
-      mWidget, gl::GLContextEGL::Cast(GetGLContext())->mConfig);
+      mWidget, gl::GLContextEGL::Cast(GetGLContext())->mSurfaceConfig);
   if (surface == EGL_NO_SURFACE) {
     const auto* renderThread = RenderThread::Get();
     gfxCriticalNote << "Failed to create EGLSurface. "
