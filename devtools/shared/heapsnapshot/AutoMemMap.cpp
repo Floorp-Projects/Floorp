@@ -29,26 +29,35 @@ AutoMemMap::~AutoMemMap() {
   }
 }
 
-nsresult AutoMemMap::init(const char* filePath, int flags, int mode,
+nsresult AutoMemMap::init(nsIFile* file, int flags, int mode,
                           PRFileMapProtect prot) {
   MOZ_ASSERT(!fd);
   MOZ_ASSERT(!fileMap);
   MOZ_ASSERT(!addr);
 
-  if (PR_GetFileInfo64(filePath, &fileInfo) != PR_SUCCESS)
-    return NS_ERROR_FILE_NOT_FOUND;
+  nsresult rv;
+  int64_t inputFileSize;
+  rv = file->GetFileSize(&inputFileSize);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Check if the file is too big to memmap.
-  if (fileInfo.size > int64_t(UINT32_MAX)) return NS_ERROR_INVALID_ARG;
-  auto length = uint32_t(fileInfo.size);
+  if (inputFileSize > int64_t(UINT32_MAX)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  fileSize = uint32_t(inputFileSize);
 
-  fd = PR_Open(filePath, flags, flags);
+  rv = file->OpenNSPRFileDesc(flags, mode, &fd);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   if (!fd) return NS_ERROR_UNEXPECTED;
 
-  fileMap = PR_CreateFileMap(fd, fileInfo.size, prot);
+  fileMap = PR_CreateFileMap(fd, inputFileSize, prot);
   if (!fileMap) return NS_ERROR_UNEXPECTED;
 
-  addr = PR_MemMap(fileMap, 0, length);
+  addr = PR_MemMap(fileMap, 0, fileSize);
   if (!addr) return NS_ERROR_UNEXPECTED;
 
   return NS_OK;
