@@ -1431,17 +1431,20 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetMetricsFor(
       presContext, aIsVertical, aFont, aFontSize, aUseUserFontSet);
-  RefPtr<gfxFont> font = fm->GetThebesFontGroup()->GetFirstValidFont();
-  const auto& metrics = font->GetMetrics(fm->Orientation());
+  auto* fontGroup = fm->GetThebesFontGroup();
+  auto metrics = fontGroup->GetMetricsForCSSUnits(fm->Orientation());
 
   float scriptPercentScaleDown = 0;
   float scriptScriptPercentScaleDown = 0;
-  if (aRetrieveMathScales && font->TryGetMathTable()) {
-    scriptPercentScaleDown = static_cast<float>(
-        font->MathTable()->Constant(gfxMathTable::ScriptPercentScaleDown));
-    scriptScriptPercentScaleDown =
-        static_cast<float>(font->MathTable()->Constant(
-            gfxMathTable::ScriptScriptPercentScaleDown));
+  if (aRetrieveMathScales) {
+    RefPtr<gfxFont> font = fontGroup->GetFirstValidFont();
+    if (font->TryGetMathTable()) {
+      scriptPercentScaleDown = static_cast<float>(
+          font->MathTable()->Constant(gfxMathTable::ScriptPercentScaleDown));
+      scriptScriptPercentScaleDown =
+          static_cast<float>(font->MathTable()->Constant(
+              gfxMathTable::ScriptScriptPercentScaleDown));
+    }
   }
 
   int32_t d2a = aPresContext->AppUnitsPerDevPixel();
