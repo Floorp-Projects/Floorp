@@ -11,7 +11,7 @@ if (AppConstants.platform == "macosx") {
 }
 
 add_setup(async function() {
-  await setup();
+  await initInteractionTest();
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -24,135 +24,40 @@ add_setup(async function() {
   });
 });
 
-add_task(async function interaction_persisted_search_terms() {
-  await doTest(async browser => {
-    await openPopup("x");
-    await waitForPauseImpression();
-    await doEnter();
-
-    await openPopup("x");
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([
-      { reason: "pause" },
-      { reason: "pause", interaction: "typed" },
-    ]);
+add_task(async function persisted_search_terms() {
+  await doPersistedSearchTermsTest({
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([
+        { reason: "pause" },
+        { reason: "pause", interaction: "typed" },
+      ]),
   });
 });
 
-add_task(async function interaction_persisted_search_terms_restarted_refined() {
-  const testData = [
-    {
-      firstInput: "x",
-      // Just move the focus to the URL bar after engagement.
-      secondInput: null,
-      expected: "topsites",
-    },
-    {
-      firstInput: "x",
-      secondInput: "x",
-      expected: "typed",
-    },
-    {
-      firstInput: "x",
-      secondInput: "y",
-      expected: "typed",
-    },
-    {
-      firstInput: "x",
-      secondInput: "x y",
-      expected: "typed",
-    },
-    {
-      firstInput: "x y",
-      secondInput: "x",
-      expected: "typed",
-    },
-  ];
-
-  for (const { firstInput, secondInput, expected } of testData) {
-    await doTest(async browser => {
-      await openPopup(firstInput);
-      await waitForPauseImpression();
-      await doEnter();
-
-      await UrlbarTestUtils.promisePopupOpen(window, () => {
-        EventUtils.synthesizeKey("l", { accelKey: true });
-      });
-      if (secondInput) {
-        for (let i = 0; i < secondInput.length; i++) {
-          EventUtils.synthesizeKey(secondInput.charAt(i));
-        }
-      }
-      await UrlbarTestUtils.promiseSearchComplete(window);
-      await waitForPauseImpression();
-
+add_task(async function persisted_search_terms_restarted_refined() {
+  await doPersistedSearchTermsRestartedRefinedTest({
+    enabled: false,
+    trigger: () => waitForPauseImpression(),
+    assert: expected =>
       assertImpressionTelemetry([
         { reason: "pause" },
         { reason: "pause", interaction: expected },
-      ]);
-    });
-  }
+      ]),
+  });
 });
 
 add_task(
-  async function interaction_persisted_search_terms_restarted_refined_via_abandonment() {
-    const testData = [
-      {
-        firstInput: "x",
-        // Just move the focus to the URL bar after blur.
-        secondInput: null,
-        expected: "returned",
-      },
-      {
-        firstInput: "x",
-        secondInput: "x",
-        expected: "returned",
-      },
-      {
-        firstInput: "x",
-        secondInput: "y",
-        expected: "restarted",
-      },
-      {
-        firstInput: "x",
-        secondInput: "x y",
-        expected: "refined",
-      },
-      {
-        firstInput: "x y",
-        secondInput: "x",
-        expected: "refined",
-      },
-    ];
-
-    for (const { firstInput, secondInput, expected } of testData) {
-      await doTest(async browser => {
-        await openPopup("any search");
-        await waitForPauseImpression();
-        await doEnter();
-
-        await openPopup(firstInput);
-        await waitForPauseImpression();
-        await doBlur();
-
-        await UrlbarTestUtils.promisePopupOpen(window, () => {
-          EventUtils.synthesizeKey("l", { accelKey: true });
-        });
-        if (secondInput) {
-          for (let i = 0; i < secondInput.length; i++) {
-            EventUtils.synthesizeKey(secondInput.charAt(i));
-          }
-        }
-        await UrlbarTestUtils.promiseSearchComplete(window);
-        await waitForPauseImpression();
-
+  async function persisted_search_terms_restarted_refined_via_abandonment() {
+    await doPersistedSearchTermsRestartedRefinedViaAbandonmentTest({
+      enabled: false,
+      trigger: () => waitForPauseImpression(),
+      assert: expected =>
         assertImpressionTelemetry([
           { reason: "pause" },
           { reason: "pause" },
           { reason: "pause", interaction: expected },
-        ]);
-      });
-    }
+        ]),
+    });
   }
 );

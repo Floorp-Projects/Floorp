@@ -192,6 +192,15 @@ async function initGroupTest() {
   await setup();
 }
 
+async function initInteractionTest() {
+  /* import-globals-from head-interaction.js */
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-interaction.js",
+    this
+  );
+  await setup();
+}
+
 function loadOmniboxAddon({ keyword }) {
   return ExtensionTestUtils.loadExtension({
     manifest: {
