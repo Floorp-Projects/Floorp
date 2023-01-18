@@ -28,6 +28,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.accounts.FenixAccountManager
+import org.mozilla.fenix.components.toolbar.BrowserMenuSignIn
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
@@ -97,25 +98,9 @@ class HomeMenu(
         }
     }
 
-    private fun syncSignInMenuItem(): BrowserMenuImageText? {
-        val syncItemTitle =
-            if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
-                accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sync_and_save_data)
-            } else {
-                null
-            }
-
-        return when (syncItemTitle) {
-            null -> null
-            else -> {
-                BrowserMenuImageText(
-                    syncItemTitle,
-                    R.drawable.ic_signed_out,
-                    primaryTextColor,
-                ) {
-                    onItemTapped.invoke(Item.SyncAccount(accountManager.accountState))
-                }
-            }
+    private fun syncSignInMenuItem(): BrowserMenuItem {
+        return BrowserMenuSignIn(primaryTextColor) {
+            onItemTapped.invoke(Item.SyncAccount(accountManager.accountState))
         }
     }
 

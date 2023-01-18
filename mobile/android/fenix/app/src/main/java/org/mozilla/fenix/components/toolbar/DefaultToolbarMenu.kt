@@ -15,6 +15,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuHighlight
+import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
@@ -349,27 +350,11 @@ open class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.Quit)
     }
 
-    private fun syncMenuItem(): BrowserMenuImageText? {
-        val syncItemTitle =
-            if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
-                accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sync_and_save_data)
-            } else {
-                null
-            }
-
-        return when (syncItemTitle) {
-            null -> null
-            else -> {
-                BrowserMenuImageText(
-                    syncItemTitle,
-                    R.drawable.ic_signed_out,
-                    primaryTextColor(),
-                ) {
-                    onItemTapped.invoke(
-                        ToolbarMenu.Item.SyncAccount(accountManager.accountState),
-                    )
-                }
-            }
+    private fun syncMenuItem(): BrowserMenuItem {
+        return BrowserMenuSignIn(primaryTextColor()) {
+            onItemTapped.invoke(
+                ToolbarMenu.Item.SyncAccount(accountManager.accountState),
+            )
         }
     }
 
