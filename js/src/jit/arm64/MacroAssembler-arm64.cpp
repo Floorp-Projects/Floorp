@@ -2881,11 +2881,6 @@ void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
   Label handleZero;
   Label fin;
 
-  Fcmp(iFlt, 0.0);
-
-  // NaN is always a bail condition, just bail directly.
-  B(Assembler::Overflow, fail);
-
   // Round towards positive infinity.
   Fcvtps(o64, iFlt);
 
@@ -2893,14 +2888,14 @@ void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
   Cmp(o64, Operand(o64, vixl::SXTW));
   B(NotEqual, fail);
 
-  // We have to check for (-1, -0] when the result is zero.
+  // We have to check for (-1, -0] and NaN when the result is zero.
   Cbz(o64, &handleZero);
 
   // Clear upper 32 bits.
   Uxtw(o64, o64);
   B(&fin);
 
-  // Bail if the input is in (-1, -0].
+  // Bail if the input is in (-1, -0] or NaN.
   bind(&handleZero);
   // Move the top word of the float into the output reg, if it is non-zero,
   // then the original value wasn't +0.0.
@@ -2918,9 +2913,6 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
   Label handleZero;
   Label fin;
 
-  Fcmp(iDbl, 0.0);
-  B(Assembler::Overflow, fail);
-
   // Round towards positive infinity.
   Fcvtps(o64, iDbl);
 
@@ -2928,14 +2920,14 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
   Cmp(o64, Operand(o64, vixl::SXTW));
   B(NotEqual, fail);
 
-  // We have to check for (-1, -0] when the result is zero.
+  // We have to check for (-1, -0] and NaN when the result is zero.
   Cbz(o64, &handleZero);
 
   // Clear upper 32 bits.
   Uxtw(o64, o64);
   B(&fin);
 
-  // Bail if the input is in (-1, -0].
+  // Bail if the input is in (-1, -0] or NaN.
   bind(&handleZero);
   // Move the top word of the double into the output reg, if it is non-zero,
   // then the original value wasn't +0.0.
