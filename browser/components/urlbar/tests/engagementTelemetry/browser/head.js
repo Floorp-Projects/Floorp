@@ -210,6 +210,15 @@ async function initNCharsAndNWordsTest() {
   await setup();
 }
 
+async function initPreferencesTest() {
+  /* import-globals-from head-preferences.js */
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-preferences.js",
+    this
+  );
+  await setup();
+}
+
 function loadOmniboxAddon({ keyword }) {
   return ExtensionTestUtils.loadExtension({
     manifest: {
