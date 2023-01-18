@@ -40,12 +40,12 @@ impl crate::TypeInner {
         }
     }
 
-    pub(super) fn try_size_hlsl(
+    pub(super) fn size_hlsl(
         &self,
         types: &crate::UniqueArena<crate::Type>,
         constants: &crate::Arena<crate::Constant>,
-    ) -> Result<u32, crate::arena::BadHandle> {
-        Ok(match *self {
+    ) -> u32 {
+        match *self {
             Self::Matrix {
                 columns,
                 rows,
@@ -58,22 +58,20 @@ impl crate::TypeInner {
             Self::Array { base, size, stride } => {
                 let count = match size {
                     crate::ArraySize::Constant(handle) => {
-                        let constant = constants.try_get(handle)?;
-                        constant.to_array_length().unwrap_or(1)
+                        constants[handle].to_array_length().unwrap_or(1)
                     }
                     // A dynamically-sized array has to have at least one element
                     crate::ArraySize::Dynamic => 1,
                 };
-                let last_el_size = types[base].inner.try_size_hlsl(types, constants)?;
+                let last_el_size = types[base].inner.size_hlsl(types, constants);
                 ((count - 1) * stride) + last_el_size
             }
-            _ => self.try_size(constants)?,
-        })
+            _ => self.size(constants),
+        }
     }
 
     /// Used to generate the name of the wrapped type constructor
     pub(super) fn hlsl_type_id<'a>(
-        &self,
         base: crate::Handle<crate::Type>,
         types: &crate::UniqueArena<crate::Type>,
         constants: &crate::Arena<crate::Constant>,
@@ -103,7 +101,7 @@ impl crate::TypeInner {
             } => Cow::Owned(format!(
                 "array{}_{}_",
                 constants[size].to_array_length().unwrap(),
-                self.hlsl_type_id(base, types, constants, names)?
+                Self::hlsl_type_id(base, types, constants, names)?
             )),
             crate::TypeInner::Struct { .. } => {
                 Cow::Borrowed(&names[&crate::proc::NameKey::Type(base)])
@@ -179,7 +177,7 @@ impl crate::BuiltIn {
             Self::BaseInstance | Self::BaseVertex | Self::WorkGroupSize => {
                 return Err(Error::Unimplemented(format!("builtin {:?}", self)))
             }
-            Self::ViewIndex => {
+            Self::ViewIndex | Self::PointCoord => {
                 return Err(Error::Custom(format!("Unsupported builtin {:?}", self)))
             }
         })

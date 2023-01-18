@@ -452,11 +452,11 @@ impl<W: Write> Writer<W> {
     /// Adds no trailing or leading whitespace
     fn write_value_type(&mut self, module: &Module, inner: &TypeInner) -> BackendResult {
         match *inner {
-            TypeInner::Vector { size, kind, .. } => write!(
+            TypeInner::Vector { size, kind, width } => write!(
                 self.out,
                 "vec{}<{}>",
                 back::vector_size_str(size),
-                scalar_kind_str(kind),
+                scalar_kind_str(kind, width),
             )?,
             TypeInner::Sampler { comparison: false } => {
                 write!(self.out, "sampler")?;
@@ -478,7 +478,7 @@ impl<W: Write> Writer<W> {
                     Ic::Sampled { kind, multi } => (
                         "",
                         if multi { "multisampled_" } else { "" },
-                        scalar_kind_str(kind),
+                        scalar_kind_str(kind, 4),
                         "",
                     ),
                     Ic::Depth { multi } => {
@@ -508,11 +508,11 @@ impl<W: Write> Writer<W> {
                     write!(self.out, "<{}{}>", format_str, storage_str)?;
                 }
             }
-            TypeInner::Scalar { kind, .. } => {
-                write!(self.out, "{}", scalar_kind_str(kind))?;
+            TypeInner::Scalar { kind, width } => {
+                write!(self.out, "{}", scalar_kind_str(kind, width))?;
             }
-            TypeInner::Atomic { kind, .. } => {
-                write!(self.out, "atomic<{}>", scalar_kind_str(kind))?;
+            TypeInner::Atomic { kind, width } => {
+                write!(self.out, "atomic<{}>", scalar_kind_str(kind, width))?;
             }
             TypeInner::Array {
                 base,
@@ -582,12 +582,12 @@ impl<W: Write> Writer<W> {
             TypeInner::ValuePointer {
                 size: None,
                 kind,
-                width: _,
+                width,
                 space,
             } => {
                 let (address, maybe_access) = address_space_str(space);
                 if let Some(space) = address {
-                    write!(self.out, "ptr<{}, {}", space, scalar_kind_str(kind))?;
+                    write!(self.out, "ptr<{}, {}", space, scalar_kind_str(kind, width))?;
                     if let Some(access) = maybe_access {
                         write!(self.out, ", {}", access)?;
                     }
@@ -602,7 +602,7 @@ impl<W: Write> Writer<W> {
             TypeInner::ValuePointer {
                 size: Some(size),
                 kind,
-                width: _,
+                width,
                 space,
             } => {
                 let (address, maybe_access) = address_space_str(space);
@@ -612,7 +612,7 @@ impl<W: Write> Writer<W> {
                         "ptr<{}, vec{}<{}>",
                         space,
                         back::vector_size_str(size),
-                        scalar_kind_str(kind)
+                        scalar_kind_str(kind, width)
                     )?;
                     if let Some(access) = maybe_access {
                         write!(self.out, ", {}", access)?;
@@ -880,25 +880,47 @@ impl<W: Write> Writer<W> {
                 };
 
                 let l2 = level.next();
-                if !cases.is_empty() {
-                    for case in cases {
-                        match case.value {
-                            crate::SwitchValue::Integer(value) => {
-                                writeln!(self.out, "{}case {}{}: {{", l2, value, type_postfix)?;
+                let mut new_case = true;
+                for case in cases {
+                    if case.fall_through && !case.body.is_empty() {
+                        // TODO: we could do the same workaround as we did for the HLSL backend
+                        return Err(Error::Unimplemented(
+                            "fall-through switch case block".into(),
+                        ));
+                    }
+
+                    match case.value {
+                        crate::SwitchValue::Integer(value) => {
+                            if new_case {
+                                write!(self.out, "{}case ", l2)?;
                             }
-                            crate::SwitchValue::Default => {
-                                writeln!(self.out, "{}default: {{", l2)?;
+                            write!(self.out, "{}{}", value, type_postfix)?;
+                        }
+                        crate::SwitchValue::Default => {
+                            if new_case {
+                                if case.fall_through {
+                                    write!(self.out, "{}case ", l2)?;
+                                } else {
+                                    write!(self.out, "{}", l2)?;
+                                }
                             }
+                            write!(self.out, "default")?;
                         }
+                    }
 
-                        for sta in case.body.iter() {
-                            self.write_stmt(module, sta, func_ctx, l2.next())?;
-                        }
+                    new_case = !case.fall_through;
 
-                        if case.fall_through {
-                            writeln!(self.out, "{}fallthrough;", l2.next())?;
-                        }
+                    if case.fall_through {
+                        write!(self.out, ", ")?;
+                    } else {
+                        writeln!(self.out, ": {{")?;
+                    }
 
+                    for sta in case.body.iter() {
+                        self.write_stmt(module, sta, func_ctx, l2.next())?;
+                    }
+
+                    if !case.fall_through {
                         writeln!(self.out, "{}}}", l2)?;
                     }
                 }
@@ -1402,17 +1424,24 @@ impl<W: Write> Writer<W> {
             } => {
                 let inner = func_ctx.info[expr].ty.inner_with(&module.types);
                 match *inner {
-                    TypeInner::Matrix { columns, rows, .. } => {
+                    TypeInner::Matrix {
+                        columns,
+                        rows,
+                        width,
+                        ..
+                    } => {
+                        let scalar_kind_str = scalar_kind_str(kind, convert.unwrap_or(width));
                         write!(
                             self.out,
-                            "mat{}x{}<f32>",
+                            "mat{}x{}<{}>",
                             back::vector_size_str(columns),
-                            back::vector_size_str(rows)
+                            back::vector_size_str(rows),
+                            scalar_kind_str
                         )?;
                     }
-                    TypeInner::Vector { size, .. } => {
+                    TypeInner::Vector { size, width, .. } => {
                         let vector_size_str = back::vector_size_str(size);
-                        let scalar_kind_str = scalar_kind_str(kind);
+                        let scalar_kind_str = scalar_kind_str(kind, convert.unwrap_or(width));
                         if convert.is_some() {
                             write!(self.out, "vec{}<{}>", vector_size_str, scalar_kind_str)?;
                         } else {
@@ -1423,11 +1452,12 @@ impl<W: Write> Writer<W> {
                             )?;
                         }
                     }
-                    TypeInner::Scalar { .. } => {
+                    TypeInner::Scalar { width, .. } => {
+                        let scalar_kind_str = scalar_kind_str(kind, convert.unwrap_or(width));
                         if convert.is_some() {
-                            write!(self.out, "{}", scalar_kind_str(kind))?
+                            write!(self.out, "{}", scalar_kind_str)?
                         } else {
-                            write!(self.out, "bitcast<{}>", scalar_kind_str(kind))?
+                            write!(self.out, "bitcast<{}>", scalar_kind_str)?
                         }
                     }
                     _ => {
@@ -1443,8 +1473,8 @@ impl<W: Write> Writer<W> {
             }
             Expression::Splat { size, value } => {
                 let inner = func_ctx.info[value].ty.inner_with(&module.types);
-                let scalar_kind = match *inner {
-                    crate::TypeInner::Scalar { kind, .. } => kind,
+                let (scalar_kind, scalar_width) = match *inner {
+                    crate::TypeInner::Scalar { kind, width } => (kind, width),
                     _ => {
                         return Err(Error::Unimplemented(format!(
                             "write_expr expression::splat {:?}",
@@ -1452,7 +1482,7 @@ impl<W: Write> Writer<W> {
                         )));
                     }
                 };
-                let scalar = scalar_kind_str(scalar_kind);
+                let scalar = scalar_kind_str(scalar_kind, scalar_width);
                 let size = back::vector_size_str(size);
 
                 write!(self.out, "vec{}<{}>(", size, scalar)?;
@@ -1888,7 +1918,6 @@ const fn builtin_str(built_in: crate::BuiltIn) -> Option<&'static str> {
         Bi::LocalInvocationIndex => Some("local_invocation_index"),
         Bi::GlobalInvocationId => Some("global_invocation_id"),
         Bi::WorkGroupId => Some("workgroup_id"),
-        Bi::WorkGroupSize => Some("workgroup_size"),
         Bi::NumWorkGroups => Some("num_workgroups"),
         Bi::SampleIndex => Some("sample_index"),
         Bi::SampleMask => Some("sample_mask"),
@@ -1909,14 +1938,16 @@ const fn image_dimension_str(dim: crate::ImageDimension) -> &'static str {
     }
 }
 
-const fn scalar_kind_str(kind: crate::ScalarKind) -> &'static str {
+const fn scalar_kind_str(kind: crate::ScalarKind, width: u8) -> &'static str {
     use crate::ScalarKind as Sk;
 
-    match kind {
-        Sk::Float => "f32",
-        Sk::Sint => "i32",
-        Sk::Uint => "u32",
-        Sk::Bool => "bool",
+    match (kind, width) {
+        (Sk::Float, 8) => "f64",
+        (Sk::Float, 4) => "f32",
+        (Sk::Sint, 4) => "i32",
+        (Sk::Uint, 4) => "u32",
+        (Sk::Bool, 1) => "bool",
+        _ => unreachable!(),
     }
 }
 
