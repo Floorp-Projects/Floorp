@@ -281,7 +281,9 @@ function TargetMixin(parentClass) {
     // Allows to controls which features are available against
     // a chrome or a content document.
     get chrome() {
-      return this.isAddon || this.isContentProcess || this.isParentProcess;
+      return (
+        this.isWebExtension || this.isContentProcess || this.isParentProcess
+      );
     }
 
     // Tells us if the related actor implements WindowGlobalTargetActor
@@ -292,7 +294,7 @@ function TargetMixin(parentClass) {
     }
 
     get name() {
-      if (this.isAddon || this.isContentProcess) {
+      if (this.isWebExtension || this.isContentProcess) {
         return this.targetForm.name;
       }
       return this.title;
@@ -304,10 +306,6 @@ function TargetMixin(parentClass) {
 
     get url() {
       return this._url;
-    }
-
-    get isAddon() {
-      return this.isWebExtension;
     }
 
     get isWorkerTarget() {

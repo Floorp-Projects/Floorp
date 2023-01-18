@@ -300,7 +300,11 @@ Tools.memory = {
   tooltip: l10n("memory.tooltip"),
 
   isToolSupported(toolbox) {
-    return !toolbox.target.isAddon && !toolbox.target.isWorkerTarget;
+    const { descriptorFront } = toolbox.commands;
+    return (
+      !descriptorFront.isWebExtensionDescriptor &&
+      !descriptorFront.isWorkerDescriptor
+    );
   },
 
   build(frame, toolbox, commands) {
