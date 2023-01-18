@@ -216,19 +216,22 @@ class MOZ_RAII AutoProfilerTextMarker {
         mText(aText) {
     MOZ_ASSERT(mOptions.Timing().EndTime().IsNull(),
                "AutoProfilerTextMarker options shouldn't have an end time");
-    if (mOptions.Timing().StartTime().IsNull()) {
+    if (profiler_is_active_and_unpaused() &&
+        mOptions.Timing().StartTime().IsNull()) {
       mOptions.Set(mozilla::MarkerTiming::InstantNow());
     }
   }
 
   ~AutoProfilerTextMarker() {
-    AUTO_PROFILER_LABEL("TextMarker", PROFILER);
-    mOptions.TimingRef().SetIntervalEnd();
-    AUTO_PROFILER_STATS(AUTO_PROFILER_MARKER_TEXT);
-    profiler_add_marker(
-        mozilla::ProfilerString8View::WrapNullTerminatedString(mMarkerName),
-        mCategory, std::move(mOptions), geckoprofiler::markers::TextMarker{},
-        mText);
+    if (profiler_is_active_and_unpaused()) {
+      AUTO_PROFILER_LABEL("TextMarker", PROFILER);
+      mOptions.TimingRef().SetIntervalEnd();
+      AUTO_PROFILER_STATS(AUTO_PROFILER_MARKER_TEXT);
+      profiler_add_marker(
+          mozilla::ProfilerString8View::WrapNullTerminatedString(mMarkerName),
+          mCategory, std::move(mOptions), geckoprofiler::markers::TextMarker{},
+          mText);
+    }
   }
 
  protected:
