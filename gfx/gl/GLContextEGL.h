@@ -103,9 +103,6 @@ class GLContextEGL final : public GLContext {
   static RefPtr<GLContextEGL> CreateEGLPBufferOffscreenContext(
       std::shared_ptr<EglDisplay>, const GLContextCreateDesc&,
       const gfx::IntSize& size, nsACString* const out_FailureId);
-  static RefPtr<GLContextEGL> CreateEGLPBufferOffscreenContextImpl(
-      std::shared_ptr<EglDisplay>, const GLContextCreateDesc&,
-      const gfx::IntSize& size, bool aUseGles, nsACString* const out_FailureId);
   static RefPtr<GLContextEGL> CreateEGLSurfacelessContext(
       const std::shared_ptr<EglDisplay> display,
       const GLContextCreateDesc& desc, nsACString* const out_failureId);
