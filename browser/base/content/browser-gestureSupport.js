@@ -668,14 +668,7 @@ var gHistorySwipeAnimation = {
       return;
     }
 
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.history_swipe_animation.disabled",
-        false
-      )
-    ) {
-      this.active = true;
-    }
+    this.active = true;
   },
 
   /**
