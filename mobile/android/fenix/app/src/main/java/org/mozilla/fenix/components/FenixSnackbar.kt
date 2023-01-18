@@ -141,10 +141,20 @@ class FenixSnackbar private constructor(
                         0
                     },
                 )
+
+                if (parent.id == R.id.dynamicSnackbarContainer) {
+                    (parent.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
+                        behavior = FenixSnackbarBehavior<FrameLayout>(
+                            context = view.context,
+                            toolbarPosition = view.context.settings().toolbarPosition,
+                        )
+                    }
+                }
             }
         }
 
         // Use the same implementation of `Snackbar`
+        @Suppress("ReturnCount")
         private fun findSuitableParent(_view: View?): ViewGroup? {
             var view = _view
             var fallback: ViewGroup? = null
@@ -156,6 +166,10 @@ class FenixSnackbar private constructor(
 
                 if (view is FrameLayout) {
                     if (view.id == android.R.id.content) {
+                        return view
+                    }
+
+                    if (view.id == R.id.dynamicSnackbarContainer) {
                         return view
                     }
 

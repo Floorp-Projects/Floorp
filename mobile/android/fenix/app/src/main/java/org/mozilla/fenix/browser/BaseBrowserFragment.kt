@@ -359,7 +359,7 @@ abstract class BaseBrowserFragment :
                 }
 
                 viewLifecycleOwner.lifecycleScope.allowUndo(
-                    binding.browserLayout,
+                    binding.dynamicSnackbarContainer,
                     snackbarMessage,
                     requireContext().getString(R.string.snackbar_deleted_undo),
                     {
@@ -438,7 +438,7 @@ abstract class BaseBrowserFragment :
             feature = ContextMenuFeature(
                 fragmentManager = parentFragmentManager,
                 store = store,
-                candidates = getContextMenuCandidates(context, binding.browserLayout),
+                candidates = getContextMenuCandidates(context, binding.dynamicSnackbarContainer),
                 engineView = binding.engineView,
                 useCases = context.components.useCases.contextMenuUseCases,
                 tabId = customTabSessionId,
@@ -527,7 +527,7 @@ abstract class BaseBrowserFragment :
                     didFail = downloadJobStatus == DownloadState.Status.FAILED,
                     tryAgain = downloadFeature::tryAgain,
                     onCannotOpenFile = {
-                        showCannotOpenFileError(binding.browserLayout, context, it)
+                        showCannotOpenFileError(binding.dynamicSnackbarContainer, context, it)
                     },
                     binding = binding.viewDynamicDownloadDialog,
                     toolbarHeight = toolbarHeight,
@@ -971,7 +971,7 @@ abstract class BaseBrowserFragment :
             didFail = savedDownloadState.second,
             tryAgain = onTryAgain,
             onCannotOpenFile = {
-                showCannotOpenFileError(binding.browserLayout, context, it)
+                showCannotOpenFileError(binding.dynamicSnackbarContainer, context, it)
             },
             binding = binding.viewDynamicDownloadDialog,
             toolbarHeight = toolbarHeight,
@@ -1297,7 +1297,7 @@ abstract class BaseBrowserFragment :
                 withContext(Main) {
                     view?.let {
                         FenixSnackbar.make(
-                            view = binding.browserLayout,
+                            view = binding.dynamicSnackbarContainer,
                             duration = FenixSnackbar.LENGTH_LONG,
                             isDisplayedWithBrowserToolbar = true,
                         )
@@ -1318,7 +1318,7 @@ abstract class BaseBrowserFragment :
                 withContext(Main) {
                     view?.let {
                         FenixSnackbar.make(
-                            view = binding.browserLayout,
+                            view = binding.dynamicSnackbarContainer,
                             duration = FenixSnackbar.LENGTH_LONG,
                             isDisplayedWithBrowserToolbar = true,
                         )
@@ -1361,7 +1361,7 @@ abstract class BaseBrowserFragment :
             // Close find in page bar if opened
             findInPageIntegration.onBackPressed()
             FenixSnackbar.make(
-                view = binding.browserLayout,
+                view = binding.dynamicSnackbarContainer,
                 duration = Snackbar.LENGTH_SHORT,
                 isDisplayedWithBrowserToolbar = false,
             )
@@ -1442,12 +1442,12 @@ abstract class BaseBrowserFragment :
     }
 
     private fun showCannotOpenFileError(
-        view: View,
+        container: ViewGroup,
         context: Context,
         downloadState: DownloadState,
     ) {
         FenixSnackbar.make(
-            view = view,
+            view = container,
             duration = Snackbar.LENGTH_SHORT,
             isDisplayedWithBrowserToolbar = true,
         ).setText(DynamicDownloadDialog.getCannotOpenFileErrorMessage(context, downloadState))

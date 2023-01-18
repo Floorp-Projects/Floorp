@@ -66,6 +66,11 @@
                 android:layout_height="match_parent"
                 android:visibility="gone" />
 
+            <FrameLayout
+                android:id="@+id/dynamicSnackbarContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
         <mozilla.components.feature.prompts.address.AddressSelectBar

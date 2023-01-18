@@ -442,7 +442,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     }
                 }
                 FenixSnackbar.make(
-                    view = binding.browserLayout,
+                    view = binding.dynamicSnackbarContainer,
                     duration = Snackbar.LENGTH_SHORT,
                     isDisplayedWithBrowserToolbar = true,
                 )

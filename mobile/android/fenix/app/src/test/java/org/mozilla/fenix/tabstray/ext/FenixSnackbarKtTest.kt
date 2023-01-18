@@ -6,16 +6,29 @@ package org.mozilla.fenix.tabstray.ext
 
 import android.content.Context
 import android.view.View
+import android.widget.FrameLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verifyOrder
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.FenixSnackbarBehavior
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.helpers.MockkRetryTestRule
 import org.mozilla.fenix.tabstray.TabsTrayFragment.Companion.ELEVATION
+import org.mozilla.fenix.utils.Settings
 
+@RunWith(FenixRobolectricTestRunner::class)
 class FenixSnackbarKtTest {
 
     @get:Rule
@@ -92,6 +105,26 @@ class FenixSnackbarKtTest {
             snackbar.anchorView = anchor
             view.elevation = ELEVATION
             snackbar.setAction("test1", any())
+        }
+    }
+
+    @Test
+    fun `GIVEN the snackbar is a child of dynamic container WHEN it is shown THEN enable the dynamic behavior`() {
+        val container = FrameLayout(testContext).apply {
+            id = R.id.dynamicSnackbarContainer
+            layoutParams = CoordinatorLayout.LayoutParams(0, 0)
+        }
+        val settings: Settings = mockk(relaxed = true) {
+            every { toolbarPosition } returns ToolbarPosition.BOTTOM
+        }
+        mockkStatic("org.mozilla.fenix.ext.ContextKt") {
+            every { any<Context>().settings() } returns settings
+
+            FenixSnackbar.make(view = container)
+
+            val behavior = (container.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior
+            assertTrue(behavior is FenixSnackbarBehavior)
+            assertEquals(ToolbarPosition.BOTTOM, (behavior as? FenixSnackbarBehavior)?.toolbarPosition)
         }
     }
 }
