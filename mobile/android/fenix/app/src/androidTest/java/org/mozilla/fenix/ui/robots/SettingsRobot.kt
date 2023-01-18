@@ -86,8 +86,8 @@ class SettingsRobot {
     fun verifyHTTPSOnlyModeState(state: String) = assertHTTPSOnlyModeState(state)
     fun verifyEnhancedTrackingProtectionButton() = assertEnhancedTrackingProtectionButton()
     fun verifyLoginsAndPasswordsButton() = assertLoginsAndPasswordsButton()
-    fun verifyEnhancedTrackingProtectionState(state: String) =
-        assertEnhancedTrackingProtectionState(state)
+    fun verifyEnhancedTrackingProtectionState(option: String) =
+        assertEnhancedTrackingProtectionState(option)
     fun verifyPrivateBrowsingButton() = assertPrivateBrowsingButton()
     fun verifySitePermissionsButton() = assertSitePermissionsButton()
     fun verifyDeleteBrowsingDataButton() = assertDeleteBrowsingDataButton()
@@ -363,8 +363,10 @@ private fun assertHomepageButton() =
 private fun assertAutofillButton() =
     onView(withText(R.string.preferences_autofill)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertLanguageButton() =
+private fun assertLanguageButton() {
+    scrollToElementByText(getStringResource(R.string.preferences_language))
     onView(withText(R.string.preferences_language)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun assertCustomizeButton() = onView(withText("Customize"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
