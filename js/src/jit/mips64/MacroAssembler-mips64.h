@@ -520,9 +520,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void testUndefinedSet(Condition cond, const ValueOperand& value,
                         Register dest);
 
-  // higher level tag testing code
-  Address ToPayload(Address value) { return value; }
-
   template <typename T>
   void loadUnboxedValue(const T& address, MIRType type, AnyRegister dest) {
     if (dest.isFloat()) {
