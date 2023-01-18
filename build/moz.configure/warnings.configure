@@ -57,6 +57,9 @@ check_and_add_warning("-Wshadow-field-in-constructor-modified")
 # catches comparing signed/unsigned ints
 add_warning("-Wsign-compare")
 
+# catches comparisons of values and sized types are always true or false
+check_and_add_warning("-Wtautological-constant-in-range-compare")
+
 # catches overflow bugs, few false positives
 add_warning("-Wtype-limits")
 
