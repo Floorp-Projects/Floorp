@@ -4157,6 +4157,7 @@ void gfxFont::CreateVerticalMetrics() {
 
   // Read real vertical metrics if available.
   metrics->ideographicWidth = -1.0;
+  metrics->zeroWidth = -1.0;
   gfxFontEntry::AutoTable vheaTable(mFontEntry, kVheaTableTag);
   if (vheaTable && mFUnitsConvFactor >= 0.0) {
     const MetricsHeader* vhea = reinterpret_cast<const MetricsHeader*>(
@@ -4183,10 +4184,19 @@ void gfxFont::CreateVerticalMetrics() {
         uint32_t gid = ProvidesGetGlyph()
                            ? GetGlyph(kWaterIdeograph, 0)
                            : shaper->GetNominalGlyph(kWaterIdeograph);
-        int32_t advance = shaper->GetGlyphVAdvance(gid);
-        // Convert 16.16 fixed-point advance from the shaper to a float.
-        metrics->ideographicWidth =
-            advance < 0 ? metrics->aveCharWidth : advance / 65536.0;
+        if (gid) {
+          int32_t advance = shaper->GetGlyphVAdvance(gid);
+          // Convert 16.16 fixed-point advance from the shaper to a float.
+          metrics->ideographicWidth =
+              advance < 0 ? metrics->aveCharWidth : advance / 65536.0;
+        }
+        gid = ProvidesGetGlyph() ? GetGlyph('0', 0)
+                                 : shaper->GetNominalGlyph('0');
+        if (gid) {
+          int32_t advance = shaper->GetGlyphVAdvance(gid);
+          metrics->zeroWidth =
+              advance < 0 ? metrics->aveCharWidth : advance / 65536.0;
+        }
       }
     }
   }
@@ -4244,10 +4254,13 @@ void gfxFont::CreateVerticalMetrics() {
 
   // Somewhat arbitrary values for now, subject to future refinement...
   metrics->spaceWidth = metrics->aveCharWidth;
-  metrics->zeroWidth = metrics->aveCharWidth;
   metrics->maxHeight = metrics->maxAscent + metrics->maxDescent;
   metrics->xHeight = metrics->emHeight / 2;
   metrics->capHeight = metrics->maxAscent;
+
+  if (metrics->zeroWidth < 0.0) {
+    metrics->zeroWidth = metrics->aveCharWidth;
+  }
 
   if (!mVerticalMetrics.compareExchange(nullptr, metrics)) {
     delete metrics;
