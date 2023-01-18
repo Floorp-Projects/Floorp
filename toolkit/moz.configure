@@ -2421,21 +2421,10 @@ with only_when(requires_wasm_sandboxing & compile_environment):
     @depends(
         "--with-wasi-sysroot",
         bootstrap_path("sysroot-wasm32-wasi", when=bootstrap_wasi_sysroot),
-        "--with-wasm-sandboxed-libraries",
     )
     @imports("os")
-    def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot, sandboxed_libs):
+    def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot):
         if not wasi_sysroot:
-            if not bootstrapped_sysroot:
-                suggest_disable = ""
-                if sandboxed_libs.origin == "default":
-                    suggest_disable = (
-                        " Or build with --without-wasm-sandboxed-libraries."
-                    )
-                die(
-                    "Cannot find a wasi sysroot. Please give its location with "
-                    "--with-wasi-sysroot." + suggest_disable
-                )
             return bootstrapped_sysroot
 
         wasi_sysroot = wasi_sysroot[0]
@@ -2448,8 +2437,10 @@ with only_when(requires_wasm_sandboxing & compile_environment):
 
     @depends(wasi_sysroot)
     def wasi_sysroot_flags(wasi_sysroot):
-        log.info("Using wasi sysroot in %s", wasi_sysroot)
-        return ["--sysroot=%s" % wasi_sysroot]
+        if wasi_sysroot:
+            log.info("Using wasi sysroot in %s", wasi_sysroot)
+            return ["--sysroot=%s" % wasi_sysroot]
+        return []
 
     set_config("WASI_SYSROOT", wasi_sysroot)
 
