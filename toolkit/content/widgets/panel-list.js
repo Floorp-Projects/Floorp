@@ -80,14 +80,14 @@
       if (!event) {
         return null;
       }
+      if (event._savedComposedTarget) {
+        return event._savedComposedTarget;
+      }
       if (event.composed) {
         event._savedComposedTarget =
           event.composedTarget || event.composedPath()[0];
       }
-      if (event._savedComposedTarget) {
-        return event._savedComposedTarget;
-      }
-      return event.target;
+      return event._savedComposedTarget || event.target;
     }
 
     show(triggeringEvent) {
