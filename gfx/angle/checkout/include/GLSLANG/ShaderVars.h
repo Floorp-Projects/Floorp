@@ -15,9 +15,6 @@
 #include <string>
 #include <vector>
 
-// This type is defined here to simplify ANGLE's integration with glslang for SPIRv.
-using ShCompileOptions = uint64_t;
-
 namespace sh
 {
 // GLenum alias
@@ -33,6 +30,8 @@ enum InterpolationType
     INTERPOLATION_NOPERSPECTIVE
 };
 
+const char *InterpolationTypeToString(InterpolationType type);
+
 // Validate link & SSO consistency of interpolation qualifiers
 bool InterpolationTypesMatch(InterpolationType a, InterpolationType b);
 
@@ -46,12 +45,16 @@ enum BlockLayoutType
     BLOCKLAYOUT_SHARED
 };
 
+const char *BlockLayoutTypeToString(BlockLayoutType type);
+
 // Interface Blocks, see section 4.3.9 of the ESSL 3.10 spec
 enum class BlockType
 {
     BLOCK_UNIFORM,
     BLOCK_BUFFER,
 };
+
+const char *BlockTypeToString(BlockType type);
 
 // Base class for all variables defined in shaders, including Varyings, Uniforms, etc
 // Note: we must override the copy constructor and assignment operator so we can
@@ -210,10 +213,11 @@ struct ShaderVariable
     int binding;
     GLenum imageUnitFormat;
     int offset;
+    bool rasterOrdered;
     bool readonly;
     bool writeonly;
 
-    // From EXT_shader_framebuffer_fetch
+    // From EXT_shader_framebuffer_fetch / KHR_blend_equation_advanced
     bool isFragmentInOut;
 
     // OutputVariable

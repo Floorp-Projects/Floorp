@@ -158,6 +158,11 @@ class Context11 : public ContextD3D, public MultisampleTextureInitializer
                                            const GLsizei *counts,
                                            const GLsizei *instanceCounts,
                                            GLsizei drawcount) override;
+    angle::Result multiDrawArraysIndirect(const gl::Context *context,
+                                          gl::PrimitiveMode mode,
+                                          const void *indirect,
+                                          GLsizei drawcount,
+                                          GLsizei stride) override;
     angle::Result multiDrawElements(const gl::Context *context,
                                     gl::PrimitiveMode mode,
                                     const GLsizei *counts,
@@ -171,6 +176,12 @@ class Context11 : public ContextD3D, public MultisampleTextureInitializer
                                              const GLvoid *const *indices,
                                              const GLsizei *instanceCounts,
                                              GLsizei drawcount) override;
+    angle::Result multiDrawElementsIndirect(const gl::Context *context,
+                                            gl::PrimitiveMode mode,
+                                            gl::DrawElementsType type,
+                                            const void *indirect,
+                                            GLsizei drawcount,
+                                            GLsizei stride) override;
     angle::Result multiDrawArraysInstancedBaseInstance(const gl::Context *context,
                                                        gl::PrimitiveMode mode,
                                                        const GLint *firsts,
@@ -206,7 +217,8 @@ class Context11 : public ContextD3D, public MultisampleTextureInitializer
     // State sync with dirty bits.
     angle::Result syncState(const gl::Context *context,
                             const gl::State::DirtyBits &dirtyBits,
-                            const gl::State::DirtyBits &bitMask) override;
+                            const gl::State::DirtyBits &bitMask,
+                            gl::Command command) override;
 
     // Disjoint timer queries
     GLint getGPUDisjoint() override;
@@ -220,6 +232,7 @@ class Context11 : public ContextD3D, public MultisampleTextureInitializer
     const gl::TextureCapsMap &getNativeTextureCaps() const override;
     const gl::Extensions &getNativeExtensions() const override;
     const gl::Limitations &getNativeLimitations() const override;
+    ShPixelLocalStorageType getNativePixelLocalStorageType() const override;
 
     Renderer11 *getRenderer() const { return mRenderer; }
 
@@ -257,7 +270,8 @@ class Context11 : public ContextD3D, public MultisampleTextureInitializer
                                    GLsizei instanceCount,
                                    GLint baseVertex,
                                    GLuint baseInstance,
-                                   bool promoteDynamic);
+                                   bool promoteDynamic,
+                                   bool isInstancedDraw);
 
     Renderer11 *mRenderer;
     IncompleteTextureSet mIncompleteTextures;

@@ -38,6 +38,7 @@ namespace rx
 {
 class ProgramD3DMetadata;
 class ShaderD3D;
+struct ShaderStorageBlock;
 
 // This class needs to match OutputHLSL::decorate
 class DecorateVariable final : angle::NonCopyable
@@ -148,19 +149,26 @@ class DynamicHLSL : angle::NonCopyable
     std::string generateVertexShaderForInputLayout(
         const std::string &sourceShader,
         const gl::InputLayout &inputLayout,
-        const std::vector<sh::ShaderVariable> &shaderAttributes) const;
+        const std::vector<sh::ShaderVariable> &shaderAttributes,
+        const std::vector<rx::ShaderStorageBlock> &shaderStorageBlocks,
+        size_t baseUAVRegister) const;
     std::string generatePixelShaderForOutputSignature(
         const std::string &sourceShader,
         const std::vector<PixelShaderOutputVariable> &outputVariables,
         bool usesFragDepth,
-        const std::vector<GLenum> &outputLayout) const;
-    std::string generateComputeShaderForImage2DBindSignature(
-        const d3d::Context *context,
+        const std::vector<GLenum> &outputLayout,
+        const std::vector<rx::ShaderStorageBlock> &shaderStorageBlocks,
+        size_t baseUAVRegister) const;
+    std::string generateShaderForImage2DBindSignature(
         ProgramD3D &programD3D,
         const gl::ProgramState &programData,
+        gl::ShaderType shaderType,
+        const std::string &shaderHLSL,
         std::vector<sh::ShaderVariable> &image2DUniforms,
-        const gl::ImageUnitTextureTypeMap &image2DBindLayout) const;
-    void generateShaderLinkHLSL(const gl::Caps &caps,
+        const gl::ImageUnitTextureTypeMap &image2DBindLayout,
+        unsigned int baseUAVRegister) const;
+    void generateShaderLinkHLSL(const gl::Context *context,
+                                const gl::Caps &caps,
                                 const gl::ProgramState &programData,
                                 const ProgramD3DMetadata &programMetadata,
                                 const gl::VaryingPacking &varyingPacking,

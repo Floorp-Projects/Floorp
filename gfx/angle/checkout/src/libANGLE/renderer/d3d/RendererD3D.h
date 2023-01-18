@@ -19,11 +19,12 @@
 #include "libANGLE/Version.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/formatutils.h"
+#include "libANGLE/renderer/d3d/ShaderD3D.h"
 #include "libANGLE/renderer/d3d/VertexDataManager.h"
 #include "libANGLE/renderer/d3d/formatutilsD3D.h"
 #include "libANGLE/renderer/renderer_utils.h"
 #include "libANGLE/renderer/serial_utils.h"
-#include "platform/FeaturesD3D.h"
+#include "platform/FeaturesD3D_autogen.h"
 
 namespace egl
 {
@@ -72,6 +73,24 @@ enum RendererClass
 {
     RENDERER_D3D11,
     RENDERER_D3D9
+};
+
+struct BindFlags
+{
+    bool renderTarget    = false;
+    bool unorderedAccess = false;
+    static BindFlags RenderTarget()
+    {
+        BindFlags flags;
+        flags.renderTarget = true;
+        return flags;
+    }
+    static BindFlags UnorderedAccess()
+    {
+        BindFlags flags;
+        flags.unorderedAccess = true;
+        return flags;
+    }
 };
 
 // A d3d::Context wraps error handling.
@@ -160,9 +179,9 @@ class RendererD3D : public BufferFactoryD3D
 
     virtual ContextImpl *createContext(const gl::State &state, gl::ErrorSet *errorSet) = 0;
 
-    virtual std::string getRendererDescription() const = 0;
-    virtual std::string getVendorString() const        = 0;
-    virtual std::string getVersionString() const       = 0;
+    virtual std::string getRendererDescription() const                  = 0;
+    virtual std::string getVendorString() const                         = 0;
+    virtual std::string getVersionString(bool includeFullVersion) const = 0;
 
     virtual int getMinorShaderModel() const          = 0;
     virtual std::string getShaderModelSuffix() const = 0;
@@ -277,7 +296,7 @@ class RendererD3D : public BufferFactoryD3D
                                               gl::ShaderType type,
                                               const std::vector<D3DVarying> &streamOutVaryings,
                                               bool separatedOutputBuffers,
-                                              const angle::CompilerWorkaroundsD3D &workarounds,
+                                              const CompilerWorkaroundsD3D &workarounds,
                                               ShaderExecutableD3D **outExectuable) = 0;
     virtual angle::Result ensureHLSLCompilerInitialized(d3d::Context *context)     = 0;
 
@@ -289,13 +308,13 @@ class RendererD3D : public BufferFactoryD3D
         const gl::Context *context,
         EGLenum target,
         EGLClientBuffer buffer,
-        const egl::AttributeMap &attribs)                                                  = 0;
+        const egl::AttributeMap &attribs)                                              = 0;
     virtual angle::Result generateMipmap(const gl::Context *context,
                                          ImageD3D *dest,
-                                         ImageD3D *source)                                 = 0;
+                                         ImageD3D *source)                             = 0;
     virtual angle::Result generateMipmapUsingD3D(const gl::Context *context,
                                                  TextureStorage *storage,
-                                                 const gl::TextureState &textureState)     = 0;
+                                                 const gl::TextureState &textureState) = 0;
     virtual angle::Result copyImage(const gl::Context *context,
                                     ImageD3D *dest,
                                     ImageD3D *source,
@@ -303,49 +322,62 @@ class RendererD3D : public BufferFactoryD3D
                                     const gl::Offset &destOffset,
                                     bool unpackFlipY,
                                     bool unpackPremultiplyAlpha,
-                                    bool unpackUnmultiplyAlpha)                            = 0;
-    virtual TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain)                = 0;
+                                    bool unpackUnmultiplyAlpha)                        = 0;
+    virtual TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain,
+                                                   const std::string &label)           = 0;
     virtual TextureStorage *createTextureStorageEGLImage(EGLImageD3D *eglImage,
-                                                         RenderTargetD3D *renderTargetD3D) = 0;
+                                                         RenderTargetD3D *renderTargetD3D,
+                                                         const std::string &label)     = 0;
+    virtual TextureStorage *createTextureStorageBuffer(
+        const gl::OffsetBindingPointer<gl::Buffer> &buffer,
+        GLenum internalFormat,
+        const std::string &label) = 0;
     virtual TextureStorage *createTextureStorageExternal(
         egl::Stream *stream,
-        const egl::Stream::GLTextureDescription &desc)                                        = 0;
+        const egl::Stream::GLTextureDescription &desc,
+        const std::string &label)                                                            = 0;
     virtual TextureStorage *createTextureStorage2D(GLenum internalformat,
-                                                   bool renderTarget,
+                                                   BindFlags bindFlags,
                                                    GLsizei width,
                                                    GLsizei height,
                                                    int levels,
-                                                   bool hintLevelZeroOnly)                    = 0;
+                                                   const std::string &label,
+                                                   bool hintLevelZeroOnly)                   = 0;
     virtual TextureStorage *createTextureStorageCube(GLenum internalformat,
-                                                     bool renderTarget,
+                                                     BindFlags bindFlags,
                                                      int size,
                                                      int levels,
-                                                     bool hintLevelZeroOnly)                  = 0;
+                                                     bool hintLevelZeroOnly,
+                                                     const std::string &label)               = 0;
     virtual TextureStorage *createTextureStorage3D(GLenum internalformat,
-                                                   bool renderTarget,
+                                                   BindFlags bindFlags,
                                                    GLsizei width,
                                                    GLsizei height,
                                                    GLsizei depth,
-                                                   int levels)                                = 0;
+                                                   int levels,
+                                                   const std::string &label)                 = 0;
     virtual TextureStorage *createTextureStorage2DArray(GLenum internalformat,
-                                                        bool renderTarget,
+                                                        BindFlags bindFlags,
                                                         GLsizei width,
                                                         GLsizei height,
                                                         GLsizei depth,
-                                                        int levels)                           = 0;
+                                                        int levels,
+                                                        const std::string &label)            = 0;
     virtual TextureStorage *createTextureStorage2DMultisample(GLenum internalformat,
                                                               GLsizei width,
                                                               GLsizei height,
                                                               int levels,
                                                               int samples,
-                                                              bool fixedSampleLocations)      = 0;
+                                                              bool fixedSampleLocations,
+                                                              const std::string &label)      = 0;
     virtual TextureStorage *createTextureStorage2DMultisampleArray(GLenum internalformat,
                                                                    GLsizei width,
                                                                    GLsizei height,
                                                                    GLsizei depth,
                                                                    int levels,
                                                                    int samples,
-                                                                   bool fixedSampleLocations) = 0;
+                                                                   bool fixedSampleLocations,
+                                                                   const std::string &label) = 0;
 
     // Buffer-to-texture and Texture-to-buffer copies
     virtual bool supportsFastCopyBufferToTexture(GLenum internalFormat) const = 0;
@@ -392,6 +424,8 @@ class RendererD3D : public BufferFactoryD3D
     const gl::TextureCapsMap &getNativeTextureCaps() const;
     const gl::Extensions &getNativeExtensions() const;
     const gl::Limitations &getNativeLimitations() const;
+    ShPixelLocalStorageType getNativePixelLocalStorageType() const;
+    virtual void initializeFrontendFeatures(angle::FrontendFeatures *features) const = 0;
 
     // Necessary hack for default framebuffers in D3D.
     virtual FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &state) = 0;

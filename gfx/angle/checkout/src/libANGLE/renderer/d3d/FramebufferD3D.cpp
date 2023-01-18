@@ -70,7 +70,7 @@ ClearParameters GetClearParameters(const gl::State &state, GLbitfield mask)
     {
         clearParams.clearColor.reset();
     }
-    clearParams.colorMask = state.getBlendStateExt().mColorMask;
+    clearParams.colorMask = state.getBlendStateExt().getColorMaskBits();
 
     if (mask & GL_DEPTH_BUFFER_BIT)
     {
@@ -263,9 +263,8 @@ gl::FramebufferStatus FramebufferD3D::checkStatus(const gl::Context *context) co
 
     // D3D11 does not allow for overlapping RenderTargetViews.
     // If WebGL compatibility is enabled, this has already been checked at a higher level.
-    ASSERT(!context->getExtensions().webglCompatibility ||
-           mState.colorAttachmentsAreUniqueImages());
-    if (!context->getExtensions().webglCompatibility)
+    ASSERT(!context->isWebGL() || mState.colorAttachmentsAreUniqueImages());
+    if (!context->isWebGL())
     {
         if (!mState.colorAttachmentsAreUniqueImages())
         {
@@ -312,7 +311,7 @@ angle::Result FramebufferD3D::syncState(const gl::Context *context,
 const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(const gl::Context *context)
 {
     gl::DrawBufferMask activeProgramOutputs =
-        context->getState().getProgram()->getActiveOutputVariables();
+        context->getState().getProgram()->getExecutable().getActiveOutputVariablesMask();
 
     if (mColorAttachmentsForRender.valid() && mCurrentActiveProgramOutputs == activeProgramOutputs)
     {

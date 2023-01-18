@@ -24,6 +24,82 @@
 #include "platform/Feature.h"
 
 #include <string.h>
+#include <cctype>
+
+namespace angle
+{
+namespace
+{
+// For the sake of feature name matching, underscore is ignored, and the names are matched
+// case-insensitive.  This allows feature names to be overriden both in snake_case (previously used
+// by ANGLE) and camelCase.  The second string (user-provided name) can end in `*` for wildcard
+// matching.
+bool FeatureNameMatch(const std::string &a, const std::string &b)
+{
+    size_t ai = 0;
+    size_t bi = 0;
+
+    while (ai < a.size() && bi < b.size())
+    {
+        if (a[ai] == '_')
+        {
+            ++ai;
+        }
+        if (b[bi] == '_')
+        {
+            ++bi;
+        }
+        if (b[bi] == '*' && bi + 1 == b.size())
+        {
+            // If selected feature name ends in wildcard, match it.
+            return true;
+        }
+        if (std::tolower(a[ai++]) != std::tolower(b[bi++]))
+        {
+            return false;
+        }
+    }
+
+    return ai == a.size() && bi == b.size();
+}
+}  // anonymous namespace
+
+// FeatureSetBase implementation
+void FeatureSetBase::overrideFeatures(const std::vector<std::string> &featureNames, bool enabled)
+{
+    for (const std::string &name : featureNames)
+    {
+        const bool hasWildcard = name.back() == '*';
+        for (auto iter : members)
+        {
+            const std::string &featureName = iter.first;
+            FeatureInfo *feature           = iter.second;
+
+            if (!FeatureNameMatch(featureName, name))
+            {
+                continue;
+            }
+
+            feature->enabled = enabled;
+
+            // If name has a wildcard, try to match it with all features.  Otherwise, bail on first
+            // match, as names are unique.
+            if (!hasWildcard)
+            {
+                break;
+            }
+        }
+    }
+}
+
+void FeatureSetBase::populateFeatureList(FeatureList *features) const
+{
+    for (FeatureMap::const_iterator it = members.begin(); it != members.end(); it++)
+    {
+        features->push_back(it->second);
+    }
+}
+}  // namespace angle
 
 namespace rx
 {
@@ -225,8 +301,21 @@ void SetFloatUniformMatrixFast(unsigned int arrayElementOffset,
 
     memcpy(targetData, valueData, matrixSize * count);
 }
-
 }  // anonymous namespace
+
+bool IsRotatedAspectRatio(SurfaceRotation rotation)
+{
+    switch (rotation)
+    {
+        case SurfaceRotation::Rotated90Degrees:
+        case SurfaceRotation::Rotated270Degrees:
+        case SurfaceRotation::FlippedRotated90Degrees:
+        case SurfaceRotation::FlippedRotated270Degrees:
+            return true;
+        default:
+            return false;
+    }
+}
 
 void RotateRectangle(const SurfaceRotation rotation,
                      const bool flipY,
@@ -382,22 +471,13 @@ void PackPixels(const PackPixelsParams &params,
         return;
     }
 
-    PixelCopyFunction fastCopyFunc = sourceFormat.fastCopyFunctions.get(params.destFormat->id);
+    FastCopyFunction fastCopyFunc = sourceFormat.fastCopyFunctions.get(params.destFormat->id);
 
     if (fastCopyFunc)
     {
         // Fast copy is possible through some special function
-        for (int y = 0; y < destHeight; ++y)
-        {
-            for (int x = 0; x < destWidth; ++x)
-            {
-                uint8_t *dest =
-                    destWithOffset + y * params.outputPitch + x * params.destFormat->pixelBytes;
-                const uint8_t *src = source + y * yAxisPitch + x * xAxisPitch;
-
-                fastCopyFunc(src, dest);
-            }
-        }
+        fastCopyFunc(source, xAxisPitch, yAxisPitch, destWithOffset, params.destFormat->pixelBytes,
+                     params.outputPitch, destWidth, destHeight);
         return;
     }
 
@@ -435,24 +515,36 @@ bool FastCopyFunctionMap::has(angle::FormatID formatID) const
     return (get(formatID) != nullptr);
 }
 
-PixelCopyFunction FastCopyFunctionMap::get(angle::FormatID formatID) const
+namespace
 {
-    for (size_t index = 0; index < mSize; ++index)
+
+const FastCopyFunctionMap::Entry *getEntry(const FastCopyFunctionMap::Entry *entry,
+                                           size_t numEntries,
+                                           angle::FormatID formatID)
+{
+    const FastCopyFunctionMap::Entry *end = entry + numEntries;
+    while (entry != end)
     {
-        if (mData[index].formatID == formatID)
+        if (entry->formatID == formatID)
         {
-            return mData[index].func;
+            return entry;
         }
+        ++entry;
     }
 
     return nullptr;
 }
 
+}  // namespace
+
+FastCopyFunction FastCopyFunctionMap::get(angle::FormatID formatID) const
+{
+    const FastCopyFunctionMap::Entry *entry = getEntry(mData, mSize, formatID);
+    return entry ? entry->func : nullptr;
+}
+
 bool ShouldUseDebugLayers(const egl::AttributeMap &attribs)
 {
-    // (miko): Disabling debug layers fixes flakiness with debug builds.
-    return false;
-
     EGLAttrib debugSetting =
         attribs.get(EGL_PLATFORM_ANGLE_DEBUG_LAYERS_ENABLED_ANGLE, EGL_DONT_CARE);
 
@@ -462,20 +554,6 @@ bool ShouldUseDebugLayers(const egl::AttributeMap &attribs)
 #else
     return (debugSetting == EGL_TRUE);
 #endif  // defined(ANGLE_ENABLE_ASSERTS)
-}
-
-bool ShouldUseVirtualizedContexts(const egl::AttributeMap &attribs, bool defaultValue)
-{
-    EGLAttrib virtualizedContextRequest =
-        attribs.get(EGL_PLATFORM_ANGLE_CONTEXT_VIRTUALIZATION_ANGLE, EGL_DONT_CARE);
-    if (defaultValue)
-    {
-        return (virtualizedContextRequest != EGL_FALSE);
-    }
-    else
-    {
-        return (virtualizedContextRequest == EGL_TRUE);
-    }
 }
 
 void CopyImageCHROMIUM(const uint8_t *sourceData,
@@ -608,12 +686,26 @@ angle::Result IncompleteTextureSet::getIncompleteTexture(
 
     ContextImpl *implFactory = context->getImplementation();
 
-    const gl::Extents colorSize(1, 1, 1);
+    gl::Extents colorSize(1, 1, 1);
     gl::PixelUnpackState unpack;
     unpack.alignment = 1;
-    const gl::Box area(0, 0, 0, 1, 1, 1);
+    gl::Box area(0, 0, 0, 1, 1, 1);
     const IncompleteTextureParameters &incompleteTextureParam =
         kIncompleteTextureParameters[format];
+
+    // Cube map arrays are expected to have layer counts that are multiples of 6
+    constexpr int kCubeMapArraySize = 6;
+    if (type == gl::TextureType::CubeMapArray)
+    {
+        // From the GLES 3.2 spec:
+        //   8.18. IMMUTABLE-FORMAT TEXTURE IMAGES
+        //   TexStorage3D Errors
+        //   An INVALID_OPERATION error is generated if any of the following conditions hold:
+        //     * target is TEXTURE_CUBE_MAP_ARRAY and depth is not a multiple of 6
+        // Since ANGLE treats incomplete textures as immutable, respect that here.
+        colorSize.depth = kCubeMapArraySize;
+        area.depth      = kCubeMapArraySize;
+    }
 
     // If a texture is external use a 2D texture for the incomplete texture
     gl::TextureType createType = (type == gl::TextureType::External) ? gl::TextureType::_2D : type;
@@ -654,6 +746,23 @@ angle::Result IncompleteTextureSet::getIncompleteTexture(
                                      incompleteTextureParam.format, incompleteTextureParam.type,
                                      incompleteTextureParam.clearColor));
         }
+    }
+    else if (type == gl::TextureType::CubeMapArray)
+    {
+        // We need to provide enough pixel data to fill the array of six faces
+        GLubyte incompleteCubeArrayPixels[kCubeMapArraySize][4];
+        for (int i = 0; i < kCubeMapArraySize; ++i)
+        {
+            incompleteCubeArrayPixels[i][0] = incompleteTextureParam.clearColor[0];
+            incompleteCubeArrayPixels[i][1] = incompleteTextureParam.clearColor[1];
+            incompleteCubeArrayPixels[i][2] = incompleteTextureParam.clearColor[2];
+            incompleteCubeArrayPixels[i][3] = incompleteTextureParam.clearColor[3];
+        }
+
+        ANGLE_TRY(t->setSubImage(mutableContext, unpack, nullptr,
+                                 gl::NonCubeTextureTypeToTarget(createType), 0, area,
+                                 incompleteTextureParam.format, incompleteTextureParam.type,
+                                 *incompleteCubeArrayPixels));
     }
     else if (type == gl::TextureType::_2DMultisample)
     {
@@ -967,13 +1076,22 @@ void LogFeatureStatus(const angle::FeatureSetBase &features,
 {
     for (const std::string &name : featureNames)
     {
-        if (features.getFeatures().find(name) != features.getFeatures().end())
+        const bool hasWildcard = name.back() == '*';
+        for (auto iter : features.getFeatures())
         {
-            INFO() << "Feature: " << name << (enabled ? " enabled" : " disabled");
-        }
-        else
-        {
-            WARN() << "Feature: " << name << " is not a valid feature name.";
+            const std::string &featureName = iter.first;
+
+            if (!angle::FeatureNameMatch(featureName, name))
+            {
+                continue;
+            }
+
+            INFO() << "Feature: " << featureName << (enabled ? " enabled" : " disabled");
+
+            if (!hasWildcard)
+            {
+                break;
+            }
         }
     }
 }
@@ -996,6 +1114,7 @@ void ApplyFeatureOverrides(angle::FeatureSetBase *features, const egl::DisplaySt
     std::vector<std::string> overridesDisabled =
         angle::GetCachedStringsFromEnvironmentVarOrAndroidProperty(
             kAngleFeatureOverridesDisabledEnvName, kAngleFeatureOverridesDisabledPropertyName, ":");
+
     features->overrideFeatures(overridesEnabled, true);
     LogFeatureStatus(*features, overridesEnabled, true);
 
@@ -1048,6 +1167,7 @@ void GetSamplePosition(GLsizei sampleCount, size_t index, GLfloat *xy)
     {                                                                                          \
         if (ANGLE_NOOP_DRAW(instanced))                                                        \
         {                                                                                      \
+            ANGLE_TRY(contextImpl->handleNoopDrawEvent());                                     \
             continue;                                                                          \
         }                                                                                      \
         ANGLE_SET_DRAW_ID_UNIFORM(hasDrawID)(drawID);                                          \
@@ -1074,6 +1194,32 @@ angle::Result MultiDrawArraysGeneral(ContextImpl *contextImpl,
     else
     {
         MULTI_DRAW_BLOCK(ARRAYS, _, _, 0, 0, 0)
+    }
+
+    return angle::Result::Continue;
+}
+
+angle::Result MultiDrawArraysIndirectGeneral(ContextImpl *contextImpl,
+                                             const gl::Context *context,
+                                             gl::PrimitiveMode mode,
+                                             const void *indirect,
+                                             GLsizei drawcount,
+                                             GLsizei stride)
+{
+    const GLubyte *indirectPtr = static_cast<const GLubyte *>(indirect);
+
+    for (auto count = 0; count < drawcount; count++)
+    {
+        ANGLE_TRY(contextImpl->drawArraysIndirect(
+            context, mode, reinterpret_cast<const gl::DrawArraysIndirectCommand *>(indirectPtr)));
+        if (stride == 0)
+        {
+            indirectPtr += sizeof(gl::DrawArraysIndirectCommand);
+        }
+        else
+        {
+            indirectPtr += stride;
+        }
     }
 
     return angle::Result::Continue;
@@ -1118,6 +1264,34 @@ angle::Result MultiDrawElementsGeneral(ContextImpl *contextImpl,
     else
     {
         MULTI_DRAW_BLOCK(ELEMENTS, _, _, 0, 0, 0)
+    }
+
+    return angle::Result::Continue;
+}
+
+angle::Result MultiDrawElementsIndirectGeneral(ContextImpl *contextImpl,
+                                               const gl::Context *context,
+                                               gl::PrimitiveMode mode,
+                                               gl::DrawElementsType type,
+                                               const void *indirect,
+                                               GLsizei drawcount,
+                                               GLsizei stride)
+{
+    const GLubyte *indirectPtr = static_cast<const GLubyte *>(indirect);
+
+    for (auto count = 0; count < drawcount; count++)
+    {
+        ANGLE_TRY(contextImpl->drawElementsIndirect(
+            context, mode, type,
+            reinterpret_cast<const gl::DrawElementsIndirectCommand *>(indirectPtr)));
+        if (stride == 0)
+        {
+            indirectPtr += sizeof(gl::DrawElementsIndirectCommand);
+        }
+        else
+        {
+            indirectPtr += stride;
+        }
     }
 
     return angle::Result::Continue;
@@ -1282,6 +1456,8 @@ angle::FormatID ConvertToSRGB(angle::FormatID formatID)
     {
         case angle::FormatID::R8_UNORM:
             return angle::FormatID::R8_UNORM_SRGB;
+        case angle::FormatID::R8G8_UNORM:
+            return angle::FormatID::R8G8_UNORM_SRGB;
         case angle::FormatID::R8G8B8_UNORM:
             return angle::FormatID::R8G8B8_UNORM_SRGB;
         case angle::FormatID::R8G8B8A8_UNORM:
@@ -1343,6 +1519,8 @@ angle::FormatID ConvertToLinear(angle::FormatID formatID)
     {
         case angle::FormatID::R8_UNORM_SRGB:
             return angle::FormatID::R8_UNORM;
+        case angle::FormatID::R8G8_UNORM_SRGB:
+            return angle::FormatID::R8G8_UNORM;
         case angle::FormatID::R8G8B8_UNORM_SRGB:
             return angle::FormatID::R8G8B8_UNORM;
         case angle::FormatID::R8G8B8A8_UNORM_SRGB:

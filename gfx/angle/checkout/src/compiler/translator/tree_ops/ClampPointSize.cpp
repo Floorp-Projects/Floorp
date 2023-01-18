@@ -23,12 +23,13 @@ bool ClampPointSize(TCompiler *compiler,
                     TSymbolTable *symbolTable)
 {
     // Only clamp gl_PointSize if it's used in the shader.
-    if (!FindSymbolNode(root, ImmutableString("gl_PointSize")))
+    const TIntermSymbol *glPointSize = FindSymbolNode(root, ImmutableString("gl_PointSize"));
+    if (glPointSize == nullptr)
     {
         return true;
     }
 
-    TIntermSymbol *pointSizeNode = new TIntermSymbol(BuiltInVariable::gl_PointSize());
+    TIntermTyped *pointSizeNode = glPointSize->deepCopy();
 
     TConstantUnion *maxPointSizeConstant = new TConstantUnion();
     maxPointSizeConstant->setFConst(maxPointSize);

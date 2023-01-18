@@ -32,12 +32,6 @@ class MemoryProgramCache final : angle::NonCopyable
                             const Program *program,
                             egl::BlobCache::Key *hashOut);
 
-    // Check if the cache contains a binary matching the specified program.
-    bool get(const Context *context,
-             const egl::BlobCache::Key &programHash,
-             egl::BlobCache::Value *programOut,
-             size_t *programSizeOut);
-
     // For querying the contents of the cache.
     bool getAt(size_t index,
                const egl::BlobCache::Key **hashOut,
@@ -56,9 +50,9 @@ class MemoryProgramCache final : angle::NonCopyable
 
     // Store a binary directly.  TODO(syoussefi): deprecated.  Will be removed once Chrome supports
     // EGL_ANDROID_blob_cache. http://anglebug.com/2516
-    ANGLE_NO_DISCARD bool putBinary(const egl::BlobCache::Key &programHash,
-                                    const uint8_t *binary,
-                                    size_t length);
+    [[nodiscard]] bool putBinary(const egl::BlobCache::Key &programHash,
+                                 const uint8_t *binary,
+                                 size_t length);
 
     // Check the cache, and deserialize and load the program if found. Evict existing hash if load
     // fails.
@@ -86,7 +80,6 @@ class MemoryProgramCache final : angle::NonCopyable
 
   private:
     egl::BlobCache &mBlobCache;
-    unsigned int mIssuedWarnings;
 };
 
 }  // namespace gl

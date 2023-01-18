@@ -12,6 +12,8 @@
 #include "libANGLE/VertexArray.h"
 #include "libANGLE/VertexAttribute.h"
 
+#include <limits>
+
 namespace gl
 {
 namespace
@@ -34,6 +36,12 @@ bool EnclosesRange(int outsideLow, int outsideHigh, int insideLow, int insideHig
 {
     return outsideLow <= insideLow && outsideHigh >= insideHigh;
 }
+
+bool IsAdvancedBlendEquation(gl::BlendEquationType blendEquation)
+{
+    return blendEquation >= gl::BlendEquationType::Multiply &&
+           blendEquation <= gl::BlendEquationType::HslLuminosity;
+}
 }  // anonymous namespace
 
 RasterizerState::RasterizerState()
@@ -55,6 +63,12 @@ RasterizerState::RasterizerState()
 RasterizerState::RasterizerState(const RasterizerState &other)
 {
     memcpy(this, &other, sizeof(RasterizerState));
+}
+
+RasterizerState &RasterizerState::operator=(const RasterizerState &other)
+{
+    memcpy(this, &other, sizeof(RasterizerState));
+    return *this;
 }
 
 bool operator==(const RasterizerState &a, const RasterizerState &b)
@@ -124,6 +138,12 @@ DepthStencilState::DepthStencilState()
 DepthStencilState::DepthStencilState(const DepthStencilState &other)
 {
     memcpy(this, &other, sizeof(DepthStencilState));
+}
+
+DepthStencilState &DepthStencilState::operator=(const DepthStencilState &other)
+{
+    memcpy(this, &other, sizeof(DepthStencilState));
+    return *this;
 }
 
 bool DepthStencilState::isDepthMaskedOut() const
@@ -338,37 +358,34 @@ ImageUnit::ImageUnit(const ImageUnit &other) = default;
 
 ImageUnit::~ImageUnit() = default;
 
-BlendStateExt::BlendStateExt(const size_t drawBuffers)
-    : mMaxFactorMask(FactorStorage::GetMask(drawBuffers)),
-      mSrcColor(FactorStorage::GetReplicatedValue(BlendFactorType::One, mMaxFactorMask)),
-      mDstColor(FactorStorage::GetReplicatedValue(BlendFactorType::Zero, mMaxFactorMask)),
-      mSrcAlpha(FactorStorage::GetReplicatedValue(BlendFactorType::One, mMaxFactorMask)),
-      mDstAlpha(FactorStorage::GetReplicatedValue(BlendFactorType::Zero, mMaxFactorMask)),
-      mMaxEquationMask(EquationStorage::GetMask(drawBuffers)),
-      mEquationColor(EquationStorage::GetReplicatedValue(BlendEquationType::Add, mMaxEquationMask)),
-      mEquationAlpha(EquationStorage::GetReplicatedValue(BlendEquationType::Add, mMaxEquationMask)),
-      mMaxColorMask(ColorMaskStorage::GetMask(drawBuffers)),
-      mColorMask(ColorMaskStorage::GetReplicatedValue(PackColorMask(true, true, true, true),
-                                                      mMaxColorMask)),
-      mMaxEnabledMask(0xFF >> (8 - drawBuffers)),
-      mEnabledMask(),
-      mMaxDrawBuffers(drawBuffers)
+BlendStateExt::BlendStateExt(const size_t drawBufferCount)
+    : mParameterMask(FactorStorage::GetMask(drawBufferCount)),
+      mSrcColor(FactorStorage::GetReplicatedValue(BlendFactorType::One, mParameterMask)),
+      mDstColor(FactorStorage::GetReplicatedValue(BlendFactorType::Zero, mParameterMask)),
+      mSrcAlpha(FactorStorage::GetReplicatedValue(BlendFactorType::One, mParameterMask)),
+      mDstAlpha(FactorStorage::GetReplicatedValue(BlendFactorType::Zero, mParameterMask)),
+      mEquationColor(EquationStorage::GetReplicatedValue(BlendEquationType::Add, mParameterMask)),
+      mEquationAlpha(EquationStorage::GetReplicatedValue(BlendEquationType::Add, mParameterMask)),
+      mAllColorMask(
+          ColorMaskStorage::GetReplicatedValue(PackColorMask(true, true, true, true),
+                                               ColorMaskStorage::GetMask(drawBufferCount))),
+      mColorMask(mAllColorMask),
+      mAllEnabledMask(0xFF >> (8 - drawBufferCount)),
+      mDrawBufferCount(drawBufferCount)
 {}
 
-BlendStateExt &BlendStateExt::operator=(const BlendStateExt &other)
-{
-    memcpy(this, &other, sizeof(BlendStateExt));
-    return *this;
-}
+BlendStateExt::BlendStateExt(const BlendStateExt &other) = default;
+
+BlendStateExt &BlendStateExt::operator=(const BlendStateExt &other) = default;
 
 void BlendStateExt::setEnabled(const bool enabled)
 {
-    mEnabledMask = enabled ? mMaxEnabledMask : DrawBufferMask::Zero();
+    mEnabledMask = enabled ? mAllEnabledMask : DrawBufferMask::Zero();
 }
 
 void BlendStateExt::setEnabledIndexed(const size_t index, const bool enabled)
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     mEnabledMask.set(index, enabled);
 }
 
@@ -378,14 +395,14 @@ BlendStateExt::ColorMaskStorage::Type BlendStateExt::expandColorMaskValue(const 
                                                                           const bool alpha) const
 {
     return BlendStateExt::ColorMaskStorage::GetReplicatedValue(
-        PackColorMask(red, green, blue, alpha), mMaxColorMask);
+        PackColorMask(red, green, blue, alpha), mAllColorMask);
 }
 
 BlendStateExt::ColorMaskStorage::Type BlendStateExt::expandColorMaskIndexed(
     const size_t index) const
 {
     return ColorMaskStorage::GetReplicatedValue(
-        ColorMaskStorage::GetValueIndexed(index, mColorMask), mMaxColorMask);
+        ColorMaskStorage::GetValueIndexed(index, mColorMask), mAllColorMask);
 }
 
 void BlendStateExt::setColorMask(const bool red,
@@ -398,7 +415,7 @@ void BlendStateExt::setColorMask(const bool red,
 
 void BlendStateExt::setColorMaskIndexed(const size_t index, const uint8_t value)
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     ASSERT(value <= 0xF);
     ColorMaskStorage::SetValueIndexed(index, value, &mColorMask);
 }
@@ -409,13 +426,13 @@ void BlendStateExt::setColorMaskIndexed(const size_t index,
                                         const bool blue,
                                         const bool alpha)
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     ColorMaskStorage::SetValueIndexed(index, PackColorMask(red, green, blue, alpha), &mColorMask);
 }
 
 uint8_t BlendStateExt::getColorMaskIndexed(const size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return ColorMaskStorage::GetValueIndexed(index, mColorMask);
 }
 
@@ -425,7 +442,7 @@ void BlendStateExt::getColorMaskIndexed(const size_t index,
                                         bool *blue,
                                         bool *alpha) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     UnpackColorMask(ColorMaskStorage::GetValueIndexed(index, mColorMask), red, green, blue, alpha);
 }
 
@@ -436,64 +453,91 @@ DrawBufferMask BlendStateExt::compareColorMask(ColorMaskStorage::Type other) con
 
 BlendStateExt::EquationStorage::Type BlendStateExt::expandEquationValue(const GLenum mode) const
 {
-    return EquationStorage::GetReplicatedValue(FromGLenum<BlendEquationType>(mode),
-                                               mMaxEquationMask);
+    return EquationStorage::GetReplicatedValue(FromGLenum<BlendEquationType>(mode), mParameterMask);
+}
+
+BlendStateExt::EquationStorage::Type BlendStateExt::expandEquationValue(
+    const gl::BlendEquationType equation) const
+{
+    return EquationStorage::GetReplicatedValue(equation, mParameterMask);
 }
 
 BlendStateExt::EquationStorage::Type BlendStateExt::expandEquationColorIndexed(
     const size_t index) const
 {
     return EquationStorage::GetReplicatedValue(
-        EquationStorage::GetValueIndexed(index, mEquationColor), mMaxEquationMask);
+        EquationStorage::GetValueIndexed(index, mEquationColor), mParameterMask);
 }
 
 BlendStateExt::EquationStorage::Type BlendStateExt::expandEquationAlphaIndexed(
     const size_t index) const
 {
     return EquationStorage::GetReplicatedValue(
-        EquationStorage::GetValueIndexed(index, mEquationAlpha), mMaxEquationMask);
+        EquationStorage::GetValueIndexed(index, mEquationAlpha), mParameterMask);
 }
 
 void BlendStateExt::setEquations(const GLenum modeColor, const GLenum modeAlpha)
 {
-    mEquationColor = expandEquationValue(modeColor);
-    mEquationAlpha = expandEquationValue(modeAlpha);
+    const gl::BlendEquationType colorEquation = FromGLenum<BlendEquationType>(modeColor);
+    const gl::BlendEquationType alphaEquation = FromGLenum<BlendEquationType>(modeAlpha);
+
+    mEquationColor = expandEquationValue(colorEquation);
+    mEquationAlpha = expandEquationValue(alphaEquation);
+
+    // Note that advanced blend equations cannot be independently set for color and alpha, so only
+    // the color equation can be checked.
+    if (IsAdvancedBlendEquation(colorEquation))
+    {
+        mUsesAdvancedBlendEquationMask = mAllEnabledMask;
+    }
+    else
+    {
+        mUsesAdvancedBlendEquationMask.reset();
+    }
 }
 
 void BlendStateExt::setEquationsIndexed(const size_t index,
                                         const GLenum modeColor,
                                         const GLenum modeAlpha)
 {
-    ASSERT(index < mMaxDrawBuffers);
-    EquationStorage::SetValueIndexed(index, FromGLenum<BlendEquationType>(modeColor),
-                                     &mEquationColor);
-    EquationStorage::SetValueIndexed(index, FromGLenum<BlendEquationType>(modeAlpha),
-                                     &mEquationAlpha);
+    ASSERT(index < mDrawBufferCount);
+
+    const gl::BlendEquationType colorEquation = FromGLenum<BlendEquationType>(modeColor);
+    const gl::BlendEquationType alphaEquation = FromGLenum<BlendEquationType>(modeAlpha);
+
+    EquationStorage::SetValueIndexed(index, colorEquation, &mEquationColor);
+    EquationStorage::SetValueIndexed(index, alphaEquation, &mEquationAlpha);
+
+    mUsesAdvancedBlendEquationMask.set(index, IsAdvancedBlendEquation(colorEquation));
 }
 
 void BlendStateExt::setEquationsIndexed(const size_t index,
                                         const size_t sourceIndex,
                                         const BlendStateExt &source)
 {
-    ASSERT(index < mMaxDrawBuffers);
-    ASSERT(sourceIndex < source.mMaxDrawBuffers);
-    EquationStorage::SetValueIndexed(
-        index, EquationStorage::GetValueIndexed(sourceIndex, source.mEquationColor),
-        &mEquationColor);
-    EquationStorage::SetValueIndexed(
-        index, EquationStorage::GetValueIndexed(sourceIndex, source.mEquationAlpha),
-        &mEquationAlpha);
+    ASSERT(index < mDrawBufferCount);
+    ASSERT(sourceIndex < source.mDrawBufferCount);
+
+    const gl::BlendEquationType colorEquation =
+        EquationStorage::GetValueIndexed(sourceIndex, source.mEquationColor);
+    const gl::BlendEquationType alphaEquation =
+        EquationStorage::GetValueIndexed(sourceIndex, source.mEquationAlpha);
+
+    EquationStorage::SetValueIndexed(index, colorEquation, &mEquationColor);
+    EquationStorage::SetValueIndexed(index, alphaEquation, &mEquationAlpha);
+
+    mUsesAdvancedBlendEquationMask.set(index, IsAdvancedBlendEquation(colorEquation));
 }
 
 GLenum BlendStateExt::getEquationColorIndexed(size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return ToGLenum(EquationStorage::GetValueIndexed(index, mEquationColor));
 }
 
 GLenum BlendStateExt::getEquationAlphaIndexed(size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return ToGLenum(EquationStorage::GetValueIndexed(index, mEquationAlpha));
 }
 
@@ -506,35 +550,35 @@ DrawBufferMask BlendStateExt::compareEquations(const EquationStorage::Type color
 
 BlendStateExt::FactorStorage::Type BlendStateExt::expandFactorValue(const GLenum func) const
 {
-    return FactorStorage::GetReplicatedValue(FromGLenum<BlendFactorType>(func), mMaxFactorMask);
+    return FactorStorage::GetReplicatedValue(FromGLenum<BlendFactorType>(func), mParameterMask);
 }
 
 BlendStateExt::FactorStorage::Type BlendStateExt::expandSrcColorIndexed(const size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return FactorStorage::GetReplicatedValue(FactorStorage::GetValueIndexed(index, mSrcColor),
-                                             mMaxFactorMask);
+                                             mParameterMask);
 }
 
 BlendStateExt::FactorStorage::Type BlendStateExt::expandDstColorIndexed(const size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return FactorStorage::GetReplicatedValue(FactorStorage::GetValueIndexed(index, mDstColor),
-                                             mMaxFactorMask);
+                                             mParameterMask);
 }
 
 BlendStateExt::FactorStorage::Type BlendStateExt::expandSrcAlphaIndexed(const size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return FactorStorage::GetReplicatedValue(FactorStorage::GetValueIndexed(index, mSrcAlpha),
-                                             mMaxFactorMask);
+                                             mParameterMask);
 }
 
 BlendStateExt::FactorStorage::Type BlendStateExt::expandDstAlphaIndexed(const size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return FactorStorage::GetReplicatedValue(FactorStorage::GetValueIndexed(index, mDstAlpha),
-                                             mMaxFactorMask);
+                                             mParameterMask);
 }
 
 void BlendStateExt::setFactors(const GLenum srcColor,
@@ -554,7 +598,7 @@ void BlendStateExt::setFactorsIndexed(const size_t index,
                                       const GLenum srcAlpha,
                                       const GLenum dstAlpha)
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     FactorStorage::SetValueIndexed(index, FromGLenum<BlendFactorType>(srcColor), &mSrcColor);
     FactorStorage::SetValueIndexed(index, FromGLenum<BlendFactorType>(dstColor), &mDstColor);
     FactorStorage::SetValueIndexed(index, FromGLenum<BlendFactorType>(srcAlpha), &mSrcAlpha);
@@ -565,8 +609,8 @@ void BlendStateExt::setFactorsIndexed(const size_t index,
                                       const size_t sourceIndex,
                                       const BlendStateExt &source)
 {
-    ASSERT(index < mMaxDrawBuffers);
-    ASSERT(sourceIndex < source.mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
+    ASSERT(sourceIndex < source.mDrawBufferCount);
     FactorStorage::SetValueIndexed(
         index, FactorStorage::GetValueIndexed(sourceIndex, source.mSrcColor), &mSrcColor);
     FactorStorage::SetValueIndexed(
@@ -579,25 +623,25 @@ void BlendStateExt::setFactorsIndexed(const size_t index,
 
 GLenum BlendStateExt::getSrcColorIndexed(size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return ToGLenum(FactorStorage::GetValueIndexed(index, mSrcColor));
 }
 
 GLenum BlendStateExt::getDstColorIndexed(size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return ToGLenum(FactorStorage::GetValueIndexed(index, mDstColor));
 }
 
 GLenum BlendStateExt::getSrcAlphaIndexed(size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return ToGLenum(FactorStorage::GetValueIndexed(index, mSrcAlpha));
 }
 
 GLenum BlendStateExt::getDstAlphaIndexed(size_t index) const
 {
-    ASSERT(index < mMaxDrawBuffers);
+    ASSERT(index < mDrawBufferCount);
     return ToGLenum(FactorStorage::GetValueIndexed(index, mDstAlpha));
 }
 
@@ -626,30 +670,17 @@ static void MinMax(int a, int b, int *minimum, int *maximum)
     }
 }
 
-Rectangle Rectangle::flip(bool flipX, bool flipY) const
+template <>
+bool RectangleImpl<int>::empty() const
 {
-    Rectangle flipped = *this;
-    if (flipX)
-    {
-        flipped.x     = flipped.x + flipped.width;
-        flipped.width = -flipped.width;
-    }
-    if (flipY)
-    {
-        flipped.y      = flipped.y + flipped.height;
-        flipped.height = -flipped.height;
-    }
-    return flipped;
+    return width == 0 && height == 0;
 }
 
-Rectangle Rectangle::removeReversal() const
+template <>
+bool RectangleImpl<float>::empty() const
 {
-    return flip(isReversedX(), isReversedY());
-}
-
-bool Rectangle::encloses(const gl::Rectangle &inside) const
-{
-    return x0() <= inside.x0() && y0() <= inside.y0() && x1() >= inside.x1() && y1() >= inside.y1();
+    return std::abs(width) < std::numeric_limits<float>::epsilon() &&
+           std::abs(height) < std::numeric_limits<float>::epsilon();
 }
 
 bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *intersection)
@@ -820,6 +851,11 @@ void ExtendRectangle(const Rectangle &source, const Rectangle &extend, Rectangle
     extended->height = y1 - y0;
 }
 
+bool Box::valid() const
+{
+    return width != 0 && height != 0 && depth != 0;
+}
+
 bool Box::operator==(const Box &other) const
 {
     return (x == other.x && y == other.y && z == other.z && width == other.width &&
@@ -841,6 +877,87 @@ bool Box::coversSameExtent(const Extents &size) const
 {
     return x == 0 && y == 0 && z == 0 && width == size.width && height == size.height &&
            depth == size.depth;
+}
+
+bool Box::contains(const Box &other) const
+{
+    return x <= other.x && y <= other.y && z <= other.z && x + width >= other.x + other.width &&
+           y + height >= other.y + other.height && z + depth >= other.z + other.depth;
+}
+
+size_t Box::volume() const
+{
+    return width * height * depth;
+}
+
+void Box::extend(const Box &other)
+{
+    // This extends the logic of "ExtendRectangle" to 3 dimensions
+
+    int x0 = x;
+    int x1 = x + width;
+    int y0 = y;
+    int y1 = y + height;
+    int z0 = z;
+    int z1 = z + depth;
+
+    const int otherx0 = other.x;
+    const int otherx1 = other.x + other.width;
+    const int othery0 = other.y;
+    const int othery1 = other.y + other.height;
+    const int otherz0 = other.z;
+    const int otherz1 = other.z + other.depth;
+
+    // For each side of the box, calculate whether it can be extended by the other box.
+    // If so, extend it and continue to the next side with the new dimensions.
+
+    const bool enclosesWidth  = EnclosesRange(otherx0, otherx1, x0, x1);
+    const bool enclosesHeight = EnclosesRange(othery0, othery1, y0, y1);
+    const bool enclosesDepth  = EnclosesRange(otherz0, otherz1, z0, z1);
+
+    // Left: Reduce x0 if the other box's Y and Z plane encloses the source
+    if (otherx0 < x0 && otherx1 >= x0 && enclosesHeight && enclosesDepth)
+    {
+        x0 = otherx0;
+    }
+
+    // Right: Increase x1 simiarly.
+    if (otherx0 <= x1 && otherx1 > x1 && enclosesHeight && enclosesDepth)
+    {
+        x1 = otherx1;
+    }
+
+    // Bottom: Reduce y0 if the other box's X and Z plane encloses the source
+    if (othery0 < y0 && othery1 >= y0 && enclosesWidth && enclosesDepth)
+    {
+        y0 = othery0;
+    }
+
+    // Top: Increase y1 simiarly.
+    if (othery0 <= y1 && othery1 > y1 && enclosesWidth && enclosesDepth)
+    {
+        y1 = othery1;
+    }
+
+    // Front: Reduce z0 if the other box's X and Y plane encloses the source
+    if (otherz0 < z0 && otherz1 >= z0 && enclosesWidth && enclosesHeight)
+    {
+        z0 = otherz0;
+    }
+
+    // Back: Increase z1 simiarly.
+    if (otherz0 <= z1 && otherz1 > z1 && enclosesWidth && enclosesHeight)
+    {
+        z1 = otherz1;
+    }
+
+    // Update member var with new dimensions
+    x      = x0;
+    width  = x1 - x0;
+    y      = y0;
+    height = y1 - y0;
+    z      = z0;
+    depth  = z1 - z0;
 }
 
 bool operator==(const Offset &a, const Offset &b)

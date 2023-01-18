@@ -19,15 +19,15 @@ class TranslatorESSL : public TCompiler
 
   protected:
     void initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
-                                     ShCompileOptions compileOptions) override;
+                                     const ShCompileOptions &compileOptions) override;
 
-    ANGLE_NO_DISCARD bool translate(TIntermBlock *root,
-                                    ShCompileOptions compileOptions,
-                                    PerformanceDiagnostics *perfDiagnostics) override;
+    [[nodiscard]] bool translate(TIntermBlock *root,
+                                 const ShCompileOptions &compileOptions,
+                                 PerformanceDiagnostics *perfDiagnostics) override;
     bool shouldFlattenPragmaStdglInvariantAll() override;
 
   private:
-    void writeExtensionBehavior(ShCompileOptions compileOptions);
+    void writeExtensionBehavior(const ShCompileOptions &compileOptions);
 };
 
 }  // namespace sh

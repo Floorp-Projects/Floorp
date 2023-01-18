@@ -211,6 +211,8 @@ angle::Result Image9::CopyImage(const gl::Context *context,
                       destD3DFormatInfo.info().componentType, sourceRect.width, sourceRect.height,
                       1, unpackFlipY, unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
 
+    dest->markDirty();
+
     destSurface->UnlockRect();
     sourceSurface->UnlockRect();
 
@@ -744,6 +746,119 @@ angle::Result Image9::copyFromRTInternal(Context9 *context9,
                             unsigned char red     = sourcePixels[x * 2 + 1] & 0x7C;
                             destPixels[x * 2 + 0] = (red << 1) | (red >> 4);
                             destPixels[x * 2 + 1] = (signed char)sourcePixels[x * 2 + 1] >> 7;
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                default:
+                    UNREACHABLE();
+            }
+            break;
+        case D3DFMT_A16B16G16R16F:
+            switch (getD3DFormat())
+            {
+                case D3DFMT_X8R8G8B8:
+                case D3DFMT_A8R8G8B8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        const uint16_t *sourcePixels16F =
+                            reinterpret_cast<uint16_t *>(sourcePixels);
+                        for (int x = 0; x < width; x++)
+                        {
+                            float r = gl::float16ToFloat32(sourcePixels16F[x * 4 + 0]);
+                            float g = gl::float16ToFloat32(sourcePixels16F[x * 4 + 1]);
+                            float b = gl::float16ToFloat32(sourcePixels16F[x * 4 + 2]);
+                            float a = gl::float16ToFloat32(sourcePixels16F[x * 4 + 3]);
+                            destPixels[x * 4 + 0] = gl::floatToNormalized<uint8_t>(b);
+                            destPixels[x * 4 + 1] = gl::floatToNormalized<uint8_t>(g);
+                            destPixels[x * 4 + 2] = gl::floatToNormalized<uint8_t>(r);
+                            destPixels[x * 4 + 3] = gl::floatToNormalized<uint8_t>(a);
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        const uint16_t *sourcePixels16F =
+                            reinterpret_cast<uint16_t *>(sourcePixels);
+                        for (int x = 0; x < width; x++)
+                        {
+                            float r       = gl::float16ToFloat32(sourcePixels16F[x * 4]);
+                            destPixels[x] = gl::floatToNormalized<uint8_t>(r);
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_A8L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        const uint16_t *sourcePixels16F =
+                            reinterpret_cast<uint16_t *>(sourcePixels);
+                        for (int x = 0; x < width; x++)
+                        {
+                            float r = gl::float16ToFloat32(sourcePixels16F[x * 4 + 0]);
+                            float a = gl::float16ToFloat32(sourcePixels16F[x * 4 + 3]);
+                            destPixels[x * 2 + 0] = gl::floatToNormalized<uint8_t>(r);
+                            destPixels[x * 2 + 1] = gl::floatToNormalized<uint8_t>(a);
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                default:
+                    UNREACHABLE();
+            }
+            break;
+        case D3DFMT_A32B32G32R32F:
+            switch (getD3DFormat())
+            {
+                case D3DFMT_X8R8G8B8:
+                case D3DFMT_A8R8G8B8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        const float *sourcePixels32F = reinterpret_cast<float *>(sourcePixels);
+                        for (int x = 0; x < width; x++)
+                        {
+                            float r               = sourcePixels32F[x * 4 + 0];
+                            float g               = sourcePixels32F[x * 4 + 1];
+                            float b               = sourcePixels32F[x * 4 + 2];
+                            float a               = sourcePixels32F[x * 4 + 3];
+                            destPixels[x * 4 + 0] = gl::floatToNormalized<uint8_t>(b);
+                            destPixels[x * 4 + 1] = gl::floatToNormalized<uint8_t>(g);
+                            destPixels[x * 4 + 2] = gl::floatToNormalized<uint8_t>(r);
+                            destPixels[x * 4 + 3] = gl::floatToNormalized<uint8_t>(a);
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        const float *sourcePixels32F = reinterpret_cast<float *>(sourcePixels);
+                        for (int x = 0; x < width; x++)
+                        {
+                            float r       = sourcePixels32F[x * 4];
+                            destPixels[x] = gl::floatToNormalized<uint8_t>(r);
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_A8L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        const float *sourcePixels32F = reinterpret_cast<float *>(sourcePixels);
+                        for (int x = 0; x < width; x++)
+                        {
+                            float r               = sourcePixels32F[x * 4 + 0];
+                            float a               = sourcePixels32F[x * 4 + 3];
+                            destPixels[x * 2 + 0] = gl::floatToNormalized<uint8_t>(r);
+                            destPixels[x * 2 + 1] = gl::floatToNormalized<uint8_t>(a);
                         }
                         sourcePixels += sourceLock.Pitch;
                         destPixels += destLock.Pitch;

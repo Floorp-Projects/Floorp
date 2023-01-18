@@ -7,9 +7,10 @@
 #include "compiler/translator/TranslatorESSL.h"
 
 #include "angle_gl.h"
+#include "common/utilities.h"
 #include "compiler/translator/BuiltInFunctionEmulatorGLSL.h"
 #include "compiler/translator/OutputESSL.h"
-#include "compiler/translator/tree_ops/gl/RecordConstantPrecision.h"
+#include "compiler/translator/tree_ops/RecordConstantPrecision.h"
 
 namespace sh
 {
@@ -19,21 +20,27 @@ TranslatorESSL::TranslatorESSL(sh::GLenum type, ShShaderSpec spec)
 {}
 
 void TranslatorESSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
-                                                 ShCompileOptions compileOptions)
+                                                 const ShCompileOptions &compileOptions)
 {
-    if ((compileOptions & SH_EMULATE_ATAN2_FLOAT_FUNCTION) != 0)
+    if (compileOptions.emulateAtan2FloatFunction)
     {
         InitBuiltInAtanFunctionEmulatorForGLSLWorkarounds(emu);
     }
 }
 
 bool TranslatorESSL::translate(TIntermBlock *root,
-                               ShCompileOptions compileOptions,
+                               const ShCompileOptions &compileOptions,
                                PerformanceDiagnostics * /*perfDiagnostics*/)
 {
     TInfoSinkBase &sink = getInfoSink().obj;
 
-    int shaderVer = getShaderVersion();
+    int shaderVer = getShaderVersion();  // Frontend shader version.
+    if (hasPixelLocalStorageUniforms() &&
+        ShPixelLocalStorageTypeUsesImages(compileOptions.pls.type))
+    {
+        // The backend translator emits shader image code. Use a minimum version of 310.
+        shaderVer = std::max(shaderVer, 310);
+    }
     if (shaderVer > 100)
     {
         sink << "#version " << shaderVer << " es\n";
@@ -44,11 +51,7 @@ bool TranslatorESSL::translate(TIntermBlock *root,
 
     // Write pragmas after extensions because some drivers consider pragmas
     // like non-preprocessor tokens.
-    writePragma(compileOptions);
-
-    bool precisionEmulation = false;
-    if (!emulatePrecisionIfNeeded(root, sink, &precisionEmulation, SH_ESSL_OUTPUT))
-        return false;
+    WritePragma(sink, compileOptions, getPragma());
 
     if (!RecordConstantPrecision(this, root, &getSymbolTable()))
     {
@@ -76,9 +79,6 @@ bool TranslatorESSL::translate(TIntermBlock *root,
         sink << "// END: Generated code for built-in function emulation\n\n";
     }
 
-    // Write array bounds clamping emulation if needed.
-    getArrayBoundsClamper().OutputClampingFunctionDefinition(sink);
-
     if (getShaderType() == GL_FRAGMENT_SHADER)
     {
         EmitEarlyFragmentTestsGLSL(*this, sink);
@@ -97,9 +97,7 @@ bool TranslatorESSL::translate(TIntermBlock *root,
     }
 
     // Write translated shader.
-    TOutputESSL outputESSL(sink, getArrayIndexClampingStrategy(), getHashFunction(), getNameMap(),
-                           &getSymbolTable(), getShaderType(), shaderVer, precisionEmulation,
-                           compileOptions);
+    TOutputESSL outputESSL(this, sink, compileOptions);
 
     root->traverse(&outputESSL);
 
@@ -120,7 +118,7 @@ bool TranslatorESSL::shouldFlattenPragmaStdglInvariantAll()
     return true;
 }
 
-void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
+void TranslatorESSL::writeExtensionBehavior(const ShCompileOptions &compileOptions)
 {
     TInfoSinkBase &sink                   = getInfoSink().obj;
     const TExtensionBehavior &extBehavior = getExtensionBehavior();
@@ -151,7 +149,8 @@ void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
                     EmitMultiviewGLSL(*this, compileOptions, iter->first, iter->second, sink);
                 }
             }
-            else if (iter->first == TExtension::EXT_geometry_shader)
+            else if (iter->first == TExtension::EXT_geometry_shader ||
+                     iter->first == TExtension::OES_geometry_shader)
             {
                 sink << "#ifdef GL_EXT_geometry_shader\n"
                      << "#extension GL_EXT_geometry_shader : " << GetBehaviorString(iter->second)
@@ -170,13 +169,36 @@ void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
             else if (iter->first == TExtension::ANGLE_multi_draw)
             {
                 // Don't emit anything. This extension is emulated
-                ASSERT((compileOptions & SH_EMULATE_GL_DRAW_ID) != 0);
+                ASSERT(compileOptions.emulateGLDrawID);
                 continue;
             }
-            else if (iter->first == TExtension::ANGLE_base_vertex_base_instance)
+            else if (iter->first == TExtension::ANGLE_base_vertex_base_instance_shader_builtin)
             {
                 // Don't emit anything. This extension is emulated
-                ASSERT((compileOptions & SH_EMULATE_GL_BASE_VERTEX_BASE_INSTANCE) != 0);
+                ASSERT(compileOptions.emulateGLBaseVertexBaseInstance);
+                continue;
+            }
+            else if (iter->first == TExtension::ANGLE_shader_pixel_local_storage)
+            {
+                // TODO(anglebug.com/7279): future impl that uses EXT_shader_pixel_local_storage.
+                if (compileOptions.pls.type == ShPixelLocalStorageType::FramebufferFetch)
+                {
+                    // Just enable the extension. Appropriate warnings will be generated by the
+                    // frontend compiler for GL_ANGLE_shader_pixel_local_storage, if desired.
+                    sink << "#extension GL_EXT_shader_framebuffer_fetch : enable\n";
+                }
+                continue;
+            }
+            else if (iter->first == TExtension::EXT_shader_framebuffer_fetch)
+            {
+                sink << "#extension GL_EXT_shader_framebuffer_fetch : "
+                     << GetBehaviorString(iter->second) << "\n";
+                continue;
+            }
+            else if (iter->first == TExtension::EXT_shader_framebuffer_fetch_non_coherent)
+            {
+                sink << "#extension GL_EXT_shader_framebuffer_fetch_non_coherent : "
+                     << GetBehaviorString(iter->second) << "\n";
                 continue;
             }
             else if (iter->first == TExtension::WEBGL_video_texture)

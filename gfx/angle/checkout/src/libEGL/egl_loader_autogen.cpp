@@ -68,9 +68,12 @@ PFNEGLCREATEDEVICEANGLEPROC l_EGL_CreateDeviceANGLE;
 PFNEGLRELEASEDEVICEANGLEPROC l_EGL_ReleaseDeviceANGLE;
 PFNEGLQUERYDISPLAYATTRIBANGLEPROC l_EGL_QueryDisplayAttribANGLE;
 PFNEGLQUERYSTRINGIANGLEPROC l_EGL_QueryStringiANGLE;
+PFNEGLCOPYMETALSHAREDEVENTANGLEPROC l_EGL_CopyMetalSharedEventANGLE;
+PFNEGLFORCEGPUSWITCHANGLEPROC l_EGL_ForceGPUSwitchANGLE;
 PFNEGLHANDLEGPUSWITCHANGLEPROC l_EGL_HandleGPUSwitchANGLE;
 PFNEGLREACQUIREHIGHPOWERGPUANGLEPROC l_EGL_ReacquireHighPowerGPUANGLE;
 PFNEGLRELEASEHIGHPOWERGPUANGLEPROC l_EGL_ReleaseHighPowerGPUANGLE;
+PFNEGLPREPARESWAPBUFFERSANGLEPROC l_EGL_PrepareSwapBuffersANGLE;
 PFNEGLPROGRAMCACHEGETATTRIBANGLEPROC l_EGL_ProgramCacheGetAttribANGLE;
 PFNEGLPROGRAMCACHEPOPULATEANGLEPROC l_EGL_ProgramCachePopulateANGLE;
 PFNEGLPROGRAMCACHEQUERYANGLEPROC l_EGL_ProgramCacheQueryANGLE;
@@ -80,10 +83,13 @@ PFNEGLCREATESTREAMPRODUCERD3DTEXTUREANGLEPROC l_EGL_CreateStreamProducerD3DTextu
 PFNEGLSTREAMPOSTD3DTEXTUREANGLEPROC l_EGL_StreamPostD3DTextureANGLE;
 PFNEGLSWAPBUFFERSWITHFRAMETOKENANGLEPROC l_EGL_SwapBuffersWithFrameTokenANGLE;
 PFNEGLGETMSCRATEANGLEPROC l_EGL_GetMscRateANGLE;
+PFNEGLEXPORTVKIMAGEANGLEPROC l_EGL_ExportVkImageANGLE;
 PFNEGLGETSYNCVALUESCHROMIUMPROC l_EGL_GetSyncValuesCHROMIUM;
 PFNEGLQUERYDEVICEATTRIBEXTPROC l_EGL_QueryDeviceAttribEXT;
 PFNEGLQUERYDEVICESTRINGEXTPROC l_EGL_QueryDeviceStringEXT;
 PFNEGLQUERYDISPLAYATTRIBEXTPROC l_EGL_QueryDisplayAttribEXT;
+PFNEGLQUERYDMABUFFORMATSEXTPROC l_EGL_QueryDmaBufFormatsEXT;
+PFNEGLQUERYDMABUFMODIFIERSEXTPROC l_EGL_QueryDmaBufModifiersEXT;
 PFNEGLCREATEPLATFORMPIXMAPSURFACEEXTPROC l_EGL_CreatePlatformPixmapSurfaceEXT;
 PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC l_EGL_CreatePlatformWindowSurfaceEXT;
 PFNEGLGETPLATFORMDISPLAYEXTPROC l_EGL_GetPlatformDisplayEXT;
@@ -96,6 +102,10 @@ PFNEGLDESTROYSYNCKHRPROC l_EGL_DestroySyncKHR;
 PFNEGLGETSYNCATTRIBKHRPROC l_EGL_GetSyncAttribKHR;
 PFNEGLCREATEIMAGEKHRPROC l_EGL_CreateImageKHR;
 PFNEGLDESTROYIMAGEKHRPROC l_EGL_DestroyImageKHR;
+PFNEGLLOCKSURFACEKHRPROC l_EGL_LockSurfaceKHR;
+PFNEGLQUERYSURFACE64KHRPROC l_EGL_QuerySurface64KHR;
+PFNEGLUNLOCKSURFACEKHRPROC l_EGL_UnlockSurfaceKHR;
+PFNEGLSETDAMAGEREGIONKHRPROC l_EGL_SetDamageRegionKHR;
 PFNEGLSIGNALSYNCKHRPROC l_EGL_SignalSyncKHR;
 PFNEGLCREATESTREAMKHRPROC l_EGL_CreateStreamKHR;
 PFNEGLDESTROYSTREAMKHRPROC l_EGL_DestroyStreamKHR;
@@ -110,9 +120,7 @@ PFNEGLWAITSYNCKHRPROC l_EGL_WaitSyncKHR;
 PFNEGLPOSTSUBBUFFERNVPROC l_EGL_PostSubBufferNV;
 PFNEGLSTREAMCONSUMERGLTEXTUREEXTERNALATTRIBSNVPROC l_EGL_StreamConsumerGLTextureExternalAttribsNV;
 
-namespace angle
-{
-void LoadEGL_EGL(LoadProc loadProc)
+void LoadLibEGL_EGL(LoadProc loadProc)
 {
     l_EGL_ChooseConfig  = reinterpret_cast<PFNEGLCHOOSECONFIGPROC>(loadProc("EGL_ChooseConfig"));
     l_EGL_CopyBuffers   = reinterpret_cast<PFNEGLCOPYBUFFERSPROC>(loadProc("EGL_CopyBuffers"));
@@ -205,12 +213,18 @@ void LoadEGL_EGL(LoadProc loadProc)
         loadProc("EGL_QueryDisplayAttribANGLE"));
     l_EGL_QueryStringiANGLE =
         reinterpret_cast<PFNEGLQUERYSTRINGIANGLEPROC>(loadProc("EGL_QueryStringiANGLE"));
+    l_EGL_CopyMetalSharedEventANGLE = reinterpret_cast<PFNEGLCOPYMETALSHAREDEVENTANGLEPROC>(
+        loadProc("EGL_CopyMetalSharedEventANGLE"));
+    l_EGL_ForceGPUSwitchANGLE =
+        reinterpret_cast<PFNEGLFORCEGPUSWITCHANGLEPROC>(loadProc("EGL_ForceGPUSwitchANGLE"));
     l_EGL_HandleGPUSwitchANGLE =
         reinterpret_cast<PFNEGLHANDLEGPUSWITCHANGLEPROC>(loadProc("EGL_HandleGPUSwitchANGLE"));
     l_EGL_ReacquireHighPowerGPUANGLE = reinterpret_cast<PFNEGLREACQUIREHIGHPOWERGPUANGLEPROC>(
         loadProc("EGL_ReacquireHighPowerGPUANGLE"));
     l_EGL_ReleaseHighPowerGPUANGLE = reinterpret_cast<PFNEGLRELEASEHIGHPOWERGPUANGLEPROC>(
         loadProc("EGL_ReleaseHighPowerGPUANGLE"));
+    l_EGL_PrepareSwapBuffersANGLE = reinterpret_cast<PFNEGLPREPARESWAPBUFFERSANGLEPROC>(
+        loadProc("EGL_PrepareSwapBuffersANGLE"));
     l_EGL_ProgramCacheGetAttribANGLE = reinterpret_cast<PFNEGLPROGRAMCACHEGETATTRIBANGLEPROC>(
         loadProc("EGL_ProgramCacheGetAttribANGLE"));
     l_EGL_ProgramCachePopulateANGLE = reinterpret_cast<PFNEGLPROGRAMCACHEPOPULATEANGLEPROC>(
@@ -231,6 +245,8 @@ void LoadEGL_EGL(LoadProc loadProc)
             loadProc("EGL_SwapBuffersWithFrameTokenANGLE"));
     l_EGL_GetMscRateANGLE =
         reinterpret_cast<PFNEGLGETMSCRATEANGLEPROC>(loadProc("EGL_GetMscRateANGLE"));
+    l_EGL_ExportVkImageANGLE =
+        reinterpret_cast<PFNEGLEXPORTVKIMAGEANGLEPROC>(loadProc("EGL_ExportVkImageANGLE"));
     l_EGL_GetSyncValuesCHROMIUM =
         reinterpret_cast<PFNEGLGETSYNCVALUESCHROMIUMPROC>(loadProc("EGL_GetSyncValuesCHROMIUM"));
     l_EGL_QueryDeviceAttribEXT =
@@ -239,6 +255,10 @@ void LoadEGL_EGL(LoadProc loadProc)
         reinterpret_cast<PFNEGLQUERYDEVICESTRINGEXTPROC>(loadProc("EGL_QueryDeviceStringEXT"));
     l_EGL_QueryDisplayAttribEXT =
         reinterpret_cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(loadProc("EGL_QueryDisplayAttribEXT"));
+    l_EGL_QueryDmaBufFormatsEXT =
+        reinterpret_cast<PFNEGLQUERYDMABUFFORMATSEXTPROC>(loadProc("EGL_QueryDmaBufFormatsEXT"));
+    l_EGL_QueryDmaBufModifiersEXT = reinterpret_cast<PFNEGLQUERYDMABUFMODIFIERSEXTPROC>(
+        loadProc("EGL_QueryDmaBufModifiersEXT"));
     l_EGL_CreatePlatformPixmapSurfaceEXT =
         reinterpret_cast<PFNEGLCREATEPLATFORMPIXMAPSURFACEEXTPROC>(
             loadProc("EGL_CreatePlatformPixmapSurfaceEXT"));
@@ -263,6 +283,14 @@ void LoadEGL_EGL(LoadProc loadProc)
         reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(loadProc("EGL_CreateImageKHR"));
     l_EGL_DestroyImageKHR =
         reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(loadProc("EGL_DestroyImageKHR"));
+    l_EGL_LockSurfaceKHR =
+        reinterpret_cast<PFNEGLLOCKSURFACEKHRPROC>(loadProc("EGL_LockSurfaceKHR"));
+    l_EGL_QuerySurface64KHR =
+        reinterpret_cast<PFNEGLQUERYSURFACE64KHRPROC>(loadProc("EGL_QuerySurface64KHR"));
+    l_EGL_UnlockSurfaceKHR =
+        reinterpret_cast<PFNEGLUNLOCKSURFACEKHRPROC>(loadProc("EGL_UnlockSurfaceKHR"));
+    l_EGL_SetDamageRegionKHR =
+        reinterpret_cast<PFNEGLSETDAMAGEREGIONKHRPROC>(loadProc("EGL_SetDamageRegionKHR"));
     l_EGL_SignalSyncKHR = reinterpret_cast<PFNEGLSIGNALSYNCKHRPROC>(loadProc("EGL_SignalSyncKHR"));
     l_EGL_CreateStreamKHR =
         reinterpret_cast<PFNEGLCREATESTREAMKHRPROC>(loadProc("EGL_CreateStreamKHR"));
@@ -290,4 +318,3 @@ void LoadEGL_EGL(LoadProc loadProc)
         reinterpret_cast<PFNEGLSTREAMCONSUMERGLTEXTUREEXTERNALATTRIBSNVPROC>(
             loadProc("EGL_StreamConsumerGLTextureExternalAttribsNV"));
 }
-}  // namespace angle

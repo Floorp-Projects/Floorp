@@ -36,12 +36,12 @@ class OverlayState : angle::NonCopyable
     size_t getTextWidgetsBufferSize() const;
     size_t getGraphWidgetsBufferSize() const;
 
-    void initFontData(uint8_t *fontData) const;
-    void fillEnabledWidgetCoordinates(const gl::Extents &imageExtents,
-                                      uint8_t *enabledWidgetsPtr) const;
+    const uint8_t *getFontData() const;
     void fillWidgetData(const gl::Extents &imageExtents,
                         uint8_t *textData,
-                        uint8_t *graphData) const;
+                        uint8_t *graphData,
+                        uint32_t *activeTextWidgetCountOut,
+                        uint32_t *activeGraphWidgetCountOut) const;
 
     uint32_t getEnabledWidgetCount() const { return mEnabledWidgetCount; }
 
@@ -59,7 +59,7 @@ class Overlay : angle::NonCopyable
     Overlay(rx::GLImplFactory *implFactory);
     ~Overlay();
 
-    angle::Result init(const Context *context);
+    void init();
     void destroy(const gl::Context *context);
 
     void onSwap() const;
@@ -87,7 +87,10 @@ class Overlay : angle::NonCopyable
 
     rx::OverlayImpl *getImplementation() const { return mImplementation.get(); }
 
-    bool isEnabled() const { return mImplementation != nullptr; }
+    bool isEnabled() const
+    {
+        return mImplementation != nullptr && mState.getEnabledWidgetCount() > 0;
+    }
 
   private:
     template <typename Widget, WidgetType Type>
@@ -113,7 +116,7 @@ class MockOverlay
     MockOverlay(rx::GLImplFactory *implFactory);
     ~MockOverlay();
 
-    angle::Result init(const Context *context) { return angle::Result::Continue; }
+    void init() {}
     void destroy(const Context *context) {}
 
     void onSwap() const {}
