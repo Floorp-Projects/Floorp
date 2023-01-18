@@ -126,9 +126,12 @@ class NimbusMessagingStorage(
      * e.g.
      * `https://example.com/{locale}/whatsnew.html?version={app_version}`
      *
-     * A special variable, `{uuid}` is also detected, and a random UUID is
-     * put in its place. If `{uuid}` is detected, then it is returned as the first
-     * value of the returned [Pair].
+     * If the string `{uuid}` is detected in the [action] string, then it is
+     * replaced with a random UUID. This is returned as the first value of the returned
+     * [Pair].
+     *
+     * The fully resolved (with all substitutions) action is returned as the second value
+     * of the [Pair].
      */
     fun getMessageAction(action: String): Pair<String?, String> {
         val helper = gleanPlumb.createMessageHelper(customAttributes)

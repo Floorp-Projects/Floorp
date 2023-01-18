@@ -45,7 +45,7 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `WHEN calling onMessageDismissed THEN record an event and updates metadata`() = coroutineScope.runTest {
+    fun `WHEN calling onMessageDismissed THEN record a messageDismissed event and updates metadata`() = coroutineScope.runTest {
         val message = createMessage("id-1")
         assertNull(Messaging.messageDismissed.testGetValue())
 
@@ -60,12 +60,12 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `WHEN calling onMessageDisplayed THEN record an event and updates metadata`() = coroutineScope.runTest {
+    fun `WHEN calling processDisplayedMessage THEN record a messageDisplayed event and updates metadata`() = coroutineScope.runTest {
         val message = createMessage("id-1")
         assertNull(Messaging.messageShown.testGetValue())
         assertEquals(0, message.metadata.displayCount)
 
-        val updated = controller.onMessageDisplayed(message)
+        val updated = controller.processDisplayedMessage(message)
 
         assertNotNull(Messaging.messageShown.testGetValue())
         val event = Messaging.messageShown.testGetValue()!!
@@ -77,12 +77,12 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `WHEN calling onMessageDisplayed on an expiring message THEN record an event`() = coroutineScope.runTest {
+    fun `WHEN calling processDisplayedMessage on an expiring message THEN record a messageExpired event`() = coroutineScope.runTest {
         val message = createMessage("id-1", style = StyleData(maxDisplayCount = 1))
         assertNull(Messaging.messageShown.testGetValue())
         assertEquals(0, message.metadata.displayCount)
 
-        val updated = controller.onMessageDisplayed(message)
+        val updated = controller.processDisplayedMessage(message)
 
         assertNotNull(Messaging.messageShown.testGetValue())
         val shownEvent = Messaging.messageShown.testGetValue()!!
@@ -126,7 +126,7 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `GIVEN a URL WHEN calling createMessageAction THEN record an event`() {
+    fun `GIVEN a URL WHEN calling createMessageAction THEN record a messageClicked event`() {
         val message = createMessage("id-1", action = "http://mozilla.org")
         every { storage.getMessageAction(any()) } returns Pair(null, message.action)
 
@@ -141,7 +141,7 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `GIVEN a URL with a {uuid} WHEN calling createMessageAction THEN record an event`() {
+    fun `GIVEN a URL with a {uuid} WHEN calling createMessageAction THEN record a messageClicked event with a uuid`() {
         val message = createMessage("id-1", action = "http://mozilla.org?uuid={uuid}")
         val uuid = UUID.randomUUID().toString()
         every { storage.getMessageAction(any()) } returns Pair(uuid, message.action)

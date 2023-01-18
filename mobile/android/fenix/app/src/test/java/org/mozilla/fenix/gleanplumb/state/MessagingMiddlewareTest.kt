@@ -59,7 +59,7 @@ class MessagingMiddlewareTest {
     fun setUp() {
         appStore = mockk(relaxed = true)
         messagingStorage = mockk(relaxed = true)
-        messagingController = NimbusMessagingController(messagingStorage, clock = { 0L })
+        messagingController = NimbusMessagingController(messagingStorage) { 0L }
         middlewareContext = mockk(relaxed = true)
         every { middlewareContext.store } returns appStore
 
@@ -169,7 +169,7 @@ class MessagingMiddlewareTest {
 
         spiedMiddleware.onMessagedDisplayed(message, middlewareContext)
 
-        coVerify { messagingController.onMessageDisplayed(message) }
+        coVerify { messagingController.processDisplayedMessage(message) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(displayCount = 1)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
     }
@@ -310,7 +310,7 @@ class MessagingMiddlewareTest {
 
         verify { spiedMiddleware.updateMessage(middlewareContext, oldMessage, updatedMessage) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
-        coVerify { messagingController.onMessageDisplayed(oldMessage) }
+        coVerify { messagingController.processDisplayedMessage(oldMessage) }
         coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
     }
 
@@ -343,7 +343,7 @@ class MessagingMiddlewareTest {
         verify { spiedMiddleware.consumeMessageToShowIfNeeded(middlewareContext, oldMessage) }
         verify { spiedMiddleware.removeMessage(middlewareContext, oldMessage) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
-        coVerify { messagingController.onMessageDisplayed(oldMessage) }
+        coVerify { messagingController.processDisplayedMessage(oldMessage) }
         coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
     }
 }

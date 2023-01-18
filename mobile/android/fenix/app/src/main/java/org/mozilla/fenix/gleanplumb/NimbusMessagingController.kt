@@ -12,9 +12,9 @@ import org.mozilla.fenix.GleanMetrics.Messaging
  * Class extracted from [MessagingMiddleware] to do the bookkeeping for message actions, in terms
  * of Glean messages and the messaging store.
  */
-open class NimbusMessagingController(
-    protected val messagingStorage: NimbusMessagingStorage,
-    private val clock: () -> Long = { System.currentTimeMillis() },
+class NimbusMessagingController(
+    private val messagingStorage: NimbusMessagingStorage,
+    private val now: () -> Long = { System.currentTimeMillis() },
 ) {
     /**
      * Called when a message is just about to be shown to the user.
@@ -23,11 +23,11 @@ open class NimbusMessagingController(
      *
      * Records glean events for messageShown and messageExpired.
      */
-    suspend fun onMessageDisplayed(oldMessage: Message): Message {
+    suspend fun processDisplayedMessage(oldMessage: Message): Message {
         sendShownMessageTelemetry(oldMessage.id)
         val newMetadata = oldMessage.metadata.copy(
             displayCount = oldMessage.metadata.displayCount + 1,
-            lastTimeShown = clock(),
+            lastTimeShown = now(),
         )
         val newMessage = oldMessage.copy(
             metadata = newMetadata,
