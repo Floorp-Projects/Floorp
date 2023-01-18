@@ -12,6 +12,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/workerinternals/WorkerModuleLoader.h"
 #include "mozilla/Maybe.h"
 #include "nsIContentPolicy.h"
 #include "nsStringFwd.h"
@@ -231,6 +232,8 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
     aName.AssignLiteral("WorkerScriptLoader");
     return NS_OK;
   }
+
+  void InitModuleLoader();
 
   void TryShutdown();
 
