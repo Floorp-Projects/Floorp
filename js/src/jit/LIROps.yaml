@@ -1583,6 +1583,12 @@
   operands:
     object: WordSized
 
+- name: DebugEnterGCUnsafeRegion
+  num_temps: 1
+
+- name: DebugLeaveGCUnsafeRegion
+  num_temps: 1
+
 # Load the "slots" member out of a JSObject.
 #   Input: JSObject pointer
 #   Output: slots pointer

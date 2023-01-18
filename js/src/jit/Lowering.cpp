@@ -3258,6 +3258,16 @@ void LIRGenerator::visitKeepAliveObject(MKeepAliveObject* ins) {
   add(new (alloc()) LKeepAliveObject(useKeepalive(obj)), ins);
 }
 
+void LIRGenerator::visitDebugEnterGCUnsafeRegion(
+    MDebugEnterGCUnsafeRegion* ins) {
+  add(new (alloc()) LDebugEnterGCUnsafeRegion(temp()), ins);
+}
+
+void LIRGenerator::visitDebugLeaveGCUnsafeRegion(
+    MDebugLeaveGCUnsafeRegion* ins) {
+  add(new (alloc()) LDebugLeaveGCUnsafeRegion(temp()), ins);
+}
+
 void LIRGenerator::visitSlots(MSlots* ins) {
   define(new (alloc()) LSlots(useRegisterAtStart(ins->object())), ins);
 }

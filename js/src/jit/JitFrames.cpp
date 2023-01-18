@@ -663,6 +663,12 @@ void HandleException(ResumeFromException* rfe) {
 
 #ifdef DEBUG
   cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
+
+  // Reset the counter when we bailed after MDebugEnterGCUnsafeRegion, but
+  // before the matching MDebugLeaveGCUnsafeRegion.
+  //
+  // NOTE: EnterJit ensures the counter is zero when we enter JIT code.
+  cx->resetInUnsafeRegion();
 #endif
 
   auto resetProfilerFrame = mozilla::MakeScopeExit([=] {

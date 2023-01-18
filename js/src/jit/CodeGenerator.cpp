@@ -3893,6 +3893,36 @@ void CodeGenerator::visitKeepAliveObject(LKeepAliveObject* lir) {
   // No-op.
 }
 
+void CodeGenerator::visitDebugEnterGCUnsafeRegion(
+    LDebugEnterGCUnsafeRegion* lir) {
+  Register temp = ToRegister(lir->temp0());
+
+  masm.loadJSContext(temp);
+
+  Address inUnsafeRegion(temp, JSContext::offsetOfInUnsafeRegion());
+  masm.add32(Imm32(1), inUnsafeRegion);
+
+  Label ok;
+  masm.branch32(Assembler::GreaterThan, inUnsafeRegion, Imm32(0), &ok);
+  masm.assumeUnreachable("unbalanced enter/leave GC unsafe region");
+  masm.bind(&ok);
+}
+
+void CodeGenerator::visitDebugLeaveGCUnsafeRegion(
+    LDebugLeaveGCUnsafeRegion* lir) {
+  Register temp = ToRegister(lir->temp0());
+
+  masm.loadJSContext(temp);
+
+  Address inUnsafeRegion(temp, JSContext::offsetOfInUnsafeRegion());
+  masm.add32(Imm32(-1), inUnsafeRegion);
+
+  Label ok;
+  masm.branch32(Assembler::GreaterThanOrEqual, inUnsafeRegion, Imm32(0), &ok);
+  masm.assumeUnreachable("unbalanced enter/leave GC unsafe region");
+  masm.bind(&ok);
+}
+
 void CodeGenerator::visitSlots(LSlots* lir) {
   Address slots(ToRegister(lir->object()), NativeObject::offsetOfSlots());
   masm.loadPtr(slots, ToRegister(lir->output()));

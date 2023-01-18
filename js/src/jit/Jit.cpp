@@ -37,6 +37,11 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     return EnterJitStatus::Error;
   }
 
+  // jit::Bailout(), jit::InvalidationBailout(), and jit::HandleException()
+  // reset the counter to zero, so assert here it's also zero when we enter
+  // JIT code.
+  MOZ_ASSERT(!cx->isInUnsafeRegion());
+
 #ifdef DEBUG
   // Assert we don't GC before entering JIT code. A GC could discard JIT code
   // or move the function stored in the CalleeToken (it won't be traced at
@@ -108,6 +113,9 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
                         calleeToken, envChain, /* osrNumStackValues = */ 0,
                         result.address());
   }
+
+  // Ensure the counter was reset to zero after exiting from JIT code.
+  MOZ_ASSERT(!cx->isInUnsafeRegion());
 
   // Release temporary buffer used for OSR into Ion.
   cx->runtime()->jitRuntime()->freeIonOsrTempData();
