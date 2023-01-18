@@ -1127,7 +1127,7 @@ bool GLContextEGL::FindVisual(int* const out_visualId) {
 /*static*/
 RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
     const std::shared_ptr<EglDisplay> egl, const GLContextCreateDesc& desc,
-    const mozilla::gfx::IntSize& size, nsACString* const out_failureId) {
+    nsACString* const out_failureId) {
   const auto WithUseGles = [&](const bool useGles) -> RefPtr<GLContextEGL> {
     const EGLConfig config = ChooseConfig(*egl, desc, useGles);
     if (config == EGL_NO_CONFIG) {
@@ -1140,16 +1140,17 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
       egl->DumpEGLConfig(config);
     }
 
-    mozilla::gfx::IntSize pbSize(size);
+    auto dummySize = mozilla::gfx::IntSize{16, 16};
     EGLSurface surface = nullptr;
 #ifdef MOZ_WAYLAND
     if (GdkIsWaylandDisplay()) {
-      surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
+      surface =
+          GLContextEGL::CreateWaylandBufferSurface(*egl, config, dummySize);
     } else
 #endif
     {
       surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
-          *egl, config, LOCAL_EGL_NONE, pbSize);
+          *egl, config, LOCAL_EGL_NONE, dummySize);
     }
     if (!surface) {
       *out_failureId = "FEATURE_FAILURE_EGL_POT"_ns;
@@ -1195,9 +1196,8 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
   if (!display) {
     return nullptr;
   }
-  mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
-  auto ret = GLContextEGL::CreateEGLPBufferOffscreenContext(
-      display, desc, dummySize, out_failureId);
+  auto ret = GLContextEGL::CreateEGLPBufferOffscreenContext(display, desc,
+                                                            out_failureId);
   return ret.forget();
 }
 
