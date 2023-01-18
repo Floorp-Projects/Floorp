@@ -249,7 +249,7 @@ class Renderer9 : public RendererD3D
                                       gl::ShaderType type,
                                       const std::vector<D3DVarying> &streamOutVaryings,
                                       bool separatedOutputBuffers,
-                                      const CompilerWorkaroundsD3D &workarounds,
+                                      const angle::CompilerWorkaroundsD3D &workarounds,
                                       ShaderExecutableD3D **outExectuable) override;
     angle::Result ensureHLSLCompilerInitialized(d3d::Context *context) override;
 
@@ -275,63 +275,49 @@ class Renderer9 : public RendererD3D
                             bool unpackFlipY,
                             bool unpackPremultiplyAlpha,
                             bool unpackUnmultiplyAlpha) override;
-    TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain,
-                                           const std::string &label) override;
+    TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain) override;
     TextureStorage *createTextureStorageEGLImage(EGLImageD3D *eglImage,
-                                                 RenderTargetD3D *renderTargetD3D,
-                                                 const std::string &label) override;
-
-    TextureStorage *createTextureStorageBuffer(const gl::OffsetBindingPointer<gl::Buffer> &buffer,
-                                               GLenum internalFormat,
-                                               const std::string &label) override;
-
-    TextureStorage *createTextureStorageExternal(egl::Stream *stream,
-                                                 const egl::Stream::GLTextureDescription &desc,
-                                                 const std::string &label) override;
-
+                                                 RenderTargetD3D *renderTargetD3D) override;
+    TextureStorage *createTextureStorageExternal(
+        egl::Stream *stream,
+        const egl::Stream::GLTextureDescription &desc) override;
     TextureStorage *createTextureStorage2D(GLenum internalformat,
-                                           BindFlags bindFlags,
+                                           bool renderTarget,
                                            GLsizei width,
                                            GLsizei height,
                                            int levels,
-                                           const std::string &label,
                                            bool hintLevelZeroOnly) override;
     TextureStorage *createTextureStorageCube(GLenum internalformat,
-                                             BindFlags bindFlags,
+                                             bool renderTarget,
                                              int size,
                                              int levels,
-                                             bool hintLevelZeroOnly,
-                                             const std::string &label) override;
+                                             bool hintLevelZeroOnly) override;
     TextureStorage *createTextureStorage3D(GLenum internalformat,
-                                           BindFlags bindFlags,
+                                           bool renderTarget,
                                            GLsizei width,
                                            GLsizei height,
                                            GLsizei depth,
-                                           int levels,
-                                           const std::string &label) override;
+                                           int levels) override;
     TextureStorage *createTextureStorage2DArray(GLenum internalformat,
-                                                BindFlags bindFlags,
+                                                bool renderTarget,
                                                 GLsizei width,
                                                 GLsizei height,
                                                 GLsizei depth,
-                                                int levels,
-                                                const std::string &label) override;
+                                                int levels) override;
 
     TextureStorage *createTextureStorage2DMultisample(GLenum internalformat,
                                                       GLsizei width,
                                                       GLsizei height,
                                                       int levels,
                                                       int samples,
-                                                      bool fixedSampleLocations,
-                                                      const std::string &label) override;
+                                                      bool fixedSampleLocations) override;
     TextureStorage *createTextureStorage2DMultisampleArray(GLenum internalformat,
                                                            GLsizei width,
                                                            GLsizei height,
                                                            GLsizei depth,
                                                            int levels,
                                                            int samples,
-                                                           bool fixedSampleLocations,
-                                                           const std::string &label) override;
+                                                           bool fixedSampleLocations) override;
 
     // Buffer creation
     VertexBuffer *createVertexBuffer() override;
@@ -423,7 +409,7 @@ class Renderer9 : public RendererD3D
 
     std::string getRendererDescription() const override;
     std::string getVendorString() const override;
-    std::string getVersionString(bool includeFullVersion) const override;
+    std::string getVersionString() const override;
 
   private:
     angle::Result drawArraysImpl(const gl::Context *context,
@@ -449,8 +435,6 @@ class Renderer9 : public RendererD3D
                       gl::Limitations *outLimitations) const override;
 
     void initializeFeatures(angle::FeaturesD3D *features) const override;
-
-    void initializeFrontendFeatures(angle::FrontendFeatures *features) const override;
 
     angle::Result setBlendDepthRasterStates(const gl::Context *context, gl::PrimitiveMode drawMode);
 

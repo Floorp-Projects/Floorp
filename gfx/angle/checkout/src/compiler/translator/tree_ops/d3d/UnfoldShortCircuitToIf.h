@@ -21,9 +21,9 @@ class TCompiler;
 class TIntermNode;
 class TSymbolTable;
 
-[[nodiscard]] bool UnfoldShortCircuitToIf(TCompiler *compiler,
-                                          TIntermNode *root,
-                                          TSymbolTable *symbolTable);
+ANGLE_NO_DISCARD bool UnfoldShortCircuitToIf(TCompiler *compiler,
+                                             TIntermNode *root,
+                                             TSymbolTable *symbolTable);
 
 }  // namespace sh
 

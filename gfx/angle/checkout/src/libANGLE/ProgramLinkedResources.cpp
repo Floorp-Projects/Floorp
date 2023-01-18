@@ -85,6 +85,41 @@ LinkMismatchError LinkValidateUniforms(const sh::ShaderVariable &uniform1,
     return LinkMismatchError::NO_MISMATCH;
 }
 
+using ShaderUniform = std::pair<ShaderType, const sh::ShaderVariable *>;
+
+bool ValidateGraphicsUniformsPerShader(Shader *shaderToLink,
+                                       bool extendLinkedUniforms,
+                                       std::map<std::string, ShaderUniform> *linkedUniforms,
+                                       InfoLog &infoLog)
+{
+    ASSERT(shaderToLink && linkedUniforms);
+
+    for (const sh::ShaderVariable &uniform : shaderToLink->getUniforms())
+    {
+        const auto &entry = linkedUniforms->find(uniform.name);
+        if (entry != linkedUniforms->end())
+        {
+            const sh::ShaderVariable &linkedUniform = *(entry->second.second);
+            std::string mismatchedStructFieldName;
+            LinkMismatchError linkError =
+                LinkValidateUniforms(uniform, linkedUniform, &mismatchedStructFieldName);
+            if (linkError != LinkMismatchError::NO_MISMATCH)
+            {
+                LogLinkMismatch(infoLog, uniform.name, "uniform", linkError,
+                                mismatchedStructFieldName, entry->second.first,
+                                shaderToLink->getType());
+                return false;
+            }
+        }
+        else if (extendLinkedUniforms)
+        {
+            (*linkedUniforms)[uniform.name] = std::make_pair(shaderToLink->getType(), &uniform);
+        }
+    }
+
+    return true;
+}
+
 GLuint GetMaximumShaderUniformVectors(ShaderType shaderType, const Caps &caps)
 {
     switch (shaderType)
@@ -458,20 +493,6 @@ class FlattenUniformVisitor : public sh::VariableNameVisitor
             {
                 linkedUniform.setParentArrayIndex(variable.parentArrayIndex());
             }
-
-            std::vector<unsigned int> arrayDims = arraySizes;
-            ASSERT(variable.arraySizes.size() == 1 || variable.arraySizes.size() == 0);
-            arrayDims.push_back(variable.arraySizes.empty() ? 1 : variable.arraySizes[0]);
-
-            size_t numDimensions = arraySizes.size();
-            uint32_t arrayStride = 1;
-            for (size_t dimension = numDimensions; dimension > 0;)
-            {
-                --dimension;
-                arrayStride *= arrayDims[dimension + 1];
-                linkedUniform.outerArrayOffset += arrayStride * mArrayElementStack[dimension];
-            }
-
             if (mMarkActive)
             {
                 linkedUniform.setActive(mShaderType, true);
@@ -519,18 +540,6 @@ class FlattenUniformVisitor : public sh::VariableNameVisitor
         sh::VariableNameVisitor::exitStructAccess(structVar, isRowMajor);
     }
 
-    void enterArrayElement(const sh::ShaderVariable &arrayVar, unsigned int arrayElement) override
-    {
-        mArrayElementStack.push_back(arrayElement);
-        sh::VariableNameVisitor::enterArrayElement(arrayVar, arrayElement);
-    }
-
-    void exitArrayElement(const sh::ShaderVariable &arrayVar, unsigned int arrayElement) override
-    {
-        mArrayElementStack.pop_back();
-        sh::VariableNameVisitor::exitArrayElement(arrayVar, arrayElement);
-    }
-
     ShaderUniformCount getCounts() const { return mUniformCount; }
 
   private:
@@ -551,7 +560,6 @@ class FlattenUniformVisitor : public sh::VariableNameVisitor
     std::vector<LinkedUniform> *mAtomicCounterUniforms;
     std::vector<LinkedUniform> *mInputAttachmentUniforms;
     std::vector<UnusedUniform> *mUnusedUniforms;
-    std::vector<unsigned int> mArrayElementStack;
     ShaderUniformCount mUniformCount;
     unsigned int mStructStackSize = 0;
 };
@@ -781,123 +789,29 @@ bool DoShaderVariablesMatch(int frontShaderVersion,
 
     return false;
 }
-
-const char *GetInterfaceBlockTypeString(sh::BlockType blockType)
-{
-    switch (blockType)
-    {
-        case sh::BlockType::BLOCK_UNIFORM:
-            return "uniform block";
-        case sh::BlockType::BLOCK_BUFFER:
-            return "shader storage block";
-        default:
-            UNREACHABLE();
-            return "";
-    }
-}
-
-std::string GetInterfaceBlockLimitName(ShaderType shaderType, sh::BlockType blockType)
-{
-    std::ostringstream stream;
-    stream << "GL_MAX_" << GetShaderTypeString(shaderType) << "_";
-
-    switch (blockType)
-    {
-        case sh::BlockType::BLOCK_UNIFORM:
-            stream << "UNIFORM_BUFFERS";
-            break;
-        case sh::BlockType::BLOCK_BUFFER:
-            stream << "SHADER_STORAGE_BLOCKS";
-            break;
-        default:
-            UNREACHABLE();
-            return "";
-    }
-
-    if (shaderType == ShaderType::Geometry)
-    {
-        stream << "_EXT";
-    }
-
-    return stream.str();
-}
-
-void LogInterfaceBlocksExceedLimit(InfoLog &infoLog,
-                                   ShaderType shaderType,
-                                   sh::BlockType blockType,
-                                   GLuint limit)
-{
-    infoLog << GetShaderTypeString(shaderType) << " shader "
-            << GetInterfaceBlockTypeString(blockType) << " count exceeds "
-            << GetInterfaceBlockLimitName(shaderType, blockType) << " (" << limit << ")";
-}
-
-bool ValidateInterfaceBlocksCount(GLuint maxInterfaceBlocks,
-                                  const std::vector<sh::InterfaceBlock> &interfaceBlocks,
-                                  ShaderType shaderType,
-                                  sh::BlockType blockType,
-                                  GLuint *combinedInterfaceBlocksCount,
-                                  InfoLog &infoLog)
-{
-    GLuint blockCount = 0;
-    for (const sh::InterfaceBlock &block : interfaceBlocks)
-    {
-        if (IsActiveInterfaceBlock(block))
-        {
-            blockCount += std::max(block.arraySize, 1u);
-            if (blockCount > maxInterfaceBlocks)
-            {
-                LogInterfaceBlocksExceedLimit(infoLog, shaderType, blockType, maxInterfaceBlocks);
-                return false;
-            }
-        }
-    }
-
-    // [OpenGL ES 3.1] Chapter 7.6.2 Page 105:
-    // If a uniform block is used by multiple shader stages, each such use counts separately
-    // against this combined limit.
-    // [OpenGL ES 3.1] Chapter 7.8 Page 111:
-    // If a shader storage block in a program is referenced by multiple shaders, each such
-    // reference counts separately against this combined limit.
-    if (combinedInterfaceBlocksCount)
-    {
-        *combinedInterfaceBlocksCount += blockCount;
-    }
-
-    return true;
-}
 }  // anonymous namespace
 
-UniformLinker::UniformLinker(const ShaderBitSet &activeShaderStages,
-                             const ShaderMap<std::vector<sh::ShaderVariable>> &shaderUniforms)
-    : mActiveShaderStages(activeShaderStages), mShaderUniforms(shaderUniforms)
-{}
+UniformLinker::UniformLinker(const ProgramState &state) : mState(state) {}
 
 UniformLinker::~UniformLinker() = default;
 
 void UniformLinker::getResults(std::vector<LinkedUniform> *uniforms,
-                               std::vector<UnusedUniform> *unusedUniformsOutOrNull,
-                               std::vector<VariableLocation> *uniformLocationsOutOrNull)
+                               std::vector<UnusedUniform> *unusedUniforms,
+                               std::vector<VariableLocation> *uniformLocations)
 {
     uniforms->swap(mUniforms);
-
-    if (unusedUniformsOutOrNull)
-    {
-        unusedUniformsOutOrNull->swap(mUnusedUniforms);
-    }
-
-    if (uniformLocationsOutOrNull)
-    {
-        uniformLocationsOutOrNull->swap(mUniformLocations);
-    }
+    unusedUniforms->swap(mUnusedUniforms);
+    uniformLocations->swap(mUniformLocations);
 }
 
 bool UniformLinker::link(const Caps &caps,
                          InfoLog &infoLog,
                          const ProgramAliasedBindings &uniformLocationBindings)
 {
-    if (mActiveShaderStages[ShaderType::Vertex] && mActiveShaderStages[ShaderType::Fragment])
+    if (mState.getAttachedShader(ShaderType::Vertex) &&
+        mState.getAttachedShader(ShaderType::Fragment))
     {
+        ASSERT(mState.getAttachedShader(ShaderType::Compute) == nullptr);
         if (!validateGraphicsUniforms(infoLog))
         {
             return false;
@@ -929,57 +843,28 @@ bool UniformLinker::validateGraphicsUniforms(InfoLog &infoLog) const
     // Check that uniforms defined in the graphics shaders are identical
     std::map<std::string, ShaderUniform> linkedUniforms;
 
-    for (const ShaderType shaderType : mActiveShaderStages)
+    for (const ShaderType shaderType : kAllGraphicsShaderTypes)
     {
-        if (shaderType == ShaderType::Vertex)
+        Shader *currentShader = mState.getAttachedShader(shaderType);
+        if (currentShader)
         {
-            for (const sh::ShaderVariable &vertexUniform : mShaderUniforms[ShaderType::Vertex])
+            if (shaderType == ShaderType::Vertex)
             {
-                linkedUniforms[vertexUniform.name] =
-                    std::make_pair(ShaderType::Vertex, &vertexUniform);
+                for (const sh::ShaderVariable &vertexUniform : currentShader->getUniforms())
+                {
+                    linkedUniforms[vertexUniform.name] =
+                        std::make_pair(ShaderType::Vertex, &vertexUniform);
+                }
             }
-        }
-        else
-        {
-            bool isLastShader = (shaderType == ShaderType::Fragment);
-            if (!validateGraphicsUniformsPerShader(shaderType, !isLastShader, &linkedUniforms,
-                                                   infoLog))
+            else
             {
-                return false;
+                bool isLastShader = (shaderType == ShaderType::Fragment);
+                if (!ValidateGraphicsUniformsPerShader(currentShader, !isLastShader,
+                                                       &linkedUniforms, infoLog))
+                {
+                    return false;
+                }
             }
-        }
-    }
-
-    return true;
-}
-
-bool UniformLinker::validateGraphicsUniformsPerShader(
-    ShaderType shaderToLink,
-    bool extendLinkedUniforms,
-    std::map<std::string, ShaderUniform> *linkedUniforms,
-    InfoLog &infoLog) const
-{
-    ASSERT(mActiveShaderStages[shaderToLink] && linkedUniforms);
-
-    for (const sh::ShaderVariable &uniform : mShaderUniforms[shaderToLink])
-    {
-        const auto &entry = linkedUniforms->find(uniform.name);
-        if (entry != linkedUniforms->end())
-        {
-            const sh::ShaderVariable &linkedUniform = *(entry->second.second);
-            std::string mismatchedStructFieldName;
-            LinkMismatchError linkError =
-                LinkValidateUniforms(uniform, linkedUniform, &mismatchedStructFieldName);
-            if (linkError != LinkMismatchError::NO_MISMATCH)
-            {
-                LogLinkMismatch(infoLog, uniform.name, "uniform", linkError,
-                                mismatchedStructFieldName, entry->second.first, shaderToLink);
-                return false;
-            }
-        }
-        else if (extendLinkedUniforms)
-        {
-            (*linkedUniforms)[uniform.name] = std::make_pair(shaderToLink, &uniform);
         }
     }
 
@@ -994,8 +879,8 @@ bool UniformLinker::indexUniforms(InfoLog &infoLog,
 
     int maxUniformLocation = -1;
 
-    // Gather uniform locations that have been set either using the bindUniformLocationCHROMIUM API
-    // or by using a location layout qualifier and check conflicts between them.
+    // Gather uniform locations that have been set either using the bindUniformLocation API or by
+    // using a location layout qualifier and check conflicts between them.
     if (!gatherUniformLocationsAndCheckConflicts(infoLog, uniformLocationBindings,
                                                  &ignoredLocations, &maxUniformLocation))
     {
@@ -1174,7 +1059,7 @@ void UniformLinker::pruneUnusedUniforms()
 }
 
 bool UniformLinker::flattenUniformsAndCheckCapsForShader(
-    ShaderType shaderType,
+    Shader *shader,
     const Caps &caps,
     std::vector<LinkedUniform> &samplerUniforms,
     std::vector<LinkedUniform> &imageUniforms,
@@ -1184,9 +1069,9 @@ bool UniformLinker::flattenUniformsAndCheckCapsForShader(
     InfoLog &infoLog)
 {
     ShaderUniformCount shaderUniformCount;
-    for (const sh::ShaderVariable &uniform : mShaderUniforms[shaderType])
+    for (const sh::ShaderVariable &uniform : shader->getUniforms())
     {
-        FlattenUniformVisitor flattener(shaderType, uniform, &mUniforms, &samplerUniforms,
+        FlattenUniformVisitor flattener(shader->getType(), uniform, &mUniforms, &samplerUniforms,
                                         &imageUniforms, &atomicCounterUniforms,
                                         &inputAttachmentUniforms, &unusedUniforms);
         sh::TraverseShaderVariable(uniform, false, &flattener);
@@ -1203,7 +1088,9 @@ bool UniformLinker::flattenUniformsAndCheckCapsForShader(
         }
     }
 
-    // This code does not do fine-grained component counting.
+    ShaderType shaderType = shader->getType();
+
+    // TODO (jiawei.shao@intel.com): check whether we need finer-grained component counting
     GLuint maxUniformVectorsCount = GetMaximumShaderUniformVectors(shaderType, caps);
     if (shaderUniformCount.vectorCount > maxUniformVectorsCount)
     {
@@ -1258,9 +1145,15 @@ bool UniformLinker::flattenUniformsAndCheckCaps(const Caps &caps, InfoLog &infoL
     std::vector<LinkedUniform> inputAttachmentUniforms;
     std::vector<UnusedUniform> unusedUniforms;
 
-    for (const ShaderType shaderType : mActiveShaderStages)
+    for (const ShaderType shaderType : AllShaderTypes())
     {
-        if (!flattenUniformsAndCheckCapsForShader(shaderType, caps, samplerUniforms, imageUniforms,
+        Shader *shader = mState.getAttachedShader(shaderType);
+        if (!shader)
+        {
+            continue;
+        }
+
+        if (!flattenUniformsAndCheckCapsForShader(shader, caps, samplerUniforms, imageUniforms,
                                                   atomicCounterUniforms, inputAttachmentUniforms,
                                                   unusedUniforms, infoLog))
         {
@@ -1512,39 +1405,6 @@ ProgramLinkedResources::ProgramLinkedResources() = default;
 
 ProgramLinkedResources::~ProgramLinkedResources() = default;
 
-LinkingVariables::LinkingVariables(const Context *context, const ProgramState &state)
-{
-    for (ShaderType shaderType : kAllGraphicsShaderTypes)
-    {
-        Shader *shader = state.getAttachedShader(shaderType);
-        if (shader)
-        {
-            outputVaryings[shaderType] = shader->getOutputVaryings(context);
-            inputVaryings[shaderType]  = shader->getInputVaryings(context);
-            uniforms[shaderType]       = shader->getUniforms(context);
-            uniformBlocks[shaderType]  = shader->getUniformBlocks(context);
-            isShaderStageUsedBitset.set(shaderType);
-        }
-    }
-}
-
-LinkingVariables::LinkingVariables(const ProgramPipelineState &state)
-{
-    for (ShaderType shaderType : state.getExecutable().getLinkedShaderStages())
-    {
-        const Program *program = state.getShaderProgram(shaderType);
-        ASSERT(program);
-        outputVaryings[shaderType] = program->getExecutable().getLinkedOutputVaryings(shaderType);
-        inputVaryings[shaderType]  = program->getExecutable().getLinkedInputVaryings(shaderType);
-        uniforms[shaderType] = program->getState().getExecutable().getLinkedUniforms(shaderType);
-        uniformBlocks[shaderType] =
-            program->getState().getExecutable().getLinkedUniformBlocks(shaderType);
-        isShaderStageUsedBitset.set(shaderType);
-    }
-}
-
-LinkingVariables::~LinkingVariables() = default;
-
 void ProgramLinkedResources::init(std::vector<InterfaceBlock> *uniformBlocksOut,
                                   std::vector<LinkedUniform> *uniformsOut,
                                   std::vector<InterfaceBlock> *shaderStorageBlocksOut,
@@ -1557,8 +1417,7 @@ void ProgramLinkedResources::init(std::vector<InterfaceBlock> *uniformBlocksOut,
     atomicCounterBufferLinker.init(atomicCounterBuffersOut);
 }
 
-void ProgramLinkedResourcesLinker::linkResources(const Context *context,
-                                                 const ProgramState &programState,
+void ProgramLinkedResourcesLinker::linkResources(const ProgramState &programState,
                                                  const ProgramLinkedResources &resources) const
 {
     // Gather uniform interface block info.
@@ -1568,7 +1427,7 @@ void ProgramLinkedResourcesLinker::linkResources(const Context *context,
         Shader *shader = programState.getAttachedShader(shaderType);
         if (shader)
         {
-            uniformBlockInfo.getShaderBlockInfo(shader->getUniformBlocks(context));
+            uniformBlockInfo.getShaderBlockInfo(shader->getUniformBlocks());
         }
     }
 
@@ -1593,7 +1452,7 @@ void ProgramLinkedResourcesLinker::linkResources(const Context *context,
         Shader *shader = programState.getAttachedShader(shaderType);
         if (shader)
         {
-            shaderStorageBlockInfo.getShaderBlockInfo(shader->getShaderStorageBlocks(context));
+            shaderStorageBlockInfo.getShaderBlockInfo(shader->getShaderStorageBlocks());
         }
     }
     auto getShaderStorageBlockSize = [&shaderStorageBlockInfo](const std::string &name,
@@ -1642,9 +1501,8 @@ void ProgramLinkedResourcesLinker::getAtomicCounterBufferSizeMap(
     }
 }
 
-bool LinkValidateProgramGlobalNames(InfoLog &infoLog,
-                                    const ProgramExecutable &executable,
-                                    const LinkingVariables &linkingVariables)
+// Note: this is broken for pipelines with modified/discarded shaders. http://anglebug.com/5506
+bool LinkValidateProgramGlobalNames(InfoLog &infoLog, const HasAttachedShaders &programOrPipeline)
 {
     angle::HashMap<std::string, const sh::ShaderVariable *> uniformMap;
     using BlockAndFieldPair = std::pair<const sh::InterfaceBlock *, const sh::ShaderVariable *>;
@@ -1652,13 +1510,14 @@ bool LinkValidateProgramGlobalNames(InfoLog &infoLog,
 
     for (ShaderType shaderType : kAllGraphicsShaderTypes)
     {
-        if (!linkingVariables.isShaderStageUsedBitset[shaderType])
+        Shader *shader = programOrPipeline.getAttachedShader(shaderType);
+        if (!shader)
         {
             continue;
         }
 
         // Build a map of Uniforms
-        const std::vector<sh::ShaderVariable> &uniforms = linkingVariables.uniforms[shaderType];
+        const std::vector<sh::ShaderVariable> uniforms = shader->getUniforms();
         for (const auto &uniform : uniforms)
         {
             uniformMap[uniform.name] = &uniform;
@@ -1667,9 +1526,7 @@ bool LinkValidateProgramGlobalNames(InfoLog &infoLog,
         // Build a map of Uniform Blocks
         // This will also detect any field name conflicts between Uniform Blocks without instance
         // names
-        const std::vector<sh::InterfaceBlock> &uniformBlocks =
-            linkingVariables.uniformBlocks[shaderType];
-
+        const std::vector<sh::InterfaceBlock> &uniformBlocks = shader->getUniformBlocks();
         for (const auto &uniformBlock : uniformBlocks)
         {
             // Only uniform blocks without an instance name can create a conflict with their field
@@ -1728,18 +1585,19 @@ bool LinkValidateProgramGlobalNames(InfoLog &infoLog,
     }
 
     // Validate no uniform names conflict with attribute names
-    if (linkingVariables.isShaderStageUsedBitset[ShaderType::Vertex])
+    Shader *vertexShader = programOrPipeline.getAttachedShader(ShaderType::Vertex);
+    if (vertexShader)
     {
         // ESSL 3.00.6 section 4.3.5:
         // If a uniform variable name is declared in one stage (e.g., a vertex shader)
         // but not in another (e.g., a fragment shader), then that name is still
         // available in the other stage for a different use.
         std::unordered_set<std::string> uniforms;
-        for (const sh::ShaderVariable &uniform : linkingVariables.uniforms[ShaderType::Vertex])
+        for (const sh::ShaderVariable &uniform : vertexShader->getUniforms())
         {
             uniforms.insert(uniform.name);
         }
-        for (const auto &attrib : executable.getProgramInputs())
+        for (const auto &attrib : vertexShader->getActiveAttributes())
         {
             if (uniforms.count(attrib.name))
             {
@@ -2061,317 +1919,4 @@ bool LinkValidateBuiltInVaryings(const std::vector<sh::ShaderVariable> &outputVa
     }
     return true;
 }
-
-void LogAmbiguousFieldLinkMismatch(InfoLog &infoLog,
-                                   const std::string &blockName1,
-                                   const std::string &blockName2,
-                                   const std::string &fieldName,
-                                   ShaderType shaderType1,
-                                   ShaderType shaderType2)
-{
-    infoLog << "Ambiguous field '" << fieldName << "' in blocks '" << blockName1 << "' ("
-            << GetShaderTypeString(shaderType1) << " shader) and '" << blockName2 << "' ("
-            << GetShaderTypeString(shaderType2) << " shader) which don't have instance names.";
-}
-
-bool ValidateInstancelessGraphicsInterfaceBlocksPerShader(
-    const std::vector<sh::InterfaceBlock> &interfaceBlocks,
-    ShaderType shaderType,
-    InterfaceBlockMap *instancelessBlocksFields,
-    InfoLog &infoLog)
-{
-    ASSERT(instancelessBlocksFields);
-
-    for (const sh::InterfaceBlock &block : interfaceBlocks)
-    {
-        if (!block.instanceName.empty())
-        {
-            continue;
-        }
-
-        for (const sh::ShaderVariable &field : block.fields)
-        {
-            const auto &entry = instancelessBlocksFields->find(field.name);
-            if (entry != instancelessBlocksFields->end())
-            {
-                const sh::InterfaceBlock &linkedBlock = *(entry->second.second);
-                if (block.name != linkedBlock.name)
-                {
-                    LogAmbiguousFieldLinkMismatch(infoLog, block.name, linkedBlock.name, field.name,
-                                                  entry->second.first, shaderType);
-                    return false;
-                }
-            }
-            else
-            {
-                (*instancelessBlocksFields)[field.name] = std::make_pair(shaderType, &block);
-            }
-        }
-    }
-
-    return true;
-}
-
-LinkMismatchError LinkValidateInterfaceBlockFields(const sh::ShaderVariable &blockField1,
-                                                   const sh::ShaderVariable &blockField2,
-                                                   bool webglCompatibility,
-                                                   std::string *mismatchedBlockFieldName)
-{
-    if (blockField1.name != blockField2.name)
-    {
-        return LinkMismatchError::FIELD_NAME_MISMATCH;
-    }
-
-    // If webgl, validate precision of UBO fields, otherwise don't.  See Khronos bug 10287.
-    LinkMismatchError linkError = LinkValidateProgramVariables(
-        blockField1, blockField2, webglCompatibility, false, false, mismatchedBlockFieldName);
-    if (linkError != LinkMismatchError::NO_MISMATCH)
-    {
-        AddProgramVariableParentPrefix(blockField1.name, mismatchedBlockFieldName);
-        return linkError;
-    }
-
-    if (blockField1.isRowMajorLayout != blockField2.isRowMajorLayout)
-    {
-        AddProgramVariableParentPrefix(blockField1.name, mismatchedBlockFieldName);
-        return LinkMismatchError::MATRIX_PACKING_MISMATCH;
-    }
-
-    return LinkMismatchError::NO_MISMATCH;
-}
-
-LinkMismatchError AreMatchingInterfaceBlocks(const sh::InterfaceBlock &interfaceBlock1,
-                                             const sh::InterfaceBlock &interfaceBlock2,
-                                             bool webglCompatibility,
-                                             std::string *mismatchedBlockFieldName)
-{
-    // validate blocks for the same member types
-    if (interfaceBlock1.fields.size() != interfaceBlock2.fields.size())
-    {
-        return LinkMismatchError::FIELD_NUMBER_MISMATCH;
-    }
-    if (interfaceBlock1.arraySize != interfaceBlock2.arraySize)
-    {
-        return LinkMismatchError::ARRAY_SIZE_MISMATCH;
-    }
-    if (interfaceBlock1.layout != interfaceBlock2.layout ||
-        interfaceBlock1.binding != interfaceBlock2.binding)
-    {
-        return LinkMismatchError::LAYOUT_QUALIFIER_MISMATCH;
-    }
-    if (interfaceBlock1.instanceName.empty() != interfaceBlock2.instanceName.empty())
-    {
-        return LinkMismatchError::INSTANCE_NAME_MISMATCH;
-    }
-    const unsigned int numBlockMembers = static_cast<unsigned int>(interfaceBlock1.fields.size());
-    for (unsigned int blockMemberIndex = 0; blockMemberIndex < numBlockMembers; blockMemberIndex++)
-    {
-        const sh::ShaderVariable &member1 = interfaceBlock1.fields[blockMemberIndex];
-        const sh::ShaderVariable &member2 = interfaceBlock2.fields[blockMemberIndex];
-
-        LinkMismatchError linkError = LinkValidateInterfaceBlockFields(
-            member1, member2, webglCompatibility, mismatchedBlockFieldName);
-        if (linkError != LinkMismatchError::NO_MISMATCH)
-        {
-            return linkError;
-        }
-    }
-    return LinkMismatchError::NO_MISMATCH;
-}
-
-void InitializeInterfaceBlockMap(const std::vector<sh::InterfaceBlock> &interfaceBlocks,
-                                 ShaderType shaderType,
-                                 InterfaceBlockMap *linkedInterfaceBlocks)
-{
-    ASSERT(linkedInterfaceBlocks);
-
-    for (const sh::InterfaceBlock &interfaceBlock : interfaceBlocks)
-    {
-        (*linkedInterfaceBlocks)[interfaceBlock.name] = std::make_pair(shaderType, &interfaceBlock);
-    }
-}
-
-bool ValidateGraphicsInterfaceBlocksPerShader(
-    const std::vector<sh::InterfaceBlock> &interfaceBlocksToLink,
-    ShaderType shaderType,
-    bool webglCompatibility,
-    InterfaceBlockMap *linkedBlocks,
-    InfoLog &infoLog)
-{
-    ASSERT(linkedBlocks);
-
-    for (const sh::InterfaceBlock &block : interfaceBlocksToLink)
-    {
-        const auto &entry = linkedBlocks->find(block.name);
-        if (entry != linkedBlocks->end())
-        {
-            const sh::InterfaceBlock &linkedBlock = *(entry->second.second);
-            std::string mismatchedStructFieldName;
-            LinkMismatchError linkError = AreMatchingInterfaceBlocks(
-                block, linkedBlock, webglCompatibility, &mismatchedStructFieldName);
-            if (linkError != LinkMismatchError::NO_MISMATCH)
-            {
-                LogLinkMismatch(infoLog, block.name, GetInterfaceBlockTypeString(block.blockType),
-                                linkError, mismatchedStructFieldName, entry->second.first,
-                                shaderType);
-                return false;
-            }
-        }
-        else
-        {
-            (*linkedBlocks)[block.name] = std::make_pair(shaderType, &block);
-        }
-    }
-
-    return true;
-}
-
-bool ValidateInterfaceBlocksMatch(
-    GLuint numShadersHasInterfaceBlocks,
-    const ShaderMap<const std::vector<sh::InterfaceBlock> *> &shaderInterfaceBlocks,
-    InfoLog &infoLog,
-    bool webglCompatibility,
-    InterfaceBlockMap *instancelessInterfaceBlocksFields)
-{
-    for (ShaderType shaderType : kAllGraphicsShaderTypes)
-    {
-        // Validate that instanceless blocks of different names don't have fields of the same name.
-        if (shaderInterfaceBlocks[shaderType] &&
-            !ValidateInstancelessGraphicsInterfaceBlocksPerShader(
-                *shaderInterfaceBlocks[shaderType], shaderType, instancelessInterfaceBlocksFields,
-                infoLog))
-        {
-            return false;
-        }
-    }
-
-    if (numShadersHasInterfaceBlocks < 2u)
-    {
-        return true;
-    }
-
-    ASSERT(!shaderInterfaceBlocks[ShaderType::Compute]);
-
-    // Check that interface blocks defined in the graphics shaders are identical
-
-    InterfaceBlockMap linkedInterfaceBlocks;
-
-    bool interfaceBlockMapInitialized = false;
-    for (ShaderType shaderType : kAllGraphicsShaderTypes)
-    {
-        if (!shaderInterfaceBlocks[shaderType])
-        {
-            continue;
-        }
-
-        if (!interfaceBlockMapInitialized)
-        {
-            InitializeInterfaceBlockMap(*shaderInterfaceBlocks[shaderType], shaderType,
-                                        &linkedInterfaceBlocks);
-            interfaceBlockMapInitialized = true;
-        }
-        else if (!ValidateGraphicsInterfaceBlocksPerShader(*shaderInterfaceBlocks[shaderType],
-                                                           shaderType, webglCompatibility,
-                                                           &linkedInterfaceBlocks, infoLog))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool LinkValidateProgramInterfaceBlocks(const Context *context,
-                                        ShaderBitSet activeProgramStages,
-                                        const ProgramLinkedResources &resources,
-                                        InfoLog &infoLog,
-                                        GLuint *combinedShaderStorageBlocksCountOut)
-{
-    ASSERT(combinedShaderStorageBlocksCountOut);
-
-    const Caps &caps              = context->getCaps();
-    const bool webglCompatibility = context->isWebGL();
-    const Version &version        = context->getClientVersion();
-
-    GLuint combinedUniformBlocksCount                                         = 0u;
-    GLuint numShadersHasUniformBlocks                                         = 0u;
-    ShaderMap<const std::vector<sh::InterfaceBlock> *> allShaderUniformBlocks = {};
-    InterfaceBlockMap instancelessInterfaceBlocksFields;
-
-    for (ShaderType shaderType : activeProgramStages)
-    {
-        const std::vector<sh::InterfaceBlock> &uniformBlocks =
-            resources.uniformBlockLinker.getShaderBlocks(shaderType);
-        if (!uniformBlocks.empty())
-        {
-            if (!ValidateInterfaceBlocksCount(
-                    static_cast<GLuint>(caps.maxShaderUniformBlocks[shaderType]), uniformBlocks,
-                    shaderType, sh::BlockType::BLOCK_UNIFORM, &combinedUniformBlocksCount, infoLog))
-            {
-                return false;
-            }
-
-            allShaderUniformBlocks[shaderType] = &uniformBlocks;
-            ++numShadersHasUniformBlocks;
-        }
-    }
-
-    if (combinedUniformBlocksCount > static_cast<GLuint>(caps.maxCombinedUniformBlocks))
-    {
-        infoLog << "The sum of the number of active uniform blocks exceeds "
-                   "MAX_COMBINED_UNIFORM_BLOCKS ("
-                << caps.maxCombinedUniformBlocks << ").";
-        return false;
-    }
-
-    if (!ValidateInterfaceBlocksMatch(numShadersHasUniformBlocks, allShaderUniformBlocks, infoLog,
-                                      webglCompatibility, &instancelessInterfaceBlocksFields))
-    {
-        return false;
-    }
-
-    if (version >= Version(3, 1))
-    {
-        *combinedShaderStorageBlocksCountOut                                      = 0u;
-        GLuint numShadersHasShaderStorageBlocks                                   = 0u;
-        ShaderMap<const std::vector<sh::InterfaceBlock> *> allShaderStorageBlocks = {};
-        for (ShaderType shaderType : activeProgramStages)
-        {
-            const std::vector<sh::InterfaceBlock> &shaderStorageBlocks =
-                resources.shaderStorageBlockLinker.getShaderBlocks(shaderType);
-            if (!shaderStorageBlocks.empty())
-            {
-                if (!ValidateInterfaceBlocksCount(
-                        static_cast<GLuint>(caps.maxShaderStorageBlocks[shaderType]),
-                        shaderStorageBlocks, shaderType, sh::BlockType::BLOCK_BUFFER,
-                        combinedShaderStorageBlocksCountOut, infoLog))
-                {
-                    return false;
-                }
-
-                allShaderStorageBlocks[shaderType] = &shaderStorageBlocks;
-                ++numShadersHasShaderStorageBlocks;
-            }
-        }
-
-        if (*combinedShaderStorageBlocksCountOut >
-            static_cast<GLuint>(caps.maxCombinedShaderStorageBlocks))
-        {
-            infoLog << "The sum of the number of active shader storage blocks exceeds "
-                       "MAX_COMBINED_SHADER_STORAGE_BLOCKS ("
-                    << caps.maxCombinedShaderStorageBlocks << ").";
-            return false;
-        }
-
-        if (!ValidateInterfaceBlocksMatch(numShadersHasShaderStorageBlocks, allShaderStorageBlocks,
-                                          infoLog, webglCompatibility,
-                                          &instancelessInterfaceBlocksFields))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 }  // namespace gl

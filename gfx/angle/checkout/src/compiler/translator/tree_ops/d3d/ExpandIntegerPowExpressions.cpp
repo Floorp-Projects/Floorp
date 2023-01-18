@@ -23,9 +23,9 @@ namespace
 class Traverser : public TIntermTraverser
 {
   public:
-    [[nodiscard]] static bool Apply(TCompiler *compiler,
-                                    TIntermNode *root,
-                                    TSymbolTable *symbolTable);
+    ANGLE_NO_DISCARD static bool Apply(TCompiler *compiler,
+                                       TIntermNode *root,
+                                       TSymbolTable *symbolTable);
 
   private:
     Traverser(TSymbolTable *symbolTable);

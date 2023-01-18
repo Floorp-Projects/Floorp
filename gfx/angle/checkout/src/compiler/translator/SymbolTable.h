@@ -75,14 +75,6 @@ enum class Spec : uint8_t
 };
 
 constexpr uint16_t kESSL1Only = 100;
-// Some built-ins from backend shader languages are made available internally to ESSL for use in
-// tree transformations.  This (invalid) shader version is used to select those built-ins.  This
-// value needs to be larger than all other shader versions.
-constexpr uint16_t kESSLInternalBackendBuiltIns = 0x3FFF;
-
-// The version assigned to |kESSLInternalBackendBuiltIns| should be good until OpenGL 20.0!
-static_assert(kESSLInternalBackendBuiltIns > 2000,
-              "Accidentally exposing internal backend built-ins in OpenGL");
 
 static_assert(offsetof(ShBuiltInResources, OES_standard_derivatives) != 0,
               "Update SymbolTable extension logic");
@@ -179,9 +171,8 @@ const TSymbol *FindMangledBuiltIn(ShShaderSpec shaderSpec,
 class UnmangledEntry
 {
   public:
-    template <size_t ESSLExtCount>
     constexpr UnmangledEntry(const char *name,
-                             const std::array<TExtension, ESSLExtCount> &esslExtensions,
+                             TExtension esslExtension,
                              TExtension glslExtension,
                              int esslVersion,
                              int glslVersion,
@@ -195,24 +186,22 @@ class UnmangledEntry
 
   private:
     const char *mName;
-    std::array<TExtension, 2u> mESSLExtensions;
-    TExtension mGLSLExtension;
+    uint8_t mESSLExtension;
+    uint8_t mGLSLExtension;
     uint8_t mShaderType;
     uint16_t mESSLVersion;
     uint16_t mGLSLVersion;
 };
 
-template <size_t ESSLExtCount>
 constexpr UnmangledEntry::UnmangledEntry(const char *name,
-                                         const std::array<TExtension, ESSLExtCount> &esslExtensions,
+                                         TExtension esslExtension,
                                          TExtension glslExtension,
                                          int esslVersion,
                                          int glslVersion,
                                          Shader shaderType)
     : mName(name),
-      mESSLExtensions{(ESSLExtCount >= 1) ? esslExtensions[0] : TExtension::UNDEFINED,
-                      (ESSLExtCount >= 2) ? esslExtensions[1] : TExtension::UNDEFINED},
-      mGLSLExtension(glslExtension),
+      mESSLExtension(static_cast<uint8_t>(esslExtension)),
+      mGLSLExtension(static_cast<uint8_t>(glslExtension)),
       mShaderType(static_cast<uint8_t>(shaderType)),
       mESSLVersion(esslVersion < 0 ? std::numeric_limits<uint16_t>::max()
                                    : static_cast<uint16_t>(esslVersion)),
@@ -307,8 +296,6 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
                             ShShaderSpec spec,
                             const ShBuiltInResources &resources);
     void clearCompilationResults();
-
-    ShShaderSpec getShaderSpec() const { return mShaderSpec; }
 
   private:
     friend class TSymbolUniqueId;

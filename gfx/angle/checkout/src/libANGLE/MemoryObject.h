@@ -38,8 +38,6 @@ class MemoryObject final : public RefCountObject<MemoryObjectID>
 
     angle::Result setDedicatedMemory(const Context *context, bool dedicatedMemory);
     bool isDedicatedMemory() const { return mDedicatedMemory; }
-    angle::Result setProtectedMemory(const Context *context, bool protectedMemory);
-    bool isProtectedMemory() const { return mProtectedMemory; }
 
     angle::Result importFd(Context *context, GLuint64 size, HandleType handleType, GLint fd);
     angle::Result importZirconHandle(Context *context,
@@ -52,7 +50,6 @@ class MemoryObject final : public RefCountObject<MemoryObjectID>
 
     bool mImmutable;
     bool mDedicatedMemory;
-    bool mProtectedMemory;
 };
 
 }  // namespace gl

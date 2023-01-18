@@ -21,13 +21,13 @@ class TIntermBlock;
 class TSymbolTable;
 
 #ifdef ANGLE_ENABLE_GLSL
-[[nodiscard]] bool ClampFragDepth(TCompiler *compiler,
-                                  TIntermBlock *root,
-                                  TSymbolTable *symbolTable);
+ANGLE_NO_DISCARD bool ClampFragDepth(TCompiler *compiler,
+                                     TIntermBlock *root,
+                                     TSymbolTable *symbolTable);
 #else
-[[nodiscard]] ANGLE_INLINE bool ClampFragDepth(TCompiler *compiler,
-                                               TIntermBlock *root,
-                                               TSymbolTable *symbolTable)
+ANGLE_NO_DISCARD ANGLE_INLINE bool ClampFragDepth(TCompiler *compiler,
+                                                  TIntermBlock *root,
+                                                  TSymbolTable *symbolTable)
 {
     UNREACHABLE();
     return false;

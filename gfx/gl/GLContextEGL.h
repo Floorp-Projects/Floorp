@@ -37,13 +37,12 @@ class GLContextEGL final : public GLContext {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
 
   static RefPtr<GLContextEGL> CreateGLContext(
-      std::shared_ptr<EglDisplay>, const GLContextDesc&,
-      EGLConfig surfaceConfig, EGLSurface surface, const bool useGles,
-      EGLConfig contextConfig, nsACString* const out_failureId);
+      std::shared_ptr<EglDisplay>, const GLContextDesc&, EGLConfig config,
+      EGLSurface surface, const bool useGles, nsACString* const out_failureId);
 
  private:
   GLContextEGL(std::shared_ptr<EglDisplay>, const GLContextDesc&,
-               EGLConfig surfaceConfig, EGLSurface surface, EGLContext context);
+               EGLConfig config, EGLSurface surface, EGLContext context);
   ~GLContextEGL();
 
  public:
@@ -101,9 +100,12 @@ class GLContextEGL final : public GLContext {
 
   void Destroy();
 
-  static RefPtr<GLContextEGL> CreateWithoutSurface(
+  static RefPtr<GLContextEGL> CreateEGLPBufferOffscreenContext(
       std::shared_ptr<EglDisplay>, const GLContextCreateDesc&,
-      nsACString* const out_FailureId);
+      const gfx::IntSize& size, nsACString* const out_FailureId);
+  static RefPtr<GLContextEGL> CreateEGLPBufferOffscreenContextImpl(
+      std::shared_ptr<EglDisplay>, const GLContextCreateDesc&,
+      const gfx::IntSize& size, bool aUseGles, nsACString* const out_FailureId);
   static RefPtr<GLContextEGL> CreateEGLSurfacelessContext(
       const std::shared_ptr<EglDisplay> display,
       const GLContextCreateDesc& desc, nsACString* const out_failureId);
@@ -123,7 +125,7 @@ class GLContextEGL final : public GLContext {
 
  public:
   const std::shared_ptr<EglDisplay> mEgl;
-  const EGLConfig mSurfaceConfig;
+  const EGLConfig mConfig;
   const EGLContext mContext;
 
  protected:

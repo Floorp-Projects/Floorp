@@ -49,11 +49,11 @@ angle::Result IndexBuffer11::initialize(const gl::Context *context,
 
         if (dynamic)
         {
-            mBuffer.setInternalName("IndexBuffer11(dynamic)");
+            mBuffer.setDebugName("IndexBuffer11 (dynamic)");
         }
         else
         {
-            mBuffer.setInternalName("IndexBuffer11(static)");
+            mBuffer.setDebugName("IndexBuffer11 (static)");
         }
     }
 

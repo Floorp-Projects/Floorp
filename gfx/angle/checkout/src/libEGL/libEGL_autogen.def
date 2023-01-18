@@ -91,17 +91,10 @@ EXPORTS
     eglQueryDisplayAttribANGLE
     eglQueryStringiANGLE
 
-    ; EGL_ANGLE_metal_shared_event_sync
-    eglCopyMetalSharedEventANGLE
-
     ; EGL_ANGLE_power_preference
-    eglForceGPUSwitchANGLE
     eglHandleGPUSwitchANGLE
     eglReacquireHighPowerGPUANGLE
     eglReleaseHighPowerGPUANGLE
-
-    ; EGL_ANGLE_prepare_swap_buffers
-    eglPrepareSwapBuffersANGLE
 
     ; EGL_ANGLE_program_cache_control
     eglProgramCacheGetAttribANGLE
@@ -122,9 +115,6 @@ EXPORTS
     ; EGL_ANGLE_sync_control_rate
     eglGetMscRateANGLE
 
-    ; EGL_ANGLE_vulkan_image
-    eglExportVkImageANGLE
-
     ; EGL_CHROMIUM_sync_control
     eglGetSyncValuesCHROMIUM
 
@@ -132,10 +122,6 @@ EXPORTS
     eglQueryDeviceAttribEXT
     eglQueryDeviceStringEXT
     eglQueryDisplayAttribEXT
-
-    ; EGL_EXT_image_dma_buf_import_modifiers
-    eglQueryDmaBufFormatsEXT
-    eglQueryDmaBufModifiersEXT
 
     ; EGL_EXT_platform_base
     eglCreatePlatformPixmapSurfaceEXT
@@ -156,14 +142,6 @@ EXPORTS
     ; EGL_KHR_image
     eglCreateImageKHR
     eglDestroyImageKHR
-
-    ; EGL_KHR_lock_surface3
-    eglLockSurfaceKHR
-    eglQuerySurface64KHR
-    eglUnlockSurfaceKHR
-
-    ; EGL_KHR_partial_update
-    eglSetDamageRegionKHR
 
     ; EGL_KHR_reusable_sync
     eglSignalSyncKHR

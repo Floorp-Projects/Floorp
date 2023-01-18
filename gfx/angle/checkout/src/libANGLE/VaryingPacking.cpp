@@ -1016,6 +1016,8 @@ bool ProgramVaryingPacking::collectAndPackUserVaryings(InfoLog &infoLog,
     // Special case for start-after-vertex.
     if (frontShaderStage != ShaderType::Vertex)
     {
+        ASSERT(isSeparableProgram);
+
         ShaderType emulatedFrontShaderStage = ShaderType::Vertex;
         ShaderType backShaderStage          = frontShaderStage;
 
@@ -1060,6 +1062,8 @@ bool ProgramVaryingPacking::collectAndPackUserVaryings(InfoLog &infoLog,
     // Special case for stop-before-fragment.
     if (frontShaderStage != ShaderType::Fragment)
     {
+        ASSERT(isSeparableProgram);
+
         if (!mVaryingPackings[frontShaderStage].collectAndPackUserVaryings(
                 infoLog, GetMaxShaderOutputVectors(caps, frontShaderStage), packMode,
                 frontShaderStage, ShaderType::InvalidEnum, mergedVaryings, tfVaryings,
@@ -1075,22 +1079,27 @@ bool ProgramVaryingPacking::collectAndPackUserVaryings(InfoLog &infoLog,
     return true;
 }
 
-ProgramMergedVaryings GetMergedVaryingsFromLinkingVariables(
-    const LinkingVariables &linkingVariables)
+ProgramMergedVaryings GetMergedVaryingsFromShaders(const HasAttachedShaders &programOrPipeline,
+                                                   const ProgramExecutable &programExecutable)
 {
     ShaderType frontShaderType = ShaderType::InvalidEnum;
     ProgramMergedVaryings merged;
 
     for (ShaderType backShaderType : kAllGraphicsShaderTypes)
     {
-        if (!linkingVariables.isShaderStageUsedBitset[backShaderType])
+        Shader *backShader = programOrPipeline.getAttachedShader(backShaderType);
+
+        if (!backShader && !programExecutable.hasLinkedShaderStage(backShaderType))
         {
             continue;
         }
+
         const std::vector<sh::ShaderVariable> &backShaderOutputVaryings =
-            linkingVariables.outputVaryings[backShaderType];
+            backShader ? backShader->getOutputVaryings()
+                       : programExecutable.getLinkedOutputVaryings(backShaderType);
         const std::vector<sh::ShaderVariable> &backShaderInputVaryings =
-            linkingVariables.inputVaryings[backShaderType];
+            backShader ? backShader->getInputVaryings()
+                       : programExecutable.getLinkedInputVaryings(backShaderType);
 
         // Add outputs. These are always unmatched since we walk shader stages sequentially.
         for (const sh::ShaderVariable &frontVarying : backShaderOutputVaryings)

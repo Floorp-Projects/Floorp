@@ -276,18 +276,16 @@ const d3d11::DepthStencilView &TextureRenderTarget11::getDepthStencilView() cons
     return mDepthStencil;
 }
 
-angle::Result TextureRenderTarget11::getShaderResourceView(const gl::Context *context,
-                                                           const d3d11::SharedSRV **outSRV)
+const d3d11::SharedSRV &TextureRenderTarget11::getShaderResourceView(
+    const gl::Context *context) const
 {
-    *outSRV = &mShaderResource;
-    return angle::Result::Continue;
+    return mShaderResource;
 }
 
-angle::Result TextureRenderTarget11::getBlitShaderResourceView(const gl::Context *context,
-                                                               const d3d11::SharedSRV **outSRV)
+const d3d11::SharedSRV &TextureRenderTarget11::getBlitShaderResourceView(
+    const gl::Context *context) const
 {
-    *outSRV = &mBlitShaderResource;
-    return angle::Result::Continue;
+    return mBlitShaderResource;
 }
 
 GLsizei TextureRenderTarget11::getWidth() const
@@ -374,25 +372,18 @@ const d3d11::DepthStencilView &SurfaceRenderTarget11::getDepthStencilView() cons
     return mSwapChain->getDepthStencil();
 }
 
-angle::Result SurfaceRenderTarget11::getShaderResourceView(const gl::Context *context,
-                                                           const d3d11::SharedSRV **outSRV)
+const d3d11::SharedSRV &SurfaceRenderTarget11::getShaderResourceView(
+    const gl::Context *context) const
 {
-    if (mDepth)
-    {
-        *outSRV = &mSwapChain->getDepthStencilShaderResource();
-    }
-    else
-    {
-        ANGLE_TRY(mSwapChain->getRenderTargetShaderResource(GetImplAs<Context11>(context), outSRV));
-    }
-    return angle::Result::Continue;
+    return (mDepth ? mSwapChain->getDepthStencilShaderResource()
+                   : mSwapChain->getRenderTargetShaderResource(GetImplAs<Context11>(context)));
 }
 
-angle::Result SurfaceRenderTarget11::getBlitShaderResourceView(const gl::Context *context,
-                                                               const d3d11::SharedSRV **outSRV)
+const d3d11::SharedSRV &SurfaceRenderTarget11::getBlitShaderResourceView(
+    const gl::Context *context) const
 {
     // The SurfaceRenderTargetView format should always be such that the normal SRV works for blits.
-    return getShaderResourceView(context, outSRV);
+    return getShaderResourceView(context);
 }
 
 unsigned int SurfaceRenderTarget11::getSubresourceIndex() const

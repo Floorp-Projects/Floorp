@@ -27,7 +27,7 @@ namespace
 class RewriteAssignToSwizzledTraverser : public TIntermTraverser
 {
   public:
-    [[nodiscard]] static bool rewrite(TCompiler *compiler, TIntermBlock *root);
+    ANGLE_NO_DISCARD static bool rewrite(TCompiler *compiler, TIntermBlock *root);
 
   private:
     RewriteAssignToSwizzledTraverser();

@@ -7,8 +7,6 @@
 // SystemInfo_vulkan.cpp: Generic vulkan implementation of SystemInfo.h
 // TODO: Use VK_KHR_driver_properties. http://anglebug.com/5103
 
-#include "gpu_info_util/SystemInfo_vulkan.h"
-
 #include <vulkan/vulkan.h>
 #include "gpu_info_util/SystemInfo_internal.h"
 
@@ -18,7 +16,12 @@
 #include "common/angleutils.h"
 #include "common/debug.h"
 #include "common/system_utils.h"
-#include "common/vulkan/libvulkan_loader.h"
+
+#if defined(ANGLE_PLATFORM_WINDOWS)
+const char *kLibVulkanNames[] = {"vulkan-1.dll"};
+#else
+const char *kLibVulkanNames[] = {"libvulkan.so", "libvulkan.so.1"};
+#endif
 
 namespace angle
 {
@@ -37,13 +40,27 @@ class VulkanLibrary final : NonCopyable
                 pfnDestroyInstance(mInstance, nullptr);
             }
         }
-
-        CloseSystemLibrary(mLibVulkan);
+        SafeDelete(mLibVulkan);
     }
 
     VkInstance getVulkanInstance()
     {
-        mLibVulkan = vk::OpenLibVulkan();
+        for (const char *libraryName : kLibVulkanNames)
+        {
+            mLibVulkan = OpenSharedLibraryWithExtension(libraryName);
+            if (mLibVulkan)
+            {
+                if (mLibVulkan->getNative())
+                {
+                    break;
+                }
+                else
+                {
+                    SafeDelete(mLibVulkan);
+                }
+            }
+        }
+
         if (!mLibVulkan)
         {
             // If Vulkan doesn't exist, bail-out early:
@@ -95,11 +112,11 @@ class VulkanLibrary final : NonCopyable
     template <typename Func>
     Func getProc(const char *fn) const
     {
-        return reinterpret_cast<Func>(angle::GetLibrarySymbol(mLibVulkan, fn));
+        return reinterpret_cast<Func>(mLibVulkan->getSymbol(fn));
     }
 
   private:
-    void *mLibVulkan     = nullptr;
+    Library *mLibVulkan  = nullptr;
     VkInstance mInstance = VK_NULL_HANDLE;
 };
 
@@ -118,14 +135,6 @@ std::string FormatString(const char *fmt, ...)
 
 bool GetSystemInfoVulkan(SystemInfo *info)
 {
-    return GetSystemInfoVulkanWithICD(info, vk::ICD::Default);
-}
-
-bool GetSystemInfoVulkanWithICD(SystemInfo *info, vk::ICD preferredICD)
-{
-    const bool enableValidationLayers = false;
-    vk::ScopedVkLoaderEnvironment scopedEnvironment(enableValidationLayers, preferredICD);
-
     // This implementation builds on top of the Vulkan API, but cannot assume the existence of the
     // Vulkan library.  ANGLE can be installed on versions of Android as old as Ice Cream Sandwich.
     // Therefore, we need to use dlopen()/dlsym() in order to see if Vulkan is installed on the
@@ -143,10 +152,8 @@ bool GetSystemInfoVulkanWithICD(SystemInfo *info, vk::ICD preferredICD)
         vkLibrary.getProc<PFN_vkEnumeratePhysicalDevices>("vkEnumeratePhysicalDevices");
     auto pfnGetPhysicalDeviceProperties =
         vkLibrary.getProc<PFN_vkGetPhysicalDeviceProperties>("vkGetPhysicalDeviceProperties");
-    auto pfnGetPhysicalDeviceProperties2 =
-        vkLibrary.getProc<PFN_vkGetPhysicalDeviceProperties2>("vkGetPhysicalDeviceProperties2");
     uint32_t physicalDeviceCount = 0;
-    if (!pfnEnumeratePhysicalDevices || !pfnGetPhysicalDeviceProperties ||
+    if (!pfnEnumeratePhysicalDevices ||
         pfnEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr) != VK_SUCCESS)
     {
         return false;
@@ -163,23 +170,8 @@ bool GetSystemInfoVulkanWithICD(SystemInfo *info, vk::ICD preferredICD)
 
     for (uint32_t i = 0; i < physicalDeviceCount; i++)
     {
-        VkPhysicalDeviceDriverProperties driverProperties = {};
-        driverProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES;
-
-        VkPhysicalDeviceProperties2 properties2 = {};
-        properties2.sType                       = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-        properties2.pNext                       = &driverProperties;
-
-        VkPhysicalDeviceProperties &properties = properties2.properties;
+        VkPhysicalDeviceProperties properties;
         pfnGetPhysicalDeviceProperties(physicalDevices[i], &properties);
-
-        // vkGetPhysicalDeviceProperties2() is supported since 1.1
-        // Use vkGetPhysicalDeviceProperties2() to get driver information.
-        if (properties.apiVersion >= VK_API_VERSION_1_1)
-        {
-            pfnGetPhysicalDeviceProperties2(physicalDevices[i], &properties2);
-        }
-
         // Fill in data for a given physical device (a.k.a. gpu):
         GPUDeviceInfo &gpu = info->gpus[i];
         gpu.vendorId       = properties.vendorID;
@@ -188,8 +180,6 @@ bool GetSystemInfoVulkanWithICD(SystemInfo *info, vk::ICD preferredICD)
         //
         // TODO(ianelliott): Determine the formatting used for each vendor
         // (http://anglebug.com/2677)
-        // TODO(http://anglebug.com/7677): Use driverID instead of the hardware vendorID to detect
-        // driveVendor, etc.
         switch (properties.vendorID)
         {
             case kVendorID_AMD:
@@ -204,11 +194,6 @@ bool GetSystemInfoVulkanWithICD(SystemInfo *info, vk::ICD preferredICD)
                 break;
             case kVendorID_Broadcom:
                 gpu.driverVendor                = "Broadcom";
-                gpu.driverVersion               = FormatString("0x%x", properties.driverVersion);
-                gpu.detailedDriverVersion.major = properties.driverVersion;
-                break;
-            case kVendorID_GOOGLE:
-                gpu.driverVendor                = "Google";
                 gpu.driverVersion               = FormatString("0x%x", properties.driverVersion);
                 gpu.detailedDriverVersion.major = properties.driverVersion;
                 break;
@@ -265,17 +250,10 @@ bool GetSystemInfoVulkanWithICD(SystemInfo *info, vk::ICD preferredICD)
                 gpu.driverVersion               = FormatString("0x%x", properties.driverVersion);
                 gpu.detailedDriverVersion.major = properties.driverVersion;
                 break;
-            case kVendorID_Mesa:
-                gpu.driverVendor                = "Mesa";
-                gpu.driverVersion               = FormatString("0x%x", properties.driverVersion);
-                gpu.detailedDriverVersion.major = properties.driverVersion;
-                break;
             default:
                 return false;
         }
-        gpu.driverId         = static_cast<DriverID>(driverProperties.driverID);
-        gpu.driverApiVersion = properties.apiVersion;
-        gpu.driverDate       = "";
+        gpu.driverDate = "";
     }
 
     return true;

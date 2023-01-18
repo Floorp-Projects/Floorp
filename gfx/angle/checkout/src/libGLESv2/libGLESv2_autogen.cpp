@@ -16,13 +16,6 @@
 #include "libGLESv2/entry_points_gles_3_2_autogen.h"
 #include "libGLESv2/entry_points_gles_ext_autogen.h"
 
-#if defined(ANGLE_ENABLE_GL_DESKTOP_FRONTEND)
-#    include "libGLESv2/entry_points_gl_1_autogen.h"
-#    include "libGLESv2/entry_points_gl_2_autogen.h"
-#    include "libGLESv2/entry_points_gl_3_autogen.h"
-#    include "libGLESv2/entry_points_gl_4_autogen.h"
-#endif
-
 #include "common/event_tracer.h"
 
 extern "C" {
@@ -592,11 +585,11 @@ void GL_APIENTRY glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 
 void GL_APIENTRY glShaderBinary(GLsizei count,
                                 const GLuint *shaders,
-                                GLenum binaryFormat,
+                                GLenum binaryformat,
                                 const void *binary,
                                 GLsizei length)
 {
-    return GL_ShaderBinary(count, shaders, binaryFormat, binary, length);
+    return GL_ShaderBinary(count, shaders, binaryformat, binary, length);
 }
 
 void GL_APIENTRY glShaderSource(GLuint shader,
@@ -1147,10 +1140,10 @@ void GL_APIENTRY glGetIntegeri_v(GLenum target, GLuint index, GLint *data)
 void GL_APIENTRY glGetInternalformativ(GLenum target,
                                        GLenum internalformat,
                                        GLenum pname,
-                                       GLsizei count,
+                                       GLsizei bufSize,
                                        GLint *params)
 {
-    return GL_GetInternalformativ(target, internalformat, pname, count, params);
+    return GL_GetInternalformativ(target, internalformat, pname, bufSize, params);
 }
 
 void GL_APIENTRY glGetProgramBinary(GLuint program,
@@ -1188,9 +1181,9 @@ const GLubyte *GL_APIENTRY glGetStringi(GLenum name, GLuint index)
 }
 
 void GL_APIENTRY
-glGetSynciv(GLsync sync, GLenum pname, GLsizei count, GLsizei *length, GLint *values)
+glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
 {
-    return GL_GetSynciv(sync, pname, count, length, values);
+    return GL_GetSynciv(sync, pname, bufSize, length, values);
 }
 
 void GL_APIENTRY glGetTransformFeedbackVarying(GLuint program,
@@ -1666,11 +1659,11 @@ void GL_APIENTRY glGetProgramResourceiv(GLuint program,
                                         GLuint index,
                                         GLsizei propCount,
                                         const GLenum *props,
-                                        GLsizei count,
+                                        GLsizei bufSize,
                                         GLsizei *length,
                                         GLint *params)
 {
-    return GL_GetProgramResourceiv(program, programInterface, index, propCount, props, count,
+    return GL_GetProgramResourceiv(program, programInterface, index, propCount, props, bufSize,
                                    length, params);
 }
 
@@ -2720,87 +2713,6 @@ void GL_APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, const 
     return GL_VertexPointer(size, type, stride, pointer);
 }
 
-// GL_AMD_performance_monitor
-void GL_APIENTRY glBeginPerfMonitorAMD(GLuint monitor)
-{
-    return GL_BeginPerfMonitorAMD(monitor);
-}
-
-void GL_APIENTRY glDeletePerfMonitorsAMD(GLsizei n, GLuint *monitors)
-{
-    return GL_DeletePerfMonitorsAMD(n, monitors);
-}
-
-void GL_APIENTRY glEndPerfMonitorAMD(GLuint monitor)
-{
-    return GL_EndPerfMonitorAMD(monitor);
-}
-
-void GL_APIENTRY glGenPerfMonitorsAMD(GLsizei n, GLuint *monitors)
-{
-    return GL_GenPerfMonitorsAMD(n, monitors);
-}
-
-void GL_APIENTRY glGetPerfMonitorCounterDataAMD(GLuint monitor,
-                                                GLenum pname,
-                                                GLsizei dataSize,
-                                                GLuint *data,
-                                                GLint *bytesWritten)
-{
-    return GL_GetPerfMonitorCounterDataAMD(monitor, pname, dataSize, data, bytesWritten);
-}
-
-void GL_APIENTRY glGetPerfMonitorCounterInfoAMD(GLuint group,
-                                                GLuint counter,
-                                                GLenum pname,
-                                                void *data)
-{
-    return GL_GetPerfMonitorCounterInfoAMD(group, counter, pname, data);
-}
-
-void GL_APIENTRY glGetPerfMonitorCounterStringAMD(GLuint group,
-                                                  GLuint counter,
-                                                  GLsizei bufSize,
-                                                  GLsizei *length,
-                                                  GLchar *counterString)
-{
-    return GL_GetPerfMonitorCounterStringAMD(group, counter, bufSize, length, counterString);
-}
-
-void GL_APIENTRY glGetPerfMonitorCountersAMD(GLuint group,
-                                             GLint *numCounters,
-                                             GLint *maxActiveCounters,
-                                             GLsizei counterSize,
-                                             GLuint *counters)
-{
-    return GL_GetPerfMonitorCountersAMD(group, numCounters, maxActiveCounters, counterSize,
-                                        counters);
-}
-
-void GL_APIENTRY glGetPerfMonitorGroupStringAMD(GLuint group,
-                                                GLsizei bufSize,
-                                                GLsizei *length,
-                                                GLchar *groupString)
-{
-    return GL_GetPerfMonitorGroupStringAMD(group, bufSize, length, groupString);
-}
-
-void GL_APIENTRY glGetPerfMonitorGroupsAMD(GLint *numGroups, GLsizei groupsSize, GLuint *groups)
-{
-    return GL_GetPerfMonitorGroupsAMD(numGroups, groupsSize, groups);
-}
-
-void GL_APIENTRY glSelectPerfMonitorCountersAMD(GLuint monitor,
-                                                GLboolean enable,
-                                                GLuint group,
-                                                GLint numCounters,
-                                                GLuint *counterList)
-{
-    return GL_SelectPerfMonitorCountersAMD(monitor, enable, group, numCounters, counterList);
-}
-
-// GL_ANDROID_extension_pack_es31a
-
 // GL_ANGLE_base_vertex_base_instance
 void GL_APIENTRY glDrawArraysInstancedBaseInstanceANGLE(GLenum mode,
                                                         GLint first,
@@ -2815,12 +2727,12 @@ void GL_APIENTRY glDrawElementsInstancedBaseVertexBaseInstanceANGLE(GLenum mode,
                                                                     GLsizei count,
                                                                     GLenum type,
                                                                     const GLvoid *indices,
-                                                                    GLsizei instanceCount,
+                                                                    GLsizei instanceCounts,
                                                                     GLint baseVertex,
                                                                     GLuint baseInstance)
 {
     return GL_DrawElementsInstancedBaseVertexBaseInstanceANGLE(
-        mode, count, type, indices, instanceCount, baseVertex, baseInstance);
+        mode, count, type, indices, instanceCounts, baseVertex, baseInstance);
 }
 
 void GL_APIENTRY glMultiDrawArraysInstancedBaseInstanceANGLE(GLenum mode,
@@ -2888,8 +2800,6 @@ void GL_APIENTRY glCopySubTexture3DANGLE(GLuint sourceId,
                                     unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
 }
 
-// GL_ANGLE_depth_texture
-
 // GL_ANGLE_framebuffer_blit
 void GL_APIENTRY glBlitFramebufferANGLE(GLint srcX0,
                                         GLint srcY0,
@@ -2921,11 +2831,6 @@ void GL_APIENTRY
 glGetTexImageANGLE(GLenum target, GLint level, GLenum format, GLenum type, void *pixels)
 {
     return GL_GetTexImageANGLE(target, level, format, type, pixels);
-}
-
-void GL_APIENTRY glGetCompressedTexImageANGLE(GLenum target, GLint level, void *pixels)
-{
-    return GL_GetCompressedTexImageANGLE(target, level, pixels);
 }
 
 void GL_APIENTRY glGetRenderbufferImageANGLE(GLenum target,
@@ -2976,12 +2881,6 @@ void GL_APIENTRY glVertexAttribDivisorANGLE(GLuint index, GLuint divisor)
     return GL_VertexAttribDivisorANGLE(index, divisor);
 }
 
-// GL_ANGLE_logic_op
-void GL_APIENTRY glLogicOpANGLE(GLenum opcode)
-{
-    return GL_LogicOpANGLE(opcode);
-}
-
 // GL_ANGLE_memory_object_flags
 void GL_APIENTRY glTexStorageMemFlags2DANGLE(GLenum target,
                                              GLsizei levels,
@@ -2991,11 +2890,10 @@ void GL_APIENTRY glTexStorageMemFlags2DANGLE(GLenum target,
                                              GLuint memory,
                                              GLuint64 offset,
                                              GLbitfield createFlags,
-                                             GLbitfield usageFlags,
-                                             const void *imageCreateInfoPNext)
+                                             GLbitfield usageFlags)
 {
     return GL_TexStorageMemFlags2DANGLE(target, levels, internalFormat, width, height, memory,
-                                        offset, createFlags, usageFlags, imageCreateInfoPNext);
+                                        offset, createFlags, usageFlags);
 }
 
 void GL_APIENTRY glTexStorageMemFlags2DMultisampleANGLE(GLenum target,
@@ -3007,12 +2905,11 @@ void GL_APIENTRY glTexStorageMemFlags2DMultisampleANGLE(GLenum target,
                                                         GLuint memory,
                                                         GLuint64 offset,
                                                         GLbitfield createFlags,
-                                                        GLbitfield usageFlags,
-                                                        const void *imageCreateInfoPNext)
+                                                        GLbitfield usageFlags)
 {
     return GL_TexStorageMemFlags2DMultisampleANGLE(target, samples, internalFormat, width, height,
                                                    fixedSampleLocations, memory, offset,
-                                                   createFlags, usageFlags, imageCreateInfoPNext);
+                                                   createFlags, usageFlags);
 }
 
 void GL_APIENTRY glTexStorageMemFlags3DANGLE(GLenum target,
@@ -3024,12 +2921,10 @@ void GL_APIENTRY glTexStorageMemFlags3DANGLE(GLenum target,
                                              GLuint memory,
                                              GLuint64 offset,
                                              GLbitfield createFlags,
-                                             GLbitfield usageFlags,
-                                             const void *imageCreateInfoPNext)
+                                             GLbitfield usageFlags)
 {
     return GL_TexStorageMemFlags3DANGLE(target, levels, internalFormat, width, height, depth,
-                                        memory, offset, createFlags, usageFlags,
-                                        imageCreateInfoPNext);
+                                        memory, offset, createFlags, usageFlags);
 }
 
 void GL_APIENTRY glTexStorageMemFlags3DMultisampleANGLE(GLenum target,
@@ -3042,12 +2937,11 @@ void GL_APIENTRY glTexStorageMemFlags3DMultisampleANGLE(GLenum target,
                                                         GLuint memory,
                                                         GLuint64 offset,
                                                         GLbitfield createFlags,
-                                                        GLbitfield usageFlags,
-                                                        const void *imageCreateInfoPNext)
+                                                        GLbitfield usageFlags)
 {
     return GL_TexStorageMemFlags3DMultisampleANGLE(target, samples, internalFormat, width, height,
                                                    depth, fixedSampleLocations, memory, offset,
-                                                   createFlags, usageFlags, imageCreateInfoPNext);
+                                                   createFlags, usageFlags);
 }
 
 // GL_ANGLE_memory_object_fuchsia
@@ -3096,8 +2990,6 @@ void GL_APIENTRY glMultiDrawElementsInstancedANGLE(GLenum mode,
     return GL_MultiDrawElementsInstancedANGLE(mode, counts, type, indices, instanceCounts,
                                               drawcount);
 }
-
-// GL_ANGLE_pack_reverse_row_order
 
 // GL_ANGLE_program_binary
 
@@ -3758,8 +3650,6 @@ void GL_APIENTRY glGetQueryObjectui64vRobustANGLE(GLuint id,
     return GL_GetQueryObjectui64vRobustANGLE(id, pname, bufSize, length, params);
 }
 
-// GL_ANGLE_robust_resource_initialization
-
 // GL_ANGLE_semaphore_fuchsia
 void GL_APIENTRY glImportSemaphoreZirconHandleANGLE(GLuint semaphore,
                                                     GLenum handleType,
@@ -3767,41 +3657,6 @@ void GL_APIENTRY glImportSemaphoreZirconHandleANGLE(GLuint semaphore,
 {
     return GL_ImportSemaphoreZirconHandleANGLE(semaphore, handleType, handle);
 }
-
-// GL_ANGLE_shader_pixel_local_storage
-void GL_APIENTRY glFramebufferMemorylessPixelLocalStorageANGLE(GLint plane, GLenum internalformat)
-{
-    return GL_FramebufferMemorylessPixelLocalStorageANGLE(plane, internalformat);
-}
-
-void GL_APIENTRY glFramebufferTexturePixelLocalStorageANGLE(GLint plane,
-                                                            GLuint backingtexture,
-                                                            GLint level,
-                                                            GLint layer)
-{
-    return GL_FramebufferTexturePixelLocalStorageANGLE(plane, backingtexture, level, layer);
-}
-
-void GL_APIENTRY glBeginPixelLocalStorageANGLE(GLsizei planes,
-                                               const GLenum *loadops,
-                                               const void *cleardata)
-{
-    return GL_BeginPixelLocalStorageANGLE(planes, loadops, cleardata);
-}
-
-void GL_APIENTRY glEndPixelLocalStorageANGLE()
-{
-    return GL_EndPixelLocalStorageANGLE();
-}
-
-void GL_APIENTRY glPixelLocalStorageBarrierANGLE()
-{
-    return GL_PixelLocalStorageBarrierANGLE();
-}
-
-// GL_ANGLE_texture_compression_dxt3
-
-// GL_ANGLE_texture_compression_dxt5
 
 // GL_ANGLE_texture_external_update
 void GL_APIENTRY glTexImage2DExternalANGLE(GLenum target,
@@ -3844,33 +3699,14 @@ void GL_APIENTRY glSampleMaskiANGLE(GLuint maskNumber, GLbitfield mask)
     return GL_SampleMaskiANGLE(maskNumber, mask);
 }
 
-// GL_ANGLE_texture_usage
-
 // GL_ANGLE_translated_shader_source
 void GL_APIENTRY glGetTranslatedShaderSourceANGLE(GLuint shader,
-                                                  GLsizei bufSize,
+                                                  GLsizei bufsize,
                                                   GLsizei *length,
                                                   GLchar *source)
 {
-    return GL_GetTranslatedShaderSourceANGLE(shader, bufSize, length, source);
+    return GL_GetTranslatedShaderSourceANGLE(shader, bufsize, length, source);
 }
-
-// GL_ANGLE_vulkan_image
-void GL_APIENTRY glAcquireTexturesANGLE(GLuint numTextures,
-                                        const GLuint *textures,
-                                        const GLenum *layouts)
-{
-    return GL_AcquireTexturesANGLE(numTextures, textures, layouts);
-}
-
-void GL_APIENTRY glReleaseTexturesANGLE(GLuint numTextures, const GLuint *textures, GLenum *layouts)
-{
-    return GL_ReleaseTexturesANGLE(numTextures, textures, layouts);
-}
-
-// GL_APPLE_clip_distance
-
-// GL_ARB_sync
 
 // GL_CHROMIUM_bind_uniform_location
 void GL_APIENTRY glBindUniformLocationCHROMIUM(GLuint program, GLint location, const GLchar *name)
@@ -3935,55 +3771,7 @@ void GL_APIENTRY glLoseContextCHROMIUM(GLenum current, GLenum other)
 
 // GL_EXT_EGL_image_array
 
-// GL_EXT_EGL_image_storage
-void GL_APIENTRY glEGLImageTargetTexStorageEXT(GLenum target,
-                                               GLeglImageOES image,
-                                               const GLint *attrib_list)
-{
-    return GL_EGLImageTargetTexStorageEXT(target, image, attrib_list);
-}
-
-void GL_APIENTRY glEGLImageTargetTextureStorageEXT(GLuint texture,
-                                                   GLeglImageOES image,
-                                                   const GLint *attrib_list)
-{
-    return GL_EGLImageTargetTextureStorageEXT(texture, image, attrib_list);
-}
-
 // GL_EXT_YUV_target
-
-// GL_EXT_base_instance
-void GL_APIENTRY glDrawArraysInstancedBaseInstanceEXT(GLenum mode,
-                                                      GLint first,
-                                                      GLsizei count,
-                                                      GLsizei instancecount,
-                                                      GLuint baseinstance)
-{
-    return GL_DrawArraysInstancedBaseInstanceEXT(mode, first, count, instancecount, baseinstance);
-}
-
-void GL_APIENTRY glDrawElementsInstancedBaseInstanceEXT(GLenum mode,
-                                                        GLsizei count,
-                                                        GLenum type,
-                                                        const void *indices,
-                                                        GLsizei instancecount,
-                                                        GLuint baseinstance)
-{
-    return GL_DrawElementsInstancedBaseInstanceEXT(mode, count, type, indices, instancecount,
-                                                   baseinstance);
-}
-
-void GL_APIENTRY glDrawElementsInstancedBaseVertexBaseInstanceEXT(GLenum mode,
-                                                                  GLsizei count,
-                                                                  GLenum type,
-                                                                  const void *indices,
-                                                                  GLsizei instancecount,
-                                                                  GLint basevertex,
-                                                                  GLuint baseinstance)
-{
-    return GL_DrawElementsInstancedBaseVertexBaseInstanceEXT(
-        mode, count, type, indices, instancecount, basevertex, baseinstance);
-}
 
 // GL_EXT_blend_func_extended
 void GL_APIENTRY glBindFragDataLocationEXT(GLuint program, GLuint color, const GLchar *name)
@@ -4011,8 +3799,6 @@ GLint GL_APIENTRY glGetProgramResourceLocationIndexEXT(GLuint program,
     return GL_GetProgramResourceLocationIndexEXT(program, programInterface, name);
 }
 
-// GL_EXT_blend_minmax
-
 // GL_EXT_buffer_storage
 void GL_APIENTRY glBufferStorageEXT(GLenum target,
                                     GLsizeiptr size,
@@ -4027,12 +3813,6 @@ void GL_APIENTRY glClipControlEXT(GLenum origin, GLenum depth)
 {
     return GL_ClipControlEXT(origin, depth);
 }
-
-// GL_EXT_clip_cull_distance
-
-// GL_EXT_color_buffer_float
-
-// GL_EXT_color_buffer_half_float
 
 // GL_EXT_copy_image
 void GL_APIENTRY glCopyImageSubDataEXT(GLuint srcName,
@@ -4237,10 +4017,10 @@ void GL_APIENTRY glMultiDrawElementsBaseVertexEXT(GLenum mode,
                                                   const GLsizei *count,
                                                   GLenum type,
                                                   const void *const *indices,
-                                                  GLsizei drawcount,
+                                                  GLsizei primcount,
                                                   const GLint *basevertex)
 {
-    return GL_MultiDrawElementsBaseVertexEXT(mode, count, type, indices, drawcount, basevertex);
+    return GL_MultiDrawElementsBaseVertexEXT(mode, count, type, indices, primcount, basevertex);
 }
 
 // GL_EXT_external_buffer
@@ -4262,8 +4042,6 @@ void GL_APIENTRY glNamedBufferStorageExternalEXT(GLuint buffer,
     return GL_NamedBufferStorageExternalEXT(buffer, offset, size, clientBuffer, flags);
 }
 
-// GL_EXT_float_blend
-
 // GL_EXT_geometry_shader
 void GL_APIENTRY glFramebufferTextureEXT(GLenum target,
                                          GLenum attachment,
@@ -4272,8 +4050,6 @@ void GL_APIENTRY glFramebufferTextureEXT(GLenum target,
 {
     return GL_FramebufferTextureEXT(target, attachment, texture, level);
 }
-
-// GL_EXT_gpu_shader5
 
 // GL_EXT_instanced_arrays
 void GL_APIENTRY glDrawArraysInstancedEXT(GLenum mode,
@@ -4415,24 +4191,6 @@ void GL_APIENTRY glImportMemoryFdEXT(GLuint memory, GLuint64 size, GLenum handle
     return GL_ImportMemoryFdEXT(memory, size, handleType, fd);
 }
 
-// GL_EXT_multi_draw_indirect
-void GL_APIENTRY glMultiDrawArraysIndirectEXT(GLenum mode,
-                                              const void *indirect,
-                                              GLsizei drawcount,
-                                              GLsizei stride)
-{
-    return GL_MultiDrawArraysIndirectEXT(mode, indirect, drawcount, stride);
-}
-
-void GL_APIENTRY glMultiDrawElementsIndirectEXT(GLenum mode,
-                                                GLenum type,
-                                                const void *indirect,
-                                                GLsizei drawcount,
-                                                GLsizei stride)
-{
-    return GL_MultiDrawElementsIndirectEXT(mode, type, indirect, drawcount, stride);
-}
-
 // GL_EXT_multisampled_render_to_texture
 void GL_APIENTRY glFramebufferTexture2DMultisampleEXT(GLenum target,
                                                       GLenum attachment,
@@ -4454,8 +4212,6 @@ void GL_APIENTRY glRenderbufferStorageMultisampleEXT(GLenum target,
     return GL_RenderbufferStorageMultisampleEXT(target, samples, internalformat, width, height);
 }
 
-// GL_EXT_multisampled_render_to_texture2
-
 // GL_EXT_occlusion_query_boolean
 
 // GL_EXT_primitive_bounding_box
@@ -4470,10 +4226,6 @@ void GL_APIENTRY glPrimitiveBoundingBoxEXT(GLfloat minX,
 {
     return GL_PrimitiveBoundingBoxEXT(minX, minY, minZ, minW, maxX, maxY, maxZ, maxW);
 }
-
-// GL_EXT_protected_textures
-
-// GL_EXT_pvrtc_sRGB
 
 // GL_EXT_read_format_bgra
 
@@ -4509,8 +4261,6 @@ void GL_APIENTRY glReadnPixelsEXT(GLint x,
 }
 
 // GL_EXT_sRGB
-
-// GL_EXT_sRGB_write_control
 
 // GL_EXT_semaphore
 void GL_APIENTRY glDeleteSemaphoresEXT(GLsizei n, const GLuint *semaphores)
@@ -4873,8 +4623,6 @@ void GL_APIENTRY glValidateProgramPipelineEXT(GLuint pipeline)
     return GL_ValidateProgramPipelineEXT(pipeline);
 }
 
-// GL_EXT_shader_framebuffer_fetch
-
 // GL_EXT_shader_framebuffer_fetch_non_coherent
 void GL_APIENTRY glFramebufferFetchBarrierEXT()
 {
@@ -4882,12 +4630,6 @@ void GL_APIENTRY glFramebufferFetchBarrierEXT()
 }
 
 // GL_EXT_shader_io_blocks
-
-// GL_EXT_shader_non_constant_global_initializers
-
-// GL_EXT_shader_texture_lod
-
-// GL_EXT_shadow_samplers
 
 // GL_EXT_tessellation_shader
 void GL_APIENTRY glPatchParameteriEXT(GLenum pname, GLint value)
@@ -4967,17 +4709,9 @@ void GL_APIENTRY glTexBufferRangeEXT(GLenum target,
 
 // GL_EXT_texture_format_BGRA8888
 
-// GL_EXT_texture_format_sRGB_override
-
-// GL_EXT_texture_norm16
-
-// GL_EXT_texture_rg
-
 // GL_EXT_texture_sRGB_R8
 
 // GL_EXT_texture_sRGB_RG8
-
-// GL_EXT_texture_sRGB_decode
 
 // GL_EXT_texture_storage
 void GL_APIENTRY glTexStorage1DEXT(GLenum target,
@@ -5006,14 +4740,6 @@ void GL_APIENTRY glTexStorage3DEXT(GLenum target,
 {
     return GL_TexStorage3DEXT(target, levels, internalformat, width, height, depth);
 }
-
-// GL_EXT_texture_type_2_10_10_10_REV
-
-// GL_EXT_unpack_subimage
-
-// GL_IMG_texture_compression_pvrtc
-
-// GL_IMG_texture_compression_pvrtc2
 
 // GL_KHR_blend_equation_advanced
 void GL_APIENTRY glBlendBarrierKHR()
@@ -5105,31 +4831,10 @@ void GL_APIENTRY glPushDebugGroupKHR(GLenum source,
     return GL_PushDebugGroupKHR(source, id, length, message);
 }
 
-// GL_KHR_no_error
-
 // GL_KHR_parallel_shader_compile
 void GL_APIENTRY glMaxShaderCompilerThreadsKHR(GLuint count)
 {
     return GL_MaxShaderCompilerThreadsKHR(count);
-}
-
-// GL_KHR_robust_buffer_access_behavior
-
-// GL_KHR_texture_compression_astc_hdr
-
-// GL_KHR_texture_compression_astc_ldr
-
-// GL_KHR_texture_compression_astc_sliced_3d
-
-// GL_MESA_framebuffer_flip_y
-void GL_APIENTRY glFramebufferParameteriMESA(GLenum target, GLenum pname, GLint param)
-{
-    return GL_FramebufferParameteriMESA(target, pname, param);
-}
-
-void GL_APIENTRY glGetFramebufferParameterivMESA(GLenum target, GLenum pname, GLint *params)
-{
-    return GL_GetFramebufferParameterivMESA(target, pname, params);
 }
 
 // GL_NV_fence
@@ -5184,18 +4889,6 @@ void GL_APIENTRY glBlitFramebufferNV(GLint srcX0,
                                 filter);
 }
 
-// GL_NV_pixel_buffer_object
-
-// GL_NV_read_depth
-
-// GL_NV_read_depth_stencil
-
-// GL_NV_read_stencil
-
-// GL_NV_robustness_video_memory_purge
-
-// GL_NV_shader_noperspective_interpolation
-
 // GL_OES_EGL_image
 void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOES image)
 {
@@ -5207,13 +4900,7 @@ void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image
     return GL_EGLImageTargetTexture2DOES(target, image);
 }
 
-// GL_OES_EGL_image_external
-
-// GL_OES_EGL_image_external_essl3
-
 // GL_OES_compressed_ETC1_RGB8_texture
-
-// GL_OES_compressed_paletted_texture
 
 // GL_OES_copy_image
 void GL_APIENTRY glCopyImageSubDataOES(GLuint srcName,
@@ -5237,11 +4924,7 @@ void GL_APIENTRY glCopyImageSubDataOES(GLuint srcName,
                                   srcDepth);
 }
 
-// GL_OES_depth24
-
 // GL_OES_depth32
-
-// GL_OES_depth_texture
 
 // GL_OES_draw_buffers_indexed
 void GL_APIENTRY glBlendEquationSeparateiOES(GLuint buf, GLenum modeRGB, GLenum modeAlpha)
@@ -5358,10 +5041,6 @@ void GL_APIENTRY glDrawTexxvOES(const GLfixed *coords)
     return GL_DrawTexxvOES(coords);
 }
 
-// GL_OES_element_index_uint
-
-// GL_OES_fbo_render_mipmap
-
 // GL_OES_framebuffer_object
 void GL_APIENTRY glBindFramebufferOES(GLenum target, GLuint framebuffer)
 {
@@ -5451,15 +5130,6 @@ void GL_APIENTRY glRenderbufferStorageOES(GLenum target,
     return GL_RenderbufferStorageOES(target, internalformat, width, height);
 }
 
-// GL_OES_geometry_shader
-void GL_APIENTRY glFramebufferTextureOES(GLenum target,
-                                         GLenum attachment,
-                                         GLuint texture,
-                                         GLint level)
-{
-    return GL_FramebufferTextureOES(target, attachment, texture, level);
-}
-
 // GL_OES_get_program_binary
 void GL_APIENTRY glGetProgramBinaryOES(GLuint program,
                                        GLsizei bufSize,
@@ -5518,27 +5188,10 @@ void GL_APIENTRY glWeightPointerOES(GLint size, GLenum type, GLsizei stride, con
     return GL_WeightPointerOES(size, type, stride, pointer);
 }
 
-// GL_OES_packed_depth_stencil
-
 // GL_OES_point_size_array
 void GL_APIENTRY glPointSizePointerOES(GLenum type, GLsizei stride, const void *pointer)
 {
     return GL_PointSizePointerOES(type, stride, pointer);
-}
-
-// GL_OES_point_sprite
-
-// GL_OES_primitive_bounding_box
-void GL_APIENTRY glPrimitiveBoundingBoxOES(GLfloat minX,
-                                           GLfloat minY,
-                                           GLfloat minZ,
-                                           GLfloat minW,
-                                           GLfloat maxX,
-                                           GLfloat maxY,
-                                           GLfloat maxZ,
-                                           GLfloat maxW)
-{
-    return GL_PrimitiveBoundingBoxOES(minX, minY, minZ, minW, maxX, maxY, maxZ, maxW);
 }
 
 // GL_OES_query_matrix
@@ -5547,25 +5200,13 @@ GLbitfield GL_APIENTRY glQueryMatrixxOES(GLfixed *mantissa, GLint *exponent)
     return GL_QueryMatrixxOES(mantissa, exponent);
 }
 
-// GL_OES_rgb8_rgba8
-
 // GL_OES_sample_shading
 void GL_APIENTRY glMinSampleShadingOES(GLfloat value)
 {
     return GL_MinSampleShadingOES(value);
 }
 
-// GL_OES_sample_variables
-
-// GL_OES_shader_image_atomic
-
 // GL_OES_shader_io_blocks
-
-// GL_OES_shader_multisample_interpolation
-
-// GL_OES_standard_derivatives
-
-// GL_OES_surfaceless_context
 
 // GL_OES_texture_3D
 void GL_APIENTRY glCompressedTexImage3DOES(GLenum target,
@@ -5708,8 +5349,6 @@ void GL_APIENTRY glTexBufferRangeOES(GLenum target,
     return GL_TexBufferRangeOES(target, internalformat, buffer, offset, size);
 }
 
-// GL_OES_texture_compression_astc
-
 // GL_OES_texture_cube_map
 void GL_APIENTRY glGetTexGenfvOES(GLenum coord, GLenum pname, GLfloat *params)
 {
@@ -5758,15 +5397,7 @@ void GL_APIENTRY glTexGenxvOES(GLenum coord, GLenum pname, const GLfixed *params
 
 // GL_OES_texture_cube_map_array
 
-// GL_OES_texture_float
-
-// GL_OES_texture_float_linear
-
 // GL_OES_texture_half_float
-
-// GL_OES_texture_half_float_linear
-
-// GL_OES_texture_npot
 
 // GL_OES_texture_stencil8
 
@@ -5804,10 +5435,6 @@ GLboolean GL_APIENTRY glIsVertexArrayOES(GLuint array)
     return GL_IsVertexArrayOES(array);
 }
 
-// GL_OES_vertex_half_float
-
-// GL_OES_vertex_type_10_10_10_2
-
 // GL_OVR_multiview
 void GL_APIENTRY glFramebufferTextureMultiviewOVR(GLenum target,
                                                   GLenum attachment,
@@ -5822,3237 +5449,4852 @@ void GL_APIENTRY glFramebufferTextureMultiviewOVR(GLenum target,
 
 // GL_OVR_multiview2
 
-// GL_QCOM_shading_rate
-void GL_APIENTRY glShadingRateQCOM(GLenum rate)
+// EGL_ANGLE_explicit_context
+void GL_APIENTRY glActiveShaderProgramContextANGLE(GLeglContext ctx,
+                                                   GLuint pipeline,
+                                                   GLuint program)
 {
-    return GL_ShadingRateQCOM(rate);
+    return GL_ActiveShaderProgramContextANGLE(ctx, pipeline, program);
 }
 
-#if defined(ANGLE_ENABLE_GL_DESKTOP_FRONTEND)
-
-// GL 1.0
-void GL_APIENTRY glAccum(GLenum op, GLfloat value)
-{
-    return GL_Accum(op, value);
-}
-
-void GL_APIENTRY glBegin(GLenum mode)
-{
-    return GL_Begin(mode);
-}
-
-void GL_APIENTRY glBitmap(GLsizei width,
-                          GLsizei height,
-                          GLfloat xorig,
-                          GLfloat yorig,
-                          GLfloat xmove,
-                          GLfloat ymove,
-                          const GLubyte *bitmap)
-{
-    return GL_Bitmap(width, height, xorig, yorig, xmove, ymove, bitmap);
-}
-
-void GL_APIENTRY glCallList(GLuint list)
-{
-    return GL_CallList(list);
-}
-
-void GL_APIENTRY glCallLists(GLsizei n, GLenum type, const void *lists)
-{
-    return GL_CallLists(n, type, lists);
-}
-
-void GL_APIENTRY glClearAccum(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
-{
-    return GL_ClearAccum(red, green, blue, alpha);
-}
-
-void GL_APIENTRY glClearDepth(GLdouble depth)
-{
-    return GL_ClearDepth(depth);
-}
-
-void GL_APIENTRY glClearIndex(GLfloat c)
-{
-    return GL_ClearIndex(c);
-}
-
-void GL_APIENTRY glClipPlane(GLenum plane, const GLdouble *equation)
-{
-    return GL_ClipPlane(plane, equation);
-}
-
-void GL_APIENTRY glColor3b(GLbyte red, GLbyte green, GLbyte blue)
-{
-    return GL_Color3b(red, green, blue);
-}
-
-void GL_APIENTRY glColor3bv(const GLbyte *v)
-{
-    return GL_Color3bv(v);
-}
-
-void GL_APIENTRY glColor3d(GLdouble red, GLdouble green, GLdouble blue)
-{
-    return GL_Color3d(red, green, blue);
-}
-
-void GL_APIENTRY glColor3dv(const GLdouble *v)
-{
-    return GL_Color3dv(v);
-}
-
-void GL_APIENTRY glColor3f(GLfloat red, GLfloat green, GLfloat blue)
-{
-    return GL_Color3f(red, green, blue);
-}
-
-void GL_APIENTRY glColor3fv(const GLfloat *v)
-{
-    return GL_Color3fv(v);
-}
-
-void GL_APIENTRY glColor3i(GLint red, GLint green, GLint blue)
-{
-    return GL_Color3i(red, green, blue);
-}
-
-void GL_APIENTRY glColor3iv(const GLint *v)
-{
-    return GL_Color3iv(v);
-}
-
-void GL_APIENTRY glColor3s(GLshort red, GLshort green, GLshort blue)
-{
-    return GL_Color3s(red, green, blue);
-}
-
-void GL_APIENTRY glColor3sv(const GLshort *v)
-{
-    return GL_Color3sv(v);
-}
-
-void GL_APIENTRY glColor3ub(GLubyte red, GLubyte green, GLubyte blue)
-{
-    return GL_Color3ub(red, green, blue);
-}
-
-void GL_APIENTRY glColor3ubv(const GLubyte *v)
-{
-    return GL_Color3ubv(v);
-}
-
-void GL_APIENTRY glColor3ui(GLuint red, GLuint green, GLuint blue)
-{
-    return GL_Color3ui(red, green, blue);
-}
-
-void GL_APIENTRY glColor3uiv(const GLuint *v)
-{
-    return GL_Color3uiv(v);
-}
-
-void GL_APIENTRY glColor3us(GLushort red, GLushort green, GLushort blue)
-{
-    return GL_Color3us(red, green, blue);
-}
-
-void GL_APIENTRY glColor3usv(const GLushort *v)
-{
-    return GL_Color3usv(v);
-}
-
-void GL_APIENTRY glColor4b(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha)
-{
-    return GL_Color4b(red, green, blue, alpha);
-}
-
-void GL_APIENTRY glColor4bv(const GLbyte *v)
-{
-    return GL_Color4bv(v);
-}
-
-void GL_APIENTRY glColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha)
-{
-    return GL_Color4d(red, green, blue, alpha);
-}
-
-void GL_APIENTRY glColor4dv(const GLdouble *v)
-{
-    return GL_Color4dv(v);
-}
-
-void GL_APIENTRY glColor4fv(const GLfloat *v)
-{
-    return GL_Color4fv(v);
-}
-
-void GL_APIENTRY glColor4i(GLint red, GLint green, GLint blue, GLint alpha)
-{
-    return GL_Color4i(red, green, blue, alpha);
-}
-
-void GL_APIENTRY glColor4iv(const GLint *v)
-{
-    return GL_Color4iv(v);
-}
-
-void GL_APIENTRY glColor4s(GLshort red, GLshort green, GLshort blue, GLshort alpha)
-{
-    return GL_Color4s(red, green, blue, alpha);
-}
-
-void GL_APIENTRY glColor4sv(const GLshort *v)
-{
-    return GL_Color4sv(v);
-}
-
-void GL_APIENTRY glColor4ubv(const GLubyte *v)
-{
-    return GL_Color4ubv(v);
-}
-
-void GL_APIENTRY glColor4ui(GLuint red, GLuint green, GLuint blue, GLuint alpha)
-{
-    return GL_Color4ui(red, green, blue, alpha);
-}
-
-void GL_APIENTRY glColor4uiv(const GLuint *v)
-{
-    return GL_Color4uiv(v);
-}
-
-void GL_APIENTRY glColor4us(GLushort red, GLushort green, GLushort blue, GLushort alpha)
-{
-    return GL_Color4us(red, green, blue, alpha);
-}
-
-void GL_APIENTRY glColor4usv(const GLushort *v)
-{
-    return GL_Color4usv(v);
-}
-
-void GL_APIENTRY glColorMaterial(GLenum face, GLenum mode)
-{
-    return GL_ColorMaterial(face, mode);
-}
-
-void GL_APIENTRY glCopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)
-{
-    return GL_CopyPixels(x, y, width, height, type);
-}
-
-void GL_APIENTRY glDeleteLists(GLuint list, GLsizei range)
-{
-    return GL_DeleteLists(list, range);
-}
-
-void GL_APIENTRY glDepthRange(GLdouble n, GLdouble f)
-{
-    return GL_DepthRange(n, f);
-}
-
-void GL_APIENTRY glDrawBuffer(GLenum buf)
-{
-    return GL_DrawBuffer(buf);
-}
-
-void GL_APIENTRY
-glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels)
-{
-    return GL_DrawPixels(width, height, format, type, pixels);
-}
-
-void GL_APIENTRY glEdgeFlag(GLboolean flag)
-{
-    return GL_EdgeFlag(flag);
-}
-
-void GL_APIENTRY glEdgeFlagv(const GLboolean *flag)
-{
-    return GL_EdgeFlagv(flag);
-}
-
-void GL_APIENTRY glEnd()
-{
-    return GL_End();
-}
-
-void GL_APIENTRY glEndList()
-{
-    return GL_EndList();
-}
-
-void GL_APIENTRY glEvalCoord1d(GLdouble u)
-{
-    return GL_EvalCoord1d(u);
-}
-
-void GL_APIENTRY glEvalCoord1dv(const GLdouble *u)
-{
-    return GL_EvalCoord1dv(u);
-}
-
-void GL_APIENTRY glEvalCoord1f(GLfloat u)
-{
-    return GL_EvalCoord1f(u);
-}
-
-void GL_APIENTRY glEvalCoord1fv(const GLfloat *u)
-{
-    return GL_EvalCoord1fv(u);
-}
-
-void GL_APIENTRY glEvalCoord2d(GLdouble u, GLdouble v)
-{
-    return GL_EvalCoord2d(u, v);
-}
-
-void GL_APIENTRY glEvalCoord2dv(const GLdouble *u)
-{
-    return GL_EvalCoord2dv(u);
-}
-
-void GL_APIENTRY glEvalCoord2f(GLfloat u, GLfloat v)
-{
-    return GL_EvalCoord2f(u, v);
-}
-
-void GL_APIENTRY glEvalCoord2fv(const GLfloat *u)
-{
-    return GL_EvalCoord2fv(u);
-}
-
-void GL_APIENTRY glEvalMesh1(GLenum mode, GLint i1, GLint i2)
-{
-    return GL_EvalMesh1(mode, i1, i2);
-}
-
-void GL_APIENTRY glEvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
-{
-    return GL_EvalMesh2(mode, i1, i2, j1, j2);
-}
-
-void GL_APIENTRY glEvalPoint1(GLint i)
-{
-    return GL_EvalPoint1(i);
-}
-
-void GL_APIENTRY glEvalPoint2(GLint i, GLint j)
-{
-    return GL_EvalPoint2(i, j);
-}
-
-void GL_APIENTRY glFeedbackBuffer(GLsizei size, GLenum type, GLfloat *buffer)
-{
-    return GL_FeedbackBuffer(size, type, buffer);
-}
-
-void GL_APIENTRY glFogi(GLenum pname, GLint param)
-{
-    return GL_Fogi(pname, param);
-}
-
-void GL_APIENTRY glFogiv(GLenum pname, const GLint *params)
-{
-    return GL_Fogiv(pname, params);
-}
-
-void GL_APIENTRY glFrustum(GLdouble left,
-                           GLdouble right,
-                           GLdouble bottom,
-                           GLdouble top,
-                           GLdouble zNear,
-                           GLdouble zFar)
-{
-    return GL_Frustum(left, right, bottom, top, zNear, zFar);
-}
-
-GLuint GL_APIENTRY glGenLists(GLsizei range)
-{
-    return GL_GenLists(range);
-}
-
-void GL_APIENTRY glGetClipPlane(GLenum plane, GLdouble *equation)
-{
-    return GL_GetClipPlane(plane, equation);
-}
-
-void GL_APIENTRY glGetDoublev(GLenum pname, GLdouble *data)
-{
-    return GL_GetDoublev(pname, data);
-}
-
-void GL_APIENTRY glGetLightiv(GLenum light, GLenum pname, GLint *params)
-{
-    return GL_GetLightiv(light, pname, params);
-}
-
-void GL_APIENTRY glGetMapdv(GLenum target, GLenum query, GLdouble *v)
-{
-    return GL_GetMapdv(target, query, v);
-}
-
-void GL_APIENTRY glGetMapfv(GLenum target, GLenum query, GLfloat *v)
-{
-    return GL_GetMapfv(target, query, v);
-}
-
-void GL_APIENTRY glGetMapiv(GLenum target, GLenum query, GLint *v)
-{
-    return GL_GetMapiv(target, query, v);
-}
-
-void GL_APIENTRY glGetMaterialiv(GLenum face, GLenum pname, GLint *params)
-{
-    return GL_GetMaterialiv(face, pname, params);
-}
-
-void GL_APIENTRY glGetPixelMapfv(GLenum map, GLfloat *values)
-{
-    return GL_GetPixelMapfv(map, values);
-}
-
-void GL_APIENTRY glGetPixelMapuiv(GLenum map, GLuint *values)
-{
-    return GL_GetPixelMapuiv(map, values);
-}
-
-void GL_APIENTRY glGetPixelMapusv(GLenum map, GLushort *values)
-{
-    return GL_GetPixelMapusv(map, values);
-}
-
-void GL_APIENTRY glGetPolygonStipple(GLubyte *mask)
-{
-    return GL_GetPolygonStipple(mask);
-}
-
-void GL_APIENTRY glGetTexGendv(GLenum coord, GLenum pname, GLdouble *params)
-{
-    return GL_GetTexGendv(coord, pname, params);
-}
-
-void GL_APIENTRY glGetTexGenfv(GLenum coord, GLenum pname, GLfloat *params)
-{
-    return GL_GetTexGenfv(coord, pname, params);
-}
-
-void GL_APIENTRY glGetTexGeniv(GLenum coord, GLenum pname, GLint *params)
-{
-    return GL_GetTexGeniv(coord, pname, params);
-}
-
-void GL_APIENTRY glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, void *pixels)
-{
-    return GL_GetTexImage(target, level, format, type, pixels);
-}
-
-void GL_APIENTRY glIndexMask(GLuint mask)
-{
-    return GL_IndexMask(mask);
-}
-
-void GL_APIENTRY glIndexd(GLdouble c)
-{
-    return GL_Indexd(c);
-}
-
-void GL_APIENTRY glIndexdv(const GLdouble *c)
-{
-    return GL_Indexdv(c);
-}
-
-void GL_APIENTRY glIndexf(GLfloat c)
-{
-    return GL_Indexf(c);
-}
-
-void GL_APIENTRY glIndexfv(const GLfloat *c)
-{
-    return GL_Indexfv(c);
-}
-
-void GL_APIENTRY glIndexi(GLint c)
-{
-    return GL_Indexi(c);
-}
-
-void GL_APIENTRY glIndexiv(const GLint *c)
-{
-    return GL_Indexiv(c);
-}
-
-void GL_APIENTRY glIndexs(GLshort c)
-{
-    return GL_Indexs(c);
-}
-
-void GL_APIENTRY glIndexsv(const GLshort *c)
-{
-    return GL_Indexsv(c);
-}
-
-void GL_APIENTRY glInitNames()
-{
-    return GL_InitNames();
-}
-
-GLboolean GL_APIENTRY glIsList(GLuint list)
-{
-    return GL_IsList(list);
-}
-
-void GL_APIENTRY glLightModeli(GLenum pname, GLint param)
-{
-    return GL_LightModeli(pname, param);
-}
-
-void GL_APIENTRY glLightModeliv(GLenum pname, const GLint *params)
-{
-    return GL_LightModeliv(pname, params);
-}
-
-void GL_APIENTRY glLighti(GLenum light, GLenum pname, GLint param)
-{
-    return GL_Lighti(light, pname, param);
-}
-
-void GL_APIENTRY glLightiv(GLenum light, GLenum pname, const GLint *params)
-{
-    return GL_Lightiv(light, pname, params);
-}
-
-void GL_APIENTRY glLineStipple(GLint factor, GLushort pattern)
-{
-    return GL_LineStipple(factor, pattern);
-}
-
-void GL_APIENTRY glListBase(GLuint base)
-{
-    return GL_ListBase(base);
-}
-
-void GL_APIENTRY glLoadMatrixd(const GLdouble *m)
-{
-    return GL_LoadMatrixd(m);
-}
-
-void GL_APIENTRY glLoadName(GLuint name)
-{
-    return GL_LoadName(name);
-}
-
-void GL_APIENTRY
-glMap1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points)
-{
-    return GL_Map1d(target, u1, u2, stride, order, points);
-}
-
-void GL_APIENTRY
-glMap1f(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points)
-{
-    return GL_Map1f(target, u1, u2, stride, order, points);
-}
-
-void GL_APIENTRY glMap2d(GLenum target,
-                         GLdouble u1,
-                         GLdouble u2,
-                         GLint ustride,
-                         GLint uorder,
-                         GLdouble v1,
-                         GLdouble v2,
-                         GLint vstride,
-                         GLint vorder,
-                         const GLdouble *points)
-{
-    return GL_Map2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points);
-}
-
-void GL_APIENTRY glMap2f(GLenum target,
-                         GLfloat u1,
-                         GLfloat u2,
-                         GLint ustride,
-                         GLint uorder,
-                         GLfloat v1,
-                         GLfloat v2,
-                         GLint vstride,
-                         GLint vorder,
-                         const GLfloat *points)
-{
-    return GL_Map2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points);
-}
-
-void GL_APIENTRY glMapGrid1d(GLint un, GLdouble u1, GLdouble u2)
-{
-    return GL_MapGrid1d(un, u1, u2);
-}
-
-void GL_APIENTRY glMapGrid1f(GLint un, GLfloat u1, GLfloat u2)
-{
-    return GL_MapGrid1f(un, u1, u2);
-}
-
-void GL_APIENTRY glMapGrid2d(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2)
-{
-    return GL_MapGrid2d(un, u1, u2, vn, v1, v2);
-}
-
-void GL_APIENTRY glMapGrid2f(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2)
-{
-    return GL_MapGrid2f(un, u1, u2, vn, v1, v2);
-}
-
-void GL_APIENTRY glMateriali(GLenum face, GLenum pname, GLint param)
-{
-    return GL_Materiali(face, pname, param);
-}
-
-void GL_APIENTRY glMaterialiv(GLenum face, GLenum pname, const GLint *params)
-{
-    return GL_Materialiv(face, pname, params);
-}
-
-void GL_APIENTRY glMultMatrixd(const GLdouble *m)
-{
-    return GL_MultMatrixd(m);
-}
-
-void GL_APIENTRY glNewList(GLuint list, GLenum mode)
-{
-    return GL_NewList(list, mode);
-}
-
-void GL_APIENTRY glNormal3b(GLbyte nx, GLbyte ny, GLbyte nz)
-{
-    return GL_Normal3b(nx, ny, nz);
-}
-
-void GL_APIENTRY glNormal3bv(const GLbyte *v)
-{
-    return GL_Normal3bv(v);
-}
-
-void GL_APIENTRY glNormal3d(GLdouble nx, GLdouble ny, GLdouble nz)
-{
-    return GL_Normal3d(nx, ny, nz);
-}
-
-void GL_APIENTRY glNormal3dv(const GLdouble *v)
-{
-    return GL_Normal3dv(v);
-}
-
-void GL_APIENTRY glNormal3fv(const GLfloat *v)
-{
-    return GL_Normal3fv(v);
-}
-
-void GL_APIENTRY glNormal3i(GLint nx, GLint ny, GLint nz)
-{
-    return GL_Normal3i(nx, ny, nz);
-}
-
-void GL_APIENTRY glNormal3iv(const GLint *v)
-{
-    return GL_Normal3iv(v);
-}
-
-void GL_APIENTRY glNormal3s(GLshort nx, GLshort ny, GLshort nz)
-{
-    return GL_Normal3s(nx, ny, nz);
-}
-
-void GL_APIENTRY glNormal3sv(const GLshort *v)
-{
-    return GL_Normal3sv(v);
-}
-
-void GL_APIENTRY
-glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
-{
-    return GL_Ortho(left, right, bottom, top, zNear, zFar);
-}
-
-void GL_APIENTRY glPassThrough(GLfloat token)
-{
-    return GL_PassThrough(token);
-}
-
-void GL_APIENTRY glPixelMapfv(GLenum map, GLsizei mapsize, const GLfloat *values)
-{
-    return GL_PixelMapfv(map, mapsize, values);
-}
-
-void GL_APIENTRY glPixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values)
-{
-    return GL_PixelMapuiv(map, mapsize, values);
-}
-
-void GL_APIENTRY glPixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values)
-{
-    return GL_PixelMapusv(map, mapsize, values);
-}
-
-void GL_APIENTRY glPixelStoref(GLenum pname, GLfloat param)
-{
-    return GL_PixelStoref(pname, param);
-}
-
-void GL_APIENTRY glPixelTransferf(GLenum pname, GLfloat param)
-{
-    return GL_PixelTransferf(pname, param);
-}
-
-void GL_APIENTRY glPixelTransferi(GLenum pname, GLint param)
-{
-    return GL_PixelTransferi(pname, param);
-}
-
-void GL_APIENTRY glPixelZoom(GLfloat xfactor, GLfloat yfactor)
-{
-    return GL_PixelZoom(xfactor, yfactor);
-}
-
-void GL_APIENTRY glPolygonMode(GLenum face, GLenum mode)
-{
-    return GL_PolygonMode(face, mode);
-}
-
-void GL_APIENTRY glPolygonStipple(const GLubyte *mask)
-{
-    return GL_PolygonStipple(mask);
-}
-
-void GL_APIENTRY glPopAttrib()
-{
-    return GL_PopAttrib();
-}
-
-void GL_APIENTRY glPopName()
-{
-    return GL_PopName();
-}
-
-void GL_APIENTRY glPushAttrib(GLbitfield mask)
-{
-    return GL_PushAttrib(mask);
-}
-
-void GL_APIENTRY glPushName(GLuint name)
-{
-    return GL_PushName(name);
-}
-
-void GL_APIENTRY glRasterPos2d(GLdouble x, GLdouble y)
-{
-    return GL_RasterPos2d(x, y);
-}
-
-void GL_APIENTRY glRasterPos2dv(const GLdouble *v)
-{
-    return GL_RasterPos2dv(v);
-}
-
-void GL_APIENTRY glRasterPos2f(GLfloat x, GLfloat y)
-{
-    return GL_RasterPos2f(x, y);
-}
-
-void GL_APIENTRY glRasterPos2fv(const GLfloat *v)
-{
-    return GL_RasterPos2fv(v);
-}
-
-void GL_APIENTRY glRasterPos2i(GLint x, GLint y)
-{
-    return GL_RasterPos2i(x, y);
-}
-
-void GL_APIENTRY glRasterPos2iv(const GLint *v)
-{
-    return GL_RasterPos2iv(v);
-}
-
-void GL_APIENTRY glRasterPos2s(GLshort x, GLshort y)
-{
-    return GL_RasterPos2s(x, y);
-}
-
-void GL_APIENTRY glRasterPos2sv(const GLshort *v)
-{
-    return GL_RasterPos2sv(v);
-}
-
-void GL_APIENTRY glRasterPos3d(GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_RasterPos3d(x, y, z);
-}
-
-void GL_APIENTRY glRasterPos3dv(const GLdouble *v)
-{
-    return GL_RasterPos3dv(v);
-}
-
-void GL_APIENTRY glRasterPos3f(GLfloat x, GLfloat y, GLfloat z)
-{
-    return GL_RasterPos3f(x, y, z);
-}
-
-void GL_APIENTRY glRasterPos3fv(const GLfloat *v)
-{
-    return GL_RasterPos3fv(v);
-}
-
-void GL_APIENTRY glRasterPos3i(GLint x, GLint y, GLint z)
-{
-    return GL_RasterPos3i(x, y, z);
-}
-
-void GL_APIENTRY glRasterPos3iv(const GLint *v)
-{
-    return GL_RasterPos3iv(v);
-}
-
-void GL_APIENTRY glRasterPos3s(GLshort x, GLshort y, GLshort z)
-{
-    return GL_RasterPos3s(x, y, z);
-}
-
-void GL_APIENTRY glRasterPos3sv(const GLshort *v)
-{
-    return GL_RasterPos3sv(v);
-}
-
-void GL_APIENTRY glRasterPos4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-    return GL_RasterPos4d(x, y, z, w);
-}
-
-void GL_APIENTRY glRasterPos4dv(const GLdouble *v)
-{
-    return GL_RasterPos4dv(v);
-}
-
-void GL_APIENTRY glRasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-    return GL_RasterPos4f(x, y, z, w);
-}
-
-void GL_APIENTRY glRasterPos4fv(const GLfloat *v)
-{
-    return GL_RasterPos4fv(v);
-}
-
-void GL_APIENTRY glRasterPos4i(GLint x, GLint y, GLint z, GLint w)
-{
-    return GL_RasterPos4i(x, y, z, w);
-}
-
-void GL_APIENTRY glRasterPos4iv(const GLint *v)
-{
-    return GL_RasterPos4iv(v);
-}
-
-void GL_APIENTRY glRasterPos4s(GLshort x, GLshort y, GLshort z, GLshort w)
-{
-    return GL_RasterPos4s(x, y, z, w);
-}
-
-void GL_APIENTRY glRasterPos4sv(const GLshort *v)
-{
-    return GL_RasterPos4sv(v);
-}
-
-void GL_APIENTRY glRectd(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
-{
-    return GL_Rectd(x1, y1, x2, y2);
-}
-
-void GL_APIENTRY glRectdv(const GLdouble *v1, const GLdouble *v2)
-{
-    return GL_Rectdv(v1, v2);
-}
-
-void GL_APIENTRY glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
-{
-    return GL_Rectf(x1, y1, x2, y2);
-}
-
-void GL_APIENTRY glRectfv(const GLfloat *v1, const GLfloat *v2)
-{
-    return GL_Rectfv(v1, v2);
-}
-
-void GL_APIENTRY glRecti(GLint x1, GLint y1, GLint x2, GLint y2)
-{
-    return GL_Recti(x1, y1, x2, y2);
-}
-
-void GL_APIENTRY glRectiv(const GLint *v1, const GLint *v2)
-{
-    return GL_Rectiv(v1, v2);
-}
-
-void GL_APIENTRY glRects(GLshort x1, GLshort y1, GLshort x2, GLshort y2)
-{
-    return GL_Rects(x1, y1, x2, y2);
-}
-
-void GL_APIENTRY glRectsv(const GLshort *v1, const GLshort *v2)
-{
-    return GL_Rectsv(v1, v2);
-}
-
-GLint GL_APIENTRY glRenderMode(GLenum mode)
-{
-    return GL_RenderMode(mode);
-}
-
-void GL_APIENTRY glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_Rotated(angle, x, y, z);
-}
-
-void GL_APIENTRY glScaled(GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_Scaled(x, y, z);
-}
-
-void GL_APIENTRY glSelectBuffer(GLsizei size, GLuint *buffer)
-{
-    return GL_SelectBuffer(size, buffer);
-}
-
-void GL_APIENTRY glTexCoord1d(GLdouble s)
-{
-    return GL_TexCoord1d(s);
-}
-
-void GL_APIENTRY glTexCoord1dv(const GLdouble *v)
-{
-    return GL_TexCoord1dv(v);
-}
-
-void GL_APIENTRY glTexCoord1f(GLfloat s)
-{
-    return GL_TexCoord1f(s);
-}
-
-void GL_APIENTRY glTexCoord1fv(const GLfloat *v)
-{
-    return GL_TexCoord1fv(v);
-}
-
-void GL_APIENTRY glTexCoord1i(GLint s)
-{
-    return GL_TexCoord1i(s);
-}
-
-void GL_APIENTRY glTexCoord1iv(const GLint *v)
-{
-    return GL_TexCoord1iv(v);
-}
-
-void GL_APIENTRY glTexCoord1s(GLshort s)
-{
-    return GL_TexCoord1s(s);
-}
-
-void GL_APIENTRY glTexCoord1sv(const GLshort *v)
-{
-    return GL_TexCoord1sv(v);
-}
-
-void GL_APIENTRY glTexCoord2d(GLdouble s, GLdouble t)
-{
-    return GL_TexCoord2d(s, t);
-}
-
-void GL_APIENTRY glTexCoord2dv(const GLdouble *v)
-{
-    return GL_TexCoord2dv(v);
-}
-
-void GL_APIENTRY glTexCoord2f(GLfloat s, GLfloat t)
-{
-    return GL_TexCoord2f(s, t);
-}
-
-void GL_APIENTRY glTexCoord2fv(const GLfloat *v)
-{
-    return GL_TexCoord2fv(v);
-}
-
-void GL_APIENTRY glTexCoord2i(GLint s, GLint t)
-{
-    return GL_TexCoord2i(s, t);
-}
-
-void GL_APIENTRY glTexCoord2iv(const GLint *v)
-{
-    return GL_TexCoord2iv(v);
-}
-
-void GL_APIENTRY glTexCoord2s(GLshort s, GLshort t)
-{
-    return GL_TexCoord2s(s, t);
-}
-
-void GL_APIENTRY glTexCoord2sv(const GLshort *v)
-{
-    return GL_TexCoord2sv(v);
-}
-
-void GL_APIENTRY glTexCoord3d(GLdouble s, GLdouble t, GLdouble r)
-{
-    return GL_TexCoord3d(s, t, r);
-}
-
-void GL_APIENTRY glTexCoord3dv(const GLdouble *v)
-{
-    return GL_TexCoord3dv(v);
-}
-
-void GL_APIENTRY glTexCoord3f(GLfloat s, GLfloat t, GLfloat r)
-{
-    return GL_TexCoord3f(s, t, r);
-}
-
-void GL_APIENTRY glTexCoord3fv(const GLfloat *v)
-{
-    return GL_TexCoord3fv(v);
-}
-
-void GL_APIENTRY glTexCoord3i(GLint s, GLint t, GLint r)
-{
-    return GL_TexCoord3i(s, t, r);
-}
-
-void GL_APIENTRY glTexCoord3iv(const GLint *v)
-{
-    return GL_TexCoord3iv(v);
-}
-
-void GL_APIENTRY glTexCoord3s(GLshort s, GLshort t, GLshort r)
-{
-    return GL_TexCoord3s(s, t, r);
-}
-
-void GL_APIENTRY glTexCoord3sv(const GLshort *v)
-{
-    return GL_TexCoord3sv(v);
-}
-
-void GL_APIENTRY glTexCoord4d(GLdouble s, GLdouble t, GLdouble r, GLdouble q)
-{
-    return GL_TexCoord4d(s, t, r, q);
-}
-
-void GL_APIENTRY glTexCoord4dv(const GLdouble *v)
-{
-    return GL_TexCoord4dv(v);
-}
-
-void GL_APIENTRY glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
-{
-    return GL_TexCoord4f(s, t, r, q);
-}
-
-void GL_APIENTRY glTexCoord4fv(const GLfloat *v)
-{
-    return GL_TexCoord4fv(v);
-}
-
-void GL_APIENTRY glTexCoord4i(GLint s, GLint t, GLint r, GLint q)
-{
-    return GL_TexCoord4i(s, t, r, q);
-}
-
-void GL_APIENTRY glTexCoord4iv(const GLint *v)
-{
-    return GL_TexCoord4iv(v);
-}
-
-void GL_APIENTRY glTexCoord4s(GLshort s, GLshort t, GLshort r, GLshort q)
-{
-    return GL_TexCoord4s(s, t, r, q);
-}
-
-void GL_APIENTRY glTexCoord4sv(const GLshort *v)
-{
-    return GL_TexCoord4sv(v);
-}
-
-void GL_APIENTRY glTexGend(GLenum coord, GLenum pname, GLdouble param)
-{
-    return GL_TexGend(coord, pname, param);
-}
-
-void GL_APIENTRY glTexGendv(GLenum coord, GLenum pname, const GLdouble *params)
-{
-    return GL_TexGendv(coord, pname, params);
-}
-
-void GL_APIENTRY glTexGenf(GLenum coord, GLenum pname, GLfloat param)
-{
-    return GL_TexGenf(coord, pname, param);
-}
-
-void GL_APIENTRY glTexGenfv(GLenum coord, GLenum pname, const GLfloat *params)
-{
-    return GL_TexGenfv(coord, pname, params);
-}
-
-void GL_APIENTRY glTexGeni(GLenum coord, GLenum pname, GLint param)
-{
-    return GL_TexGeni(coord, pname, param);
-}
-
-void GL_APIENTRY glTexGeniv(GLenum coord, GLenum pname, const GLint *params)
-{
-    return GL_TexGeniv(coord, pname, params);
-}
-
-void GL_APIENTRY glTexImage1D(GLenum target,
-                              GLint level,
-                              GLint internalformat,
-                              GLsizei width,
-                              GLint border,
-                              GLenum format,
-                              GLenum type,
-                              const void *pixels)
-{
-    return GL_TexImage1D(target, level, internalformat, width, border, format, type, pixels);
-}
-
-void GL_APIENTRY glTranslated(GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_Translated(x, y, z);
-}
-
-void GL_APIENTRY glVertex2d(GLdouble x, GLdouble y)
-{
-    return GL_Vertex2d(x, y);
-}
-
-void GL_APIENTRY glVertex2dv(const GLdouble *v)
-{
-    return GL_Vertex2dv(v);
-}
-
-void GL_APIENTRY glVertex2f(GLfloat x, GLfloat y)
-{
-    return GL_Vertex2f(x, y);
-}
-
-void GL_APIENTRY glVertex2fv(const GLfloat *v)
-{
-    return GL_Vertex2fv(v);
-}
-
-void GL_APIENTRY glVertex2i(GLint x, GLint y)
-{
-    return GL_Vertex2i(x, y);
-}
-
-void GL_APIENTRY glVertex2iv(const GLint *v)
-{
-    return GL_Vertex2iv(v);
-}
-
-void GL_APIENTRY glVertex2s(GLshort x, GLshort y)
-{
-    return GL_Vertex2s(x, y);
-}
-
-void GL_APIENTRY glVertex2sv(const GLshort *v)
-{
-    return GL_Vertex2sv(v);
-}
-
-void GL_APIENTRY glVertex3d(GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_Vertex3d(x, y, z);
-}
-
-void GL_APIENTRY glVertex3dv(const GLdouble *v)
-{
-    return GL_Vertex3dv(v);
-}
-
-void GL_APIENTRY glVertex3f(GLfloat x, GLfloat y, GLfloat z)
-{
-    return GL_Vertex3f(x, y, z);
-}
-
-void GL_APIENTRY glVertex3fv(const GLfloat *v)
-{
-    return GL_Vertex3fv(v);
-}
-
-void GL_APIENTRY glVertex3i(GLint x, GLint y, GLint z)
-{
-    return GL_Vertex3i(x, y, z);
-}
-
-void GL_APIENTRY glVertex3iv(const GLint *v)
-{
-    return GL_Vertex3iv(v);
-}
-
-void GL_APIENTRY glVertex3s(GLshort x, GLshort y, GLshort z)
-{
-    return GL_Vertex3s(x, y, z);
-}
-
-void GL_APIENTRY glVertex3sv(const GLshort *v)
-{
-    return GL_Vertex3sv(v);
-}
-
-void GL_APIENTRY glVertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-    return GL_Vertex4d(x, y, z, w);
-}
-
-void GL_APIENTRY glVertex4dv(const GLdouble *v)
-{
-    return GL_Vertex4dv(v);
-}
-
-void GL_APIENTRY glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-    return GL_Vertex4f(x, y, z, w);
-}
-
-void GL_APIENTRY glVertex4fv(const GLfloat *v)
-{
-    return GL_Vertex4fv(v);
-}
-
-void GL_APIENTRY glVertex4i(GLint x, GLint y, GLint z, GLint w)
-{
-    return GL_Vertex4i(x, y, z, w);
-}
-
-void GL_APIENTRY glVertex4iv(const GLint *v)
-{
-    return GL_Vertex4iv(v);
-}
-
-void GL_APIENTRY glVertex4s(GLshort x, GLshort y, GLshort z, GLshort w)
-{
-    return GL_Vertex4s(x, y, z, w);
-}
-
-void GL_APIENTRY glVertex4sv(const GLshort *v)
-{
-    return GL_Vertex4sv(v);
-}
-
-// GL 1.1
-GLboolean GL_APIENTRY glAreTexturesResident(GLsizei n,
-                                            const GLuint *textures,
-                                            GLboolean *residences)
-{
-    return GL_AreTexturesResident(n, textures, residences);
-}
-
-void GL_APIENTRY glArrayElement(GLint i)
-{
-    return GL_ArrayElement(i);
-}
-
-void GL_APIENTRY glCopyTexImage1D(GLenum target,
-                                  GLint level,
-                                  GLenum internalformat,
-                                  GLint x,
-                                  GLint y,
-                                  GLsizei width,
-                                  GLint border)
-{
-    return GL_CopyTexImage1D(target, level, internalformat, x, y, width, border);
-}
-
-void GL_APIENTRY
-glCopyTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
-{
-    return GL_CopyTexSubImage1D(target, level, xoffset, x, y, width);
-}
-
-void GL_APIENTRY glEdgeFlagPointer(GLsizei stride, const void *pointer)
-{
-    return GL_EdgeFlagPointer(stride, pointer);
-}
-
-void GL_APIENTRY glIndexPointer(GLenum type, GLsizei stride, const void *pointer)
-{
-    return GL_IndexPointer(type, stride, pointer);
-}
-
-void GL_APIENTRY glIndexub(GLubyte c)
-{
-    return GL_Indexub(c);
-}
-
-void GL_APIENTRY glIndexubv(const GLubyte *c)
-{
-    return GL_Indexubv(c);
-}
-
-void GL_APIENTRY glInterleavedArrays(GLenum format, GLsizei stride, const void *pointer)
-{
-    return GL_InterleavedArrays(format, stride, pointer);
-}
-
-void GL_APIENTRY glPopClientAttrib()
-{
-    return GL_PopClientAttrib();
-}
-
-void GL_APIENTRY glPrioritizeTextures(GLsizei n, const GLuint *textures, const GLfloat *priorities)
-{
-    return GL_PrioritizeTextures(n, textures, priorities);
-}
-
-void GL_APIENTRY glPushClientAttrib(GLbitfield mask)
-{
-    return GL_PushClientAttrib(mask);
-}
-
-void GL_APIENTRY glTexSubImage1D(GLenum target,
-                                 GLint level,
-                                 GLint xoffset,
-                                 GLsizei width,
-                                 GLenum format,
-                                 GLenum type,
-                                 const void *pixels)
-{
-    return GL_TexSubImage1D(target, level, xoffset, width, format, type, pixels);
-}
-
-// GL 1.2
-
-// GL 1.3
-void GL_APIENTRY glCompressedTexImage1D(GLenum target,
-                                        GLint level,
-                                        GLenum internalformat,
-                                        GLsizei width,
-                                        GLint border,
-                                        GLsizei imageSize,
-                                        const void *data)
-{
-    return GL_CompressedTexImage1D(target, level, internalformat, width, border, imageSize, data);
-}
-
-void GL_APIENTRY glCompressedTexSubImage1D(GLenum target,
-                                           GLint level,
-                                           GLint xoffset,
-                                           GLsizei width,
-                                           GLenum format,
-                                           GLsizei imageSize,
-                                           const void *data)
-{
-    return GL_CompressedTexSubImage1D(target, level, xoffset, width, format, imageSize, data);
-}
-
-void GL_APIENTRY glGetCompressedTexImage(GLenum target, GLint level, void *img)
-{
-    return GL_GetCompressedTexImage(target, level, img);
-}
-
-void GL_APIENTRY glLoadTransposeMatrixd(const GLdouble *m)
-{
-    return GL_LoadTransposeMatrixd(m);
-}
-
-void GL_APIENTRY glLoadTransposeMatrixf(const GLfloat *m)
-{
-    return GL_LoadTransposeMatrixf(m);
-}
-
-void GL_APIENTRY glMultTransposeMatrixd(const GLdouble *m)
-{
-    return GL_MultTransposeMatrixd(m);
-}
-
-void GL_APIENTRY glMultTransposeMatrixf(const GLfloat *m)
-{
-    return GL_MultTransposeMatrixf(m);
-}
-
-void GL_APIENTRY glMultiTexCoord1d(GLenum target, GLdouble s)
-{
-    return GL_MultiTexCoord1d(target, s);
-}
-
-void GL_APIENTRY glMultiTexCoord1dv(GLenum target, const GLdouble *v)
-{
-    return GL_MultiTexCoord1dv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord1f(GLenum target, GLfloat s)
-{
-    return GL_MultiTexCoord1f(target, s);
-}
-
-void GL_APIENTRY glMultiTexCoord1fv(GLenum target, const GLfloat *v)
-{
-    return GL_MultiTexCoord1fv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord1i(GLenum target, GLint s)
-{
-    return GL_MultiTexCoord1i(target, s);
-}
-
-void GL_APIENTRY glMultiTexCoord1iv(GLenum target, const GLint *v)
-{
-    return GL_MultiTexCoord1iv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord1s(GLenum target, GLshort s)
-{
-    return GL_MultiTexCoord1s(target, s);
-}
-
-void GL_APIENTRY glMultiTexCoord1sv(GLenum target, const GLshort *v)
-{
-    return GL_MultiTexCoord1sv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord2d(GLenum target, GLdouble s, GLdouble t)
-{
-    return GL_MultiTexCoord2d(target, s, t);
-}
-
-void GL_APIENTRY glMultiTexCoord2dv(GLenum target, const GLdouble *v)
-{
-    return GL_MultiTexCoord2dv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord2f(GLenum target, GLfloat s, GLfloat t)
-{
-    return GL_MultiTexCoord2f(target, s, t);
-}
-
-void GL_APIENTRY glMultiTexCoord2fv(GLenum target, const GLfloat *v)
-{
-    return GL_MultiTexCoord2fv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord2i(GLenum target, GLint s, GLint t)
-{
-    return GL_MultiTexCoord2i(target, s, t);
-}
-
-void GL_APIENTRY glMultiTexCoord2iv(GLenum target, const GLint *v)
-{
-    return GL_MultiTexCoord2iv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord2s(GLenum target, GLshort s, GLshort t)
-{
-    return GL_MultiTexCoord2s(target, s, t);
-}
-
-void GL_APIENTRY glMultiTexCoord2sv(GLenum target, const GLshort *v)
-{
-    return GL_MultiTexCoord2sv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord3d(GLenum target, GLdouble s, GLdouble t, GLdouble r)
-{
-    return GL_MultiTexCoord3d(target, s, t, r);
-}
-
-void GL_APIENTRY glMultiTexCoord3dv(GLenum target, const GLdouble *v)
-{
-    return GL_MultiTexCoord3dv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord3f(GLenum target, GLfloat s, GLfloat t, GLfloat r)
-{
-    return GL_MultiTexCoord3f(target, s, t, r);
-}
-
-void GL_APIENTRY glMultiTexCoord3fv(GLenum target, const GLfloat *v)
-{
-    return GL_MultiTexCoord3fv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord3i(GLenum target, GLint s, GLint t, GLint r)
-{
-    return GL_MultiTexCoord3i(target, s, t, r);
-}
-
-void GL_APIENTRY glMultiTexCoord3iv(GLenum target, const GLint *v)
-{
-    return GL_MultiTexCoord3iv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord3s(GLenum target, GLshort s, GLshort t, GLshort r)
-{
-    return GL_MultiTexCoord3s(target, s, t, r);
-}
-
-void GL_APIENTRY glMultiTexCoord3sv(GLenum target, const GLshort *v)
-{
-    return GL_MultiTexCoord3sv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord4d(GLenum target, GLdouble s, GLdouble t, GLdouble r, GLdouble q)
-{
-    return GL_MultiTexCoord4d(target, s, t, r, q);
-}
-
-void GL_APIENTRY glMultiTexCoord4dv(GLenum target, const GLdouble *v)
-{
-    return GL_MultiTexCoord4dv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord4fv(GLenum target, const GLfloat *v)
-{
-    return GL_MultiTexCoord4fv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord4i(GLenum target, GLint s, GLint t, GLint r, GLint q)
-{
-    return GL_MultiTexCoord4i(target, s, t, r, q);
-}
-
-void GL_APIENTRY glMultiTexCoord4iv(GLenum target, const GLint *v)
-{
-    return GL_MultiTexCoord4iv(target, v);
-}
-
-void GL_APIENTRY glMultiTexCoord4s(GLenum target, GLshort s, GLshort t, GLshort r, GLshort q)
-{
-    return GL_MultiTexCoord4s(target, s, t, r, q);
-}
-
-void GL_APIENTRY glMultiTexCoord4sv(GLenum target, const GLshort *v)
-{
-    return GL_MultiTexCoord4sv(target, v);
-}
-
-// GL 1.4
-void GL_APIENTRY glFogCoordPointer(GLenum type, GLsizei stride, const void *pointer)
-{
-    return GL_FogCoordPointer(type, stride, pointer);
-}
-
-void GL_APIENTRY glFogCoordd(GLdouble coord)
-{
-    return GL_FogCoordd(coord);
-}
-
-void GL_APIENTRY glFogCoorddv(const GLdouble *coord)
-{
-    return GL_FogCoorddv(coord);
-}
-
-void GL_APIENTRY glFogCoordf(GLfloat coord)
-{
-    return GL_FogCoordf(coord);
-}
-
-void GL_APIENTRY glFogCoordfv(const GLfloat *coord)
-{
-    return GL_FogCoordfv(coord);
-}
-
-void GL_APIENTRY glMultiDrawArrays(GLenum mode,
-                                   const GLint *first,
-                                   const GLsizei *count,
-                                   GLsizei drawcount)
-{
-    return GL_MultiDrawArrays(mode, first, count, drawcount);
-}
-
-void GL_APIENTRY glMultiDrawElements(GLenum mode,
-                                     const GLsizei *count,
-                                     GLenum type,
-                                     const void *const *indices,
-                                     GLsizei drawcount)
-{
-    return GL_MultiDrawElements(mode, count, type, indices, drawcount);
-}
-
-void GL_APIENTRY glPointParameteri(GLenum pname, GLint param)
-{
-    return GL_PointParameteri(pname, param);
-}
-
-void GL_APIENTRY glPointParameteriv(GLenum pname, const GLint *params)
-{
-    return GL_PointParameteriv(pname, params);
-}
-
-void GL_APIENTRY glSecondaryColor3b(GLbyte red, GLbyte green, GLbyte blue)
-{
-    return GL_SecondaryColor3b(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3bv(const GLbyte *v)
-{
-    return GL_SecondaryColor3bv(v);
-}
-
-void GL_APIENTRY glSecondaryColor3d(GLdouble red, GLdouble green, GLdouble blue)
-{
-    return GL_SecondaryColor3d(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3dv(const GLdouble *v)
-{
-    return GL_SecondaryColor3dv(v);
-}
-
-void GL_APIENTRY glSecondaryColor3f(GLfloat red, GLfloat green, GLfloat blue)
-{
-    return GL_SecondaryColor3f(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3fv(const GLfloat *v)
-{
-    return GL_SecondaryColor3fv(v);
-}
-
-void GL_APIENTRY glSecondaryColor3i(GLint red, GLint green, GLint blue)
-{
-    return GL_SecondaryColor3i(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3iv(const GLint *v)
-{
-    return GL_SecondaryColor3iv(v);
-}
-
-void GL_APIENTRY glSecondaryColor3s(GLshort red, GLshort green, GLshort blue)
-{
-    return GL_SecondaryColor3s(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3sv(const GLshort *v)
-{
-    return GL_SecondaryColor3sv(v);
-}
-
-void GL_APIENTRY glSecondaryColor3ub(GLubyte red, GLubyte green, GLubyte blue)
-{
-    return GL_SecondaryColor3ub(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3ubv(const GLubyte *v)
-{
-    return GL_SecondaryColor3ubv(v);
-}
-
-void GL_APIENTRY glSecondaryColor3ui(GLuint red, GLuint green, GLuint blue)
-{
-    return GL_SecondaryColor3ui(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3uiv(const GLuint *v)
-{
-    return GL_SecondaryColor3uiv(v);
-}
-
-void GL_APIENTRY glSecondaryColor3us(GLushort red, GLushort green, GLushort blue)
-{
-    return GL_SecondaryColor3us(red, green, blue);
-}
-
-void GL_APIENTRY glSecondaryColor3usv(const GLushort *v)
-{
-    return GL_SecondaryColor3usv(v);
-}
-
-void GL_APIENTRY glSecondaryColorPointer(GLint size,
-                                         GLenum type,
-                                         GLsizei stride,
-                                         const void *pointer)
-{
-    return GL_SecondaryColorPointer(size, type, stride, pointer);
-}
-
-void GL_APIENTRY glWindowPos2d(GLdouble x, GLdouble y)
-{
-    return GL_WindowPos2d(x, y);
-}
-
-void GL_APIENTRY glWindowPos2dv(const GLdouble *v)
-{
-    return GL_WindowPos2dv(v);
-}
-
-void GL_APIENTRY glWindowPos2f(GLfloat x, GLfloat y)
-{
-    return GL_WindowPos2f(x, y);
-}
-
-void GL_APIENTRY glWindowPos2fv(const GLfloat *v)
-{
-    return GL_WindowPos2fv(v);
-}
-
-void GL_APIENTRY glWindowPos2i(GLint x, GLint y)
-{
-    return GL_WindowPos2i(x, y);
-}
-
-void GL_APIENTRY glWindowPos2iv(const GLint *v)
-{
-    return GL_WindowPos2iv(v);
-}
-
-void GL_APIENTRY glWindowPos2s(GLshort x, GLshort y)
-{
-    return GL_WindowPos2s(x, y);
-}
-
-void GL_APIENTRY glWindowPos2sv(const GLshort *v)
-{
-    return GL_WindowPos2sv(v);
-}
-
-void GL_APIENTRY glWindowPos3d(GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_WindowPos3d(x, y, z);
-}
-
-void GL_APIENTRY glWindowPos3dv(const GLdouble *v)
-{
-    return GL_WindowPos3dv(v);
-}
-
-void GL_APIENTRY glWindowPos3f(GLfloat x, GLfloat y, GLfloat z)
-{
-    return GL_WindowPos3f(x, y, z);
-}
-
-void GL_APIENTRY glWindowPos3fv(const GLfloat *v)
-{
-    return GL_WindowPos3fv(v);
-}
-
-void GL_APIENTRY glWindowPos3i(GLint x, GLint y, GLint z)
-{
-    return GL_WindowPos3i(x, y, z);
-}
-
-void GL_APIENTRY glWindowPos3iv(const GLint *v)
-{
-    return GL_WindowPos3iv(v);
-}
-
-void GL_APIENTRY glWindowPos3s(GLshort x, GLshort y, GLshort z)
-{
-    return GL_WindowPos3s(x, y, z);
-}
-
-void GL_APIENTRY glWindowPos3sv(const GLshort *v)
-{
-    return GL_WindowPos3sv(v);
-}
-
-// GL 1.5
-void GL_APIENTRY glGetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void *data)
-{
-    return GL_GetBufferSubData(target, offset, size, data);
-}
-
-void GL_APIENTRY glGetQueryObjectiv(GLuint id, GLenum pname, GLint *params)
-{
-    return GL_GetQueryObjectiv(id, pname, params);
-}
-
-void *GL_APIENTRY glMapBuffer(GLenum target, GLenum access)
-{
-    return GL_MapBuffer(target, access);
-}
-
-// GL 2.0
-void GL_APIENTRY glGetVertexAttribdv(GLuint index, GLenum pname, GLdouble *params)
-{
-    return GL_GetVertexAttribdv(index, pname, params);
-}
-
-void GL_APIENTRY glVertexAttrib1d(GLuint index, GLdouble x)
-{
-    return GL_VertexAttrib1d(index, x);
-}
-
-void GL_APIENTRY glVertexAttrib1dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttrib1dv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib1s(GLuint index, GLshort x)
-{
-    return GL_VertexAttrib1s(index, x);
-}
-
-void GL_APIENTRY glVertexAttrib1sv(GLuint index, const GLshort *v)
-{
-    return GL_VertexAttrib1sv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib2d(GLuint index, GLdouble x, GLdouble y)
-{
-    return GL_VertexAttrib2d(index, x, y);
-}
-
-void GL_APIENTRY glVertexAttrib2dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttrib2dv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib2s(GLuint index, GLshort x, GLshort y)
-{
-    return GL_VertexAttrib2s(index, x, y);
-}
-
-void GL_APIENTRY glVertexAttrib2sv(GLuint index, const GLshort *v)
-{
-    return GL_VertexAttrib2sv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib3d(GLuint index, GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_VertexAttrib3d(index, x, y, z);
-}
-
-void GL_APIENTRY glVertexAttrib3dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttrib3dv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib3s(GLuint index, GLshort x, GLshort y, GLshort z)
-{
-    return GL_VertexAttrib3s(index, x, y, z);
-}
-
-void GL_APIENTRY glVertexAttrib3sv(GLuint index, const GLshort *v)
-{
-    return GL_VertexAttrib3sv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4Nbv(GLuint index, const GLbyte *v)
-{
-    return GL_VertexAttrib4Nbv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4Niv(GLuint index, const GLint *v)
-{
-    return GL_VertexAttrib4Niv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4Nsv(GLuint index, const GLshort *v)
-{
-    return GL_VertexAttrib4Nsv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4Nub(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)
-{
-    return GL_VertexAttrib4Nub(index, x, y, z, w);
-}
-
-void GL_APIENTRY glVertexAttrib4Nubv(GLuint index, const GLubyte *v)
-{
-    return GL_VertexAttrib4Nubv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4Nuiv(GLuint index, const GLuint *v)
-{
-    return GL_VertexAttrib4Nuiv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4Nusv(GLuint index, const GLushort *v)
-{
-    return GL_VertexAttrib4Nusv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4bv(GLuint index, const GLbyte *v)
-{
-    return GL_VertexAttrib4bv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4d(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-    return GL_VertexAttrib4d(index, x, y, z, w);
-}
-
-void GL_APIENTRY glVertexAttrib4dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttrib4dv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4iv(GLuint index, const GLint *v)
-{
-    return GL_VertexAttrib4iv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4s(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)
-{
-    return GL_VertexAttrib4s(index, x, y, z, w);
-}
-
-void GL_APIENTRY glVertexAttrib4sv(GLuint index, const GLshort *v)
-{
-    return GL_VertexAttrib4sv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4ubv(GLuint index, const GLubyte *v)
-{
-    return GL_VertexAttrib4ubv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4uiv(GLuint index, const GLuint *v)
-{
-    return GL_VertexAttrib4uiv(index, v);
-}
-
-void GL_APIENTRY glVertexAttrib4usv(GLuint index, const GLushort *v)
-{
-    return GL_VertexAttrib4usv(index, v);
-}
-
-// GL 2.1
-
-// GL 3.0
-void GL_APIENTRY glBeginConditionalRender(GLuint id, GLenum mode)
-{
-    return GL_BeginConditionalRender(id, mode);
-}
-
-void GL_APIENTRY glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name)
-{
-    return GL_BindFragDataLocation(program, color, name);
-}
-
-void GL_APIENTRY glClampColor(GLenum target, GLenum clamp)
-{
-    return GL_ClampColor(target, clamp);
-}
-
-void GL_APIENTRY glEndConditionalRender()
-{
-    return GL_EndConditionalRender();
-}
-
-void GL_APIENTRY glFramebufferTexture1D(GLenum target,
-                                        GLenum attachment,
-                                        GLenum textarget,
-                                        GLuint texture,
-                                        GLint level)
-{
-    return GL_FramebufferTexture1D(target, attachment, textarget, texture, level);
-}
-
-void GL_APIENTRY glFramebufferTexture3D(GLenum target,
-                                        GLenum attachment,
-                                        GLenum textarget,
-                                        GLuint texture,
-                                        GLint level,
-                                        GLint zoffset)
-{
-    return GL_FramebufferTexture3D(target, attachment, textarget, texture, level, zoffset);
-}
-
-void GL_APIENTRY glVertexAttribI1i(GLuint index, GLint x)
-{
-    return GL_VertexAttribI1i(index, x);
-}
-
-void GL_APIENTRY glVertexAttribI1iv(GLuint index, const GLint *v)
-{
-    return GL_VertexAttribI1iv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI1ui(GLuint index, GLuint x)
-{
-    return GL_VertexAttribI1ui(index, x);
-}
-
-void GL_APIENTRY glVertexAttribI1uiv(GLuint index, const GLuint *v)
-{
-    return GL_VertexAttribI1uiv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI2i(GLuint index, GLint x, GLint y)
-{
-    return GL_VertexAttribI2i(index, x, y);
-}
-
-void GL_APIENTRY glVertexAttribI2iv(GLuint index, const GLint *v)
-{
-    return GL_VertexAttribI2iv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI2ui(GLuint index, GLuint x, GLuint y)
-{
-    return GL_VertexAttribI2ui(index, x, y);
-}
-
-void GL_APIENTRY glVertexAttribI2uiv(GLuint index, const GLuint *v)
-{
-    return GL_VertexAttribI2uiv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI3i(GLuint index, GLint x, GLint y, GLint z)
-{
-    return GL_VertexAttribI3i(index, x, y, z);
-}
-
-void GL_APIENTRY glVertexAttribI3iv(GLuint index, const GLint *v)
-{
-    return GL_VertexAttribI3iv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI3ui(GLuint index, GLuint x, GLuint y, GLuint z)
-{
-    return GL_VertexAttribI3ui(index, x, y, z);
-}
-
-void GL_APIENTRY glVertexAttribI3uiv(GLuint index, const GLuint *v)
-{
-    return GL_VertexAttribI3uiv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI4bv(GLuint index, const GLbyte *v)
-{
-    return GL_VertexAttribI4bv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI4sv(GLuint index, const GLshort *v)
-{
-    return GL_VertexAttribI4sv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI4ubv(GLuint index, const GLubyte *v)
-{
-    return GL_VertexAttribI4ubv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribI4usv(GLuint index, const GLushort *v)
-{
-    return GL_VertexAttribI4usv(index, v);
-}
-
-// GL 3.1
-void GL_APIENTRY glGetActiveUniformName(GLuint program,
-                                        GLuint uniformIndex,
-                                        GLsizei bufSize,
-                                        GLsizei *length,
-                                        GLchar *uniformName)
-{
-    return GL_GetActiveUniformName(program, uniformIndex, bufSize, length, uniformName);
-}
-
-void GL_APIENTRY glPrimitiveRestartIndex(GLuint index)
-{
-    return GL_PrimitiveRestartIndex(index);
-}
-
-// GL 3.2
-void GL_APIENTRY glMultiDrawElementsBaseVertex(GLenum mode,
-                                               const GLsizei *count,
-                                               GLenum type,
-                                               const void *const *indices,
-                                               GLsizei drawcount,
-                                               const GLint *basevertex)
-{
-    return GL_MultiDrawElementsBaseVertex(mode, count, type, indices, drawcount, basevertex);
-}
-
-void GL_APIENTRY glProvokingVertex(GLenum mode)
-{
-    return GL_ProvokingVertex(mode);
-}
-
-void GL_APIENTRY glTexImage2DMultisample(GLenum target,
-                                         GLsizei samples,
-                                         GLenum internalformat,
-                                         GLsizei width,
-                                         GLsizei height,
-                                         GLboolean fixedsamplelocations)
-{
-    return GL_TexImage2DMultisample(target, samples, internalformat, width, height,
-                                    fixedsamplelocations);
-}
-
-void GL_APIENTRY glTexImage3DMultisample(GLenum target,
-                                         GLsizei samples,
-                                         GLenum internalformat,
-                                         GLsizei width,
-                                         GLsizei height,
-                                         GLsizei depth,
-                                         GLboolean fixedsamplelocations)
-{
-    return GL_TexImage3DMultisample(target, samples, internalformat, width, height, depth,
-                                    fixedsamplelocations);
-}
-
-// GL 3.3
-void GL_APIENTRY glBindFragDataLocationIndexed(GLuint program,
-                                               GLuint colorNumber,
-                                               GLuint index,
-                                               const GLchar *name)
-{
-    return GL_BindFragDataLocationIndexed(program, colorNumber, index, name);
-}
-
-void GL_APIENTRY glColorP3ui(GLenum type, GLuint color)
-{
-    return GL_ColorP3ui(type, color);
-}
-
-void GL_APIENTRY glColorP3uiv(GLenum type, const GLuint *color)
-{
-    return GL_ColorP3uiv(type, color);
-}
-
-void GL_APIENTRY glColorP4ui(GLenum type, GLuint color)
-{
-    return GL_ColorP4ui(type, color);
-}
-
-void GL_APIENTRY glColorP4uiv(GLenum type, const GLuint *color)
-{
-    return GL_ColorP4uiv(type, color);
-}
-
-GLint GL_APIENTRY glGetFragDataIndex(GLuint program, const GLchar *name)
-{
-    return GL_GetFragDataIndex(program, name);
-}
-
-void GL_APIENTRY glGetQueryObjecti64v(GLuint id, GLenum pname, GLint64 *params)
-{
-    return GL_GetQueryObjecti64v(id, pname, params);
-}
-
-void GL_APIENTRY glGetQueryObjectui64v(GLuint id, GLenum pname, GLuint64 *params)
-{
-    return GL_GetQueryObjectui64v(id, pname, params);
-}
-
-void GL_APIENTRY glMultiTexCoordP1ui(GLenum texture, GLenum type, GLuint coords)
-{
-    return GL_MultiTexCoordP1ui(texture, type, coords);
-}
-
-void GL_APIENTRY glMultiTexCoordP1uiv(GLenum texture, GLenum type, const GLuint *coords)
-{
-    return GL_MultiTexCoordP1uiv(texture, type, coords);
-}
-
-void GL_APIENTRY glMultiTexCoordP2ui(GLenum texture, GLenum type, GLuint coords)
-{
-    return GL_MultiTexCoordP2ui(texture, type, coords);
-}
-
-void GL_APIENTRY glMultiTexCoordP2uiv(GLenum texture, GLenum type, const GLuint *coords)
-{
-    return GL_MultiTexCoordP2uiv(texture, type, coords);
-}
-
-void GL_APIENTRY glMultiTexCoordP3ui(GLenum texture, GLenum type, GLuint coords)
-{
-    return GL_MultiTexCoordP3ui(texture, type, coords);
-}
-
-void GL_APIENTRY glMultiTexCoordP3uiv(GLenum texture, GLenum type, const GLuint *coords)
-{
-    return GL_MultiTexCoordP3uiv(texture, type, coords);
-}
-
-void GL_APIENTRY glMultiTexCoordP4ui(GLenum texture, GLenum type, GLuint coords)
-{
-    return GL_MultiTexCoordP4ui(texture, type, coords);
-}
-
-void GL_APIENTRY glMultiTexCoordP4uiv(GLenum texture, GLenum type, const GLuint *coords)
-{
-    return GL_MultiTexCoordP4uiv(texture, type, coords);
-}
-
-void GL_APIENTRY glNormalP3ui(GLenum type, GLuint coords)
-{
-    return GL_NormalP3ui(type, coords);
-}
-
-void GL_APIENTRY glNormalP3uiv(GLenum type, const GLuint *coords)
-{
-    return GL_NormalP3uiv(type, coords);
-}
-
-void GL_APIENTRY glQueryCounter(GLuint id, GLenum target)
-{
-    return GL_QueryCounter(id, target);
-}
-
-void GL_APIENTRY glSecondaryColorP3ui(GLenum type, GLuint color)
-{
-    return GL_SecondaryColorP3ui(type, color);
-}
-
-void GL_APIENTRY glSecondaryColorP3uiv(GLenum type, const GLuint *color)
-{
-    return GL_SecondaryColorP3uiv(type, color);
-}
-
-void GL_APIENTRY glTexCoordP1ui(GLenum type, GLuint coords)
-{
-    return GL_TexCoordP1ui(type, coords);
-}
-
-void GL_APIENTRY glTexCoordP1uiv(GLenum type, const GLuint *coords)
-{
-    return GL_TexCoordP1uiv(type, coords);
-}
-
-void GL_APIENTRY glTexCoordP2ui(GLenum type, GLuint coords)
-{
-    return GL_TexCoordP2ui(type, coords);
-}
-
-void GL_APIENTRY glTexCoordP2uiv(GLenum type, const GLuint *coords)
-{
-    return GL_TexCoordP2uiv(type, coords);
-}
-
-void GL_APIENTRY glTexCoordP3ui(GLenum type, GLuint coords)
-{
-    return GL_TexCoordP3ui(type, coords);
-}
-
-void GL_APIENTRY glTexCoordP3uiv(GLenum type, const GLuint *coords)
-{
-    return GL_TexCoordP3uiv(type, coords);
-}
-
-void GL_APIENTRY glTexCoordP4ui(GLenum type, GLuint coords)
-{
-    return GL_TexCoordP4ui(type, coords);
-}
-
-void GL_APIENTRY glTexCoordP4uiv(GLenum type, const GLuint *coords)
-{
-    return GL_TexCoordP4uiv(type, coords);
-}
-
-void GL_APIENTRY glVertexAttribP1ui(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-    return GL_VertexAttribP1ui(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexAttribP1uiv(GLuint index,
-                                     GLenum type,
-                                     GLboolean normalized,
-                                     const GLuint *value)
-{
-    return GL_VertexAttribP1uiv(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexAttribP2ui(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-    return GL_VertexAttribP2ui(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexAttribP2uiv(GLuint index,
-                                     GLenum type,
-                                     GLboolean normalized,
-                                     const GLuint *value)
-{
-    return GL_VertexAttribP2uiv(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexAttribP3ui(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-    return GL_VertexAttribP3ui(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexAttribP3uiv(GLuint index,
-                                     GLenum type,
-                                     GLboolean normalized,
-                                     const GLuint *value)
-{
-    return GL_VertexAttribP3uiv(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexAttribP4ui(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-    return GL_VertexAttribP4ui(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexAttribP4uiv(GLuint index,
-                                     GLenum type,
-                                     GLboolean normalized,
-                                     const GLuint *value)
-{
-    return GL_VertexAttribP4uiv(index, type, normalized, value);
-}
-
-void GL_APIENTRY glVertexP2ui(GLenum type, GLuint value)
-{
-    return GL_VertexP2ui(type, value);
-}
-
-void GL_APIENTRY glVertexP2uiv(GLenum type, const GLuint *value)
-{
-    return GL_VertexP2uiv(type, value);
-}
-
-void GL_APIENTRY glVertexP3ui(GLenum type, GLuint value)
-{
-    return GL_VertexP3ui(type, value);
-}
-
-void GL_APIENTRY glVertexP3uiv(GLenum type, const GLuint *value)
+void GL_APIENTRY glActiveShaderProgramEXTContextANGLE(GLeglContext ctx,
+                                                      GLuint pipeline,
+                                                      GLuint program)
 {
-    return GL_VertexP3uiv(type, value);
+    return GL_ActiveShaderProgramEXTContextANGLE(ctx, pipeline, program);
 }
 
-void GL_APIENTRY glVertexP4ui(GLenum type, GLuint value)
+void GL_APIENTRY glActiveTextureContextANGLE(GLeglContext ctx, GLenum texture)
 {
-    return GL_VertexP4ui(type, value);
+    return GL_ActiveTextureContextANGLE(ctx, texture);
 }
 
-void GL_APIENTRY glVertexP4uiv(GLenum type, const GLuint *value)
+void GL_APIENTRY glAlphaFuncContextANGLE(GLeglContext ctx, GLenum func, GLfloat ref)
 {
-    return GL_VertexP4uiv(type, value);
+    return GL_AlphaFuncContextANGLE(ctx, func, ref);
 }
 
-// GL 4.0
-void GL_APIENTRY glBeginQueryIndexed(GLenum target, GLuint index, GLuint id)
+void GL_APIENTRY glAlphaFuncxContextANGLE(GLeglContext ctx, GLenum func, GLfixed ref)
 {
-    return GL_BeginQueryIndexed(target, index, id);
+    return GL_AlphaFuncxContextANGLE(ctx, func, ref);
 }
 
-void GL_APIENTRY glDrawTransformFeedback(GLenum mode, GLuint id)
+void GL_APIENTRY glAttachShaderContextANGLE(GLeglContext ctx, GLuint program, GLuint shader)
 {
-    return GL_DrawTransformFeedback(mode, id);
+    return GL_AttachShaderContextANGLE(ctx, program, shader);
 }
 
-void GL_APIENTRY glDrawTransformFeedbackStream(GLenum mode, GLuint id, GLuint stream)
+void GL_APIENTRY glBeginQueryContextANGLE(GLeglContext ctx, GLenum target, GLuint id)
 {
-    return GL_DrawTransformFeedbackStream(mode, id, stream);
+    return GL_BeginQueryContextANGLE(ctx, target, id);
 }
 
-void GL_APIENTRY glEndQueryIndexed(GLenum target, GLuint index)
+void GL_APIENTRY glBeginQueryEXTContextANGLE(GLeglContext ctx, GLenum target, GLuint id)
 {
-    return GL_EndQueryIndexed(target, index);
+    return GL_BeginQueryEXTContextANGLE(ctx, target, id);
 }
 
-void GL_APIENTRY glGetActiveSubroutineName(GLuint program,
-                                           GLenum shadertype,
-                                           GLuint index,
-                                           GLsizei bufSize,
-                                           GLsizei *length,
-                                           GLchar *name)
+void GL_APIENTRY glBeginTransformFeedbackContextANGLE(GLeglContext ctx, GLenum primitiveMode)
 {
-    return GL_GetActiveSubroutineName(program, shadertype, index, bufSize, length, name);
+    return GL_BeginTransformFeedbackContextANGLE(ctx, primitiveMode);
 }
 
-void GL_APIENTRY glGetActiveSubroutineUniformName(GLuint program,
-                                                  GLenum shadertype,
+void GL_APIENTRY glBindAttribLocationContextANGLE(GLeglContext ctx,
+                                                  GLuint program,
                                                   GLuint index,
-                                                  GLsizei bufSize,
-                                                  GLsizei *length,
-                                                  GLchar *name)
+                                                  const GLchar *name)
 {
-    return GL_GetActiveSubroutineUniformName(program, shadertype, index, bufSize, length, name);
+    return GL_BindAttribLocationContextANGLE(ctx, program, index, name);
 }
 
-void GL_APIENTRY glGetActiveSubroutineUniformiv(GLuint program,
-                                                GLenum shadertype,
-                                                GLuint index,
-                                                GLenum pname,
-                                                GLint *values)
+void GL_APIENTRY glBindBufferContextANGLE(GLeglContext ctx, GLenum target, GLuint buffer)
 {
-    return GL_GetActiveSubroutineUniformiv(program, shadertype, index, pname, values);
+    return GL_BindBufferContextANGLE(ctx, target, buffer);
 }
 
-void GL_APIENTRY glGetProgramStageiv(GLuint program, GLenum shadertype, GLenum pname, GLint *values)
+void GL_APIENTRY glBindBufferBaseContextANGLE(GLeglContext ctx,
+                                              GLenum target,
+                                              GLuint index,
+                                              GLuint buffer)
 {
-    return GL_GetProgramStageiv(program, shadertype, pname, values);
+    return GL_BindBufferBaseContextANGLE(ctx, target, index, buffer);
 }
 
-void GL_APIENTRY glGetQueryIndexediv(GLenum target, GLuint index, GLenum pname, GLint *params)
+void GL_APIENTRY glBindBufferRangeContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLuint index,
+                                               GLuint buffer,
+                                               GLintptr offset,
+                                               GLsizeiptr size)
 {
-    return GL_GetQueryIndexediv(target, index, pname, params);
+    return GL_BindBufferRangeContextANGLE(ctx, target, index, buffer, offset, size);
 }
 
-GLuint GL_APIENTRY glGetSubroutineIndex(GLuint program, GLenum shadertype, const GLchar *name)
+void GL_APIENTRY glBindFragDataLocationEXTContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLuint color,
+                                                       const GLchar *name)
 {
-    return GL_GetSubroutineIndex(program, shadertype, name);
+    return GL_BindFragDataLocationEXTContextANGLE(ctx, program, color, name);
 }
 
-GLint GL_APIENTRY glGetSubroutineUniformLocation(GLuint program,
-                                                 GLenum shadertype,
-                                                 const GLchar *name)
+void GL_APIENTRY glBindFragDataLocationIndexedEXTContextANGLE(GLeglContext ctx,
+                                                              GLuint program,
+                                                              GLuint colorNumber,
+                                                              GLuint index,
+                                                              const GLchar *name)
 {
-    return GL_GetSubroutineUniformLocation(program, shadertype, name);
+    return GL_BindFragDataLocationIndexedEXTContextANGLE(ctx, program, colorNumber, index, name);
 }
 
-void GL_APIENTRY glGetUniformSubroutineuiv(GLenum shadertype, GLint location, GLuint *params)
+void GL_APIENTRY glBindFramebufferContextANGLE(GLeglContext ctx, GLenum target, GLuint framebuffer)
 {
-    return GL_GetUniformSubroutineuiv(shadertype, location, params);
+    return GL_BindFramebufferContextANGLE(ctx, target, framebuffer);
 }
 
-void GL_APIENTRY glGetUniformdv(GLuint program, GLint location, GLdouble *params)
+void GL_APIENTRY glBindFramebufferOESContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
+                                                  GLuint framebuffer)
 {
-    return GL_GetUniformdv(program, location, params);
+    return GL_BindFramebufferOESContextANGLE(ctx, target, framebuffer);
 }
 
-void GL_APIENTRY glPatchParameterfv(GLenum pname, const GLfloat *values)
+void GL_APIENTRY glBindImageTextureContextANGLE(GLeglContext ctx,
+                                                GLuint unit,
+                                                GLuint texture,
+                                                GLint level,
+                                                GLboolean layered,
+                                                GLint layer,
+                                                GLenum access,
+                                                GLenum format)
 {
-    return GL_PatchParameterfv(pname, values);
+    return GL_BindImageTextureContextANGLE(ctx, unit, texture, level, layered, layer, access,
+                                           format);
 }
 
-void GL_APIENTRY glUniform1d(GLint location, GLdouble x)
+void GL_APIENTRY glBindProgramPipelineContextANGLE(GLeglContext ctx, GLuint pipeline)
 {
-    return GL_Uniform1d(location, x);
+    return GL_BindProgramPipelineContextANGLE(ctx, pipeline);
 }
 
-void GL_APIENTRY glUniform1dv(GLint location, GLsizei count, const GLdouble *value)
+void GL_APIENTRY glBindProgramPipelineEXTContextANGLE(GLeglContext ctx, GLuint pipeline)
 {
-    return GL_Uniform1dv(location, count, value);
+    return GL_BindProgramPipelineEXTContextANGLE(ctx, pipeline);
 }
 
-void GL_APIENTRY glUniform2d(GLint location, GLdouble x, GLdouble y)
+void GL_APIENTRY glBindRenderbufferContextANGLE(GLeglContext ctx,
+                                                GLenum target,
+                                                GLuint renderbuffer)
 {
-    return GL_Uniform2d(location, x, y);
+    return GL_BindRenderbufferContextANGLE(ctx, target, renderbuffer);
 }
 
-void GL_APIENTRY glUniform2dv(GLint location, GLsizei count, const GLdouble *value)
+void GL_APIENTRY glBindRenderbufferOESContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLuint renderbuffer)
 {
-    return GL_Uniform2dv(location, count, value);
+    return GL_BindRenderbufferOESContextANGLE(ctx, target, renderbuffer);
 }
 
-void GL_APIENTRY glUniform3d(GLint location, GLdouble x, GLdouble y, GLdouble z)
+void GL_APIENTRY glBindSamplerContextANGLE(GLeglContext ctx, GLuint unit, GLuint sampler)
 {
-    return GL_Uniform3d(location, x, y, z);
+    return GL_BindSamplerContextANGLE(ctx, unit, sampler);
 }
 
-void GL_APIENTRY glUniform3dv(GLint location, GLsizei count, const GLdouble *value)
+void GL_APIENTRY glBindTextureContextANGLE(GLeglContext ctx, GLenum target, GLuint texture)
 {
-    return GL_Uniform3dv(location, count, value);
+    return GL_BindTextureContextANGLE(ctx, target, texture);
 }
 
-void GL_APIENTRY glUniform4d(GLint location, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+void GL_APIENTRY glBindTransformFeedbackContextANGLE(GLeglContext ctx, GLenum target, GLuint id)
 {
-    return GL_Uniform4d(location, x, y, z, w);
+    return GL_BindTransformFeedbackContextANGLE(ctx, target, id);
 }
 
-void GL_APIENTRY glUniform4dv(GLint location, GLsizei count, const GLdouble *value)
+void GL_APIENTRY glBindVertexArrayContextANGLE(GLeglContext ctx, GLuint array)
 {
-    return GL_Uniform4dv(location, count, value);
+    return GL_BindVertexArrayContextANGLE(ctx, array);
 }
 
-void GL_APIENTRY glUniformMatrix2dv(GLint location,
-                                    GLsizei count,
-                                    GLboolean transpose,
-                                    const GLdouble *value)
+void GL_APIENTRY glBindVertexArrayOESContextANGLE(GLeglContext ctx, GLuint array)
 {
-    return GL_UniformMatrix2dv(location, count, transpose, value);
+    return GL_BindVertexArrayOESContextANGLE(ctx, array);
 }
 
-void GL_APIENTRY glUniformMatrix2x3dv(GLint location,
-                                      GLsizei count,
-                                      GLboolean transpose,
-                                      const GLdouble *value)
+void GL_APIENTRY glBindVertexBufferContextANGLE(GLeglContext ctx,
+                                                GLuint bindingindex,
+                                                GLuint buffer,
+                                                GLintptr offset,
+                                                GLsizei stride)
 {
-    return GL_UniformMatrix2x3dv(location, count, transpose, value);
+    return GL_BindVertexBufferContextANGLE(ctx, bindingindex, buffer, offset, stride);
 }
 
-void GL_APIENTRY glUniformMatrix2x4dv(GLint location,
-                                      GLsizei count,
-                                      GLboolean transpose,
-                                      const GLdouble *value)
+void GL_APIENTRY glBlendBarrierContextANGLE(GLeglContext ctx)
 {
-    return GL_UniformMatrix2x4dv(location, count, transpose, value);
+    return GL_BlendBarrierContextANGLE(ctx);
 }
 
-void GL_APIENTRY glUniformMatrix3dv(GLint location,
-                                    GLsizei count,
-                                    GLboolean transpose,
-                                    const GLdouble *value)
+void GL_APIENTRY glBlendBarrierKHRContextANGLE(GLeglContext ctx)
 {
-    return GL_UniformMatrix3dv(location, count, transpose, value);
-}
-
-void GL_APIENTRY glUniformMatrix3x2dv(GLint location,
-                                      GLsizei count,
-                                      GLboolean transpose,
-                                      const GLdouble *value)
-{
-    return GL_UniformMatrix3x2dv(location, count, transpose, value);
-}
-
-void GL_APIENTRY glUniformMatrix3x4dv(GLint location,
-                                      GLsizei count,
-                                      GLboolean transpose,
-                                      const GLdouble *value)
-{
-    return GL_UniformMatrix3x4dv(location, count, transpose, value);
-}
-
-void GL_APIENTRY glUniformMatrix4dv(GLint location,
-                                    GLsizei count,
-                                    GLboolean transpose,
-                                    const GLdouble *value)
-{
-    return GL_UniformMatrix4dv(location, count, transpose, value);
-}
-
-void GL_APIENTRY glUniformMatrix4x2dv(GLint location,
-                                      GLsizei count,
-                                      GLboolean transpose,
-                                      const GLdouble *value)
-{
-    return GL_UniformMatrix4x2dv(location, count, transpose, value);
-}
-
-void GL_APIENTRY glUniformMatrix4x3dv(GLint location,
-                                      GLsizei count,
-                                      GLboolean transpose,
-                                      const GLdouble *value)
-{
-    return GL_UniformMatrix4x3dv(location, count, transpose, value);
-}
-
-void GL_APIENTRY glUniformSubroutinesuiv(GLenum shadertype, GLsizei count, const GLuint *indices)
-{
-    return GL_UniformSubroutinesuiv(shadertype, count, indices);
-}
-
-// GL 4.1
-void GL_APIENTRY glDepthRangeArrayv(GLuint first, GLsizei count, const GLdouble *v)
-{
-    return GL_DepthRangeArrayv(first, count, v);
-}
-
-void GL_APIENTRY glDepthRangeIndexed(GLuint index, GLdouble n, GLdouble f)
-{
-    return GL_DepthRangeIndexed(index, n, f);
-}
-
-void GL_APIENTRY glGetDoublei_v(GLenum target, GLuint index, GLdouble *data)
-{
-    return GL_GetDoublei_v(target, index, data);
-}
-
-void GL_APIENTRY glGetFloati_v(GLenum target, GLuint index, GLfloat *data)
-{
-    return GL_GetFloati_v(target, index, data);
-}
-
-void GL_APIENTRY glGetVertexAttribLdv(GLuint index, GLenum pname, GLdouble *params)
-{
-    return GL_GetVertexAttribLdv(index, pname, params);
-}
-
-void GL_APIENTRY glProgramUniform1d(GLuint program, GLint location, GLdouble v0)
-{
-    return GL_ProgramUniform1d(program, location, v0);
-}
-
-void GL_APIENTRY glProgramUniform1dv(GLuint program,
-                                     GLint location,
-                                     GLsizei count,
-                                     const GLdouble *value)
-{
-    return GL_ProgramUniform1dv(program, location, count, value);
-}
-
-void GL_APIENTRY glProgramUniform2d(GLuint program, GLint location, GLdouble v0, GLdouble v1)
-{
-    return GL_ProgramUniform2d(program, location, v0, v1);
-}
-
-void GL_APIENTRY glProgramUniform2dv(GLuint program,
-                                     GLint location,
-                                     GLsizei count,
-                                     const GLdouble *value)
-{
-    return GL_ProgramUniform2dv(program, location, count, value);
+    return GL_BlendBarrierKHRContextANGLE(ctx);
 }
 
 void GL_APIENTRY
-glProgramUniform3d(GLuint program, GLint location, GLdouble v0, GLdouble v1, GLdouble v2)
+glBlendColorContextANGLE(GLeglContext ctx, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
-    return GL_ProgramUniform3d(program, location, v0, v1, v2);
+    return GL_BlendColorContextANGLE(ctx, red, green, blue, alpha);
 }
 
-void GL_APIENTRY glProgramUniform3dv(GLuint program,
-                                     GLint location,
-                                     GLsizei count,
-                                     const GLdouble *value)
+void GL_APIENTRY glBlendEquationContextANGLE(GLeglContext ctx, GLenum mode)
 {
-    return GL_ProgramUniform3dv(program, location, count, value);
+    return GL_BlendEquationContextANGLE(ctx, mode);
 }
 
-void GL_APIENTRY glProgramUniform4d(GLuint program,
-                                    GLint location,
-                                    GLdouble v0,
-                                    GLdouble v1,
-                                    GLdouble v2,
-                                    GLdouble v3)
+void GL_APIENTRY glBlendEquationSeparateContextANGLE(GLeglContext ctx,
+                                                     GLenum modeRGB,
+                                                     GLenum modeAlpha)
 {
-    return GL_ProgramUniform4d(program, location, v0, v1, v2, v3);
+    return GL_BlendEquationSeparateContextANGLE(ctx, modeRGB, modeAlpha);
 }
 
-void GL_APIENTRY glProgramUniform4dv(GLuint program,
-                                     GLint location,
-                                     GLsizei count,
-                                     const GLdouble *value)
+void GL_APIENTRY glBlendEquationSeparateiContextANGLE(GLeglContext ctx,
+                                                      GLuint buf,
+                                                      GLenum modeRGB,
+                                                      GLenum modeAlpha)
 {
-    return GL_ProgramUniform4dv(program, location, count, value);
+    return GL_BlendEquationSeparateiContextANGLE(ctx, buf, modeRGB, modeAlpha);
 }
 
-void GL_APIENTRY glProgramUniformMatrix2dv(GLuint program,
-                                           GLint location,
-                                           GLsizei count,
-                                           GLboolean transpose,
-                                           const GLdouble *value)
+void GL_APIENTRY glBlendEquationSeparateiEXTContextANGLE(GLeglContext ctx,
+                                                         GLuint buf,
+                                                         GLenum modeRGB,
+                                                         GLenum modeAlpha)
 {
-    return GL_ProgramUniformMatrix2dv(program, location, count, transpose, value);
+    return GL_BlendEquationSeparateiEXTContextANGLE(ctx, buf, modeRGB, modeAlpha);
 }
 
-void GL_APIENTRY glProgramUniformMatrix2x3dv(GLuint program,
-                                             GLint location,
-                                             GLsizei count,
-                                             GLboolean transpose,
-                                             const GLdouble *value)
+void GL_APIENTRY glBlendEquationSeparateiOESContextANGLE(GLeglContext ctx,
+                                                         GLuint buf,
+                                                         GLenum modeRGB,
+                                                         GLenum modeAlpha)
 {
-    return GL_ProgramUniformMatrix2x3dv(program, location, count, transpose, value);
+    return GL_BlendEquationSeparateiOESContextANGLE(ctx, buf, modeRGB, modeAlpha);
 }
 
-void GL_APIENTRY glProgramUniformMatrix2x4dv(GLuint program,
-                                             GLint location,
-                                             GLsizei count,
-                                             GLboolean transpose,
-                                             const GLdouble *value)
+void GL_APIENTRY glBlendEquationiContextANGLE(GLeglContext ctx, GLuint buf, GLenum mode)
 {
-    return GL_ProgramUniformMatrix2x4dv(program, location, count, transpose, value);
+    return GL_BlendEquationiContextANGLE(ctx, buf, mode);
 }
 
-void GL_APIENTRY glProgramUniformMatrix3dv(GLuint program,
-                                           GLint location,
-                                           GLsizei count,
-                                           GLboolean transpose,
-                                           const GLdouble *value)
+void GL_APIENTRY glBlendEquationiEXTContextANGLE(GLeglContext ctx, GLuint buf, GLenum mode)
 {
-    return GL_ProgramUniformMatrix3dv(program, location, count, transpose, value);
+    return GL_BlendEquationiEXTContextANGLE(ctx, buf, mode);
 }
 
-void GL_APIENTRY glProgramUniformMatrix3x2dv(GLuint program,
-                                             GLint location,
-                                             GLsizei count,
-                                             GLboolean transpose,
-                                             const GLdouble *value)
+void GL_APIENTRY glBlendEquationiOESContextANGLE(GLeglContext ctx, GLuint buf, GLenum mode)
 {
-    return GL_ProgramUniformMatrix3x2dv(program, location, count, transpose, value);
+    return GL_BlendEquationiOESContextANGLE(ctx, buf, mode);
 }
 
-void GL_APIENTRY glProgramUniformMatrix3x4dv(GLuint program,
-                                             GLint location,
-                                             GLsizei count,
-                                             GLboolean transpose,
-                                             const GLdouble *value)
+void GL_APIENTRY glBlendFuncContextANGLE(GLeglContext ctx, GLenum sfactor, GLenum dfactor)
 {
-    return GL_ProgramUniformMatrix3x4dv(program, location, count, transpose, value);
+    return GL_BlendFuncContextANGLE(ctx, sfactor, dfactor);
 }
 
-void GL_APIENTRY glProgramUniformMatrix4dv(GLuint program,
-                                           GLint location,
-                                           GLsizei count,
-                                           GLboolean transpose,
-                                           const GLdouble *value)
+void GL_APIENTRY glBlendFuncSeparateContextANGLE(GLeglContext ctx,
+                                                 GLenum sfactorRGB,
+                                                 GLenum dfactorRGB,
+                                                 GLenum sfactorAlpha,
+                                                 GLenum dfactorAlpha)
 {
-    return GL_ProgramUniformMatrix4dv(program, location, count, transpose, value);
+    return GL_BlendFuncSeparateContextANGLE(ctx, sfactorRGB, dfactorRGB, sfactorAlpha,
+                                            dfactorAlpha);
 }
 
-void GL_APIENTRY glProgramUniformMatrix4x2dv(GLuint program,
-                                             GLint location,
-                                             GLsizei count,
-                                             GLboolean transpose,
-                                             const GLdouble *value)
+void GL_APIENTRY glBlendFuncSeparateiContextANGLE(GLeglContext ctx,
+                                                  GLuint buf,
+                                                  GLenum srcRGB,
+                                                  GLenum dstRGB,
+                                                  GLenum srcAlpha,
+                                                  GLenum dstAlpha)
 {
-    return GL_ProgramUniformMatrix4x2dv(program, location, count, transpose, value);
+    return GL_BlendFuncSeparateiContextANGLE(ctx, buf, srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
-void GL_APIENTRY glProgramUniformMatrix4x3dv(GLuint program,
-                                             GLint location,
-                                             GLsizei count,
-                                             GLboolean transpose,
-                                             const GLdouble *value)
+void GL_APIENTRY glBlendFuncSeparateiEXTContextANGLE(GLeglContext ctx,
+                                                     GLuint buf,
+                                                     GLenum srcRGB,
+                                                     GLenum dstRGB,
+                                                     GLenum srcAlpha,
+                                                     GLenum dstAlpha)
 {
-    return GL_ProgramUniformMatrix4x3dv(program, location, count, transpose, value);
+    return GL_BlendFuncSeparateiEXTContextANGLE(ctx, buf, srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
-void GL_APIENTRY glScissorArrayv(GLuint first, GLsizei count, const GLint *v)
+void GL_APIENTRY glBlendFuncSeparateiOESContextANGLE(GLeglContext ctx,
+                                                     GLuint buf,
+                                                     GLenum srcRGB,
+                                                     GLenum dstRGB,
+                                                     GLenum srcAlpha,
+                                                     GLenum dstAlpha)
 {
-    return GL_ScissorArrayv(first, count, v);
+    return GL_BlendFuncSeparateiOESContextANGLE(ctx, buf, srcRGB, dstRGB, srcAlpha, dstAlpha);
+}
+
+void GL_APIENTRY glBlendFunciContextANGLE(GLeglContext ctx, GLuint buf, GLenum src, GLenum dst)
+{
+    return GL_BlendFunciContextANGLE(ctx, buf, src, dst);
+}
+
+void GL_APIENTRY glBlendFunciEXTContextANGLE(GLeglContext ctx, GLuint buf, GLenum src, GLenum dst)
+{
+    return GL_BlendFunciEXTContextANGLE(ctx, buf, src, dst);
+}
+
+void GL_APIENTRY glBlendFunciOESContextANGLE(GLeglContext ctx, GLuint buf, GLenum src, GLenum dst)
+{
+    return GL_BlendFunciOESContextANGLE(ctx, buf, src, dst);
+}
+
+void GL_APIENTRY glBlitFramebufferContextANGLE(GLeglContext ctx,
+                                               GLint srcX0,
+                                               GLint srcY0,
+                                               GLint srcX1,
+                                               GLint srcY1,
+                                               GLint dstX0,
+                                               GLint dstY0,
+                                               GLint dstX1,
+                                               GLint dstY1,
+                                               GLbitfield mask,
+                                               GLenum filter)
+{
+    return GL_BlitFramebufferContextANGLE(ctx, srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                                          dstY1, mask, filter);
+}
+
+void GL_APIENTRY glBlitFramebufferANGLEContextANGLE(GLeglContext ctx,
+                                                    GLint srcX0,
+                                                    GLint srcY0,
+                                                    GLint srcX1,
+                                                    GLint srcY1,
+                                                    GLint dstX0,
+                                                    GLint dstY0,
+                                                    GLint dstX1,
+                                                    GLint dstY1,
+                                                    GLbitfield mask,
+                                                    GLenum filter)
+{
+    return GL_BlitFramebufferANGLEContextANGLE(ctx, srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                                               dstY1, mask, filter);
+}
+
+void GL_APIENTRY glBlitFramebufferNVContextANGLE(GLeglContext ctx,
+                                                 GLint srcX0,
+                                                 GLint srcY0,
+                                                 GLint srcX1,
+                                                 GLint srcY1,
+                                                 GLint dstX0,
+                                                 GLint dstY0,
+                                                 GLint dstX1,
+                                                 GLint dstY1,
+                                                 GLbitfield mask,
+                                                 GLenum filter)
+{
+    return GL_BlitFramebufferNVContextANGLE(ctx, srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                                            dstY1, mask, filter);
+}
+
+void GL_APIENTRY glBufferDataContextANGLE(GLeglContext ctx,
+                                          GLenum target,
+                                          GLsizeiptr size,
+                                          const void *data,
+                                          GLenum usage)
+{
+    return GL_BufferDataContextANGLE(ctx, target, size, data, usage);
+}
+
+void GL_APIENTRY glBufferStorageEXTContextANGLE(GLeglContext ctx,
+                                                GLenum target,
+                                                GLsizeiptr size,
+                                                const void *data,
+                                                GLbitfield flags)
+{
+    return GL_BufferStorageEXTContextANGLE(ctx, target, size, data, flags);
+}
+
+void GL_APIENTRY glBufferStorageExternalEXTContextANGLE(GLeglContext ctx,
+                                                        GLenum target,
+                                                        GLintptr offset,
+                                                        GLsizeiptr size,
+                                                        GLeglClientBufferEXT clientBuffer,
+                                                        GLbitfield flags)
+{
+    return GL_BufferStorageExternalEXTContextANGLE(ctx, target, offset, size, clientBuffer, flags);
+}
+
+void GL_APIENTRY glBufferStorageMemEXTContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLsizeiptr size,
+                                                   GLuint memory,
+                                                   GLuint64 offset)
+{
+    return GL_BufferStorageMemEXTContextANGLE(ctx, target, size, memory, offset);
+}
+
+void GL_APIENTRY glBufferSubDataContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLintptr offset,
+                                             GLsizeiptr size,
+                                             const void *data)
+{
+    return GL_BufferSubDataContextANGLE(ctx, target, offset, size, data);
+}
+
+GLenum GL_APIENTRY glCheckFramebufferStatusContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_CheckFramebufferStatusContextANGLE(ctx, target);
+}
+
+GLenum GL_APIENTRY glCheckFramebufferStatusOESContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_CheckFramebufferStatusOESContextANGLE(ctx, target);
+}
+
+void GL_APIENTRY glClearContextANGLE(GLeglContext ctx, GLbitfield mask)
+{
+    return GL_ClearContextANGLE(ctx, mask);
+}
+
+void GL_APIENTRY glClearBufferfiContextANGLE(GLeglContext ctx,
+                                             GLenum buffer,
+                                             GLint drawbuffer,
+                                             GLfloat depth,
+                                             GLint stencil)
+{
+    return GL_ClearBufferfiContextANGLE(ctx, buffer, drawbuffer, depth, stencil);
+}
+
+void GL_APIENTRY glClearBufferfvContextANGLE(GLeglContext ctx,
+                                             GLenum buffer,
+                                             GLint drawbuffer,
+                                             const GLfloat *value)
+{
+    return GL_ClearBufferfvContextANGLE(ctx, buffer, drawbuffer, value);
+}
+
+void GL_APIENTRY glClearBufferivContextANGLE(GLeglContext ctx,
+                                             GLenum buffer,
+                                             GLint drawbuffer,
+                                             const GLint *value)
+{
+    return GL_ClearBufferivContextANGLE(ctx, buffer, drawbuffer, value);
+}
+
+void GL_APIENTRY glClearBufferuivContextANGLE(GLeglContext ctx,
+                                              GLenum buffer,
+                                              GLint drawbuffer,
+                                              const GLuint *value)
+{
+    return GL_ClearBufferuivContextANGLE(ctx, buffer, drawbuffer, value);
 }
 
 void GL_APIENTRY
-glScissorIndexed(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height)
+glClearColorContextANGLE(GLeglContext ctx, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
-    return GL_ScissorIndexed(index, left, bottom, width, height);
-}
-
-void GL_APIENTRY glScissorIndexedv(GLuint index, const GLint *v)
-{
-    return GL_ScissorIndexedv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribL1d(GLuint index, GLdouble x)
-{
-    return GL_VertexAttribL1d(index, x);
-}
-
-void GL_APIENTRY glVertexAttribL1dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttribL1dv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribL2d(GLuint index, GLdouble x, GLdouble y)
-{
-    return GL_VertexAttribL2d(index, x, y);
-}
-
-void GL_APIENTRY glVertexAttribL2dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttribL2dv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribL3d(GLuint index, GLdouble x, GLdouble y, GLdouble z)
-{
-    return GL_VertexAttribL3d(index, x, y, z);
-}
-
-void GL_APIENTRY glVertexAttribL3dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttribL3dv(index, v);
-}
-
-void GL_APIENTRY glVertexAttribL4d(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-    return GL_VertexAttribL4d(index, x, y, z, w);
-}
-
-void GL_APIENTRY glVertexAttribL4dv(GLuint index, const GLdouble *v)
-{
-    return GL_VertexAttribL4dv(index, v);
+    return GL_ClearColorContextANGLE(ctx, red, green, blue, alpha);
 }
 
 void GL_APIENTRY
-glVertexAttribLPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const void *pointer)
+glClearColorxContextANGLE(GLeglContext ctx, GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
 {
-    return GL_VertexAttribLPointer(index, size, type, stride, pointer);
+    return GL_ClearColorxContextANGLE(ctx, red, green, blue, alpha);
 }
 
-void GL_APIENTRY glViewportArrayv(GLuint first, GLsizei count, const GLfloat *v)
+void GL_APIENTRY glClearDepthfContextANGLE(GLeglContext ctx, GLfloat d)
 {
-    return GL_ViewportArrayv(first, count, v);
+    return GL_ClearDepthfContextANGLE(ctx, d);
 }
 
-void GL_APIENTRY glViewportIndexedf(GLuint index, GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+void GL_APIENTRY glClearDepthxContextANGLE(GLeglContext ctx, GLfixed depth)
 {
-    return GL_ViewportIndexedf(index, x, y, w, h);
+    return GL_ClearDepthxContextANGLE(ctx, depth);
 }
 
-void GL_APIENTRY glViewportIndexedfv(GLuint index, const GLfloat *v)
+void GL_APIENTRY glClearStencilContextANGLE(GLeglContext ctx, GLint s)
 {
-    return GL_ViewportIndexedfv(index, v);
+    return GL_ClearStencilContextANGLE(ctx, s);
 }
 
-// GL 4.2
-void GL_APIENTRY glDrawArraysInstancedBaseInstance(GLenum mode,
+void GL_APIENTRY glClientActiveTextureContextANGLE(GLeglContext ctx, GLenum texture)
+{
+    return GL_ClientActiveTextureContextANGLE(ctx, texture);
+}
+
+GLenum GL_APIENTRY glClientWaitSyncContextANGLE(GLeglContext ctx,
+                                                GLsync sync,
+                                                GLbitfield flags,
+                                                GLuint64 timeout)
+{
+    return GL_ClientWaitSyncContextANGLE(ctx, sync, flags, timeout);
+}
+
+void GL_APIENTRY glClipControlEXTContextANGLE(GLeglContext ctx, GLenum origin, GLenum depth)
+{
+    return GL_ClipControlEXTContextANGLE(ctx, origin, depth);
+}
+
+void GL_APIENTRY glClipPlanefContextANGLE(GLeglContext ctx, GLenum p, const GLfloat *eqn)
+{
+    return GL_ClipPlanefContextANGLE(ctx, p, eqn);
+}
+
+void GL_APIENTRY glClipPlanexContextANGLE(GLeglContext ctx, GLenum plane, const GLfixed *equation)
+{
+    return GL_ClipPlanexContextANGLE(ctx, plane, equation);
+}
+
+void GL_APIENTRY
+glColor4fContextANGLE(GLeglContext ctx, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+    return GL_Color4fContextANGLE(ctx, red, green, blue, alpha);
+}
+
+void GL_APIENTRY
+glColor4ubContextANGLE(GLeglContext ctx, GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
+{
+    return GL_Color4ubContextANGLE(ctx, red, green, blue, alpha);
+}
+
+void GL_APIENTRY
+glColor4xContextANGLE(GLeglContext ctx, GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
+{
+    return GL_Color4xContextANGLE(ctx, red, green, blue, alpha);
+}
+
+void GL_APIENTRY glColorMaskContextANGLE(GLeglContext ctx,
+                                         GLboolean red,
+                                         GLboolean green,
+                                         GLboolean blue,
+                                         GLboolean alpha)
+{
+    return GL_ColorMaskContextANGLE(ctx, red, green, blue, alpha);
+}
+
+void GL_APIENTRY glColorMaskiContextANGLE(GLeglContext ctx,
+                                          GLuint index,
+                                          GLboolean r,
+                                          GLboolean g,
+                                          GLboolean b,
+                                          GLboolean a)
+{
+    return GL_ColorMaskiContextANGLE(ctx, index, r, g, b, a);
+}
+
+void GL_APIENTRY glColorMaskiEXTContextANGLE(GLeglContext ctx,
+                                             GLuint index,
+                                             GLboolean r,
+                                             GLboolean g,
+                                             GLboolean b,
+                                             GLboolean a)
+{
+    return GL_ColorMaskiEXTContextANGLE(ctx, index, r, g, b, a);
+}
+
+void GL_APIENTRY glColorMaskiOESContextANGLE(GLeglContext ctx,
+                                             GLuint index,
+                                             GLboolean r,
+                                             GLboolean g,
+                                             GLboolean b,
+                                             GLboolean a)
+{
+    return GL_ColorMaskiOESContextANGLE(ctx, index, r, g, b, a);
+}
+
+void GL_APIENTRY glColorPointerContextANGLE(GLeglContext ctx,
+                                            GLint size,
+                                            GLenum type,
+                                            GLsizei stride,
+                                            const void *pointer)
+{
+    return GL_ColorPointerContextANGLE(ctx, size, type, stride, pointer);
+}
+
+void GL_APIENTRY glCompileShaderContextANGLE(GLeglContext ctx, GLuint shader)
+{
+    return GL_CompileShaderContextANGLE(ctx, shader);
+}
+
+void GL_APIENTRY glCompressedTexImage2DContextANGLE(GLeglContext ctx,
+                                                    GLenum target,
+                                                    GLint level,
+                                                    GLenum internalformat,
+                                                    GLsizei width,
+                                                    GLsizei height,
+                                                    GLint border,
+                                                    GLsizei imageSize,
+                                                    const void *data)
+{
+    return GL_CompressedTexImage2DContextANGLE(ctx, target, level, internalformat, width, height,
+                                               border, imageSize, data);
+}
+
+void GL_APIENTRY glCompressedTexImage3DContextANGLE(GLeglContext ctx,
+                                                    GLenum target,
+                                                    GLint level,
+                                                    GLenum internalformat,
+                                                    GLsizei width,
+                                                    GLsizei height,
+                                                    GLsizei depth,
+                                                    GLint border,
+                                                    GLsizei imageSize,
+                                                    const void *data)
+{
+    return GL_CompressedTexImage3DContextANGLE(ctx, target, level, internalformat, width, height,
+                                               depth, border, imageSize, data);
+}
+
+void GL_APIENTRY glCompressedTexImage3DOESContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLint level,
+                                                       GLenum internalformat,
+                                                       GLsizei width,
+                                                       GLsizei height,
+                                                       GLsizei depth,
+                                                       GLint border,
+                                                       GLsizei imageSize,
+                                                       const void *data)
+{
+    return GL_CompressedTexImage3DOESContextANGLE(ctx, target, level, internalformat, width, height,
+                                                  depth, border, imageSize, data);
+}
+
+void GL_APIENTRY glCompressedTexSubImage2DContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLint level,
+                                                       GLint xoffset,
+                                                       GLint yoffset,
+                                                       GLsizei width,
+                                                       GLsizei height,
+                                                       GLenum format,
+                                                       GLsizei imageSize,
+                                                       const void *data)
+{
+    return GL_CompressedTexSubImage2DContextANGLE(ctx, target, level, xoffset, yoffset, width,
+                                                  height, format, imageSize, data);
+}
+
+void GL_APIENTRY glCompressedTexSubImage3DContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLint level,
+                                                       GLint xoffset,
+                                                       GLint yoffset,
+                                                       GLint zoffset,
+                                                       GLsizei width,
+                                                       GLsizei height,
+                                                       GLsizei depth,
+                                                       GLenum format,
+                                                       GLsizei imageSize,
+                                                       const void *data)
+{
+    return GL_CompressedTexSubImage3DContextANGLE(ctx, target, level, xoffset, yoffset, zoffset,
+                                                  width, height, depth, format, imageSize, data);
+}
+
+void GL_APIENTRY glCompressedTexSubImage3DOESContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLint level,
+                                                          GLint xoffset,
+                                                          GLint yoffset,
+                                                          GLint zoffset,
+                                                          GLsizei width,
+                                                          GLsizei height,
+                                                          GLsizei depth,
+                                                          GLenum format,
+                                                          GLsizei imageSize,
+                                                          const void *data)
+{
+    return GL_CompressedTexSubImage3DOESContextANGLE(ctx, target, level, xoffset, yoffset, zoffset,
+                                                     width, height, depth, format, imageSize, data);
+}
+
+void GL_APIENTRY glCopyBufferSubDataContextANGLE(GLeglContext ctx,
+                                                 GLenum readTarget,
+                                                 GLenum writeTarget,
+                                                 GLintptr readOffset,
+                                                 GLintptr writeOffset,
+                                                 GLsizeiptr size)
+{
+    return GL_CopyBufferSubDataContextANGLE(ctx, readTarget, writeTarget, readOffset, writeOffset,
+                                            size);
+}
+
+void GL_APIENTRY glCopyImageSubDataContextANGLE(GLeglContext ctx,
+                                                GLuint srcName,
+                                                GLenum srcTarget,
+                                                GLint srcLevel,
+                                                GLint srcX,
+                                                GLint srcY,
+                                                GLint srcZ,
+                                                GLuint dstName,
+                                                GLenum dstTarget,
+                                                GLint dstLevel,
+                                                GLint dstX,
+                                                GLint dstY,
+                                                GLint dstZ,
+                                                GLsizei srcWidth,
+                                                GLsizei srcHeight,
+                                                GLsizei srcDepth)
+{
+    return GL_CopyImageSubDataContextANGLE(ctx, srcName, srcTarget, srcLevel, srcX, srcY, srcZ,
+                                           dstName, dstTarget, dstLevel, dstX, dstY, dstZ, srcWidth,
+                                           srcHeight, srcDepth);
+}
+
+void GL_APIENTRY glCopyImageSubDataEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint srcName,
+                                                   GLenum srcTarget,
+                                                   GLint srcLevel,
+                                                   GLint srcX,
+                                                   GLint srcY,
+                                                   GLint srcZ,
+                                                   GLuint dstName,
+                                                   GLenum dstTarget,
+                                                   GLint dstLevel,
+                                                   GLint dstX,
+                                                   GLint dstY,
+                                                   GLint dstZ,
+                                                   GLsizei srcWidth,
+                                                   GLsizei srcHeight,
+                                                   GLsizei srcDepth)
+{
+    return GL_CopyImageSubDataEXTContextANGLE(ctx, srcName, srcTarget, srcLevel, srcX, srcY, srcZ,
+                                              dstName, dstTarget, dstLevel, dstX, dstY, dstZ,
+                                              srcWidth, srcHeight, srcDepth);
+}
+
+void GL_APIENTRY glCopyImageSubDataOESContextANGLE(GLeglContext ctx,
+                                                   GLuint srcName,
+                                                   GLenum srcTarget,
+                                                   GLint srcLevel,
+                                                   GLint srcX,
+                                                   GLint srcY,
+                                                   GLint srcZ,
+                                                   GLuint dstName,
+                                                   GLenum dstTarget,
+                                                   GLint dstLevel,
+                                                   GLint dstX,
+                                                   GLint dstY,
+                                                   GLint dstZ,
+                                                   GLsizei srcWidth,
+                                                   GLsizei srcHeight,
+                                                   GLsizei srcDepth)
+{
+    return GL_CopyImageSubDataOESContextANGLE(ctx, srcName, srcTarget, srcLevel, srcX, srcY, srcZ,
+                                              dstName, dstTarget, dstLevel, dstX, dstY, dstZ,
+                                              srcWidth, srcHeight, srcDepth);
+}
+
+void GL_APIENTRY glCopyTexImage2DContextANGLE(GLeglContext ctx,
+                                              GLenum target,
+                                              GLint level,
+                                              GLenum internalformat,
+                                              GLint x,
+                                              GLint y,
+                                              GLsizei width,
+                                              GLsizei height,
+                                              GLint border)
+{
+    return GL_CopyTexImage2DContextANGLE(ctx, target, level, internalformat, x, y, width, height,
+                                         border);
+}
+
+void GL_APIENTRY glCopyTexSubImage2DContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLint level,
+                                                 GLint xoffset,
+                                                 GLint yoffset,
+                                                 GLint x,
+                                                 GLint y,
+                                                 GLsizei width,
+                                                 GLsizei height)
+{
+    return GL_CopyTexSubImage2DContextANGLE(ctx, target, level, xoffset, yoffset, x, y, width,
+                                            height);
+}
+
+void GL_APIENTRY glCopyTexSubImage3DContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLint level,
+                                                 GLint xoffset,
+                                                 GLint yoffset,
+                                                 GLint zoffset,
+                                                 GLint x,
+                                                 GLint y,
+                                                 GLsizei width,
+                                                 GLsizei height)
+{
+    return GL_CopyTexSubImage3DContextANGLE(ctx, target, level, xoffset, yoffset, zoffset, x, y,
+                                            width, height);
+}
+
+void GL_APIENTRY glCopyTexSubImage3DOESContextANGLE(GLeglContext ctx,
+                                                    GLenum target,
+                                                    GLint level,
+                                                    GLint xoffset,
+                                                    GLint yoffset,
+                                                    GLint zoffset,
+                                                    GLint x,
+                                                    GLint y,
+                                                    GLsizei width,
+                                                    GLsizei height)
+{
+    return GL_CopyTexSubImage3DOESContextANGLE(ctx, target, level, xoffset, yoffset, zoffset, x, y,
+                                               width, height);
+}
+
+void GL_APIENTRY glCreateMemoryObjectsEXTContextANGLE(GLeglContext ctx,
+                                                      GLsizei n,
+                                                      GLuint *memoryObjects)
+{
+    return GL_CreateMemoryObjectsEXTContextANGLE(ctx, n, memoryObjects);
+}
+
+GLuint GL_APIENTRY glCreateProgramContextANGLE(GLeglContext ctx)
+{
+    return GL_CreateProgramContextANGLE(ctx);
+}
+
+GLuint GL_APIENTRY glCreateShaderContextANGLE(GLeglContext ctx, GLenum type)
+{
+    return GL_CreateShaderContextANGLE(ctx, type);
+}
+
+GLuint GL_APIENTRY glCreateShaderProgramvContextANGLE(GLeglContext ctx,
+                                                      GLenum type,
+                                                      GLsizei count,
+                                                      const GLchar *const *strings)
+{
+    return GL_CreateShaderProgramvContextANGLE(ctx, type, count, strings);
+}
+
+GLuint GL_APIENTRY glCreateShaderProgramvEXTContextANGLE(GLeglContext ctx,
+                                                         GLenum type,
+                                                         GLsizei count,
+                                                         const GLchar **strings)
+{
+    return GL_CreateShaderProgramvEXTContextANGLE(ctx, type, count, strings);
+}
+
+void GL_APIENTRY glCullFaceContextANGLE(GLeglContext ctx, GLenum mode)
+{
+    return GL_CullFaceContextANGLE(ctx, mode);
+}
+
+void GL_APIENTRY glCurrentPaletteMatrixOESContextANGLE(GLeglContext ctx, GLuint matrixpaletteindex)
+{
+    return GL_CurrentPaletteMatrixOESContextANGLE(ctx, matrixpaletteindex);
+}
+
+void GL_APIENTRY glDebugMessageCallbackContextANGLE(GLeglContext ctx,
+                                                    GLDEBUGPROC callback,
+                                                    const void *userParam)
+{
+    return GL_DebugMessageCallbackContextANGLE(ctx, callback, userParam);
+}
+
+void GL_APIENTRY glDebugMessageCallbackKHRContextANGLE(GLeglContext ctx,
+                                                       GLDEBUGPROCKHR callback,
+                                                       const void *userParam)
+{
+    return GL_DebugMessageCallbackKHRContextANGLE(ctx, callback, userParam);
+}
+
+void GL_APIENTRY glDebugMessageControlContextANGLE(GLeglContext ctx,
+                                                   GLenum source,
+                                                   GLenum type,
+                                                   GLenum severity,
+                                                   GLsizei count,
+                                                   const GLuint *ids,
+                                                   GLboolean enabled)
+{
+    return GL_DebugMessageControlContextANGLE(ctx, source, type, severity, count, ids, enabled);
+}
+
+void GL_APIENTRY glDebugMessageControlKHRContextANGLE(GLeglContext ctx,
+                                                      GLenum source,
+                                                      GLenum type,
+                                                      GLenum severity,
+                                                      GLsizei count,
+                                                      const GLuint *ids,
+                                                      GLboolean enabled)
+{
+    return GL_DebugMessageControlKHRContextANGLE(ctx, source, type, severity, count, ids, enabled);
+}
+
+void GL_APIENTRY glDebugMessageInsertContextANGLE(GLeglContext ctx,
+                                                  GLenum source,
+                                                  GLenum type,
+                                                  GLuint id,
+                                                  GLenum severity,
+                                                  GLsizei length,
+                                                  const GLchar *buf)
+{
+    return GL_DebugMessageInsertContextANGLE(ctx, source, type, id, severity, length, buf);
+}
+
+void GL_APIENTRY glDebugMessageInsertKHRContextANGLE(GLeglContext ctx,
+                                                     GLenum source,
+                                                     GLenum type,
+                                                     GLuint id,
+                                                     GLenum severity,
+                                                     GLsizei length,
+                                                     const GLchar *buf)
+{
+    return GL_DebugMessageInsertKHRContextANGLE(ctx, source, type, id, severity, length, buf);
+}
+
+void GL_APIENTRY glDeleteBuffersContextANGLE(GLeglContext ctx, GLsizei n, const GLuint *buffers)
+{
+    return GL_DeleteBuffersContextANGLE(ctx, n, buffers);
+}
+
+void GL_APIENTRY glDeleteFencesNVContextANGLE(GLeglContext ctx, GLsizei n, const GLuint *fences)
+{
+    return GL_DeleteFencesNVContextANGLE(ctx, n, fences);
+}
+
+void GL_APIENTRY glDeleteFramebuffersContextANGLE(GLeglContext ctx,
+                                                  GLsizei n,
+                                                  const GLuint *framebuffers)
+{
+    return GL_DeleteFramebuffersContextANGLE(ctx, n, framebuffers);
+}
+
+void GL_APIENTRY glDeleteFramebuffersOESContextANGLE(GLeglContext ctx,
+                                                     GLsizei n,
+                                                     const GLuint *framebuffers)
+{
+    return GL_DeleteFramebuffersOESContextANGLE(ctx, n, framebuffers);
+}
+
+void GL_APIENTRY glDeleteMemoryObjectsEXTContextANGLE(GLeglContext ctx,
+                                                      GLsizei n,
+                                                      const GLuint *memoryObjects)
+{
+    return GL_DeleteMemoryObjectsEXTContextANGLE(ctx, n, memoryObjects);
+}
+
+void GL_APIENTRY glDeleteProgramContextANGLE(GLeglContext ctx, GLuint program)
+{
+    return GL_DeleteProgramContextANGLE(ctx, program);
+}
+
+void GL_APIENTRY glDeleteProgramPipelinesContextANGLE(GLeglContext ctx,
+                                                      GLsizei n,
+                                                      const GLuint *pipelines)
+{
+    return GL_DeleteProgramPipelinesContextANGLE(ctx, n, pipelines);
+}
+
+void GL_APIENTRY glDeleteProgramPipelinesEXTContextANGLE(GLeglContext ctx,
+                                                         GLsizei n,
+                                                         const GLuint *pipelines)
+{
+    return GL_DeleteProgramPipelinesEXTContextANGLE(ctx, n, pipelines);
+}
+
+void GL_APIENTRY glDeleteQueriesContextANGLE(GLeglContext ctx, GLsizei n, const GLuint *ids)
+{
+    return GL_DeleteQueriesContextANGLE(ctx, n, ids);
+}
+
+void GL_APIENTRY glDeleteQueriesEXTContextANGLE(GLeglContext ctx, GLsizei n, const GLuint *ids)
+{
+    return GL_DeleteQueriesEXTContextANGLE(ctx, n, ids);
+}
+
+void GL_APIENTRY glDeleteRenderbuffersContextANGLE(GLeglContext ctx,
+                                                   GLsizei n,
+                                                   const GLuint *renderbuffers)
+{
+    return GL_DeleteRenderbuffersContextANGLE(ctx, n, renderbuffers);
+}
+
+void GL_APIENTRY glDeleteRenderbuffersOESContextANGLE(GLeglContext ctx,
+                                                      GLsizei n,
+                                                      const GLuint *renderbuffers)
+{
+    return GL_DeleteRenderbuffersOESContextANGLE(ctx, n, renderbuffers);
+}
+
+void GL_APIENTRY glDeleteSamplersContextANGLE(GLeglContext ctx,
+                                              GLsizei count,
+                                              const GLuint *samplers)
+{
+    return GL_DeleteSamplersContextANGLE(ctx, count, samplers);
+}
+
+void GL_APIENTRY glDeleteSemaphoresEXTContextANGLE(GLeglContext ctx,
+                                                   GLsizei n,
+                                                   const GLuint *semaphores)
+{
+    return GL_DeleteSemaphoresEXTContextANGLE(ctx, n, semaphores);
+}
+
+void GL_APIENTRY glDeleteShaderContextANGLE(GLeglContext ctx, GLuint shader)
+{
+    return GL_DeleteShaderContextANGLE(ctx, shader);
+}
+
+void GL_APIENTRY glDeleteSyncContextANGLE(GLeglContext ctx, GLsync sync)
+{
+    return GL_DeleteSyncContextANGLE(ctx, sync);
+}
+
+void GL_APIENTRY glDeleteTexturesContextANGLE(GLeglContext ctx, GLsizei n, const GLuint *textures)
+{
+    return GL_DeleteTexturesContextANGLE(ctx, n, textures);
+}
+
+void GL_APIENTRY glDeleteTransformFeedbacksContextANGLE(GLeglContext ctx,
+                                                        GLsizei n,
+                                                        const GLuint *ids)
+{
+    return GL_DeleteTransformFeedbacksContextANGLE(ctx, n, ids);
+}
+
+void GL_APIENTRY glDeleteVertexArraysContextANGLE(GLeglContext ctx, GLsizei n, const GLuint *arrays)
+{
+    return GL_DeleteVertexArraysContextANGLE(ctx, n, arrays);
+}
+
+void GL_APIENTRY glDeleteVertexArraysOESContextANGLE(GLeglContext ctx,
+                                                     GLsizei n,
+                                                     const GLuint *arrays)
+{
+    return GL_DeleteVertexArraysOESContextANGLE(ctx, n, arrays);
+}
+
+void GL_APIENTRY glDepthFuncContextANGLE(GLeglContext ctx, GLenum func)
+{
+    return GL_DepthFuncContextANGLE(ctx, func);
+}
+
+void GL_APIENTRY glDepthMaskContextANGLE(GLeglContext ctx, GLboolean flag)
+{
+    return GL_DepthMaskContextANGLE(ctx, flag);
+}
+
+void GL_APIENTRY glDepthRangefContextANGLE(GLeglContext ctx, GLfloat n, GLfloat f)
+{
+    return GL_DepthRangefContextANGLE(ctx, n, f);
+}
+
+void GL_APIENTRY glDepthRangexContextANGLE(GLeglContext ctx, GLfixed n, GLfixed f)
+{
+    return GL_DepthRangexContextANGLE(ctx, n, f);
+}
+
+void GL_APIENTRY glDetachShaderContextANGLE(GLeglContext ctx, GLuint program, GLuint shader)
+{
+    return GL_DetachShaderContextANGLE(ctx, program, shader);
+}
+
+void GL_APIENTRY glDisableContextANGLE(GLeglContext ctx, GLenum cap)
+{
+    return GL_DisableContextANGLE(ctx, cap);
+}
+
+void GL_APIENTRY glDisableClientStateContextANGLE(GLeglContext ctx, GLenum array)
+{
+    return GL_DisableClientStateContextANGLE(ctx, array);
+}
+
+void GL_APIENTRY glDisableVertexAttribArrayContextANGLE(GLeglContext ctx, GLuint index)
+{
+    return GL_DisableVertexAttribArrayContextANGLE(ctx, index);
+}
+
+void GL_APIENTRY glDisableiContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_DisableiContextANGLE(ctx, target, index);
+}
+
+void GL_APIENTRY glDisableiEXTContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_DisableiEXTContextANGLE(ctx, target, index);
+}
+
+void GL_APIENTRY glDisableiOESContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_DisableiOESContextANGLE(ctx, target, index);
+}
+
+void GL_APIENTRY glDiscardFramebufferEXTContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLsizei numAttachments,
+                                                     const GLenum *attachments)
+{
+    return GL_DiscardFramebufferEXTContextANGLE(ctx, target, numAttachments, attachments);
+}
+
+void GL_APIENTRY glDispatchComputeContextANGLE(GLeglContext ctx,
+                                               GLuint num_groups_x,
+                                               GLuint num_groups_y,
+                                               GLuint num_groups_z)
+{
+    return GL_DispatchComputeContextANGLE(ctx, num_groups_x, num_groups_y, num_groups_z);
+}
+
+void GL_APIENTRY glDispatchComputeIndirectContextANGLE(GLeglContext ctx, GLintptr indirect)
+{
+    return GL_DispatchComputeIndirectContextANGLE(ctx, indirect);
+}
+
+void GL_APIENTRY glDrawArraysContextANGLE(GLeglContext ctx, GLenum mode, GLint first, GLsizei count)
+{
+    return GL_DrawArraysContextANGLE(ctx, mode, first, count);
+}
+
+void GL_APIENTRY glDrawArraysIndirectContextANGLE(GLeglContext ctx,
+                                                  GLenum mode,
+                                                  const void *indirect)
+{
+    return GL_DrawArraysIndirectContextANGLE(ctx, mode, indirect);
+}
+
+void GL_APIENTRY glDrawArraysInstancedContextANGLE(GLeglContext ctx,
+                                                   GLenum mode,
                                                    GLint first,
                                                    GLsizei count,
-                                                   GLsizei instancecount,
-                                                   GLuint baseinstance)
+                                                   GLsizei instancecount)
 {
-    return GL_DrawArraysInstancedBaseInstance(mode, first, count, instancecount, baseinstance);
+    return GL_DrawArraysInstancedContextANGLE(ctx, mode, first, count, instancecount);
 }
 
-void GL_APIENTRY glDrawElementsInstancedBaseInstance(GLenum mode,
+void GL_APIENTRY glDrawArraysInstancedANGLEContextANGLE(GLeglContext ctx,
+                                                        GLenum mode,
+                                                        GLint first,
+                                                        GLsizei count,
+                                                        GLsizei primcount)
+{
+    return GL_DrawArraysInstancedANGLEContextANGLE(ctx, mode, first, count, primcount);
+}
+
+void GL_APIENTRY glDrawArraysInstancedEXTContextANGLE(GLeglContext ctx,
+                                                      GLenum mode,
+                                                      GLint start,
+                                                      GLsizei count,
+                                                      GLsizei primcount)
+{
+    return GL_DrawArraysInstancedEXTContextANGLE(ctx, mode, start, count, primcount);
+}
+
+void GL_APIENTRY glDrawBuffersContextANGLE(GLeglContext ctx, GLsizei n, const GLenum *bufs)
+{
+    return GL_DrawBuffersContextANGLE(ctx, n, bufs);
+}
+
+void GL_APIENTRY glDrawBuffersEXTContextANGLE(GLeglContext ctx, GLsizei n, const GLenum *bufs)
+{
+    return GL_DrawBuffersEXTContextANGLE(ctx, n, bufs);
+}
+
+void GL_APIENTRY glDrawElementsContextANGLE(GLeglContext ctx,
+                                            GLenum mode,
+                                            GLsizei count,
+                                            GLenum type,
+                                            const void *indices)
+{
+    return GL_DrawElementsContextANGLE(ctx, mode, count, type, indices);
+}
+
+void GL_APIENTRY glDrawElementsBaseVertexContextANGLE(GLeglContext ctx,
+                                                      GLenum mode,
+                                                      GLsizei count,
+                                                      GLenum type,
+                                                      const void *indices,
+                                                      GLint basevertex)
+{
+    return GL_DrawElementsBaseVertexContextANGLE(ctx, mode, count, type, indices, basevertex);
+}
+
+void GL_APIENTRY glDrawElementsBaseVertexEXTContextANGLE(GLeglContext ctx,
+                                                         GLenum mode,
+                                                         GLsizei count,
+                                                         GLenum type,
+                                                         const void *indices,
+                                                         GLint basevertex)
+{
+    return GL_DrawElementsBaseVertexEXTContextANGLE(ctx, mode, count, type, indices, basevertex);
+}
+
+void GL_APIENTRY glDrawElementsBaseVertexOESContextANGLE(GLeglContext ctx,
+                                                         GLenum mode,
+                                                         GLsizei count,
+                                                         GLenum type,
+                                                         const void *indices,
+                                                         GLint basevertex)
+{
+    return GL_DrawElementsBaseVertexOESContextANGLE(ctx, mode, count, type, indices, basevertex);
+}
+
+void GL_APIENTRY glDrawElementsIndirectContextANGLE(GLeglContext ctx,
+                                                    GLenum mode,
+                                                    GLenum type,
+                                                    const void *indirect)
+{
+    return GL_DrawElementsIndirectContextANGLE(ctx, mode, type, indirect);
+}
+
+void GL_APIENTRY glDrawElementsInstancedContextANGLE(GLeglContext ctx,
+                                                     GLenum mode,
                                                      GLsizei count,
                                                      GLenum type,
                                                      const void *indices,
-                                                     GLsizei instancecount,
-                                                     GLuint baseinstance)
+                                                     GLsizei instancecount)
 {
-    return GL_DrawElementsInstancedBaseInstance(mode, count, type, indices, instancecount,
-                                                baseinstance);
+    return GL_DrawElementsInstancedContextANGLE(ctx, mode, count, type, indices, instancecount);
 }
 
-void GL_APIENTRY glDrawElementsInstancedBaseVertexBaseInstance(GLenum mode,
+void GL_APIENTRY glDrawElementsInstancedANGLEContextANGLE(GLeglContext ctx,
+                                                          GLenum mode,
+                                                          GLsizei count,
+                                                          GLenum type,
+                                                          const void *indices,
+                                                          GLsizei primcount)
+{
+    return GL_DrawElementsInstancedANGLEContextANGLE(ctx, mode, count, type, indices, primcount);
+}
+
+void GL_APIENTRY glDrawElementsInstancedBaseVertexContextANGLE(GLeglContext ctx,
+                                                               GLenum mode,
                                                                GLsizei count,
                                                                GLenum type,
                                                                const void *indices,
                                                                GLsizei instancecount,
-                                                               GLint basevertex,
-                                                               GLuint baseinstance)
+                                                               GLint basevertex)
 {
-    return GL_DrawElementsInstancedBaseVertexBaseInstance(mode, count, type, indices, instancecount,
-                                                          basevertex, baseinstance);
+    return GL_DrawElementsInstancedBaseVertexContextANGLE(ctx, mode, count, type, indices,
+                                                          instancecount, basevertex);
 }
 
-void GL_APIENTRY glDrawTransformFeedbackInstanced(GLenum mode, GLuint id, GLsizei instancecount)
+void GL_APIENTRY glDrawElementsInstancedBaseVertexEXTContextANGLE(GLeglContext ctx,
+                                                                  GLenum mode,
+                                                                  GLsizei count,
+                                                                  GLenum type,
+                                                                  const void *indices,
+                                                                  GLsizei instancecount,
+                                                                  GLint basevertex)
 {
-    return GL_DrawTransformFeedbackInstanced(mode, id, instancecount);
+    return GL_DrawElementsInstancedBaseVertexEXTContextANGLE(ctx, mode, count, type, indices,
+                                                             instancecount, basevertex);
 }
 
-void GL_APIENTRY glDrawTransformFeedbackStreamInstanced(GLenum mode,
-                                                        GLuint id,
-                                                        GLuint stream,
-                                                        GLsizei instancecount)
+void GL_APIENTRY glDrawElementsInstancedBaseVertexOESContextANGLE(GLeglContext ctx,
+                                                                  GLenum mode,
+                                                                  GLsizei count,
+                                                                  GLenum type,
+                                                                  const void *indices,
+                                                                  GLsizei instancecount,
+                                                                  GLint basevertex)
 {
-    return GL_DrawTransformFeedbackStreamInstanced(mode, id, stream, instancecount);
+    return GL_DrawElementsInstancedBaseVertexOESContextANGLE(ctx, mode, count, type, indices,
+                                                             instancecount, basevertex);
 }
 
-void GL_APIENTRY glGetActiveAtomicCounterBufferiv(GLuint program,
-                                                  GLuint bufferIndex,
+void GL_APIENTRY glDrawElementsInstancedEXTContextANGLE(GLeglContext ctx,
+                                                        GLenum mode,
+                                                        GLsizei count,
+                                                        GLenum type,
+                                                        const void *indices,
+                                                        GLsizei primcount)
+{
+    return GL_DrawElementsInstancedEXTContextANGLE(ctx, mode, count, type, indices, primcount);
+}
+
+void GL_APIENTRY glDrawRangeElementsContextANGLE(GLeglContext ctx,
+                                                 GLenum mode,
+                                                 GLuint start,
+                                                 GLuint end,
+                                                 GLsizei count,
+                                                 GLenum type,
+                                                 const void *indices)
+{
+    return GL_DrawRangeElementsContextANGLE(ctx, mode, start, end, count, type, indices);
+}
+
+void GL_APIENTRY glDrawRangeElementsBaseVertexContextANGLE(GLeglContext ctx,
+                                                           GLenum mode,
+                                                           GLuint start,
+                                                           GLuint end,
+                                                           GLsizei count,
+                                                           GLenum type,
+                                                           const void *indices,
+                                                           GLint basevertex)
+{
+    return GL_DrawRangeElementsBaseVertexContextANGLE(ctx, mode, start, end, count, type, indices,
+                                                      basevertex);
+}
+
+void GL_APIENTRY glDrawRangeElementsBaseVertexEXTContextANGLE(GLeglContext ctx,
+                                                              GLenum mode,
+                                                              GLuint start,
+                                                              GLuint end,
+                                                              GLsizei count,
+                                                              GLenum type,
+                                                              const void *indices,
+                                                              GLint basevertex)
+{
+    return GL_DrawRangeElementsBaseVertexEXTContextANGLE(ctx, mode, start, end, count, type,
+                                                         indices, basevertex);
+}
+
+void GL_APIENTRY glDrawRangeElementsBaseVertexOESContextANGLE(GLeglContext ctx,
+                                                              GLenum mode,
+                                                              GLuint start,
+                                                              GLuint end,
+                                                              GLsizei count,
+                                                              GLenum type,
+                                                              const void *indices,
+                                                              GLint basevertex)
+{
+    return GL_DrawRangeElementsBaseVertexOESContextANGLE(ctx, mode, start, end, count, type,
+                                                         indices, basevertex);
+}
+
+void GL_APIENTRY glDrawTexfOESContextANGLE(GLeglContext ctx,
+                                           GLfloat x,
+                                           GLfloat y,
+                                           GLfloat z,
+                                           GLfloat width,
+                                           GLfloat height)
+{
+    return GL_DrawTexfOESContextANGLE(ctx, x, y, z, width, height);
+}
+
+void GL_APIENTRY glDrawTexfvOESContextANGLE(GLeglContext ctx, const GLfloat *coords)
+{
+    return GL_DrawTexfvOESContextANGLE(ctx, coords);
+}
+
+void GL_APIENTRY
+glDrawTexiOESContextANGLE(GLeglContext ctx, GLint x, GLint y, GLint z, GLint width, GLint height)
+{
+    return GL_DrawTexiOESContextANGLE(ctx, x, y, z, width, height);
+}
+
+void GL_APIENTRY glDrawTexivOESContextANGLE(GLeglContext ctx, const GLint *coords)
+{
+    return GL_DrawTexivOESContextANGLE(ctx, coords);
+}
+
+void GL_APIENTRY glDrawTexsOESContextANGLE(GLeglContext ctx,
+                                           GLshort x,
+                                           GLshort y,
+                                           GLshort z,
+                                           GLshort width,
+                                           GLshort height)
+{
+    return GL_DrawTexsOESContextANGLE(ctx, x, y, z, width, height);
+}
+
+void GL_APIENTRY glDrawTexsvOESContextANGLE(GLeglContext ctx, const GLshort *coords)
+{
+    return GL_DrawTexsvOESContextANGLE(ctx, coords);
+}
+
+void GL_APIENTRY glDrawTexxOESContextANGLE(GLeglContext ctx,
+                                           GLfixed x,
+                                           GLfixed y,
+                                           GLfixed z,
+                                           GLfixed width,
+                                           GLfixed height)
+{
+    return GL_DrawTexxOESContextANGLE(ctx, x, y, z, width, height);
+}
+
+void GL_APIENTRY glDrawTexxvOESContextANGLE(GLeglContext ctx, const GLfixed *coords)
+{
+    return GL_DrawTexxvOESContextANGLE(ctx, coords);
+}
+
+void GL_APIENTRY glEGLImageTargetRenderbufferStorageOESContextANGLE(GLeglContext ctx,
+                                                                    GLenum target,
+                                                                    GLeglImageOES image)
+{
+    return GL_EGLImageTargetRenderbufferStorageOESContextANGLE(ctx, target, image);
+}
+
+void GL_APIENTRY glEGLImageTargetTexture2DOESContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLeglImageOES image)
+{
+    return GL_EGLImageTargetTexture2DOESContextANGLE(ctx, target, image);
+}
+
+void GL_APIENTRY glEnableContextANGLE(GLeglContext ctx, GLenum cap)
+{
+    return GL_EnableContextANGLE(ctx, cap);
+}
+
+void GL_APIENTRY glEnableClientStateContextANGLE(GLeglContext ctx, GLenum array)
+{
+    return GL_EnableClientStateContextANGLE(ctx, array);
+}
+
+void GL_APIENTRY glEnableVertexAttribArrayContextANGLE(GLeglContext ctx, GLuint index)
+{
+    return GL_EnableVertexAttribArrayContextANGLE(ctx, index);
+}
+
+void GL_APIENTRY glEnableiContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_EnableiContextANGLE(ctx, target, index);
+}
+
+void GL_APIENTRY glEnableiEXTContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_EnableiEXTContextANGLE(ctx, target, index);
+}
+
+void GL_APIENTRY glEnableiOESContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_EnableiOESContextANGLE(ctx, target, index);
+}
+
+void GL_APIENTRY glEndQueryContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_EndQueryContextANGLE(ctx, target);
+}
+
+void GL_APIENTRY glEndQueryEXTContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_EndQueryEXTContextANGLE(ctx, target);
+}
+
+void GL_APIENTRY glEndTransformFeedbackContextANGLE(GLeglContext ctx)
+{
+    return GL_EndTransformFeedbackContextANGLE(ctx);
+}
+
+GLsync GL_APIENTRY glFenceSyncContextANGLE(GLeglContext ctx, GLenum condition, GLbitfield flags)
+{
+    return GL_FenceSyncContextANGLE(ctx, condition, flags);
+}
+
+void GL_APIENTRY glFinishContextANGLE(GLeglContext ctx)
+{
+    return GL_FinishContextANGLE(ctx);
+}
+
+void GL_APIENTRY glFinishFenceNVContextANGLE(GLeglContext ctx, GLuint fence)
+{
+    return GL_FinishFenceNVContextANGLE(ctx, fence);
+}
+
+void GL_APIENTRY glFlushContextANGLE(GLeglContext ctx)
+{
+    return GL_FlushContextANGLE(ctx);
+}
+
+void GL_APIENTRY glFlushMappedBufferRangeContextANGLE(GLeglContext ctx,
+                                                      GLenum target,
+                                                      GLintptr offset,
+                                                      GLsizeiptr length)
+{
+    return GL_FlushMappedBufferRangeContextANGLE(ctx, target, offset, length);
+}
+
+void GL_APIENTRY glFlushMappedBufferRangeEXTContextANGLE(GLeglContext ctx,
+                                                         GLenum target,
+                                                         GLintptr offset,
+                                                         GLsizeiptr length)
+{
+    return GL_FlushMappedBufferRangeEXTContextANGLE(ctx, target, offset, length);
+}
+
+void GL_APIENTRY glFogfContextANGLE(GLeglContext ctx, GLenum pname, GLfloat param)
+{
+    return GL_FogfContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glFogfvContextANGLE(GLeglContext ctx, GLenum pname, const GLfloat *params)
+{
+    return GL_FogfvContextANGLE(ctx, pname, params);
+}
+
+void GL_APIENTRY glFogxContextANGLE(GLeglContext ctx, GLenum pname, GLfixed param)
+{
+    return GL_FogxContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glFogxvContextANGLE(GLeglContext ctx, GLenum pname, const GLfixed *param)
+{
+    return GL_FogxvContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glFramebufferFetchBarrierEXTContextANGLE(GLeglContext ctx)
+{
+    return GL_FramebufferFetchBarrierEXTContextANGLE(ctx);
+}
+
+void GL_APIENTRY glFramebufferParameteriContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLenum pname,
+                                                     GLint param)
+{
+    return GL_FramebufferParameteriContextANGLE(ctx, target, pname, param);
+}
+
+void GL_APIENTRY glFramebufferRenderbufferContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLenum attachment,
+                                                       GLenum renderbuffertarget,
+                                                       GLuint renderbuffer)
+{
+    return GL_FramebufferRenderbufferContextANGLE(ctx, target, attachment, renderbuffertarget,
+                                                  renderbuffer);
+}
+
+void GL_APIENTRY glFramebufferRenderbufferOESContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLenum attachment,
+                                                          GLenum renderbuffertarget,
+                                                          GLuint renderbuffer)
+{
+    return GL_FramebufferRenderbufferOESContextANGLE(ctx, target, attachment, renderbuffertarget,
+                                                     renderbuffer);
+}
+
+void GL_APIENTRY glFramebufferTextureContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
+                                                  GLenum attachment,
+                                                  GLuint texture,
+                                                  GLint level)
+{
+    return GL_FramebufferTextureContextANGLE(ctx, target, attachment, texture, level);
+}
+
+void GL_APIENTRY glFramebufferTexture2DContextANGLE(GLeglContext ctx,
+                                                    GLenum target,
+                                                    GLenum attachment,
+                                                    GLenum textarget,
+                                                    GLuint texture,
+                                                    GLint level)
+{
+    return GL_FramebufferTexture2DContextANGLE(ctx, target, attachment, textarget, texture, level);
+}
+
+void GL_APIENTRY glFramebufferTexture2DMultisampleEXTContextANGLE(GLeglContext ctx,
+                                                                  GLenum target,
+                                                                  GLenum attachment,
+                                                                  GLenum textarget,
+                                                                  GLuint texture,
+                                                                  GLint level,
+                                                                  GLsizei samples)
+{
+    return GL_FramebufferTexture2DMultisampleEXTContextANGLE(ctx, target, attachment, textarget,
+                                                             texture, level, samples);
+}
+
+void GL_APIENTRY glFramebufferTexture2DOESContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLenum attachment,
+                                                       GLenum textarget,
+                                                       GLuint texture,
+                                                       GLint level)
+{
+    return GL_FramebufferTexture2DOESContextANGLE(ctx, target, attachment, textarget, texture,
+                                                  level);
+}
+
+void GL_APIENTRY glFramebufferTexture3DOESContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLenum attachment,
+                                                       GLenum textarget,
+                                                       GLuint texture,
+                                                       GLint level,
+                                                       GLint zoffset)
+{
+    return GL_FramebufferTexture3DOESContextANGLE(ctx, target, attachment, textarget, texture,
+                                                  level, zoffset);
+}
+
+void GL_APIENTRY glFramebufferTextureEXTContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLenum attachment,
+                                                     GLuint texture,
+                                                     GLint level)
+{
+    return GL_FramebufferTextureEXTContextANGLE(ctx, target, attachment, texture, level);
+}
+
+void GL_APIENTRY glFramebufferTextureLayerContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLenum attachment,
+                                                       GLuint texture,
+                                                       GLint level,
+                                                       GLint layer)
+{
+    return GL_FramebufferTextureLayerContextANGLE(ctx, target, attachment, texture, level, layer);
+}
+
+void GL_APIENTRY glFramebufferTextureMultiviewOVRContextANGLE(GLeglContext ctx,
+                                                              GLenum target,
+                                                              GLenum attachment,
+                                                              GLuint texture,
+                                                              GLint level,
+                                                              GLint baseViewIndex,
+                                                              GLsizei numViews)
+{
+    return GL_FramebufferTextureMultiviewOVRContextANGLE(ctx, target, attachment, texture, level,
+                                                         baseViewIndex, numViews);
+}
+
+void GL_APIENTRY glFrontFaceContextANGLE(GLeglContext ctx, GLenum mode)
+{
+    return GL_FrontFaceContextANGLE(ctx, mode);
+}
+
+void GL_APIENTRY glFrustumfContextANGLE(GLeglContext ctx,
+                                        GLfloat l,
+                                        GLfloat r,
+                                        GLfloat b,
+                                        GLfloat t,
+                                        GLfloat n,
+                                        GLfloat f)
+{
+    return GL_FrustumfContextANGLE(ctx, l, r, b, t, n, f);
+}
+
+void GL_APIENTRY glFrustumxContextANGLE(GLeglContext ctx,
+                                        GLfixed l,
+                                        GLfixed r,
+                                        GLfixed b,
+                                        GLfixed t,
+                                        GLfixed n,
+                                        GLfixed f)
+{
+    return GL_FrustumxContextANGLE(ctx, l, r, b, t, n, f);
+}
+
+void GL_APIENTRY glGenBuffersContextANGLE(GLeglContext ctx, GLsizei n, GLuint *buffers)
+{
+    return GL_GenBuffersContextANGLE(ctx, n, buffers);
+}
+
+void GL_APIENTRY glGenFencesNVContextANGLE(GLeglContext ctx, GLsizei n, GLuint *fences)
+{
+    return GL_GenFencesNVContextANGLE(ctx, n, fences);
+}
+
+void GL_APIENTRY glGenFramebuffersContextANGLE(GLeglContext ctx, GLsizei n, GLuint *framebuffers)
+{
+    return GL_GenFramebuffersContextANGLE(ctx, n, framebuffers);
+}
+
+void GL_APIENTRY glGenFramebuffersOESContextANGLE(GLeglContext ctx, GLsizei n, GLuint *framebuffers)
+{
+    return GL_GenFramebuffersOESContextANGLE(ctx, n, framebuffers);
+}
+
+void GL_APIENTRY glGenProgramPipelinesContextANGLE(GLeglContext ctx, GLsizei n, GLuint *pipelines)
+{
+    return GL_GenProgramPipelinesContextANGLE(ctx, n, pipelines);
+}
+
+void GL_APIENTRY glGenProgramPipelinesEXTContextANGLE(GLeglContext ctx,
+                                                      GLsizei n,
+                                                      GLuint *pipelines)
+{
+    return GL_GenProgramPipelinesEXTContextANGLE(ctx, n, pipelines);
+}
+
+void GL_APIENTRY glGenQueriesContextANGLE(GLeglContext ctx, GLsizei n, GLuint *ids)
+{
+    return GL_GenQueriesContextANGLE(ctx, n, ids);
+}
+
+void GL_APIENTRY glGenQueriesEXTContextANGLE(GLeglContext ctx, GLsizei n, GLuint *ids)
+{
+    return GL_GenQueriesEXTContextANGLE(ctx, n, ids);
+}
+
+void GL_APIENTRY glGenRenderbuffersContextANGLE(GLeglContext ctx, GLsizei n, GLuint *renderbuffers)
+{
+    return GL_GenRenderbuffersContextANGLE(ctx, n, renderbuffers);
+}
+
+void GL_APIENTRY glGenRenderbuffersOESContextANGLE(GLeglContext ctx,
+                                                   GLsizei n,
+                                                   GLuint *renderbuffers)
+{
+    return GL_GenRenderbuffersOESContextANGLE(ctx, n, renderbuffers);
+}
+
+void GL_APIENTRY glGenSamplersContextANGLE(GLeglContext ctx, GLsizei count, GLuint *samplers)
+{
+    return GL_GenSamplersContextANGLE(ctx, count, samplers);
+}
+
+void GL_APIENTRY glGenSemaphoresEXTContextANGLE(GLeglContext ctx, GLsizei n, GLuint *semaphores)
+{
+    return GL_GenSemaphoresEXTContextANGLE(ctx, n, semaphores);
+}
+
+void GL_APIENTRY glGenTexturesContextANGLE(GLeglContext ctx, GLsizei n, GLuint *textures)
+{
+    return GL_GenTexturesContextANGLE(ctx, n, textures);
+}
+
+void GL_APIENTRY glGenTransformFeedbacksContextANGLE(GLeglContext ctx, GLsizei n, GLuint *ids)
+{
+    return GL_GenTransformFeedbacksContextANGLE(ctx, n, ids);
+}
+
+void GL_APIENTRY glGenVertexArraysContextANGLE(GLeglContext ctx, GLsizei n, GLuint *arrays)
+{
+    return GL_GenVertexArraysContextANGLE(ctx, n, arrays);
+}
+
+void GL_APIENTRY glGenVertexArraysOESContextANGLE(GLeglContext ctx, GLsizei n, GLuint *arrays)
+{
+    return GL_GenVertexArraysOESContextANGLE(ctx, n, arrays);
+}
+
+void GL_APIENTRY glGenerateMipmapContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_GenerateMipmapContextANGLE(ctx, target);
+}
+
+void GL_APIENTRY glGenerateMipmapOESContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_GenerateMipmapOESContextANGLE(ctx, target);
+}
+
+void GL_APIENTRY glGetActiveAttribContextANGLE(GLeglContext ctx,
+                                               GLuint program,
+                                               GLuint index,
+                                               GLsizei bufSize,
+                                               GLsizei *length,
+                                               GLint *size,
+                                               GLenum *type,
+                                               GLchar *name)
+{
+    return GL_GetActiveAttribContextANGLE(ctx, program, index, bufSize, length, size, type, name);
+}
+
+void GL_APIENTRY glGetActiveUniformContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLuint index,
+                                                GLsizei bufSize,
+                                                GLsizei *length,
+                                                GLint *size,
+                                                GLenum *type,
+                                                GLchar *name)
+{
+    return GL_GetActiveUniformContextANGLE(ctx, program, index, bufSize, length, size, type, name);
+}
+
+void GL_APIENTRY glGetActiveUniformBlockNameContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLuint uniformBlockIndex,
+                                                         GLsizei bufSize,
+                                                         GLsizei *length,
+                                                         GLchar *uniformBlockName)
+{
+    return GL_GetActiveUniformBlockNameContextANGLE(ctx, program, uniformBlockIndex, bufSize,
+                                                    length, uniformBlockName);
+}
+
+void GL_APIENTRY glGetActiveUniformBlockivContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLuint uniformBlockIndex,
+                                                       GLenum pname,
+                                                       GLint *params)
+{
+    return GL_GetActiveUniformBlockivContextANGLE(ctx, program, uniformBlockIndex, pname, params);
+}
+
+void GL_APIENTRY glGetActiveUniformsivContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLsizei uniformCount,
+                                                   const GLuint *uniformIndices,
+                                                   GLenum pname,
+                                                   GLint *params)
+{
+    return GL_GetActiveUniformsivContextANGLE(ctx, program, uniformCount, uniformIndices, pname,
+                                              params);
+}
+
+void GL_APIENTRY glGetAttachedShadersContextANGLE(GLeglContext ctx,
+                                                  GLuint program,
+                                                  GLsizei maxCount,
+                                                  GLsizei *count,
+                                                  GLuint *shaders)
+{
+    return GL_GetAttachedShadersContextANGLE(ctx, program, maxCount, count, shaders);
+}
+
+GLint GL_APIENTRY glGetAttribLocationContextANGLE(GLeglContext ctx,
+                                                  GLuint program,
+                                                  const GLchar *name)
+{
+    return GL_GetAttribLocationContextANGLE(ctx, program, name);
+}
+
+void GL_APIENTRY glGetBooleani_vContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLuint index,
+                                             GLboolean *data)
+{
+    return GL_GetBooleani_vContextANGLE(ctx, target, index, data);
+}
+
+void GL_APIENTRY glGetBooleanvContextANGLE(GLeglContext ctx, GLenum pname, GLboolean *data)
+{
+    return GL_GetBooleanvContextANGLE(ctx, pname, data);
+}
+
+void GL_APIENTRY glGetBufferParameteri64vContextANGLE(GLeglContext ctx,
+                                                      GLenum target,
+                                                      GLenum pname,
+                                                      GLint64 *params)
+{
+    return GL_GetBufferParameteri64vContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetBufferParameterivContextANGLE(GLeglContext ctx,
+                                                    GLenum target,
+                                                    GLenum pname,
+                                                    GLint *params)
+{
+    return GL_GetBufferParameterivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetBufferPointervContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLenum pname,
+                                                 void **params)
+{
+    return GL_GetBufferPointervContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetBufferPointervOESContextANGLE(GLeglContext ctx,
+                                                    GLenum target,
+                                                    GLenum pname,
+                                                    void **params)
+{
+    return GL_GetBufferPointervOESContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetClipPlanefContextANGLE(GLeglContext ctx, GLenum plane, GLfloat *equation)
+{
+    return GL_GetClipPlanefContextANGLE(ctx, plane, equation);
+}
+
+void GL_APIENTRY glGetClipPlanexContextANGLE(GLeglContext ctx, GLenum plane, GLfixed *equation)
+{
+    return GL_GetClipPlanexContextANGLE(ctx, plane, equation);
+}
+
+GLuint GL_APIENTRY glGetDebugMessageLogContextANGLE(GLeglContext ctx,
+                                                    GLuint count,
+                                                    GLsizei bufSize,
+                                                    GLenum *sources,
+                                                    GLenum *types,
+                                                    GLuint *ids,
+                                                    GLenum *severities,
+                                                    GLsizei *lengths,
+                                                    GLchar *messageLog)
+{
+    return GL_GetDebugMessageLogContextANGLE(ctx, count, bufSize, sources, types, ids, severities,
+                                             lengths, messageLog);
+}
+
+GLuint GL_APIENTRY glGetDebugMessageLogKHRContextANGLE(GLeglContext ctx,
+                                                       GLuint count,
+                                                       GLsizei bufSize,
+                                                       GLenum *sources,
+                                                       GLenum *types,
+                                                       GLuint *ids,
+                                                       GLenum *severities,
+                                                       GLsizei *lengths,
+                                                       GLchar *messageLog)
+{
+    return GL_GetDebugMessageLogKHRContextANGLE(ctx, count, bufSize, sources, types, ids,
+                                                severities, lengths, messageLog);
+}
+
+GLenum GL_APIENTRY glGetErrorContextANGLE(GLeglContext ctx)
+{
+    return GL_GetErrorContextANGLE(ctx);
+}
+
+void GL_APIENTRY glGetFenceivNVContextANGLE(GLeglContext ctx,
+                                            GLuint fence,
+                                            GLenum pname,
+                                            GLint *params)
+{
+    return GL_GetFenceivNVContextANGLE(ctx, fence, pname, params);
+}
+
+void GL_APIENTRY glGetFixedvContextANGLE(GLeglContext ctx, GLenum pname, GLfixed *params)
+{
+    return GL_GetFixedvContextANGLE(ctx, pname, params);
+}
+
+void GL_APIENTRY glGetFloatvContextANGLE(GLeglContext ctx, GLenum pname, GLfloat *data)
+{
+    return GL_GetFloatvContextANGLE(ctx, pname, data);
+}
+
+GLint GL_APIENTRY glGetFragDataIndexEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    const GLchar *name)
+{
+    return GL_GetFragDataIndexEXTContextANGLE(ctx, program, name);
+}
+
+GLint GL_APIENTRY glGetFragDataLocationContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    const GLchar *name)
+{
+    return GL_GetFragDataLocationContextANGLE(ctx, program, name);
+}
+
+void GL_APIENTRY glGetFramebufferAttachmentParameterivContextANGLE(GLeglContext ctx,
+                                                                   GLenum target,
+                                                                   GLenum attachment,
+                                                                   GLenum pname,
+                                                                   GLint *params)
+{
+    return GL_GetFramebufferAttachmentParameterivContextANGLE(ctx, target, attachment, pname,
+                                                              params);
+}
+
+void GL_APIENTRY glGetFramebufferAttachmentParameterivOESContextANGLE(GLeglContext ctx,
+                                                                      GLenum target,
+                                                                      GLenum attachment,
+                                                                      GLenum pname,
+                                                                      GLint *params)
+{
+    return GL_GetFramebufferAttachmentParameterivOESContextANGLE(ctx, target, attachment, pname,
+                                                                 params);
+}
+
+void GL_APIENTRY glGetFramebufferParameterivContextANGLE(GLeglContext ctx,
+                                                         GLenum target,
+                                                         GLenum pname,
+                                                         GLint *params)
+{
+    return GL_GetFramebufferParameterivContextANGLE(ctx, target, pname, params);
+}
+
+GLenum GL_APIENTRY glGetGraphicsResetStatusContextANGLE(GLeglContext ctx)
+{
+    return GL_GetGraphicsResetStatusContextANGLE(ctx);
+}
+
+GLenum GL_APIENTRY glGetGraphicsResetStatusEXTContextANGLE(GLeglContext ctx)
+{
+    return GL_GetGraphicsResetStatusEXTContextANGLE(ctx);
+}
+
+void GL_APIENTRY glGetInteger64i_vContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLuint index,
+                                               GLint64 *data)
+{
+    return GL_GetInteger64i_vContextANGLE(ctx, target, index, data);
+}
+
+void GL_APIENTRY glGetInteger64vContextANGLE(GLeglContext ctx, GLenum pname, GLint64 *data)
+{
+    return GL_GetInteger64vContextANGLE(ctx, pname, data);
+}
+
+void GL_APIENTRY glGetInteger64vEXTContextANGLE(GLeglContext ctx, GLenum pname, GLint64 *data)
+{
+    return GL_GetInteger64vEXTContextANGLE(ctx, pname, data);
+}
+
+void GL_APIENTRY glGetIntegeri_vContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLuint index,
+                                             GLint *data)
+{
+    return GL_GetIntegeri_vContextANGLE(ctx, target, index, data);
+}
+
+void GL_APIENTRY glGetIntegervContextANGLE(GLeglContext ctx, GLenum pname, GLint *data)
+{
+    return GL_GetIntegervContextANGLE(ctx, pname, data);
+}
+
+void GL_APIENTRY glGetInternalformativContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLenum internalformat,
+                                                   GLenum pname,
+                                                   GLsizei bufSize,
+                                                   GLint *params)
+{
+    return GL_GetInternalformativContextANGLE(ctx, target, internalformat, pname, bufSize, params);
+}
+
+void GL_APIENTRY glGetLightfvContextANGLE(GLeglContext ctx,
+                                          GLenum light,
+                                          GLenum pname,
+                                          GLfloat *params)
+{
+    return GL_GetLightfvContextANGLE(ctx, light, pname, params);
+}
+
+void GL_APIENTRY glGetLightxvContextANGLE(GLeglContext ctx,
+                                          GLenum light,
+                                          GLenum pname,
+                                          GLfixed *params)
+{
+    return GL_GetLightxvContextANGLE(ctx, light, pname, params);
+}
+
+void GL_APIENTRY glGetMaterialfvContextANGLE(GLeglContext ctx,
+                                             GLenum face,
+                                             GLenum pname,
+                                             GLfloat *params)
+{
+    return GL_GetMaterialfvContextANGLE(ctx, face, pname, params);
+}
+
+void GL_APIENTRY glGetMaterialxvContextANGLE(GLeglContext ctx,
+                                             GLenum face,
+                                             GLenum pname,
+                                             GLfixed *params)
+{
+    return GL_GetMaterialxvContextANGLE(ctx, face, pname, params);
+}
+
+void GL_APIENTRY glGetMemoryObjectParameterivEXTContextANGLE(GLeglContext ctx,
+                                                             GLuint memoryObject,
+                                                             GLenum pname,
+                                                             GLint *params)
+{
+    return GL_GetMemoryObjectParameterivEXTContextANGLE(ctx, memoryObject, pname, params);
+}
+
+void GL_APIENTRY glGetMultisamplefvContextANGLE(GLeglContext ctx,
+                                                GLenum pname,
+                                                GLuint index,
+                                                GLfloat *val)
+{
+    return GL_GetMultisamplefvContextANGLE(ctx, pname, index, val);
+}
+
+void GL_APIENTRY glGetObjectLabelContextANGLE(GLeglContext ctx,
+                                              GLenum identifier,
+                                              GLuint name,
+                                              GLsizei bufSize,
+                                              GLsizei *length,
+                                              GLchar *label)
+{
+    return GL_GetObjectLabelContextANGLE(ctx, identifier, name, bufSize, length, label);
+}
+
+void GL_APIENTRY glGetObjectLabelEXTContextANGLE(GLeglContext ctx,
+                                                 GLenum type,
+                                                 GLuint object,
+                                                 GLsizei bufSize,
+                                                 GLsizei *length,
+                                                 GLchar *label)
+{
+    return GL_GetObjectLabelEXTContextANGLE(ctx, type, object, bufSize, length, label);
+}
+
+void GL_APIENTRY glGetObjectLabelKHRContextANGLE(GLeglContext ctx,
+                                                 GLenum identifier,
+                                                 GLuint name,
+                                                 GLsizei bufSize,
+                                                 GLsizei *length,
+                                                 GLchar *label)
+{
+    return GL_GetObjectLabelKHRContextANGLE(ctx, identifier, name, bufSize, length, label);
+}
+
+void GL_APIENTRY glGetObjectPtrLabelContextANGLE(GLeglContext ctx,
+                                                 const void *ptr,
+                                                 GLsizei bufSize,
+                                                 GLsizei *length,
+                                                 GLchar *label)
+{
+    return GL_GetObjectPtrLabelContextANGLE(ctx, ptr, bufSize, length, label);
+}
+
+void GL_APIENTRY glGetObjectPtrLabelKHRContextANGLE(GLeglContext ctx,
+                                                    const void *ptr,
+                                                    GLsizei bufSize,
+                                                    GLsizei *length,
+                                                    GLchar *label)
+{
+    return GL_GetObjectPtrLabelKHRContextANGLE(ctx, ptr, bufSize, length, label);
+}
+
+void GL_APIENTRY glGetPointervContextANGLE(GLeglContext ctx, GLenum pname, void **params)
+{
+    return GL_GetPointervContextANGLE(ctx, pname, params);
+}
+
+void GL_APIENTRY glGetPointervKHRContextANGLE(GLeglContext ctx, GLenum pname, void **params)
+{
+    return GL_GetPointervKHRContextANGLE(ctx, pname, params);
+}
+
+void GL_APIENTRY glGetProgramBinaryContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLsizei bufSize,
+                                                GLsizei *length,
+                                                GLenum *binaryFormat,
+                                                void *binary)
+{
+    return GL_GetProgramBinaryContextANGLE(ctx, program, bufSize, length, binaryFormat, binary);
+}
+
+void GL_APIENTRY glGetProgramBinaryOESContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLsizei bufSize,
+                                                   GLsizei *length,
+                                                   GLenum *binaryFormat,
+                                                   void *binary)
+{
+    return GL_GetProgramBinaryOESContextANGLE(ctx, program, bufSize, length, binaryFormat, binary);
+}
+
+void GL_APIENTRY glGetProgramInfoLogContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLsizei bufSize,
+                                                 GLsizei *length,
+                                                 GLchar *infoLog)
+{
+    return GL_GetProgramInfoLogContextANGLE(ctx, program, bufSize, length, infoLog);
+}
+
+void GL_APIENTRY glGetProgramInterfaceivContextANGLE(GLeglContext ctx,
+                                                     GLuint program,
+                                                     GLenum programInterface,
+                                                     GLenum pname,
+                                                     GLint *params)
+{
+    return GL_GetProgramInterfaceivContextANGLE(ctx, program, programInterface, pname, params);
+}
+
+void GL_APIENTRY glGetProgramPipelineInfoLogContextANGLE(GLeglContext ctx,
+                                                         GLuint pipeline,
+                                                         GLsizei bufSize,
+                                                         GLsizei *length,
+                                                         GLchar *infoLog)
+{
+    return GL_GetProgramPipelineInfoLogContextANGLE(ctx, pipeline, bufSize, length, infoLog);
+}
+
+void GL_APIENTRY glGetProgramPipelineInfoLogEXTContextANGLE(GLeglContext ctx,
+                                                            GLuint pipeline,
+                                                            GLsizei bufSize,
+                                                            GLsizei *length,
+                                                            GLchar *infoLog)
+{
+    return GL_GetProgramPipelineInfoLogEXTContextANGLE(ctx, pipeline, bufSize, length, infoLog);
+}
+
+void GL_APIENTRY glGetProgramPipelineivContextANGLE(GLeglContext ctx,
+                                                    GLuint pipeline,
+                                                    GLenum pname,
+                                                    GLint *params)
+{
+    return GL_GetProgramPipelineivContextANGLE(ctx, pipeline, pname, params);
+}
+
+void GL_APIENTRY glGetProgramPipelineivEXTContextANGLE(GLeglContext ctx,
+                                                       GLuint pipeline,
+                                                       GLenum pname,
+                                                       GLint *params)
+{
+    return GL_GetProgramPipelineivEXTContextANGLE(ctx, pipeline, pname, params);
+}
+
+GLuint GL_APIENTRY glGetProgramResourceIndexContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLenum programInterface,
+                                                         const GLchar *name)
+{
+    return GL_GetProgramResourceIndexContextANGLE(ctx, program, programInterface, name);
+}
+
+GLint GL_APIENTRY glGetProgramResourceLocationContextANGLE(GLeglContext ctx,
+                                                           GLuint program,
+                                                           GLenum programInterface,
+                                                           const GLchar *name)
+{
+    return GL_GetProgramResourceLocationContextANGLE(ctx, program, programInterface, name);
+}
+
+GLint GL_APIENTRY glGetProgramResourceLocationIndexEXTContextANGLE(GLeglContext ctx,
+                                                                   GLuint program,
+                                                                   GLenum programInterface,
+                                                                   const GLchar *name)
+{
+    return GL_GetProgramResourceLocationIndexEXTContextANGLE(ctx, program, programInterface, name);
+}
+
+void GL_APIENTRY glGetProgramResourceNameContextANGLE(GLeglContext ctx,
+                                                      GLuint program,
+                                                      GLenum programInterface,
+                                                      GLuint index,
+                                                      GLsizei bufSize,
+                                                      GLsizei *length,
+                                                      GLchar *name)
+{
+    return GL_GetProgramResourceNameContextANGLE(ctx, program, programInterface, index, bufSize,
+                                                 length, name);
+}
+
+void GL_APIENTRY glGetProgramResourceivContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLenum programInterface,
+                                                    GLuint index,
+                                                    GLsizei propCount,
+                                                    const GLenum *props,
+                                                    GLsizei bufSize,
+                                                    GLsizei *length,
+                                                    GLint *params)
+{
+    return GL_GetProgramResourceivContextANGLE(ctx, program, programInterface, index, propCount,
+                                               props, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetProgramivContextANGLE(GLeglContext ctx,
+                                            GLuint program,
+                                            GLenum pname,
+                                            GLint *params)
+{
+    return GL_GetProgramivContextANGLE(ctx, program, pname, params);
+}
+
+void GL_APIENTRY glGetQueryObjecti64vEXTContextANGLE(GLeglContext ctx,
+                                                     GLuint id,
+                                                     GLenum pname,
+                                                     GLint64 *params)
+{
+    return GL_GetQueryObjecti64vEXTContextANGLE(ctx, id, pname, params);
+}
+
+void GL_APIENTRY glGetQueryObjectivEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint id,
+                                                   GLenum pname,
+                                                   GLint *params)
+{
+    return GL_GetQueryObjectivEXTContextANGLE(ctx, id, pname, params);
+}
+
+void GL_APIENTRY glGetQueryObjectui64vEXTContextANGLE(GLeglContext ctx,
+                                                      GLuint id,
+                                                      GLenum pname,
+                                                      GLuint64 *params)
+{
+    return GL_GetQueryObjectui64vEXTContextANGLE(ctx, id, pname, params);
+}
+
+void GL_APIENTRY glGetQueryObjectuivContextANGLE(GLeglContext ctx,
+                                                 GLuint id,
+                                                 GLenum pname,
+                                                 GLuint *params)
+{
+    return GL_GetQueryObjectuivContextANGLE(ctx, id, pname, params);
+}
+
+void GL_APIENTRY glGetQueryObjectuivEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint id,
+                                                    GLenum pname,
+                                                    GLuint *params)
+{
+    return GL_GetQueryObjectuivEXTContextANGLE(ctx, id, pname, params);
+}
+
+void GL_APIENTRY glGetQueryivContextANGLE(GLeglContext ctx,
+                                          GLenum target,
+                                          GLenum pname,
+                                          GLint *params)
+{
+    return GL_GetQueryivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetQueryivEXTContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLenum pname,
+                                             GLint *params)
+{
+    return GL_GetQueryivEXTContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetRenderbufferParameterivContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLenum pname,
+                                                          GLint *params)
+{
+    return GL_GetRenderbufferParameterivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetRenderbufferParameterivOESContextANGLE(GLeglContext ctx,
+                                                             GLenum target,
+                                                             GLenum pname,
+                                                             GLint *params)
+{
+    return GL_GetRenderbufferParameterivOESContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterIivContextANGLE(GLeglContext ctx,
+                                                      GLuint sampler,
+                                                      GLenum pname,
+                                                      GLint *params)
+{
+    return GL_GetSamplerParameterIivContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterIivEXTContextANGLE(GLeglContext ctx,
+                                                         GLuint sampler,
+                                                         GLenum pname,
+                                                         GLint *params)
+{
+    return GL_GetSamplerParameterIivEXTContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterIivOESContextANGLE(GLeglContext ctx,
+                                                         GLuint sampler,
+                                                         GLenum pname,
+                                                         GLint *params)
+{
+    return GL_GetSamplerParameterIivOESContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterIuivContextANGLE(GLeglContext ctx,
+                                                       GLuint sampler,
+                                                       GLenum pname,
+                                                       GLuint *params)
+{
+    return GL_GetSamplerParameterIuivContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterIuivEXTContextANGLE(GLeglContext ctx,
+                                                          GLuint sampler,
+                                                          GLenum pname,
+                                                          GLuint *params)
+{
+    return GL_GetSamplerParameterIuivEXTContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterIuivOESContextANGLE(GLeglContext ctx,
+                                                          GLuint sampler,
+                                                          GLenum pname,
+                                                          GLuint *params)
+{
+    return GL_GetSamplerParameterIuivOESContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterfvContextANGLE(GLeglContext ctx,
+                                                     GLuint sampler,
+                                                     GLenum pname,
+                                                     GLfloat *params)
+{
+    return GL_GetSamplerParameterfvContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSamplerParameterivContextANGLE(GLeglContext ctx,
+                                                     GLuint sampler,
+                                                     GLenum pname,
+                                                     GLint *params)
+{
+    return GL_GetSamplerParameterivContextANGLE(ctx, sampler, pname, params);
+}
+
+void GL_APIENTRY glGetSemaphoreParameterui64vEXTContextANGLE(GLeglContext ctx,
+                                                             GLuint semaphore,
+                                                             GLenum pname,
+                                                             GLuint64 *params)
+{
+    return GL_GetSemaphoreParameterui64vEXTContextANGLE(ctx, semaphore, pname, params);
+}
+
+void GL_APIENTRY glGetShaderInfoLogContextANGLE(GLeglContext ctx,
+                                                GLuint shader,
+                                                GLsizei bufSize,
+                                                GLsizei *length,
+                                                GLchar *infoLog)
+{
+    return GL_GetShaderInfoLogContextANGLE(ctx, shader, bufSize, length, infoLog);
+}
+
+void GL_APIENTRY glGetShaderPrecisionFormatContextANGLE(GLeglContext ctx,
+                                                        GLenum shadertype,
+                                                        GLenum precisiontype,
+                                                        GLint *range,
+                                                        GLint *precision)
+{
+    return GL_GetShaderPrecisionFormatContextANGLE(ctx, shadertype, precisiontype, range,
+                                                   precision);
+}
+
+void GL_APIENTRY glGetShaderSourceContextANGLE(GLeglContext ctx,
+                                               GLuint shader,
+                                               GLsizei bufSize,
+                                               GLsizei *length,
+                                               GLchar *source)
+{
+    return GL_GetShaderSourceContextANGLE(ctx, shader, bufSize, length, source);
+}
+
+void GL_APIENTRY glGetShaderivContextANGLE(GLeglContext ctx,
+                                           GLuint shader,
+                                           GLenum pname,
+                                           GLint *params)
+{
+    return GL_GetShaderivContextANGLE(ctx, shader, pname, params);
+}
+
+const GLubyte *GL_APIENTRY glGetStringContextANGLE(GLeglContext ctx, GLenum name)
+{
+    return GL_GetStringContextANGLE(ctx, name);
+}
+
+const GLubyte *GL_APIENTRY glGetStringiContextANGLE(GLeglContext ctx, GLenum name, GLuint index)
+{
+    return GL_GetStringiContextANGLE(ctx, name, index);
+}
+
+void GL_APIENTRY glGetSyncivContextANGLE(GLeglContext ctx,
+                                         GLsync sync,
+                                         GLenum pname,
+                                         GLsizei bufSize,
+                                         GLsizei *length,
+                                         GLint *values)
+{
+    return GL_GetSyncivContextANGLE(ctx, sync, pname, bufSize, length, values);
+}
+
+void GL_APIENTRY glGetTexEnvfvContextANGLE(GLeglContext ctx,
+                                           GLenum target,
+                                           GLenum pname,
+                                           GLfloat *params)
+{
+    return GL_GetTexEnvfvContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetTexEnvivContextANGLE(GLeglContext ctx,
+                                           GLenum target,
+                                           GLenum pname,
+                                           GLint *params)
+{
+    return GL_GetTexEnvivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetTexEnvxvContextANGLE(GLeglContext ctx,
+                                           GLenum target,
+                                           GLenum pname,
+                                           GLfixed *params)
+{
+    return GL_GetTexEnvxvContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glGetTexGenfvOESContextANGLE(GLeglContext ctx,
+                                              GLenum coord,
+                                              GLenum pname,
+                                              GLfloat *params)
+{
+    return GL_GetTexGenfvOESContextANGLE(ctx, coord, pname, params);
+}
+
+void GL_APIENTRY glGetTexGenivOESContextANGLE(GLeglContext ctx,
+                                              GLenum coord,
+                                              GLenum pname,
+                                              GLint *params)
+{
+    return GL_GetTexGenivOESContextANGLE(ctx, coord, pname, params);
+}
+
+void GL_APIENTRY glGetTexGenxvOESContextANGLE(GLeglContext ctx,
+                                              GLenum coord,
+                                              GLenum pname,
+                                              GLfixed *params)
+{
+    return GL_GetTexGenxvOESContextANGLE(ctx, coord, pname, params);
+}
+
+void GL_APIENTRY glGetTexLevelParameterfvContextANGLE(GLeglContext ctx,
+                                                      GLenum target,
+                                                      GLint level,
+                                                      GLenum pname,
+                                                      GLfloat *params)
+{
+    return GL_GetTexLevelParameterfvContextANGLE(ctx, target, level, pname, params);
+}
+
+void GL_APIENTRY glGetTexLevelParameterivContextANGLE(GLeglContext ctx,
+                                                      GLenum target,
+                                                      GLint level,
+                                                      GLenum pname,
+                                                      GLint *params)
+{
+    return GL_GetTexLevelParameterivContextANGLE(ctx, target, level, pname, params);
+}
+
+void GL_APIENTRY glGetTexParameterIivContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
                                                   GLenum pname,
                                                   GLint *params)
 {
-    return GL_GetActiveAtomicCounterBufferiv(program, bufferIndex, pname, params);
+    return GL_GetTexParameterIivContextANGLE(ctx, target, pname, params);
 }
 
-void GL_APIENTRY glTexStorage1D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width)
+void GL_APIENTRY glGetTexParameterIivEXTContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLenum pname,
+                                                     GLint *params)
 {
-    return GL_TexStorage1D(target, levels, internalformat, width);
+    return GL_GetTexParameterIivEXTContextANGLE(ctx, target, pname, params);
 }
 
-// GL 4.3
-void GL_APIENTRY glClearBufferData(GLenum target,
-                                   GLenum internalformat,
-                                   GLenum format,
-                                   GLenum type,
-                                   const void *data)
+void GL_APIENTRY glGetTexParameterIivOESContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLenum pname,
+                                                     GLint *params)
 {
-    return GL_ClearBufferData(target, internalformat, format, type, data);
+    return GL_GetTexParameterIivOESContextANGLE(ctx, target, pname, params);
 }
 
-void GL_APIENTRY glClearBufferSubData(GLenum target,
-                                      GLenum internalformat,
-                                      GLintptr offset,
-                                      GLsizeiptr size,
-                                      GLenum format,
-                                      GLenum type,
-                                      const void *data)
+void GL_APIENTRY glGetTexParameterIuivContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLenum pname,
+                                                   GLuint *params)
 {
-    return GL_ClearBufferSubData(target, internalformat, offset, size, format, type, data);
+    return GL_GetTexParameterIuivContextANGLE(ctx, target, pname, params);
 }
 
-void GL_APIENTRY glGetInternalformati64v(GLenum target,
-                                         GLenum internalformat,
-                                         GLenum pname,
-                                         GLsizei count,
-                                         GLint64 *params)
+void GL_APIENTRY glGetTexParameterIuivEXTContextANGLE(GLeglContext ctx,
+                                                      GLenum target,
+                                                      GLenum pname,
+                                                      GLuint *params)
 {
-    return GL_GetInternalformati64v(target, internalformat, pname, count, params);
+    return GL_GetTexParameterIuivEXTContextANGLE(ctx, target, pname, params);
 }
 
-GLint GL_APIENTRY glGetProgramResourceLocationIndex(GLuint program,
-                                                    GLenum programInterface,
-                                                    const GLchar *name)
+void GL_APIENTRY glGetTexParameterIuivOESContextANGLE(GLeglContext ctx,
+                                                      GLenum target,
+                                                      GLenum pname,
+                                                      GLuint *params)
 {
-    return GL_GetProgramResourceLocationIndex(program, programInterface, name);
+    return GL_GetTexParameterIuivOESContextANGLE(ctx, target, pname, params);
 }
 
-void GL_APIENTRY glInvalidateBufferData(GLuint buffer)
+void GL_APIENTRY glGetTexParameterfvContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLenum pname,
+                                                 GLfloat *params)
 {
-    return GL_InvalidateBufferData(buffer);
+    return GL_GetTexParameterfvContextANGLE(ctx, target, pname, params);
 }
 
-void GL_APIENTRY glInvalidateBufferSubData(GLuint buffer, GLintptr offset, GLsizeiptr length)
+void GL_APIENTRY glGetTexParameterivContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLenum pname,
+                                                 GLint *params)
 {
-    return GL_InvalidateBufferSubData(buffer, offset, length);
+    return GL_GetTexParameterivContextANGLE(ctx, target, pname, params);
 }
 
-void GL_APIENTRY glInvalidateTexImage(GLuint texture, GLint level)
+void GL_APIENTRY glGetTexParameterxvContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLenum pname,
+                                                 GLfixed *params)
 {
-    return GL_InvalidateTexImage(texture, level);
+    return GL_GetTexParameterxvContextANGLE(ctx, target, pname, params);
 }
 
-void GL_APIENTRY glInvalidateTexSubImage(GLuint texture,
-                                         GLint level,
-                                         GLint xoffset,
-                                         GLint yoffset,
-                                         GLint zoffset,
-                                         GLsizei width,
-                                         GLsizei height,
-                                         GLsizei depth)
+void GL_APIENTRY glGetTransformFeedbackVaryingContextANGLE(GLeglContext ctx,
+                                                           GLuint program,
+                                                           GLuint index,
+                                                           GLsizei bufSize,
+                                                           GLsizei *length,
+                                                           GLsizei *size,
+                                                           GLenum *type,
+                                                           GLchar *name)
 {
-    return GL_InvalidateTexSubImage(texture, level, xoffset, yoffset, zoffset, width, height,
-                                    depth);
+    return GL_GetTransformFeedbackVaryingContextANGLE(ctx, program, index, bufSize, length, size,
+                                                      type, name);
 }
 
-void GL_APIENTRY glMultiDrawArraysIndirect(GLenum mode,
-                                           const void *indirect,
-                                           GLsizei drawcount,
-                                           GLsizei stride)
+void GL_APIENTRY glGetTranslatedShaderSourceANGLEContextANGLE(GLeglContext ctx,
+                                                              GLuint shader,
+                                                              GLsizei bufsize,
+                                                              GLsizei *length,
+                                                              GLchar *source)
 {
-    return GL_MultiDrawArraysIndirect(mode, indirect, drawcount, stride);
+    return GL_GetTranslatedShaderSourceANGLEContextANGLE(ctx, shader, bufsize, length, source);
 }
 
-void GL_APIENTRY glMultiDrawElementsIndirect(GLenum mode,
+GLuint GL_APIENTRY glGetUniformBlockIndexContextANGLE(GLeglContext ctx,
+                                                      GLuint program,
+                                                      const GLchar *uniformBlockName)
+{
+    return GL_GetUniformBlockIndexContextANGLE(ctx, program, uniformBlockName);
+}
+
+void GL_APIENTRY glGetUniformIndicesContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLsizei uniformCount,
+                                                 const GLchar *const *uniformNames,
+                                                 GLuint *uniformIndices)
+{
+    return GL_GetUniformIndicesContextANGLE(ctx, program, uniformCount, uniformNames,
+                                            uniformIndices);
+}
+
+GLint GL_APIENTRY glGetUniformLocationContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   const GLchar *name)
+{
+    return GL_GetUniformLocationContextANGLE(ctx, program, name);
+}
+
+void GL_APIENTRY glGetUniformfvContextANGLE(GLeglContext ctx,
+                                            GLuint program,
+                                            GLint location,
+                                            GLfloat *params)
+{
+    return GL_GetUniformfvContextANGLE(ctx, program, location, params);
+}
+
+void GL_APIENTRY glGetUniformivContextANGLE(GLeglContext ctx,
+                                            GLuint program,
+                                            GLint location,
+                                            GLint *params)
+{
+    return GL_GetUniformivContextANGLE(ctx, program, location, params);
+}
+
+void GL_APIENTRY glGetUniformuivContextANGLE(GLeglContext ctx,
+                                             GLuint program,
+                                             GLint location,
+                                             GLuint *params)
+{
+    return GL_GetUniformuivContextANGLE(ctx, program, location, params);
+}
+
+void GL_APIENTRY glGetUnsignedBytevEXTContextANGLE(GLeglContext ctx, GLenum pname, GLubyte *data)
+{
+    return GL_GetUnsignedBytevEXTContextANGLE(ctx, pname, data);
+}
+
+void GL_APIENTRY glGetUnsignedBytei_vEXTContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLuint index,
+                                                     GLubyte *data)
+{
+    return GL_GetUnsignedBytei_vEXTContextANGLE(ctx, target, index, data);
+}
+
+void GL_APIENTRY glGetVertexAttribIivContextANGLE(GLeglContext ctx,
+                                                  GLuint index,
+                                                  GLenum pname,
+                                                  GLint *params)
+{
+    return GL_GetVertexAttribIivContextANGLE(ctx, index, pname, params);
+}
+
+void GL_APIENTRY glGetVertexAttribIuivContextANGLE(GLeglContext ctx,
+                                                   GLuint index,
+                                                   GLenum pname,
+                                                   GLuint *params)
+{
+    return GL_GetVertexAttribIuivContextANGLE(ctx, index, pname, params);
+}
+
+void GL_APIENTRY glGetVertexAttribPointervContextANGLE(GLeglContext ctx,
+                                                       GLuint index,
+                                                       GLenum pname,
+                                                       void **pointer)
+{
+    return GL_GetVertexAttribPointervContextANGLE(ctx, index, pname, pointer);
+}
+
+void GL_APIENTRY glGetVertexAttribfvContextANGLE(GLeglContext ctx,
+                                                 GLuint index,
+                                                 GLenum pname,
+                                                 GLfloat *params)
+{
+    return GL_GetVertexAttribfvContextANGLE(ctx, index, pname, params);
+}
+
+void GL_APIENTRY glGetVertexAttribivContextANGLE(GLeglContext ctx,
+                                                 GLuint index,
+                                                 GLenum pname,
+                                                 GLint *params)
+{
+    return GL_GetVertexAttribivContextANGLE(ctx, index, pname, params);
+}
+
+void GL_APIENTRY glGetnUniformfvContextANGLE(GLeglContext ctx,
+                                             GLuint program,
+                                             GLint location,
+                                             GLsizei bufSize,
+                                             GLfloat *params)
+{
+    return GL_GetnUniformfvContextANGLE(ctx, program, location, bufSize, params);
+}
+
+void GL_APIENTRY glGetnUniformfvEXTContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLsizei bufSize,
+                                                GLfloat *params)
+{
+    return GL_GetnUniformfvEXTContextANGLE(ctx, program, location, bufSize, params);
+}
+
+void GL_APIENTRY glGetnUniformivContextANGLE(GLeglContext ctx,
+                                             GLuint program,
+                                             GLint location,
+                                             GLsizei bufSize,
+                                             GLint *params)
+{
+    return GL_GetnUniformivContextANGLE(ctx, program, location, bufSize, params);
+}
+
+void GL_APIENTRY glGetnUniformivEXTContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLsizei bufSize,
+                                                GLint *params)
+{
+    return GL_GetnUniformivEXTContextANGLE(ctx, program, location, bufSize, params);
+}
+
+void GL_APIENTRY glGetnUniformuivContextANGLE(GLeglContext ctx,
+                                              GLuint program,
+                                              GLint location,
+                                              GLsizei bufSize,
+                                              GLuint *params)
+{
+    return GL_GetnUniformuivContextANGLE(ctx, program, location, bufSize, params);
+}
+
+void GL_APIENTRY glHintContextANGLE(GLeglContext ctx, GLenum target, GLenum mode)
+{
+    return GL_HintContextANGLE(ctx, target, mode);
+}
+
+void GL_APIENTRY glImportMemoryFdEXTContextANGLE(GLeglContext ctx,
+                                                 GLuint memory,
+                                                 GLuint64 size,
+                                                 GLenum handleType,
+                                                 GLint fd)
+{
+    return GL_ImportMemoryFdEXTContextANGLE(ctx, memory, size, handleType, fd);
+}
+
+void GL_APIENTRY glImportSemaphoreFdEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint semaphore,
+                                                    GLenum handleType,
+                                                    GLint fd)
+{
+    return GL_ImportSemaphoreFdEXTContextANGLE(ctx, semaphore, handleType, fd);
+}
+
+void GL_APIENTRY glInsertEventMarkerEXTContextANGLE(GLeglContext ctx,
+                                                    GLsizei length,
+                                                    const GLchar *marker)
+{
+    return GL_InsertEventMarkerEXTContextANGLE(ctx, length, marker);
+}
+
+void GL_APIENTRY glInvalidateFramebufferContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLsizei numAttachments,
+                                                     const GLenum *attachments)
+{
+    return GL_InvalidateFramebufferContextANGLE(ctx, target, numAttachments, attachments);
+}
+
+void GL_APIENTRY glInvalidateSubFramebufferContextANGLE(GLeglContext ctx,
+                                                        GLenum target,
+                                                        GLsizei numAttachments,
+                                                        const GLenum *attachments,
+                                                        GLint x,
+                                                        GLint y,
+                                                        GLsizei width,
+                                                        GLsizei height)
+{
+    return GL_InvalidateSubFramebufferContextANGLE(ctx, target, numAttachments, attachments, x, y,
+                                                   width, height);
+}
+
+GLboolean GL_APIENTRY glIsBufferContextANGLE(GLeglContext ctx, GLuint buffer)
+{
+    return GL_IsBufferContextANGLE(ctx, buffer);
+}
+
+GLboolean GL_APIENTRY glIsEnabledContextANGLE(GLeglContext ctx, GLenum cap)
+{
+    return GL_IsEnabledContextANGLE(ctx, cap);
+}
+
+GLboolean GL_APIENTRY glIsEnablediContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_IsEnablediContextANGLE(ctx, target, index);
+}
+
+GLboolean GL_APIENTRY glIsEnablediEXTContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_IsEnablediEXTContextANGLE(ctx, target, index);
+}
+
+GLboolean GL_APIENTRY glIsEnablediOESContextANGLE(GLeglContext ctx, GLenum target, GLuint index)
+{
+    return GL_IsEnablediOESContextANGLE(ctx, target, index);
+}
+
+GLboolean GL_APIENTRY glIsFenceNVContextANGLE(GLeglContext ctx, GLuint fence)
+{
+    return GL_IsFenceNVContextANGLE(ctx, fence);
+}
+
+GLboolean GL_APIENTRY glIsFramebufferContextANGLE(GLeglContext ctx, GLuint framebuffer)
+{
+    return GL_IsFramebufferContextANGLE(ctx, framebuffer);
+}
+
+GLboolean GL_APIENTRY glIsFramebufferOESContextANGLE(GLeglContext ctx, GLuint framebuffer)
+{
+    return GL_IsFramebufferOESContextANGLE(ctx, framebuffer);
+}
+
+GLboolean GL_APIENTRY glIsMemoryObjectEXTContextANGLE(GLeglContext ctx, GLuint memoryObject)
+{
+    return GL_IsMemoryObjectEXTContextANGLE(ctx, memoryObject);
+}
+
+GLboolean GL_APIENTRY glIsProgramContextANGLE(GLeglContext ctx, GLuint program)
+{
+    return GL_IsProgramContextANGLE(ctx, program);
+}
+
+GLboolean GL_APIENTRY glIsProgramPipelineContextANGLE(GLeglContext ctx, GLuint pipeline)
+{
+    return GL_IsProgramPipelineContextANGLE(ctx, pipeline);
+}
+
+GLboolean GL_APIENTRY glIsProgramPipelineEXTContextANGLE(GLeglContext ctx, GLuint pipeline)
+{
+    return GL_IsProgramPipelineEXTContextANGLE(ctx, pipeline);
+}
+
+GLboolean GL_APIENTRY glIsQueryContextANGLE(GLeglContext ctx, GLuint id)
+{
+    return GL_IsQueryContextANGLE(ctx, id);
+}
+
+GLboolean GL_APIENTRY glIsQueryEXTContextANGLE(GLeglContext ctx, GLuint id)
+{
+    return GL_IsQueryEXTContextANGLE(ctx, id);
+}
+
+GLboolean GL_APIENTRY glIsRenderbufferContextANGLE(GLeglContext ctx, GLuint renderbuffer)
+{
+    return GL_IsRenderbufferContextANGLE(ctx, renderbuffer);
+}
+
+GLboolean GL_APIENTRY glIsRenderbufferOESContextANGLE(GLeglContext ctx, GLuint renderbuffer)
+{
+    return GL_IsRenderbufferOESContextANGLE(ctx, renderbuffer);
+}
+
+GLboolean GL_APIENTRY glIsSemaphoreEXTContextANGLE(GLeglContext ctx, GLuint semaphore)
+{
+    return GL_IsSemaphoreEXTContextANGLE(ctx, semaphore);
+}
+
+GLboolean GL_APIENTRY glIsSamplerContextANGLE(GLeglContext ctx, GLuint sampler)
+{
+    return GL_IsSamplerContextANGLE(ctx, sampler);
+}
+
+GLboolean GL_APIENTRY glIsShaderContextANGLE(GLeglContext ctx, GLuint shader)
+{
+    return GL_IsShaderContextANGLE(ctx, shader);
+}
+
+GLboolean GL_APIENTRY glIsSyncContextANGLE(GLeglContext ctx, GLsync sync)
+{
+    return GL_IsSyncContextANGLE(ctx, sync);
+}
+
+GLboolean GL_APIENTRY glIsTextureContextANGLE(GLeglContext ctx, GLuint texture)
+{
+    return GL_IsTextureContextANGLE(ctx, texture);
+}
+
+GLboolean GL_APIENTRY glIsTransformFeedbackContextANGLE(GLeglContext ctx, GLuint id)
+{
+    return GL_IsTransformFeedbackContextANGLE(ctx, id);
+}
+
+GLboolean GL_APIENTRY glIsVertexArrayContextANGLE(GLeglContext ctx, GLuint array)
+{
+    return GL_IsVertexArrayContextANGLE(ctx, array);
+}
+
+GLboolean GL_APIENTRY glIsVertexArrayOESContextANGLE(GLeglContext ctx, GLuint array)
+{
+    return GL_IsVertexArrayOESContextANGLE(ctx, array);
+}
+
+void GL_APIENTRY glLabelObjectEXTContextANGLE(GLeglContext ctx,
+                                              GLenum type,
+                                              GLuint object,
+                                              GLsizei length,
+                                              const GLchar *label)
+{
+    return GL_LabelObjectEXTContextANGLE(ctx, type, object, length, label);
+}
+
+void GL_APIENTRY glLightModelfContextANGLE(GLeglContext ctx, GLenum pname, GLfloat param)
+{
+    return GL_LightModelfContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glLightModelfvContextANGLE(GLeglContext ctx, GLenum pname, const GLfloat *params)
+{
+    return GL_LightModelfvContextANGLE(ctx, pname, params);
+}
+
+void GL_APIENTRY glLightModelxContextANGLE(GLeglContext ctx, GLenum pname, GLfixed param)
+{
+    return GL_LightModelxContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glLightModelxvContextANGLE(GLeglContext ctx, GLenum pname, const GLfixed *param)
+{
+    return GL_LightModelxvContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glLightfContextANGLE(GLeglContext ctx, GLenum light, GLenum pname, GLfloat param)
+{
+    return GL_LightfContextANGLE(ctx, light, pname, param);
+}
+
+void GL_APIENTRY glLightfvContextANGLE(GLeglContext ctx,
+                                       GLenum light,
+                                       GLenum pname,
+                                       const GLfloat *params)
+{
+    return GL_LightfvContextANGLE(ctx, light, pname, params);
+}
+
+void GL_APIENTRY glLightxContextANGLE(GLeglContext ctx, GLenum light, GLenum pname, GLfixed param)
+{
+    return GL_LightxContextANGLE(ctx, light, pname, param);
+}
+
+void GL_APIENTRY glLightxvContextANGLE(GLeglContext ctx,
+                                       GLenum light,
+                                       GLenum pname,
+                                       const GLfixed *params)
+{
+    return GL_LightxvContextANGLE(ctx, light, pname, params);
+}
+
+void GL_APIENTRY glLineWidthContextANGLE(GLeglContext ctx, GLfloat width)
+{
+    return GL_LineWidthContextANGLE(ctx, width);
+}
+
+void GL_APIENTRY glLineWidthxContextANGLE(GLeglContext ctx, GLfixed width)
+{
+    return GL_LineWidthxContextANGLE(ctx, width);
+}
+
+void GL_APIENTRY glLinkProgramContextANGLE(GLeglContext ctx, GLuint program)
+{
+    return GL_LinkProgramContextANGLE(ctx, program);
+}
+
+void GL_APIENTRY glLoadIdentityContextANGLE(GLeglContext ctx)
+{
+    return GL_LoadIdentityContextANGLE(ctx);
+}
+
+void GL_APIENTRY glLoadMatrixfContextANGLE(GLeglContext ctx, const GLfloat *m)
+{
+    return GL_LoadMatrixfContextANGLE(ctx, m);
+}
+
+void GL_APIENTRY glLoadMatrixxContextANGLE(GLeglContext ctx, const GLfixed *m)
+{
+    return GL_LoadMatrixxContextANGLE(ctx, m);
+}
+
+void GL_APIENTRY glLoadPaletteFromModelViewMatrixOESContextANGLE(GLeglContext ctx)
+{
+    return GL_LoadPaletteFromModelViewMatrixOESContextANGLE(ctx);
+}
+
+void GL_APIENTRY glLogicOpContextANGLE(GLeglContext ctx, GLenum opcode)
+{
+    return GL_LogicOpContextANGLE(ctx, opcode);
+}
+
+void *GL_APIENTRY glMapBufferOESContextANGLE(GLeglContext ctx, GLenum target, GLenum access)
+{
+    return GL_MapBufferOESContextANGLE(ctx, target, access);
+}
+
+void *GL_APIENTRY glMapBufferRangeContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLintptr offset,
+                                               GLsizeiptr length,
+                                               GLbitfield access)
+{
+    return GL_MapBufferRangeContextANGLE(ctx, target, offset, length, access);
+}
+
+void *GL_APIENTRY glMapBufferRangeEXTContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
+                                                  GLintptr offset,
+                                                  GLsizeiptr length,
+                                                  GLbitfield access)
+{
+    return GL_MapBufferRangeEXTContextANGLE(ctx, target, offset, length, access);
+}
+
+void GL_APIENTRY glMaterialfContextANGLE(GLeglContext ctx, GLenum face, GLenum pname, GLfloat param)
+{
+    return GL_MaterialfContextANGLE(ctx, face, pname, param);
+}
+
+void GL_APIENTRY glMaterialfvContextANGLE(GLeglContext ctx,
+                                          GLenum face,
+                                          GLenum pname,
+                                          const GLfloat *params)
+{
+    return GL_MaterialfvContextANGLE(ctx, face, pname, params);
+}
+
+void GL_APIENTRY glMaterialxContextANGLE(GLeglContext ctx, GLenum face, GLenum pname, GLfixed param)
+{
+    return GL_MaterialxContextANGLE(ctx, face, pname, param);
+}
+
+void GL_APIENTRY glMaterialxvContextANGLE(GLeglContext ctx,
+                                          GLenum face,
+                                          GLenum pname,
+                                          const GLfixed *param)
+{
+    return GL_MaterialxvContextANGLE(ctx, face, pname, param);
+}
+
+void GL_APIENTRY glMatrixIndexPointerOESContextANGLE(GLeglContext ctx,
+                                                     GLint size,
+                                                     GLenum type,
+                                                     GLsizei stride,
+                                                     const void *pointer)
+{
+    return GL_MatrixIndexPointerOESContextANGLE(ctx, size, type, stride, pointer);
+}
+
+void GL_APIENTRY glMatrixModeContextANGLE(GLeglContext ctx, GLenum mode)
+{
+    return GL_MatrixModeContextANGLE(ctx, mode);
+}
+
+void GL_APIENTRY glMaxShaderCompilerThreadsKHRContextANGLE(GLeglContext ctx, GLuint count)
+{
+    return GL_MaxShaderCompilerThreadsKHRContextANGLE(ctx, count);
+}
+
+void GL_APIENTRY glMemoryBarrierContextANGLE(GLeglContext ctx, GLbitfield barriers)
+{
+    return GL_MemoryBarrierContextANGLE(ctx, barriers);
+}
+
+void GL_APIENTRY glMemoryBarrierByRegionContextANGLE(GLeglContext ctx, GLbitfield barriers)
+{
+    return GL_MemoryBarrierByRegionContextANGLE(ctx, barriers);
+}
+
+void GL_APIENTRY glMemoryObjectParameterivEXTContextANGLE(GLeglContext ctx,
+                                                          GLuint memoryObject,
+                                                          GLenum pname,
+                                                          const GLint *params)
+{
+    return GL_MemoryObjectParameterivEXTContextANGLE(ctx, memoryObject, pname, params);
+}
+
+void GL_APIENTRY glMinSampleShadingContextANGLE(GLeglContext ctx, GLfloat value)
+{
+    return GL_MinSampleShadingContextANGLE(ctx, value);
+}
+
+void GL_APIENTRY glMinSampleShadingOESContextANGLE(GLeglContext ctx, GLfloat value)
+{
+    return GL_MinSampleShadingOESContextANGLE(ctx, value);
+}
+
+void GL_APIENTRY glMultMatrixfContextANGLE(GLeglContext ctx, const GLfloat *m)
+{
+    return GL_MultMatrixfContextANGLE(ctx, m);
+}
+
+void GL_APIENTRY glMultMatrixxContextANGLE(GLeglContext ctx, const GLfixed *m)
+{
+    return GL_MultMatrixxContextANGLE(ctx, m);
+}
+
+void GL_APIENTRY glMultiDrawElementsBaseVertexEXTContextANGLE(GLeglContext ctx,
+                                                              GLenum mode,
+                                                              const GLsizei *count,
+                                                              GLenum type,
+                                                              const void *const *indices,
+                                                              GLsizei primcount,
+                                                              const GLint *basevertex)
+{
+    return GL_MultiDrawElementsBaseVertexEXTContextANGLE(ctx, mode, count, type, indices, primcount,
+                                                         basevertex);
+}
+
+void GL_APIENTRY glMultiTexCoord4fContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLfloat s,
+                                               GLfloat t,
+                                               GLfloat r,
+                                               GLfloat q)
+{
+    return GL_MultiTexCoord4fContextANGLE(ctx, target, s, t, r, q);
+}
+
+void GL_APIENTRY glMultiTexCoord4xContextANGLE(GLeglContext ctx,
+                                               GLenum texture,
+                                               GLfixed s,
+                                               GLfixed t,
+                                               GLfixed r,
+                                               GLfixed q)
+{
+    return GL_MultiTexCoord4xContextANGLE(ctx, texture, s, t, r, q);
+}
+
+void GL_APIENTRY glNamedBufferStorageExternalEXTContextANGLE(GLeglContext ctx,
+                                                             GLuint buffer,
+                                                             GLintptr offset,
+                                                             GLsizeiptr size,
+                                                             GLeglClientBufferEXT clientBuffer,
+                                                             GLbitfield flags)
+{
+    return GL_NamedBufferStorageExternalEXTContextANGLE(ctx, buffer, offset, size, clientBuffer,
+                                                        flags);
+}
+
+void GL_APIENTRY glNormal3fContextANGLE(GLeglContext ctx, GLfloat nx, GLfloat ny, GLfloat nz)
+{
+    return GL_Normal3fContextANGLE(ctx, nx, ny, nz);
+}
+
+void GL_APIENTRY glNormal3xContextANGLE(GLeglContext ctx, GLfixed nx, GLfixed ny, GLfixed nz)
+{
+    return GL_Normal3xContextANGLE(ctx, nx, ny, nz);
+}
+
+void GL_APIENTRY glNormalPointerContextANGLE(GLeglContext ctx,
                                              GLenum type,
-                                             const void *indirect,
-                                             GLsizei drawcount,
-                                             GLsizei stride)
+                                             GLsizei stride,
+                                             const void *pointer)
 {
-    return GL_MultiDrawElementsIndirect(mode, type, indirect, drawcount, stride);
+    return GL_NormalPointerContextANGLE(ctx, type, stride, pointer);
 }
 
-void GL_APIENTRY glShaderStorageBlockBinding(GLuint program,
-                                             GLuint storageBlockIndex,
-                                             GLuint storageBlockBinding)
+void GL_APIENTRY glObjectLabelContextANGLE(GLeglContext ctx,
+                                           GLenum identifier,
+                                           GLuint name,
+                                           GLsizei length,
+                                           const GLchar *label)
 {
-    return GL_ShaderStorageBlockBinding(program, storageBlockIndex, storageBlockBinding);
+    return GL_ObjectLabelContextANGLE(ctx, identifier, name, length, label);
 }
 
-void GL_APIENTRY glTextureView(GLuint texture,
-                               GLenum target,
-                               GLuint origtexture,
-                               GLenum internalformat,
-                               GLuint minlevel,
-                               GLuint numlevels,
-                               GLuint minlayer,
-                               GLuint numlayers)
+void GL_APIENTRY glObjectLabelKHRContextANGLE(GLeglContext ctx,
+                                              GLenum identifier,
+                                              GLuint name,
+                                              GLsizei length,
+                                              const GLchar *label)
 {
-    return GL_TextureView(texture, target, origtexture, internalformat, minlevel, numlevels,
-                          minlayer, numlayers);
+    return GL_ObjectLabelKHRContextANGLE(ctx, identifier, name, length, label);
 }
 
-void GL_APIENTRY glVertexAttribLFormat(GLuint attribindex,
-                                       GLint size,
-                                       GLenum type,
-                                       GLuint relativeoffset)
+void GL_APIENTRY glObjectPtrLabelContextANGLE(GLeglContext ctx,
+                                              const void *ptr,
+                                              GLsizei length,
+                                              const GLchar *label)
 {
-    return GL_VertexAttribLFormat(attribindex, size, type, relativeoffset);
+    return GL_ObjectPtrLabelContextANGLE(ctx, ptr, length, label);
 }
 
-// GL 4.4
-void GL_APIENTRY glBindBuffersBase(GLenum target,
-                                   GLuint first,
-                                   GLsizei count,
-                                   const GLuint *buffers)
+void GL_APIENTRY glObjectPtrLabelKHRContextANGLE(GLeglContext ctx,
+                                                 const void *ptr,
+                                                 GLsizei length,
+                                                 const GLchar *label)
 {
-    return GL_BindBuffersBase(target, first, count, buffers);
+    return GL_ObjectPtrLabelKHRContextANGLE(ctx, ptr, length, label);
 }
 
-void GL_APIENTRY glBindBuffersRange(GLenum target,
-                                    GLuint first,
-                                    GLsizei count,
-                                    const GLuint *buffers,
-                                    const GLintptr *offsets,
-                                    const GLsizeiptr *sizes)
+void GL_APIENTRY glOrthofContextANGLE(GLeglContext ctx,
+                                      GLfloat l,
+                                      GLfloat r,
+                                      GLfloat b,
+                                      GLfloat t,
+                                      GLfloat n,
+                                      GLfloat f)
 {
-    return GL_BindBuffersRange(target, first, count, buffers, offsets, sizes);
+    return GL_OrthofContextANGLE(ctx, l, r, b, t, n, f);
 }
 
-void GL_APIENTRY glBindImageTextures(GLuint first, GLsizei count, const GLuint *textures)
+void GL_APIENTRY glOrthoxContextANGLE(GLeglContext ctx,
+                                      GLfixed l,
+                                      GLfixed r,
+                                      GLfixed b,
+                                      GLfixed t,
+                                      GLfixed n,
+                                      GLfixed f)
 {
-    return GL_BindImageTextures(first, count, textures);
+    return GL_OrthoxContextANGLE(ctx, l, r, b, t, n, f);
 }
 
-void GL_APIENTRY glBindSamplers(GLuint first, GLsizei count, const GLuint *samplers)
+void GL_APIENTRY glPatchParameteriContextANGLE(GLeglContext ctx, GLenum pname, GLint value)
 {
-    return GL_BindSamplers(first, count, samplers);
+    return GL_PatchParameteriContextANGLE(ctx, pname, value);
 }
 
-void GL_APIENTRY glBindTextures(GLuint first, GLsizei count, const GLuint *textures)
+void GL_APIENTRY glPatchParameteriEXTContextANGLE(GLeglContext ctx, GLenum pname, GLint value)
 {
-    return GL_BindTextures(first, count, textures);
+    return GL_PatchParameteriEXTContextANGLE(ctx, pname, value);
 }
 
-void GL_APIENTRY glBindVertexBuffers(GLuint first,
-                                     GLsizei count,
-                                     const GLuint *buffers,
-                                     const GLintptr *offsets,
-                                     const GLsizei *strides)
+void GL_APIENTRY glPauseTransformFeedbackContextANGLE(GLeglContext ctx)
 {
-    return GL_BindVertexBuffers(first, count, buffers, offsets, strides);
+    return GL_PauseTransformFeedbackContextANGLE(ctx);
 }
 
-void GL_APIENTRY glBufferStorage(GLenum target, GLsizeiptr size, const void *data, GLbitfield flags)
+void GL_APIENTRY glPixelStoreiContextANGLE(GLeglContext ctx, GLenum pname, GLint param)
 {
-    return GL_BufferStorage(target, size, data, flags);
+    return GL_PixelStoreiContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glPointParameterfContextANGLE(GLeglContext ctx, GLenum pname, GLfloat param)
+{
+    return GL_PointParameterfContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glPointParameterfvContextANGLE(GLeglContext ctx,
+                                                GLenum pname,
+                                                const GLfloat *params)
+{
+    return GL_PointParameterfvContextANGLE(ctx, pname, params);
+}
+
+void GL_APIENTRY glPointParameterxContextANGLE(GLeglContext ctx, GLenum pname, GLfixed param)
+{
+    return GL_PointParameterxContextANGLE(ctx, pname, param);
+}
+
+void GL_APIENTRY glPointParameterxvContextANGLE(GLeglContext ctx,
+                                                GLenum pname,
+                                                const GLfixed *params)
+{
+    return GL_PointParameterxvContextANGLE(ctx, pname, params);
+}
+
+void GL_APIENTRY glPointSizeContextANGLE(GLeglContext ctx, GLfloat size)
+{
+    return GL_PointSizeContextANGLE(ctx, size);
+}
+
+void GL_APIENTRY glPointSizePointerOESContextANGLE(GLeglContext ctx,
+                                                   GLenum type,
+                                                   GLsizei stride,
+                                                   const void *pointer)
+{
+    return GL_PointSizePointerOESContextANGLE(ctx, type, stride, pointer);
+}
+
+void GL_APIENTRY glPointSizexContextANGLE(GLeglContext ctx, GLfixed size)
+{
+    return GL_PointSizexContextANGLE(ctx, size);
+}
+
+void GL_APIENTRY glPolygonOffsetContextANGLE(GLeglContext ctx, GLfloat factor, GLfloat units)
+{
+    return GL_PolygonOffsetContextANGLE(ctx, factor, units);
+}
+
+void GL_APIENTRY glPolygonOffsetxContextANGLE(GLeglContext ctx, GLfixed factor, GLfixed units)
+{
+    return GL_PolygonOffsetxContextANGLE(ctx, factor, units);
+}
+
+void GL_APIENTRY glPopDebugGroupContextANGLE(GLeglContext ctx)
+{
+    return GL_PopDebugGroupContextANGLE(ctx);
+}
+
+void GL_APIENTRY glPopDebugGroupKHRContextANGLE(GLeglContext ctx)
+{
+    return GL_PopDebugGroupKHRContextANGLE(ctx);
+}
+
+void GL_APIENTRY glPopGroupMarkerEXTContextANGLE(GLeglContext ctx)
+{
+    return GL_PopGroupMarkerEXTContextANGLE(ctx);
+}
+
+void GL_APIENTRY glPopMatrixContextANGLE(GLeglContext ctx)
+{
+    return GL_PopMatrixContextANGLE(ctx);
+}
+
+void GL_APIENTRY glPrimitiveBoundingBoxContextANGLE(GLeglContext ctx,
+                                                    GLfloat minX,
+                                                    GLfloat minY,
+                                                    GLfloat minZ,
+                                                    GLfloat minW,
+                                                    GLfloat maxX,
+                                                    GLfloat maxY,
+                                                    GLfloat maxZ,
+                                                    GLfloat maxW)
+{
+    return GL_PrimitiveBoundingBoxContextANGLE(ctx, minX, minY, minZ, minW, maxX, maxY, maxZ, maxW);
+}
+
+void GL_APIENTRY glPrimitiveBoundingBoxEXTContextANGLE(GLeglContext ctx,
+                                                       GLfloat minX,
+                                                       GLfloat minY,
+                                                       GLfloat minZ,
+                                                       GLfloat minW,
+                                                       GLfloat maxX,
+                                                       GLfloat maxY,
+                                                       GLfloat maxZ,
+                                                       GLfloat maxW)
+{
+    return GL_PrimitiveBoundingBoxEXTContextANGLE(ctx, minX, minY, minZ, minW, maxX, maxY, maxZ,
+                                                  maxW);
+}
+
+void GL_APIENTRY glProgramBinaryContextANGLE(GLeglContext ctx,
+                                             GLuint program,
+                                             GLenum binaryFormat,
+                                             const void *binary,
+                                             GLsizei length)
+{
+    return GL_ProgramBinaryContextANGLE(ctx, program, binaryFormat, binary, length);
+}
+
+void GL_APIENTRY glProgramBinaryOESContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLenum binaryFormat,
+                                                const void *binary,
+                                                GLint length)
+{
+    return GL_ProgramBinaryOESContextANGLE(ctx, program, binaryFormat, binary, length);
+}
+
+void GL_APIENTRY glProgramParameteriContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLenum pname,
+                                                 GLint value)
+{
+    return GL_ProgramParameteriContextANGLE(ctx, program, pname, value);
+}
+
+void GL_APIENTRY glProgramParameteriEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLenum pname,
+                                                    GLint value)
+{
+    return GL_ProgramParameteriEXTContextANGLE(ctx, program, pname, value);
+}
+
+void GL_APIENTRY glProgramUniform1fContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLfloat v0)
+{
+    return GL_ProgramUniform1fContextANGLE(ctx, program, location, v0);
+}
+
+void GL_APIENTRY glProgramUniform1fEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLfloat v0)
+{
+    return GL_ProgramUniform1fEXTContextANGLE(ctx, program, location, v0);
+}
+
+void GL_APIENTRY glProgramUniform1fvContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLfloat *value)
+{
+    return GL_ProgramUniform1fvContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform1fvEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLfloat *value)
+{
+    return GL_ProgramUniform1fvEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform1iContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLint v0)
+{
+    return GL_ProgramUniform1iContextANGLE(ctx, program, location, v0);
+}
+
+void GL_APIENTRY glProgramUniform1iEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLint v0)
+{
+    return GL_ProgramUniform1iEXTContextANGLE(ctx, program, location, v0);
+}
+
+void GL_APIENTRY glProgramUniform1ivContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLint *value)
+{
+    return GL_ProgramUniform1ivContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform1ivEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLint *value)
+{
+    return GL_ProgramUniform1ivEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform1uiContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLuint v0)
+{
+    return GL_ProgramUniform1uiContextANGLE(ctx, program, location, v0);
+}
+
+void GL_APIENTRY glProgramUniform1uiEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLuint v0)
+{
+    return GL_ProgramUniform1uiEXTContextANGLE(ctx, program, location, v0);
+}
+
+void GL_APIENTRY glProgramUniform1uivContextANGLE(GLeglContext ctx,
+                                                  GLuint program,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  const GLuint *value)
+{
+    return GL_ProgramUniform1uivContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform1uivEXTContextANGLE(GLeglContext ctx,
+                                                     GLuint program,
+                                                     GLint location,
+                                                     GLsizei count,
+                                                     const GLuint *value)
+{
+    return GL_ProgramUniform1uivEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform2fContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLfloat v0,
+                                                GLfloat v1)
+{
+    return GL_ProgramUniform2fContextANGLE(ctx, program, location, v0, v1);
+}
+
+void GL_APIENTRY glProgramUniform2fEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLfloat v0,
+                                                   GLfloat v1)
+{
+    return GL_ProgramUniform2fEXTContextANGLE(ctx, program, location, v0, v1);
+}
+
+void GL_APIENTRY glProgramUniform2fvContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLfloat *value)
+{
+    return GL_ProgramUniform2fvContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform2fvEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLfloat *value)
+{
+    return GL_ProgramUniform2fvEXTContextANGLE(ctx, program, location, count, value);
 }
 
 void GL_APIENTRY
-glClearTexImage(GLuint texture, GLint level, GLenum format, GLenum type, const void *data)
+glProgramUniform2iContextANGLE(GLeglContext ctx, GLuint program, GLint location, GLint v0, GLint v1)
 {
-    return GL_ClearTexImage(texture, level, format, type, data);
+    return GL_ProgramUniform2iContextANGLE(ctx, program, location, v0, v1);
 }
 
-void GL_APIENTRY glClearTexSubImage(GLuint texture,
-                                    GLint level,
-                                    GLint xoffset,
-                                    GLint yoffset,
-                                    GLint zoffset,
-                                    GLsizei width,
-                                    GLsizei height,
-                                    GLsizei depth,
-                                    GLenum format,
-                                    GLenum type,
-                                    const void *data)
+void GL_APIENTRY glProgramUniform2iEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLint v0,
+                                                   GLint v1)
 {
-    return GL_ClearTexSubImage(texture, level, xoffset, yoffset, zoffset, width, height, depth,
-                               format, type, data);
+    return GL_ProgramUniform2iEXTContextANGLE(ctx, program, location, v0, v1);
 }
 
-// GL 4.5
-void GL_APIENTRY glBindTextureUnit(GLuint unit, GLuint texture)
+void GL_APIENTRY glProgramUniform2ivContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLint *value)
 {
-    return GL_BindTextureUnit(unit, texture);
+    return GL_ProgramUniform2ivContextANGLE(ctx, program, location, count, value);
 }
 
-void GL_APIENTRY glBlitNamedFramebuffer(GLuint readFramebuffer,
-                                        GLuint drawFramebuffer,
-                                        GLint srcX0,
-                                        GLint srcY0,
-                                        GLint srcX1,
-                                        GLint srcY1,
-                                        GLint dstX0,
-                                        GLint dstY0,
-                                        GLint dstX1,
-                                        GLint dstY1,
-                                        GLbitfield mask,
-                                        GLenum filter)
+void GL_APIENTRY glProgramUniform2ivEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLint *value)
 {
-    return GL_BlitNamedFramebuffer(readFramebuffer, drawFramebuffer, srcX0, srcY0, srcX1, srcY1,
-                                   dstX0, dstY0, dstX1, dstY1, mask, filter);
+    return GL_ProgramUniform2ivEXTContextANGLE(ctx, program, location, count, value);
 }
 
-GLenum GL_APIENTRY glCheckNamedFramebufferStatus(GLuint framebuffer, GLenum target)
+void GL_APIENTRY glProgramUniform2uiContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLuint v0,
+                                                 GLuint v1)
 {
-    return GL_CheckNamedFramebufferStatus(framebuffer, target);
+    return GL_ProgramUniform2uiContextANGLE(ctx, program, location, v0, v1);
 }
 
-void GL_APIENTRY glClearNamedBufferData(GLuint buffer,
-                                        GLenum internalformat,
-                                        GLenum format,
-                                        GLenum type,
-                                        const void *data)
+void GL_APIENTRY glProgramUniform2uiEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLuint v0,
+                                                    GLuint v1)
 {
-    return GL_ClearNamedBufferData(buffer, internalformat, format, type, data);
+    return GL_ProgramUniform2uiEXTContextANGLE(ctx, program, location, v0, v1);
 }
 
-void GL_APIENTRY glClearNamedBufferSubData(GLuint buffer,
-                                           GLenum internalformat,
-                                           GLintptr offset,
-                                           GLsizeiptr size,
+void GL_APIENTRY glProgramUniform2uivContextANGLE(GLeglContext ctx,
+                                                  GLuint program,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  const GLuint *value)
+{
+    return GL_ProgramUniform2uivContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform2uivEXTContextANGLE(GLeglContext ctx,
+                                                     GLuint program,
+                                                     GLint location,
+                                                     GLsizei count,
+                                                     const GLuint *value)
+{
+    return GL_ProgramUniform2uivEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform3fContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLfloat v0,
+                                                GLfloat v1,
+                                                GLfloat v2)
+{
+    return GL_ProgramUniform3fContextANGLE(ctx, program, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glProgramUniform3fEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLfloat v0,
+                                                   GLfloat v1,
+                                                   GLfloat v2)
+{
+    return GL_ProgramUniform3fEXTContextANGLE(ctx, program, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glProgramUniform3fvContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLfloat *value)
+{
+    return GL_ProgramUniform3fvContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform3fvEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLfloat *value)
+{
+    return GL_ProgramUniform3fvEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform3iContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLint v0,
+                                                GLint v1,
+                                                GLint v2)
+{
+    return GL_ProgramUniform3iContextANGLE(ctx, program, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glProgramUniform3iEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLint v0,
+                                                   GLint v1,
+                                                   GLint v2)
+{
+    return GL_ProgramUniform3iEXTContextANGLE(ctx, program, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glProgramUniform3ivContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLint *value)
+{
+    return GL_ProgramUniform3ivContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform3ivEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLint *value)
+{
+    return GL_ProgramUniform3ivEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform3uiContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLuint v0,
+                                                 GLuint v1,
+                                                 GLuint v2)
+{
+    return GL_ProgramUniform3uiContextANGLE(ctx, program, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glProgramUniform3uiEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLuint v0,
+                                                    GLuint v1,
+                                                    GLuint v2)
+{
+    return GL_ProgramUniform3uiEXTContextANGLE(ctx, program, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glProgramUniform3uivContextANGLE(GLeglContext ctx,
+                                                  GLuint program,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  const GLuint *value)
+{
+    return GL_ProgramUniform3uivContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform3uivEXTContextANGLE(GLeglContext ctx,
+                                                     GLuint program,
+                                                     GLint location,
+                                                     GLsizei count,
+                                                     const GLuint *value)
+{
+    return GL_ProgramUniform3uivEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform4fContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLfloat v0,
+                                                GLfloat v1,
+                                                GLfloat v2,
+                                                GLfloat v3)
+{
+    return GL_ProgramUniform4fContextANGLE(ctx, program, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glProgramUniform4fEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLfloat v0,
+                                                   GLfloat v1,
+                                                   GLfloat v2,
+                                                   GLfloat v3)
+{
+    return GL_ProgramUniform4fEXTContextANGLE(ctx, program, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glProgramUniform4fvContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLfloat *value)
+{
+    return GL_ProgramUniform4fvContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform4fvEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLfloat *value)
+{
+    return GL_ProgramUniform4fvEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform4iContextANGLE(GLeglContext ctx,
+                                                GLuint program,
+                                                GLint location,
+                                                GLint v0,
+                                                GLint v1,
+                                                GLint v2,
+                                                GLint v3)
+{
+    return GL_ProgramUniform4iContextANGLE(ctx, program, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glProgramUniform4iEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLint location,
+                                                   GLint v0,
+                                                   GLint v1,
+                                                   GLint v2,
+                                                   GLint v3)
+{
+    return GL_ProgramUniform4iEXTContextANGLE(ctx, program, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glProgramUniform4ivContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLsizei count,
+                                                 const GLint *value)
+{
+    return GL_ProgramUniform4ivContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform4ivEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLsizei count,
+                                                    const GLint *value)
+{
+    return GL_ProgramUniform4ivEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform4uiContextANGLE(GLeglContext ctx,
+                                                 GLuint program,
+                                                 GLint location,
+                                                 GLuint v0,
+                                                 GLuint v1,
+                                                 GLuint v2,
+                                                 GLuint v3)
+{
+    return GL_ProgramUniform4uiContextANGLE(ctx, program, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glProgramUniform4uiEXTContextANGLE(GLeglContext ctx,
+                                                    GLuint program,
+                                                    GLint location,
+                                                    GLuint v0,
+                                                    GLuint v1,
+                                                    GLuint v2,
+                                                    GLuint v3)
+{
+    return GL_ProgramUniform4uiEXTContextANGLE(ctx, program, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glProgramUniform4uivContextANGLE(GLeglContext ctx,
+                                                  GLuint program,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  const GLuint *value)
+{
+    return GL_ProgramUniform4uivContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniform4uivEXTContextANGLE(GLeglContext ctx,
+                                                     GLuint program,
+                                                     GLint location,
+                                                     GLsizei count,
+                                                     const GLuint *value)
+{
+    return GL_ProgramUniform4uivEXTContextANGLE(ctx, program, location, count, value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix2fvContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLint location,
+                                                       GLsizei count,
+                                                       GLboolean transpose,
+                                                       const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix2fvContextANGLE(ctx, program, location, count, transpose, value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix2fvEXTContextANGLE(GLeglContext ctx,
+                                                          GLuint program,
+                                                          GLint location,
+                                                          GLsizei count,
+                                                          GLboolean transpose,
+                                                          const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix2fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                     value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix2x3fvContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLint location,
+                                                         GLsizei count,
+                                                         GLboolean transpose,
+                                                         const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix2x3fvContextANGLE(ctx, program, location, count, transpose,
+                                                    value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix2x3fvEXTContextANGLE(GLeglContext ctx,
+                                                            GLuint program,
+                                                            GLint location,
+                                                            GLsizei count,
+                                                            GLboolean transpose,
+                                                            const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix2x3fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                       value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix2x4fvContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLint location,
+                                                         GLsizei count,
+                                                         GLboolean transpose,
+                                                         const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix2x4fvContextANGLE(ctx, program, location, count, transpose,
+                                                    value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix2x4fvEXTContextANGLE(GLeglContext ctx,
+                                                            GLuint program,
+                                                            GLint location,
+                                                            GLsizei count,
+                                                            GLboolean transpose,
+                                                            const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix2x4fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                       value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix3fvContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLint location,
+                                                       GLsizei count,
+                                                       GLboolean transpose,
+                                                       const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix3fvContextANGLE(ctx, program, location, count, transpose, value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix3fvEXTContextANGLE(GLeglContext ctx,
+                                                          GLuint program,
+                                                          GLint location,
+                                                          GLsizei count,
+                                                          GLboolean transpose,
+                                                          const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix3fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                     value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix3x2fvContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLint location,
+                                                         GLsizei count,
+                                                         GLboolean transpose,
+                                                         const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix3x2fvContextANGLE(ctx, program, location, count, transpose,
+                                                    value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix3x2fvEXTContextANGLE(GLeglContext ctx,
+                                                            GLuint program,
+                                                            GLint location,
+                                                            GLsizei count,
+                                                            GLboolean transpose,
+                                                            const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix3x2fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                       value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix3x4fvContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLint location,
+                                                         GLsizei count,
+                                                         GLboolean transpose,
+                                                         const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix3x4fvContextANGLE(ctx, program, location, count, transpose,
+                                                    value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix3x4fvEXTContextANGLE(GLeglContext ctx,
+                                                            GLuint program,
+                                                            GLint location,
+                                                            GLsizei count,
+                                                            GLboolean transpose,
+                                                            const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix3x4fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                       value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix4fvContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLint location,
+                                                       GLsizei count,
+                                                       GLboolean transpose,
+                                                       const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix4fvContextANGLE(ctx, program, location, count, transpose, value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix4fvEXTContextANGLE(GLeglContext ctx,
+                                                          GLuint program,
+                                                          GLint location,
+                                                          GLsizei count,
+                                                          GLboolean transpose,
+                                                          const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix4fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                     value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix4x2fvContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLint location,
+                                                         GLsizei count,
+                                                         GLboolean transpose,
+                                                         const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix4x2fvContextANGLE(ctx, program, location, count, transpose,
+                                                    value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix4x2fvEXTContextANGLE(GLeglContext ctx,
+                                                            GLuint program,
+                                                            GLint location,
+                                                            GLsizei count,
+                                                            GLboolean transpose,
+                                                            const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix4x2fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                       value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix4x3fvContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLint location,
+                                                         GLsizei count,
+                                                         GLboolean transpose,
+                                                         const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix4x3fvContextANGLE(ctx, program, location, count, transpose,
+                                                    value);
+}
+
+void GL_APIENTRY glProgramUniformMatrix4x3fvEXTContextANGLE(GLeglContext ctx,
+                                                            GLuint program,
+                                                            GLint location,
+                                                            GLsizei count,
+                                                            GLboolean transpose,
+                                                            const GLfloat *value)
+{
+    return GL_ProgramUniformMatrix4x3fvEXTContextANGLE(ctx, program, location, count, transpose,
+                                                       value);
+}
+
+void GL_APIENTRY glPushDebugGroupContextANGLE(GLeglContext ctx,
+                                              GLenum source,
+                                              GLuint id,
+                                              GLsizei length,
+                                              const GLchar *message)
+{
+    return GL_PushDebugGroupContextANGLE(ctx, source, id, length, message);
+}
+
+void GL_APIENTRY glPushDebugGroupKHRContextANGLE(GLeglContext ctx,
+                                                 GLenum source,
+                                                 GLuint id,
+                                                 GLsizei length,
+                                                 const GLchar *message)
+{
+    return GL_PushDebugGroupKHRContextANGLE(ctx, source, id, length, message);
+}
+
+void GL_APIENTRY glPushGroupMarkerEXTContextANGLE(GLeglContext ctx,
+                                                  GLsizei length,
+                                                  const GLchar *marker)
+{
+    return GL_PushGroupMarkerEXTContextANGLE(ctx, length, marker);
+}
+
+void GL_APIENTRY glPushMatrixContextANGLE(GLeglContext ctx)
+{
+    return GL_PushMatrixContextANGLE(ctx);
+}
+
+void GL_APIENTRY glQueryCounterEXTContextANGLE(GLeglContext ctx, GLuint id, GLenum target)
+{
+    return GL_QueryCounterEXTContextANGLE(ctx, id, target);
+}
+
+GLbitfield GL_APIENTRY glQueryMatrixxOESContextANGLE(GLeglContext ctx,
+                                                     GLfixed *mantissa,
+                                                     GLint *exponent)
+{
+    return GL_QueryMatrixxOESContextANGLE(ctx, mantissa, exponent);
+}
+
+void GL_APIENTRY glReadBufferContextANGLE(GLeglContext ctx, GLenum src)
+{
+    return GL_ReadBufferContextANGLE(ctx, src);
+}
+
+void GL_APIENTRY glReadPixelsContextANGLE(GLeglContext ctx,
+                                          GLint x,
+                                          GLint y,
+                                          GLsizei width,
+                                          GLsizei height,
+                                          GLenum format,
+                                          GLenum type,
+                                          void *pixels)
+{
+    return GL_ReadPixelsContextANGLE(ctx, x, y, width, height, format, type, pixels);
+}
+
+void GL_APIENTRY glReadnPixelsContextANGLE(GLeglContext ctx,
+                                           GLint x,
+                                           GLint y,
+                                           GLsizei width,
+                                           GLsizei height,
                                            GLenum format,
                                            GLenum type,
-                                           const void *data)
+                                           GLsizei bufSize,
+                                           void *data)
 {
-    return GL_ClearNamedBufferSubData(buffer, internalformat, offset, size, format, type, data);
+    return GL_ReadnPixelsContextANGLE(ctx, x, y, width, height, format, type, bufSize, data);
 }
 
-void GL_APIENTRY glClearNamedFramebufferfi(GLuint framebuffer,
-                                           GLenum buffer,
-                                           GLint drawbuffer,
-                                           GLfloat depth,
-                                           GLint stencil)
+void GL_APIENTRY glReadnPixelsEXTContextANGLE(GLeglContext ctx,
+                                              GLint x,
+                                              GLint y,
+                                              GLsizei width,
+                                              GLsizei height,
+                                              GLenum format,
+                                              GLenum type,
+                                              GLsizei bufSize,
+                                              void *data)
 {
-    return GL_ClearNamedFramebufferfi(framebuffer, buffer, drawbuffer, depth, stencil);
+    return GL_ReadnPixelsEXTContextANGLE(ctx, x, y, width, height, format, type, bufSize, data);
 }
 
-void GL_APIENTRY glClearNamedFramebufferfv(GLuint framebuffer,
-                                           GLenum buffer,
-                                           GLint drawbuffer,
-                                           const GLfloat *value)
+void GL_APIENTRY glReleaseShaderCompilerContextANGLE(GLeglContext ctx)
 {
-    return GL_ClearNamedFramebufferfv(framebuffer, buffer, drawbuffer, value);
+    return GL_ReleaseShaderCompilerContextANGLE(ctx);
 }
 
-void GL_APIENTRY glClearNamedFramebufferiv(GLuint framebuffer,
-                                           GLenum buffer,
-                                           GLint drawbuffer,
-                                           const GLint *value)
+void GL_APIENTRY glRenderbufferStorageContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLenum internalformat,
+                                                   GLsizei width,
+                                                   GLsizei height)
 {
-    return GL_ClearNamedFramebufferiv(framebuffer, buffer, drawbuffer, value);
+    return GL_RenderbufferStorageContextANGLE(ctx, target, internalformat, width, height);
 }
 
-void GL_APIENTRY glClearNamedFramebufferuiv(GLuint framebuffer,
-                                            GLenum buffer,
-                                            GLint drawbuffer,
-                                            const GLuint *value)
+void GL_APIENTRY glRenderbufferStorageMultisampleContextANGLE(GLeglContext ctx,
+                                                              GLenum target,
+                                                              GLsizei samples,
+                                                              GLenum internalformat,
+                                                              GLsizei width,
+                                                              GLsizei height)
 {
-    return GL_ClearNamedFramebufferuiv(framebuffer, buffer, drawbuffer, value);
+    return GL_RenderbufferStorageMultisampleContextANGLE(ctx, target, samples, internalformat,
+                                                         width, height);
 }
 
-void GL_APIENTRY glClipControl(GLenum origin, GLenum depth)
+void GL_APIENTRY glRenderbufferStorageMultisampleANGLEContextANGLE(GLeglContext ctx,
+                                                                   GLenum target,
+                                                                   GLsizei samples,
+                                                                   GLenum internalformat,
+                                                                   GLsizei width,
+                                                                   GLsizei height)
 {
-    return GL_ClipControl(origin, depth);
+    return GL_RenderbufferStorageMultisampleANGLEContextANGLE(ctx, target, samples, internalformat,
+                                                              width, height);
 }
 
-void GL_APIENTRY glCompressedTextureSubImage1D(GLuint texture,
-                                               GLint level,
-                                               GLint xoffset,
-                                               GLsizei width,
-                                               GLenum format,
-                                               GLsizei imageSize,
-                                               const void *data)
+void GL_APIENTRY glRenderbufferStorageMultisampleEXTContextANGLE(GLeglContext ctx,
+                                                                 GLenum target,
+                                                                 GLsizei samples,
+                                                                 GLenum internalformat,
+                                                                 GLsizei width,
+                                                                 GLsizei height)
 {
-    return GL_CompressedTextureSubImage1D(texture, level, xoffset, width, format, imageSize, data);
+    return GL_RenderbufferStorageMultisampleEXTContextANGLE(ctx, target, samples, internalformat,
+                                                            width, height);
 }
 
-void GL_APIENTRY glCompressedTextureSubImage2D(GLuint texture,
-                                               GLint level,
-                                               GLint xoffset,
-                                               GLint yoffset,
-                                               GLsizei width,
-                                               GLsizei height,
-                                               GLenum format,
-                                               GLsizei imageSize,
-                                               const void *data)
+void GL_APIENTRY glRenderbufferStorageOESContextANGLE(GLeglContext ctx,
+                                                      GLenum target,
+                                                      GLenum internalformat,
+                                                      GLsizei width,
+                                                      GLsizei height)
 {
-    return GL_CompressedTextureSubImage2D(texture, level, xoffset, yoffset, width, height, format,
-                                          imageSize, data);
+    return GL_RenderbufferStorageOESContextANGLE(ctx, target, internalformat, width, height);
 }
 
-void GL_APIENTRY glCompressedTextureSubImage3D(GLuint texture,
-                                               GLint level,
-                                               GLint xoffset,
-                                               GLint yoffset,
-                                               GLint zoffset,
-                                               GLsizei width,
-                                               GLsizei height,
-                                               GLsizei depth,
-                                               GLenum format,
-                                               GLsizei imageSize,
-                                               const void *data)
+void GL_APIENTRY glResumeTransformFeedbackContextANGLE(GLeglContext ctx)
 {
-    return GL_CompressedTextureSubImage3D(texture, level, xoffset, yoffset, zoffset, width, height,
-                                          depth, format, imageSize, data);
-}
-
-void GL_APIENTRY glCopyNamedBufferSubData(GLuint readBuffer,
-                                          GLuint writeBuffer,
-                                          GLintptr readOffset,
-                                          GLintptr writeOffset,
-                                          GLsizeiptr size)
-{
-    return GL_CopyNamedBufferSubData(readBuffer, writeBuffer, readOffset, writeOffset, size);
+    return GL_ResumeTransformFeedbackContextANGLE(ctx);
 }
 
 void GL_APIENTRY
-glCopyTextureSubImage1D(GLuint texture, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
+glRotatefContextANGLE(GLeglContext ctx, GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
-    return GL_CopyTextureSubImage1D(texture, level, xoffset, x, y, width);
+    return GL_RotatefContextANGLE(ctx, angle, x, y, z);
 }
 
-void GL_APIENTRY glCopyTextureSubImage2D(GLuint texture,
-                                         GLint level,
-                                         GLint xoffset,
-                                         GLint yoffset,
-                                         GLint x,
-                                         GLint y,
-                                         GLsizei width,
-                                         GLsizei height)
+void GL_APIENTRY
+glRotatexContextANGLE(GLeglContext ctx, GLfixed angle, GLfixed x, GLfixed y, GLfixed z)
 {
-    return GL_CopyTextureSubImage2D(texture, level, xoffset, yoffset, x, y, width, height);
+    return GL_RotatexContextANGLE(ctx, angle, x, y, z);
 }
 
-void GL_APIENTRY glCopyTextureSubImage3D(GLuint texture,
-                                         GLint level,
-                                         GLint xoffset,
-                                         GLint yoffset,
-                                         GLint zoffset,
-                                         GLint x,
-                                         GLint y,
-                                         GLsizei width,
-                                         GLsizei height)
+void GL_APIENTRY glSampleCoverageContextANGLE(GLeglContext ctx, GLfloat value, GLboolean invert)
 {
-    return GL_CopyTextureSubImage3D(texture, level, xoffset, yoffset, zoffset, x, y, width, height);
+    return GL_SampleCoverageContextANGLE(ctx, value, invert);
 }
 
-void GL_APIENTRY glCreateBuffers(GLsizei n, GLuint *buffers)
+void GL_APIENTRY glSampleCoveragexContextANGLE(GLeglContext ctx, GLclampx value, GLboolean invert)
 {
-    return GL_CreateBuffers(n, buffers);
+    return GL_SampleCoveragexContextANGLE(ctx, value, invert);
 }
 
-void GL_APIENTRY glCreateFramebuffers(GLsizei n, GLuint *framebuffers)
+void GL_APIENTRY glSampleMaskiContextANGLE(GLeglContext ctx, GLuint maskNumber, GLbitfield mask)
 {
-    return GL_CreateFramebuffers(n, framebuffers);
+    return GL_SampleMaskiContextANGLE(ctx, maskNumber, mask);
 }
 
-void GL_APIENTRY glCreateProgramPipelines(GLsizei n, GLuint *pipelines)
+void GL_APIENTRY glSamplerParameterIivContextANGLE(GLeglContext ctx,
+                                                   GLuint sampler,
+                                                   GLenum pname,
+                                                   const GLint *param)
 {
-    return GL_CreateProgramPipelines(n, pipelines);
+    return GL_SamplerParameterIivContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glCreateQueries(GLenum target, GLsizei n, GLuint *ids)
+void GL_APIENTRY glSamplerParameterIivEXTContextANGLE(GLeglContext ctx,
+                                                      GLuint sampler,
+                                                      GLenum pname,
+                                                      const GLint *param)
 {
-    return GL_CreateQueries(target, n, ids);
+    return GL_SamplerParameterIivEXTContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glCreateRenderbuffers(GLsizei n, GLuint *renderbuffers)
+void GL_APIENTRY glSamplerParameterIivOESContextANGLE(GLeglContext ctx,
+                                                      GLuint sampler,
+                                                      GLenum pname,
+                                                      const GLint *param)
 {
-    return GL_CreateRenderbuffers(n, renderbuffers);
+    return GL_SamplerParameterIivOESContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glCreateSamplers(GLsizei n, GLuint *samplers)
+void GL_APIENTRY glSamplerParameterIuivContextANGLE(GLeglContext ctx,
+                                                    GLuint sampler,
+                                                    GLenum pname,
+                                                    const GLuint *param)
 {
-    return GL_CreateSamplers(n, samplers);
+    return GL_SamplerParameterIuivContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glCreateTextures(GLenum target, GLsizei n, GLuint *textures)
+void GL_APIENTRY glSamplerParameterIuivEXTContextANGLE(GLeglContext ctx,
+                                                       GLuint sampler,
+                                                       GLenum pname,
+                                                       const GLuint *param)
 {
-    return GL_CreateTextures(target, n, textures);
+    return GL_SamplerParameterIuivEXTContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glCreateTransformFeedbacks(GLsizei n, GLuint *ids)
+void GL_APIENTRY glSamplerParameterIuivOESContextANGLE(GLeglContext ctx,
+                                                       GLuint sampler,
+                                                       GLenum pname,
+                                                       const GLuint *param)
 {
-    return GL_CreateTransformFeedbacks(n, ids);
+    return GL_SamplerParameterIuivOESContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glCreateVertexArrays(GLsizei n, GLuint *arrays)
+void GL_APIENTRY glSamplerParameterfContextANGLE(GLeglContext ctx,
+                                                 GLuint sampler,
+                                                 GLenum pname,
+                                                 GLfloat param)
 {
-    return GL_CreateVertexArrays(n, arrays);
+    return GL_SamplerParameterfContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glDisableVertexArrayAttrib(GLuint vaobj, GLuint index)
+void GL_APIENTRY glSamplerParameterfvContextANGLE(GLeglContext ctx,
+                                                  GLuint sampler,
+                                                  GLenum pname,
+                                                  const GLfloat *param)
 {
-    return GL_DisableVertexArrayAttrib(vaobj, index);
+    return GL_SamplerParameterfvContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glEnableVertexArrayAttrib(GLuint vaobj, GLuint index)
+void GL_APIENTRY glSamplerParameteriContextANGLE(GLeglContext ctx,
+                                                 GLuint sampler,
+                                                 GLenum pname,
+                                                 GLint param)
 {
-    return GL_EnableVertexArrayAttrib(vaobj, index);
+    return GL_SamplerParameteriContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glFlushMappedNamedBufferRange(GLuint buffer, GLintptr offset, GLsizeiptr length)
+void GL_APIENTRY glSamplerParameterivContextANGLE(GLeglContext ctx,
+                                                  GLuint sampler,
+                                                  GLenum pname,
+                                                  const GLint *param)
 {
-    return GL_FlushMappedNamedBufferRange(buffer, offset, length);
+    return GL_SamplerParameterivContextANGLE(ctx, sampler, pname, param);
 }
 
-void GL_APIENTRY glGenerateTextureMipmap(GLuint texture)
+void GL_APIENTRY glScalefContextANGLE(GLeglContext ctx, GLfloat x, GLfloat y, GLfloat z)
 {
-    return GL_GenerateTextureMipmap(texture);
+    return GL_ScalefContextANGLE(ctx, x, y, z);
 }
 
-void GL_APIENTRY glGetCompressedTextureImage(GLuint texture,
+void GL_APIENTRY glScalexContextANGLE(GLeglContext ctx, GLfixed x, GLfixed y, GLfixed z)
+{
+    return GL_ScalexContextANGLE(ctx, x, y, z);
+}
+
+void GL_APIENTRY
+glScissorContextANGLE(GLeglContext ctx, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    return GL_ScissorContextANGLE(ctx, x, y, width, height);
+}
+
+void GL_APIENTRY glSemaphoreParameterui64vEXTContextANGLE(GLeglContext ctx,
+                                                          GLuint semaphore,
+                                                          GLenum pname,
+                                                          const GLuint64 *params)
+{
+    return GL_SemaphoreParameterui64vEXTContextANGLE(ctx, semaphore, pname, params);
+}
+
+void GL_APIENTRY glSetFenceNVContextANGLE(GLeglContext ctx, GLuint fence, GLenum condition)
+{
+    return GL_SetFenceNVContextANGLE(ctx, fence, condition);
+}
+
+void GL_APIENTRY glShadeModelContextANGLE(GLeglContext ctx, GLenum mode)
+{
+    return GL_ShadeModelContextANGLE(ctx, mode);
+}
+
+void GL_APIENTRY glShaderBinaryContextANGLE(GLeglContext ctx,
+                                            GLsizei count,
+                                            const GLuint *shaders,
+                                            GLenum binaryformat,
+                                            const void *binary,
+                                            GLsizei length)
+{
+    return GL_ShaderBinaryContextANGLE(ctx, count, shaders, binaryformat, binary, length);
+}
+
+void GL_APIENTRY glShaderSourceContextANGLE(GLeglContext ctx,
+                                            GLuint shader,
+                                            GLsizei count,
+                                            const GLchar *const *string,
+                                            const GLint *length)
+{
+    return GL_ShaderSourceContextANGLE(ctx, shader, count, string, length);
+}
+
+void GL_APIENTRY glSignalSemaphoreEXTContextANGLE(GLeglContext ctx,
+                                                  GLuint semaphore,
+                                                  GLuint numBufferBarriers,
+                                                  const GLuint *buffers,
+                                                  GLuint numTextureBarriers,
+                                                  const GLuint *textures,
+                                                  const GLenum *dstLayouts)
+{
+    return GL_SignalSemaphoreEXTContextANGLE(ctx, semaphore, numBufferBarriers, buffers,
+                                             numTextureBarriers, textures, dstLayouts);
+}
+
+void GL_APIENTRY glStencilFuncContextANGLE(GLeglContext ctx, GLenum func, GLint ref, GLuint mask)
+{
+    return GL_StencilFuncContextANGLE(ctx, func, ref, mask);
+}
+
+void GL_APIENTRY glStencilFuncSeparateContextANGLE(GLeglContext ctx,
+                                                   GLenum face,
+                                                   GLenum func,
+                                                   GLint ref,
+                                                   GLuint mask)
+{
+    return GL_StencilFuncSeparateContextANGLE(ctx, face, func, ref, mask);
+}
+
+void GL_APIENTRY glStencilMaskContextANGLE(GLeglContext ctx, GLuint mask)
+{
+    return GL_StencilMaskContextANGLE(ctx, mask);
+}
+
+void GL_APIENTRY glStencilMaskSeparateContextANGLE(GLeglContext ctx, GLenum face, GLuint mask)
+{
+    return GL_StencilMaskSeparateContextANGLE(ctx, face, mask);
+}
+
+void GL_APIENTRY glStencilOpContextANGLE(GLeglContext ctx, GLenum fail, GLenum zfail, GLenum zpass)
+{
+    return GL_StencilOpContextANGLE(ctx, fail, zfail, zpass);
+}
+
+void GL_APIENTRY glStencilOpSeparateContextANGLE(GLeglContext ctx,
+                                                 GLenum face,
+                                                 GLenum sfail,
+                                                 GLenum dpfail,
+                                                 GLenum dppass)
+{
+    return GL_StencilOpSeparateContextANGLE(ctx, face, sfail, dpfail, dppass);
+}
+
+GLboolean GL_APIENTRY glTestFenceNVContextANGLE(GLeglContext ctx, GLuint fence)
+{
+    return GL_TestFenceNVContextANGLE(ctx, fence);
+}
+
+void GL_APIENTRY glTexBufferContextANGLE(GLeglContext ctx,
+                                         GLenum target,
+                                         GLenum internalformat,
+                                         GLuint buffer)
+{
+    return GL_TexBufferContextANGLE(ctx, target, internalformat, buffer);
+}
+
+void GL_APIENTRY glTexBufferEXTContextANGLE(GLeglContext ctx,
+                                            GLenum target,
+                                            GLenum internalformat,
+                                            GLuint buffer)
+{
+    return GL_TexBufferEXTContextANGLE(ctx, target, internalformat, buffer);
+}
+
+void GL_APIENTRY glTexBufferOESContextANGLE(GLeglContext ctx,
+                                            GLenum target,
+                                            GLenum internalformat,
+                                            GLuint buffer)
+{
+    return GL_TexBufferOESContextANGLE(ctx, target, internalformat, buffer);
+}
+
+void GL_APIENTRY glTexBufferRangeContextANGLE(GLeglContext ctx,
+                                              GLenum target,
+                                              GLenum internalformat,
+                                              GLuint buffer,
+                                              GLintptr offset,
+                                              GLsizeiptr size)
+{
+    return GL_TexBufferRangeContextANGLE(ctx, target, internalformat, buffer, offset, size);
+}
+
+void GL_APIENTRY glTexBufferRangeEXTContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLenum internalformat,
+                                                 GLuint buffer,
+                                                 GLintptr offset,
+                                                 GLsizeiptr size)
+{
+    return GL_TexBufferRangeEXTContextANGLE(ctx, target, internalformat, buffer, offset, size);
+}
+
+void GL_APIENTRY glTexBufferRangeOESContextANGLE(GLeglContext ctx,
+                                                 GLenum target,
+                                                 GLenum internalformat,
+                                                 GLuint buffer,
+                                                 GLintptr offset,
+                                                 GLsizeiptr size)
+{
+    return GL_TexBufferRangeOESContextANGLE(ctx, target, internalformat, buffer, offset, size);
+}
+
+void GL_APIENTRY glTexCoordPointerContextANGLE(GLeglContext ctx,
+                                               GLint size,
+                                               GLenum type,
+                                               GLsizei stride,
+                                               const void *pointer)
+{
+    return GL_TexCoordPointerContextANGLE(ctx, size, type, stride, pointer);
+}
+
+void GL_APIENTRY glTexEnvfContextANGLE(GLeglContext ctx, GLenum target, GLenum pname, GLfloat param)
+{
+    return GL_TexEnvfContextANGLE(ctx, target, pname, param);
+}
+
+void GL_APIENTRY glTexEnvfvContextANGLE(GLeglContext ctx,
+                                        GLenum target,
+                                        GLenum pname,
+                                        const GLfloat *params)
+{
+    return GL_TexEnvfvContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexEnviContextANGLE(GLeglContext ctx, GLenum target, GLenum pname, GLint param)
+{
+    return GL_TexEnviContextANGLE(ctx, target, pname, param);
+}
+
+void GL_APIENTRY glTexEnvivContextANGLE(GLeglContext ctx,
+                                        GLenum target,
+                                        GLenum pname,
+                                        const GLint *params)
+{
+    return GL_TexEnvivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexEnvxContextANGLE(GLeglContext ctx, GLenum target, GLenum pname, GLfixed param)
+{
+    return GL_TexEnvxContextANGLE(ctx, target, pname, param);
+}
+
+void GL_APIENTRY glTexEnvxvContextANGLE(GLeglContext ctx,
+                                        GLenum target,
+                                        GLenum pname,
+                                        const GLfixed *params)
+{
+    return GL_TexEnvxvContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexGenfOESContextANGLE(GLeglContext ctx,
+                                          GLenum coord,
+                                          GLenum pname,
+                                          GLfloat param)
+{
+    return GL_TexGenfOESContextANGLE(ctx, coord, pname, param);
+}
+
+void GL_APIENTRY glTexGenfvOESContextANGLE(GLeglContext ctx,
+                                           GLenum coord,
+                                           GLenum pname,
+                                           const GLfloat *params)
+{
+    return GL_TexGenfvOESContextANGLE(ctx, coord, pname, params);
+}
+
+void GL_APIENTRY glTexGeniOESContextANGLE(GLeglContext ctx, GLenum coord, GLenum pname, GLint param)
+{
+    return GL_TexGeniOESContextANGLE(ctx, coord, pname, param);
+}
+
+void GL_APIENTRY glTexGenivOESContextANGLE(GLeglContext ctx,
+                                           GLenum coord,
+                                           GLenum pname,
+                                           const GLint *params)
+{
+    return GL_TexGenivOESContextANGLE(ctx, coord, pname, params);
+}
+
+void GL_APIENTRY glTexGenxOESContextANGLE(GLeglContext ctx,
+                                          GLenum coord,
+                                          GLenum pname,
+                                          GLfixed param)
+{
+    return GL_TexGenxOESContextANGLE(ctx, coord, pname, param);
+}
+
+void GL_APIENTRY glTexGenxvOESContextANGLE(GLeglContext ctx,
+                                           GLenum coord,
+                                           GLenum pname,
+                                           const GLfixed *params)
+{
+    return GL_TexGenxvOESContextANGLE(ctx, coord, pname, params);
+}
+
+void GL_APIENTRY glTexImage2DContextANGLE(GLeglContext ctx,
+                                          GLenum target,
+                                          GLint level,
+                                          GLint internalformat,
+                                          GLsizei width,
+                                          GLsizei height,
+                                          GLint border,
+                                          GLenum format,
+                                          GLenum type,
+                                          const void *pixels)
+{
+    return GL_TexImage2DContextANGLE(ctx, target, level, internalformat, width, height, border,
+                                     format, type, pixels);
+}
+
+void GL_APIENTRY glTexImage3DContextANGLE(GLeglContext ctx,
+                                          GLenum target,
+                                          GLint level,
+                                          GLint internalformat,
+                                          GLsizei width,
+                                          GLsizei height,
+                                          GLsizei depth,
+                                          GLint border,
+                                          GLenum format,
+                                          GLenum type,
+                                          const void *pixels)
+{
+    return GL_TexImage3DContextANGLE(ctx, target, level, internalformat, width, height, depth,
+                                     border, format, type, pixels);
+}
+
+void GL_APIENTRY glTexImage3DOESContextANGLE(GLeglContext ctx,
+                                             GLenum target,
                                              GLint level,
-                                             GLsizei bufSize,
-                                             void *pixels)
+                                             GLenum internalformat,
+                                             GLsizei width,
+                                             GLsizei height,
+                                             GLsizei depth,
+                                             GLint border,
+                                             GLenum format,
+                                             GLenum type,
+                                             const void *pixels)
 {
-    return GL_GetCompressedTextureImage(texture, level, bufSize, pixels);
+    return GL_TexImage3DOESContextANGLE(ctx, target, level, internalformat, width, height, depth,
+                                        border, format, type, pixels);
 }
 
-void GL_APIENTRY glGetCompressedTextureSubImage(GLuint texture,
+void GL_APIENTRY glTexParameterIivContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLenum pname,
+                                               const GLint *params)
+{
+    return GL_TexParameterIivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameterIivEXTContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
+                                                  GLenum pname,
+                                                  const GLint *params)
+{
+    return GL_TexParameterIivEXTContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameterIivOESContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
+                                                  GLenum pname,
+                                                  const GLint *params)
+{
+    return GL_TexParameterIivOESContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameterIuivContextANGLE(GLeglContext ctx,
+                                                GLenum target,
+                                                GLenum pname,
+                                                const GLuint *params)
+{
+    return GL_TexParameterIuivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameterIuivEXTContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLenum pname,
+                                                   const GLuint *params)
+{
+    return GL_TexParameterIuivEXTContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameterIuivOESContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLenum pname,
+                                                   const GLuint *params)
+{
+    return GL_TexParameterIuivOESContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameterfContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLenum pname,
+                                             GLfloat param)
+{
+    return GL_TexParameterfContextANGLE(ctx, target, pname, param);
+}
+
+void GL_APIENTRY glTexParameterfvContextANGLE(GLeglContext ctx,
+                                              GLenum target,
+                                              GLenum pname,
+                                              const GLfloat *params)
+{
+    return GL_TexParameterfvContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameteriContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLenum pname,
+                                             GLint param)
+{
+    return GL_TexParameteriContextANGLE(ctx, target, pname, param);
+}
+
+void GL_APIENTRY glTexParameterivContextANGLE(GLeglContext ctx,
+                                              GLenum target,
+                                              GLenum pname,
+                                              const GLint *params)
+{
+    return GL_TexParameterivContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexParameterxContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLenum pname,
+                                             GLfixed param)
+{
+    return GL_TexParameterxContextANGLE(ctx, target, pname, param);
+}
+
+void GL_APIENTRY glTexParameterxvContextANGLE(GLeglContext ctx,
+                                              GLenum target,
+                                              GLenum pname,
+                                              const GLfixed *params)
+{
+    return GL_TexParameterxvContextANGLE(ctx, target, pname, params);
+}
+
+void GL_APIENTRY glTexStorage1DEXTContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLsizei levels,
+                                               GLenum internalformat,
+                                               GLsizei width)
+{
+    return GL_TexStorage1DEXTContextANGLE(ctx, target, levels, internalformat, width);
+}
+
+void GL_APIENTRY glTexStorage2DContextANGLE(GLeglContext ctx,
+                                            GLenum target,
+                                            GLsizei levels,
+                                            GLenum internalformat,
+                                            GLsizei width,
+                                            GLsizei height)
+{
+    return GL_TexStorage2DContextANGLE(ctx, target, levels, internalformat, width, height);
+}
+
+void GL_APIENTRY glTexStorage2DEXTContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLsizei levels,
+                                               GLenum internalformat,
+                                               GLsizei width,
+                                               GLsizei height)
+{
+    return GL_TexStorage2DEXTContextANGLE(ctx, target, levels, internalformat, width, height);
+}
+
+void GL_APIENTRY glTexStorage2DMultisampleContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLsizei samples,
+                                                       GLenum internalformat,
+                                                       GLsizei width,
+                                                       GLsizei height,
+                                                       GLboolean fixedsamplelocations)
+{
+    return GL_TexStorage2DMultisampleContextANGLE(ctx, target, samples, internalformat, width,
+                                                  height, fixedsamplelocations);
+}
+
+void GL_APIENTRY glTexStorage3DContextANGLE(GLeglContext ctx,
+                                            GLenum target,
+                                            GLsizei levels,
+                                            GLenum internalformat,
+                                            GLsizei width,
+                                            GLsizei height,
+                                            GLsizei depth)
+{
+    return GL_TexStorage3DContextANGLE(ctx, target, levels, internalformat, width, height, depth);
+}
+
+void GL_APIENTRY glTexStorage3DEXTContextANGLE(GLeglContext ctx,
+                                               GLenum target,
+                                               GLsizei levels,
+                                               GLenum internalformat,
+                                               GLsizei width,
+                                               GLsizei height,
+                                               GLsizei depth)
+{
+    return GL_TexStorage3DEXTContextANGLE(ctx, target, levels, internalformat, width, height,
+                                          depth);
+}
+
+void GL_APIENTRY glTexStorage3DMultisampleContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLsizei samples,
+                                                       GLenum internalformat,
+                                                       GLsizei width,
+                                                       GLsizei height,
+                                                       GLsizei depth,
+                                                       GLboolean fixedsamplelocations)
+{
+    return GL_TexStorage3DMultisampleContextANGLE(ctx, target, samples, internalformat, width,
+                                                  height, depth, fixedsamplelocations);
+}
+
+void GL_APIENTRY glTexStorage3DMultisampleOESContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLsizei samples,
+                                                          GLenum internalformat,
+                                                          GLsizei width,
+                                                          GLsizei height,
+                                                          GLsizei depth,
+                                                          GLboolean fixedsamplelocations)
+{
+    return GL_TexStorage3DMultisampleOESContextANGLE(ctx, target, samples, internalformat, width,
+                                                     height, depth, fixedsamplelocations);
+}
+
+void GL_APIENTRY glTexStorageMem2DEXTContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
+                                                  GLsizei levels,
+                                                  GLenum internalFormat,
+                                                  GLsizei width,
+                                                  GLsizei height,
+                                                  GLuint memory,
+                                                  GLuint64 offset)
+{
+    return GL_TexStorageMem2DEXTContextANGLE(ctx, target, levels, internalFormat, width, height,
+                                             memory, offset);
+}
+
+void GL_APIENTRY glTexStorageMem2DMultisampleEXTContextANGLE(GLeglContext ctx,
+                                                             GLenum target,
+                                                             GLsizei samples,
+                                                             GLenum internalFormat,
+                                                             GLsizei width,
+                                                             GLsizei height,
+                                                             GLboolean fixedSampleLocations,
+                                                             GLuint memory,
+                                                             GLuint64 offset)
+{
+    return GL_TexStorageMem2DMultisampleEXTContextANGLE(
+        ctx, target, samples, internalFormat, width, height, fixedSampleLocations, memory, offset);
+}
+
+void GL_APIENTRY glTexStorageMem3DEXTContextANGLE(GLeglContext ctx,
+                                                  GLenum target,
+                                                  GLsizei levels,
+                                                  GLenum internalFormat,
+                                                  GLsizei width,
+                                                  GLsizei height,
+                                                  GLsizei depth,
+                                                  GLuint memory,
+                                                  GLuint64 offset)
+{
+    return GL_TexStorageMem3DEXTContextANGLE(ctx, target, levels, internalFormat, width, height,
+                                             depth, memory, offset);
+}
+
+void GL_APIENTRY glTexStorageMem3DMultisampleEXTContextANGLE(GLeglContext ctx,
+                                                             GLenum target,
+                                                             GLsizei samples,
+                                                             GLenum internalFormat,
+                                                             GLsizei width,
+                                                             GLsizei height,
+                                                             GLsizei depth,
+                                                             GLboolean fixedSampleLocations,
+                                                             GLuint memory,
+                                                             GLuint64 offset)
+{
+    return GL_TexStorageMem3DMultisampleEXTContextANGLE(ctx, target, samples, internalFormat, width,
+                                                        height, depth, fixedSampleLocations, memory,
+                                                        offset);
+}
+
+void GL_APIENTRY glTexSubImage2DContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLint level,
+                                             GLint xoffset,
+                                             GLint yoffset,
+                                             GLsizei width,
+                                             GLsizei height,
+                                             GLenum format,
+                                             GLenum type,
+                                             const void *pixels)
+{
+    return GL_TexSubImage2DContextANGLE(ctx, target, level, xoffset, yoffset, width, height, format,
+                                        type, pixels);
+}
+
+void GL_APIENTRY glTexSubImage3DContextANGLE(GLeglContext ctx,
+                                             GLenum target,
+                                             GLint level,
+                                             GLint xoffset,
+                                             GLint yoffset,
+                                             GLint zoffset,
+                                             GLsizei width,
+                                             GLsizei height,
+                                             GLsizei depth,
+                                             GLenum format,
+                                             GLenum type,
+                                             const void *pixels)
+{
+    return GL_TexSubImage3DContextANGLE(ctx, target, level, xoffset, yoffset, zoffset, width,
+                                        height, depth, format, type, pixels);
+}
+
+void GL_APIENTRY glTexSubImage3DOESContextANGLE(GLeglContext ctx,
+                                                GLenum target,
                                                 GLint level,
                                                 GLint xoffset,
                                                 GLint yoffset,
@@ -9060,645 +10302,1629 @@ void GL_APIENTRY glGetCompressedTextureSubImage(GLuint texture,
                                                 GLsizei width,
                                                 GLsizei height,
                                                 GLsizei depth,
-                                                GLsizei bufSize,
-                                                void *pixels)
+                                                GLenum format,
+                                                GLenum type,
+                                                const void *pixels)
 {
-    return GL_GetCompressedTextureSubImage(texture, level, xoffset, yoffset, zoffset, width, height,
-                                           depth, bufSize, pixels);
+    return GL_TexSubImage3DOESContextANGLE(ctx, target, level, xoffset, yoffset, zoffset, width,
+                                           height, depth, format, type, pixels);
 }
 
-void GL_APIENTRY glGetNamedBufferParameteri64v(GLuint buffer, GLenum pname, GLint64 *params)
+void GL_APIENTRY glTransformFeedbackVaryingsContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLsizei count,
+                                                         const GLchar *const *varyings,
+                                                         GLenum bufferMode)
 {
-    return GL_GetNamedBufferParameteri64v(buffer, pname, params);
+    return GL_TransformFeedbackVaryingsContextANGLE(ctx, program, count, varyings, bufferMode);
 }
 
-void GL_APIENTRY glGetNamedBufferParameteriv(GLuint buffer, GLenum pname, GLint *params)
+void GL_APIENTRY glTranslatefContextANGLE(GLeglContext ctx, GLfloat x, GLfloat y, GLfloat z)
 {
-    return GL_GetNamedBufferParameteriv(buffer, pname, params);
+    return GL_TranslatefContextANGLE(ctx, x, y, z);
 }
 
-void GL_APIENTRY glGetNamedBufferPointerv(GLuint buffer, GLenum pname, void **params)
+void GL_APIENTRY glTranslatexContextANGLE(GLeglContext ctx, GLfixed x, GLfixed y, GLfixed z)
 {
-    return GL_GetNamedBufferPointerv(buffer, pname, params);
+    return GL_TranslatexContextANGLE(ctx, x, y, z);
 }
 
-void GL_APIENTRY glGetNamedBufferSubData(GLuint buffer,
-                                         GLintptr offset,
-                                         GLsizeiptr size,
-                                         void *data)
+void GL_APIENTRY glUniform1fContextANGLE(GLeglContext ctx, GLint location, GLfloat v0)
 {
-    return GL_GetNamedBufferSubData(buffer, offset, size, data);
+    return GL_Uniform1fContextANGLE(ctx, location, v0);
 }
 
-void GL_APIENTRY glGetNamedFramebufferAttachmentParameteriv(GLuint framebuffer,
-                                                            GLenum attachment,
+void GL_APIENTRY glUniform1fvContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLfloat *value)
+{
+    return GL_Uniform1fvContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniform1iContextANGLE(GLeglContext ctx, GLint location, GLint v0)
+{
+    return GL_Uniform1iContextANGLE(ctx, location, v0);
+}
+
+void GL_APIENTRY glUniform1ivContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLint *value)
+{
+    return GL_Uniform1ivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniform1uiContextANGLE(GLeglContext ctx, GLint location, GLuint v0)
+{
+    return GL_Uniform1uiContextANGLE(ctx, location, v0);
+}
+
+void GL_APIENTRY glUniform1uivContextANGLE(GLeglContext ctx,
+                                           GLint location,
+                                           GLsizei count,
+                                           const GLuint *value)
+{
+    return GL_Uniform1uivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniform2fContextANGLE(GLeglContext ctx, GLint location, GLfloat v0, GLfloat v1)
+{
+    return GL_Uniform2fContextANGLE(ctx, location, v0, v1);
+}
+
+void GL_APIENTRY glUniform2fvContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLfloat *value)
+{
+    return GL_Uniform2fvContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniform2iContextANGLE(GLeglContext ctx, GLint location, GLint v0, GLint v1)
+{
+    return GL_Uniform2iContextANGLE(ctx, location, v0, v1);
+}
+
+void GL_APIENTRY glUniform2ivContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLint *value)
+{
+    return GL_Uniform2ivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniform2uiContextANGLE(GLeglContext ctx, GLint location, GLuint v0, GLuint v1)
+{
+    return GL_Uniform2uiContextANGLE(ctx, location, v0, v1);
+}
+
+void GL_APIENTRY glUniform2uivContextANGLE(GLeglContext ctx,
+                                           GLint location,
+                                           GLsizei count,
+                                           const GLuint *value)
+{
+    return GL_Uniform2uivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY
+glUniform3fContextANGLE(GLeglContext ctx, GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
+{
+    return GL_Uniform3fContextANGLE(ctx, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glUniform3fvContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLfloat *value)
+{
+    return GL_Uniform3fvContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY
+glUniform3iContextANGLE(GLeglContext ctx, GLint location, GLint v0, GLint v1, GLint v2)
+{
+    return GL_Uniform3iContextANGLE(ctx, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glUniform3ivContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLint *value)
+{
+    return GL_Uniform3ivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY
+glUniform3uiContextANGLE(GLeglContext ctx, GLint location, GLuint v0, GLuint v1, GLuint v2)
+{
+    return GL_Uniform3uiContextANGLE(ctx, location, v0, v1, v2);
+}
+
+void GL_APIENTRY glUniform3uivContextANGLE(GLeglContext ctx,
+                                           GLint location,
+                                           GLsizei count,
+                                           const GLuint *value)
+{
+    return GL_Uniform3uivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniform4fContextANGLE(GLeglContext ctx,
+                                         GLint location,
+                                         GLfloat v0,
+                                         GLfloat v1,
+                                         GLfloat v2,
+                                         GLfloat v3)
+{
+    return GL_Uniform4fContextANGLE(ctx, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glUniform4fvContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLfloat *value)
+{
+    return GL_Uniform4fvContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY
+glUniform4iContextANGLE(GLeglContext ctx, GLint location, GLint v0, GLint v1, GLint v2, GLint v3)
+{
+    return GL_Uniform4iContextANGLE(ctx, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glUniform4ivContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLsizei count,
+                                          const GLint *value)
+{
+    return GL_Uniform4ivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniform4uiContextANGLE(GLeglContext ctx,
+                                          GLint location,
+                                          GLuint v0,
+                                          GLuint v1,
+                                          GLuint v2,
+                                          GLuint v3)
+{
+    return GL_Uniform4uiContextANGLE(ctx, location, v0, v1, v2, v3);
+}
+
+void GL_APIENTRY glUniform4uivContextANGLE(GLeglContext ctx,
+                                           GLint location,
+                                           GLsizei count,
+                                           const GLuint *value)
+{
+    return GL_Uniform4uivContextANGLE(ctx, location, count, value);
+}
+
+void GL_APIENTRY glUniformBlockBindingContextANGLE(GLeglContext ctx,
+                                                   GLuint program,
+                                                   GLuint uniformBlockIndex,
+                                                   GLuint uniformBlockBinding)
+{
+    return GL_UniformBlockBindingContextANGLE(ctx, program, uniformBlockIndex, uniformBlockBinding);
+}
+
+void GL_APIENTRY glUniformMatrix2fvContextANGLE(GLeglContext ctx,
+                                                GLint location,
+                                                GLsizei count,
+                                                GLboolean transpose,
+                                                const GLfloat *value)
+{
+    return GL_UniformMatrix2fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix2x3fvContextANGLE(GLeglContext ctx,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  GLboolean transpose,
+                                                  const GLfloat *value)
+{
+    return GL_UniformMatrix2x3fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix2x4fvContextANGLE(GLeglContext ctx,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  GLboolean transpose,
+                                                  const GLfloat *value)
+{
+    return GL_UniformMatrix2x4fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix3fvContextANGLE(GLeglContext ctx,
+                                                GLint location,
+                                                GLsizei count,
+                                                GLboolean transpose,
+                                                const GLfloat *value)
+{
+    return GL_UniformMatrix3fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix3x2fvContextANGLE(GLeglContext ctx,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  GLboolean transpose,
+                                                  const GLfloat *value)
+{
+    return GL_UniformMatrix3x2fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix3x4fvContextANGLE(GLeglContext ctx,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  GLboolean transpose,
+                                                  const GLfloat *value)
+{
+    return GL_UniformMatrix3x4fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix4fvContextANGLE(GLeglContext ctx,
+                                                GLint location,
+                                                GLsizei count,
+                                                GLboolean transpose,
+                                                const GLfloat *value)
+{
+    return GL_UniformMatrix4fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix4x2fvContextANGLE(GLeglContext ctx,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  GLboolean transpose,
+                                                  const GLfloat *value)
+{
+    return GL_UniformMatrix4x2fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+void GL_APIENTRY glUniformMatrix4x3fvContextANGLE(GLeglContext ctx,
+                                                  GLint location,
+                                                  GLsizei count,
+                                                  GLboolean transpose,
+                                                  const GLfloat *value)
+{
+    return GL_UniformMatrix4x3fvContextANGLE(ctx, location, count, transpose, value);
+}
+
+GLboolean GL_APIENTRY glUnmapBufferContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_UnmapBufferContextANGLE(ctx, target);
+}
+
+GLboolean GL_APIENTRY glUnmapBufferOESContextANGLE(GLeglContext ctx, GLenum target)
+{
+    return GL_UnmapBufferOESContextANGLE(ctx, target);
+}
+
+void GL_APIENTRY glUseProgramContextANGLE(GLeglContext ctx, GLuint program)
+{
+    return GL_UseProgramContextANGLE(ctx, program);
+}
+
+void GL_APIENTRY glUseProgramStagesContextANGLE(GLeglContext ctx,
+                                                GLuint pipeline,
+                                                GLbitfield stages,
+                                                GLuint program)
+{
+    return GL_UseProgramStagesContextANGLE(ctx, pipeline, stages, program);
+}
+
+void GL_APIENTRY glUseProgramStagesEXTContextANGLE(GLeglContext ctx,
+                                                   GLuint pipeline,
+                                                   GLbitfield stages,
+                                                   GLuint program)
+{
+    return GL_UseProgramStagesEXTContextANGLE(ctx, pipeline, stages, program);
+}
+
+void GL_APIENTRY glValidateProgramContextANGLE(GLeglContext ctx, GLuint program)
+{
+    return GL_ValidateProgramContextANGLE(ctx, program);
+}
+
+void GL_APIENTRY glValidateProgramPipelineContextANGLE(GLeglContext ctx, GLuint pipeline)
+{
+    return GL_ValidateProgramPipelineContextANGLE(ctx, pipeline);
+}
+
+void GL_APIENTRY glValidateProgramPipelineEXTContextANGLE(GLeglContext ctx, GLuint pipeline)
+{
+    return GL_ValidateProgramPipelineEXTContextANGLE(ctx, pipeline);
+}
+
+void GL_APIENTRY glVertexAttrib1fContextANGLE(GLeglContext ctx, GLuint index, GLfloat x)
+{
+    return GL_VertexAttrib1fContextANGLE(ctx, index, x);
+}
+
+void GL_APIENTRY glVertexAttrib1fvContextANGLE(GLeglContext ctx, GLuint index, const GLfloat *v)
+{
+    return GL_VertexAttrib1fvContextANGLE(ctx, index, v);
+}
+
+void GL_APIENTRY glVertexAttrib2fContextANGLE(GLeglContext ctx, GLuint index, GLfloat x, GLfloat y)
+{
+    return GL_VertexAttrib2fContextANGLE(ctx, index, x, y);
+}
+
+void GL_APIENTRY glVertexAttrib2fvContextANGLE(GLeglContext ctx, GLuint index, const GLfloat *v)
+{
+    return GL_VertexAttrib2fvContextANGLE(ctx, index, v);
+}
+
+void GL_APIENTRY
+glVertexAttrib3fContextANGLE(GLeglContext ctx, GLuint index, GLfloat x, GLfloat y, GLfloat z)
+{
+    return GL_VertexAttrib3fContextANGLE(ctx, index, x, y, z);
+}
+
+void GL_APIENTRY glVertexAttrib3fvContextANGLE(GLeglContext ctx, GLuint index, const GLfloat *v)
+{
+    return GL_VertexAttrib3fvContextANGLE(ctx, index, v);
+}
+
+void GL_APIENTRY glVertexAttrib4fContextANGLE(GLeglContext ctx,
+                                              GLuint index,
+                                              GLfloat x,
+                                              GLfloat y,
+                                              GLfloat z,
+                                              GLfloat w)
+{
+    return GL_VertexAttrib4fContextANGLE(ctx, index, x, y, z, w);
+}
+
+void GL_APIENTRY glVertexAttrib4fvContextANGLE(GLeglContext ctx, GLuint index, const GLfloat *v)
+{
+    return GL_VertexAttrib4fvContextANGLE(ctx, index, v);
+}
+
+void GL_APIENTRY glVertexAttribBindingContextANGLE(GLeglContext ctx,
+                                                   GLuint attribindex,
+                                                   GLuint bindingindex)
+{
+    return GL_VertexAttribBindingContextANGLE(ctx, attribindex, bindingindex);
+}
+
+void GL_APIENTRY glVertexAttribDivisorContextANGLE(GLeglContext ctx, GLuint index, GLuint divisor)
+{
+    return GL_VertexAttribDivisorContextANGLE(ctx, index, divisor);
+}
+
+void GL_APIENTRY glVertexAttribDivisorANGLEContextANGLE(GLeglContext ctx,
+                                                        GLuint index,
+                                                        GLuint divisor)
+{
+    return GL_VertexAttribDivisorANGLEContextANGLE(ctx, index, divisor);
+}
+
+void GL_APIENTRY glVertexAttribDivisorEXTContextANGLE(GLeglContext ctx,
+                                                      GLuint index,
+                                                      GLuint divisor)
+{
+    return GL_VertexAttribDivisorEXTContextANGLE(ctx, index, divisor);
+}
+
+void GL_APIENTRY glVertexAttribFormatContextANGLE(GLeglContext ctx,
+                                                  GLuint attribindex,
+                                                  GLint size,
+                                                  GLenum type,
+                                                  GLboolean normalized,
+                                                  GLuint relativeoffset)
+{
+    return GL_VertexAttribFormatContextANGLE(ctx, attribindex, size, type, normalized,
+                                             relativeoffset);
+}
+
+void GL_APIENTRY
+glVertexAttribI4iContextANGLE(GLeglContext ctx, GLuint index, GLint x, GLint y, GLint z, GLint w)
+{
+    return GL_VertexAttribI4iContextANGLE(ctx, index, x, y, z, w);
+}
+
+void GL_APIENTRY glVertexAttribI4ivContextANGLE(GLeglContext ctx, GLuint index, const GLint *v)
+{
+    return GL_VertexAttribI4ivContextANGLE(ctx, index, v);
+}
+
+void GL_APIENTRY glVertexAttribI4uiContextANGLE(GLeglContext ctx,
+                                                GLuint index,
+                                                GLuint x,
+                                                GLuint y,
+                                                GLuint z,
+                                                GLuint w)
+{
+    return GL_VertexAttribI4uiContextANGLE(ctx, index, x, y, z, w);
+}
+
+void GL_APIENTRY glVertexAttribI4uivContextANGLE(GLeglContext ctx, GLuint index, const GLuint *v)
+{
+    return GL_VertexAttribI4uivContextANGLE(ctx, index, v);
+}
+
+void GL_APIENTRY glVertexAttribIFormatContextANGLE(GLeglContext ctx,
+                                                   GLuint attribindex,
+                                                   GLint size,
+                                                   GLenum type,
+                                                   GLuint relativeoffset)
+{
+    return GL_VertexAttribIFormatContextANGLE(ctx, attribindex, size, type, relativeoffset);
+}
+
+void GL_APIENTRY glVertexAttribIPointerContextANGLE(GLeglContext ctx,
+                                                    GLuint index,
+                                                    GLint size,
+                                                    GLenum type,
+                                                    GLsizei stride,
+                                                    const void *pointer)
+{
+    return GL_VertexAttribIPointerContextANGLE(ctx, index, size, type, stride, pointer);
+}
+
+void GL_APIENTRY glVertexAttribPointerContextANGLE(GLeglContext ctx,
+                                                   GLuint index,
+                                                   GLint size,
+                                                   GLenum type,
+                                                   GLboolean normalized,
+                                                   GLsizei stride,
+                                                   const void *pointer)
+{
+    return GL_VertexAttribPointerContextANGLE(ctx, index, size, type, normalized, stride, pointer);
+}
+
+void GL_APIENTRY glVertexBindingDivisorContextANGLE(GLeglContext ctx,
+                                                    GLuint bindingindex,
+                                                    GLuint divisor)
+{
+    return GL_VertexBindingDivisorContextANGLE(ctx, bindingindex, divisor);
+}
+
+void GL_APIENTRY glVertexPointerContextANGLE(GLeglContext ctx,
+                                             GLint size,
+                                             GLenum type,
+                                             GLsizei stride,
+                                             const void *pointer)
+{
+    return GL_VertexPointerContextANGLE(ctx, size, type, stride, pointer);
+}
+
+void GL_APIENTRY
+glViewportContextANGLE(GLeglContext ctx, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    return GL_ViewportContextANGLE(ctx, x, y, width, height);
+}
+
+void GL_APIENTRY glWaitSemaphoreEXTContextANGLE(GLeglContext ctx,
+                                                GLuint semaphore,
+                                                GLuint numBufferBarriers,
+                                                const GLuint *buffers,
+                                                GLuint numTextureBarriers,
+                                                const GLuint *textures,
+                                                const GLenum *srcLayouts)
+{
+    return GL_WaitSemaphoreEXTContextANGLE(ctx, semaphore, numBufferBarriers, buffers,
+                                           numTextureBarriers, textures, srcLayouts);
+}
+
+void GL_APIENTRY glWaitSyncContextANGLE(GLeglContext ctx,
+                                        GLsync sync,
+                                        GLbitfield flags,
+                                        GLuint64 timeout)
+{
+    return GL_WaitSyncContextANGLE(ctx, sync, flags, timeout);
+}
+
+void GL_APIENTRY glWeightPointerOESContextANGLE(GLeglContext ctx,
+                                                GLint size,
+                                                GLenum type,
+                                                GLsizei stride,
+                                                const void *pointer)
+{
+    return GL_WeightPointerOESContextANGLE(ctx, size, type, stride, pointer);
+}
+
+void GL_APIENTRY glBindUniformLocationCHROMIUMContextANGLE(GLeglContext ctx,
+                                                           GLuint program,
+                                                           GLint location,
+                                                           const GLchar *name)
+{
+    return GL_BindUniformLocationCHROMIUMContextANGLE(ctx, program, location, name);
+}
+
+void GL_APIENTRY glCoverageModulationCHROMIUMContextANGLE(GLeglContext ctx, GLenum components)
+{
+    return GL_CoverageModulationCHROMIUMContextANGLE(ctx, components);
+}
+
+void GL_APIENTRY glCopyTextureCHROMIUMContextANGLE(GLeglContext ctx,
+                                                   GLuint sourceId,
+                                                   GLint sourceLevel,
+                                                   GLenum destTarget,
+                                                   GLuint destId,
+                                                   GLint destLevel,
+                                                   GLint internalFormat,
+                                                   GLenum destType,
+                                                   GLboolean unpackFlipY,
+                                                   GLboolean unpackPremultiplyAlpha,
+                                                   GLboolean unpackUnmultiplyAlpha)
+{
+    return GL_CopyTextureCHROMIUMContextANGLE(ctx, sourceId, sourceLevel, destTarget, destId,
+                                              destLevel, internalFormat, destType, unpackFlipY,
+                                              unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
+}
+
+void GL_APIENTRY glCopySubTextureCHROMIUMContextANGLE(GLeglContext ctx,
+                                                      GLuint sourceId,
+                                                      GLint sourceLevel,
+                                                      GLenum destTarget,
+                                                      GLuint destId,
+                                                      GLint destLevel,
+                                                      GLint xoffset,
+                                                      GLint yoffset,
+                                                      GLint x,
+                                                      GLint y,
+                                                      GLint width,
+                                                      GLint height,
+                                                      GLboolean unpackFlipY,
+                                                      GLboolean unpackPremultiplyAlpha,
+                                                      GLboolean unpackUnmultiplyAlpha)
+{
+    return GL_CopySubTextureCHROMIUMContextANGLE(
+        ctx, sourceId, sourceLevel, destTarget, destId, destLevel, xoffset, yoffset, x, y, width,
+        height, unpackFlipY, unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
+}
+
+void GL_APIENTRY glCompressedCopyTextureCHROMIUMContextANGLE(GLeglContext ctx,
+                                                             GLuint sourceId,
+                                                             GLuint destId)
+{
+    return GL_CompressedCopyTextureCHROMIUMContextANGLE(ctx, sourceId, destId);
+}
+
+void GL_APIENTRY glRequestExtensionANGLEContextANGLE(GLeglContext ctx, const GLchar *name)
+{
+    return GL_RequestExtensionANGLEContextANGLE(ctx, name);
+}
+
+void GL_APIENTRY glDisableExtensionANGLEContextANGLE(GLeglContext ctx, const GLchar *name)
+{
+    return GL_DisableExtensionANGLEContextANGLE(ctx, name);
+}
+
+void GL_APIENTRY glGetBooleanvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                      GLenum pname,
+                                                      GLsizei bufSize,
+                                                      GLsizei *length,
+                                                      GLboolean *params)
+{
+    return GL_GetBooleanvRobustANGLEContextANGLE(ctx, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetBufferParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                               GLenum target,
+                                                               GLenum pname,
+                                                               GLsizei bufSize,
+                                                               GLsizei *length,
+                                                               GLint *params)
+{
+    return GL_GetBufferParameterivRobustANGLEContextANGLE(ctx, target, pname, bufSize, length,
+                                                          params);
+}
+
+void GL_APIENTRY glGetFloatvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                    GLenum pname,
+                                                    GLsizei bufSize,
+                                                    GLsizei *length,
+                                                    GLfloat *params)
+{
+    return GL_GetFloatvRobustANGLEContextANGLE(ctx, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetFramebufferAttachmentParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                              GLenum target,
+                                                                              GLenum attachment,
+                                                                              GLenum pname,
+                                                                              GLsizei bufSize,
+                                                                              GLsizei *length,
+                                                                              GLint *params)
+{
+    return GL_GetFramebufferAttachmentParameterivRobustANGLEContextANGLE(
+        ctx, target, attachment, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetIntegervRobustANGLEContextANGLE(GLeglContext ctx,
+                                                      GLenum pname,
+                                                      GLsizei bufSize,
+                                                      GLsizei *length,
+                                                      GLint *data)
+{
+    return GL_GetIntegervRobustANGLEContextANGLE(ctx, pname, bufSize, length, data);
+}
+
+void GL_APIENTRY glGetProgramivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLenum pname,
+                                                       GLsizei bufSize,
+                                                       GLsizei *length,
+                                                       GLint *params)
+{
+    return GL_GetProgramivRobustANGLEContextANGLE(ctx, program, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetRenderbufferParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                     GLenum target,
+                                                                     GLenum pname,
+                                                                     GLsizei bufSize,
+                                                                     GLsizei *length,
+                                                                     GLint *params)
+{
+    return GL_GetRenderbufferParameterivRobustANGLEContextANGLE(ctx, target, pname, bufSize, length,
+                                                                params);
+}
+
+void GL_APIENTRY glGetShaderivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                      GLuint shader,
+                                                      GLenum pname,
+                                                      GLsizei bufSize,
+                                                      GLsizei *length,
+                                                      GLint *params)
+{
+    return GL_GetShaderivRobustANGLEContextANGLE(ctx, shader, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetTexParameterfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                            GLenum target,
                                                             GLenum pname,
+                                                            GLsizei bufSize,
+                                                            GLsizei *length,
+                                                            GLfloat *params)
+{
+    return GL_GetTexParameterfvRobustANGLEContextANGLE(ctx, target, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetTexParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                            GLenum target,
+                                                            GLenum pname,
+                                                            GLsizei bufSize,
+                                                            GLsizei *length,
                                                             GLint *params)
 {
-    return GL_GetNamedFramebufferAttachmentParameteriv(framebuffer, attachment, pname, params);
+    return GL_GetTexParameterivRobustANGLEContextANGLE(ctx, target, pname, bufSize, length, params);
 }
 
-void GL_APIENTRY glGetNamedFramebufferParameteriv(GLuint framebuffer, GLenum pname, GLint *param)
+void GL_APIENTRY glGetUniformfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLint location,
+                                                       GLsizei bufSize,
+                                                       GLsizei *length,
+                                                       GLfloat *params)
 {
-    return GL_GetNamedFramebufferParameteriv(framebuffer, pname, param);
+    return GL_GetUniformfvRobustANGLEContextANGLE(ctx, program, location, bufSize, length, params);
 }
 
-void GL_APIENTRY glGetNamedRenderbufferParameteriv(GLuint renderbuffer, GLenum pname, GLint *params)
+void GL_APIENTRY glGetUniformivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                       GLuint program,
+                                                       GLint location,
+                                                       GLsizei bufSize,
+                                                       GLsizei *length,
+                                                       GLint *params)
 {
-    return GL_GetNamedRenderbufferParameteriv(renderbuffer, pname, params);
+    return GL_GetUniformivRobustANGLEContextANGLE(ctx, program, location, bufSize, length, params);
 }
 
-void GL_APIENTRY glGetQueryBufferObjecti64v(GLuint id, GLuint buffer, GLenum pname, GLintptr offset)
+void GL_APIENTRY glGetVertexAttribfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                            GLuint index,
+                                                            GLenum pname,
+                                                            GLsizei bufSize,
+                                                            GLsizei *length,
+                                                            GLfloat *params)
 {
-    return GL_GetQueryBufferObjecti64v(id, buffer, pname, offset);
+    return GL_GetVertexAttribfvRobustANGLEContextANGLE(ctx, index, pname, bufSize, length, params);
 }
 
-void GL_APIENTRY glGetQueryBufferObjectiv(GLuint id, GLuint buffer, GLenum pname, GLintptr offset)
+void GL_APIENTRY glGetVertexAttribivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                            GLuint index,
+                                                            GLenum pname,
+                                                            GLsizei bufSize,
+                                                            GLsizei *length,
+                                                            GLint *params)
 {
-    return GL_GetQueryBufferObjectiv(id, buffer, pname, offset);
+    return GL_GetVertexAttribivRobustANGLEContextANGLE(ctx, index, pname, bufSize, length, params);
 }
 
-void GL_APIENTRY glGetQueryBufferObjectui64v(GLuint id,
-                                             GLuint buffer,
-                                             GLenum pname,
-                                             GLintptr offset)
+void GL_APIENTRY glGetVertexAttribPointervRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                  GLuint index,
+                                                                  GLenum pname,
+                                                                  GLsizei bufSize,
+                                                                  GLsizei *length,
+                                                                  void **pointer)
 {
-    return GL_GetQueryBufferObjectui64v(id, buffer, pname, offset);
+    return GL_GetVertexAttribPointervRobustANGLEContextANGLE(ctx, index, pname, bufSize, length,
+                                                             pointer);
 }
 
-void GL_APIENTRY glGetQueryBufferObjectuiv(GLuint id, GLuint buffer, GLenum pname, GLintptr offset)
-{
-    return GL_GetQueryBufferObjectuiv(id, buffer, pname, offset);
-}
-
-void GL_APIENTRY glGetTextureImage(GLuint texture,
-                                   GLint level,
-                                   GLenum format,
-                                   GLenum type,
-                                   GLsizei bufSize,
-                                   void *pixels)
-{
-    return GL_GetTextureImage(texture, level, format, type, bufSize, pixels);
-}
-
-void GL_APIENTRY glGetTextureLevelParameterfv(GLuint texture,
-                                              GLint level,
-                                              GLenum pname,
-                                              GLfloat *params)
-{
-    return GL_GetTextureLevelParameterfv(texture, level, pname, params);
-}
-
-void GL_APIENTRY glGetTextureLevelParameteriv(GLuint texture,
-                                              GLint level,
-                                              GLenum pname,
-                                              GLint *params)
-{
-    return GL_GetTextureLevelParameteriv(texture, level, pname, params);
-}
-
-void GL_APIENTRY glGetTextureParameterIiv(GLuint texture, GLenum pname, GLint *params)
-{
-    return GL_GetTextureParameterIiv(texture, pname, params);
-}
-
-void GL_APIENTRY glGetTextureParameterIuiv(GLuint texture, GLenum pname, GLuint *params)
-{
-    return GL_GetTextureParameterIuiv(texture, pname, params);
-}
-
-void GL_APIENTRY glGetTextureParameterfv(GLuint texture, GLenum pname, GLfloat *params)
-{
-    return GL_GetTextureParameterfv(texture, pname, params);
-}
-
-void GL_APIENTRY glGetTextureParameteriv(GLuint texture, GLenum pname, GLint *params)
-{
-    return GL_GetTextureParameteriv(texture, pname, params);
-}
-
-void GL_APIENTRY glGetTextureSubImage(GLuint texture,
-                                      GLint level,
-                                      GLint xoffset,
-                                      GLint yoffset,
-                                      GLint zoffset,
-                                      GLsizei width,
-                                      GLsizei height,
-                                      GLsizei depth,
-                                      GLenum format,
-                                      GLenum type,
-                                      GLsizei bufSize,
-                                      void *pixels)
-{
-    return GL_GetTextureSubImage(texture, level, xoffset, yoffset, zoffset, width, height, depth,
-                                 format, type, bufSize, pixels);
-}
-
-void GL_APIENTRY glGetTransformFeedbacki64_v(GLuint xfb, GLenum pname, GLuint index, GLint64 *param)
-{
-    return GL_GetTransformFeedbacki64_v(xfb, pname, index, param);
-}
-
-void GL_APIENTRY glGetTransformFeedbacki_v(GLuint xfb, GLenum pname, GLuint index, GLint *param)
-{
-    return GL_GetTransformFeedbacki_v(xfb, pname, index, param);
-}
-
-void GL_APIENTRY glGetTransformFeedbackiv(GLuint xfb, GLenum pname, GLint *param)
-{
-    return GL_GetTransformFeedbackiv(xfb, pname, param);
-}
-
-void GL_APIENTRY glGetVertexArrayIndexed64iv(GLuint vaobj,
-                                             GLuint index,
-                                             GLenum pname,
-                                             GLint64 *param)
-{
-    return GL_GetVertexArrayIndexed64iv(vaobj, index, pname, param);
-}
-
-void GL_APIENTRY glGetVertexArrayIndexediv(GLuint vaobj, GLuint index, GLenum pname, GLint *param)
-{
-    return GL_GetVertexArrayIndexediv(vaobj, index, pname, param);
-}
-
-void GL_APIENTRY glGetVertexArrayiv(GLuint vaobj, GLenum pname, GLint *param)
-{
-    return GL_GetVertexArrayiv(vaobj, pname, param);
-}
-
-void GL_APIENTRY
-glGetnColorTable(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *table)
-{
-    return GL_GetnColorTable(target, format, type, bufSize, table);
-}
-
-void GL_APIENTRY glGetnCompressedTexImage(GLenum target, GLint lod, GLsizei bufSize, void *pixels)
-{
-    return GL_GetnCompressedTexImage(target, lod, bufSize, pixels);
-}
-
-void GL_APIENTRY
-glGetnConvolutionFilter(GLenum target, GLenum format, GLenum type, GLsizei bufSize, void *image)
-{
-    return GL_GetnConvolutionFilter(target, format, type, bufSize, image);
-}
-
-void GL_APIENTRY glGetnHistogram(GLenum target,
-                                 GLboolean reset,
-                                 GLenum format,
-                                 GLenum type,
-                                 GLsizei bufSize,
-                                 void *values)
-{
-    return GL_GetnHistogram(target, reset, format, type, bufSize, values);
-}
-
-void GL_APIENTRY glGetnMapdv(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v)
-{
-    return GL_GetnMapdv(target, query, bufSize, v);
-}
-
-void GL_APIENTRY glGetnMapfv(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v)
-{
-    return GL_GetnMapfv(target, query, bufSize, v);
-}
-
-void GL_APIENTRY glGetnMapiv(GLenum target, GLenum query, GLsizei bufSize, GLint *v)
-{
-    return GL_GetnMapiv(target, query, bufSize, v);
-}
-
-void GL_APIENTRY glGetnMinmax(GLenum target,
-                              GLboolean reset,
-                              GLenum format,
-                              GLenum type,
-                              GLsizei bufSize,
-                              void *values)
-{
-    return GL_GetnMinmax(target, reset, format, type, bufSize, values);
-}
-
-void GL_APIENTRY glGetnPixelMapfv(GLenum map, GLsizei bufSize, GLfloat *values)
-{
-    return GL_GetnPixelMapfv(map, bufSize, values);
-}
-
-void GL_APIENTRY glGetnPixelMapuiv(GLenum map, GLsizei bufSize, GLuint *values)
-{
-    return GL_GetnPixelMapuiv(map, bufSize, values);
-}
-
-void GL_APIENTRY glGetnPixelMapusv(GLenum map, GLsizei bufSize, GLushort *values)
-{
-    return GL_GetnPixelMapusv(map, bufSize, values);
-}
-
-void GL_APIENTRY glGetnPolygonStipple(GLsizei bufSize, GLubyte *pattern)
-{
-    return GL_GetnPolygonStipple(bufSize, pattern);
-}
-
-void GL_APIENTRY glGetnSeparableFilter(GLenum target,
-                                       GLenum format,
-                                       GLenum type,
-                                       GLsizei rowBufSize,
-                                       void *row,
-                                       GLsizei columnBufSize,
-                                       void *column,
-                                       void *span)
-{
-    return GL_GetnSeparableFilter(target, format, type, rowBufSize, row, columnBufSize, column,
-                                  span);
-}
-
-void GL_APIENTRY glGetnTexImage(GLenum target,
-                                GLint level,
-                                GLenum format,
-                                GLenum type,
-                                GLsizei bufSize,
-                                void *pixels)
-{
-    return GL_GetnTexImage(target, level, format, type, bufSize, pixels);
-}
-
-void GL_APIENTRY glGetnUniformdv(GLuint program, GLint location, GLsizei bufSize, GLdouble *params)
-{
-    return GL_GetnUniformdv(program, location, bufSize, params);
-}
-
-void GL_APIENTRY glInvalidateNamedFramebufferData(GLuint framebuffer,
-                                                  GLsizei numAttachments,
-                                                  const GLenum *attachments)
-{
-    return GL_InvalidateNamedFramebufferData(framebuffer, numAttachments, attachments);
-}
-
-void GL_APIENTRY glInvalidateNamedFramebufferSubData(GLuint framebuffer,
-                                                     GLsizei numAttachments,
-                                                     const GLenum *attachments,
+void GL_APIENTRY glReadPixelsRobustANGLEContextANGLE(GLeglContext ctx,
                                                      GLint x,
                                                      GLint y,
                                                      GLsizei width,
-                                                     GLsizei height)
+                                                     GLsizei height,
+                                                     GLenum format,
+                                                     GLenum type,
+                                                     GLsizei bufSize,
+                                                     GLsizei *length,
+                                                     GLsizei *columns,
+                                                     GLsizei *rows,
+                                                     void *pixels)
 {
-    return GL_InvalidateNamedFramebufferSubData(framebuffer, numAttachments, attachments, x, y,
-                                                width, height);
+    return GL_ReadPixelsRobustANGLEContextANGLE(ctx, x, y, width, height, format, type, bufSize,
+                                                length, columns, rows, pixels);
 }
 
-void *GL_APIENTRY glMapNamedBuffer(GLuint buffer, GLenum access)
+void GL_APIENTRY glTexImage2DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLint level,
+                                                     GLint internalformat,
+                                                     GLsizei width,
+                                                     GLsizei height,
+                                                     GLint border,
+                                                     GLenum format,
+                                                     GLenum type,
+                                                     GLsizei bufSize,
+                                                     const void *pixels)
 {
-    return GL_MapNamedBuffer(buffer, access);
+    return GL_TexImage2DRobustANGLEContextANGLE(ctx, target, level, internalformat, width, height,
+                                                border, format, type, bufSize, pixels);
 }
 
-void *GL_APIENTRY glMapNamedBufferRange(GLuint buffer,
-                                        GLintptr offset,
-                                        GLsizeiptr length,
-                                        GLbitfield access)
+void GL_APIENTRY glTexParameterfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                         GLenum target,
+                                                         GLenum pname,
+                                                         GLsizei bufSize,
+                                                         const GLfloat *params)
 {
-    return GL_MapNamedBufferRange(buffer, offset, length, access);
+    return GL_TexParameterfvRobustANGLEContextANGLE(ctx, target, pname, bufSize, params);
 }
 
-void GL_APIENTRY glNamedBufferData(GLuint buffer, GLsizeiptr size, const void *data, GLenum usage)
+void GL_APIENTRY glTexParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                         GLenum target,
+                                                         GLenum pname,
+                                                         GLsizei bufSize,
+                                                         const GLint *params)
 {
-    return GL_NamedBufferData(buffer, size, data, usage);
+    return GL_TexParameterivRobustANGLEContextANGLE(ctx, target, pname, bufSize, params);
 }
 
-void GL_APIENTRY glNamedBufferStorage(GLuint buffer,
-                                      GLsizeiptr size,
-                                      const void *data,
-                                      GLbitfield flags)
+void GL_APIENTRY glTexSubImage2DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLenum target,
+                                                        GLint level,
+                                                        GLint xoffset,
+                                                        GLint yoffset,
+                                                        GLsizei width,
+                                                        GLsizei height,
+                                                        GLenum format,
+                                                        GLenum type,
+                                                        GLsizei bufSize,
+                                                        const void *pixels)
 {
-    return GL_NamedBufferStorage(buffer, size, data, flags);
+    return GL_TexSubImage2DRobustANGLEContextANGLE(ctx, target, level, xoffset, yoffset, width,
+                                                   height, format, type, bufSize, pixels);
 }
 
-void GL_APIENTRY glNamedBufferSubData(GLuint buffer,
-                                      GLintptr offset,
-                                      GLsizeiptr size,
-                                      const void *data)
+void GL_APIENTRY glTexImage3DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLint level,
+                                                     GLint internalformat,
+                                                     GLsizei width,
+                                                     GLsizei height,
+                                                     GLsizei depth,
+                                                     GLint border,
+                                                     GLenum format,
+                                                     GLenum type,
+                                                     GLsizei bufSize,
+                                                     const void *pixels)
 {
-    return GL_NamedBufferSubData(buffer, offset, size, data);
+    return GL_TexImage3DRobustANGLEContextANGLE(ctx, target, level, internalformat, width, height,
+                                                depth, border, format, type, bufSize, pixels);
 }
 
-void GL_APIENTRY glNamedFramebufferDrawBuffer(GLuint framebuffer, GLenum buf)
+void GL_APIENTRY glTexSubImage3DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLenum target,
+                                                        GLint level,
+                                                        GLint xoffset,
+                                                        GLint yoffset,
+                                                        GLint zoffset,
+                                                        GLsizei width,
+                                                        GLsizei height,
+                                                        GLsizei depth,
+                                                        GLenum format,
+                                                        GLenum type,
+                                                        GLsizei bufSize,
+                                                        const void *pixels)
 {
-    return GL_NamedFramebufferDrawBuffer(framebuffer, buf);
+    return GL_TexSubImage3DRobustANGLEContextANGLE(ctx, target, level, xoffset, yoffset, zoffset,
+                                                   width, height, depth, format, type, bufSize,
+                                                   pixels);
 }
 
-void GL_APIENTRY glNamedFramebufferDrawBuffers(GLuint framebuffer, GLsizei n, const GLenum *bufs)
+void GL_APIENTRY glCompressedTexImage2DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                               GLenum target,
+                                                               GLint level,
+                                                               GLenum internalformat,
+                                                               GLsizei width,
+                                                               GLsizei height,
+                                                               GLint border,
+                                                               GLsizei imageSize,
+                                                               GLsizei dataSize,
+                                                               const GLvoid *data)
 {
-    return GL_NamedFramebufferDrawBuffers(framebuffer, n, bufs);
+    return GL_CompressedTexImage2DRobustANGLEContextANGLE(
+        ctx, target, level, internalformat, width, height, border, imageSize, dataSize, data);
 }
 
-void GL_APIENTRY glNamedFramebufferParameteri(GLuint framebuffer, GLenum pname, GLint param)
+void GL_APIENTRY glCompressedTexSubImage2DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                  GLenum target,
+                                                                  GLint level,
+                                                                  GLsizei xoffset,
+                                                                  GLsizei yoffset,
+                                                                  GLsizei width,
+                                                                  GLsizei height,
+                                                                  GLenum format,
+                                                                  GLsizei imageSize,
+                                                                  GLsizei dataSize,
+                                                                  const GLvoid *data)
 {
-    return GL_NamedFramebufferParameteri(framebuffer, pname, param);
+    return GL_CompressedTexSubImage2DRobustANGLEContextANGLE(
+        ctx, target, level, xoffset, yoffset, width, height, format, imageSize, dataSize, data);
 }
 
-void GL_APIENTRY glNamedFramebufferReadBuffer(GLuint framebuffer, GLenum src)
+void GL_APIENTRY glCompressedTexImage3DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                               GLenum target,
+                                                               GLint level,
+                                                               GLenum internalformat,
+                                                               GLsizei width,
+                                                               GLsizei height,
+                                                               GLsizei depth,
+                                                               GLint border,
+                                                               GLsizei imageSize,
+                                                               GLsizei dataSize,
+                                                               const GLvoid *data)
 {
-    return GL_NamedFramebufferReadBuffer(framebuffer, src);
+    return GL_CompressedTexImage3DRobustANGLEContextANGLE(ctx, target, level, internalformat, width,
+                                                          height, depth, border, imageSize,
+                                                          dataSize, data);
 }
 
-void GL_APIENTRY glNamedFramebufferRenderbuffer(GLuint framebuffer,
-                                                GLenum attachment,
-                                                GLenum renderbuffertarget,
-                                                GLuint renderbuffer)
+void GL_APIENTRY glCompressedTexSubImage3DRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                  GLenum target,
+                                                                  GLint level,
+                                                                  GLint xoffset,
+                                                                  GLint yoffset,
+                                                                  GLint zoffset,
+                                                                  GLsizei width,
+                                                                  GLsizei height,
+                                                                  GLsizei depth,
+                                                                  GLenum format,
+                                                                  GLsizei imageSize,
+                                                                  GLsizei dataSize,
+                                                                  const GLvoid *data)
 {
-    return GL_NamedFramebufferRenderbuffer(framebuffer, attachment, renderbuffertarget,
-                                           renderbuffer);
+    return GL_CompressedTexSubImage3DRobustANGLEContextANGLE(ctx, target, level, xoffset, yoffset,
+                                                             zoffset, width, height, depth, format,
+                                                             imageSize, dataSize, data);
 }
 
-void GL_APIENTRY glNamedFramebufferTexture(GLuint framebuffer,
-                                           GLenum attachment,
-                                           GLuint texture,
-                                           GLint level)
+void GL_APIENTRY glGetQueryivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                     GLenum target,
+                                                     GLenum pname,
+                                                     GLsizei bufSize,
+                                                     GLsizei *length,
+                                                     GLint *params)
 {
-    return GL_NamedFramebufferTexture(framebuffer, attachment, texture, level);
+    return GL_GetQueryivRobustANGLEContextANGLE(ctx, target, pname, bufSize, length, params);
 }
 
-void GL_APIENTRY glNamedFramebufferTextureLayer(GLuint framebuffer,
-                                                GLenum attachment,
-                                                GLuint texture,
-                                                GLint level,
-                                                GLint layer)
+void GL_APIENTRY glGetQueryObjectuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                            GLuint id,
+                                                            GLenum pname,
+                                                            GLsizei bufSize,
+                                                            GLsizei *length,
+                                                            GLuint *params)
 {
-    return GL_NamedFramebufferTextureLayer(framebuffer, attachment, texture, level, layer);
+    return GL_GetQueryObjectuivRobustANGLEContextANGLE(ctx, id, pname, bufSize, length, params);
 }
 
-void GL_APIENTRY glNamedRenderbufferStorage(GLuint renderbuffer,
-                                            GLenum internalformat,
-                                            GLsizei width,
-                                            GLsizei height)
+void GL_APIENTRY glGetBufferPointervRobustANGLEContextANGLE(GLeglContext ctx,
+                                                            GLenum target,
+                                                            GLenum pname,
+                                                            GLsizei bufSize,
+                                                            GLsizei *length,
+                                                            void **params)
 {
-    return GL_NamedRenderbufferStorage(renderbuffer, internalformat, width, height);
+    return GL_GetBufferPointervRobustANGLEContextANGLE(ctx, target, pname, bufSize, length, params);
 }
 
-void GL_APIENTRY glNamedRenderbufferStorageMultisample(GLuint renderbuffer,
-                                                       GLsizei samples,
-                                                       GLenum internalformat,
+void GL_APIENTRY glGetIntegeri_vRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLenum target,
+                                                        GLuint index,
+                                                        GLsizei bufSize,
+                                                        GLsizei *length,
+                                                        GLint *data)
+{
+    return GL_GetIntegeri_vRobustANGLEContextANGLE(ctx, target, index, bufSize, length, data);
+}
+
+void GL_APIENTRY glGetInternalformativRobustANGLEContextANGLE(GLeglContext ctx,
+                                                              GLenum target,
+                                                              GLenum internalformat,
+                                                              GLenum pname,
+                                                              GLsizei bufSize,
+                                                              GLsizei *length,
+                                                              GLint *params)
+{
+    return GL_GetInternalformativRobustANGLEContextANGLE(ctx, target, internalformat, pname,
+                                                         bufSize, length, params);
+}
+
+void GL_APIENTRY glGetVertexAttribIivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                             GLuint index,
+                                                             GLenum pname,
+                                                             GLsizei bufSize,
+                                                             GLsizei *length,
+                                                             GLint *params)
+{
+    return GL_GetVertexAttribIivRobustANGLEContextANGLE(ctx, index, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetVertexAttribIuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                              GLuint index,
+                                                              GLenum pname,
+                                                              GLsizei bufSize,
+                                                              GLsizei *length,
+                                                              GLuint *params)
+{
+    return GL_GetVertexAttribIuivRobustANGLEContextANGLE(ctx, index, pname, bufSize, length,
+                                                         params);
+}
+
+void GL_APIENTRY glGetUniformuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLuint program,
+                                                        GLint location,
+                                                        GLsizei bufSize,
+                                                        GLsizei *length,
+                                                        GLuint *params)
+{
+    return GL_GetUniformuivRobustANGLEContextANGLE(ctx, program, location, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetActiveUniformBlockivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                  GLuint program,
+                                                                  GLuint uniformBlockIndex,
+                                                                  GLenum pname,
+                                                                  GLsizei bufSize,
+                                                                  GLsizei *length,
+                                                                  GLint *params)
+{
+    return GL_GetActiveUniformBlockivRobustANGLEContextANGLE(ctx, program, uniformBlockIndex, pname,
+                                                             bufSize, length, params);
+}
+
+void GL_APIENTRY glGetInteger64vRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLenum pname,
+                                                        GLsizei bufSize,
+                                                        GLsizei *length,
+                                                        GLint64 *data)
+{
+    return GL_GetInteger64vRobustANGLEContextANGLE(ctx, pname, bufSize, length, data);
+}
+
+void GL_APIENTRY glGetInteger64i_vRobustANGLEContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLuint index,
+                                                          GLsizei bufSize,
+                                                          GLsizei *length,
+                                                          GLint64 *data)
+{
+    return GL_GetInteger64i_vRobustANGLEContextANGLE(ctx, target, index, bufSize, length, data);
+}
+
+void GL_APIENTRY glGetBufferParameteri64vRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                 GLenum target,
+                                                                 GLenum pname,
+                                                                 GLsizei bufSize,
+                                                                 GLsizei *length,
+                                                                 GLint64 *params)
+{
+    return GL_GetBufferParameteri64vRobustANGLEContextANGLE(ctx, target, pname, bufSize, length,
+                                                            params);
+}
+
+void GL_APIENTRY glSamplerParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                             GLuint sampler,
+                                                             GLuint pname,
+                                                             GLsizei bufSize,
+                                                             const GLint *param)
+{
+    return GL_SamplerParameterivRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, param);
+}
+
+void GL_APIENTRY glSamplerParameterfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                             GLuint sampler,
+                                                             GLenum pname,
+                                                             GLsizei bufSize,
+                                                             const GLfloat *param)
+{
+    return GL_SamplerParameterfvRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, param);
+}
+
+void GL_APIENTRY glGetSamplerParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                GLuint sampler,
+                                                                GLenum pname,
+                                                                GLsizei bufSize,
+                                                                GLsizei *length,
+                                                                GLint *params)
+{
+    return GL_GetSamplerParameterivRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, length,
+                                                           params);
+}
+
+void GL_APIENTRY glGetSamplerParameterfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                GLuint sampler,
+                                                                GLenum pname,
+                                                                GLsizei bufSize,
+                                                                GLsizei *length,
+                                                                GLfloat *params)
+{
+    return GL_GetSamplerParameterfvRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, length,
+                                                           params);
+}
+
+void GL_APIENTRY glGetFramebufferParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                    GLenum target,
+                                                                    GLenum pname,
+                                                                    GLsizei bufSize,
+                                                                    GLsizei *length,
+                                                                    GLint *params)
+{
+    return GL_GetFramebufferParameterivRobustANGLEContextANGLE(ctx, target, pname, bufSize, length,
+                                                               params);
+}
+
+void GL_APIENTRY glGetProgramInterfaceivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                GLuint program,
+                                                                GLenum programInterface,
+                                                                GLenum pname,
+                                                                GLsizei bufSize,
+                                                                GLsizei *length,
+                                                                GLint *params)
+{
+    return GL_GetProgramInterfaceivRobustANGLEContextANGLE(ctx, program, programInterface, pname,
+                                                           bufSize, length, params);
+}
+
+void GL_APIENTRY glGetBooleani_vRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLenum target,
+                                                        GLuint index,
+                                                        GLsizei bufSize,
+                                                        GLsizei *length,
+                                                        GLboolean *data)
+{
+    return GL_GetBooleani_vRobustANGLEContextANGLE(ctx, target, index, bufSize, length, data);
+}
+
+void GL_APIENTRY glGetMultisamplefvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                           GLenum pname,
+                                                           GLuint index,
+                                                           GLsizei bufSize,
+                                                           GLsizei *length,
+                                                           GLfloat *val)
+{
+    return GL_GetMultisamplefvRobustANGLEContextANGLE(ctx, pname, index, bufSize, length, val);
+}
+
+void GL_APIENTRY glGetTexLevelParameterivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                 GLenum target,
+                                                                 GLint level,
+                                                                 GLenum pname,
+                                                                 GLsizei bufSize,
+                                                                 GLsizei *length,
+                                                                 GLint *params)
+{
+    return GL_GetTexLevelParameterivRobustANGLEContextANGLE(ctx, target, level, pname, bufSize,
+                                                            length, params);
+}
+
+void GL_APIENTRY glGetTexLevelParameterfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                 GLenum target,
+                                                                 GLint level,
+                                                                 GLenum pname,
+                                                                 GLsizei bufSize,
+                                                                 GLsizei *length,
+                                                                 GLfloat *params)
+{
+    return GL_GetTexLevelParameterfvRobustANGLEContextANGLE(ctx, target, level, pname, bufSize,
+                                                            length, params);
+}
+
+void GL_APIENTRY glGetPointervRobustANGLERobustANGLEContextANGLE(GLeglContext ctx,
+                                                                 GLenum pname,
+                                                                 GLsizei bufSize,
+                                                                 GLsizei *length,
+                                                                 void **params)
+{
+    return GL_GetPointervRobustANGLERobustANGLEContextANGLE(ctx, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glReadnPixelsRobustANGLEContextANGLE(GLeglContext ctx,
+                                                      GLint x,
+                                                      GLint y,
+                                                      GLsizei width,
+                                                      GLsizei height,
+                                                      GLenum format,
+                                                      GLenum type,
+                                                      GLsizei bufSize,
+                                                      GLsizei *length,
+                                                      GLsizei *columns,
+                                                      GLsizei *rows,
+                                                      void *data)
+{
+    return GL_ReadnPixelsRobustANGLEContextANGLE(ctx, x, y, width, height, format, type, bufSize,
+                                                 length, columns, rows, data);
+}
+
+void GL_APIENTRY glGetnUniformfvRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLuint program,
+                                                        GLint location,
+                                                        GLsizei bufSize,
+                                                        GLsizei *length,
+                                                        GLfloat *params)
+{
+    return GL_GetnUniformfvRobustANGLEContextANGLE(ctx, program, location, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetnUniformivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                        GLuint program,
+                                                        GLint location,
+                                                        GLsizei bufSize,
+                                                        GLsizei *length,
+                                                        GLint *params)
+{
+    return GL_GetnUniformivRobustANGLEContextANGLE(ctx, program, location, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetnUniformuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                         GLuint program,
+                                                         GLint location,
+                                                         GLsizei bufSize,
+                                                         GLsizei *length,
+                                                         GLuint *params)
+{
+    return GL_GetnUniformuivRobustANGLEContextANGLE(ctx, program, location, bufSize, length,
+                                                    params);
+}
+
+void GL_APIENTRY glTexParameterIivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLenum pname,
+                                                          GLsizei bufSize,
+                                                          const GLint *params)
+{
+    return GL_TexParameterIivRobustANGLEContextANGLE(ctx, target, pname, bufSize, params);
+}
+
+void GL_APIENTRY glTexParameterIuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                           GLenum target,
+                                                           GLenum pname,
+                                                           GLsizei bufSize,
+                                                           const GLuint *params)
+{
+    return GL_TexParameterIuivRobustANGLEContextANGLE(ctx, target, pname, bufSize, params);
+}
+
+void GL_APIENTRY glGetTexParameterIivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                             GLenum target,
+                                                             GLenum pname,
+                                                             GLsizei bufSize,
+                                                             GLsizei *length,
+                                                             GLint *params)
+{
+    return GL_GetTexParameterIivRobustANGLEContextANGLE(ctx, target, pname, bufSize, length,
+                                                        params);
+}
+
+void GL_APIENTRY glGetTexParameterIuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                              GLenum target,
+                                                              GLenum pname,
+                                                              GLsizei bufSize,
+                                                              GLsizei *length,
+                                                              GLuint *params)
+{
+    return GL_GetTexParameterIuivRobustANGLEContextANGLE(ctx, target, pname, bufSize, length,
+                                                         params);
+}
+
+void GL_APIENTRY glSamplerParameterIivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                              GLuint sampler,
+                                                              GLenum pname,
+                                                              GLsizei bufSize,
+                                                              const GLint *param)
+{
+    return GL_SamplerParameterIivRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, param);
+}
+
+void GL_APIENTRY glSamplerParameterIuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                               GLuint sampler,
+                                                               GLenum pname,
+                                                               GLsizei bufSize,
+                                                               const GLuint *param)
+{
+    return GL_SamplerParameterIuivRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, param);
+}
+
+void GL_APIENTRY glGetSamplerParameterIivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                 GLuint sampler,
+                                                                 GLenum pname,
+                                                                 GLsizei bufSize,
+                                                                 GLsizei *length,
+                                                                 GLint *params)
+{
+    return GL_GetSamplerParameterIivRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, length,
+                                                            params);
+}
+
+void GL_APIENTRY glGetSamplerParameterIuivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                                  GLuint sampler,
+                                                                  GLenum pname,
+                                                                  GLsizei bufSize,
+                                                                  GLsizei *length,
+                                                                  GLuint *params)
+{
+    return GL_GetSamplerParameterIuivRobustANGLEContextANGLE(ctx, sampler, pname, bufSize, length,
+                                                             params);
+}
+
+void GL_APIENTRY glGetQueryObjectivRobustANGLEContextANGLE(GLeglContext ctx,
+                                                           GLuint id,
+                                                           GLenum pname,
+                                                           GLsizei bufSize,
+                                                           GLsizei *length,
+                                                           GLint *params)
+{
+    return GL_GetQueryObjectivRobustANGLEContextANGLE(ctx, id, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetQueryObjecti64vRobustANGLEContextANGLE(GLeglContext ctx,
+                                                             GLuint id,
+                                                             GLenum pname,
+                                                             GLsizei bufSize,
+                                                             GLsizei *length,
+                                                             GLint64 *params)
+{
+    return GL_GetQueryObjecti64vRobustANGLEContextANGLE(ctx, id, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glGetQueryObjectui64vRobustANGLEContextANGLE(GLeglContext ctx,
+                                                              GLuint id,
+                                                              GLenum pname,
+                                                              GLsizei bufSize,
+                                                              GLsizei *length,
+                                                              GLuint64 *params)
+{
+    return GL_GetQueryObjectui64vRobustANGLEContextANGLE(ctx, id, pname, bufSize, length, params);
+}
+
+void GL_APIENTRY glCopyTexture3DANGLEContextANGLE(GLeglContext ctx,
+                                                  GLuint sourceId,
+                                                  GLint sourceLevel,
+                                                  GLenum destTarget,
+                                                  GLuint destId,
+                                                  GLint destLevel,
+                                                  GLint internalFormat,
+                                                  GLenum destType,
+                                                  GLboolean unpackFlipY,
+                                                  GLboolean unpackPremultiplyAlpha,
+                                                  GLboolean unpackUnmultiplyAlpha)
+{
+    return GL_CopyTexture3DANGLEContextANGLE(ctx, sourceId, sourceLevel, destTarget, destId,
+                                             destLevel, internalFormat, destType, unpackFlipY,
+                                             unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
+}
+
+void GL_APIENTRY glCopySubTexture3DANGLEContextANGLE(GLeglContext ctx,
+                                                     GLuint sourceId,
+                                                     GLint sourceLevel,
+                                                     GLenum destTarget,
+                                                     GLuint destId,
+                                                     GLint destLevel,
+                                                     GLint xoffset,
+                                                     GLint yoffset,
+                                                     GLint zoffset,
+                                                     GLint x,
+                                                     GLint y,
+                                                     GLint z,
+                                                     GLint width,
+                                                     GLint height,
+                                                     GLint depth,
+                                                     GLboolean unpackFlipY,
+                                                     GLboolean unpackPremultiplyAlpha,
+                                                     GLboolean unpackUnmultiplyAlpha)
+{
+    return GL_CopySubTexture3DANGLEContextANGLE(
+        ctx, sourceId, sourceLevel, destTarget, destId, destLevel, xoffset, yoffset, zoffset, x, y,
+        z, width, height, depth, unpackFlipY, unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
+}
+
+void GL_APIENTRY glTexStorage2DMultisampleANGLEContextANGLE(GLeglContext ctx,
+                                                            GLenum target,
+                                                            GLsizei samples,
+                                                            GLenum internalformat,
+                                                            GLsizei width,
+                                                            GLsizei height,
+                                                            GLboolean fixedsamplelocations)
+{
+    return GL_TexStorage2DMultisampleANGLEContextANGLE(ctx, target, samples, internalformat, width,
+                                                       height, fixedsamplelocations);
+}
+
+void GL_APIENTRY glGetTexLevelParameterivANGLEContextANGLE(GLeglContext ctx,
+                                                           GLenum target,
+                                                           GLint level,
+                                                           GLenum pname,
+                                                           GLint *params)
+{
+    return GL_GetTexLevelParameterivANGLEContextANGLE(ctx, target, level, pname, params);
+}
+
+void GL_APIENTRY glGetTexLevelParameterfvANGLEContextANGLE(GLeglContext ctx,
+                                                           GLenum target,
+                                                           GLint level,
+                                                           GLenum pname,
+                                                           GLfloat *params)
+{
+    return GL_GetTexLevelParameterfvANGLEContextANGLE(ctx, target, level, pname, params);
+}
+
+void GL_APIENTRY glMultiDrawArraysANGLEContextANGLE(GLeglContext ctx,
+                                                    GLenum mode,
+                                                    const GLint *firsts,
+                                                    const GLsizei *counts,
+                                                    GLsizei drawcount)
+{
+    return GL_MultiDrawArraysANGLEContextANGLE(ctx, mode, firsts, counts, drawcount);
+}
+
+void GL_APIENTRY glMultiDrawArraysInstancedANGLEContextANGLE(GLeglContext ctx,
+                                                             GLenum mode,
+                                                             const GLint *firsts,
+                                                             const GLsizei *counts,
+                                                             const GLsizei *instanceCounts,
+                                                             GLsizei drawcount)
+{
+    return GL_MultiDrawArraysInstancedANGLEContextANGLE(ctx, mode, firsts, counts, instanceCounts,
+                                                        drawcount);
+}
+
+void GL_APIENTRY glMultiDrawElementsANGLEContextANGLE(GLeglContext ctx,
+                                                      GLenum mode,
+                                                      const GLsizei *counts,
+                                                      GLenum type,
+                                                      const GLvoid *const *indices,
+                                                      GLsizei drawcount)
+{
+    return GL_MultiDrawElementsANGLEContextANGLE(ctx, mode, counts, type, indices, drawcount);
+}
+
+void GL_APIENTRY glMultiDrawElementsInstancedANGLEContextANGLE(GLeglContext ctx,
+                                                               GLenum mode,
+                                                               const GLsizei *counts,
+                                                               GLenum type,
+                                                               const GLvoid *const *indices,
+                                                               const GLsizei *instanceCounts,
+                                                               GLsizei drawcount)
+{
+    return GL_MultiDrawElementsInstancedANGLEContextANGLE(ctx, mode, counts, type, indices,
+                                                          instanceCounts, drawcount);
+}
+
+void GL_APIENTRY glDrawArraysInstancedBaseInstanceANGLEContextANGLE(GLeglContext ctx,
+                                                                    GLenum mode,
+                                                                    GLint first,
+                                                                    GLsizei count,
+                                                                    GLsizei instanceCount,
+                                                                    GLuint baseInstance)
+{
+    return GL_DrawArraysInstancedBaseInstanceANGLEContextANGLE(ctx, mode, first, count,
+                                                               instanceCount, baseInstance);
+}
+
+void GL_APIENTRY
+glDrawElementsInstancedBaseVertexBaseInstanceANGLEContextANGLE(GLeglContext ctx,
+                                                               GLenum mode,
+                                                               GLsizei count,
+                                                               GLenum type,
+                                                               const GLvoid *indices,
+                                                               GLsizei instanceCounts,
+                                                               GLint baseVertex,
+                                                               GLuint baseInstance)
+{
+    return GL_DrawElementsInstancedBaseVertexBaseInstanceANGLEContextANGLE(
+        ctx, mode, count, type, indices, instanceCounts, baseVertex, baseInstance);
+}
+
+void GL_APIENTRY
+glMultiDrawArraysInstancedBaseInstanceANGLEContextANGLE(GLeglContext ctx,
+                                                        GLenum mode,
+                                                        const GLint *firsts,
+                                                        const GLsizei *counts,
+                                                        const GLsizei *instanceCounts,
+                                                        const GLuint *baseInstances,
+                                                        GLsizei drawcount)
+{
+    return GL_MultiDrawArraysInstancedBaseInstanceANGLEContextANGLE(
+        ctx, mode, firsts, counts, instanceCounts, baseInstances, drawcount);
+}
+
+void GL_APIENTRY
+glMultiDrawElementsInstancedBaseVertexBaseInstanceANGLEContextANGLE(GLeglContext ctx,
+                                                                    GLenum mode,
+                                                                    const GLsizei *counts,
+                                                                    GLenum type,
+                                                                    const GLvoid *const *indices,
+                                                                    const GLsizei *instanceCounts,
+                                                                    const GLint *baseVertices,
+                                                                    const GLuint *baseInstances,
+                                                                    GLsizei drawcount)
+{
+    return GL_MultiDrawElementsInstancedBaseVertexBaseInstanceANGLEContextANGLE(
+        ctx, mode, counts, type, indices, instanceCounts, baseVertices, baseInstances, drawcount);
+}
+
+void GL_APIENTRY glGetMultisamplefvANGLEContextANGLE(GLeglContext ctx,
+                                                     GLenum pname,
+                                                     GLuint index,
+                                                     GLfloat *val)
+{
+    return GL_GetMultisamplefvANGLEContextANGLE(ctx, pname, index, val);
+}
+
+void GL_APIENTRY glSampleMaskiANGLEContextANGLE(GLeglContext ctx,
+                                                GLuint maskNumber,
+                                                GLbitfield mask)
+{
+    return GL_SampleMaskiANGLEContextANGLE(ctx, maskNumber, mask);
+}
+
+void GL_APIENTRY glProvokingVertexANGLEContextANGLE(GLeglContext ctx, GLenum mode)
+{
+    return GL_ProvokingVertexANGLEContextANGLE(ctx, mode);
+}
+
+void GL_APIENTRY glLoseContextCHROMIUMContextANGLE(GLeglContext ctx, GLenum current, GLenum other)
+{
+    return GL_LoseContextCHROMIUMContextANGLE(ctx, current, other);
+}
+
+void GL_APIENTRY glTexImage2DExternalANGLEContextANGLE(GLeglContext ctx,
+                                                       GLenum target,
+                                                       GLint level,
+                                                       GLint internalformat,
                                                        GLsizei width,
-                                                       GLsizei height)
+                                                       GLsizei height,
+                                                       GLint border,
+                                                       GLenum format,
+                                                       GLenum type)
 {
-    return GL_NamedRenderbufferStorageMultisample(renderbuffer, samples, internalformat, width,
-                                                  height);
+    return GL_TexImage2DExternalANGLEContextANGLE(ctx, target, level, internalformat, width, height,
+                                                  border, format, type);
 }
 
-void GL_APIENTRY glTextureBarrier()
+void GL_APIENTRY glInvalidateTextureANGLEContextANGLE(GLeglContext ctx, GLenum target)
 {
-    return GL_TextureBarrier();
+    return GL_InvalidateTextureANGLEContextANGLE(ctx, target);
 }
 
-void GL_APIENTRY glTextureBuffer(GLuint texture, GLenum internalformat, GLuint buffer)
+void GL_APIENTRY glGetTexImageANGLEContextANGLE(GLeglContext ctx,
+                                                GLenum target,
+                                                GLint level,
+                                                GLenum format,
+                                                GLenum type,
+                                                void *pixels)
 {
-    return GL_TextureBuffer(texture, internalformat, buffer);
+    return GL_GetTexImageANGLEContextANGLE(ctx, target, level, format, type, pixels);
 }
 
-void GL_APIENTRY glTextureBufferRange(GLuint texture,
-                                      GLenum internalformat,
-                                      GLuint buffer,
-                                      GLintptr offset,
-                                      GLsizeiptr size)
+void GL_APIENTRY glGetRenderbufferImageANGLEContextANGLE(GLeglContext ctx,
+                                                         GLenum target,
+                                                         GLenum format,
+                                                         GLenum type,
+                                                         void *pixels)
 {
-    return GL_TextureBufferRange(texture, internalformat, buffer, offset, size);
+    return GL_GetRenderbufferImageANGLEContextANGLE(ctx, target, format, type, pixels);
 }
 
-void GL_APIENTRY glTextureParameterIiv(GLuint texture, GLenum pname, const GLint *params)
+void GL_APIENTRY glTexStorageMemFlags2DANGLEContextANGLE(GLeglContext ctx,
+                                                         GLenum target,
+                                                         GLsizei levels,
+                                                         GLenum internalFormat,
+                                                         GLsizei width,
+                                                         GLsizei height,
+                                                         GLuint memory,
+                                                         GLuint64 offset,
+                                                         GLbitfield createFlags,
+                                                         GLbitfield usageFlags)
 {
-    return GL_TextureParameterIiv(texture, pname, params);
+    return GL_TexStorageMemFlags2DANGLEContextANGLE(ctx, target, levels, internalFormat, width,
+                                                    height, memory, offset, createFlags,
+                                                    usageFlags);
 }
 
-void GL_APIENTRY glTextureParameterIuiv(GLuint texture, GLenum pname, const GLuint *params)
+void GL_APIENTRY glTexStorageMemFlags2DMultisampleANGLEContextANGLE(GLeglContext ctx,
+                                                                    GLenum target,
+                                                                    GLsizei samples,
+                                                                    GLenum internalFormat,
+                                                                    GLsizei width,
+                                                                    GLsizei height,
+                                                                    GLboolean fixedSampleLocations,
+                                                                    GLuint memory,
+                                                                    GLuint64 offset,
+                                                                    GLbitfield createFlags,
+                                                                    GLbitfield usageFlags)
 {
-    return GL_TextureParameterIuiv(texture, pname, params);
+    return GL_TexStorageMemFlags2DMultisampleANGLEContextANGLE(
+        ctx, target, samples, internalFormat, width, height, fixedSampleLocations, memory, offset,
+        createFlags, usageFlags);
 }
 
-void GL_APIENTRY glTextureParameterf(GLuint texture, GLenum pname, GLfloat param)
+void GL_APIENTRY glTexStorageMemFlags3DANGLEContextANGLE(GLeglContext ctx,
+                                                         GLenum target,
+                                                         GLsizei levels,
+                                                         GLenum internalFormat,
+                                                         GLsizei width,
+                                                         GLsizei height,
+                                                         GLsizei depth,
+                                                         GLuint memory,
+                                                         GLuint64 offset,
+                                                         GLbitfield createFlags,
+                                                         GLbitfield usageFlags)
 {
-    return GL_TextureParameterf(texture, pname, param);
+    return GL_TexStorageMemFlags3DANGLEContextANGLE(ctx, target, levels, internalFormat, width,
+                                                    height, depth, memory, offset, createFlags,
+                                                    usageFlags);
 }
 
-void GL_APIENTRY glTextureParameterfv(GLuint texture, GLenum pname, const GLfloat *param)
+void GL_APIENTRY glTexStorageMemFlags3DMultisampleANGLEContextANGLE(GLeglContext ctx,
+                                                                    GLenum target,
+                                                                    GLsizei samples,
+                                                                    GLenum internalFormat,
+                                                                    GLsizei width,
+                                                                    GLsizei height,
+                                                                    GLsizei depth,
+                                                                    GLboolean fixedSampleLocations,
+                                                                    GLuint memory,
+                                                                    GLuint64 offset,
+                                                                    GLbitfield createFlags,
+                                                                    GLbitfield usageFlags)
 {
-    return GL_TextureParameterfv(texture, pname, param);
+    return GL_TexStorageMemFlags3DMultisampleANGLEContextANGLE(
+        ctx, target, samples, internalFormat, width, height, depth, fixedSampleLocations, memory,
+        offset, createFlags, usageFlags);
 }
 
-void GL_APIENTRY glTextureParameteri(GLuint texture, GLenum pname, GLint param)
+void GL_APIENTRY glImportMemoryZirconHandleANGLEContextANGLE(GLeglContext ctx,
+                                                             GLuint memory,
+                                                             GLuint64 size,
+                                                             GLenum handleType,
+                                                             GLuint handle)
 {
-    return GL_TextureParameteri(texture, pname, param);
+    return GL_ImportMemoryZirconHandleANGLEContextANGLE(ctx, memory, size, handleType, handle);
 }
 
-void GL_APIENTRY glTextureParameteriv(GLuint texture, GLenum pname, const GLint *param)
+void GL_APIENTRY glImportSemaphoreZirconHandleANGLEContextANGLE(GLeglContext ctx,
+                                                                GLuint semaphore,
+                                                                GLenum handleType,
+                                                                GLuint handle)
 {
-    return GL_TextureParameteriv(texture, pname, param);
+    return GL_ImportSemaphoreZirconHandleANGLEContextANGLE(ctx, semaphore, handleType, handle);
 }
 
-void GL_APIENTRY glTextureStorage1D(GLuint texture,
-                                    GLsizei levels,
-                                    GLenum internalformat,
-                                    GLsizei width)
-{
-    return GL_TextureStorage1D(texture, levels, internalformat, width);
-}
-
-void GL_APIENTRY glTextureStorage2D(GLuint texture,
-                                    GLsizei levels,
-                                    GLenum internalformat,
-                                    GLsizei width,
-                                    GLsizei height)
-{
-    return GL_TextureStorage2D(texture, levels, internalformat, width, height);
-}
-
-void GL_APIENTRY glTextureStorage2DMultisample(GLuint texture,
-                                               GLsizei samples,
-                                               GLenum internalformat,
-                                               GLsizei width,
-                                               GLsizei height,
-                                               GLboolean fixedsamplelocations)
-{
-    return GL_TextureStorage2DMultisample(texture, samples, internalformat, width, height,
-                                          fixedsamplelocations);
-}
-
-void GL_APIENTRY glTextureStorage3D(GLuint texture,
-                                    GLsizei levels,
-                                    GLenum internalformat,
-                                    GLsizei width,
-                                    GLsizei height,
-                                    GLsizei depth)
-{
-    return GL_TextureStorage3D(texture, levels, internalformat, width, height, depth);
-}
-
-void GL_APIENTRY glTextureStorage3DMultisample(GLuint texture,
-                                               GLsizei samples,
-                                               GLenum internalformat,
-                                               GLsizei width,
-                                               GLsizei height,
-                                               GLsizei depth,
-                                               GLboolean fixedsamplelocations)
-{
-    return GL_TextureStorage3DMultisample(texture, samples, internalformat, width, height, depth,
-                                          fixedsamplelocations);
-}
-
-void GL_APIENTRY glTextureSubImage1D(GLuint texture,
-                                     GLint level,
-                                     GLint xoffset,
-                                     GLsizei width,
-                                     GLenum format,
-                                     GLenum type,
-                                     const void *pixels)
-{
-    return GL_TextureSubImage1D(texture, level, xoffset, width, format, type, pixels);
-}
-
-void GL_APIENTRY glTextureSubImage2D(GLuint texture,
-                                     GLint level,
-                                     GLint xoffset,
-                                     GLint yoffset,
-                                     GLsizei width,
-                                     GLsizei height,
-                                     GLenum format,
-                                     GLenum type,
-                                     const void *pixels)
-{
-    return GL_TextureSubImage2D(texture, level, xoffset, yoffset, width, height, format, type,
-                                pixels);
-}
-
-void GL_APIENTRY glTextureSubImage3D(GLuint texture,
-                                     GLint level,
-                                     GLint xoffset,
-                                     GLint yoffset,
-                                     GLint zoffset,
-                                     GLsizei width,
-                                     GLsizei height,
-                                     GLsizei depth,
-                                     GLenum format,
-                                     GLenum type,
-                                     const void *pixels)
-{
-    return GL_TextureSubImage3D(texture, level, xoffset, yoffset, zoffset, width, height, depth,
-                                format, type, pixels);
-}
-
-void GL_APIENTRY glTransformFeedbackBufferBase(GLuint xfb, GLuint index, GLuint buffer)
-{
-    return GL_TransformFeedbackBufferBase(xfb, index, buffer);
-}
-
-void GL_APIENTRY glTransformFeedbackBufferRange(GLuint xfb,
-                                                GLuint index,
-                                                GLuint buffer,
-                                                GLintptr offset,
-                                                GLsizeiptr size)
-{
-    return GL_TransformFeedbackBufferRange(xfb, index, buffer, offset, size);
-}
-
-GLboolean GL_APIENTRY glUnmapNamedBuffer(GLuint buffer)
-{
-    return GL_UnmapNamedBuffer(buffer);
-}
-
-void GL_APIENTRY glVertexArrayAttribBinding(GLuint vaobj, GLuint attribindex, GLuint bindingindex)
-{
-    return GL_VertexArrayAttribBinding(vaobj, attribindex, bindingindex);
-}
-
-void GL_APIENTRY glVertexArrayAttribFormat(GLuint vaobj,
-                                           GLuint attribindex,
-                                           GLint size,
-                                           GLenum type,
-                                           GLboolean normalized,
-                                           GLuint relativeoffset)
-{
-    return GL_VertexArrayAttribFormat(vaobj, attribindex, size, type, normalized, relativeoffset);
-}
-
-void GL_APIENTRY glVertexArrayAttribIFormat(GLuint vaobj,
-                                            GLuint attribindex,
-                                            GLint size,
-                                            GLenum type,
-                                            GLuint relativeoffset)
-{
-    return GL_VertexArrayAttribIFormat(vaobj, attribindex, size, type, relativeoffset);
-}
-
-void GL_APIENTRY glVertexArrayAttribLFormat(GLuint vaobj,
-                                            GLuint attribindex,
-                                            GLint size,
-                                            GLenum type,
-                                            GLuint relativeoffset)
-{
-    return GL_VertexArrayAttribLFormat(vaobj, attribindex, size, type, relativeoffset);
-}
-
-void GL_APIENTRY glVertexArrayBindingDivisor(GLuint vaobj, GLuint bindingindex, GLuint divisor)
-{
-    return GL_VertexArrayBindingDivisor(vaobj, bindingindex, divisor);
-}
-
-void GL_APIENTRY glVertexArrayElementBuffer(GLuint vaobj, GLuint buffer)
-{
-    return GL_VertexArrayElementBuffer(vaobj, buffer);
-}
-
-void GL_APIENTRY glVertexArrayVertexBuffer(GLuint vaobj,
-                                           GLuint bindingindex,
-                                           GLuint buffer,
-                                           GLintptr offset,
-                                           GLsizei stride)
-{
-    return GL_VertexArrayVertexBuffer(vaobj, bindingindex, buffer, offset, stride);
-}
-
-void GL_APIENTRY glVertexArrayVertexBuffers(GLuint vaobj,
-                                            GLuint first,
-                                            GLsizei count,
-                                            const GLuint *buffers,
-                                            const GLintptr *offsets,
-                                            const GLsizei *strides)
-{
-    return GL_VertexArrayVertexBuffers(vaobj, first, count, buffers, offsets, strides);
-}
-
-// GL 4.6
-void GL_APIENTRY glMultiDrawArraysIndirectCount(GLenum mode,
-                                                const void *indirect,
-                                                GLintptr drawcount,
-                                                GLsizei maxdrawcount,
-                                                GLsizei stride)
-{
-    return GL_MultiDrawArraysIndirectCount(mode, indirect, drawcount, maxdrawcount, stride);
-}
-
-void GL_APIENTRY glMultiDrawElementsIndirectCount(GLenum mode,
-                                                  GLenum type,
-                                                  const void *indirect,
-                                                  GLintptr drawcount,
-                                                  GLsizei maxdrawcount,
-                                                  GLsizei stride)
-{
-    return GL_MultiDrawElementsIndirectCount(mode, type, indirect, drawcount, maxdrawcount, stride);
-}
-
-void GL_APIENTRY glPolygonOffsetClamp(GLfloat factor, GLfloat units, GLfloat clamp)
-{
-    return GL_PolygonOffsetClamp(factor, units, clamp);
-}
-
-void GL_APIENTRY glSpecializeShader(GLuint shader,
-                                    const GLchar *pEntryPoint,
-                                    GLuint numSpecializationConstants,
-                                    const GLuint *pConstantIndex,
-                                    const GLuint *pConstantValue)
-{
-    return GL_SpecializeShader(shader, pEntryPoint, numSpecializationConstants, pConstantIndex,
-                               pConstantValue);
-}
-
-#endif  // defined(ANGLE_ENABLE_GL_DESKTOP_FRONTEND)
 }  // extern "C"

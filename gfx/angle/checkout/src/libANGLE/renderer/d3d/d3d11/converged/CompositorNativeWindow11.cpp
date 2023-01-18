@@ -236,7 +236,6 @@ RoHelper::RoHelper()
       mFpRoInitialize(nullptr),
       mFpRoUninitialize(nullptr),
       mWinRtAvailable(false),
-      mWinRtInitialized(false),
       mComBaseModule(nullptr),
       mCoreMessagingModule(nullptr)
 {
@@ -304,16 +303,9 @@ RoHelper::RoHelper()
         return;
     }
 
-    auto result = RoInitialize(RO_INIT_MULTITHREADED);
-
-    if (SUCCEEDED(result) || result == RPC_E_CHANGED_MODE)
+    if (SUCCEEDED(RoInitialize(RO_INIT_MULTITHREADED)))
     {
         mWinRtAvailable = true;
-
-        if (SUCCEEDED(result))
-        {
-            mWinRtInitialized = true;
-        }
     }
 #endif
 }
@@ -321,7 +313,7 @@ RoHelper::RoHelper()
 RoHelper::~RoHelper()
 {
 #ifndef ANGLE_ENABLE_WINDOWS_UWP
-    if (mWinRtInitialized)
+    if (mWinRtAvailable)
     {
         RoUninitialize();
     }

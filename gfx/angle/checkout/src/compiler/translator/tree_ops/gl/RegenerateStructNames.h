@@ -16,13 +16,13 @@ class TIntermBlock;
 class TSymbolTable;
 
 #if defined(ANGLE_ENABLE_GLSL)
-[[nodiscard]] bool RegenerateStructNames(TCompiler *compiler,
-                                         TIntermBlock *root,
-                                         TSymbolTable *symbolTable);
+ANGLE_NO_DISCARD bool RegenerateStructNames(TCompiler *compiler,
+                                            TIntermBlock *root,
+                                            TSymbolTable *symbolTable);
 #else
-[[nodiscard]] ANGLE_INLINE bool RegenerateStructNames(TCompiler *compiler,
-                                                      TIntermBlock *root,
-                                                      TSymbolTable *symbolTable)
+ANGLE_NO_DISCARD ANGLE_INLINE bool RegenerateStructNames(TCompiler *compiler,
+                                                         TIntermBlock *root,
+                                                         TSymbolTable *symbolTable)
 {
     UNREACHABLE();
     return false;

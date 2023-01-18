@@ -22,10 +22,10 @@
 
 namespace gl
 {
+class HasAttachedShaders;
 class InfoLog;
 class ProgramExecutable;
 struct Caps;
-struct LinkingVariables;
 struct ProgramVaryingRef;
 
 using ProgramMergedVaryings = std::vector<ProgramVaryingRef>;
@@ -157,7 +157,7 @@ struct PackedVaryingRegister final
           registerColumn(0)
     {}
 
-    PackedVaryingRegister(const PackedVaryingRegister &)            = default;
+    PackedVaryingRegister(const PackedVaryingRegister &) = default;
     PackedVaryingRegister &operator=(const PackedVaryingRegister &) = default;
 
     bool operator<(const PackedVaryingRegister &other) const
@@ -211,14 +211,14 @@ class VaryingPacking final : angle::NonCopyable
     VaryingPacking();
     ~VaryingPacking();
 
-    [[nodiscard]] bool collectAndPackUserVaryings(InfoLog &infoLog,
-                                                  GLint maxVaryingVectors,
-                                                  PackMode packMode,
-                                                  ShaderType frontShaderStage,
-                                                  ShaderType backShaderStage,
-                                                  const ProgramMergedVaryings &mergedVaryings,
-                                                  const std::vector<std::string> &tfVaryings,
-                                                  const bool isSeparableProgram);
+    ANGLE_NO_DISCARD bool collectAndPackUserVaryings(InfoLog &infoLog,
+                                                     GLint maxVaryingVectors,
+                                                     PackMode packMode,
+                                                     ShaderType frontShaderStage,
+                                                     ShaderType backShaderStage,
+                                                     const ProgramMergedVaryings &mergedVaryings,
+                                                     const std::vector<std::string> &tfVaryings,
+                                                     const bool isSeparableProgram);
 
     struct Register
     {
@@ -306,13 +306,13 @@ class ProgramVaryingPacking final : angle::NonCopyable
     const VaryingPacking &getInputPacking(ShaderType backShaderStage) const;
     const VaryingPacking &getOutputPacking(ShaderType frontShaderStage) const;
 
-    [[nodiscard]] bool collectAndPackUserVaryings(InfoLog &infoLog,
-                                                  const Caps &caps,
-                                                  PackMode packMode,
-                                                  const ShaderBitSet &activeShadersMask,
-                                                  const ProgramMergedVaryings &mergedVaryings,
-                                                  const std::vector<std::string> &tfVaryings,
-                                                  bool isSeparableProgram);
+    ANGLE_NO_DISCARD bool collectAndPackUserVaryings(InfoLog &infoLog,
+                                                     const Caps &caps,
+                                                     PackMode packMode,
+                                                     const ShaderBitSet &activeShadersMask,
+                                                     const ProgramMergedVaryings &mergedVaryings,
+                                                     const std::vector<std::string> &tfVaryings,
+                                                     bool isSeparableProgram);
 
   private:
     // Indexed by the front shader.
@@ -322,8 +322,9 @@ class ProgramVaryingPacking final : angle::NonCopyable
     ShaderMap<ShaderType> mBackToFrontStageMap;
 };
 
-ProgramMergedVaryings GetMergedVaryingsFromLinkingVariables(
-    const LinkingVariables &linkingVariables);
+// Takes an abstract handle to a program or pipeline.
+ProgramMergedVaryings GetMergedVaryingsFromShaders(const HasAttachedShaders &programOrPipeline,
+                                                   const ProgramExecutable &programExecutable);
 }  // namespace gl
 
 #endif  // LIBANGLE_VARYINGPACKING_H_

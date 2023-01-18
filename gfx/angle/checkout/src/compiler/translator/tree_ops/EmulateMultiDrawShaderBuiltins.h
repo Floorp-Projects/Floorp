@@ -29,18 +29,18 @@ class TCompiler;
 class TIntermBlock;
 class TSymbolTable;
 
-[[nodiscard]] bool EmulateGLDrawID(TCompiler *compiler,
-                                   TIntermBlock *root,
-                                   TSymbolTable *symbolTable,
-                                   std::vector<sh::ShaderVariable> *uniforms,
-                                   bool shouldCollect);
+ANGLE_NO_DISCARD bool EmulateGLDrawID(TCompiler *compiler,
+                                      TIntermBlock *root,
+                                      TSymbolTable *symbolTable,
+                                      std::vector<sh::ShaderVariable> *uniforms,
+                                      bool shouldCollect);
 
-[[nodiscard]] bool EmulateGLBaseVertexBaseInstance(TCompiler *compiler,
-                                                   TIntermBlock *root,
-                                                   TSymbolTable *symbolTable,
-                                                   std::vector<sh::ShaderVariable> *uniforms,
-                                                   bool shouldCollect,
-                                                   bool addBaseVertexToVertexID);
+ANGLE_NO_DISCARD bool EmulateGLBaseVertexBaseInstance(TCompiler *compiler,
+                                                      TIntermBlock *root,
+                                                      TSymbolTable *symbolTable,
+                                                      std::vector<sh::ShaderVariable> *uniforms,
+                                                      bool shouldCollect,
+                                                      bool addBaseVertexToVertexID);
 
 }  // namespace sh
 

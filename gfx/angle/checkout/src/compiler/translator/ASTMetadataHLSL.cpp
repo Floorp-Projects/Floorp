@@ -40,9 +40,6 @@ class PullGradient : public TIntermTraverser
         mGradientBuiltinFunctions.insert(ImmutableString("textureCube"));
 
         // ESSL 300 builtin gradient functions
-        mGradientBuiltinFunctions.insert(ImmutableString("dFdx"));
-        mGradientBuiltinFunctions.insert(ImmutableString("dFdy"));
-        mGradientBuiltinFunctions.insert(ImmutableString("fwidth"));
         mGradientBuiltinFunctions.insert(ImmutableString("texture"));
         mGradientBuiltinFunctions.insert(ImmutableString("textureProj"));
         mGradientBuiltinFunctions.insert(ImmutableString("textureOffset"));
@@ -98,6 +95,25 @@ class PullGradient : public TIntermTraverser
         return true;
     }
 
+    bool visitUnary(Visit visit, TIntermUnary *node) override
+    {
+        if (visit == PreVisit)
+        {
+            switch (node->getOp())
+            {
+                case EOpDFdx:
+                case EOpDFdy:
+                case EOpFwidth:
+                    onGradient();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return true;
+    }
+
     bool visitAggregate(Visit visit, TIntermAggregate *node) override
     {
         if (visit == PreVisit)
@@ -112,7 +128,7 @@ class PullGradient : public TIntermTraverser
                     onGradient();
                 }
             }
-            else if (BuiltInGroup::IsBuiltIn(node->getOp()) && !BuiltInGroup::IsMath(node->getOp()))
+            else if (node->getOp() == EOpCallBuiltInFunction)
             {
                 if (mGradientBuiltinFunctions.find(node->getFunction()->name()) !=
                     mGradientBuiltinFunctions.end())
