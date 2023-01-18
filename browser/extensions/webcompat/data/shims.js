@@ -855,6 +855,21 @@ const AVAILABLE_SHIMS = [
       },
     ],
   },
+  {
+    id: "SpotifyEmbed",
+    platform: "all",
+    name: "SpotifyEmbed",
+    bug: "1792395",
+    contentScripts: [
+      {
+        js: "spotify-embed.js",
+        matches: ["*://open.spotify.com/embed/track/*"],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;
