@@ -4539,11 +4539,23 @@ gViewController.defineView("list", async type => {
   const disabledAddonsFilterFn = addon =>
     !addon.hidden && !addon.isActive && !isPending(addon, "uninstall");
 
+  const isRetainedColorwayBuiltIn = addon =>
+    BuiltInThemes.isMonochromaticTheme(addon.id) &&
+    BuiltInThemes.isRetainedExpiredTheme(addon.id);
+
+  const isMigratedColorway = addon =>
+    BuiltInThemes.isMonochromaticTheme(addon.id) &&
+    !addon.isBuiltinColorwayTheme;
+
   const disabledThemesFilterFn = addon =>
     disabledAddonsFilterFn(addon) &&
-    ((BuiltInThemes.isRetainedExpiredTheme(addon.id) &&
-      !COLORWAY_CLOSET_ENABLED) ||
-      !BuiltInThemes.isMonochromaticTheme(addon.id));
+    // Show disabled themes that are not colorway themes.
+    (!BuiltInThemes.isMonochromaticTheme(addon.id) ||
+      // Show migrated or retained themes when the colorway
+      // section is disabled (which is expected to happen automatically
+      // after the last colletion is expired after 2023-01-17)
+      (!COLORWAY_CLOSET_ENABLED &&
+        (isRetainedColorwayBuiltIn(addon) || isMigratedColorway(addon))));
 
   sections.push({
     headingId: getL10nIdMapping(`${type}-disabled-heading`),
