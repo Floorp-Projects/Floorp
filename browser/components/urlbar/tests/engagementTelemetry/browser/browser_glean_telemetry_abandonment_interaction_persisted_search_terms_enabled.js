@@ -11,7 +11,7 @@ if (AppConstants.platform == "macosx") {
 }
 
 add_setup(async function() {
-  await setup();
+  await initInteractionTest();
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -22,124 +22,32 @@ add_setup(async function() {
   });
 });
 
-add_task(async function interaction_persisted_search_terms() {
-  await doTest(async browser => {
-    await openPopup("x");
-    await doEnter();
-
-    await openPopup("x");
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ interaction: "persisted_search_terms" }]);
+add_task(async function persisted_search_terms() {
+  await doPersistedSearchTermsTest({
+    trigger: () => doBlur(),
+    assert: () =>
+      assertAbandonmentTelemetry([{ interaction: "persisted_search_terms" }]),
   });
 });
 
-add_task(async function interaction_persisted_search_terms_restarted_refined() {
-  const testData = [
-    {
-      firstInput: "x",
-      // Just move the focus to the URL bar after engagement.
-      secondInput: null,
-      expected: "persisted_search_terms",
-    },
-    {
-      firstInput: "x",
-      secondInput: "x",
-      expected: "persisted_search_terms",
-    },
-    {
-      firstInput: "x",
-      secondInput: "y",
-      expected: "persisted_search_terms_restarted",
-    },
-    {
-      firstInput: "x",
-      secondInput: "x y",
-      expected: "persisted_search_terms_refined",
-    },
-    {
-      firstInput: "x y",
-      secondInput: "x",
-      expected: "persisted_search_terms_refined",
-    },
-  ];
-
-  for (const { firstInput, secondInput, expected } of testData) {
-    await doTest(async browser => {
-      await openPopup(firstInput);
-      await doEnter();
-
-      await UrlbarTestUtils.promisePopupOpen(window, () => {
-        EventUtils.synthesizeKey("l", { accelKey: true });
-      });
-      if (secondInput) {
-        for (let i = 0; i < secondInput.length; i++) {
-          EventUtils.synthesizeKey(secondInput.charAt(i));
-        }
-      }
-      await UrlbarTestUtils.promiseSearchComplete(window);
-      await doBlur();
-
-      assertAbandonmentTelemetry([{ interaction: expected }]);
-    });
-  }
+add_task(async function persisted_search_terms_restarted_refined() {
+  await doPersistedSearchTermsRestartedRefinedTest({
+    enabled: true,
+    trigger: () => doBlur(),
+    assert: expected => assertAbandonmentTelemetry([{ interaction: expected }]),
+  });
 });
 
 add_task(
-  async function interaction_persisted_search_terms_restarted_refined_via_abandonment() {
-    const testData = [
-      {
-        firstInput: "x",
-        // Just move the focus to the URL bar after blur.
-        secondInput: null,
-        expected: "persisted_search_terms",
-      },
-      {
-        firstInput: "x",
-        secondInput: "x",
-        expected: "persisted_search_terms",
-      },
-      {
-        firstInput: "x",
-        secondInput: "y",
-        expected: "persisted_search_terms_restarted",
-      },
-      {
-        firstInput: "x",
-        secondInput: "x y",
-        expected: "persisted_search_terms_refined",
-      },
-      {
-        firstInput: "x y",
-        secondInput: "x",
-        expected: "persisted_search_terms_refined",
-      },
-    ];
-
-    for (const { firstInput, secondInput, expected } of testData) {
-      await doTest(async browser => {
-        await openPopup("any search");
-        await doEnter();
-
-        await openPopup(firstInput);
-        await doBlur();
-
-        await UrlbarTestUtils.promisePopupOpen(window, () => {
-          EventUtils.synthesizeKey("l", { accelKey: true });
-        });
-        if (secondInput) {
-          for (let i = 0; i < secondInput.length; i++) {
-            EventUtils.synthesizeKey(secondInput.charAt(i));
-          }
-        }
-        await UrlbarTestUtils.promiseSearchComplete(window);
-        await doBlur();
-
+  async function persisted_search_terms_restarted_refined_via_abandonment() {
+    await doPersistedSearchTermsRestartedRefinedViaAbandonmentTest({
+      enabled: true,
+      trigger: () => doBlur(),
+      assert: expected =>
         assertAbandonmentTelemetry([
           { interaction: "persisted_search_terms_restarted" },
           { interaction: expected },
-        ]);
-      });
-    }
+        ]),
+    });
   }
 );
