@@ -91,6 +91,9 @@ class MOZ_RAII IRGenerator {
 
   void emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee);
 
+  void emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
+                                GuardClassKind kind);
+
   friend class CacheIRSpewer;
 
  public:
@@ -535,6 +538,10 @@ class MOZ_RAII InlinableNativeIRGenerator {
   bool ignoresResult() const { return generator_.op_ == JSOp::CallIgnoresRv; }
 
   void emitNativeCalleeGuard();
+  void emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
+                                GuardClassKind kind) {
+    generator_.emitOptimisticClassGuard(objId, obj, kind);
+  }
 
   ObjOperandId emitLoadArgsArray();
 

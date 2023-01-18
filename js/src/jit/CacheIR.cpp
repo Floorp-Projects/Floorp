@@ -1752,6 +1752,52 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
   MOZ_CRASH("Unexpected ProxyStubType");
 }
 
+// Guards the class of an object. Because shape implies class, and a shape guard
+// is faster than a class guard, if this is our first time attaching a stub, we
+// instead generate a shape guard.
+void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
+                                           GuardClassKind kind) {
+#ifdef DEBUG
+  switch (kind) {
+    case GuardClassKind::Array:
+      MOZ_ASSERT(obj->is<ArrayObject>());
+      break;
+    case GuardClassKind::PlainObject:
+      MOZ_ASSERT(obj->is<PlainObject>());
+      break;
+    case GuardClassKind::ArrayBuffer:
+      MOZ_ASSERT(obj->is<ArrayBufferObject>());
+      break;
+    case GuardClassKind::SharedArrayBuffer:
+      MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
+      break;
+    case GuardClassKind::DataView:
+      MOZ_ASSERT(obj->is<DataViewObject>());
+      break;
+    case GuardClassKind::Set:
+      MOZ_ASSERT(obj->is<SetObject>());
+      break;
+    case GuardClassKind::Map:
+      MOZ_ASSERT(obj->is<MapObject>());
+      break;
+
+    case GuardClassKind::MappedArguments:
+    case GuardClassKind::UnmappedArguments:
+    case GuardClassKind::JSFunction:
+    case GuardClassKind::WindowProxy:
+      // Arguments, functions, and the global object have
+      // less consistent shapes.
+      MOZ_CRASH("GuardClassKind not supported");
+  }
+#endif
+
+  if (isFirstStub_) {
+    writer.guardShapeForClass(objId, obj->shape());
+  } else {
+    writer.guardClass(objId, kind);
+  }
+}
+
 AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
                                                          ObjOperandId objId,
                                                          HandleId id) {
@@ -1765,7 +1811,7 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
     }
 
     maybeEmitIdGuard(id);
-    writer.guardClass(objId, GuardClassKind::Array);
+    emitOptimisticClassGuard(objId, obj, GuardClassKind::Array);
     writer.loadInt32ArrayLengthResult(objId);
     writer.returnFromIC();
 
@@ -4234,7 +4280,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
   }
 
   maybeEmitIdGuard(id);
-  writer.guardClass(objId, GuardClassKind::Array);
+  emitOptimisticClassGuard(objId, obj, GuardClassKind::Array);
   writer.callSetArrayLength(objId, IsStrictSetPC(pc_), rhsId);
   writer.returnFromIC();
 
@@ -5712,7 +5758,8 @@ ObjOperandId CallIRGenerator::emitFunApplyArgsGuard(
     writer.guardArgumentsObjectFlags(argObjId, flags);
   } else {
     MOZ_ASSERT(format == CallFlags::FunApplyArray);
-    writer.guardClass(argObjId, GuardClassKind::Array);
+    emitOptimisticClassGuard(argObjId, &args_[1].toObject(),
+                             GuardClassKind::Array);
     writer.guardArrayIsPacked(argObjId);
   }
 
@@ -5822,7 +5869,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayPopShift(
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  writer.guardClass(objId, GuardClassKind::Array);
+  emitOptimisticClassGuard(objId, arr, GuardClassKind::Array);
 
   if (native == InlinableNative::ArrayPop) {
     writer.packedArrayPopResult(objId);
@@ -5865,7 +5912,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayJoin() {
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId thisObjId = writer.guardToObject(thisValId);
-  writer.guardClass(thisObjId, GuardClassKind::Array);
+  emitOptimisticClassGuard(thisObjId, &thisval_.toObject(),
+                           GuardClassKind::Array);
 
   StringOperandId sepId;
   if (argc_ == 1) {
@@ -5945,7 +5993,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArraySlice() {
   ObjOperandId objId = writer.guardToObject(thisValId);
 
   if (isPackedArray) {
-    writer.guardClass(objId, GuardClassKind::Array);
+    emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                             GuardClassKind::Array);
   } else {
     auto* args = &thisval_.toObject().as<ArgumentsObject>();
 
@@ -6060,7 +6109,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  writer.guardClass(objId, GuardClassKind::DataView);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                           GuardClassKind::DataView);
 
   // Convert offset to intPtr.
   ValOperandId offsetId =
@@ -6125,7 +6175,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  writer.guardClass(objId, GuardClassKind::DataView);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                           GuardClassKind::DataView);
 
   // Convert offset to intPtr.
   ValOperandId offsetId =
@@ -8784,7 +8835,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSetHas() {
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  writer.guardClass(objId, GuardClassKind::Set);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(), GuardClassKind::Set);
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
 
@@ -8871,7 +8922,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMapHas() {
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  writer.guardClass(objId, GuardClassKind::Map);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(), GuardClassKind::Map);
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
 
@@ -8958,7 +9009,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMapGet() {
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  writer.guardClass(objId, GuardClassKind::Map);
+  emitOptimisticClassGuard(objId, &thisval_.toObject(), GuardClassKind::Map);
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
 
