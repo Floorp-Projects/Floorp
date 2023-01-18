@@ -228,6 +228,15 @@ async function initSapTest() {
   await setup();
 }
 
+async function initSearchModeTest() {
+  /* import-globals-from head-search_mode.js */
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-search_mode.js",
+    this
+  );
+  await setup();
+}
+
 function loadOmniboxAddon({ keyword }) {
   return ExtensionTestUtils.loadExtension({
     manifest: {

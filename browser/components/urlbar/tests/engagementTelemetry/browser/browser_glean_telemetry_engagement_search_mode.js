@@ -7,97 +7,57 @@
 // - search_mode
 
 add_setup(async function() {
-  await setup();
+  await initSearchModeTest();
 });
 
-add_task(async function search_mode_search_not_mode() {
-  await doTest(async browser => {
-    await openPopup("x");
-    await doEnter();
-
-    assertEngagementTelemetry([{ search_mode: "" }]);
+add_task(async function not_search_mode() {
+  await doNotSearchModeTest({
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([{ search_mode: "" }]),
   });
 });
 
-add_task(async function search_mode_search_engine() {
-  await doTest(async browser => {
-    await openPopup("x");
-    await UrlbarTestUtils.enterSearchMode(window);
-    await doEnter();
-
-    assertEngagementTelemetry([{ search_mode: "search_engine" }]);
+add_task(async function search_engine() {
+  await doSearchEngineTest({
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([{ search_mode: "search_engine" }]),
   });
 });
 
-add_task(async function search_mode_bookmarks() {
-  await doTest(async browser => {
-    await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      url: "https://example.com/bookmark",
-      title: "bookmark",
-    });
-
-    await openPopup("bookmark");
-    await UrlbarTestUtils.enterSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-    });
-    await selectRowByURL("https://example.com/bookmark");
-    await doEnter();
-
-    assertEngagementTelemetry([{ search_mode: "bookmarks" }]);
+add_task(async function bookmarks() {
+  await doBookmarksTest({
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([{ search_mode: "bookmarks" }]),
   });
 });
 
-add_task(async function search_mode_history() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.autoFill", false]],
+add_task(async function history() {
+  await doHistoryTest({
+    trigger: () => doEnter(),
+    assert: () => assertEngagementTelemetry([{ search_mode: "history" }]),
   });
-
-  await doTest(async browser => {
-    await PlacesTestUtils.addVisits("https://example.com/test");
-
-    await openPopup("example");
-    await UrlbarTestUtils.enterSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-    });
-    await selectRowByURL("https://example.com/test");
-    await doEnter();
-
-    assertEngagementTelemetry([{ search_mode: "history" }]);
-  });
-
-  await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function search_mode_tabs() {
-  const tab = BrowserTestUtils.addTab(gBrowser, "https://example.com/");
-
-  await doTest(async browser => {
-    await openPopup("example");
-    await UrlbarTestUtils.enterSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.TABS,
-    });
-    await selectRowByProvider("Places");
-    EventUtils.synthesizeKey("KEY_Enter");
-    await BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab === tab);
-
-    assertEngagementTelemetry([{ search_mode: "tabs" }]);
+add_task(async function tabs() {
+  await doTabTest({
+    trigger: async () => {
+      const currentTab = gBrowser.selectedTab;
+      EventUtils.synthesizeKey("KEY_Enter");
+      await BrowserTestUtils.waitForCondition(
+        () => gBrowser.selectedTab !== currentTab
+      );
+    },
+    assert: () => assertEngagementTelemetry([{ search_mode: "tabs" }]),
   });
-
-  BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function search_mode_actions() {
-  await doTest(async browser => {
-    await openPopup("add");
-    await UrlbarTestUtils.enterSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
-    });
-    await selectRowByProvider("quickactions");
-    const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    doClickSubButton(".urlbarView-quickaction-row[data-key=addons]");
-    await onLoad;
-
-    assertEngagementTelemetry([{ search_mode: "actions" }]);
+add_task(async function actions() {
+  await doActionsTest({
+    trigger: async () => {
+      const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      doClickSubButton(".urlbarView-quickaction-row[data-key=addons]");
+      await onLoad;
+    },
+    assert: () => assertEngagementTelemetry([{ search_mode: "actions" }]),
   });
 });
