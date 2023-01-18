@@ -7,61 +7,32 @@
 // - sap
 
 add_setup(async function() {
-  await setup();
+  await initSapTest();
 });
 
-add_task(async function sap_urlbar() {
-  await doTest(async browser => {
-    await openPopup("x");
-    await waitForPauseImpression();
-    await doEnter();
-
-    await openPopup("y");
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([
-      { reason: "pause", sap: "urlbar_newtab" },
-      { reason: "pause", sap: "urlbar" },
-    ]);
+add_task(async function urlbar() {
+  await doUrlbarTest({
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([
+        { reason: "pause", sap: "urlbar_newtab" },
+        { reason: "pause", sap: "urlbar" },
+      ]),
   });
 });
 
-add_task(async function sap_handoff() {
-  await doTest(async browser => {
-    BrowserTestUtils.loadURI(browser, "about:newtab");
-    await BrowserTestUtils.browserStopped(browser, "about:newtab");
-    await SpecialPowers.spawn(browser, [], function() {
-      const searchInput = content.document.querySelector(".fake-editable");
-      searchInput.click();
-    });
-    EventUtils.synthesizeKey("x");
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([{ reason: "pause", sap: "handoff" }]);
+add_task(async function handoff() {
+  await doHandoffTest({
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([{ reason: "pause", sap: "handoff" }]),
   });
 });
 
-add_task(async function sap_urlbar_addonpage() {
-  const extensionData = {
-    files: {
-      "page.html": "<!DOCTYPE html>hello",
-    },
-  };
-  const extension = ExtensionTestUtils.loadExtension(extensionData);
-  await extension.startup();
-  const extensionURL = `moz-extension://${extension.uuid}/page.html`;
-
-  await doTest(async browser => {
-    const onLoad = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURI(browser, extensionURL);
-    await onLoad;
-
-    await openPopup("x");
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_addonpage" }]);
+add_task(async function urlbar_addonpage() {
+  await doUrlbarAddonpageTest({
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_addonpage" }]),
   });
-
-  await extension.unload();
 });
