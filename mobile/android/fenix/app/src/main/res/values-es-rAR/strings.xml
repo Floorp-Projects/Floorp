@@ -362,7 +362,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reducir mensajes de cookies</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox intenta rechazar automáticamente las solicitudes de cookies en las pancartas de cookies. Si una opción de rechazo no está disponible, Firefox puede aceptar todas las cookies para descartar la pancarta.</string>
+    <string name="reduce_cookie_banner_summary">Firefox intenta rechazar automáticamente las solicitudes de cookies en los mensajes de cookies. Si una opción de rechazo no está disponible, Firefox puede aceptar todas las cookies para descartar el mensaje.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Desactivada para este sitio</string>
