@@ -3,26 +3,11 @@
 
 "use strict";
 
-// Test for the following data of abandonment telemetry.
+// Test for the following data of engagement telemetry.
 // - sap
-
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
 
 add_setup(async function() {
   await setup();
-});
-
-add_task(async function sap_urlbar_newtab() {
-  await doTest(async browser => {
-    await openPopup("x");
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ sap: "urlbar_newtab" }]);
-  });
 });
 
 add_task(async function sap_urlbar() {
@@ -31,9 +16,9 @@ add_task(async function sap_urlbar() {
     await doEnter();
 
     await openPopup("y");
-    await doBlur();
+    await doEnter();
 
-    assertAbandonmentTelemetry([{ sap: "urlbar" }]);
+    assertEngagementTelemetry([{ sap: "urlbar_newtab" }, { sap: "urlbar" }]);
   });
 });
 
@@ -46,9 +31,9 @@ add_task(async function sap_handoff() {
       searchInput.click();
     });
     EventUtils.synthesizeKey("x");
-    await doBlur();
+    await doEnter();
 
-    assertAbandonmentTelemetry([{ sap: "handoff" }]);
+    assertEngagementTelemetry([{ sap: "handoff" }]);
   });
 });
 
@@ -68,9 +53,9 @@ add_task(async function sap_urlbar_addonpage() {
     await onLoad;
 
     await openPopup("x");
-    await doBlur();
+    await doEnter();
 
-    assertAbandonmentTelemetry([{ sap: "urlbar_addonpage" }]);
+    assertEngagementTelemetry([{ sap: "urlbar_addonpage" }]);
   });
 
   await extension.unload();

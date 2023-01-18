@@ -3,18 +3,12 @@
 
 "use strict";
 
-// Test engagement telemetry with persisted search terms enabled.
+// Test abandonment telemetry with persisted search terms enabled.
 
 // Allow more time for Mac machines so they don't time out in verify mode.
 if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);
 }
-
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
 
 add_setup(async function() {
   await setup();
@@ -34,12 +28,9 @@ add_task(async function interaction_persisted_search_terms() {
     await doEnter();
 
     await openPopup("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
-      { interaction: "typed" },
-      { interaction: "persisted_search_terms" },
-    ]);
+    assertAbandonmentTelemetry([{ interaction: "persisted_search_terms" }]);
   });
 });
 
@@ -87,12 +78,9 @@ add_task(async function interaction_persisted_search_terms_restarted_refined() {
         }
       }
       await UrlbarTestUtils.promiseSearchComplete(window);
-      await doEnter();
+      await doBlur();
 
-      assertEngagementTelemetry([
-        { interaction: "typed" },
-        { interaction: expected },
-      ]);
+      assertAbandonmentTelemetry([{ interaction: expected }]);
     });
   }
 });
@@ -145,10 +133,10 @@ add_task(
           }
         }
         await UrlbarTestUtils.promiseSearchComplete(window);
-        await doEnter();
+        await doBlur();
 
-        assertEngagementTelemetry([
-          { interaction: "typed" },
+        assertAbandonmentTelemetry([
+          { interaction: "persisted_search_terms_restarted" },
           { interaction: expected },
         ]);
       });

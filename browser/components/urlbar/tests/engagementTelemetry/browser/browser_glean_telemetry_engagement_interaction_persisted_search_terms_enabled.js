@@ -3,24 +3,22 @@
 
 "use strict";
 
-// Test abandonment telemetry with persisted search terms disabled.
+// Test engagement telemetry with persisted search terms enabled.
 
 // Allow more time for Mac machines so they don't time out in verify mode.
 if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);
 }
 
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
-
 add_setup(async function() {
   await setup();
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.showSearchTerms.featureGate", false]],
+    set: [
+      ["browser.urlbar.showSearchTerms.featureGate", true],
+      ["browser.urlbar.showSearchTerms.enabled", true],
+      ["browser.search.widget.inNavBar", false],
+    ],
   });
 });
 
@@ -30,9 +28,12 @@ add_task(async function interaction_persisted_search_terms() {
     await doEnter();
 
     await openPopup("x");
-    await doBlur();
+    await doEnter();
 
-    assertAbandonmentTelemetry([{ interaction: "typed" }]);
+    assertEngagementTelemetry([
+      { interaction: "typed" },
+      { interaction: "persisted_search_terms" },
+    ]);
   });
 });
 
@@ -42,27 +43,27 @@ add_task(async function interaction_persisted_search_terms_restarted_refined() {
       firstInput: "x",
       // Just move the focus to the URL bar after engagement.
       secondInput: null,
-      expected: "topsites",
+      expected: "persisted_search_terms",
     },
     {
       firstInput: "x",
       secondInput: "x",
-      expected: "typed",
+      expected: "persisted_search_terms",
     },
     {
       firstInput: "x",
       secondInput: "y",
-      expected: "typed",
+      expected: "persisted_search_terms_restarted",
     },
     {
       firstInput: "x",
       secondInput: "x y",
-      expected: "typed",
+      expected: "persisted_search_terms_refined",
     },
     {
       firstInput: "x y",
       secondInput: "x",
-      expected: "typed",
+      expected: "persisted_search_terms_refined",
     },
   ];
 
@@ -80,9 +81,12 @@ add_task(async function interaction_persisted_search_terms_restarted_refined() {
         }
       }
       await UrlbarTestUtils.promiseSearchComplete(window);
-      await doBlur();
+      await doEnter();
 
-      assertAbandonmentTelemetry([{ interaction: expected }]);
+      assertEngagementTelemetry([
+        { interaction: "typed" },
+        { interaction: expected },
+      ]);
     });
   }
 });
@@ -94,27 +98,27 @@ add_task(
         firstInput: "x",
         // Just move the focus to the URL bar after blur.
         secondInput: null,
-        expected: "returned",
+        expected: "persisted_search_terms",
       },
       {
         firstInput: "x",
         secondInput: "x",
-        expected: "returned",
+        expected: "persisted_search_terms",
       },
       {
         firstInput: "x",
         secondInput: "y",
-        expected: "restarted",
+        expected: "persisted_search_terms_restarted",
       },
       {
         firstInput: "x",
         secondInput: "x y",
-        expected: "refined",
+        expected: "persisted_search_terms_refined",
       },
       {
         firstInput: "x y",
         secondInput: "x",
-        expected: "refined",
+        expected: "persisted_search_terms_refined",
       },
     ];
 
@@ -135,9 +139,9 @@ add_task(
           }
         }
         await UrlbarTestUtils.promiseSearchComplete(window);
-        await doBlur();
+        await doEnter();
 
-        assertAbandonmentTelemetry([
+        assertEngagementTelemetry([
           { interaction: "typed" },
           { interaction: expected },
         ]);

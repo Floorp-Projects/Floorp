@@ -3,32 +3,31 @@
 
 "use strict";
 
-// Test for the following data of impression telemetry.
+// Test for the following data of abandonment telemetry.
 // - sap
-
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
 
 add_setup(async function() {
   await setup();
 });
 
+add_task(async function sap_urlbar_newtab() {
+  await doTest(async browser => {
+    await openPopup("x");
+    await doBlur();
+
+    assertAbandonmentTelemetry([{ sap: "urlbar_newtab" }]);
+  });
+});
+
 add_task(async function sap_urlbar() {
   await doTest(async browser => {
     await openPopup("x");
-    await waitForPauseImpression();
     await doEnter();
 
     await openPopup("y");
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([
-      { reason: "pause", sap: "urlbar_newtab" },
-      { reason: "pause", sap: "urlbar" },
-    ]);
+    assertAbandonmentTelemetry([{ sap: "urlbar" }]);
   });
 });
 
@@ -41,10 +40,9 @@ add_task(async function sap_handoff() {
       searchInput.click();
     });
     EventUtils.synthesizeKey("x");
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ reason: "pause", sap: "handoff" }]);
+    assertAbandonmentTelemetry([{ sap: "handoff" }]);
   });
 });
 
@@ -64,9 +62,9 @@ add_task(async function sap_urlbar_addonpage() {
     await onLoad;
 
     await openPopup("x");
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_addonpage" }]);
+    assertAbandonmentTelemetry([{ sap: "urlbar_addonpage" }]);
   });
 
   await extension.unload();

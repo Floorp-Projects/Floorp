@@ -3,14 +3,8 @@
 
 "use strict";
 
-// Test for the following data of impression telemetry.
+// Test for the following data of abandonment telemetry.
 // - search_mode
-
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
 
 add_setup(async function() {
   await setup();
@@ -19,9 +13,9 @@ add_setup(async function() {
 add_task(async function search_mode_search_not_mode() {
   await doTest(async browser => {
     await openPopup("x");
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ search_mode: "" }]);
+    assertAbandonmentTelemetry([{ search_mode: "" }]);
   });
 });
 
@@ -29,9 +23,9 @@ add_task(async function search_mode_search_engine() {
   await doTest(async browser => {
     await openPopup("x");
     await UrlbarTestUtils.enterSearchMode(window);
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ search_mode: "search_engine" }]);
+    assertAbandonmentTelemetry([{ search_mode: "search_engine" }]);
   });
 });
 
@@ -48,9 +42,9 @@ add_task(async function search_mode_bookmarks() {
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     });
     await selectRowByURL("https://example.com/bookmark");
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ search_mode: "bookmarks" }]);
+    assertAbandonmentTelemetry([{ search_mode: "bookmarks" }]);
   });
 });
 
@@ -67,9 +61,9 @@ add_task(async function search_mode_history() {
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
     });
     await selectRowByURL("https://example.com/test");
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ search_mode: "history" }]);
+    assertAbandonmentTelemetry([{ search_mode: "history" }]);
   });
 
   await SpecialPowers.popPrefEnv();
@@ -84,9 +78,9 @@ add_task(async function search_mode_tabs() {
       source: UrlbarUtils.RESULT_SOURCE.TABS,
     });
     await selectRowByProvider("Places");
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ search_mode: "tabs" }]);
+    assertAbandonmentTelemetry([{ search_mode: "tabs" }]);
   });
 
   BrowserTestUtils.removeTab(tab);
@@ -99,8 +93,8 @@ add_task(async function search_mode_actions() {
       source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
     });
     await selectRowByProvider("quickactions");
-    await waitForPauseImpression();
+    await doBlur();
 
-    assertImpressionTelemetry([{ search_mode: "actions" }]);
+    assertAbandonmentTelemetry([{ search_mode: "actions" }]);
   });
 });
