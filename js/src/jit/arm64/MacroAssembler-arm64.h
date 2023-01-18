@@ -594,14 +594,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
         B(&done, Assembler::Zero);  // If conversion was exact, go to end.
 
         // The conversion was inexact, but the caller intends to allow -0.
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMFPRegister scratch64 = temps.AcquireD();
-        MOZ_ASSERT(!scratch64.Is(fsrc64));
 
         // Compare fsrc64 to 0.
         // If fsrc64 == 0 and FJCVTZS conversion was inexact, then fsrc64 is -0.
-        Fmov(scratch64, xzr);
-        Fcmp(scratch64, fsrc64);
+        Fcmp(fsrc64, 0.0);
         B(fail, Assembler::NotEqual);  // Pass through -0; fail otherwise.
 
         bind(&done);
