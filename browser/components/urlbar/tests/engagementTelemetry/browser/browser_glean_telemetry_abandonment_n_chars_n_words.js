@@ -8,55 +8,29 @@
 // - n_words
 
 add_setup(async function() {
-  await setup();
+  await initNCharsAndNWordsTest();
 });
 
 add_task(async function n_chars() {
-  for (const input of ["x", "xx", "xx x", "xx x "]) {
-    await doTest(async browser => {
-      await openPopup(input);
-      await doBlur();
+  await doNCharsTest({
+    trigger: () => doBlur(),
+    assert: nChars => assertAbandonmentTelemetry([{ n_chars: nChars }]),
+  });
 
-      assertAbandonmentTelemetry([{ n_chars: input.length }]);
-    });
-  }
-
-  await doTest(async browser => {
-    let input = "";
-    for (let i = 0; i < UrlbarUtils.MAX_TEXT_LENGTH * 2; i++) {
-      input += "x";
-    }
-
-    await openPopup(input);
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ n_chars: UrlbarUtils.MAX_TEXT_LENGTH * 2 }]);
+  await doNCharsWithOverMaxTextLengthCharsTest({
+    trigger: () => doBlur(),
+    assert: nChars => assertAbandonmentTelemetry([{ n_chars: nChars }]),
   });
 });
 
 add_task(async function n_words() {
-  for (const input of ["x", "xx", "xx x", "xx x "]) {
-    await doTest(async browser => {
-      await openPopup(input);
-      await doBlur();
+  await doNWordsTest({
+    trigger: () => doBlur(),
+    assert: nWords => assertAbandonmentTelemetry([{ n_words: nWords }]),
+  });
 
-      const splits = input.trim().split(" ");
-      assertAbandonmentTelemetry([{ n_words: splits.length }]);
-    });
-  }
-
-  await doTest(async browser => {
-    const word = "1234 ";
-    let input = "";
-    while (input.length < UrlbarUtils.MAX_TEXT_LENGTH * 2) {
-      input += word;
-    }
-
-    await openPopup(input);
-    await doBlur();
-
-    assertAbandonmentTelemetry([
-      { n_words: UrlbarUtils.MAX_TEXT_LENGTH / word.length },
-    ]);
+  await doNWordsWithOverMaxTextLengthCharsTest({
+    trigger: () => doBlur(),
+    assert: nWords => assertAbandonmentTelemetry([{ n_words: nWords }]),
   });
 });

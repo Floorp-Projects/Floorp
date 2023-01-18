@@ -8,57 +8,33 @@
 // - n_words
 
 add_setup(async function() {
-  await setup();
+  await initNCharsAndNWordsTest();
 });
 
 add_task(async function n_chars() {
-  for (const input of ["x", "xx", "xx x", "xx x "]) {
-    await doTest(async browser => {
-      await openPopup(input);
-      await waitForPauseImpression();
+  await doNCharsTest({
+    trigger: () => waitForPauseImpression(),
+    assert: nChars =>
+      assertImpressionTelemetry([{ reason: "pause", n_chars: nChars }]),
+  });
 
-      assertImpressionTelemetry([{ reason: "pause", n_chars: input.length }]);
-    });
-  }
-
-  await doTest(async browser => {
-    let input = "";
-    for (let i = 0; i < UrlbarUtils.MAX_TEXT_LENGTH * 2; i++) {
-      input += "x";
-    }
-
-    await openPopup(input);
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([
-      { reason: "pause", n_chars: UrlbarUtils.MAX_TEXT_LENGTH * 2 },
-    ]);
+  await doNCharsWithOverMaxTextLengthCharsTest({
+    trigger: () => waitForPauseImpression(),
+    assert: nChars =>
+      assertImpressionTelemetry([{ reason: "pause", n_chars: nChars }]),
   });
 });
 
 add_task(async function n_words() {
-  for (const input of ["x", "xx", "xx x", "xx x "]) {
-    await doTest(async browser => {
-      await openPopup(input);
-      await waitForPauseImpression();
+  await doNWordsTest({
+    trigger: () => waitForPauseImpression(),
+    assert: nWords =>
+      assertImpressionTelemetry([{ reason: "pause", n_words: nWords }]),
+  });
 
-      const splits = input.trim().split(" ");
-      assertImpressionTelemetry([{ reason: "pause", n_words: splits.length }]);
-    });
-  }
-
-  await doTest(async browser => {
-    const word = "1234 ";
-    let input = "";
-    while (input.length < UrlbarUtils.MAX_TEXT_LENGTH * 2) {
-      input += word;
-    }
-
-    await openPopup(input);
-    await waitForPauseImpression();
-
-    assertImpressionTelemetry([
-      { reason: "pause", n_words: UrlbarUtils.MAX_TEXT_LENGTH / word.length },
-    ]);
+  await doNWordsWithOverMaxTextLengthCharsTest({
+    trigger: () => waitForPauseImpression(),
+    assert: nWords =>
+      assertImpressionTelemetry([{ reason: "pause", n_words: nWords }]),
   });
 });
