@@ -20,7 +20,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.children
 import androidx.viewbinding.ViewBinding
+import mozilla.components.feature.downloads.databinding.MozacDownloaderChooserPromptBinding
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
+import mozilla.components.feature.downloads.ui.DownloaderApp
+import mozilla.components.feature.downloads.ui.DownloaderAppAdapter
 import mozilla.components.support.ktx.android.view.setNavigationBarTheme
 import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import org.mozilla.fenix.R
@@ -207,6 +210,39 @@ class FirstPartyDownloadDialog(
                     }
                 },
             )
+        }
+    }
+}
+
+/**
+ * A download view mimicking a modal dialog that presents the user with a list of all apps
+ * that can handle the download request.
+ *
+ * @param activity The [Activity] in which the dialog will be shown.
+ * Used to update the activity [Window] to best mimic a modal dialog.
+ * @param downloaderApps List of all applications that can handle the download request.
+ * @param onAppSelected Callback for when the user chooses a specific application to handle the download request.
+ * @param negativeButtonAction Callback for when the user interacts with the dialog to dismiss it.
+ */
+class ThirdPartyDownloadDialog(
+    private val activity: Activity,
+    private val downloaderApps: List<DownloaderApp>,
+    private val onAppSelected: (DownloaderApp) -> Unit,
+    private val negativeButtonAction: () -> Unit,
+) : StartDownloadDialog(activity) {
+    override fun setupView() {
+        val dialog = MozacDownloaderChooserPromptBinding.inflate(LayoutInflater.from(activity), container, true)
+            .also { binding = it }
+
+        val recyclerView = dialog.appsList
+        recyclerView.adapter = DownloaderAppAdapter(activity, downloaderApps) { app ->
+            onAppSelected(app)
+            dismiss()
+        }
+
+        dialog.closeButton.setOnClickListener {
+            negativeButtonAction()
+            dismiss()
         }
     }
 }

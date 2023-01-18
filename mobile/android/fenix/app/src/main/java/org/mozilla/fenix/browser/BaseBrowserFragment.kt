@@ -124,6 +124,7 @@ import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.downloads.FirstPartyDownloadDialog
 import org.mozilla.fenix.downloads.StartDownloadDialog
+import org.mozilla.fenix.downloads.ThirdPartyDownloadDialog
 import org.mozilla.fenix.ext.accessibilityManager
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
@@ -521,6 +522,18 @@ abstract class BaseBrowserFragment :
                     contentSize = contentSize.value,
                     positiveButtonAction = positiveAction.value,
                     negativeButtonAction = negativeAction.value,
+                ).onDismiss {
+                    currentStartDownloadDialog = null
+                }.show(binding.startDownloadDialogContainer).also {
+                    currentStartDownloadDialog = it
+                }
+            },
+            customThirdPartyDownloadDialog = { downloaderApps, onAppSelected, negativeActionCallback ->
+                ThirdPartyDownloadDialog(
+                    activity = requireActivity(),
+                    downloaderApps = downloaderApps.value,
+                    onAppSelected = onAppSelected.value,
+                    negativeButtonAction = negativeActionCallback.value,
                 ).onDismiss {
                     currentStartDownloadDialog = null
                 }.show(binding.startDownloadDialogContainer).also {
