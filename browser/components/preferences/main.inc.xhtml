@@ -101,7 +101,11 @@
                   class="tail-with-learn-more"
                   data-l10n-id="browser-containers-enabled"
                   preference="privacy.userContext.enabled"/>
-        <label id="browserContainersLearnMore" is="text-link" class="learnMore" data-l10n-id="browser-containers-learn-more"/>
+        <html:a
+          is="moz-support-link"
+          support-page="containers"
+          data-l10n-id="browser-containers-learn-more"
+        />
         <spacer flex="1"/>
         <button id="browserContainersSettings"
                 is="highlightable-button"
