@@ -87,7 +87,7 @@ This can be done using the version of `npm` packaged with `mach`:
 
 ```sh
 # Install a dev dependency from within the storybook directory.
-cd browser/components/storybook && ../../../mach npm -i -D your-package
+cd browser/components/storybook && ../../../mach npm i -D your-package
 ```
 
 ## Adding new stories
