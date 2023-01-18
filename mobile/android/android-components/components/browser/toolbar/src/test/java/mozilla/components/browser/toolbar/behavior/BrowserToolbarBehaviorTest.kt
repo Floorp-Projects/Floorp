@@ -6,14 +6,12 @@ package mozilla.components.browser.toolbar.behavior
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.view.Gravity
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
@@ -472,29 +470,6 @@ class BrowserToolbarBehaviorTest {
         behavior.forceCollapse(toolbar)
 
         verify(yTranslator).collapseWithAnimation(toolbar)
-    }
-
-    @Test
-    fun `Behavior will position snackbar above toolbar`() {
-        val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
-
-        val toolbar: BrowserToolbar = mock()
-        doReturn(4223).`when`(toolbar).id
-
-        val layoutParams: CoordinatorLayout.LayoutParams = CoordinatorLayout.LayoutParams(0, 0)
-
-        val snackbarLayout: Snackbar.SnackbarLayout = mock()
-        doReturn(layoutParams).`when`(snackbarLayout).layoutParams
-
-        behavior.layoutDependsOn(
-            parent = mock(),
-            child = toolbar,
-            dependency = snackbarLayout,
-        )
-
-        assertEquals(4223, layoutParams.anchorId)
-        assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, layoutParams.anchorGravity)
-        assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, layoutParams.gravity)
     }
 
     @Test

@@ -9,6 +9,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **browser-toolbar**
+  * ⚠️ **This is a breaking change**: `BrowserToolbarBehavior` will not position the `Snackbar.SnackbarLayout` anymore. The ownership for the positioning behavior should be reversed with the snackbar choosing whether it want to be shown above the toolbar and exactly how. [Bug 1812518](https://bugzilla.mozilla.org/show_bug.cgi?id=1812518).
+
 * **browser-engine-gecko**
   * 🚒 Bug fixed [bug 1811183](https://bugzilla.mozilla.org/show_bug.cgi?id=1811183). Handles non-digit values for `DateTimePrompt.stepValue`.
 
