@@ -1618,6 +1618,8 @@
       }
     },
 
+    _dataURLRegEx: /^data:[^,]+;base64,/i,
+
     setTabTitle(aTab) {
       var browser = this.getBrowserForTab(aTab);
       var title = browser.contentTitle;
@@ -1637,6 +1639,7 @@
         delete aTab._labelIsInitialTitle;
       }
 
+      let isURL = false;
       let isContentTitle = !!title;
       if (!title) {
         // See if we can use the URI as the title.
@@ -1650,16 +1653,8 @@
         }
 
         if (title && !isBlankPageURL(title)) {
-          // If it's a long data: URI that uses base64 encoding, truncate to a
-          // reasonable length rather than trying to display the entire thing,
-          // which can be slow.
-          // We can't shorten arbitrary URIs like this, as bidi etc might mean
-          // we need the trailing characters for display. But a base64-encoded
-          // data-URI is plain ASCII, so this is OK for tab-title display.
-          // (See bug 1408854.)
-          if (title.length > 500 && title.match(/^data:[^,]+;base64,/)) {
-            title = title.substring(0, 500) + "\u2026";
-          } else {
+          isURL = true;
+          if (title.length <= 500 || !this._dataURLRegEx.test(title)) {
             // Try to unescape not-ASCII URIs using the current character set.
             try {
               let characterSet = browser.characterSet;
@@ -1677,12 +1672,23 @@
         }
       }
 
-      return this._setTabLabel(aTab, title, { isContentTitle });
+      return this._setTabLabel(aTab, title, { isContentTitle, isURL });
     },
 
-    _setTabLabel(aTab, aLabel, { beforeTabOpen, isContentTitle } = {}) {
+    _setTabLabel(aTab, aLabel, { beforeTabOpen, isContentTitle, isURL } = {}) {
       if (!aLabel || aLabel.includes("about:reader?")) {
         return false;
+      }
+
+      // If it's a long data: URI that uses base64 encoding, truncate to a
+      // reasonable length rather than trying to display the entire thing,
+      // which can hang or crash the browser.
+      // We can't shorten arbitrary URIs like this, as bidi etc might mean
+      // we need the trailing characters for display. But a base64-encoded
+      // data-URI is plain ASCII, so this is OK for tab-title display.
+      // (See bug 1408854.)
+      if (isURL && aLabel.length > 500 && this._dataURLRegEx.test(aLabel)) {
+        aLabel = aLabel.substring(0, 500) + "\u2026";
       }
 
       aTab._fullLabel = aLabel;
@@ -2658,7 +2664,10 @@
           t.setAttribute("label", this.tabContainer.emptyTabTitle);
         } else {
           // Set URL as label so that the tab isn't empty initially.
-          this.setInitialTabTitle(t, aURI, { beforeTabOpen: true });
+          this.setInitialTabTitle(t, aURI, {
+            beforeTabOpen: true,
+            isURL: true,
+          });
         }
       }
 
