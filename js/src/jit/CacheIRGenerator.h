@@ -717,8 +717,6 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
   AttachDecision tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachBigInt(ValOperandId lhsId, ValOperandId rhsId);
-  AttachDecision tryAttachNumberUndefined(ValOperandId lhsId,
-                                          ValOperandId rhsId);
   AttachDecision tryAttachAnyNullUndefined(ValOperandId lhsId,
                                            ValOperandId rhsId);
   AttachDecision tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);

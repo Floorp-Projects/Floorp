@@ -11123,36 +11123,6 @@ AttachDecision CompareIRGenerator::tryAttachBigInt(ValOperandId lhsId,
   return AttachDecision::Attach;
 }
 
-AttachDecision CompareIRGenerator::tryAttachNumberUndefined(
-    ValOperandId lhsId, ValOperandId rhsId) {
-  if (!(lhsVal_.isUndefined() && rhsVal_.isNumber()) &&
-      !(rhsVal_.isUndefined() && lhsVal_.isNumber())) {
-    return AttachDecision::NoAction;
-  }
-
-  // Should have been handled by tryAttachAnyNullUndefined.
-  MOZ_ASSERT(!IsEqualityOp(op_));
-
-  if (lhsVal_.isNumber()) {
-    writer.guardIsNumber(lhsId);
-  } else {
-    writer.guardIsUndefined(lhsId);
-  }
-
-  if (rhsVal_.isNumber()) {
-    writer.guardIsNumber(rhsId);
-  } else {
-    writer.guardIsUndefined(rhsId);
-  }
-
-  // Relational comparing a number with undefined will always be false.
-  writer.loadBooleanResult(false);
-  writer.returnFromIC();
-
-  trackAttached("NumberUndefined");
-  return AttachDecision::Attach;
-}
-
 AttachDecision CompareIRGenerator::tryAttachAnyNullUndefined(
     ValOperandId lhsId, ValOperandId rhsId) {
   MOZ_ASSERT(IsEqualityOp(op_));
@@ -11475,11 +11445,6 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
 
     TRY_ATTACH(tryAttachPrimitiveSymbol(lhsId, rhsId));
   }
-
-  // This should preceed the Int32/Number cases to allow
-  // them to not concern themselves with handling undefined
-  // or null.
-  TRY_ATTACH(tryAttachNumberUndefined(lhsId, rhsId));
 
   // We want these to be last, to allow us to bypass the
   // strictly-different-types cases in the below attachment code
