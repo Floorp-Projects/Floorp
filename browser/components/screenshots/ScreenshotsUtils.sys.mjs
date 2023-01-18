@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { getFilename } from "chrome://browser/content/screenshots/fileHelpers.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -13,22 +12,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyServiceGetters(lazy, {
-  AlertsService: ["@mozilla.org/alerts-service;1", "nsIAlertsService"],
-});
-
-XPCOMUtils.defineLazyGetter(lazy, "screenshotsLocalization", () => {
-  return new Localization(["browser/screenshots.ftl"], true);
-});
-
 const PanelPosition = "bottomright topright";
 const PanelOffsetX = -33;
 const PanelOffsetY = -8;
-// The max dimension for a canvas is defined https://searchfox.org/mozilla-central/rev/f40d29a11f2eb4685256b59934e637012ea6fb78/gfx/cairo/cairo/src/cairo-image-surface.c#62.
-// The max number of pixels for a canvas is 124925329 or 11177 x 11177.
-// We have to limit screenshots to these dimensions otherwise it will cause an error.
-const MAX_CAPTURE_DIMENSION = 32767;
-const MAX_CAPTURE_AREA = 124925329;
 
 export class ScreenshotsComponentParent extends JSWindowActorParent {
   async receiveMessage(message) {
@@ -292,49 +278,6 @@ export var ScreenshotsUtils = {
     let actor = this.getActor(browser);
     return actor.sendQuery("Screenshots:getVisibleBounds");
   },
-  showAlertMessage(title, message) {
-    lazy.AlertsService.showAlertNotification(null, title, message);
-  },
-  /**
-   * The max one dimesion for a canvas is 32767 and the max canvas area is
-   * 124925329. If the width or height is greater than 32767 we will crop the
-   * screenshot to the max width. If the area is still too large for the canvas
-   * we will adjust the height so we can successfully capture the screenshot.
-   * @param {Object} rect The dimensions of the screenshot. The rect will be
-   * modified in place
-   */
-  cropScreenshotRectIfNeeded(rect) {
-    let cropped = false;
-    let width = rect.width * rect.devicePixelRatio;
-    let height = rect.height * rect.devicePixelRatio;
-
-    if (width > MAX_CAPTURE_DIMENSION) {
-      width = MAX_CAPTURE_DIMENSION;
-      cropped = true;
-    }
-    if (height > MAX_CAPTURE_DIMENSION) {
-      height = MAX_CAPTURE_DIMENSION;
-      cropped = true;
-    }
-    if (width * height > MAX_CAPTURE_AREA) {
-      height = Math.floor(MAX_CAPTURE_AREA / width);
-      cropped = true;
-    }
-
-    rect.width = Math.floor(width / rect.devicePixelRatio);
-    rect.height = Math.floor(height / rect.devicePixelRatio);
-
-    if (cropped) {
-      let [
-        errorTitle,
-        errorMessage,
-      ] = lazy.screenshotsLocalization.formatMessagesSync([
-        { id: "screenshots-too-large-error-title" },
-        { id: "screenshots-too-large-error-details" },
-      ]);
-      this.showAlertMessage(errorTitle.value, errorMessage.value);
-    }
-  },
   /**
    * Add screenshot-ui to the dialog box and then take the screenshot
    * @param browser The current browser.
@@ -363,8 +306,6 @@ export var ScreenshotsUtils = {
    * @param rect DOMRect containing bounds of the screenshot.
    */
   async takeScreenshot(browser, dialog, rect) {
-    this.cropScreenshotRectIfNeeded(rect);
-
     let { canvas, snapshot } = await this.createCanvas(rect, browser);
 
     let newImg = dialog._frame.contentDocument.createElement("img");
