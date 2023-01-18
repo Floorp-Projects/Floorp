@@ -2290,6 +2290,23 @@ already_AddRefed<gfxFont> gfxFontGroup::GetFirstValidFont(
 
   uint32_t count = mFonts.Length();
   bool loading = false;
+
+  // Check whether the font supports the given character, unless the char is
+  // SPACE, in which case it is not required to be present in the font, but
+  // we must still check if it was excluded by a unicode-range descriptor.
+  auto isValidForChar = [](gfxFont* aFont, uint32_t aCh) -> bool {
+    if (!aFont) {
+      return false;
+    }
+    if (aCh == 0x20) {
+      if (const auto* unicodeRange = aFont->GetUnicodeRangeMap()) {
+        return unicodeRange->test(aCh);
+      }
+      return true;
+    }
+    return aFont->HasCharacter(aCh);
+  };
+
   for (uint32_t i = 0; i < count; ++i) {
     FamilyFace& ff = mFonts[i];
     if (ff.IsInvalid()) {
@@ -2298,7 +2315,7 @@ already_AddRefed<gfxFont> gfxFontGroup::GetFirstValidFont(
 
     // already have a font?
     RefPtr<gfxFont> font = ff.Font();
-    if (font) {
+    if (isValidForChar(font, aCh)) {
       if (aGeneric) {
         *aGeneric = ff.Generic();
       }
@@ -2328,7 +2345,7 @@ already_AddRefed<gfxFont> gfxFontGroup::GetFirstValidFont(
     }
 
     font = GetFontAt(i, aCh, &loading);
-    if (font) {
+    if (isValidForChar(font, aCh)) {
       if (aGeneric) {
         *aGeneric = ff.Generic();
       }
@@ -2934,7 +2951,7 @@ gfxTextRun* gfxFontGroup::GetEllipsisTextRun(
 
   // Use a Unicode ellipsis if the font supports it,
   // otherwise use three ASCII periods as fallback.
-  RefPtr<gfxFont> firstFont = GetFirstValidFont(uint32_t(kEllipsisChar[0]));
+  RefPtr<gfxFont> firstFont = GetFirstValidFont();
   nsString ellipsis =
       firstFont->HasCharacter(kEllipsisChar[0])
           ? nsDependentString(kEllipsisChar, ArrayLength(kEllipsisChar) - 1)
