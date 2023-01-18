@@ -3832,11 +3832,6 @@
   value: false
   mirror: always
 
-- name: dom.workers.pFetch.enabled
-  type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 - name: dom.workers.requestAnimationFrame
   type: RelaxedAtomicBool
   value: true

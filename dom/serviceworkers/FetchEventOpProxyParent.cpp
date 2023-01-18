@@ -160,7 +160,7 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
         RemoteLazyInputStream::WrapStream(aBodyStream);
     MOZ_DIAGNOSTIC_ASSERT(stream);
 
-    copyRequest.body().ref().get_ParentToChildStream() = stream;
+    copyRequest.body().ref().get_ParentToChildStream().stream() = stream;
   }
 
   Unused << aManager->SendPFetchEventOpProxyConstructor(actor, copyArgs);

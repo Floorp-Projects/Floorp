@@ -10,21 +10,8 @@ function finish(a, msg) {
   postMessage({ type: "finish" });
 }
 
-async function wait_for_performance_entries() {
-  let promise = new Promise(resolve => {
-    new PerformanceObserver(list => {
-      resolve(list.getEntries());
-    }).observe({ entryTypes: ["resource"] });
-  });
-  entries = await promise;
-  return entries;
-}
-
-async function check(resource, initiatorType, protocol) {
+function check(resource, initiatorType, protocol) {
   let entries = performance.getEntries();
-  if (!entries.length) {
-    entries = await wait_for_performance_entries();
-  }
   ok(entries.length == 1, "We have an entry");
 
   ok(entries[0] instanceof PerformanceEntry, "The entry is a PerformanceEntry");
@@ -87,9 +74,9 @@ function import_script() {
 function redirect() {
   fetch("test_worker_performance_entries.sjs?redirect")
     .then(r => r.text())
-    .then(async text => {
+    .then(text => {
       is(text, "Hello world \\o/", "The redirect worked correctly");
-      await check(
+      check(
         "test_worker_performance_entries.sjs?redirect",
         "fetch",
         "http/1.1"
