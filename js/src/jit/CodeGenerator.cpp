@@ -8373,17 +8373,18 @@ void CodeGenerator::visitWasmDerivedIndexPointer(
 
 void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
   Register instance = ToRegister(ins->instance());
-  Register valueAddr = ToRegister(ins->valueAddr());
+  Register valueBase = ToRegister(ins->valueBase());
+  size_t offset = ins->offset();
   Register value = ToRegister(ins->value());
   Register temp = ToRegister(ins->temp0());
 
   Label skipPreBarrier;
-  wasm::EmitWasmPreBarrierGuard(masm, instance, temp, valueAddr,
+  wasm::EmitWasmPreBarrierGuard(masm, instance, temp, valueBase, offset,
                                 &skipPreBarrier);
-  wasm::EmitWasmPreBarrierCall(masm, instance, temp, valueAddr);
+  wasm::EmitWasmPreBarrierCall(masm, instance, temp, valueBase, offset);
   masm.bind(&skipPreBarrier);
 
-  masm.storePtr(value, Address(valueAddr, 0));
+  masm.storePtr(value, Address(valueBase, offset));
   // The postbarrier is handled separately.
 }
 

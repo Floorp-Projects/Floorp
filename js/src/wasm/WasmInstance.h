@@ -443,6 +443,8 @@ class alignas(16) Instance {
   static void postBarrier(Instance* instance, gc::Cell** location);
   static void postBarrierPrecise(Instance* instance, JSObject** location,
                                  JSObject* prev);
+  static void postBarrierPreciseWithOffset(Instance* instance, JSObject** base,
+                                           uint32_t offset, JSObject* prev);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
   static void* structNew(Instance* instance, const wasm::TypeDef* typeDef);
   static void* exceptionNew(Instance* instance, JSObject* tag);

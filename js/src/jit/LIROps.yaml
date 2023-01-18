@@ -2919,8 +2919,10 @@
 - name: WasmStoreRef
   operands:
     instance: WordSized
-    valueAddr: WordSized
+    valueBase: WordSized
     value: WordSized
+  arguments:
+    offset: uint32_t
   num_temps: 1
   mir_op: true
 

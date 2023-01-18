@@ -449,7 +449,7 @@ wasm::StackMap* ConvertStackMapBoolVectorToStackMap(
 
 void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register instance,
                              Register scratch, Register valueAddr,
-                             Label* skipBarrier);
+                             size_t valueOffset, Label* skipBarrier);
 
 // Before storing a GC pointer value in memory, call out-of-line prebarrier
 // code. This assumes `PreBarrierReg` contains the address that will be updated.
@@ -460,7 +460,8 @@ void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register instance,
 // It is OK for `instance` and `scratch` to be the same register.
 
 void EmitWasmPreBarrierCall(jit::MacroAssembler& masm, Register instance,
-                            Register scratch, Register valueAddr);
+                            Register scratch, Register valueAddr,
+                            size_t valueOffset);
 
 // After storing a GC pointer value in memory, skip to `skipBarrier` if a
 // postbarrier is not needed.  If the location being set is in an heap-allocated
