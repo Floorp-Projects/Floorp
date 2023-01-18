@@ -5,12 +5,6 @@
 
 // Test the Glean telemetry behavior with its preferences.
 
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
-
 add_task(async function enabled() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.searchEngagementTelemetry.enabled", true]],

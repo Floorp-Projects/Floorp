@@ -3,15 +3,9 @@
 
 "use strict";
 
-// Test for the following data of impression telemetry.
+// Test for the following data of engagement telemetry.
 // - n_chars
 // - n_words
-
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
 
 add_setup(async function() {
   await setup();
@@ -21,9 +15,9 @@ add_task(async function n_chars() {
   for (const input of ["x", "xx", "xx x", "xx x "]) {
     await doTest(async browser => {
       await openPopup(input);
-      await waitForPauseImpression();
+      await doEnter();
 
-      assertImpressionTelemetry([{ reason: "pause", n_chars: input.length }]);
+      assertEngagementTelemetry([{ n_chars: input.length }]);
     });
   }
 
@@ -34,11 +28,9 @@ add_task(async function n_chars() {
     }
 
     await openPopup(input);
-    await waitForPauseImpression();
+    await doEnter();
 
-    assertImpressionTelemetry([
-      { reason: "pause", n_chars: UrlbarUtils.MAX_TEXT_LENGTH * 2 },
-    ]);
+    assertEngagementTelemetry([{ n_chars: UrlbarUtils.MAX_TEXT_LENGTH * 2 }]);
   });
 });
 
@@ -46,10 +38,10 @@ add_task(async function n_words() {
   for (const input of ["x", "xx", "xx x", "xx x "]) {
     await doTest(async browser => {
       await openPopup(input);
-      await waitForPauseImpression();
+      await doEnter();
 
       const splits = input.trim().split(" ");
-      assertImpressionTelemetry([{ reason: "pause", n_words: splits.length }]);
+      assertEngagementTelemetry([{ n_words: splits.length }]);
     });
   }
 
@@ -61,10 +53,10 @@ add_task(async function n_words() {
     }
 
     await openPopup(input);
-    await waitForPauseImpression();
+    await doEnter();
 
-    assertImpressionTelemetry([
-      { reason: "pause", n_words: UrlbarUtils.MAX_TEXT_LENGTH / word.length },
+    assertEngagementTelemetry([
+      { n_words: UrlbarUtils.MAX_TEXT_LENGTH / word.length },
     ]);
   });
 });

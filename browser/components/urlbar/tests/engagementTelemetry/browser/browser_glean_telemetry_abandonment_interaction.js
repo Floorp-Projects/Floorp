@@ -3,19 +3,8 @@
 
 "use strict";
 
-// Test for the following data of engagement telemetry.
+// Test for the following data of abandonment telemetry.
 // - interaction
-
-// Allow more time for Mac machines so they don't time out in verify mode.
-if (AppConstants.platform == "macosx") {
-  requestLongerTimeout(3);
-}
-
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
 
 add_setup(async function() {
   await setup();
@@ -25,79 +14,50 @@ add_task(async function interaction_topsites() {
   await doTest(async browser => {
     await addTopSites("https://example.com/");
     await showResultByArrowDown();
-    await selectRowByURL("https://example.com/");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "topsites" }]);
+    assertAbandonmentTelemetry([{ interaction: "topsites" }]);
   });
 });
 
 add_task(async function interaction_typed() {
   await doTest(async browser => {
     await openPopup("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "typed" }]);
+    assertAbandonmentTelemetry([{ interaction: "typed" }]);
   });
 
   await doTest(async browser => {
     await showResultByArrowDown();
     EventUtils.synthesizeKey("x");
     await UrlbarTestUtils.promiseSearchComplete(window);
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "typed" }]);
-  });
-});
-
-add_task(async function interaction_dropped() {
-  await doTest(async browser => {
-    await doDropAndGo("example.com");
-
-    assertEngagementTelemetry([{ interaction: "dropped" }]);
-  });
-
-  await doTest(async browser => {
-    await showResultByArrowDown();
-    await doDropAndGo("example.com");
-
-    assertEngagementTelemetry([{ interaction: "dropped" }]);
+    assertAbandonmentTelemetry([{ interaction: "typed" }]);
   });
 });
 
 add_task(async function interaction_pasted() {
   await doTest(async browser => {
     await doPaste("www.example.com");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
-  });
-
-  await doTest(async browser => {
-    await doPasteAndGo("www.example.com");
-
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
+    assertAbandonmentTelemetry([{ interaction: "pasted" }]);
   });
 
   await doTest(async browser => {
     await showResultByArrowDown();
     await doPaste("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
-  });
-
-  await doTest(async browser => {
-    await showResultByArrowDown();
-    await doPasteAndGo("www.example.com");
-
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
+    assertAbandonmentTelemetry([{ interaction: "pasted" }]);
   });
 });
 
 add_task(async function interaction_topsite_search() {
   // TODO
-  // assertEngagementTelemetry([{ interaction: "topsite_search" }]);
+  // assertAbandonmentTelemetry([{ interaction: "topsite_search" }]);
 });
 
 add_task(async function interaction_returned_restarted_refined() {
@@ -144,9 +104,12 @@ add_task(async function interaction_returned_restarted_refined() {
         }
       }
       await UrlbarTestUtils.promiseSearchComplete(window);
-      await doEnter();
+      await doBlur();
 
-      assertEngagementTelemetry([{ interaction: expected }]);
+      assertAbandonmentTelemetry([
+        { interaction: "typed" },
+        { interaction: expected },
+      ]);
     });
   }
 });

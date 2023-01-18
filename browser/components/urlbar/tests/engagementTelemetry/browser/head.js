@@ -3,7 +3,11 @@
 
 "use strict";
 
-/* import-globals-from head.js */
+/* import-globals-from ../../browser/head-common.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-common.js",
+  this
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
@@ -17,6 +21,10 @@ XPCOMUtils.defineLazyGetter(lazy, "QuickSuggestTestUtils", () => {
   );
   module.init(this);
   return module;
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  sinon: "resource://testing-common/Sinon.jsm",
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -227,7 +235,7 @@ async function loadRemoteTab(url) {
     ],
   };
 
-  const sandbox = sinon.createSandbox();
+  const sandbox = lazy.sinon.createSandbox();
   // eslint-disable-next-line no-undef
   const syncedTabs = SyncedTabs;
   const originalSyncedTabsInternal = syncedTabs._internal;
@@ -308,7 +316,8 @@ async function setup() {
   });
 
   const engine = await SearchTestUtils.promiseNewSearchEngine({
-    url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+    url:
+      "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
   });
   const originalDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(

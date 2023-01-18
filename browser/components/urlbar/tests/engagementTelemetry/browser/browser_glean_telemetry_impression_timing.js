@@ -5,12 +5,6 @@
 
 // Test for the taking timing for the impression telemetry.
 
-/* import-globals-from head-glean.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-glean.js",
-  this
-);
-
 add_setup(async function() {
   await setup();
 });
