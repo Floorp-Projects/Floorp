@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1802215 - Allow <panel-list> to be anchored to shadow DOM nodes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="./panel-list.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="./panel-list.css"/>
+  <link rel="stylesheet" href="./panel-item.css"/>
+  <script>
+    /**
+     * Define a simple custom element that includes a <button> in its
+     * shadow DOM to anchor a panel-list on. The TestElement is slotted,
+     * putting any direct descendents right after a 400px tall <div>
+     * with a red border.
+     */
+    class TestElement extends HTMLElement {
+      static get fragment() {
+        const MARKUP = `
+          <template>
+            <div style="height: 100px; border: 1px solid red;">
+              <button id="anchor">Anchor</button>
+            </div>
+            <slot></slot>
+          </template>
+        `;
+
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(MARKUP, "text/html");
+        TestElement.template = document.importNode(
+          doc.querySelector("template"),
+          true
+        );
+        let fragment = TestElement.template.content.cloneNode(true);
+        return fragment;
+      }
+
+      connectedCallback() {
+        this.shadow = this.attachShadow({ mode: "closed" });
+        this.shadow.appendChild(TestElement.fragment);
+        this.anchor = this.shadow.querySelector("#anchor");
+        this.anchor.addEventListener("click", event => {
+          let panelList = this.querySelector("panel-list");
+          panelList.toggle(event);
+        });
+      }
+
+      doClick() {
+        this.anchor.click();
+      }
+    }
+
+    customElements.define("test-element", TestElement);
+
+    /**
+     * Tests that if a <panel-list> is anchored on a node within a custom
+     * element shadow DOM, that it anchors properly to that shadow node.
+     */
+    add_task(async function test_panel_list_anchor_on_shadow_node() {
+      let testElement = document.getElementById("test-element");
+      let panelList = document.getElementById("test-list");
+
+      // Bug 1808803 - We cannot create a panel-item either programmatically
+      // with createElement nor declaratively with <panel-item> in the markup
+      // without causing an "Operation not permitted" error to be emitted.
+      let panelItem = new (customElements.get("panel-item"));
+      panelItem.textContent = "An item";
+      panelList.appendChild(panelItem);
+
+      let openPromise = new Promise(resolve => {
+        panelList.addEventListener("shown", resolve, { once: true });
+      });
+      testElement.doClick();
+      await openPromise;
+
+      let panelRect = panelList.getBoundingClientRect();
+      let anchorRect = testElement.anchor.getBoundingClientRect();
+      // Recalculate the <panel-list> rect top value relative to the top-left
+      // of the anchorRect. We expect the <panel-list> to be tightly anchored
+      // to the bottom of the <button>, so we expect this new value to be 0.
+      let panelTopLeftRelativeToAnchorTopLeft = panelRect.top - anchorRect.top - anchorRect.height;
+      is(
+        panelTopLeftRelativeToAnchorTopLeft,
+        0,
+        "Panel should be tightly anchored to the bottom of the button shadow node."
+      );
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <test-element id="test-element">
+    <panel-list id="test-list">
+    </panel-list>
+  </test-element>
+</div>
+<pre id="test"></pre>
+</body>
+</html>
