@@ -31,7 +31,6 @@ XPIDL_MODULE = "xulapp"
 
 EXPORTS += [
     "nsAppRunner.h",
-    "nsIAppStartupNotifier.h",
 ]
 
 EXPORTS.mozilla += [
@@ -138,7 +137,6 @@ UNIFIED_SOURCES += [
     "Bootstrap.cpp",
     "CmdLineAndEnvUtils.cpp",
     "CreateAppData.cpp",
-    "nsAppStartupNotifier.cpp",
     "nsConsoleWriter.cpp",
     "nsNativeAppSupportBase.cpp",
     "nsSigHandlers.cpp",

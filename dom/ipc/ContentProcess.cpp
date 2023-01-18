@@ -30,7 +30,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/GeckoArgs.h"
-#include "nsAppStartupNotifier.h"
+#include "nsCategoryManagerUtils.h"
 
 using mozilla::ipc::IOThreadChild;
 
@@ -215,7 +215,8 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
+  // "app-startup" is the name of both the category and the event
+  NS_CreateServicesFromCategory("app-startup", nullptr, "app-startup", nullptr);
 
 #if (defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
   mContent.SetProfileDir(profileDir);

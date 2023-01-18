@@ -296,8 +296,8 @@ be specified by adding to a global ``Categories`` dictionary:
 .. code-block:: python
 
     Categories = {
-        'app-startup': {
-            'Mapi Support': 'service,@mozilla.org/mapisupport;1',
+        'update-timer': {
+            'nsUpdateService': '@mozilla.org/updates/update-service;1,getService,background-update-timer,app.update.interval,43200,86400',
         }
     }
 
@@ -307,7 +307,7 @@ value:
 .. code-block:: python
 
     Categories = {
-        'app-startup': {
-            'MainProcessSingleton': ('service,@mozilla.org/main-process-singleton;1', ProcessSelector.MAIN_PROCESS_ONLY),
+        '@mozilla.org/streamconv;1': {
+            '?from=gzip&to=uncompressed': ('', ProcessSelector.ALLOW_IN_SOCKET_PROCESS),
         }
     }

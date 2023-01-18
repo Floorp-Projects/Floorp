@@ -69,7 +69,7 @@
 #include "prtime.h"
 
 #include "nsIAppStartup.h"
-#include "nsAppStartupNotifier.h"
+#include "nsCategoryManagerUtils.h"
 #include "nsIMutableArray.h"
 #include "nsCommandLine.h"
 #include "nsIComponentRegistrar.h"
@@ -5372,7 +5372,9 @@ nsresult XREMain::XRE_mainRun() {
                        nsICommandLine::STATE_INITIAL_LAUNCH);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY, cmdLine);
+    // "app-startup" is the name of both the category and the event
+    NS_CreateServicesFromCategory("app-startup", cmdLine, "app-startup",
+                                  nullptr);
 
     appStartup = components::AppStartup::Service();
     NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);

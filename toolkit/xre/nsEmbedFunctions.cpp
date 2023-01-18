@@ -14,7 +14,6 @@
 #include "prenv.h"
 
 #include "nsIAppShell.h"
-#include "nsAppStartupNotifier.h"
 #include "nsIToolkitProfile.h"
 
 #ifdef XP_WIN
