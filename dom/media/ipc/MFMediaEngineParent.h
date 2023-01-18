@@ -25,11 +25,11 @@ class MFMediaSource;
 class RemoteDecoderManagerParent;
 
 /**
- * MFMediaEngineParent is a wrapper class for a MediaEngine in the RDD process.
- * It's responsible to create the media engine and its related classes, such as
- * a custom media source, media engine extension, media engine notify...e.t.c
- * It communicates with MFMediaEngineChild in the content process to receive
- * commands and direct them to the media engine.
+ * MFMediaEngineParent is a wrapper class for a MediaEngine in the MF-CDM
+ * process. It's responsible to create the media engine and its related classes,
+ * such as a custom media source, media engine extension, media engine
+ * notify...e.t.c It communicates with MFMediaEngineChild in the content process
+ * to receive commands and direct them to the media engine.
  * https://docs.microsoft.com/en-us/windows/win32/api/mfmediaengine/nn-mfmediaengine-imfmediaengine
  */
 class MFMediaEngineParent final : public PMFMediaEngineParent {
