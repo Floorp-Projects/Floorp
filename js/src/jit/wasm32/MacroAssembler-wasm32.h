@@ -325,11 +325,6 @@ class MacroAssemblerWasm32 : public Assembler {
   void store32(Imm32 src, const Address& address) { MOZ_CRASH(); }
 
   template <typename T, typename S>
-  void store32_NoSecondScratch(T, S) {
-    MOZ_CRASH();
-  }
-
-  template <typename T, typename S>
   void store32Unaligned(T, S) {
     MOZ_CRASH();
   }

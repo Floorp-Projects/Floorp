@@ -710,12 +710,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   void store32(Imm32 src, const Address& address);
   void store32(Imm32 src, const BaseIndex& address);
 
-  // NOTE: This will use second scratch on MIPS. Only ARM needs the
-  // implementation without second scratch.
-  void store32_NoSecondScratch(Imm32 src, const Address& address) {
-    store32(src, address);
-  }
-
   template <typename T>
   void store32Unaligned(Register src, const T& dest) {
     ma_store_unaligned(src, dest);

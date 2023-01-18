@@ -1013,16 +1013,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     doBaseIndex(ARMRegister(r, 32), address, vixl::STR_w);
   }
 
-  void store32_NoSecondScratch(Imm32 imm, const Address& address) {
-    vixl::UseScratchRegisterScope temps(this);
-    temps.Exclude(ARMRegister(ScratchReg2, 32));  // Disallow ScratchReg2.
-    const ARMRegister scratch32 = temps.AcquireW();
-
-    MOZ_ASSERT(scratch32.asUnsized() != address.base);
-    Mov(scratch32, uint64_t(imm.value));
-    Str(scratch32, toMemOperand(address));
-  }
-
   template <typename S, typename T>
   void store32Unaligned(const S& src, const T& dest) {
     store32(src, dest);
@@ -2059,10 +2049,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     }
   }
 
-  void loadInstructionPointerAfterCall(Register dest) {
-    MOZ_CRASH("loadInstructionPointerAfterCall");
-  }
-
   // Emit a B that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
   CodeOffset toggledJump(Label* label) {
     BufferOffset offset = b(label, Always);
@@ -2225,12 +2211,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     vixl::MacroAssembler::Ret(vixl::lr);
   }
 
-  void clampCheck(Register r, Label* handleNotAnInt) {
-    MOZ_CRASH("clampCheck");
-  }
-
-  void stackCheck(ImmWord limitAddr, Label* label) { MOZ_CRASH("stackCheck"); }
-
   void incrementInt32Value(const Address& addr) {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch32 = temps.AcquireW();
@@ -2256,17 +2236,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 #ifdef JS_SIMULATOR_ARM64
     svc(vixl::kCheckStackPointer);
 #endif
-  }
-
-  // Overwrites the payload bits of a dest register containing a Value.
-  void movePayload(Register src, Register dest) {
-    // Bfxil cannot be used with the zero register as a source.
-    if (src == rzr) {
-      And(ARMRegister(dest, 64), ARMRegister(dest, 64),
-          Operand(JS::detail::ValueTagMask));
-    } else {
-      Bfxil(ARMRegister(dest, 64), ARMRegister(src, 64), 0, JSVAL_TAG_SHIFT);
-    }
   }
 
  protected:
