@@ -643,7 +643,9 @@ async function openPasswordManager(openingFunc, waitForFilter) {
   if (waitForFilter) {
     filterValue = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
       let loginFilter = Cu.waiveXrays(
-        content.document.querySelector("login-filter")
+        content.document
+          .querySelector("login-list")
+          .shadowRoot.querySelector("login-filter")
       );
       await ContentTaskUtils.waitForCondition(
         () => !!loginFilter.value,

@@ -37,12 +37,16 @@ add_task(async function test_query_parameter_filter() {
     LoginHelper.loginToVanillaObject(TEST_LOGIN2),
   ];
   await SpecialPowers.spawn(browser, [vanillaLogins], async logins => {
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    const loginList = Cu.waiveXrays(
+      content.document.querySelector("login-list")
+    );
     await ContentTaskUtils.waitForCondition(() => {
       return loginList._loginGuidsSortedOrder.length == 2;
     }, "Waiting for logins to be cached");
 
-    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    const loginItem = Cu.waiveXrays(
+      content.document.querySelector("login-item")
+    );
     await ContentTaskUtils.waitForCondition(
       () => loginItem._login.guid == logins[0].guid,
       "Waiting for TEST_LOGIN1 to be selected for the login-item view"
@@ -52,21 +56,22 @@ add_task(async function test_query_parameter_filter() {
       ContentTaskUtils.is_visible(loginItem),
       "login-item should be visible when a login is selected"
     );
-    let loginIntro = content.document.querySelector("login-intro");
+    const loginIntro = content.document.querySelector("login-intro");
     Assert.ok(
       ContentTaskUtils.is_hidden(loginIntro),
       "login-intro should be hidden when a login is selected"
     );
 
-    let loginFilter = content.document.querySelector("login-filter");
-    let xRayLoginFilter = Cu.waiveXrays(loginFilter);
+    const loginFilter = loginList.shadowRoot.querySelector("login-filter");
+
+    const xRayLoginFilter = Cu.waiveXrays(loginFilter);
     Assert.equal(
       xRayLoginFilter.value,
       logins[0].origin,
       "The filter should be prepopulated"
     );
     Assert.equal(
-      content.document.activeElement,
+      loginList.shadowRoot.activeElement,
       loginFilter,
       "login-filter should be focused"
     );

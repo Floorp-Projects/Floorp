@@ -349,14 +349,14 @@ add_task(async function test_cancel_create_login() {
 
 add_task(
   async function test_cancel_create_login_with_filter_showing_one_login() {
-    let browser = gBrowser.selectedBrowser;
+    const browser = gBrowser.selectedBrowser;
     await SpecialPowers.spawn(browser, [], async () => {
-      let loginList = Cu.waiveXrays(
+      const loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
 
-      let loginFilter = Cu.waiveXrays(
-        content.document.querySelector("login-filter")
+      const loginFilter = Cu.waiveXrays(
+        loginList.shadowRoot.querySelector("login-filter")
       );
       loginFilter.value = "bugzilla.mozilla.org";
       Assert.equal(
@@ -400,14 +400,16 @@ add_task(
 );
 
 add_task(async function test_cancel_create_login_with_logins_filtered_out() {
-  let browser = gBrowser.selectedBrowser;
+  const browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], async () => {
-    let loginFilter = Cu.waiveXrays(
-      content.document.querySelector("login-filter")
+    const loginList = Cu.waiveXrays(
+      content.document.querySelector("login-list")
+    );
+    const loginFilter = Cu.waiveXrays(
+      loginList.shadowRoot.querySelector("login-filter")
     );
     loginFilter.value = "XXX-no-logins-should-match-this-XXX";
     await Promise.resolve();
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     Assert.equal(
       loginList._list.querySelectorAll(
         ".login-list-item[data-guid]:not([hidden])"

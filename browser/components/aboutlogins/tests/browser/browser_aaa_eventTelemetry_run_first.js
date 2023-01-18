@@ -254,8 +254,9 @@ add_task(async function test_telemetry_events() {
   });
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    let loginFilter = content.document.querySelector("login-filter");
-    let input = loginFilter.shadowRoot.querySelector("input");
+    const loginList = content.document.querySelector("login-list");
+    const loginFilter = loginList.shadowRoot.querySelector("login-filter");
+    const input = loginFilter.shadowRoot.querySelector("input");
     input.setUserInput("test");
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
