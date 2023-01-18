@@ -54,17 +54,13 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       return this.initialized;
     }
 
-    // If the server-side support for stylesheet resources is enabled, we need to start
-    // to watch for them before instanciating the pageStyle actor (which does use the
-    // watcher and assume we're already watching for stylesheets).
+    // Watch STYLESHEET resources to fill the ResourceCommand cache.
+    // StyleRule front's `get parentStyleSheet()` will query the cache to
+    // retrieve the resource corresponding to the parent stylesheet of a rule.
     const { resourceCommand } = this.targetFront.commands;
-
-    // Store `resourceCommand` on the inspector front as we need it later, and we might not be able to retrieve it from
-    // the targetFront as its resourceCommand property is nullified by ResourceCommand.onTargetDestroyed.
+    // Backup resourceCommand, targetFront.commands might be null in `destroy`.
     this.resourceCommand = resourceCommand;
-
     await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
-      // we simply want to start the watcher, we don't have to do anything with those resources.
       onAvailable: this.noopStylesheetListener,
     });
 
