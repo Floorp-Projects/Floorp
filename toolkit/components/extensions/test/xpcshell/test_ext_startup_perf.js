@@ -4,7 +4,7 @@
 
 const STARTUP_APIS = ["backgroundPage"];
 
-const STARTUP_MODULES = [
+const STARTUP_MODULES = new Set([
   "resource://gre/modules/Extension.jsm",
   "resource://gre/modules/ExtensionCommon.jsm",
   "resource://gre/modules/ExtensionParent.jsm",
@@ -15,21 +15,18 @@ const STARTUP_MODULES = [
   "resource://gre/modules/ExtensionProcessScript.jsm",
   "resource://gre/modules/ExtensionUtils.jsm",
   "resource://gre/modules/ExtensionTelemetry.jsm",
-];
+]);
 
 if (!Services.prefs.getBoolPref("extensions.webextensions.remote")) {
-  STARTUP_MODULES.push(
-    "resource://gre/modules/ExtensionChild.jsm",
-    "resource://gre/modules/ExtensionPageChild.jsm"
-  );
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionChild.jsm");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionPageChild.jsm");
 }
 
 if (AppConstants.MOZ_APP_NAME == "thunderbird") {
-  STARTUP_MODULES.push(
-    "resource://gre/modules/ExtensionChild.jsm",
-    "resource://gre/modules/ExtensionContent.jsm",
-    "resource://gre/modules/ExtensionPageChild.jsm"
-  );
+  // Imported via mail/components/extensions/processScript.js.
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionChild.jsm");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionContent.jsm");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionPageChild.jsm");
 }
 
 AddonTestUtils.init(this);
@@ -65,7 +62,7 @@ add_task(async function test_loaded_scripts() {
 
   deepEqual(
     loadedModules.sort(),
-    STARTUP_MODULES.sort(),
+    Array.from(STARTUP_MODULES).sort(),
     "No extra extension modules should be loaded at startup for a simple extension"
   );
 
