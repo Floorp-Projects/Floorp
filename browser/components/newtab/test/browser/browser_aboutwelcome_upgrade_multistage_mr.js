@@ -136,9 +136,9 @@ add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
   await test_upgrade_screen_content(
     browser,
     //Expected selectors:
-    ["main.UPGRADE_COLORWAY"],
+    [],
     //Unexpected selectors:
-    ["main.action-checkbox"]
+    ["main.UPGRADE_COLORWAY", "main.action-checkbox"]
   );
 
   await clickVisibleButton(browser, ".action-buttons button.primary");
@@ -181,9 +181,9 @@ add_task(
     await test_upgrade_screen_content(
       browser,
       //Expected selectors:
-      ["main.UPGRADE_COLORWAY", "#action-checkbox"],
+      [],
       //Unexpected selectors:
-      []
+      ["main.UPGRADE_COLORWAY", "#action-checkbox"]
     );
 
     await clickVisibleButton(browser, ".action-buttons button.primary");
@@ -227,23 +227,9 @@ add_task(
     await test_upgrade_screen_content(
       browser,
       //Expected selectors:
-      ["main.UPGRADE_COLORWAY", "#action-checkbox"],
+      [],
       //Unexpected selectors:
-      []
-    );
-
-    browser.document.querySelector("#action-checkbox").click();
-
-    await clickVisibleButton(browser, ".action-buttons button.primary");
-    await waitForDialogClose(browser);
-
-    Assert.ok(
-      !Services.prefs.prefHasUserValue(HOMEPAGE_PREF),
-      "homepage pref should have a user value"
-    );
-    Assert.ok(
-      !Services.prefs.prefHasUserValue(NEWTAB_PREF),
-      "newtab pref should have a user value"
+      ["main.UPGRADE_COLORWAY", "#action-checkbox"]
     );
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
