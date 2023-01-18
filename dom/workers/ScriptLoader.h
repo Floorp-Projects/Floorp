@@ -185,7 +185,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
                      nsISerialEventTarget* aSyncLoopTarget,
                      WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
 
-  void CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
+  bool CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
                             const mozilla::Encoding* aDocumentEncoding,
                             bool aIsMainScript);
 
