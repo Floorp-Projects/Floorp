@@ -1017,8 +1017,8 @@ void CodeGenerator::visitOutOfLineZeroIfNaN(OutOfLineZeroIfNaN* ool) {
   FloatRegister input = ool->input();
   Register output = ool->output();
 
-  // NaN triggers the failure path for branchTruncateDoubleToInt32() on x86,
-  // x64, and ARM64, so handle it here. In all other cases bail out.
+  // NaN triggers the failure path for branchTruncateDoubleToInt32() on x86 and
+  // x64, so handle it here. In all other cases bail out.
 
   Label fails;
   if (input.isSingle()) {
