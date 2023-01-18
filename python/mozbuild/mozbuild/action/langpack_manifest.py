@@ -423,7 +423,7 @@ def get_version_maybe_buildid(version):
 #                'base_path': 'browser/'
 #            }
 #        },
-#        'browser_specific_settings': {
+#        'applications': {
 #            'gecko':  {
 #                'strict_min_version': '57.0',
 #                'strict_max_version': '57.0.*',
@@ -454,7 +454,7 @@ def create_webmanifest(
     manifest = {
         "langpack_id": main_locale,
         "manifest_version": 2,
-        "browser_specific_settings": {
+        "applications": {
             "gecko": {
                 "id": langpack_eid,
                 "strict_min_version": min_app_ver,
