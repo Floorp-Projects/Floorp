@@ -727,7 +727,10 @@
             class="tail-with-learn-more"
             data-l10n-id="browsing-picture-in-picture-toggle-enabled"
             preference="media.videocontrols.picture-in-picture.video-toggle.enabled"/>
-    <label id="pictureInPictureLearnMore" class="learnMore" data-l10n-id="browsing-picture-in-picture-learn-more" is="text-link"/>
+    <html:a is="moz-support-link"
+          data-l10n-id="browsing-picture-in-picture-learn-more"
+          support-page="picture-in-picture"
+    />
   </hbox>
   <hbox id="mediaControlBox" align="center" hidden="true">
     <checkbox id="mediaControlToggleEnabled"
