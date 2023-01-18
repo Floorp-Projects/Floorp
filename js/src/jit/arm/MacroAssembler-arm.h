@@ -1365,17 +1365,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void trunc(FloatRegister input, Register output, Label* handleNotAnInt);
   void truncf(FloatRegister input, Register output, Label* handleNotAnInt);
 
-  void clampCheck(Register r, Label* handleNotAnInt) {
-    // Check explicitly for r == INT_MIN || r == INT_MAX
-    // This is the instruction sequence that gcc generated for this
-    // operation.
-    ScratchRegisterScope scratch(asMasm());
-    SecondScratchRegisterScope scratch2(asMasm());
-    ma_sub(r, Imm32(0x80000001), scratch, scratch2);
-    as_cmn(scratch, Imm8(3));
-    ma_b(handleNotAnInt, Above);
-  }
-
   void lea(Operand addr, Register dest) {
     ScratchRegisterScope scratch(asMasm());
     ma_add(addr.baseReg(), Imm32(addr.disp()), dest, scratch);

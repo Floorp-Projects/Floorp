@@ -336,10 +336,6 @@ class MacroAssemblerX86Shared : public Assembler {
     movl(src, Operand(dest));
   }
   template <typename S, typename T>
-  void store32_NoSecondScratch(const S& src, const T& dest) {
-    store32(src, dest);
-  }
-  template <typename S, typename T>
   void store32Unaligned(const S& src, const T& dest) {
     store32(src, dest);
   }
