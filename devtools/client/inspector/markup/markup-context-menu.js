@@ -574,7 +574,7 @@ class MarkupContextMenu {
     const type = popupNode.dataset.type;
     if (type === "uri" || type === "cssresource" || type === "jsresource") {
       // Links can't be opened in new tabs in the browser toolbox.
-      if (type === "uri" && !this.target.chrome) {
+      if (type === "uri" && !this.toolbox.isBrowserToolbox) {
         linkFollow.visible = true;
         linkFollow.label = INSPECTOR_L10N.getStr(
           "inspector.menu.openUrlInNewTab.label"

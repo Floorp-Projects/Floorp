@@ -545,7 +545,7 @@ OptionsPanel.prototype = {
       });
     }
 
-    if (!this.target.chrome) {
+    if (this.commands.descriptorFront.isTabDescriptor) {
       const isJavascriptEnabled = await this.commands.targetConfigurationCommand.isJavascriptEnabled();
       this.disableJSNode.checked = !isJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);

@@ -584,7 +584,8 @@ function createHighlightButton(highlighterName, id) {
   return {
     id: `command-button-${id}`,
     description: l10n(`toolbox.buttons.${id}`),
-    isToolSupported: toolbox => !toolbox.target.chrome,
+    isToolSupported: toolbox =>
+      toolbox.commands.descriptorFront.isTabDescriptor,
     async onClick(event, toolbox) {
       const inspectorFront = await toolbox.target.getFront("inspector");
       const highlighter = await inspectorFront.getOrCreateHighlighterByType(
