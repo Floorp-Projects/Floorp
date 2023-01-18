@@ -529,7 +529,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     loadContext->mLoadResult = rv;
   }
 
-  RefPtr<ScriptLoadRequest> request;
+  RefPtr<ScriptLoadRequest> request = nullptr;
   if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic) {
     RefPtr<ScriptFetchOptions> fetchOptions =
         new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
@@ -539,12 +539,19 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
                                     loadContext);
   } else {
     // Implements part of "To fetch a worklet/module worker script graph"
-    // including, setting up the request with a credentials mode (TODO),
+    // including, setting up the request with a credentials mode,
     // destination (CSP, TODO).
 
-    // Step 1. Let options be a script fetch options. TODO: credentials mode.
+    // Step 1. Let options be a script fetch options.
+    // We currently don't track credentials in our ScriptFetchOptions
+    // implementation. We translate this instead to cors.
+    CORSMode cors = mWorkerRef->Private()->WorkerCredentials() ==
+                            RequestCredentials::Include
+                        ? CORSMode::CORS_USE_CREDENTIALS
+                        : CORSMode::CORS_ANONYMOUS;
+
     RefPtr<ScriptFetchOptions> fetchOptions =
-        new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
+        new ScriptFetchOptions(cors, referrerPolicy, nullptr);
 
     RefPtr<WorkerModuleLoader::ModuleLoaderBase> moduleLoader =
         GetGlobal()->GetModuleLoader(nullptr);
