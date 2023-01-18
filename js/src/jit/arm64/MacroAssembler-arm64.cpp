@@ -3050,7 +3050,6 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
   ARMFPRegister src32(src, 32);
   ARMRegister dest32(dest, 32);
-  ScratchFloat32Scope scratch(*this);
 
   Label negative, done;
 
@@ -3093,25 +3092,20 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
   // 3. If = 0.5, round to +Infinity (so, up).
   bind(&negative);
   {
-    // Inputs in [-0.5, 0) need 0.5 added; other negative inputs need
-    // the biggest double less than 0.5.
-    Label join;
-    loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
-    loadConstantFloat32(-0.5f, scratch);
-    branchFloat(Assembler::DoubleLessThan, src, scratch, &join);
-    loadConstantFloat32(0.5f, temp);
-    bind(&join);
+    // Inputs in [-0.5, 0) are rounded to -0. Fail.
+    loadConstantFloat32(-0.5f, temp);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, src, temp, fail);
 
+    // Other negative inputs need the biggest double less than 0.5 added.
+    loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
     addFloat32(src, temp);
+
     // Round all values toward -Infinity.
     // In the case of overflow, the output is saturated.
     // NaN and -0 are already handled by the "positive number" path above.
     Fcvtms(dest32, temp);
     // If the output potentially saturated, fail.
     branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-
-    // If output is zero, then the actual result is -0. Fail.
-    branchTest32(Assembler::Zero, dest, dest, fail);
   }
 
   bind(&done);
@@ -3122,7 +3116,6 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
   ARMFPRegister src64(src, 64);
   ARMRegister dest64(dest, 64);
   ARMRegister dest32(dest, 32);
-  ScratchDoubleScope scratch(*this);
 
   Label negative, done;
 
@@ -3165,25 +3158,20 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
   // 3. If = 0.5, round to +Infinity (so, up).
   bind(&negative);
   {
-    // Inputs in [-0.5, 0) need 0.5 added; other negative inputs need
-    // the biggest double less than 0.5.
-    Label join;
-    loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
-    loadConstantDouble(-0.5, scratch);
-    branchDouble(Assembler::DoubleLessThan, src, scratch, &join);
-    loadConstantDouble(0.5, temp);
-    bind(&join);
+    // Inputs in [-0.5, 0) are rounded to -0. Fail.
+    loadConstantDouble(-0.5, temp);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, src, temp, fail);
 
+    // Other negative inputs need the biggest double less than 0.5 added.
+    loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
     addDouble(src, temp);
+
     // Round all values toward -Infinity.
     // In the case of overflow, the output is saturated.
     // NaN and -0 are already handled by the "positive number" path above.
     Fcvtms(dest32, temp);
     // If the output potentially saturated, fail.
     branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
-
-    // If output is zero, then the actual result is -0. Fail.
-    branchTest32(Assembler::Zero, dest, dest, fail);
   }
 
   bind(&done);
