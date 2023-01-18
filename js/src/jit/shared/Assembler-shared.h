@@ -153,6 +153,11 @@ struct ImmPtr {
 
   struct NoCheckToken {};
 
+  explicit constexpr ImmPtr(std::nullptr_t) : value(nullptr) {
+    // Explicit constructor for nullptr. This ensures ImmPtr(0) can't be called.
+    // Either use ImmPtr(nullptr) or ImmWord(0).
+  }
+
   explicit ImmPtr(void* value, NoCheckToken) : value(value) {
     // A special unchecked variant for contexts where we know it is safe to
     // use an immptr. This is assuming the caller knows what they're doing.
