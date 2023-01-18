@@ -1346,10 +1346,10 @@ void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
   MOZ_ASSERT(!scratch64.Is(dest64));
 
   Fcvtzs(dest64, src32);
-  Add(scratch64, dest64, Operand(0x7fffffffffffffff));
+  Add(scratch64, dest64, Operand(0x7fff'ffff'ffff'ffff));
   Cmn(scratch64, 3);
   B(fail, Assembler::Above);
-  And(dest64, dest64, Operand(0xffffffff));
+  And(dest64, dest64, Operand(0xffff'ffff));
 }
 
 void MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src,
@@ -1391,10 +1391,10 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
   MOZ_ASSERT(!scratch64.Is(dest64));
 
   Fcvtzs(dest64, src64);
-  Add(scratch64, dest64, Operand(0x7fffffffffffffff));
+  Add(scratch64, dest64, Operand(0x7fff'ffff'ffff'ffff));
   Cmn(scratch64, 3);
   B(fail, Assembler::Above);
-  And(dest64, dest64, Operand(0xffffffff));
+  And(dest64, dest64, Operand(0xffff'ffff));
 }
 
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
