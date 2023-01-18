@@ -872,10 +872,6 @@ var gMainPane = {
     }
     Services.prefs.addObserver(PREF_CONTAINERS_EXTENSION, this);
 
-    const link = document.getElementById("browserContainersLearnMore");
-    link.href =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") + "containers";
-
     document.getElementById("browserContainersbox").hidden = false;
     this.readBrowserContainersCheckbox();
   },
