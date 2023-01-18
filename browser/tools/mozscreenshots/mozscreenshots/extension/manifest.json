@@ -4,7 +4,7 @@
   "description": "Take screenshots of Mozilla applications in various UI configurations.",
   "version": "1.0",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "mozscreenshots@mozilla.org"
     }

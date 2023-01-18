@@ -6,7 +6,7 @@
   "author": "Mozilla <screenshots-feedback@mozilla.com>",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
   "incognito": "spanning",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "screenshots@mozilla.org",
       "strict_min_version": "57.0a1"
