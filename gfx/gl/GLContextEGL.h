@@ -101,7 +101,7 @@ class GLContextEGL final : public GLContext {
 
   void Destroy();
 
-  static RefPtr<GLContextEGL> CreateEGLPBufferOffscreenContext(
+  static RefPtr<GLContextEGL> CreateWithoutSurface(
       std::shared_ptr<EglDisplay>, const GLContextCreateDesc&,
       nsACString* const out_FailureId);
   static RefPtr<GLContextEGL> CreateEGLSurfacelessContext(
