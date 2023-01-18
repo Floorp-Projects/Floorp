@@ -49,11 +49,11 @@ def generate_payload(request):
     }
 
 def main(request, response):
-    payload_generator = lambda _: generate_payload(request)
+    def payload_generator(_): return generate_payload(request)
     maybe_additional_headers = {}
     if b'contentSecurityPolicy' in request.GET:
         csp = unquote(isomorphic_decode(request.GET[b'contentSecurityPolicy']))
-        maybe_additional_headers[b'Content-Security-Policy'] = get_csp_value(csp);
+        maybe_additional_headers[b'Content-Security-Policy'] = get_csp_value(csp)
     subresource.respond(request,
                         response,
                         payload_generator = payload_generator,
