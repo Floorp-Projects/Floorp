@@ -398,6 +398,40 @@ nsresult PerformRenameFile(const FileSystemConnection& aConnection,
   return PerformRename(aConnection, aHandle, aNewName, updateFileNameQuery);
 }
 
+Result<nsTArray<EntryId>, QMResult> FindDescendants(
+    const FileSystemConnection& aConnection, const EntryId& aEntryId) {
+  const nsLiteralCString descendantsQuery =
+      "WITH RECURSIVE traceChildren(handle, parent) AS ( "
+      "SELECT handle, parent "
+      "FROM Entries "
+      "WHERE handle=:handle "
+      "UNION "
+      "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
+      "WHERE traceChildren.handle=Entries.parent ) "
+      "SELECT handle "
+      "FROM traceChildren INNER JOIN Files "
+      "USING(handle) "
+      ";"_ns;
+
+  nsTArray<EntryId> descendants;
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, descendantsQuery));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
+    QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+
+    while (moreResults) {
+      QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 0u));
+
+      descendants.AppendElement(entryId);
+
+      QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
+    }
+  }
+
+  return descendants;
+}
+
 }  // namespace
 
 /* static */
@@ -706,19 +740,6 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
   // If it's empty or we can delete recursively, deleting the handle will
   // cascade
 
-  const nsLiteralCString descendantsQuery =
-      "WITH RECURSIVE traceChildren(handle, parent) AS ( "
-      "SELECT handle, parent "
-      "FROM Entries "
-      "WHERE handle=:handle "
-      "UNION "
-      "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
-      "WHERE traceChildren.handle=Entries.parent ) "
-      "SELECT handle "
-      "FROM traceChildren INNER JOIN Files "
-      "USING(handle) "
-      ";"_ns;
-
   const nsLiteralCString deleteEntryQuery =
       "DELETE FROM Entries "
       "WHERE handle = :handle "
@@ -727,20 +748,11 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
   mozStorageTransaction transaction(
       mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-  nsTArray<EntryId> descendants;
-  {
-    QM_TRY_UNWRAP(ResultStatement stmt,
-                  ResultStatement::Create(mConnection, descendantsQuery));
-    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
-    QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
-
-    while (moreResults) {
-      QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 0u));
-
-      descendants.AppendElement(entryId);
-
-      QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
-    }
+  QM_TRY_INSPECT(const nsTArray<EntryId>& descendants,
+                 FindDescendants(mConnection, entryId));
+  for (const auto& child : descendants) {
+    QM_TRY(OkIf(!mDataManager->IsLocked(child)),
+           Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR)));
   }
 
   {
