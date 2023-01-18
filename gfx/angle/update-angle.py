@@ -42,7 +42,7 @@ Update: (in the angle repo)
 
 ~~~
 # In the angle repo:
-/path/to/gecko/gfx/angle/update-angle.py origin/chromium/XXXX
+/path/to/gecko/gfx/angle/update-angle.py origin
 git push moz # Push the firefox-XX branch to github.com/mozilla/angle
 ~~~~
 
