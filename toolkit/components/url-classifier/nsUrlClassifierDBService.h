@@ -183,7 +183,10 @@ class nsUrlClassifierDBServiceWorker final : public nsIUrlClassifierDBService {
   // Used to probe the state of the worker thread. When the update begins,
   // mUpdateObserver will be set. When the update finished, mUpdateObserver
   // will be nulled out in NotifyUpdateObserver.
-  bool IsBusyUpdating() const { return !!mUpdateObserver; }
+  bool IsBusyUpdating() {
+    mozilla::MutexAutoLock lock(mUpdateObserverLock);
+    return !!mUpdateObserver;
+  }
 
   // Delegate Classifier to disable async update. If there is an
   // ongoing update on the update thread, we will be blocked until
@@ -243,7 +246,12 @@ class nsUrlClassifierDBServiceWorker final : public nsIUrlClassifierDBService {
   nsresult mUpdateStatus;
   nsTArray<nsCString> mUpdateTables;
 
-  nsCOMPtr<nsIUrlClassifierUpdateObserver> mUpdateObserver;
+  // The mUpdateObserver will be accessed by both the main thread and the worker
+  // thread. The lock is used to protect the mUpdateObserver.
+  mozilla::Mutex mUpdateObserverLock;
+
+  nsCOMPtr<nsIUrlClassifierUpdateObserver> mUpdateObserver
+      MOZ_GUARDED_BY(mUpdateObserverLock);
   bool mInStream;
 
   // The number of noise entries to add to the set of lookup results.
