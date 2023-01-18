@@ -11,12 +11,20 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.endsWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -43,6 +51,25 @@ class SettingsSubMenuLoginsAndPasswordRobot {
 
     fun verifyDefaultValueAutofillLogins(context: Context) = assertDefaultValueAutofillLogins(context)
 
+    fun clickAutofillOption() = autofillOption.click()
+
+    fun verifyAutofillToggle(enabled: Boolean) =
+        autofillOption
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            if (enabled) {
+                                isChecked()
+                            } else {
+                                isNotChecked()
+                            },
+                        ),
+                    ),
+                ),
+            )
+
     class Transition {
 
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -53,7 +80,7 @@ class SettingsSubMenuLoginsAndPasswordRobot {
         }
 
         fun openSavedLogins(interact: SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition {
-            fun savedLoginsButton() = onView(ViewMatchers.withText("Saved logins"))
+            fun savedLoginsButton() = onView(withText("Saved logins"))
             savedLoginsButton().click()
 
             SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot().interact()
@@ -76,8 +103,8 @@ class SettingsSubMenuLoginsAndPasswordRobot {
             return SettingsTurnOnSyncRobot.Transition()
         }
 
-        fun saveLoginsAndPasswordsOptions(interact: SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.Transition {
-            fun saveLoginsAndPasswordButton() = onView(ViewMatchers.withText("Save logins and passwords"))
+        fun openSaveLoginsAndPasswordsOptions(interact: SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.Transition {
+            fun saveLoginsAndPasswordButton() = onView(withText("Save logins and passwords"))
             saveLoginsAndPasswordButton().click()
 
             SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot().interact()
@@ -112,3 +139,5 @@ private fun assertDefaultValueExceptions() = onView(ViewMatchers.withText("Excep
 
 private fun assertDefaultValueSyncLogins() = onView(ViewMatchers.withText("Sync and save data"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private val autofillOption = onView(withText("Autofill in $appName"))

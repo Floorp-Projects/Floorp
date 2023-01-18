@@ -17,7 +17,9 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class LoginsTest {
@@ -55,7 +57,7 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
-            verifySaveLoginPromptIsShown()
+            clickSubmitLoginButton()
             // Click save to save the login
             saveLoginFromPrompt("Save")
         }
@@ -103,7 +105,7 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
-            verifySaveLoginPromptIsShown()
+            clickSubmitLoginButton()
             // Don't save the login, add to exceptions
             saveLoginFromPrompt("Never save")
         }.openThreeDotMenu {
@@ -130,12 +132,13 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
-            verifySaveLoginPromptIsShown()
+            clickSubmitLoginButton()
             // Click Save to save the login
             saveLoginFromPrompt("Save")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             enterPassword("test")
+            clickSubmitLoginButton()
             verifyUpdateLoginPromptIsShown()
             // Click Update to change the saved password
             saveLoginFromPrompt("Update")
@@ -171,7 +174,7 @@ class LoginsTest {
             verifySuggestedUserName("mozilla")
             clickLoginSuggestion("mozilla")
             clickShowPasswordButton()
-            verifyPrefilledLoginCredentials("mozilla", "firefox")
+            verifyPrefilledLoginCredentials("mozilla", "firefox", true)
         }
     }
 
@@ -228,7 +231,7 @@ class LoginsTest {
         }.refreshPage {
             waitForPageToLoad()
             clickShowPasswordButton()
-            verifyPrefilledLoginCredentials("android", "fenix")
+            verifyPrefilledLoginCredentials("android", "fenix", true)
         }
     }
 
@@ -311,7 +314,7 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.url) {
-            verifySaveLoginPromptIsShown()
+            clickSubmitLoginButton()
             saveLoginFromPrompt("Save")
         }.openThreeDotMenu {
         }.openSettings {
@@ -331,6 +334,252 @@ class LoginsTest {
             clickConfirmDeleteLogin()
             // The account remains displayed, see: https://github.com/mozilla-mobile/fenix/issues/23212
             // verifyNotSavedLoginFromPrompt()
+        }
+    }
+
+    @Test
+    fun verifyNeverSaveLoginOptionTest() {
+        val loginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSaveLoginsAndPasswordsOptions {
+            clickNeverSaveOption()
+        }.goBack {
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.url) {
+            clickSubmitLoginButton()
+            verifySaveLoginPromptIsNotDisplayed()
+        }
+    }
+
+    @Test
+    fun verifyAutofillToggleTest() {
+        val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            saveLoginFromPrompt("Save")
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPrefilledLoginCredentials("mozilla", "firefox", true)
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+            verifyAutofillToggle(true)
+            clickAutofillOption()
+            verifyAutofillToggle(false)
+        }.goBack {
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPrefilledLoginCredentials("mozilla", "firefox", false)
+        }
+    }
+
+    @Test
+    fun verifyLoginIsNotUpdatedTest() {
+        val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+        val originWebsite = "mozilla-mobile.github.io"
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSaveLoginsAndPasswordsOptions {
+            verifySaveLoginsOptionsView()
+            verifyAskToSaveRadioButton(true)
+            verifyNeverSaveSaveRadioButton(false)
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            saveLoginFromPrompt("Save")
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            clickShowPasswordButton()
+            fillAndSubmitLoginCredentials("mozilla", "fenix")
+            verifyUpdateLoginPromptIsShown()
+            saveLoginFromPrompt("Don’t update")
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            tapSetupLater()
+            viewSavedLoginDetails(originWebsite)
+            revealPassword()
+            verifyPasswordSaved("firefox")
+        }
+    }
+
+    @Test
+    fun verifySearchLoginsTest() {
+        val firstLoginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
+        val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+        val originWebsite = "mozilla-mobile.github.io"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            clickSubmitLoginButton()
+            saveLoginFromPrompt("Save")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            saveLoginFromPrompt("Save")
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            tapSetupLater()
+            clickSearchLoginButton()
+            searchLogin("mozilla")
+            viewSavedLoginDetails(originWebsite)
+            verifyLoginItemUsername("mozilla")
+            revealPassword()
+            verifyPasswordSaved("firefox")
+        }
+    }
+
+    @Test
+    fun verifyLastUsedLoginSortingOptionTest() {
+        val firstLoginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
+        val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+        val originWebsite = "mozilla-mobile.github.io"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            clickSubmitLoginButton()
+            saveLoginFromPrompt("Save")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            saveLoginFromPrompt("Save")
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            tapSetupLater()
+            clickSavedLoginsChevronIcon()
+            verifyLoginsSortingOptions()
+            clickLastUsedSortingOption()
+            verifySortedLogin(activityTestRule, 0, originWebsite)
+            verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+        }.goBack {
+        }.openSavedLogins {
+            verifySortedLogin(activityTestRule, 0, originWebsite)
+            verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+        }
+
+        restartApp(activityTestRule)
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            verifySortedLogin(activityTestRule, 0, originWebsite)
+            verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+        }
+    }
+
+    @Test
+    fun verifyAlphabeticalLoginSortingOptionTest() {
+        val firstLoginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
+        val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+        val originWebsite = "mozilla-mobile.github.io"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            clickSubmitLoginButton()
+            saveLoginFromPrompt("Save")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            saveLoginFromPrompt("Save")
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            tapSetupLater()
+            verifySortedLogin(activityTestRule, 0, firstLoginPage.url.authority.toString())
+            verifySortedLogin(activityTestRule, 1, originWebsite)
+        }.goBack {
+        }.openSavedLogins {
+            verifySortedLogin(activityTestRule, 0, firstLoginPage.url.authority.toString())
+            verifySortedLogin(activityTestRule, 1, originWebsite)
+        }
+
+        restartApp(activityTestRule)
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            verifySortedLogin(activityTestRule, 0, firstLoginPage.url.authority.toString())
+            verifySortedLogin(activityTestRule, 1, originWebsite)
+        }
+    }
+
+    @Test
+    fun verifyAddLoginManuallyTest() {
+        val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            tapSetupLater()
+            clickAddLoginButton()
+            verifyAddNewLoginView()
+            enterSiteCredential("mozilla")
+            verifyHostnameErrorMessage()
+            enterSiteCredential(loginPage)
+            setNewUserName("mozilla")
+            setNewPassword("firefox")
+            clickClearPasswordButton()
+            verifyPasswordErrorMessage()
+            setNewPassword("firefox")
+            saveEditedLogin()
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            clickUsernameTextField()
+            clickSuggestedLoginsButton()
+            verifySuggestedUserName("mozilla")
+            clickLoginSuggestion("mozilla")
+            clickShowPasswordButton()
+            verifyPrefilledLoginCredentials("mozilla", "firefox", true)
         }
     }
 }

@@ -209,7 +209,7 @@ class SettingsPrivacyTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
-        }.saveLoginsAndPasswordsOptions {
+        }.openSaveLoginsAndPasswordsOptions {
             verifySaveLoginsOptionsView()
         }
     }

@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions
@@ -13,15 +15,18 @@ import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
+import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -47,6 +52,52 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     }
 
     fun tapSetupLater() = onView(withText("Later")).perform(ViewActions.click())
+
+    fun clickAddLoginButton() =
+        itemContainingText(getStringResource(R.string.preferences_logins_add_login)).click()
+
+    fun verifyAddNewLoginView() {
+        assertItemWithResIdExists(
+            siteHeader,
+            siteTextInput,
+            usernameHeader,
+            usernameTextInput,
+            passwordHeader,
+            passwordTextInput,
+        )
+        assertItemContainingTextExists(siteDescription)
+        siteTextInputHint.check(matches(withHint(R.string.add_login_hostname_hint_text)))
+    }
+
+    fun enterSiteCredential(website: String) = siteTextInput.setText(website)
+
+    fun verifyHostnameErrorMessage() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_2)))
+
+    fun verifyPasswordErrorMessage() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.saved_login_password_required)))
+
+    fun clickSearchLoginButton() = itemWithResId("$packageName:id/search").click()
+
+    fun clickSavedLoginsChevronIcon() = itemWithResId("$packageName:id/toolbar_chevron_icon").click()
+
+    fun verifyLoginsSortingOptions() {
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_alphabetically)))
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_last_used)))
+    }
+
+    fun clickLastUsedSortingOption() =
+        itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_last_used)).click()
+
+    fun verifySortedLogin(testRule: HomeActivityIntentTestRule, position: Int, loginTitle: String) {
+        val list = testRule.activity.findViewById<RecyclerView>(R.id.saved_logins_list)
+        val item = list.layoutManager?.findViewByPosition(position)
+        val title = item?.findViewById<AppCompatTextView>(R.id.webAddressView)
+        assertEquals(loginTitle, title?.text)
+    }
+
+    fun searchLogin(searchTerm: String) =
+        itemContainingText(getStringResource(R.string.preferences_passwords_saved_logins_search)).setText(searchTerm)
 
     fun verifySavedLoginsSectionUsername(username: String) =
         mDevice.waitNotNull(Until.findObjects(By.text(username)))
@@ -77,11 +128,11 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun clickCancelDeleteLogin() =
         onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog()).click()
 
-    fun setNewUserName(userName: String) = itemWithResId("$packageName:id/usernameText").setText(userName)
+    fun setNewUserName(userName: String) = usernameTextInput.setText(userName)
 
     fun clickClearUserNameButton() = itemWithResId("$packageName:id/clearUsernameTextButton").click()
 
-    fun setNewPassword(password: String) = itemWithResId("$packageName:id/passwordText").setText(password)
+    fun setNewPassword(password: String) = passwordTextInput.setText(password)
 
     fun clickClearPasswordButton() = itemWithResId("$packageName:id/clearPasswordTextButton").click()
 
@@ -126,3 +177,12 @@ private fun assertSavedLoginAppears() =
         .check(matches(isDisplayed()))
 
 private val openWebsiteButton = onView(withId(R.id.openWebAddress))
+
+private val siteHeader = itemWithResId("$packageName:id/hostnameHeaderText")
+private val siteTextInput = itemWithResId("$packageName:id/hostnameText")
+private val siteDescription = itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_3))
+private val siteTextInputHint = onView(withId(R.id.hostnameText))
+private val usernameHeader = itemWithResId("$packageName:id/usernameHeader")
+private val usernameTextInput = itemWithResId("$packageName:id/usernameText")
+private val passwordHeader = itemWithResId("$packageName:id/passwordHeader")
+private val passwordTextInput = itemWithResId("$packageName:id/passwordText")

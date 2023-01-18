@@ -403,12 +403,9 @@ class BrowserRobot {
         switchButton.clickAndWaitForNewWindow(waitingTime)
     }
 
-    fun verifySaveLoginPromptIsShown() = clickPageObject(webPageItemWithResourceId("submit"))
+    fun clickSubmitLoginButton() = clickPageObject(webPageItemWithResourceId("submit"))
 
-    fun verifyUpdateLoginPromptIsShown() {
-        clickPageObject(webPageItemWithResourceId("submit"))
-        mDevice.waitNotNull(Until.findObjects(text("Update")))
-    }
+    fun verifyUpdateLoginPromptIsShown() = mDevice.waitNotNull(Until.findObjects(text("Update")))
 
     fun saveLoginFromPrompt(optionToSaveLogin: String) {
         mDevice.waitForObjects(
@@ -504,6 +501,12 @@ class BrowserRobot {
         mDevice.waitForIdle(waitingTime)
     }
 
+    fun clickUsernameTextField() =
+        webPageItemWithResourceId("username").also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
+
     fun clickSuggestedLoginsButton() {
         var currentTries = 0
         while (currentTries++ < 3) {
@@ -564,34 +567,41 @@ class BrowserRobot {
         )
     }
 
-    fun verifyPrefilledLoginCredentials(userName: String, password: String) {
-        var currentTries = 0
+    fun verifyPrefilledLoginCredentials(userName: String, password: String, credentialsArePrefilled: Boolean) {
         // Sometimes the assertion of the pre-filled logins fails so we are re-trying after refreshing the page
-        while (currentTries++ < 3) {
+        for (i in 1..RETRY_COUNT) {
             try {
-                mDevice.waitForObjects(webPageItemWithResourceId("username"))
-                assertTrue(webPageItemWithResourceId("username").text.equals(userName))
+                if (credentialsArePrefilled) {
+                    mDevice.waitForObjects(webPageItemWithResourceId("username"))
+                    assertTrue(webPageItemWithResourceId("username").text.equals(userName))
 
-                mDevice.waitForObjects(webPageItemWithResourceId("password"))
-                assertTrue(webPageItemWithResourceId("password").text.equals(password))
+                    mDevice.waitForObjects(webPageItemWithResourceId("password"))
+                    assertTrue(webPageItemWithResourceId("password").text.equals(password))
+                } else {
+                    mDevice.waitForObjects(webPageItemWithResourceId("username"))
+                    assertFalse(webPageItemWithResourceId("username").text.equals(userName))
+
+                    mDevice.waitForObjects(webPageItemWithResourceId("password"))
+                    assertFalse(webPageItemWithResourceId("password").text.equals(password))
+                }
 
                 break
             } catch (e: AssertionError) {
-                browserScreen {
-                }.openThreeDotMenu {
-                }.refreshPage {
-                    clearUserNameLoginCredential()
-                    clickSuggestedLoginsButton()
-                    verifySuggestedUserName(userName)
-                    clickLoginSuggestion(userName)
-                    clickShowPasswordButton()
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openThreeDotMenu {
+                    }.refreshPage {
+                        clearUserNameLoginCredential()
+                        clickSuggestedLoginsButton()
+                        verifySuggestedUserName(userName)
+                        clickLoginSuggestion(userName)
+                        clickShowPasswordButton()
+                    }
                 }
             }
         }
-        mDevice.waitForObjects(webPageItemWithResourceId("username"))
-        assertTrue(webPageItemWithResourceId("username").text.equals(userName))
-        mDevice.waitForObjects(webPageItemWithResourceId("password"))
-        assertTrue(webPageItemWithResourceId("password").text.equals(password))
     }
 
     fun verifyAutofilledAddress(streetAddress: String) {
@@ -635,6 +645,12 @@ class BrowserRobot {
             ).waitForExists(waitingTime),
         )
     }
+
+    fun verifySaveLoginPromptIsNotDisplayed() =
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/feature_prompt_login_fragment"),
+            exists = false,
+        )
 
     fun verifyTrackingProtectionWebContent(state: String) {
         for (i in 1..RETRY_COUNT) {

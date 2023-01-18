@@ -8,8 +8,17 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.not
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 
 /**
  * Implementation of Robot Pattern for the Privacy Settings > saved logins sub menu
@@ -17,12 +26,51 @@ import org.hamcrest.CoreMatchers
 
 class SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot {
     fun verifySaveLoginsOptionsView() {
-        onView(ViewMatchers.withText("Ask to save"))
+        onView(withText("Ask to save"))
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-        onView(ViewMatchers.withText("Never save"))
+        onView(withText("Never save"))
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
+
+    fun verifyAskToSaveRadioButton(isChecked: Boolean) {
+        if (isChecked) {
+            onView(
+                allOf(
+                    withId(R.id.radio_button),
+                    hasSibling(withText(R.string.preferences_passwords_save_logins_ask_to_save)),
+                ),
+            ).check(matches(isChecked()))
+        } else {
+            onView(
+                allOf(
+                    withId(R.id.radio_button),
+                    hasSibling(withText(R.string.preferences_passwords_save_logins_ask_to_save)),
+                ),
+            ).check(matches(not(isChecked())))
+        }
+    }
+
+    fun verifyNeverSaveSaveRadioButton(isChecked: Boolean) {
+        if (isChecked) {
+            onView(
+                allOf(
+                    withId(R.id.radio_button),
+                    hasSibling(withText(R.string.preferences_passwords_save_logins_never_save)),
+                ),
+            ).check(matches(isChecked()))
+        } else {
+            onView(
+                allOf(
+                    withId(R.id.radio_button),
+                    hasSibling(withText(R.string.preferences_passwords_save_logins_never_save)),
+                ),
+            ).check(matches(not(isChecked())))
+        }
+    }
+
+    fun clickNeverSaveOption() =
+        itemContainingText(getStringResource(R.string.preferences_passwords_save_logins_never_save)).click()
 
     class Transition {
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
