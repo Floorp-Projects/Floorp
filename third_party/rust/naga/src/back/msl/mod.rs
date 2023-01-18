@@ -156,10 +156,8 @@ pub enum Error {
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum EntryPointError {
-    #[error("global '{0}' doesn't have a binding")]
-    MissingBinding(String),
     #[error("mapping of {0:?} is missing")]
-    MissingBindTarget(crate::ResourceBinding),
+    MissingBinding(crate::ResourceBinding),
     #[error("mapping for push constants is missing")]
     MissingPushConstants,
     #[error("mapping for sizes buffer is missing")]
@@ -305,7 +303,7 @@ impl Options {
                 index: 0,
                 interpolation: None,
             }),
-            None => Err(EntryPointError::MissingBindTarget(res_binding.clone())),
+            None => Err(EntryPointError::MissingBinding(res_binding.clone())),
         }
     }
 
@@ -393,7 +391,6 @@ impl ResolvedBinding {
                     Bi::VertexIndex => "vertex_id",
                     // fragment
                     Bi::FragDepth => "depth(any)",
-                    Bi::PointCoord => "point_coord",
                     Bi::FrontFacing => "front_facing",
                     Bi::PrimitiveIndex => "primitive_id",
                     Bi::SampleIndex => "sample_id",

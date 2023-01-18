@@ -1404,26 +1404,6 @@ impl fmt::Debug for DeviceQueueCreateFlags {
         debug_flags(f, KNOWN, self.0)
     }
 }
-impl fmt::Debug for DirectDriverLoadingFlagsLUNARG {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const KNOWN: &[(Flags, &str)] = &[];
-        debug_flags(f, KNOWN, self.0)
-    }
-}
-impl fmt::Debug for DirectDriverLoadingModeLUNARG {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let name = match *self {
-            Self::EXCLUSIVE => Some("EXCLUSIVE"),
-            Self::INCLUSIVE => Some("INCLUSIVE"),
-            _ => None,
-        };
-        if let Some(x) = name {
-            f.write_str(x)
-        } else {
-            self.0.fmt(f)
-        }
-    }
-}
 impl fmt::Debug for DirectFBSurfaceCreateFlagsEXT {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[];
@@ -3862,16 +3842,6 @@ impl fmt::Debug for PolygonMode {
         }
     }
 }
-impl fmt::Debug for PresentGravityFlagsEXT {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const KNOWN: &[(Flags, &str)] = &[
-            (PresentGravityFlagsEXT::MIN.0, "MIN"),
-            (PresentGravityFlagsEXT::MAX.0, "MAX"),
-            (PresentGravityFlagsEXT::CENTERED.0, "CENTERED"),
-        ];
-        debug_flags(f, KNOWN, self.0)
-    }
-}
 impl fmt::Debug for PresentModeKHR {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let name = match *self {
@@ -3888,19 +3858,6 @@ impl fmt::Debug for PresentModeKHR {
         } else {
             self.0.fmt(f)
         }
-    }
-}
-impl fmt::Debug for PresentScalingFlagsEXT {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const KNOWN: &[(Flags, &str)] = &[
-            (PresentScalingFlagsEXT::ONE_TO_ONE.0, "ONE_TO_ONE"),
-            (
-                PresentScalingFlagsEXT::ASPECT_RATIO_STRETCH.0,
-                "ASPECT_RATIO_STRETCH",
-            ),
-            (PresentScalingFlagsEXT::STRETCH.0, "STRETCH"),
-        ];
-        debug_flags(f, KNOWN, self.0)
     }
 }
 impl fmt::Debug for PrimitiveTopology {
@@ -4787,17 +4744,17 @@ impl fmt::Debug for StructureType {
             Self::VIDEO_ENCODE_H265_RATE_CONTROL_LAYER_INFO_EXT => {
                 Some("VIDEO_ENCODE_H265_RATE_CONTROL_LAYER_INFO_EXT")
             }
-            Self::VIDEO_DECODE_H264_CAPABILITIES_KHR => Some("VIDEO_DECODE_H264_CAPABILITIES_KHR"),
-            Self::VIDEO_DECODE_H264_PICTURE_INFO_KHR => Some("VIDEO_DECODE_H264_PICTURE_INFO_KHR"),
-            Self::VIDEO_DECODE_H264_PROFILE_INFO_KHR => Some("VIDEO_DECODE_H264_PROFILE_INFO_KHR"),
-            Self::VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_KHR => {
-                Some("VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_KHR")
+            Self::VIDEO_DECODE_H264_CAPABILITIES_EXT => Some("VIDEO_DECODE_H264_CAPABILITIES_EXT"),
+            Self::VIDEO_DECODE_H264_PICTURE_INFO_EXT => Some("VIDEO_DECODE_H264_PICTURE_INFO_EXT"),
+            Self::VIDEO_DECODE_H264_PROFILE_INFO_EXT => Some("VIDEO_DECODE_H264_PROFILE_INFO_EXT"),
+            Self::VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT => {
+                Some("VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT")
             }
-            Self::VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_KHR => {
-                Some("VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_KHR")
+            Self::VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT => {
+                Some("VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT")
             }
-            Self::VIDEO_DECODE_H264_DPB_SLOT_INFO_KHR => {
-                Some("VIDEO_DECODE_H264_DPB_SLOT_INFO_KHR")
+            Self::VIDEO_DECODE_H264_DPB_SLOT_INFO_EXT => {
+                Some("VIDEO_DECODE_H264_DPB_SLOT_INFO_EXT")
             }
             Self::TEXTURE_LOD_GATHER_FORMAT_PROPERTIES_AMD => {
                 Some("TEXTURE_LOD_GATHER_FORMAT_PROPERTIES_AMD")
@@ -5165,17 +5122,17 @@ impl fmt::Debug for StructureType {
             Self::PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_AMD => {
                 Some("PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_AMD")
             }
-            Self::VIDEO_DECODE_H265_CAPABILITIES_KHR => Some("VIDEO_DECODE_H265_CAPABILITIES_KHR"),
-            Self::VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_KHR => {
-                Some("VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_KHR")
+            Self::VIDEO_DECODE_H265_CAPABILITIES_EXT => Some("VIDEO_DECODE_H265_CAPABILITIES_EXT"),
+            Self::VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_EXT => {
+                Some("VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_EXT")
             }
-            Self::VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_KHR => {
-                Some("VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_KHR")
+            Self::VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT => {
+                Some("VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT")
             }
-            Self::VIDEO_DECODE_H265_PROFILE_INFO_KHR => Some("VIDEO_DECODE_H265_PROFILE_INFO_KHR"),
-            Self::VIDEO_DECODE_H265_PICTURE_INFO_KHR => Some("VIDEO_DECODE_H265_PICTURE_INFO_KHR"),
-            Self::VIDEO_DECODE_H265_DPB_SLOT_INFO_KHR => {
-                Some("VIDEO_DECODE_H265_DPB_SLOT_INFO_KHR")
+            Self::VIDEO_DECODE_H265_PROFILE_INFO_EXT => Some("VIDEO_DECODE_H265_PROFILE_INFO_EXT"),
+            Self::VIDEO_DECODE_H265_PICTURE_INFO_EXT => Some("VIDEO_DECODE_H265_PICTURE_INFO_EXT"),
+            Self::VIDEO_DECODE_H265_DPB_SLOT_INFO_EXT => {
+                Some("VIDEO_DECODE_H265_DPB_SLOT_INFO_EXT")
             }
             Self::DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR => {
                 Some("DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR")
@@ -5377,25 +5334,6 @@ impl fmt::Debug for StructureType {
             Self::PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT => {
                 Some("PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT")
             }
-            Self::SURFACE_PRESENT_MODE_EXT => Some("SURFACE_PRESENT_MODE_EXT"),
-            Self::SURFACE_PRESENT_SCALING_CAPABILITIES_EXT => {
-                Some("SURFACE_PRESENT_SCALING_CAPABILITIES_EXT")
-            }
-            Self::SURFACE_PRESENT_MODE_COMPATIBILITY_EXT => {
-                Some("SURFACE_PRESENT_MODE_COMPATIBILITY_EXT")
-            }
-            Self::PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT => {
-                Some("PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT")
-            }
-            Self::SWAPCHAIN_PRESENT_FENCE_INFO_EXT => Some("SWAPCHAIN_PRESENT_FENCE_INFO_EXT"),
-            Self::SWAPCHAIN_PRESENT_MODES_CREATE_INFO_EXT => {
-                Some("SWAPCHAIN_PRESENT_MODES_CREATE_INFO_EXT")
-            }
-            Self::SWAPCHAIN_PRESENT_MODE_INFO_EXT => Some("SWAPCHAIN_PRESENT_MODE_INFO_EXT"),
-            Self::SWAPCHAIN_PRESENT_SCALING_CREATE_INFO_EXT => {
-                Some("SWAPCHAIN_PRESENT_SCALING_CREATE_INFO_EXT")
-            }
-            Self::RELEASE_SWAPCHAIN_IMAGES_INFO_EXT => Some("RELEASE_SWAPCHAIN_IMAGES_INFO_EXT"),
             Self::PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_NV => {
                 Some("PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_NV")
             }
@@ -5828,8 +5766,6 @@ impl fmt::Debug for StructureType {
             Self::RENDER_PASS_SUBPASS_FEEDBACK_CREATE_INFO_EXT => {
                 Some("RENDER_PASS_SUBPASS_FEEDBACK_CREATE_INFO_EXT")
             }
-            Self::DIRECT_DRIVER_LOADING_INFO_LUNARG => Some("DIRECT_DRIVER_LOADING_INFO_LUNARG"),
-            Self::DIRECT_DRIVER_LOADING_LIST_LUNARG => Some("DIRECT_DRIVER_LOADING_LIST_LUNARG"),
             Self::PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT => {
                 Some("PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT")
             }
@@ -5874,9 +5810,6 @@ impl fmt::Debug for StructureType {
                 Some("PHYSICAL_DEVICE_AMIGO_PROFILING_FEATURES_SEC")
             }
             Self::AMIGO_PROFILING_SUBMIT_INFO_SEC => Some("AMIGO_PROFILING_SUBMIT_INFO_SEC"),
-            Self::PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_VIEWPORTS_FEATURES_QCOM => {
-                Some("PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_VIEWPORTS_FEATURES_QCOM")
-            }
             Self::PHYSICAL_DEVICE_RAY_TRACING_INVOCATION_REORDER_FEATURES_NV => {
                 Some("PHYSICAL_DEVICE_RAY_TRACING_INVOCATION_REORDER_FEATURES_NV")
             }
@@ -6389,11 +6322,8 @@ impl fmt::Debug for SwapchainCreateFlagsKHR {
             ),
             (SwapchainCreateFlagsKHR::PROTECTED.0, "PROTECTED"),
             (SwapchainCreateFlagsKHR::MUTABLE_FORMAT.0, "MUTABLE_FORMAT"),
-            (
-                SwapchainCreateFlagsKHR::DEFERRED_MEMORY_ALLOCATION_EXT.0,
-                "DEFERRED_MEMORY_ALLOCATION_EXT",
-            ),
             (SwapchainCreateFlagsKHR::RESERVED_4_EXT.0, "RESERVED_4_EXT"),
+            (SwapchainCreateFlagsKHR::RESERVED_3_SEC.0, "RESERVED_3_SEC"),
         ];
         debug_flags(f, KNOWN, self.0)
     }
@@ -6624,8 +6554,14 @@ impl fmt::Debug for VideoCodecOperationFlagsKHR {
                 VideoCodecOperationFlagsKHR::ENCODE_H265_EXT.0,
                 "ENCODE_H265_EXT",
             ),
-            (VideoCodecOperationFlagsKHR::DECODE_H264.0, "DECODE_H264"),
-            (VideoCodecOperationFlagsKHR::DECODE_H265.0, "DECODE_H265"),
+            (
+                VideoCodecOperationFlagsKHR::DECODE_H264_EXT.0,
+                "DECODE_H264_EXT",
+            ),
+            (
+                VideoCodecOperationFlagsKHR::DECODE_H265_EXT.0,
+                "DECODE_H265_EXT",
+            ),
         ];
         debug_flags(f, KNOWN, self.0)
     }
@@ -6678,19 +6614,19 @@ impl fmt::Debug for VideoDecodeFlagsKHR {
         debug_flags(f, KNOWN, self.0)
     }
 }
-impl fmt::Debug for VideoDecodeH264PictureLayoutFlagsKHR {
+impl fmt::Debug for VideoDecodeH264PictureLayoutFlagsEXT {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
             (
-                VideoDecodeH264PictureLayoutFlagsKHR::PROGRESSIVE.0,
+                VideoDecodeH264PictureLayoutFlagsEXT::PROGRESSIVE.0,
                 "PROGRESSIVE",
             ),
             (
-                VideoDecodeH264PictureLayoutFlagsKHR::INTERLACED_INTERLEAVED_LINES.0,
+                VideoDecodeH264PictureLayoutFlagsEXT::INTERLACED_INTERLEAVED_LINES.0,
                 "INTERLACED_INTERLEAVED_LINES",
             ),
             (
-                VideoDecodeH264PictureLayoutFlagsKHR::INTERLACED_SEPARATE_PLANES.0,
+                VideoDecodeH264PictureLayoutFlagsEXT::INTERLACED_SEPARATE_PLANES.0,
                 "INTERLACED_SEPARATE_PLANES",
             ),
         ];

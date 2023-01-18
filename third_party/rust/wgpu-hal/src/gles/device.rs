@@ -372,8 +372,7 @@ impl super::Device {
             }
         }
 
-        let mut uniforms: [super::UniformDesc; super::MAX_PUSH_CONSTANTS] =
-            [None; super::MAX_PUSH_CONSTANTS].map(|_: Option<()>| Default::default());
+        let mut uniforms: [super::UniformDesc; super::MAX_PUSH_CONSTANTS] = Default::default();
         let count = unsafe { gl.get_active_uniforms(program) };
         let mut offset = 0;
 
@@ -381,7 +380,7 @@ impl super::Device {
             let glow::ActiveUniform { utype, name, .. } =
                 unsafe { gl.get_active_uniform(program, uniform) }.unwrap();
 
-            if conv::is_opaque_type(utype) {
+            if conv::is_sampler(utype) {
                 continue;
             }
 

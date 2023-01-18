@@ -97,9 +97,11 @@ impl super::TypeInner {
         }
     }
 
-    /// Get the size of this type.
-    pub fn size(&self, constants: &super::Arena<super::Constant>) -> u32 {
-        match *self {
+    pub fn try_size(
+        &self,
+        constants: &super::Arena<super::Constant>,
+    ) -> Result<u32, crate::arena::BadHandle> {
+        Ok(match *self {
             Self::Scalar { kind: _, width } | Self::Atomic { kind: _, width } => width as u32,
             Self::Vector {
                 size,
@@ -120,7 +122,8 @@ impl super::TypeInner {
             } => {
                 let count = match size {
                     super::ArraySize::Constant(handle) => {
-                        constants[handle].to_array_length().unwrap_or(1)
+                        let constant = constants.try_get(handle)?;
+                        constant.to_array_length().unwrap_or(1)
                     }
                     // A dynamically-sized array has to have at least one element
                     super::ArraySize::Dynamic => 1,
@@ -129,7 +132,13 @@ impl super::TypeInner {
             }
             Self::Struct { span, .. } => span,
             Self::Image { .. } | Self::Sampler { .. } | Self::BindingArray { .. } => 0,
-        }
+        })
+    }
+
+    /// Get the size of this type. Panics if the `constants` doesn't contain
+    /// a referenced handle. This may not happen in a properly validated IR module.
+    pub fn size(&self, constants: &super::Arena<super::Constant>) -> u32 {
+        self.try_size(constants).unwrap()
     }
 
     /// Return the canonical form of `self`, or `None` if it's already in
