@@ -205,15 +205,13 @@ void CodeGenerator::visitMinMaxF(LMinMaxF* ins) {
   }
 }
 
-// FIXME: Uh, is this a static function? It looks like it is...
 template <typename T>
-ARMRegister toWRegister(const T* a) {
+static ARMRegister toWRegister(const T* a) {
   return ARMRegister(ToRegister(a), 32);
 }
 
-// FIXME: Uh, is this a static function? It looks like it is...
 template <typename T>
-ARMRegister toXRegister(const T* a) {
+static ARMRegister toXRegister(const T* a) {
   return ARMRegister(ToRegister(a), 64);
 }
 
