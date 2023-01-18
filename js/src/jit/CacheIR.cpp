@@ -10930,6 +10930,47 @@ void jit::LoadShapeWrapperContents(MacroAssembler& masm, Register obj,
       JSVAL_TYPE_PRIVATE_GCTHING);
 }
 
+static bool CanConvertToInt32ForToNumber(const Value& v) {
+  return v.isInt32() || v.isBoolean() || v.isNull();
+}
+
+static Int32OperandId EmitGuardToInt32ForToNumber(CacheIRWriter& writer,
+                                                  ValOperandId id,
+                                                  const Value& v) {
+  if (v.isInt32()) {
+    return writer.guardToInt32(id);
+  }
+  if (v.isNull()) {
+    writer.guardIsNull(id);
+    return writer.loadInt32Constant(0);
+  }
+  MOZ_ASSERT(v.isBoolean());
+  return writer.guardBooleanToInt32(id);
+}
+
+static bool CanConvertToDoubleForToNumber(const Value& v) {
+  return v.isNumber() || v.isBoolean() || v.isNullOrUndefined();
+}
+
+static NumberOperandId EmitGuardToDoubleForToNumber(CacheIRWriter& writer,
+                                                    ValOperandId id,
+                                                    const Value& v) {
+  if (v.isNumber()) {
+    return writer.guardIsNumber(id);
+  }
+  if (v.isBoolean()) {
+    BooleanOperandId boolId = writer.guardToBoolean(id);
+    return writer.booleanToNumber(boolId);
+  }
+  if (v.isNull()) {
+    writer.guardIsNull(id);
+    return writer.loadDoubleConstant(0.0);
+  }
+  MOZ_ASSERT(v.isUndefined());
+  writer.guardIsUndefined(id);
+  return writer.loadDoubleConstant(JS::GenericNaN());
+}
+
 CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script,
                                        jsbytecode* pc, ICState state, JSOp op,
                                        HandleValue lhsVal, HandleValue rhsVal)
@@ -11649,24 +11690,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
-static bool CanConvertToInt32ForToNumber(const Value& v) {
-  return v.isInt32() || v.isBoolean() || v.isNull();
-}
-
-static Int32OperandId EmitGuardToInt32ForToNumber(CacheIRWriter& writer,
-                                                  ValOperandId id,
-                                                  const Value& v) {
-  if (v.isInt32()) {
-    return writer.guardToInt32(id);
-  }
-  if (v.isNull()) {
-    writer.guardIsNull(id);
-    return writer.loadInt32Constant(0);
-  }
-  MOZ_ASSERT(v.isBoolean());
-  return writer.guardBooleanToInt32(id);
-}
-
 AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
   if (op_ == JSOp::BitNot) {
     return AttachDecision::NoAction;
@@ -11705,29 +11728,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
 
   writer.returnFromIC();
   return AttachDecision::Attach;
-}
-
-static bool CanConvertToDoubleForToNumber(const Value& v) {
-  return v.isNumber() || v.isBoolean() || v.isNullOrUndefined();
-}
-
-static NumberOperandId EmitGuardToDoubleForToNumber(CacheIRWriter& writer,
-                                                    ValOperandId id,
-                                                    const Value& v) {
-  if (v.isNumber()) {
-    return writer.guardIsNumber(id);
-  }
-  if (v.isBoolean()) {
-    BooleanOperandId boolId = writer.guardToBoolean(id);
-    return writer.booleanToNumber(boolId);
-  }
-  if (v.isNull()) {
-    writer.guardIsNull(id);
-    return writer.loadDoubleConstant(0.0);
-  }
-  MOZ_ASSERT(v.isUndefined());
-  writer.guardIsUndefined(id);
-  return writer.loadDoubleConstant(JS::GenericNaN());
 }
 
 AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
