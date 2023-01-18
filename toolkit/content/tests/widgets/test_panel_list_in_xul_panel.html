@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test Panel List In XUL Panel</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://global/skin/global.css" type="text/css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <button id="anchor-button">Open</button>
+  <panel-list id="panel-list">
+    <panel-item>one</panel-item>
+    <panel-item>two</panel-item>
+    <panel-item>three</panel-item>
+    <panel-item>four</panel-item>
+    <panel-item>five</panel-item>
+    <panel-item>six</panel-item>
+  </panel-list>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+const {BrowserTestUtils} = ChromeUtils.importESModule("resource://testing-common/BrowserTestUtils.sys.mjs");
+let xulPanel, anchorButton, panelList;
+
+
+add_setup(function setup() {
+  // The HTML document parser doesn't let us put XUL elements in the markup, so
+  // we have to create the <xul:panel> programmatically with script.
+  let content = document.getElementById("content");
+  xulPanel = document.createXULElement("panel");
+  panelList = document.getElementById("panel-list");
+  xulPanel.appendChild(panelList);
+  content.appendChild(xulPanel);
+  anchorButton = document.getElementById("anchor-button");
+  anchorButton.addEventListener("click", e => panelList.toggle(e));
+});
+
+add_task(async function testXULPanelOpenFromClicks() {
+  let xulPanelShown = BrowserTestUtils.waitForPopupEvent(xulPanel, "shown");
+  let shown = BrowserTestUtils.waitForEvent(panelList, "shown");
+  synthesizeMouseAtCenter(anchorButton, {});
+  await shown;
+  await xulPanelShown;
+
+  ok(panelList.hasAttribute("inxulpanel"), "Should have inxulpanel attribute set");
+  ok(!panelList.hasAttribute("style"), "top/left inline styles should not be set.");
+
+  let xulPanelHidden = BrowserTestUtils.waitForPopupEvent(xulPanel, "hidden");
+  let hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+  synthesizeKey("Escape", {});
+  await hidden;
+  await xulPanelHidden;
+});
+
+add_task(async function testXULPanelOpenProgrammatically() {
+  let xulPanelShown = BrowserTestUtils.waitForPopupEvent(xulPanel, "shown");
+  let shown = BrowserTestUtils.waitForEvent(panelList, "shown");
+  panelList.show();
+  await shown;
+  await xulPanelShown;
+
+  ok(panelList.hasAttribute("inxulpanel"), "Should have inxulpanel attribute set");
+  ok(!panelList.hasAttribute("style"), "top/left inline styles should not be set.");
+
+  let xulPanelHidden = BrowserTestUtils.waitForPopupEvent(xulPanel, "hidden");
+  let hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+  panelList.hide();
+  await hidden;
+  await xulPanelHidden;
+});
+</script>
+</pre>
+</body>
+</html>
