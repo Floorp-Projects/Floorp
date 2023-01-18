@@ -265,6 +265,12 @@ _ContextualIdentityService.prototype = {
       );
     }
 
+    if (!name.trim()) {
+      throw new Error(
+        "Contextual identity names cannot contain only whitespace."
+      );
+    }
+
     let identity = {
       userContextId,
       public: true,
@@ -289,6 +295,13 @@ _ContextualIdentityService.prototype = {
     let identity = this._identities.find(
       identity => identity.userContextId == userContextId && identity.public
     );
+
+    if (!name.trim()) {
+      throw new Error(
+        "Contextual identity names cannot contain only whitespace."
+      );
+    }
+
     if (identity && name) {
       identity.name = name;
       identity.color = color;
