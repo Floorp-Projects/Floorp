@@ -2446,24 +2446,57 @@ with only_when(requires_wasm_sandboxing & compile_environment):
 
         return wasi_sysroot
 
+    @depends(wasi_sysroot)
+    def wasi_sysroot_flags(wasi_sysroot):
+        log.info("Using wasi sysroot in %s", wasi_sysroot)
+        return ["--sysroot=%s" % wasi_sysroot]
+
     set_config("WASI_SYSROOT", wasi_sysroot)
 
-    def wasm_compiler_with_flags(compiler, sysroot):
-        if not sysroot:
-            return
-        elif compiler:
+    def wasm_compiler_with_flags(compiler, sysroot_flags):
+        if compiler:
             return (
-                compiler.wrapper
-                + [compiler.compiler]
-                + compiler.flags
-                + ["--sysroot=%s" % sysroot]
+                compiler.wrapper + [compiler.compiler] + compiler.flags + sysroot_flags
             )
 
-    wasm_cc = compiler("C", wasm, other_compiler=c_compiler)
+    @template
+    def wasm_compiler_error(msg):
+        @depends("--with-wasm-sandboxed-libraries")
+        def wasm_compiler_error(sandboxed_libs):
+            suggest_disable = ""
+            if sandboxed_libs.origin == "default":
+                suggest_disable = " Or build with --without-wasm-sandboxed-libraries."
+            return lambda: die(msg + suggest_disable)
 
-    @depends(wasm_cc, wasi_sysroot)
-    def wasm_cc_with_flags(wasm_cc, wasi_sysroot):
-        return wasm_compiler_with_flags(wasm_cc, wasi_sysroot)
+        return wasm_compiler_error
+
+    @template
+    def check_wasm_compiler(compiler, language):
+        compiler.try_compile(
+            includes=["cstring" if language == "C++" else "string.h"],
+            flags=wasi_sysroot_flags,
+            check_msg="the wasm %s compiler can find wasi headers" % language,
+            onerror=wasm_compiler_error(
+                "Cannot find wasi headers or problem with the wasm compiler. "
+                "Please fix the problem."
+            ),
+        )
+
+        compiler.try_run(
+            flags=wasi_sysroot_flags,
+            check_msg="the wasm %s linker can find wasi libraries" % language,
+            onerror=wasm_compiler_error(
+                "Cannot find wasi libraries or problem with the wasm linker. "
+                "Please fix the problem."
+            ),
+        )
+
+    wasm_cc = compiler("C", wasm, other_compiler=c_compiler)
+    check_wasm_compiler(wasm_cc, "C")
+
+    @depends(wasm_cc, wasi_sysroot_flags)
+    def wasm_cc_with_flags(wasm_cc, wasi_sysroot_flags):
+        return wasm_compiler_with_flags(wasm_cc, wasi_sysroot_flags)
 
     set_config("WASM_CC", wasm_cc_with_flags)
 
@@ -2474,10 +2507,11 @@ with only_when(requires_wasm_sandboxing & compile_environment):
         other_compiler=cxx_compiler,
         other_c_compiler=c_compiler,
     )
+    check_wasm_compiler(wasm_cxx, "C++")
 
-    @depends(wasm_cxx, wasi_sysroot)
-    def wasm_cxx_with_flags(wasm_cxx, wasi_sysroot):
-        return wasm_compiler_with_flags(wasm_cxx, wasi_sysroot)
+    @depends(wasm_cxx, wasi_sysroot_flags)
+    def wasm_cxx_with_flags(wasm_cxx, wasi_sysroot_flags):
+        return wasm_compiler_with_flags(wasm_cxx, wasi_sysroot_flags)
 
     set_config("WASM_CXX", wasm_cxx_with_flags)
 
