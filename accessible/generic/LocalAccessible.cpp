@@ -3832,6 +3832,22 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       mDoc->QueueCacheUpdate(this, CacheDomain::TransformMatrix);
     }
 
+    if (newStyle->StyleDisplay()->IsPositionedStyle()) {
+      // We normally rely on reflow to know when bounds might have changed.
+      // However, changing the CSS left, top, etc. properties doesn't always
+      // cause reflow.
+      for (auto prop : {eCSSProperty_left, eCSSProperty_right, eCSSProperty_top,
+                        eCSSProperty_bottom}) {
+        nsAutoCString oldVal, newVal;
+        mOldComputedStyle->GetComputedPropertyValue(prop, oldVal);
+        newStyle->GetComputedPropertyValue(prop, newVal);
+        if (oldVal != newVal) {
+          mDoc->QueueCacheUpdate(this, CacheDomain::Bounds);
+          break;
+        }
+      }
+    }
+
     mOldComputedStyle = newStyle;
     if (newHasValidTransformStyle) {
       mStateFlags |= eOldFrameHasValidTransformStyle;
