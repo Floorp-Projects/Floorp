@@ -2180,7 +2180,7 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
       case LOCAL_GL_RENDERER: {
         bool allowRenderer = StaticPrefs::webgl_enable_renderer_query();
-        if (nsContentUtils::ShouldResistFingerprinting()) {
+        if (ShouldResistFingerprinting()) {
           allowRenderer = false;
         }
         if (allowRenderer) {
@@ -5595,24 +5595,26 @@ void ClientWebGLContext::RequestExtension(const WebGLExtensionID ext) const {
 
 // -
 
-static bool IsExtensionForbiddenForCaller(const WebGLExtensionID ext,
-                                          const dom::CallerType callerType) {
-  if (callerType == dom::CallerType::System) return false;
+bool ClientWebGLContext::IsExtensionForbiddenForCaller(
+    const WebGLExtensionID ext, const dom::CallerType callerType) const {
+  if (callerType == dom::CallerType::System) {
+    return false;
+  }
 
-  if (StaticPrefs::webgl_enable_privileged_extensions()) return false;
+  if (StaticPrefs::webgl_enable_privileged_extensions()) {
+    return false;
+  }
 
-  const bool resistFingerprinting =
-      nsContentUtils::ShouldResistFingerprinting();
   switch (ext) {
     case WebGLExtensionID::MOZ_debug:
       return true;
 
     case WebGLExtensionID::WEBGL_debug_renderer_info:
-      return resistFingerprinting ||
+      return ShouldResistFingerprinting() ||
              !StaticPrefs::webgl_enable_debug_renderer_info();
 
     case WebGLExtensionID::WEBGL_debug_shaders:
-      return resistFingerprinting;
+      return ShouldResistFingerprinting();
 
     default:
       return false;
@@ -5621,7 +5623,10 @@ static bool IsExtensionForbiddenForCaller(const WebGLExtensionID ext,
 
 bool ClientWebGLContext::IsSupported(const WebGLExtensionID ext,
                                      const dom::CallerType callerType) const {
-  if (IsExtensionForbiddenForCaller(ext, callerType)) return false;
+  if (IsExtensionForbiddenForCaller(ext, callerType)) {
+    return false;
+  }
+
   const auto& limits = Limits();
   return limits.supportedExtensions[ext];
 }
@@ -5660,15 +5665,13 @@ void ClientWebGLContext::GetSupportedProfilesASTC(
 
 bool ClientWebGLContext::ShouldResistFingerprinting() const {
   if (mCanvasElement) {
-    // If we're constructed from a canvas element.
     return mCanvasElement->OwnerDoc()->ShouldResistFingerprinting();
   }
   if (mOffscreenCanvas) {
-    // If we're constructed from an offscreen canvas
     return mOffscreenCanvas->ShouldResistFingerprinting();
   }
   // Last resort, just check the global preference
-  return nsContentUtils::ShouldResistFingerprinting();
+  return nsContentUtils::ShouldResistFingerprinting("Fallback");
 }
 
 uint32_t ClientWebGLContext::GetPrincipalHashValue() const {
