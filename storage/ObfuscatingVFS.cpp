@@ -313,7 +313,7 @@ static int obfsRead(sqlite3_file* pFile, void* zBuf, int iAmt,
     if (iAmt == OBFS_PGSZ && !p->inCkpt) {
       obfsDecode(p, (u8*)zBuf, iAmt);
     }
-  } else if (SQLITE_IOERR_SHORT_READ && iOfst == 0 && iAmt >= 100) {
+  } else if (rc == SQLITE_IOERR_SHORT_READ && iOfst == 0 && iAmt >= 100) {
     static const unsigned char aEmptyDb[] = {
         0x53, 0x51, 0x4c, 0x69, 0x74,           0x65, 0x20, 0x66,
         0x6f, 0x72, 0x6d, 0x61, 0x74,           0x20, 0x33, 0x00,
