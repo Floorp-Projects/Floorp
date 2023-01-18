@@ -8,15 +8,6 @@
 
 add_setup(async function() {
   await initInteractionTest();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs",
-        100,
-      ],
-    ],
-  });
 });
 
 add_task(async function topsites() {

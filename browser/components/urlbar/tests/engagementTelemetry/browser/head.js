@@ -366,6 +366,10 @@ async function setup() {
       ["browser.urlbar.quickactions.showInZeroPrefix", true],
       ["browser.urlbar.suggest.quickactions", true],
       ["browser.urlbar.shortcuts.quickactions", true],
+      [
+        "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs",
+        100,
+      ],
     ],
   });
 

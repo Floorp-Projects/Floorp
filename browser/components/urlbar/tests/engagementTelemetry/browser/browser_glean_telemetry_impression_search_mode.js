@@ -8,6 +8,15 @@
 
 add_setup(async function() {
   await initSearchModeTest();
+  // Increase the pausing time to ensure entering search mode.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs",
+        1000,
+      ],
+    ],
+  });
 });
 
 add_task(async function not_search_mode() {

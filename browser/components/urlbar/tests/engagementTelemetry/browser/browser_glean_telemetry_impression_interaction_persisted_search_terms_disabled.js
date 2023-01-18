@@ -14,13 +14,7 @@ add_setup(async function() {
   await initInteractionTest();
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.showSearchTerms.featureGate", false],
-      [
-        "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs",
-        100,
-      ],
-    ],
+    set: [["browser.urlbar.showSearchTerms.featureGate", false]],
   });
 });
 
