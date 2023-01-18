@@ -2940,23 +2940,27 @@ void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
                                          Label* fail) {
   ARMFPRegister src32(src, 32);
   ARMRegister dest32(dest, 32);
+  ARMRegister dest64(dest, 64);
 
   Label done, zeroCase;
 
-  // Convert scalar to signed 32-bit fixed-point, rounding toward zero.
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
   // In the case of overflow, the output is saturated.
   // In the case of NaN and -0, the output is zero.
-  Fcvtzs(dest32, src32);
+  Fcvtzs(dest64, src32);
 
   // If the output was zero, worry about special cases.
-  branch32(Assembler::Equal, dest, Imm32(0), &zeroCase);
+  Cbz(dest64, &zeroCase);
 
-  // Fail on overflow cases.
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
+  Cmp(dest64, Operand(dest64, vixl::SXTW));
+  B(NotEqual, fail);
+
+  // Clear upper 32 bits.
+  Uxtw(dest64, dest64);
 
   // If the output was non-zero and wasn't saturated, just return it.
-  jump(&done);
+  B(&done);
 
   // Handle the case of a zero output:
   // 1. The input may have been NaN, requiring a failure.
@@ -2995,20 +2999,23 @@ void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
 
   Label done, zeroCase;
 
-  // Convert scalar to signed 32-bit fixed-point, rounding toward zero.
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
   // In the case of overflow, the output is saturated.
   // In the case of NaN and -0, the output is zero.
-  Fcvtzs(dest32, src64);
+  Fcvtzs(dest64, src64);
 
   // If the output was zero, worry about special cases.
-  branch32(Assembler::Equal, dest, Imm32(0), &zeroCase);
+  Cbz(dest64, &zeroCase);
 
-  // Fail on overflow cases.
-  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
-  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
+  Cmp(dest64, Operand(dest64, vixl::SXTW));
+  B(NotEqual, fail);
+
+  // Clear upper 32 bits.
+  Uxtw(dest64, dest64);
 
   // If the output was non-zero and wasn't saturated, just return it.
-  jump(&done);
+  B(&done);
 
   // Handle the case of a zero output:
   // 1. The input may have been NaN, requiring a failure.
