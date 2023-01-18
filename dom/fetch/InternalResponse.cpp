@@ -186,6 +186,30 @@ InternalResponse::ToParentToParentInternalResponse() {
   return result;
 }
 
+ParentToChildInternalResponse InternalResponse::ToParentToChildInternalResponse(
+    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent) {
+  ParentToChildInternalResponse result(GetMetadata(), Nothing(),
+                                       UNKNOWN_BODY_SIZE, Nothing());
+
+  nsCOMPtr<nsIInputStream> body;
+  int64_t bodySize;
+  GetUnfilteredBody(getter_AddRefs(body), &bodySize);
+
+  if (body) {
+    result.body() = Some(
+        ToParentToChildStream(WrapNotNull(body), bodySize, aBackgroundParent));
+    result.bodySize() = bodySize;
+  }
+
+  nsCOMPtr<nsIInputStream> alternativeBody = TakeAlternativeBody();
+  if (alternativeBody) {
+    result.alternativeBody() = Some(ToParentToChildStream(
+        WrapNotNull(alternativeBody), UNKNOWN_BODY_SIZE, aBackgroundParent));
+  }
+
+  return result;
+}
+
 SafeRefPtr<InternalResponse> InternalResponse::Clone(CloneType aCloneType) {
   SafeRefPtr<InternalResponse> clone = CreateIncompleteCopy();
   clone->mCloned = (mCloned = true);
