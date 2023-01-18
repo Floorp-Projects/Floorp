@@ -2104,8 +2104,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void profilerEnterFrame(Register framePtr, Register scratch);
   void profilerExitFrame();
-  Address ToPayload(Address value) { return value; }
-  Address ToType(Address value) { return value; }
 
   void wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase,
                     Register ptr, AnyRegister outany, Register64 out64);
