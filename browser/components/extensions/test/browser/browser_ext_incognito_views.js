@@ -2,6 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.openPopupWithoutUserGesture.enabled", true]],
+  });
+});
+
 add_task(async function testIncognitoViews() {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(
