@@ -776,7 +776,10 @@
       data-subcategory="netsettings">
     <description flex="1" control="connectionSettings">
       <html:span id="connectionSettingsDescription"/>
-      <label id="connectionSettingsLearnMore" class="learnMore" is="text-link" data-l10n-id="network-proxy-connection-learn-more"/>
+      <html:a is="moz-support-link"
+            data-l10n-id="network-proxy-connection-learn-more"
+            support-page="prefs-connection-settings"
+      />
     </description>
     <separator orient="vertical"/>
     <button id="connectionSettings"
