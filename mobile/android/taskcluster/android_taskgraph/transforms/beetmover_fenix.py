@@ -12,7 +12,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Optional, Required, Schema
 
-from fenix_taskgraph.util.scriptworker import generate_beetmover_artifact_map
+from android_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 
 logger = logging.getLogger(__name__)
 
@@ -69,20 +69,21 @@ def make_task_description(config, tasks):
             ],
             "dependencies": task["dependencies"],
             "attributes": attributes,
-            "run-on-projects": attributes.get("run_on_projects"),
-            "run-on-tasks-for": attributes.get("run_on_tasks_for"),
             "treeherder": task["treeherder"],
         }
 
         yield task
 
 
+_STAGING_PREFIX = "staging-"
+
 def craft_release_properties(config, task):
     params = config.params
+
     return {
-        "app-name": str(params["project"]),
+        "app-name": "fenix",    # TODO: Support focus
         "app-version": str(params["version"]),
-        "branch": str(params["project"]),
+        "branch": params["project"],
         "build-id": str(params["moz_build_date"]),
         "hash-type": "sha512",
         "platform": "android",

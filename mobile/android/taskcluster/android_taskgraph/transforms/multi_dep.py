@@ -6,6 +6,7 @@
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
+from android_taskgraph.util.scriptworker import generate_beetmover_upstream_artifacts
 
 transforms = TransformSequence()
 
@@ -63,19 +64,26 @@ def build_upstream_artifacts(config, tasks):
         worker_definition = {
             "upstream-artifacts": [],
         }
-
-        for dep in _get_all_deps(task):
-            paths = list(dep.attributes.get("artifacts", {}).values())
-            paths.extend([
-                apk_metadata["name"]
-                for apk_metadata in dep.attributes.get("apks", {}).values()
-            ])
-            if paths:
-                worker_definition["upstream-artifacts"].append({
-                    "taskId": {"task-reference": f"<{dep.kind}>"},
-                    "taskType": _get_task_type(dep.kind),
-                    "paths": sorted(paths),
-                })
+        if "artifact_map" in task["attributes"]:
+            # Beetmover-fenix tasks use declarative artifacts.
+            locale = task["attributes"].get("locale")
+            build_type = task["attributes"]["build-type"]
+            worker_definition[
+                "upstream-artifacts"
+            ] = generate_beetmover_upstream_artifacts(config, task, build_type, locale)
+        else:
+            for dep in _get_all_deps(task):
+                paths = list(dep.attributes.get("artifacts", {}).values())
+                paths.extend([
+                    apk_metadata["name"]
+                    for apk_metadata in dep.attributes.get("apks", {}).values()
+                ])
+                if paths:
+                    worker_definition["upstream-artifacts"].append({
+                        "taskId": {"task-reference": f"<{dep.kind}>"},
+                        "taskType": _get_task_type(dep.kind),
+                        "paths": sorted(paths),
+                    })
 
         task.setdefault("worker", {}).update(worker_definition)
         yield task

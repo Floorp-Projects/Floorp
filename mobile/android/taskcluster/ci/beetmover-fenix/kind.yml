@@ -1,0 +1,40 @@
+# This source code form is subject to the terms of the mozilla public
+# license, v. 2.0. if a copy of the mpl was not distributed with this
+# file, you can obtain one at http://mozilla.org/mpl/2.0/.
+---
+loader: android_taskgraph.loader.multi_dep:loader
+
+transforms:
+    - android_taskgraph.transforms.multi_dep:transforms
+    - android_taskgraph.transforms.clean_multi_dep:transforms
+    - android_taskgraph.transforms.treeherder:transforms
+    - android_taskgraph.transforms.beetmover_fenix:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing-apk
+
+primary-dependency: signing-apk
+
+group-by: build-type
+
+only-for-build-types:
+    - fenix-release
+    - fenix-beta
+    - fenix-nightly
+
+task-template:
+    attributes:
+        # TODO: Support focus
+        artifact_map: taskcluster/android_taskgraph/manifests/fenix_releases.yml
+        shipping_phase: ship
+    treeherder:
+        job-symbol: BM
+    bucket-scope:
+        by-level:
+            '3':
+                by-build-type:
+                    'fenix-nightly': "project:mobile:fenix:releng:beetmover:bucket:nightly"
+                    (fenix-release|fenix-beta): "project:mobile:fenix:releng:beetmover:bucket:release"
+                    default: "project:mobile:fenix:releng:beetmover:bucket:dep"
+            default: "project:mobile:fenix:releng:beetmover:bucket:dep"
