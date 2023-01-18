@@ -1,5 +1,9 @@
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
+});
+
 AddonTestUtils.init(this);
 
 const PREF_DNR_FEEDBACK_DEFAULT_VALUE = Services.prefs.getBoolPref(
@@ -253,4 +257,37 @@ add_task(async function declarativeNetRequestFeedback_without_feature() {
       permissions: ["declarativeNetRequest", "declarativeNetRequestFeedback"],
     },
   });
+});
+
+add_task(async function test_dnr_limits_namespace_properties() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["declarativeNetRequest"],
+    },
+    background() {
+      const {
+        GUARANTEED_MINIMUM_STATIC_RULES,
+        MAX_NUMBER_OF_STATIC_RULESETS,
+        MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
+        MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+      } = browser.declarativeNetRequest;
+      browser.test.sendMessage("dnr-namespace-properties", {
+        GUARANTEED_MINIMUM_STATIC_RULES,
+        MAX_NUMBER_OF_STATIC_RULESETS,
+        MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
+        MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+      });
+    },
+  });
+
+  await extension.startup();
+
+  Assert.deepEqual(
+    await extension.awaitMessage("dnr-namespace-properties"),
+    ExtensionDNRLimits,
+    "Got the expected limits values set on the dnr namespace"
+  );
+
+  await extension.unload();
 });

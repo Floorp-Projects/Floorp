@@ -5,6 +5,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
+  ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
@@ -342,7 +343,7 @@ add_task(async function test_stored_dynamic_rules_exceeding_limits() {
     decompress: true,
   });
 
-  const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = ExtensionDNR.limits;
+  const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = ExtensionDNRLimits;
 
   const expectedDynamicRules = [];
   const unexpectedDynamicRules = [];

@@ -26,6 +26,11 @@ extensions.registerModules({
     scopes: ["addon_child"],
     paths: [["contentScripts"]],
   },
+  declarativeNetRequest: {
+    url: "chrome://extensions/content/child/ext-declarativeNetRequest.js",
+    scopes: ["addon_child"],
+    paths: [["declarativeNetRequest"]],
+  },
   extension: {
     url: "chrome://extensions/content/child/ext-extension.js",
     scopes: ["addon_child", "content_child", "devtools_child"],
