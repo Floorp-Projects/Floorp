@@ -90,13 +90,6 @@ template <typename T>
         aIPCResponse.metadata().principalInfo().ref()));
   }
 
-  nsAutoCString bodyBlobURISpec(aIPCResponse.metadata().bodyBlobURISpec());
-  response->SetBodyBlobURISpec(bodyBlobURISpec);
-  nsAutoString bodyLocalPath(aIPCResponse.metadata().bodyLocalPath());
-  response->SetBodyLocalPath(bodyLocalPath);
-
-  response->mCredentialsMode = aIPCResponse.metadata().credentialsMode();
-
   switch (aIPCResponse.metadata().type()) {
     case ResponseType::Basic:
       response = response->BasicResponse();
@@ -131,17 +124,13 @@ InternalResponseMetadata InternalResponse::GetMetadata() {
   Maybe<mozilla::ipc::PrincipalInfo> principalInfo =
       mPrincipalInfo ? Some(*mPrincipalInfo) : Nothing();
 
-  nsAutoCString bodyBlobURISpec(BodyBlobURISpec());
-  nsAutoString bodyLocalPath(BodyLocalPath());
-
   // Note: all the arguments are copied rather than moved, which would be more
   // efficient, because there's no move-friendly constructor generated.
   nsCOMPtr<nsITransportSecurityInfo> securityInfo(mChannelInfo.SecurityInfo());
   return InternalResponseMetadata(
       mType, GetUnfilteredURLList(), GetUnfilteredStatus(),
       GetUnfilteredStatusText(), headersGuard, headers, mErrorCode,
-      GetAlternativeDataType(), securityInfo, principalInfo, bodyBlobURISpec,
-      bodyLocalPath, GetCredentialsMode());
+      GetAlternativeDataType(), securityInfo, principalInfo);
 }
 
 void InternalResponse::ToChildToParentInternalResponse(
@@ -192,31 +181,6 @@ InternalResponse::ToParentToParentInternalResponse() {
   if (alternativeBody) {
     result.alternativeBody() = Some(ToParentToParentStream(
         WrapNotNull(alternativeBody), UNKNOWN_BODY_SIZE));
-  }
-
-  return result;
-}
-
-ParentToChildInternalResponse InternalResponse::ToParentToChildInternalResponse(
-    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent) {
-  ParentToChildInternalResponse result(GetMetadata(), Nothing(),
-                                       UNKNOWN_BODY_SIZE, Nothing());
-
-  nsCOMPtr<nsIInputStream> body;
-  int64_t bodySize;
-  GetUnfilteredBody(getter_AddRefs(body), &bodySize);
-
-  if (body) {
-    result.body() = Some(ToParentToChildStream(
-        WrapNotNull(body), bodySize, aBackgroundParent, mSerializeAsLazy));
-    result.bodySize() = bodySize;
-  }
-
-  nsCOMPtr<nsIInputStream> alternativeBody = TakeAlternativeBody();
-  if (alternativeBody) {
-    result.alternativeBody() = Some(
-        ToParentToChildStream(WrapNotNull(alternativeBody), UNKNOWN_BODY_SIZE,
-                              aBackgroundParent, mSerializeAsLazy));
   }
 
   return result;

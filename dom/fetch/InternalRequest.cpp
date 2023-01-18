@@ -53,7 +53,6 @@ SafeRefPtr<InternalRequest> InternalRequest::GetRequestConstructorCopy(
 
   copy->mPreferredAlternativeDataType = mPreferredAlternativeDataType;
   copy->mSkipWasmCaching = mSkipWasmCaching;
-  copy->mEmbedderPolicy = mEmbedderPolicy;
   return copy;
 }
 
@@ -141,7 +140,6 @@ InternalRequest::InternalRequest(const InternalRequest& aOther,
       mUnsafeRequest(aOther.mUnsafeRequest),
       mUseURLCredentials(aOther.mUseURLCredentials),
       mContentPolicyTypeOverridden(aOther.mContentPolicyTypeOverridden),
-      mEmbedderPolicy(aOther.mEmbedderPolicy),
       mInterceptionContentPolicyType(aOther.mInterceptionContentPolicyType),
       mInterceptionRedirectChain(aOther.mInterceptionRedirectChain),
       mInterceptionFromThirdParty(aOther.mInterceptionFromThirdParty) {
@@ -165,14 +163,12 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
           static_cast<nsContentPolicyType>(aIPCRequest.contentPolicyType())),
       mReferrer(aIPCRequest.referrer()),
       mReferrerPolicy(aIPCRequest.referrerPolicy()),
-      mEnvironmentReferrerPolicy(aIPCRequest.environmentReferrerPolicy()),
       mMode(aIPCRequest.requestMode()),
       mCredentialsMode(aIPCRequest.requestCredentials()),
       mCacheMode(aIPCRequest.cacheMode()),
       mRedirectMode(aIPCRequest.requestRedirect()),
       mIntegrity(aIPCRequest.integrity()),
       mFragment(aIPCRequest.fragment()),
-      mEmbedderPolicy(aIPCRequest.embedderPolicy()),
       mInterceptionContentPolicyType(static_cast<nsContentPolicyType>(
           aIPCRequest.interceptionContentPolicyType())),
       mInterceptionRedirectChain(aIPCRequest.interceptionRedirectChain()),
@@ -190,52 +186,11 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
 
   const Maybe<BodyStreamVariant>& body = aIPCRequest.body();
 
-  if (!XRE_IsParentProcess()) {
-    if (body) {
-      MOZ_ASSERT(body->type() == BodyStreamVariant::TParentToChildStream);
-      mBodyStream = body->get_ParentToChildStream().get_RemoteLazyInputStream();
-    }
-  } else {
-    if (body) {
-      MOZ_ASSERT(body->type() == BodyStreamVariant::TChildToParentStream);
-      mBodyStream =
-          DeserializeIPCStream(body->get_ChildToParentStream().stream());
-    }
-  }
-}
-
-void InternalRequest::ToIPCInternalRequest(
-    IPCInternalRequest* aIPCRequest, mozilla::ipc::PBackgroundChild* aManager) {
-  aIPCRequest->method() = mMethod;
-  for (const auto& url : mURLList) {
-    aIPCRequest->urlList().AppendElement(url);
-  }
-  mHeaders->ToIPC(aIPCRequest->headers(), aIPCRequest->headersGuard());
-  aIPCRequest->bodySize() = mBodyLength;
-  aIPCRequest->preferredAlternativeDataType() = mPreferredAlternativeDataType;
-  aIPCRequest->contentPolicyType() = mContentPolicyType;
-  aIPCRequest->referrer() = mReferrer;
-  aIPCRequest->referrerPolicy() = mReferrerPolicy;
-  aIPCRequest->environmentReferrerPolicy() = mEnvironmentReferrerPolicy;
-  aIPCRequest->requestMode() = mMode;
-  aIPCRequest->requestCredentials() = mCredentialsMode;
-  aIPCRequest->cacheMode() = mCacheMode;
-  aIPCRequest->requestRedirect() = mRedirectMode;
-  aIPCRequest->integrity() = mIntegrity;
-  aIPCRequest->fragment() = mFragment;
-  aIPCRequest->embedderPolicy() = mEmbedderPolicy;
-
-  if (mPrincipalInfo) {
-    aIPCRequest->principalInfo() = Some(*mPrincipalInfo);
-  }
-
-  if (mBodyStream) {
-    nsCOMPtr<nsIInputStream> body = mBodyStream;
-    aIPCRequest->body().emplace(ChildToParentStream());
-    DebugOnly<bool> ok = mozilla::ipc::SerializeIPCStream(
-        body.forget(), aIPCRequest->body()->get_ChildToParentStream().stream(),
-        /* aAllowLazy */ false);
-    MOZ_ASSERT(ok);
+  // This constructor is (currently) only used for parent -> child communication
+  // (constructed on the child side).
+  if (body) {
+    MOZ_ASSERT(body->type() == BodyStreamVariant::TParentToChildStream);
+    mBodyStream = body->get_ParentToChildStream().stream();
   }
 }
 
