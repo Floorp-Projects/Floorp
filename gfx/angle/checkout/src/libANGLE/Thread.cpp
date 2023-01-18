@@ -10,28 +10,11 @@
 
 #include "libANGLE/Context.h"
 #include "libANGLE/Debug.h"
-#include "libANGLE/Display.h"
 #include "libANGLE/Error.h"
 
 namespace angle
 {
-#if defined(ANGLE_USE_ANDROID_TLS_SLOT)
 bool gUseAndroidOpenGLTlsSlot;
-#endif
-
-void PthreadKeyDestructorCallback(void *ptr)
-{
-    egl::Thread *thread = static_cast<egl::Thread *>(ptr);
-    ASSERT(thread);
-
-    egl::Display::EglDisplaySet displays = egl::Display::GetEglDisplaySet();
-    for (egl::Display *display : displays)
-    {
-        ASSERT(display);
-        // Perform necessary cleanup.
-        display->threadCleanup(thread);
-    }
-}
 }  // namespace angle
 
 namespace egl
@@ -107,11 +90,6 @@ EGLenum Thread::getAPI() const
 void Thread::setCurrent(gl::Context *context)
 {
     mContext = context;
-    if (mContext)
-    {
-        ASSERT(mContext->getDisplay());
-        mContext->getDisplay()->addActiveThread(this);
-    }
 }
 
 Surface *Thread::getCurrentDrawSurface() const

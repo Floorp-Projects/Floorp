@@ -508,36 +508,12 @@ LoadImageFunctionInfo COMPRESSED_RGBA8_ETC2_EAC_to_R8G8B8A8_UNORM(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x10_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 10>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x10_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<10, 10, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x5_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 5>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -556,36 +532,12 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x5_KHR_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x6_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 6>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x6_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<10, 6, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x8_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 8>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -604,36 +556,12 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_10x8_KHR_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_12x10_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<12, 10>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_12x10_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<12, 10, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_12x12_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<12, 12>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -676,18 +604,6 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_4x3x3_OES_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_4x4_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<4, 4>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_4x4_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -724,18 +640,6 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_4x4x4_OES_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_5x4_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<5, 4>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_5x4_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -754,18 +658,6 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_5x4x4_OES_to_default(GLenum type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<5, 4, 4, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_5x5_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<5, 5>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -808,18 +700,6 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_5x5x5_OES_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_6x5_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<6, 5>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_6x5_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -838,18 +718,6 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_6x5x5_OES_to_default(GLenum type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<6, 5, 5, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_6x6_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<6, 6>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -892,18 +760,6 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_6x6x6_OES_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_8x5_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<8, 5>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_8x5_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -916,36 +772,12 @@ LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_8x5_KHR_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_8x6_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<8, 6>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_8x6_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<8, 6, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_RGBA_ASTC_8x8_KHR_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<8, 8>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1144,36 +976,12 @@ LoadImageFunctionInfo COMPRESSED_SIGNED_RG11_EAC_to_R16G16_SNORM(GLenum type)
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 10>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<10, 10, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 5>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1192,36 +1000,12 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR_to_default(GLenum ty
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 6>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<10, 6, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<10, 8>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1240,36 +1024,12 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR_to_default(GLenum ty
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<12, 10>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<12, 10, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<12, 12>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1312,18 +1072,6 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_4x3x3_OES_to_default(GLenum t
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<4, 4>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -1360,18 +1108,6 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_4x4x4_OES_to_default(GLenum t
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<5, 4>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -1390,18 +1126,6 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_5x4x4_OES_to_default(GLenum t
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<5, 4, 4, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<5, 5>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1444,18 +1168,6 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_5x5x5_OES_to_default(GLenum t
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<6, 5>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -1474,18 +1186,6 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_6x5x5_OES_to_default(GLenum t
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<6, 5, 5, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<6, 6>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1528,18 +1228,6 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_6x6x6_OES_to_default(GLenum t
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<8, 5>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR_to_default(GLenum type)
 {
     switch (type)
@@ -1552,36 +1240,12 @@ LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR_to_default(GLenum typ
     }
 }
 
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<8, 6>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadCompressedToNative<8, 6, 1, 16>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR_to_R8G8B8A8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadASTCToRGBA8<8, 8>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1822,20 +1486,6 @@ LoadImageFunctionInfo DEPTH_COMPONENT16_to_D16_UNORM(GLenum type)
     }
 }
 
-LoadImageFunctionInfo DEPTH_COMPONENT16_to_D32_FLOAT(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_INT:
-            return LoadImageFunctionInfo(LoadUNorm32To32F, true);
-        case GL_UNSIGNED_SHORT:
-            return LoadImageFunctionInfo(LoadUNorm16To32F, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo DEPTH_COMPONENT24_to_D24_UNORM_S8_UINT(GLenum type)
 {
     switch (type)
@@ -1854,18 +1504,6 @@ LoadImageFunctionInfo DEPTH_COMPONENT24_to_D24_UNORM_X8_UINT(GLenum type)
     {
         case GL_UNSIGNED_INT:
             return LoadImageFunctionInfo(LoadR32ToR24G8, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo DEPTH_COMPONENT24_to_D32_FLOAT(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_INT:
-            return LoadImageFunctionInfo(LoadD24S8ToD32F, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1970,19 +1608,19 @@ LoadImageFunctionInfo ETC1_RGB8_OES_to_R8G8B8A8_UNORM(GLenum type)
     }
 }
 
-LoadImageFunctionInfo G8_B8R8_2PLANE_420_UNORM_ANGLE_to_default(GLenum type)
+LoadImageFunctionInfo G8_B8R8_2PLANE_420_UNORM_ANGLEX_to_default(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadYuvToNative, true);
+            return LoadImageFunctionInfo(UnimplementedLoadFunction, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
     }
 }
 
-LoadImageFunctionInfo G8_B8_R8_3PLANE_420_UNORM_ANGLE_to_default(GLenum type)
+LoadImageFunctionInfo G8_B8_R8_3PLANE_420_UNORM_ANGLEX_to_default(GLenum type)
 {
     switch (type)
     {
@@ -2224,126 +1862,6 @@ LoadImageFunctionInfo LUMINANCE_ALPHA32F_EXT_to_default(GLenum type)
     {
         case GL_FLOAT:
             return LoadImageFunctionInfo(LoadLA32FToRGBA32F, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE4_R5_G6_B5_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<4, 5, 6, 0>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE4_RGB5_A1_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<4, 5, 5, 1>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE4_RGB8_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<4, 8, 8, 0>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE4_RGBA4_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<4, 4, 4, 4>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE4_RGBA8_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<4, 8, 8, 8>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE8_R5_G6_B5_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<8, 5, 6, 0>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE8_RGB5_A1_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<8, 5, 5, 1>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE8_RGB8_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<8, 8, 8, 0>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE8_RGBA4_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<8, 4, 4, 4>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo PALETTE8_RGBA8_OES_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadPalettedToRGBA8<8, 8, 8, 8>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -3596,48 +3114,12 @@ LoadImageFunctionInfo RGBA8_USCALED_ANGLEX_to_default(GLenum type)
     }
 }
 
-LoadImageFunctionInfo RGBX8_ANGLE_to_R8G8B8A8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadToNative3To4<GLubyte, 0xFF>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo RGBX8_ANGLE_to_R8G8B8X8_UNORM(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadToNative3To4<GLubyte, 0xFF>, true);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
 LoadImageFunctionInfo SR8_EXT_to_R8_UNORM_SRGB(GLenum type)
 {
     switch (type)
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadToNative<GLbyte, 1>, false);
-        default:
-            UNREACHABLE();
-            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
-    }
-}
-
-LoadImageFunctionInfo SRG8_EXT_to_R8G8_UNORM_SRGB(GLenum type)
-{
-    switch (type)
-    {
-        case GL_UNSIGNED_BYTE:
-            return LoadImageFunctionInfo(LoadToNative<GLbyte, 2>, false);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -3919,165 +3401,53 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
             break;
         }
         case GL_COMPRESSED_RGBA_ASTC_10x10_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_10x10_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_10x10_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_10x10_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_10x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_10x5_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_10x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_10x5_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_10x6_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_10x6_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_10x6_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_10x6_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_10x8_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_10x8_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_10x8_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_10x8_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_12x10_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_12x10_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_12x10_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_12x10_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_12x12_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_12x12_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_12x12_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_12x12_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_3x3x3_OES:
             return COMPRESSED_RGBA_ASTC_3x3x3_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_4x3x3_OES:
             return COMPRESSED_RGBA_ASTC_4x3x3_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_4x4_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_4x4_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_4x4_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_4x4_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_4x4x3_OES:
             return COMPRESSED_RGBA_ASTC_4x4x3_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_4x4x4_OES:
             return COMPRESSED_RGBA_ASTC_4x4x4_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_5x4_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_5x4_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_5x4_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_5x4_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_5x4x4_OES:
             return COMPRESSED_RGBA_ASTC_5x4x4_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_5x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_5x5_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_5x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_5x5_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_5x5x4_OES:
             return COMPRESSED_RGBA_ASTC_5x5x4_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_5x5x5_OES:
             return COMPRESSED_RGBA_ASTC_5x5x5_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_6x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_6x5_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_6x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_6x5_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_6x5x5_OES:
             return COMPRESSED_RGBA_ASTC_6x5x5_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_6x6_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_6x6_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_6x6_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_6x6_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_6x6x5_OES:
             return COMPRESSED_RGBA_ASTC_6x6x5_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_6x6x6_OES:
             return COMPRESSED_RGBA_ASTC_6x6x6_OES_to_default;
         case GL_COMPRESSED_RGBA_ASTC_8x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_8x5_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_8x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_8x5_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_8x6_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_8x6_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_8x6_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_8x6_KHR_to_default;
         case GL_COMPRESSED_RGBA_ASTC_8x8_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return COMPRESSED_RGBA_ASTC_8x8_KHR_to_R8G8B8A8_UNORM;
-                default:
-                    return COMPRESSED_RGBA_ASTC_8x8_KHR_to_default;
-            }
-        }
+            return COMPRESSED_RGBA_ASTC_8x8_KHR_to_default;
         case GL_COMPRESSED_RGBA_BPTC_UNORM_EXT:
             return COMPRESSED_RGBA_BPTC_UNORM_EXT_to_default;
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
@@ -4127,165 +3497,53 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
             break;
         }
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_3x3x3_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_3x3x3_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x3x3_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_4x3x3_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4x3_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_4x4x3_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4x4_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_4x4x4_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4x4_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_5x4x4_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5x4_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_5x5x4_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5x5_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_5x5x5_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5x5_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_6x5x5_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6x5_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_6x6x5_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6x6_OES:
             return COMPRESSED_SRGB8_ALPHA8_ASTC_6x6x6_OES_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM_SRGB:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR_to_R8G8B8A8_UNORM_SRGB;
-                default:
-                    return COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR_to_default;
-            }
-        }
+            return COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR_to_default;
         case GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
         {
             switch (angleFormat)
@@ -4389,8 +3647,6 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
             {
                 case FormatID::D16_UNORM:
                     return DEPTH_COMPONENT16_to_D16_UNORM;
-                case FormatID::D32_FLOAT:
-                    return DEPTH_COMPONENT16_to_D32_FLOAT;
                 default:
                     break;
             }
@@ -4404,8 +3660,6 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
                     return DEPTH_COMPONENT24_to_D24_UNORM_S8_UINT;
                 case FormatID::D24_UNORM_X8_UINT:
                     return DEPTH_COMPONENT24_to_D24_UNORM_X8_UINT;
-                case FormatID::D32_FLOAT:
-                    return DEPTH_COMPONENT24_to_D32_FLOAT;
                 case FormatID::D32_FLOAT_S8X24_UINT:
                     return DEPTH_COMPONENT24_to_D32_FLOAT_S8X24_UINT;
                 default:
@@ -4460,10 +3714,10 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
             }
             break;
         }
-        case GL_G8_B8R8_2PLANE_420_UNORM_ANGLE:
-            return G8_B8R8_2PLANE_420_UNORM_ANGLE_to_default;
-        case GL_G8_B8_R8_3PLANE_420_UNORM_ANGLE:
-            return G8_B8_R8_3PLANE_420_UNORM_ANGLE_to_default;
+        case GL_G8_B8R8_2PLANE_420_UNORM_ANGLEX:
+            return G8_B8R8_2PLANE_420_UNORM_ANGLEX_to_default;
+        case GL_G8_B8_R8_3PLANE_420_UNORM_ANGLEX:
+            return G8_B8_R8_3PLANE_420_UNORM_ANGLEX_to_default;
         case GL_LUMINANCE:
         {
             switch (angleFormat)
@@ -4553,116 +3807,6 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
                 default:
                     return LUMINANCE_ALPHA32F_EXT_to_default;
             }
-        }
-        case GL_PALETTE4_R5_G6_B5_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE4_R5_G6_B5_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE4_RGB5_A1_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE4_RGB5_A1_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE4_RGB8_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE4_RGB8_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE4_RGBA4_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE4_RGBA4_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE4_RGBA8_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE4_RGBA8_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE8_R5_G6_B5_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE8_R5_G6_B5_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE8_RGB5_A1_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE8_RGB5_A1_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE8_RGB8_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE8_RGB8_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE8_RGBA4_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE8_RGBA4_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_PALETTE8_RGBA8_OES:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return PALETTE8_RGBA8_OES_to_R8G8B8A8_UNORM;
-                default:
-                    break;
-            }
-            break;
         }
         case GL_R11F_G11F_B10F:
         {
@@ -5382,36 +4526,12 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
             return RGBA8_SSCALED_ANGLEX_to_default;
         case GL_RGBA8_USCALED_ANGLEX:
             return RGBA8_USCALED_ANGLEX_to_default;
-        case GL_RGBX8_ANGLE:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8B8A8_UNORM:
-                    return RGBX8_ANGLE_to_R8G8B8A8_UNORM;
-                case FormatID::R8G8B8X8_UNORM:
-                    return RGBX8_ANGLE_to_R8G8B8X8_UNORM;
-                default:
-                    break;
-            }
-            break;
-        }
         case GL_SR8_EXT:
         {
             switch (angleFormat)
             {
                 case FormatID::R8_UNORM_SRGB:
                     return SR8_EXT_to_R8_UNORM_SRGB;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GL_SRG8_EXT:
-        {
-            switch (angleFormat)
-            {
-                case FormatID::R8G8_UNORM_SRGB:
-                    return SRG8_EXT_to_R8G8_UNORM_SRGB;
                 default:
                     break;
             }

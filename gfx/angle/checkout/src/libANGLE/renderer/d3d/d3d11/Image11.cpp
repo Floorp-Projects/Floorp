@@ -179,9 +179,9 @@ angle::Result Image11::copyToStorage(const gl::Context *context,
     return angle::Result::Continue;
 }
 
-void Image11::verifyAssociatedStorageValid(TextureStorage11 *textureStorageEXT) const
+void Image11::verifyAssociatedStorageValid(TextureStorage11 *textureStorage) const
 {
-    ASSERT(mAssociatedStorage == textureStorageEXT);
+    ASSERT(mAssociatedStorage == textureStorage);
 }
 
 angle::Result Image11::recoverFromAssociatedStorage(const gl::Context *context)
@@ -578,7 +578,7 @@ angle::Result Image11::createStagingTexture(const gl::Context *context)
                     mRenderer->allocateTexture(context11, desc, formatInfo, &mStagingTexture));
             }
 
-            mStagingTexture.setInternalName("Image11::StagingTexture3D");
+            mStagingTexture.setDebugName("Image11::StagingTexture3D");
             mStagingSubresource = D3D11CalcSubresource(lodOffset, 0, lodOffset + 1);
             mStagingTextureSubresourceVerifier.setDesc(desc);
         }
@@ -617,7 +617,7 @@ angle::Result Image11::createStagingTexture(const gl::Context *context)
                     mRenderer->allocateTexture(context11, desc, formatInfo, &mStagingTexture));
             }
 
-            mStagingTexture.setInternalName("Image11::StagingTexture2D");
+            mStagingTexture.setDebugName("Image11::StagingTexture2D");
             mStagingSubresource = D3D11CalcSubresource(lodOffset, 0, lodOffset + 1);
             mStagingTextureSubresourceVerifier.setDesc(desc);
         }

@@ -36,15 +36,9 @@ void Sampler::onDestroy(const Context *context)
     }
 }
 
-angle::Result Sampler::setLabel(const Context *context, const std::string &label)
+void Sampler::setLabel(const Context *context, const std::string &label)
 {
     mLabel = label;
-
-    if (mSampler)
-    {
-        return mSampler->onLabelUpdate(context);
-    }
-    return angle::Result::Continue;
 }
 
 const std::string &Sampler::getLabel() const

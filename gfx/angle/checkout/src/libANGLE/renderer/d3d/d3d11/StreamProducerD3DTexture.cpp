@@ -119,9 +119,9 @@ egl::Error StreamProducerD3DTexture::validateD3DTexture(const void *pointer,
     ID3D11Texture2D *textureD3D = static_cast<ID3D11Texture2D *>(const_cast<void *>(pointer));
 
     // Check that the texture originated from our device
-    angle::ComPtr<ID3D11Device> device;
+    ID3D11Device *device;
     textureD3D->GetDevice(&device);
-    if (device.Get() != mRenderer->getDevice())
+    if (device != mRenderer->getDevice())
     {
         return egl::EglBadParameter() << "Texture not created on ANGLE D3D device";
     }

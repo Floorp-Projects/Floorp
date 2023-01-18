@@ -25,16 +25,17 @@ class TIntermBinary;
 class TSymbolTable;
 class PerformanceDiagnostics;
 
-[[nodiscard]] bool RemoveDynamicIndexingOfNonSSBOVectorOrMatrix(
+ANGLE_NO_DISCARD bool RemoveDynamicIndexingOfNonSSBOVectorOrMatrix(
     TCompiler *compiler,
     TIntermNode *root,
     TSymbolTable *symbolTable,
     PerformanceDiagnostics *perfDiagnostics);
 
-[[nodiscard]] bool RemoveDynamicIndexingOfSwizzledVector(TCompiler *compiler,
-                                                         TIntermNode *root,
-                                                         TSymbolTable *symbolTable,
-                                                         PerformanceDiagnostics *perfDiagnostics);
+ANGLE_NO_DISCARD bool RemoveDynamicIndexingOfSwizzledVector(
+    TCompiler *compiler,
+    TIntermNode *root,
+    TSymbolTable *symbolTable,
+    PerformanceDiagnostics *perfDiagnostics);
 
 }  // namespace sh
 

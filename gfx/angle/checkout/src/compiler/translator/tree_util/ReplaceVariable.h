@@ -9,32 +9,39 @@
 #ifndef COMPILER_TRANSLATOR_TREEUTIL_REPLACEVARIABLE_H_
 #define COMPILER_TRANSLATOR_TREEUTIL_REPLACEVARIABLE_H_
 
-#include "common/angleutils.h"
+#include "common/debug.h"
+
+#include <stack>
+#include <unordered_map>
 
 namespace sh
 {
 
 class TCompiler;
+class TFunction;
+class TIntermAggregate;
 class TIntermBlock;
+class TIntermFunctionPrototype;
+class TIntermNode;
 class TIntermTyped;
 class TSymbolTable;
 class TVariable;
 
-[[nodiscard]] bool ReplaceVariable(TCompiler *compiler,
-                                   TIntermBlock *root,
-                                   const TVariable *toBeReplaced,
-                                   const TVariable *replacement);
-[[nodiscard]] bool ReplaceVariableWithTyped(TCompiler *compiler,
-                                            TIntermBlock *root,
-                                            const TVariable *toBeReplaced,
-                                            const TIntermTyped *replacement);
+ANGLE_NO_DISCARD bool ReplaceVariable(TCompiler *compiler,
+                                      TIntermBlock *root,
+                                      const TVariable *toBeReplaced,
+                                      const TVariable *replacement);
+ANGLE_NO_DISCARD bool ReplaceVariableWithTyped(TCompiler *compiler,
+                                               TIntermBlock *root,
+                                               const TVariable *toBeReplaced,
+                                               const TIntermTyped *replacement);
 
 using VariableReplacementMap = angle::HashMap<const TVariable *, const TIntermTyped *>;
 
 // Replace a set of variables with their corresponding expression.
-[[nodiscard]] bool ReplaceVariables(TCompiler *compiler,
-                                    TIntermBlock *root,
-                                    const VariableReplacementMap &variableMap);
+ANGLE_NO_DISCARD bool ReplaceVariables(TCompiler *compiler,
+                                       TIntermBlock *root,
+                                       const VariableReplacementMap &variableMap);
 
 // Find all declarators, and replace the TVariable they are declaring with a duplicate.  This is
 // used to support deepCopy of TIntermBlock and TIntermLoop nodes that include declarations.

@@ -291,7 +291,7 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
 
   const auto desc = GLContextDesc{{flags}, false};
   RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
-      egl, desc, config, surface, aUseGles, config, &failureId);
+      egl, desc, config, surface, aUseGles, &failureId);
   if (!gl) {
     const auto err = egl->mLib->fGetError();
     gfxCriticalNote << "Failed to create EGLContext!: " << gfx::hexa(err);
@@ -369,14 +369,14 @@ EGLSurface GLContextEGL::CreateEGLSurfaceForCompositorWidget(
 }
 
 GLContextEGL::GLContextEGL(const std::shared_ptr<EglDisplay> egl,
-                           const GLContextDesc& desc, EGLConfig surfaceConfig,
+                           const GLContextDesc& desc, EGLConfig config,
                            EGLSurface surface, EGLContext context)
     : GLContext(desc, nullptr, false),
       mEgl(egl),
-      mSurfaceConfig(surfaceConfig),
+      mConfig(config),
       mContext(context),
       mSurface(surface),
-      mFallbackSurface(CreateFallbackSurface(*mEgl, mSurfaceConfig)) {
+      mFallbackSurface(CreateFallbackSurface(*mEgl, mConfig)) {
 #ifdef DEBUG
   printf_stderr("Initializing context %p surface %p on display %p\n", mContext,
                 mSurface, mEgl->mDisplay);
@@ -498,7 +498,7 @@ bool GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
       GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget);
   if (nativeWindow) {
     mSurface = mozilla::gl::CreateSurfaceFromNativeWindow(*mEgl, nativeWindow,
-                                                          mSurfaceConfig);
+                                                          mConfig);
     if (!mSurface) {
       NS_WARNING("Failed to create EGLSurface from native window");
       return false;
@@ -604,8 +604,8 @@ GLint GLContextEGL::GetBufferAge() const {
 
 RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
     const std::shared_ptr<EglDisplay> egl, const GLContextDesc& desc,
-    EGLConfig surfaceConfig, EGLSurface surface, const bool useGles,
-    EGLConfig contextConfig, nsACString* const out_failureId) {
+    EGLConfig config, EGLSurface surface, const bool useGles,
+    nsACString* const out_failureId) {
   const auto& flags = desc.flags;
 
   std::vector<EGLint> required_attribs;
@@ -715,7 +715,7 @@ RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
       terminated_attribs.push_back(cur);
     }
 
-    return egl->fCreateContext(contextConfig, EGL_NO_CONTEXT,
+    return egl->fCreateContext(config, EGL_NO_CONTEXT,
                                terminated_attribs.data());
   };
 
@@ -755,7 +755,7 @@ RefPtr<GLContextEGL> GLContextEGL::CreateGLContext(
   MOZ_ASSERT(context);
 
   RefPtr<GLContextEGL> glContext =
-      new GLContextEGL(egl, desc, surfaceConfig, surface, context);
+      new GLContextEGL(egl, desc, config, surface, context);
   if (!glContext->Init()) {
     *out_failureId = "FEATURE_FAILURE_EGL_INIT"_ns;
     return nullptr;
@@ -1005,11 +1005,11 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateForCompositorWidget(
 
 EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) const {
   MOZ_ASSERT(aWindow);
-  MOZ_RELEASE_ASSERT(mSurfaceConfig != EGL_NO_CONFIG);
+  MOZ_RELEASE_ASSERT(mConfig != EGL_NO_CONFIG);
 
   // NOTE: aWindow is an ANativeWindow
   EGLSurface surface = mEgl->fCreateWindowSurface(
-      mSurfaceConfig, reinterpret_cast<EGLNativeWindowType>(aWindow), nullptr);
+      mConfig, reinterpret_cast<EGLNativeWindowType>(aWindow), nullptr);
   if (!surface) {
     gfxCriticalError() << "CreateCompatibleSurface failed: "
                        << hexa(GetError());
@@ -1125,70 +1125,71 @@ bool GLContextEGL::FindVisual(int* const out_visualId) {
 #endif
 
 /*static*/
-RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
+RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
     const std::shared_ptr<EglDisplay> egl, const GLContextCreateDesc& desc,
+    const mozilla::gfx::IntSize& size, const bool useGles,
     nsACString* const out_failureId) {
-  const auto WithUseGles = [&](const bool useGles) -> RefPtr<GLContextEGL> {
-    const EGLConfig surfaceConfig = ChooseConfig(*egl, desc, useGles);
-    if (surfaceConfig == EGL_NO_CONFIG) {
-      *out_failureId = "FEATURE_FAILURE_EGL_NO_CONFIG"_ns;
-      NS_WARNING("Failed to find a compatible config.");
-      return nullptr;
-    }
+  const EGLConfig config = ChooseConfig(*egl, desc, useGles);
+  if (config == EGL_NO_CONFIG) {
+    *out_failureId = "FEATURE_FAILURE_EGL_NO_CONFIG"_ns;
+    NS_WARNING("Failed to find a compatible config.");
+    return nullptr;
+  }
 
-    if (GLContext::ShouldSpew()) {
-      egl->DumpEGLConfig(surfaceConfig);
-    }
-    const EGLConfig contextConfig =
-        egl->IsExtensionSupported(EGLExtension::KHR_no_config_context)
-            ? nullptr
-            : surfaceConfig;
+  if (GLContext::ShouldSpew()) {
+    egl->DumpEGLConfig(config);
+  }
 
-    auto dummySize = mozilla::gfx::IntSize{16, 16};
-    EGLSurface surface = nullptr;
+  mozilla::gfx::IntSize pbSize(size);
+  EGLSurface surface = nullptr;
 #ifdef MOZ_WAYLAND
-    if (GdkIsWaylandDisplay()) {
-      surface = GLContextEGL::CreateWaylandBufferSurface(*egl, surfaceConfig,
-                                                         dummySize);
-    } else
+  if (GdkIsWaylandDisplay()) {
+    surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
+  } else
 #endif
-    {
-      surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
-          *egl, surfaceConfig, LOCAL_EGL_NONE, dummySize);
-    }
-    if (!surface) {
-      *out_failureId = "FEATURE_FAILURE_EGL_POT"_ns;
-      NS_WARNING("Failed to create PBuffer for context!");
-      return nullptr;
-    }
+  {
+    surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
+        *egl, config, LOCAL_EGL_NONE, pbSize);
+  }
+  if (!surface) {
+    *out_failureId = "FEATURE_FAILURE_EGL_POT"_ns;
+    NS_WARNING("Failed to create PBuffer for context!");
+    return nullptr;
+  }
 
-    auto fullDesc = GLContextDesc{desc};
-    fullDesc.isOffscreen = true;
-    RefPtr<GLContextEGL> gl =
-        GLContextEGL::CreateGLContext(egl, fullDesc, surfaceConfig, surface,
-                                      useGles, contextConfig, out_failureId);
-    if (!gl) {
-      NS_WARNING("Failed to create GLContext from PBuffer");
-      egl->fDestroySurface(surface);
+  auto fullDesc = GLContextDesc{desc};
+  fullDesc.isOffscreen = true;
+  RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
+      egl, fullDesc, config, surface, useGles, out_failureId);
+  if (!gl) {
+    NS_WARNING("Failed to create GLContext from PBuffer");
+    egl->fDestroySurface(surface);
 #if defined(MOZ_WAYLAND)
-      DeleteSavedGLSurface(surface);
+    DeleteSavedGLSurface(surface);
 #endif
-      return nullptr;
-    }
+    return nullptr;
+  }
 
-    return gl;
-  };
+  return gl;
+}
 
+/*static*/
+RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
+    const std::shared_ptr<EglDisplay> display, const GLContextCreateDesc& desc,
+    const mozilla::gfx::IntSize& size, nsACString* const out_failureId) {
   bool preferGles;
 #if defined(MOZ_WIDGET_ANDROID)
   preferGles = true;
 #else
   preferGles = StaticPrefs::gfx_egl_prefer_gles_enabled_AtStartup();
 #endif  // defined(MOZ_WIDGET_ANDROID)
-  RefPtr<GLContextEGL> gl = WithUseGles(preferGles);
+
+  RefPtr<GLContextEGL> gl = CreateEGLPBufferOffscreenContextImpl(
+      display, desc, size, preferGles, out_failureId);
 #if !defined(MOZ_WIDGET_ANDROID)
   if (!gl) {
-    gl = WithUseGles(!preferGles);
+    gl = CreateEGLPBufferOffscreenContextImpl(display, desc, size, !preferGles,
+                                              out_failureId);
   }
 #endif  // !defined(MOZ_WIDGET_ANDROID)
   return gl;
@@ -1201,7 +1202,9 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
   if (!display) {
     return nullptr;
   }
-  auto ret = GLContextEGL::CreateWithoutSurface(display, desc, out_failureId);
+  mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
+  auto ret = GLContextEGL::CreateEGLPBufferOffscreenContext(
+      display, desc, dummySize, out_failureId);
   return ret.forget();
 }
 

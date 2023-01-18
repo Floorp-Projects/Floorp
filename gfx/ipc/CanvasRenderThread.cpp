@@ -37,19 +37,15 @@ void CanvasRenderThread::Start() {
   sCanvasRenderThreadEverStarted = true;
 #endif
 
-  // This is 4M, which is higher than the default 256K.
-  // Increased with bug 1753349 to accommodate the `chromium/5359` branch of
-  // ANGLE, which has large peak stack usage for some pathological shader
-  // compilations.
-  //
-  // Previously increased to 512K to accommodate Mesa in bug 1753340.
+  // This is 512K, which is higher than the default 256K.
+  // Increased to accommodate Mesa in bug 1753340.
   //
   // Previously increased to 320K to avoid a stack overflow in the
   // Intel Vulkan driver initialization in bug 1716120.
   //
   // Note: we only override it if it's limited already.
   const uint32_t stackSize =
-      nsIThreadManager::DEFAULT_STACK_SIZE ? 4096 << 10 : 0;
+      nsIThreadManager::DEFAULT_STACK_SIZE ? 512 << 10 : 0;
 
   RefPtr<nsIThread> thread;
   nsresult rv = NS_NewNamedThread(

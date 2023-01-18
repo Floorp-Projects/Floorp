@@ -193,9 +193,6 @@ enum {
     AHARDWAREBUFFER_FORMAT_Y8Cb8Cr8_420             = 0x23,
 
 #endif  // ANGLE_AHARDWARE_BUFFER_SUPPORT
-
-    AHARDWAREBUFFER_FORMAT_YV12                     = 0x32315659,
-    AHARDWAREBUFFER_FORMAT_IMPLEMENTATION_DEFINED   = 0x22,
 };
 // clang-format on
 
@@ -217,12 +214,12 @@ namespace
 constexpr int kAHardwareBufferToANativeWindowBufferOffset = static_cast<int>(sizeof(void *)) * 2;
 
 template <typename T1, typename T2>
-T1 *OffsetPointer(T2 *ptr, int bytes)
+T1 *offsetPointer(T2 *ptr, int bytes)
 {
     return reinterpret_cast<T1 *>(reinterpret_cast<intptr_t>(ptr) + bytes);
 }
 
-GLenum GetPixelFormatInfo(int pixelFormat, bool *isYUV)
+GLenum getPixelFormatInfo(int pixelFormat, bool *isYUV)
 {
     *isYUV = false;
     switch (pixelFormat)
@@ -260,13 +257,12 @@ GLenum GetPixelFormatInfo(int pixelFormat, bool *isYUV)
         case AHARDWAREBUFFER_FORMAT_S8_UINT:
             return GL_STENCIL_INDEX8;
         case AHARDWAREBUFFER_FORMAT_Y8Cb8Cr8_420:
-        case AHARDWAREBUFFER_FORMAT_YV12:
-        case AHARDWAREBUFFER_FORMAT_IMPLEMENTATION_DEFINED:
             *isYUV = true;
             return GL_RGB8;
         default:
             // Treat unknown formats as RGB. They are vendor-specific YUV formats that would sample
             // as RGB.
+            WARN() << "Unknown pixelFormat: " << pixelFormat << ". Treating as RGB8";
             *isYUV = true;
             return GL_RGB8;
     }
@@ -330,30 +326,27 @@ EGLClientBuffer CreateEGLClientBufferFromAHardwareBuffer(int width,
     }
 
     return AHardwareBufferToClientBuffer(aHardwareBuffer);
-#else
-    return nullptr;
 #endif  // ANGLE_AHARDWARE_BUFFER_SUPPORT
+    return nullptr;
 }
 
 void GetANativeWindowBufferProperties(const ANativeWindowBuffer *buffer,
                                       int *width,
                                       int *height,
                                       int *depth,
-                                      int *pixelFormat,
-                                      uint64_t *usage)
+                                      int *pixelFormat)
 {
     *width       = buffer->width;
     *height      = buffer->height;
     *depth       = static_cast<int>(buffer->layerCount);
     *height      = buffer->height;
     *pixelFormat = buffer->format;
-    *usage       = buffer->usage;
 }
 
 GLenum NativePixelFormatToGLInternalFormat(int pixelFormat)
 {
     bool isYuv = false;
-    return GetPixelFormatInfo(pixelFormat, &isYuv);
+    return getPixelFormatInfo(pixelFormat, &isYuv);
 }
 
 int GLInternalFormatToNativePixelFormat(GLenum internalFormat)
@@ -399,25 +392,25 @@ int GLInternalFormatToNativePixelFormat(GLenum internalFormat)
 bool NativePixelFormatIsYUV(int pixelFormat)
 {
     bool isYuv = false;
-    GetPixelFormatInfo(pixelFormat, &isYuv);
+    getPixelFormatInfo(pixelFormat, &isYuv);
     return isYuv;
 }
 
 AHardwareBuffer *ANativeWindowBufferToAHardwareBuffer(ANativeWindowBuffer *windowBuffer)
 {
-    return OffsetPointer<AHardwareBuffer>(windowBuffer,
+    return offsetPointer<AHardwareBuffer>(windowBuffer,
                                           -kAHardwareBufferToANativeWindowBufferOffset);
 }
 
 EGLClientBuffer AHardwareBufferToClientBuffer(const AHardwareBuffer *hardwareBuffer)
 {
-    return OffsetPointer<EGLClientBuffer>(hardwareBuffer,
+    return offsetPointer<EGLClientBuffer>(hardwareBuffer,
                                           kAHardwareBufferToANativeWindowBufferOffset);
 }
 
 AHardwareBuffer *ClientBufferToAHardwareBuffer(EGLClientBuffer clientBuffer)
 {
-    return OffsetPointer<AHardwareBuffer>(clientBuffer,
+    return offsetPointer<AHardwareBuffer>(clientBuffer,
                                           -kAHardwareBufferToANativeWindowBufferOffset);
 }
 }  // namespace android
