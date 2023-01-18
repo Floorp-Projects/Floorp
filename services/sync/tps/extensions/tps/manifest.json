@@ -3,7 +3,7 @@
   "name": "TPS",
   "version": "1.0",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "tps@mozilla.org"
     }
