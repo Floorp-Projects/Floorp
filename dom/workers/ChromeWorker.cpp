@@ -21,7 +21,8 @@ already_AddRefed<ChromeWorker> ChromeWorker::Constructor(
 
   RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(
       cx, aScriptURL, true /* aIsChromeWorker */, WorkerKindDedicated,
-      WorkerType::Classic, u""_ns, VoidCString(), nullptr /*aLoadInfo */, aRv);
+      RequestCredentials::Omit, WorkerType::Classic, u""_ns, VoidCString(),
+      nullptr /*aLoadInfo */, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
