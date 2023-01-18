@@ -124,7 +124,7 @@ codegenTestMultiplatform_adhoc(
              03 c0     add %eax, %eax`,
      x86:   `8b 45 10  movl 0x10\\(%rbp\\), %eax
              03 c0     add %eax, %eax`,
-     arm64: `2b000000  adds w0, w0, w0`,
+     arm64: `0b000000  add w0, w0, w0`,
      arm:   `e0900000  adds r0, r0, r0`},
     {x86: {no_prefix:true}}
 );
@@ -270,7 +270,7 @@ codegenTestMultiplatform_adhoc(
              03 c0     add %eax, %eax`,
      x86:   `8b 45 10  movl 0x10\\(%rbp\\), %eax
              03 c0     add %eax, %eax`,
-     arm64: `2b000000  adds w0, w0, w0`,
+     arm64: `0b000000  add w0, w0, w0`,
      arm:   `e0900000  adds r0, r0, r0`},
     {x86: {no_prefix:true}}
 );
