@@ -30,8 +30,6 @@ nsresult SchedulerGroup::UnlabeledDispatch(
   }
 }
 
-SchedulerGroup::SchedulerGroup() : mIsRunning(false) {}
-
 /* static */
 nsresult SchedulerGroup::Dispatch(TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable) {
