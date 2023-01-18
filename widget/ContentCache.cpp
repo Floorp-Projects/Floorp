@@ -392,11 +392,11 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
             ? 2u
             : 1u;
     if (NS_WARN_IF(!QueryCharRectArray(aWidget, startOffset, length, rects))) {
-      MOZ_LOG(
-          sContentCacheLog, LogLevel::Error,
-          ("0x%p   CacheTextRects(), FAILED, "
-           "couldn't retrieve text rect array around the selection anchor (%u)",
-           this, mSelection->mAnchor));
+      MOZ_LOG(sContentCacheLog, LogLevel::Error,
+              ("0x%p   CacheTextRects(), FAILED, couldn't retrieve text rect "
+               "array around the selection anchor (%s)",
+               this,
+               mSelection ? ToString(mSelection->mAnchor).c_str() : "Nothing"));
       MOZ_ASSERT_IF(mSelection.isSome(),
                     mSelection->mAnchorCharRects[ePrevCharRect].IsEmpty());
       MOZ_ASSERT_IF(mSelection.isSome(),
@@ -448,13 +448,21 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
       const uint32_t length = mSelection->mFocus ? 2u : 1u;
       if (NS_WARN_IF(
               !QueryCharRectArray(aWidget, startOffset, length, rects))) {
+        MOZ_LOG(
+            sContentCacheLog, LogLevel::Error,
+            ("0x%p   CacheTextRects(), FAILED, couldn't retrieve text rect "
+             "array around the selection focus (%s)",
+             this,
+             mSelection ? ToString(mSelection->mFocus).c_str() : "Nothing"));
+        MOZ_ASSERT_IF(mSelection.isSome(),
+                      mSelection->mFocusCharRects[ePrevCharRect].IsEmpty());
+        MOZ_ASSERT_IF(mSelection.isSome(),
+                      mSelection->mFocusCharRects[eNextCharRect].IsEmpty());
+      } else if (NS_WARN_IF(mSelection.isNothing())) {
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                ("0x%p   CacheTextRects(), FAILED, "
-                 "couldn't retrieve text rect array around the selection focus "
-                 "(%u)",
-                 this, mSelection->mFocus));
-        MOZ_ASSERT(mSelection->mFocusCharRects[ePrevCharRect].IsEmpty());
-        MOZ_ASSERT(mSelection->mFocusCharRects[eNextCharRect].IsEmpty());
+                ("0x%p   CacheTextRects(), FAILED, mSelection was reset during "
+                 "the call of QueryCharRectArray",
+                 this));
       } else {
         if (rects.Length() > 1) {
           mSelection->mFocusCharRects[ePrevCharRect] = rects[0];
