@@ -286,7 +286,8 @@ static Atomic<bool> gShuttingDownThread(false);
 NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker, nsIUrlClassifierDBService)
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
-    : mInStream(false),
+    : mUpdateObserverLock("nsUrlClassifierDBServerWorker.mUpdateObserverLock"),
+      mInStream(false),
       mGethashNoise(0),
       mPendingLookupLock("nsUrlClassifierDBServerWorker.mPendingLookupLock") {}
 
@@ -517,7 +518,10 @@ void nsUrlClassifierDBServiceWorker::ResetUpdate() {
   LOG(("ResetUpdate"));
   mUpdateWaitSec = 0;
   mUpdateStatus = NS_OK;
-  mUpdateObserver = nullptr;
+  {
+    MutexAutoLock lock(mUpdateObserverLock);
+    mUpdateObserver = nullptr;
+  }
 }
 
 NS_IMETHODIMP
@@ -536,18 +540,21 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  NS_ENSURE_STATE(!mUpdateObserver);
+  {
+    MutexAutoLock lock(mUpdateObserverLock);
+    NS_ENSURE_STATE(!mUpdateObserver);
 
-  nsresult rv = OpenDb();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to open SafeBrowsing database");
-    return NS_ERROR_FAILURE;
+    nsresult rv = OpenDb();
+    if (NS_FAILED(rv)) {
+      NS_ERROR("Unable to open SafeBrowsing database");
+      return NS_ERROR_FAILURE;
+    }
+
+    mUpdateStatus = NS_OK;
+    MOZ_ASSERT(mTableUpdates.IsEmpty(),
+               "mTableUpdates should have been cleared in FinishUpdate()");
+    mUpdateObserver = observer;
   }
-
-  mUpdateStatus = NS_OK;
-  MOZ_ASSERT(mTableUpdates.IsEmpty(),
-             "mTableUpdates should have been cleared in FinishUpdate()");
-  mUpdateObserver = observer;
   Classifier::SplitTables(tables, mUpdateTables);
 
   return NS_OK;
@@ -563,7 +570,10 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString& table) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  NS_ENSURE_STATE(mUpdateObserver);
+  {
+    MutexAutoLock lock(mUpdateObserverLock);
+    NS_ENSURE_STATE(mUpdateObserver);
+  }
   NS_ENSURE_STATE(!mInStream);
 
   mInStream = true;
@@ -656,6 +666,8 @@ nsUrlClassifierDBServiceWorker::FinishStream() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  MutexAutoLock lock(mUpdateObserverLock);
+
   MOZ_ASSERT(mProtocolParser);
 
   NS_ENSURE_STATE(mInStream);
@@ -722,7 +734,10 @@ nsUrlClassifierDBServiceWorker::FinishUpdate() {
              "Should have been nulled out in FinishStream() "
              "or never created.");
 
-  NS_ENSURE_STATE(mUpdateObserver);
+  {
+    MutexAutoLock lock(mUpdateObserverLock);
+    NS_ENSURE_STATE(mUpdateObserver);
+  }
 
   if (NS_FAILED(mUpdateStatus)) {
     LOG(
@@ -803,6 +818,8 @@ nsresult nsUrlClassifierDBServiceWorker::NotifyUpdateObserver(
     Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR, provider,
                           NS_ERROR_GET_CODE(updateStatus));
   }
+
+  MutexAutoLock lock(mUpdateObserverLock);
 
   if (!mUpdateObserver) {
     // In the normal shutdown process, CancelUpdate() would NOT be
@@ -888,24 +905,29 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::CancelUpdate() {
   LOG(("nsUrlClassifierDBServiceWorker::CancelUpdate"));
 
-  if (mUpdateObserver) {
+  {
+    MutexAutoLock lock(mUpdateObserverLock);
+    if (!mUpdateObserver) {
+      LOG(("No UpdateObserver, nothing to cancel"));
+
+      return NS_OK;
+    }
+
     LOG(("UpdateObserver exists, cancelling"));
 
     mUpdateStatus = NS_BINDING_ABORTED;
 
     mUpdateObserver->UpdateError(mUpdateStatus);
-
-    /*
-     * mark the tables as spoiled(clear cache in LookupCache), we don't want to
-     * block hosts longer than normal because our update failed
-     */
-    mClassifier->ResetTables(Classifier::Clear_Cache, mUpdateTables);
-
-    ResetStream();
-    ResetUpdate();
-  } else {
-    LOG(("No UpdateObserver, nothing to cancel"));
   }
+
+  /*
+   * mark the tables as spoiled(clear cache in LookupCache), we don't want to
+   * block hosts longer than normal because our update failed
+   */
+  mClassifier->ResetTables(Classifier::Clear_Cache, mUpdateTables);
+
+  ResetStream();
+  ResetUpdate();
 
   return NS_OK;
 }
@@ -2115,6 +2137,7 @@ nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver* observer,
     LOG(("Already updating, not available"));
     return NS_ERROR_NOT_AVAILABLE;
   }
+
   if (mWorker->IsBusyUpdating()) {
     // |mInUpdate| used to work well because "notifying update observer"
     // is synchronously done in Worker::FinishUpdate(). Even if the
