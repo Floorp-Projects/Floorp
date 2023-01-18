@@ -125,7 +125,7 @@ export const DevToolsShim = {
 
   /**
    * This method is used by browser/components/extensions/ext-devtools.js for the events:
-   * - toolbox-created
+   * - toolbox-ready
    * - toolbox-destroyed
    */
   on(event, listener) {

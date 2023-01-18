@@ -82,11 +82,11 @@ async function openToolboxWithInspectNode(domReference, tab) {
 
   const test = runTest(`custom.inspector.open.DAMP`);
 
-  // Wait for "toolbox-created" to easily get access to the created toolbox.
-  const onToolboxCreated = gDevTools.once("toolbox-created");
+  // Wait for "toolbox-ready" to easily get access to the created toolbox.
+  const onToolboxReady = gDevTools.once("toolbox-ready");
 
   await gDevTools.inspectNode(tab, domReference);
-  const toolbox = await onToolboxCreated;
+  const toolbox = await onToolboxReady;
   test.done();
 
   // Wait for all pending paints to settle.

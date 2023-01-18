@@ -20,13 +20,9 @@ add_task(async function() {
 
   await addTab(URL);
 
-  let created = 0,
-    ready = 0,
+  let ready = 0,
     destroy = 0,
     destroyed = 0;
-  const onCreated = () => {
-    created++;
-  };
   const onReady = () => {
     ready++;
   };
@@ -36,7 +32,6 @@ add_task(async function() {
   const onDestroyed = () => {
     destroyed++;
   };
-  gDevTools.on("toolbox-created", onCreated);
   gDevTools.on("toolbox-ready", onReady);
   gDevTools.on("toolbox-destroy", onDestroy);
   gDevTools.on("toolbox-destroyed", onDestroyed);
@@ -45,40 +40,48 @@ add_task(async function() {
   // instead it will ignore toggles that happens while the toolbox is still
   // creating or still destroying.
 
-  // Toggle the toolbox at least 3 times.
-  info("Trying to toggle the toolbox 3 times");
-  while (created < 3) {
-    // Sent multiple event to try to race the code during toolbox creation and destruction
-    toggle();
-    toggle();
-    toggle();
-
-    // Release the event loop to let a chance to actually create or destroy the toolbox!
-    await wait(50);
-  }
-  info("Toggled the toolbox 3 times");
-
-  // Now wait for the 3rd toolbox to be fully ready before closing it.
-  // We close the last toolbox manually, out of the first while() loop to
-  // avoid races and be sure we end up we no toolbox and waited for all the
-  // requests to be done.
-  while (ready != 3) {
-    await wait(100);
-  }
+  info("Toggle the toolbox many times in a row");
   toggle();
-  while (destroyed != 3) {
-    await wait(100);
-  }
+  toggle();
+  toggle();
+  toggle();
+  toggle();
+  await wait(500);
 
-  is(created, 3, "right number of created events");
-  is(ready, 3, "right number of ready events");
-  is(destroy, 3, "right number of destroy events");
-  is(destroyed, 3, "right number of destroyed events");
+  await waitFor(() => ready == 1);
+  is(
+    ready,
+    1,
+    "No matter how many times we called toggle, it will only open the toolbox once"
+  );
+  is(
+    destroy,
+    0,
+    "All subsequent, synchronous call to toggle will be ignored and the toolbox won't be destroyed"
+  );
+  is(destroyed, 0);
 
-  gDevTools.off("toolbox-created", onCreated);
+  info("Retoggle the toolbox many times in a row");
+  toggle();
+  toggle();
+  toggle();
+  toggle();
+  toggle();
+  await wait(500);
+
+  await waitFor(() => destroyed == 1);
+  is(destroyed, 1, "Similarly, the toolbox will be closed");
+  is(destroy, 1);
+  is(
+    ready,
+    1,
+    "and no other toolbox will be opened. The subsequent toggle will be ignored."
+  );
+
   gDevTools.off("toolbox-ready", onReady);
   gDevTools.off("toolbox-destroy", onDestroy);
   gDevTools.off("toolbox-destroyed", onDestroyed);
+  await wait(1000);
 
   gBrowser.removeCurrentTab();
 });

@@ -98,20 +98,13 @@ const openToolbox = async function(tool = "webconsole", onLoad) {
   let tab = getActiveTab();
 
   dump(`Open toolbox - Call showToolboxForTab\n`);
-  let onToolboxCreated = gDevTools.once("toolbox-created");
-  let showPromise = gDevTools.showToolboxForTab(tab, { toolId: tool });
-
-  dump(`Open toolbox - Wait for "toolbox-created"\n`);
-  let toolbox = await onToolboxCreated;
+  const toolbox = await gDevTools.showToolboxForTab(tab, { toolId: tool });
 
   if (typeof onLoad == "function") {
     dump(`Open toolbox - Wait for custom onLoad callback\n`);
     let panel = await toolbox.getPanelWhenReady(tool);
     await onLoad(toolbox, panel);
   }
-
-  dump(`Open toolbox - Wait for showToolbox to resolve\n`);
-  await showPromise;
 
   return toolbox;
 };
