@@ -2902,7 +2902,7 @@ void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
     // Check explicitly for -0, bitwise.
     Fmov(ARMRegister(dest, 64), src64);
     branchTestPtr(Assembler::Signed, dest, dest, fail);
-    movePtr(ImmPtr(0), dest);
+    movePtr(ImmWord(0), dest);
   }
 
   bind(&done);

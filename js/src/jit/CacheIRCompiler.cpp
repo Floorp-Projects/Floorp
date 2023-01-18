@@ -7752,7 +7752,7 @@ bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
   masm.storeCallPointerResult(result);
   masm.PopRegsInMask(volatileRegs);
 
-  masm.branchPtr(Assembler::Equal, result, ImmPtr(0), failure->label());
+  masm.branchPtr(Assembler::Equal, result, ImmPtr(nullptr), failure->label());
   return true;
 }
 
@@ -7785,7 +7785,7 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   masm.storeCallPointerResult(result);
   masm.PopRegsInMask(volatileRegs);
 
-  masm.branchPtr(Assembler::Equal, result, ImmPtr(0), failure->label());
+  masm.branchPtr(Assembler::Equal, result, ImmPtr(nullptr), failure->label());
   return true;
 }
 
@@ -7870,7 +7870,7 @@ bool CacheIRCompiler::emitObjectToStringResult(ObjOperandId objId) {
 
   masm.PopRegsInMask(volatileRegs);
 
-  masm.branchPtr(Assembler::Equal, scratch, ImmPtr(0), failure->label());
+  masm.branchPtr(Assembler::Equal, scratch, ImmPtr(nullptr), failure->label());
   masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
 
   return true;
