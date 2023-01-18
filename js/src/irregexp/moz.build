@@ -14,10 +14,6 @@ include("../js-cxxflags.mozbuild")
 
 CXXFLAGS += ["-Wno-error=type-limits", "-Wno-error=return-type"]
 
-# Suppress spurious warnings in third-party code. See bug 1810584.
-if CONFIG["CC_TYPE"] == "gcc":
-    CXXFLAGS += ["-Wno-error=non-null"]
-
 UNIFIED_SOURCES += [
     "imported/regexp-bytecode-generator.cc",
     "imported/regexp-bytecode-peephole.cc",
