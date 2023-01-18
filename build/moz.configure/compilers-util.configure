@@ -96,16 +96,22 @@ def compiler_class(compiler, host_or_target):
                 def checking_fn(fn):
                     return fn
 
+            # We accept onerror being a @depends function that returns a callable.
+            # So, create a similar @depends function when it's not already one.
+            if not isinstance(onerror, SandboxDependsFunction):
+                onerror = dependable(lambda: onerror)
+
             @depends(
                 self,
                 dependable(flags),
                 extra_toolchain_flags,
                 stlport_cppflags,
                 dependable(header),
+                onerror,
                 when=when,
             )
             @checking_fn
-            def func(compiler, flags, extra_flags, stlport_flags, header):
+            def func(compiler, flags, extra_flags, stlport_flags, header, onerror):
                 flags = list(flags or [])
                 if is_target:
                     flags += extra_flags or []
