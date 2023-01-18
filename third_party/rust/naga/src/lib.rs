@@ -192,7 +192,6 @@ tree.
     clippy::unneeded_field_pattern,
     clippy::match_like_matches_macro,
     clippy::if_same_then_else,
-    clippy::collapsible_if,
     clippy::derive_partial_eq_without_eq
 )]
 #![warn(
@@ -203,7 +202,7 @@ tree.
     clippy::pattern_type_mismatch,
     clippy::missing_const_for_fn
 )]
-#![cfg_attr(not(test), deny(clippy::panic))]
+#![deny(clippy::panic)]
 
 mod arena;
 pub mod back;
@@ -247,7 +246,6 @@ pub(crate) type NamedExpressions = FastHashMap<Handle<Expression>, String>;
 ///   - GLSL: `layout(early_fragment_tests) in;`
 ///   - HLSL: `Attribute earlydepthstencil`
 ///   - SPIR-V: `ExecutionMode EarlyFragmentTests`
-///   - WGSL: `@early_depth_test`
 ///
 /// For more, see:
 ///   - <https://www.khronos.org/opengl/wiki/Early_Fragment_Test#Explicit_specification>
@@ -267,7 +265,6 @@ pub struct EarlyDepthTest {
 ///     - `depth_any` option behaves as if the layout qualifier was not present.
 ///   - HLSL: `SV_DepthGreaterEqual`/`SV_DepthLessEqual`/`SV_Depth`
 ///   - SPIR-V: `ExecutionMode Depth<Greater/Less/Unchanged>`
-///   - WGSL: `@early_depth_test(greater_equal/less_equal/unchanged)`
 ///
 /// For more, see:
 ///   - <https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_conservative_depth.txt>
@@ -340,7 +337,6 @@ pub enum BuiltIn {
     VertexIndex,
     // fragment
     FragDepth,
-    PointCoord,
     FrontFacing,
     PrimitiveIndex,
     SampleIndex,
@@ -1263,7 +1259,7 @@ pub enum Expression {
     /// Load a value indirectly.
     ///
     /// For [`TypeInner::Atomic`] the result is a corresponding scalar.
-    /// For other types behind the `pointer<T>`, the result is `T`.
+    /// For other types behind the pointer<T>, the result is T.
     Load { pointer: Handle<Expression> },
     /// Sample a point from a sampled or a depth image.
     ImageSample {
@@ -1403,7 +1399,11 @@ pub enum Expression {
     /// Result of calling another function.
     CallResult(Handle<Function>),
     /// Result of an atomic operation.
-    AtomicResult { ty: Handle<Type>, comparison: bool },
+    AtomicResult {
+        kind: ScalarKind,
+        width: Bytes,
+        comparison: bool,
+    },
     /// Get the length of an array.
     /// The expression must resolve to a pointer to an array with a dynamic size.
     ///
@@ -1464,22 +1464,6 @@ pub enum Statement {
         reject: Block,
     },
     /// Conditionally executes one of multiple blocks, based on the value of the selector.
-    ///
-    /// Each case must have a distinct [`value`], exactly one of which must be
-    /// [`Default`]. The `Default` may appear at any position, and covers all
-    /// values not explicitly appearing in other cases. A `Default` appearing in
-    /// the midst of the list of cases does not shadow the cases that follow.
-    ///
-    /// Some backend languages don't support fallthrough (HLSL due to FXC,
-    /// WGSL), and may translate fallthrough cases in the IR by duplicating
-    /// code. However, all backend languages do support cases selected by
-    /// multiple values, like `case 1: case 2: case 3: { ... }`. This is
-    /// represented in the IR as a series of fallthrough cases with empty
-    /// bodies, except for the last.
-    ///
-    /// [`value`]: SwitchCase::value
-    /// [`body`]: SwitchCase::body
-    /// [`Default`]: SwitchValue::Default
     Switch {
         selector: Handle<Expression>, //int
         cases: Vec<SwitchCase>,
@@ -1563,7 +1547,7 @@ pub enum Statement {
     ///
     /// For [`TypeInner::Atomic`] type behind the pointer, the value
     /// has to be a corresponding scalar.
-    /// For other types behind the `pointer<T>`, the value is `T`.
+    /// For other types behind the pointer<T>, the value is T.
     ///
     /// This statement is a barrier for any operations on the
     /// `Expression::LocalVariable` or `Expression::GlobalVariable`

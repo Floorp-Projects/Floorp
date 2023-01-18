@@ -224,12 +224,12 @@ impl<'a> ConstantSolver<'a> {
                                         ScalarValue::Sint(a),
                                         ScalarValue::Sint(b),
                                         ScalarValue::Sint(c),
-                                    ) => ScalarValue::Sint(a.clamp(b, c)),
+                                    ) => ScalarValue::Sint(a.max(b).min(c)),
                                     (
                                         ScalarValue::Uint(a),
                                         ScalarValue::Uint(b),
                                         ScalarValue::Uint(c),
-                                    ) => ScalarValue::Uint(a.clamp(b, c)),
+                                    ) => ScalarValue::Uint(a.max(b).min(c)),
                                     (
                                         ScalarValue::Float(a),
                                         ScalarValue::Float(b),
@@ -739,11 +739,8 @@ mod tests {
 
         let res3_inner = &constants[res3].inner;
 
-        match *res3_inner {
-            ConstantInner::Composite {
-                ref ty,
-                ref components,
-            } => {
+        match res3_inner {
+            ConstantInner::Composite { ty, components } => {
                 assert_eq!(*ty, vec_ty);
                 let mut components_iter = components.iter().copied();
                 assert_eq!(
@@ -936,11 +933,8 @@ mod tests {
 
         let res1_inner = &constants[res1].inner;
 
-        match *res1_inner {
-            ConstantInner::Composite {
-                ref ty,
-                ref components,
-            } => {
+        match res1_inner {
+            ConstantInner::Composite { ty, components } => {
                 assert_eq!(*ty, vec_ty);
                 let mut components_iter = components.iter().copied();
                 assert_eq!(

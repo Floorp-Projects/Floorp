@@ -1442,7 +1442,7 @@ impl<W: Write> Writer<W> {
                         if offset.is_none() && !is_cube_map {
                             write!(self.out, ", {}::int2(0)", NAMESPACE)?;
                         }
-                        let letter = back::COMPONENTS[component as usize];
+                        let letter = ['x', 'y', 'z', 'w'][component as usize];
                         write!(self.out, ", {}::component::{}", NAMESPACE, letter)?;
                     }
                 }
@@ -1500,9 +1500,8 @@ impl<W: Write> Writer<W> {
                         _ => return Err(Error::Validation),
                     },
                 };
-                write!(self.out, "{}(", op_str)?;
+                write!(self.out, "{}", op_str)?;
                 self.put_expression(expr, context, false)?;
-                write!(self.out, ")")?;
             }
             crate::Expression::Binary { op, left, right } => {
                 let op_str = crate::back::binary_operation_str(op);
@@ -2546,30 +2545,19 @@ impl<W: Write> Writer<W> {
                     for case in cases.iter() {
                         match case.value {
                             crate::SwitchValue::Integer(value) => {
-                                write!(self.out, "{}case {}{}:", lcase, value, type_postfix)?;
+                                writeln!(self.out, "{}case {}{}: {{", lcase, value, type_postfix)?;
                             }
                             crate::SwitchValue::Default => {
-                                write!(self.out, "{}default:", lcase)?;
+                                writeln!(self.out, "{}default: {{", lcase)?;
                             }
                         }
-
-                        let write_block_braces = !(case.fall_through && case.body.is_empty());
-                        if write_block_braces {
-                            writeln!(self.out, " {{")?;
-                        } else {
-                            writeln!(self.out)?;
-                        }
-
                         self.put_block(lcase.next(), &case.body, context)?;
                         if !case.fall_through
                             && case.body.last().map_or(true, |s| !s.is_terminator())
                         {
                             writeln!(self.out, "{}break;", lcase.next())?;
                         }
-
-                        if write_block_braces {
-                            writeln!(self.out, "{}}}", lcase)?;
-                        }
+                        writeln!(self.out, "{}}}", lcase)?;
                     }
                     writeln!(self.out, "{}}}", level)?;
                 }
@@ -3399,52 +3387,33 @@ impl<W: Write> Writer<W> {
                     if fun_info[var_handle].is_empty() {
                         continue;
                     }
-                    match var.space {
-                        crate::AddressSpace::Uniform
-                        | crate::AddressSpace::Storage { .. }
-                        | crate::AddressSpace::Handle => {
-                            let br = match var.binding {
-                                Some(ref br) => br,
-                                None => {
-                                    let var_name = var.name.clone().unwrap_or_default();
-                                    ep_error =
-                                        Some(super::EntryPointError::MissingBinding(var_name));
-                                    break;
-                                }
-                            };
-                            let good = match options.per_stage_map[ep.stage].resources.get(br) {
-                                Some(target) => {
-                                    let binding_ty = match module.types[var.ty].inner {
-                                        crate::TypeInner::BindingArray { base, .. } => {
-                                            &module.types[base].inner
-                                        }
-                                        ref ty => ty,
-                                    };
-                                    match *binding_ty {
-                                        crate::TypeInner::Image { .. } => target.texture.is_some(),
-                                        crate::TypeInner::Sampler { .. } => {
-                                            target.sampler.is_some()
-                                        }
-                                        _ => target.buffer.is_some(),
+                    if let Some(ref br) = var.binding {
+                        let good = match options.per_stage_map[ep.stage].resources.get(br) {
+                            Some(target) => {
+                                let binding_ty = match module.types[var.ty].inner {
+                                    crate::TypeInner::BindingArray { base, .. } => {
+                                        &module.types[base].inner
                                     }
+                                    ref ty => ty,
+                                };
+                                match *binding_ty {
+                                    crate::TypeInner::Image { .. } => target.texture.is_some(),
+                                    crate::TypeInner::Sampler { .. } => target.sampler.is_some(),
+                                    _ => target.buffer.is_some(),
                                 }
-                                None => false,
-                            };
-                            if !good {
-                                ep_error =
-                                    Some(super::EntryPointError::MissingBindTarget(br.clone()));
-                                break;
                             }
+                            None => false,
+                        };
+                        if !good {
+                            ep_error = Some(super::EntryPointError::MissingBinding(br.clone()));
+                            break;
                         }
-                        crate::AddressSpace::PushConstant => {
-                            if let Err(e) = options.resolve_push_constants(ep.stage) {
-                                ep_error = Some(e);
-                                break;
-                            }
+                    }
+                    if var.space == crate::AddressSpace::PushConstant {
+                        if let Err(e) = options.resolve_push_constants(ep.stage) {
+                            ep_error = Some(e);
+                            break;
                         }
-                        crate::AddressSpace::Function
-                        | crate::AddressSpace::Private
-                        | crate::AddressSpace::WorkGroup => {}
                     }
                 }
                 if supports_array_length {
@@ -3986,13 +3955,12 @@ fn test_stack_size() {
 
     {
         // check expression stack
-        let mut addresses_start = usize::MAX;
-        let mut addresses_end = 0usize;
+        let mut addresses = usize::MAX..0usize;
         for pointer in writer.put_expression_stack_pointers {
-            addresses_start = addresses_start.min(pointer as usize);
-            addresses_end = addresses_end.max(pointer as usize);
+            addresses.start = addresses.start.min(pointer as usize);
+            addresses.end = addresses.end.max(pointer as usize);
         }
-        let stack_size = addresses_end - addresses_start;
+        let stack_size = addresses.end - addresses.start;
         // check the size (in debug only)
         // last observed macOS value: 20528 (CI)
         if !(11000..=25000).contains(&stack_size) {
@@ -4002,13 +3970,12 @@ fn test_stack_size() {
 
     {
         // check block stack
-        let mut addresses_start = usize::MAX;
-        let mut addresses_end = 0usize;
+        let mut addresses = usize::MAX..0usize;
         for pointer in writer.put_block_stack_pointers {
-            addresses_start = addresses_start.min(pointer as usize);
-            addresses_end = addresses_end.max(pointer as usize);
+            addresses.start = addresses.start.min(pointer as usize);
+            addresses.end = addresses.end.max(pointer as usize);
         }
-        let stack_size = addresses_end - addresses_start;
+        let stack_size = addresses.end - addresses.start;
         // check the size (in debug only)
         // last observed macOS value: 19152 (CI)
         if !(9500..=20000).contains(&stack_size) {

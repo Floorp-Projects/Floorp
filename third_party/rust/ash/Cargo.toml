@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.59.0"
 name = "ash"
-version = "0.37.2+1.3.238"
+version = "0.37.1+1.3.235"
 authors = [
     "Maik Klein <maikklein@googlemail.com>",
     "Benjamin Saunders <ben.e.saunders@gmail.com>",

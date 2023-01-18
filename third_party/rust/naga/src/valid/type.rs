@@ -1,6 +1,6 @@
 use super::Capabilities;
 use crate::{
-    arena::{Arena, Handle, UniqueArena},
+    arena::{Arena, BadHandle, Handle, UniqueArena},
     proc::Alignment,
 };
 
@@ -88,6 +88,8 @@ pub enum Disalignment {
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum TypeError {
+    #[error(transparent)]
+    BadHandle(#[from] BadHandle),
     #[error("The {0:?} scalar width {1} is not supported")]
     InvalidWidth(crate::ScalarKind, crate::Bytes),
     #[error("The {0:?} scalar width {1} is not supported for an atomic")]
@@ -416,7 +418,7 @@ impl super::Validator {
 
                 let sized_flag = match size {
                     crate::ArraySize::Constant(const_handle) => {
-                        let constant = &constants[const_handle];
+                        let constant = constants.try_get(const_handle)?;
                         let length_is_positive = match *constant {
                             crate::Constant {
                                 specialization: Some(_),

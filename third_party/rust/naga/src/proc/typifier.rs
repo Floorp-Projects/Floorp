@@ -1,4 +1,4 @@
-use crate::arena::{Arena, Handle, UniqueArena};
+use crate::arena::{Arena, BadHandle, Handle, UniqueArena};
 
 use thiserror::Error;
 
@@ -162,6 +162,8 @@ impl crate::ConstantInner {
 
 #[derive(Clone, Debug, Error, PartialEq)]
 pub enum ResolveError {
+    #[error(transparent)]
+    BadHandle(#[from] BadHandle),
     #[error("Index {index} is out of bounds for expression {expr:?}")]
     OutOfBoundsIndex {
         expr: Handle<crate::Expression>,
@@ -193,6 +195,8 @@ pub enum ResolveError {
     IncompatibleOperands(String),
     #[error("Function argument {0} doesn't exist")]
     FunctionArgumentNotFound(u32),
+    #[error("Expression {0:?} depends on expressions that follow")]
+    ExpressionForwardDependency(Handle<crate::Expression>),
 }
 
 pub struct ResolveContext<'a> {
@@ -399,15 +403,20 @@ impl<'a> ResolveContext<'a> {
                     }
                 }
             }
-            crate::Expression::Constant(h) => match self.constants[h].inner {
-                crate::ConstantInner::Scalar { width, ref value } => {
-                    TypeResolution::Value(Ti::Scalar {
-                        kind: value.scalar_kind(),
-                        width,
-                    })
+            crate::Expression::Constant(h) => {
+                let constant = self.constants.try_get(h)?;
+                match constant.inner {
+                    crate::ConstantInner::Scalar { width, ref value } => {
+                        TypeResolution::Value(Ti::Scalar {
+                            kind: value.scalar_kind(),
+                            width,
+                        })
+                    }
+                    crate::ConstantInner::Composite { ty, components: _ } => {
+                        TypeResolution::Handle(ty)
+                    }
                 }
-                crate::ConstantInner::Composite { ty, components: _ } => TypeResolution::Handle(ty),
-            },
+            }
             crate::Expression::Splat { size, value } => match *past(value)?.inner_with(types) {
                 Ti::Scalar { kind, width } => {
                     TypeResolution::Value(Ti::Vector { size, kind, width })
@@ -441,7 +450,7 @@ impl<'a> ResolveContext<'a> {
                 TypeResolution::Handle(arg.ty)
             }
             crate::Expression::GlobalVariable(h) => {
-                let var = &self.global_vars[h];
+                let var = self.global_vars.try_get(h)?;
                 if var.space == crate::AddressSpace::Handle {
                     TypeResolution::Handle(var.ty)
                 } else {
@@ -452,7 +461,7 @@ impl<'a> ResolveContext<'a> {
                 }
             }
             crate::Expression::LocalVariable(h) => {
-                let var = &self.local_vars[h];
+                let var = self.local_vars.try_get(h)?;
                 TypeResolution::Value(Ti::Pointer {
                     base: var.ty,
                     space: crate::AddressSpace::Function,
@@ -635,7 +644,21 @@ impl<'a> ResolveContext<'a> {
                 | crate::BinaryOperator::ShiftLeft
                 | crate::BinaryOperator::ShiftRight => past(left)?.clone(),
             },
-            crate::Expression::AtomicResult { ty, .. } => TypeResolution::Handle(ty),
+            crate::Expression::AtomicResult {
+                kind,
+                width,
+                comparison,
+            } => {
+                if comparison {
+                    TypeResolution::Value(Ti::Vector {
+                        size: crate::VectorSize::Bi,
+                        kind,
+                        width,
+                    })
+                } else {
+                    TypeResolution::Value(Ti::Scalar { kind, width })
+                }
+            }
             crate::Expression::Select { accept, .. } => past(accept)?.clone(),
             crate::Expression::Derivative { axis: _, expr } => past(expr)?.clone(),
             crate::Expression::Relational { fun, argument } => match fun {

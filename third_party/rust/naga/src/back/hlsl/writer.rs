@@ -829,7 +829,10 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 }
             }
             let ty_inner = &module.types[member.ty].inner;
-            last_offset = member.offset + ty_inner.size_hlsl(&module.types, &module.constants);
+            last_offset = member.offset
+                + ty_inner
+                    .try_size_hlsl(&module.types, &module.constants)
+                    .unwrap();
 
             // The indentation is only for readability
             write!(self.out, "{}", back::INDENT)?;
@@ -1822,47 +1825,18 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
 
                 for (i, case) in cases.iter().enumerate() {
                     match case.value {
-                        crate::SwitchValue::Integer(value) => write!(
+                        crate::SwitchValue::Integer(value) => writeln!(
                             self.out,
-                            "{}case {}{}:",
+                            "{}case {}{}: {{",
                             indent_level_1, value, type_postfix
                         )?,
                         crate::SwitchValue::Default => {
-                            write!(self.out, "{}default:", indent_level_1)?
+                            writeln!(self.out, "{}default: {{", indent_level_1)?
                         }
                     }
 
-                    // The new block is not only stylistic, it plays a role here:
-                    // We might end up having to write the same case body
-                    // multiple times due to FXC not supporting fallthrough.
-                    // Therefore, some `Expression`s written by `Statement::Emit`
-                    // will end up having the same name (`_expr<handle_index>`).
-                    // So we need to put each case in its own scope.
-                    let write_block_braces = !(case.fall_through && case.body.is_empty());
-                    if write_block_braces {
-                        writeln!(self.out, " {{")?;
-                    } else {
-                        writeln!(self.out)?;
-                    }
-
-                    // Although FXC does support a series of case clauses before
-                    // a block[^yes], it does not support fallthrough from a
-                    // non-empty case block to the next[^no]. If this case has a
-                    // non-empty body with a fallthrough, emulate that by
-                    // duplicating the bodies of all the cases it would fall
-                    // into as extensions of this case's own body. This makes
-                    // the HLSL output potentially quadratic in the size of the
-                    // Naga IR.
-                    //
-                    // [^yes]: ```hlsl
-                    // case 1:
-                    // case 2: do_stuff()
-                    // ```
-                    // [^no]: ```hlsl
-                    // case 1: do_this();
-                    // case 2: do_that();
-                    // ```
-                    if case.fall_through && !case.body.is_empty() {
+                    // FXC doesn't support fallthrough so we duplicate the body of the following case blocks
+                    if case.fall_through {
                         let curr_len = i + 1;
                         let end_case_idx = curr_len
                             + cases
@@ -1887,16 +1861,12 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                         for sta in case.body.iter() {
                             self.write_stmt(module, sta, func_ctx, indent_level_2)?;
                         }
-                        if !case.fall_through
-                            && case.body.last().map_or(true, |s| !s.is_terminator())
-                        {
+                        if case.body.last().map_or(true, |s| !s.is_terminator()) {
                             writeln!(self.out, "{}break;", indent_level_2)?;
                         }
                     }
 
-                    if write_block_braces {
-                        writeln!(self.out, "{}}}", indent_level_1)?;
-                    }
+                    writeln!(self.out, "{}}}", indent_level_1)?;
                 }
 
                 writeln!(self.out, "{}}}", level)?
@@ -2425,9 +2395,8 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                         }
                     },
                 };
-                write!(self.out, "{}(", op_str)?;
+                write!(self.out, "{}", op_str)?;
                 self.write_expr(module, expr, func_ctx)?;
-                write!(self.out, ")")?;
             }
             Expression::As {
                 expr,

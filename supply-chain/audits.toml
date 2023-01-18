@@ -99,11 +99,6 @@ Nicolas Silva, Jim Blandy, and Teodor Tanasoaia audited ash master
 branch commits from e43e9c0c to 6bd82768 inclusive.
 """
 
-[[audits.ash]]
-who = "Nicolas Silva <nical@fastmail.com>"
-criteria = "safe-to-deploy"
-delta = "0.37.1+1.3.235 -> 0.37.2+1.3.238"
-
 [[audits.ashmem]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
