@@ -42,6 +42,11 @@ module.exports = {
       "lit.all.mjs"
     ] = `${projectRoot}/toolkit/content/widgets/vendor/lit.all.mjs`;
 
+    // The @storybook/web-components project uses lit-html. Redirect it to our
+    // bundled version.
+    config.resolve.alias["lit-html/directive-helpers.js"] = "lit.all.mjs";
+    config.resolve.alias["lit-html"] = "lit.all.mjs";
+
     config.module.rules.push({
       test: /\.ftl$/,
       type: "asset/source",
