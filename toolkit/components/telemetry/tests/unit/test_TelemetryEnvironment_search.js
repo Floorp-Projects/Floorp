@@ -388,7 +388,6 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
   });
 
   engine.wrappedJSObject.updateFromManifest(
-    extension.id,
     extension.baseURI,
     SearchTestUtils.createEngineManifest({
       name: "TestEngine",
