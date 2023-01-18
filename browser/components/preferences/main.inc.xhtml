@@ -737,7 +737,10 @@
             class="tail-with-learn-more"
             data-l10n-id="browsing-media-control"
             preference="media.hardwaremediakeys.enabled"/>
-    <label id="mediaControlLearnMore" class="learnMore" data-l10n-id="browsing-media-control-learn-more" is="text-link"/>
+    <html:a is="moz-support-link"
+          data-l10n-id="browsing-media-control-learn-more"
+          support-page="media-keyboard-control"
+    />
   </hbox>
   <hbox align="center" data-subcategory="cfraddons">
     <checkbox id="cfrRecommendations"

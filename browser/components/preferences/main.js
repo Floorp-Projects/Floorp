@@ -482,11 +482,6 @@ var gMainPane = {
       AppConstants.MOZ_WIDGET_GTK
     ) {
       document.getElementById("mediaControlBox").hidden = false;
-      let mediaControlLearnMoreUrl =
-        Services.urlFormatter.formatURLPref("app.support.baseURL") +
-        "media-keyboard-control";
-      let link = document.getElementById("mediaControlLearnMore");
-      link.setAttribute("href", mediaControlLearnMoreUrl);
     }
 
     // Initializes the fonts dropdowns displayed in this pane.
