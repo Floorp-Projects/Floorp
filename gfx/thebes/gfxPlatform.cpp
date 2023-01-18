@@ -2968,6 +2968,10 @@ void gfxPlatform::InitWebGPUConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::WEBGPU);
   feature.SetDefaultFromPref("dom.webgpu.enabled", true, false);
 
+  if (StaticPrefs::gfx_webgpu_force_enabled_AtStartup()) {
+    feature.UserForceEnable("Force-enabled by pref");
+  }
+
   nsCString message;
   nsCString failureId;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU, &message, failureId)) {
@@ -2978,10 +2982,6 @@ void gfxPlatform::InitWebGPUConfig() {
   feature.ForceDisable(FeatureStatus::Blocked,
                        "WebGPU cannot be enabled in release or beta",
                        "WEBGPU_DISABLE_RELEASE_OR_BETA"_ns);
-#else
-  if (StaticPrefs::gfx_webgpu_force_enabled_AtStartup()) {
-    feature.UserForceEnable("Force-enabled by pref");
-  }
 #endif
 
   gfxVars::SetAllowWebGPU(feature.IsEnabled());
