@@ -19,6 +19,16 @@ using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
 using ScriptLoadRequestList = JS::loader::ScriptLoadRequestList;
 using ModuleLoadRequest = JS::loader::ModuleLoadRequest;
 
+// WorkerModuleLoader
+//
+// The WorkerModuleLoader provides the methods that implement specification
+// step 5 from "To fetch a worklet/module worker script graph", specifically for
+// workers. In addition, this implements worker specific initialization for
+// Static imports and Dynamic imports.
+//
+// The steps are outlined in "To fetch the descendants of and link a module
+// script" and are common for all Modules. Thus we delegate to ModuleLoaderBase
+// for those steps.
 class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -45,6 +55,8 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
 
   bool CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) override;
 
+  // StartFetch is special for worker modules, as we need to move back to the
+  // main thread to start a new load.
   nsresult StartFetch(ModuleLoadRequest* aRequest) override;
 
   nsresult CompileFetchedModule(
