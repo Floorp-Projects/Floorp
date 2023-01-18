@@ -7,19 +7,23 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/PFetchParent.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "nsCOMPtr.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsID.h"
 #include "nsISerialEventTarget.h"
 #include "nsString.h"
+#include "nsTHashMap.h"
 
 namespace mozilla::dom {
 
 class ClientInfo;
+class FetchServicePromises;
 class InternalRequest;
 class InternalResponse;
 class ServiceWorkerDescriptor;
@@ -38,7 +42,14 @@ class FetchParent final : public PFetchParent {
 
   static RefPtr<FetchParent> GetActorByID(const nsID& aID);
 
-  void OnFlushConsoleReport(nsTArray<net::ConsoleReportCollected>&& aReports);
+  void OnResponseAvailableInternal(SafeRefPtr<InternalResponse>&& aResponse);
+
+  void OnResponseEnd(const ResponseEndArgs& aArgs);
+
+  void OnDataAvailable();
+
+  void OnFlushConsoleReport(
+      const nsTArray<net::ConsoleReportCollected>& aReports);
 
   class FetchParentCSPEventListener final : public nsICSPEventListener {
    public:
@@ -76,9 +87,11 @@ class FetchParent final : public PFetchParent {
   nsCString mWorkerScript;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
-  RefPtr<FetchParentCSPEventListener> mCSPEventListener;
+  Maybe<CookieJarSettingsArgs> mCookieJarSettings;
+  nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   bool mNeedOnDataAvailable{false};
   bool mHasCSPEventListener{false};
+  bool mExtendForCSPEventListener{false};
 
   Atomic<bool> mIsDone{false};
   Atomic<bool> mActorDestroyed{false};
