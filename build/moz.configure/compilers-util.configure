@@ -109,8 +109,8 @@ def compiler_class(compiler, host_or_target):
                 flags = list(flags or [])
                 if is_target:
                     flags += extra_flags or []
-                if compiler.language == "C++":
-                    flags += stlport_flags or []
+                    if compiler.language == "C++":
+                        flags += stlport_flags or []
                 header = header or ""
                 if isinstance(header, (list, tuple)):
                     header = "\n".join(header)
