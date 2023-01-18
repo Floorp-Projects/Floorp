@@ -19,7 +19,6 @@ jobs:
         sudo apt update
 
     - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on == 'ubuntu-22.04'
       run: |
         echo Before:
         free -h
@@ -149,7 +148,6 @@ jobs:
         sudo apt update
 
     - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on == 'ubuntu-22.04'
       run: |
         echo Before:
         free -h
