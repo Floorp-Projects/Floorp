@@ -1125,7 +1125,7 @@ bool GLContextEGL::FindVisual(int* const out_visualId) {
 #endif
 
 /*static*/
-RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
+RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
     const std::shared_ptr<EglDisplay> egl, const GLContextCreateDesc& desc,
     nsACString* const out_failureId) {
   const auto WithUseGles = [&](const bool useGles) -> RefPtr<GLContextEGL> {
@@ -1201,8 +1201,7 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
   if (!display) {
     return nullptr;
   }
-  auto ret = GLContextEGL::CreateEGLPBufferOffscreenContext(display, desc,
-                                                            out_failureId);
+  auto ret = GLContextEGL::CreateWithoutSurface(display, desc, out_failureId);
   return ret.forget();
 }
 
