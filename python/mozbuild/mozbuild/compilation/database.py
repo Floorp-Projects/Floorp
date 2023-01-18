@@ -147,13 +147,15 @@ class CompileDBBackend(CommonBackend):
         # Output the database (a JSON file) to objdir/compile_commands.json
         return os.path.join(self.environment.topobjdir, "compile_commands.json")
 
+    def _process_unified_sources_without_mapping(self, obj):
+        for f in list(sorted(obj.files)):
+            self._build_db_line(
+                obj.objdir, obj.relsrcdir, obj.config, f, obj.canonical_suffix
+            )
+
     def _process_unified_sources(self, obj):
         if not obj.have_unified_mapping:
-            for f in list(sorted(obj.files)):
-                self._build_db_line(
-                    obj.objdir, obj.relsrcdir, obj.config, f, obj.canonical_suffix
-                )
-            return
+            return self._process_unified_sources_without_mapping(obj)
 
         # For unified sources, only include the unified source file.
         # Note that unified sources are never used for host sources.
