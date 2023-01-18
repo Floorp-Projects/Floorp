@@ -122,6 +122,7 @@ enum class SymbolicAddress {
   PreBarrierFiltering,
   PostBarrier,
   PostBarrierPrecise,
+  PostBarrierPreciseWithOffset,
   PostBarrierFiltering,
   StructNew,
   ExceptionNew,
@@ -245,6 +246,7 @@ extern const SymbolicAddressSignature SASigRefFunc;
 extern const SymbolicAddressSignature SASigPreBarrierFiltering;
 extern const SymbolicAddressSignature SASigPostBarrier;
 extern const SymbolicAddressSignature SASigPostBarrierPrecise;
+extern const SymbolicAddressSignature SASigPostBarrierPreciseWithOffset;
 extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
 extern const SymbolicAddressSignature SASigExceptionNew;

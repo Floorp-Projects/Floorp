@@ -1119,7 +1119,17 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                                JSObject** location,
                                                JSObject* prev) {
   MOZ_ASSERT(SASigPostBarrierPrecise.failureMode == FailureMode::Infallible);
-  MOZ_ASSERT(location);
+  postBarrierPreciseWithOffset(instance, location, /*offset=*/0, prev);
+}
+
+/* static */ void Instance::postBarrierPreciseWithOffset(Instance* instance,
+                                                         JSObject** base,
+                                                         uint32_t offset,
+                                                         JSObject* prev) {
+  MOZ_ASSERT(SASigPostBarrierPreciseWithOffset.failureMode ==
+             FailureMode::Infallible);
+  MOZ_ASSERT(base);
+  JSObject** location = (JSObject**)(uintptr_t(base) + size_t(offset));
   JSObject* next = *location;
   JSObject::postWriteBarrier(location, prev, next);
 }

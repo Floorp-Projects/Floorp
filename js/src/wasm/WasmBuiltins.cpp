@@ -268,6 +268,12 @@ const SymbolicAddressSignature SASigPostBarrierPrecise = {
     _Infallible,
     3,
     {_PTR, _PTR, _RoN, _END}};
+const SymbolicAddressSignature SASigPostBarrierPreciseWithOffset = {
+    SymbolicAddress::PostBarrierPreciseWithOffset,
+    _VOID,
+    _Infallible,
+    4,
+    {_PTR, _PTR, _I32, _RoN, _END}};
 const SymbolicAddressSignature SASigPostBarrierFiltering = {
     SymbolicAddress::PostBarrierFiltering,
     _VOID,
@@ -1258,6 +1264,10 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralGeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigPostBarrierPrecise));
       return FuncCast(Instance::postBarrierPrecise, *abiType);
+    case SymbolicAddress::PostBarrierPreciseWithOffset:
+      *abiType = Args_Int32_GeneralGeneralInt32General;
+      MOZ_ASSERT(*abiType == ToABIType(SASigPostBarrierPreciseWithOffset));
+      return FuncCast(Instance::postBarrierPreciseWithOffset, *abiType);
     case SymbolicAddress::PreBarrierFiltering:
       *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigPreBarrierFiltering));
@@ -1460,6 +1470,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::PreBarrierFiltering:
     case SymbolicAddress::PostBarrier:
     case SymbolicAddress::PostBarrierPrecise:
+    case SymbolicAddress::PostBarrierPreciseWithOffset:
     case SymbolicAddress::PostBarrierFiltering:
     case SymbolicAddress::StructNew:
     case SymbolicAddress::ExceptionNew:

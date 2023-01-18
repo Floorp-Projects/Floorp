@@ -1593,6 +1593,7 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native filtering GC prebarrier (in wasm)";
     case SymbolicAddress::PostBarrier:
     case SymbolicAddress::PostBarrierPrecise:
+    case SymbolicAddress::PostBarrierPreciseWithOffset:
     case SymbolicAddress::PostBarrierFiltering:
       return "call to native GC postbarrier (in wasm)";
     case SymbolicAddress::StructNew:

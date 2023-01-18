@@ -3265,7 +3265,7 @@ class LWasmDerivedPointer : public LInstructionHelper<1, 1, 0> {
     setOperand(0, base);
   }
   const LAllocation* base() { return getOperand(0); }
-  size_t offset() { return mirRaw()->toWasmDerivedPointer()->offset(); }
+  uint32_t offset() { return mirRaw()->toWasmDerivedPointer()->offset(); }
 };
 
 class LWasmDerivedIndexPointer : public LInstructionHelper<1, 2, 0> {
