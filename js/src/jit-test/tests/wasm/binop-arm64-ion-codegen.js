@@ -119,7 +119,7 @@ let double32 =
 codegenTestARM64_adhoc(
     double32,
     'f',
-    '2b000000  adds w0, w0, w0'); // The ADDS is some legacy thing, likely unnecessary
+    '0b000000  add w0, w0, w0');
 assertEq(wasmEvalText(double32).exports.f(-37), -74)
 assertEq(wasmEvalText(double32).exports.f(42), 84)
 

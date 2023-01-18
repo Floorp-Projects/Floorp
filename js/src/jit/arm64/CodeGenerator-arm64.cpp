@@ -345,6 +345,10 @@ void CodeGenerator::visitMulI(LMulI* ins) {
         }
         return;  // Avoid overflow check.
       case 2:
+        if (!mul->canOverflow()) {
+          masm.Add(destreg32, lhsreg32, Operand(lhsreg32));
+          return;  // Avoid overflow check.
+        }
         masm.Adds(destreg32, lhsreg32, Operand(lhsreg32));
         break;  // Go to overflow check.
       default:
