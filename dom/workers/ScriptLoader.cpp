@@ -411,8 +411,24 @@ WorkerScriptLoader::WorkerScriptLoader(
   }
 
   nsIGlobalObject* global = GetGlobal();
-
   mController = global->GetController();
+  // Set up the module loader, if it has not been yet.
+  // TODO: Implement this for classic scripts when dynamic imports are added.
+  if (aWorkerPrivate->WorkerType() == WorkerType::Module) {
+    InitModuleLoader();
+  }
+}
+
+void WorkerScriptLoader::InitModuleLoader() {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  RefPtr<WorkerModuleLoader> moduleLoader =
+      new WorkerModuleLoader(this, GetGlobal(), mSyncLoopTarget.get());
+
+  if (mWorkerScriptType == WorkerScript) {
+    mWorkerRef->Private()->GlobalScope()->InitModuleLoader(moduleLoader);
+    return;
+  }
+  mWorkerRef->Private()->DebuggerGlobalScope()->InitModuleLoader(moduleLoader);
 }
 
 void WorkerScriptLoader::CreateScriptRequests(
