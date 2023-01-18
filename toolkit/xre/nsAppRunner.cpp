@@ -5329,19 +5329,6 @@ nsresult XREMain::XRE_mainRun() {
       }
     }
 
-#ifndef XP_WIN
-    nsCOMPtr<nsIFile> profileDir;
-    nsAutoCString path;
-    rv = mDirProvider.GetProfileStartupDir(getter_AddRefs(profileDir));
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(profileDir->GetNativePath(path)) &&
-        !IsUtf8(path)) {
-      PR_fprintf(
-          PR_STDERR,
-          "Error: The profile path is not valid UTF-8. Unable to continue.\n");
-      return NS_ERROR_FAILURE;
-    }
-#endif
-
     // Initialize user preferences before notifying startup observers so they're
     // ready in time for early consumers, such as the component loader.
     mDirProvider.InitializeUserPrefs();

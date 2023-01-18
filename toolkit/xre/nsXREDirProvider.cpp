@@ -11,6 +11,7 @@
 
 #include "jsapi.h"
 #include "xpcpublic.h"
+#include "prprf.h"
 
 #include "nsIAppStartup.h"
 #include "nsIFile.h"
@@ -159,15 +160,30 @@ nsresult nsXREDirProvider::Initialize(nsIFile* aXULAppDir, nsIFile* aGREDir) {
 }
 
 nsresult nsXREDirProvider::SetProfile(nsIFile* aDir, nsIFile* aLocalDir) {
-  NS_ASSERTION(aDir && aLocalDir, "We don't support no-profile apps yet!");
+  MOZ_ASSERT(aDir && aLocalDir, "We don't support no-profile apps!");
 
-  nsresult rv;
-
-  rv = EnsureDirectoryExists(aDir);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = EnsureDirectoryExists(aDir);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = EnsureDirectoryExists(aLocalDir);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifndef XP_WIN
+  nsAutoCString profilePath;
+  rv = aDir->GetNativePath(profilePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString localProfilePath;
+  rv = aLocalDir->GetNativePath(localProfilePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mozilla::IsUtf8(profilePath) || !mozilla::IsUtf8(localProfilePath)) {
+    PR_fprintf(
+        PR_STDERR,
+        "Error: The profile path is not valid UTF-8. Unable to continue.\n");
+    return NS_ERROR_FAILURE;
+  }
+#endif
 
 #ifdef XP_MACOSX
   bool same;
