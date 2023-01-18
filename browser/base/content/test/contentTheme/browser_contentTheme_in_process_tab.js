@@ -77,11 +77,4 @@ add_task(async function test_in_process_tab() {
   );
 
   await BrowserTestUtils.closeWindow(win);
-
-  // There is a CSS transition happening on the navigation toolbar
-  // background-color before closing the window.
-  // Compositor animations on closed windows only stop after a GCMajor.
-  // (This is bug 1803387.)
-  // Force a GC immediately to avoid waiting forever for vsync to be disabled.
-  Cu.forceGC();
 });

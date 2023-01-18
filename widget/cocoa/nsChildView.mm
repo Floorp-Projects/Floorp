@@ -368,17 +368,19 @@ nsCocoaWindow* nsChildView::GetAppWindowWidget() const {
 void nsChildView::Destroy() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  // Make sure that no composition is in progress while disconnecting
-  // ourselves from the view.
-  MutexAutoLock lock(mCompositingLock);
-
   if (mOnDestroyCalled) return;
   mOnDestroyCalled = true;
 
   // Stuff below may delete the last ref to this
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
-  [mView widgetDestroyed];
+  {
+    // Make sure that no composition is in progress while disconnecting
+    // ourselves from the view.
+    MutexAutoLock lock(mCompositingLock);
+
+    [mView widgetDestroyed];
+  }
 
   nsBaseWidget::Destroy();
 

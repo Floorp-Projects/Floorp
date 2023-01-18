@@ -508,6 +508,8 @@ void nsBaseWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener) {
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::Destroy() {
+  DestroyCompositor();
+
   // Just in case our parent is the only ref to us
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
   // disconnect from the parent
