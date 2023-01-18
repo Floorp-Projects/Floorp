@@ -4281,6 +4281,27 @@ bool MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result) {
         return true;
       }
     }
+
+    // Optimize comparison against NaN.
+    if (mozilla::IsNaN(cte)) {
+      switch (jsop_) {
+        case JSOp::Lt:
+        case JSOp::Le:
+        case JSOp::Gt:
+        case JSOp::Ge:
+        case JSOp::Eq:
+        case JSOp::StrictEq:
+          *result = false;
+          break;
+        case JSOp::Ne:
+        case JSOp::StrictNe:
+          *result = true;
+          break;
+        default:
+          MOZ_CRASH("Unexpected op.");
+      }
+      return true;
+    }
   }
 
   if (!left->isConstant() || !right->isConstant()) {
