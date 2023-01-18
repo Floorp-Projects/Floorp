@@ -10,10 +10,6 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace(
 
 const TEST_PAGE = TEST_ROOT + "test-page.html";
 const SHORT_TEST_PAGE = TEST_ROOT + "short-test-page.html";
-const LARGE_TEST_PAGE = TEST_ROOT + "large-test-page.html";
-
-const MAX_CAPTURE_DIMENSION = 32767;
-const MAX_CAPTURE_AREA = 124925329;
 
 const gScreenshotUISelectors = {
   panelButtons: "#screenshotsPagePanel",
