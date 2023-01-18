@@ -219,6 +219,15 @@ async function initPreferencesTest() {
   await setup();
 }
 
+async function initSapTest() {
+  /* import-globals-from head-sap.js */
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-sap.js",
+    this
+  );
+  await setup();
+}
+
 function loadOmniboxAddon({ keyword }) {
   return ExtensionTestUtils.loadExtension({
     manifest: {
