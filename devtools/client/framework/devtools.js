@@ -731,8 +731,6 @@ DevTools.prototype = {
 
     this._toolboxesPerCommands.set(commands, toolbox);
 
-    this.emit("toolbox-created", toolbox);
-
     toolbox.once("destroy", () => {
       this.emit("toolbox-destroy", toolbox);
     });
