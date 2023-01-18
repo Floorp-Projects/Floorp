@@ -200,11 +200,15 @@ class _BuiltInThemes {
       } else {
         try {
           let addon = await lazy.AddonManager.getAddonByID(id);
-          if (addon) {
+          // Only uninstall the expired colorways theme if they are not
+          // migrated builtins (because on migrated to xpi files
+          // installed in the user profile they are also removed
+          // from the retainedExpiredThemes pref).
+          if (addon?.isBuiltinColorwayTheme) {
             await addon.uninstall();
           }
         } catch (e) {
-          console.error(`Failed to uninstall expired theme ${id}`);
+          console.error(`Failed to uninstall expired theme ${id}`, e);
         }
       }
     }
