@@ -418,8 +418,6 @@ export default class LoginList extends HTMLElement {
       case "keyup":
       case "keydown": {
         if (event.type == "keydown") {
-          this._handleTabbingToExternalElements(event);
-
           if (
             this.shadowRoot.activeElement &&
             this.shadowRoot.activeElement.closest("ol") &&
@@ -699,37 +697,6 @@ export default class LoginList extends HTMLElement {
       document.l10n.setAttributes(this._count, "login-list-count", {
         count,
       });
-    }
-  }
-
-  _handleTabbingToExternalElements(event) {
-    if (
-      (this._createLoginButton == this.shadowRoot.activeElement ||
-        (this._list == this.shadowRoot.activeElement &&
-          this._createLoginButton.disabled)) &&
-      event.key == "Tab"
-    ) {
-      // Bug 1562716: Pressing Tab from the create-login-button cycles back to the
-      // login-sort dropdown due to the login-list having `overflow`
-      // CSS property set. Explicitly forward focus here until
-      // this keyboard trap is fixed.
-      if (event.shiftKey) {
-        return;
-      }
-      if (
-        this.classList.contains("no-logins") &&
-        !this.classList.contains("create-login-selected")
-      ) {
-        let loginIntro = document.querySelector("login-intro");
-        event.preventDefault();
-        loginIntro.focus();
-        return;
-      }
-      let loginItem = document.querySelector("login-item");
-      if (loginItem) {
-        event.preventDefault();
-        loginItem.focus();
-      }
     }
   }
 

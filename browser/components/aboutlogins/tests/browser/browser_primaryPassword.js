@@ -195,11 +195,14 @@ add_task(async function test() {
   });
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    let loginFilter = Cu.waiveXrays(
-      content.document.querySelector("login-filter")
+    const loginList = Cu.waiveXrays(
+      content.document.querySelector("login-list")
+    );
+
+    const loginFilter = Cu.waiveXrays(
+      loginList.shadowRoot.querySelector("login-filter")
     );
     loginFilter.value = "pass1";
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     Assert.equal(
       loginList._list.querySelectorAll(
         ".login-list-item[data-guid]:not([hidden])"
@@ -219,11 +222,13 @@ add_task(async function test() {
   LoginTestUtils.primaryPassword.disable();
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     Cu.waiveXrays(content).AboutLoginsUtils.primaryPasswordEnabled = false;
-    let loginFilter = Cu.waiveXrays(
-      content.document.querySelector("login-filter")
+    const loginList = Cu.waiveXrays(
+      content.document.querySelector("login-list")
+    );
+    const loginFilter = Cu.waiveXrays(
+      loginList.shadowRoot.querySelector("login-filter")
     );
     loginFilter.value = "pass1";
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     Assert.equal(
       loginList._list.querySelectorAll(
         ".login-list-item[data-guid]:not([hidden])"
