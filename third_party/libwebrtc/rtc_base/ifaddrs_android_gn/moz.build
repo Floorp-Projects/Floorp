@@ -81,6 +81,10 @@ if CONFIG["CPU_ARCH"] == "arm":
 
 if CONFIG["CPU_ARCH"] == "x86":
 
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
     OS_LIBS += [
         "android_support"
     ]
