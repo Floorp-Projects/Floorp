@@ -74,10 +74,6 @@ class SchedulerGroup {
   static nsresult UnlabeledDispatch(TaskCategory aCategory,
                                     already_AddRefed<nsIRunnable>&& aRunnable);
 
-  static void MarkVsyncReceived();
-
-  static void MarkVsyncRan();
-
   static nsresult LabeledDispatch(
       TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
       mozilla::PerformanceCounter* aPerformanceCounter);

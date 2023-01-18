@@ -60,8 +60,6 @@ mozilla::ipc::IPCResult VsyncMainChild::RecvNotify(const VsyncEvent& aVsync,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
 
-  SchedulerGroup::MarkVsyncRan();
-
   mVsyncRate = TimeDuration::FromMilliseconds(aVsyncRate);
 
   for (RefPtr<VsyncObserver> observer : mObservers.ForwardRange()) {

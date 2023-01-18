@@ -186,10 +186,6 @@ class BackgroundChildImpl : public PBackgroundChild {
 
   virtual bool DeallocPClientManagerChild(PClientManagerChild* aActor) override;
 
-#ifdef EARLY_BETA_OR_EARLIER
-  virtual void OnChannelReceivedMessage(const Message& aMsg) override;
-#endif
-
   virtual PWebAuthnTransactionChild* AllocPWebAuthnTransactionChild() override;
 
   virtual bool DeallocPWebAuthnTransactionChild(

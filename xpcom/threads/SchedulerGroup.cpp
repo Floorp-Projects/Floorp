@@ -20,12 +20,6 @@
 
 using namespace mozilla;
 
-namespace {
-
-static Atomic<uint64_t> gEarliestUnprocessedVsync(0);
-
-}  // namespace
-
 /* static */
 nsresult SchedulerGroup::UnlabeledDispatch(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
@@ -35,24 +29,6 @@ nsresult SchedulerGroup::UnlabeledDispatch(
     return NS_DispatchToMainThread(std::move(aRunnable));
   }
 }
-
-/* static */
-void SchedulerGroup::MarkVsyncReceived() {
-  // May be called on any thread when a vsync is received and scheduled to be
-  // processed. This may occur on the main thread due to queued messages when
-  // the channel is connected.
-  TimeStamp creation = TimeStamp::ProcessCreation();
-
-  // Attempt to set gEarliestUnprocessedVsync to our new value. If we've seen a
-  // vsync already, but haven't handled it, the `compareExchange` will fail and
-  // the static won't be updated.
-  uint64_t unprocessedVsync =
-      uint64_t((TimeStamp::Now() - creation).ToMicroseconds());
-  gEarliestUnprocessedVsync.compareExchange(0, unprocessedVsync);
-}
-
-/* static */
-void SchedulerGroup::MarkVsyncRan() { gEarliestUnprocessedVsync = 0; }
 
 SchedulerGroup::SchedulerGroup() : mIsRunning(false) {}
 
