@@ -120,7 +120,17 @@ class StyleSheetsManager extends EventEmitter {
     let styleSheets = await Promise.all(promises);
     styleSheets = styleSheets.flat();
     for (const styleSheet of styleSheets) {
-      this._registerStyleSheet(styleSheet);
+      const resourceId = this._findStyleSheetResourceId(styleSheet);
+      if (resourceId) {
+        // If the stylesheet was already registered before any consumer started
+        // watching, emit "applicable-stylesheet-added" immediately.
+        this.emitAsync("applicable-stylesheet-added", {
+          resourceId,
+          styleSheet,
+        });
+      } else {
+        this._registerStyleSheet(styleSheet);
+      }
     }
   }
 
