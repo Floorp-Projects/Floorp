@@ -443,7 +443,10 @@
   <hbox align="center">
     <checkbox id="playDRMContent" preference="media.eme.enabled"
               class="tail-with-learn-more" data-l10n-id="play-drm-content" />
-    <label id="playDRMContentLink" class="learnMore" data-l10n-id="play-drm-content-learn-more" is="text-link"/>
+    <html:a is="moz-support-link"
+      data-l10n-id="play-drm-content-learn-more"
+      support-page="drm-content"
+    />
   </hbox>
 </groupbox>
 
