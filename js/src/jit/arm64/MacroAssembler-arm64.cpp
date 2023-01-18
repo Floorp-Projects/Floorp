@@ -2938,14 +2938,15 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
 
 void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
                                          Label* fail) {
-  const ARMFPRegister src32(src, 32);
+  ARMFPRegister src32(src, 32);
+  ARMRegister dest32(dest, 32);
 
   Label done, zeroCase;
 
   // Convert scalar to signed 32-bit fixed-point, rounding toward zero.
   // In the case of overflow, the output is saturated.
   // In the case of NaN and -0, the output is zero.
-  Fcvtzs(ARMRegister(dest, 32), src32);
+  Fcvtzs(dest32, src32);
 
   // If the output was zero, worry about special cases.
   branch32(Assembler::Equal, dest, Imm32(0), &zeroCase);
@@ -2963,16 +2964,24 @@ void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
   {
     bind(&zeroCase);
 
-    // If input is a negative number that truncated to zero, the real
-    // output should be the non-integer -0.
-    // The use of "lt" instead of "lo" also catches unordered NaN input.
-    Fcmp(src32, 0.0f);
-    B(fail, vixl::lt);
+    // Combine test for negative and NaN values using a single bitwise
+    // operation.
+    //
+    // | Decimal number | Bitwise representation |
+    // |----------------|------------------------|
+    // | -0             | 8000'0000              |
+    // | +0             | 0000'0000              |
+    // | +1             | 3f80'0000              |
+    // |  NaN (or +Inf) | 7fyx'xxxx, y >= 8      |
+    // | -NaN (or -Inf) | ffyx'xxxx, y >= 8      |
+    //
+    // If any of two most significant bits is set, the number isn't in [0, 1).
+    // (Recall that floating point numbers, except for NaN, are strictly ordered
+    // when comparing their bitwise representation as signed integers.)
 
-    // Check explicitly for -0, bitwise.
-    Fmov(ARMRegister(dest, 32), src32);
-    branchTest32(Assembler::Signed, dest, dest, fail);
-    move32(Imm32(0), dest);
+    Fmov(dest32, src32);
+    Lsr(dest32, dest32, 30);
+    Cbnz(dest32, fail);
   }
 
   bind(&done);
@@ -2980,14 +2989,16 @@ void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
 
 void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
-  const ARMFPRegister src64(src, 64);
+  ARMFPRegister src64(src, 64);
+  ARMRegister dest64(dest, 64);
+  ARMRegister dest32(dest, 32);
 
   Label done, zeroCase;
 
   // Convert scalar to signed 32-bit fixed-point, rounding toward zero.
   // In the case of overflow, the output is saturated.
   // In the case of NaN and -0, the output is zero.
-  Fcvtzs(ARMRegister(dest, 32), src64);
+  Fcvtzs(dest32, src64);
 
   // If the output was zero, worry about special cases.
   branch32(Assembler::Equal, dest, Imm32(0), &zeroCase);
@@ -3005,16 +3016,24 @@ void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
   {
     bind(&zeroCase);
 
-    // If input is a negative number that truncated to zero, the real
-    // output should be the non-integer -0.
-    // The use of "lt" instead of "lo" also catches unordered NaN input.
-    Fcmp(src64, 0.0);
-    B(fail, vixl::lt);
+    // Combine test for negative and NaN values using a single bitwise
+    // operation.
+    //
+    // | Decimal number | Bitwise representation |
+    // |----------------|------------------------|
+    // | -0             | 8000'0000'0000'0000    |
+    // | +0             | 0000'0000'0000'0000    |
+    // | +1             | 3ff0'0000'0000'0000    |
+    // |  NaN (or +Inf) | 7ffx'xxxx'xxxx'xxxx    |
+    // | -NaN (or -Inf) | fffx'xxxx'xxxx'xxxx    |
+    //
+    // If any of two most significant bits is set, the number isn't in [0, 1).
+    // (Recall that floating point numbers, except for NaN, are strictly ordered
+    // when comparing their bitwise representation as signed integers.)
 
-    // Check explicitly for -0, bitwise.
-    Fmov(ARMRegister(dest, 64), src64);
-    branchTestPtr(Assembler::Signed, dest, dest, fail);
-    movePtr(ImmWord(0), dest);
+    Fmov(dest64, src64);
+    Lsr(dest64, dest64, 62);
+    Cbnz(dest64, fail);
   }
 
   bind(&done);
@@ -3022,7 +3041,8 @@ void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
 
 void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
-  const ARMFPRegister src32(src, 32);
+  ARMFPRegister src32(src, 32);
+  ARMRegister dest32(dest, 32);
   ScratchFloat32Scope scratch(*this);
 
   Label negative, done;
@@ -3041,7 +3061,7 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
     // Convert to signed 32-bit integer, rounding halfway cases away from zero.
     // In the case of overflow, the output is saturated.
     // In the case of NaN and -0, the output is zero.
-    Fcvtas(ARMRegister(dest, 32), src32);
+    Fcvtas(dest32, src32);
     // If the output potentially saturated, fail.
     branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
 
@@ -3049,16 +3069,11 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
     // In the case of zero, the input may have been NaN or -0, which must bail.
     branch32(Assembler::NotEqual, dest, Imm32(0), &done);
     {
-      // If input is NaN, comparisons set the C and V bits of the NZCV flags.
-      Fcmp(src32, 0.0f);
-      B(fail, Assembler::Overflow);
-
-      // Move all 32 bits of the input into a scratch register to check for -0.
-      vixl::UseScratchRegisterScope temps(this);
-      const ARMRegister scratchGPR32 = temps.AcquireW();
-      Fmov(scratchGPR32, src32);
-      Cmp(scratchGPR32, vixl::Operand(uint32_t(0x80000000)));
-      B(fail, Assembler::Equal);
+      // Combine test for -0 and NaN values using a single bitwise operation.
+      // See truncFloat32ToInt32 for an explanation.
+      Fmov(dest32, src32);
+      Lsr(dest32, dest32, 30);
+      Cbnz(dest32, fail);
     }
 
     jump(&done);
@@ -3084,7 +3099,7 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
     // Round all values toward -Infinity.
     // In the case of overflow, the output is saturated.
     // NaN and -0 are already handled by the "positive number" path above.
-    Fcvtms(ARMRegister(dest, 32), temp);
+    Fcvtms(dest32, temp);
     // If the output potentially saturated, fail.
     branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
 
@@ -3097,7 +3112,9 @@ void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
 
 void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
                                         FloatRegister temp, Label* fail) {
-  const ARMFPRegister src64(src, 64);
+  ARMFPRegister src64(src, 64);
+  ARMRegister dest64(dest, 64);
+  ARMRegister dest32(dest, 32);
   ScratchDoubleScope scratch(*this);
 
   Label negative, done;
@@ -3116,7 +3133,7 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
     // Convert to signed 32-bit integer, rounding halfway cases away from zero.
     // In the case of overflow, the output is saturated.
     // In the case of NaN and -0, the output is zero.
-    Fcvtas(ARMRegister(dest, 32), src64);
+    Fcvtas(dest32, src64);
     // If the output potentially saturated, fail.
     branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
 
@@ -3124,16 +3141,11 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
     // In the case of zero, the input may have been NaN or -0, which must bail.
     branch32(Assembler::NotEqual, dest, Imm32(0), &done);
     {
-      // If input is NaN, comparisons set the C and V bits of the NZCV flags.
-      Fcmp(src64, 0.0);
-      B(fail, Assembler::Overflow);
-
-      // Move all 64 bits of the input into a scratch register to check for -0.
-      vixl::UseScratchRegisterScope temps(this);
-      const ARMRegister scratchGPR64 = temps.AcquireX();
-      Fmov(scratchGPR64, src64);
-      Cmp(scratchGPR64, vixl::Operand(uint64_t(0x8000000000000000)));
-      B(fail, Assembler::Equal);
+      // Combine test for -0 and NaN values using a single bitwise operation.
+      // See truncDoubleToInt32 for an explanation.
+      Fmov(dest64, src64);
+      Lsr(dest64, dest64, 62);
+      Cbnz(dest64, fail);
     }
 
     jump(&done);
@@ -3159,7 +3171,7 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
     // Round all values toward -Infinity.
     // In the case of overflow, the output is saturated.
     // NaN and -0 are already handled by the "positive number" path above.
-    Fcvtms(ARMRegister(dest, 32), temp);
+    Fcvtms(dest32, temp);
     // If the output potentially saturated, fail.
     branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
 
