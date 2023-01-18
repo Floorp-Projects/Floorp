@@ -37,12 +37,13 @@ class GLContextEGL final : public GLContext {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
 
   static RefPtr<GLContextEGL> CreateGLContext(
-      std::shared_ptr<EglDisplay>, const GLContextDesc&, EGLConfig config,
-      EGLSurface surface, const bool useGles, nsACString* const out_failureId);
+      std::shared_ptr<EglDisplay>, const GLContextDesc&,
+      EGLConfig surfaceConfig, EGLSurface surface, const bool useGles,
+      EGLConfig contextConfig, nsACString* const out_failureId);
 
  private:
   GLContextEGL(std::shared_ptr<EglDisplay>, const GLContextDesc&,
-               EGLConfig config, EGLSurface surface, EGLContext context);
+               EGLConfig surfaceConfig, EGLSurface surface, EGLContext context);
   ~GLContextEGL();
 
  public:
@@ -122,7 +123,7 @@ class GLContextEGL final : public GLContext {
 
  public:
   const std::shared_ptr<EglDisplay> mEgl;
-  const EGLConfig mConfig;
+  const EGLConfig mSurfaceConfig;
   const EGLContext mContext;
 
  protected:
