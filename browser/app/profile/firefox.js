@@ -975,8 +975,6 @@ pref("browser.gesture.twist.end", "cmd_gestureRotateEnd");
   pref("browser.gesture.tap", "");
 #endif
 
-pref("browser.history_swipe_animation.disabled", false);
-
 // 0: Nothing happens
 // 1: Scrolling contents
 // 2: Go back or go forward, in your history
