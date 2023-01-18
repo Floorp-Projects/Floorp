@@ -652,6 +652,49 @@ class DownloadsFeatureTest {
     }
 
     @Test
+    fun `GIVEN download should not be forwarded to third party apps but to a custom delegate WHEN processing a download request THEN forward it to the delegate`() {
+        val tab = createTab("https://www.mozilla.org", id = "test-tab")
+        val download = DownloadState(url = "https://www.mozilla.org/file.txt", sessionId = "test-tab", id = "test")
+        val usecases: DownloadsUseCases = mock()
+        val consumeDownloadUseCase: ConsumeDownloadUseCase = mock()
+        val cancelDownloadUseCase: CancelDownloadRequestUseCase = mock()
+        doReturn(consumeDownloadUseCase).`when`(usecases).consumeDownload
+        doReturn(cancelDownloadUseCase).`when`(usecases).cancelDownloadRequest
+        val downloadManager: DownloadManager = mock()
+        var delegateFilename = ""
+        var delegateContentSize: Long = -1
+        var delegatePositiveActionCallback: (() -> Unit)? = null
+        var delegateNegativeActionCallback: (() -> Unit)? = null
+        grantPermissions()
+        doReturn(arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)).`when`(downloadManager).permissions
+        val feature = spy(
+            DownloadsFeature(
+                applicationContext = testContext,
+                store = mock(),
+                useCases = usecases,
+                downloadManager = downloadManager,
+                customDownloadDialog = { filename, contentSize, positiveActionCallback, negativeActionCallback ->
+                    delegateFilename = filename.value
+                    delegateContentSize = contentSize.value
+                    delegatePositiveActionCallback = positiveActionCallback.value
+                    delegateNegativeActionCallback = negativeActionCallback.value
+                },
+            ),
+        )
+
+        feature.processDownload(tab, download)
+
+        assertEquals("file.txt", delegateFilename)
+        assertEquals(0, delegateContentSize)
+        assertNotNull(delegatePositiveActionCallback)
+        delegatePositiveActionCallback?.invoke()
+        verify(consumeDownloadUseCase).invoke(tab.id, download.id)
+        assertNotNull(delegateNegativeActionCallback)
+        delegateNegativeActionCallback?.invoke()
+        verify(cancelDownloadUseCase).invoke(tab.id, download.id)
+    }
+
+    @Test
     fun `when url is data url return only our app as downloader app`() {
         val context = mock<Context>()
         val download = DownloadState(url = "data:", sessionId = "test-tab")

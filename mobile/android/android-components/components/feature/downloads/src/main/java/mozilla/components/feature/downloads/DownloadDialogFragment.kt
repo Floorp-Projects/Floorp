@@ -10,7 +10,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.BYTES_TO_MB_LIMIT
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.KILOBYTE
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.MEGABYTE
-import mozilla.components.support.utils.DownloadUtils
+import mozilla.components.feature.downloads.ext.realFilenameOrGuessed
 
 /**
  * This is a general representation of a dialog meant to be used in collaboration with [DownloadsFeature]
@@ -34,11 +34,7 @@ abstract class DownloadDialogFragment : AppCompatDialogFragment() {
      */
     fun setDownload(download: DownloadState) {
         val args = arguments ?: Bundle()
-        args.putString(
-            KEY_FILE_NAME,
-            download.fileName
-                ?: DownloadUtils.guessFileName(null, download.destinationDirectory, download.url, download.contentType),
-        )
+        args.putString(KEY_FILE_NAME, download.realFilenameOrGuessed)
         args.putString(KEY_URL, download.url)
         args.putLong(KEY_CONTENT_LENGTH, download.contentLength ?: 0)
         arguments = args
