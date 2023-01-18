@@ -1222,16 +1222,21 @@ const windowGlobalTargetPrototype = {
    * Ensure that CSS error reporting is enabled.
    */
   async ensureCSSErrorReportingEnabled() {
-    const promises = [];
-    for (const docShell of this.docShells) {
+    const promises = this.docShells.map(async docShell => {
       if (docShell.cssErrorReportingEnabled) {
-        continue;
+        // CSS Error Reporting already enabled here, nothing to do.
+        return;
       }
+
       try {
         docShell.cssErrorReportingEnabled = true;
       } catch (e) {
-        continue;
+        return;
       }
+
+      // After enabling CSS Error Reporting, reparse existing stylesheets to
+      // detect potential CSS errors.
+
       // Ensure docShell.document is available.
       docShell.QueryInterface(Ci.nsIWebNavigation);
       // We don't really want to reparse UA sheets and such, but want to do
@@ -1244,16 +1249,19 @@ const windowGlobalTargetPrototype = {
         if (InspectorUtils.hasRulesModifiedByCSSOM(sheet)) {
           continue;
         }
-        // Reparse the sheet so that we see the existing errors.
-        const onStyleSheetParsed = getStyleSheetText(sheet)
-          .then(text => {
-            InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
-          })
-          .catch(e => console.error("Error while parsing stylesheet"));
-        promises.push(onStyleSheetParsed);
+
+        try {
+          // Reparse the sheet so that we see the existing errors.
+          const text = await getStyleSheetText(sheet);
+          InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
+        } catch (e) {
+          console.error("Error while parsing stylesheet");
+        }
       }
-    }
+    });
+
     await Promise.all(promises);
+
     return {};
   },
 
