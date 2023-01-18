@@ -22,10 +22,10 @@ namespace
 class Traverser : public TIntermTraverser
 {
   public:
-    ANGLE_NO_DISCARD static bool Apply(TCompiler *compiler,
-                                       TIntermNode *root,
-                                       const TSymbolTable &symbolTable,
-                                       int shaderVersion);
+    [[nodiscard]] static bool Apply(TCompiler *compiler,
+                                    TIntermNode *root,
+                                    const TSymbolTable &symbolTable,
+                                    int shaderVersion);
 
   private:
     Traverser(const TSymbolTable &symbolTable, int shaderVersion);
@@ -77,7 +77,7 @@ bool Traverser::visitAggregate(Visit visit, TIntermAggregate *node)
     }
 
     // Decide if the node represents the call of texelFetchOffset.
-    if (node->getOp() != EOpCallBuiltInFunction)
+    if (!BuiltInGroup::IsBuiltIn(node->getOp()))
     {
         return true;
     }

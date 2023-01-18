@@ -42,7 +42,8 @@ void GetANativeWindowBufferProperties(const ANativeWindowBuffer *buffer,
                                       int *width,
                                       int *height,
                                       int *depth,
-                                      int *pixelFormat);
+                                      int *pixelFormat,
+                                      uint64_t *usage);
 GLenum NativePixelFormatToGLInternalFormat(int pixelFormat);
 int GLInternalFormatToNativePixelFormat(GLenum internalFormat);
 

@@ -64,7 +64,7 @@ class TransformFeedback final : public RefCountObject<TransformFeedbackID>, publ
     ~TransformFeedback() override;
     void onDestroy(const Context *context) override;
 
-    void setLabel(const Context *context, const std::string &label) override;
+    angle::Result setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
     angle::Result begin(const Context *context, PrimitiveMode primitiveMode, Program *program);
@@ -100,7 +100,7 @@ class TransformFeedback final : public RefCountObject<TransformFeedbackID>, publ
     GLsizeiptr getPrimitivesDrawn() const { return mState.getPrimitivesDrawn(); }
 
     // Returns true if any buffer bound to this object is also bound to another target.
-    bool buffersBoundForOtherUse() const;
+    bool buffersBoundForOtherUseInWebGL() const;
 
     angle::Result detachBuffer(const Context *context, BufferID bufferID);
 

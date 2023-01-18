@@ -23,6 +23,8 @@ class Context;
 
 namespace egl
 {
+constexpr EGLint kEglMajorVersion = 1;
+constexpr EGLint kEglMinorVersion = 5;
 
 class AttributeMap;
 struct ClientExtensions;
@@ -44,6 +46,7 @@ struct ValidationContext
 
     // We should remove the message-less overload once we have messages for all EGL errors.
     void setError(EGLint error) const;
+    ANGLE_FORMAT_PRINTF(3, 4)
     void setError(EGLint error, const char *message...) const;
 
     Thread *eglThread;
@@ -106,36 +109,40 @@ typename std::enable_if<std::is_enum<PackedT>::value, PackedT>::type PackParam(F
     return FromEGLenum<PackedT>(from);
 }
 
-// Second case: handling other types.
-template <typename PackedT, typename FromT>
-typename std::enable_if<!std::is_enum<PackedT>::value,
-                        typename std::remove_reference<PackedT>::type>::type
-PackParam(FromT from);
-
-template <>
-inline const AttributeMap PackParam<const AttributeMap &, const EGLint *>(const EGLint *attribs)
+// This and the next 2 template specializations handle distinguishing between EGLint, EGLAttrib
+// and other. This is needed because on some architectures EGLint and EGLAttrib are not the same
+// base type. Previously the code conditionally compiled 2 specializations on 64 bit but it turns
+// out on WatchOS the assumption about 32/64 bit and if EGLint and ELGAttrib are the same or
+// different did not hold.
+template <typename PackedT,
+          typename FromT,
+          typename std::enable_if<!std::is_enum<PackedT>::value>::type *              = nullptr,
+          typename std::enable_if<std::is_same<FromT, const EGLint *>::value>::type * = nullptr>
+typename std::remove_reference<PackedT>::type PackParam(FromT attribs)
 {
     return AttributeMap::CreateFromIntArray(attribs);
 }
 
-// In a 32-bit environment the EGLAttrib and EGLint types are the same. We need to mask out one of
-// the two specializations to avoid having an override ambiguity.
-#if defined(ANGLE_IS_64_BIT_CPU)
-template <>
-inline const AttributeMap PackParam<const AttributeMap &, const EGLAttrib *>(
-    const EGLAttrib *attribs)
+template <typename PackedT,
+          typename FromT,
+          typename std::enable_if<!std::is_enum<PackedT>::value>::type *                 = nullptr,
+          typename std::enable_if<!std::is_same<FromT, const EGLint *>::value>::type *   = nullptr,
+          typename std::enable_if<std::is_same<FromT, const EGLAttrib *>::value>::type * = nullptr>
+typename std::remove_reference<PackedT>::type PackParam(FromT attribs)
 {
     return AttributeMap::CreateFromAttribArray(attribs);
 }
-#endif  // defined(ANGLE_IS_64_BIT_CPU)
 
-template <typename PackedT, typename FromT>
-inline typename std::enable_if<!std::is_enum<PackedT>::value,
-                               typename std::remove_reference<PackedT>::type>::type
-PackParam(FromT from)
+template <typename PackedT,
+          typename FromT,
+          typename std::enable_if<!std::is_enum<PackedT>::value>::type *                  = nullptr,
+          typename std::enable_if<!std::is_same<FromT, const EGLint *>::value>::type *    = nullptr,
+          typename std::enable_if<!std::is_same<FromT, const EGLAttrib *>::value>::type * = nullptr>
+typename std::remove_reference<PackedT>::type PackParam(FromT attribs)
 {
-    return static_cast<PackedT>(from);
+    return static_cast<PackedT>(attribs);
 }
+
 }  // namespace egl
 
 #define ANGLE_EGL_VALIDATE(THREAD, EP, OBJ, RETURN_TYPE, ...)                              \
@@ -179,6 +186,16 @@ PackParam(FromT from)
             THREAD->setError(ANGLE_LOCAL_VAR, FUNCNAME, LABELOBJECT);     \
             return RETVAL;                                                \
         }                                                                 \
+    } while (0)
+
+#define ANGLE_EGLBOOLEAN_TRY(EXPR)           \
+    do                                       \
+    {                                        \
+        EGLBoolean ANGLE_LOCAL_VAR = (EXPR); \
+        if (ANGLE_LOCAL_VAR != EGL_TRUE)     \
+        {                                    \
+            return ANGLE_LOCAL_VAR;          \
+        }                                    \
     } while (0)
 
 #endif  // LIBANGLE_VALIDATIONEGL_H_

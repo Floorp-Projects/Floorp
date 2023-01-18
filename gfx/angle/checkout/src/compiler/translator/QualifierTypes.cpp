@@ -511,8 +511,8 @@ bool JoinParameterStorageQualifier(TQualifier *joinedQualifier, TQualifier stora
         {
             switch (storageQualifier)
             {
-                case EvqIn:
-                    *joinedQualifier = EvqConstReadOnly;
+                case EvqParamIn:
+                    *joinedQualifier = EvqParamConst;
                     break;
                 default:
                     return false;
@@ -630,6 +630,7 @@ TTypeQualifier GetVariableTypeQualifierFromSortedSequence(
 }
 
 TTypeQualifier GetParameterTypeQualifierFromSortedSequence(
+    TBasicType parameterBasicType,
     const TTypeQualifierBuilder::QualifierSequence &sortedSequence,
     TDiagnostics *diagnostics)
 {
@@ -641,7 +642,6 @@ TTypeQualifier GetParameterTypeQualifierFromSortedSequence(
         switch (qualifier->getType())
         {
             case QtInvariant:
-            case QtPrecise:
             case QtInterpolation:
             case QtLayout:
                 break;
@@ -661,6 +661,10 @@ TTypeQualifier GetParameterTypeQualifierFromSortedSequence(
                     static_cast<const TPrecisionQualifierWrapper *>(qualifier)->getQualifier();
                 ASSERT(typeQualifier.precision != EbpUndefined);
                 break;
+            case QtPrecise:
+                isQualifierValid      = true;
+                typeQualifier.precise = true;
+                break;
             default:
                 UNREACHABLE();
         }
@@ -675,17 +679,19 @@ TTypeQualifier GetParameterTypeQualifierFromSortedSequence(
 
     switch (typeQualifier.qualifier)
     {
-        case EvqIn:
-        case EvqConstReadOnly:  // const in
-        case EvqOut:
-        case EvqInOut:
+        case EvqParamIn:
+        case EvqParamConst:  // const in
+        case EvqParamOut:
+        case EvqParamInOut:
             break;
         case EvqConst:
-            typeQualifier.qualifier = EvqConstReadOnly;
+            // Opaque parameters can only be |in|.  |const| is allowed, but is meaningless and is
+            // dropped.
+            typeQualifier.qualifier = IsOpaqueType(parameterBasicType) ? EvqParamIn : EvqParamConst;
             break;
         case EvqTemporary:
-            // no qualifier has been specified, set it to EvqIn which is the default
-            typeQualifier.qualifier = EvqIn;
+            // no qualifier has been specified, set it to EvqParamIn which is the default
+            typeQualifier.qualifier = EvqParamIn;
             break;
         default:
             diagnostics->error(sortedSequence[0]->getLine(), "Invalid parameter qualifier ",
@@ -850,6 +856,11 @@ TLayoutQualifier JoinLayoutQualifiers(TLayoutQualifier leftQualifier,
         joinedQualifier.index = rightQualifier.index;
     }
 
+    if (rightQualifier.advancedBlendEquations.any())
+    {
+        joinedQualifier.advancedBlendEquations |= rightQualifier.advancedBlendEquations;
+    }
+
     return joinedQualifier;
 }
 
@@ -942,7 +953,8 @@ bool TTypeQualifierBuilder::checkSequenceIsValid(TDiagnostics *diagnostics) cons
     return true;
 }
 
-TTypeQualifier TTypeQualifierBuilder::getParameterTypeQualifier(TDiagnostics *diagnostics) const
+TTypeQualifier TTypeQualifierBuilder::getParameterTypeQualifier(TBasicType parameterBasicType,
+                                                                TDiagnostics *diagnostics) const
 {
     ASSERT(IsInvariantCorrect(mQualifiers));
     ASSERT(static_cast<const TStorageQualifierWrapper *>(mQualifiers[0])->getQualifier() ==
@@ -961,9 +973,11 @@ TTypeQualifier TTypeQualifierBuilder::getParameterTypeQualifier(TDiagnostics *di
         // Copy the qualifier sequence so that we can sort them.
         QualifierSequence sortedQualifierSequence = mQualifiers;
         SortSequence(sortedQualifierSequence);
-        return GetParameterTypeQualifierFromSortedSequence(sortedQualifierSequence, diagnostics);
+        return GetParameterTypeQualifierFromSortedSequence(parameterBasicType,
+                                                           sortedQualifierSequence, diagnostics);
     }
-    return GetParameterTypeQualifierFromSortedSequence(mQualifiers, diagnostics);
+    return GetParameterTypeQualifierFromSortedSequence(parameterBasicType, mQualifiers,
+                                                       diagnostics);
 }
 
 TTypeQualifier TTypeQualifierBuilder::getVariableTypeQualifier(TDiagnostics *diagnostics) const

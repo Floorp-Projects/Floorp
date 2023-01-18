@@ -141,12 +141,6 @@ egl::Error SurfaceD3D::initialize(const egl::Display *display)
     return egl::NoError();
 }
 
-FramebufferImpl *SurfaceD3D::createDefaultFramebuffer(const gl::Context *context,
-                                                      const gl::FramebufferState &data)
-{
-    return mRenderer->createDefaultFramebuffer(data);
-}
-
 egl::Error SurfaceD3D::bindTexImage(const gl::Context *, gl::Texture *, EGLint)
 {
     return egl::NoError();
@@ -440,6 +434,17 @@ const angle::Format *SurfaceD3D::getD3DTextureColorFormat() const
     return mColorFormat;
 }
 
+egl::Error SurfaceD3D::attachToFramebuffer(const gl::Context *context, gl::Framebuffer *framebuffer)
+{
+    return egl::NoError();
+}
+
+egl::Error SurfaceD3D::detachFromFramebuffer(const gl::Context *context,
+                                             gl::Framebuffer *framebuffer)
+{
+    return egl::NoError();
+}
+
 angle::Result SurfaceD3D::getAttachmentRenderTarget(const gl::Context *context,
                                                     GLenum binding,
                                                     const gl::ImageIndex &imageIndex,
@@ -458,15 +463,26 @@ angle::Result SurfaceD3D::getAttachmentRenderTarget(const gl::Context *context,
 }
 
 angle::Result SurfaceD3D::initializeContents(const gl::Context *context,
+                                             GLenum binding,
                                              const gl::ImageIndex &imageIndex)
 {
-    if (mState.config->renderTargetFormat != GL_NONE)
+    switch (binding)
     {
-        ANGLE_TRY(mRenderer->initRenderTarget(context, mSwapChain->getColorRenderTarget()));
-    }
-    if (mState.config->depthStencilFormat != GL_NONE)
-    {
-        ANGLE_TRY(mRenderer->initRenderTarget(context, mSwapChain->getDepthStencilRenderTarget()));
+        case GL_BACK:
+            ASSERT(mState.config->renderTargetFormat != GL_NONE);
+            ANGLE_TRY(mRenderer->initRenderTarget(context, mSwapChain->getColorRenderTarget()));
+            break;
+
+        case GL_DEPTH:
+        case GL_STENCIL:
+            ASSERT(mState.config->depthStencilFormat != GL_NONE);
+            ANGLE_TRY(
+                mRenderer->initRenderTarget(context, mSwapChain->getDepthStencilRenderTarget()));
+            break;
+
+        default:
+            UNREACHABLE();
+            break;
     }
     return angle::Result::Continue;
 }

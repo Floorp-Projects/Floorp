@@ -97,8 +97,6 @@ void TypedResourceManager<ResourceType, ImplT, IDType>::deleteObject(const Conte
     }
 }
 
-// Unclear why Clang warns about weak vtables in this case.
-ANGLE_DISABLE_WEAK_TEMPLATE_VTABLES_WARNING
 template class TypedResourceManager<Buffer, BufferManager, BufferID>;
 template class TypedResourceManager<Texture, TextureManager, TextureID>;
 template class TypedResourceManager<Renderbuffer, RenderbufferManager, RenderbufferID>;
@@ -106,7 +104,6 @@ template class TypedResourceManager<Sampler, SamplerManager, SamplerID>;
 template class TypedResourceManager<Sync, SyncManager, GLuint>;
 template class TypedResourceManager<Framebuffer, FramebufferManager, FramebufferID>;
 template class TypedResourceManager<ProgramPipeline, ProgramPipelineManager, ProgramPipelineID>;
-ANGLE_REENABLE_WEAK_TEMPLATE_VTABLES_WARNING
 
 // BufferManager Implementation.
 BufferManager::~BufferManager() = default;
@@ -350,12 +347,11 @@ FramebufferManager::~FramebufferManager() = default;
 // static
 Framebuffer *FramebufferManager::AllocateNewObject(rx::GLImplFactory *factory,
                                                    FramebufferID handle,
-                                                   const Caps &caps,
-                                                   egl::ShareGroup *shareGroup)
+                                                   const Context *context)
 {
     // Make sure the caller isn't using a reserved handle.
     ASSERT(handle != Framebuffer::kDefaultDrawFramebufferHandle);
-    return new Framebuffer(caps, factory, handle, shareGroup);
+    return new Framebuffer(context, factory, handle);
 }
 
 // static
