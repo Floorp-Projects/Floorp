@@ -1399,7 +1399,21 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
 
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
                                                  Register dest, Label* fail) {
-  convertDoubleToInt32(src, dest, fail, false);
+  ARMFPRegister src64(src, 64);
+  ARMRegister dest64(dest, 64);
+  ARMRegister dest32(dest, 32);
+
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
+  // In the case of overflow, the output is saturated.
+  // In the case of NaN and -0, the output is zero.
+  Fcvtzs(dest64, src64);
+
+  // Fail on overflow cases.
+  Cmp(dest64, Operand(dest32, vixl::SXTW));
+  B(fail, Assembler::NotEqual);
+
+  // Clear upper 32 bits.
+  Mov(dest32, dest32);
 }
 
 template <typename T>
