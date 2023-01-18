@@ -196,7 +196,26 @@ class _BuiltInThemes {
     );
     for (let [id] of expiredThemes) {
       if (id == activeThemeID) {
-        this._retainLimitedTimeTheme(id);
+        let shouldRetain = true;
+
+        try {
+          let addon = await lazy.AddonManager.getAddonByID(id);
+          if (addon) {
+            // Only add the id to the retain themes pref if it is
+            // also a built-in themes (and don't if it was migrated
+            // xpi files installed in the user profile).
+            shouldRetain = addon.isBuiltinColorwayTheme;
+          }
+        } catch (e) {
+          console.error(
+            `Failed to retrieve active theme AddonWrapper ${id}`,
+            e
+          );
+        }
+
+        if (shouldRetain) {
+          this._retainLimitedTimeTheme(id);
+        }
       } else {
         try {
           let addon = await lazy.AddonManager.getAddonByID(id);
