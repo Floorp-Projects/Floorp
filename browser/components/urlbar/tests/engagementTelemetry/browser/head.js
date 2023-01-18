@@ -99,22 +99,6 @@ async function ensureQuickSuggestInit() {
   });
 }
 
-async function doTest(testFn) {
-  await Services.fog.testFlushAllChildren();
-  Services.fog.testResetFOG();
-  gURLBar.controller.engagementEvent.reset();
-  await PlacesUtils.history.clear();
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistoryVisits();
-  await PlacesTestUtils.clearInputHistory();
-  await UrlbarTestUtils.formHistory.clear(window);
-  await QuickSuggest.blockedSuggestions.clear();
-  await QuickSuggest.blockedSuggestions._test_readyPromise;
-  await updateTopSites(() => true);
-
-  await BrowserTestUtils.withNewTab(gBrowser, testFn);
-}
-
 async function doBlur() {
   await UrlbarTestUtils.promisePopupClose(window, () => {
     gURLBar.blur();
@@ -181,6 +165,31 @@ async function doPasteAndGo(data) {
   const menuitem = inputBox.getMenuItem("paste-and-go");
   contextMenu.activateItem(menuitem);
   await onLoad;
+}
+
+async function doTest(testFn) {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+  gURLBar.controller.engagementEvent.reset();
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.clearHistoryVisits();
+  await PlacesTestUtils.clearInputHistory();
+  await UrlbarTestUtils.formHistory.clear(window);
+  await QuickSuggest.blockedSuggestions.clear();
+  await QuickSuggest.blockedSuggestions._test_readyPromise;
+  await updateTopSites(() => true);
+
+  await BrowserTestUtils.withNewTab(gBrowser, testFn);
+}
+
+async function initGroupTest() {
+  /* import-globals-from head-groups.js */
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-groups.js",
+    this
+  );
+  await setup();
 }
 
 function loadOmniboxAddon({ keyword }) {

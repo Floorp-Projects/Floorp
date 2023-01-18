@@ -9,286 +9,185 @@
 // - n_results
 
 add_setup(async function() {
-  await setup();
+  await initGroupTest();
 });
 
-add_task(async function groups_heuristics() {
-  await doTest(async browser => {
-    await openPopup("x");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      { groups: "heuristic", results: "search_engine" },
-    ]);
-  });
-});
-
-add_task(async function groups_adaptive_history() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.autoFill", false]],
-  });
-
-  await doTest(async browser => {
-    await PlacesTestUtils.addVisits(["https://example.com/test"]);
-    await UrlbarUtils.addToInputHistory("https://example.com/test", "examp");
-    await openPopup("exa");
-    await selectRowByURL("https://example.com/test");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,adaptive_history",
-        results: "search_engine,history",
-        n_results: 2,
-      },
-    ]);
-  });
-
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function groups_search_history() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.suggest.searches", true],
-      ["browser.urlbar.maxHistoricalSearchSuggestions", 2],
-    ],
-  });
-
-  await doTest(async browser => {
-    await UrlbarTestUtils.formHistory.add(["foofoo", "foobar"]);
-
-    await openPopup("foo");
-    await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,search_history,search_history",
-        results: "search_engine,search_history,search_history",
-        n_results: 3,
-      },
-    ]);
-  });
-
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function groups_search_suggest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.suggest.searches", true],
-      ["browser.urlbar.maxHistoricalSearchSuggestions", 2],
-    ],
-  });
-
-  await doTest(async browser => {
-    await openPopup("foo");
-    await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,search_suggest,search_suggest",
-        results: "search_engine,search_suggest,search_suggest",
-        n_results: 3,
-      },
-    ]);
-  });
-
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function groups_top_pick() {
-  const cleanupQuickSuggest = await ensureQuickSuggestInit();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", true]],
-  });
-
-  await doTest(async browser => {
-    await openPopup("sponsored");
-    await selectRowByURL("https://example.com/sponsored");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,top_pick,search_suggest,search_suggest",
-        results: "search_engine,suggest_sponsor,search_suggest,search_suggest",
-        n_results: 4,
-      },
-    ]);
-  });
-
-  await SpecialPowers.popPrefEnv();
-  cleanupQuickSuggest();
-});
-
-add_task(async function groups_top_site() {
-  await doTest(async browser => {
-    await addTopSites("https://example.com/");
-    await showResultByArrowDown();
-    await selectRowByURL("https://example.com/");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "top_site,suggested_index",
-        results: "top_site,action",
-        n_results: 2,
-      },
-    ]);
+add_task(async function heuristics() {
+  await doHeuristicsTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        { groups: "heuristic", results: "search_engine" },
+      ]),
   });
 });
 
-add_task(async function group_remote_tab() {
-  const remoteTab = await loadRemoteTab("https://example.com");
-
-  await doTest(async browser => {
-    await openPopup("example");
-    await selectRowByProvider("RemoteTabs");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,remote_tab",
-        results: "search_engine,remote_tab",
-        n_results: 2,
-      },
-    ]);
+add_task(async function adaptive_history() {
+  await doAdaptiveHistoryTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,adaptive_history",
+          results: "search_engine,history",
+          n_results: 2,
+        },
+      ]),
   });
-
-  await remoteTab.unload();
 });
 
-add_task(async function group_addon() {
-  const addon = loadOmniboxAddon({ keyword: "omni" });
-  await addon.startup();
-
-  await doTest(async browser => {
-    await openPopup("omni test");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "addon",
-        results: "addon",
-        n_results: 1,
-      },
-    ]);
+add_task(async function search_history() {
+  await doSearchHistoryTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,search_history,search_history",
+          results: "search_engine,search_history,search_history",
+          n_results: 3,
+        },
+      ]),
   });
-
-  await addon.unload();
 });
 
-add_task(async function group_general() {
-  await doTest(async browser => {
-    await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      url: "https://example.com/bookmark",
-      title: "bookmark",
-    });
-
-    await openPopup("bookmark");
-    await selectRowByURL("https://example.com/bookmark");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,suggested_index,general",
-        results: "search_engine,action,bookmark",
-      },
-    ]);
+add_task(async function search_suggest() {
+  await doSearchSuggestTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,search_suggest,search_suggest",
+          results: "search_engine,search_suggest,search_suggest",
+          n_results: 3,
+        },
+      ]),
   });
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.autoFill", false]],
-  });
-  await doTest(async browser => {
-    await PlacesTestUtils.addVisits("https://example.com/test");
-
-    await openPopup("example");
-    await selectRowByURL("https://example.com/test");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,general",
-        results: "search_engine,history",
-        n_results: 2,
-      },
-    ]);
-  });
-  await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function group_suggest() {
-  const cleanupQuickSuggest = await ensureQuickSuggestInit();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", false]],
+add_task(async function top_pick() {
+  await doTopPickTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,top_pick,search_suggest,search_suggest",
+          results:
+            "search_engine,suggest_sponsor,search_suggest,search_suggest",
+          n_results: 4,
+        },
+      ]),
   });
-
-  await doTest(async browser => {
-    await openPopup("nonsponsored");
-    await selectRowByURL("https://example.com/nonsponsored");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,suggest",
-        results: "search_engine,suggest_non_sponsor",
-        n_results: 2,
-      },
-    ]);
-  });
-
-  await SpecialPowers.popPrefEnv();
-  cleanupQuickSuggest();
 });
 
-add_task(async function group_about_page() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.maxRichResults", 3]],
+add_task(async function top_site() {
+  await doTopSiteTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "top_site,suggested_index",
+          results: "top_site,action",
+          n_results: 2,
+        },
+      ]),
   });
-
-  await doTest(async browser => {
-    await openPopup("about:");
-    await selectRowByURL("about:robots");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,about_page,about_page",
-        results: "search_engine,history,history",
-        n_results: 3,
-      },
-    ]);
-  });
-
-  await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function group_suggested_index() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.unitConversion.enabled", true]],
+add_task(async function remote_tab() {
+  await doRemoteTabTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,remote_tab",
+          results: "search_engine,remote_tab",
+          n_results: 2,
+        },
+      ]),
+  });
+});
+
+add_task(async function addon() {
+  await doAddonTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "addon",
+          results: "addon",
+          n_results: 1,
+        },
+      ]),
+  });
+});
+
+add_task(async function general() {
+  await doGeneralBookmarkTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,suggested_index,general",
+          results: "search_engine,action,bookmark",
+          n_results: 3,
+        },
+      ]),
   });
 
-  await doTest(async browser => {
-    await openPopup("1m to cm");
-    await selectRowByProvider("UnitConversion");
-    await SimpleTest.promiseClipboardChange("100 cm", () => {
-      EventUtils.synthesizeKey("KEY_Enter");
-    });
-
-    assertEngagementTelemetry([
-      {
-        groups: "heuristic,suggested_index",
-        results: "search_engine,unit",
-        n_results: 2,
-      },
-    ]);
+  await doGeneralHistoryTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,general",
+          results: "search_engine,history",
+          n_results: 2,
+        },
+      ]),
   });
+});
 
-  await SpecialPowers.popPrefEnv();
+add_task(async function suggest() {
+  await doSuggestTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,suggest",
+          results: "search_engine,suggest_non_sponsor",
+          n_results: 2,
+        },
+      ]),
+  });
+});
+
+add_task(async function about_page() {
+  await doAboutPageTest({
+    trigger: () => doEnter(),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,about_page,about_page",
+          results: "search_engine,history,history",
+          n_results: 3,
+        },
+      ]),
+  });
+});
+
+add_task(async function suggested_index() {
+  await doSuggestedIndexTest({
+    trigger: () =>
+      SimpleTest.promiseClipboardChange("100 cm", () => {
+        EventUtils.synthesizeKey("KEY_Enter");
+      }),
+    assert: () =>
+      assertEngagementTelemetry([
+        {
+          groups: "heuristic,suggested_index",
+          results: "search_engine,unit",
+          n_results: 2,
+        },
+      ]),
+  });
 });
