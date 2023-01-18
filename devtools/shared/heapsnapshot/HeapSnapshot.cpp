@@ -36,7 +36,8 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/MapAndSet.h"
-#include "js/Object.h"  // JS::GetCompartment
+#include "js/Object.h"                // JS::GetCompartment
+#include "nsComponentManagerUtils.h"  // do_CreateInstance
 #include "nsCycleCollectionParticipant.h"
 #include "nsCRTGlue.h"
 #include "nsIFile.h"
@@ -1545,14 +1546,22 @@ already_AddRefed<HeapSnapshot> ChromeUtils::ReadHeapSnapshot(
     GlobalObject& global, const nsAString& filePath, ErrorResult& rv) {
   auto start = TimeStamp::Now();
 
-  UniquePtr<char[]> path(ToNewCString(filePath, mozilla::fallible));
-  if (!path) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+  nsresult nsrv;
+  nsCOMPtr<nsIFile> snapshotFile =
+      do_CreateInstance("@mozilla.org/file/local;1", &nsrv);
+
+  if (NS_FAILED(nsrv)) {
+    rv = nsrv;
+    return nullptr;
+  }
+
+  rv = snapshotFile->InitWithPath(filePath);
+  if (rv.Failed()) {
     return nullptr;
   }
 
   AutoMemMap mm;
-  rv = mm.init(path.get());
+  rv = mm.init(snapshotFile);
   if (rv.Failed()) return nullptr;
 
   RefPtr<HeapSnapshot> snapshot = HeapSnapshot::Create(
