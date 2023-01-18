@@ -205,7 +205,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 
   nsCOMPtr<nsIFile> xpcomAppDir = appDirArg ? appDirArg : greDir;
 
-  rv = mDirProvider.Initialize(xpcomAppDir, greDir, nullptr);
+  rv = mDirProvider.Initialize(xpcomAppDir, greDir);
   if (NS_FAILED(rv)) {
     return false;
   }

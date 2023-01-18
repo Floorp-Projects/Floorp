@@ -43,9 +43,7 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
 
   nsXREDirProvider();
 
-  // if aXULAppDir is null, use gArgv[0]
-  nsresult Initialize(nsIFile* aXULAppDir, nsIFile* aGREDir,
-                      nsIDirectoryServiceProvider* aAppProvider = nullptr);
+  nsresult Initialize(nsIFile* aXULAppDir, nsIFile* aGREDir);
   ~nsXREDirProvider();
 
   static already_AddRefed<nsXREDirProvider> GetSingleton();
@@ -60,10 +58,6 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
 
   nsresult GetLegacyInstallHash(nsAString& aPathHash);
 
-  // We only set the profile dir, we don't ensure that it exists;
-  // that is the responsibility of the toolkit profile service.
-  // We also don't fire profile-changed notifications... that is
-  // the responsibility of the apprunner.
   nsresult SetProfile(nsIFile* aProfileDir, nsIFile* aProfileLocalDir);
 
   void InitializeUserPrefs();
@@ -78,7 +72,6 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
     return GetUserDataDirectory(aFile, true);
   }
 
-  // GetUserDataDirectory gets the profile path from gAppData.
   static nsresult GetUserDataDirectory(nsIFile** aFile, bool aLocal);
 
   /* make sure you clone it, if you need to do stuff to it */
@@ -104,20 +97,19 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   nsresult GetUpdateRootDir(nsIFile** aResult, bool aGetOldLocation = false);
 
   /**
-   * Get the profile startup directory as determined by this class or by
-   * mAppProvider. This method may be called before XPCOM is started. aResult
+   * Get the profile startup directory.
+   * This method may be called before XPCOM is started. aResult
    * is a clone, it may be modified.
    */
   nsresult GetProfileStartupDir(nsIFile** aResult);
 
   /**
-   * Get the profile directory as determined by this class or by an
-   * embedder-provided XPCOM directory provider. Only call this method
+   * Get the profile directory. Only call this method
    * when XPCOM is initialized! aResult is a clone, it may be modified.
    */
   nsresult GetProfileDir(nsIFile** aResult);
 
- protected:
+ private:
   nsresult GetFilesInternal(const char* aProperty,
                             nsISimpleEnumerator** aResult);
   static nsresult GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal);
@@ -137,6 +129,9 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   // delimiters.
   static inline nsresult AppendProfileString(nsIFile* aFile, const char* aPath);
 
+  static nsresult SetUserDataProfileDirectory(nsCOMPtr<nsIFile>& aFile,
+                                              bool aLocal);
+
 #if defined(MOZ_SANDBOX)
   // Load the temp directory for sandboxed content processes
   nsresult LoadContentProcessTempDir();
@@ -144,7 +139,6 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
 
   void Append(nsIFile* aDirectory);
 
-  nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
   // On OSX, mGREDir points to .app/Contents/Resources
   nsCOMPtr<nsIFile> mGREDir;
   // On OSX, mGREBinDir points to .app/Contents/MacOS
@@ -153,16 +147,12 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   nsCOMPtr<nsIFile> mXULAppDir;
   nsCOMPtr<nsIFile> mProfileDir;
   nsCOMPtr<nsIFile> mProfileLocalDir;
-  bool mProfileNotified;
+  bool mProfileNotified = false;
   bool mPrefsInitialized = false;
 #if defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> mContentTempDir;
   nsCOMPtr<nsIFile> mContentProcessSandboxTempDir;
 #endif
-
- private:
-  static nsresult SetUserDataProfileDirectory(nsCOMPtr<nsIFile>& aFile,
-                                              bool aLocal);
 };
 
 #endif

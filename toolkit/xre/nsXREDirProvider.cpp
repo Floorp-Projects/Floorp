@@ -131,9 +131,7 @@ static const char* GetAppVendor() {
 }
 #endif
 
-nsXREDirProvider::nsXREDirProvider() : mProfileNotified(false) {
-  gDirServiceProvider = this;
-}
+nsXREDirProvider::nsXREDirProvider() { gDirServiceProvider = this; }
 
 nsXREDirProvider::~nsXREDirProvider() {
   gDirServiceProvider = nullptr;
@@ -148,35 +146,16 @@ already_AddRefed<nsXREDirProvider> nsXREDirProvider::GetSingleton() {
   return do_AddRef(gDirServiceProvider);
 }
 
-nsresult nsXREDirProvider::Initialize(
-    nsIFile* aXULAppDir, nsIFile* aGREDir,
-    nsIDirectoryServiceProvider* aAppProvider) {
+nsresult nsXREDirProvider::Initialize(nsIFile* aXULAppDir, nsIFile* aGREDir) {
   NS_ENSURE_ARG(aXULAppDir);
   NS_ENSURE_ARG(aGREDir);
 
-  mAppProvider = aAppProvider;
   mXULAppDir = aXULAppDir;
   mGREDir = aGREDir;
   nsCOMPtr<nsIFile> binaryPath;
   nsresult rv = XRE_GetBinaryPath(getter_AddRefs(binaryPath));
-  if (NS_FAILED(rv)) return rv;
-  rv = binaryPath->GetParent(getter_AddRefs(mGREBinDir));
-  if (NS_FAILED(rv)) return rv;
-
-  if (!mProfileDir) {
-    nsCOMPtr<nsIDirectoryServiceProvider> app(mAppProvider);
-    if (app) {
-      bool per = false;
-      app->GetFile(NS_APP_USER_PROFILE_50_DIR, &per,
-                   getter_AddRefs(mProfileDir));
-      NS_ASSERTION(per, "NS_APP_USER_PROFILE_50_DIR must be persistent!");
-      NS_ASSERTION(
-          mProfileDir,
-          "NS_APP_USER_PROFILE_50_DIR not defined! This shouldn't happen!");
-    }
-  }
-
-  return NS_OK;
+  NS_ENSURE_SUCCESS(rv, rv);
+  return binaryPath->GetParent(getter_AddRefs(mGREBinDir));
 }
 
 nsresult nsXREDirProvider::SetProfile(nsIFile* aDir, nsIFile* aLocalDir) {
@@ -330,37 +309,19 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
                           nsIFile** aFile) {
   nsresult rv;
 
-  bool gettingProfile = false;
-
   if (!strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR)) {
-    // If XRE_NotifyProfile hasn't been called, don't fall through to
-    // mAppProvider on the profile keys.
-    if (!mProfileNotified) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(mProfileNotified, NS_ERROR_FAILURE);
 
-    if (mProfileLocalDir) return mProfileLocalDir->Clone(aFile);
+    if (mProfileLocalDir) {
+      return mProfileLocalDir->Clone(aFile);
+    }
 
-    if (mAppProvider)
-      return mAppProvider->GetFile(aProperty, aPersistent, aFile);
-
-    // This falls through to the case below
-    gettingProfile = true;
+    NS_ENSURE_TRUE(mProfileDir, NS_ERROR_FAILURE);
+    return mProfileDir->Clone(aFile);
   }
-  if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) || gettingProfile) {
-    if (!mProfileNotified) return NS_ERROR_FAILURE;
-
-    if (mProfileDir) return mProfileDir->Clone(aFile);
-
-    if (mAppProvider)
-      return mAppProvider->GetFile(aProperty, aPersistent, aFile);
-
-    // If we don't succeed here, bail early so that we aren't reentrant
-    // through the "GetProfileDir" call below.
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mAppProvider) {
-    rv = mAppProvider->GetFile(aProperty, aPersistent, aFile);
-    if (NS_SUCCEEDED(rv) && *aFile) return rv;
+  if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR)) {
+    NS_ENSURE_TRUE(mProfileDir && mProfileNotified, NS_ERROR_FAILURE);
+    return mProfileDir->Clone(aFile);
   }
 
   *aPersistent = true;
@@ -447,10 +408,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     if (mProfileLocalDir) return mProfileLocalDir->Clone(aFile);
 
     if (mProfileDir) return mProfileDir->Clone(aFile);
-
-    if (mAppProvider)
-      return mAppProvider->GetFile(NS_APP_PROFILE_DIR_STARTUP, aPersistent,
-                                   aFile);
   }
 #if defined(XP_UNIX) || defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_LOCAL_EXTENSION_PARENT_DIR)) {
@@ -524,8 +481,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     return NS_OK;
   }
 
-  bool ensureFilePermissions = false;
-
   if (NS_SUCCEEDED(GetProfileDir(getter_AddRefs(file)))) {
     if (!strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
       rv = NS_OK;
@@ -544,23 +499,13 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
       }
     }
   }
-  if (NS_FAILED(rv) || !file) return NS_ERROR_FAILURE;
 
-  if (ensureFilePermissions) {
-    bool fileToEnsureExists;
-    bool isWritable;
-    if (NS_SUCCEEDED(file->Exists(&fileToEnsureExists)) && fileToEnsureExists &&
-        NS_SUCCEEDED(file->IsWritable(&isWritable)) && !isWritable) {
-      uint32_t permissions;
-      if (NS_SUCCEEDED(file->GetPermissions(&permissions))) {
-        rv = file->SetPermissions(permissions | 0600);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to ensure file permissions");
-      }
-    }
+  if (NS_SUCCEEDED(rv) && file) {
+    file.forget(aFile);
+    return NS_OK;
   }
 
-  file.forget(aFile);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 static void LoadDirIntoArray(nsIFile* dir, const char* const* aAppendList,
@@ -579,40 +524,6 @@ static void LoadDirIntoArray(nsIFile* dir, const char* const* aAppendList,
   if (NS_SUCCEEDED(subdir->Exists(&exists)) && exists) {
     aDirectories.AppendObject(subdir);
   }
-}
-
-NS_IMETHODIMP
-nsXREDirProvider::GetFiles(const char* aProperty,
-                           nsISimpleEnumerator** aResult) {
-  nsresult rv;
-
-  nsCOMPtr<nsISimpleEnumerator> appEnum;
-  nsCOMPtr<nsIDirectoryServiceProvider2> appP2(do_QueryInterface(mAppProvider));
-  if (appP2) {
-    rv = appP2->GetFiles(aProperty, getter_AddRefs(appEnum));
-    if (NS_FAILED(rv)) {
-      appEnum = nullptr;
-    } else if (rv != NS_SUCCESS_AGGREGATE_RESULT) {
-      appEnum.forget(aResult);
-      return NS_OK;
-    }
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> xreEnum;
-  rv = GetFilesInternal(aProperty, getter_AddRefs(xreEnum));
-  if (NS_FAILED(rv)) {
-    if (appEnum) {
-      appEnum.forget(aResult);
-      return NS_SUCCESS_AGGREGATE_RESULT;
-    }
-
-    return rv;
-  }
-
-  rv = NS_NewUnionEnumerator(aResult, appEnum, xreEnum);
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_SUCCESS_AGGREGATE_RESULT;
 }
 
 #if defined(MOZ_SANDBOX)
@@ -788,9 +699,10 @@ static const char* const kAppendBackgroundTasksPrefDir[] = {
     "defaults", "backgroundtasks", nullptr};
 #endif
 
-nsresult nsXREDirProvider::GetFilesInternal(const char* aProperty,
-                                            nsISimpleEnumerator** aResult) {
-  nsresult rv = NS_OK;
+NS_IMETHODIMP
+nsXREDirProvider::GetFiles(const char* aProperty,
+                           nsISimpleEnumerator** aResult) {
+  nsresult rv = NS_ERROR_FAILURE;
   *aResult = nullptr;
 
   if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
@@ -814,10 +726,10 @@ nsresult nsXREDirProvider::GetFilesInternal(const char* aProperty,
     LoadDirIntoArray(mXULAppDir, kAppendChromeDir, directories);
 
     rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
-  } else
-    rv = NS_ERROR_FAILURE;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return rv;
+  return NS_SUCCESS_AGGREGATE_RESULT;
 }
 
 NS_IMETHODIMP
@@ -1290,32 +1202,14 @@ nsresult nsXREDirProvider::GetUpdateRootDir(nsIFile** aResult,
 }
 
 nsresult nsXREDirProvider::GetProfileStartupDir(nsIFile** aResult) {
-  if (mProfileDir) return mProfileDir->Clone(aResult);
-
-  if (mAppProvider) {
-    nsCOMPtr<nsIFile> needsclone;
-    bool dummy;
-    nsresult rv = mAppProvider->GetFile(NS_APP_PROFILE_DIR_STARTUP, &dummy,
-                                        getter_AddRefs(needsclone));
-    if (NS_SUCCEEDED(rv)) return needsclone->Clone(aResult);
-  }
-
-  return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mProfileDir, NS_ERROR_FAILURE);
+  return mProfileDir->Clone(aResult);
 }
 
 nsresult nsXREDirProvider::GetProfileDir(nsIFile** aResult) {
   if (mProfileDir) {
-    if (!mProfileNotified) return NS_ERROR_FAILURE;
-
+    NS_ENSURE_TRUE(mProfileNotified, NS_ERROR_FAILURE);
     return mProfileDir->Clone(aResult);
-  }
-
-  if (mAppProvider) {
-    nsCOMPtr<nsIFile> needsclone;
-    bool dummy;
-    nsresult rv = mAppProvider->GetFile(NS_APP_USER_PROFILE_50_DIR, &dummy,
-                                        getter_AddRefs(needsclone));
-    if (NS_SUCCEEDED(rv)) return needsclone->Clone(aResult);
   }
 
   return NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aResult);
