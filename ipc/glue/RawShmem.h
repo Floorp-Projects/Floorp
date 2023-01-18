@@ -76,8 +76,7 @@ class WritableSharedMemoryMapping {
  public:
   WritableSharedMemoryMapping() = default;
 
-  WritableSharedMemoryMapping(WritableSharedMemoryMapping&& aMoved) =
-      default;
+  WritableSharedMemoryMapping(WritableSharedMemoryMapping&& aMoved) = default;
 
   WritableSharedMemoryMapping& operator=(WritableSharedMemoryMapping&& aMoved) =
       default;
@@ -93,9 +92,10 @@ class WritableSharedMemoryMapping {
   Span<uint8_t> Bytes();
 
  private:
-  explicit WritableSharedMemoryMapping(RefPtr<ipc::SharedMemoryBasic>&& aRef);
+  explicit WritableSharedMemoryMapping(
+      RefPtr<mozilla::ipc::SharedMemoryBasic>&& aRef);
 
-  RefPtr<ipc::SharedMemoryBasic> mRef;
+  RefPtr<mozilla::ipc::SharedMemoryBasic> mRef;
 };
 
 }  // namespace mozilla::ipc
