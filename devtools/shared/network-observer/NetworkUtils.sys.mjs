@@ -372,7 +372,7 @@ function matchRequest(channel, filters) {
     }
     if (type == "webextension") {
       return (
-        channel?.loadInfo.loadingPrincipal.addonId ===
+        channel.loadInfo?.loadingPrincipal?.addonId ===
         filters.sessionContext.addonId
       );
     }
@@ -410,8 +410,7 @@ function legacyMatchRequest(channel, filters) {
   // Ignore requests from chrome or add-on code when we are monitoring
   // content.
   if (
-    channel.loadInfo &&
-    channel.loadInfo.loadingDocument === null &&
+    channel.loadInfo?.loadingDocument === null &&
     (channel.loadInfo.loadingPrincipal ===
       Services.scriptSecurityManager.getSystemPrincipal() ||
       channel.loadInfo.isInDevToolsContext)
@@ -450,18 +449,14 @@ function legacyMatchRequest(channel, filters) {
 
     // If we couldn't get the top frame BrowsingContext from the loadContext,
     // look for it on channel.loadInfo instead.
-    if (
-      channel.loadInfo &&
-      channel.loadInfo.browsingContext &&
-      channel.loadInfo.browsingContext.browserId == filters.browserId
-    ) {
+    if (channel.loadInfo?.browsingContext?.browserId == filters.browserId) {
       return true;
     }
   }
 
   if (
     filters.addonId &&
-    channel?.loadInfo.loadingPrincipal.addonId === filters.addonId
+    channel.loadInfo?.loadingPrincipal?.addonId === filters.addonId
   ) {
     return true;
   }
