@@ -209,7 +209,6 @@ module.exports = {
       // Report as warnings where it is not yet passing.
       files: [
         "browser/components/**",
-        "browser/extensions/report-site-issue/**",
         "dom/push/test/mockpushserviceparent.js",
         "toolkit/**",
       ],

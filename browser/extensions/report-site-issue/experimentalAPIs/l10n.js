@@ -35,8 +35,8 @@ this.l10n = class extends ExtensionAPI {
     if (l10nManifest) {
       Components.manager.addBootstrappedManifestLocation(l10nManifest);
     } else {
-      Cu.reportError(
-        "Cannot find webcompat reporter chrome.manifest for registring translated strings"
+      console.error(
+        "Cannot find webcompat reporter chrome.manifest for registering translated strings"
       );
     }
 
