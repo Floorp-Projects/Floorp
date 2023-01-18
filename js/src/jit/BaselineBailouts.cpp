@@ -1735,6 +1735,11 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
   MOZ_DIAGNOSTIC_ASSERT(*bailoutInfo->bailoutKind != BailoutKind::Unreachable);
 
   JSContext* cx = TlsContext.get();
+
+  // jit::Bailout(), jit::InvalidationBailout(), and jit::HandleException()
+  // should have reset the counter to zero.
+  MOZ_ASSERT(!cx->isInUnsafeRegion());
+
   BaselineFrame* topFrame = GetTopBaselineFrame(cx);
 
   // We have to get rid of the rematerialized frame, whether it is

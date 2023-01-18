@@ -1259,6 +1259,16 @@
   result_type: None
   guard: true
 
+- name: DebugEnterGCUnsafeRegion
+  result_type: None
+  guard: true
+  alias_set: none
+
+- name: DebugLeaveGCUnsafeRegion
+  result_type: None
+  guard: true
+  alias_set: none
+
 - name: Not
   gen_boilerplate: false
 
