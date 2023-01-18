@@ -399,30 +399,43 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
         }
 
         if (acc->Bounds().Contains(aX, aY)) {
-          if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
-            // Because our rects are in hittesting order, the
-            // first match we encounter is guaranteed to be the
-            // deepest match.
-            lastMatch = acc;
-            break;
-          }
-
-          // We're looking for a DirectChild match. Update our
-          // `lastMatch` marker as we ascend towards `this`.
+          // Because our rects are in hittesting order, the
+          // first match we encounter is guaranteed to be the
+          // deepest match.
           lastMatch = acc;
+          break;
         }
       }
     }
   }
 
-  if (!lastMatch && Bounds().Contains(aX, aY)) {
-    return this;
+  if (aWhichChild == EWhichChildAtPoint::DirectChild && lastMatch) {
+    // lastMatch is the deepest match. Walk up to the direct child of this.
+    RemoteAccessible* parent = lastMatch->RemoteParent();
+    for (;;) {
+      if (parent == this) {
+        break;
+      }
+      if (!parent || parent->IsDoc()) {
+        // `this` is not an ancestor of lastMatch. Ignore lastMatch.
+        lastMatch = nullptr;
+        break;
+      }
+      lastMatch = parent;
+      parent = parent->RemoteParent();
+    }
+  } else if (aWhichChild == EWhichChildAtPoint::DeepestChild && lastMatch &&
+             !IsDoc() && !IsAncestorOf(lastMatch)) {
+    // If we end up with a match that is not in the ancestor chain
+    // of the accessible this call originated on, we should ignore it.
+    // This can happen when the aX, aY given are outside `this`.
+    lastMatch = nullptr;
   }
-  // If we end up with a match that is not in the ancestor chain
-  // of the accessible this call originated on, we should ignore it.
-  // This can happen when the aX, aY given are outside `this`.
-  if (lastMatch && !IsDoc() && !IsAncestorOf(lastMatch)) {
-    return nullptr;
+
+  if (!lastMatch && Bounds().Contains(aX, aY)) {
+    // Even though the hit target isn't inside `this`, the point is still
+    // within our bounds, so fall back to `this`.
+    return this;
   }
 
   return lastMatch;
