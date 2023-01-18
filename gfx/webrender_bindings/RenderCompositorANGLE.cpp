@@ -660,14 +660,8 @@ bool RenderCompositorANGLE::CreateEGLSurface() {
     }
   }
 
-  const EGLint pbuffer_attribs[]{
-      LOCAL_EGL_WIDTH,
-      size.width,
-      LOCAL_EGL_HEIGHT,
-      size.height,
-      LOCAL_EGL_FLEXIBLE_SURFACE_COMPATIBILITY_SUPPORTED_ANGLE,
-      LOCAL_EGL_TRUE,
-      LOCAL_EGL_NONE};
+  const EGLint pbuffer_attribs[]{LOCAL_EGL_WIDTH, size.width, LOCAL_EGL_HEIGHT,
+                                 size.height, LOCAL_EGL_NONE};
 
   const auto buffer = reinterpret_cast<EGLClientBuffer>(backBuf.get());
 
