@@ -98,6 +98,23 @@
         (triggeringEvent.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
           triggeringEvent.mozInputSource == MouseEvent.MOZ_SOURCE_UNKNOWN);
       this.open = true;
+
+      if (this.parentIsXULPanel()) {
+        this.toggleAttribute("inxulpanel", true);
+        let panel = this.parentElement;
+        panel.hidden = false;
+        panel.openPopup(
+          this.lastAnchorNode,
+          "after_start",
+          0,
+          0,
+          false,
+          false,
+          this.triggeringEvent
+        );
+      } else {
+        this.toggleAttribute("inxulpanel", false);
+      }
     }
 
     hide(triggeringEvent, { force = false } = {}) {
@@ -114,6 +131,16 @@
       let openingEvent = this.triggeringEvent;
       this.triggeringEvent = triggeringEvent;
       this.open = false;
+
+      if (this.parentIsXULPanel()) {
+        // It's possible that we're being programattically hidden, in which
+        // case, we need to hide the XUL panel we're embedded in. If, however,
+        // we're being hidden because the XUL panel is being hidden, calling
+        // hidePopup again on it is a no-op.
+        let panel = this.parentElement;
+        panel.hidePopup();
+      }
+
       let target = this.getTargetForEvent(openingEvent);
       // Refocus the button that opened the menu if we have one.
       if (target && this.wasOpenedByKeyboard) {
@@ -141,10 +168,21 @@
       return document.dir === "rtl";
     }
 
+    parentIsXULPanel() {
+      const XUL_NS =
+        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      return (
+        this.parentElement?.namespaceURI == XUL_NS &&
+        this.parentElement?.localName == "panel"
+      );
+    }
+
     async setAlign() {
-      if (!this.parentElement) {
+      if (!this.parentElement || this.parentIsXULPanel()) {
         // This could get called before we're added to the DOM.
         // Nothing to do in that case.
+        //
+        // And if we're embedded in a XUL panel, let it handle alignment.
         return;
       }
 
@@ -254,6 +292,9 @@
       window.addEventListener("resize", this);
       window.addEventListener("scroll", this, { capture: true });
       window.addEventListener("blur", this);
+      if (this.parentIsXULPanel()) {
+        this.parentElement.addEventListener("popuphidden", this);
+      }
     }
 
     removeHideListeners() {
@@ -264,6 +305,9 @@
       window.removeEventListener("resize", this);
       window.removeEventListener("scroll", this, { capture: true });
       window.removeEventListener("blur", this);
+      if (this.parentIsXULPanel()) {
+        this.parentElement.removeEventListener("popuphidden", this);
+      }
     }
 
     handleEvent(e) {
@@ -281,6 +325,7 @@
         case "resize":
         case "scroll":
         case "blur":
+        case "popuphidden":
           this.hide();
           break;
         case "click":
