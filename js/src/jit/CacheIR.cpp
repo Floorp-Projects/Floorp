@@ -11058,38 +11058,48 @@ AttachDecision CompareIRGenerator::tryAttachStrictDifferentTypes(
 
 AttachDecision CompareIRGenerator::tryAttachInt32(ValOperandId lhsId,
                                                   ValOperandId rhsId) {
-  if ((!lhsVal_.isInt32() && !lhsVal_.isBoolean()) ||
-      (!rhsVal_.isInt32() && !rhsVal_.isBoolean())) {
+  if (!CanConvertToInt32ForToNumber(lhsVal_) ||
+      !CanConvertToInt32ForToNumber(rhsVal_)) {
     return AttachDecision::NoAction;
   }
 
-  Int32OperandId lhsIntId = lhsVal_.isBoolean()
-                                ? writer.guardBooleanToInt32(lhsId)
-                                : writer.guardToInt32(lhsId);
-  Int32OperandId rhsIntId = rhsVal_.isBoolean()
-                                ? writer.guardBooleanToInt32(rhsId)
-                                : writer.guardToInt32(rhsId);
-
   // Strictly different types should have been handed by
-  // tryAttachStrictDifferentTypes
+  // tryAttachStrictDifferentTypes.
   MOZ_ASSERT_IF(op_ == JSOp::StrictEq || op_ == JSOp::StrictNe,
-                lhsVal_.isInt32() == rhsVal_.isInt32());
+                lhsVal_.type() == rhsVal_.type());
+
+  // Should have been handled by tryAttachAnyNullUndefined.
+  MOZ_ASSERT_IF(lhsVal_.isNull() || rhsVal_.isNull(), !IsEqualityOp(op_));
+
+  Int32OperandId lhsIntId = EmitGuardToInt32ForToNumber(writer, lhsId, lhsVal_);
+  Int32OperandId rhsIntId = EmitGuardToInt32ForToNumber(writer, rhsId, rhsVal_);
 
   writer.compareInt32Result(op_, lhsIntId, rhsIntId);
   writer.returnFromIC();
 
-  trackAttached(lhsVal_.isBoolean() ? "Boolean" : "Int32");
+  trackAttached("Int32");
   return AttachDecision::Attach;
 }
 
 AttachDecision CompareIRGenerator::tryAttachNumber(ValOperandId lhsId,
                                                    ValOperandId rhsId) {
-  if (!lhsVal_.isNumber() || !rhsVal_.isNumber()) {
+  if (!CanConvertToDoubleForToNumber(lhsVal_) ||
+      !CanConvertToDoubleForToNumber(rhsVal_)) {
     return AttachDecision::NoAction;
   }
 
-  NumberOperandId lhs = writer.guardIsNumber(lhsId);
-  NumberOperandId rhs = writer.guardIsNumber(rhsId);
+  // Strictly different types should have been handed by
+  // tryAttachStrictDifferentTypes.
+  MOZ_ASSERT_IF(op_ == JSOp::StrictEq || op_ == JSOp::StrictNe,
+                lhsVal_.type() == rhsVal_.type() ||
+                    (lhsVal_.isNumber() && rhsVal_.isNumber()));
+
+  // Should have been handled by tryAttachAnyNullUndefined.
+  MOZ_ASSERT_IF(lhsVal_.isNullOrUndefined() || rhsVal_.isNullOrUndefined(),
+                !IsEqualityOp(op_));
+
+  NumberOperandId lhs = EmitGuardToDoubleForToNumber(writer, lhsId, lhsVal_);
+  NumberOperandId rhs = EmitGuardToDoubleForToNumber(writer, rhsId, rhsVal_);
   writer.compareDoubleResult(op_, lhs, rhs);
   writer.returnFromIC();
 
