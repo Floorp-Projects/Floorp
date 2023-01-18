@@ -6,6 +6,7 @@ mod analyzer;
 mod compose;
 mod expression;
 mod function;
+mod handles;
 mod interface;
 mod r#type;
 
@@ -13,7 +14,7 @@ mod r#type;
 use crate::arena::{Arena, UniqueArena};
 
 use crate::{
-    arena::{BadHandle, Handle},
+    arena::Handle,
     proc::{LayoutError, Layouter},
     FastHashSet,
 };
@@ -30,6 +31,8 @@ pub use expression::ExpressionError;
 pub use function::{CallError, FunctionError, LocalVariableError};
 pub use interface::{EntryPointError, GlobalVariableError, VaryingError};
 pub use r#type::{Disalignment, TypeError, TypeFlags};
+
+use self::handles::InvalidHandleError;
 
 bitflags::bitflags! {
     /// Validation flags.
@@ -66,6 +69,9 @@ bitflags::bitflags! {
         /// Constants.
         #[cfg(feature = "validate")]
         const CONSTANTS = 0x10;
+        /// Group, binding, and location attributes.
+        #[cfg(feature = "validate")]
+        const BINDINGS = 0x20;
     }
 }
 
@@ -143,8 +149,6 @@ pub struct Validator {
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum ConstantError {
-    #[error(transparent)]
-    BadHandle(#[from] BadHandle),
     #[error("The type doesn't match the constant")]
     InvalidType,
     #[error("The component handle {0:?} can not be resolved")]
@@ -157,6 +161,8 @@ pub enum ConstantError {
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum ValidationError {
+    #[error(transparent)]
+    InvalidHandle(#[from] InvalidHandleError),
     #[error(transparent)]
     Layouter(#[from] LayoutError),
     #[error("Type {handle:?} '{name}' is invalid")]
@@ -220,17 +226,17 @@ impl crate::TypeInner {
     const fn image_storage_coordinates(&self) -> Option<crate::ImageDimension> {
         match *self {
             Self::Scalar {
-                kind: crate::ScalarKind::Sint,
+                kind: crate::ScalarKind::Sint | crate::ScalarKind::Uint,
                 ..
             } => Some(crate::ImageDimension::D1),
             Self::Vector {
                 size: crate::VectorSize::Bi,
-                kind: crate::ScalarKind::Sint,
+                kind: crate::ScalarKind::Sint | crate::ScalarKind::Uint,
                 ..
             } => Some(crate::ImageDimension::D2),
             Self::Vector {
                 size: crate::VectorSize::Tri,
-                kind: crate::ScalarKind::Sint,
+                kind: crate::ScalarKind::Sint | crate::ScalarKind::Uint,
                 ..
             } => Some(crate::ImageDimension::D3),
             _ => None,
@@ -280,7 +286,7 @@ impl Validator {
                 }
             }
             crate::ConstantInner::Composite { ty, ref components } => {
-                match types.get_handle(ty)?.inner {
+                match types[ty].inner {
                     crate::TypeInner::Array {
                         size: crate::ArraySize::Constant(size_handle),
                         ..
@@ -312,6 +318,9 @@ impl Validator {
     ) -> Result<ModuleInfo, WithSpan<ValidationError>> {
         self.reset();
         self.reset_types(module.types.len());
+
+        #[cfg(feature = "validate")]
+        Self::validate_module_handles(module).map_err(|e| e.with_span())?;
 
         self.layouter
             .update(&module.types, &module.constants)
@@ -411,4 +420,21 @@ impl Validator {
 
         Ok(mod_info)
     }
+}
+
+#[cfg(feature = "validate")]
+fn validate_atomic_compare_exchange_struct(
+    types: &UniqueArena<crate::Type>,
+    members: &[crate::StructMember],
+    scalar_predicate: impl FnOnce(&crate::TypeInner) -> bool,
+) -> bool {
+    members.len() == 2
+        && members[0].name.as_deref() == Some("old_value")
+        && scalar_predicate(&types[members[0].ty].inner)
+        && members[1].name.as_deref() == Some("exchanged")
+        && types[members[1].ty].inner
+            == crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Bool,
+                width: crate::BOOL_WIDTH,
+            }
 }
