@@ -19,12 +19,12 @@ Building NSS
 
 .. container::
 
-   NSS needs a C and C++ compiler.  It has minimal dependencies, including only standard C and C++
+   NSS needs a C and C++ compiler.  It has minimal dependencies, including only standard C and C++
    libraries, plus `zlib <https://www.zlib.net/>`__.
 
-   For building, you also need `make <https://www.gnu.org/software/make/>`__.  Ideally, also install
+   For building, you also need `make <https://www.gnu.org/software/make/>`__.  Ideally, also install
    `gyp <https://gyp.gsrc.io/>`__ and `ninja <https://ninja-build.org/>`__ and put them on your
-   path.  This is recommended, as the build is faster and more reliable.
+   path.  This is recommended, as the build is faster and more reliable.
 
 `Windows <#windows>`__
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +50,7 @@ Building NSS
    latest sources for NSS and NSPR--which may not be part of a stable release--use the following
    commands:
 
-   .. code:: notranslate
+   .. code::
 
       hg clone https://hg.mozilla.org/projects/nspr
       hg clone https://hg.mozilla.org/projects/nss
@@ -64,7 +64,7 @@ Building NSS
 
    Build NSS using our build script:
 
-   .. code:: notranslate
+   .. code::
 
       nss/build.sh
 
@@ -78,9 +78,9 @@ Building NSS
 .. container::
 
    Alternatively, there is a ``make`` target called "nss_build_all", which produces a similar
-   result.  This supports some alternative options, but can be a lot slower.
+   result.  This supports some alternative options, but can be a lot slower.
 
-   .. code:: notranslate
+   .. code::
 
       make -C nss nss_build_all USE_64=1
 
@@ -113,10 +113,10 @@ Building NSS
 
 .. container::
 
-   NSS contains extensive unit tests.  Scripts to run these are found in the ``tests`` directory. 
+   NSS contains extensive unit tests.  Scripts to run these are found in the ``tests`` directory. 
    Run the standard suite by:
 
-   .. code:: notranslate
+   .. code::
 
       HOST=localhost DOMSUF=localdomain USE_64=1 nss/tests/all.sh
 
@@ -135,7 +135,7 @@ Building NSS
    If you don't have a domain suffix you can add an entry to ``/etc/hosts`` (on
    Windows,\ ``c:\Windows\System32\drivers\etc\hosts``) as follows:
 
-   .. code:: notranslate
+   .. code::
 
       127.0.0.1 localhost.localdomain
 
@@ -152,7 +152,7 @@ Building NSS
 
    Running all tests can take a considerable amount of time.
 
-   Test output is stored in ``tests_results/security/$HOST.$NUMBER/``.  The file ``results.html``
+   Test output is stored in ``tests_results/security/$HOST.$NUMBER/``.  The file ``results.html``
    summarizes the results, ``output.log`` captures all the test output.
 
    Other subdirectories of ``nss/tests`` contain scripts that run a subset of the full suite. Those

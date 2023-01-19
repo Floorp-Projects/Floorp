@@ -311,10 +311,10 @@ NSS API Guidelines
 
    Each file should include a CVS ID string for identification. The preferred format is:
 
-   .. code:: notranslate
+   .. code::
 
               "@(#) $RCSfile: nss-guidelines.html,
-                  v $ $Revision: 48936 $ $Date: 2009-08-11 07:45:57 -0700 (Tue, 11 Aug 2009) $ $Name$"
+                  v $ $Revision: 48936 $ $Date: 2009-08-11 07:45:57 -0700 (Tue, 11 Aug 2009) $ $Name$"
 
    You can put the string in a comment or in a static char array. Use #ifdef DEBUG to include the
    array in debug builds only. The advantage of using an array is that you can use strings(1) to
@@ -324,11 +324,11 @@ NSS API Guidelines
 
    Here is an example from lib/base/baset.h:
 
-   .. code:: notranslate
+   .. code::
 
           #ifdef DEBUG
           static const char BASET_CVS_ID[] = "@(#) $RCSfile: nss-guidelines.html,
-                  v $ $Revision: 48936 $ $Date: 2009-08-11 07:45:57 -0700 (Tue, 11 Aug 2009) $ $Name$";
+                  v $ $Revision: 48936 $ $Date: 2009-08-11 07:45:57 -0700 (Tue, 11 Aug 2009) $ $Name$";
           #endif /* DEBUG */
 
    The difference, between this and Id, is that Id has some useless information (*every* file is
@@ -345,7 +345,7 @@ NSS API Guidelines
 
    | We have a preferred naming system for include files. We had been moving towards one, for some
      time, but for the NSS 3.0 project we finally wrote it down.
-   |  
+   |  
 
    ========================= =========== ===================
    \                         Data Types  Function Prototypes
@@ -371,11 +371,11 @@ NSS API Guidelines
 
    #. Header files for consumption outside NSS start with "nss."
    #. Header files with types have a trailing "t", header files with prototypes don't.
-      "extern" declarations of data also go in the prototypes files.
-   #. "Friend" headers are for things that we really wish weren't used by non-NSS code, but which
-      are. Those files have a trailing "f," and their use should be deprecated.
-   #. "Module" headers are for things used only within a specific subset of NSS; things which would
-      have been "static" if we had combined separate C source files together. These header files
+      "extern" declarations of data also go in the prototypes files.
+   #. "Friend" headers are for things that we really wish weren't used by non-NSS code, but which
+      are. Those files have a trailing "f," and their use should be deprecated.
+   #. "Module" headers are for things used only within a specific subset of NSS; things which would
+      have been "static" if we had combined separate C source files together. These header files
       have a trailing "m."
 
 .. _functions_and_types:
@@ -448,13 +448,13 @@ NSS API Guidelines
 
    For example, for the structure SECMyOpaqueData you would add:
 
-   .. code:: notranslate
+   .. code::
 
           typedef struct SECMyOpaqueDataStr SECMyOpaqueData;
 
    and add the actual structure definition to the private header file. In this same example:
 
-   .. code:: notranslate
+   .. code::
 
           struct SECMyOpaqueDataStr {
               unsigned long myPrivateData1;
@@ -509,7 +509,7 @@ NSS API Guidelines
 
    #. Thread A marks the arena, and allocates some memory from it.
    #. Thread B allocates some memory from the arena.
-   #. Thread A releases the arena back to the mark.
+   #. Thread A releases the arena back to the mark.
    #. Thread B now finds itself with a pointer to released data.
    #. Some thread -- doesn't matter which -- allocates some data from the arena; this may overlap
       the chunk thread B has.
@@ -553,13 +553,13 @@ NSS API Guidelines
    Errors, though not integers, are done as external constants, instead of preprocessor definitions.
    This is so any additional error doesn't trigger the entire tree to rebuild. Likewise, the
    external references to errors are made in the prototypes files, with the functions which can
-   return them.  Error stacks are thread-private.
+   return them.  Error stacks are thread-private.
 
    The usual semantic is that public routines clear the stack first, private routines don't.
    Usually, every public routine has a private counterpart, and the implementation of the public
    routine looks like this:
 
-   .. code:: notranslate
+   .. code::
 
           NSSImplement rv *
           NSSType_Method
@@ -572,8 +572,8 @@ NSS API Guidelines
               nss_ClearErrorStack();
 
               #ifdef DEBUG
-                  if( !nssFoo_verifyPointer(arg1) ) return (rv *)NULL;
-                  if( !nssBar_verifyPointer(arg2) ) return (rv *)NULL;
+                  if( !nssFoo_verifyPointer(arg1) ) return (rv *)NULL;
+                  if( !nssBar_verifyPointer(arg2) ) return (rv *)NULL;
               #endif /* DEBUG */
 
               return nssType_Method(t, arg1, arg2);
@@ -808,7 +808,7 @@ NSS API Guidelines
    These functions should have the form LAYER_TraverseStorageObjectOrList().
 
    List and Array returning functions should be available at the higher layers of the API, most
-   wrapping  LAYER_Traverse() functions. They should have the form
+   wrapping  LAYER_Traverse() functions. They should have the form
    LAYER_LookupDataType{List|Array}[ByDataType]().
 
 .. _accesssor_functions:
@@ -842,7 +842,7 @@ NSS API Guidelines
 
    All encrypt and decrypt functions, which return data inline, should have a consistent signature:
 
-   .. code:: notranslate
+   .. code::
 
       SECStatus MY_FunctionName(MyContext *context,
                             unsigned char *outBuf,
@@ -858,7 +858,7 @@ NSS API Guidelines
    All hashing update, MACing update, and encrypt/decrypt functions which act like filters should
    have a consistent signature:
 
-   .. code:: notranslate
+   .. code::
 
       SECStatus PK11_DigestOp(PK11Context *context,
                             unsigned char *inBuf,

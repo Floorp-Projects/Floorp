@@ -11,7 +11,7 @@ NSS Sample Code Sample1
 .. container::
 
    This is an example program that demonstrates how to do key generation and transport between
-   cooperating servers.  This program shows the following:
+   cooperating servers.  This program shows the following:
 
    -  RSA key pair generation
    -  Naming RSA key pairs
@@ -38,7 +38,7 @@ NSS Sample Code Sample1
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       #include <iostream.h>
       #include "pk11pub.h"

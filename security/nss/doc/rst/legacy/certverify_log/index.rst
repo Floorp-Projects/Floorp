@@ -15,7 +15,7 @@ NSS CERTVerify Log
 
    To create a log:
 
-   .. code:: eval
+   .. code::
 
       #include "secport.h"
       #include "certt.h"
@@ -34,7 +34,7 @@ NSS CERTVerify Log
 
    Each entry is a CERTVerifyLogNode. Defined in certt.h:
 
-   .. code:: eval
+   .. code::
 
       /*
        * This structure is used to keep a log of errors when verifying

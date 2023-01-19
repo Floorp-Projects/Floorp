@@ -132,7 +132,7 @@ NSS 3.45 release notes
    -  `Bug 1515342 <https://bugzilla.mozilla.org/show_bug.cgi?id=1515342>`__ - More thorough input
       checking (`CVE-2019-11729) <https://bugzilla.mozilla.org/show_bug.cgi?id=CVE-2019-11729>`__
 
-   -  
+   -
 
       .. container::
 
@@ -144,7 +144,7 @@ NSS 3.45 release notes
       divide-by-zero in makePfromQandSeed from lib/freebl/pqg.c (static analysis)
 
    -  `Bug 1227096 <https://bugzilla.mozilla.org/show_bug.cgi?id=1227096>`__ - Fix a potential
-      divide-by-zero in PQG_VerifyParams from lib/freebl/pqg.c  (static analysis)
+      divide-by-zero in PQG_VerifyParams from lib/freebl/pqg.c  (static analysis)
 
    -  `Bug 1509432 <https://bugzilla.mozilla.org/show_bug.cgi?id=1509432>`__ - De-duplicate code
       between mp_set_long and mp_set_ulong
@@ -165,7 +165,7 @@ NSS 3.45 release notes
    -  `Bug 1551041 <https://bugzilla.mozilla.org/show_bug.cgi?id=1551041>`__ - Fix builds using GCC
       < 4.3 on big-endian architectures
 
-   -  
+   -
 
       .. container::
 

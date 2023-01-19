@@ -68,11 +68,11 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax
 
-   .. code:: notranslate
+   .. code::
 
       #include <certt.h>
 
-   .. code:: notranslate
+   .. code::
 
       typedef struct CERTCertDBHandleStr CERTCertDBHandle;
 
@@ -84,11 +84,11 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax_2
 
-   .. code:: notranslate
+   .. code::
 
       #include <certt.h>
 
-   .. code:: notranslate
+   .. code::
 
       typedef struct CERTCertificateStr CERTCertificate;
 
@@ -113,7 +113,7 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax_3
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11expt.h>
 
@@ -127,13 +127,13 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax_4
 
-   .. code:: notranslate
+   .. code::
 
       #include <seccomon.h>
       #include <prtypes.h>
       #include <secport.h>
 
-   .. code:: notranslate
+   .. code::
 
       typedef enum {
           siBuffer,
@@ -148,11 +148,11 @@ ssltyp
           siDEROID
       } SECItemType;
 
-   .. code:: notranslate
+   .. code::
 
       typedef struct SECItemStr SECItem;
 
-   .. code:: notranslate
+   .. code::
 
       struct SECItemStr {
           SECItemType type;
@@ -177,11 +177,11 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax_5
 
-   .. code:: notranslate
+   .. code::
 
       #include <keyt.h>
 
-   .. code:: notranslate
+   .. code::
 
       typedef struct SECKEYPrivateKeyStr SECKEYPrivateKey;
 
@@ -203,11 +203,11 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax_6
 
-   .. code:: notranslate
+   .. code::
 
       #include <seccomon.h>
 
-   .. code:: notranslate
+   .. code::
 
       typedef enum {
           SECWouldBlock = -2,
@@ -221,15 +221,15 @@ ssltyp
    The enum includes the following enumerators:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | Reserved for internal use.                      |
+   | .. code::                           | Reserved for internal use.                      |
    |                                                 |                                                 |
    |    SECWouldBlock                                |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The operation failed. To find out why, call     |
+   | .. code::                           | The operation failed. To find out why, call     |
    |                                                 | ``PR_GetError``.                                |
    |    SECFailure                                   |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The operation succeeded. In this case the value |
+   | .. code::                           | The operation succeeded. In this case the value |
    |                                                 | returned by ``PR_GetError`` is meaningless.     |
    |    SECSuccess                                   |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -255,15 +255,15 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax_7
 
-   .. code:: notranslate
+   .. code::
 
-      #include <prtypes.h> 
+      #include <prtypes.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECStatus SECItem_FreeItem (
-         SECItem *item,
-         PRBool freeItem)
+         SECItem *item,
+         PRBool freeItem)
 
    .. rubric:: Parameter
       :name: parameter
@@ -302,15 +302,15 @@ ssltyp
    .. rubric:: Syntax
       :name: syntax_8
 
-   .. code:: notranslate
+   .. code::
 
-      #include <prtypes.h> 
+      #include <prtypes.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECStatus SECItem_ZfreeItem (
-         SECItem *item,
-         PRBool freeItem)
+         SECItem *item,
+         PRBool freeItem)
 
    .. rubric:: Parameter
       :name: parameter_2

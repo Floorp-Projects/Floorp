@@ -28,7 +28,7 @@ NSS environment variables
    |                        |                        | named in the           |                        |
    |                        |                        | environment variable   |                        |
    |                        |                        | NSRANDFILE (see        |                        |
-   |                        |                        | below).  Makes         |                        |
+   |                        |                        | below).  Makes         |                        |
    |                        |                        | NSRANDFILE usable with |                        |
    |                        |                        | /dev/urandom.          |                        |
    +------------------------+------------------------+------------------------+------------------------+
@@ -239,7 +239,7 @@ NSS environment variables
    |                        |                        |    and will report an  |                        |
    |                        |                        |    error in non-DEBUG  |                        |
    |                        |                        |    builds.             |                        |
-   |                        |                        | -  If set  to          |                        |
+   |                        |                        | -  If set  to          |                        |
    |                        |                        |    "DISABLED",         |                        |
    |                        |                        |    Softoken will       |                        |
    |                        |                        |    ignore forks, and   |                        |
@@ -259,7 +259,7 @@ NSS environment variables
    |                        |                        | shutdown NSS before    |                        |
    |                        |                        | freeing all the        |                        |
    |                        |                        | resources it acquired  |                        |
-   |                        |                        | from NSS while NSS was |                        |
+   |                        |                        | from NSS while NSS was |                        |
    |                        |                        | initialized.           |                        |
    +------------------------+------------------------+------------------------+------------------------+
    | ``NSS_TRACE_OCSP``     | Boolean                | Enables OCSP tracing.  | 3.12                   |
@@ -278,7 +278,7 @@ NSS environment variables
    |                        |                        | the non-standard       |                        |
    |                        |                        | unencoded format that  |                        |
    |                        |                        | was used by default    |                        |
-   |                        |                        | before NSS 3.12.3.     |                        |
+   |                        |                        | before NSS 3.12.3.     |                        |
    +------------------------+------------------------+------------------------+------------------------+
    | ``NSS_US               | Boolean                | Tells NSS to allow     | 3.12.3                 |
    | E_SHEXP_IN_CERT_NAME`` | (any value to enable)  | shell-style wildcard   |                        |

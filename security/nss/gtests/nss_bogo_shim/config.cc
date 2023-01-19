@@ -58,10 +58,11 @@ Config::Status Config::ParseArgs(int argc, char **argv) {
   }
   while (!args.empty()) {
     auto e = entries_.find(XformFlag(args.front()));
-    args.pop();
     if (e == entries_.end()) {
+      std::cerr << "Unimplemented shim flag: " << args.front() << std::endl;
       return kUnknownFlag;
     }
+    args.pop();
     if (!e->second->Parse(args)) return kMalformedArgument;
   }
 

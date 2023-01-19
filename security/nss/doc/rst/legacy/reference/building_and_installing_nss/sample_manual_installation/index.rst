@@ -5,7 +5,7 @@ Sample manual installation
 
 .. container::
 
-   | 
+   |
    | The NSS build system does not include a target to install header files and shared libraries in
      the system directories, so this needs to be done manually.
 

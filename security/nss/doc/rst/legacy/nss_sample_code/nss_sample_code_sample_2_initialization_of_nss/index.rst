@@ -10,7 +10,7 @@ NSS Sample Code Sample_2_Initialization of NSS
 
 .. container::
 
-   This example program demonstrates how to initialize the NSS Database.  This program illustrates
+   This example program demonstrates how to initialize the NSS Database.  This program illustrates
    password handling.
 
 .. _sample_code_1:

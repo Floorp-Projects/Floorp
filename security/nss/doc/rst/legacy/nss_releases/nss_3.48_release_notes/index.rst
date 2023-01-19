@@ -42,10 +42,10 @@ NSS 3.48 release notes
 .. container::
 
    -  `TLS 1.3 <https://datatracker.ietf.org/doc/html/rfc8446>`__ is the default maximum TLS
-      version.  See `Bug 1573118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573118>`__ for
+      version.  See `Bug 1573118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573118>`__ for
       details.
    -  `TLS extended master secret <https://datatracker.ietf.org/doc/html/rfc7627>`__ is enabled by
-      default, where possible.  See `Bug
+      default, where possible.  See `Bug
       1575411 <https://bugzilla.mozilla.org/show_bug.cgi?id=1575411>`__ for details.
    -  The master password PBE now uses 10,000 iterations by default when using the default sql
       (key4.db) storage. Because using an iteration count higher than 1 with the legacy dbm

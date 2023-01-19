@@ -12,7 +12,7 @@ Function_Name
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       #include <headers.h>
       ReturnType Function_Name(

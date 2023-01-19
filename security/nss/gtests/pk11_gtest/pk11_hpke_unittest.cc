@@ -7,7 +7,7 @@
 #include <memory>
 #include "blapi.h"
 #include "gtest/gtest.h"
-#include "json.h"
+#include "json_reader.h"
 #include "nss.h"
 #include "nss_scoped_ptrs.h"
 #include "pk11hpke.h"

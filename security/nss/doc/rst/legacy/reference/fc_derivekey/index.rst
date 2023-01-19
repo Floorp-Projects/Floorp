@@ -15,7 +15,7 @@ FC_DeriveKey
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_DeriveKey(
         CK_SESSION_HANDLE hSession,

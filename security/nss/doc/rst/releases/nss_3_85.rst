@@ -37,9 +37,9 @@ NSS 3.85 release notes
    - Bug 1792821 - Modification of the primes.c and dhe-params.c in order to have better looking tables.
    - Bug 1796815 - Update zlib in NSS to 1.2.13.
    - Bug 1796504 - Skip building modutil and shlibsign when building in Firefox.
-   - Bug 1796504 - Use __STDC_VERSION__ rather than __STDC__ as a guard. 
+   - Bug 1796504 - Use __STDC_VERSION__ rather than __STDC__ as a guard.
    - Bug 1796407 - Fix -Wunused-but-set-variable warning from clang 15.
-   - Bug 1796308 - Fix -Wtautological-constant-out-of-range-compare and -Wtype-limits warnings. 
+   - Bug 1796308 - Fix -Wtautological-constant-out-of-range-compare and -Wtype-limits warnings.
    - Bug 1796281 - Followup: add missing stdint.h include.
    - Bug 1796281 - Fix -Wint-to-void-pointer-cast warnings.
    - Bug 1796280 - Fix -Wunused-{function,variable,but-set-variable} warnings on Windows.

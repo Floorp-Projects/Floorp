@@ -15,7 +15,7 @@ FC_GetOperationState
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_GetOperationState(
         CK_SESSION_HANDLE hSession,

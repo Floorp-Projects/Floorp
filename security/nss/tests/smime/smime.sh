@@ -577,10 +577,10 @@ smime_main()
 
 smime_data_tb()
 {
-  ${BINDIR}/pk12util -d ${P_R_ALICEDIR} -o tb/Alice.p12 -n Alice -K nss -W ""
-  ${BINDIR}/pk12util -d ${P_R_BOBDIR} -o tb/Bob.p12 -n Bob -K nss -W ""
-  ${BINDIR}/pk12util -d ${P_R_DAVEDIR} -o tb/Dave.p12 -n Dave -K nss -W ""
-  ${BINDIR}/pk12util -d ${P_R_EVEDIR} -o tb/Eve.p12 -n Eve -K nss -W ""
+  ${BINDIR}/pk12util -d ${P_R_ALICEDIR} -o tb/Alice.p12 -n Alice -K nss -W nss
+  ${BINDIR}/pk12util -d ${P_R_BOBDIR} -o tb/Bob.p12 -n Bob -K nss -W nss
+  ${BINDIR}/pk12util -d ${P_R_DAVEDIR} -o tb/Dave.p12 -n Dave -K nss -W nss
+  ${BINDIR}/pk12util -d ${P_R_EVEDIR} -o tb/Eve.p12 -n Eve -K nss -W nss
   CAOUT=tb/TestCA.pem
   cat ${P_R_CADIR}/TestCA.ca.cert | sed 's/\r$//' | ${BINDIR}/btoa -w c >> ${CAOUT}
 }

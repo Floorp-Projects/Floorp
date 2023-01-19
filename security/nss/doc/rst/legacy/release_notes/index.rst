@@ -6,7 +6,7 @@ Older NSS release notes
 .. container::
 
    This page lists release notes for older versions of NSS.
-   See :ref:`mozilla_projects_nss_nss_releases` :ref:`mozilla_projects_nss_nss_releases` for recent
+   See :ref:`mozilla_projects_nss_nss_releases` :ref:`mozilla_projects_nss_nss_releases` for recent
    release notes. The links below are provided for historical information.
 
    -  NSS 3.14

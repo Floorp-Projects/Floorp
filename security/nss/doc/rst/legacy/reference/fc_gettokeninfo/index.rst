@@ -15,7 +15,7 @@ FC_GetTokenInfo
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo);
 

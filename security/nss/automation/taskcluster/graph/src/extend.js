@@ -20,6 +20,12 @@ const LINUX_INTEROP_IMAGE = {
   path: "automation/taskcluster/docker-interop"
 };
 
+const ACVP_IMAGE = {
+  name: "acvp",
+  path: "automation/taskcluster/docker-acvp"
+};
+
+
 const CLANG_FORMAT_IMAGE = {
   name: "clang-format",
   path: "automation/taskcluster/docker-clang-format"
@@ -1135,6 +1141,18 @@ async function scheduleTools() {
       "bin/checkout.sh && nss/automation/clang-format/run_clang_format.sh"
     ]
   }));
+
+  queue.scheduleTask(merge(base, {
+    symbol: "acvp",
+    name: "acvp",
+    image: ACVP_IMAGE,
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && bin/run.sh"
+    ]
+  }));
+
 
   queue.scheduleTask(merge(base, {
     symbol: "scan-build",

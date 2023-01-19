@@ -35,6 +35,7 @@
 
 #define SECITEM_AllocItem SECITEM_AllocItem_stub
 #define SECITEM_CompareItem SECITEM_CompareItem_stub
+#define SECITEM_ItemsAreEqual SECITEM_ItemsAreEqual_stub
 #define SECITEM_CopyItem SECITEM_CopyItem_stub
 #define SECITEM_FreeItem SECITEM_FreeItem_stub
 #define SECITEM_ZfreeItem SECITEM_ZfreeItem_stub

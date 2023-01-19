@@ -52,7 +52,7 @@ NSS tools : pk12util
 
    Specify the key cert (overall package) encryption algorithm.
 
-   | 
+   |
    | -d [sql:]directory
 
    | Specify the database directory into which to import to or export

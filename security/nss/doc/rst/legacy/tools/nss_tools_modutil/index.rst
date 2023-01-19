@@ -326,57 +326,57 @@ NSS Tools modutil
    metainfo file for the `Netscape Signing
    Tool <http://developer.netscape.com/docs/manuals/signedobj/signtool/index.htm>`__ would include a
    line such as this:
-   .. code:: notranslate
+   .. code::
 
       + Pkcs11_install_script: pk11install
 
    The sample script file could contain the following:
-   .. code:: notranslate
+   .. code::
 
       ForwardCompatible { IRIX:6.2:mips SUNOS:5.5.1:sparc }
       Platforms {
-         WINNT::x86 {
-            ModuleName { "Fortezza Module" }
-            ModuleFile { win32/fort32.dll }
-            DefaultMechanismFlags{0x0001}
-            DefaultCipherFlags{0x0001}
-            Files {
-               win32/setup.exe {
-                  Executable
-                  RelativePath { %temp%/setup.exe }
-               }
-               win32/setup.hlp {
-                  RelativePath { %temp%/setup.hlp }
-               }
-               win32/setup.cab {
-                  RelativePath { %temp%/setup.cab }
-               }
-            }
-         }
-         WIN95::x86 {
-            EquivalentPlatform {WINNT::x86}
-         }
-         SUNOS:5.5.1:sparc {
-            ModuleName { "Fortezza UNIX Module" }
-            ModuleFile { unix/fort.so }
-            DefaultMechanismFlags{0x0001}
-            CipherEnableFlags{0x0001}
-            Files {
-               unix/fort.so {
-                  RelativePath{%root%/lib/fort.so}
-                  AbsolutePath{/usr/local/netscape/lib/fort.so}
-                  FilePermissions{555}
-               }
-               xplat/instr.html {
-                  RelativePath{%root%/docs/inst.html}
-                  AbsolutePath{/usr/local/netscape/docs/inst.html}
-                  FilePermissions{555}
-               }
-            }
-         }
-         IRIX:6.2:mips {
-            EquivalentPlatform { SUNOS:5.5.1:sparc }
-         }
+         WINNT::x86 {
+            ModuleName { "Fortezza Module" }
+            ModuleFile { win32/fort32.dll }
+            DefaultMechanismFlags{0x0001}
+            DefaultCipherFlags{0x0001}
+            Files {
+               win32/setup.exe {
+                  Executable
+                  RelativePath { %temp%/setup.exe }
+               }
+               win32/setup.hlp {
+                  RelativePath { %temp%/setup.hlp }
+               }
+               win32/setup.cab {
+                  RelativePath { %temp%/setup.cab }
+               }
+            }
+         }
+         WIN95::x86 {
+            EquivalentPlatform {WINNT::x86}
+         }
+         SUNOS:5.5.1:sparc {
+            ModuleName { "Fortezza UNIX Module" }
+            ModuleFile { unix/fort.so }
+            DefaultMechanismFlags{0x0001}
+            CipherEnableFlags{0x0001}
+            Files {
+               unix/fort.so {
+                  RelativePath{%root%/lib/fort.so}
+                  AbsolutePath{/usr/local/netscape/lib/fort.so}
+                  FilePermissions{555}
+               }
+               xplat/instr.html {
+                  RelativePath{%root%/docs/inst.html}
+                  AbsolutePath{/usr/local/netscape/docs/inst.html}
+                  FilePermissions{555}
+               }
+            }
+         }
+         IRIX:6.2:mips {
+            EquivalentPlatform { SUNOS:5.5.1:sparc }
+         }
       }
 
 .. _script_grammar:
@@ -387,39 +387,39 @@ NSS Tools modutil
 .. container::
 
    The script file grammar is as follows:
-   .. code:: notranslate
+   .. code::
 
       --> valuelist
 
-   .. code:: notranslate
+   .. code::
 
       valuelist --> value valuelist
-                     <null>
+                     <null>
 
-   .. code:: notranslate
+   .. code::
 
       value ---> key_value_pair
-                  string
+                  string
 
-   .. code:: notranslate
+   .. code::
 
       key_value_pair --> key { valuelist }
 
-   .. code:: notranslate
+   .. code::
 
       key --> string
 
-   .. code:: notranslate
+   .. code::
 
       string --> simple_string
-                  "complex_string"
+                  "complex_string"
 
-   .. code:: notranslate
+   .. code::
 
-      simple_string --> [^ \t\n\""{""}"]+ 
+      simple_string --> [^ \t\n\""{""}"]+
       (No whitespace, quotes, or braces.)
 
-   .. code:: notranslate
+   .. code::
 
       complex_string --> ([^\"\\\r\n]|(\\\")|(\\\\))+ (Quotes and
       backslashes must be escaped with a backslash. A complex string must not
@@ -474,12 +474,12 @@ NSS Tools modutil
    -  WINNT (x86)
 
    Here are some examples of valid platform strings:
-   .. code:: notranslate
+   .. code::
 
       IRIX:6.2:mips
       SUNOS:5.5.1:sparc
       Linux:2.0.32:x86
-      WIN95::x86. 
+      WIN95::x86.
 
    .. rubric:: Per-Platform Keys
       :name: per-platform_keys
@@ -497,31 +497,31 @@ NSS Tools modutil
    This key-value pair is a bitstring specified in hexadecimal (0x) format. It is constructed as a
    bitwise OR of the following constants. If the ``DefaultMechanismFlags`` entry is omitted, the
    value defaults to 0x0.
-   .. code:: notranslate
+   .. code::
 
-         RSA:                   0x00000001
-         DSA:                   0x00000002
-         RC2:                   0x00000004
-         RC4:                   0x00000008
-         DES:                   0x00000010
-         DH:                    0x00000020
-         FORTEZZA:              0x00000040
-         RC5:                   0x00000080
-         SHA1:                  0x00000100
-         MD5:                   0x00000200
-         MD2:                   0x00000400
-         RANDOM:                0x08000000
-         FRIENDLY:              0x10000000
-         OWN_PW_DEFAULTS:       0x20000000
-         DISABLE:               0x40000000
+         RSA:                   0x00000001
+         DSA:                   0x00000002
+         RC2:                   0x00000004
+         RC4:                   0x00000008
+         DES:                   0x00000010
+         DH:                    0x00000020
+         FORTEZZA:              0x00000040
+         RC5:                   0x00000080
+         SHA1:                  0x00000100
+         MD5:                   0x00000200
+         MD2:                   0x00000400
+         RANDOM:                0x08000000
+         FRIENDLY:              0x10000000
+         OWN_PW_DEFAULTS:       0x20000000
+         DISABLE:               0x40000000
 
    ``CipherEnableFlags`` Specifies ciphers that this module provides but Netscape Communicator does
    not, so that Communicator can enable them. This key is a bitstring specified in hexadecimal (0x)
    format. It is constructed as a bitwise OR of the following constants. If the
    ``CipherEnableFlags`` entry is omitted, the value defaults to 0x0.
-   .. code:: notranslate
+   .. code::
 
-         FORTEZZA:               0x0000 0001
+         FORTEZZA:               0x0000 0001
 
    ``EquivalentPlatform`` Specifies that the attributes of the named platform should also be used
    for the current platform. Saves typing when there is more than one platform using the same
@@ -552,17 +552,17 @@ NSS Tools modutil
    in the order in which they are specified in the script file. ``FilePermissions`` Interpreted as a
    string of octal digits, according to the standard Unix format. This string is a bitwise OR of the
    following constants:
-   .. code:: notranslate
+   .. code::
 
-         user read:                0400
-         user write:               0200
-         user execute:             0100
-         group read:               0040
-         group write:              0020
-         group execute:            0010
-         other read:               0004
-         other write:              0002
-         other execute:       0001
+         user read:                0400
+         user write:               0200
+         user execute:             0100
+         group read:               0040
+         group write:              0020
+         group execute:            0010
+         other read:               0004
+         other write:              0002
+         other execute:       0001
 
    Some platforms may not understand these permissions. They are applied only insofar as they make
    sense for the current platform. If this attribute is omitted, a default of 777 is assumed.
@@ -591,24 +591,24 @@ NSS Tools modutil
 .. container::
 
    This example creates a set of security management database files in the specified directory:
-   .. code:: notranslate
+   .. code::
 
       modutil -create -dbdir c:\databases
 
    The Security Module Database Tool displays a warning:
-   .. code:: notranslate
+   .. code::
 
       WARNING: Performing this operation while Communicator is running could
       cause corruption of your security databases. If Communicator is
       currently running, you should exit Communicator before continuing this
-      operation. Type 'q <enter>' to abort, or <enter> to continue: 
+      operation. Type 'q <enter>' to abort, or <enter> to continue:
 
    After you press Enter, the tool displays the following:
-   .. code:: notranslate
+   .. code::
 
       Creating "c:\databases\key3.db"...done.
       Creating "c:\databases\cert8.db"...done.
-      Creating "c:\databases\secmod.db"...done. 
+      Creating "c:\databases\secmod.db"...done.
 
 .. _displaying_module_information:
 
@@ -618,35 +618,35 @@ NSS Tools modutil
 .. container::
 
    This example gives detailed information about the specified module:
-   .. code:: notranslate
+   .. code::
 
-      modutil -list "Netscape Internal PKCS #11 Module" -dbdir c:\databases 
+      modutil -list "Netscape Internal PKCS #11 Module" -dbdir c:\databases
 
    The Security Module Database Tool displays information similar to this:
-   .. code:: notranslate
+   .. code::
 
       Using database directory c:\databases...
       --------------------------------------------------------
       Name: Netscape Internal PKCS #11 Module
       Library file: **Internal ONLY module**
-      Manufacturer: Netscape Communications Corp 
+      Manufacturer: Netscape Communications Corp
       Description: Communicator Internal Crypto Svc
       PKCS #11 Version 2.0
       Library Version: 4.0
       Cipher Enable Flags: None
       Default Mechanism Flags: RSA:DSA:RC2:RC4:DES:SHA1:MD5:MD2
 
-   .. code:: notranslate
+   .. code::
 
       Slot: Communicator Internal Cryptographic Services Version 4.0
-      Manufacturer: Netscape Communications Corp 
+      Manufacturer: Netscape Communications Corp
       Type: Software
       Version Number: 4.1
       Firmware Version: 0.0
       Status: Enabled
       Token Name: Communicator Generic Crypto Svcs
-      Token Manufacturer: Netscape Communications Corp 
-      Token Model: Libsec 4.0 
+      Token Manufacturer: Netscape Communications Corp
+      Token Model: Libsec 4.0
       Token Serial Number: 0000000000000000
       Token Version: 4.0
       Token Firmware Version: 0.0
@@ -654,17 +654,17 @@ NSS Tools modutil
       Login Type: Public (no login required)
       User Pin: NOT Initialized
 
-   .. code:: notranslate
+   .. code::
 
       Slot: Communicator User Private Key and Certificate Services
-      Manufacturer: Netscape Communications Corp 
+      Manufacturer: Netscape Communications Corp
       Type: Software
       Version Number: 3.0
       Firmware Version: 0.0
       Status: Enabled
-      Token Name: Communicator Certificate DB 
-      Token Manufacturer: Netscape Communications Corp 
-      Token Model: Libsec 4.0 
+      Token Name: Communicator Certificate DB
+      Token Manufacturer: Netscape Communications Corp
+      Token Model: Libsec 4.0
       Token Serial Number: 0000000000000000
       Token Version: 7.0
       Token Firmware Version: 0.0
@@ -681,25 +681,25 @@ NSS Tools modutil
 
    This example makes the specified module a default provider for the RSA, DSA, and RC2 security
    mechanisms:
-   .. code:: notranslate
+   .. code::
 
-      modutil -default "Cryptographic Module" -dbdir 
-      c:\databases -mechanisms RSA:DSA:RC2 
+      modutil -default "Cryptographic Module" -dbdir
+      c:\databases -mechanisms RSA:DSA:RC2
 
    The Security Module Database Tool displays a warning:
-   .. code:: notranslate
+   .. code::
 
       WARNING: Performing this operation while Communicator is running could
       cause corruption of your security databases. If Communicator is
       currently running, you should exit Communicator before continuing this
-      operation. Type 'q <enter>' to abort, or <enter> to continue: 
+      operation. Type 'q <enter>' to abort, or <enter> to continue:
 
    After you press Enter, the tool displays the following:
-   .. code:: notranslate
+   .. code::
 
       Using database directory c:\databases...
 
-   .. code:: notranslate
+   .. code::
 
       Successfully changed defaults.
 
@@ -711,27 +711,27 @@ NSS Tools modutil
 .. container::
 
    This example enables a particular slot in the specified module:
-   .. code:: notranslate
+   .. code::
 
-      modutil -enable "Cryptographic Module" -slot 
-      "Cryptographic Reader" -dbdir c:\databases 
+      modutil -enable "Cryptographic Module" -slot
+      "Cryptographic Reader" -dbdir c:\databases
 
    The Security Module Database Tool displays a warning:
-   .. code:: notranslate
+   .. code::
 
       WARNING: Performing this operation while Communicator is running could
       cause corruption of your security databases. If Communicator is
       currently running, you should exit Communicator before continuing this
-      operation. Type 'q <enter>' to abort, or <enter> to continue: 
+      operation. Type 'q <enter>' to abort, or <enter> to continue:
 
    After you press Enter, the tool displays the following:
-   .. code:: notranslate
+   .. code::
 
       Using database directory c:\databases...
 
-   .. code:: notranslate
+   .. code::
 
-      Slot "Cryptographic Reader" enabled. 
+      Slot "Cryptographic Reader" enabled.
 
 .. _enabling_fips_compliance:
 
@@ -741,22 +741,22 @@ NSS Tools modutil
 .. container::
 
    This example enables FIPS 140-2 compliance in Communicator's internal module:
-   .. code:: notranslate
+   .. code::
 
-      modutil -dbdir "C:\databases" -fips true 
+      modutil -dbdir "C:\databases" -fips true
 
    The Security Module Database Tool displays a warning:
-   .. code:: notranslate
+   .. code::
 
       WARNING: Performing this operation while the browser is running could cause
       corruption of your security databases. If the browser is currently running,
       you should exit browser before continuing this operation. Type
-      'q <enter>' to abort, or <enter> to continue: 
+      'q <enter>' to abort, or <enter> to continue:
 
    After you press Enter, the tool displays the following:
-   .. code:: notranslate
+   .. code::
 
-      FIPS mode enabled. 
+      FIPS mode enabled.
 
 .. _adding_a_cryptographic_module:
 
@@ -766,25 +766,25 @@ NSS Tools modutil
 .. container::
 
    This example adds a new cryptographic module to the database:
-   .. code:: notranslate
+   .. code::
 
       C:\modutil> modutil -dbdir "C:\databases" -add "Cryptorific Module" -
-      libfile "C:\winnt\system32\crypto.dll" -mechanisms RSA:DSA:RC2:RANDOM 
+      libfile "C:\winnt\system32\crypto.dll" -mechanisms RSA:DSA:RC2:RANDOM
 
    The Security Module Database Tool displays a warning:
-   .. code:: notranslate
+   .. code::
 
       WARNING: Performing this operation while Communicator is running could
       cause corruption of your security databases. If Communicator is
       currently running, you should exit Communicator before continuing this
-      operation. Type 'q <enter>' to abort, or <enter> to continue: 
+      operation. Type 'q <enter>' to abort, or <enter> to continue:
 
    After you press Enter, the tool displays the following:
-   .. code:: notranslate
+   .. code::
 
-      Using database directory C:\databases... 
-      Module "Cryptorific Module" added to database. 
-      C:\modutil> 
+      Using database directory C:\databases...
+      Module "Cryptorific Module" added to database.
+      C:\modutil>
 
 .. _installing_a_cryptographic_module_from_a_jar_file:
 
@@ -794,59 +794,59 @@ NSS Tools modutil
 .. container::
 
    This example installs a cryptographic module from the following sample installation script.
-   .. code:: notranslate
+   .. code::
 
-      Platforms { 
-         WinNT::x86 { 
-            ModuleName { "Cryptorific Module" } 
-            ModuleFile { crypto.dll } 
-            DefaultMechanismFlags{0x0000} 
-            CipherEnableFlags{0x0000} 
-            Files { 
-               crypto.dll { 
-                  RelativePath{ %root%/system32/crypto.dll } 
-               } 
-               setup.exe { 
-                  Executable 
-                  RelativePath{ %temp%/setup.exe } 
-               } 
-            } 
-         } 
-         Win95::x86 { 
-            EquivalentPlatform { Winnt::x86 } 
-         } 
-      } 
+      Platforms {
+         WinNT::x86 {
+            ModuleName { "Cryptorific Module" }
+            ModuleFile { crypto.dll }
+            DefaultMechanismFlags{0x0000}
+            CipherEnableFlags{0x0000}
+            Files {
+               crypto.dll {
+                  RelativePath{ %root%/system32/crypto.dll }
+               }
+               setup.exe {
+                  Executable
+                  RelativePath{ %temp%/setup.exe }
+               }
+            }
+         }
+         Win95::x86 {
+            EquivalentPlatform { Winnt::x86 }
+         }
+      }
 
    To install from the script, use the following command. The root directory should be the Windows
    root directory (for example, ``c:\\windows``, or ``c:\\winnt``).
-   .. code:: notranslate
+   .. code::
 
-      C:\modutil> modutil -dbdir "c:\databases" -jar 
-      install.jar -installdir "C:/winnt" 
+      C:\modutil> modutil -dbdir "c:\databases" -jar
+      install.jar -installdir "C:/winnt"
 
    The Security Module Database Tool displays a warning:
-   .. code:: notranslate
+   .. code::
 
       WARNING: Performing this operation while Communicator is running could
       cause corruption of your security databases. If Communicator is
       currently running, you should exit Communicator before continuing this
-      operation. Type 'q <enter>' to abort, or <enter> to continue: 
+      operation. Type 'q <enter>' to abort, or <enter> to continue:
 
    After you press Enter, the tool displays the following:
-   .. code:: notranslate
+   .. code::
 
-      Using database directory c:\databases... 
+      Using database directory c:\databases...
 
-   .. code:: notranslate
+   .. code::
 
-      This installation JAR file was signed by: 
-      ---------------------------------------------- 
+      This installation JAR file was signed by:
+      ----------------------------------------------
 
-   .. code:: notranslate
+   .. code::
 
-      **SUBJECT NAME** 
+      **SUBJECT NAME**
 
-   .. code:: notranslate
+   .. code::
 
       C=US, ST=California, L=Mountain View, CN=Cryptorific Inc., OU=Digital ID
       Class 3 - Netscape Object Signing, OU="www.verisign.com/repository/CPS
@@ -855,26 +855,26 @@ NSS Tools modutil
       Organization, OU="VeriSign, Inc.", O=VeriSign Trust Network **ISSUER
       NAME**, OU=www.verisign.com/CPS Incorp.by Ref. LIABILITY LTD.(c)97
       VeriSign, OU=VeriSign Object Signing CA - Class 3 Organization,
-      OU="VeriSign, Inc.", O=VeriSign Trust Network 
-      ---------------------------------------------- 
+      OU="VeriSign, Inc.", O=VeriSign Trust Network
+      ----------------------------------------------
 
-   .. code:: notranslate
+   .. code::
 
-      Do you wish to continue this installation? (y/n) y 
-      Using installer script "installer_script" 
-      Successfully parsed installation script 
-      Current platform is WINNT::x86 
-      Using installation parameters for platform WinNT::x86 
-      Installed file crypto.dll to C:/winnt/system32/crypto.dll 
-      Installed file setup.exe to ./pk11inst.dir/setup.exe 
-      Executing "./pk11inst.dir/setup.exe"... 
-      "./pk11inst.dir/setup.exe" executed successfully 
-      Installed module "Cryptorific Module" into module database 
+      Do you wish to continue this installation? (y/n) y
+      Using installer script "installer_script"
+      Successfully parsed installation script
+      Current platform is WINNT::x86
+      Using installation parameters for platform WinNT::x86
+      Installed file crypto.dll to C:/winnt/system32/crypto.dll
+      Installed file setup.exe to ./pk11inst.dir/setup.exe
+      Executing "./pk11inst.dir/setup.exe"...
+      "./pk11inst.dir/setup.exe" executed successfully
+      Installed module "Cryptorific Module" into module database
 
-   .. code:: notranslate
+   .. code::
 
-      Installation completed successfully 
-      C:\modutil> 
+      Installation completed successfully
+      C:\modutil>
 
 .. _changing_the_password_on_a_token:
 
@@ -884,29 +884,29 @@ NSS Tools modutil
 .. container::
 
    This example changes the password for a token on an existing module.
-   .. code:: notranslate
+   .. code::
 
-      C:\modutil> modutil -dbdir "c:\databases" -changepw 
-      "Communicator Certificate DB" 
+      C:\modutil> modutil -dbdir "c:\databases" -changepw
+      "Communicator Certificate DB"
 
    The Security Module Database Tool displays a warning:
-   .. code:: notranslate
+   .. code::
 
       WARNING: Performing this operation while Communicator is running could
       cause corruption of your security databases. If Communicator is
       currently running, you should exit Communicator before continuing this
-      operation. Type 'q <enter>' to abort, or <enter> to continue: 
+      operation. Type 'q <enter>' to abort, or <enter> to continue:
 
    After you press Enter, the tool displays the following:
-   .. code:: notranslate
+   .. code::
 
-      Using database directory c:\databases... 
-      Enter old password: 
-      Incorrect password, try again... 
-      Enter old password: 
-      Enter new password: 
-      Re-enter new password: 
-      Token "Communicator Certificate DB" password changed successfully. 
-      C:\modutil> 
+      Using database directory c:\databases...
+      Enter old password:
+      Incorrect password, try again...
+      Enter old password:
+      Enter new password:
+      Re-enter new password:
+      Token "Communicator Certificate DB" password changed successfully.
+      C:\modutil>
 
    --------------

@@ -17,7 +17,7 @@ nss tech note3
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       09 May 2002
       Nelson B. Bolyard

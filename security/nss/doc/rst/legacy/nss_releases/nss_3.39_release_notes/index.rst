@@ -41,7 +41,7 @@ NSS 3.39 release notes
    -  The ``tstclnt`` and ``selfserv`` utilities added support for configuring the enabled TLS
       signature schemes using the ``-J`` parameter.
 
-   -  NSS will use RSA-PSS keys to authenticate in TLS.  Support for these keys is disabled by
+   -  NSS will use RSA-PSS keys to authenticate in TLS.  Support for these keys is disabled by
       default but can be enabled using ``SSL_SignatureSchemePrefSet()``.
 
    -  ``certutil`` added the ability to delete an orphan private key from an NSS key database.

@@ -8,7 +8,7 @@ NSS 3.52.1 release notes
 
 .. container::
 
-   The NSS team has released Network Security Services (NSS) 3.52.1 on **19 May 2020**. This is  a
+   The NSS team has released Network Security Services (NSS) 3.52.1 on **19 May 2020**. This is  a
    security patch release.
 
    Thank you to Cesar Pereida Garcia and the Network and Information Security Group (NISEC) at

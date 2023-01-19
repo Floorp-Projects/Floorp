@@ -52,17 +52,17 @@ NSS 3.19.2 release notes
       minimum key sizes that the freebl cryptographic implementation (part of the softoken
       cryptographic module used by default by NSS) was willing to generate or use was increased -
       for RSA keys, to 512 bits, and for DH keys, 1023 bits. This was done as part of a security fix
-      for `Bug 1138554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1138554>`__ /
+      for `Bug 1138554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1138554>`__ /
       `CVE-2015-4000 <http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-4000>`__.
       Applications that requested or attempted to use keys smaller then the minimum size would fail.
-      However, this change in behaviour unintentionally broke existing NSS applications that need to
+      However, this change in behaviour unintentionally broke existing NSS applications that need to
       generate or use such keys, via APIs such as SECKEY_CreateRSAPrivateKey or
       SECKEY_CreateDHPrivateKey.
       In NSS 3.19.2, this change in freebl behaviour has been reverted. The fix for `Bug
-      1138554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1138554>`__ has been moved to libssl,
+      1138554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1138554>`__ has been moved to libssl,
       and will now only affect the minimum keystrengths used in SSL/TLS.
-      **Note:** Future versions of NSS *may* increase the minimum keysizes required by the freebl
-      module. Consumers of NSS are **strongly** encouraged to migrate to stronger cryptographic
+      **Note:** Future versions of NSS *may* increase the minimum keysizes required by the freebl
+      module. Consumers of NSS are **strongly** encouraged to migrate to stronger cryptographic
       strengths as soon as possible.
 
 .. _bugs_fixed_in_nss_3.19.2:

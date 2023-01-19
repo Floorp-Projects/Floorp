@@ -30,7 +30,7 @@ NSS 3.12.9 release notes
       .. rubric:: Distribution Information
          :name: Distribution_Information
 
-      | The CVS tag for the NSS 3.12.9 release is ``NSS_3.12.9_RTM``.  NSS 3.12.9 requires `NSPR
+      | The CVS tag for the NSS 3.12.9 release is ``NSS_3.12.9_RTM``.  NSS 3.12.9 requires `NSPR
         4.8.7 <https://www.mozilla.org/projects/nspr/release-notes/nspr486.html>`__.
       | See the `Documentation <#docs>`__ section for the build instructions.
 
@@ -130,7 +130,7 @@ NSS 3.12.9 release notes
 
       NSS 3.12.9 shared libraries are backward compatible with all older NSS 3.x shared libraries. A
       program linked with older NSS 3.x shared libraries will work with NSS 3.12.9 shared libraries
-      without recompiling or relinking.  Furthermore, applications that restrict their use of NSS
+      without recompiling or relinking.  Furthermore, applications that restrict their use of NSS
       APIs to the functions listed in `NSS Public Functions </en-US/ref/nssfunctions.html>`__ will
       remain compatible with future versions of the NSS shared libraries.
 

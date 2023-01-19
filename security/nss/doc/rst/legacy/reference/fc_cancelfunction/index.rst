@@ -15,7 +15,7 @@ FC_CancelFunction
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_CancelFunction(
         CK_SESSION_HANDLE hSession

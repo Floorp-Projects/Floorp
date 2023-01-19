@@ -2342,7 +2342,9 @@ TEST_F(TlsConnectStreamTls13, EchBadCiphersuite) {
   ConnectExpectFail();
 }
 
-// Connect to a 1.2 server, it should ignore ECH.
+/* ECH (configured) client connects to a 1.2 server, this MUST lead to an
+ * 'ech_required' alert being sent by the client when handling the handshake
+ * finished messages [draft-ietf-tls-esni-14, Section 6.1.6]. */
 TEST_F(TlsConnectStreamTls13, EchToTls12Server) {
   EnsureTlsSetup();
   SetupEch(client_, server_);
@@ -2353,7 +2355,14 @@ TEST_F(TlsConnectStreamTls13, EchToTls12Server) {
 
   client_->ExpectEch(false);
   server_->ExpectEch(false);
-  Connect();
+
+  client_->ExpectSendAlert(kTlsAlertEchRequired, kTlsAlertFatal);
+  server_->ExpectReceiveAlert(kTlsAlertEchRequired, kTlsAlertFatal);
+  ConnectExpectFailOneSide(TlsAgent::CLIENT);
+  client_->CheckErrorCode(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
+
+  /* Reset expectations for the TlsAgent deconstructor. */
+  server_->ExpectReceiveAlert(kTlsAlertCloseNotify, kTlsAlertWarning);
 }
 
 TEST_F(TlsConnectStreamTls13, NoEchFromTls12Client) {

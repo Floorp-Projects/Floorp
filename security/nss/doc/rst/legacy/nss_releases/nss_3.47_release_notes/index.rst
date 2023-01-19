@@ -44,10 +44,10 @@ NSS 3.47 release notes
    will be released in early December:
 
    -  `TLS 1.3 <https://datatracker.ietf.org/doc/html/rfc8446>`__ will be the default maximum TLS
-      version.  See `Bug 1573118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573118>`__ for
+      version.  See `Bug 1573118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573118>`__ for
       details.
    -  `TLS extended master secret <https://datatracker.ietf.org/doc/html/rfc7627>`__ will be enabled
-      by default, where possible.  See `Bug
+      by default, where possible.  See `Bug
       1575411 <https://bugzilla.mozilla.org/show_bug.cgi?id=1575411>`__ for details.
 
 .. _notable_changes_in_nss_3.47:

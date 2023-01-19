@@ -19,6 +19,7 @@
 #include "pqg.h"
 #include "blapii.h"
 #include "secitem.h"
+#include "pkcs11t.h"
 
 #ifndef NSS_FIPS_DISABLED
 
@@ -321,228 +322,315 @@ BLAPI_SHVerifyFile(const char *shName)
     return blapi_SHVerifyFile(shName, PR_FALSE);
 }
 
+#ifndef NSS_STRICT_INTEGRITY
+/* This allows checks with old shlibsign .chk files. If NSS_STRICT_INTEGRITY
+ * is set, we don't accept DSA */
 static PRBool
-blapi_SHVerifyFile(const char *shName, PRBool self)
+blapi_SHVerifyDSACheck(PRFileDesc *shFD, const SECHashObject *hashObj,
+                       DSAPublicKey *key, const SECItem *signature)
 {
-    char *checkName = NULL;
-    PRFileDesc *checkFD = NULL;
-    PRFileDesc *shFD = NULL;
     void *hashcx = NULL;
-    const SECHashObject *hashObj = NULL;
-    SECItem signature = { 0, NULL, 0 };
     SECItem hash;
-    int bytesRead, offset;
-    SECStatus rv;
-    DSAPublicKey key;
-    int count;
-    (void)count; /* Suppress unused var warning (Bug 1738028) */
-#ifdef FREEBL_USE_PRELINK
-    int pid = 0;
-#endif
-
-    PRBool result = PR_FALSE; /* if anything goes wrong,
-                   * the signature does not verify */
-    unsigned char buf[4096];
+    int bytesRead;
     unsigned char hashBuf[HASH_LENGTH_MAX];
+    unsigned char buf[4096];
+    SECStatus rv;
 
-    PORT_Memset(&key, 0, sizeof(key));
+    hash.type = siBuffer;
     hash.data = hashBuf;
     hash.len = sizeof(hashBuf);
 
-    /* If our integrity check was never ran or failed, fail any other
-     * integrity checks to prevent any token going into FIPS mode. */
-    if (!self && (BL_FIPSEntryOK(PR_FALSE) != SECSuccess)) {
-        return PR_FALSE;
-    }
-
-    if (!shName) {
-        goto loser;
-    }
-
-    /* figure out the name of our check file */
-    checkName = mkCheckFileName(shName);
-    if (!checkName) {
-        goto loser;
-    }
-
-    /* open the check File */
-    checkFD = PR_Open(checkName, PR_RDONLY, 0);
-    if (checkFD == NULL) {
-#ifdef DEBUG_SHVERIFY
-        fprintf(stderr, "Failed to open the check file %s: (%d, %d)\n",
-                checkName, (int)PR_GetError(), (int)PR_GetOSError());
-#endif /* DEBUG_SHVERIFY */
-        goto loser;
-    }
-
-    /* read and Verify the headerthe header */
-    bytesRead = PR_Read(checkFD, buf, 12);
-    if (bytesRead != 12) {
-        goto loser;
-    }
-    if ((buf[0] != NSS_SIGN_CHK_MAGIC1) || (buf[1] != NSS_SIGN_CHK_MAGIC2)) {
-        goto loser;
-    }
-    if ((buf[2] != NSS_SIGN_CHK_MAJOR_VERSION) ||
-        (buf[3] < NSS_SIGN_CHK_MINOR_VERSION)) {
-        goto loser;
-    }
-#ifdef notdef
-    if (decodeInt(&buf[8]) != CKK_DSA) {
-        goto loser;
-    }
-#endif
-
-    /* seek past any future header extensions */
-    offset = decodeInt(&buf[4]);
-    if (PR_Seek(checkFD, offset, PR_SEEK_SET) < 0) {
-        goto loser;
-    }
-
-    /* read the key */
-    rv = readItem(checkFD, &key.params.prime);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    rv = readItem(checkFD, &key.params.subPrime);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    rv = readItem(checkFD, &key.params.base);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    rv = readItem(checkFD, &key.publicValue);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-    /* read the siganture */
-    rv = readItem(checkFD, &signature);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
-    /* done with the check file */
-    PR_Close(checkFD);
-    checkFD = NULL;
-
-    hashObj = HASH_GetRawHashObject(PQG_GetHashType(&key.params));
-    if (hashObj == NULL) {
-        goto loser;
-    }
-
-/* open our library file */
-#ifdef FREEBL_USE_PRELINK
-    shFD = bl_OpenUnPrelink(shName, &pid);
-#else
-    shFD = PR_Open(shName, PR_RDONLY, 0);
-#endif
-    if (shFD == NULL) {
-#ifdef DEBUG_SHVERIFY
-        fprintf(stderr, "Failed to open the library file %s: (%d, %d)\n",
-                shName, (int)PR_GetError(), (int)PR_GetOSError());
-#endif /* DEBUG_SHVERIFY */
-        goto loser;
-    }
-
-    /* hash our library file with SHA1 */
+    /* hash our library file */
     hashcx = hashObj->create();
     if (hashcx == NULL) {
-        goto loser;
+        return PR_FALSE;
     }
     hashObj->begin(hashcx);
 
-    count = 0;
     while ((bytesRead = PR_Read(shFD, buf, sizeof(buf))) > 0) {
         hashObj->update(hashcx, buf, bytesRead);
-        count += bytesRead;
     }
+    hashObj->end(hashcx, hash.data, &hash.len, hash.len);
+    hashObj->destroy(hashcx, PR_TRUE);
+
+    /* verify the hash against the check file */
+    rv = DSA_VerifyDigest(key, signature, &hash);
+    PORT_Memset(hashBuf, 0, sizeof hashBuf);
+    return (rv == SECSuccess) ? PR_TRUE : PR_FALSE;
+}
+#endif
+
+#ifdef NSS_STRICT_INTEGRITY
+/* don't allow MD2, MD5, SHA1 or SHA224 as your integrity hash */
+static PRBool
+blapi_HashAllowed(SECHashObject *hashObj)
+{
+    switch (hashObj->type) {
+        case HASH_AlgSHA256:
+        case HASH_AlgSHA384:
+        case HASH_AlgSHA512:
+            return PR_TRUE;
+        default:
+            break;
+    }
+    return PR_FALSE;
+}
+#endif
+
+static PRBool
+blapi_SHVerifyHMACCheck(PRFileDesc *shFD, const SECHashObject *hashObj,
+                        const SECItem *key, const SECItem *signature)
+{
+    HMACContext *hmaccx = NULL;
+    SECItem hash;
+    int bytesRead;
+    unsigned char hashBuf[HASH_LENGTH_MAX];
+    unsigned char buf[4096];
+    SECStatus rv;
+    PRBool result = PR_FALSE;
+
+#ifdef NSS_STRICT_INTEGRITY
+    if (!blapi_HashAllowed(hashObj)) {
+        return PR_FALSE;
+#endif
+
+        hash.type = siBuffer;
+        hash.data = hashBuf;
+        hash.len = hashObj->length;
+
+        /* create an hmac for the library file */
+        hmaccx = HMAC_Create(hashObj, key->data, key->len, PR_TRUE);
+        if (hmaccx == NULL) {
+            return PR_FALSE;
+        }
+        HMAC_Begin(hmaccx);
+
+        while ((bytesRead = PR_Read(shFD, buf, sizeof(buf))) > 0) {
+            HMAC_Update(hmaccx, buf, bytesRead);
+        }
+        rv = HMAC_Finish(hmaccx, hash.data, &hash.len, hash.len);
+
+        HMAC_Destroy(hmaccx, PR_TRUE);
+
+        /* verify the hmac against the check file */
+        if (rv == SECSuccess) {
+            result = SECITEM_ItemsAreEqual(signature, &hash);
+        }
+        PORT_Memset(hashBuf, 0, sizeof hashBuf);
+        return result;
+    }
+
+    static PRBool
+    blapi_SHVerifyFile(const char *shName, PRBool self)
+    {
+        char *checkName = NULL;
+        PRFileDesc *checkFD = NULL;
+        PRFileDesc *shFD = NULL;
+        const SECHashObject *hashObj = NULL;
+        SECItem signature = { 0, NULL, 0 };
+        int bytesRead, offset, type;
+        SECStatus rv;
+        SECItem hmacKey = { 0, NULL, 0 };
 #ifdef FREEBL_USE_PRELINK
-    bl_CloseUnPrelink(shFD, pid);
+        int pid = 0;
+#endif
+        PRBool result = PR_FALSE; /* if anything goes wrong,
+                   * the signature does not verify */
+        NSSSignChkHeader header;
+#ifndef NSS_STRICT_INTEGRITY
+        DSAPublicKey key;
+
+        PORT_Memset(&key, 0, sizeof(key));
+#endif
+
+        /* If our integrity check was never ran or failed, fail any other
+     * integrity checks to prevent any token going into FIPS mode. */
+        if (!self && (BL_FIPSEntryOK(PR_FALSE) != SECSuccess)) {
+            return PR_FALSE;
+        }
+
+        if (!shName) {
+            goto loser;
+        }
+
+        /* figure out the name of our check file */
+        checkName = mkCheckFileName(shName);
+        if (!checkName) {
+            goto loser;
+        }
+
+        /* open the check File */
+        checkFD = PR_Open(checkName, PR_RDONLY, 0);
+        if (checkFD == NULL) {
+#ifdef DEBUG_SHVERIFY
+            fprintf(stderr, "Failed to open the check file %s: (%d, %d)\n",
+                    checkName, (int)PR_GetError(), (int)PR_GetOSError());
+#endif /* DEBUG_SHVERIFY */
+            goto loser;
+        }
+
+        /* read and Verify the headerthe header */
+        bytesRead = PR_Read(checkFD, &header, sizeof(header));
+        if (bytesRead != sizeof(header)) {
+            goto loser;
+        }
+        if ((header.magic1 != NSS_SIGN_CHK_MAGIC1) ||
+            (header.magic2 != NSS_SIGN_CHK_MAGIC2)) {
+            goto loser;
+        }
+        /* we've bumped the version number so that newly signed .check
+     * files will fail nicely on old version of nss */
+        if (header.majorVersion > NSS_SIGN_CHK_MAJOR_VERSION) {
+            goto loser;
+        }
+        if (header.minorVersion < NSS_SIGN_CHK_MINOR_VERSION) {
+            goto loser;
+        }
+        type = decodeInt(header.type);
+
+        /* seek past any future header extensions */
+        offset = decodeInt(header.offset);
+        if (PR_Seek(checkFD, offset, PR_SEEK_SET) < 0) {
+            goto loser;
+        }
+
+        switch (type) {
+            case CKK_DSA:
+#ifdef NSS_STRICT_INTEGRITY
+                goto loser;
+#else
+            /* accept old dsa check files if NSS_STRICT_INTEGRITY is not set*/
+            /* read the key */
+            rv = readItem(checkFD, &key.params.prime);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            rv = readItem(checkFD, &key.params.subPrime);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            rv = readItem(checkFD, &key.params.base);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            rv = readItem(checkFD, &key.publicValue);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            /* read the signature */
+            rv = readItem(checkFD, &signature);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            hashObj = HASH_GetRawHashObject(PQG_GetHashType(&key.params));
+            break;
+#endif
+            default:
+                if ((type & NSS_SIGN_CHK_TYPE_FLAGS) != NSS_SIGN_CHK_FLAG_HMAC) {
+                    goto loser;
+                }
+                /* read the HMAC Key */
+                rv = readItem(checkFD, &hmacKey);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                /* read the siganture */
+                rv = readItem(checkFD, &signature);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                hashObj = HASH_GetRawHashObject(type & ~NSS_SIGN_CHK_TYPE_FLAGS);
+        }
+
+        /* done with the check file */
+        PR_Close(checkFD);
+        checkFD = NULL;
+
+        if (hashObj == NULL) {
+            goto loser;
+        }
+
+/* open our library file */
+#ifdef FREEBL_USE_PRELINK
+        shFD = bl_OpenUnPrelink(shName, &pid);
+#else
+    shFD = PR_Open(shName, PR_RDONLY, 0);
+#endif
+        if (shFD == NULL) {
+#ifdef DEBUG_SHVERIFY
+            fprintf(stderr, "Failed to open the library file %s: (%d, %d)\n",
+                    shName, (int)PR_GetError(), (int)PR_GetOSError());
+#endif /* DEBUG_SHVERIFY */
+            goto loser;
+        }
+
+        switch (type) {
+            case CKK_DSA:
+#ifndef NSS_STRICT_INTEGRITY
+                result = blapi_SHVerifyDSACheck(shFD, hashObj, &key, &signature);
+#endif
+                break;
+            default:
+                if ((type & NSS_SIGN_CHK_TYPE_FLAGS) != NSS_SIGN_CHK_FLAG_HMAC) {
+                    break;
+                }
+                result = blapi_SHVerifyHMACCheck(shFD, hashObj, &hmacKey, &signature);
+                break;
+        }
+
+#ifdef FREEBL_USE_PRELINK
+        bl_CloseUnPrelink(shFD, pid);
 #else
     PR_Close(shFD);
 #endif
-    shFD = NULL;
+        shFD = NULL;
 
-    hashObj->end(hashcx, hash.data, &hash.len, hash.len);
-
-    /* verify the hash against the check file */
-    if (DSA_VerifyDigest(&key, &signature, &hash) == SECSuccess) {
-        result = PR_TRUE;
+    loser:
+        PORT_Memset(&header, 0, sizeof header);
+        if (checkName != NULL) {
+            PORT_Free(checkName);
+        }
+        if (checkFD != NULL) {
+            PR_Close(checkFD);
+        }
+        if (shFD != NULL) {
+            PR_Close(shFD);
+        }
+        if (hmacKey.data != NULL) {
+            SECITEM_ZfreeItem(&hmacKey, PR_FALSE);
+        }
+        if (signature.data != NULL) {
+            SECITEM_ZfreeItem(&signature, PR_FALSE);
+        }
+#ifndef NSS_STRICT_INTEGRITY
+        if (key.params.prime.data != NULL) {
+            SECITEM_ZfreeItem(&key.params.prime, PR_FALSE);
+        }
+        if (key.params.subPrime.data != NULL) {
+            SECITEM_ZfreeItem(&key.params.subPrime, PR_FALSE);
+        }
+        if (key.params.base.data != NULL) {
+            SECITEM_ZfreeItem(&key.params.base, PR_FALSE);
+        }
+        if (key.publicValue.data != NULL) {
+            SECITEM_ZfreeItem(&key.publicValue, PR_FALSE);
+        }
+#endif
+        return result;
     }
-#ifdef DEBUG_SHVERIFY
+
+    PRBool
+    BLAPI_VerifySelf(const char *name)
     {
-        int i, j;
-        fprintf(stderr, "File %s: %d bytes\n", shName, count);
-        fprintf(stderr, "  hash: %d bytes\n", hash.len);
-#define STEP 10
-        for (i = 0; i < hash.len; i += STEP) {
-            fprintf(stderr, "   ");
-            for (j = 0; j < STEP && (i + j) < hash.len; j++) {
-                fprintf(stderr, " %02x", hash.data[i + j]);
-            }
-            fprintf(stderr, "\n");
-        }
-        fprintf(stderr, "  signature: %d bytes\n", signature.len);
-        for (i = 0; i < signature.len; i += STEP) {
-            fprintf(stderr, "   ");
-            for (j = 0; j < STEP && (i + j) < signature.len; j++) {
-                fprintf(stderr, " %02x", signature.data[i + j]);
-            }
-            fprintf(stderr, "\n");
-        }
-        fprintf(stderr, "Verified : %s\n", result ? "TRUE" : "FALSE");
-    }
-#endif /* DEBUG_SHVERIFY */
-
-loser:
-    PORT_Memset(buf, 0, sizeof buf);
-    PORT_Memset(hashBuf, 0, sizeof hashBuf);
-    if (checkName != NULL) {
-        PORT_Free(checkName);
-    }
-    if (checkFD != NULL) {
-        PR_Close(checkFD);
-    }
-    if (shFD != NULL) {
-        PR_Close(shFD);
-    }
-    if (hashcx != NULL) {
-        if (hashObj) {
-            hashObj->destroy(hashcx, PR_TRUE);
-        }
-    }
-    if (signature.data != NULL) {
-        SECITEM_ZfreeItem(&signature, PR_FALSE);
-    }
-    if (key.params.prime.data != NULL) {
-        SECITEM_ZfreeItem(&key.params.prime, PR_FALSE);
-    }
-    if (key.params.subPrime.data != NULL) {
-        SECITEM_ZfreeItem(&key.params.subPrime, PR_FALSE);
-    }
-    if (key.params.base.data != NULL) {
-        SECITEM_ZfreeItem(&key.params.base, PR_FALSE);
-    }
-    if (key.publicValue.data != NULL) {
-        SECITEM_ZfreeItem(&key.publicValue, PR_FALSE);
-    }
-
-    return result;
-}
-
-PRBool
-BLAPI_VerifySelf(const char *name)
-{
-    if (name == NULL) {
-        /*
+        if (name == NULL) {
+            /*
          * If name is NULL, freebl is statically linked into softoken.
          * softoken will call BLAPI_SHVerify next to verify itself.
          */
-        return PR_TRUE;
+            return PR_TRUE;
+        }
+        return blapi_SHVerify(name, (PRFuncPtr)decodeInt, PR_TRUE);
     }
-    return blapi_SHVerify(name, (PRFuncPtr)decodeInt, PR_TRUE);
-}
 
 #else /* NSS_FIPS_DISABLED */
 

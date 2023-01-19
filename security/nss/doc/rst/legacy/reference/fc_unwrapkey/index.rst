@@ -15,7 +15,7 @@ FC_UnwrapKey
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_UnwrapKey(
         CK_SESSION_HANDLE hSession,

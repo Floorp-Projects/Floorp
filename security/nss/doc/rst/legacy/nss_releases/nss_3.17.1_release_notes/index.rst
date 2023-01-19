@@ -69,16 +69,16 @@ NSS 3.17.1 release notes
 
    -  *in ssl.h*
 
-      -  **SSL_ENABLE_FALLBACK_SCSV** - an SSL socket option that enables TLS_FALLBACK_SCSV. Off by
+      -  **SSL_ENABLE_FALLBACK_SCSV** - an SSL socket option that enables TLS_FALLBACK_SCSV. Off by
          default.
 
    -  *in sslerr.h*
 
-      -  **SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT** - a new SSL error code.
+      -  **SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT** - a new SSL error code.
 
    -  *in sslproto.h*
 
-      -  **TLS_FALLBACK_SCSV** - a signaling cipher suite value that indicates a handshake is the
+      -  **TLS_FALLBACK_SCSV** - a signaling cipher suite value that indicates a handshake is the
          result of TLS version fallback.
 
 .. _notable_changes_in_nss_3.17.1:

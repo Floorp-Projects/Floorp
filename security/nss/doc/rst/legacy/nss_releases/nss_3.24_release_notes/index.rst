@@ -59,12 +59,12 @@ NSS 3.24 release notes
       certificate and private key. Use this new function in place of SSL_ConfigSecureServer,
       SSL_ConfigSecureServerWithCertChain, SSL_SetStapledOCSPResponses, and
       SSL_SetSignedCertTimestamps. SSL_ConfigServerCert automatically determines the certificate
-      type from the certificate and private key. The caller is no longer required to use SSLKEAType
+      type from the certificate and private key. The caller is no longer required to use SSLKEAType
       explicitly to select a "slot" into which the certificate is configured (which incorrectly
       identifies a key agreement type rather than a certificate). Separate functions for configuring
       Online Certificate Status Protocol (OCSP) responses or Signed Certificate Timestamps are not
       needed, since these can be added to the optional SSLExtraServerCertData struct provided to
-      SSL_ConfigServerCert.  Also, partial support for RSA Probabilistic Signature Scheme (RSA-PSS)
+      SSL_ConfigServerCert.  Also, partial support for RSA Probabilistic Signature Scheme (RSA-PSS)
       certificates has been added. Although these certificates can be configured, they will not be
       used by NSS in this version.
    -  For functions that use temporary arenas, allocating a PORTCheapArena on the stack is more

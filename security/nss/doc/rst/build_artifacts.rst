@@ -63,7 +63,7 @@ Build artifacts
    libraries:
 
    ======= ======== ===============================
-           Windows  Unix
+           Windows  Unix
    static  ``.lib`` ``.a``
    dynamic ``.dll`` ``.so`` or ``.dylib`` or ``.sl``
    ======= ======== ===============================

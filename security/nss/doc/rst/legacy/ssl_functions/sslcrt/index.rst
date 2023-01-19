@@ -56,18 +56,18 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax
 
-   .. code:: notranslate
+   .. code::
 
-      #include <cert.h> 
+      #include <cert.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECStatus CERT_VerifyCertNow(
-         CERTCertDBHandle *handle,
-         CERTCertificate *cert,
-         PRBool checkSig,
-         SECCertUsage certUsage,
-         void *wincx);
+         CERTCertDBHandle *handle,
+         CERTCertificate *cert,
+         PRBool checkSig,
+         SECCertUsage certUsage,
+         void *wincx);
 
    .. rubric:: Parameters
       :name: parameters
@@ -75,21 +75,21 @@ sslcrt
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate database handle.   |
+   | .. code::                           | A pointer to the certificate database handle.   |
    |                                                 |                                                 |
    |    handle                                       |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate to be checked.     |
+   | .. code::                           | A pointer to the certificate to be checked.     |
    |                                                 |                                                 |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | Indicates whether certificate signatures are to |
+   | .. code::                           | Indicates whether certificate signatures are to |
    |                                                 | be checked. ``PR_TRUE`` means certificate       |
    |    checkSig                                     | signatures are to be checked. ``PR_FALSE``      |
    |                                                 | means certificate signatures will not be        |
    |                                                 | checked.                                        |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | One of these values:                            |
+   | .. code::                           | One of these values:                            |
    |                                                 |                                                 |
    |    certUsage                                    | -  ``certUsageSSLClient``                       |
    |                                                 | -  ``certUsageSSLServer``                       |
@@ -102,7 +102,7 @@ sslcrt
    |                                                 | -  ``certUsageVerifyCA``                        |
    |                                                 | -  ``certUsageProtectedObjectSigner``           |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The PIN argument value to pass to PK11          |
+   | .. code::                           | The PIN argument value to pass to PK11          |
    |                                                 | functions. See description below for more       |
    |    wincx                                        | information.                                    |
    +-------------------------------------------------+-------------------------------------------------+
@@ -134,15 +134,15 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_2
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECStatus CERT_VerifyCertName(
-         CERTCertificate *cert,
-         char *hostname);
+         CERTCertificate *cert,
+         char *hostname);
 
    .. rubric:: Parameters
       :name: parameters_2
@@ -150,11 +150,11 @@ sslcrt
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate against which to   |
+   | .. code::                           | A pointer to the certificate against which to   |
    |                                                 | check the hostname referenced by ``hostname``.  |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The hostname to be checked.                     |
+   | .. code::                           | The hostname to be checked.                     |
    |                                                 |                                                 |
    |    hostname                                     |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -199,16 +199,16 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_3
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
       #include <certt.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECCertTimeValidity CERT_CheckCertValidTimes(
-         CERTCertificate *cert,
-         int64 t);
+         CERTCertificate *cert,
+         int64 t);
 
    .. rubric:: Parameters
       :name: parameters_3
@@ -216,11 +216,11 @@ sslcrt
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate whose validity     |
+   | .. code::                           | A pointer to the certificate whose validity     |
    |                                                 | period you want to check against.               |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The time to check against the certificate's     |
+   | .. code::                           | The time to check against the certificate's     |
    |                                                 | validity period. For more information, see the  |
    |    t                                            | NSPR header ``pr_time.h``.                      |
    +-------------------------------------------------+-------------------------------------------------+
@@ -230,12 +230,12 @@ sslcrt
 
    The function returns an enumerator of type ``SECCertTimeValidity``:
 
-   .. code:: notranslate
+   .. code::
 
       typedef enum {
-         secCertTimeValid,
-         secCertTimeExpired,
-         secCertTimeNotValidYet
+         secCertTimeValid,
+         secCertTimeExpired,
+         secCertTimeNotValidYet
       } SECCertTimeValidity;
 
    .. rubric:: NSS_CmpCertChainWCANames
@@ -247,15 +247,15 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_4
 
-   .. code:: notranslate
+   .. code::
 
       #include <nss.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECStatus NSS_CmpCertChainWCANames(
-         CERTCertificate *cert,
-         CERTDistNames *caNames);
+         CERTCertificate *cert,
+         CERTDistNames *caNames);
 
    .. rubric:: Parameters
       :name: parameters_4
@@ -263,11 +263,11 @@ sslcrt
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate structure for the  |
+   | .. code::                           | A pointer to the certificate structure for the  |
    |                                                 | certificate whose certificate chain is to be    |
    |    cert                                         | checked.                                        |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a structure that contains a list   |
+   | .. code::                           | A pointer to a structure that contains a list   |
    |                                                 | of distinguished names (DNs) against which to   |
    |    caNames                                      | check the DNs for the signers in the            |
    |                                                 | certificate chain.                              |
@@ -301,11 +301,11 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_5
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
 
-   .. code:: notranslate
+   .. code::
 
       CERTCertificate *CERT_DupCertificate(CERTCertificate *c)
 
@@ -315,7 +315,7 @@ sslcrt
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate object to be       |
+   | .. code::                           | A pointer to the certificate object to be       |
    |                                                 | duplicated.                                     |
    |    c                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -340,12 +340,12 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_6
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
       #include <certt.h>
 
-   .. code:: notranslate
+   .. code::
 
       void CERT_DestroyCertificate(CERTCertificate *cert);
 
@@ -355,7 +355,7 @@ sslcrt
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate to destroy.        |
+   | .. code::                           | A pointer to the certificate to destroy.        |
    |                                                 |                                                 |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -396,15 +396,15 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_7
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
 
-   .. code:: notranslate
+   .. code::
 
       CERTCertificate *CERT_FindCertByName (
-         CERTCertDBHandle *handle,
-         SECItem *name);
+         CERTCertDBHandle *handle,
+         SECItem *name);
 
    .. rubric:: Parameters
       :name: parameters_6
@@ -412,11 +412,11 @@ sslcrt
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate database handle.   |
+   | .. code::                           | A pointer to the certificate database handle.   |
    |                                                 |                                                 |
    |    handle                                       |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The subject DN of the certificate you wish to   |
+   | .. code::                           | The subject DN of the certificate you wish to   |
    |                                                 | find.                                           |
    |    name                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -435,17 +435,17 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_8
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
       #include <certt.h>
 
-   .. code:: notranslate
+   .. code::
 
       CERTCertNicknames *CERT_GetCertNicknames (
-         CERTCertDBHandle *handle,
-         int what,
-         void *wincx);
+         CERTCertDBHandle *handle,
+         int what,
+         void *wincx);
 
    .. rubric:: Parameters
       :name: parameters_7
@@ -453,18 +453,18 @@ sslcrt
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the certificate database handle.   |
+   | .. code::                           | A pointer to the certificate database handle.   |
    |                                                 |                                                 |
    |    handle                                       |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | One of these values:                            |
+   | .. code::                           | One of these values:                            |
    |                                                 |                                                 |
    |    what                                         | -  ``SEC_CERT_NICKNAMES_ALL``                   |
    |                                                 | -  ``SEC_CERT_NICKNAMES_USER``                  |
    |                                                 | -  ``SEC_CERT_NICKNAMES_SERVER``                |
    |                                                 | -  ``SEC_CERT_NICKNAMES_CA``                    |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The PIN argument value to pass to PK11          |
+   | .. code::                           | The PIN argument value to pass to PK11          |
    |                                                 | functions. See description below for more       |
    |    wincx                                        | information.                                    |
    +-------------------------------------------------+-------------------------------------------------+
@@ -492,11 +492,11 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_9
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
 
-   .. code:: notranslate
+   .. code::
 
       void CERT_FreeNicknames(CERTCertNicknames *nicknames);
 
@@ -506,7 +506,7 @@ sslcrt
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the ``CERTCertNicknames``          |
+   | .. code::                           | A pointer to the ``CERTCertNicknames``          |
    |                                                 | structure to be freed.                          |
    |    nicknames                                    |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -519,11 +519,11 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_10
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
 
-   .. code:: notranslate
+   .. code::
 
       CERTCertDBHandle *CERT_GetDefaultCertDB(void);
 
@@ -546,11 +546,11 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_11
 
-   .. code:: notranslate
+   .. code::
 
       #include <nss.h>
 
-   .. code:: notranslate
+   .. code::
 
       SSLKEAType NSS_FindCertKEAType(CERTCertificate * cert);
 
@@ -560,7 +560,7 @@ sslcrt
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | The certificate to check.                       |
+   | .. code::                           | The certificate to check.                       |
    |                                                 |                                                 |
    |    a                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -592,16 +592,16 @@ sslcrt
    .. rubric:: Syntax
       :name: syntax_12
 
-   .. code:: notranslate
+   .. code::
 
       #include <secitem.h>
       #include <seccomon.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECComparison SECITEM_CompareItem(
-         SECItem *a,
-         SECItem *b);
+         SECItem *a,
+         SECItem *b);
 
    .. rubric:: Parameters
       :name: parameters_9
@@ -609,11 +609,11 @@ sslcrt
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to one of the items to be compared.   |
+   | .. code::                           | A pointer to one of the items to be compared.   |
    |                                                 |                                                 |
    |    a                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to one of the items to be compared.   |
+   | .. code::                           | A pointer to one of the items to be compared.   |
    |                                                 |                                                 |
    |    b                                            |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -623,10 +623,10 @@ sslcrt
 
    The function returns an enumerator of type ``SECComparison``.
 
-   .. code:: notranslate
+   .. code::
 
       typedef enum _SECComparison {
-         SECLessThan                = -1,
-         SECEqual                = 0,
-         SECGreaterThan = 1
+         SECLessThan                = -1,
+         SECEqual                = 0,
+         SECGreaterThan = 1
       } SECComparison;

@@ -21,7 +21,7 @@
    -  libpkix: an RFC 3280 Compliant Certificate Path Validation Library
    -  PKCS11 needsLogin method
    -  support HmacSHA256, HmacSHA384, and HmacSHA512
-   -  support for all NSS 3.12 initialization options
+   -  support for all NSS 3.12 initialization options
 
    JSS 4.3 is `tri-licensed <https://www.mozilla.org/MPL>`__ under MPL 1.1/GPL 2.0/LGPL 2.1.
 
@@ -32,24 +32,24 @@
 
 .. container::
 
-    A list of bug fixes and enhancement requests were implemented in this release can be obtained by
+    A list of bug fixes and enhancement requests were implemented in this release can be obtained by
    running this `bugzilla
    query <http://bugzilla.mozilla.org/buglist.cgi?product=JSS&target_milestone=4.2.5&target_milestone=4.3&bug_status=RESOLVED&resolution=FIXED>`__
 
-   **JSS 4.3 requires**\ `NSS
+   **JSS 4.3 requires**\ `NSS
    3.12 <https://www.mozilla.org/projects/security/pki/nss/nss-3.12/nss-3.12-release-notes.html>`__\ **or
    higher.**
 
    -  New `SQLite-Based Shareable Certificate and Key
       Databases <https://wiki.mozilla.org/NSS_Shared_DB>`__ by prepending the string "sql:" to the
       directory path passed to configdir parameter for Crypomanager.initialize method or using the
-      NSS environment variable :ref:`mozilla_projects_nss_reference_nss_environment_variables`.
+      NSS environment variable :ref:`mozilla_projects_nss_reference_nss_environment_variables`.
    -  Libpkix: an RFC 3280 Compliant Certificate Path Validation Library (see
       `PKIXVerify <http://mxr.mozilla.org/mozilla/ident?i=PKIXVerify>`__)
    -  PK11Token.needsLogin method (see needsLogin)
    -  support HmacSHA256, HmacSHA384, and HmacSHA512 (see
       `HMACTest.java <http://mxr.mozilla.org/mozilla/source/security/jss/org/mozilla/jss/tests/HMACTest.java>`__)
-   -  support for all NSS 3.12 initialization options (see InitializationValues)
+   -  support for all NSS 3.12 initialization options (see InitializationValues)
    -  New SSL error codes (see https://mxr.mozilla.org/security/sour...util/SSLerrs.h)
 
       -  SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT
@@ -92,10 +92,10 @@
    -  The CVS tag for the JSS 4.3 release is ``JSS_4_3_RTM``.
    -  Source tarballs are available from
       https://archive.mozilla.org/pub/security/jss/releases/JSS_4_3_RTM/src/jss-4.3.tar.bz2
-   -  Binary releases are no longer available on mozilla. JSS is a JNI library we provide the
+   -  Binary releases are no longer available on mozilla. JSS is a JNI library we provide the
       jss4.jar but expect you to build the JSS's matching JNI shared library. We provide the
-      jss4.jar in case you do not want to obtain your own JCE code signing certificate. JSS is a
-      JCE provider and therefore the jss4.jar must be signed.
+      jss4.jar in case you do not want to obtain your own JCE code signing certificate. JSS is a
+      JCE provider and therefore the jss4.jar must be signed.
       https://archive.mozilla.org/pub/security/jss/releases/JSS_4_3_RTM/
 
    --------------
@@ -113,8 +113,8 @@
    -  Read the instructions on `using JSS </using_jss.html>`__.
    -  Source may be viewed with a browser (via the MXR tool) at
       http://mxr.mozilla.org/mozilla/source/security/jss/
-   -  The RUN TIME behavior of JSS can be affected by the
-      :ref:`mozilla_projects_nss_reference_nss_environment_variables`. 
+   -  The RUN TIME behavior of JSS can be affected by the
+      :ref:`mozilla_projects_nss_reference_nss_environment_variables`. 
 
 .. _platform_information:
 
@@ -142,7 +142,7 @@
 
    -  For a list of reported bugs that have not yet been fixed, `click
       here. <http://bugzilla.mozilla.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&&product=JSS>`__
-      Note that some bugs may have been fixed since JSS 4.3 was released. 
+      Note that some bugs may have been fixed since JSS 4.3 was released. 
 
    --------------
 
@@ -157,7 +157,7 @@
       file must be used with the JSS shared library from the exact same release.
    -  To obtain the version info from the jar file use,
       "System.out.println(org.mozilla.jss.CryptoManager.JAR_JSS_VERSION)" and to check the shared
-      library: strings libjss4.so \| grep -i header  
+      library: strings libjss4.so \| grep -i header  
 
    --------------
 
@@ -168,7 +168,7 @@
 
    -  Bugs discovered should be reported by filing a bug report with
       `bugzilla <http://bugzilla.mozilla.org/enter_bug.cgi?product=JSS>`__.
-   -  You can also give feedback directly to the developers on the Mozilla Cryptography forums...
+   -  You can also give feedback directly to the developers on the Mozilla Cryptography forums...
 
       -  `Mailing list <https://lists.mozilla.org/listinfo/dev-tech-crypto>`__
       -  `Newsgroup <http://groups.google.com/group/mozilla.dev.tech.crypto>`__

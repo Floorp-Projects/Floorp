@@ -19,17 +19,17 @@ nss tech note6
 .. container::
 
    In NSS 3.8, we added checksum files required for the NSS softoken to operate in FIPS 140 mode.
-   The new checksum file is called libsoftokn3.chk on Unix/Linux and softokn3.chk on Windows.  It
+   The new checksum file is called libsoftokn3.chk on Unix/Linux and softokn3.chk on Windows.  It
    must be put in the same directory as the NSS libraries. The libsoftokn3.chk/softokn3.chk file
    contains a checksum for the softoken. When in FIPS 140 mode, the softoken is required to compute
    its checksum and compare it with the value in libsoftokn3.chk/softokn3.chk.
-    
+    
    The following applies to NSS 3.8 through 3.10 :
 
    | On 32-bit Solaris SPARC (i.e., not x86, and not 64-bit SPARC) and 32-bit HP-UX PA-RISC (i.e.,
      not Itanium, and not 64-bit PA-RISC), there are two more .chk files: libfreebl_pure32_3.chk and
      libfreebl_hybrid_3.chk.
-   |  
+   |  
 
    The following applies to NSS 3.11 :
 
@@ -77,28 +77,28 @@ nss tech note6
    If your build process modifies NSS libraries in any way (for example, to strip the symbols), it
    should consider not doing so for the reasons cited above. If you still decide to make unsupported
    changes, you can allow the softoken to come up in FIPS 140 mode of operation by regenerating the
-   .chk files yourself.  The tool to do that is called shlibsign.  It is released as part of the NSS
+   .chk files yourself.  The tool to do that is called shlibsign.  It is released as part of the NSS
    binary distributions.
    If your build process does not modify NSS shared libraries, you can just use the .chk files in
    the NSS binary distributions.
-    
+    
    So you have two options.
-    
+    
    1. Do not modify NSS libraries in your build process. Specifically, do not modify libsoftokn3.so,
    libsoftokn3.sl, softokn3.dll, libfreebl_pure32_3.so, libfreebl_pure32_3.sl,
    libfreebl_hybrid_3.so,libfreebl_hybrid_3.sl, libfreebl3.so, libfreebl3.sl, freebl3.dll,
    libfreebl_32int64_3.so, libfreebl_32int_3.so, libfreebl_32fpu_3.so, libfreebl_64int_3.so,
    libfreebl_64fpu_3.so, libfreebl_32int_3.sl, libfreebl_32fpu_3.sl; or
-    
-   2. Use shlibsign to regenerate the .chk files.  For example, on 32-bit Solaris SPARC for NSS
+    
+   2. Use shlibsign to regenerate the .chk files.  For example, on 32-bit Solaris SPARC for NSS
    3.11, say
-    
+    
    shlibsign -v -i libsoftokn3.so
    shlibsign -v -i libfreebl_32int64_3.so
    shlibsign -v -i libfreebl_32fpu_3.so
    shlibsign -v -i libfreebl_32int_3.so
-    
+    
    (You need to set LD_LIBRARY_PATH appropriately and specify the correct pathnames of the
    libraries.)
-    
+    
    Option 1 is simpler and highly preferred.

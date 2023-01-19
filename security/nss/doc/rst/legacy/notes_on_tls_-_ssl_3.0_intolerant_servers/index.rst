@@ -45,7 +45,7 @@ Notes on TLS - SSL 3.0 Intolerant Servers
 
    For up-to-date information, you can read a Bugzilla bug report which keeps track of this problem
    with Mozilla-based browsers. See
-   `bug 59321 <https://bugzilla.mozilla.org/show_bug.cgi?id=59321>`__.
+   `bug 59321 <https://bugzilla.mozilla.org/show_bug.cgi?id=59321>`__.
 
 .. _servers_currently_known_to_exhibit_this_intolerant_behavior:
 
@@ -69,7 +69,7 @@ Notes on TLS - SSL 3.0 Intolerant Servers
 
    N.B. There might be servers other than those listed above which exhibit this problem. If you find
    such a server, feel free to add it to this page. For up-to-date information, you can read this
-   `bug 59321 <https://bugzilla.mozilla.org/show_bug.cgi?id=59321>`__ which keeps a list of TLS/SSL
+   `bug 59321 <https://bugzilla.mozilla.org/show_bug.cgi?id=59321>`__ which keeps a list of TLS/SSL
    3.0 intolerant servers.
 
 .. _users:_how_to_avoid_this_problem.3f:
@@ -157,7 +157,7 @@ Notes on TLS - SSL 3.0 Intolerant Servers
       For instance, to check ``https://bugzilla.mozilla.org/``, then visit
       `http://toolbar.netcraft.com/site_rep...a.mozilla.org/ <http://toolbar.netcraft.com/site_report?url=https://bugzilla.mozilla.org/>`__.
    -  Add the information on such a server (software, URL) to
-      `bug 59321 <https://bugzilla.mozilla.org/show_bug.cgi?id=59321>`__ at Bugzilla. (Note: You
+      `bug 59321 <https://bugzilla.mozilla.org/show_bug.cgi?id=59321>`__ at Bugzilla. (Note: You
       will be asked to provide your email address before you can file a bug at Bugzilla.)
 
 .. _original_document_information:
@@ -167,6 +167,6 @@ Notes on TLS - SSL 3.0 Intolerant Servers
 
 .. container::
 
-   -  Author : Katsuhiko Momoi
+   -  Author : Katsuhiko Momoi
    -  Last Updated Date: January 27th, 2003
    -  Copyright © 2001-2003 Netscape. All rights reserved.

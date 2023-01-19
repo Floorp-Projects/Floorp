@@ -34,7 +34,7 @@ NSS 3.59 release notes
 
 .. container::
 
-   -  Exported two existing functions from libnss,  CERT_AddCertToListHeadWithData and
+   -  Exported two existing functions from libnss,  CERT_AddCertToListHeadWithData and
       CERT_AddCertToListTailWithData
 
 .. _build_requirements:
@@ -69,7 +69,7 @@ NSS 3.59 release notes
    -  `Bug 1644209 <https://bugzilla.mozilla.org/show_bug.cgi?id=1644209>`__ - Fix broken
       SelectedCipherSuiteReplacer filter to solve some test intermittents
    -  `Bug 1672703 <https://bugzilla.mozilla.org/show_bug.cgi?id=1672703>`__ - Tolerate the first
-      CCS in TLS 1.3  to fix a regression in our  CVE-2020-25648 fix that broke purple-discord
+      CCS in TLS 1.3  to fix a regression in our  CVE-2020-25648 fix that broke purple-discord
    -  `Bug 1666891 <https://bugzilla.mozilla.org/show_bug.cgi?id=1666891>`__ - Support key
       wrap/unwrap with RSA-OAEP
    -  `Bug 1667989 <https://bugzilla.mozilla.org/show_bug.cgi?id=1667989>`__ - Fix gyp linking on

@@ -15,7 +15,7 @@ FC_SignRecover
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_SignRecover(
         CK_SESSION_HANDLE hSession,

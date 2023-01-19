@@ -37,7 +37,7 @@ troubleshoot
 
    -  Building a 32-bit version on a 64-bit may fail with:
 
-      .. code:: notranslate
+      .. code::
 
          /usr/include/features.h:324:26: fatal error: bits/predefs.h: No such file or directory
 
@@ -72,7 +72,7 @@ troubleshoot
          cp shmsdos.exe shmsdos.bak *(backup shmsdos)*
          cp sh.exe shmsdos.exe *(substitute alternative shell)*
 
-      Making this change will probably break other builds you are  making on the same machine. You
+      Making this change will probably break other builds you are  making on the same machine. You
       may need to switch the shell back and forthdepending on which product you are building. We
       will try to provide a moreconvenient solution in the future. If you have the MKS toolkit
-      installed,  the <tt>sh.exe</tt> that comes with this toolkit can be used as well.
+      installed,  the <tt>sh.exe</tt> that comes with this toolkit can be used as well.

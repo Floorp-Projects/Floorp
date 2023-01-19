@@ -7,6 +7,7 @@ DEPTH      = ../..
 MODULE = nss
 
 CPPSRCS = \
+      json_reader.cc \
       pk11_aes_gcm_unittest.cc \
       pk11_aeskeywrap_unittest.cc \
       pk11_aeskeywrapkwp_unittest.cc \

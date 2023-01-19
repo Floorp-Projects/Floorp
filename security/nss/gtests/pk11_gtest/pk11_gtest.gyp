@@ -11,6 +11,7 @@
       'target_name': 'pk11_gtest',
       'type': 'executable',
       'sources': [
+        'json_reader.cc',
         'pk11_aes_cmac_unittest.cc',
         'pk11_aes_gcm_unittest.cc',
         'pk11_aeskeywrap_unittest.cc',

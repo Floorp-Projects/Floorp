@@ -44,7 +44,7 @@ NSS 3.49.2 release notes
 .. container::
 
    -  `Bug 1606992 <https://bugzilla.mozilla.org/show_bug.cgi?id=1606992>`__ - Cache the most
-      recent PBKDF1 password hash, to speed up repeated SDR operations, important with the increased
+      recent PBKDF1 password hash, to speed up repeated SDR operations, important with the increased
       KDF iteration counts. NSS 3.49.1 sped up PBKDF2 operations, though PBKDF1 operations are also
       relevant for older NSS databases.
    -  `Bug 1608327 <https://bugzilla.mozilla.org/show_bug.cgi?id=1608327>`__ - Fix compilation

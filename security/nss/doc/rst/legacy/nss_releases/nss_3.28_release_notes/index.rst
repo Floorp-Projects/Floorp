@@ -39,15 +39,15 @@ NSS 3.28 release notes
 .. container::
 
    -  NSS includes support for `TLS 1.3 draft
-      -18 <https://datatracker.ietf.org/doc/html/draft-ietf-tls-tls13-18>`__.  This includes a
+      -18 <https://datatracker.ietf.org/doc/html/draft-ietf-tls-tls13-18>`__.  This includes a
       number of improvements to TLS 1.3:
 
       -  The signed certificate timestamp, used in certificate transparency, is supported in TLS 1.3
          (`bug 1252745 <https://bugzilla.mozilla.org/show_bug.cgi?id=1252745>`__).
       -  Key exporters for TLS 1.3 are supported (`bug
-         1310610 <https://bugzilla.mozilla.org/show_bug.cgi?id=1310610>`__).  This includes the
+         1310610 <https://bugzilla.mozilla.org/show_bug.cgi?id=1310610>`__).  This includes the
          early key exporter, which can be used if 0-RTT is enabled. Note that there is a difference
-         between TLS 1.3 and key exporters in older versions of TLS.  TLS 1.3 does not distinguish
+         between TLS 1.3 and key exporters in older versions of TLS.  TLS 1.3 does not distinguish
          between an empty context and no context.
       -  The TLS 1.3 (draft) protocol can be enabled, by defining NSS_ENABLE_TLS_1_3=1 when building
          NSS.
@@ -63,7 +63,7 @@ NSS 3.28 release notes
    -  in ssl.h
 
       -  **SSL_ExportEarlyKeyingMaterial** implements a key exporter based on the TLS 1.3 early
-         exporter secret.  This API is equivalent in function to SSL_ExportKeyingMaterial, but it
+         exporter secret.  This API is equivalent in function to SSL_ExportKeyingMaterial, but it
          can only succeed if 0-RTT was attempted (on the client) or accepted (on the server).
 
       -  **SSL_SendAdditionalKeyShares** configures a TLS 1.3 client so that it generates additional
@@ -94,7 +94,7 @@ NSS 3.28 release notes
    will therefore enable support for the TLS 1.3 protocol.
 
    In order to prepare for this future change, we'd like to encourage all users of NSS to override
-   the standard NSS 3.28 build configuration, by defining NSS_ENABLE_TLS_1_3=1 at build time.  This
+   the standard NSS 3.28 build configuration, by defining NSS_ENABLE_TLS_1_3=1 at build time.  This
    will enable support for TLS 1.3. Please give feedback to the NSS developers for any compatibility
    issues that you encounter in your tests.
 
@@ -107,7 +107,7 @@ NSS 3.28 release notes
 
    -  NSS can no longer be compiled with support for additional elliptic curves (the
       NSS_ECC_MORE_THAN_SUITE_B option, `bug
-      1253912 <https://bugzilla.mozilla.org/show_bug.cgi?id=1253912>`__).  This was previously
+      1253912 <https://bugzilla.mozilla.org/show_bug.cgi?id=1253912>`__).  This was previously
       possible by replacing certain NSS source files.
    -  NSS will now detect the presence of tokens that support additional elliptic curves and enable
       those curves for use in TLS (`bug
@@ -119,12 +119,12 @@ NSS 3.28 release notes
    -  Support for "export" grade SSL/TLS cipher suites has been removed (`bug
       1252849 <https://bugzilla.mozilla.org/show_bug.cgi?id=1252849>`__).
    -  NSS now uses the signature schemes definition in TLS 1.3 (`bug
-      1309446 <https://bugzilla.mozilla.org/show_bug.cgi?id=1309446>`__).  This also affects TLS
+      1309446 <https://bugzilla.mozilla.org/show_bug.cgi?id=1309446>`__).  This also affects TLS
       1.2. NSS will now only generate signatures with the combinations of hash and signature scheme
       that are defined in TLS 1.3, even when negotiating TLS 1.2.
 
       -  This means that SHA-256 will only be used with P-256 ECDSA certificates, SHA-384 with P-384
-         certificates, and SHA-512 with P-521 certificates.  SHA-1 is permitted (in TLS 1.2 only)
+         certificates, and SHA-512 with P-521 certificates.  SHA-1 is permitted (in TLS 1.2 only)
          with any certificate for backward compatibility reasons.
       -  New functions to configure signature schemes are provided: **SSL_SignatureSchemePrefSet,
          SSL_SignatureSchemePrefGet**. The old SSL_SignaturePrefSet and SSL_SignaturePrefSet

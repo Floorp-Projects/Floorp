@@ -36,11 +36,11 @@ PKCS #11 Module Specs
 
    All applications/libraries must be able recognize the following name values:
 
-   library 
+   library 
       This specifies the path to the pkcs #11 library.
-   name 
+   name 
       This specifies the name of the pkcs #11 library.
-   parameter 
+   parameter 
       This specifies a pkcs #11 library parameter with the application must pass to the pkcs #11
       library at ``C_Initialize()`` time (see below).
 
@@ -70,7 +70,7 @@ PKCS #11 Module Specs
 
    A new ``CK_C_INITIALIZE_ARGS`` structure is defined as
 
-   .. code:: notranslate
+   .. code::
 
       typedef struct CK_C_INITIALIZE_ARGS {
         CK_CREATEMUTEX CreateMutex;
@@ -97,7 +97,7 @@ PKCS #11 Module Specs
    ``secmod.db`` or pkcs11.txt. This isn't part of the generic spec (that is other applications need
    not parse it, nor pkcs #11 modules need supply them or use them).
 
-   .. code:: eval
+   .. code::
 
       NSS="nss_params"
 
@@ -214,7 +214,7 @@ PKCS #11 Module Specs
 
    Sample file:
 
-   .. code:: notranslate
+   .. code::
 
       library= name="Netscape Internal Crypto Module"   parameters="configdir=/u/relyea/.netscape certprefix= secmod=secmod.db" NSS="Flags=internal,pkcs11module TrustOrder=1 CipherOrder=-1 ciphers= slotParams={0x1=[slotFlags='RSA,DSA,DH,RC4,RC2,DES,MD2,MD5,SHA1,SSL,TLS,PublicCerts,Random'] 0x2=[slotFlags='RSA' askpw=only]}"
       library=dkck32.dll name="DataKey SignaSURE 3600" NSS="TrustOrder=50 ciphers= "
@@ -237,50 +237,50 @@ PKCS #11 Module Specs
 
    Valid values are:
 
-   configDir 
+   configDir 
       Configuration Directory where NSS can store persistant state information (typically
       databases).
-   secmod 
+   secmod 
       Name of the secmod database (default = secmod.db).
-   certPrefix 
+   certPrefix 
       Prefix for the cert database.
-   keyPrefix 
+   keyPrefix 
       Prefix for the key database.
-   minPWLen 
+   minPWLen 
       Minimum password length in bytes.
-   manufacturerID 
+   manufacturerID 
       Override the default ``manufactureID`` value for the module returned in the ``CK_INFO``,
       ``CK_SLOT_INFO``, and ``CK_TOKEN_INFO`` structures with an internationalize string (UTF8).
       This value will be truncated at 32 bytes (no NULL, partial UTF8 characters dropped).
-   libraryDescription 
+   libraryDescription 
       Override the default ``libraryDescription`` value for the module returned in the ``CK_INFO``
       structure with an internationalize string (UTF8). This value will be truncated at 32 bytes (no
       ``NULL``, partial UTF8 characters dropped).
-   cryptoTokenDescription 
+   cryptoTokenDescription 
       Override the default label value for the internal crypto token returned in the
       ``CK_TOKEN_INFO`` structure with an internationalize string (UTF8). This value will be
       truncated at 32 bytes (no NULL, partial UTF8 characters dropped).
-   dbTokenDescription 
+   dbTokenDescription 
       Override the default label value for the internal DB token returned in the ``CK_TOKEN_INFO``
       structure with an internationalize string (UTF8). This value will be truncated at 32 bytes (no
       NULL, partial UTF8 characters dropped).
-   FIPSTokenDescription 
+   FIPSTokenDescription 
       Override the default label value for the internal FIPS token returned in the ``CK_TOKEN_INFO``
       structure with an internationalize string (UTF8). This value will be truncated at 32 bytes (no
       NULL, partial UTF8 characters dropped).
-   cryptoSlotDescription 
+   cryptoSlotDescription 
       Override the default ``slotDescription`` value for the internal crypto token returned in the
       ``CK_SLOT_INFO`` structure with an internationalize string (UTF8). This value will be
       truncated at 64 bytes (no NULL, partial UTF8 characters dropped).
-   dbSlotDescription 
+   dbSlotDescription 
       Override the default ``slotDescription`` value for the internal DB token returned in the
       ``CK_SLOT_INFO`` structure with an internationalize string (UTF8). This value will be
       truncated at 64 bytes (no NULL, partial UTF8 characters dropped).
-   FIPSSlotDescription 
+   FIPSSlotDescription 
       Override the default ``slotDescription`` value for the internal FIPS token returned in the
       ``CK_SLOT_INFO`` structure with an internationalize string (UTF8). This value will be
       truncated at 64 bytes (no NULL, partial UTF8 characters dropped).
-   flags 
+   flags 
       comma separated list of flag values, parsed case-insensitive.
 
    .. rubric:: Flags
@@ -288,23 +288,23 @@ PKCS #11 Module Specs
 
    Valid flags are:
 
-   noModDB 
+   noModDB 
       Don't open ``secmod.db`` and try to supply the strings. The MOD DB function is not through
       standard PKCS #11 interfaces.
-   readOnly 
+   readOnly 
       Databases should be opened read only.
-   noCertDB 
+   noCertDB 
       Don't try to open a certificate database.
-   noKeyDB 
+   noKeyDB 
       Don't try to open a key database.
-   forceOpen 
+   forceOpen 
       Don't fail to initialize the token if the databases could not be opened.
-   passwordRequired 
+   passwordRequired 
       Zero length passwords are not acceptable (valid only if there is a keyDB).
-   optimizeSpace 
+   optimizeSpace 
       allocate smaller hash tables and lock tables. When this flag is not specified, Softoken will
       allocate large tables to prevent lock contention.
-   tokens 
+   tokens 
       configure 'tokens' by hand. The tokens parameter specifies a space separated list of slotIDS,
       each of which specify their own set of parameters affecting that token. Typically 'tokens'
       would not be specified unless additional databases are to be opened as additional tokens. If
@@ -313,13 +313,13 @@ PKCS #11 Module Specs
 
    In non-FIPS mode:
 
-   .. code:: eval
+   .. code::
 
       tokens=<0x01=[configDir=configDir tokenDescription=cryptoTokenDescription slotDescription=cryptoSlotDescription flags=noCertDB,noKeyDB,optimizeSpace] 0x02=[configDir=configDir tokenDescription=dbTokenDescription slotDescription=dbSlotDescription certPrefix=certPrefix keyPrefix=keyPrefix flags=flags minPWLen=minPWLen]>
 
    In FIPS mode:
 
-   .. code:: eval
+   .. code::
 
       tokens=<0x03=[configDir=configDir tokenDescription=FIPSTokenDescription slotDescription=FIPSSlotDescription certPrefix=certPrefix keyPrefix=keyPrefix flags=flags minPWLen=minPWLen]>
 
@@ -329,37 +329,37 @@ PKCS #11 Module Specs
 
    Parameters:
 
-   configDir 
+   configDir 
       The location of the databases for this token. If ``configDir`` is not specified, the default
       ``configDir`` specified earlier will be used.
-   certPrefix 
+   certPrefix 
       Cert prefix for this token.
-   keyPrefix 
+   keyPrefix 
       Prefix for the key database for this token.
-   tokenDescription 
+   tokenDescription 
       The label value for this token returned in the ``CK_TOKEN_INFO`` structure with an
       internationalize string (UTF8). This value will be truncated at 32 bytes (no NULL, partial
       UTF8 characters dropped).
-   slotDescription 
+   slotDescription 
       The ``slotDescription`` value for this token returned in the ``CK_SLOT_INFO`` structure with
       an internationalize string (UTF8). This value will be truncated at 64 bytes (no NULL, partial
       UTF8 characters dropped).
-   minPWLen 
+   minPWLen 
       minimum password length for this token.
-   flags 
+   flags 
       comma separated list of flag values, parsed case-insensitive.
       Valid flags are:
 
-      readOnly 
+      readOnly 
          Databases should be opened read only.
-      noCertDB 
+      noCertDB 
          Don't try to open a certificate database.
-      noKeyDB 
+      noKeyDB 
          Don't try to open a key database.
-      forceOpen 
+      forceOpen 
          Don't fail to initialize the token if the databases could not be opened.
-      passwordRequired 
+      passwordRequired 
          Zero length passwords are not acceptable (valid only if there is a ``keyDB``).
-      optimizeSpace 
+      optimizeSpace 
          allocate smaller hash tables and lock tables. When this flag is not specified, Softoken
          will allocate large tables to prevent lock contention.

@@ -19,6 +19,9 @@
 #define USES_LINKS 1
 #endif
 
+#define COMPAT_MAJOR 0x01
+#define COMPAT_MINOR 0x02
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,22 +52,74 @@
 /* freebl headers */
 #include "shsign.h"
 
-#define NUM_ELEM(array) (sizeof(array) / sizeof(array[0]))
-CK_BBOOL true = CK_TRUE;
-CK_BBOOL false = CK_FALSE;
+/* nss headers for definition of HASH_HashType */
+#include "hasht.h"
+
+CK_BBOOL cktrue = CK_TRUE;
+CK_BBOOL ckfalse = CK_FALSE;
 static PRBool verbose = PR_FALSE;
+static PRBool verify = PR_FALSE;
+static PRBool compat = PR_FALSE;
+
+typedef struct HashTableStruct {
+    char *name;
+    CK_MECHANISM_TYPE hash;
+    CK_MECHANISM_TYPE hmac;
+    CK_KEY_TYPE keyType;
+    HASH_HashType hashType;
+    CK_ULONG hashLength;
+} HashTable;
+
+#define CKR_INTERNAL_OUT_FAILURE 0x80111111
+#define CKR_INTERNAL_IN_FAILURE 0x80222222
+#define CKM_SHA1 CKM_SHA_1
+#define CKM_SHA1_HMAC CKM_SHA_1_HMAC
+#define CKK_SHA1_HMAC CKK_SHA_1_HMAC
+#define MKHASH(name, mech)                                   \
+    {                                                        \
+        name, CKM_##mech, CKM_##mech##_HMAC,                 \
+            CKK_##mech##_HMAC, HASH_Alg##mech, mech##_LENGTH \
+    }
+static HashTable hashTable[] = {
+    MKHASH("sha-1", SHA1), MKHASH("sha1", SHA1), MKHASH("sha224", SHA224),
+    MKHASH("sha256", SHA256), MKHASH("sha384", SHA384),
+    MKHASH("sha512", SHA512)
+};
+static size_t hashTableSize = PR_ARRAY_SIZE(hashTable);
+
+const HashTable *
+findHash(const char *hashName)
+{
+    int i;
+
+    for (i = 0; i < hashTableSize; i++) {
+        if (PL_strcasecmp(hashTable[i].name, hashName) == 0) {
+            return &hashTable[i];
+        }
+    }
+    return NULL;
+}
 
 static void
 usage(const char *program_name)
 {
+    int i;
+    const char *comma = "";
     PRFileDesc *debug_out = PR_GetSpecialFD(PR_StandardError);
     PR_fprintf(debug_out,
                "type %s -H for more detail information.\n", program_name);
     PR_fprintf(debug_out,
                "Usage: %s [-v] [-V] [-o outfile] [-d dbdir] [-f pwfile]\n"
-               "          [-F] [-p pwd] -[P dbprefix ] "
+               "          [-F] [-p pwd] -[P dbprefix ] [-t hash]"
+               "          [-D] [-k keysize] [-c]"
                "-i shared_library_name\n",
                program_name);
+    PR_fprintf(debug_out, "Valid Hashes: ");
+    for (i = 0; i < hashTableSize; i++) {
+        PR_fprintf(debug_out, "%s%s", comma, hashTable[i].name);
+        comma = ", ";
+    }
+    PR_fprintf(debug_out, "\n");
     exit(1);
 }
 
@@ -72,10 +127,16 @@ static void
 long_usage(const char *program_name)
 {
     PRFileDesc *debug_out = PR_GetSpecialFD(PR_StandardError);
+    int i;
+    const char *comma = "";
     PR_fprintf(debug_out, "%s test program usage:\n", program_name);
     PR_fprintf(debug_out, "\t-i <infile>  shared_library_name to process\n");
     PR_fprintf(debug_out, "\t-o <outfile> checksum outfile\n");
     PR_fprintf(debug_out, "\t-d <path>    database path location\n");
+    PR_fprintf(debug_out, "\t-t <hash>    Hash for HMAC/or DSA\n");
+    PR_fprintf(debug_out, "\t-D           Sign with DSA rather than HMAC\n");
+    PR_fprintf(debug_out, "\t-k <keysize> size of the DSA key\n");
+    PR_fprintf(debug_out, "\t-c           Use compatible versions for old NSS\n");
     PR_fprintf(debug_out, "\t-P <prefix>  database prefix\n");
     PR_fprintf(debug_out, "\t-f <file>    password File : echo pw > file \n");
     PR_fprintf(debug_out, "\t-F           FIPS mode\n");
@@ -90,6 +151,12 @@ long_usage(const char *program_name)
     PR_fprintf(debug_out, "\t      pre-existing libraries with generated ");
     PR_fprintf(debug_out, "checksum files\n");
     PR_fprintf(debug_out, "\t      and database in FIPS mode \n");
+    PR_fprintf(debug_out, "Valid Hashes: ");
+    for (i = 0; i < hashTableSize; i++) {
+        PR_fprintf(debug_out, "%s%s", comma, hashTable[i].name);
+        comma = ", ";
+    }
+    PR_fprintf(debug_out, "\n");
     exit(1);
 }
 
@@ -131,8 +198,7 @@ encodeInt(unsigned char *buf, int val)
 }
 
 static PRStatus
-writeItem(PRFileDesc *fd, CK_VOID_PTR pValue,
-          CK_ULONG ulValueLen, char *file)
+writeItem(PRFileDesc *fd, CK_VOID_PTR pValue, CK_ULONG ulValueLen)
 {
     unsigned char buf[4];
     int bytesWritten;
@@ -144,12 +210,10 @@ writeItem(PRFileDesc *fd, CK_VOID_PTR pValue,
     encodeInt(buf, ulValueLen);
     bytesWritten = PR_Write(fd, buf, 4);
     if (bytesWritten != 4) {
-        lperror(file);
         return PR_FAILURE;
     }
     bytesWritten = PR_Write(fd, pValue, ulValueLen);
     if (bytesWritten < 0 || (CK_ULONG)bytesWritten != ulValueLen) {
-        lperror(file);
         return PR_FAILURE;
     }
     return PR_SUCCESS;
@@ -701,6 +765,481 @@ getSlotList(CK_FUNCTION_LIST_PTR pFunctionList,
     return pSlotList;
 }
 
+CK_RV
+shlibSignDSA(CK_FUNCTION_LIST_PTR pFunctionList, CK_SLOT_ID slot,
+             CK_SESSION_HANDLE hRwSession, int keySize, PRFileDesc *ifd,
+             PRFileDesc *ofd, const HashTable *hash)
+{
+    CK_MECHANISM digestmech;
+    CK_ULONG digestLen = 0;
+    CK_BYTE digest[HASH_LENGTH_MAX];
+    CK_BYTE sign[64]; /* DSA2 SIGNATURE LENGTH */
+    CK_ULONG signLen = 0;
+    CK_ULONG expectedSigLen = sizeof(sign);
+    CK_MECHANISM signMech = {
+        CKM_DSA, NULL, 0
+    };
+    int bytesRead;
+    int bytesWritten;
+    unsigned char file_buf[512];
+    NSSSignChkHeader header;
+    int count = 0;
+    CK_RV crv = CKR_GENERAL_ERROR;
+    PRStatus rv = PR_SUCCESS;
+    const char *hashName = "sha256"; /* default hash value */
+    int i;
+
+    /*** DSA Key ***/
+    CK_MECHANISM dsaKeyPairGenMech;
+    CK_ATTRIBUTE dsaPubKeyTemplate[5];
+    CK_ATTRIBUTE dsaPrivKeyTemplate[5];
+    CK_OBJECT_HANDLE hDSApubKey = CK_INVALID_HANDLE;
+    CK_OBJECT_HANDLE hDSAprivKey = CK_INVALID_HANDLE;
+    CK_BYTE dsaPubKey[384];
+    CK_ATTRIBUTE dsaPubKeyValue;
+
+    if ((keySize == 0) || (keySize > 1024)) {
+        CK_MECHANISM_INFO mechInfo;
+        crv = pFunctionList->C_GetMechanismInfo(slot,
+                                                CKM_DSA, &mechInfo);
+        if (crv != CKR_OK) {
+            pk11error("Couldn't get mechanism info for DSA", crv);
+            return crv;
+        }
+
+        if (keySize && (mechInfo.ulMaxKeySize < keySize)) {
+            PR_fprintf(PR_STDERR,
+                       "token doesn't support DSA2 (Max key size=%d)\n",
+                       mechInfo.ulMaxKeySize);
+            return crv;
+        }
+
+        if ((keySize == 0) && mechInfo.ulMaxKeySize >= 2048) {
+            keySize = 2048;
+        } else {
+            keySize = 1024;
+        }
+    }
+
+    /* DSA key init */
+    if (keySize == 1024) {
+        dsaPubKeyTemplate[0].type = CKA_PRIME;
+        dsaPubKeyTemplate[0].pValue = (CK_VOID_PTR)&prime;
+        dsaPubKeyTemplate[0].ulValueLen = sizeof(prime);
+        dsaPubKeyTemplate[1].type = CKA_SUBPRIME;
+        dsaPubKeyTemplate[1].pValue = (CK_VOID_PTR)&subprime;
+        dsaPubKeyTemplate[1].ulValueLen = sizeof(subprime);
+        dsaPubKeyTemplate[2].type = CKA_BASE;
+        dsaPubKeyTemplate[2].pValue = (CK_VOID_PTR)&base;
+        dsaPubKeyTemplate[2].ulValueLen = sizeof(base);
+        hashName = "sha-1"; /* use sha-1 for old dsa keys */
+        expectedSigLen = 32;
+    } else if (keySize == 2048) {
+        dsaPubKeyTemplate[0].type = CKA_PRIME;
+        dsaPubKeyTemplate[0].pValue = (CK_VOID_PTR)&prime2;
+        dsaPubKeyTemplate[0].ulValueLen = sizeof(prime2);
+        dsaPubKeyTemplate[1].type = CKA_SUBPRIME;
+        dsaPubKeyTemplate[1].pValue = (CK_VOID_PTR)&subprime2;
+        dsaPubKeyTemplate[1].ulValueLen = sizeof(subprime2);
+        dsaPubKeyTemplate[2].type = CKA_BASE;
+        dsaPubKeyTemplate[2].pValue = (CK_VOID_PTR)&base2;
+        dsaPubKeyTemplate[2].ulValueLen = sizeof(base2);
+        digestmech.mechanism = hash ? hash->hash : CKM_SHA256;
+        digestmech.pParameter = NULL;
+        digestmech.ulParameterLen = 0;
+    } else {
+        PR_fprintf(PR_STDERR, "Only keysizes 1024 and 2048 are supported");
+        return CKR_GENERAL_ERROR;
+    }
+    if (hash == NULL) {
+        hash = findHash(hashName);
+    }
+    if (hash == NULL) {
+        PR_fprintf(PR_STDERR,
+                   "Internal error,  couldn't find hash '%s' in table.\n",
+                   hashName);
+        return CKR_GENERAL_ERROR;
+    }
+    digestmech.mechanism = hash->hash;
+    digestmech.pParameter = NULL;
+    digestmech.ulParameterLen = 0;
+    dsaPubKeyTemplate[3].type = CKA_TOKEN;
+    dsaPubKeyTemplate[3].pValue = &ckfalse; /* session object */
+    dsaPubKeyTemplate[3].ulValueLen = sizeof(ckfalse);
+    dsaPubKeyTemplate[4].type = CKA_VERIFY;
+    dsaPubKeyTemplate[4].pValue = &cktrue;
+    dsaPubKeyTemplate[4].ulValueLen = sizeof(cktrue);
+    dsaKeyPairGenMech.mechanism = CKM_DSA_KEY_PAIR_GEN;
+    dsaKeyPairGenMech.pParameter = NULL;
+    dsaKeyPairGenMech.ulParameterLen = 0;
+    dsaPrivKeyTemplate[0].type = CKA_TOKEN;
+    dsaPrivKeyTemplate[0].pValue = &ckfalse; /* session object */
+    dsaPrivKeyTemplate[0].ulValueLen = sizeof(ckfalse);
+    dsaPrivKeyTemplate[1].type = CKA_PRIVATE;
+    dsaPrivKeyTemplate[1].pValue = &cktrue;
+    dsaPrivKeyTemplate[1].ulValueLen = sizeof(cktrue);
+    dsaPrivKeyTemplate[2].type = CKA_SENSITIVE;
+    dsaPrivKeyTemplate[2].pValue = &cktrue;
+    dsaPrivKeyTemplate[2].ulValueLen = sizeof(cktrue);
+    dsaPrivKeyTemplate[3].type = CKA_SIGN,
+    dsaPrivKeyTemplate[3].pValue = &cktrue;
+    dsaPrivKeyTemplate[3].ulValueLen = sizeof(cktrue);
+    dsaPrivKeyTemplate[4].type = CKA_EXTRACTABLE;
+    dsaPrivKeyTemplate[4].pValue = &ckfalse;
+    dsaPrivKeyTemplate[4].ulValueLen = sizeof(ckfalse);
+
+    /* Generate a DSA key pair */
+    logIt("Generate a DSA key pair ... \n");
+    crv = pFunctionList->C_GenerateKeyPair(hRwSession, &dsaKeyPairGenMech,
+                                           dsaPubKeyTemplate,
+                                           PR_ARRAY_SIZE(dsaPubKeyTemplate),
+                                           dsaPrivKeyTemplate,
+                                           PR_ARRAY_SIZE(dsaPrivKeyTemplate),
+                                           &hDSApubKey, &hDSAprivKey);
+    if (crv != CKR_OK) {
+        pk11error("DSA key pair generation failed", crv);
+        return crv;
+    }
+
+    /* compute the digest */
+    memset(digest, 0, sizeof(digest));
+    crv = pFunctionList->C_DigestInit(hRwSession, &digestmech);
+    if (crv != CKR_OK) {
+        pk11error("C_DigestInit failed", crv);
+        return crv;
+    }
+
+    /* Digest the file */
+    while ((bytesRead = PR_Read(ifd, file_buf, sizeof(file_buf))) > 0) {
+        crv = pFunctionList->C_DigestUpdate(hRwSession, (CK_BYTE_PTR)file_buf,
+                                            bytesRead);
+        if (crv != CKR_OK) {
+            pk11error("C_DigestUpdate failed", crv);
+            return crv;
+        }
+        count += bytesRead;
+    }
+
+    if (bytesRead < 0) {
+        lperror("0 bytes read from input file");
+        return CKR_INTERNAL_IN_FAILURE;
+    }
+
+    digestLen = sizeof(digest);
+    crv = pFunctionList->C_DigestFinal(hRwSession, (CK_BYTE_PTR)digest,
+                                       &digestLen);
+    if (crv != CKR_OK) {
+        pk11error("C_DigestFinal failed", crv);
+        return crv;
+    }
+
+    if (digestLen != hash->hashLength) {
+        PR_fprintf(PR_STDERR, "digestLen has incorrect length %lu "
+                              "it should be %lu \n",
+                   digestLen, sizeof(digest));
+        return crv;
+    }
+
+    /* sign the hash */
+    memset(sign, 0, sizeof(sign));
+    /* SignUpdate  */
+    crv = pFunctionList->C_SignInit(hRwSession, &signMech, hDSAprivKey);
+    if (crv != CKR_OK) {
+        pk11error("C_SignInit failed", crv);
+        return crv;
+    }
+
+    signLen = sizeof(sign);
+    crv = pFunctionList->C_Sign(hRwSession, (CK_BYTE *)digest, digestLen,
+                                sign, &signLen);
+    if (crv != CKR_OK) {
+        pk11error("C_Sign failed", crv);
+        return crv;
+    }
+
+    if (signLen != expectedSigLen) {
+        PR_fprintf(PR_STDERR, "signLen has incorrect length %lu "
+                              "it should be %lu \n",
+                   signLen, expectedSigLen);
+        return crv;
+    }
+
+    if (verify) {
+        crv = pFunctionList->C_VerifyInit(hRwSession, &signMech, hDSApubKey);
+        if (crv != CKR_OK) {
+            pk11error("C_VerifyInit failed", crv);
+            return crv;
+        }
+        crv = pFunctionList->C_Verify(hRwSession, digest, digestLen,
+                                      sign, signLen);
+        if (crv != CKR_OK) {
+            pk11error("C_Verify failed", crv);
+            return crv;
+        }
+    }
+
+    if (verbose) {
+        int j;
+        PR_fprintf(PR_STDERR, "Library File Size: %d bytes\n", count);
+        PR_fprintf(PR_STDERR, "  hash: %lu bytes\n", digestLen);
+#define STEP 10
+        for (i = 0; i < (int)digestLen; i += STEP) {
+            PR_fprintf(PR_STDERR, "   ");
+            for (j = 0; j < STEP && (i + j) < (int)digestLen; j++) {
+                PR_fprintf(PR_STDERR, " %02x", digest[i + j]);
+            }
+            PR_fprintf(PR_STDERR, "\n");
+        }
+        PR_fprintf(PR_STDERR, "  signature: %lu bytes\n", signLen);
+        for (i = 0; i < (int)signLen; i += STEP) {
+            PR_fprintf(PR_STDERR, "   ");
+            for (j = 0; j < STEP && (i + j) < (int)signLen; j++) {
+                PR_fprintf(PR_STDERR, " %02x", sign[i + j]);
+            }
+            PR_fprintf(PR_STDERR, "\n");
+        }
+    }
+
+    /*
+     * we write the key out in a straight binary format because very
+     * low level libraries need to read an parse this file. Ideally we should
+     * just derEncode the public key (which would be pretty simple, and be
+     * more general), but then we'd need to link the ASN.1 decoder with the
+     * freebl libraries.
+     */
+
+    header.magic1 = NSS_SIGN_CHK_MAGIC1;
+    header.magic2 = NSS_SIGN_CHK_MAGIC2;
+    header.majorVersion = compat ? COMPAT_MAJOR : NSS_SIGN_CHK_MAJOR_VERSION;
+    header.minorVersion = compat ? COMPAT_MINOR : NSS_SIGN_CHK_MINOR_VERSION;
+    encodeInt(header.offset, sizeof(header)); /* offset to data start */
+    encodeInt(header.type, CKK_DSA);
+    bytesWritten = PR_Write(ofd, &header, sizeof(header));
+    if (bytesWritten != sizeof(header)) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+
+    /* get DSA Public KeyValue */
+    memset(dsaPubKey, 0, sizeof(dsaPubKey));
+    dsaPubKeyValue.type = CKA_VALUE;
+    dsaPubKeyValue.pValue = (CK_VOID_PTR)&dsaPubKey;
+    dsaPubKeyValue.ulValueLen = sizeof(dsaPubKey);
+
+    crv = pFunctionList->C_GetAttributeValue(hRwSession, hDSApubKey,
+                                             &dsaPubKeyValue, 1);
+    if (crv != CKR_OK && crv != CKR_ATTRIBUTE_TYPE_INVALID) {
+        pk11error("C_GetAttributeValue failed", crv);
+        return crv;
+    }
+
+    /* CKA_PRIME */
+    rv = writeItem(ofd, dsaPubKeyTemplate[0].pValue,
+                   dsaPubKeyTemplate[0].ulValueLen);
+    if (rv != PR_SUCCESS) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+    /* CKA_SUBPRIME */
+    rv = writeItem(ofd, dsaPubKeyTemplate[1].pValue,
+                   dsaPubKeyTemplate[1].ulValueLen);
+    if (rv != PR_SUCCESS) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+    /* CKA_BASE */
+    rv = writeItem(ofd, dsaPubKeyTemplate[2].pValue,
+                   dsaPubKeyTemplate[2].ulValueLen);
+    if (rv != PR_SUCCESS) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+    /* DSA Public Key value */
+    rv = writeItem(ofd, dsaPubKeyValue.pValue,
+                   dsaPubKeyValue.ulValueLen);
+    if (rv != PR_SUCCESS) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+    /* DSA SIGNATURE */
+    rv = writeItem(ofd, &sign, signLen);
+    if (rv != PR_SUCCESS) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+
+    return CKR_OK;
+}
+
+CK_RV
+shlibSignHMAC(CK_FUNCTION_LIST_PTR pFunctionList, CK_SLOT_ID slot,
+              CK_SESSION_HANDLE hRwSession, int keySize, PRFileDesc *ifd,
+              PRFileDesc *ofd, const HashTable *hash)
+{
+    CK_MECHANISM hmacMech = { 0, NULL, 0 };
+    CK_MECHANISM hmacKeyGenMech = { 0, NULL, 0 };
+    CK_BYTE keyBuf[HASH_LENGTH_MAX];
+    CK_ULONG keyLen = 0;
+    CK_BYTE sign[HASH_LENGTH_MAX];
+    CK_ULONG signLen = 0;
+    int bytesRead;
+    int bytesWritten;
+    unsigned char file_buf[512];
+    NSSSignChkHeader header;
+    int count = 0;
+    CK_RV crv = CKR_GENERAL_ERROR;
+    PRStatus rv = PR_SUCCESS;
+    int i;
+
+    /*** HMAC Key ***/
+    CK_ATTRIBUTE hmacKeyTemplate[7];
+    CK_ATTRIBUTE hmacKeyValue;
+    CK_OBJECT_HANDLE hHMACKey = CK_INVALID_HANDLE;
+
+    if (hash == NULL) {
+        hash = findHash("sha256");
+    }
+    if (hash == NULL) {
+        PR_fprintf(PR_STDERR,
+                   "Internal error:Could find sha256 entry in table.\n");
+    }
+
+    hmacKeyTemplate[0].type = CKA_TOKEN;
+    hmacKeyTemplate[0].pValue = &ckfalse; /* session object */
+    hmacKeyTemplate[0].ulValueLen = sizeof(ckfalse);
+    hmacKeyTemplate[1].type = CKA_PRIVATE;
+    hmacKeyTemplate[1].pValue = &cktrue;
+    hmacKeyTemplate[1].ulValueLen = sizeof(cktrue);
+    hmacKeyTemplate[2].type = CKA_SENSITIVE;
+    hmacKeyTemplate[2].pValue = &ckfalse;
+    hmacKeyTemplate[2].ulValueLen = sizeof(cktrue);
+    hmacKeyTemplate[3].type = CKA_SIGN;
+    hmacKeyTemplate[3].pValue = &cktrue;
+    hmacKeyTemplate[3].ulValueLen = sizeof(cktrue);
+    hmacKeyTemplate[4].type = CKA_EXTRACTABLE;
+    hmacKeyTemplate[4].pValue = &ckfalse;
+    hmacKeyTemplate[4].ulValueLen = sizeof(ckfalse);
+    hmacKeyTemplate[5].type = CKA_VALUE_LEN;
+    hmacKeyTemplate[5].pValue = (void *)&hash->hashLength;
+    hmacKeyTemplate[5].ulValueLen = sizeof(hash->hashLength);
+    hmacKeyTemplate[6].type = CKA_KEY_TYPE;
+    hmacKeyTemplate[6].pValue = (void *)&hash->keyType;
+    hmacKeyTemplate[6].ulValueLen = sizeof(hash->keyType);
+    hmacKeyGenMech.mechanism = CKM_GENERIC_SECRET_KEY_GEN;
+    hmacMech.mechanism = hash->hmac;
+
+    /* Generate a DSA key pair */
+    logIt("Generate an HMAC key ... \n");
+    crv = pFunctionList->C_GenerateKey(hRwSession, &hmacKeyGenMech,
+                                       hmacKeyTemplate,
+                                       PR_ARRAY_SIZE(hmacKeyTemplate),
+                                       &hHMACKey);
+    if (crv != CKR_OK) {
+        pk11error("HMAC key generation failed", crv);
+        return crv;
+    }
+
+    /* compute the digest */
+    memset(sign, 0, sizeof(sign));
+    crv = pFunctionList->C_SignInit(hRwSession, &hmacMech, hHMACKey);
+    if (crv != CKR_OK) {
+        pk11error("C_SignInit failed", crv);
+        return crv;
+    }
+
+    /* Digest the file */
+    while ((bytesRead = PR_Read(ifd, file_buf, sizeof(file_buf))) > 0) {
+        crv = pFunctionList->C_SignUpdate(hRwSession, (CK_BYTE_PTR)file_buf,
+                                          bytesRead);
+        if (crv != CKR_OK) {
+            pk11error("C_SignUpdate failed", crv);
+            return crv;
+        }
+        count += bytesRead;
+    }
+
+    if (bytesRead < 0) {
+        lperror("0 bytes read from input file");
+        return CKR_INTERNAL_IN_FAILURE;
+    }
+
+    signLen = sizeof(sign);
+    crv = pFunctionList->C_SignFinal(hRwSession, (CK_BYTE_PTR)sign,
+                                     &signLen);
+    if (crv != CKR_OK) {
+        pk11error("C_SignFinal failed", crv);
+        return crv;
+    }
+
+    if (signLen != hash->hashLength) {
+        PR_fprintf(PR_STDERR, "digestLen has incorrect length %lu "
+                              "it should be %lu \n",
+                   signLen, hash->hashLength);
+        return crv;
+    }
+    /* get HMAC KeyValue */
+    memset(keyBuf, 0, sizeof(keyBuf));
+    hmacKeyValue.type = CKA_VALUE;
+    hmacKeyValue.pValue = (CK_VOID_PTR)&keyBuf;
+    hmacKeyValue.ulValueLen = sizeof(keyBuf);
+
+    crv = pFunctionList->C_GetAttributeValue(hRwSession, hHMACKey,
+                                             &hmacKeyValue, 1);
+    if (crv != CKR_OK && crv != CKR_ATTRIBUTE_TYPE_INVALID) {
+        pk11error("C_GetAttributeValue failed", crv);
+        return crv;
+    }
+    keyLen = hmacKeyValue.ulValueLen;
+
+    if (verbose) {
+        int j;
+        PR_fprintf(PR_STDERR, "Library File Size: %d bytes\n", count);
+        PR_fprintf(PR_STDERR, "  key: %lu bytes\n", keyLen);
+#define STEP 10
+        for (i = 0; i < (int)keyLen; i += STEP) {
+            PR_fprintf(PR_STDERR, "   ");
+            for (j = 0; j < STEP && (i + j) < (int)keyLen; j++) {
+                PR_fprintf(PR_STDERR, " %02x", keyBuf[i + j]);
+            }
+            PR_fprintf(PR_STDERR, "\n");
+        }
+        PR_fprintf(PR_STDERR, "  signature: %lu bytes\n", signLen);
+        for (i = 0; i < (int)signLen; i += STEP) {
+            PR_fprintf(PR_STDERR, "   ");
+            for (j = 0; j < STEP && (i + j) < (int)signLen; j++) {
+                PR_fprintf(PR_STDERR, " %02x", sign[i + j]);
+            }
+            PR_fprintf(PR_STDERR, "\n");
+        }
+    }
+
+    /*
+     * we write the key out in a straight binary format because very
+     * low level libraries need to read an parse this file. Ideally we should
+     * just derEncode the public key (which would be pretty simple, and be
+     * more general), but then we'd need to link the ASN.1 decoder with the
+     * freebl libraries.
+     */
+
+    header.magic1 = NSS_SIGN_CHK_MAGIC1;
+    header.magic2 = NSS_SIGN_CHK_MAGIC2;
+    header.majorVersion = NSS_SIGN_CHK_MAJOR_VERSION;
+    header.minorVersion = NSS_SIGN_CHK_MINOR_VERSION;
+    encodeInt(header.offset, sizeof(header)); /* offset to data start */
+    encodeInt(header.type, NSS_SIGN_CHK_FLAG_HMAC | hash->hashType);
+    bytesWritten = PR_Write(ofd, &header, sizeof(header));
+    if (bytesWritten != sizeof(header)) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+
+    /* HMACKey */
+    rv = writeItem(ofd, keyBuf, keyLen);
+    if (rv != PR_SUCCESS) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+    /* HMAC SIGNATURE */
+    rv = writeItem(ofd, &sign, signLen);
+    if (rv != PR_SUCCESS) {
+        return CKR_INTERNAL_OUT_FAILURE;
+    }
+
+    return CKR_OK;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -708,19 +1247,15 @@ main(int argc, char **argv)
     char *program_name;
     char *libname = NULL;
     PRLibrary *lib = NULL;
-    PRFileDesc *fd;
-    PRStatus rv = PR_SUCCESS;
+    PRFileDesc *ifd = NULL;
+    PRFileDesc *ofd = NULL;
     const char *input_file = NULL; /* read/create encrypted data from here */
     char *output_file = NULL;      /* write new encrypted data here */
-    int bytesRead;
-    int bytesWritten;
-    unsigned char file_buf[512];
-    int count = 0;
     unsigned int keySize = 0;
-    int i;
-    PRBool verify = PR_FALSE;
     static PRBool FIPSMODE = PR_FALSE;
+    static PRBool useDSA = PR_FALSE;
     PRBool successful = PR_FALSE;
+    const HashTable *hash = NULL;
 
 #ifdef USES_LINKS
     int ret;
@@ -741,29 +1276,10 @@ main(int argc, char **argv)
     CK_SESSION_HANDLE hRwSession;
     CK_SLOT_ID *pSlotList = NULL;
     CK_ULONG slotIndex = 0;
-    CK_MECHANISM digestmech;
-    CK_ULONG digestLen = 0;
-    CK_BYTE digest[32]; /* SHA256_LENGTH */
-    CK_BYTE sign[64];   /* DSA SIGNATURE LENGTH */
-    CK_ULONG signLen = 0;
-    CK_MECHANISM signMech = {
-        CKM_DSA, NULL, 0
-    };
-
-    /*** DSA Key ***/
-
-    CK_MECHANISM dsaKeyPairGenMech;
-    CK_ATTRIBUTE dsaPubKeyTemplate[5];
-    CK_ATTRIBUTE dsaPrivKeyTemplate[5];
-    CK_OBJECT_HANDLE hDSApubKey = CK_INVALID_HANDLE;
-    CK_OBJECT_HANDLE hDSAprivKey = CK_INVALID_HANDLE;
-
-    CK_BYTE dsaPubKey[384];
-    CK_ATTRIBUTE dsaPubKeyValue;
 
     program_name = strrchr(argv[0], '/');
     program_name = program_name ? (program_name + 1) : argv[0];
-    optstate = PL_CreateOptState(argc, argv, "i:o:f:Fd:hH?k:p:P:vVs:");
+    optstate = PL_CreateOptState(argc, argv, "i:o:f:Fd:hH?k:p:P:vVs:t:Dc");
     if (optstate == NULL) {
         lperror("PL_CreateOptState failed");
         return 1;
@@ -779,6 +1295,14 @@ main(int argc, char **argv)
                 }
                 configDir = PL_strdup(optstate->value);
                 checkPath(configDir);
+                break;
+
+            case 'D':
+                useDSA = PR_TRUE;
+                break;
+
+            case 'c':
+                compat = PR_TRUE;
                 break;
 
             case 'i':
@@ -835,6 +1359,18 @@ main(int argc, char **argv)
                 dbPrefix = PL_strdup(optstate->value);
                 break;
 
+            case 't':
+                if (!optstate->value) {
+                    PL_DestroyOptState(optstate);
+                    usage(program_name);
+                }
+                hash = findHash(optstate->value);
+                if (hash == NULL) {
+                    PR_fprintf(PR_STDERR, "Invalid hash '%s'\n",
+                               optstate->value);
+                    usage(program_name);
+                }
+                break;
             case 'v':
                 verbose = PR_TRUE;
                 break;
@@ -930,86 +1466,6 @@ main(int argc, char **argv)
         goto cleanup;
     }
 
-    if ((keySize == 0) || (keySize > 1024)) {
-        CK_MECHANISM_INFO mechInfo;
-        crv = pFunctionList->C_GetMechanismInfo(pSlotList[slotIndex],
-                                                CKM_DSA, &mechInfo);
-        if (crv != CKR_OK) {
-            pk11error("Couldn't get mechanism info for DSA", crv);
-            goto cleanup;
-        }
-
-        if (keySize && (mechInfo.ulMaxKeySize < keySize)) {
-            PR_fprintf(PR_STDERR,
-                       "token doesn't support DSA2 (Max key size=%d)\n",
-                       mechInfo.ulMaxKeySize);
-            goto cleanup;
-        }
-
-        if ((keySize == 0) && mechInfo.ulMaxKeySize >= 2048) {
-            keySize = 2048;
-        } else {
-            keySize = 1024;
-        }
-    }
-
-    /* DSA key init */
-    if (keySize == 1024) {
-        dsaPubKeyTemplate[0].type = CKA_PRIME;
-        dsaPubKeyTemplate[0].pValue = (CK_VOID_PTR)&prime;
-        dsaPubKeyTemplate[0].ulValueLen = sizeof(prime);
-        dsaPubKeyTemplate[1].type = CKA_SUBPRIME;
-        dsaPubKeyTemplate[1].pValue = (CK_VOID_PTR)&subprime;
-        dsaPubKeyTemplate[1].ulValueLen = sizeof(subprime);
-        dsaPubKeyTemplate[2].type = CKA_BASE;
-        dsaPubKeyTemplate[2].pValue = (CK_VOID_PTR)&base;
-        dsaPubKeyTemplate[2].ulValueLen = sizeof(base);
-        digestmech.mechanism = CKM_SHA_1;
-        digestmech.pParameter = NULL;
-        digestmech.ulParameterLen = 0;
-    } else if (keySize == 2048) {
-        dsaPubKeyTemplate[0].type = CKA_PRIME;
-        dsaPubKeyTemplate[0].pValue = (CK_VOID_PTR)&prime2;
-        dsaPubKeyTemplate[0].ulValueLen = sizeof(prime2);
-        dsaPubKeyTemplate[1].type = CKA_SUBPRIME;
-        dsaPubKeyTemplate[1].pValue = (CK_VOID_PTR)&subprime2;
-        dsaPubKeyTemplate[1].ulValueLen = sizeof(subprime2);
-        dsaPubKeyTemplate[2].type = CKA_BASE;
-        dsaPubKeyTemplate[2].pValue = (CK_VOID_PTR)&base2;
-        dsaPubKeyTemplate[2].ulValueLen = sizeof(base2);
-        digestmech.mechanism = CKM_SHA256;
-        digestmech.pParameter = NULL;
-        digestmech.ulParameterLen = 0;
-    } else {
-        /* future - generate pqg */
-        PR_fprintf(PR_STDERR, "Only keysizes 1024 and 2048 are supported");
-        goto cleanup;
-    }
-    dsaPubKeyTemplate[3].type = CKA_TOKEN;
-    dsaPubKeyTemplate[3].pValue = &false; /* session object */
-    dsaPubKeyTemplate[3].ulValueLen = sizeof(false);
-    dsaPubKeyTemplate[4].type = CKA_VERIFY;
-    dsaPubKeyTemplate[4].pValue = &true;
-    dsaPubKeyTemplate[4].ulValueLen = sizeof(true);
-    dsaKeyPairGenMech.mechanism = CKM_DSA_KEY_PAIR_GEN;
-    dsaKeyPairGenMech.pParameter = NULL;
-    dsaKeyPairGenMech.ulParameterLen = 0;
-    dsaPrivKeyTemplate[0].type = CKA_TOKEN;
-    dsaPrivKeyTemplate[0].pValue = &false; /* session object */
-    dsaPrivKeyTemplate[0].ulValueLen = sizeof(false);
-    dsaPrivKeyTemplate[1].type = CKA_PRIVATE;
-    dsaPrivKeyTemplate[1].pValue = &true;
-    dsaPrivKeyTemplate[1].ulValueLen = sizeof(true);
-    dsaPrivKeyTemplate[2].type = CKA_SENSITIVE;
-    dsaPrivKeyTemplate[2].pValue = &true;
-    dsaPrivKeyTemplate[2].ulValueLen = sizeof(true);
-    dsaPrivKeyTemplate[3].type = CKA_SIGN,
-    dsaPrivKeyTemplate[3].pValue = &true;
-    dsaPrivKeyTemplate[3].ulValueLen = sizeof(true);
-    dsaPrivKeyTemplate[4].type = CKA_EXTRACTABLE;
-    dsaPrivKeyTemplate[4].pValue = &false;
-    dsaPrivKeyTemplate[4].ulValueLen = sizeof(false);
-
     crv = pFunctionList->C_OpenSession(pSlotList[slotIndex],
                                        CKF_RW_SESSION | CKF_SERIAL_SESSION,
                                        NULL, NULL, &hRwSession);
@@ -1041,22 +1497,9 @@ main(int argc, char **argv)
         logIt("A password was provided but the password was not used.\n");
     }
 
-    /* Generate a DSA key pair */
-    logIt("Generate a DSA key pair ... \n");
-    crv = pFunctionList->C_GenerateKeyPair(hRwSession, &dsaKeyPairGenMech,
-                                           dsaPubKeyTemplate,
-                                           NUM_ELEM(dsaPubKeyTemplate),
-                                           dsaPrivKeyTemplate,
-                                           NUM_ELEM(dsaPrivKeyTemplate),
-                                           &hDSApubKey, &hDSAprivKey);
-    if (crv != CKR_OK) {
-        pk11error("DSA key pair generation failed", crv);
-        goto cleanup;
-    }
-
     /* open the shared library */
-    fd = PR_OpenFile(input_file, PR_RDONLY, 0);
-    if (fd == NULL) {
+    ifd = PR_OpenFile(input_file, PR_RDONLY, 0);
+    if (ifd == NULL) {
         lperror(input_file);
         goto cleanup;
     }
@@ -1102,179 +1545,42 @@ main(int argc, char **argv)
         output_file = mkoutput(input_file);
     }
 
-    /* compute the digest */
-    memset(digest, 0, sizeof(digest));
-    crv = pFunctionList->C_DigestInit(hRwSession, &digestmech);
-    if (crv != CKR_OK) {
-        pk11error("C_DigestInit failed", crv);
-        goto cleanup;
-    }
-
-    /* Digest the file */
-    while ((bytesRead = PR_Read(fd, file_buf, sizeof(file_buf))) > 0) {
-        crv = pFunctionList->C_DigestUpdate(hRwSession, (CK_BYTE_PTR)file_buf,
-                                            bytesRead);
-        if (crv != CKR_OK) {
-            pk11error("C_DigestUpdate failed", crv);
-            goto cleanup;
-        }
-        count += bytesRead;
-    }
-
-    /* close the input_File */
-    PR_Close(fd);
-    fd = NULL;
-    if (bytesRead < 0) {
-        lperror("0 bytes read from input file");
-        goto cleanup;
-    }
-
-    digestLen = sizeof(digest);
-    crv = pFunctionList->C_DigestFinal(hRwSession, (CK_BYTE_PTR)digest,
-                                       &digestLen);
-    if (crv != CKR_OK) {
-        pk11error("C_DigestFinal failed", crv);
-        goto cleanup;
-    }
-
-    if (digestLen != sizeof(digest)) {
-        PR_fprintf(PR_STDERR, "digestLen has incorrect length %lu "
-                              "it should be %lu \n",
-                   digestLen, sizeof(digest));
-        goto cleanup;
-    }
-
-    /* sign the hash */
-    memset(sign, 0, sizeof(sign));
-    /* SignUpdate  */
-    crv = pFunctionList->C_SignInit(hRwSession, &signMech, hDSAprivKey);
-    if (crv != CKR_OK) {
-        pk11error("C_SignInit failed", crv);
-        goto cleanup;
-    }
-
-    signLen = sizeof(sign);
-    crv = pFunctionList->C_Sign(hRwSession, (CK_BYTE *)digest, digestLen,
-                                sign, &signLen);
-    if (crv != CKR_OK) {
-        pk11error("C_Sign failed", crv);
-        goto cleanup;
-    }
-
-    if (signLen != sizeof(sign)) {
-        PR_fprintf(PR_STDERR, "signLen has incorrect length %lu "
-                              "it should be %lu \n",
-                   signLen, sizeof(sign));
-        goto cleanup;
-    }
-
-    if (verify) {
-        crv = pFunctionList->C_VerifyInit(hRwSession, &signMech, hDSApubKey);
-        if (crv != CKR_OK) {
-            pk11error("C_VerifyInit failed", crv);
-            goto cleanup;
-        }
-        crv = pFunctionList->C_Verify(hRwSession, digest, digestLen,
-                                      sign, signLen);
-        if (crv != CKR_OK) {
-            pk11error("C_Verify failed", crv);
-            goto cleanup;
-        }
-    }
-
     if (verbose) {
-        int j;
-        PR_fprintf(PR_STDERR, "Library File: %s %d bytes\n", input_file, count);
+        PR_fprintf(PR_STDERR, "Library File: %s\n", input_file);
         PR_fprintf(PR_STDERR, "Check File: %s\n", output_file);
 #ifdef USES_LINKS
         if (link_file) {
             PR_fprintf(PR_STDERR, "Link: %s\n", link_file);
         }
 #endif
-        PR_fprintf(PR_STDERR, "  hash: %lu bytes\n", digestLen);
-#define STEP 10
-        for (i = 0; i < (int)digestLen; i += STEP) {
-            PR_fprintf(PR_STDERR, "   ");
-            for (j = 0; j < STEP && (i + j) < (int)digestLen; j++) {
-                PR_fprintf(PR_STDERR, " %02x", digest[i + j]);
-            }
-            PR_fprintf(PR_STDERR, "\n");
-        }
-        PR_fprintf(PR_STDERR, "  signature: %lu bytes\n", signLen);
-        for (i = 0; i < (int)signLen; i += STEP) {
-            PR_fprintf(PR_STDERR, "   ");
-            for (j = 0; j < STEP && (i + j) < (int)signLen; j++) {
-                PR_fprintf(PR_STDERR, " %02x", sign[i + j]);
-            }
-            PR_fprintf(PR_STDERR, "\n");
-        }
     }
 
     /* open the target signature file */
-    fd = PR_Open(output_file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666);
-    if (fd == NULL) {
+    ofd = PR_Open(output_file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666);
+    if (ofd == NULL) {
         lperror(output_file);
         goto cleanup;
     }
 
-    /*
-     * we write the key out in a straight binary format because very
-     * low level libraries need to read an parse this file. Ideally we should
-     * just derEncode the public key (which would be pretty simple, and be
-     * more general), but then we'd need to link the ASN.1 decoder with the
-     * freebl libraries.
-     */
-
-    file_buf[0] = NSS_SIGN_CHK_MAGIC1;
-    file_buf[1] = NSS_SIGN_CHK_MAGIC2;
-    file_buf[2] = NSS_SIGN_CHK_MAJOR_VERSION;
-    file_buf[3] = NSS_SIGN_CHK_MINOR_VERSION;
-    encodeInt(&file_buf[4], 12); /* offset to data start */
-    encodeInt(&file_buf[8], CKK_DSA);
-    bytesWritten = PR_Write(fd, file_buf, 12);
-    if (bytesWritten != 12) {
+    if (useDSA) {
+        crv = shlibSignDSA(pFunctionList, pSlotList[slotIndex], hRwSession,
+                           keySize, ifd, ofd, hash);
+    } else {
+        crv = shlibSignHMAC(pFunctionList, pSlotList[slotIndex], hRwSession,
+                            keySize, ifd, ofd, hash);
+    }
+    if (crv == CKR_INTERNAL_OUT_FAILURE) {
         lperror(output_file);
-        goto cleanup;
+    }
+    if (crv == CKR_INTERNAL_IN_FAILURE) {
+        lperror(input_file);
     }
 
-    /* get DSA Public KeyValue */
-    memset(dsaPubKey, 0, sizeof(dsaPubKey));
-    dsaPubKeyValue.type = CKA_VALUE;
-    dsaPubKeyValue.pValue = (CK_VOID_PTR)&dsaPubKey;
-    dsaPubKeyValue.ulValueLen = sizeof(dsaPubKey);
-
-    crv = pFunctionList->C_GetAttributeValue(hRwSession, hDSApubKey,
-                                             &dsaPubKeyValue, 1);
-    if (crv != CKR_OK && crv != CKR_ATTRIBUTE_TYPE_INVALID) {
-        pk11error("C_GetAttributeValue failed", crv);
-        goto cleanup;
-    }
-
-    /* CKA_PRIME */
-    rv = writeItem(fd, dsaPubKeyTemplate[0].pValue,
-                   dsaPubKeyTemplate[0].ulValueLen, output_file);
-    if (rv != PR_SUCCESS)
-        goto cleanup;
-    /* CKA_SUBPRIME */
-    rv = writeItem(fd, dsaPubKeyTemplate[1].pValue,
-                   dsaPubKeyTemplate[1].ulValueLen, output_file);
-    if (rv != PR_SUCCESS)
-        goto cleanup;
-    /* CKA_BASE */
-    rv = writeItem(fd, dsaPubKeyTemplate[2].pValue,
-                   dsaPubKeyTemplate[2].ulValueLen, output_file);
-    if (rv != PR_SUCCESS)
-        goto cleanup;
-    /* DSA Public Key value */
-    rv = writeItem(fd, dsaPubKeyValue.pValue,
-                   dsaPubKeyValue.ulValueLen, output_file);
-    if (rv != PR_SUCCESS)
-        goto cleanup;
-    /* DSA SIGNATURE */
-    rv = writeItem(fd, &sign, signLen, output_file);
-    if (rv != PR_SUCCESS)
-        goto cleanup;
-    PR_Close(fd);
+    PR_Close(ofd);
+    ofd = NULL;
+    /* close the input_File */
+    PR_Close(ifd);
+    ifd = NULL;
 
 #ifdef USES_LINKS
     if (link_file) {
@@ -1286,7 +1592,6 @@ main(int argc, char **argv)
         }
     }
 #endif
-
     successful = PR_TRUE;
 
 cleanup:
@@ -1318,6 +1623,12 @@ cleanup:
         PL_strfree(link_file);
     }
 #endif
+    if (ifd) {
+        PR_Close(ifd);
+    }
+    if (ofd) {
+        PR_Close(ofd);
+    }
 
     disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
     if (!disableUnload && lib) {

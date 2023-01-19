@@ -17,7 +17,7 @@ Installation guide
    installed. This is done here:
    `http://lxr.mozilla.org/security/sour...platlibs.mk#53 <http://lxr.mozilla.org/security/source/security/nss/cmd/platlibs.mk#53>`__
 
-   .. code:: eval
+   .. code::
 
       53 ifeq ($(OS_ARCH), Linux)
       54 ifeq ($(USE_64), 1)

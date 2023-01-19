@@ -13,7 +13,7 @@ NSS Tools cmsutil
    Newsgroup: `mozilla.dev.tech.crypto <news://news.mozilla.org/mozilla.dev.tech.crypto>`__
    The cmsutil command-line utility uses the `S/MIME Toolkit <../smime/>`__ to perform basic
    operations, such as encryption and decryption, on `Cryptographic Message
-   Syntax (CMS) <http://www.ietf.org/rfc/rfc2630.txt>`__ messages.
+   Syntax (CMS) <http://www.ietf.org/rfc/rfc2630.txt>`__ messages.
 
 .. _syntax_2:
 
@@ -86,7 +86,7 @@ NSS Tools cmsutil
    | -p *password*                                  | Use password as key database password.         |
    +------------------------------------------------+------------------------------------------------+
    | -                                              | Specify list of recipients (email addresses)   |
-   | r&nbsp\ *recipient1*,\ *recipient2, . .&nbsp.* | for an encrypted or enveloped message. For     |
+   | r&nbsp\ *recipient1*,\ *recipient2, . .&nbsp.* | for an encrypted or enveloped message. For     |
    |                                                | certificates-only message, list of             |
    |                                                | certificates to send.                          |
    +------------------------------------------------+------------------------------------------------+
@@ -105,7 +105,7 @@ NSS Tools cmsutil
 .. container::
 
    cmsutil -C [-i *infile*] [-o *outfile*] [-d *dbdir*] [-p *password*] -r
-   "*recipient1*,\ *recipient2*, . . ." -e *envfile*
+   "*recipient1*,\ *recipient2*, . . ." -e *envfile*
    cmsutil -D [-i *infile*] [-o *outfile*] [-d *dbdir*] [-p *password*] [-c *content*] [-n] [-h
    *num*]
 
@@ -113,7 +113,7 @@ NSS Tools cmsutil
    "*recipient1*,\ *recipient2*,&nbsp.&nbsp.&nbsp."
 
    cmsutil -O [-i *infile*] [-o *outfile*] [-d *dbdir*] [-p *password*] -r
-   "*cert1*,\ *cert2*, . . ."
+   "*cert1*,\ *cert2*, . . ."
 
    cmsutil -S [-i *infile*] [-o *outfile*] [-d *dbdir*] [-p *password*] -N *nickname*\ [-TGP] [-Y
    *ekprefnick*]

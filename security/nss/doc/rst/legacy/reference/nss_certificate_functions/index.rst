@@ -39,11 +39,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
 
-   .. code:: eval
+   .. code::
 
       SECStatus CERT_VerifyCertNow(
         CERTCertDBHandle *handle,
@@ -110,11 +110,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_2
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
 
-   .. code:: eval
+   .. code::
 
       SECStatus CERT_VerifyCert(
         CERTCertDBHandle *handle,
@@ -184,11 +184,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_3
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
 
-   .. code:: eval
+   .. code::
 
       SECStatus CERT_VerifyCertName(
         CERTCertificate *cert,
@@ -221,7 +221,7 @@ NSS Certificate Functions
    certificates:
 
    -  \* matches anything
-   -   ? matches one character
+   -   ? matches one character
    -  \\ escapes a special character
    -  $ matches the end of the string
    -  [abc] matches one occurrence of a, b, or c. The only character that needs to be escaped in
@@ -241,12 +241,12 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_4
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
       #include <certt.h>
 
-   .. code:: eval
+   .. code::
 
       SECCertTimeValidity CERT_CheckCertValidTimes(
         CERTCertificate *cert,
@@ -267,7 +267,7 @@ NSS Certificate Functions
 
    The function returns an enumerator of type SECCertTimeValidity:
 
-   .. code:: eval
+   .. code::
 
       typedef enum {
         secCertTimeValid,
@@ -284,7 +284,7 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_5
 
-   .. code:: eval
+   .. code::
 
       #include <nss.h>
 
@@ -325,11 +325,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_6
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
 
-   .. code:: eval
+   .. code::
 
       CERTCertificate *CERT_DupCertificate(CERTCertificate *c)
 
@@ -359,12 +359,12 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_7
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
       #include <certt.h>
 
-   .. code:: eval
+   .. code::
 
       void CERT_DestroyCertificate(CERTCertificate *cert);
 
@@ -406,11 +406,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_8
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
 
-   .. code:: eval
+   .. code::
 
       CERTCertificate *CERT_FindCertByName (
         CERTCertDBHandle *handle,
@@ -438,12 +438,12 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_9
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
       #include <certt.h>
 
-   .. code:: eval
+   .. code::
 
       CERTCertNicknames *CERT_GetCertNicknames (
         CERTCertDBHandle *handle,
@@ -488,11 +488,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_10
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
 
-   .. code:: eval
+   .. code::
 
       void CERT_FreeNicknames(CERTCertNicknames *nicknames);
 
@@ -511,11 +511,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_11
 
-   .. code:: eval
+   .. code::
 
       #include <cert.h>
 
-   .. code:: eval
+   .. code::
 
       CERTCertDBHandle *CERT_GetDefaultCertDB(void);
 
@@ -537,11 +537,11 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_12
 
-   .. code:: eval
+   .. code::
 
       #include <nss.h>
 
-   .. code:: eval
+   .. code::
 
       SSLKEAType NSS_FindCertKEAType(CERTCertificate * cert);
 
@@ -575,12 +575,12 @@ NSS Certificate Functions
    .. rubric:: Syntax
       :name: syntax_13
 
-   .. code:: eval
+   .. code::
 
       #include <secitem.h>
       #include <seccomon.h>
 
-   .. code:: eval
+   .. code::
 
       SECComparison SECITEM_CompareItem(
         SECItem *a,
@@ -600,7 +600,7 @@ NSS Certificate Functions
 
    The function returns an enumerator of type SECComparison.
 
-   .. code:: eval
+   .. code::
 
       typedef enum _SECComparison {
         SECLessThan                = -1,

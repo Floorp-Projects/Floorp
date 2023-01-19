@@ -15,7 +15,7 @@ FC_GetObjectSize
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_GetObjectSize(
         CK_SESSION_HANDLE hSession,

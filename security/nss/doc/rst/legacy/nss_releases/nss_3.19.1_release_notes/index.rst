@@ -33,7 +33,7 @@ NSS 3.19.1 release notes
 .. container::
 
    -  `Bug
-      1138554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1138554>`__ / `CVE-2015-4000 <http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-4000>`__ -
+      1138554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1138554>`__ / `CVE-2015-4000 <http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-4000>`__ -
       The minimum strength of keys that libssl will accept for finite field algorithms (RSA,
       Diffie-Hellman, and DSA) have been increased to 1023 bits.
 
@@ -61,11 +61,11 @@ NSS 3.19.1 release notes
 
 .. container::
 
-   -  NSS reports the bit length of keys more accurately.  Thus, the SECKEY_PublicKeyStrength and
+   -  NSS reports the bit length of keys more accurately.  Thus, the SECKEY_PublicKeyStrength and
       SECKEY_PublicKeyStrengthInBits functions could report smaller values for values that have
       leading zero values. This affects the key strength values that are reported by
       SSL_GetChannelInfo.
-   -  The minimum size of keys that NSS will generate, import, or use has been raised:
+   -  The minimum size of keys that NSS will generate, import, or use has been raised:
 
       -  The minimum modulus size for RSA keys is now 512 bits
       -  The minimum modulus size for DSA keys is now 1023 bits
@@ -88,7 +88,7 @@ NSS 3.19.1 release notes
 .. container::
 
    The NSS development team would like to thank Matthew Green and Karthikeyan Bhargavan for
-   responsibly disclosing the issue in `bug
+   responsibly disclosing the issue in `bug
    1138554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1138554>`__.
 
 `Compatibility <#compatibility>`__
@@ -102,7 +102,7 @@ NSS 3.19.1 release notes
    to the functions listed in NSS Public Functions will remain compatible with future versions of
    the NSS shared libraries.
 
-   **Note:** NSS 3.19.1 increases the minimum size of keys it is willing to use. This has been shown
+   **Note:** NSS 3.19.1 increases the minimum size of keys it is willing to use. This has been shown
    to break some applications. :ref:`mozilla_projects_nss_nss_3_19_2_release_notes` reverts the
    behaviour to the NSS 3.19 and earlier limits.
 

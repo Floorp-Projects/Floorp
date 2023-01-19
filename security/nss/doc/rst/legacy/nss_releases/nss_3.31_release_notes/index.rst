@@ -89,11 +89,11 @@ NSS 3.31 release notes
       overlap with a systemwide crypto policy, if configured. **SSL_VersionRangeGetSupported** can
       be used to query the overlap between the library's supported range of TLS versions and the
       systemwide policy.
-   -  Previously, **SSL_VersionRangeSet** and **SSL_VersionRangeSetDefault** returned a failure if
+   -  Previously, **SSL_VersionRangeSet** and **SSL_VersionRangeSetDefault** returned a failure if
       the requested version range wasn't fully allowed by the systemwide crypto policy. They have
       been changed to return success, if at least one TLS version overlaps between the requested
       range and the systemwide policy. An application may call **SSL_VersionRangeGet**
-      and **SSL_VersionRangeGetDefault** to query the TLS version range that was effectively
+      and **SSL_VersionRangeGetDefault** to query the TLS version range that was effectively
       activated.
    -  Corrected the encoding of Domain Name Constraints extensions created by certutil
    -  NSS supports a clean seeding mechanism for \*NIX systems now using only /dev/urandom. This is

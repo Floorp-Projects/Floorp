@@ -172,7 +172,7 @@ nss tech note1
       only supported with SEC_QuickDERDecodeItem . It is useful to debug your templates or when
       writing new templates if they don't work.
 
-   | 
+   |
    | *Differences between SEC_ASN1DecodeItem and SEC_QuickDERDecodeItem*
 
    #. The arena argument is required to be non-NULL for SEC_QuickDERDecodeItem . With

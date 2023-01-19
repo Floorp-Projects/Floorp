@@ -2,18 +2,84 @@
 #include <string.h>
 #include <assert.h>
 
-#include "nspr.h"
-
 /* nss headers */
-#include "prtypes.h"
-#include "plgetopt.h"
 #include "hasht.h"
 #include "nsslowhash.h"
 #include "secport.h"
-#include "hasht.h"
-#include "basicutil.h"
 
 static char *progName = NULL;
+
+/* can't call NSPR or NSSUtil directly, so just include
+ * our own versions of SECU_ functions in basicutil.c.
+ * We need this test program to link without those functions
+ * so we can test that everyting works in a freebl only
+ * environment */
+const char *hex = "0123456789abcdef";
+
+const char printable[257] = {
+    "................"  /* 0x */
+    "................"  /* 1x */
+    " !\"#$%&'()*+,-./" /* 2x */
+    "0123456789:;<=>?"  /* 3x */
+    "@ABCDEFGHIJKLMNO"  /* 4x */
+    "PQRSTUVWXYZ[\\]^_" /* 5x */
+    "`abcdefghijklmno"  /* 6x */
+    "pqrstuvwxyz{|}~."  /* 7x */
+    "................"  /* 8x */
+    "................"  /* 9x */
+    "................"  /* ax */
+    "................"  /* bx */
+    "................"  /* cx */
+    "................"  /* dx */
+    "................"  /* ex */
+    "................"  /* fx */
+};
+
+static void
+SECU_PrintBuf(FILE *out, const char *msg, const void *vp, int len)
+{
+    const unsigned char *cp = (const unsigned char *)vp;
+    char buf[80];
+    char *bp;
+    char *ap;
+
+    fprintf(out, "%s [Len: %d]\n", msg, len);
+    memset(buf, ' ', sizeof buf);
+    bp = buf;
+    ap = buf + 50;
+    while (--len >= 0) {
+        unsigned char ch = *cp++;
+        *bp++ = hex[(ch >> 4) & 0xf];
+        *bp++ = hex[ch & 0xf];
+        *bp++ = ' ';
+        *ap++ = printable[ch];
+        if (ap - buf >= 66) {
+            *ap = 0;
+            fprintf(out, "   %s\n", buf);
+            memset(buf, ' ', sizeof buf);
+            bp = buf;
+            ap = buf + 50;
+        }
+    }
+    if (bp > buf) {
+        *ap = 0;
+        fprintf(out, "   %s\n", buf);
+    }
+}
+
+/* simple version o print error */
+static void
+SECU_PrintError(const char *prog, const char *string)
+{
+    fprintf(stderr, "%s: %s", prog, string);
+}
+
+/* simple version o print error */
+static void
+SECU_PrintError3(const char *prog, const char *string, const char *string2)
+{
+    fprintf(stderr, "%s: %s %s\n", prog, string, string2);
+}
 
 static int
 test_long_message(NSSLOWInitContext *initCtx,
@@ -28,7 +94,7 @@ test_long_message(NSSLOWInitContext *initCtx,
      * buffer and call update 1,000 times.
      */
     unsigned char buf[1000];
-    (void)PORT_Memset(buf, 'a', sizeof(buf));
+    (void)memset(buf, 'a', sizeof(buf));
 
     ctx = NSSLOWHASH_NewContext(initCtx, algoType);
     if (ctx == NULL) {
@@ -42,8 +108,8 @@ test_long_message(NSSLOWInitContext *initCtx,
     }
 
     NSSLOWHASH_End(ctx, results, &len, hashLen);
-    PR_ASSERT(len == hashLen);
-    PR_ASSERT(PORT_Memcmp(expected, results, hashLen) == 0);
+    assert(len == hashLen);
+    assert(PORT_Memcmp(expected, results, hashLen) == 0);
     if (PORT_Memcmp(expected, results, len) != 0) {
         SECU_PrintError(progName, "Hash mismatch\n");
         SECU_PrintBuf(stdout, "Expected: ", expected, hashLen);
@@ -140,8 +206,8 @@ testMessageDigest(NSSLOWInitContext *initCtx,
     NSSLOWHASH_Begin(ctx);
     NSSLOWHASH_Update(ctx, message, PORT_Strlen((const char *)message));
     NSSLOWHASH_End(ctx, results, &len, hashLen);
-    PR_ASSERT(len == hashLen);
-    PR_ASSERT(PORT_Memcmp(expected, results, len) == 0);
+    assert(len == hashLen);
+    assert(PORT_Memcmp(expected, results, len) == 0);
 
     if (PORT_Memcmp(expected, results, len) != 0) {
         SECU_PrintError(progName, "Hash mismatch\n");
@@ -425,7 +491,7 @@ main(int argc, char **argv)
     } else if (strcmp(argv[1], "SHA512") == 0) {
         rv += testSHA512(initCtx);
     } else {
-        SECU_PrintError(progName, "Unsupported hash type %s\n", argv[0]);
+        SECU_PrintError3(progName, "Unsupported hash type", argv[0]);
         Usage();
     }
 

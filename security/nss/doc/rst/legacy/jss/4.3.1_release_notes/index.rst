@@ -30,11 +30,11 @@
 
 .. container::
 
-    A list of bug fixes and enhancement requests were implemented in this release can be obtained by
+    A list of bug fixes and enhancement requests were implemented in this release can be obtained by
    running this `bugzilla
    query <http://bugzilla.mozilla.org/buglist.cgi?product=JSS&target_milestone=4.3.1&target_milestone=4.3.1&bug_status=RESOLVED&resolution=FIXED>`__
 
-   **JSS 4.3.1 requires :ref:`mozilla_projects_nss_3_12_5_release_notes` or higher.**
+   **JSS 4.3.1 requires :ref:`mozilla_projects_nss_3_12_5_release_notes` or higher.**
 
    .. rubric:: SSL3 & TLS Renegotiation Vulnerability
       :name: ssl3_tls_renegotiation_vulnerability
@@ -44,7 +44,7 @@
    vulnerability.
 
    All SSL/TLS renegotiation is disabled by default in NSS 3.12.5 and therefore will be disabled by
-   default with JSS 4.3.1. This will cause programs that attempt to perform renegotiation to
+   default with JSS 4.3.1. This will cause programs that attempt to perform renegotiation to
    experience failures where they formerly experienced successes, and is necessary for them to not
    be vulnerable, until such time as a new safe renegotiation scheme is standardized by the IETF.
 
@@ -71,11 +71,11 @@
    .. rubric:: Explicitly set the key usage for the generated private key
       :name: explicitly_set_the_key_usage_for_the_generated_private_key
 
-   |  In PKCS #11, each keypair can be marked with the operations it will
-   |  be used to perform. Some tokens require that a key be marked for
-   |  an operation before the key can be used to perform that operation;
-   |  other tokens don't care. NSS/JSS provides a way to specify a set of
-   |  flags and a corresponding mask for these flags.
+   |  In PKCS #11, each keypair can be marked with the operations it will
+   |  be used to perform. Some tokens require that a key be marked for
+   |  an operation before the key can be used to perform that operation;
+   |  other tokens don't care. NSS/JSS provides a way to specify a set of
+   |  flags and a corresponding mask for these flags.
 
    -  see generateECKeyPairWithOpFlags
    -  see generateRSAKeyPairWithOpFlags
@@ -92,10 +92,10 @@
    -  The CVS tag for the JSS 4.3.1 release is ``JSS_4_3_1_RTM``.
    -  Source tarballs are available from
       `ftp://ftp.mozilla.org/pub/mozilla.or...-4.3.1.tar.bz2 <ftp://ftp.mozilla.org/pub/mozilla.org/security/jss/releases/JSS_4_3_1_RTM/src/jss-4.3.1.tar.bz2>`__
-   -  Binary releases are no longer available on mozilla. JSS is a JNI library we provide the
+   -  Binary releases are no longer available on mozilla. JSS is a JNI library we provide the
       jss4.jar but expect you to build the JSS's matching JNI shared library. We provide the
-      jss4.jar in case you do not want to obtain your own JCE code signing certificate. JSS is a
-      JCE provider and therefore the jss4.jar must be signed.
+      jss4.jar in case you do not want to obtain your own JCE code signing certificate. JSS is a
+      JCE provider and therefore the jss4.jar must be signed.
       `ftp://ftp.mozilla.org/pub/mozilla.org/security/jss/releases/JSS_4_3_1_RTM <ftp://ftp.mozilla.org/pub/mozilla.org/security/jss/releases/JSS_4_3_1_RTM/>`__.
 
 `Documentation <#documentation>`__
@@ -111,8 +111,8 @@
    -  Read the instructions on `using JSS </using_jss.html>`__.
    -  Source may be viewed with a browser (via the MXR tool) at
       http://mxr.mozilla.org/mozilla/source/security/jss/
-   -  The RUN TIME behavior of JSS can be affected by the
-      :ref:`mozilla_projects_nss_reference_nss_environment_variables`. 
+   -  The RUN TIME behavior of JSS can be affected by the
+      :ref:`mozilla_projects_nss_reference_nss_environment_variables`. 
 
 .. _platform_information:
 
@@ -145,7 +145,7 @@
 
    -  For a list of reported bugs that have not yet been fixed, `click
       here. <http://bugzilla.mozilla.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&&product=JSS>`__
-      Note that some bugs may have been fixed since JSS 4.3.1 was released. 
+      Note that some bugs may have been fixed since JSS 4.3.1 was released. 
 
 `Compatibility <#compatibility>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -158,7 +158,7 @@
       JAR file must be used with the JSS shared library from the exact same release.
    -  To obtain the version info from the jar file use,
       "System.out.println(org.mozilla.jss.CryptoManager.JAR_JSS_VERSION)" and to check the shared
-      library: strings libjss4.so \| grep -i header  
+      library: strings libjss4.so \| grep -i header  
 
 `Feedback <#feedback>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,7 +167,7 @@
 
    -  Bugs discovered should be reported by filing a bug report with
       `bugzilla <http://bugzilla.mozilla.org/enter_bug.cgi?product=JSS>`__.
-   -  You can also give feedback directly to the developers on the Mozilla Cryptography forums...
+   -  You can also give feedback directly to the developers on the Mozilla Cryptography forums...
 
       -  `Mailing list <https://lists.mozilla.org/listinfo/dev-tech-crypto>`__
       -  `Newsgroup <http://groups.google.com/group/mozilla.dev.tech.crypto>`__

@@ -24,14 +24,14 @@ nss tech note2
    To enable the module logger, you must set the environment variable NSS_DEBUG_PKCS11_MODULE to the
    name of the target module. For example, to log the softoken, use:
 
-   .. code:: notranslate
+   .. code::
 
       NSS_DEBUG_PKCS11_MODULE="NSS Internal PKCS #11 Module"
 
    Note: In the Command Prompt on Windows, do not quote the name of the target module, otherwise the
    quotes are considered part of the name. For example, to log the softoken on Windows, use:
 
-   .. code:: notranslate
+   .. code::
 
             set NSS_DEBUG_PKCS11_MODULE=NSS Internal PKCS #11 Module
 
@@ -49,21 +49,21 @@ nss tech note2
 
    **1. Only display the sequence of PKCS #11 calls.** To enable this mode, set:
 
-   .. code:: notranslate
+   .. code::
 
       NSPR_LOG_MODULES=nss_mod_log:1
       NSPR_LOG_FILE=<logfile>
 
    The output format is:
 
-   .. code:: notranslate
+   .. code::
 
       OSThreadID[NSPRThreadID]: C_XXX
       OSThreadID[NSPRThreadID]:   rv = 0xYYYYYYYY
 
    For example,
 
-   .. code:: notranslate
+   .. code::
 
       1024[805ef10]: C_Initialize
       1024[805ef10]:   rv = 0x0
@@ -75,14 +75,14 @@ nss tech note2
    **2. Display the sequence of PKCS #11 calls, and the parameters given to them.** To enable this
    mode, set:
 
-   .. code:: notranslate
+   .. code::
 
       NSPR_LOG_MODULES=nss_mod_log:3
       NSPR_LOG_FILE=<logfile>
 
    The output format is:
 
-   .. code:: notranslate
+   .. code::
 
       OSThreadID[NSPRThreadID]: C_XXX
       OSThreadID[NSPRThreadID]:   arg1 = 0xAAAAAAAA
@@ -92,7 +92,7 @@ nss tech note2
 
    For example,
 
-   .. code:: notranslate
+   .. code::
 
       1024[805ef10]: C_Initialize
       1024[805ef10]:   pInitArgs = 0x4010c938
@@ -113,14 +113,14 @@ nss tech note2
    **3. Display verbose information, including template values, array values, etc.** To enable this
    mode, set:
 
-   .. code:: notranslate
+   .. code::
 
       NSPR_LOG_MODULES=nss_mod_log:4
       NSPR_LOG_FILE=<logfile>
 
    The output format is the same as above, but with more information. For example,
 
-   .. code:: notranslate
+   .. code::
 
       1024[805ef10]: C_FindObjectsInit
       1024[805ef10]:   hSession = 0x1000001

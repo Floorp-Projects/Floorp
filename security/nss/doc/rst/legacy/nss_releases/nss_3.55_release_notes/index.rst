@@ -70,7 +70,7 @@ NSS 3.55 release notes
 .. container::
 
    -  `Bug 1631583 <https://bugzilla.mozilla.org/show_bug.cgi?id=1631583>`__ (CVE-2020-6829,
-      CVE-2020-12400)  - Replace P384 and P521 with new, verifiable implementations from
+      CVE-2020-12400)  - Replace P384 and P521 with new, verifiable implementations from
       `Fiat-Crypto <https://github.com/mit-plv/fiat-crypto>`__ and
       `ECCKiila <https://gitlab.com/nisec/ecckiila/>`__.
    -  `Bug 1649487 <https://bugzilla.mozilla.org/show_bug.cgi?id=1649487>`__ - Move overzealous

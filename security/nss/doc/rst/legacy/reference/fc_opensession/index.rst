@@ -15,7 +15,7 @@ FC_OpenSession
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_OpenSession(
         CK_SLOT_ID slotID,

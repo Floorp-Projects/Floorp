@@ -636,14 +636,14 @@ Python binding for NSS
    | Change Log                                      | The primary enhancements in this version was    |
    |                                                 | fixing access to extensions in a                |
    |                                                 | CertificateRequest and giving access to         |
-   |                                                 | CertificateRequest attributes.  There is a bug  |
+   |                                                 | CertificateRequest attributes.  There is a bug  |
    |                                                 | in NSS which hides the existence of extensions  |
    |                                                 | in a CSR if the extensions are not contained in |
-   |                                                 | the first CSR  attribute. This was fixable in   |
-   |                                                 | python-nss without requiring a patch  to NSS.   |
+   |                                                 | the first CSR  attribute. This was fixable in   |
+   |                                                 | python-nss without requiring a patch  to NSS.   |
    |                                                 | Formerly python-nss did not provide access to   |
    |                                                 | the attributes in a CSR only the extensions,    |
-   |                                                 | with this release all components of a  CSR can  |
+   |                                                 | with this release all components of a  CSR can  |
    |                                                 | be accessed. See test/test_cert_request.py for  |
    |                                                 | examples.                                       |
    |                                                 |                                                 |
@@ -1387,7 +1387,7 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | SCM Tag                                         | PYNSS_RELEASE_0_9_0                             |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications                 |
@@ -1558,7 +1558,7 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | SCM Tag                                         | PYNSS_RELEASE_0_8_0                             |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications_2               |
@@ -1594,9 +1594,9 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | Release Date                                    | 2009-09-18                                      |
    +-------------------------------------------------+-------------------------------------------------+
-   | SCM Tag                                         |                                                 |
+   | SCM Tag                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications_3               |
@@ -1665,9 +1665,9 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | Release Date                                    | 2009-07-08                                      |
    +-------------------------------------------------+-------------------------------------------------+
-   | SCM Tag                                         |                                                 |
+   | SCM Tag                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications_4               |
@@ -1687,9 +1687,9 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | Release Date                                    | 2009-07-01                                      |
    +-------------------------------------------------+-------------------------------------------------+
-   | SCM Tag                                         |                                                 |
+   | SCM Tag                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications_5               |
@@ -1709,9 +1709,9 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | Release Date                                    | 2009-06-30                                      |
    +-------------------------------------------------+-------------------------------------------------+
-   | SCM Tag                                         |                                                 |
+   | SCM Tag                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications_6               |
@@ -1732,9 +1732,9 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | Release Date                                    | 2009-06-04                                      |
    +-------------------------------------------------+-------------------------------------------------+
-   | SCM Tag                                         |                                                 |
+   | SCM Tag                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications_7               |
@@ -1753,9 +1753,9 @@ Internal Changes
    +-------------------------------------------------+-------------------------------------------------+
    | Release Date                                    | 2009-05-21                                      |
    +-------------------------------------------------+-------------------------------------------------+
-   | SCM Tag                                         |                                                 |
+   | SCM Tag                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | Source Download                                 |                                                 |
+   | Source Download                                 |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | Change Log                                      | .. rubric:: General Modifications:              |
    |                                                 |    :name: general_modifications_8               |
@@ -1789,7 +1789,7 @@ Internal Changes
 
    =============== ===============
    Release Date    2008-07-09
-   SCM Tag          
-   Source Download  
+   SCM Tag          
+   Source Download  
    Change Log      Initial release
    =============== ===============

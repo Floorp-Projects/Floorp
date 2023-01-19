@@ -106,7 +106,7 @@ Mozilla-JSS JCA Provider notes
 
    The following example shows how you can specify which token is used for various JCA operations:
 
-   .. code:: notranslate
+   .. code::
 
       // Lookup PKCS #11 tokens
       CryptoManager manager = CryptoManager.getInstance();

@@ -52,7 +52,7 @@ FC_Initialize
 
    The library parameters string has this format:
 
-   .. code:: notranslate
+   .. code::
 
       "configdir='dir' certPrefix='prefix1' keyPrefix='prefix2' secmod='file' flags= "
 
@@ -60,14 +60,14 @@ FC_Initialize
 
    ``NSS_NoDB_Init("")``, which initializes NSS with no databases:
 
-   .. code:: notranslate
+   .. code::
 
        "configdir='' certPrefix='' keyPrefix='' secmod='' flags=readOnly,noCertDB,noMod
       DB,forceOpen,optimizeSpace "
 
    Mozilla Firefox initializes NSS with this string (on Windows):
 
-   .. code:: notranslate
+   .. code::
 
        "configdir='C:\\Documents and Settings\\wtc\\Application Data\\Mozilla\\Firefox\\Profiles\\default.7tt' certPrefix='' keyPrefix='' secmod='secmod.db' flags=optimizeSpace  manufacturerID='Mozilla.org' libraryDescription='PSM Internal Crypto Services' cryptoTokenDescription='Generic Crypto Services' dbTokenDescription='Software Security Device' cryptoSlotDescription='PSM Internal Cryptographic Services' dbSlotDescription='PSM Private Keys' FIPSSlotDescription='PSM Internal FIPS-140-1 Cryptographic Services' FIPSTokenDescription='PSM FIPS-140-1 User Private Key Services' minPS=0"
 
@@ -108,7 +108,7 @@ FC_Initialize
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       #include <assert.h>
 

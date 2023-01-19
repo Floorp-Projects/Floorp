@@ -15,7 +15,7 @@ FC_EncryptUpdate
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_EncryptUpdate(
         CK_SESSION_HANDLE hSession,

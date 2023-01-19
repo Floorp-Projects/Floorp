@@ -52,14 +52,14 @@ NSS 3.16.2 release notes
 
    -  *in cert.h*
 
-      -  **CERT_AddExtensionByOID** - adds an extension to a certificate. It is the same as
+      -  **CERT_AddExtensionByOID** - adds an extension to a certificate. It is the same as
          CERT_AddExtension except that the OID is represented by a SECItem instead of a SECOidTag.
 
    -  *in pk11pub.h*
 
-      -  **PK11_PrivDecrypt** - decrypts with a private key. The algorithm is specified with a
+      -  **PK11_PrivDecrypt** - decrypts with a private key. The algorithm is specified with a
          CK_MECHANISM_TYPE.
-      -  **PK11_PubEncrypt** - encrypts with a public key. The algorithm is specified with a
+      -  **PK11_PubEncrypt** - encrypts with a public key. The algorithm is specified with a
          CK_MECHANISM_TYPE.
 
    .. rubric:: New Macros
@@ -67,9 +67,9 @@ NSS 3.16.2 release notes
 
    -  *in sslerr.h*
 
-      -  **SSL_ERROR_NEXT_PROTOCOL_NO_CALLBACK** - An SSL error code that means the next protcol
+      -  **SSL_ERROR_NEXT_PROTOCOL_NO_CALLBACK** - An SSL error code that means the next protcol
          negotiation extension was enabled, but the callback was cleared prior to being needed.
-      -  **SSL_ERROR_NEXT_PROTOCOL_NO_PROTOCOL** - An SSL error code that means the server supports
+      -  **SSL_ERROR_NEXT_PROTOCOL_NO_PROTOCOL** - An SSL error code that means the server supports
          no protocols that the client advertises in the ALPN extension.
 
 .. _notable_changes_in_nss_3.16.2:
@@ -95,14 +95,14 @@ NSS 3.16.2 release notes
 
    -  The certutil command has three new certificate usage specifiers:
 
-      -  L:  certificateUsageSSLCA
-      -  A: certificateUsageAnyCA
-      -  Y: certificateUsageVerifyCA
+      -  L:  certificateUsageSSLCA
+      -  A: certificateUsageAnyCA
+      -  Y: certificateUsageVerifyCA
 
    -  The pp command has a new command-line option -u, which means "use UTF-8". The default is to
       show a non-ASCII character as ".".
-   -  On Linux, NSS is built with the -ffunction-sections -fdata-sections compiler flags and the
-      --gc-sections linker flag to allow unused functions to be discarded.
+   -  On Linux, NSS is built with the -ffunction-sections -fdata-sections compiler flags and the
+      --gc-sections linker flag to allow unused functions to be discarded.
 
 .. _bugs_fixed_in_nss_3.16.2:
 
@@ -114,4 +114,4 @@ NSS 3.16.2 release notes
    This Bugzilla query returns all the bugs fixed in NSS 3.16.2:
 
    | https://bugzilla.mozilla.org/buglist.cgi?resolution=FIXED&classification=Components&query_format=advanced&product=NSS&target_milestone=3.16.2
-   |  
+   |  

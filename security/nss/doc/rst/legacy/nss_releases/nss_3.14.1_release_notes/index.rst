@@ -72,29 +72,29 @@ NSS 3.14.1 release notes
 .. container::
 
    -  Windows CE support has been removed from the code base.
-   -  `Bug 812399 <https://bugzilla.mozilla.org/show_bug.cgi?id=812399>`__ - In NSS 3.14, a
+   -  `Bug 812399 <https://bugzilla.mozilla.org/show_bug.cgi?id=812399>`__ - In NSS 3.14, a
       regression caused `Bug 641052 <https://bugzilla.mozilla.org/show_bug.cgi?id=641052>`__ /
       CVE-2011-3640 to be re-introduced under certain situations. This regression only affected
       applications that initialize NSS via the NSS_NoDB_Init function. NSS 3.14.1 includes the
       complete fix for this issue.
-   -  `Bug 357025 <https://bugzilla.mozilla.org/show_bug.cgi?id=357025>`__ - NSS 3.14 added support
+   -  `Bug 357025 <https://bugzilla.mozilla.org/show_bug.cgi?id=357025>`__ - NSS 3.14 added support
       for tokens that make use of CKA_ALWAYS_AUTHENTICATE. However, when authenticating with such
       tokens, it was possible for an internal lock to be acquired twice, causing a hang. This hang
       has been fixed in NSS 3.14.1.
-   -  `Bug 802429 <https://bugzilla.mozilla.org/show_bug.cgi?id=802429>`__ - In previous versions of
+   -  `Bug 802429 <https://bugzilla.mozilla.org/show_bug.cgi?id=802429>`__ - In previous versions of
       NSS, the "cipherOrder" slot configuration flag was not respected, causing the most recently
       added slot that supported the requested PKCS#11 mechanism to be used instead. NSS now
       correctly respects the supplied cipherOrder.
       Applications which use multiple PKCS#11 modules, which do not indicate which tokens should be
       used by default for particular algorithms, and which do make use of cipherOrder may now find
       that cryptographic operations occur on a different PKCS#11 token.
-   -  `Bug 802429 <https://bugzilla.mozilla.org/show_bug.cgi?id=802429>`__ - The NSS softoken is now
+   -  `Bug 802429 <https://bugzilla.mozilla.org/show_bug.cgi?id=802429>`__ - The NSS softoken is now
       the default token for SHA-256 and SHA-512. In previous versions of NSS, these algorithms would
       be handled by the most recently added PKCS#11 token that supported them.
-   -  `Bug 611451 <https://bugzilla.mozilla.org/show_bug.cgi?id=611451>`__ - When built with the
+   -  `Bug 611451 <https://bugzilla.mozilla.org/show_bug.cgi?id=611451>`__ - When built with the
       current version of Apple XCode on Mac OS X, the NSS shared libraries will now only export the
       public NSS functions.
-   -  `Bug 810582 <https://bugzilla.mozilla.org/show_bug.cgi?id=810582>`__ - TLS False Start is now
+   -  `Bug 810582 <https://bugzilla.mozilla.org/show_bug.cgi?id=810582>`__ - TLS False Start is now
       only used with servers that negotiate a cipher suite that supports forward secrecy.
       **Note**: The criteria for False Start may change again in future NSS releases.
 

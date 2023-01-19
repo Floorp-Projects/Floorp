@@ -15,7 +15,7 @@ FC_CloseSession
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_CloseSession(
         CK_SESSION_HANDLE hSession

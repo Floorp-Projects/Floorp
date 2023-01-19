@@ -85,8 +85,8 @@ NSS 3.15.1 release notes
 
 .. container::
 
-   -  `Bug 856060 <https://bugzilla.mozilla.org/show_bug.cgi?id=856060>`__ - Enforce name
-      constraints on the common name in libpkix  when no subjectAltName is present.
+   -  `Bug 856060 <https://bugzilla.mozilla.org/show_bug.cgi?id=856060>`__ - Enforce name
+      constraints on the common name in libpkix  when no subjectAltName is present.
    -  `Bug 875156 <https://bugzilla.mozilla.org/show_bug.cgi?id=875156>`__ - Add const to the
       function arguments of SEC_CertNicknameConflict.
    -  `Bug 877798 <https://bugzilla.mozilla.org/show_bug.cgi?id=877798>`__ - Fix ssltap to print the

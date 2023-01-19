@@ -53,7 +53,7 @@ NSS_3.12.3_release_notes.html
 
 .. container::
 
-   | The CVS tag for the NSS 3.12.3 release is NSS_3_12_3_RTM.  NSS 3.12.3 requires `NSPR
+   | The CVS tag for the NSS 3.12.3 release is NSS_3_12_3_RTM.  NSS 3.12.3 requires `NSPR
      4.7.4 <https://www.mozilla.org/projects/nspr/release-notes/nspr474.html>`__.
    | See the `Documentation <#documentation>`__ section for the build instructions.
 
@@ -419,7 +419,7 @@ NSS_3.12.3_release_notes.html
 
    NSS 3.12.3 shared libraries are backward compatible with all older NSS 3.x shared libraries. A
    program linked with older NSS 3.x shared libraries will work with NSS 3.12.3 shared libraries
-   without recompiling or relinking.  Furthermore, applications that restrict their use of NSS APIs
+   without recompiling or relinking.  Furthermore, applications that restrict their use of NSS APIs
    to the functions listed in `NSS Public Functions <../ref/nssfunctions.html>`__ will remain
    compatible with future versions of the NSS shared libraries.
 

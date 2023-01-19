@@ -10,7 +10,7 @@ NSS Sample Code sample5
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       /* Example code to illustrate PKI crypto ops (encrypt with public key,
        * decrypt with private key)

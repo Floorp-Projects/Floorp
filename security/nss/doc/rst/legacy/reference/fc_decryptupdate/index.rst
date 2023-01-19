@@ -15,7 +15,7 @@ FC_DecryptUpdate
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_DecryptUpdate(
         CK_SESSION_HANDLE hSession,

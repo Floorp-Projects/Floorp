@@ -15,7 +15,7 @@ FC_GetFunctionStatus
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_GetFunctionStatus(
         CK_SESSION_HANDLE hSession

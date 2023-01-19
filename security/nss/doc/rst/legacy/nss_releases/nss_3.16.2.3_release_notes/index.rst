@@ -55,16 +55,16 @@ NSS 3.16.2.3 release notes
 
    -  *in ssl.h*
 
-      -  **SSL_ENABLE_FALLBACK_SCSV** - an SSL socket option that enables TLS_FALLBACK_SCSV. Off by
+      -  **SSL_ENABLE_FALLBACK_SCSV** - an SSL socket option that enables TLS_FALLBACK_SCSV. Off by
          default.
 
    -  *in sslerr.h*
 
-      -  **SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT** - a new SSL error code.
+      -  **SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT** - a new SSL error code.
 
    -  *in sslproto.h*
 
-      -  **TLS_FALLBACK_SCSV** - a signaling cipher suite value that indicates a handshake is the
+      -  **TLS_FALLBACK_SCSV** - a signaling cipher suite value that indicates a handshake is the
          result of TLS version fallback.
 
 .. _notable_changes_in_nss_3.16.2.3:
@@ -87,7 +87,7 @@ NSS 3.16.2.3 release notes
 
    -  `Bug 1057161 <https://bugzilla.mozilla.org/show_bug.cgi?id=1057161>`__ - NSS hangs with 100%
       CPU on invalid EC key
-   -  `Bug 1036735 <https://bugzilla.mozilla.org/show_bug.cgi?id=1036735>`__ - Add support for
+   -  `Bug 1036735 <https://bugzilla.mozilla.org/show_bug.cgi?id=1036735>`__ - Add support for
       draft-ietf-tls-downgrade-scsv to NSS
 
 `Compatibility <#compatibility>`__

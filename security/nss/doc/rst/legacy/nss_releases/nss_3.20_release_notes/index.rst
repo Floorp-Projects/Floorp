@@ -48,7 +48,7 @@ NSS 3.20 release notes
       -  **SSL_DHEGroupPrefSet** - Configure the set of allowed/enabled DHE group parameters that
          can be used by NSS for a server socket.
       -  **SSL_EnableWeakDHEPrimeGroup** - Enable the use of weak DHE group parameters that are
-         smaller than default minimum size of the library.
+         smaller than default minimum size of the library.
 
    .. rubric:: New Types
       :name: new_types
@@ -74,10 +74,10 @@ NSS 3.20 release notes
 .. container::
 
    -  The TLS library has been extended to support DHE ciphersuites in server applications.
-   -  For backward compatibility reasons, the server side implementation of the TLS library keeps
+   -  For backward compatibility reasons, the server side implementation of the TLS library keeps
       all DHE ciphersuites disabled by default. They can be enabled with the new socket option
       SSL_ENABLE_SERVER_DHE and the SSL_OptionSet or the SSL_OptionSetDefault API.
-   -  The server side implementation of the TLS  does not support session tickets while using a DHE
+   -  The server side implementation of the TLS  does not support session tickets while using a DHE
       ciphersuite (see `bug 1174677 <https://bugzilla.mozilla.org/show_bug.cgi?id=1174677>`__).
    -  Support for the following ciphersuites has been added:
 
@@ -96,7 +96,7 @@ NSS 3.20 release notes
       select one or multiple of the embedded DHE parameters as the preferred parameters. The current
       implementation of NSS will always use the first entry in the array that is passed as a
       parameter to the SSL_DHEGroupPrefSet API. In future versions of the TLS implementation, a TLS
-      client might show a preference for certain DHE parameters, and the NSS TLS server side
+      client might show a preference for certain DHE parameters, and the NSS TLS server side
       implementation might select a matching entry from the set of parameters that have been
       configured as preferred on the server side.
    -  NSS optionally supports the use of weak DHE parameters with DHE ciphersuites in order to
@@ -138,5 +138,5 @@ NSS 3.20 release notes
 .. container::
 
    Bugs discovered should be reported by filing a bug report
-   at ` bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product
+   at ` bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product
    NSS).

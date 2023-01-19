@@ -48,7 +48,7 @@ NSS 3.35 release notes
 
       -  **SSLHandshakeType** - The type of a TLS handshake message.
       -  For the **SSLSignatureScheme** enum, the enumerated values ssl_sig_rsa_pss_sha\* are
-         deprecated in response to a change in TLS 1.3.  Please use the equivalent
+         deprecated in response to a change in TLS 1.3.  Please use the equivalent
          ssl_sig_rsa_pss_rsae_sha\* for rsaEncryption keys, or ssl_sig_rsa_pss_pss_sha\* for PSS
          keys. Note that this release does not include support for the latter.
 
@@ -133,7 +133,7 @@ NSS 3.35 release notes
 
    -  Significant changes to TLS 1.3 were made, along with the update from draft -18 to draft -23:
 
-      -  Support for KeyUpdate was added.  KeyUpdate will be used automatically, if a cipher is used
+      -  Support for KeyUpdate was added.  KeyUpdate will be used automatically, if a cipher is used
          for a sufficient number of records.
       -  SSL_KEYLOGFILE support was updated for TLS 1.3.
       -  An option to enable TLS 1.3 compatibility mode, SSL_ENABLE_TLS13_COMPAT_MODE, was added.
@@ -143,22 +143,22 @@ NSS 3.35 release notes
       -  Note: The value of ssl_tls13_key_share_xtn value, from the SSLExtensionType, has been
          renumbered to match changes in TLS 1.3. This is not expected to cause problems; code
          compiled against previous versions of TLS will now refer to an unsupported codepoint, if
-         this value was used.  Recompilation should correct any mismatches.
+         this value was used.  Recompilation should correct any mismatches.
       -  Note: DTLS support is promoted in draft -23, but this is currently not compliant with the
          DTLS 1.3 draft -23 specification.
 
-   -  TLS servers are able to handle a ClientHello statelessly, if the client supports TLS 1.3.  If
+   -  TLS servers are able to handle a ClientHello statelessly, if the client supports TLS 1.3.  If
       the server sends a HelloRetryRequest, it is possible to discard the server socket, and make a
-      new socket to handle any subsequent ClientHello.  This better enables stateless server
-      operation.  (This feature is added in support of QUIC, but it also has utility for DTLS 1.3
+      new socket to handle any subsequent ClientHello.  This better enables stateless server
+      operation.  (This feature is added in support of QUIC, but it also has utility for DTLS 1.3
       servers.)
-   -  The tstclnt utility now supports DTLS, using the -P option.  Note that a DTLS server is also
+   -  The tstclnt utility now supports DTLS, using the -P option.  Note that a DTLS server is also
       provided in tstclnt.
-   -  TLS compression is no longer possible with NSS.  The option can be enabled, but NSS will no
+   -  TLS compression is no longer possible with NSS.  The option can be enabled, but NSS will no
       longer negotiate compression.
    -  The signatures of functions SSL_OptionSet, SSL_OptionGet, SSL_OptionSetDefault and
-      SSL_OptionGetDefault have been modified, to take a PRIntn argument rather than PRBool.  This
-      makes it clearer, that options can have values other than 0 or 1.  Note this does not affect
+      SSL_OptionGetDefault have been modified, to take a PRIntn argument rather than PRBool.  This
+      makes it clearer, that options can have values other than 0 or 1.  Note this does not affect
       ABI compatibility, because PRBool is a typedef for PRIntn.
 
 .. _experimental_apis_and_functionality:
@@ -197,17 +197,17 @@ NSS 3.35 release notes
    -  Several experimental APIs were added in support of TLS 1.3 features:
 
       -  TLS servers are able to send session tickets to clients on demand, using the experimental
-         SSL_SendSessionTicket function.  This ticket can include arbitrary application-chosen
+         SSL_SendSessionTicket function.  This ticket can include arbitrary application-chosen
          content.
       -  An anti-replay mechanism was added for 0-RTT, through the experimental SSL_SetupAntiReplay
-         function.  *This mechanism must be enabled for 0-RTT to be accepted when NSS is being used
+         function.  *This mechanism must be enabled for 0-RTT to be accepted when NSS is being used
          as a server.*
       -  KeyUpdate can be triggered by the experimental SSL_KeyUpdate() function.
       -  TLS servers can screen new TLS 1.3 connections, as they are made using the experimental
-         SSL_HelloRetryRequestCallback function.  This function allows for callbacks to be
-         installed, which are called when a server receives a new TLS ClientHello.  The application
+         SSL_HelloRetryRequestCallback function.  This function allows for callbacks to be
+         installed, which are called when a server receives a new TLS ClientHello.  The application
          is then able to examine application-chosen content from the session tickets, or
-         HelloRetryRequest cookie, and decide whether to proceed with the connection.  For an
+         HelloRetryRequest cookie, and decide whether to proceed with the connection.  For an
          initial ClientHello, an application can control whether NSS sends a HelloRetryRequest, and
          include application-chosen content in the cookie.
 

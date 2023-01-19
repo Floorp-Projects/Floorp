@@ -130,27 +130,27 @@ NSS tools : cmsutil
    cmsutil -C [-i infile] [-o outfile] [-d dbdir] [-p password] -r "recipient1,recipient2, . . ." -e
    envfile
 
-   | 
+   |
    | Decode Example
 
    cmsutil -D [-i infile] [-o outfile] [-d dbdir] [-p password] [-c content] [-n] [-h num]
 
-   | 
+   |
    | Envelope Example
 
    cmsutil -E [-i infile] [-o outfile] [-d dbdir] [-p password] -r "recipient1,recipient2, ..."
 
-   | 
+   |
    | Certificate-only Example
 
    cmsutil -O [-i infile] [-o outfile] [-d dbdir] [-p password] -r "cert1,cert2, . . ."
 
-   | 
+   |
    | Sign Message Example
 
    cmsutil -S [-i infile] [-o outfile] [-d dbdir] [-p password] -N nickname[-TGP] [-Y ekprefnick]
 
-   | 
+   |
    | See also
 
    certutil(1)

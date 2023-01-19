@@ -55,7 +55,7 @@ NSS 3.53 release notes
       attribute, which NSS consumers can query to further refine trust decisions. (`Bug
       1618404, <https://bugzilla.mozilla.org/show_bug.cgi?id=1618404>`__ `Bug
       1621159 <https://bugzilla.mozilla.org/show_bug.cgi?id=1621159>`__) If a builtin certificate
-      has a CKA_NSS_SERVER_DISTRUST_AFTER timestamp before the  SCT or NotBefore date of a
+      has a CKA_NSS_SERVER_DISTRUST_AFTER timestamp before the  SCT or NotBefore date of a
       certificate that builtin issued, then clients can elect not to trust it.
 
       -  This attribute provides a more graceful phase-out for certificate authorities than complete

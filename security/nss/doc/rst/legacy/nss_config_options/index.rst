@@ -5,7 +5,7 @@ NSS Config Options
 
 .. _nss_config_options_format:
 
-` NSS Config Options Format <#nss_config_options_format>`__
+` NSS Config Options Format <#nss_config_options_format>`__
 -----------------------------------------------------------
 
 .. container::
@@ -13,45 +13,45 @@ NSS Config Options
    The specified ciphers will be allowed by policy, but an application may allow more by policy
    explicitly:
 
-   .. code:: notranslate
+   .. code::
 
       config="allow=curve1:curve2:hash1:hash2:rsa-1024..."
 
    Only the specified hashes and curves will be allowed:
 
-   .. code:: notranslate
+   .. code::
 
       config="disallow=all allow=sha1:sha256:secp256r1:secp384r1"
 
    Only the specified hashes and curves will be allowed, and RSA keys of 2048 or more will be
    accepted, and DH key exchange with 1024-bit primes or more:
 
-   .. code:: notranslate
+   .. code::
 
       config="disallow=all allow=sha1:sha256:secp256r1:secp384r1:min-rsa=2048:min-dh=1024"
 
    A policy that enables the AES ciphersuites and the SECP256/384 curves:
 
-   .. code:: notranslate
+   .. code::
 
       config="allow=aes128-cbc:aes128-gcm::HMAC-SHA1:SHA1:SHA256:SHA384:RSA:ECDHE-RSA:SECP256R1:SECP384R1"
 
    Turn off md5
 
-   .. code:: notranslate
+   .. code::
 
       config="disallow=MD5"
 
    Turn off md5 and sha1 only for SSL
 
-   .. code:: notranslate
+   .. code::
 
       config="disallow=MD5(SSL):SHA1(SSL)"
 
    Disallow values are parsed first, and then allow values, independent of the order in which they
    appear.
 
-   .. code:: notranslate
+   .. code::
 
       Future key words (not yet implemented):
       enable: turn on ciphersuites by default.
@@ -64,10 +64,10 @@ NSS Config Options
            ssl-default-lock: turn off the ability for applications to change cipher
                      suite states with SSL_EnableCipher, SSL_DisableCipher.
 
-   .. rubric::  ECC Curves
+   .. rubric::  ECC Curves
       :name: ecc_curves
 
-   | 
+   |
    | PRIME192V1
    | PRIME192V2
    | PRIME192V3
@@ -131,7 +131,7 @@ NSS Config Options
    .. rubric:: Hashes
       :name: hashes
 
-   | 
+   |
    | MD2
    | MD4
    | MD5

@@ -15,7 +15,7 @@ FC_DigestEncryptUpdate
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_DigestEncryptUpdate(
         CK_SESSION_HANDLE hSession,

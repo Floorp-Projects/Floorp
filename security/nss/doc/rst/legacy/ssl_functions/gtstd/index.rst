@@ -57,7 +57,7 @@ gtstd
    related low-level OS operations. On any given server or client, one or more PKCS #11 modules may
    be available.
 
-   **Figure 2.1    Relationships among NSS libraries, cryptographic modules, slots, and tokens**
+   **Figure 2.1    Relationships among NSS libraries, cryptographic modules, slots, and tokens**
 
    .. image:: /en-US/docs/Mozilla/Projects/NSS/SSL_functions/gtstd/pkcs.gif
 

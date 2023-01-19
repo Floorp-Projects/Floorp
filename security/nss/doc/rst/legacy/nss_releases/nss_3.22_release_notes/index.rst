@@ -67,8 +67,8 @@ NSS 3.22 release notes
       -  **PK11_VerifyWithMechanism** - This function is an extended version of ``PK11_Verify()``.
 
          -  These functions take an explicit mechanism and parameters as arguments rather than
-            inferring it from the key type using ``PK11_MapSignKeyType()``.  The mechanism type
-            CKM_RSA_PKCS_PSS is now supported for RSA in addition to CKM_RSA_PKCS.  The
+            inferring it from the key type using ``PK11_MapSignKeyType()``.  The mechanism type
+            CKM_RSA_PKCS_PSS is now supported for RSA in addition to CKM_RSA_PKCS.  The
             CK_RSA_PKCS_PSS mechanism takes a parameter of type CK_RSA_PKCS_PSS_PARAMS.
 
    -  *in ssl.h*
@@ -162,7 +162,7 @@ NSS 3.22 release notes
 
 .. container::
 
-   -  NSS C++ tests are built by default, requiring a C++11 compiler.  Set the NSS_DISABLE_GTESTS
+   -  NSS C++ tests are built by default, requiring a C++11 compiler.  Set the NSS_DISABLE_GTESTS
       variable to 1 to disable building these tests.
 
 .. _bugs_fixed_in_nss_3.22:

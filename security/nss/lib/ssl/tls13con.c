@@ -3035,7 +3035,10 @@ tls13_HandleServerHelloPart2(sslSocket *ss, const PRUint8 *savedMsg, PRUint32 sa
         /* We may have offered a PSK. If the server didn't negotiate
          * it, clear this state to re-extract the Early Secret. */
         if (ss->ssl3.hs.currentSecret) {
-            PORT_Assert(ssl3_ExtensionAdvertised(ss, ssl_tls13_pre_shared_key_xtn));
+            /* We might have dropped incompatible PSKs on HRR
+             * (see RFC8466, Section 4.1.4). */
+            PORT_Assert(ss->ssl3.hs.helloRetry ||
+                        ssl3_ExtensionAdvertised(ss, ssl_tls13_pre_shared_key_xtn));
             PK11_FreeSymKey(ss->ssl3.hs.currentSecret);
             ss->ssl3.hs.currentSecret = NULL;
         }
@@ -5063,8 +5066,6 @@ loser:
 static SECStatus
 tls13_FinishHandshake(sslSocket *ss)
 {
-    /* If |!echHpkeCtx|, any advertised ECH was GREASE ECH. */
-    PRBool offeredEch = !ss->sec.isServer && ss->ssl3.hs.echHpkeCtx;
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->ssl3.hs.restartTarget == NULL);
@@ -5080,28 +5081,7 @@ tls13_FinishHandshake(sslSocket *ss)
 
     TLS13_SET_HS_STATE(ss, idle_handshake);
 
-    PORT_Assert(ss->ssl3.hs.echAccepted ||
-                (ss->opt.enableTls13BackendEch &&
-                 ss->xtnData.ech &&
-                 ss->xtnData.ech->receivedInnerXtn) ==
-                    ssl3_ExtensionNegotiated(ss, ssl_tls13_encrypted_client_hello_xtn));
-    if (offeredEch && !ss->ssl3.hs.echAccepted) {
-        SSL3_SendAlert(ss, alert_fatal, ech_required);
-
-        /* "If [one, none] of the retry_configs contains a supported version, the client can
-         * regard ECH as securely [replaced, disabled] by the server." */
-        if (ss->xtnData.ech && ss->xtnData.ech->retryConfigs.len) {
-            PORT_SetError(SSL_ERROR_ECH_RETRY_WITH_ECH);
-            ss->xtnData.ech->retryConfigsValid = PR_TRUE;
-        } else {
-            PORT_SetError(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
-        }
-        return SECFailure;
-    }
-
-    ssl_FinishHandshake(ss);
-
-    return SECSuccess;
+    return ssl_FinishHandshake(ss);
 }
 
 /* Do the parts of sending the client's second round that require

@@ -12,7 +12,7 @@ CERT_FindCertByIssuerAndSN
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
       CERTCertificate *CERT_FindCertByIssuerAndSN (
@@ -58,7 +58,7 @@ CERT_FindCertByIssuerAndSN
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       CERTIssuerAndSN issuerSN;
       issuerSN.derIssuer.data = caName->data;

@@ -15,7 +15,7 @@ FC_SeedRandom
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_SeedRandom(
         CK_SESSION_HANDLE hSession,
@@ -44,7 +44,7 @@ FC_SeedRandom
    that ``FC_SeedRandom()`` doesn't provide the initial seed material for the random number
    generator. The initial seed material is provided by the NSS cryptographic module itself.
 
-   | 
+   |
    | A user may call ``FC_SeedRandom()`` without logging into the token (to assume the NSS User
      role).
 

@@ -27,12 +27,12 @@ OLD SSL Reference
    Writer: Sean Cotter
    Manager: Wan-Teh Chang*
 
-   .. rubric:: `Chapter 1  Overview of an SSL Application <sslintro.html#1028068>`__
+   .. rubric:: `Chapter 1  Overview of an SSL Application <sslintro.html#1028068>`__
       :name: chapter_1_overview_of_an_ssl_application
 
       SSL and related APIs allow compliant applications to configure sockets for authenticated,
       tamper-proof, and encrypted communications. This chapter introduces some of the basic SSL
-      functions. Chapter 2, "Getting Started With SSL" illustrates their use in sample client and
+      functions. Chapter 2, "Getting Started With SSL" illustrates their use in sample client and
       server applications.
 
    -  `Initialization <sslintro.html#1027662>`__
@@ -44,7 +44,7 @@ OLD SSL Reference
    -  `Functions Used by Callbacks <sslintro.html#1027820>`__ ` <sslintro.html#1030535>`__
    -  `Cleanup <sslintro.html#1030535>`__
 
-   .. rubric:: `Chapter 2  Getting Started With SSL <gtstd.html#1005439>`__
+   .. rubric:: `Chapter 2  Getting Started With SSL <gtstd.html#1005439>`__
       :name: chapter_2_getting_started_with_ssl
 
       This chapter describes how to set up your environment, including certificate and key
@@ -62,7 +62,7 @@ OLD SSL Reference
 
    -  `Building NSS Programs <gtstd.html#1013274>`__
 
-   .. rubric:: `Chapter 3  Selected SSL Types and Structures <ssltyp.html#1029792>`__
+   .. rubric:: `Chapter 3  Selected SSL Types and Structures <ssltyp.html#1029792>`__
       :name: chapter_3_selected_ssl_types_and_structures
 
       This chapter describes some of the most important types and structures used with the functions
@@ -204,7 +204,7 @@ OLD SSL Reference
          :ref:`mozilla_projects_nss_ssl_functions_sslfnc#1231825`
       -  :ref:`mozilla_projects_nss_ssl_functions_sslfnc#1231825`
 
-   .. rubric:: `Chapter 5  Certificate Functions <sslcrt.html#1047959>`__
+   .. rubric:: `Chapter 5  Certificate Functions <sslcrt.html#1047959>`__
       :name: chapter_5_certificate_functions
 
       This chapter describes the functions and related types used to work with a certificate
@@ -234,7 +234,7 @@ OLD SSL Reference
 
       -  `SECITEM_CompareItem <sslcrt.html#1057028>`__
 
-   .. rubric:: `Chapter 6  Key Functions <sslkey.html#1047959>`__
+   .. rubric:: `Chapter 6  Key Functions <sslkey.html#1047959>`__
       :name: chapter_6_key_functions
 
       This chapter describes two functions used to manipulate private keys and key databases such as
@@ -243,7 +243,7 @@ OLD SSL Reference
    -  `SECKEY_GetDefaultKeyDB <sslkey.html#1051479>`__ ` <sslkey.html#1051017>`__
    -  `SECKEY_DestroyPrivateKey <sslkey.html#1051017>`__
 
-   .. rubric:: `Chapter 7  PKCS #11 Functions <pkfnc.html#1027946>`__
+   .. rubric:: `Chapter 7  PKCS #11 Functions <pkfnc.html#1027946>`__
       :name: chapter_7_pkcs_11_functions
 
       This chapter describes the core PKCS #11 functions that an application needs for communicating
@@ -259,7 +259,7 @@ OLD SSL Reference
    -  `PK11_IsReadOnly <pkfnc.html#1022991>`__ ` <pkfnc.html#1023128>`__
    -  `PK11_SetPasswordFunc <pkfnc.html#1023128>`__
 
-   .. rubric:: `Chapter 8  NSS and SSL Error Codes <sslerr.html#1013897>`__
+   .. rubric:: `Chapter 8  NSS and SSL Error Codes <sslerr.html#1013897>`__
       :name: chapter_8_nss_and_ssl_error_codes
 
       NSS error codes are retrieved using the NSPR function PR_GetError. In addition to the error

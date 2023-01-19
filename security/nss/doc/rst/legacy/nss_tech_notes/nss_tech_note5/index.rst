@@ -20,7 +20,7 @@ nss tech note5
    -  NSS Project Info is at
       `http://www.mozilla.org/projects/security/pki/nss/ <https://www.mozilla.org/projects/security/pki/nss/>`__
    -  You can browse the NSS source online at http://lxr.mozilla.org/mozilla/source/security/nss/
-       and http://lxr.mozilla.org/security/
+       and http://lxr.mozilla.org/security/
    -  Be sure to look for :ref:`mozilla_projects_nss_sample_code` first for things you need to do.
    -  **Note:** This document contains code snippets that focus on essential aspects of the task and
       often do not illustrate all the cleanup that needs to be done. Also, this document does not
@@ -46,7 +46,7 @@ nss tech note5
       - grep for CKF_EN_DE_.
       *CK_MECHANISM_TYPE cipherMech = CKM_DES_CBC_PAD* <big>(for example)</big>
    #. Choose a slot on which to do the operation
-      *PK11SlotInfo\* slot = PK11_GetBestSlot(cipherMech, NULL);  *\ **OR**\ *
+      *PK11SlotInfo\* slot = PK11_GetBestSlot(cipherMech, NULL);  *\ **OR**\ *
       PK11SlotInfo\* slot = PK11_GetInternalKeySlot(); /\* alwys returns internal slot, may not be
       optimal \*/*
    #. Prepare the Key
@@ -58,11 +58,11 @@ nss tech note5
          keyItem.len = /\* length of the array of key bytes \*/
          /\* turn the SECItem into a key object \*/
          PK11SymKey\* SymKey = PK11_ImportSymKey(slot, cipherMech, PK11_OriginUnwrap,
-                                                                                                
+                                                                                                
          CKA_ENCRYPT, &keyItem, NULL)*;
       -  If generating the key - see section `Generate a Symmetric
          Key <#generate_a_symmetric_key>`__
-          
+          
 
    #. <big>Prepare the parameter for crypto context. IV is relevant only when using CBC mode of
       encryption. If not using CBC mode, just pass a NULL IV parm to PK11_ParamFromIV function
@@ -74,16 +74,16 @@ nss tech note5
 
       -  Create Encryption context
          *PK11Context\* EncContext = PK11_CreateContextBySymKey(cipherMech,
-                                                                                        
-          CKA_ENCRYPT or CKA_DECRYPT,
-                                                                                          SymKey,
+                                                                                        
+          CKA_ENCRYPT or CKA_DECRYPT,
+                                                                                          SymKey,
          SecParam);*
       -  Do the Operation. If encrypting, outbuf len must be atleast (inbuflen + blocksize). If
          decrypting, outbuflen must be atleast inbuflen.
          *SECStatus s = PK11_CipherOp(EncContext, outbuf, &tmp1_outlen, sizeof outbuf, inbuf,
-                                                                     inbuflen);
+                                                                     inbuflen);
          s = PK11_DigestFinal(EncContext, outbuf+tmp1_outlen, &tmp2_outlen,
-                                                    sizeof outbuf - tmp1_outlen);
+                                                    sizeof outbuf - tmp1_outlen);
          result_len = tmp1_outlen + tmp2_outlen;*
       -  <big>Destroy the Context
          *PK11_DestroyContext(EncContext, PR_TRUE);*\ </big>
@@ -125,7 +125,7 @@ nss tech note5
    #. Clean up
       *PK11_DestroyContext(DigestContext, PR_TRUE);*
 
-   | 
+   |
    | You can also look at a `sample program <../sample-code/sample3.html>`__ illustrating this
 
    --------------
@@ -147,7 +147,7 @@ nss tech note5
       security/nss/lib/softoken/pkcs11.c - grep for CKF_DIGEST.
       *CK_MECHANISM_TYPE digestMech = CKM_MD5* <big>(for example)</big>
    #. Choose a slot on which to do the operation
-      *PK11SlotInfo\* slot = PK11_GetBestSlot(digestMech, NULL);  *\ **OR**\ *
+      *PK11SlotInfo\* slot = PK11_GetBestSlot(digestMech, NULL);  *\ **OR**\ *
       PK11SlotInfo\* slot = PK11_GetInternalKeySlot(); /\* always returns int slot, may not be
       optimal \*/*
    #. Prepare the Key
@@ -159,12 +159,12 @@ nss tech note5
          keyItem.len = /\* length of the array of key bytes \*/
          /\* turn the SECItem into a key object \*/
          PK11SymKey\* SymKey = PK11_ImportSymKey(slot, digestMech, PK11_OriginUnwrap,
-                                                                                                
+                                                                                                
          CKA_DIGEST, &keyItem, NULL)*;
       -  If generating the key - see section `Generate a Symmetric
          Key <#generate_a_symmetric_key>`__. Can use *CKM_GENERIC_SECRET_KEY_GEN* as the key gen
          mechanism.
-          
+          
 
    #. <big>Prepare the parameter for crypto context. The param must be provided, but can be empty.
       *SECItem param;
@@ -172,8 +172,8 @@ nss tech note5
       param.len = 0;*\ </big>
    #. <big>Create Crypto context</big>
       *PK11Context\* DigestContext = PK11_CreateContextBySymKey(digestMech, CKA_DIGEST, SymKey,
-                                                                                                   
-                               &param);*
+                                                                                                   
+                               &param);*
    #. <big>Digest the data</big>, providing the key
       <big>\ *SECStatus s = PK11_DigestBegin(DigestContext);
       s = PK11_DigestKey(DigestContext, SymKey);
@@ -200,12 +200,12 @@ nss tech note5
    #. Make sure NSS is initialized.The simplest Init function, in case you don't need a NSS database
       is
       *NSS_NoDB_Init(".")*
-   #. Choose a  HMAC mechanism. You can find a list of HMAC mechanisms in
+   #. Choose a  HMAC mechanism. You can find a list of HMAC mechanisms in
       security/nss/lib/softoken/pkcs11.c - grep for CKF_SN_VR, and choose the mechanisms that
       contain HMAC in the name
       *CK_MECHANISM_TYPE hmacMech = CKM_MD5_HMAC;* <big>(for example)</big>
    #. Choose a slot on which to do the operation
-      *PK11SlotInfo\* slot = PK11_GetBestSlot(hmacMech, NULL);  *\ **OR**\ *
+      *PK11SlotInfo\* slot = PK11_GetBestSlot(hmacMech, NULL);  *\ **OR**\ *
       PK11SlotInfo\* slot = PK11_GetInternalKeySlot(); /\* always returns int slot, may not be
       optimal \*/*
    #. Prepare the Key
@@ -218,12 +218,12 @@ nss tech note5
          keyItem.len = /\* length of the array of key bytes \*/
          /\* turn the SECItem into a key object \*/
          PK11SymKey\* SymKey = PK11_ImportSymKey(slot, hmacMech, PK11_OriginUnwrap,
-                                                                                                
-         CKA_SIGN,  &keyItem, NULL)*;
+                                                                                                
+         CKA_SIGN,  &keyItem, NULL)*;
       -  If generating the key - see section `Generate a Symmetric
          Key <#generate_a_symmetric_key>`__. Can use *CKM_GENERIC_SECRET_KEY_GEN* as the key gen
          mechanism.
-          
+          
 
    #. <big>Prepare the parameter for crypto context. The param must be provided, but can be empty.
       *SECItem param;
@@ -232,8 +232,8 @@ nss tech note5
       param.len = 0;*\ </big>
    #. <big>Create Crypto context</big>
       *PK11Context\* DigestContext = PK11_CreateContextBySymKey(hmacMech, CKA_SIGN,
-                                                                                                   
-                               SymKey, &param);*
+                                                                                                   
+                               SymKey, &param);*
    #. <big>Digest the data</big>
       <big>\ *SECStatus s = PK11_DigestBegin(DigestContext);
       s = PK11_DigestOp(DigestContext, data, sizeof data);
@@ -245,7 +245,7 @@ nss tech note5
       *PK11_FreeSymKey(SymKey);
       PK11_FreeSlot(slot);*
 
-   | 
+   |
    | You can also look at a `sample program <../sample-code/sample3.html>`__ illustrating this
 
    --------------
@@ -263,12 +263,12 @@ nss tech note5
    #. Make sure NSS is initialized.The simplest Init function, in case you don't need a NSS database
       is
       *NSS_NoDB_Init(".")*
-   #. Choose a  Wrapping mechanism. See wrapMechanismList in security/nss/lib/pk11wrap/pk11slot.c
+   #. Choose a  Wrapping mechanism. See wrapMechanismList in security/nss/lib/pk11wrap/pk11slot.c
       and security/nss/lib/ssl/ssl3con.c for examples of wrapping mechanisms. Most of them are
       cipher mechanisms.
       *CK_MECHANISM_TYPE wrapMech = CKM_DES3_ECB;* <big>(for example)</big>
    #. Choose a slot on which to do the operation
-      *PK11SlotInfo\* slot = PK11_GetBestSlot(wrapMech, NULL);  *\ **OR**\ *
+      *PK11SlotInfo\* slot = PK11_GetBestSlot(wrapMech, NULL);  *\ **OR**\ *
       PK11SlotInfo\* slot = PK11_GetInternalKeySlot(); /\* always returns int slot, may not be
       optimal \*/*
       <big>Regarding the choice of slot and wrapMech, if you know one, you can derive the other. You
@@ -284,14 +284,14 @@ nss tech note5
          keyItem.len = /\* length of the array of key bytes \*/
          /\* turn the SECItem into a key object \*/
          PK11SymKey\* WrappingSymKey = PK11_ImportSymKey(slot, wrapMech,
-                                                                                                    
-                      PK11_OriginUnwrap,
-                                                                                                    
-                      CKA_WRAP,  &keyItem, NULL)*
-          
+                                                                                                    
+                      PK11_OriginUnwrap,
+                                                                                                    
+                      CKA_WRAP,  &keyItem, NULL)*
+          
       -  If generating the key - see section `Generate a Symmetric
          Key <#generate_a_symmetric_key>`__
-          
+          
 
    #. Prepare the To-be-Wrapped Key
 
@@ -302,13 +302,13 @@ nss tech note5
          keyItem.len = /\* length of the array of key bytes \*/
          /\* turn the SECItem into a key object \*/
          PK11SymKey\* ToBeWrappedSymKey = PK11_ImportSymKey(slot, wrapMech,,
-                                                                                                    
-                              PK11_OriginUnwrap,
-                                                                                                    
-                             CKA_WRAP,  &keyItem, NULL)*;
+                                                                                                    
+                              PK11_OriginUnwrap,
+                                                                                                    
+                             CKA_WRAP,  &keyItem, NULL)*;
       -  If generating the key - see section `Generate a Symmetric
          Key <#generate_a_symmetric_key>`__
-          
+          
 
    #. <big>Prepare the parameter for crypto context. IV is relevant only when using CBC cipher mode.
       If not using CBC mode, just pass a NULL *SecParam* to *PK11_WrapSymKey* or *PK11_UnwrapSymKey*
@@ -322,30 +322,30 @@ nss tech note5
       WrappedKey.len = SOME_LEN;
       WrappedKey.data = allocate (SOME_LEN) bytes;*
    #. <big>Do the Wrap</big>. Note that the WrappingSymKey and the ToBeWrappedSymKey must be on the
-      slot where the wrap is going to happen. To move  keys to the desired slot, see section `Moving
+      slot where the wrap is going to happen. To move  keys to the desired slot, see section `Moving
       a Key from one slot to another <#moving_a_key_from_one_slot_to_another>`__
       <big>\ *SECStatus s = PK11_WrapSymKey(wrapMech, SecParam, WrappingSymKey,
-                                                                       ToBeWrappedSymKey,
+                                                                       ToBeWrappedSymKey,
       &WrappedKey);*\ </big>
    #. <big><big>Transport/Store or do whatever with the Wrapped Key (WrappedKey.data,
       WrappedKey.len)</big></big>
-   #. <big><big>Unwrapping. </big></big>
+   #. <big><big>Unwrapping. </big></big>
 
       -  <big><big>Set up the args to the function *PK11_UnwrapSymKey*, most of which are
-         illustrated above. The *keyTypeMech* arg of type *CK_MECHANISM_TYPE  *\ <big>indicates the
+         illustrated above. The *keyTypeMech* arg of type *CK_MECHANISM_TYPE  *\ <big>indicates the
          type of key that was wrapped and can be same as the *wrapMech* (e.g.
          *wrapMech=CKM_SKIPJACK_WRAP, keyTypeMech=CKM_SKIPJACK_CBC64; wrapMech=CKM_SKIPJACK_CBC64,
          keyTypeMech=CKM_SKIPJACK_CBC64*).</big>\ </big></big>
       -  Do the unwrap
          <big><big>\ *PK11SymKey\* UnwrappedSymKey = PK11_UnwrapSymKey(WrappingSymKey,
-                                                                                            
+                                                                                            
          wrapMech*\ </big></big><big><big>\ *, SecParam, &WrappedKey,
-                                                                                            
+                                                                                            
          keyTypeMech,*\ </big></big>
-         <big><big>\ *                                                                             
-              CKA_UNWRAP, /\* or CKA_DECRYPT? \*/
-                                                                                          
-          size_of_key_that_was_wrapped_bytes);*\ </big></big>
+         <big><big>\ *                                                                             
+              CKA_UNWRAP, /\* or CKA_DECRYPT? \*/
+                                                                                          
+          size_of_key_that_was_wrapped_bytes);*\ </big></big>
 
    #. Clean up
       *PK11_FreeSymKey(WrappingSymKey);*
@@ -353,7 +353,7 @@ nss tech note5
       PK11_FreeSymKey(UnwrappedSymKey);
       if (SecParam) SECITEM_FreeItem(SecParam, PR_TRUE);
       SECITEM_FreeItem(&WrappedKey, PR_TRUE);
-      PK11_FreeSlot(slot); *
+      PK11_FreeSlot(slot); *
 
    --------------
 
@@ -368,12 +368,12 @@ nss tech note5
       *#include "nss.h"
       #include "pk11pub.h"*
    #. Make sure NSS is initialized.
-   #. Choose a  Wrapping mechanism. See wrapMechanismList in security/nss/lib/pk11wrap/pk11slot.c
+   #. Choose a  Wrapping mechanism. See wrapMechanismList in security/nss/lib/pk11wrap/pk11slot.c
       and security/nss/lib/ssl/ssl3con.c for examples of wrapping mechanisms. Most of them are
       cipher mechanisms.
       *CK_MECHANISM_TYPE wrapMech = CKM_DES3_ECB;* <big>(for example).</big>
    #. Slot on which to do the operation
-      *PK11SlotInfo\* slot = PK11_GetBestSlot(wrapMech, NULL);  *\ **OR**\ *
+      *PK11SlotInfo\* slot = PK11_GetBestSlot(wrapMech, NULL);  *\ **OR**\ *
       PK11SlotInfo\* slot = PK11_GetInternalKeySlot(); /\* always returns int slot, may not be
       optimal \*/*
       This should be the slot that is best suited for the wrapping. This may or may not be the slot
@@ -391,17 +391,17 @@ nss tech note5
          keyItem.len = /\* length of the array of key bytes \*/
          /\* turn the SECItem into a key object \*/
          PK11SymKey\* WrappingSymKey = PK11_ImportSymKey(slot, wrapMech,
-                                                                                                    
-                      PK11_OriginUnwrap,
-                                                                                                    
-                      CKA_WRAP,  &keyItem, NULL)*;
+                                                                                                    
+                      PK11_OriginUnwrap,
+                                                                                                    
+                      CKA_WRAP,  &keyItem, NULL)*;
       -  If generating the key - see section `Generate a Symmetric
          Key <#generate_a_symmetric_key>`__
-          
+          
 
    #. Prepare the To-be-Wrapped Key
 
-      -  *SECKEYPrivateKey \*ToBeWrappedPrivKey *
+      -  *SECKEYPrivateKey \*ToBeWrappedPrivKey *
 
    #. <big>Prepare the parameter for crypto context. IV is relevant only when using CBC cipher mode.
       If not using CBC mode, just pass a NULL *SecParam* to *PK11_WrapPrivKey* function
@@ -415,10 +415,10 @@ nss tech note5
       WrappedKey.len = SOME_LEN;
       WrappedKey.data = allocate (SOME_LEN) bytes;*
    #. <big>Do the Wrap</big>. Note that the WrappingSymKey and the ToBeWrappedPvtKey must be on the
-      slot where the wrap is going to happen. To move  keys to the desired slot, see section `Moving
+      slot where the wrap is going to happen. To move  keys to the desired slot, see section `Moving
       a Key from one slot to another <#moving_a_key_from_one_slot_to_another>`__
-      <big>\ *SECStatus s = PK11_WrapPrivKey(slot, WrappingSymKey,  ToBeWrappedPvtKey, wrapMech,
-                                                                       SecParam, &WrappedKey,
+      <big>\ *SECStatus s = PK11_WrapPrivKey(slot, WrappingSymKey,  ToBeWrappedPvtKey, wrapMech,
+                                                                       SecParam, &WrappedKey,
       NULL);*\ </big>
    #. <big><big>Transport/Store or do whatever with the Wrapped Key (WrappedKey.data,
       WrappedKey.len)</big></big>
@@ -437,28 +437,28 @@ nss tech note5
          int numAttribs;
          /\* figure out which operations to enable for this key \*/
          if( keyType == CKK_RSA ) {
-                 attribs[0] = CKA_SIGN;
-                 attribs[1] = CKA_DECRYPT;
-                 attribs[2] = CKA_SIGN_RECOVER;
-                 attribs[3] = CKA_UNWRAP;
-                 numAttribs = 4;
+                 attribs[0] = CKA_SIGN;
+                 attribs[1] = CKA_DECRYPT;
+                 attribs[2] = CKA_SIGN_RECOVER;
+                 attribs[3] = CKA_UNWRAP;
+                 numAttribs = 4;
          } else if(keyType == CKK_DSA) {
-                 attribs[0] = CKA_SIGN;
-                 numAttribs = 1;
+                 attribs[0] = CKA_SIGN;
+                 numAttribs = 1;
          }*
       -  <big>Do the unwrap</big>
          *SECKEYPrivateKey \*UnwrappedPvtKey =
-                       PK11_UnwrapPrivKey(slot, WrappingSymKey, wrapMech, SecParam, &WrappedKey,
-                                                                   &label,  pubValue, token, PR_TRUE
+                       PK11_UnwrapPrivKey(slot, WrappingSymKey, wrapMech, SecParam, &WrappedKey,
+                                                                   &label,  pubValue, token, PR_TRUE
          /\* sensitive \*/
-                                                                   keyType,  attribs, numAttribs,
+                                                                   keyType,  attribs, numAttribs,
          NULL /*wincx*/);*
 
    #. Clean up
       *PK11_FreeSymKey(WrappingSymKey);*
       <big>\ *if (SecParam) SECITEM_FreeItem(SecParam, PR_TRUE);*\ </big>
       <big>\ *SECITEM_FreeItem(&WrappedKey, PR_TRUE);*\ </big>
-      *if (pubValue)  SECITEM_FreeItem(pubValue, PR_TRUE);*
+      *if (pubValue)  SECITEM_FreeItem(pubValue, PR_TRUE);*
       *if (UnwrappedPvtKey) SECKEY_DestroyPrivateKey(UnwrappedPvtKey);*
       *if (ToBeWrappedPvtKey) SECKEY_DestroyPrivateKey(ToBeWrappedPvtKey);*
       *PK11_FreeSlot(slot);*
@@ -476,12 +476,12 @@ nss tech note5
       *#include "nss.h"
       #include "pk11pub.h"*
    #. Make sure NSS is initialized.
-   #. Choose a  Wrapping mechanism. See wrapMechanismList in security/nss/lib/pk11wrap/pk11slot.c
+   #. Choose a  Wrapping mechanism. See wrapMechanismList in security/nss/lib/pk11wrap/pk11slot.c
       and security/nss/lib/ssl/ssl3con.c for examples of wrapping mechanisms. Most of them are
       cipher mechanisms.
       *CK_MECHANISM_TYPE wrapMech = CKM_DES3_ECB;* <big>(for example)</big>
    #. Slot on which to do the operation
-      *PK11SlotInfo\* slot = PK11_GetBestSlot(wrapMech, NULL);  *\ **OR**\ *
+      *PK11SlotInfo\* slot = PK11_GetBestSlot(wrapMech, NULL);  *\ **OR**\ *
       PK11SlotInfo\* slot = PK11_GetInternalKeySlot(); /\* always returns int slot, may not be
       optimal \*/*
       This should be the slot that is best suited for the wrapping. This may or may not be the slot
@@ -503,10 +503,10 @@ nss tech note5
          keyItem.len = /\* length of the array of key bytes \*/
          /\* turn the SECItem into a key object \*/
          PK11SymKey\* ToBeWrappedSymKey = PK11_ImportSymKey(slot, wrapMech,,
-                                                                                                    
-                              PK11_OriginUnwrap,
-                                                                                                    
-                             CKA_WRAP,  &keyItem, NULL)*;
+                                                                                                    
+                              PK11_OriginUnwrap,
+                                                                                                    
+                             CKA_WRAP,  &keyItem, NULL)*;
       -  If generating the key - see section `Generate a Symmetric
          Key <#generate_a_symmetric_key>`__
 
@@ -515,10 +515,10 @@ nss tech note5
       WrappedKey.len = SOME_LEN;
       WrappedKey.data = allocate (SOME_LEN) bytes;*
    #. <big>Do the Wrap</big>. Note that the WrappingPubKey and the ToBeWrappedSymKey must be on the
-      slot where the wrap is going to happen. To move  keys to the desired slot, see section `Moving
+      slot where the wrap is going to happen. To move  keys to the desired slot, see section `Moving
       a Key from one slot to another <#moving_a_key_from_one_slot_to_another>`__
       <big>\ *SECStatus s = PK11_PubWrapSymKey(wrapMech, WrappingPubKey,
-                                                                              ToBeWrappedSymKey,
+                                                                              ToBeWrappedSymKey,
       &WrappedKey);*\ </big>
    #. <big><big>Transport/Store or do whatever with the Wrapped Key (WrappedKey.data,
       WrappedKey.len)</big></big>
@@ -529,11 +529,11 @@ nss tech note5
          CK_MECHANISM_TYPE keyTypeMech = ??;*
       -  <big>Do the unwrap</big>
          *PK11SymKey \*UnwrappedSymKey =
-                   PK11_PubUnwrapSymKey(UnWrappingPvtKey, WrappedKey, keyTypeMech,
-                                                                      *<big><big>\ *CKA_UNWRAP, /\*
+                   PK11_PubUnwrapSymKey(UnWrappingPvtKey, WrappedKey, keyTypeMech,
+                                                                      *<big><big>\ *CKA_UNWRAP, /\*
          or CKA_DECRYPT? \*/
-                                                                    
-          *\ </big></big><big><big>\ *size_of_key_that_was_wrapped_bytes);*\ </big></big>
+                                                                    
+          *\ </big></big><big><big>\ *size_of_key_that_was_wrapped_bytes);*\ </big></big>
 
    #. Clean up
       *PK11_FreeSymKey(ToBeWrappedSymKey);*
@@ -557,7 +557,7 @@ nss tech note5
      raw form. You can find a list of key generation mechanisms in
      security/nss/lib/softoken/pkcs11.c - grep for CKF_GENERATE. For some key gen mechanisms, the
      keysize is in bytes, and for some it is in bits.
-   |  
+   |  
 
    #. <big>Choose a key generation mechanism</big>
       *CK_MECHANISM_TYPE keygenMech = CKM_DES_KEY_GEN;* (for example)
@@ -569,7 +569,7 @@ nss tech note5
 
    .. rubric:: Extract the raw key (This should not normally be used. Better to use wrapping
       instead. See `method1 <#symmetric_key_wrappingunwrapping_sym_key>`__ and
-      `method2 <#pki_wrap_symkey>`__ ). 
+      `method2 <#pki_wrap_symkey>`__ ). 
       :name: extract_the_raw_key_(this_should_not_normally_be_used._better_to_use_wrapping_instead._see_method1_and_method2_).
 
    *SECStatus rv = PK11_ExtractKeyValue(SymKey);
@@ -583,9 +583,9 @@ nss tech note5
      keyid.data = /\* ptr to an array of bytes representing the id of the key to be generated \*/;
      keyid.len = /\* length of the array of bytes \*/;
      /\* keysize must be 0 for fixed key-length algorithms like DES... and appropriate value
-      \*  for non fixed-key-length algorithms \*/
+      \*  for non fixed-key-length algorithms \*/
      PK11SymKey \*key = PK11_TokenKeyGen(slot, cipherMech, 0, 32 /\* keysize \*/,
-                                                                                    &keyid, PR_TRUE,
+                                                                                    &keyid, PR_TRUE,
      0);*
    | *int keylen = PK11_GetKeyLength(key);
      cipherMech = PK11_GetMechanism(key);*
@@ -654,6 +654,6 @@ nss tech note5
       *int keylen = PK11_GetKeyLength(PK11SymKey \*symkey);*
    #. Get the mechanism given a symmetric key
       *CK_MECHANISM_TYPE mech = PK11_GetMechanism(PK11SymKey \*key);*
-       
+       
 
    --------------

@@ -30,7 +30,7 @@ NSS Tools sslstrength
 .. container::
 
    The first form simple lists out the possible ciphers. The letter in the first column of the
-   output is used to identify the cipher preferences in the ciphers=  command.
+   output is used to identify the cipher preferences in the ciphers=  command.
    The second form attempts to connect to the named ssl host. The hostname argument must be present.
    However, the port number is an optional argument, and if not given, will default to the https
    port (443).
@@ -46,11 +46,11 @@ NSS Tools sslstrength
    command can be used to further restrict the ciphers available. The argument to the ciphers
    command is a string of characters, where each single character represents a cipher. You can
    obtain this list of character->cipher mappings by doing 'sslstrength ciphers'. For example,
-   **    ciphers=bfi** will turn on these cipher preferences and turn off all others.
+   **    ciphers=bfi** will turn on these cipher preferences and turn off all others.
 
-   **    policy=export** or **policy=domestic** will set your policies appropriately.
+   **    policy=export** or **policy=domestic** will set your policies appropriately.
 
-   | **    policy** will default to domestic if not specified.
+   | **    policy** will default to domestic if not specified.
 
    .. rubric:: Step-up
       :name: step-up
