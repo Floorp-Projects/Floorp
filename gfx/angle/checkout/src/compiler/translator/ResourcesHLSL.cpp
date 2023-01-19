@@ -161,6 +161,18 @@ static TString InterfaceBlockScalarVectorFieldPaddingString(const TType &type)
     return "";
 }
 
+static bool IsAnyRasterOrdered(const TVector<const TVariable *> &imageVars)
+{
+    for (const TVariable *imageVar : imageVars)
+    {
+        if (imageVar->getType().getLayoutQualifier().rasterOrdered)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // anonymous namespace
 
 ResourcesHLSL::ResourcesHLSL(StructureHLSL *structureHLSL,
@@ -415,6 +427,9 @@ void ResourcesHLSL::outputHLSLImageUniformGroup(TInfoSinkBase &out,
     {
         return;
     }
+
+    // ROVs should all be written out in DynamicImage2DHLSL.cpp.
+    ASSERT(!IsAnyRasterOrdered(group));
 
     unsigned int groupRegisterCount = 0;
     outputHLSLImageUniformIndices(out, group, *groupTextureRegisterIndex, &groupRegisterCount);
@@ -762,6 +777,27 @@ TString ResourcesHLSL::uniformBlocksHeader(
     return (interfaceBlocks.empty() ? "" : ("// Uniform Blocks\n\n" + interfaceBlocks));
 }
 
+void ResourcesHLSL::allocateShaderStorageBlockRegisters(
+    const ReferencedInterfaceBlocks &referencedInterfaceBlocks)
+{
+    for (const auto &interfaceBlockReference : referencedInterfaceBlocks)
+    {
+        const TInterfaceBlock &interfaceBlock = *interfaceBlockReference.second->block;
+        const TVariable *instanceVariable     = interfaceBlockReference.second->instanceVariable;
+
+        mShaderStorageBlockRegisterMap[interfaceBlock.name().data()] = mUAVRegister;
+
+        if (instanceVariable != nullptr && instanceVariable->getType().isArray())
+        {
+            mUAVRegister += instanceVariable->getType().getOutermostArraySize();
+        }
+        else
+        {
+            mUAVRegister += 1u;
+        }
+    }
+}
+
 TString ResourcesHLSL::shaderStorageBlocksHeader(
     const ReferencedInterfaceBlocks &referencedInterfaceBlocks)
 {
@@ -772,8 +808,7 @@ TString ResourcesHLSL::shaderStorageBlocksHeader(
         const TInterfaceBlock &interfaceBlock = *interfaceBlockReference.second->block;
         const TVariable *instanceVariable     = interfaceBlockReference.second->instanceVariable;
 
-        unsigned int activeRegister                                  = mUAVRegister;
-        mShaderStorageBlockRegisterMap[interfaceBlock.name().data()] = activeRegister;
+        unsigned int activeRegister = mShaderStorageBlockRegisterMap[interfaceBlock.name().data()];
 
         if (instanceVariable != nullptr && instanceVariable->getType().isArray())
         {
@@ -783,17 +818,15 @@ TString ResourcesHLSL::shaderStorageBlocksHeader(
                 interfaceBlocks += shaderStorageBlockString(
                     interfaceBlock, instanceVariable, activeRegister + arrayIndex, arrayIndex);
             }
-            mUAVRegister += instanceArraySize;
         }
         else
         {
             interfaceBlocks += shaderStorageBlockString(interfaceBlock, instanceVariable,
                                                         activeRegister, GL_INVALID_INDEX);
-            mUAVRegister += 1u;
         }
     }
 
-    return (interfaceBlocks.empty() ? "" : ("// Shader Storage Blocks\n\n" + interfaceBlocks));
+    return interfaceBlocks;
 }
 
 TString ResourcesHLSL::uniformBlockString(const TInterfaceBlock &interfaceBlock,

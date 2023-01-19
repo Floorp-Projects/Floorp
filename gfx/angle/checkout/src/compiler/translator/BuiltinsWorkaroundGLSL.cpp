@@ -7,7 +7,6 @@
 #include "compiler/translator/BuiltinsWorkaroundGLSL.h"
 
 #include "angle_gl.h"
-#include "compiler/translator/StaticType.h"
 #include "compiler/translator/Symbol.h"
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/tree_util/BuiltIn.h"
@@ -23,7 +22,7 @@ constexpr const ImmutableString kGlVertexIDString("gl_VertexID");
 class TBuiltinsWorkaroundGLSL : public TIntermTraverser
 {
   public:
-    TBuiltinsWorkaroundGLSL(TSymbolTable *symbolTable, ShCompileOptions options);
+    TBuiltinsWorkaroundGLSL(TSymbolTable *symbolTable, const ShCompileOptions &options);
 
     void visitSymbol(TIntermSymbol *node) override;
     bool visitDeclaration(Visit, TIntermDeclaration *node) override;
@@ -31,13 +30,13 @@ class TBuiltinsWorkaroundGLSL : public TIntermTraverser
   private:
     void ensureVersionIsAtLeast(int version);
 
-    ShCompileOptions mCompileOptions;
+    const ShCompileOptions &mCompileOptions;
 
     bool isBaseInstanceDeclared = false;
 };
 
 TBuiltinsWorkaroundGLSL::TBuiltinsWorkaroundGLSL(TSymbolTable *symbolTable,
-                                                 ShCompileOptions options)
+                                                 const ShCompileOptions &options)
     : TIntermTraverser(true, false, false, symbolTable), mCompileOptions(options)
 {}
 
@@ -93,10 +92,10 @@ bool TBuiltinsWorkaroundGLSL::visitDeclaration(Visit, TIntermDeclaration *node)
 
 }  // anonymous namespace
 
-ANGLE_NO_DISCARD bool ShaderBuiltinsWorkaround(TCompiler *compiler,
-                                               TIntermBlock *root,
-                                               TSymbolTable *symbolTable,
-                                               ShCompileOptions compileOptions)
+[[nodiscard]] bool ShaderBuiltinsWorkaround(TCompiler *compiler,
+                                            TIntermBlock *root,
+                                            TSymbolTable *symbolTable,
+                                            const ShCompileOptions &compileOptions)
 {
     TBuiltinsWorkaroundGLSL builtins(symbolTable, compileOptions);
     root->traverse(&builtins);

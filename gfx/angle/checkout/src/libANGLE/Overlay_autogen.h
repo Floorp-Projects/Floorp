@@ -28,10 +28,30 @@ enum class WidgetId
     VulkanWriteDescriptorSetCount,
     // Descriptor Set Allocations.
     VulkanDescriptorSetAllocations,
-    // Shader Buffer Descriptor Set Cache Hit Rate.
-    VulkanShaderBufferDSHitRate,
+    // Shader Resource Descriptor Set Cache Hit Rate.
+    VulkanShaderResourceDSHitRate,
     // Buffer Allocations Made By vk::DynamicBuffer.
     VulkanDynamicBufferAllocations,
+    // Total size of all descriptor set caches
+    VulkanDescriptorCacheSize,
+    // Number of cached Texture descriptor sets
+    VulkanTextureDescriptorCacheSize,
+    // Number of cached default uniform descriptor sets
+    VulkanUniformDescriptorCacheSize,
+    // Total size of all keys in the descriptor set caches
+    VulkanDescriptorCacheKeySize,
+    // Number of times the Vulkan backend attempted to submit commands
+    VulkanAttemptedSubmissions,
+    // Number of times the Vulkan backend actually submitted commands
+    VulkanActualSubmissions,
+    // Number of times the Vulkan backend has looked up the pipeline cache
+    VulkanPipelineCacheLookups,
+    // Number of times the Vulkan backend has missed the pipeline cache
+    VulkanPipelineCacheMisses,
+    // Total time spent creating pipelines that missed the cache.
+    VulkanTotalPipelineCacheMissTimeMs,
+    // Total time spent creating pipelines that hit the cache.
+    VulkanTotalPipelineCacheHitTimeMs,
 
     InvalidEnum,
     EnumCount = InvalidEnum,
@@ -47,7 +67,17 @@ enum class WidgetId
     PROC(VulkanSecondaryCommandBufferPoolWaste) \
     PROC(VulkanWriteDescriptorSetCount)         \
     PROC(VulkanDescriptorSetAllocations)        \
-    PROC(VulkanShaderBufferDSHitRate)           \
-    PROC(VulkanDynamicBufferAllocations)
+    PROC(VulkanShaderResourceDSHitRate)         \
+    PROC(VulkanDynamicBufferAllocations)        \
+    PROC(VulkanDescriptorCacheSize)             \
+    PROC(VulkanTextureDescriptorCacheSize)      \
+    PROC(VulkanUniformDescriptorCacheSize)      \
+    PROC(VulkanDescriptorCacheKeySize)          \
+    PROC(VulkanAttemptedSubmissions)            \
+    PROC(VulkanActualSubmissions)               \
+    PROC(VulkanPipelineCacheLookups)            \
+    PROC(VulkanPipelineCacheMisses)             \
+    PROC(VulkanTotalPipelineCacheMissTimeMs)    \
+    PROC(VulkanTotalPipelineCacheHitTimeMs)
 
 }  // namespace gl

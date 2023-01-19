@@ -20,23 +20,25 @@
 
 namespace sh
 {
-#if defined(ANGLE_ENABLE_VULKAN) || defined(ANGLE_ENABLE_METAL)
+#if defined(ANGLE_ENABLE_SPIRV_GENERATION_THROUGH_GLSLANG)
 void GlslangInitialize();
 void GlslangFinalize();
 
 // Generate SPIR-V out of intermediate GLSL through glslang.
-ANGLE_NO_DISCARD bool GlslangCompileToSpirv(const ShBuiltInResources &resources,
-                                            sh::GLenum shaderType,
-                                            const std::string &shaderSource,
-                                            angle::spirv::Blob *spirvBlobOut);
+[[nodiscard]] bool GlslangCompileToSpirv(const ShBuiltInResources &resources,
+                                         sh::GLenum shaderType,
+                                         const std::string &shaderSource,
+                                         angle::spirv::Blob *spirvBlobOut);
 #else
-ANGLE_INLINE void GlslangInitialize()
+ANGLE_INLINE void GlslangInitialize() {}
+ANGLE_INLINE void GlslangFinalize() {}
+ANGLE_INLINE bool GlslangCompileToSpirv(const ShBuiltInResources &resources,
+                                        sh::GLenum shaderType,
+                                        const std::string &shaderSource,
+                                        angle::spirv::Blob *spirvBlobOut)
 {
     UNREACHABLE();
-}
-ANGLE_INLINE void GlslangFinalize()
-{
-    UNREACHABLE();
+    return false;
 }
 #endif  // defined(ANGLE_ENABLE_VULKAN) || defined(ANGLE_ENABLE_METAL)
 }  // namespace sh

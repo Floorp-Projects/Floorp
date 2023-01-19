@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <limits>
 
 #include "common/debug.h"
 
@@ -89,6 +90,22 @@ void HandleAllocator::release(GLuint handle)
     if (mLoggingEnabled)
     {
         WARN() << "HandleAllocator::release releasing " << handle << std::endl;
+    }
+
+    // Try consolidating the ranges first.
+    for (HandleRange &handleRange : mUnallocatedList)
+    {
+        if (handleRange.begin - 1 == handle)
+        {
+            handleRange.begin--;
+            return;
+        }
+
+        if (handleRange.end == handle - 1)
+        {
+            handleRange.end++;
+            return;
+        }
     }
 
     // Add to released list, logarithmic time for push_heap.

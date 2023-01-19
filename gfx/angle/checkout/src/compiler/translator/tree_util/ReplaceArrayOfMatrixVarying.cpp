@@ -75,10 +75,10 @@ class CollectVaryingTraverser : public TIntermTraverser
 };
 }  // namespace
 
-ANGLE_NO_DISCARD bool ReplaceArrayOfMatrixVarying(TCompiler *compiler,
-                                                  TIntermBlock *root,
-                                                  TSymbolTable *symbolTable,
-                                                  const TVariable *varying)
+[[nodiscard]] bool ReplaceArrayOfMatrixVarying(TCompiler *compiler,
+                                               TIntermBlock *root,
+                                               TSymbolTable *symbolTable,
+                                               const TVariable *varying)
 {
     const TType &type = varying->getType();
 
@@ -86,7 +86,6 @@ ANGLE_NO_DISCARD bool ReplaceArrayOfMatrixVarying(TCompiler *compiler,
     // arithmetic, assignments an so on.
     TType *tmpReplacementType = new TType(type);
     tmpReplacementType->setQualifier(EvqGlobal);
-    tmpReplacementType->realize();
 
     TVariable *tempReplaceVar = new TVariable(
         symbolTable, ImmutableString(std::string("ANGLE_AOM_Temp_") + varying->name().data()),
@@ -98,14 +97,10 @@ ANGLE_NO_DISCARD bool ReplaceArrayOfMatrixVarying(TCompiler *compiler,
     }
 
     // Create array of vectors type
-    TType *varyingReplaceType =
-        new TType(type.getBasicType(), type.getPrecision(), type.getQualifier(),
-                  static_cast<unsigned char>(type.getRows()), 1);
-    varyingReplaceType->setInvariant(type.isInvariant());
-    varyingReplaceType->setMemoryQualifier(type.getMemoryQualifier());
-    varyingReplaceType->setLayoutQualifier(type.getLayoutQualifier());
+    TType *varyingReplaceType = new TType(type);
+    varyingReplaceType->toMatrixColumnType();
+    varyingReplaceType->toArrayElementType();
     varyingReplaceType->makeArray(type.getCols() * type.getOutermostArraySize());
-    varyingReplaceType->realize();
 
     TVariable *varyingReplaceVar =
         new TVariable(symbolTable, varying->name(), varyingReplaceType, SymbolType::UserDefined);
@@ -125,7 +120,7 @@ ANGLE_NO_DISCARD bool ReplaceArrayOfMatrixVarying(TCompiler *compiler,
     {
         TIntermBinary *tempMatrixIndexed =
             new TIntermBinary(EOpIndexDirect, tempReplaceSymbol->deepCopy(), CreateIndexNode(i));
-        for (int col = 0; col < type.getCols(); ++col)
+        for (uint8_t col = 0; col < type.getCols(); ++col)
         {
 
             TIntermBinary *tempMatrixColIndexed = new TIntermBinary(
@@ -158,9 +153,9 @@ ANGLE_NO_DISCARD bool ReplaceArrayOfMatrixVarying(TCompiler *compiler,
     }
 }
 
-ANGLE_NO_DISCARD bool ReplaceArrayOfMatrixVaryings(TCompiler *compiler,
-                                                   TIntermBlock *root,
-                                                   TSymbolTable *symbolTable)
+[[nodiscard]] bool ReplaceArrayOfMatrixVaryings(TCompiler *compiler,
+                                                TIntermBlock *root,
+                                                TSymbolTable *symbolTable)
 {
     std::vector<const TVariable *> arrayOfMatrixVars;
     CollectVaryingTraverser varCollector(&arrayOfMatrixVars);

@@ -316,7 +316,10 @@ const TSymbol *TSymbolTable::findBuiltInWithConversion(const std::vector<Immutab
 bool TSymbolTable::declare(TSymbol *symbol)
 {
     ASSERT(!mTable.empty());
-    ASSERT(symbol->symbolType() == SymbolType::UserDefined);
+    // The following built-ins may be redeclared by the shader: gl_ClipDistance, gl_CullDistance and
+    // gl_LastFragData.
+    ASSERT(symbol->symbolType() == SymbolType::UserDefined ||
+           (symbol->symbolType() == SymbolType::BuiltIn && IsRedeclarableBuiltIn(symbol->name())));
     ASSERT(!symbol->isFunction());
     return mTable.back()->insert(symbol);
 }
@@ -523,10 +526,10 @@ bool UnmangledEntry::matches(const ImmutableString &name,
         if (mGLSLVersion > shaderVersion)
             return false;
 
-        if (static_cast<TExtension>(mGLSLExtension) == TExtension::UNDEFINED)
+        if (mGLSLExtension == TExtension::UNDEFINED)
             return true;
 
-        return IsExtensionEnabled(extensions, static_cast<TExtension>(mGLSLExtension));
+        return IsExtensionEnabled(extensions, mGLSLExtension);
     }
     else
     {
@@ -536,10 +539,21 @@ bool UnmangledEntry::matches(const ImmutableString &name,
         if (mESSLVersion > shaderVersion)
             return false;
 
-        if (static_cast<TExtension>(mESSLExtension) == TExtension::UNDEFINED)
+        bool anyExtension        = false;
+        bool anyExtensionEnabled = false;
+        for (TExtension ext : mESSLExtensions)
+        {
+            if (ext != TExtension::UNDEFINED)
+            {
+                anyExtension        = true;
+                anyExtensionEnabled = anyExtensionEnabled || IsExtensionEnabled(extensions, ext);
+            }
+        }
+
+        if (!anyExtension)
             return true;
 
-        return IsExtensionEnabled(extensions, static_cast<TExtension>(mESSLExtension));
+        return anyExtensionEnabled;
     }
 }
 }  // namespace sh

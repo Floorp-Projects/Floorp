@@ -35,11 +35,6 @@ void Context::compressedTexSubImage1D(GLenum target,
     UNIMPLEMENTED();
 }
 
-void Context::getCompressedTexImage(GLenum target, GLint level, void *img)
-{
-    UNIMPLEMENTED();
-}
-
 void Context::loadTransposeMatrixd(const GLdouble *m)
 {
     UNIMPLEMENTED();
@@ -2659,16 +2654,6 @@ void Context::viewportIndexedfv(GLuint index, const GLfloat *v)
     UNIMPLEMENTED();
 }
 
-void Context::drawElementsInstancedBaseInstance(GLenum mode,
-                                                GLsizei count,
-                                                GLenum type,
-                                                const void *indices,
-                                                GLsizei instancecount,
-                                                GLuint baseinstance)
-{
-    UNIMPLEMENTED();
-}
-
 void Context::drawTransformFeedbackInstanced(GLenum mode,
                                              TransformFeedbackID id,
                                              GLsizei instancecount)
@@ -2744,23 +2729,6 @@ void Context::invalidateTexSubImage(TextureID texture,
                                     GLsizei width,
                                     GLsizei height,
                                     GLsizei depth)
-{
-    UNIMPLEMENTED();
-}
-
-void Context::multiDrawArraysIndirect(GLenum mode,
-                                      const void *indirect,
-                                      GLsizei drawcount,
-                                      GLsizei stride)
-{
-    UNIMPLEMENTED();
-}
-
-void Context::multiDrawElementsIndirect(GLenum mode,
-                                        GLenum type,
-                                        const void *indirect,
-                                        GLsizei drawcount,
-                                        GLsizei stride)
 {
     UNIMPLEMENTED();
 }
@@ -3364,14 +3332,6 @@ void Context::getnUniformdv(ShaderProgramID program,
                             UniformLocation location,
                             GLsizei bufSize,
                             GLdouble *params)
-{
-    UNIMPLEMENTED();
-}
-
-void Context::getnUniformuiv(ShaderProgramID program,
-                             UniformLocation location,
-                             GLsizei bufSize,
-                             GLuint *params)
 {
     UNIMPLEMENTED();
 }

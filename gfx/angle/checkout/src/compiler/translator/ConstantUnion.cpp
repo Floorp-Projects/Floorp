@@ -67,11 +67,15 @@ bool IsValidShiftOffset(const TConstantUnion &rhs)
 
 }  // anonymous namespace
 
-TConstantUnion::TConstantUnion()
-{
-    iConst = 0;
-    type   = EbtVoid;
-}
+TConstantUnion::TConstantUnion() : iConst(0), type(EbtVoid) {}
+
+TConstantUnion::TConstantUnion(int i) : iConst(i), type(EbtInt) {}
+
+TConstantUnion::TConstantUnion(unsigned int u) : uConst(u), type(EbtUInt) {}
+
+TConstantUnion::TConstantUnion(float f) : fConst(f), type(EbtFloat) {}
+
+TConstantUnion::TConstantUnion(bool b) : bConst(b), type(EbtBool) {}
 
 int TConstantUnion::getIConst() const
 {
@@ -231,6 +235,16 @@ bool TConstantUnion::cast(TBasicType newType, const TConstantUnion &constant)
                     break;
                 case EbtFloat:
                     setFConst(constant.getFConst());
+                    break;
+                default:
+                    return false;
+            }
+            break;
+        case EbtYuvCscStandardEXT:
+            switch (constant.type)
+            {
+                case EbtYuvCscStandardEXT:
+                    setYuvCscStandardEXTConst(constant.getYuvCscStandardEXTConst());
                     break;
                 default:
                     return false;

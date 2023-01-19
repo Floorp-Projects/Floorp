@@ -10,6 +10,7 @@
 //        int a;
 //   2. Literal statements: "1.0;". The ESSL output doesn't define a default precision for float,
 //      so float literal statements would end up with no precision which is invalid ESSL.
+//   3. Statements after discard, return, break and continue.
 
 #ifndef COMPILER_TRANSLATOR_TREEOPS_PRUNENOOPS_H_
 #define COMPILER_TRANSLATOR_TREEOPS_PRUNENOOPS_H_
@@ -22,9 +23,7 @@ class TCompiler;
 class TIntermBlock;
 class TSymbolTable;
 
-ANGLE_NO_DISCARD bool PruneNoOps(TCompiler *compiler,
-                                 TIntermBlock *root,
-                                 TSymbolTable *symbolTable);
+[[nodiscard]] bool PruneNoOps(TCompiler *compiler, TIntermBlock *root, TSymbolTable *symbolTable);
 }  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TREEOPS_PRUNENOOPS_H_
