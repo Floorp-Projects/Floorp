@@ -40,6 +40,8 @@ class MTest;
 
 [[nodiscard]] bool SplitCriticalEdges(MIRGraph& graph);
 
+[[nodiscard]] bool OptimizeIteratorIndices(MIRGenerator* mir, MIRGraph& graph);
+
 bool IsUint32Type(const MDefinition* def);
 
 enum Observability { ConservativeObservability, AggressiveObservability };

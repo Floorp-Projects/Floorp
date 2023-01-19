@@ -2783,6 +2783,27 @@ class LAtomicTypedArrayElementBinopForEffect64
   }
 };
 
+class LIteratorHasIndicesAndBranch : public LControlInstructionHelper<2, 1, 1> {
+ public:
+  LIR_HEADER(IteratorHasIndicesAndBranch)
+
+  LIteratorHasIndicesAndBranch(MBasicBlock* ifTrue, MBasicBlock* ifFalse,
+                               const LAllocation& iterObj,
+                               const LDefinition& temp)
+      : LControlInstructionHelper(classOpcode) {
+    setSuccessor(0, ifTrue);
+    setSuccessor(1, ifFalse);
+    setOperand(0, iterObj);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* iterObj() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+
+  MBasicBlock* ifTrue() const { return getSuccessor(0); }
+  MBasicBlock* ifFalse() const { return getSuccessor(1); }
+};
+
 class LIsNoIterAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 0> {
  public:
   LIR_HEADER(IsNoIterAndBranch)

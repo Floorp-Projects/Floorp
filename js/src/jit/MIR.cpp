@@ -6561,6 +6561,10 @@ AliasSet MGuardNoDenseElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MIteratorHasIndices::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
 AliasSet MAllocateAndStoreSlot::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields | AliasSet::DynamicSlot);
 }
