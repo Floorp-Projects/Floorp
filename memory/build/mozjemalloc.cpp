@@ -127,8 +127,6 @@
 
 #include <cstring>
 #include <cerrno>
-#include <optional>
-#include <type_traits>
 #ifdef XP_WIN
 #  include <io.h>
 #  include <windows.h>
@@ -152,6 +150,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RandomNum.h"
+#include "mozilla/Sprintf.h"
 // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
 // instead of the one defined here; use only MozTagAnonymousMemory().
 #include "mozilla/TaggedAnonymousMemory.h"
@@ -164,8 +163,8 @@
 #include "Mutex.h"
 #include "Utils.h"
 
+// For GetGeckoProcessType(), when it's used.
 #if defined(XP_WIN) && !defined(JS_STANDALONE)
-#  include "mozmemory_utils.h"
 #  include "mozilla/ProcessType.h"
 #endif
 
@@ -1483,7 +1482,10 @@ constexpr size_t kMaxAttempts = 10;
 // Microsoft's documentation for ::Sleep() for details.)
 constexpr size_t kDelayMs = 50;
 
-using StallSpecs = ::mozilla::StallSpecs;
+struct StallSpecs {
+  size_t maxAttempts;
+  size_t delayMs;
+};
 
 static constexpr StallSpecs maxStall = {.maxAttempts = kMaxAttempts,
                                         .delayMs = kDelayMs};
@@ -1503,8 +1505,7 @@ static inline StallSpecs GetStallSpecs() {
 
     // For all other process types, stall for at most half as long.
     default:
-      return {.maxAttempts = maxStall.maxAttempts / 2,
-              .delayMs = maxStall.delayMs};
+      return {.maxAttempts = kMaxAttempts / 2, .delayMs = kDelayMs};
   }
 #  endif
 }
@@ -1516,8 +1517,6 @@ static inline StallSpecs GetStallSpecs() {
 // Ref: https://docs.microsoft.com/en-us/troubleshoot/windows-client/performance/slow-page-file-growth-memory-allocation-errors
 [[nodiscard]] void* MozVirtualAlloc(LPVOID lpAddress, SIZE_T dwSize,
                                     DWORD flAllocationType, DWORD flProtect) {
-  DWORD const lastError = ::GetLastError();
-
   constexpr auto IsOOMError = [] {
     switch (::GetLastError()) {
       // This is the usual error result from VirtualAlloc for OOM.
@@ -1546,40 +1545,31 @@ static inline StallSpecs GetStallSpecs() {
   // Retry as many times as desired (possibly zero).
   const StallSpecs stallSpecs = GetStallSpecs();
 
-  const auto ret =
-      stallSpecs.StallAndRetry(&::Sleep, [&]() -> std::optional<void*> {
-        void* ptr =
-            ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
+  for (size_t i = 0; i < stallSpecs.maxAttempts; ++i) {
+    ::Sleep(stallSpecs.delayMs);
+    void* ptr = ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
 
-        if (ptr) {
-          // The OOM status has been handled, and should not be reported to
-          // telemetry.
-          if (IsOOMError()) {
-            ::SetLastError(lastError);
-          }
-          return ptr;
-        }
+    if (ptr) {
+      // The OOM status has been handled, and should not be reported to
+      // telemetry.
+      if (IsOOMError()) {
+        ::SetLastError(0);
+      }
+      return ptr;
+    }
 
-        // Failure for some reason other than OOM.
-        if (!IsOOMError()) {
-          return nullptr;
-        }
+    // Failure for some reason other than OOM.
+    if (!IsOOMError()) {
+      return nullptr;
+    }
+  }
 
-        return std::nullopt;
-      });
-
-  return ret.value_or(nullptr);
+  // Ah, well. We tried.
+  return nullptr;
 }
 }  // namespace MozAllocRetries
 
 using MozAllocRetries::MozVirtualAlloc;
-
-namespace mozilla {
-MOZ_JEMALLOC_API StallSpecs GetAllocatorStallSpecs() {
-  return ::MozAllocRetries::GetStallSpecs();
-}
-}  // namespace mozilla
-
 #endif  // XP_WIN
 
 // ***************************************************************************
