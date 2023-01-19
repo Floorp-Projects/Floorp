@@ -106,7 +106,7 @@ jobs:
 
     - name: Set Display Version
       run: |
-        echo `cat browser/config/version_display.txt`-${{ github.sha }} > browser/config/version_display.txt
+        echo ${{ github.sha }} > browser/config/version_display.txt
 
     - name: Build 🔨
       run: |
@@ -289,7 +289,7 @@ jobs:
 
     - name: Set Display Version
       run: |
-        echo `cat browser/config/version_display.txt`-${{ github.sha }} > browser/config/version_display.txt
+        echo ${{ github.sha }} > browser/config/version_display.txt
 
     - name: Build 🔨
       run: |
@@ -411,7 +411,7 @@ jobs:
 
     - name: Set Display Version
       run: |
-        echo `cat browser/config/version_display.txt`-${{ github.sha }} > browser/config/version_display.txt
+        echo ${{ github.sha }} > browser/config/version_display.txt
 
     - name: Build 🔨
       run: |
