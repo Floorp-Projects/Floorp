@@ -9,6 +9,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -93,6 +94,185 @@ class AddressAutofillTest {
             clickDeleteAddressButton()
             clickConfirmDeleteAddressButton()
             verifyAddAddressButton()
+        }
+    }
+
+    @Test
+    fun verifyAddAddressViewTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddAddressButton()
+            verifyAddAddressView()
+        }.goBackToAutofillSettings {
+            verifyAutofillToolbarTitle()
+        }
+    }
+
+    @Test
+    fun verifyEditAddressViewTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "United States",
+                "555-5555",
+                "foo@bar.com",
+            )
+            clickManageAddressesButton()
+            clickSavedAddress("Mozilla")
+            verifyEditAddressView()
+        }
+    }
+
+    @Test
+    fun verifyAddressAutofillToggleTest() {
+        val addressFormPage =
+            TestAssetHelper.getAddressFormAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            verifyAddressAutofillSection(true, false)
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "United States",
+                "555-5555",
+                "foo@bar.com",
+            )
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(addressFormPage.url) {
+            clickStreetAddressTextBox()
+            verifySelectAddressButtonExists(true)
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickSaveAndAutofillAddressesOption()
+            verifyAddressAutofillSection(false, true)
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(addressFormPage.url) {
+            clickStreetAddressTextBox()
+            verifySelectAddressButtonExists(false)
+        }
+    }
+
+    @Test
+    fun verifyManageAddressesPromptOptionTest() {
+        val addressFormPage =
+            TestAssetHelper.getAddressFormAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            verifyAddressAutofillSection(true, false)
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "United States",
+                "555-5555",
+                "foo@bar.com",
+            )
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(addressFormPage.url) {
+            clickStreetAddressTextBox()
+            clickSelectAddressButton()
+        }.clickManageAddressButton {
+            verifyAutofillToolbarTitle()
+        }.goBackToBrowser {
+            verifySaveLoginPromptIsNotDisplayed()
+        }
+    }
+
+    @Test
+    fun verifyAddressAutofillSelectionTest() {
+        val addressFormPage =
+            TestAssetHelper.getAddressFormAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            verifyAddressAutofillSection(true, false)
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "United States",
+                "555-5555",
+                "foo@bar.com",
+            )
+            clickManageAddressesButton()
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Android",
+                "Test",
+                "Name",
+                "Fort Street",
+                "San Jose",
+                "Arizona",
+                "95141",
+                "United States",
+                "777-7777",
+                "fuu@bar.org",
+            )
+            verifyManageAddressesToolbarTitle()
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(addressFormPage.url) {
+            clickStreetAddressTextBox()
+            clickSelectAddressButton()
+            clickAddressSuggestion("Harrison Street")
+            verifyAutofilledAddress("Harrison Street")
+            clearAddressForm()
+            clickStreetAddressTextBox()
+            clickSelectAddressButton()
+            clickAddressSuggestion("Fort Street")
+            verifyAutofilledAddress("Fort Street")
         }
     }
 }

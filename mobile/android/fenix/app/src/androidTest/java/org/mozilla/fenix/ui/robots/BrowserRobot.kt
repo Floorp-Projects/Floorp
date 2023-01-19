@@ -523,10 +523,21 @@ class BrowserRobot {
 
     fun clickStreetAddressTextBox() = clickPageObject(webPageItemWithResourceId("streetAddress"))
 
+    fun clearAddressForm() {
+        webPageItemWithResourceId("streetAddress").clearTextField()
+        webPageItemWithResourceId("city").clearTextField()
+        webPageItemWithResourceId("zipCode").clearTextField()
+        webPageItemWithResourceId("country").clearTextField()
+        webPageItemWithResourceId("telephone").clearTextField()
+        webPageItemWithResourceId("email").clearTextField()
+    }
+
     fun clickSelectAddressButton() {
         selectAddressButton.waitForExists(waitingTime)
         selectAddressButton.clickAndWaitForNewWindow(waitingTime)
     }
+
+    fun verifySelectAddressButtonExists(exists: Boolean) = assertItemWithResIdExists(selectAddressButton, exists = exists)
 
     fun clickCardNumberTextBox() = clickPageObject(webPageItemWithResourceId("cardNumber"))
 
@@ -1129,6 +1140,13 @@ class BrowserRobot {
 
             SiteSecurityRobot().interact()
             return SiteSecurityRobot.Transition()
+        }
+
+        fun clickManageAddressButton(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
+            itemWithResId("$packageName:id/manage_addresses").clickAndWaitForNewWindow(waitingTime)
+
+            SettingsSubMenuAutofillRobot().interact()
+            return SettingsSubMenuAutofillRobot.Transition()
         }
     }
 }
