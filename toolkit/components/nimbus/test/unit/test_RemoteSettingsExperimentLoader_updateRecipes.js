@@ -233,7 +233,7 @@ add_task(async function test_updateRecipes_invalidRecipeAfterUpdate() {
 
 add_task(async function test_updateRecipes_invalidBranchAfterUpdate() {
   const message = await PanelTestProvider.getMessages().then(msgs =>
-    msgs.find(m => m.id === "MULTISTAGE_SPOTLIGHT_MESSAGE")
+    msgs.find(m => m.id === "SPOTLIGHT_MESSAGE_93")
   );
 
   const manager = ExperimentFakes.manager();
@@ -820,7 +820,7 @@ add_task(async function test_updateRecipes_featureValidationOptOut() {
   });
 
   const message = await PanelTestProvider.getMessages().then(msgs =>
-    msgs.find(m => m.id === "MULTISTAGE_SPOTLIGHT_MESSAGE")
+    msgs.find(m => m.id === "SPOTLIGHT_MESSAGE_93")
   );
   delete message.template;
 
