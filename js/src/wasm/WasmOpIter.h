@@ -3471,12 +3471,13 @@ inline bool OpIter<Policy>::readRefCast(uint32_t* typeIndex, Value* ref) {
     return false;
   }
 
-  if (!popWithType(RefType::any(), ref)) {
+  StackType inputType;
+  if (!popWithType(RefType::any(), ref, &inputType)) {
     return false;
   }
 
   const TypeDef& typeDef = env_.types->type(*typeIndex);
-  return push(RefType::fromTypeDef(&typeDef, false));
+  return push(RefType::fromTypeDef(&typeDef, inputType.isNullableAsOperand()));
 }
 
 // `br_on_cast <labelRelativeDepth> null? <castTypeIndex>`

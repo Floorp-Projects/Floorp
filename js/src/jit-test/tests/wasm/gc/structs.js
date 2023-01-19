@@ -666,7 +666,7 @@ assertErrorMessage(() => new WebAssembly.Module(bad),
        ;; reloaded for the second OOL write.  First for non-ref fields ..
        (func (export "threeSetsNonReffy") (param eqref)
          (local (ref $hasOOL))
-         (local.set 1 (ref.cast $hasOOL (local.get 0)))
+         (local.set 1 (ref.as_non_null (ref.cast $hasOOL (local.get 0))))
          (struct.set $hasOOL 16 (local.get 1) (i64.const 1337)) ;; set $OOLnonref
          (struct.set $hasOOL 2  (local.get 1) (i64.const 7331)) ;; set $ILnonref
          (struct.set $hasOOL 16 (local.get 1) (i64.const 9009)) ;; set $OOLnonref
@@ -674,7 +674,7 @@ assertErrorMessage(() => new WebAssembly.Module(bad),
        ;; and the same for ref fields.
        (func (export "threeSetsReffy") (param eqref)
          (local (ref $hasOOL))
-         (local.set 1 (ref.cast $hasOOL (local.get 0)))
+         (local.set 1 (ref.as_non_null (ref.cast $hasOOL (local.get 0))))
          (struct.set $hasOOL 17 (local.get 1) (ref.null $meh)) ;; set $OOLref
          (struct.set $hasOOL 3  (local.get 1) (ref.null $meh)) ;; set $ILref
          (struct.set $hasOOL 17 (local.get 1) (ref.null $meh)) ;; set $OOLref
