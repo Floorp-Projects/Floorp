@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+const ok = window.parent.ok;
+const SpecialPowers = window.parent.SpecialPowers;
+
+async function runTest() {
+  SpecialPowers.wrap(document.documentElement).requestFullscreen();
+  const currentType = window.screen.orientation.type;
+  const lockPromise = window.screen.orientation.lock(currentType.startsWith("landscape") ? "portrait" : "landscape");
+  ok(true, "lock orientation doesn't throw error at this time");
+  // This document will be detached by "pending" message.
+  parent.postMessage("pending", "*");
+  await lockPromise;
+}
+</script>
+<body onload="runTest()">
+</body>
+</html>

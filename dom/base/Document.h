@@ -1941,6 +1941,9 @@ class Document : public nsINode,
   // flag.
   void SetFullscreenElement(Element&);
 
+  // Whether we has pending fullscreen request.
+  bool HasPendingFullscreenRequests();
+
   // Cancel the dialog element if the document is blocked by the dialog
   void TryCancelDialog();
 

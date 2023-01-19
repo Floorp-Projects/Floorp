@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1744288
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 1744288</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=174488">Mozilla Bug 1744288</a>
+<script>
+const kIsWin = navigator.platform.indexOf("Win") == 0;
+
+add_task(async function test_pending_fullscreen_request() {
+  if (kIsWin) {
+    // CI won't run on Windows tablet mode.
+    ok(true, "Skip on Windows");
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.screenorientation.allow-lock", true]]
+  });
+
+  SpecialPowers.wrap(document.documentElement).requestFullscreen();
+  let gotException = false;
+  try {
+    await window.screen.orientation.lock("any");
+  } catch (e) {
+    gotException = true;
+  }
+  ok(!gotException, "No exception even if fullscreen request is pending.");
+
+  window.screen.orientation.unlock();
+  try {
+    await document.exitFullscreen();
+  } catch (e) {
+  }
+});
+
+// Gecko doesn't allow orientation lock without fullscreen by default
+add_task(async function test_no_fullscreen_request() {
+  if (kIsWin) {
+    // CI won't run on Windows tablet mode.
+    ok(true, "Skip on Windows");
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.screenorientation.allow-lock", true]]
+  });
+
+  let gotException = false;
+  try {
+    await window.screen.orientation.lock("any");
+  } catch (e) {
+    gotException = true;
+  }
+  ok(gotException, "Should throw an exception when fullscreen request is nothing.");
+});
+
+// Gecko doesn't allow orientation lock after fullscreen request is canceled
+add_task(async function test_cancel_pending_fullscreen_request() {
+  if (kIsWin) {
+    // CI won't run on Windows tablet mode.
+    ok(true, "Skip on Windows");
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.screenorientation.allow-lock", true]]
+  });
+
+  const element = document.createElement("div");
+  document.body.appendChild(element);
+  SpecialPowers.wrap(element).requestFullscreen().then(() => {
+    ok(false, "Fullscreen request should be canceled.");
+  }, () => {
+    ok(true, "Fullscreen request is canceled.");
+  });
+  let gotException = false;
+  try {
+    const promise = window.screen.orientation.lock("any");
+    // Removing element causes that fullscreen request is canceled.
+    document.body.removeChild(element);
+    await promise;
+  } catch (e) {
+    gotException = true;
+  }
+  ok(gotException, "Should throw an exception when pending fullscreen request is canceled.");
+
+  try {
+    window.screen.orientation.unlock();
+    await document.exitFullscreen();
+  } catch (e) {
+  }
+});
+
+add_task(async function test_dont_leak_memory_with_pending_fullscreen_request() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.screenorientation.allow-lock", true]]
+  });
+
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("allowFullScreen", "");
+  iframe.src = "file_lock_orientation_with_pending_fullscreen.html";
+
+  const promise = new Promise(resolve => {
+    window.addEventListener("message", function handler(e) {
+      if (e.data === "pending") {
+        document.body.removeChild(iframe);
+        window.removeEventListener("message", handler);
+        resolve();
+      }
+    });
+  });
+
+  document.body.appendChild(iframe);
+  await promise;
+});
+</script>
+</body>
+</html>
