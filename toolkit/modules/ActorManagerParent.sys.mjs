@@ -458,10 +458,10 @@ let JSWINDOWACTORS = {
 
   WebChannel: {
     parent: {
-      moduleURI: "resource://gre/actors/WebChannelParent.jsm",
+      esModuleURI: "resource://gre/actors/WebChannelParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/WebChannelChild.jsm",
+      esModuleURI: "resource://gre/actors/WebChannelChild.sys.mjs",
       events: {
         WebChannelMessageToChrome: { capture: true, wantUntrusted: true },
       },
