@@ -254,9 +254,9 @@ async function runTest(options) {
       enabled = !enabled;
     }
     is(
-      button.pressed,
+      button.checked,
       enabled,
-      `permission is set correctly for ${permissions}: ${button.pressed}`
+      `permission is set correctly for ${permissions}: ${button.checked}`
     );
     let change;
     if (addon.userDisabled || !extension) {
@@ -294,14 +294,14 @@ async function runTest(options) {
     }
 
     await BrowserTestUtils.waitForCondition(async () => {
-      return button.pressed == !enabled;
+      return button.checked == !enabled;
     }, "button changed state");
   }
 
   // This tests that the button changes state if the permission is
   // changed outside of about:addons
   async function testExternalPermissionChange(permission, button) {
-    let enabled = button.pressed;
+    let enabled = button.checked;
     let type = button.getAttribute("permission-type");
     let change;
     if (addon.userDisabled || !extension) {
@@ -336,7 +336,7 @@ async function runTest(options) {
     );
 
     await BrowserTestUtils.waitForCondition(async () => {
-      return button.pressed == !enabled;
+      return button.checked == !enabled;
     }, "button changed state");
   }
 
@@ -374,14 +374,14 @@ async function runTest(options) {
       // Check the row is a permission row with the correct key on the toggle
       // control.
       let row = permission_rows.shift();
-      let toggle = row.querySelector("moz-toggle");
-      let label = toggle.labelEl;
+      let label = row.firstElementChild;
 
       let str = optional_strings[name];
       if (str) {
-        is(label.textContent.trim(), str, `Expected permission string ${str}`);
+        is(label.textContent, str, `Expected permission string ${str}`);
       }
 
+      let toggle = label.lastElementChild;
       ok(
         row.classList.contains("permission-info"),
         `optional permission row for ${name}`
@@ -401,9 +401,9 @@ async function runTest(options) {
         await testExternalPermissionChange(perm, toggle);
         // change another addon to mess around with optional permission
         // values to see if it effects the addon we're testing here.  The
-        // next check would fail if anything bleeds onto other addons.
+        // next check would fail if anythign bleeds onto other addons.
         await testOtherPermissionChange(perm, toggle);
-        // repeat the "outside" test.
+        // repeate the "outside" test.
         await testExternalPermissionChange(perm, toggle);
       }
     }
@@ -696,7 +696,8 @@ add_task(async function test_OneOfMany_AllSites_toggle() {
   is(permission_rows.length, 1, "Only one 'all sites' permission toggle.");
 
   let row = permission_rows[0];
-  let toggle = row.querySelector("moz-toggle");
+  let label = row.firstElementChild;
+  let toggle = label.lastElementChild;
   ok(
     row.classList.contains("permission-info"),
     `optional permission row for "http://*/*"`
@@ -706,7 +707,7 @@ add_task(async function test_OneOfMany_AllSites_toggle() {
     "http://*/*",
     `optional permission toggle exists for "http://*/*"`
   );
-  ok(toggle.pressed, "Expect 'all sites' toggle to be set.");
+  ok(toggle.checked, "Expect 'all sites' toggle to be set.");
 
   // Revoke the second "all sites" permission, expect toggle to be unchecked.
   await ExtensionPermissions.remove("addon9@mochi.test", {
@@ -714,7 +715,7 @@ add_task(async function test_OneOfMany_AllSites_toggle() {
     origins: ["https://*/*"],
   });
   await extension.awaitMessage("permission-removed");
-  ok(!toggle.pressed, "Expect 'all sites' toggle not to be pressed.");
+  ok(!toggle.checked, "Expect 'all sites' toggle to be unchecked.");
 
   toggle.click();
 
