@@ -1517,6 +1517,8 @@ static inline StallSpecs GetStallSpecs() {
 // Ref: https://docs.microsoft.com/en-us/troubleshoot/windows-client/performance/slow-page-file-growth-memory-allocation-errors
 [[nodiscard]] void* MozVirtualAlloc(LPVOID lpAddress, SIZE_T dwSize,
                                     DWORD flAllocationType, DWORD flProtect) {
+  DWORD const lastError = ::GetLastError();
+
   constexpr auto IsOOMError = [] {
     switch (::GetLastError()) {
       // This is the usual error result from VirtualAlloc for OOM.
@@ -1553,7 +1555,7 @@ static inline StallSpecs GetStallSpecs() {
       // The OOM status has been handled, and should not be reported to
       // telemetry.
       if (IsOOMError()) {
-        ::SetLastError(0);
+        ::SetLastError(lastError);
       }
       return ptr;
     }
