@@ -8736,6 +8736,13 @@
   value: true
   mirror: always
 
+# Enable experimental enhanced color CSS color spaces. (lab(), lch(), oklab(), oklch(), color())
+- name: layout.css.more_color_4.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # The margin used for detecting relevancy for `content-visibility: auto`.
 - name: layout.css.content-visibility-relevant-content-margin
   type: float

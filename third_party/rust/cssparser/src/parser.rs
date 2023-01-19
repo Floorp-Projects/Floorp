@@ -639,17 +639,49 @@ impl<'i: 't, 't> Parser<'i, 't> {
     /// Parse a list of comma-separated values, all with the same syntax.
     ///
     /// The given closure is called repeatedly with a "delimited" parser
-    /// (see the `Parser::parse_until_before` method)
-    /// so that it can over consume the input past a comma at this block/function nesting level.
+    /// (see the `Parser::parse_until_before` method) so that it can over
+    /// consume the input past a comma at this block/function nesting level.
     ///
     /// Successful results are accumulated in a vector.
     ///
     /// This method returns `Err(())` the first time that a closure call does,
-    /// or if a closure call leaves some input before the next comma or the end of the input.
+    /// or if a closure call leaves some input before the next comma or the end
+    /// of the input.
     #[inline]
     pub fn parse_comma_separated<F, T, E>(
         &mut self,
+        parse_one: F,
+    ) -> Result<Vec<T>, ParseError<'i, E>>
+    where
+        F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+    {
+        self.parse_comma_separated_internal(parse_one, /* ignore_errors = */ false)
+    }
+
+    /// Like `parse_comma_separated`, but ignores errors on unknown components,
+    /// rather than erroring out in the whole list.
+    ///
+    /// Caller must deal with the fact that the resulting list might be empty,
+    /// if there's no valid component on the list.
+    #[inline]
+    pub fn parse_comma_separated_ignoring_errors<F, T, E: 'i>(
+        &mut self,
+        parse_one: F,
+    ) -> Vec<T>
+    where
+        F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+    {
+        match self.parse_comma_separated_internal(parse_one, /* ignore_errors = */ true) {
+            Ok(values) => values,
+            Err(..) => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn parse_comma_separated_internal<F, T, E>(
+        &mut self,
         mut parse_one: F,
+        ignore_errors: bool,
     ) -> Result<Vec<T>, ParseError<'i, E>>
     where
         F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
@@ -661,7 +693,11 @@ impl<'i: 't, 't> Parser<'i, 't> {
         let mut values = Vec::with_capacity(1);
         loop {
             self.skip_whitespace(); // Unnecessary for correctness, but may help try() in parse_one rewind less.
-            values.push(self.parse_until_before(Delimiter::Comma, &mut parse_one)?);
+            match self.parse_until_before(Delimiter::Comma, &mut parse_one) {
+                Ok(v) => values.push(v),
+                Err(e) if !ignore_errors => return Err(e),
+                Err(_) => {},
+            }
             match self.next() {
                 Err(_) => return Ok(values),
                 Ok(&Token::Comma) => continue,

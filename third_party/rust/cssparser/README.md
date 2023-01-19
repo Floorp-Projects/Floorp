@@ -1,7 +1,7 @@
 rust-cssparser
 ==============
 
-[![Build Status](https://travis-ci.com/servo/rust-cssparser.svg)](https://travis-ci.com/servo/rust-cssparser)
+[![Build Status](https://github.com/servo/rust-cssparser/actions/workflows/main.yml/badge.svg)](https://github.com/servo/rust-cssparser/actions)
 
 [Documentation](https://docs.rs/cssparser/)
 
@@ -53,5 +53,5 @@ Parsing CSS involves a series of steps:
   It does however provide some helper functions to parse [CSS colors](src/color.rs)
   and [An+B](src/nth.rs) (the argument to `:nth-child()` and related selectors.
 
-  See [Servo’s `style` crate](https://github.com/mozilla/servo/tree/master/components/style)
+  See [Servo’s `style` crate](https://github.com/servo/servo/tree/master/components/style)
   for an example of a parser based on rust-cssparser.
