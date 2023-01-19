@@ -15,7 +15,7 @@ add_task(async function() {
   // And get rid of this code from the old storage actor.
   await pushPref("devtools.target-switching.server.enabled", false);
 
-  const browser = await addTab("data:text/html;charset=utf-8,foo");
+  const tab = await addTab("data:text/html;charset=utf-8,foo");
 
   info("Register target-scoped actor in the content process");
   await registerActorInContentProcess(ACTOR_URL, {
@@ -24,7 +24,6 @@ add_task(async function() {
     type: { target: true },
   });
 
-  const tab = gBrowser.getTabForBrowser(browser);
   const target = await createAndAttachTargetForTab(tab);
   const { client } = target;
   const form = target.targetForm;
