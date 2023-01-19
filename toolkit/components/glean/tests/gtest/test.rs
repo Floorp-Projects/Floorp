@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+extern crate firefox_on_glean;
+use firefox_on_glean::metrics;
+
 extern crate nsstring;
 use nsstring::nsString;
 
@@ -37,8 +40,8 @@ pub extern "C" fn Rust_TestRustInGTest() {
     // b) Require Gecko
     // This demonstration doesn't actually require Gecko. But we pretend it
     // does so we remember how to do this rust-in-gtest pattern.
-    fog::metrics::test_only::bad_code.add(12);
-    expect!(fog::metrics::test_only::bad_code.test_get_value(None) == Some(12));
+    metrics::test_only::bad_code.add(12);
+    expect!(metrics::test_only::bad_code.test_get_value(None) == Some(12));
 }
 
 #[no_mangle]
