@@ -1037,7 +1037,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
-  if (!mir->compilingWasm()) {
+  if (!mir->compilingWasm() && !JitOptions.disableIteratorIndices) {
     if (!OptimizeIteratorIndices(mir, graph)) {
       return false;
     }
