@@ -155,6 +155,7 @@ namespace jit {
   _(GetImportOperation, js::GetImportOperation)                                \
   _(GetIntrinsicValue, js::jit::GetIntrinsicValue)                             \
   _(GetIterator, js::GetIterator)                                              \
+  _(GetIteratorWithIndices, js::GetIteratorWithIndices)                        \
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                  \
   _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
   _(GetPrototypeOf, js::jit::GetPrototypeOf)                                   \
