@@ -14,11 +14,7 @@
 #include "modules/desktop_capture/desktop_capturer.h"
 
 #if defined(WEBRTC_USE_PIPEWIRE)
-#if defined(WEBRTC_MOZILLA_BUILD)
-#include "modules/desktop_capture/linux/wayland/moz_base_capturer_pipewire.h"
-#else
 #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
-#endif
 #endif  // defined(WEBRTC_USE_PIPEWIRE)
 
 #if defined(WEBRTC_USE_X11)
@@ -32,11 +28,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
     const DesktopCaptureOptions& options) {
 #if defined(WEBRTC_USE_PIPEWIRE)
   if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
-#if defined(WEBRTC_MOZILLA_BUILD)
-    return BaseCapturerPipeWire::CreateRawCapturer(options);
-#else
     return std::make_unique<BaseCapturerPipeWire>(options);
-#endif
   }
 #endif  // defined(WEBRTC_USE_PIPEWIRE)
 
