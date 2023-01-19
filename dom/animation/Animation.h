@@ -483,6 +483,8 @@ class Animation : public DOMEventTargetHelper,
     return mHiddenByContentVisibility;
   }
 
+  DocGroup* GetDocGroup();
+
  protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void CancelNoUpdate();

@@ -58,7 +58,7 @@ interface Animation : EventTarget {
   undefined reverse();
   [Pref="dom.animations-api.autoremove.enabled"]
   undefined persist();
-  [Pref="dom.animations-api.autoremove.enabled", Throws]
+  [CEReactions, Pref="dom.animations-api.autoremove.enabled", Throws]
   undefined commitStyles();
 };
 
