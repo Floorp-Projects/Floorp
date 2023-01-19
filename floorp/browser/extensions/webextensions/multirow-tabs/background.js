@@ -199,9 +199,7 @@ async function startup() {
   if (!('paxmod' in browser && 'stylesheet' in browser)) {
     browser.tabs.create({url: browser.runtime.getURL('missing_api.html')});
   }
-  const value = await browser.aboutConfigPrefs.getPref("floorp.enable.multitab");
-  console.log(value)
- if(value){
+
   browser.stylesheet.load(globalSheet, 'AUTHOR_SHEET');
   browser.paxmod.load();
   let options = await getOptions();
@@ -215,7 +213,7 @@ async function startup() {
     await setOptions(newOptions);
   }
   applyOptions();
- }
+
   // When idiling, occasionally check if icon sheets should be refreshed to
   // avoid growing a large cache.
   browser.idle.setDetectionInterval(60 * 10);
@@ -228,13 +226,19 @@ async function startup() {
   });
 }
 
-browser.theme.onUpdated.addListener(async details => {
-  const value = await browser.aboutConfigPrefs.getPref("floorp.enable.multitab");
-  if(value){
-  if ((await browser.storage.local.get('fitLightness')).fitLightness !== false) {
-    // Re-apply options, so the lightness settings fit the new theme
-    applyOptions();
+(async() => {
+  let enabled = await browser.aboutConfigPrefs.getPref("floorp.enable.multitab");
+  if (enabled) {
+    browser.theme.onUpdated.addListener(async details => {
+      if ((await browser.storage.local.get('fitLightness')).fitLightness !== false) {
+        // Re-apply options, so the lightness settings fit the new theme
+        applyOptions();
+      }
+    });
+    
+    startup();
   }
-}});
-
-startup();
+  browser.aboutConfigPrefs.onPrefChange.addListener(function(){
+    browser.runtime.reload();
+  }, "floorp.enable.multitab");
+})();

@@ -87,5 +87,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 3000);
   
-  Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row",setMultirowTabMaxHeight);  
+  Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row",setMultirowTabMaxHeight);
+  Services.prefs.addObserver("floorp.enable.multitab", function(){
+    if (Services.prefs.getBoolPref("floorp.enable.multitab")) {
+      setBrowserDesign();
+      setTimeout(setMultirowTabMaxHeight, 3000);
+    } else {
+      removeMultirowTabMaxHeight();
+      setBrowserDesign();
+    }
+  });
 }, { once: true });
