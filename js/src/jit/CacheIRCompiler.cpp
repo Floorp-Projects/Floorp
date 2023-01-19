@@ -4674,7 +4674,7 @@ bool CacheIRCompiler::emitObjectToIteratorResult(
   masm.bind(&callVM);
   callvm.prepare();
   masm.Push(obj);
-  using Fn = JSObject* (*)(JSContext*, HandleObject);
+  using Fn = PropertyIteratorObject* (*)(JSContext*, HandleObject);
   callvm.call<Fn, GetIterator>();
   masm.storeCallPointerResult(iterObj);
 
@@ -4694,7 +4694,7 @@ bool CacheIRCompiler::emitValueToIteratorResult(ValOperandId valId) {
 
   masm.Push(val);
 
-  using Fn = JSObject* (*)(JSContext*, HandleValue);
+  using Fn = PropertyIteratorObject* (*)(JSContext*, HandleValue);
   callvm.call<Fn, ValueToIterator>();
   return true;
 }
@@ -9494,6 +9494,10 @@ struct ReturnTypeToJSValueType<BigInt*> {
 };
 template <>
 struct ReturnTypeToJSValueType<JSObject*> {
+  static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
+};
+template <>
+struct ReturnTypeToJSValueType<PropertyIteratorObject*> {
   static constexpr JSValueType result = JSVAL_TYPE_OBJECT;
 };
 template <>

@@ -448,6 +448,7 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator {
 
 class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
   HandleValue val_;
+  Handle<PropertyIteratorObject*> iterObj_;
 
   AttachDecision tryAttachNativeIterator(ValOperandId valId);
   AttachDecision tryAttachNullOrUndefined(ValOperandId valId);
@@ -455,7 +456,8 @@ class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
 
  public:
   GetIteratorIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
-                         ICState state, HandleValue value);
+                         ICState state, HandleValue value,
+                         Handle<PropertyIteratorObject*> iterObj);
 
   AttachDecision tryAttachStub();
 

@@ -637,10 +637,10 @@ RegExpStringIteratorObject* NewRegExpStringIterator(JSContext* cx);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);
 
-JSObject* GetIterator(JSContext* cx, HandleObject obj);
-JSObject* GetIteratorWithIndices(JSContext* cx, HandleObject obj);
+PropertyIteratorObject* GetIterator(JSContext* cx, HandleObject obj);
+PropertyIteratorObject* GetIteratorWithIndices(JSContext* cx, HandleObject obj);
 
-JSObject* ValueToIterator(JSContext* cx, HandleValue vp);
+PropertyIteratorObject* ValueToIterator(JSContext* cx, HandleValue vp);
 
 void CloseIterator(JSObject* obj);
 
