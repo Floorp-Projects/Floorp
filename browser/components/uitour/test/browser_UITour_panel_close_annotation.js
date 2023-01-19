@@ -224,39 +224,4 @@ var tests = [
       "Highlight should be shown after showHighlight() for fixed panel items"
     );
   },
-
-  function test_info_move_outside_panel(done) {
-    gContentAPI.showInfo("addons", "test title", "test text");
-    gContentAPI.showHighlight("urlbar");
-    let addonsButton = document.getElementById("add-ons-button");
-    waitForPopupAtAnchor(
-      tooltip,
-      addonsButton,
-      function checkPanelIsOpen() {
-        isnot(PanelUI.panel.state, "closed", "Panel should have opened");
-
-        // Move the info panel outside which should close the app menu.
-        gContentAPI.showInfo("appMenu", "Cool menu button", "It's three lines");
-        waitForPopupAtAnchor(
-          tooltip,
-          document.getElementById("PanelUI-button"),
-          () => {
-            isnot(
-              PanelUI.panel.state,
-              "open",
-              "Menu should have closed after the highlight moved elsewhere."
-            );
-            is(
-              highlight.parentElement.state,
-              "open",
-              "The highlight should have remained visible"
-            );
-            done();
-          },
-          "Tooltip should move to the appMenu button and still be visible"
-        );
-      },
-      "Tooltip should be shown after showInfo() for a panel item"
-    );
-  },
 ];

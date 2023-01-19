@@ -53,23 +53,13 @@ const POPUP_PRELOAD_TIMEOUT_MS = 200;
 const browserActionMap = new WeakMap();
 
 XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
-  let panelArea = gUnifiedExtensionsEnabled
-    ? CustomizableUI.AREA_ADDONS
-    : CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
   return {
     navbar: CustomizableUI.AREA_NAVBAR,
-    menupanel: panelArea,
+    menupanel: CustomizableUI.AREA_ADDONS,
     tabstrip: CustomizableUI.AREA_TABSTRIP,
     personaltoolbar: CustomizableUI.AREA_BOOKMARKS,
   };
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gUnifiedExtensionsEnabled",
-  "extensions.unifiedExtensions.enabled",
-  false
-);
 
 function actionWidgetId(widgetId) {
   return `${widgetId}-browser-action`;
@@ -235,49 +225,47 @@ this.browserAction = class extends ExtensionAPIPersistent {
           "subviewbutton"
         );
 
-        if (gUnifiedExtensionsEnabled) {
-          let contents = document.createXULElement("vbox");
-          contents.classList.add("unified-extensions-item-contents");
-          contents.setAttribute("move-after-stack", "true");
+        let contents = document.createXULElement("vbox");
+        contents.classList.add("unified-extensions-item-contents");
+        contents.setAttribute("move-after-stack", "true");
 
-          let name = document.createXULElement("label");
-          name.classList.add("unified-extensions-item-name");
-          contents.appendChild(name);
+        let name = document.createXULElement("label");
+        name.classList.add("unified-extensions-item-name");
+        contents.appendChild(name);
 
-          // This deck (and its labels) should be kept in sync with
-          // `browser/base/content/unified-extensions-viewcache.inc.xhtml`.
-          let deck = document.createXULElement("deck");
-          deck.classList.add("unified-extensions-item-message-deck");
+        // This deck (and its labels) should be kept in sync with
+        // `browser/base/content/unified-extensions-viewcache.inc.xhtml`.
+        let deck = document.createXULElement("deck");
+        deck.classList.add("unified-extensions-item-message-deck");
 
-          let messageDefault = document.createXULElement("label");
-          messageDefault.classList.add(
-            "unified-extensions-item-message",
-            "unified-extensions-item-message-default"
-          );
-          deck.appendChild(messageDefault);
+        let messageDefault = document.createXULElement("label");
+        messageDefault.classList.add(
+          "unified-extensions-item-message",
+          "unified-extensions-item-message-default"
+        );
+        deck.appendChild(messageDefault);
 
-          let messageHover = document.createXULElement("label");
-          messageHover.classList.add(
-            "unified-extensions-item-message",
-            "unified-extensions-item-message-hover"
-          );
-          deck.appendChild(messageHover);
+        let messageHover = document.createXULElement("label");
+        messageHover.classList.add(
+          "unified-extensions-item-message",
+          "unified-extensions-item-message-hover"
+        );
+        deck.appendChild(messageHover);
 
-          let messageHoverForMenuButton = document.createXULElement("label");
-          messageHoverForMenuButton.classList.add(
-            "unified-extensions-item-message",
-            "unified-extensions-item-message-hover-menu-button"
-          );
-          messageHoverForMenuButton.setAttribute(
-            "data-l10n-id",
-            "unified-extensions-item-message-manage"
-          );
-          deck.appendChild(messageHoverForMenuButton);
+        let messageHoverForMenuButton = document.createXULElement("label");
+        messageHoverForMenuButton.classList.add(
+          "unified-extensions-item-message",
+          "unified-extensions-item-message-hover-menu-button"
+        );
+        messageHoverForMenuButton.setAttribute(
+          "data-l10n-id",
+          "unified-extensions-item-message-manage"
+        );
+        deck.appendChild(messageHoverForMenuButton);
 
-          contents.appendChild(deck);
+        contents.appendChild(deck);
 
-          button.appendChild(contents);
-        }
+        button.appendChild(contents);
 
         let menuButton = document.createXULElement("toolbarbutton");
         menuButton.classList.add(
@@ -286,24 +274,19 @@ this.browserAction = class extends ExtensionAPIPersistent {
           "subviewbutton-iconic"
         );
 
-        if (gUnifiedExtensionsEnabled) {
-          menuButton.setAttribute(
-            "data-l10n-id",
-            "unified-extensions-item-open-menu"
-          );
-          // Allow the users to quickly move between extension items using
-          // the arrow keys, see: `PanelMultiView._isNavigableWithTabOnly()`.
-          menuButton.setAttribute("data-navigable-with-tab-only", true);
-        }
+        menuButton.setAttribute(
+          "data-l10n-id",
+          "unified-extensions-item-open-menu"
+        );
+        // Allow the users to quickly move between extension items using
+        // the arrow keys, see: `PanelMultiView._isNavigableWithTabOnly()`.
+        menuButton.setAttribute("data-navigable-with-tab-only", true);
 
         menuButton.setAttribute("data-extensionid", extension.id);
         menuButton.setAttribute("closemenu", "none");
 
         let node = document.createXULElement("toolbaritem");
-        node.setAttribute(
-          "unified-extensions",
-          String(gUnifiedExtensionsEnabled)
-        );
+        node.setAttribute("unified-extensions", String(true));
         node.classList.add(
           "toolbaritem-combined-buttons",
           "unified-extensions-item"
@@ -360,23 +343,21 @@ this.browserAction = class extends ExtensionAPIPersistent {
         actionButton.onmouseout = event => this.handleEvent(event);
         actionButton.onauxclick = event => this.handleEvent(event);
 
-        if (gUnifiedExtensionsEnabled) {
-          const menuButton = node.querySelector(
-            ".unified-extensions-item-menu-button"
-          );
-          menuButton.setAttribute(
-            "data-l10n-args",
-            JSON.stringify({ extensionName: this.extension.name })
-          );
+        const menuButton = node.querySelector(
+          ".unified-extensions-item-menu-button"
+        );
+        menuButton.setAttribute(
+          "data-l10n-args",
+          JSON.stringify({ extensionName: this.extension.name })
+        );
 
-          menuButton.onblur = event => this.handleMenuButtonEvent(event);
-          menuButton.onfocus = event => this.handleMenuButtonEvent(event);
-          menuButton.onmouseout = event => this.handleMenuButtonEvent(event);
-          menuButton.onmouseover = event => this.handleMenuButtonEvent(event);
+        menuButton.onblur = event => this.handleMenuButtonEvent(event);
+        menuButton.onfocus = event => this.handleMenuButtonEvent(event);
+        menuButton.onmouseout = event => this.handleMenuButtonEvent(event);
+        menuButton.onmouseover = event => this.handleMenuButtonEvent(event);
 
-          actionButton.onblur = event => this.handleEvent(event);
-          actionButton.onfocus = event => this.handleEvent(event);
-        }
+        actionButton.onblur = event => this.handleEvent(event);
+        actionButton.onfocus = event => this.handleEvent(event);
 
         this.updateButton(node, this.action.getContextData(null), true, false);
       },
@@ -411,13 +392,9 @@ this.browserAction = class extends ExtensionAPIPersistent {
           return;
         }
 
-        // Open the unified extensions context menu when the pref is enabled.
-        // This context menu only has the relevant menu items for the unified
-        // extensions UI.
+        // Open the unified extensions context menu.
         const popup = target.ownerDocument.getElementById(
-          gUnifiedExtensionsEnabled
-            ? "unified-extensions-context-menu"
-            : "customizationPanelItemContextMenu"
+          "unified-extensions-context-menu"
         );
         popup.openPopup(
           target,
@@ -526,11 +503,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
     }
 
     if (this.widget.areaType == CustomizableUI.TYPE_PANEL) {
-      if (gUnifiedExtensionsEnabled) {
-        await window.gUnifiedExtensions.togglePanel();
-      } else {
-        await window.document.getElementById("nav-bar").overflowable.show();
-      }
+      await window.gUnifiedExtensions.togglePanel();
     }
 
     // This should already have been checked by callers, but acts as an
@@ -663,7 +636,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         let popupURL = this.action.getPopupUrl(tab);
 
         let { node } = window.gBrowser && this.widget.forWindow(window);
-        if (gUnifiedExtensionsEnabled && node) {
+        if (node) {
           node.querySelector(
             ".unified-extensions-item-message-deck"
           ).selectedIndex = window.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER;
@@ -689,7 +662,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
       case "blur":
       case "mouseout": {
         let { node } = window.gBrowser && this.widget.forWindow(window);
-        if (gUnifiedExtensionsEnabled && node) {
+        if (node) {
           node.querySelector(
             ".unified-extensions-item-message-deck"
           ).selectedIndex =
@@ -843,16 +816,13 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let button = node.querySelector(".unified-extensions-item-action-button");
     let extensionTitle = tabData.title || this.extension.name;
 
-    let messages;
-    if (gUnifiedExtensionsEnabled) {
-      let policy = WebExtensionPolicy.getByID(this.extension.id);
-      messages = OriginControls.getStateMessageIDs({
-        policy,
-        uri: node.ownerGlobal.gBrowser.currentURI,
-        isAction: true,
-        hasPopup: !!tabData.popup,
-      });
-    }
+    let policy = WebExtensionPolicy.getByID(this.extension.id);
+    let messages = OriginControls.getStateMessageIDs({
+      policy,
+      uri: node.ownerGlobal.gBrowser.currentURI,
+      isAction: true,
+      hasPopup: !!tabData.popup,
+    });
 
     let callback = () => {
       // This is set on the node so that it looks good in the toolbar.
@@ -866,28 +836,26 @@ this.browserAction = class extends ExtensionAPIPersistent {
         { extensionTitle }
       );
 
-      if (gUnifiedExtensionsEnabled) {
-        button.querySelector(
-          ".unified-extensions-item-name"
-        ).textContent = this.extension?.name;
+      button.querySelector(
+        ".unified-extensions-item-name"
+      ).textContent = this.extension?.name;
 
-        if (messages) {
-          const messageDefaultElement = button.querySelector(
-            ".unified-extensions-item-message-default"
-          );
-          node.ownerDocument.l10n.setAttributes(
-            messageDefaultElement,
-            messages.default
-          );
+      if (messages) {
+        const messageDefaultElement = button.querySelector(
+          ".unified-extensions-item-message-default"
+        );
+        node.ownerDocument.l10n.setAttributes(
+          messageDefaultElement,
+          messages.default
+        );
 
-          const messageHoverElement = button.querySelector(
-            ".unified-extensions-item-message-hover"
-          );
-          node.ownerDocument.l10n.setAttributes(
-            messageHoverElement,
-            messages.onHover || messages.default
-          );
-        }
+        const messageHoverElement = button.querySelector(
+          ".unified-extensions-item-message-hover"
+        );
+        node.ownerDocument.l10n.setAttributes(
+          messageHoverElement,
+          messages.onHover || messages.default
+        );
       }
 
       if (tabData.badgeText) {
@@ -938,25 +906,15 @@ this.browserAction = class extends ExtensionAPIPersistent {
       `;
     };
 
-    let icon16 = IconDetails.getPreferredIcon(icons, this.extension, 16).icon;
     let icon32 = IconDetails.getPreferredIcon(icons, this.extension, 32).icon;
     let icon64 = IconDetails.getPreferredIcon(icons, this.extension, 64).icon;
 
-    if (gUnifiedExtensionsEnabled) {
-      return `
+    return `
         ${getStyle("menupanel-image", icon32)}
         ${getStyle("menupanel-image-2x", icon64)}
         ${getStyle("toolbar-image", icon32)}
         ${getStyle("toolbar-image-2x", icon64)}
       `;
-    }
-
-    return `
-      ${getStyle("menupanel-image", icon16)}
-      ${getStyle("menupanel-image-2x", icon32)}
-      ${getStyle("toolbar-image", icon16)}
-      ${getStyle("toolbar-image-2x", icon32)}
-    `;
   }
 
   /**

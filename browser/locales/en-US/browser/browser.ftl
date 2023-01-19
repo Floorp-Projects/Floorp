@@ -760,12 +760,6 @@ repair-text-encoding-button =
 ## Customize Toolbar Buttons
 
 # Variables:
-#  $shortcut (String): keyboard shortcut to open the add-ons manager
-toolbar-addons-themes-button =
-  .label = Add-ons and themes
-  .tooltiptext = Manage your add-ons and themes ({ $shortcut })
-
-# Variables:
 #  $shortcut (String): keyboard shortcut to open settings (only on macOS)
 toolbar-settings-button =
   .label = Settings

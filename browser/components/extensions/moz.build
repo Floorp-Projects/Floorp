@@ -26,7 +26,6 @@ TESTING_JS_MODULES += [
 DIRS += ["schemas"]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser-no-unified-extensions.ini",
     "test/browser/browser-private.ini",
     "test/browser/browser.ini",
 ]

@@ -1279,10 +1279,7 @@ var gUnifiedExtensions = {
   },
 
   get isEnabled() {
-    return Services.prefs.getBoolPref(
-      "extensions.unifiedExtensions.enabled",
-      false
-    );
+    return true;
   },
 
   onLocationChange(browser, webProgress, _request, _uri, flags) {
