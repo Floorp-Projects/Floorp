@@ -236,7 +236,7 @@ struct NativeIterator : public NativeIteratorListNode {
    */
   NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
                  Handle<JSObject*> objBeingIterated, HandleIdVector props,
-                 uint32_t numShapes, HashNumber shapesHash, bool* hadError);
+                 uint32_t numShapes, bool* hadError);
 
   JSObject* objectBeingIterated() const { return objectBeingIterated_; }
 

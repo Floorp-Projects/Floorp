@@ -827,7 +827,7 @@ static inline size_t AllocationSize(size_t propertyCount, size_t shapeCount) {
 
 static PropertyIteratorObject* CreatePropertyIterator(
     JSContext* cx, Handle<JSObject*> objBeingIterated, HandleIdVector props,
-    uint32_t numShapes, HashNumber shapesHash) {
+    uint32_t numShapes) {
   if (props.length() > NativeIterator::PropCountLimit) {
     ReportAllocationOverflow(cx);
     return nullptr;
@@ -847,7 +847,7 @@ static PropertyIteratorObject* CreatePropertyIterator(
   // This also registers |ni| with |propIter|.
   bool hadError = false;
   new (mem) NativeIterator(cx, propIter, objBeingIterated, props, numShapes,
-                           shapesHash, &hadError);
+                           &hadError);
   if (hadError) {
     return nullptr;
   }
@@ -870,7 +870,7 @@ NativeIterator::NativeIterator(JSContext* cx,
                                Handle<PropertyIteratorObject*> propIter,
                                Handle<JSObject*> objBeingIterated,
                                HandleIdVector props, uint32_t numShapes,
-                               HashNumber shapesHash, bool* hadError)
+                               bool* hadError)
     : objectBeingIterated_(objBeingIterated),
       iterObj_(propIter),
       // NativeIterator initially acts (before full initialization) as if it
@@ -880,7 +880,7 @@ NativeIterator::NativeIterator(JSContext* cx,
       propertyCursor_(
           reinterpret_cast<GCPtr<JSLinearString*>*>(shapesBegin() + numShapes)),
       propertiesEnd_(propertyCursor_),
-      shapesHash_(shapesHash),
+      shapesHash_(0),
       flagsAndCount_(
           initialFlagsAndCount(props.length()))  // note: no Flags::Initialized
 {
@@ -905,7 +905,7 @@ NativeIterator::NativeIterator(JSContext* cx,
   AddCellMemory(propIter, nbytes, MemoryUse::NativeIterator);
 
   if (numShapes > 0) {
-    // Construct shapes into the shapes array.  Also recompute the shapesHash,
+    // Construct shapes into the shapes array.  Also compute the shapesHash,
     // which incorporates Shape* addresses that could have changed during a GC
     // triggered in (among other places) |IdToString| above.
     JSObject* pobj = objBeingIterated;
@@ -1209,7 +1209,7 @@ JSObject* js::GetIterator(JSContext* cx, HandleObject obj) {
   }
 
   PropertyIteratorObject* iterobj =
-      CreatePropertyIterator(cx, obj, keys, numShapes, 0);
+      CreatePropertyIterator(cx, obj, keys, numShapes);
   if (!iterobj) {
     return nullptr;
   }
@@ -1524,7 +1524,7 @@ PropertyIteratorObject* GlobalObject::getOrCreateEmptyIterator(JSContext* cx) {
   if (!cx->global()->data().emptyIterator) {
     RootedIdVector props(cx);  // Empty
     PropertyIteratorObject* iter =
-        CreatePropertyIterator(cx, nullptr, props, 0, 0);
+        CreatePropertyIterator(cx, nullptr, props, 0);
     if (!iter) {
       return nullptr;
     }
