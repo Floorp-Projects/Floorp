@@ -8735,6 +8735,17 @@
     "bug_numbers": [1360916],
     "description": "Session restore: Duration of data collection in the content process (ms). Possible keys currently are: historychange, scroll, formdata, pageStyle, disallow, storage, storagechange."
   },
+  "FX_SESSION_RESTORE_COLLECT_SESSION_HISTORY_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com", "farre@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 20,
+    "bug_numbers": [1810704 ],
+    "description": "Session restore: Duration of session history collection in the parent process (ms)."
+  },
   "FX_SESSION_RESTORE_PRIVACY_LEVEL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
