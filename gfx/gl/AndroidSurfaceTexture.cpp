@@ -34,7 +34,8 @@ class AndroidSharedBlitGL final {
     }
 
     const auto& egl = *(sContext->mEgl);
-    mTargetSurface = egl.fCreateWindowSurface(sContext->mConfig, window, 0);
+    mTargetSurface =
+        egl.fCreateWindowSurface(sContext->mSurfaceConfig, window, nullptr);
 
     ++sInstanceCount;
   }
@@ -83,7 +84,7 @@ class AndroidSharedBlitGL final {
     CreateConfig(*egl, &eglConfig, /* bpp */ 24, /* depth buffer? */ false,
                  aUseGles);
     auto gl = GLContextEGL::CreateGLContext(egl, {}, eglConfig, EGL_NO_SURFACE,
-                                            true, &ignored);
+                                            true, eglConfig, &ignored);
     if (!gl) {
       NS_WARNING("Fail to create GL context for native blitter.");
       return nullptr;

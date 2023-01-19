@@ -56,7 +56,7 @@ UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
 EGLSurface RenderCompositorEGL::CreateEGLSurface() {
   EGLSurface surface = EGL_NO_SURFACE;
   surface = gl::GLContextEGL::CreateEGLSurfaceForCompositorWidget(
-      mWidget, gl::GLContextEGL::Cast(gl())->mConfig);
+      mWidget, gl::GLContextEGL::Cast(gl())->mSurfaceConfig);
   if (surface == EGL_NO_SURFACE) {
     const auto* renderThread = RenderThread::Get();
     gfxCriticalNote << "Failed to create EGLSurface. "
