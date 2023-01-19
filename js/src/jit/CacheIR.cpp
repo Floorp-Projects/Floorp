@@ -5296,11 +5296,12 @@ AttachDecision TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
   return AttachDecision::Attach;
 }
 
-GetIteratorIRGenerator::GetIteratorIRGenerator(JSContext* cx,
-                                               HandleScript script,
-                                               jsbytecode* pc, ICState state,
-                                               HandleValue value)
-    : IRGenerator(cx, script, pc, CacheKind::GetIterator, state), val_(value) {}
+GetIteratorIRGenerator::GetIteratorIRGenerator(
+    JSContext* cx, HandleScript script, jsbytecode* pc, ICState state,
+    HandleValue value, Handle<PropertyIteratorObject*> iterObj)
+    : IRGenerator(cx, script, pc, CacheKind::GetIterator, state),
+      val_(value),
+      iterObj_(iterObj) {}
 
 AttachDecision GetIteratorIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::GetIterator);
@@ -5332,8 +5333,8 @@ AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
   RootedObject obj(cx_, &val_.toObject());
   ObjOperandId objId = writer.guardToObject(valId);
 
-  PropertyIteratorObject* iterobj = LookupInIteratorCache(cx_, obj);
-  if (!iterobj) {
+  if (!obj->shape()->cache().isIterator() ||
+      obj->shape()->cache().toIterator() != iterObj_) {
     return AttachDecision::NoAction;
   }
   auto* nobj = &obj->as<NativeObject>();
@@ -5349,7 +5350,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
                               /* alwaysGuardFirstProto = */ false);
 
   ObjOperandId iterId = writer.guardAndGetIterator(
-      objId, iterobj, cx_->compartment()->enumeratorsAddr());
+      objId, iterObj_, cx_->compartment()->enumeratorsAddr());
   writer.loadObjectResult(iterId);
   writer.returnFromIC();
 

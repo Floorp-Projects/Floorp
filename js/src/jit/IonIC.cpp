@@ -391,9 +391,14 @@ JSObject* IonGetIteratorIC::update(JSContext* cx, HandleScript outerScript,
                                    IonGetIteratorIC* ic, HandleValue value) {
   IonScript* ionScript = outerScript->ionScript();
 
-  TryAttachIonStub<GetIteratorIRGenerator>(cx, ic, ionScript, value);
+  Rooted<PropertyIteratorObject*> iterObj(cx, ValueToIterator(cx, value));
+  if (!iterObj) {
+    return nullptr;
+  }
 
-  return ValueToIterator(cx, value);
+  TryAttachIonStub<GetIteratorIRGenerator>(cx, ic, ionScript, value, iterObj);
+
+  return iterObj;
 }
 
 /* static */

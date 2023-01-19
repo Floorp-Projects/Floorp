@@ -13994,7 +13994,7 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
   Register temp2 = ToRegister(lir->temp1());
   Register temp3 = ToRegister(lir->temp2());
 
-  using Fn = JSObject* (*)(JSContext*, HandleObject);
+  using Fn = PropertyIteratorObject* (*)(JSContext*, HandleObject);
   OutOfLineCode* ool =
       oolCallVM<Fn, GetIterator>(lir, ArgList(obj), StoreRegisterTo(iterObj));
 
@@ -14023,7 +14023,7 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
 void CodeGenerator::visitValueToIterator(LValueToIterator* lir) {
   pushArg(ToValue(lir, LValueToIterator::ValueIndex));
 
-  using Fn = JSObject* (*)(JSContext*, HandleValue);
+  using Fn = PropertyIteratorObject* (*)(JSContext*, HandleValue);
   callVM<Fn, ValueToIterator>(lir);
 }
 

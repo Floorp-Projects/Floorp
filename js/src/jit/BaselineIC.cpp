@@ -1848,14 +1848,15 @@ bool DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
   MaybeNotifyWarp(frame->outerScript(), stub);
   FallbackICSpew(cx, stub, "GetIterator");
 
-  TryAttachStub<GetIteratorIRGenerator>("GetIterator", cx, frame, stub, value);
-
-  JSObject* iterobj = ValueToIterator(cx, value);
-  if (!iterobj) {
+  Rooted<PropertyIteratorObject*> iterObj(cx, ValueToIterator(cx, value));
+  if (!iterObj) {
     return false;
   }
 
-  res.setObject(*iterobj);
+  TryAttachStub<GetIteratorIRGenerator>("GetIterator", cx, frame, stub, value,
+                                        iterObj);
+
+  res.setObject(*iterObj);
   return true;
 }
 

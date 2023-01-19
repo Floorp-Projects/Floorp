@@ -1289,11 +1289,12 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   return iterobj;
 }
 
-JSObject* js::GetIterator(JSContext* cx, HandleObject obj) {
+PropertyIteratorObject* js::GetIterator(JSContext* cx, HandleObject obj) {
   return GetIteratorImpl<false>(cx, obj);
 }
 
-JSObject* js::GetIteratorWithIndices(JSContext* cx, HandleObject obj) {
+PropertyIteratorObject* js::GetIteratorWithIndices(JSContext* cx,
+                                                   HandleObject obj) {
   return GetIteratorImpl<true>(cx, obj);
 }
 
@@ -1596,7 +1597,7 @@ PropertyIteratorObject* GlobalObject::getOrCreateEmptyIterator(JSContext* cx) {
   return cx->global()->data().emptyIterator;
 }
 
-JSObject* js::ValueToIterator(JSContext* cx, HandleValue vp) {
+PropertyIteratorObject* js::ValueToIterator(JSContext* cx, HandleValue vp) {
   RootedObject obj(cx);
   if (vp.isObject()) {
     /* Common case. */
