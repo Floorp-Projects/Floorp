@@ -485,8 +485,10 @@ void nsWindow::DispatchActivateEvent(void) {
   if (mWidgetListener) mWidgetListener->WindowActivated();
 }
 
-void nsWindow::DispatchDeactivateEvent(void) {
-  if (mWidgetListener) mWidgetListener->WindowDeactivated();
+void nsWindow::DispatchDeactivateEvent() {
+  if (mWidgetListener) {
+    mWidgetListener->WindowDeactivated();
+  }
 
 #ifdef ACCESSIBILITY
   DispatchDeactivateEventAccessible();
@@ -4801,24 +4803,29 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
 
   if (mWindowType == eWindowType_toplevel ||
       mWindowType == eWindowType_dialog) {
-    nsCOMPtr<nsIDragService> dragService =
-        do_GetService("@mozilla.org/widget/dragservice;1");
-    nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession(getter_AddRefs(dragSession));
-
-    // Rollup popups when a window is focused out unless a drag is occurring.
+    // Rollup menus when a window is focused out unless a drag is occurring.
     // This check is because drags grab the keyboard and cause a focus out on
     // versions of GTK before 2.18.
-    bool shouldRollup = !dragSession;
-    if (!shouldRollup) {
-      // we also roll up when a drag is from a different application
+    const bool shouldRollupMenus = [&] {
+      nsCOMPtr<nsIDragService> dragService =
+          do_GetService("@mozilla.org/widget/dragservice;1");
+      nsCOMPtr<nsIDragSession> dragSession;
+      dragService->GetCurrentSession(getter_AddRefs(dragSession));
+      if (!dragSession) {
+        return true;
+      }
+      // We also roll up when a drag is from a different application
       nsCOMPtr<nsINode> sourceNode;
       dragSession->GetSourceNode(getter_AddRefs(sourceNode));
-      shouldRollup = (sourceNode == nullptr);
+      return !sourceNode;
+    }();
+
+    if (shouldRollupMenus) {
+      CheckForRollup(0, 0, false, true);
     }
 
-    if (shouldRollup) {
-      CheckForRollup(0, 0, false, true);
+    if (RefPtr pm = nsXULPopupManager::GetInstance()) {
+      pm->RollupTooltips();
     }
   }
 
