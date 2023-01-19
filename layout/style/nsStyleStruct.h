@@ -1245,7 +1245,7 @@ struct StyleAnimation {
   dom::PlaybackDirection GetDirection() const { return mDirection; }
   dom::FillMode GetFillMode() const { return mFillMode; }
   StyleAnimationPlayState GetPlayState() const { return mPlayState; }
-  float GetIterationCount() const { return mIterationCount; }
+  float GetIterationCount() const { return mIterationCount._0; }
   dom::CompositeOperation GetComposition() const { return mComposition; }
   const StyleAnimationTimeline& GetTimeline() const { return mTimeline; }
 
@@ -1265,7 +1265,7 @@ struct StyleAnimation {
   dom::PlaybackDirection mDirection;
   dom::FillMode mFillMode;
   StyleAnimationPlayState mPlayState;
-  float mIterationCount;  // mozilla::PositiveInfinity<float>() means infinite
+  StyleAnimationIterationCount mIterationCount;
   dom::CompositeOperation mComposition;
   StyleAnimationTimeline mTimeline;
 };

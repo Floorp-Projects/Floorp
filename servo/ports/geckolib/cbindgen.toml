@@ -75,6 +75,7 @@ exclude = [
 ]
 include = [
   "AnimationTimeline",
+  "AnimationIterationCount",
   "Appearance",
   "BreakBetween",
   "BreakWithin",
