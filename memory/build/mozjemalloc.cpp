@@ -164,8 +164,8 @@
 #include "Mutex.h"
 #include "Utils.h"
 
-// For GetGeckoProcessType(), when it's used.
 #if defined(XP_WIN) && !defined(JS_STANDALONE)
+#  include "mozmemory_utils.h"
 #  include "mozilla/ProcessType.h"
 #endif
 
@@ -1473,60 +1473,6 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
 
 // On Windows, delay crashing on OOM.
 #ifdef XP_WIN
-
-namespace mozilla {
-
-namespace detail {
-// Helper for StallAndRetry error messages.
-template <typename T>
-constexpr bool is_std_optional = false;
-template <typename T>
-constexpr bool is_std_optional<std::optional<T>> = true;
-}  // namespace detail
-
-struct StallSpecs {
-  // Maximum number of retry-attempts before giving up.
-  size_t maxAttempts;
-  // Delay time between successive events.
-  size_t delayMs;
-
-  // Retry a fallible operation until it succeeds or until we've run out of
-  // retries.
-  //
-  // Note that this invokes `aDelayFunc` immediately upon being called! It's
-  // intended for use in the unhappy path, after an initial attempt has failed.
-  //
-  // The function type here may be read:
-  // ```
-  // fn StallAndRetry<R>(
-  //     delay_func: impl Fn(usize) -> (),
-  //     operation: impl Fn() -> Option<R>,
-  // ) -> Option<R>;
-  // ```
-  //
-  template <typename DelayFunc, typename OpFunc>
-  auto StallAndRetry(DelayFunc&& aDelayFunc, OpFunc&& aOperation) const
-      -> decltype(aOperation()) {
-    {
-      // Explicit typecheck for OpFunc, to provide an explicit error message.
-      using detail::is_std_optional;
-      static_assert(is_std_optional<decltype(aOperation())>,
-                    "aOperation() must return std::optional");
-
-      // (clang's existing error messages suffice for aDelayFunc.)
-    }
-
-    for (size_t i = 0; i < maxAttempts; ++i) {
-      aDelayFunc(delayMs);
-      if (const auto opt = aOperation()) {
-        return opt;
-      }
-    }
-    return std::nullopt;
-  }
-};
-
-}  // namespace mozilla
 
 // Implementation of VirtualAlloc wrapper (bug 1716727).
 namespace MozAllocRetries {
