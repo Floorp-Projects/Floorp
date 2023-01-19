@@ -2228,6 +2228,14 @@
 - name: IteratorHasIndicesAndBranch
   gen_boilerplate: false
 
+- name: LoadSlotByIteratorIndex
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    iterator: WordSized
+
+  num_temps: 2
+
 # Patchable jump to stubs generated for a SetProperty cache.
 - name: SetPropertyCache
   operands:

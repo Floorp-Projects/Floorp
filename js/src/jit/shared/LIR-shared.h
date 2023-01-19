@@ -2783,22 +2783,28 @@ class LAtomicTypedArrayElementBinopForEffect64
   }
 };
 
-class LIteratorHasIndicesAndBranch : public LControlInstructionHelper<2, 1, 1> {
+class LIteratorHasIndicesAndBranch : public LControlInstructionHelper<2, 2, 2> {
  public:
   LIR_HEADER(IteratorHasIndicesAndBranch)
 
   LIteratorHasIndicesAndBranch(MBasicBlock* ifTrue, MBasicBlock* ifFalse,
-                               const LAllocation& iterObj,
-                               const LDefinition& temp)
+                               const LAllocation& object,
+                               const LAllocation& iterator,
+                               const LDefinition& temp,
+                               const LDefinition& temp2)
       : LControlInstructionHelper(classOpcode) {
     setSuccessor(0, ifTrue);
     setSuccessor(1, ifFalse);
-    setOperand(0, iterObj);
+    setOperand(0, object);
+    setOperand(1, iterator);
     setTemp(0, temp);
+    setTemp(1, temp2);
   }
 
-  const LAllocation* iterObj() { return getOperand(0); }
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* iterator() { return getOperand(1); }
   const LDefinition* temp() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
 
   MBasicBlock* ifTrue() const { return getSuccessor(0); }
   MBasicBlock* ifFalse() const { return getSuccessor(1); }

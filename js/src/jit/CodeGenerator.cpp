@@ -14043,20 +14043,106 @@ void CodeGenerator::visitValueToIterator(LValueToIterator* lir) {
 
 void CodeGenerator::visitIteratorHasIndicesAndBranch(
     LIteratorHasIndicesAndBranch* lir) {
-  Register iterObj = ToRegister(lir->iterObj());
+  Register iterator = ToRegister(lir->iterator());
+  Register object = ToRegister(lir->object());
   Register temp = ToRegister(lir->temp());
+  Register temp2 = ToRegister(lir->temp2());
   Label* ifTrue = getJumpLabelForBranch(lir->ifTrue());
   Label* ifFalse = getJumpLabelForBranch(lir->ifFalse());
 
-  Address nativeIterAddr(iterObj,
+  // Check that the iterator has indices available.
+  Address nativeIterAddr(iterator,
                          PropertyIteratorObject::offsetOfIteratorSlot());
   masm.loadPrivate(nativeIterAddr, temp);
-  masm.branchNativeIteratorIndices(Assembler::Equal, temp, temp,
-                                   NativeIteratorIndices::Valid, ifTrue);
+  masm.branchNativeIteratorIndices(Assembler::NotEqual, temp, temp2,
+                                   NativeIteratorIndices::Valid, ifFalse);
 
-  if (!isNextBlock(lir->ifFalse()->lir())) {
-    masm.jump(ifFalse);
+  // Guard that the first shape stored in the iterator matches the current
+  // shape of the iterated object.
+  Address firstShapeAddr(temp, NativeIterator::offsetOfFirstShape());
+  masm.loadPtr(firstShapeAddr, temp);
+  masm.branchTestObjShape(Assembler::NotEqual, object, temp, temp2, object,
+                          ifFalse);
+
+  if (!isNextBlock(lir->ifTrue()->lir())) {
+    masm.jump(ifTrue);
   }
+}
+
+void CodeGenerator::visitLoadSlotByIteratorIndex(
+    LLoadSlotByIteratorIndex* lir) {
+  Register object = ToRegister(lir->object());
+  Register iterator = ToRegister(lir->iterator());
+  Register temp = ToRegister(lir->temp0());
+  Register temp2 = ToRegister(lir->temp1());
+  ValueOperand result = ToOutValue(lir);
+
+  // Load iterator object
+  Address nativeIterAddr(iterator,
+                         PropertyIteratorObject::offsetOfIteratorSlot());
+  masm.loadPrivate(nativeIterAddr, temp);
+
+  // Compute offset of propertyCursor_ from propertiesBegin()
+  masm.loadPtr(Address(temp, NativeIterator::offsetOfPropertyCursor()), temp2);
+  masm.subPtr(Address(temp, NativeIterator::offsetOfShapesEnd()), temp2);
+
+  // Compute offset of current index from indicesBegin(). Note that because
+  // propertyCursor has already been incremented, this is actually the offset
+  // of the next index. We adjust accordingly below.
+  size_t indexAdjustment =
+      sizeof(GCPtr<JSLinearString*>) / sizeof(PropertyIndex);
+  if (indexAdjustment != 1) {
+    MOZ_ASSERT(indexAdjustment == 2);
+    masm.rshift32(Imm32(1), temp2);
+  }
+
+  // Load current index.
+  masm.loadPtr(Address(temp, NativeIterator::offsetOfPropertiesEnd()), temp);
+  masm.load32(
+      BaseIndex(temp, temp2, Scale::TimesOne, -int32_t(sizeof(PropertyIndex))),
+      temp);
+
+  // Extract kind.
+  masm.move32(temp, temp2);
+  masm.rshift32(Imm32(PropertyIndex::KindShift), temp2);
+
+  // Extract index.
+  masm.and32(Imm32(PropertyIndex::IndexMask), temp);
+
+  Label notDynamicSlot, notFixedSlot, done;
+  masm.branch32(Assembler::NotEqual, temp2,
+                Imm32(uint32_t(PropertyIndex::Kind::DynamicSlot)),
+                &notDynamicSlot);
+  masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
+  masm.loadValue(BaseValueIndex(temp2, temp), result);
+  masm.jump(&done);
+
+  masm.bind(&notDynamicSlot);
+  masm.branch32(Assembler::NotEqual, temp2,
+                Imm32(uint32_t(PropertyIndex::Kind::FixedSlot)), &notFixedSlot);
+  // Fixed slot
+  masm.loadValue(BaseValueIndex(object, temp, sizeof(NativeObject)), result);
+  masm.jump(&done);
+  masm.bind(&notFixedSlot);
+
+#ifdef DEBUG
+  Label kindOkay;
+  masm.branch32(Assembler::Equal, temp2,
+                Imm32(uint32_t(PropertyIndex::Kind::Element)), &kindOkay);
+  masm.assumeUnreachable("Invalid PropertyIndex::Kind");
+  masm.bind(&kindOkay);
+#endif
+
+  // Dense element
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp2);
+  Label indexOkay;
+  Address initLength(temp2, ObjectElements::offsetOfInitializedLength());
+  masm.branch32(Assembler::Above, initLength, temp, &indexOkay);
+  masm.assumeUnreachable("Dense element out of bounds");
+  masm.bind(&indexOkay);
+
+  masm.loadValue(BaseObjectElementIndex(temp2, temp), result);
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {

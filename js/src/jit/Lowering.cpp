@@ -1039,12 +1039,11 @@ void LIRGenerator::visitTest(MTest* test) {
   if (opd->isIteratorHasIndices()) {
     MOZ_ASSERT(opd->isEmittedAtUses());
 
-    MDefinition* input = opd->toIteratorHasIndices()->iterObj();
-    MOZ_ASSERT(input->type() == MIRType::Object);
-
-    LIteratorHasIndicesAndBranch* lir =
-        new (alloc()) LIteratorHasIndicesAndBranch(ifTrue, ifFalse,
-                                                   useRegister(input), temp());
+    MDefinition* object = opd->toIteratorHasIndices()->object();
+    MDefinition* iterator = opd->toIteratorHasIndices()->iterator();
+    LIteratorHasIndicesAndBranch* lir = new (alloc())
+        LIteratorHasIndicesAndBranch(ifTrue, ifFalse, useRegister(object),
+                                     useRegister(iterator), temp(), temp());
     add(lir, test);
     return;
   }
@@ -4920,6 +4919,13 @@ void LIRGenerator::visitValueToIterator(MValueToIterator* ins) {
   auto* lir = new (alloc()) LValueToIterator(useBoxAtStart(ins->value()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitLoadSlotByIteratorIndex(MLoadSlotByIteratorIndex* ins) {
+  auto* lir = new (alloc()) LLoadSlotByIteratorIndex(
+      useRegisterAtStart(ins->object()), useRegisterAtStart(ins->iterator()),
+      temp(), temp());
+  defineBox(lir, ins);
 }
 
 void LIRGenerator::visitIteratorHasIndices(MIteratorHasIndices* ins) {

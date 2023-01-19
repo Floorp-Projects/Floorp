@@ -1897,8 +1897,16 @@
 
 - name: IteratorHasIndices
   operands:
-    iterObj: Object
+    object: Object
+    iterator: Object
   result_type: Boolean
+  alias_set: custom
+
+- name: LoadSlotByIteratorIndex
+  operands:
+    object: Object
+    iterator: Object # TODO: add MIRType::NativeIterator?
+  result_type: Value
   alias_set: custom
 
 # Load the private value expando from a DOM proxy. The target is stored in the
