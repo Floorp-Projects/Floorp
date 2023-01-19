@@ -4,13 +4,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// Pref remains in effect until test completes and is automatically cleared afterwards
-add_task(async function set_enable_extensionStorage_pref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["devtools.storage.extensionStorage.enabled", true]],
-  });
-});
-
 add_task(
   async function test_extensionStorage_disabled_for_non_extension_target() {
     if (isFissionEnabled()) {

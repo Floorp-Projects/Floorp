@@ -41,19 +41,11 @@ const { createAppInfo, promiseStartupManager } = AddonTestUtils;
 
 const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
-const EXTENSION_STORAGE_ENABLED_PREF =
-  "devtools.storage.extensionStorage.enabled";
 
 AddonTestUtils.init(this);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 ExtensionTestUtils.init(this);
-
-// This storage actor is gated behind a pref, so make sure it is enabled first
-Services.prefs.setBoolPref(EXTENSION_STORAGE_ENABLED_PREF, true);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(EXTENSION_STORAGE_ENABLED_PREF);
-});
 
 add_setup(async function setup() {
   await promiseStartupManager();
@@ -1157,32 +1149,3 @@ add_task(async function test_live_update_with_no_extension_listener() {
 
   await shutdown(extension, target);
 });
-
-/*
- * This task should be last, as it sets a pref to disable the extensionStorage
- * storage actor. Since this pref is set at the beginning of the file, it
- * already will be cleared via registerCleanupFunction when the test finishes.
- */
-add_task(
-  {
-    // This test fails if the extension runs in the main process
-    // like in Thunderbird (see bug 1575183 comment #15 for details).
-    skip_if: () => !WebExtensionPolicy.useRemoteWebExtensions,
-  },
-  async function test_extensionStorage_store_disabled_on_pref() {
-    Services.prefs.setBoolPref(EXTENSION_STORAGE_ENABLED_PREF, false);
-
-    const extension = await startupExtension(getExtensionConfig());
-
-    const { target, extensionStorage } = await openAddonStoragePanel(
-      extension.id
-    );
-
-    ok(
-      extensionStorage === null,
-      "Should not have an extensionStorage store when pref disabled"
-    );
-
-    await shutdown(extension, target);
-  }
-);
