@@ -2042,6 +2042,8 @@ class Element : public FragmentOrElement {
    */
   virtual void GetLinkTarget(nsAString& aTarget);
 
+  virtual bool Translate() const;
+
  protected:
   enum class ReparseAttributes { No, Yes };
   /**
