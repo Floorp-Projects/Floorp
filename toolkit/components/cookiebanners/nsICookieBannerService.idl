@@ -24,6 +24,10 @@ interface nsICookieBannerService : nsISupports {
    * MODE_REJECT - Only handle banners where selecting "reject all" is possible.
    * MODE_REJECT_OR_ACCEPT - Prefer selecting "reject all", if not possible
    * fall back to "accept all".
+   * MODE_DETECT_ONLY - Detect cookie banners but do not handle them. In this
+   * mode telemetry will still be reported and cookie banner events will be
+   * dispatched if a cookie banner is showing. Use MODE_DISABLED to completely
+   * disable the component.
    * MODE_UNSET - This represents the service mode is unset, the setting should
    * fall back to default setting. This is used for the per-domain preferences.
    */
@@ -31,6 +35,7 @@ interface nsICookieBannerService : nsISupports {
     MODE_DISABLED,
     MODE_REJECT,
     MODE_REJECT_OR_ACCEPT,
+    MODE_DETECT_ONLY,
     MODE_UNSET,
   };
 

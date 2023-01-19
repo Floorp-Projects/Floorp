@@ -82,28 +82,14 @@ add_task(async function test_cookie_injector_disabled() {
  * by pref, but the cookie banner service is disabled or in detect-only mode.
  */
 add_task(async function test_cookie_banner_service_disabled() {
-  // Enable in PBM so the service is always initialized.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "cookiebanners.service.mode.privateBrowsing",
-        Ci.nsICookieBannerService.MODE_REJECT,
-      ],
-    ],
-  });
-
-  for (let [serviceMode, detectOnly] of [
-    [Ci.nsICookieBannerService.MODE_DISABLED, false],
-    [Ci.nsICookieBannerService.MODE_DISABLED, true],
-    [Ci.nsICookieBannerService.MODE_REJECT, true],
-    [Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT, true],
+  for (let mode of [
+    Ci.nsICookieBannerService.MODE_DISABLED,
+    Ci.nsICookieBannerService.MODE_DETECT_ONLY,
   ]) {
-    info(`Testing with serviceMode=${serviceMode}; detectOnly=${detectOnly}`);
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["cookiebanners.service.mode", serviceMode],
+        ["cookiebanners.service.mode", mode],
         ["cookiebanners.cookieInjector.enabled", true],
-        ["cookiebanners.service.detectOnly", detectOnly],
       ],
     });
 
@@ -111,7 +97,6 @@ add_task(async function test_cookie_banner_service_disabled() {
     assertNoCookies();
 
     await SiteDataTestUtils.clear();
-    await SpecialPowers.popPrefEnv();
   }
 });
 
