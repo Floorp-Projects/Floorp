@@ -40,7 +40,7 @@ SharedSurface_ANGLEShareHandle::Create(const SharedSurfaceDesc& desc) {
   MOZ_ASSERT(egl->IsExtensionSupported(
       EGLExtension::ANGLE_surface_d3d_texture_2d_share_handle));
 
-  const auto& config = gle->mConfig;
+  const auto& config = gle->mSurfaceConfig;
   MOZ_ASSERT(config);
 
   EGLSurface pbuffer = CreatePBufferSurface(egl.get(), config, desc.size);
