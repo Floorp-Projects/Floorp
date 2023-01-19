@@ -107,6 +107,8 @@ On Ubuntu, you can install this with:
 sudo apt-get install libc6-prof
 ```
 
+libc6-prof can be used with `LD_LIBRARY_PATH=/lib/libc6-prof/x86_64-linux-gnu`
+
 It may also be useful to have access to kernel addresses during profiling. These can be exposed with:
 ```
 sudo sh -c "echo 0 > /proc/sys/kernel/kptr_restrict"
