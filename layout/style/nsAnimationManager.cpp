@@ -248,7 +248,8 @@ static already_AddRefed<CSSAnimation> BuildAnimation(
   }
 
   TimingParams timing = TimingParamsFromCSSParams(
-      aStyle.GetAnimationDuration(animIdx), aStyle.GetAnimationDelay(animIdx),
+      aStyle.GetAnimationDuration(animIdx).ToMilliseconds(),
+      aStyle.GetAnimationDelay(animIdx).ToMilliseconds(),
       aStyle.GetAnimationIterationCount(animIdx),
       aStyle.GetAnimationDirection(animIdx),
       aStyle.GetAnimationFillMode(animIdx));
