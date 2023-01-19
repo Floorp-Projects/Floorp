@@ -18,10 +18,9 @@ origin:
   url: "https://gitlab.freedesktop.org/mesa/mesa"
   license: MIT
 
-  # update.sh will update this value
-  release: "TBD"
+  release: "e664082d3507d790ac31f721e8900417efd3a95b (2023-01-19T04:09:17.000+00:00)"
 
-  revision: 32552010d1e0243948aebd6b6642ba9aeb979004
+  revision: "e664082d3507d790ac31f721e8900417efd3a95b"
   # The codebase does not provide a LICENSE file!
   # https://docs.mesa3d.org/license.html#license-copyright-information
   # license-file: LICENSE
