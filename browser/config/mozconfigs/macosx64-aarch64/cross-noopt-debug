@@ -9,3 +9,6 @@ ac_add_options --target=aarch64-apple-darwin
 # It may conflict with settings from mozconfig.override, but that seems
 # unlikely.
 ac_add_options --disable-optimize
+
+# TODO: Remove in bug 1773743
+export MACOS_SDK_DIR=$MOZ_FETCHES_DIR/MacOSX11.3.sdk
