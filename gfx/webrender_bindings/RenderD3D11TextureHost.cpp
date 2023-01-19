@@ -18,7 +18,8 @@ namespace mozilla {
 namespace wr {
 
 RenderDXGITextureHost::RenderDXGITextureHost(
-    WindowsHandle aHandle, Maybe<uint64_t>& aGpuProcessTextureId,
+    WindowsHandle aHandle,
+    Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
     uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
     gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
     gfx::IntSize aSize)

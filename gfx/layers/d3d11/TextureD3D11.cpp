@@ -1797,12 +1797,9 @@ void GpuProcessD3D11TextureMap::Shutdown() {
 }
 
 /* static */
-uint64_t GpuProcessD3D11TextureMap::GetNextTextureId() {
+GpuProcessTextureId GpuProcessD3D11TextureMap::GetNextTextureId() {
   MOZ_ASSERT(XRE_IsGPUProcess());
-
-  static std::atomic<uint64_t> sNextId = 0;
-  uint64_t id = ++sNextId;
-  return id;
+  return GpuProcessTextureId::GetNext();
 }
 
 GpuProcessD3D11TextureMap::GpuProcessD3D11TextureMap()
@@ -1811,8 +1808,9 @@ GpuProcessD3D11TextureMap::GpuProcessD3D11TextureMap()
 GpuProcessD3D11TextureMap::~GpuProcessD3D11TextureMap() {}
 
 void GpuProcessD3D11TextureMap::Register(
-    uint64_t aTextureId, ID3D11Texture2D* aTexture, uint32_t aArrayIndex,
-    const gfx::IntSize& aSize, RefPtr<IMFSampleUsageInfo> aUsageInfo) {
+    GpuProcessTextureId aTextureId, ID3D11Texture2D* aTexture,
+    uint32_t aArrayIndex, const gfx::IntSize& aSize,
+    RefPtr<IMFSampleUsageInfo> aUsageInfo) {
   MOZ_RELEASE_ASSERT(aTexture);
   MOZ_RELEASE_ASSERT(aUsageInfo);
 
@@ -1827,7 +1825,7 @@ void GpuProcessD3D11TextureMap::Register(
                     TextureHolder(aTexture, aArrayIndex, aSize, aUsageInfo));
 }
 
-void GpuProcessD3D11TextureMap::Unregister(uint64_t aTextureId) {
+void GpuProcessD3D11TextureMap::Unregister(GpuProcessTextureId aTextureId) {
   auto textures = mD3D11TexturesById.Lock();
 
   auto it = textures->find(aTextureId);
@@ -1838,7 +1836,7 @@ void GpuProcessD3D11TextureMap::Unregister(uint64_t aTextureId) {
 }
 
 RefPtr<ID3D11Texture2D> GpuProcessD3D11TextureMap::GetTexture(
-    uint64_t aTextureId) {
+    GpuProcessTextureId aTextureId) {
   auto textures = mD3D11TexturesById.Lock();
 
   auto it = textures->find(aTextureId);
@@ -1850,7 +1848,7 @@ RefPtr<ID3D11Texture2D> GpuProcessD3D11TextureMap::GetTexture(
 }
 
 Maybe<HANDLE> GpuProcessD3D11TextureMap::GetSharedHandleOfCopiedTexture(
-    uint64_t aTextureId) {
+    GpuProcessTextureId aTextureId) {
   TextureHolder holder;
   {
     auto textures = mD3D11TexturesById.Lock();

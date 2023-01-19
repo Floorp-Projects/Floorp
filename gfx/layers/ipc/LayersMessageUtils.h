@@ -235,6 +235,18 @@ struct ParamTraits<mozilla::layers::RemoteTextureOwnerId> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::GpuProcessTextureId> {
+  typedef mozilla::layers::GpuProcessTextureId paramType;
+
+  static void Write(MessageWriter* writer, const paramType& param) {
+    WriteParam(writer, param.mId);
+  }
+  static bool Read(MessageReader* reader, paramType* result) {
+    return ReadParam(reader, &result->mId);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::layers::FrameMetrics>
     : BitfieldHelper<mozilla::layers::FrameMetrics> {
   typedef mozilla::layers::FrameMetrics paramType;
