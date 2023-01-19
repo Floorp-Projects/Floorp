@@ -14,8 +14,22 @@
   <link rel="localization" href="browser/newtab/asrouter.ftl">
   <link rel="localization" href="browser/newtab/onboarding.ftl"/>
   <link rel="localization" href="browser/spotlight.ftl"/>
+  <script defer src="resource://activity-stream/data/custom-elements/paragraph.js"></script>
 </head>
 <body role="dialog" aria-labelledby="title" aria-describedby="content">
+  <template id="logo-and-content">
+    <div id="dialog-content">
+      <img class="logo" alt="" src=""/>
+      <h1 id="title" class="title"></h1>
+      <p id="content" class="text"></p>
+      <button id="primary" class="primary"></button>
+      <button id="secondary" class="secondary text-link"></button>
+    </div>
+  </template>
+  <template id="extra-content-expanded">
+    <button id="learn-more-toggle" class="text-link"></button>
+    <p class="expanded" role="alert"></p>
+  </template>
   <script src="resource://activity-stream/vendor/react.js"></script>
   <script src="resource://activity-stream/vendor/react-dom.js"></script>
   <script src="chrome://browser/content/spotlight.js"></script>

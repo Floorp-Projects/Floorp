@@ -216,6 +216,153 @@ const MESSAGES = () => [
     },
   },
   {
+    id: "SPOTLIGHT_MESSAGE_93",
+    template: "spotlight",
+    groups: ["panel-test-provider"],
+    content: {
+      template: "logo-and-content",
+      logo: {
+        imageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
+      },
+      body: {
+        title: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-header",
+          },
+        },
+        text: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-body",
+          },
+        },
+        primary: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-primary-button",
+          },
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/en-US/products/vpn/",
+              where: "tabshifted",
+            },
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-link",
+          },
+          action: {
+            type: "CANCEL",
+          },
+        },
+      },
+    },
+    frequency: { lifetime: 3 },
+    trigger: { id: "defaultBrowserCheck" },
+  },
+  {
+    id: "BETTER_INTERNET_GLOBAL_ROLLOUT",
+    groups: ["eco"],
+    content: {
+      template: "logo-and-content",
+      logo: {
+        imageURL:
+          "chrome://activity-stream/content/data/content/assets/remote/mountain.svg",
+        size: "115px",
+      },
+      body: {
+        title: {
+          label: {
+            string_id: "spotlight-better-internet-header",
+          },
+          size: "22px",
+        },
+        text: {
+          label: {
+            string_id: "spotlight-better-internet-body",
+          },
+          size: "16px",
+        },
+        primary: {
+          label: {
+            string_id: "spotlight-pin-primary-button",
+          },
+          action: {
+            type: "PIN_FIREFOX_TO_TASKBAR",
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "spotlight-pin-secondary-button",
+          },
+          action: {
+            type: "CANCEL",
+          },
+        },
+      },
+    },
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "spotlight",
+    frequency: {
+      lifetime: 1,
+    },
+    targeting:
+      "userMonthlyActivity|length >= 1 && userMonthlyActivity|length <= 6 && doesAppNeedPin",
+  },
+  {
+    id: "PEACE_OF_MIND_GLOBAL_ROLLOUT",
+    groups: ["eco"],
+    content: {
+      template: "logo-and-content",
+      logo: {
+        imageURL:
+          "chrome://activity-stream/content/data/content/assets/remote/umbrella.png",
+        size: "115px",
+      },
+      body: {
+        title: {
+          label: {
+            string_id: "spotlight-peace-mind-header",
+          },
+          size: "22px",
+        },
+        text: {
+          label: {
+            string_id: "spotlight-peace-mind-body",
+          },
+          size: "15px",
+        },
+        primary: {
+          label: {
+            string_id: "spotlight-pin-primary-button",
+          },
+          action: {
+            type: "PIN_FIREFOX_TO_TASKBAR",
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "spotlight-pin-secondary-button",
+          },
+          action: {
+            type: "CANCEL",
+          },
+        },
+      },
+    },
+    trigger: {
+      id: "defaultBrowserCheck",
+    },
+    template: "spotlight",
+    frequency: {
+      lifetime: 1,
+    },
+    targeting:
+      "userMonthlyActivity|length >= 7 && userMonthlyActivity|length <= 13 && doesAppNeedPin",
+  },
+  {
     id: "MULTISTAGE_SPOTLIGHT_MESSAGE",
     groups: ["panel-test-provider"],
     template: "spotlight",

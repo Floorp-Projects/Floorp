@@ -56,7 +56,17 @@ const PREFETCH_FINISHED_TOPIC = "remote-images:prefetch-finished";
  * corresponds to a function that accepts a message and returns all record IDs
  * for remote images.
  */
-const MessageInspectors = {};
+const MessageInspectors = {
+  spotlight(message) {
+    if (
+      message.content.template === "logo-and-content" &&
+      message.content.logo?.imageId
+    ) {
+      return [message.content.logo.imageId];
+    }
+    return [];
+  },
+};
 
 class _RemoteImages {
   #dbPromise;
