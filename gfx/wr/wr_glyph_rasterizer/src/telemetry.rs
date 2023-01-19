@@ -5,7 +5,7 @@
 #[cfg(feature = "gecko")]
 use glean::TimerId;
 #[cfg(feature = "gecko")]
-use fog::metrics::wr;
+use firefox_on_glean::metrics::wr;
 
 #[cfg(not(feature = "gecko"))]
 pub struct TimerId;

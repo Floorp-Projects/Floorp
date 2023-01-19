@@ -7,6 +7,7 @@ use std::ffi::CString;
 use std::ops::DerefMut;
 use std::path::PathBuf;
 
+use firefox_on_glean::{metrics, pings};
 #[cfg(target_os = "android")]
 use nserror::NS_ERROR_NOT_IMPLEMENTED;
 use nserror::{nsresult, NS_ERROR_FAILURE};
@@ -86,7 +87,7 @@ fn fog_init_internal(
     upload_enabled: bool,
     uploader: Option<Box<dyn glean::net::PingUploader>>,
 ) -> Result<(), nsresult> {
-    fog::metrics::fog::initialization.start();
+    metrics::fog::initialization.start();
 
     log::debug!("Initializing FOG.");
 
@@ -110,11 +111,11 @@ fn fog_init_internal(
     log::debug!("Configuration: {:#?}", conf);
 
     // Register all custom pings before we initialize.
-    fog::pings::register_pings(Some(&conf.application_id));
+    pings::register_pings(Some(&conf.application_id));
 
     glean::initialize(conf, client_info);
 
-    fog::metrics::fog::initialization.stop();
+    metrics::fog::initialization.stop();
 
     Ok(())
 }
