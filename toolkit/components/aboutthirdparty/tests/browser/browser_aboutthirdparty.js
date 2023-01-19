@@ -21,8 +21,16 @@ function getDetailRow(aContainer, aLabel) {
 
 function verifyClipboardData(aModuleJson) {
   Assert.ok(
-    aModuleJson.blocked.includes(kUserBlockedModuleName),
-    "Blocked array should contain the blocked module."
+    aModuleJson.hasOwnProperty("blocked"),
+    "Clipboard data should have blocked property."
+  );
+  const blocked = aModuleJson.blocked.filter(
+    x => x.name == kUserBlockedModuleName
+  );
+  Assert.equal(
+    blocked.length,
+    1,
+    "Blocked array should contain the blocked module one time."
   );
   Assert.ok(
     aModuleJson.hasOwnProperty("modules"),

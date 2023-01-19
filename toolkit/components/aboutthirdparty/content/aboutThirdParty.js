@@ -57,7 +57,17 @@ async function fetchData() {
       module.dllFile?.path
     );
     module.moduleName = module.dllFile?.leafName;
+    module.hasLoadInformation = true;
   }
+
+  let blockedModules = data.blockedModules.map(blockedModuleName => {
+    return {
+      moduleName: blockedModuleName,
+      typeFlags: AboutThirdParty.lookupModuleType(blockedModuleName),
+      isCrasher: CrashModuleSet?.has(blockedModuleName),
+      hasLoadInformation: false,
+    };
+  });
 
   for (const [proc, perProc] of Object.entries(data.processes)) {
     for (const event of perProc.events) {
@@ -123,7 +133,7 @@ async function fetchData() {
     return b.loadingOnMain - a.loadingOnMain;
   });
 
-  return { modules: data.modules, blocked: data.blockedModules };
+  return { modules: data.modules, blocked: blockedModules };
 }
 
 function setContent(element, text, l10n) {
@@ -304,7 +314,21 @@ function copyDataToClipboard(aData) {
 
     return copied;
   });
-  let clipboardData = { modules: modulesData, blocked: aData.blocked };
+  const blockedData = aData.blocked.map(blockedModule => {
+    const copied = {
+      name: blockedModule.moduleName,
+    };
+    // We include the typeFlags field only when it's not 0 because
+    // typeFlags == 0 means system info is not yet collected.
+    if (blockedModule.typeFlags) {
+      copied.typeFlags = blockedModule.typeFlags;
+    }
+    if (blockedModule.isCrasher) {
+      copied.isCrasher = blockedModule.isCrasher;
+    }
+    return copied;
+  });
+  let clipboardData = { modules: modulesData, blocked: blockedData };
 
   return navigator.clipboard.writeText(JSON.stringify(clipboardData, null, 2));
 }
@@ -319,23 +343,29 @@ function correctProcessTypeForFluent(type) {
 
 function setUpBlockButton(aCard, isBlocklistDisabled, aModule) {
   const blockButton = aCard.querySelector(".button-block");
-  if (aModule) {
+  if (aModule.hasLoadInformation) {
     if (!aModule.isBlockedByBuiltin) {
       blockButton.hidden = aModule.typeFlags == 0;
-      if (aModule.typeFlags & Ci.nsIAboutThirdParty.ModuleType_BlockedByUser) {
-        blockButton.classList.add("module-blocked");
-      }
     }
   } else {
     // This means that this is an entry in the dynamic blocklist that
     // has not attempted to load, thus we have very little information
-    // about it (just its name). So this should always show up as blocked.
+    // about it (just its name). So this should always show up.
     blockButton.hidden = false;
-    blockButton.classList.add("module-blocked");
     // Bug 1808904 - don't allow unblocking this module before we've loaded
     // the list of blocked modules in the background task.
     blockButton.disabled = !gBackgroundTasksDone;
   }
+  // If we haven't loaded the typeFlags yet and we don't have any load information for this
+  // module, default to showing that the module is blocked (because we must have gotten this
+  // module's info from the dynamic blocklist)
+  if (
+    aModule.typeFlags & Ci.nsIAboutThirdParty.ModuleType_BlockedByUser ||
+    (aModule.typeFlags == 0 && !aModule.hasLoadInformation)
+  ) {
+    blockButton.classList.add("module-blocked");
+  }
+
   if (isBlocklistDisabled) {
     blockButton.classList.add("blocklist-disabled");
   }
@@ -377,21 +407,24 @@ function visualizeData(aData) {
   let lowercaseModuleNames = new Set(
     aData.modules.map(module => module.moduleName.toLowerCase())
   );
-  for (const blockedName of aData.blocked) {
-    if (lowercaseModuleNames.has(blockedName.toLowerCase())) {
+  for (const module of aData.blocked) {
+    if (lowercaseModuleNames.has(module.moduleName.toLowerCase())) {
       // Only show entries that we haven't already tried to load,
       // because those will already show up in the page
       continue;
     }
     const newCard = templateBlockedCard.content.cloneNode(true);
-    setContent(newCard.querySelector(".module-name"), blockedName);
+    setContent(newCard.querySelector(".module-name"), module.moduleName);
     // Referred by the button click handlers
     newCard.querySelector(".card").module = {
-      moduleName: blockedName,
+      moduleName: module.moduleName,
     };
 
     if (isBlocklistAvailable) {
-      setUpBlockButton(newCard, isBlocklistDisabled, null);
+      setUpBlockButton(newCard, isBlocklistDisabled, module);
+    }
+    if (module.isCrasher) {
+      newCard.querySelector(".image-warning").hidden = false;
     }
     mainContentFragment.appendChild(newCard);
   }
