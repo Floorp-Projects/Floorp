@@ -313,7 +313,8 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   float delay = aStyle.GetTransitionDelay(transitionIdx).ToMilliseconds();
 
   // The spec says a negative duration is treated as zero.
-  float duration = std::max(aStyle.GetTransitionDuration(transitionIdx).ToMilliseconds(), 0.0f);
+  float duration = std::max(
+      aStyle.GetTransitionDuration(transitionIdx).ToMilliseconds(), 0.0f);
 
   // If the combined duration of this transition is 0 or less don't start a
   // transition.
