@@ -1657,7 +1657,7 @@ struct BaseCompiler final {
   // Branch to the label if the WasmGcObject `object` is/is not a subtype of
   // `typeIndex`.
   void branchGcObjectType(RegRef object, uint32_t typeIndex, Label* label,
-                          bool onSuccess);
+                          bool succeedOnNull, bool onSuccess);
   RegPtr emitGcArrayGetData(RegRef rp);
   template <typename NullCheckPolicy>
   RegI32 emitGcArrayGetNumElements(RegRef rp);

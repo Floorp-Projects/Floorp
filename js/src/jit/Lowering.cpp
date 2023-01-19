@@ -1007,8 +1007,8 @@ void LIRGenerator::visitTest(MTest* test) {
                               ? temp()
                               : LDefinition();
     add(new (alloc()) LWasmGcObjectIsSubtypeOfAndBranch(
-            ifTrue, ifFalse, object, superTypeDef, subTypingDepth, subTypeDepth,
-            scratch),
+            ifTrue, ifFalse, object, superTypeDef, subTypingDepth,
+            isSubTypeOf->succeedOnNull(), subTypeDepth, scratch),
         test);
     return;
   }

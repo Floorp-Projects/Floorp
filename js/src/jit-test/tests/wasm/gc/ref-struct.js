@@ -121,18 +121,16 @@ wasmEvalText(
       (func $f (param $p (ref null $node)) (param $q (ref null $nix))
        (struct.set $node 0 (local.get $p) (local.get $q))))`);
 
-// ref.cast: if the pointer's null we trap
+// ref.cast: if the pointer's null we do not trap
 
-assertErrorMessage(() => wasmEvalText(
+wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (ref.cast $node2 (local.get $p)))
       (func (export "test") (result eqref)
-       (call $f (ref.null $node))))`).exports.test(),
-         WebAssembly.RuntimeError,
-         /bad cast/);
+       (call $f (ref.null $node))))`).exports.test();
 
 // ref.cast: if the downcast succeeds we get the original pointer
 

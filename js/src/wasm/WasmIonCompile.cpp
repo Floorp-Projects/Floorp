@@ -4186,11 +4186,12 @@ class FunctionCompiler {
   }
 
   [[nodiscard]] MDefinition* isGcObjectSubtypeOf(MDefinition* object,
-                                                 uint32_t castTypeIndex) {
+                                                 uint32_t castTypeIndex,
+                                                 bool succeedOnNull) {
     auto* superTypeDef = loadTypeDef(castTypeIndex);
     auto* isSubTypeOf = MWasmGcObjectIsSubtypeOf::New(
         alloc(), object, superTypeDef,
-        moduleEnv_.types->type(castTypeIndex).subTypingDepth());
+        moduleEnv_.types->type(castTypeIndex).subTypingDepth(), succeedOnNull);
     curBlock_->add(isSubTypeOf);
     return isSubTypeOf;
   }
@@ -4200,7 +4201,8 @@ class FunctionCompiler {
   // have a type that is a subtype of (or the same as) `castToTypeDef` after
   // this point.
   [[nodiscard]] bool refCast(MDefinition* ref, uint32_t castTypeIndex) {
-    MDefinition* success = isGcObjectSubtypeOf(ref, castTypeIndex);
+    MDefinition* success =
+        isGcObjectSubtypeOf(ref, castTypeIndex, /*succeedOnNull=*/true);
     if (!success) {
       return false;
     }
@@ -4213,7 +4215,7 @@ class FunctionCompiler {
   // Generate MIR that computes a boolean value indicating whether or not it
   // is possible to downcast `ref` to `castToTypeDef`.
   [[nodiscard]] MDefinition* refTest(MDefinition* ref, uint32_t castTypeIndex) {
-    return isGcObjectSubtypeOf(ref, castTypeIndex);
+    return isGcObjectSubtypeOf(ref, castTypeIndex, /*succeedOnNull=*/false);
   }
 
   // Generates MIR for br_on_cast and br_on_cast_fail.
@@ -4242,7 +4244,8 @@ class FunctionCompiler {
     MDefinition* ref = values.back();
     MOZ_ASSERT(ref->type() == MIRType::RefOrNull);
 
-    MDefinition* success = isGcObjectSubtypeOf(ref, castTypeIndex);
+    MDefinition* success =
+        isGcObjectSubtypeOf(ref, castTypeIndex, /*succeedOnNull=*/false);
     if (!success) {
       return false;
     }

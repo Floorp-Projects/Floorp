@@ -11317,10 +11317,12 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
 class MWasmGcObjectIsSubtypeOf : public MBinaryInstruction,
                                  public NoTypePolicy::Data {
   uint32_t subTypingDepth_;
+  bool succeedOnNull_;
   MWasmGcObjectIsSubtypeOf(MDefinition* object, MDefinition* superTypeDef,
-                           uint32_t subTypingDepth)
+                           uint32_t subTypingDepth, bool succeedOnNull)
       : MBinaryInstruction(classOpcode, object, superTypeDef),
-        subTypingDepth_(subTypingDepth) {
+        subTypingDepth_(subTypingDepth),
+        succeedOnNull_(succeedOnNull) {
     setResultType(MIRType::Int32);
     setMovable();
   }
@@ -11331,15 +11333,20 @@ class MWasmGcObjectIsSubtypeOf : public MBinaryInstruction,
   NAMED_OPERANDS((0, object), (1, superTypeDef))
 
   uint32_t subTypingDepth() const { return subTypingDepth_; }
+  bool succeedOnNull() const { return succeedOnNull_; }
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
            ins->toWasmGcObjectIsSubtypeOf()->subTypingDepth() ==
-               subTypingDepth();
+               subTypingDepth() &&
+           succeedOnNull_ == ins->toWasmGcObjectIsSubtypeOf()->succeedOnNull();
   }
 
   HashNumber valueHash() const override {
-    return addU32ToHash(MBinaryInstruction::valueHash(), subTypingDepth());
+    HashNumber hn = MBinaryInstruction::valueHash();
+    hn = addU32ToHash(hn, subTypingDepth());
+    hn = addU32ToHash(hn, (uint32_t)succeedOnNull());
+    return hn;
   }
 };
 

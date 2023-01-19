@@ -3728,6 +3728,7 @@ class LIonToWasmCallI64 : public LIonToWasmCallBase<INT64_PIECES> {
 class LWasmGcObjectIsSubtypeOfAndBranch
     : public LControlInstructionHelper<2, 2, 2> {
   uint32_t subTypingDepth_;
+  bool succeedOnNull_;
 
  public:
   LIR_HEADER(WasmGcObjectIsSubtypeOfAndBranch)
@@ -3738,11 +3739,12 @@ class LWasmGcObjectIsSubtypeOfAndBranch
   LWasmGcObjectIsSubtypeOfAndBranch(MBasicBlock* ifTrue, MBasicBlock* ifFalse,
                                     const LAllocation& object,
                                     const LAllocation& superTypeDef,
-                                    uint32_t subTypingDepth,
+                                    uint32_t subTypingDepth, bool succeedOnNull,
                                     const LDefinition& temp0,
                                     const LDefinition& temp1)
       : LControlInstructionHelper(classOpcode),
-        subTypingDepth_(subTypingDepth) {
+        subTypingDepth_(subTypingDepth),
+        succeedOnNull_(succeedOnNull) {
     setSuccessor(0, ifTrue);
     setSuccessor(1, ifFalse);
     setOperand(Object, object);
@@ -3752,6 +3754,7 @@ class LWasmGcObjectIsSubtypeOfAndBranch
   }
 
   uint32_t subTypingDepth() const { return subTypingDepth_; }
+  bool succeedOnNull() const { return succeedOnNull_; }
 
   MBasicBlock* ifTrue() const { return getSuccessor(0); }
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
