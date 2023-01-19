@@ -52,7 +52,7 @@ jobs:
             max-run-time: 14400  # Takes up to 4 hours
             env:
                 PRODUCT: firefox
-                REVIEWERS: "ryanvm"
+                REVIEWERS: "release-managers"
             command:
                 - /runme.sh
             taskcluster-proxy: true
