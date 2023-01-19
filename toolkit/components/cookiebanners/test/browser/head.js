@@ -33,6 +33,9 @@ async function testSetup() {
     set: [
       // Enable debug logging.
       ["cookiebanners.listService.logLevel", "Debug"],
+      // Avoid importing rules from RemoteSettings. They may interfere with test
+      // rules / assertions.
+      ["cookiebanners.listService.testSkipRemoteSettings", true],
     ],
   });
 

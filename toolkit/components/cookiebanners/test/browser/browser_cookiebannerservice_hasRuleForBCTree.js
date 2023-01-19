@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
+);
+
 let testRules = [
   // Top-level cookie rule.
   {
@@ -75,6 +79,11 @@ add_setup(async function() {
 
   // Ensure the test rules have been applied before the first test starts.
   Services.cookieBanners.resetRules();
+
+  // Visiting sites in this test can set cookies. Clean them up on test exit.
+  registerCleanupFunction(async () => {
+    await SiteDataTestUtils.clear();
+  });
 });
 
 add_task(async function test_unsupported() {
@@ -210,5 +219,75 @@ add_task(async function test_hasRuleForBCTree() {
       Services.cookieBanners.hasRuleForBrowsingContextTree(bcChildC),
       "Should have rule when called with child BC for C, because C rule for nested iframe C applies."
     );
+  });
+});
+
+/**
+ * Tests that domain prefs are not considered when evaluating whether the
+ * service has an applicable rule for the given BrowsingContext.
+ */
+add_task(async function test_hasRuleForBCTree_ignoreDomainPrefs() {
+  info("Test with top level A");
+  await BrowserTestUtils.withNewTab(TEST_ORIGIN_A, async browser => {
+    let bcTop = browser.browsingContext;
+
+    ok(
+      Services.cookieBanners.hasRuleForBrowsingContextTree(bcTop),
+      "Should have rule when called with top BC for A"
+    );
+
+    // Disable for current site per domain pref.
+    Services.cookieBanners.setDomainPref(
+      browser.currentURI,
+      Ci.nsICookieBannerService.MODE_DISABLED,
+      false
+    );
+    ok(
+      Services.cookieBanners.hasRuleForBrowsingContextTree(bcTop),
+      "Should have rule when called with top BC for A, even if mechanism is disabled for A."
+    );
+
+    // Change mode via domain pref.
+    Services.cookieBanners.setDomainPref(
+      browser.currentURI,
+      Ci.nsICookieBannerService.MODE_REJECT,
+      false
+    );
+    ok(
+      Services.cookieBanners.hasRuleForBrowsingContextTree(bcTop),
+      "Should still have rule when called with top BC for A, even with custom mode for A"
+    );
+
+    // Cleanup.
+    Services.cookieBanners.removeAllDomainPrefs(false);
+  });
+
+  info("Test with top level B");
+  await BrowserTestUtils.withNewTab(TEST_ORIGIN_B, async browser => {
+    let bcTop = browser.browsingContext;
+
+    ok(
+      Services.cookieBanners.hasRuleForBrowsingContextTree(bcTop),
+      "Should have rule when called with top BC for B"
+    );
+
+    // Change mode via domain pref.
+    Services.cookieBanners.setDomainPref(
+      browser.currentURI,
+      Ci.nsICookieBannerService.MODE_REJECT,
+      false
+    );
+    // Rule for B has no opt-out option. Since the mode is overridden to
+    // MODE_REJECT for B we don't have any applicable rule for it. This should
+    // however not be considered for the hasRule getter, it should ignore
+    // per-domain preferences and evaluate based on the global service mode
+    // instead.
+    ok(
+      Services.cookieBanners.hasRuleForBrowsingContextTree(bcTop),
+      "Should still have rule when called with top BC for B, even with custom mode for B"
+    );
+
+    // Cleanup.
+    Services.cookieBanners.removeAllDomainPrefs(false);
   });
 });

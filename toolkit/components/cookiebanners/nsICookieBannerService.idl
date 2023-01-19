@@ -86,6 +86,11 @@ interface nsICookieBannerService : nsISupports {
    * Computes whether we have a rule for the given browsing context or any of
    * its children. This takes the current cookie banner service mode into
    * consideration and whether the BC is in private browsing mode.
+   *
+   * This method only takes the global service mode into account. It will ignore
+   * any per-site mode overrides. It is meant for callers to find out whether an
+   * applicable rule exists, even if users have disabled the feature for the
+   * given site.
    */
   boolean hasRuleForBrowsingContextTree(in BrowsingContext aBrowsingContext);
 
