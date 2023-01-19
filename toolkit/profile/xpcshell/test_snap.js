@@ -24,6 +24,8 @@ add_task(async () => {
     ],
   });
 
+  simulateSnapEnvironment();
+
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
   checkStartupReason("default");
 
