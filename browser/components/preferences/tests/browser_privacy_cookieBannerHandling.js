@@ -7,6 +7,7 @@
 
 const FEATURE_PREF = "cookiebanners.ui.desktop.enabled";
 const MODE_PREF = "cookiebanners.service.mode";
+const DETECT_ONLY_PREF = "cookiebanners.service.detectOnly";
 
 const GROUPBOX_ID = "cookieBannerHandlingGroup";
 const CHECKBOX_ID = "handleCookieBanners";
@@ -71,12 +72,13 @@ add_task(async function test_checkbox_unchecked_disabled_mode() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Test the checkbox is unchecked in DETECT_ONLY mode.
+// Test the checkbox is unchecked in detect-only mode.
 add_task(async function test_checkbox_unchecked_detect_only_mode() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_DETECT_ONLY],
+      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT],
+      [DETECT_ONLY_PREF, true],
     ],
   });
 
@@ -84,7 +86,7 @@ add_task(async function test_checkbox_unchecked_detect_only_mode() {
     { gBrowser, url: "about:preferences#privacy" },
     async function(browser) {
       let checkbox = browser.contentDocument.getElementById(CHECKBOX_ID);
-      ok(!checkbox.checked, "checkbox is not checked in DETECT_ONLY mode");
+      ok(!checkbox.checked, "checkbox is not checked in detect-only mode");
     }
   );
 
