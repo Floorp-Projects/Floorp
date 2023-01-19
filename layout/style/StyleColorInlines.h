@@ -11,16 +11,17 @@
 
 #include "nsColor.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "nsStyleUtil.h"
 
 namespace mozilla {
 
 inline StyleRGBA StyleRGBA::FromColor(nscolor aColor) {
   return {NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor),
-          NS_GET_A(aColor)};
+          NS_GET_A(aColor) / 255.0f};
 }
 
 inline nscolor StyleRGBA::ToColor() const {
-  return NS_RGBA(red, green, blue, alpha);
+  return NS_RGBA(red, green, blue, nsStyleUtil::FloatToColorComponent(alpha));
 }
 
 inline StyleRGBA StyleRGBA::Transparent() { return {0, 0, 0, 0}; }
