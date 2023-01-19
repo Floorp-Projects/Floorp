@@ -242,6 +242,16 @@
   "END" \
 )
 
+// Runs when recalc_frecency is set to 1
+#  define CREATE_PLACES_AFTERUPDATE_RECALC_FRECENCY_TRIGGER                   \
+    nsLiteralCString(                                                         \
+        "CREATE TEMP TRIGGER moz_places_afterupdate_recalc_frecency_trigger " \
+        "AFTER UPDATE OF recalc_frecency ON moz_places FOR EACH ROW "         \
+        "WHEN NEW.recalc_frecency = 1 "                                       \
+        "BEGIN "                                                              \
+        "  SELECT set_should_start_frecency_recalculation();"                 \
+        "END")
+
 /**
  * This trigger removes a row from moz_openpages_temp when open_count reaches 0.
  *

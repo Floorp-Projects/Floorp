@@ -1618,6 +1618,8 @@ nsresult Database::InitFunctions() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = MD5HexFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetShouldStartFrecencyRecalculationFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1660,6 +1662,9 @@ nsresult Database::InitTempEntities() {
       CREATE_UPDATEORIGINSUPDATE_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      CREATE_PLACES_AFTERUPDATE_RECALC_FRECENCY_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mMainConn->ExecuteSimpleSQL(

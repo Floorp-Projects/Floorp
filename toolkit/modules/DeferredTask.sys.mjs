@@ -291,6 +291,13 @@ DeferredTask.prototype = {
   _finalized: false,
 
   /**
+   * Whether the DeferredTask has been finalized, and it cannot be armed anymore.
+   */
+  get isFinalized() {
+    return this._finalized;
+  },
+
+  /**
    * Timer callback used to run the delayed task.
    */
   _timerCallback() {
