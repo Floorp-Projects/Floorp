@@ -8,7 +8,9 @@ const { render } = require("enzyme");
 const {
   createFactory,
 } = require("resource://devtools/client/shared/vendor/react.js");
-const Provider = createFactory(require("react-redux").Provider);
+const Provider = createFactory(
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
+);
 
 const EagerEvaluation = createFactory(
   require("resource://devtools/client/webconsole/components/Input/EagerEvaluation.js")

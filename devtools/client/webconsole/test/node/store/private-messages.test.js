@@ -32,7 +32,7 @@ const expect = require("expect");
 
 describe("private messages", () => {
   let actions;
-  before(() => {
+  beforeAll(() => {
     actions = setupActions();
   });
 

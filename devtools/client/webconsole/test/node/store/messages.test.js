@@ -39,7 +39,7 @@ const expect = require("expect");
 describe("Message reducer:", () => {
   let actions;
 
-  before(() => {
+  beforeAll(() => {
     actions = setupActions();
   });
 

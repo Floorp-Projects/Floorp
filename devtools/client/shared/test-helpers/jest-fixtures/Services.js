@@ -559,3 +559,5 @@ function pref(name, value) {
 
 module.exports = Services;
 Services.pref = pref;
+Services.uuid = { generateUUID: () => {} };
+Services.dns = {};

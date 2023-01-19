@@ -12,4 +12,13 @@ module.exports = {
     "@babel/plugin-proposal-private-methods",
     "transform-amd-to-commonjs",
   ],
+  presets: [
+    "@babel/preset-react",
+    [
+      "@babel/preset-env",
+      {
+        modules: "commonjs",
+      },
+    ],
+  ],
 };

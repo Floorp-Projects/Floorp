@@ -8,7 +8,9 @@ const {
 // Test utils.
 const expect = require("expect");
 const { render } = require("enzyme");
-const Provider = createFactory(require("react-redux").Provider);
+const Provider = createFactory(
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
+);
 
 const ConsoleOutput = createFactory(
   require("resource://devtools/client/webconsole/components/Output/ConsoleOutput.js")

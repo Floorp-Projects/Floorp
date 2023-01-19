@@ -6,4 +6,7 @@
 
 module.exports = {
   import: () => ({}),
+  addProfilerMarker: () => {},
+  defineESModuleGetters: () => {},
+  importESModule: () => ({}),
 };

@@ -44,7 +44,7 @@ module.exports = {
   ],
   moduleNameMapper: {
     ...sharedJestConfig.moduleNameMapper,
-    "\\.css$": "<rootDir>/src/test/__mocks__/styleMock.js",
-    "\\.svg$": "<rootDir>/src/test/__mocks__/svgMock.js",
+    "\\.css$": "<rootDir>/../shared/test-helpers/jest-fixtures/empty-module",
+    "\\.svg$": "<rootDir>/../shared/test-helpers/jest-fixtures/svgMock.js",
   },
 };
