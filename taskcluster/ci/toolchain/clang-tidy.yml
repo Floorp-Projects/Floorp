@@ -58,7 +58,7 @@ macosx64-clang-tidy:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-15
-            - macosx64-sdk
+            - macosx64-sdk-toolchain
 
 macosx64-arch64-clang-tidy:
     index:
@@ -79,7 +79,7 @@ macosx64-arch64-clang-tidy:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-15
-            - macosx64-sdk
+            - macosx64-sdk-toolchain
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"

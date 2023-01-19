@@ -74,7 +74,7 @@ macosx64-llvm-symbolizer-15:
             - clang-15
         toolchain:
             - linux64-clang-15-stage1
-            - macosx64-sdk
+            - macosx64-sdk-toolchain
 
 macosx64-aarch64-llvm-symbolizer-15:
     description: "llvm-symbolizer for macOS aarch64"
@@ -96,7 +96,7 @@ macosx64-aarch64-llvm-symbolizer-15:
             - clang-15
         toolchain:
             - linux64-clang-15-stage1
-            - macosx64-sdk
+            - macosx64-sdk-toolchain
 
 win64-llvm-symbolizer-15:
     description: "llvm-symbolizer for Windows"
@@ -190,7 +190,7 @@ macosx64-llvm-symbolizer-trunk:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - macosx64-sdk
+            - macosx64-sdk-toolchain
 
 macosx64-aarch64-llvm-symbolizer-trunk:
     description: "llvm-symbolizer for macOS aarch64"
@@ -214,7 +214,7 @@ macosx64-aarch64-llvm-symbolizer-trunk:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - macosx64-sdk
+            - macosx64-sdk-toolchain
 
 win64-llvm-symbolizer-trunk:
     description: "llvm-symbolizer for Windows"
