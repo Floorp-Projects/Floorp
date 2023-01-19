@@ -21,8 +21,7 @@ interface HTMLElement : Element {
            attribute DOMString title;
   [CEReactions]
            attribute DOMString lang;
-  [CEReactions, SetterThrows, Pure]
-           attribute boolean translate;
+  //         attribute boolean translate;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString dir;
 

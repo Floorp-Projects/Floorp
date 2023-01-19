@@ -75,11 +75,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     GetHTMLAttr(nsGkAtoms::lang, aLang);
   }
   void SetLang(const nsAString& aLang) { SetHTMLAttr(nsGkAtoms::lang, aLang); }
-  bool Translate() const override;
-  void SetTranslate(bool aTranslate, mozilla::ErrorResult& aError) {
-    SetHTMLAttr(nsGkAtoms::translate, aTranslate ? u"yes"_ns : u"no"_ns,
-                aError);
-  }
   void GetDir(nsAString& aDir) { GetHTMLEnumAttr(nsGkAtoms::dir, aDir); }
   void SetDir(const nsAString& aDir, mozilla::ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::dir, aDir, aError);
