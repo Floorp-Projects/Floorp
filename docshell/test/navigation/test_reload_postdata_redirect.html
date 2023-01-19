@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+
+<form id="form" action="file_reload_postdata_redirect.sjs" target="_blank" rel="opener" method="POST">
+  <input id="input" name="payload" type="hidden" value="dummy value"/>
+</form>
+
+<pre id="test">
+<script>
+function waitForPopup(expected) {
+  return new Promise(resolve => {
+    addEventListener("message", evt => {
+      info("got message!");
+      is(evt.source.opener, window, "the event source's opener should be this window");
+      is(evt.data, "POST", "should submit the form with POST request");
+      resolve(evt.source);
+    }, { once: true });
+  });
+}
+
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["dom.confirm_repost.testing.always_accept", true]]});
+  let form = document.getElementById("form");
+
+  let popupReady = waitForPopup();
+  form.submit();
+
+  let popup = await popupReady;
+  try {
+    let popupReady2 = waitForPopup();
+    info("reloading popup");
+    popup.location.reload();
+    let popup2 = await popupReady2;
+    is(popup, popup2);
+  } finally {
+    popup.close();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

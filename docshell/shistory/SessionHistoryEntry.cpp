@@ -125,6 +125,13 @@ SessionHistoryInfo::SessionHistoryInfo(
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
     mReferrerInfo = httpChannel->GetReferrerInfo();
   }
+
+  if (nsCOMPtr<nsIUploadChannel2> postChannel = do_QueryInterface(aChannel)) {
+    int64_t contentLength;
+    MOZ_ALWAYS_SUCCEEDS(postChannel->CloneUploadStream(
+        &contentLength, getter_AddRefs(mPostData)));
+    MOZ_ASSERT_IF(mPostData, NS_InputStreamIsCloneable(mPostData));
+  }
 }
 
 void SessionHistoryInfo::Reset(nsIURI* aURI, const nsID& aDocShellID,
