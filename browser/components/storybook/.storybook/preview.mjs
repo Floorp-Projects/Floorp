@@ -4,6 +4,8 @@
 
 import { DOMLocalization } from "@fluent/dom";
 import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { css, html } from "lit.all.mjs";
+import { MozLitElement } from "toolkit/content/widgets/lit-utils.mjs";
 
 // Base Fluent set up.
 let storybookBundle = new FluentBundle("en-US");
@@ -73,3 +75,71 @@ window.MozXULElement = {
     return file;
   },
 };
+
+/**
+ * Wrapper component used to decorate all of our stories by providing access to
+ * `in-content/common.css` without leaking styles that conflict Storybook's CSS.
+ *
+ * More information on decorators can be found at:
+ * https://storybook.js.org/docs/web-components/writing-stories/decorators
+ *
+ * @property {Function} story
+ *  Storybook uses this internally to render stories. We call `story` in our
+ *  render function so that the story contents have the same shadow root as
+ *  `with-common-styles` and styles from `in-content/common` get applied.
+ * @property {Object} context
+ *  Another Storybook provided property containing additional data stories use
+ *  to render. If we don't make this a reactive property Lit seems to optimize
+ *  away any re-rendering of components inside `with-common-styles`.
+ */
+class WithCommonStyles extends MozLitElement {
+  static styles = css`
+    :host {
+      display: block;
+      height: 100%;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    :host,
+    :root {
+      font: message-box;
+      appearance: none;
+      background-color: var(--in-content-page-background);
+      color: var(--in-content-page-color);
+      -moz-box-layout: flex;
+    }
+
+    :host,
+    :root:not(.system-font-size) {
+      font-size: 15px;
+    }
+  `;
+
+  static properties = {
+    story: { type: Function },
+    context: { type: Object },
+  };
+
+  render() {
+    return html`
+      <link
+        rel="stylesheet"
+        href="chrome://global/skin/in-content/common.css"
+      />
+      ${this.story()}
+    `;
+  }
+}
+customElements.define("with-common-styles", WithCommonStyles);
+
+// Wrap all stories in `with-common-styles`.
+export const decorators = [
+  (story, context) =>
+    html`
+      <with-common-styles
+        .story=${story}
+        .context=${context}
+      ></with-common-styles>
+    `,
+];
