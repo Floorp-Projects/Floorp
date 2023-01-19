@@ -367,7 +367,7 @@ export function getAllBrowsingContextsForContext(
       // so we have to cross these boundaries by ourself.
       // (This is also the reason why we aren't using BrowsingContext.getAllBrowsingContextsInSubtree())
       for (const browser of browsingContext.window.document.querySelectorAll(
-        `browser[remote="true"]`
+        `browser[type="content"]`
       )) {
         walk(browser.browsingContext);
       }
