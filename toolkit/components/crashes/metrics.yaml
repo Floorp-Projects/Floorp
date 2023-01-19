@@ -1,0 +1,86 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Toolkit :: Crash Reporting"
+
+crash:
+  uptime:
+    type: timespan
+    description: >
+      The application uptime. This is equivalent to the legacy crash ping's
+      `UptimeTS` field.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
+
+  process_type:
+    type: string
+    # yamllint disable
+    description: >
+      The type of process that experienced a crash. See the full list of
+      options
+      [here](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/crash-ping.html#process-types).
+    # yamllint enable
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
+
+  time:
+    type: datetime
+    time_unit: minute
+    description: >
+      The time at which the crash occurred.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
+
+  startup:
+    type: boolean
+    description: >
+      If true, the crash occurred during process startup.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
