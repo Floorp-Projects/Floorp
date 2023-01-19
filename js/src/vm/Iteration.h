@@ -73,7 +73,7 @@ struct PropertyIndex {
   uint32_t index() const { return asBits_ & IndexMask; }
 };
 
-using PropertyIndexVector = js::Vector<PropertyIndex, 8, js::SystemAllocPolicy>;
+using PropertyIndexVector = js::Vector<PropertyIndex, 8, js::TempAllocPolicy>;
 
 struct NativeIterator;
 
