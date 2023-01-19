@@ -8717,6 +8717,10 @@ class MResumePoint final : public MNode
   bool isDefinition() const = delete;
   bool isResumePoint() const = delete;
 
+  void setBlock(MBasicBlock* block) {
+    setBlockAndKind(block, Kind::ResumePoint);
+  }
+
  protected:
   // Initializes operands_ to an empty array of a fixed length.
   // The array may then be filled in by inherit().

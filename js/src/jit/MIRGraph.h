@@ -43,6 +43,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
     LOOP_HEADER,
     SPLIT_EDGE,
     FAKE_LOOP_PRED,
+    INTERNAL,
     DEAD
   };
 
@@ -98,6 +99,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
 
   void discardResumePoint(MResumePoint* rp,
                           ReferencesType refType = RefType_Default);
+  void removeResumePoint(MResumePoint* rp);
 
   // Remove all references to an instruction such that it can be removed from
   // the list of instruction, without keeping any dangling pointer to it. This
@@ -129,6 +131,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
                                    size_t predEdgeIdx, MBasicBlock* succ);
   static MBasicBlock* NewFakeLoopPredecessor(MIRGraph& graph,
                                              MBasicBlock* header);
+
+  // Create a new basic block for internal control flow not present in the
+  // original CFG.
+  static MBasicBlock* NewInternal(MIRGraph& graph, MBasicBlock* orig,
+                                  MResumePoint* activeResumePoint);
 
   bool dominates(const MBasicBlock* other) const {
     return other->domIndex() - domIndex() < numDominated();
@@ -320,6 +327,18 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void discardAllPhis();
   void discardAllResumePoints(bool discardEntry = true);
   void clear();
+
+  // Splits this block in two at a given instruction, inserting a new control
+  // flow diamond with |ins| in the slow path, |fastpath| in the other, and
+  // |condition| determining which path to take.
+  bool wrapInstructionInFastpath(MInstruction* ins, MInstruction* fastpath,
+                                 MInstruction* condition);
+
+  void moveOuterResumePointTo(MBasicBlock* dest);
+
+  // Move an instruction from this block to a block that has not yet been
+  // terminated.
+  void moveToNewBlock(MInstruction* ins, MBasicBlock* dst);
 
   // Same as |void discard(MInstruction* ins)| but assuming that
   // all operands are already discarded.
@@ -564,6 +583,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
 
   BytecodeSite* trackedSite() const { return trackedSite_; }
   InlineScriptTree* trackedTree() const { return trackedSite_->tree(); }
+
+  // Find the previous resume point that would be used if this instruction
+  // bails out.
+  MResumePoint* activeResumePoint(MInstruction* ins);
 
  private:
   MIRGraph& graph_;
