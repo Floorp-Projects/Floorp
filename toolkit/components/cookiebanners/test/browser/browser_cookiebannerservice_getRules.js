@@ -43,6 +43,8 @@ add_setup(async function() {
       ["cookiebanners.listService.logLevel", "Debug"],
     ],
   });
+
+  Services.cookieBanners.resetRules(true);
 });
 
 function ruleCountForDomain(domain) {
