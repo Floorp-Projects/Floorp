@@ -147,6 +147,8 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "CocoaFileUtils.mm",
     ]
 
+DEFINES["MOZ_APP_BASENAME"] = '"%s"' % CONFIG["MOZ_APP_BASENAME"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
