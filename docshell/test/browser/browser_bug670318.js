@@ -136,7 +136,7 @@ add_task(async function test() {
       };
 
       history.addSHistoryListener(listener);
-      BrowserTestUtils.loadURI(browser, URL);
+      BrowserTestUtils.loadURIString(browser, URL);
 
       await testDone.promise;
     }

@@ -7,7 +7,7 @@ add_task(async function test_dataURI_unique_opaque_origin() {
   let pagePrincipal = browser.contentPrincipal;
   info("pagePrincial " + pagePrincipal.origin);
 
-  BrowserTestUtils.loadURI(browser, "data:text/html,hi");
+  BrowserTestUtils.loadURIString(browser, "data:text/html,hi");
   await BrowserTestUtils.browserLoaded(browser);
 
   await SpecialPowers.spawn(

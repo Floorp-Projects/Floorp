@@ -82,7 +82,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     Services.obs.addObserver(checkRequest, "http-on-modify-request");
-    BrowserTestUtils.loadURI(
+    BrowserTestUtils.loadURIString(
       browser,
       TEST_PATH + "set-samesite-cookies-and-redirect.sjs"
     );

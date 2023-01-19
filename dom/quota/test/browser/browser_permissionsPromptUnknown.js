@@ -37,7 +37,7 @@ addTest(async function testPermissionUnknownInPrivateWindow() {
   win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, testPageURL);
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, testPageURL);
   await waitForMessage(false, win.gBrowser);
 
   is(

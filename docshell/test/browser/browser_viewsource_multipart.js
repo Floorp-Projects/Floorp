@@ -10,7 +10,7 @@ const MULTIPART_URI = `${TEST_PATH}file_basic_multipart.sjs`;
 
 add_task(async function viewsource_multipart_uri() {
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    BrowserTestUtils.loadURI(browser, MULTIPART_URI);
+    BrowserTestUtils.loadURIString(browser, MULTIPART_URI);
     await BrowserTestUtils.browserLoaded(browser);
     is(browser.currentURI.spec, MULTIPART_URI);
 
@@ -30,7 +30,7 @@ add_task(async function viewsource_multipart_uri() {
 
     // Load a view-source version of the page, which should show the full
     // content, not handling multipart.
-    BrowserTestUtils.loadURI(browser, `view-source:${MULTIPART_URI}`);
+    BrowserTestUtils.loadURIString(browser, `view-source:${MULTIPART_URI}`);
     await BrowserTestUtils.browserLoaded(browser);
 
     let viewSourceContent = await SpecialPowers.spawn(browser, [], async () => {

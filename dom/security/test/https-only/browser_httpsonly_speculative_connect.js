@@ -58,7 +58,7 @@ add_task(async function() {
   });
   Services.console.registerListener(on_new_console_messages);
 
-  await BrowserTestUtils.loadURI(
+  await BrowserTestUtils.loadURIString(
     gBrowser.selectedBrowser,
     `${TEST_PATH_HTTP}file_httpsonly_speculative_connect.html`
   );

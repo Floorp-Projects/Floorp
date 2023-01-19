@@ -20,7 +20,7 @@ add_task(async function open_test_xfo_error_page() {
       kTestXFrameOptionsURIFrame,
       true
     );
-    BrowserTestUtils.loadURI(browser, kTestXFrameOptionsURI);
+    BrowserTestUtils.loadURIString(browser, kTestXFrameOptionsURI);
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function() {
@@ -40,7 +40,7 @@ add_task(async function open_test_csp_frame_ancestor_error_page() {
       kTestFrameAncestorsURIFrame,
       true
     );
-    BrowserTestUtils.loadURI(browser, kTestFrameAncestorsURI);
+    BrowserTestUtils.loadURIString(browser, kTestFrameAncestorsURI);
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function() {

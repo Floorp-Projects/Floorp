@@ -16,7 +16,7 @@ add_task(async function test() {
     await SpecialPowers.spawn(browser, [], () => {
       content.addEventListener("unload", e => e.currentTarget.stop(), true);
     });
-    BrowserTestUtils.loadURI(browser, TEST_PAGE_2);
+    BrowserTestUtils.loadURIString(browser, TEST_PAGE_2);
     await loaded;
     ok(true, "Page loaded successfully");
   });

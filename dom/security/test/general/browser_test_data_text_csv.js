@@ -46,7 +46,7 @@ add_task(async function test_with_pref_enabled() {
   let windowPromise = addWindowListener(
     "chrome://mozapps/content/downloads/unknownContentType.xhtml"
   );
-  BrowserTestUtils.loadURI(gBrowser, kTestURI);
+  BrowserTestUtils.loadURIString(gBrowser, kTestURI);
   let win = await windowPromise;
 
   let expectedValue = "index.csv";
@@ -73,7 +73,7 @@ add_task(async function test_with_pref_disabled() {
   let sourceURLBit = "text/csv;foo,bar,foobar";
 
   info("Loading URI for pref enabled");
-  BrowserTestUtils.loadURI(gBrowser, kTestURI);
+  BrowserTestUtils.loadURIString(gBrowser, kTestURI);
   info("Waiting for downloads panel to open");
   await downloadsPanelPromise;
   info("Getting downloads info after opening downloads panel");

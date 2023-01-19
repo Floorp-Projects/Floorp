@@ -15,7 +15,7 @@ add_task(async function() {
     });
   });
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
   let loadedURI = await eventPromise;
   is(loadedURI, uri, "Should have seen the event for the right URI");
 

@@ -16,7 +16,7 @@ add_task(async function see_hsts_header() {
       "https://example.com"
     ) + "hsts_headers.sjs";
   Services.obs.addObserver(observer, "http-on-examine-response");
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, setHstsUrl);
+  await BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, setHstsUrl);
 
   await BrowserTestUtils.waitForCondition(() => readMessage);
   // Clean up
@@ -41,7 +41,7 @@ add_task(async function() {
     ) + "hsts_headers.sjs";
 
   // 1. Upgrade page to https://
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, RESOURCE_LINK);
+  await BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, RESOURCE_LINK);
 
   await BrowserTestUtils.waitForCondition(() => testFinished);
 
@@ -60,7 +60,7 @@ add_task(async function() {
 
   Services.obs.addObserver(observer, "http-on-examine-response");
   // reset hsts header
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, clearHstsUrl);
+  await BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, clearHstsUrl);
   await BrowserTestUtils.waitForCondition(() => readMessage);
   // Clean up
   Services.obs.removeObserver(observer, "http-on-examine-response");

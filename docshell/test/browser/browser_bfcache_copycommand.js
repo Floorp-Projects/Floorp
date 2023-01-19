@@ -65,7 +65,7 @@ async function testWithDomain(domain) {
   await closeContextMenu();
 
   let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
-  BrowserTestUtils.loadURI(browser, dummyPageURL(domain));
+  BrowserTestUtils.loadURIString(browser, dummyPageURL(domain));
   await loaded;
   loaded = BrowserTestUtils.waitForLocationChange(gBrowser, dummy);
   browser.goBack();

@@ -69,7 +69,10 @@ add_task(async function() {
   });
 
   // Navigate tab 2 to a different page
-  BrowserTestUtils.loadURI(ctx.tab2Browser, testPath + "bug343515_pg3.html");
+  BrowserTestUtils.loadURIString(
+    ctx.tab2Browser,
+    testPath + "bug343515_pg3.html"
+  );
 
   await BrowserTestUtils.browserLoaded(ctx.tab2Browser);
 
@@ -167,7 +170,10 @@ add_task(async function() {
   await BrowserTestUtils.switchTab(gBrowser, ctx.tab1);
 
   // Navigate to page 3
-  BrowserTestUtils.loadURI(ctx.tab1Browser, testPath + "bug343515_pg3.html");
+  BrowserTestUtils.loadURIString(
+    ctx.tab1Browser,
+    testPath + "bug343515_pg3.html"
+  );
 
   await BrowserTestUtils.browserLoaded(ctx.tab1Browser);
 
