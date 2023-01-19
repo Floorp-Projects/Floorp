@@ -1267,8 +1267,7 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE(
   // Create GLContext with dummy EGLSurface, the EGLSurface is not used.
   // Instread we override it with EGLSurface of SwapChain's back buffer.
 
-  auto gl = gl::GLContextEGL::CreateEGLPBufferOffscreenContext(egl, {flags},
-                                                               &failureId);
+  auto gl = gl::GLContextEGL::CreateWithoutSurface(egl, {flags}, &failureId);
   if (!gl || !gl->IsANGLE()) {
     aError.Assign(nsPrintfCString("RcANGLE(create GL context failed: %p, %s)",
                                   gl.get(), failureId.get()));
