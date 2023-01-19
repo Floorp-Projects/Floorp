@@ -10,27 +10,6 @@ use super::{BasicParseError, ParseError, Parser, ToCss, Token};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-const OPAQUE: f32 = 1.0;
-
-/// https://w3c.github.io/csswg-drafts/css-color-4/#serializing-alpha-values
-#[inline]
-fn serialize_alpha(dest: &mut impl fmt::Write, alpha: f32, legacy_syntax: bool) -> fmt::Result {
-    // If the alpha component is full opaque, don't emit the alpha value in CSS.
-    if alpha == OPAQUE {
-        return Ok(());
-    }
-
-    dest.write_str(if legacy_syntax { ", " } else { " / " })?;
-
-    // Try first with two decimal places, then with three.
-    let mut rounded_alpha = (alpha * 100.).round() / 100.;
-    if clamp_unit_f32(rounded_alpha) != clamp_unit_f32(alpha) {
-        rounded_alpha = (alpha * 1000.).round() / 1000.;
-    }
-
-    rounded_alpha.to_css(dest)
-}
-
 /// A color with red, green, blue, and alpha components, in a byte each.
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(C)]
@@ -42,7 +21,7 @@ pub struct RGBA {
     /// The blue component.
     pub blue: u8,
     /// The alpha component.
-    pub alpha: f32,
+    pub alpha: u8,
 }
 
 impl RGBA {
@@ -55,24 +34,24 @@ impl RGBA {
             clamp_unit_f32(red),
             clamp_unit_f32(green),
             clamp_unit_f32(blue),
-            alpha.max(0.0).min(1.0),
+            clamp_unit_f32(alpha),
         )
     }
 
     /// Returns a transparent color.
     #[inline]
     pub fn transparent() -> Self {
-        Self::new(0, 0, 0, 0.0)
+        Self::new(0, 0, 0, 0)
     }
 
     /// Same thing, but with `u8` values instead of floats in the 0 to 1 range.
     #[inline]
-    pub const fn new(red: u8, green: u8, blue: u8, alpha: f32) -> Self {
-        Self {
-            red,
-            green,
-            blue,
-            alpha,
+    pub fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
+        RGBA {
+            red: red,
+            green: green,
+            blue: blue,
+            alpha: alpha,
         }
     }
 
@@ -97,39 +76,7 @@ impl RGBA {
     /// Returns the alpha channel in a floating point number form, from 0 to 1.
     #[inline]
     pub fn alpha_f32(&self) -> f32 {
-        self.alpha
-    }
-
-    /// Parse a color hash, without the leading '#' character.
-    #[inline]
-    pub fn parse_hash(value: &[u8]) -> Result<Self, ()> {
-        Ok(match value.len() {
-            8 => Self::new(
-                from_hex(value[0])? * 16 + from_hex(value[1])?,
-                from_hex(value[2])? * 16 + from_hex(value[3])?,
-                from_hex(value[4])? * 16 + from_hex(value[5])?,
-                (from_hex(value[6])? * 16 + from_hex(value[7])?) as f32 / 255.0,
-            ),
-            6 => Self::new(
-                from_hex(value[0])? * 16 + from_hex(value[1])?,
-                from_hex(value[2])? * 16 + from_hex(value[3])?,
-                from_hex(value[4])? * 16 + from_hex(value[5])?,
-                OPAQUE,
-            ),
-            4 => Self::new(
-                from_hex(value[0])? * 17,
-                from_hex(value[1])? * 17,
-                from_hex(value[2])? * 17,
-                (from_hex(value[3])? * 17) as f32 / 255.0,
-            ),
-            3 => Self::new(
-                from_hex(value[0])? * 17,
-                from_hex(value[1])? * 17,
-                from_hex(value[2])? * 17,
-                OPAQUE,
-            ),
-            _ => return Err(()),
-        })
+        self.alpha as f32 / 255.0
     }
 }
 
@@ -159,265 +106,36 @@ impl ToCss for RGBA {
     where
         W: fmt::Write,
     {
-        let has_alpha = self.alpha != OPAQUE;
+        let serialize_alpha = self.alpha != 255;
 
-        dest.write_str(if has_alpha { "rgba(" } else { "rgb(" })?;
+        dest.write_str(if serialize_alpha { "rgba(" } else { "rgb(" })?;
         self.red.to_css(dest)?;
         dest.write_str(", ")?;
         self.green.to_css(dest)?;
         dest.write_str(", ")?;
         self.blue.to_css(dest)?;
+        if serialize_alpha {
+            dest.write_str(", ")?;
 
-        serialize_alpha(dest, self.alpha, true)?;
+            // Try first with two decimal places, then with three.
+            let mut rounded_alpha = (self.alpha_f32() * 100.).round() / 100.;
+            if clamp_unit_f32(rounded_alpha) != self.alpha {
+                rounded_alpha = (self.alpha_f32() * 1000.).round() / 1000.;
+            }
 
+            rounded_alpha.to_css(dest)?;
+        }
         dest.write_char(')')
     }
 }
 
-// NOTE: LAB and OKLAB is not declared inside the [impl_lab_like] macro,
-// because it causes cbindgen to ignore them.
-
-/// Color specified by lightness, a- and b-axis components.
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
-pub struct Lab {
-    /// The lightness component.
-    pub lightness: f32,
-    /// The a-axis component.
-    pub a: f32,
-    /// The b-axis component.
-    pub b: f32,
-    /// The alpha component.
-    pub alpha: f32,
-}
-
-/// Color specified by lightness, a- and b-axis components.
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
-pub struct Oklab {
-    /// The lightness component.
-    pub lightness: f32,
-    /// The a-axis component.
-    pub a: f32,
-    /// The b-axis component.
-    pub b: f32,
-    /// The alpha component.
-    pub alpha: f32,
-}
-
-macro_rules! impl_lab_like {
-    ($cls:ident, $fname:literal) => {
-        impl $cls {
-            /// Construct a new Lab color format with lightness, a, b and alpha components.
-            pub fn new(lightness: f32, a: f32, b: f32, alpha: f32) -> Self {
-                Self {
-                    lightness,
-                    a,
-                    b,
-                    alpha,
-                }
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl Serialize for $cls {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                (self.lightness, self.a, self.b, self.alpha).serialize(serializer)
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl<'de> Deserialize<'de> for $cls {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                let (lightness, a, b, alpha) = Deserialize::deserialize(deserializer)?;
-                Ok(Self::new(lightness, a, b, alpha))
-            }
-        }
-
-        impl ToCss for $cls {
-            fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-            where
-                W: fmt::Write,
-            {
-                dest.write_str($fname)?;
-                dest.write_str("(")?;
-                self.lightness.to_css(dest)?;
-                dest.write_char(' ')?;
-                self.a.to_css(dest)?;
-                dest.write_char(' ')?;
-                self.b.to_css(dest)?;
-                serialize_alpha(dest, self.alpha, false)?;
-                dest.write_char(')')
-            }
-        }
-    };
-}
-
-impl_lab_like!(Lab, "lab");
-impl_lab_like!(Oklab, "oklab");
-
-// NOTE: LCH and OKLCH is not declared inside the [impl_lch_like] macro,
-// because it causes cbindgen to ignore them.
-
-/// Color specified by lightness, chroma and hue components.
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
-pub struct Lch {
-    /// The lightness component.
-    pub lightness: f32,
-    /// The chroma component.
-    pub chroma: f32,
-    /// The hue component.
-    pub hue: f32,
-    /// The alpha component.
-    pub alpha: f32,
-}
-
-/// Color specified by lightness, chroma and hue components.
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
-pub struct Oklch {
-    /// The lightness component.
-    pub lightness: f32,
-    /// The chroma component.
-    pub chroma: f32,
-    /// The hue component.
-    pub hue: f32,
-    /// The alpha component.
-    pub alpha: f32,
-}
-
-macro_rules! impl_lch_like {
-    ($cls:ident, $fname:literal) => {
-        impl $cls {
-            /// Construct a new color with lightness, chroma and hue components.
-            pub fn new(lightness: f32, chroma: f32, hue: f32, alpha: f32) -> Self {
-                Self {
-                    lightness,
-                    chroma,
-                    hue,
-                    alpha,
-                }
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl Serialize for $cls {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                (self.lightness, self.chroma, self.hue, self.alpha).serialize(serializer)
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl<'de> Deserialize<'de> for $cls {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                let (lightness, chroma, hue, alpha) = Deserialize::deserialize(deserializer)?;
-                Ok(Self::new(lightness, chroma, hue, alpha))
-            }
-        }
-
-        impl ToCss for $cls {
-            fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-            where
-                W: fmt::Write,
-            {
-                dest.write_str($fname)?;
-                dest.write_str("(")?;
-                self.lightness.to_css(dest)?;
-                dest.write_char(' ')?;
-                self.chroma.to_css(dest)?;
-                dest.write_char(' ')?;
-                self.hue.to_css(dest)?;
-                serialize_alpha(dest, self.alpha, false)?;
-                dest.write_char(')')
-            }
-        }
-    };
-}
-
-impl_lch_like!(Lch, "lch");
-impl_lch_like!(Oklch, "oklch");
-
-/// An absolutely specified color.
-/// https://w3c.github.io/csswg-drafts/css-color-4/#typedef-absolute-color-base
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum AbsoluteColor {
-    /// Specify sRGB colors directly by their red/green/blue/alpha chanels.
-    Rgba(RGBA),
-    /// Specifies a CIELAB color by CIE Lightness and its a- and b-axis hue
-    /// coordinates (red/green-ness, and yellow/blue-ness) using the CIE LAB
-    /// rectangular coordinate model.
-    Lab(Lab),
-    /// Specifies a CIELAB color by CIE Lightness, Chroma, and hue using the
-    /// CIE LCH cylindrical coordinate model.
-    Lch(Lch),
-    /// Specifies an Oklab color by Oklab Lightness and its a- and b-axis hue
-    /// coordinates (red/green-ness, and yellow/blue-ness) using the Oklab
-    /// rectangular coordinate model.
-    Oklab(Oklab),
-    /// Specifies an Oklab color by Oklab Lightness, Chroma, and hue using
-    /// the OKLCH cylindrical coordinate model.
-    Oklch(Oklch),
-}
-
-impl AbsoluteColor {
-    /// Return the alpha component of any of the schemes within.
-    pub fn alpha(&self) -> f32 {
-        match self {
-            Self::Rgba(c) => c.alpha,
-            Self::Lab(c) => c.alpha,
-            Self::Lch(c) => c.alpha,
-            Self::Oklab(c) => c.alpha,
-            Self::Oklch(c) => c.alpha,
-        }
-    }
-}
-
-impl ToCss for AbsoluteColor {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-    where
-        W: fmt::Write,
-    {
-        match self {
-            Self::Rgba(rgba) => rgba.to_css(dest),
-            Self::Lab(lab) => lab.to_css(dest),
-            Self::Lch(lch) => lch.to_css(dest),
-            Self::Oklab(lab) => lab.to_css(dest),
-            Self::Oklch(lch) => lch.to_css(dest),
-        }
-    }
-}
-
-#[inline]
-pub(crate) const fn rgb(red: u8, green: u8, blue: u8) -> Color {
-    rgba(red, green, blue, OPAQUE)
-}
-
-#[inline]
-pub(crate) const fn rgba(red: u8, green: u8, blue: u8, alpha: f32) -> Color {
-    Color::Absolute(AbsoluteColor::Rgba(RGBA::new(red, green, blue, alpha)))
-}
-
 /// A <color> value.
-/// https://w3c.github.io/csswg-drafts/css-color-4/#color-type
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
-    /// The 'currentcolor' keyword.
+    /// The 'currentcolor' keyword
     CurrentColor,
-    /// An absolutely specified color.
-    Absolute(AbsoluteColor),
+    /// Everything else gets converted to RGBA during parsing
+    RGBA(RGBA),
 }
 
 impl ToCss for Color {
@@ -427,7 +145,7 @@ impl ToCss for Color {
     {
         match *self {
             Color::CurrentColor => dest.write_str("currentcolor"),
-            Color::Absolute(absolute) => absolute.to_css(dest),
+            Color::RGBA(ref rgba) => rgba.to_css(dest),
         }
     }
 }
@@ -565,8 +283,9 @@ impl Color {
         let location = input.current_source_location();
         let token = input.next()?;
         match *token {
-            Token::Hash(ref value) | Token::IDHash(ref value) => RGBA::parse_hash(value.as_bytes())
-                .map(|rgba| Color::Absolute(AbsoluteColor::Rgba(rgba))),
+            Token::Hash(ref value) | Token::IDHash(ref value) => {
+                Color::parse_hash(value.as_bytes())
+            }
             Token::Ident(ref value) => parse_color_keyword(&*value),
             Token::Function(ref name) => {
                 let name = name.clone();
@@ -584,6 +303,46 @@ impl Color {
         let component_parser = DefaultComponentParser;
         Self::parse_with(&component_parser, input).map_err(ParseError::basic)
     }
+
+    /// Parse a color hash, without the leading '#' character.
+    #[inline]
+    pub fn parse_hash(value: &[u8]) -> Result<Self, ()> {
+        match value.len() {
+            8 => Ok(rgba(
+                from_hex(value[0])? * 16 + from_hex(value[1])?,
+                from_hex(value[2])? * 16 + from_hex(value[3])?,
+                from_hex(value[4])? * 16 + from_hex(value[5])?,
+                from_hex(value[6])? * 16 + from_hex(value[7])?,
+            )),
+            6 => Ok(rgb(
+                from_hex(value[0])? * 16 + from_hex(value[1])?,
+                from_hex(value[2])? * 16 + from_hex(value[3])?,
+                from_hex(value[4])? * 16 + from_hex(value[5])?,
+            )),
+            4 => Ok(rgba(
+                from_hex(value[0])? * 17,
+                from_hex(value[1])? * 17,
+                from_hex(value[2])? * 17,
+                from_hex(value[3])? * 17,
+            )),
+            3 => Ok(rgb(
+                from_hex(value[0])? * 17,
+                from_hex(value[1])? * 17,
+                from_hex(value[2])? * 17,
+            )),
+            _ => Err(()),
+        }
+    }
+}
+
+#[inline]
+fn rgb(red: u8, green: u8, blue: u8) -> Color {
+    rgba(red, green, blue, 255)
+}
+
+#[inline]
+fn rgba(red: u8, green: u8, blue: u8, alpha: u8) -> Color {
+    Color::RGBA(RGBA::new(red, green, blue, alpha))
 }
 
 /// Return the named color with the given name.
@@ -593,159 +352,169 @@ impl Color {
 /// (For example, the value of an `Ident` token is fine.)
 #[inline]
 pub fn parse_color_keyword(ident: &str) -> Result<Color, ()> {
+    macro_rules! rgb {
+        ($red: expr, $green: expr, $blue: expr) => {
+            Color::RGBA(RGBA {
+                red: $red,
+                green: $green,
+                blue: $blue,
+                alpha: 255,
+            })
+        };
+    }
     ascii_case_insensitive_phf_map! {
         keyword -> Color = {
-            "black" => rgb(0, 0, 0),
-            "silver" => rgb(192, 192, 192),
-            "gray" => rgb(128, 128, 128),
-            "white" => rgb(255, 255, 255),
-            "maroon" => rgb(128, 0, 0),
-            "red" => rgb(255, 0, 0),
-            "purple" => rgb(128, 0, 128),
-            "fuchsia" => rgb(255, 0, 255),
-            "green" => rgb(0, 128, 0),
-            "lime" => rgb(0, 255, 0),
-            "olive" => rgb(128, 128, 0),
-            "yellow" => rgb(255, 255, 0),
-            "navy" => rgb(0, 0, 128),
-            "blue" => rgb(0, 0, 255),
-            "teal" => rgb(0, 128, 128),
-            "aqua" => rgb(0, 255, 255),
+            "black" => rgb!(0, 0, 0),
+            "silver" => rgb!(192, 192, 192),
+            "gray" => rgb!(128, 128, 128),
+            "white" => rgb!(255, 255, 255),
+            "maroon" => rgb!(128, 0, 0),
+            "red" => rgb!(255, 0, 0),
+            "purple" => rgb!(128, 0, 128),
+            "fuchsia" => rgb!(255, 0, 255),
+            "green" => rgb!(0, 128, 0),
+            "lime" => rgb!(0, 255, 0),
+            "olive" => rgb!(128, 128, 0),
+            "yellow" => rgb!(255, 255, 0),
+            "navy" => rgb!(0, 0, 128),
+            "blue" => rgb!(0, 0, 255),
+            "teal" => rgb!(0, 128, 128),
+            "aqua" => rgb!(0, 255, 255),
 
-            "aliceblue" => rgb(240, 248, 255),
-            "antiquewhite" => rgb(250, 235, 215),
-            "aquamarine" => rgb(127, 255, 212),
-            "azure" => rgb(240, 255, 255),
-            "beige" => rgb(245, 245, 220),
-            "bisque" => rgb(255, 228, 196),
-            "blanchedalmond" => rgb(255, 235, 205),
-            "blueviolet" => rgb(138, 43, 226),
-            "brown" => rgb(165, 42, 42),
-            "burlywood" => rgb(222, 184, 135),
-            "cadetblue" => rgb(95, 158, 160),
-            "chartreuse" => rgb(127, 255, 0),
-            "chocolate" => rgb(210, 105, 30),
-            "coral" => rgb(255, 127, 80),
-            "cornflowerblue" => rgb(100, 149, 237),
-            "cornsilk" => rgb(255, 248, 220),
-            "crimson" => rgb(220, 20, 60),
-            "cyan" => rgb(0, 255, 255),
-            "darkblue" => rgb(0, 0, 139),
-            "darkcyan" => rgb(0, 139, 139),
-            "darkgoldenrod" => rgb(184, 134, 11),
-            "darkgray" => rgb(169, 169, 169),
-            "darkgreen" => rgb(0, 100, 0),
-            "darkgrey" => rgb(169, 169, 169),
-            "darkkhaki" => rgb(189, 183, 107),
-            "darkmagenta" => rgb(139, 0, 139),
-            "darkolivegreen" => rgb(85, 107, 47),
-            "darkorange" => rgb(255, 140, 0),
-            "darkorchid" => rgb(153, 50, 204),
-            "darkred" => rgb(139, 0, 0),
-            "darksalmon" => rgb(233, 150, 122),
-            "darkseagreen" => rgb(143, 188, 143),
-            "darkslateblue" => rgb(72, 61, 139),
-            "darkslategray" => rgb(47, 79, 79),
-            "darkslategrey" => rgb(47, 79, 79),
-            "darkturquoise" => rgb(0, 206, 209),
-            "darkviolet" => rgb(148, 0, 211),
-            "deeppink" => rgb(255, 20, 147),
-            "deepskyblue" => rgb(0, 191, 255),
-            "dimgray" => rgb(105, 105, 105),
-            "dimgrey" => rgb(105, 105, 105),
-            "dodgerblue" => rgb(30, 144, 255),
-            "firebrick" => rgb(178, 34, 34),
-            "floralwhite" => rgb(255, 250, 240),
-            "forestgreen" => rgb(34, 139, 34),
-            "gainsboro" => rgb(220, 220, 220),
-            "ghostwhite" => rgb(248, 248, 255),
-            "gold" => rgb(255, 215, 0),
-            "goldenrod" => rgb(218, 165, 32),
-            "greenyellow" => rgb(173, 255, 47),
-            "grey" => rgb(128, 128, 128),
-            "honeydew" => rgb(240, 255, 240),
-            "hotpink" => rgb(255, 105, 180),
-            "indianred" => rgb(205, 92, 92),
-            "indigo" => rgb(75, 0, 130),
-            "ivory" => rgb(255, 255, 240),
-            "khaki" => rgb(240, 230, 140),
-            "lavender" => rgb(230, 230, 250),
-            "lavenderblush" => rgb(255, 240, 245),
-            "lawngreen" => rgb(124, 252, 0),
-            "lemonchiffon" => rgb(255, 250, 205),
-            "lightblue" => rgb(173, 216, 230),
-            "lightcoral" => rgb(240, 128, 128),
-            "lightcyan" => rgb(224, 255, 255),
-            "lightgoldenrodyellow" => rgb(250, 250, 210),
-            "lightgray" => rgb(211, 211, 211),
-            "lightgreen" => rgb(144, 238, 144),
-            "lightgrey" => rgb(211, 211, 211),
-            "lightpink" => rgb(255, 182, 193),
-            "lightsalmon" => rgb(255, 160, 122),
-            "lightseagreen" => rgb(32, 178, 170),
-            "lightskyblue" => rgb(135, 206, 250),
-            "lightslategray" => rgb(119, 136, 153),
-            "lightslategrey" => rgb(119, 136, 153),
-            "lightsteelblue" => rgb(176, 196, 222),
-            "lightyellow" => rgb(255, 255, 224),
-            "limegreen" => rgb(50, 205, 50),
-            "linen" => rgb(250, 240, 230),
-            "magenta" => rgb(255, 0, 255),
-            "mediumaquamarine" => rgb(102, 205, 170),
-            "mediumblue" => rgb(0, 0, 205),
-            "mediumorchid" => rgb(186, 85, 211),
-            "mediumpurple" => rgb(147, 112, 219),
-            "mediumseagreen" => rgb(60, 179, 113),
-            "mediumslateblue" => rgb(123, 104, 238),
-            "mediumspringgreen" => rgb(0, 250, 154),
-            "mediumturquoise" => rgb(72, 209, 204),
-            "mediumvioletred" => rgb(199, 21, 133),
-            "midnightblue" => rgb(25, 25, 112),
-            "mintcream" => rgb(245, 255, 250),
-            "mistyrose" => rgb(255, 228, 225),
-            "moccasin" => rgb(255, 228, 181),
-            "navajowhite" => rgb(255, 222, 173),
-            "oldlace" => rgb(253, 245, 230),
-            "olivedrab" => rgb(107, 142, 35),
-            "orange" => rgb(255, 165, 0),
-            "orangered" => rgb(255, 69, 0),
-            "orchid" => rgb(218, 112, 214),
-            "palegoldenrod" => rgb(238, 232, 170),
-            "palegreen" => rgb(152, 251, 152),
-            "paleturquoise" => rgb(175, 238, 238),
-            "palevioletred" => rgb(219, 112, 147),
-            "papayawhip" => rgb(255, 239, 213),
-            "peachpuff" => rgb(255, 218, 185),
-            "peru" => rgb(205, 133, 63),
-            "pink" => rgb(255, 192, 203),
-            "plum" => rgb(221, 160, 221),
-            "powderblue" => rgb(176, 224, 230),
-            "rebeccapurple" => rgb(102, 51, 153),
-            "rosybrown" => rgb(188, 143, 143),
-            "royalblue" => rgb(65, 105, 225),
-            "saddlebrown" => rgb(139, 69, 19),
-            "salmon" => rgb(250, 128, 114),
-            "sandybrown" => rgb(244, 164, 96),
-            "seagreen" => rgb(46, 139, 87),
-            "seashell" => rgb(255, 245, 238),
-            "sienna" => rgb(160, 82, 45),
-            "skyblue" => rgb(135, 206, 235),
-            "slateblue" => rgb(106, 90, 205),
-            "slategray" => rgb(112, 128, 144),
-            "slategrey" => rgb(112, 128, 144),
-            "snow" => rgb(255, 250, 250),
-            "springgreen" => rgb(0, 255, 127),
-            "steelblue" => rgb(70, 130, 180),
-            "tan" => rgb(210, 180, 140),
-            "thistle" => rgb(216, 191, 216),
-            "tomato" => rgb(255, 99, 71),
-            "turquoise" => rgb(64, 224, 208),
-            "violet" => rgb(238, 130, 238),
-            "wheat" => rgb(245, 222, 179),
-            "whitesmoke" => rgb(245, 245, 245),
-            "yellowgreen" => rgb(154, 205, 50),
+            "aliceblue" => rgb!(240, 248, 255),
+            "antiquewhite" => rgb!(250, 235, 215),
+            "aquamarine" => rgb!(127, 255, 212),
+            "azure" => rgb!(240, 255, 255),
+            "beige" => rgb!(245, 245, 220),
+            "bisque" => rgb!(255, 228, 196),
+            "blanchedalmond" => rgb!(255, 235, 205),
+            "blueviolet" => rgb!(138, 43, 226),
+            "brown" => rgb!(165, 42, 42),
+            "burlywood" => rgb!(222, 184, 135),
+            "cadetblue" => rgb!(95, 158, 160),
+            "chartreuse" => rgb!(127, 255, 0),
+            "chocolate" => rgb!(210, 105, 30),
+            "coral" => rgb!(255, 127, 80),
+            "cornflowerblue" => rgb!(100, 149, 237),
+            "cornsilk" => rgb!(255, 248, 220),
+            "crimson" => rgb!(220, 20, 60),
+            "cyan" => rgb!(0, 255, 255),
+            "darkblue" => rgb!(0, 0, 139),
+            "darkcyan" => rgb!(0, 139, 139),
+            "darkgoldenrod" => rgb!(184, 134, 11),
+            "darkgray" => rgb!(169, 169, 169),
+            "darkgreen" => rgb!(0, 100, 0),
+            "darkgrey" => rgb!(169, 169, 169),
+            "darkkhaki" => rgb!(189, 183, 107),
+            "darkmagenta" => rgb!(139, 0, 139),
+            "darkolivegreen" => rgb!(85, 107, 47),
+            "darkorange" => rgb!(255, 140, 0),
+            "darkorchid" => rgb!(153, 50, 204),
+            "darkred" => rgb!(139, 0, 0),
+            "darksalmon" => rgb!(233, 150, 122),
+            "darkseagreen" => rgb!(143, 188, 143),
+            "darkslateblue" => rgb!(72, 61, 139),
+            "darkslategray" => rgb!(47, 79, 79),
+            "darkslategrey" => rgb!(47, 79, 79),
+            "darkturquoise" => rgb!(0, 206, 209),
+            "darkviolet" => rgb!(148, 0, 211),
+            "deeppink" => rgb!(255, 20, 147),
+            "deepskyblue" => rgb!(0, 191, 255),
+            "dimgray" => rgb!(105, 105, 105),
+            "dimgrey" => rgb!(105, 105, 105),
+            "dodgerblue" => rgb!(30, 144, 255),
+            "firebrick" => rgb!(178, 34, 34),
+            "floralwhite" => rgb!(255, 250, 240),
+            "forestgreen" => rgb!(34, 139, 34),
+            "gainsboro" => rgb!(220, 220, 220),
+            "ghostwhite" => rgb!(248, 248, 255),
+            "gold" => rgb!(255, 215, 0),
+            "goldenrod" => rgb!(218, 165, 32),
+            "greenyellow" => rgb!(173, 255, 47),
+            "grey" => rgb!(128, 128, 128),
+            "honeydew" => rgb!(240, 255, 240),
+            "hotpink" => rgb!(255, 105, 180),
+            "indianred" => rgb!(205, 92, 92),
+            "indigo" => rgb!(75, 0, 130),
+            "ivory" => rgb!(255, 255, 240),
+            "khaki" => rgb!(240, 230, 140),
+            "lavender" => rgb!(230, 230, 250),
+            "lavenderblush" => rgb!(255, 240, 245),
+            "lawngreen" => rgb!(124, 252, 0),
+            "lemonchiffon" => rgb!(255, 250, 205),
+            "lightblue" => rgb!(173, 216, 230),
+            "lightcoral" => rgb!(240, 128, 128),
+            "lightcyan" => rgb!(224, 255, 255),
+            "lightgoldenrodyellow" => rgb!(250, 250, 210),
+            "lightgray" => rgb!(211, 211, 211),
+            "lightgreen" => rgb!(144, 238, 144),
+            "lightgrey" => rgb!(211, 211, 211),
+            "lightpink" => rgb!(255, 182, 193),
+            "lightsalmon" => rgb!(255, 160, 122),
+            "lightseagreen" => rgb!(32, 178, 170),
+            "lightskyblue" => rgb!(135, 206, 250),
+            "lightslategray" => rgb!(119, 136, 153),
+            "lightslategrey" => rgb!(119, 136, 153),
+            "lightsteelblue" => rgb!(176, 196, 222),
+            "lightyellow" => rgb!(255, 255, 224),
+            "limegreen" => rgb!(50, 205, 50),
+            "linen" => rgb!(250, 240, 230),
+            "magenta" => rgb!(255, 0, 255),
+            "mediumaquamarine" => rgb!(102, 205, 170),
+            "mediumblue" => rgb!(0, 0, 205),
+            "mediumorchid" => rgb!(186, 85, 211),
+            "mediumpurple" => rgb!(147, 112, 219),
+            "mediumseagreen" => rgb!(60, 179, 113),
+            "mediumslateblue" => rgb!(123, 104, 238),
+            "mediumspringgreen" => rgb!(0, 250, 154),
+            "mediumturquoise" => rgb!(72, 209, 204),
+            "mediumvioletred" => rgb!(199, 21, 133),
+            "midnightblue" => rgb!(25, 25, 112),
+            "mintcream" => rgb!(245, 255, 250),
+            "mistyrose" => rgb!(255, 228, 225),
+            "moccasin" => rgb!(255, 228, 181),
+            "navajowhite" => rgb!(255, 222, 173),
+            "oldlace" => rgb!(253, 245, 230),
+            "olivedrab" => rgb!(107, 142, 35),
+            "orange" => rgb!(255, 165, 0),
+            "orangered" => rgb!(255, 69, 0),
+            "orchid" => rgb!(218, 112, 214),
+            "palegoldenrod" => rgb!(238, 232, 170),
+            "palegreen" => rgb!(152, 251, 152),
+            "paleturquoise" => rgb!(175, 238, 238),
+            "palevioletred" => rgb!(219, 112, 147),
+            "papayawhip" => rgb!(255, 239, 213),
+            "peachpuff" => rgb!(255, 218, 185),
+            "peru" => rgb!(205, 133, 63),
+            "pink" => rgb!(255, 192, 203),
+            "plum" => rgb!(221, 160, 221),
+            "powderblue" => rgb!(176, 224, 230),
+            "rebeccapurple" => rgb!(102, 51, 153),
+            "rosybrown" => rgb!(188, 143, 143),
+            "royalblue" => rgb!(65, 105, 225),
+            "saddlebrown" => rgb!(139, 69, 19),
+            "salmon" => rgb!(250, 128, 114),
+            "sandybrown" => rgb!(244, 164, 96),
+            "seagreen" => rgb!(46, 139, 87),
+            "seashell" => rgb!(255, 245, 238),
+            "sienna" => rgb!(160, 82, 45),
+            "skyblue" => rgb!(135, 206, 235),
+            "slateblue" => rgb!(106, 90, 205),
+            "slategray" => rgb!(112, 128, 144),
+            "slategrey" => rgb!(112, 128, 144),
+            "snow" => rgb!(255, 250, 250),
+            "springgreen" => rgb!(0, 255, 127),
+            "steelblue" => rgb!(70, 130, 180),
+            "tan" => rgb!(210, 180, 140),
+            "thistle" => rgb!(216, 191, 216),
+            "tomato" => rgb!(255, 99, 71),
+            "turquoise" => rgb!(64, 224, 208),
+            "violet" => rgb!(238, 130, 238),
+            "wheat" => rgb!(245, 222, 179),
+            "whitesmoke" => rgb!(245, 245, 245),
+            "yellowgreen" => rgb!(154, 205, 50),
 
-            "transparent" => rgba(0, 0, 0, 0.0),
+            "transparent" => Color::RGBA(RGBA { red: 0, green: 0, blue: 0, alpha: 0 }),
             "currentcolor" => Color::CurrentColor,
         }
     }
@@ -793,77 +562,37 @@ fn parse_color_function<'i, 't, ComponentParser>(
 where
     ComponentParser: ColorComponentParser<'i>,
 {
-    // FIXME: Should the parser clamp values? or should specified/computed
-    // value processing handle clamping?
-
-    let color = match_ignore_ascii_case! { name,
-        "rgb" | "rgba" => parse_rgb(component_parser, arguments),
-
-        "hsl" | "hsla" => parse_hsl_hwb(component_parser, arguments, hsl_to_rgb, /* allow_comma = */ true),
-
-        "hwb" => parse_hsl_hwb(component_parser, arguments, hwb_to_rgb, /* allow_comma = */ false),
-
-        // for L: 0% = 0.0, 100% = 100.0
-        // for a and b: -100% = -125, 100% = 125
-        "lab" => parse_lab_like(component_parser, arguments, 100.0, 125.0, |l, a, b, alpha| {
-            Color::Absolute(AbsoluteColor::Lab(Lab::new(l.max(0.), a , b , alpha)))
-        }),
-
-        // for L: 0% = 0.0, 100% = 100.0
-        // for C: 0% = 0, 100% = 150
-        "lch" => parse_lch_like(component_parser, arguments, 100.0, 150.0, |l, c, h, alpha| {
-            Color::Absolute(AbsoluteColor::Lch(Lch::new(l.max(0.), c.max(0.), h, alpha)))
-        }),
-
-        // for L: 0% = 0.0, 100% = 1.0
-        // for a and b: -100% = -0.4, 100% = 0.4
-        "oklab" => parse_lab_like(component_parser, arguments, 1.0, 0.4, |l, a, b, alpha| {
-            Color::Absolute(AbsoluteColor::Oklab(Oklab::new(l.max(0.), a, b, alpha)))
-        }),
-
-        // for L: 0% = 0.0, 100% = 1.0
-        // for C: 0% = 0.0 100% = 0.4
-        "oklch" => parse_lch_like(component_parser, arguments, 1.0, 0.4, |l, c, h, alpha| {
-            Color::Absolute(AbsoluteColor::Oklch(Oklch::new(l.max(0.), c.max(0.), h, alpha)))
-        }),
-
+    let (red, green, blue, uses_commas) = match_ignore_ascii_case! { name,
+        "rgb" | "rgba" => parse_rgb_components_rgb(component_parser, arguments)?,
+        "hsl" | "hsla" => parse_hsl_hwb(component_parser, arguments, hsl_to_rgb, /* allow_comma = */ true)?,
+        "hwb" => parse_hsl_hwb(component_parser, arguments, hwb_to_rgb, /* allow_comma = */ false)?,
         _ => return Err(arguments.new_unexpected_token_error(Token::Ident(name.to_owned().into()))),
-    }?;
+    };
 
-    arguments.expect_exhausted()?;
-
-    Ok(color)
-}
-
-#[inline]
-fn parse_alpha<'i, 't, ComponentParser>(
-    component_parser: &ComponentParser,
-    arguments: &mut Parser<'i, 't>,
-    uses_commas: bool,
-) -> Result<f32, ParseError<'i, ComponentParser::Error>>
-where
-    ComponentParser: ColorComponentParser<'i>,
-{
-    Ok(if !arguments.is_exhausted() {
+    let alpha = if !arguments.is_exhausted() {
         if uses_commas {
             arguments.expect_comma()?;
         } else {
             arguments.expect_delim('/')?;
         };
-        component_parser
-            .parse_number_or_percentage(arguments)?
-            .unit_value()
-            .clamp(0.0, OPAQUE)
+        clamp_unit_f32(
+            component_parser
+                .parse_number_or_percentage(arguments)?
+                .unit_value(),
+        )
     } else {
-        OPAQUE
-    })
+        255
+    };
+
+    arguments.expect_exhausted()?;
+    Ok(rgba(red, green, blue, alpha))
 }
 
 #[inline]
 fn parse_rgb_components_rgb<'i, 't, ComponentParser>(
     component_parser: &ComponentParser,
     arguments: &mut Parser<'i, 't>,
-) -> Result<(u8, u8, u8, f32), ParseError<'i, ComponentParser::Error>>
+) -> Result<(u8, u8, u8, bool), ParseError<'i, ComponentParser::Error>>
 where
     ComponentParser: ColorComponentParser<'i>,
 {
@@ -892,21 +621,7 @@ where
         blue = clamp_unit_f32(component_parser.parse_percentage(arguments)?);
     }
 
-    let alpha = parse_alpha(component_parser, arguments, uses_commas)?;
-
-    Ok((red, green, blue, alpha))
-}
-
-#[inline]
-fn parse_rgb<'i, 't, ComponentParser>(
-    component_parser: &ComponentParser,
-    arguments: &mut Parser<'i, 't>,
-) -> Result<Color, ParseError<'i, ComponentParser::Error>>
-where
-    ComponentParser: ColorComponentParser<'i>,
-{
-    let (red, green, blue, alpha) = parse_rgb_components_rgb(component_parser, arguments)?;
-    Ok(rgba(red, green, blue, alpha))
+    Ok((red, green, blue, uses_commas))
 }
 
 /// Parses hsl and hbw syntax, which happens to be identical.
@@ -919,7 +634,7 @@ fn parse_hsl_hwb<'i, 't, ComponentParser>(
     arguments: &mut Parser<'i, 't>,
     to_rgb: impl FnOnce(f32, f32, f32) -> (f32, f32, f32),
     allow_comma: bool,
-) -> Result<Color, ParseError<'i, ComponentParser::Error>>
+) -> Result<(u8, u8, u8, bool), ParseError<'i, ComponentParser::Error>>
 where
     ComponentParser: ColorComponentParser<'i>,
 {
@@ -934,26 +649,19 @@ where
     // Saturation and lightness are clamped to 0% ... 100%
     let uses_commas = allow_comma && arguments.try_parse(|i| i.expect_comma()).is_ok();
 
-    let first_percentage = component_parser
-        .parse_percentage(arguments)?
-        .clamp(0.0, 1.0);
+    let first_percentage = component_parser.parse_percentage(arguments)?.max(0.).min(1.);
 
     if uses_commas {
         arguments.expect_comma()?;
     }
 
-    let second_percentage = component_parser
-        .parse_percentage(arguments)?
-        .clamp(0.0, 1.0);
+    let second_percentage = component_parser.parse_percentage(arguments)?.max(0.).min(1.);
 
     let (red, green, blue) = to_rgb(hue, first_percentage, second_percentage);
     let red = clamp_unit_f32(red);
     let green = clamp_unit_f32(green);
     let blue = clamp_unit_f32(blue);
-
-    let alpha = parse_alpha(component_parser, arguments, uses_commas)?;
-
-    Ok(rgba(red, green, blue, alpha))
+    Ok((red, green, blue, uses_commas))
 }
 
 /// https://drafts.csswg.org/css-color-4/#hwb-to-rgb
@@ -1004,68 +712,4 @@ pub fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (f32, f32, f32) 
     let green = hue_to_rgb(m1, m2, hue_times_3);
     let blue = hue_to_rgb(m1, m2, hue_times_3 - 1.);
     (red, green, blue)
-}
-
-#[inline]
-fn parse_lab_like<'i, 't, ComponentParser>(
-    component_parser: &ComponentParser,
-    arguments: &mut Parser<'i, 't>,
-    lightness_range: f32,
-    a_b_range: f32,
-    into_color: fn(l: f32, a: f32, b: f32, alpha: f32) -> Color,
-) -> Result<Color, ParseError<'i, ComponentParser::Error>>
-where
-    ComponentParser: ColorComponentParser<'i>,
-{
-    let lightness = match component_parser.parse_number_or_percentage(arguments)? {
-        NumberOrPercentage::Number { value } => value,
-        NumberOrPercentage::Percentage { unit_value } => unit_value * lightness_range,
-    };
-
-    macro_rules! parse_a_b {
-        () => {{
-            match component_parser.parse_number_or_percentage(arguments)? {
-                NumberOrPercentage::Number { value } => value,
-                NumberOrPercentage::Percentage { unit_value } => unit_value * a_b_range,
-            }
-        }};
-    }
-
-    let a = parse_a_b!();
-    let b = parse_a_b!();
-
-    let alpha = parse_alpha(component_parser, arguments, false)?;
-
-    Ok(into_color(lightness, a, b, alpha))
-}
-
-#[inline]
-fn parse_lch_like<'i, 't, ComponentParser>(
-    component_parser: &ComponentParser,
-    arguments: &mut Parser<'i, 't>,
-    lightness_range: f32,
-    chroma_range: f32,
-    into_color: fn(l: f32, c: f32, h: f32, alpha: f32) -> Color,
-) -> Result<Color, ParseError<'i, ComponentParser::Error>>
-where
-    ComponentParser: ColorComponentParser<'i>,
-{
-    // for L: 0% = 0.0, 100% = 100.0
-    let lightness = match component_parser.parse_number_or_percentage(arguments)? {
-        NumberOrPercentage::Number { value } => value,
-        NumberOrPercentage::Percentage { unit_value } => unit_value * lightness_range,
-    };
-
-    // for C: 0% = 0, 100% = 150
-    let chroma = match component_parser.parse_number_or_percentage(arguments)? {
-        NumberOrPercentage::Number { value } => value,
-        NumberOrPercentage::Percentage { unit_value } => unit_value * chroma_range,
-    };
-
-    let hue_degrees = component_parser.parse_angle_or_number(arguments)?.degrees();
-    let hue = hue_degrees - 360. * (hue_degrees / 360.).floor();
-
-    let alpha = parse_alpha(component_parser, arguments, false)?;
-
-    Ok(into_color(lightness, chroma, hue, alpha))
 }

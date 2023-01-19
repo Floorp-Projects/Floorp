@@ -9,7 +9,7 @@
 ${helpers.predefined_type(
     "color",
     "ColorPropertyValue",
-    "::cssparser::RGBA::new(0, 0, 0, 1.0)",
+    "::cssparser::RGBA::new(0, 0, 0, 255)",
     engines="gecko servo-2013 servo-2020",
     animation_value_type="AnimatedRGBA",
     ignored_when_colors_disabled="True",
