@@ -653,11 +653,6 @@ partial namespace ChromeUtils {
    * Returns whether the background of the element is dark.
    */
   boolean isDarkBackground(Element element);
-
-  /**
-   * Starts the JSOracle process for ORB JavaScript validation, if it hasn't started already.
-   */
-   undefined ensureJSOracleStarted();
 };
 
 /*
