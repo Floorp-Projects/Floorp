@@ -4842,11 +4842,4 @@ void Element::SetHTML(const nsAString& aInnerHTML,
   }
 }
 
-bool Element::Translate() const {
-  if (const auto* parent = Element::FromNodeOrNull(mParent)) {
-    return parent->Translate();
-  }
-  return true;
-}
-
 }  // namespace mozilla::dom
