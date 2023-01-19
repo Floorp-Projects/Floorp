@@ -1640,6 +1640,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitRefCast();
   [[nodiscard]] bool emitBrOnCastCommon(bool onSuccess);
   [[nodiscard]] bool emitRefAsStruct();
+  [[nodiscard]] bool emitBrOnNonStruct();
   [[nodiscard]] bool emitExternInternalize();
   [[nodiscard]] bool emitExternExternalize();
 

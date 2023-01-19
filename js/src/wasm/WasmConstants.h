@@ -497,6 +497,8 @@ enum class GcOp {
 
   // Dart compatibility instruction
   RefAsStruct = 0x59,
+  BrOnNonStruct = 0x64,
+
   // Extern/any coercion operations
   ExternInternalize = 0x70,
   ExternExternalize = 0x71,
