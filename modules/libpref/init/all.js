@@ -205,8 +205,6 @@ pref("browser.helperApps.neverAsk.saveToDisk", "");
 pref("browser.helperApps.neverAsk.openFile", "");
 pref("browser.helperApps.deleteTempFileOnExit", false);
 
-// xxxbsmedberg: where should prefs for the toolkit go?
-pref("browser.chrome.toolbar_tips",         true);
 // max image size for which it is placed in the tab icon for tabbrowser.
 // if 0, no images are used for tab icons for image documents.
 pref("browser.chrome.image_icons.max_size", 1024);
