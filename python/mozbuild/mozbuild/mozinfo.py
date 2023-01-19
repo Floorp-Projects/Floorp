@@ -96,7 +96,6 @@ def build_dict(config, env=os.environ):
     d["artifact"] = substs.get("MOZ_ARTIFACT_BUILDS") == "1"
     d["ccov"] = substs.get("MOZ_CODE_COVERAGE") == "1"
     d["cc_type"] = substs.get("CC_TYPE")
-    d["non_native_theme"] = True
     d["domstreams"] = substs.get("MOZ_DOM_STREAMS") == "1"
     d["isolated_process"] = (
         substs.get("MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS") == "1"
