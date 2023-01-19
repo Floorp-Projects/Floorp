@@ -355,12 +355,6 @@ Trivial crate with a single proc macro to compute the max length of the inputs
 to a match expression.
 """
 
-[[audits.cssparser-macros]]
-who = "Tiaan Louw <tlouw@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.6.0 -> 0.6.0@git:722b30d2f1634714befab967ecae627813fa4cf0"
-notes = "We are pulling this package from a non crates.io source until the changes are published. No changes were made to the code."
-
 [[audits.cstr]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"

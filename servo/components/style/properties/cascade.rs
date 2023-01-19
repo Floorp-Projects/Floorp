@@ -434,11 +434,9 @@ fn tweak_when_ignoring_colors(
         return;
     }
 
-    fn alpha_channel(color: &Color, context: &computed::Context) -> f32 {
+    fn alpha_channel(color: &Color, context: &computed::Context) -> u8 {
         // We assume here currentColor is opaque.
-        let color = color
-            .to_computed_value(context)
-            .into_rgba(RGBA::new(0, 0, 0, 1.0));
+        let color = color.to_computed_value(context).into_rgba(RGBA::new(0, 0, 0, 255));
         color.alpha
     }
 
@@ -461,7 +459,7 @@ fn tweak_when_ignoring_colors(
             // otherwise, this is needed to preserve semi-transparent
             // backgrounds.
             let alpha = alpha_channel(color, context);
-            if alpha == 0.0 {
+            if alpha == 0 {
                 return;
             }
             let mut color = context.builder.device.default_background_color();
@@ -477,7 +475,7 @@ fn tweak_when_ignoring_colors(
             // If the inherited color would be transparent, but we would
             // override this with a non-transparent color, then override it with
             // the default color. Otherwise just let it inherit through.
-            if context.builder.get_parent_inherited_text().clone_color().alpha == 0.0 {
+            if context.builder.get_parent_inherited_text().clone_color().alpha == 0 {
                 let color = context.builder.device.default_color();
                 declarations_to_apply_unless_overriden.push(PropertyDeclaration::Color(
                     specified::ColorPropertyValue(color.into()),

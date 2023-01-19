@@ -35,10 +35,6 @@ notes = "This is a crate Henri wrote which is also published. We should probably
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
 
-[policy.cssparser-macros]
-audit-as-crates-io = true
-notes = "Using non-crates.io revision because the color-4 changes has not been published yet."
-
 [policy.geckodriver]
 audit-as-crates-io = false
 criteria = "safe-to-run"
