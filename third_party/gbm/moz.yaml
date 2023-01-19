@@ -1,0 +1,58 @@
+# Versio of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Core"
+  component: "WebRTC"
+
+# The source in this directory was copied from upstream by running the
+# update.py script from third_party/libdrm. Any changes made relative to
+# upstream should be reflected in that script, e.g. by applying patch files
+# after the copy step.
+
+origin:
+  name: "libgbm"
+  description: "Graphics buffer manipulation components of Mesa"
+
+  url: "https://gitlab.freedesktop.org/mesa/mesa"
+  license: MIT
+
+  # update.sh will update this value
+  release: "TBD"
+
+  revision: 32552010d1e0243948aebd6b6642ba9aeb979004
+  # The codebase does not provide a LICENSE file!
+  # https://docs.mesa3d.org/license.html#license-copyright-information
+  # license-file: LICENSE
+
+updatebot:
+  maintainer-phab: chew
+  maintainer-bz: ngrunbaum@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
+
+vendoring:
+  url: https://gitlab.freedesktop.org/mesa/mesa
+  source-hosting: gitlab
+  vendor-directory: third_party/gbm/gbm
+  skip-vendoring-steps: ['update-moz-build'] 
+  exclude:
+    - '**'
+    - '**/.*'
+    - '**/.*/**'
+    - '**/.*/**/.*'
+
+  include:
+    - src/gbm/main/gbm.h
+
+  keep:
+    - LICENSE
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/src/gbm/main/gbm.h'
+      to: '{vendor_dir}/gbm.h'
+
