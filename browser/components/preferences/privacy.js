@@ -197,6 +197,7 @@ Preferences.addAll([
   // Cookie Banner Handling
   { id: "cookiebanners.ui.desktop.enabled", type: "bool" },
   { id: "cookiebanners.service.mode", type: "int" },
+  { id: "cookiebanners.service.detectOnly", type: "bool" },
 ]);
 
 // Study opt out
@@ -1993,11 +1994,12 @@ var gPrivacyPane = {
    *
    * This UI is shown if the "cookiebanners.ui.desktop.enabled" pref is true.
    *
-   * The cookie banner handling checkbox tracks the state of the integer-valued
-   * "cookiebanners.service.mode" pref: unchecked if the value is either
-   * nsICookieBannerService.MODE_DISABLED, meaning the feature is turned off, or
-   * nsICookieBannerService.MODE_DETECT_ONLY, which is used to allow us to
-   * advertise the feature to the user via an onboarding doorhanger.
+   * The cookie banner handling checkbox reflects the cookie banner feature
+   * state. It is enabled when the service enabled via the
+   * cookiebanners.service.mode pref. If detection-only mode is enabled the
+   * checkbox is unchecked, since in this mode no banners are handled. It is
+   * only used for detection for banners which means we may prompt the user to
+   * enable the feature via other UI surfaces such as the onboarding doorhanger.
    *
    * If the user checks the checkbox, the pref value is set to
    * nsICookieBannerService.MODE_REJECT_OR_ACCEPT.
@@ -2032,17 +2034,17 @@ var gPrivacyPane = {
   },
 
   /**
-   * Reads the cookiebanners.service.mode preference value and updates
-   * the cookie banner handling checkbox accordingly.
+   * Reads the cookiebanners.service.mode and detectOnly preference value and
+   * updates the cookie banner handling checkbox accordingly.
    */
   readCookieBannerMode() {
-    let mode = Preferences.get("cookiebanners.service.mode").value;
-    let disabledModes = [
-      Ci.nsICookieBannerService.MODE_DISABLED,
-      Ci.nsICookieBannerService.MODE_DETECT_ONLY,
-    ];
-    let isEnabled = !disabledModes.includes(mode);
-    return isEnabled;
+    if (Preferences.get("cookiebanners.service.detectOnly").value) {
+      return false;
+    }
+    return (
+      Preferences.get("cookiebanners.service.mode").value !=
+      Ci.nsICookieBannerService.MODE_DISABLED
+    );
   },
 
   /**
