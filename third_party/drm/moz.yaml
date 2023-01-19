@@ -1,0 +1,56 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Core"
+  component: "WebRTC"
+
+# The source in this directory was copied from upstream by running the
+# update.py script from third_party/libdrm. Any changes made relative to
+# upstream should be reflected in that script, e.g. by applying patch files
+# after the copy step.
+
+origin:
+  name: "libdrm"
+  description: "Userspace interface to controlling GPUs on linux"
+
+  url: "https://cgit.freedesktop.org/drm/libdrm/"
+  license: MIT
+
+  release: 0e2c7d05712d65903a9b77fb9f960ddff43bac64
+
+  revision: b9ca37b3134861048986b75896c0915cbf2e97f9
+  # The codebase does not provide a LICENSE file!
+  # https://docs.mesa3d.org/license.html#license-copyright-information
+  # license-file: LICENSE
+
+updatebot:
+  maintainer-phab: chew
+  maintainer-bz: ngrunbaum@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
+
+vendoring:
+  url: https://gitlab.freedesktop.org/mesa/drm
+  source-hosting: gitlab
+  vendor-directory: third_party/drm/drm
+  skip-vendoring-steps: ['update-moz-build'] 
+  exclude:
+    - '**'
+    - '**/.*'
+
+  include:
+    - include/drm/drm.h
+    - include/drm/drm_fourcc.h
+    - include/drm/drm_mode.h
+    - xf86drm.h
+  keep:
+    - LICENSE
+  update-actions:
+    - action: move-dir
+      from: '{vendor_dir}/include/drm'
+      to: '{vendor_dir}/include/libdrm'
+
