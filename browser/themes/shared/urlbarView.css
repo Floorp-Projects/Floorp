@@ -18,8 +18,6 @@
 
   --urlbarView-favicon-width: 16px;
   --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
-
-  --urlbarView-button-background-opacity: 60%;
 }
 
 :root:-moz-lwtheme {
@@ -41,12 +39,6 @@
 
 :root[lwt-toolbar-field-focus-brighttext] {
   --urlbar-popup-action-color: rgb(191,191,201);
-}
-
-@media (prefers-contrast) {
-  :root {
-    --urlbarView-button-background-opacity: 100%;
-  }
 }
 
 :root:-moz-locale-dir(rtl) {
@@ -89,8 +81,7 @@
   align-items: center;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
-  margin-block: 2px;
-  border-radius: var(--toolbarbutton-border-radius);
+  padding-block: 2px;
 }
 
 :root:not([uidensity=compact]) .urlbarView-row:not([type=tip], [type=dynamic]) {
@@ -106,6 +97,7 @@
   flex: 1 1;
   flex-wrap: nowrap;
   overflow: hidden;
+  border-radius: var(--toolbarbutton-border-radius);
   padding-inline: var(--urlbarView-item-inline-padding);
   padding-block: 6px;
 }
@@ -214,11 +206,13 @@
   text-align: right;
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic]):hover {
+.urlbarView-row[selectable]:hover > .urlbarView-row-inner,
+.urlbarView-row-inner[selectable]:hover {
   background-color: var(--autocomplete-popup-hover-background);
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic])[selected] {
+.urlbarView-row[selectable][selected] > .urlbarView-row-inner,
+.urlbarView-row-inner[selectable][selected] {
   background-color: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
 }
@@ -293,27 +287,22 @@
   display: inline-block;
   min-width: 24px;
   min-height: 24px;
+  vertical-align: middle;
   background-size: 16px;
   background-position: center;
   background-repeat: no-repeat;
   margin-inline: 4px;
   -moz-context-properties: fill, fill-opacity;
-  border-radius: 100%;
+  border-radius: var(--toolbarbutton-border-radius);
 }
 
 .urlbarView-button[selected] {
   outline: var(--focus-outline);
-  outline-color: currentColor;
-  outline-offset: 1px;
 }
 
-.urlbarView-row:is(:hover, [selected]) > .urlbarView-button-menu:empty:not(:hover, [open]) {
-  background-color: color-mix(in srgb, var(--toolbar-field-focus-background-color) var(--urlbarView-button-background-opacity), transparent);
-}
-
-.urlbarView-button:is(:hover, [open]) {
-  fill: var(--toolbar-field-focus-background-color);
-  background-color: color-mix(in srgb, currentColor var(--urlbarView-button-background-opacity), transparent);
+.urlbarView-button:hover,
+.urlbarView-button[open] {
+  background-color: var(--autocomplete-popup-hover-background);
 }
 
 .urlbarView-button + .urlbarView-button {
@@ -330,10 +319,6 @@
 
 .urlbarView-button-menu {
   background-image: url("chrome://global/skin/icons/more.svg");
-}
-
-.urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + .urlbarView-button-menu:not([open]) {
-  display: none;
 }
 
 .urlbarView-button:not(:empty) {
@@ -367,7 +352,8 @@
 .urlbarView-button:not(:empty)[selected] {
   color: var(--button-primary-color);
   background-color: var(--button-primary-bgcolor);
-  outline-offset: var(--focus-outline-offset);
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .urlbarView-button:not(:empty)[selected]:hover {
@@ -386,6 +372,12 @@
 .urlbarView-button:not(:empty):last-child {
   /* Add space between a labeled button and the trailing edge of the panel. */
   margin-inline-end: 1.8em;
+}
+
+/* When the last button is unlabeled, vertically align it with the settings icon
+   in the search shortcuts. */
+.urlbarView-button:empty:last-child {
+  margin-inline-end: 2px;
 }
 
 /* Tip rows */
@@ -594,9 +586,12 @@
   line-height: 1.4;
 }
 
-.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
-.urlbarView-row:hover > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap >.urlbarView-action,
+.urlbarView-row:hover > .urlbarView-row-inner > .urlbarView-no-wrap >.urlbarView-action,
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-url,
+.urlbarView-row-inner[selected] > .urlbarView-no-wrap >.urlbarView-action,
+.urlbarView-row-inner:hover > .urlbarView-no-wrap >.urlbarView-action,
+.urlbarView-row-inner[selected] > .urlbarView-url,
 .urlbarView-row[type=tabtosearch][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
   color: inherit;
 }
@@ -725,7 +720,8 @@
   opacity: 0.6;
 }
 
-.urlbarView-row[type=bestmatch][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
+.urlbarView-row[type=bestmatch][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom,
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner[selected] > .urlbarView-row-body > .urlbarView-row-body-bottom {
   opacity: 1;
 }
 
