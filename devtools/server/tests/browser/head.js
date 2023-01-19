@@ -36,23 +36,6 @@ const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 // All tests are asynchronous.
 waitForExplicitFinish();
 
-/**
- * Add a new test tab in the browser and load the given url.
- * @param {String} url The url to be loaded in the new tab
- * @return a promise that resolves to the new browser that the document
- *         is loaded in. Note that we cannot return the document
- *         directly, as we aren't able to access that in the parent.
- */
-var addTab = async function(url) {
-  info(`Adding a new tab with URL: ${url}`);
-  const tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-
-  info(`Tab added a URL ${url} loaded`);
-
-  return tab.linkedBrowser;
-};
-
 // does almost the same thing as addTab, but directly returns an object
 async function addTabTarget(url) {
   info(`Adding a new tab with URL: ${url}`);

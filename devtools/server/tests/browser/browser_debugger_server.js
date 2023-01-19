@@ -17,15 +17,14 @@ add_task(async function() {
 });
 
 async function testDevToolsServerInitialized() {
-  const browser = await addTab("data:text/html;charset=utf-8,foo");
-  const tab = gBrowser.getTabForBrowser(browser);
+  const tab = await addTab("data:text/html;charset=utf-8,foo");
 
   ok(
     !DevToolsServer.initialized,
     "By default, the DevToolsServer isn't initialized in parent process"
   );
   await assertServerInitialized(
-    browser,
+    tab,
     false,
     "By default, the DevToolsServer isn't initialized not in content process"
   );
@@ -37,7 +36,7 @@ async function testDevToolsServerInitialized() {
     "Creating the commands will initialize the DevToolsServer in parent process"
   );
   await assertServerInitialized(
-    browser,
+    tab,
     false,
     "Creating the commands isn't enough to initialize the DevToolsServer in content process"
   );
@@ -45,7 +44,7 @@ async function testDevToolsServerInitialized() {
   await commands.targetCommand.startListening();
 
   await assertServerInitialized(
-    browser,
+    tab,
     true,
     "Initializing the TargetCommand will initialize the DevToolsServer in content process"
   );
@@ -58,7 +57,7 @@ async function testDevToolsServerInitialized() {
     "Destroying the commands destroys the DevToolsServer in the parent process"
   );
   await assertServerInitialized(
-    browser,
+    tab,
     false,
     "But destroying the commands ends up destroying the DevToolsServer in the content process"
   );
@@ -68,11 +67,10 @@ async function testDevToolsServerInitialized() {
 }
 
 async function testDevToolsServerKeepAlive() {
-  const browser = await addTab("data:text/html;charset=utf-8,foo");
-  const tab = gBrowser.getTabForBrowser(browser);
+  const tab = await addTab("data:text/html;charset=utf-8,foo");
 
   await assertServerInitialized(
-    browser,
+    tab,
     false,
     "Server not started in content process"
   );
@@ -80,21 +78,17 @@ async function testDevToolsServerKeepAlive() {
   const commands = await CommandsFactory.forTab(tab);
   await commands.targetCommand.startListening();
 
-  await assertServerInitialized(
-    browser,
-    true,
-    "Server started in content process"
-  );
+  await assertServerInitialized(tab, true, "Server started in content process");
 
   info("Set DevToolsServer.keepAlive to true in the content process");
   DevToolsServer.keepAlive = true;
-  await setContentServerKeepAlive(browser, true);
+  await setContentServerKeepAlive(tab, true);
 
   info("Destroy the commands, the content server should be kept alive");
   await commands.destroy();
 
   await assertServerInitialized(
-    browser,
+    tab,
     true,
     "Server still running in content process"
   );
@@ -106,7 +100,7 @@ async function testDevToolsServerKeepAlive() {
 
   info("Set DevToolsServer.keepAlive back to false");
   DevToolsServer.keepAlive = false;
-  await setContentServerKeepAlive(browser, false);
+  await setContentServerKeepAlive(tab, false);
 
   info("Create and destroy a commands again");
   const newCommands = await CommandsFactory.forTab(tab);
@@ -115,7 +109,7 @@ async function testDevToolsServerKeepAlive() {
   await newCommands.destroy();
 
   await assertServerInitialized(
-    browser,
+    tab,
     false,
     "Server stopped in content process"
   );
@@ -129,21 +123,27 @@ async function testDevToolsServerKeepAlive() {
   DevToolsServer.destroy();
 }
 
-async function assertServerInitialized(browser, expected, message) {
-  const isInitialized = await SpecialPowers.spawn(browser, [], function() {
-    const { require } = ChromeUtils.importESModule(
-      "resource://devtools/shared/loader/Loader.sys.mjs"
-    );
-    const {
-      DevToolsServer,
-    } = require("resource://devtools/server/devtools-server.js");
-    return DevToolsServer.initialized;
-  });
+async function assertServerInitialized(tab, expected, message) {
+  const isInitialized = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    function() {
+      const { require } = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs"
+      );
+      const {
+        DevToolsServer,
+      } = require("resource://devtools/server/devtools-server.js");
+      return DevToolsServer.initialized;
+    }
+  );
   is(isInitialized, expected, message);
 }
 
-async function setContentServerKeepAlive(browser, keepAlive, message) {
-  await SpecialPowers.spawn(browser, [keepAlive], function(_keepAlive) {
+async function setContentServerKeepAlive(tab, keepAlive, message) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [keepAlive], function(
+    _keepAlive
+  ) {
     const { require } = ChromeUtils.importESModule(
       "resource://devtools/shared/loader/Loader.sys.mjs"
     );

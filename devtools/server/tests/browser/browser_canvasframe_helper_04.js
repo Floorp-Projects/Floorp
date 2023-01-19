@@ -12,8 +12,10 @@ const TEST_URL_2 =
   "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test 2";
 
 add_task(async function() {
-  const browser = await addTab(TEST_URL_1);
-  await SpecialPowers.spawn(browser, [TEST_URL_2], async function(url2) {
+  const tab = await addTab(TEST_URL_1);
+  await SpecialPowers.spawn(tab.linkedBrowser, [TEST_URL_2], async function(
+    url2
+  ) {
     const { require } = ChromeUtils.importESModule(
       "resource://devtools/shared/loader/Loader.sys.mjs"
     );

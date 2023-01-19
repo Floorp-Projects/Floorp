@@ -24,7 +24,7 @@ async function openTabAndSetupStorage(url) {
     set: [[LEGACY_ACTORS_PREF, true]],
   });
 
-  const content = await addTab(url);
+  await addTab(url);
 
   // Setup the async storages in main window and for all its iframes
   const browsingContexts = gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
