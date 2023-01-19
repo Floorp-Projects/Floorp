@@ -135,6 +135,7 @@ include = [
   "NonNegativeLengthOrAuto",
   "TextDecorationSkipInk",
   "TextDecorationLength",
+  "Time",
   "Rect",
   "IntersectionObserverRootMargin",
   "Size",
@@ -948,6 +949,11 @@ renaming_overrides_prefixing = true
 "ScrollTimelineName" = """
  public:
   StyleScrollTimelineName(): _0(RefPtr<nsAtom>(nsGkAtoms::_empty).forget()) {}
+"""
+
+"Time" = """
+ float ToSeconds() const { return seconds; }
+ float ToMilliseconds() const { return seconds * 1000.0f; }
 """
 
 "FontFaceSourceTechFlags" = """
