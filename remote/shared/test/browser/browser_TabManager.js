@@ -22,7 +22,7 @@ add_task(async function test_getBrowsingContextById() {
 
   info(`Navigate to ${TEST_URL}`);
   const loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURI(browser, TEST_URL);
+  BrowserTestUtils.loadURIString(browser, TEST_URL);
   await loaded;
 
   const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
@@ -135,7 +135,7 @@ add_task(async function test_getTabForBrowsingContext() {
 
     info(`Navigate to ${TEST_URL}`);
     const loaded = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURI(browser, TEST_URL);
+    BrowserTestUtils.loadURIString(browser, TEST_URL);
     await loaded;
 
     const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();

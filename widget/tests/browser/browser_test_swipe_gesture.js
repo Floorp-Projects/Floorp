@@ -49,7 +49,7 @@ add_task(async () => {
     true /* waitForLoad */
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
   // Make sure we can go back to the previous page.
@@ -176,7 +176,7 @@ add_task(async () => {
     true /* waitForLoad */
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
   // Make sure we can go back to the previous page.
@@ -279,7 +279,7 @@ add_task(async () => {
       true /* waitForLoad */
     );
 
-    BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
     // Make sure we can go back to the previous page.
@@ -378,7 +378,7 @@ add_task(async () => {
     true /* waitForLoad */
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
   // Make sure we can go back to the previous page.
@@ -463,7 +463,7 @@ add_task(async () => {
     true /* waitForLoad */
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
   // Make sure we can go back to the previous page.
@@ -562,7 +562,7 @@ add_task(async () => {
     true /* waitForLoad */
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
   // Make sure we can go back to the previous page.
@@ -635,7 +635,7 @@ add_task(async () => {
     true /* waitForLoad */
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
   // Make sure we can go back to the previous page.
@@ -704,7 +704,7 @@ add_task(async () => {
     "chrome://mochitests/content/",
     "http://mochi.test:8888/"
   );
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     tab.linkedBrowser,
     URL_ROOT + "helper_swipe_gesture.html"
   );
@@ -788,7 +788,7 @@ add_task(async () => {
     "chrome://mochitests/content/",
     "http://mochi.test:8888/"
   );
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     tab.linkedBrowser,
     URL_ROOT + "helper_swipe_gesture.html"
   );
@@ -853,7 +853,7 @@ add_task(async () => {
     "chrome://mochitests/content/",
     "http://mochi.test:8888/"
   );
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     tab.linkedBrowser,
     URL_ROOT + "helper_swipe_gesture.html"
   );
@@ -918,7 +918,7 @@ add_task(async () => {
     true /* waitForLoad */
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, secondPage);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
 
   // Make sure we can go back to the previous page.

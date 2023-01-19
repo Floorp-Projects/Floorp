@@ -59,7 +59,7 @@ add_task(async function test_helperapp() {
 
     let askedUserPromise = waitForProtocolAppChooserDialog(browser, true);
 
-    BrowserTestUtils.loadURI(browser, kProt + ":test");
+    BrowserTestUtils.loadURIString(browser, kProt + ":test");
     let dialog = await Promise.race([
       wrongThingHappenedPromise,
       askedUserPromise,

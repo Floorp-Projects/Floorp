@@ -29,7 +29,7 @@ add_task(async function test_profile_fission_no_private_browsing() {
   try {
     const url = BASE_URL_HTTPS + "single_frame.html";
     const contentBrowser = win.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(contentBrowser, url);
+    BrowserTestUtils.loadURIString(contentBrowser, url);
     await BrowserTestUtils.browserLoaded(contentBrowser, false, url);
 
     const parentPid = Services.appinfo.processID;
@@ -142,7 +142,7 @@ add_task(async function test_profile_fission_private_browsing() {
   try {
     const url = BASE_URL_HTTPS + "single_frame.html";
     const contentBrowser = win.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(contentBrowser, url);
+    BrowserTestUtils.loadURIString(contentBrowser, url);
     await BrowserTestUtils.browserLoaded(contentBrowser, false, url);
 
     const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {

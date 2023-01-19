@@ -199,7 +199,7 @@ async function assertOfflineNavigationFails() {
   const browser = gBrowser.selectedTab.linkedBrowser;
   let netErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
 
-  BrowserTestUtils.loadURI(browser, pageEmptyURL);
+  BrowserTestUtils.loadURIString(browser, pageEmptyURL);
   await netErrorLoaded;
 }
 

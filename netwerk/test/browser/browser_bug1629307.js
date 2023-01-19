@@ -30,7 +30,7 @@ add_task(async function() {
     })
     .catch(function() {});
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URL);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, URL);
 
   // wait until the page and its iframe page is loaded
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, true, URL);

@@ -63,7 +63,7 @@ async function doGC() {
  */
 async function loadURL(browser, url) {
   const loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURI(browser, url);
+  BrowserTestUtils.loadURIString(browser, url);
   return loaded;
 }
 

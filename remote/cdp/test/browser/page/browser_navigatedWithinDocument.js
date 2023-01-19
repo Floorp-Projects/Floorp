@@ -128,6 +128,6 @@ function navigateToAnchor(baseUrl, hash) {
     gBrowser,
     url
   );
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
   return onLocationChange;
 }
