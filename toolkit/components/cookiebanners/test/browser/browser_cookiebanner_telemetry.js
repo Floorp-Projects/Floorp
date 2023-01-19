@@ -11,7 +11,6 @@ const {
   MODE_DISABLED,
   MODE_REJECT,
   MODE_REJECT_OR_ACCEPT,
-  MODE_DETECT_ONLY,
   MODE_UNSET,
 } = Ci.nsICookieBannerService;
 
@@ -19,7 +18,6 @@ const TEST_MODES = [
   MODE_DISABLED,
   MODE_REJECT,
   MODE_REJECT_OR_ACCEPT,
-  MODE_DETECT_ONLY,
   MODE_UNSET, // Should be recorded as invalid.
   99, // Invalid
   -1, // Invalid
@@ -33,8 +31,6 @@ function convertModeToTelemetryString(mode) {
       return "reject";
     case MODE_REJECT_OR_ACCEPT:
       return "reject_or_accept";
-    case MODE_DETECT_ONLY:
-      return "detect_only";
   }
 
   return "invalid";
@@ -168,13 +164,7 @@ add_task(async function test_service_mode_telemetry() {
       service.observe(null, "idle-daily", null);
 
       // Verify the telemetry value.
-      for (let label of [
-        "disabled",
-        "reject",
-        "reject_or_accept",
-        "detect_only",
-        "invalid",
-      ]) {
+      for (let label of ["disabled", "reject", "reject_or_accept", "invalid"]) {
         let expected = convertModeToTelemetryString(mode) == label;
         let expectedPBM = convertModeToTelemetryString(modePBM) == label;
 

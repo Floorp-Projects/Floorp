@@ -9,13 +9,16 @@ add_setup(clickTestSetup);
  * Test that the banner clicking won't click banner if the service is disabled or in detect-only mode.
  */
 add_task(async function test_cookie_banner_service_disabled() {
-  for (let mode of [
-    Ci.nsICookieBannerService.MODE_DISABLED,
-    Ci.nsICookieBannerService.MODE_DETECT_ONLY,
+  for (let [serviceMode, detectOnly] of [
+    [Ci.nsICookieBannerService.MODE_DISABLED, false],
+    [Ci.nsICookieBannerService.MODE_DISABLED, true],
+    [Ci.nsICookieBannerService.MODE_REJECT, true],
+    [Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT, true],
   ]) {
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["cookiebanners.service.mode", mode],
+        ["cookiebanners.service.mode", serviceMode],
+        ["cookiebanners.service.detectOnly", detectOnly],
         [
           "cookiebanners.service.mode.privateBrowsing",
           Ci.nsICookieBannerService.MODE_DISABLED,
@@ -30,6 +33,8 @@ add_task(async function test_cookie_banner_service_disabled() {
       visible: true,
       expected: "NoClick",
     });
+
+    await SpecialPowers.popPrefEnv();
   }
 });
 
