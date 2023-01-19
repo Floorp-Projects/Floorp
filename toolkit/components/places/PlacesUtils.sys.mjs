@@ -2028,6 +2028,15 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
         }
         return property;
       },
+      set(target, name, val) {
+        // Forward to the XPCOM object, otherwise don't allow to set properties.
+        if (name in target) {
+          target[name] = val;
+          return true;
+        }
+        // This will throw in strict mode.
+        return false;
+      },
     })
   );
 });

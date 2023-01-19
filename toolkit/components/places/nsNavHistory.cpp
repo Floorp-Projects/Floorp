@@ -109,12 +109,6 @@ using namespace mozilla::places;
 #define PREF_FREC_RELOAD_VISIT_BONUS "places.frecency.reloadVisitBonus"
 #define PREF_FREC_RELOAD_VISIT_BONUS_DEF 0
 
-// This is a 'hidden' pref for the purposes of unit tests.
-#define PREF_FREC_DECAY_RATE "places.frecency.decayRate"
-#define PREF_FREC_DECAY_RATE_DEF 0.975f
-// An adaptive history entry is removed if unused for these many days.
-#define ADAPTIVE_HISTORY_EXPIRE_DAYS 90
-
 // In order to avoid calling PR_now() too often we use a cached "now" value
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
 #define RENEW_CACHED_NOW_TIMEOUT ((int32_t)3 * PR_MSEC_PER_SEC)
@@ -213,142 +207,6 @@ void GetTagsSqlFragment(int64_t aTagsFolder, const nsACString& aRelation,
   _sqlFragment.AppendLiteral(" AS tags ");
 }
 
-/**
- * Recalculates invalid frecencies in chunks on the storage thread, optionally
- * decays frecencies, and notifies history observers on the main thread.
- */
-class FixAndDecayFrecencyRunnable final : public Runnable {
- public:
-  explicit FixAndDecayFrecencyRunnable(Database* aDB, float aDecayRate)
-      : Runnable("places::FixAndDecayFrecencyRunnable"),
-        mDB(aDB),
-        mDecayRate(aDecayRate),
-        mDecayReason(mozIStorageStatementCallback::REASON_FINISHED) {}
-
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is marked
-  // MOZ_CAN_RUN_SCRIPT.  See bug 1535398.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD Run() override {
-    if (NS_IsMainThread()) {
-      nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-      NS_ENSURE_STATE(navHistory);
-
-      navHistory->DecayFrecencyCompleted();
-
-      if (mozIStorageStatementCallback::REASON_FINISHED == mDecayReason) {
-        NotifyRankingChanged().Run();
-      }
-
-      return NS_OK;
-    }
-
-    MOZ_ASSERT(!NS_IsMainThread(),
-               "Frecencies should be recalculated on async thread");
-
-    nsCOMPtr<mozIStorageStatement> updateStmt = mDB->GetStatement(
-        "UPDATE moz_places "
-        "SET frecency = CALCULATE_FRECENCY(id) "
-        "WHERE id IN ("
-        "SELECT id FROM moz_places "
-        "WHERE recalc_frecency = 1 "
-        "ORDER BY frecency DESC "
-        "LIMIT 400"
-        ")");
-    NS_ENSURE_STATE(updateStmt);
-    nsresult rv = updateStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<mozIStorageStatement> selectStmt = mDB->GetStatement(
-        "SELECT id FROM moz_places WHERE recalc_frecency = 1 "
-        "LIMIT 1");
-    NS_ENSURE_STATE(selectStmt);
-    bool hasResult = false;
-    rv = selectStmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasResult) {
-      // There are more invalid frecencies to fix. Re-dispatch to the async
-      // storage thread for the next chunk.
-      return NS_DispatchToCurrentThread(this);
-    }
-
-    mozStorageTransaction transaction(
-        mDB->MainConn(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-    // XXX Handle the error, bug 1696133.
-    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
-
-    if (NS_WARN_IF(NS_FAILED(DecayFrecencies()))) {
-      mDecayReason = mozIStorageStatementCallback::REASON_ERROR;
-    }
-
-    // We've finished fixing and decaying frecencies. Trigger frecency updates
-    // for all affected origins.
-    nsCOMPtr<mozIStorageStatement> updateOriginFrecenciesStmt =
-        mDB->GetStatement("DELETE FROM moz_updateoriginsupdate_temp");
-    NS_ENSURE_STATE(updateOriginFrecenciesStmt);
-    rv = updateOriginFrecenciesStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Re-dispatch to the main thread to notify observers.
-    return NS_DispatchToMainThread(this);
-  }
-
- private:
-  nsresult DecayFrecencies() {
-    TimeStamp start = TimeStamp::Now();
-
-    // Globally decay places frecency rankings to estimate reduced frecency
-    // values of pages that haven't been visited for a while, i.e., they do
-    // not get an updated frecency.  A scaling factor of .975 results in .5 the
-    // original value after 28 days.
-    // When changing the scaling factor, ensure that the barrier in
-    // moz_places_afterupdate_frecency_trigger still ignores these changes.
-    nsCOMPtr<mozIStorageStatement> decayFrecency = mDB->GetStatement(
-        "UPDATE moz_places SET frecency = ROUND(frecency * :decay_rate) "
-        "WHERE frecency > 0 AND recalc_frecency = 0");
-    NS_ENSURE_STATE(decayFrecency);
-    nsresult rv = decayFrecency->BindDoubleByName(
-        "decay_rate"_ns, static_cast<double>(mDecayRate));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = decayFrecency->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Decay potentially unused adaptive entries (e.g. those that are at 1)
-    // to allow better chances for new entries that will start at 1.
-    nsCOMPtr<mozIStorageStatement> decayAdaptive = mDB->GetStatement(
-        "UPDATE moz_inputhistory SET use_count = use_count * :decay_rate");
-    NS_ENSURE_STATE(decayAdaptive);
-    rv = decayAdaptive->BindDoubleByName("decay_rate"_ns,
-                                         static_cast<double>(mDecayRate));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = decayAdaptive->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Delete any adaptive entries that won't help in ordering anymore.
-    nsCOMPtr<mozIStorageStatement> deleteAdaptive = mDB->GetStatement(
-        "DELETE FROM moz_inputhistory WHERE use_count < :use_count");
-    NS_ENSURE_STATE(deleteAdaptive);
-    rv = deleteAdaptive->BindDoubleByName(
-        "use_count"_ns, std::pow(static_cast<double>(mDecayRate),
-                                 ADAPTIVE_HISTORY_EXPIRE_DAYS));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = deleteAdaptive->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    Telemetry::AccumulateTimeDelta(
-        Telemetry::PLACES_IDLE_FRECENCY_DECAY_TIME_MS, start);
-
-    return NS_OK;
-  }
-
-  RefPtr<Database> mDB;
-  float mDecayRate;
-  uint16_t mDecayReason;
-};
-
 }  // namespace
 
 // Queries rows indexes to bind or get values, if adding a new one, be sure to
@@ -388,7 +246,6 @@ nsNavHistory::nsNavHistory()
       mHistoryEnabled(true),
       mMatchDiacritics(false),
       mNumVisitsForFrecency(10),
-      mDecayFrecencyPendingCount(0),
       mTagsFolder(-1),
       mLastCachedStartOfDay(INT64_MAX),
       mLastCachedEndOfDay(0) {
@@ -623,6 +480,7 @@ nsNavHistory::RecalculateOriginFrecencyStats(nsIObserver* aCallback) {
 
 Atomic<int64_t> nsNavHistory::sLastInsertedPlaceId(0);
 Atomic<int64_t> nsNavHistory::sLastInsertedVisitId(0);
+Atomic<bool> nsNavHistory::sIsFrecencyDecaying(false);
 
 void  // static
 nsNavHistory::StoreLastInsertedId(const nsACString& aTable,
@@ -1936,6 +1794,19 @@ nsNavHistory::MarkPageAsFollowedLink(nsIURI* aURI) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavHistory::GetIsFrecencyDecaying(bool* _out) {
+  NS_ENSURE_ARG_POINTER(_out);
+  *_out = nsNavHistory::sIsFrecencyDecaying;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::SetIsFrecencyDecaying(bool aVal) {
+  nsNavHistory::sIsFrecencyDecaying = aVal;
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// mozIStorageVacuumParticipant
 
@@ -2079,42 +1950,11 @@ nsNavHistory::Observe(nsISupports* aSubject, const char* aTopic,
     LoadPrefs();
   }
 
-  else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
-    (void)DecayFrecency();
-  }
-
   else if (strcmp(aTopic, TOPIC_APP_LOCALES_CHANGED) == 0) {
     mBundle = nullptr;
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistory::DecayFrecency() {
-  float decayRate =
-      Preferences::GetFloat(PREF_FREC_DECAY_RATE, PREF_FREC_DECAY_RATE_DEF);
-  if (decayRate > 1.0f) {
-    MOZ_ASSERT(false, "The frecency decay rate should not be greater than 1.0");
-    decayRate = PREF_FREC_DECAY_RATE_DEF;
-  }
-
-  RefPtr<FixAndDecayFrecencyRunnable> runnable =
-      new FixAndDecayFrecencyRunnable(mDB, decayRate);
-  nsCOMPtr<nsIEventTarget> target = do_GetInterface(mDB->MainConn());
-  NS_ENSURE_STATE(target);
-
-  mDecayFrecencyPendingCount++;
-  return target->Dispatch(runnable, NS_DISPATCH_NORMAL);
-}
-
-void nsNavHistory::DecayFrecencyCompleted() {
-  MOZ_ASSERT(mDecayFrecencyPendingCount > 0);
-  mDecayFrecencyPendingCount--;
-}
-
-bool nsNavHistory::IsFrecencyDecaying() const {
-  return mDecayFrecencyPendingCount > 0;
 }
 
 // Query stuff *****************************************************************

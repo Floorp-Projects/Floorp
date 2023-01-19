@@ -19,7 +19,6 @@ var histograms = {
   PLACES_DATABASE_PAGESIZE_B: val => Assert.equal(val, 32768),
   PLACES_DATABASE_SIZE_PER_PAGE_B: val => Assert.ok(val > 0),
   PLACES_EXPIRATION_STEPS_TO_CLEAN2: val => Assert.ok(val > 1),
-  PLACES_IDLE_FRECENCY_DECAY_TIME_MS: val => Assert.ok(val >= 0),
   PLACES_IDLE_MAINTENANCE_TIME_MS: val => Assert.ok(val > 0),
   PLACES_ANNOS_BOOKMARKS_COUNT: val => Assert.equal(val, 0),
   PLACES_ANNOS_PAGES_COUNT: val => Assert.equal(val, 1),
@@ -122,9 +121,6 @@ add_task(async function test_execute() {
   await promiseForceExpirationStep(2);
 
   // Test idle probes.
-  PlacesUtils.history
-    .QueryInterface(Ci.nsIObserver)
-    .observe(null, "idle-daily", null);
   await PlacesDBUtils.maintenanceOnIdle();
 
   for (let histogramId in histograms) {

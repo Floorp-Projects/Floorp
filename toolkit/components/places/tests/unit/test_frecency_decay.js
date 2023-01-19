@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
+
 const PREF_FREC_DECAY_RATE_DEF = 0.975;
 
 /**
@@ -20,6 +23,21 @@ add_task(async function setup() {
   );
 });
 
+add_task(async function test_isFrecencyDecaying() {
+  let db = await PlacesUtils.promiseDBConnection();
+  async function queryFrecencyDecaying() {
+    return (
+      await db.executeCached(`SELECT is_frecency_decaying()`)
+    )[0].getResultByIndex(0);
+  }
+  PlacesUtils.history.isFrecencyDecaying = true;
+  Assert.equal(PlacesUtils.history.isFrecencyDecaying, true);
+  Assert.equal(await queryFrecencyDecaying(), true);
+  PlacesUtils.history.isFrecencyDecaying = false;
+  Assert.equal(PlacesUtils.history.isFrecencyDecaying, false);
+  Assert.equal(await queryFrecencyDecaying(), false);
+});
+
 add_task(async function test_frecency_decay() {
   let unvisitedBookmarkFrecency = Services.prefs.getIntPref(
     "places.frecency.unvisitedBookmarkBonus"
@@ -34,12 +52,23 @@ add_task(async function test_frecency_decay() {
   });
   await promiseOne;
 
-  // Trigger DecayFrecency.
-  let promiseMany = promiseRankingChanged();
-  PlacesUtils.history
-    .QueryInterface(Ci.nsIObserver)
-    .observe(null, "idle-daily", "");
-  await promiseMany;
+  let histogram = TelemetryTestUtils.getAndClearHistogram(
+    "PLACES_IDLE_FRECENCY_DECAY_TIME_MS"
+  );
+  info("Trigger frecency decay.");
+  Assert.equal(PlacesUtils.history.isFrecencyDecaying, false);
+  let promiseRanking = promiseRankingChanged();
+
+  let svc = Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  );
+  svc.observe(null, "idle-daily", "");
+  Assert.equal(PlacesUtils.history.isFrecencyDecaying, true);
+  info("Wait for completion.");
+  await svc.wrappedJSObject.pendingFrecencyDecayPromise;
+
+  await promiseRanking;
+  Assert.equal(PlacesUtils.history.isFrecencyDecaying, false);
 
   // Now check the new frecency is correct.
   let newFrecency = await PlacesTestUtils.fieldInDB(url, "frecency");
@@ -49,4 +78,7 @@ add_task(async function test_frecency_decay() {
     Math.round(unvisitedBookmarkFrecency * PREF_FREC_DECAY_RATE_DEF),
     "Frecencies should match"
   );
+
+  let snapshot = histogram.snapshot();
+  Assert.greater(snapshot.sum, 0);
 });

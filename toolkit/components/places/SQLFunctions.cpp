@@ -1195,7 +1195,7 @@ IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
   NS_ENSURE_STATE(navHistory);
 
   RefPtr<nsVariant> result = new nsVariant();
-  rv = result->SetAsBool(navHistory->IsFrecencyDecaying());
+  rv = result->SetAsBool(nsNavHistory::sIsFrecencyDecaying);
   NS_ENSURE_SUCCESS(rv, rv);
   result.forget(_result);
   return NS_OK;

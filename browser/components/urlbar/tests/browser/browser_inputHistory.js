@@ -47,8 +47,9 @@ async function bumpScore(
 }
 
 async function decayInputHistory() {
-  PlacesUtils.history.decayFrecency();
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await Cc["@mozilla.org/places/frecency-recalculator;1"]
+    .getService(Ci.nsIObserver)
+    .wrappedJSObject.decay();
 }
 
 add_setup(async function() {

@@ -1148,6 +1148,13 @@ interface nsINavHistoryService : nsISupports
   void recalculateOriginFrecencyStats([optional] in nsIObserver aCallback);
 
   /**
+   * Whether frecency is in the process of being decayed. The value can also
+   * be read through the is_frecency_decaying() SQL function exposed by Places
+   * database connections.
+   */
+  attribute boolean isFrecencyDecaying;
+
+  /**
    * The database connection used by Places.
    */
   readonly attribute mozIStorageConnection DBConnection;
@@ -1182,10 +1189,4 @@ interface nsINavHistoryService : nsISupports
    * May be null if it's too late to get one.
    */
   readonly attribute nsIAsyncShutdownClient connectionShutdownClient;
-
-  /**
-   * Asynchronously recalculates frecency for all the pages that should be
-   * recalculated, then decays frecency and inputhistory values.
-   */
-   void decayFrecency();
 };
