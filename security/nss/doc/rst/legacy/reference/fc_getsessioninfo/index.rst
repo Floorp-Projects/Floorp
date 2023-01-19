@@ -15,7 +15,7 @@ FC_GetSessionInfo
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_GetSessionInfo(
         CK_SESSION_HANDLE hSession,

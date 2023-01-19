@@ -7,7 +7,7 @@ Build instructions
 
    .. note::
 
-      These instructions are outdated.  Use the :ref:`mozilla_projects_nss_building` page for more
+      These instructions are outdated.  Use the :ref:`mozilla_projects_nss_building` page for more
       recent information.
 
    Numerous optional features of NSS builds are controlled through make variables.
@@ -15,13 +15,13 @@ Build instructions
    gmake is GNU make, usually your Linux-distro-regular "make" binary file, unless maybe it is a BSD
    make. Make variables may be set on the gmake command line, e.g.,
 
-   .. code:: eval
+   .. code::
 
         gmake variable=value variable=value target1 target2
 
    or defined in the environment, e.g. (for POSIX shells),
 
-   .. code:: eval
+   .. code::
 
         variable=value; export variable
         gmake target1 target2
@@ -47,7 +47,7 @@ Build instructions
    set to "0".
 
    For Windows, install
-   the `MozillaBuild <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites#mozillabuild>`__ environment
+   the `MozillaBuild <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites#mozillabuild>`__ environment
    and Microsoft Visual Studio 2010. (The free edition works, and other versions like Visual Studio
    2008 and Visual Studio 2012 may also work.) Use start-shell-msvc2010.bat from MozillaBuild to get
    a bash shell with the PATH already configured, and execute these instructions from within that
@@ -56,14 +56,14 @@ Build instructions
    For RHEL-5, you need to use the new assembler. You can install the new assembler as root as
    follows:
 
-   .. code:: notranslate
+   .. code::
 
       yum install binutils220
 
    You can then use the new assembler by adding /usr/libexec/binutils220 to the beginning of your
    build path. This can be done in sh or bash as follows:
 
-   .. code:: notranslate
+   .. code::
 
       export PATH=/usr/libexec/binutils220:$PATH
 
@@ -79,7 +79,7 @@ Build instructions
 
    #. Clone the NSPR and NSS repositories.
 
-      .. code:: notranslate
+      .. code::
 
          hg clone https://hg.mozilla.org/projects/nspr
          hg clone https://hg.mozilla.org/projects/nss
@@ -87,7 +87,7 @@ Build instructions
    #. If you want to build a releases other than the tips of these repositories, then switch to the
       release tags:
 
-      .. code:: notranslate
+      .. code::
 
          cd nspr
          hg update NSPR_4_9_5_RTM
@@ -135,7 +135,7 @@ Build instructions
 
    #. Check out NSPR and NSS:
 
-      .. code:: notranslate
+      .. code::
 
          cvs co -r NSPR_4_9_5_RTM NSPR
          cvs co -r NSS_3_14_2_RTM NSS

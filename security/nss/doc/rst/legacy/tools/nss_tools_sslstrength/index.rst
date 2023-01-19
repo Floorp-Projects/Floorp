@@ -31,7 +31,7 @@ NSS Tools sslstrength
 .. container::
 
    The first form simple lists out the possible ciphers. The letter in the first column of the
-   output is used to identify the cipher preferences in the ciphers=  command.
+   output is used to identify the cipher preferences in the ciphers=  command.
 
    The second form attempts to connect to the named ssl host. The hostname argument must be present.
    However, the port number is an optional argument, and if not given, will default to the https
@@ -49,12 +49,12 @@ NSS Tools sslstrength
    command is a string of characters, where each single character represents a cipher. You can
    obtain this list of character->cipher mappings by doing 'sslstrength ciphers'. For example,
 
-   **    ciphers=bfi** will turn on these cipher preferences and turn off all others.
+   **    ciphers=bfi** will turn on these cipher preferences and turn off all others.
 
-   **    policy=export** or **policy=domestic** will set your policies appropriately.
+   **    policy=export** or **policy=domestic** will set your policies appropriately.
 
-   | **    policy** will default to domestic if not specified.
-   |  
+   | **    policy** will default to domestic if not specified.
+   |  
 
    .. rubric:: Step-up
       :name: step-up
@@ -70,7 +70,7 @@ NSS Tools sslstrength
 .. container::
 
    | You should have a cert7.db in the directory in which you run sslstrength.
-   |  
+   |  
 
 `Other <#other>`__
 ~~~~~~~~~~~~~~~~~~
@@ -78,7 +78,7 @@ NSS Tools sslstrength
 .. container::
 
    | For references, here is a table of well-known SSL port numbers:
-   |  
+   |  
 
    ===== ===
    HTTPS 443

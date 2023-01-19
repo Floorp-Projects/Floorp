@@ -11,7 +11,7 @@ Utilities for nss samples
 .. container::
 
    These utility functions are adapted from those found in the sectool library used by the NSS
-   security tools and other NSS test applications. 
+   security tools and other NSS test applications. 
 
    It shows the following:
 

@@ -292,7 +292,7 @@ NSS reference
 .. container::
 
    A small number of :ref:`mozilla_projects_nss_reference_nspr_functions` are required for using the
-   certificate verification and SSL functions in NSS.  These functions are listed in this section.
+   certificate verification and SSL functions in NSS.  These functions are listed in this section.
 
 .. _error_codes:
 

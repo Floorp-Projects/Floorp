@@ -6,6 +6,7 @@
 #include "stubs.h"
 #endif
 #include "prtypes.h"
+#include "prenv.h"
 #include "secerr.h"
 #include "blapi.h"
 #include "hasht.h"
@@ -30,6 +31,12 @@ nsslow_GetFIPSEnabled(void)
     FILE *f;
     char d;
     size_t size;
+    const char *env;
+
+    env = PR_GetEnvSecure("NSS_FIPS");
+    if (env && (*env == 'y' || *env == 'f' || *env == '1' || *env == 't')) {
+        return 1;
+    }
 
     f = fopen("/proc/sys/crypto/fips_enabled", "r");
     if (!f)

@@ -10,7 +10,7 @@ NSS Sample Code sample6
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       /* Example code to illustrate generation of a secret symmetric key ring
        * that PERSISTS in the NSS database. The symmetric keys can then be used

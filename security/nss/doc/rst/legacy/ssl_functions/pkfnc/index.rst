@@ -48,16 +48,16 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
       #include <certt.h>
 
-   .. code:: notranslate
+   .. code::
 
       CERTCertificate *PK11_FindCertFromNickname(
-         char *nickname,
-         void *wincx);
+         char *nickname,
+         void *wincx);
 
    .. rubric:: Parameters
       :name: parameters
@@ -65,11 +65,11 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the nickname in the certificate    |
+   | .. code::                           | A pointer to the nickname in the certificate    |
    |                                                 | database or to the nickname in the token.       |
    |    nickname                                     |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to application data for the password  |
+   | .. code::                           | A pointer to application data for the password  |
    |                                                 | callback function. This pointer is set with     |
    |    wincx                                        | :ref:`moz                                       |
    |                                                 | illa_projects_nss_ssl_functions_sslfnc#1088040` |
@@ -108,17 +108,17 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax_2
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
       #include <certt.h>
       #include <keyt.h>
 
-   .. code:: notranslate
+   .. code::
 
       SECKEYPrivateKey *PK11_FindKeyByAnyCert(
-         CERTCertificate *cert,
-         void *wincx);
+         CERTCertificate *cert,
+         void *wincx);
 
    .. rubric:: Parameters
       :name: parameters_2
@@ -126,11 +126,11 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a certificate structure in the     |
+   | .. code::                           | A pointer to a certificate structure in the     |
    |                                                 | certificate database.                           |
    |    cert                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to application data for the password  |
+   | .. code::                           | A pointer to application data for the password  |
    |                                                 | callback function. This pointer is set with     |
    |    wincx                                        | :ref:`moz                                       |
    |                                                 | illa_projects_nss_ssl_functions_sslfnc#1088040` |
@@ -166,11 +166,11 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax_3
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
 
-   .. code:: notranslate
+   .. code::
 
       char *PK11_GetSlotName(PK11SlotInfo *slot);
 
@@ -180,7 +180,7 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a slot info structure.             |
+   | .. code::                           | A pointer to a slot info structure.             |
    |                                                 |                                                 |
    |    slot                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -207,11 +207,11 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax_4
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
 
-   .. code:: notranslate
+   .. code::
 
       char *PK11_GetTokenName(PK11SlotInfo *slot);
 
@@ -221,7 +221,7 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a slot info structure.             |
+   | .. code::                           | A pointer to a slot info structure.             |
    |                                                 |                                                 |
    |    slot                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -248,12 +248,12 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax_5
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
       #include <prtypes.h>
 
-   .. code:: notranslate
+   .. code::
 
       PRBool PK11_IsHW(PK11SlotInfo *slot);
 
@@ -263,7 +263,7 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a slot info structure.             |
+   | .. code::                           | A pointer to a slot info structure.             |
    |                                                 |                                                 |
    |    slot                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -284,12 +284,12 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax_6
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
       #include <prtypes.h>
 
-   .. code:: notranslate
+   .. code::
 
       PRBool PK11_IsPresent(PK11SlotInfo *slot);
 
@@ -299,7 +299,7 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a slot info structure.             |
+   | .. code::                           | A pointer to a slot info structure.             |
    |                                                 |                                                 |
    |    slot                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -320,12 +320,12 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax_7
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
       #include <prtypes.h>
 
-   .. code:: notranslate
+   .. code::
 
       PRBool PK11_IsReadOnly(PK11SlotInfo *slot);
 
@@ -335,7 +335,7 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a slot info structure.             |
+   | .. code::                           | A pointer to a slot info structure.             |
    |                                                 |                                                 |
    |    slot                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -357,12 +357,12 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    .. rubric:: Syntax
       :name: syntax_8
 
-   .. code:: notranslate
+   .. code::
 
       #include <pk11func.h>
       #include <prtypes.h>
 
-   .. code:: notranslate
+   .. code::
 
       void PK11_SetPasswordFunc(PK11PasswordFunc func);
 
@@ -372,7 +372,7 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
    This function has the following parameter:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to the callback function to set.      |
+   | .. code::                           | A pointer to the callback function to set.      |
    |                                                 |                                                 |
    |    func                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
@@ -388,25 +388,25 @@ PKCS #11 Functions <#chapter_7_pkcs_11_functions>`__
 
    The callback function set up by ``PK11_SetPasswordFunc`` has the following prototype:
 
-   .. code:: notranslate
+   .. code::
 
       typedef char *(*PK11PasswordFunc)(
-         PK11SlotInfo *slot,
-         PRBool retry,
-         void *arg);
+         PK11SlotInfo *slot,
+         PRBool retry,
+         void *arg);
 
    This callback function has the following parameters:
 
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer to a slot info structure.             |
+   | .. code::                           | A pointer to a slot info structure.             |
    |                                                 |                                                 |
    |    slot                                         |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | Set to ``PR_TRUE`` if this is a retry. This     |
+   | .. code::                           | Set to ``PR_TRUE`` if this is a retry. This     |
    |                                                 | implies that the callback has previously        |
    |    retry                                        | returned the wrong password.                    |
    +-------------------------------------------------+-------------------------------------------------+
-   | .. code:: notranslate                           | A pointer supplied by the application that can  |
+   | .. code::                           | A pointer supplied by the application that can  |
    |                                                 | be used to pass state information. Can be       |
    |    arg                                          | ``NULL``.                                       |
    +-------------------------------------------------+-------------------------------------------------+

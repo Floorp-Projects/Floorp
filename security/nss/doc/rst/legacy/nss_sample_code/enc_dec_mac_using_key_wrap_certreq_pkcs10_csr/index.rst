@@ -703,7 +703,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
        }
 
       /*
-        * Generate the private key   
+        * Generate the private key
         */
        SECKEYPrivateKey *
        GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
@@ -1209,7 +1209,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
                rv = SECFailure;
                goto cleanup;
            }
-          
+
            arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
            if (!arena) {
                fprintf(stderr, "out of memory");
@@ -1226,7 +1226,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
 
           CERT_FinishExtensions(extHandle);
            CERT_FinishCertificateRequestAttributes(cr);
-           
+
            /* Der encode the request */
            encoding = SEC_ASN1EncodeItem(arena, NULL, cr,
                                          SEC_ASN1_GET(CERT_CertificateRequestTemplate));
@@ -1349,7 +1349,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
            PORT_Assert(pubkey != NULL);
            rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
                         ascii, certReqFileName);
-           
+
            if (rv != SECSuccess) {
                PR_fprintf(PR_STDERR, "Failed to create Certificate Request\n");
            }
@@ -1404,7 +1404,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
                                         CERTCertDBHandle *certHandle,
                                         const char       *nickNameStr,
                                         PRBool           sigVerify)
-                       
+
        {
            SECStatus            rv              = SECSuccess;
            PRFileDesc          *headerFile      = NULL;
@@ -1523,7 +1523,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
                rv = SECFailure;
                goto cleanup;
            }
-               
+
            /* Read input file  */
            while ((ptextLen = PR_Read(inFile, ptext, sizeof(ptext))) > 0) {
                if (ptextLen != MODBLOCKSIZE) {
@@ -1582,7 +1582,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
            SECKEYPrivateKey    *privkey         = NULL;
            SECItem             sigItem;
            SECOidTag           hashOIDTag;
-           
+
            /*  Open the header file to write padding */
            headerFile = PR_Open(headerFileName, PR_CREATE_FILE | PR_RDWR | PR_APPEND, 00660);
            if (!headerFile) {
@@ -1609,7 +1609,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
                rv = SECFailure;
                goto cleanup;
            }
-               
+
            /* Sign the contents of the input file */
            rv = SignData(inFileName, privkey, &sigItem);
            if (rv != SECSuccess) {
@@ -1649,7 +1649,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
            SECKEYPublicKey     *pubkey          = NULL;
            SECItem             sigItem;
            SECItem             certData;
-           
+
 
           /* Open the input file  */
            inFile = PR_Open(inFileName, PR_RDONLY, 0);
@@ -1699,7 +1699,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
                PR_fprintf(PR_STDERR, "Could not read signature from header file\n");
                goto cleanup;
            }
-               
+
            /* Verify with the public key */
            rv = VerifyData(inFileName, pubkey, &sigItem, pwdata);
            if (rv != SECSuccess) {
@@ -1890,7 +1890,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
            PRBool              selfsign                = PR_FALSE;
            PRBool              ascii                   = PR_FALSE;
            PRBool              sigVerify               = PR_FALSE;
-           
+
            const char          *headerFileName         = NULL;
            const char          *encryptedFileName      = NULL;
            const char          *inFileName             = NULL;

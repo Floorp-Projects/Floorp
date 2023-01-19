@@ -53,7 +53,7 @@ Introduction to Network Security Services
    Windows and Unix use different naming conventions for static and dynamic libraries:
 
    ======= ======== ==================
-           Windows  Unix
+           Windows  Unix
    static  ``.lib`` ``.a``
    dynamic ``.dll`` ``.so`` or ``.sl``
    ======= ======== ==================

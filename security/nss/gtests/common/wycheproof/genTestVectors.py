@@ -91,73 +91,6 @@ class ChaChaPoly():
 
         return result
 
-# Writes one Curve25519 testvector into C-header format. (Not clang-format conform)
-class Curve25519():
-    """Class that provides the generator function for a single curve25519 test case."""
-
-    # Static pkcs8 and skpi wrappers for the raw keys from Wycheproof.
-    # The public key section of the pkcs8 wrapper is filled up with 0's, which is
-    # not correct, but acceptable for the tests at this moment because
-    # validity of the public key is not checked.
-    # It's still necessary because of
-    # https://searchfox.org/nss/rev/7bc70a3317b800aac07bad83e74b6c79a9ec5bff/lib/pk11wrap/pk11pk12.c#171
-    pkcs8WrapperStart = "3067020100301406072a8648ce3d020106092b06010401da470f01044c304a0201010420"
-    pkcs8WrapperEnd = "a1230321000000000000000000000000000000000000000000000000000000000000000000"
-    spkiWrapper = "3039301406072a8648ce3d020106092b06010401da470f01032100"
-
-    def format_testcase(self, testcase, curve):
-        result = '\n// Comment: {}'.format(testcase['comment'])
-        result += '\n{{{},\n'.format(testcase['tcId'])
-        result += '{},\n'.format(string_to_hex_array(self.pkcs8WrapperStart + testcase['private'] + self.pkcs8WrapperEnd))
-        result += '{},\n'.format(string_to_hex_array(self.spkiWrapper + testcase['public']))
-        result += '{},\n'.format(string_to_hex_array(testcase['shared']))
-
-        # Flag 'acceptable' cases with secret == 0 as invalid for NSS.
-        # Flag 'acceptable' cases with forbidden public key values as invalid for NSS.
-        # Flag 'acceptable' cases with small public key (0 or 1) as invalid for NSS.
-        valid = testcase['result'] in ['valid', 'acceptable'] \
-                and not testcase['shared'] == "0000000000000000000000000000000000000000000000000000000000000000" \
-                and not testcase["public"] == "daffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" \
-                and not testcase["public"] == "dbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" \
-                and not 'Small public key' in testcase['flags']
-        # invalidASN is unused in Curve25519 tests, but this way we can use the ECDH struct
-        result += '{},\n'.format(str(False).lower())
-        result += '{}}},\n'.format(str(valid).lower())
-
-        return result
-
-class ECDH():
-    """Class that provides the generator function for a single ECDH test case."""
-
-    def format_testcase(self, testcase, curve):
-
-        result = '\n// Comment: {}'.format(testcase['comment'])
-        result += '\n// tcID: {}'.format(testcase['tcId'])
-        private_key = ec.derive_private_key(
-                int(testcase["private"], 16),
-                curve,
-                default_backend()
-            ).private_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption()
-            )
-        result += '\n{{{},\n'.format(testcase['tcId'])
-        result += '{},\n'.format(string_to_hex_array(bytes.hex(private_key)))
-        result += '{},\n'.format(string_to_hex_array(testcase['public']))
-        result += '{},\n'.format(string_to_hex_array(testcase['shared']))
-        invalid_asn = 'InvalidAsn' in testcase['flags']
-
-        # Note: This classifies "Acceptable" tests cases as invalid.
-        # As this represents a gray area, manual adjustments may be
-        # necessary to match NSS' implementation.
-        valid = testcase['result'] == 'valid'
-
-        result += '{},\n'.format(str(invalid_asn).lower())
-        result += '{}}},\n'.format(str(valid).lower())
-
-        return result
-
 class DSA():
     pub_keys = {}
     def format_testcase(self, testcase, key, hash_oid, keySize, out_defs):
@@ -179,23 +112,6 @@ class DSA():
 
         return result
 
-class ECDSA():
-    """Class that provides the generator function for a single ECDSA test case."""
-
-    def format_testcase(self, testcase, key, hash_oid, keySize, out_defs):
-        result = '\n// Comment: {}'.format(testcase['comment'])
-        result += '\n// tcID: {}\n'.format(testcase['tcId'])
-        result += '{{{}, {},\n'.format(hash_oid, testcase['tcId'])
-        result += '{},\n'.format(string_to_hex_array(testcase['sig']))
-        result += '{},\n'.format(string_to_hex_array(key))
-        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
-        valid = testcase['result'] == 'valid'
-        if not valid and testcase['result'] == 'acceptable':
-            valid = 'MissingZero' in testcase['flags']
-        result += '{}}},\n'.format(str(valid).lower())
-
-        return result
-
 class HKDF():
     """Class that provides the generator function for a single HKDF test case."""
 
@@ -206,58 +122,6 @@ class HKDF():
             result += ' \"{}\",\n'.format(vector[key])
         result += ' {},\n'.format(vector['size'])
         result += ' {}}},\n\n'.format(str(vector['result'] == 'valid').lower())
-
-        return result
-
-class RSA_PKCS1_SIGNATURE():
-    pub_keys = {}
-
-    def format_testcase(self, testcase, key, keysize, hash_oid, out_defs):
-        # To avoid hundreds of copies of the same key, define it once and reuse.
-        key_name = "pub_key_"
-        if key in self.pub_keys:
-            key_name = self.pub_keys[key]
-        else:
-            key_name += str(len(self.pub_keys))
-            self.pub_keys[key] = key_name
-            out_defs.append('static const std::vector<uint8_t> ' + key_name + string_to_hex_array(key) + ';\n\n')
-
-        result = '\n// Comment: {}'.format(testcase['comment'])
-        result += '\n// tcID: {}\n'.format(testcase['tcId'])
-        result += '{{{}, {}, \n'.format(hash_oid, testcase['tcId'])
-        result += '{},\n'.format(string_to_hex_array(testcase['sig']))
-        result += '{},\n'.format(key_name)
-        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
-
-        valid = testcase['result'] == 'valid'
-        if not valid and testcase['result'] == 'acceptable':
-            valid = keysize >= 1024 and ('SmallModulus' in testcase['flags'] or
-                                         'SmallPublicKey' in testcase['flags'])
-        result += '{}}},\n'.format(str(valid).lower())
-
-        return result
-
-
-class RSA_PKCS1_DECRYPT():
-    priv_keys = {}
-
-    def format_testcase(self, testcase, priv_key, key_size, out_defs):
-        key_name = "priv_key_"
-        if priv_key in self.priv_keys:
-            key_name = self.priv_keys[priv_key]
-        else:
-            key_name += str(len(self.priv_keys))
-            self.priv_keys[priv_key] = key_name
-            out_defs.append('static const std::vector<uint8_t> ' + key_name + string_to_hex_array(priv_key) + ';\n\n')
-
-        result = '\n// Comment: {}'.format(testcase['comment'])
-        result += '\n// tcID: {}'.format(testcase['tcId'])
-        result += '\n{{{},\n'.format(testcase['tcId'])
-        result += '{},\n'.format(string_to_hex_array(testcase['msg']))
-        result += '{},\n'.format(string_to_hex_array(testcase['ct']))
-        result += '{},\n'.format(key_name)
-        valid = testcase['result'] == 'valid'
-        result += '{}}},\n'.format(str(valid).lower())
 
         return result
 
@@ -336,9 +200,6 @@ def generate_vectors_file(params):
                 if 'curve' in group['key'] and group['key']['curve'] not in ['secp256r1', 'secp384r1', 'secp521r1']:
                     continue
                 vectors_file += params['formatter'].format_testcase(test, group['keyDer'], getSha(group['sha']), group['key']['keySize'], shared_defs)
-            elif 'type' in group and group['type'] == 'RsassaPssVerify':
-                sLen = group['sLen'] if 'sLen' in group else 0
-                vectors_file += params['formatter'].format_testcase(test, group['keyDer'], getSha(group['sha']), getMgfSha(group['mgfSha']), sLen, shared_defs)
             elif 'type' in group and group['type'] == 'RsaesOaepDecrypt':
                 vectors_file += params['formatter'].format_testcase(test, group['privateKeyPkcs8'], getSha(group['sha']), getMgfSha(group['mgfSha']), shared_defs)
             elif 'keyDer' in group:
@@ -352,8 +213,6 @@ def generate_vectors_file(params):
                     curve = ec.SECP384R1()
                 elif group['curve'] == 'secp521r1':
                     curve = ec.SECP521R1()
-                elif group['curve'] == 'curve25519':
-                    curve = "curve25519"
                 else:
                     continue
                 vectors_file += params['formatter'].format_testcase(test, curve)
@@ -442,20 +301,6 @@ chacha_poly_params = {
     'comment' : ''
 }
 
-curve25519_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'x25519_test.json',
-    'base': '../testvectors_base/curve25519-vectors_base.h',
-    'target': '../testvectors/curve25519-vectors.h',
-    'array_init': 'const EcdhTestVector kCurve25519WycheproofVectors[] = {\n',
-    'formatter' : Curve25519(),
-    'crop_size_end': -2,
-    'section': 'curve25519_vectors_h__',
-    'comment' : '// The public key section of the pkcs8 wrapped private key is\n\
-    // filled up with 0\'s, which is not correct, but acceptable for the\n\
-    // tests at this moment because validity of the public key is not checked.\n'
-}
-
 dsa_params = {
     'source_dir': 'source_vectors/',
     'source_file': 'dsa_test.json',
@@ -508,216 +353,6 @@ hkdf_sha512_params = {
     'formatter' : HKDF(),
     'crop_size_end': -3,
     'section': 'hkdf_sha512_vectors_h__',
-    'comment' : ''
-}
-
-p256ecdh_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'ecdh_secp256r1_test.json',
-    'target': '../testvectors/p256ecdh-vectors.h',
-    'array_init': 'const EcdhTestVector kP256EcdhWycheproofVectors[] = {\n',
-    'formatter' : ECDH(),
-    'crop_size_end': -2,
-    'section': 'p256ecdh_vectors_h__',
-    'comment' : ''
-}
-
-p384ecdh_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'ecdh_secp384r1_test.json',
-    'target': '../testvectors/p384ecdh-vectors.h',
-    'array_init': 'const EcdhTestVector kP384EcdhWycheproofVectors[] = {\n',
-    'formatter' : ECDH(),
-    'crop_size_end': -2,
-    'section': 'p384ecdh_vectors_h__',
-    'comment' : ''
-}
-
-p521ecdh_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'ecdh_secp521r1_test.json',
-    'target': '../testvectors/p521ecdh-vectors.h',
-    'array_init': 'const EcdhTestVector kP521EcdhWycheproofVectors[] = {\n',
-    'formatter' : ECDH(),
-    'crop_size_end': -2,
-    'section': 'p521ecdh_vectors_h__',
-    'comment' : ''
-}
-
-p256ecdsa_sha256_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'ecdsa_secp256r1_sha256_test.json',
-    'target': '../testvectors/p256ecdsa-sha256-vectors.h',
-    'array_init': 'const EcdsaTestVector kP256EcdsaSha256Vectors[] = {\n',
-    'formatter' : ECDSA(),
-    'crop_size_end': -2,
-    'section': 'p256ecdsa_sha256_vectors_h__',
-    'comment' : ''
-}
-
-p384ecdsa_sha384_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'ecdsa_secp384r1_sha384_test.json',
-    'target': '../testvectors/p384ecdsa-sha384-vectors.h',
-    'array_init': 'const EcdsaTestVector kP384EcdsaSha384Vectors[] = {\n',
-    'formatter' : ECDSA(),
-    'crop_size_end': -2,
-    'section': 'p384ecdsa_sha384_vectors_h__',
-    'comment' : ''
-}
-
-p521ecdsa_sha512_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'ecdsa_secp521r1_sha512_test.json',
-    'target': '../testvectors/p521ecdsa-sha512-vectors.h',
-    'array_init': 'const EcdsaTestVector kP521EcdsaSha512Vectors[] = {\n',
-    'formatter' : ECDSA(),
-    'crop_size_end': -2,
-    'section': 'p521ecdsa_sha512_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_2048_sha224_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_2048_sha224_test.json',
-    'target': '../testvectors/rsa_signature_2048_sha224-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature2048Sha224WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_2048_sha224_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_2048_sha256_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_2048_sha256_test.json',
-    'target': '../testvectors/rsa_signature_2048_sha256-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature2048Sha256WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_2048_sha256_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_2048_sha512_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_2048_sha512_test.json',
-    'target': '../testvectors/rsa_signature_2048_sha512-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature2048Sha512WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_2048_sha512_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_3072_sha256_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_3072_sha256_test.json',
-    'target': '../testvectors/rsa_signature_3072_sha256-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha256WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_3072_sha256_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_3072_sha256_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_3072_sha256_test.json',
-    'target': '../testvectors/rsa_signature_3072_sha256-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha256WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_3072_sha256_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_3072_sha384_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_3072_sha384_test.json',
-    'target': '../testvectors/rsa_signature_3072_sha384-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha384WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_3072_sha384_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_3072_sha512_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_3072_sha512_test.json',
-    'target': '../testvectors/rsa_signature_3072_sha512-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature3072Sha512WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_3072_sha512_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_4096_sha384_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_4096_sha384_test.json',
-    'target': '../testvectors/rsa_signature_4096_sha384-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature4096Sha384WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_4096_sha384_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_4096_sha512_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_4096_sha512_test.json',
-    'target': '../testvectors/rsa_signature_4096_sha512-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignature4096Sha512WycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_4096_sha512_vectors_h__',
-    'comment' : ''
-}
-
-rsa_signature_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_signature_test.json',
-    'base': '../testvectors_base/rsa_signature-vectors_base.txt',
-    'target': '../testvectors/rsa_signature-vectors.h',
-    'array_init': 'const RsaSignatureTestVector kRsaSignatureWycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_SIGNATURE(),
-    'crop_size_end': -2,
-    'section': 'rsa_signature_vectors_h__',
-    'comment' : ''
-}
-
-rsa_pkcs1_dec_2048_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_pkcs1_2048_test.json',
-    'target': '../testvectors/rsa_pkcs1_2048_test-vectors.h',
-    'array_init': 'const RsaDecryptTestVector kRsa2048DecryptWycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_DECRYPT(),
-    'crop_size_end': -2,
-    'section': 'rsa_pkcs1_2048_vectors_h__',
-    'comment' : ''
-}
-
-rsa_pkcs1_dec_3072_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_pkcs1_3072_test.json',
-    'target': '../testvectors/rsa_pkcs1_3072_test-vectors.h',
-    'array_init': 'const RsaDecryptTestVector kRsa3072DecryptWycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_DECRYPT(),
-    'crop_size_end': -2,
-    'section': 'rsa_pkcs1_3072_vectors_h__',
-    'comment' : ''
-}
-
-rsa_pkcs1_dec_4096_params = {
-    'source_dir': 'source_vectors/',
-    'source_file': 'rsa_pkcs1_4096_test.json',
-    'target': '../testvectors/rsa_pkcs1_4096_test-vectors.h',
-    'array_init': 'const RsaDecryptTestVector kRsa4096DecryptWycheproofVectors[] = {\n',
-    'formatter' : RSA_PKCS1_DECRYPT(),
-    'crop_size_end': -2,
-    'section': 'rsa_pkcs1_4096_vectors_h__',
     'comment' : ''
 }
 
@@ -813,37 +448,18 @@ def generate_test_vectors():
                  aes_cmac_params,
                  aes_gcm_params,
                  chacha_poly_params,
-                 curve25519_params,
                  dsa_params,
                  hkdf_sha1_params,
                  hkdf_sha256_params,
                  hkdf_sha384_params,
                  hkdf_sha512_params,
-                 p256ecdsa_sha256_params,
-                 p384ecdsa_sha384_params,
-                 p521ecdsa_sha512_params,
-                 p256ecdh_params,
-                 p384ecdh_params,
-                 p521ecdh_params,
                  rsa_oaep_2048_sha1_mgf1sha1_params,
                  rsa_oaep_2048_sha256_mgf1sha1_params,
                  rsa_oaep_2048_sha256_mgf1sha256_params,
                  rsa_oaep_2048_sha384_mgf1sha1_params,
                  rsa_oaep_2048_sha384_mgf1sha384_params,
                  rsa_oaep_2048_sha512_mgf1sha1_params,
-                 rsa_oaep_2048_sha512_mgf1sha512_params,
-                 rsa_pkcs1_dec_2048_params,
-                 rsa_pkcs1_dec_3072_params,
-                 rsa_pkcs1_dec_4096_params,
-                 rsa_signature_2048_sha224_params,
-                 rsa_signature_2048_sha256_params,
-                 rsa_signature_2048_sha512_params,
-                 rsa_signature_3072_sha256_params,
-                 rsa_signature_3072_sha384_params,
-                 rsa_signature_3072_sha512_params,
-                 rsa_signature_4096_sha384_params,
-                 rsa_signature_4096_sha512_params,
-                 rsa_signature_params]
+                 rsa_oaep_2048_sha512_mgf1sha512_params]
     update_tests(all_tests)
     for test in all_tests:
         generate_vectors_file(test)

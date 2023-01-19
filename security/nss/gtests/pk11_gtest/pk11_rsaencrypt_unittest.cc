@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdint.h>
+#include <algorithm>
+#include <cstdint>
 
 #include "cpputil.h"
 #include "cryptohi.h"
+#include "json_reader.h"
 #include "gtest/gtest.h"
 #include "limits.h"
 #include "nss.h"
@@ -15,16 +17,21 @@
 #include "pk11pub.h"
 #include "databuffer.h"
 
-#include "testvectors/rsa_pkcs1_2048_test-vectors.h"
-#include "testvectors/rsa_pkcs1_3072_test-vectors.h"
-#include "testvectors/rsa_pkcs1_4096_test-vectors.h"
+#include "testvectors/rsa_signature-vectors.h"
+#include "testvectors/rsaencrypt_bb2048-vectors.h"
+#include "testvectors/rsaencrypt_bb3072-vectors.h"
 
 namespace nss_test {
 
-class RsaDecryptWycheproofTest
-    : public ::testing::TestWithParam<RsaDecryptTestVector> {
+class RsaDecryptWycheproofTest : public ::testing::Test {
  protected:
-  void TestDecrypt(const RsaDecryptTestVector vec) {
+  void Run(const std::string& name) {
+    WycheproofHeader(name, "RSAES-PKCS1-v1_5",
+                     "rsaes_pkcs1_decrypt_schema.json",
+                     [this](JsonReader& r) { RunGroup(r); });
+  }
+
+  void TestDecrypt(const RsaDecryptTestVector& vec) {
     SECItem pkcs8_item = {siBuffer, toUcharPtr(vec.priv_key.data()),
                           static_cast<unsigned int>(vec.priv_key.size())};
 
@@ -45,29 +52,96 @@ class RsaDecryptWycheproofTest
     rv = PK11_PrivDecryptPKCS1(priv_key.get(), decrypted.data(), &decrypted_len,
                                decrypted.size(), vec.ct.data(), vec.ct.size());
 
+    decrypted.resize(decrypted_len);
     if (vec.valid) {
-      EXPECT_EQ(SECSuccess, rv);
-      decrypted.resize(decrypted_len);
+      ASSERT_EQ(SECSuccess, rv);
       EXPECT_EQ(vec.msg, decrypted);
+    } else if (vec.invalid_padding) {
+      // If the padding is bad, decryption should succeed and produce
+      // (pseudo)random output.
+      ASSERT_EQ(SECSuccess, rv);
+      ASSERT_NE(vec.msg, decrypted);
     } else {
-      DataBuffer::SetLogLimit(512);
-      decrypted.resize(decrypted_len);
-      EXPECT_EQ(SECFailure, rv)
+      ASSERT_EQ(SECFailure, rv)
           << "Returned:" << DataBuffer(decrypted.data(), decrypted.size());
     }
   };
+
+ private:
+  void RunGroup(JsonReader& r) {
+    std::vector<RsaDecryptTestVector> tests;
+    std::vector<uint8_t> private_key;
+    while (r.NextItem()) {
+      std::string n = r.ReadLabel();
+      if (n == "") {
+        break;
+      }
+
+      if (n == "d" || n == "e" || n == "keysize" || n == "n" ||
+          n == "privateKeyJwk" || n == "privateKeyPem") {
+        r.SkipValue();
+      } else if (n == "privateKeyPkcs8") {
+        private_key = r.ReadHex();
+      } else if (n == "type") {
+        ASSERT_EQ("RsaesPkcs1Decrypt", r.ReadString());
+      } else if (n == "tests") {
+        WycheproofReadTests(r, &tests, ReadTestAttr, false,
+                            [](RsaDecryptTestVector& t, const std::string&,
+                               const std::vector<std::string>& flags) {
+                              t.invalid_padding =
+                                  std::find(flags.begin(), flags.end(),
+                                            "InvalidPkcs1Padding") !=
+                                  flags.end();
+                            });
+      } else {
+        FAIL() << "unknown label in group: " << n;
+      }
+    }
+
+    for (auto& t : tests) {
+      std::cout << "Running test " << t.id << std::endl;
+      t.priv_key = private_key;
+      TestDecrypt(t);
+    }
+  }
+
+  static void ReadTestAttr(RsaDecryptTestVector& t, const std::string& n,
+                           JsonReader& r) {
+    if (n == "msg") {
+      t.msg = r.ReadHex();
+    } else if (n == "ct") {
+      t.ct = r.ReadHex();
+    } else {
+      FAIL() << "unsupported test case field: " << n;
+    }
+  }
 };
 
-TEST_P(RsaDecryptWycheproofTest, Pkcs1Decrypt) { TestDecrypt(GetParam()); }
+TEST_F(RsaDecryptWycheproofTest, Rsa2048) { Run("rsa_pkcs1_2048"); }
+TEST_F(RsaDecryptWycheproofTest, Rsa3072) { Run("rsa_pkcs1_3072"); }
+TEST_F(RsaDecryptWycheproofTest, Rsa4096) { Run("rsa_pkcs1_4096"); }
 
-INSTANTIATE_TEST_SUITE_P(WycheproofRsa2048DecryptTest, RsaDecryptWycheproofTest,
-                         ::testing::ValuesIn(kRsa2048DecryptWycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(WycheproofRsa3072DecryptTest, RsaDecryptWycheproofTest,
-                         ::testing::ValuesIn(kRsa3072DecryptWycheproofVectors));
-
-INSTANTIATE_TEST_SUITE_P(WycheproofRsa4096DecryptTest, RsaDecryptWycheproofTest,
-                         ::testing::ValuesIn(kRsa4096DecryptWycheproofVectors));
+TEST_F(RsaDecryptWycheproofTest, Bb2048) {
+  for (auto& t : kRsaBb2048Vectors) {
+    RsaDecryptTestVector copy = t;
+    copy.priv_key = kRsaBb2048;
+    TestDecrypt(copy);
+  }
+}
+TEST_F(RsaDecryptWycheproofTest, Bb2049) {
+  for (auto& t : kRsaBb2049Vectors) {
+    RsaDecryptTestVector copy = t;
+    copy.priv_key = kRsaBb2049;
+    TestDecrypt(copy);
+  }
+}
+TEST_F(RsaDecryptWycheproofTest, Bb3072) {
+  for (auto& t : kRsaBb3072Vectors) {
+    RsaDecryptTestVector copy = t;
+    copy.priv_key = kRsaBb3072;
+    TestDecrypt(copy);
+  }
+}
 
 TEST(RsaEncryptTest, MessageLengths) {
   const uint8_t spki[] = {

@@ -160,7 +160,7 @@ JSS FAQ
          passed, and then can do anything extra that it wants to do before making a final decision.
       #. SSLClientCertificateSelectionCallback is analogous to SSL_GetClientAuthDataHook.
 
-   | 
+   |
    | **Can I have multiple JSS instances reading separate db's?**
 
    -  No, you can only have one initialized instance of JSS for each database.
@@ -182,7 +182,7 @@ JSS FAQ
    **How do I convert org.mozilla.jss.crypto.X509Certificate to
    org.mozilla.jss.pkix.cert.Certificate?**
 
-   -  .. code:: notranslate
+   -  .. code::
 
          import java.io.ByteArrayInputStream;
 
@@ -208,7 +208,7 @@ JSS FAQ
       CryptoManager.getTokenByName(), but a better way is to call
       CryptoManager.getInternalKeyStorageToken(), which works no matter what the token is named. In
       general, a key is a handle to an underlying object on a PKCS #11 token, not merely a Java
-      object residing in memory. Symmetric Key usage:  basically encrypt/decrypt is for data and
+      object residing in memory. Symmetric Key usage:  basically encrypt/decrypt is for data and
       wrap/unwrap is for keys.
 
    J\ **SS 3.2 has JCA support. When will JSS have JSSE support?**

@@ -16,7 +16,7 @@ FC_GetFunctionList
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_GetFunctionList(CK_FUNCTION_LIST_PTR *ppFunctionList);
 
@@ -57,7 +57,7 @@ FC_GetFunctionList
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       #include <assert.h>
 

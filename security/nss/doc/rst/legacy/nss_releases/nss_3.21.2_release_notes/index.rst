@@ -49,7 +49,7 @@ NSS 3.21.2 release notes
 .. container::
 
    -  `Bug 1293334 <https://bugzilla.mozilla.org/show_bug.cgi?id=1293334>`__ /
-      `CVE-2016-9074 <https://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-9074>`__  - Fixed
+      `CVE-2016-9074 <https://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-9074>`__  - Fixed
       a timing side channel in the TLS CBC code.
 
 `Compatibility <#compatibility>`__

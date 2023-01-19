@@ -18,7 +18,7 @@ NSS 3.21.4 release notes
 
 .. container::
 
-   The HG tag is NSS_3_21_4_RTM. NSS 3.21.4 requires NSPR 4.12 or newer.
+   The HG tag is NSS_3_21_4_RTM. NSS 3.21.4 requires NSPR 4.12 or newer.
 
    NSS 3.21.4 source distributions are available on ftp.mozilla.org for secure HTTPS download:
 
@@ -41,7 +41,7 @@ NSS 3.21.4 release notes
 
 .. container::
 
-   -  `Bug 1344380 <https://bugzilla.mozilla.org/show_bug.cgi?id=1344380>`__ / Out-of-bounds write
+   -  `Bug 1344380 <https://bugzilla.mozilla.org/show_bug.cgi?id=1344380>`__ / Out-of-bounds write
       in Base64 encoding in NSS
       (`CVE-2017-5461 <https://www.mozilla.org/en-US/security/advisories/mfsa2017-10/#CVE-2017-5461>`__)
    -  `Bug 1345089 <https://bugzilla.mozilla.org/show_bug.cgi?id=1345089>`__ / DRBG flaw in NSS

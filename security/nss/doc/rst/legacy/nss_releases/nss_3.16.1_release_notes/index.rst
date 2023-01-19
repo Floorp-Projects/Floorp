@@ -47,13 +47,13 @@ NSS 3.16.1 release notes
 
    -  *in pk11pub.h*
 
-      -  **PK11_ExportDERPrivateKeyInfo and PK11_ExportPrivKeyInfo** - exports a private key in a
+      -  **PK11_ExportDERPrivateKeyInfo and PK11_ExportPrivKeyInfo** - exports a private key in a
          DER-encoded ASN.1 PrivateKeyInfo type or a SECKEYPrivateKeyInfo structure. Only RSA private
          keys are supported now.
 
    -  *in secmod.h*
 
-      -  **SECMOD_InternalToPubMechFlags** - converts from NSS-internal to public representation of
+      -  **SECMOD_InternalToPubMechFlags** - converts from NSS-internal to public representation of
          mechanism flags.
 
    .. rubric:: New Types
@@ -61,21 +61,21 @@ NSS 3.16.1 release notes
 
    -  *in sslt.h*
 
-      -  **ssl_padding_xtn** - the value of this enum constant changed from the experimental value
-         35655 to the IANA-assigned value 21. .
+      -  **ssl_padding_xtn** - the value of this enum constant changed from the experimental value
+         35655 to the IANA-assigned value 21. .
 
    .. rubric:: New Macros
       :name: new_macros
 
    -  *in secmod.h*
 
-      -  **PUBLIC_MECH_ECC_FLAG** - a public mechanism flag for elliptic curve cryptography (ECC)
+      -  **PUBLIC_MECH_ECC_FLAG** - a public mechanism flag for elliptic curve cryptography (ECC)
          operations.
 
    -  *in utilmodt.h*
 
-      -  **SECMOD_ECC_FLAG** - an NSS-internal mechanism flag for elliptic curve cryptography (ECC)
-         operations. This macro has the same numeric value as **PUBLIC_MECH_ECC_FLAG.**
+      -  **SECMOD_ECC_FLAG** - an NSS-internal mechanism flag for elliptic curve cryptography (ECC)
+         operations. This macro has the same numeric value as **PUBLIC_MECH_ECC_FLAG.**
 
 .. _notable_changes_in_nss_3.16.1:
 

@@ -170,6 +170,7 @@ STUB_DECLARE(char *, PR_GetEnvSecure, (const char *));
 
 STUB_DECLARE(SECItem *, SECITEM_AllocItem_Util, (PLArenaPool * arena, SECItem *item, unsigned int len));
 STUB_DECLARE(SECComparison, SECITEM_CompareItem_Util, (const SECItem *a, const SECItem *b));
+STUB_DECLARE(PRBool, SECITEM_ItemsAreEqual_Util, (const SECItem *a, const SECItem *b));
 STUB_DECLARE(SECStatus, SECITEM_CopyItem_Util, (PLArenaPool * arena, SECItem *to, const SECItem *from));
 STUB_DECLARE(void, SECITEM_FreeItem_Util, (SECItem * zap, PRBool freeit));
 STUB_DECLARE(void, SECITEM_ZfreeItem_Util, (SECItem * zap, PRBool freeit));
@@ -573,8 +574,11 @@ extern char *
 PR_GetEnvSecure_stub(const char *var)
 {
     STUB_SAFE_CALL1(PR_GetEnvSecure, var);
-    abort();
-    return NULL;
+#ifdef __USE_GNU
+    return secure_getenv(var);
+#else
+    return getenv(var);
+#endif
 }
 
 extern void
@@ -622,6 +626,30 @@ SECITEM_CompareItem_stub(const SECItem *a, const SECItem *b)
     return SECEqual;
 }
 
+extern PRBool
+SECITEM_ItemsAreEqual_stub(const SECItem *a, const SECItem *b)
+{
+    STUB_SAFE_CALL2(SECITEM_ItemsAreEqual_Util, a, b);
+    /* two nulls are equal */
+    if (!a && !b) {
+        return PR_TRUE;
+    }
+    /* only one NULL is not equal */
+    if (!a || !b) {
+        return PR_FALSE;
+    }
+    /* we know both secitems have been set, now make sure the lengths
+     * are equal */
+    if (a->len != b->len) {
+        return PR_FALSE;
+    }
+    /* lengths are equal, safe to verify the data */
+    if (PORT_Memcmp(a->data, b->data, b->len) != 0) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
 extern SECStatus
 SECITEM_CopyItem_stub(PLArenaPool *arena, SECItem *to, const SECItem *from)
 {
@@ -646,7 +674,16 @@ extern void
 SECITEM_ZfreeItem_stub(SECItem *zap, PRBool freeit)
 {
     STUB_SAFE_CALL2(SECITEM_ZfreeItem_Util, zap, freeit);
-    abort();
+    if (zap) {
+        if (zap->data) {
+            PORT_Memset(zap->data, 0, zap->len);
+            PORT_Free_stub(zap->data);
+        }
+        PORT_Memset(zap, 0, sizeof(SECItem));
+        if (freeit) {
+            PORT_Free_stub(zap);
+        }
+    }
 }
 
 extern int

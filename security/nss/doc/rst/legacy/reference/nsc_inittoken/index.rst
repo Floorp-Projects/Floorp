@@ -15,7 +15,7 @@ NSC_InitToken
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV NSC_InitToken(
         CK_SLOT_ID slotID,

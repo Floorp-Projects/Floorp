@@ -202,7 +202,7 @@ NSS_3.12.2_release_notes.html
 
    NSS 3.12.2 shared libraries are backward compatible with all older NSS 3.x shared libraries. A
    program linked with older NSS 3.x shared libraries will work with NSS 3.12.2 shared libraries
-   without recompiling or relinking.  Furthermore, applications that restrict their use of NSS APIs
+   without recompiling or relinking.  Furthermore, applications that restrict their use of NSS APIs
    to the functions listed in `NSS Public Functions <../ref/nssfunctions.html>`__ will remain
    compatible with future versions of the NSS shared libraries.
 

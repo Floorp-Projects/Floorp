@@ -28,11 +28,19 @@
 static const char* kVersionDisableFlags[] = {"no-ssl3", "no-tls1", "no-tls11",
                                              "no-tls12", "no-tls13"};
 
+/* Default EarlyData dummy data determined by Bogo implementation. */
+const unsigned char kBogoDummyData[] = {'h', 'e', 'l', 'l', 'o'};
+
 bool exitCodeUnimplemented = false;
 
 std::string FormatError(PRErrorCode code) {
   return std::string(":") + PORT_ErrorToName(code) + ":" + ":" +
          PORT_ErrorToString(code);
+}
+
+static void StringRemoveNewlines(std::string& str) {
+  str.erase(std::remove(str.begin(), str.end(), '\n'), str.cend());
+  str.erase(std::remove(str.begin(), str.end(), '\r'), str.cend());
 }
 
 class TestAgent {
@@ -375,6 +383,11 @@ class TestAgent {
       if (rv != SECSuccess) return false;
     }
 
+    if (cfg_.get<bool>("enable-early-data")) {
+      rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_0RTT_DATA, PR_TRUE);
+      if (rv != SECSuccess) return false;
+    }
+
     if (!ConfigureCiphers()) return false;
 
     return true;
@@ -516,13 +529,199 @@ class TestAgent {
     return SECSuccess;
   }
 
-  SECStatus DoExchange() {
-    SECStatus rv = Handshake();
+  SECStatus CheckALPN(std::string expectedALPN) {
+    SECStatus rv;
+    SSLNextProtoState state;
+    char chosen[256];
+    unsigned int chosen_len;
+
+    rv = SSL_GetNextProto(ssl_fd_.get(), &state,
+                          reinterpret_cast<unsigned char*>(chosen), &chosen_len,
+                          sizeof(chosen));
+    if (rv != SECSuccess) {
+      PRErrorCode err = PR_GetError();
+      std::cerr << "SSL_GetNextProto failed with error=" << FormatError(err)
+                << std::endl;
+      return SECFailure;
+    }
+
+    assert(chosen_len <= sizeof(chosen));
+    if (std::string(chosen, chosen_len) != expectedALPN) {
+      std::cerr << "Expexted ALPN (" << expectedALPN << ") != Choosen ALPN ("
+                << std::string(chosen, chosen_len) << ")" << std::endl;
+      return SECFailure;
+    }
+
+    return SECSuccess;
+  }
+
+  SECStatus AdvertiseALPN(std::string alpn) {
+    return SSL_SetNextProtoNego(
+        ssl_fd_.get(), reinterpret_cast<const unsigned char*>(alpn.c_str()),
+        alpn.size());
+  }
+
+  SECStatus DoExchange(bool resuming) {
+    SECStatus rv;
+    int earlyDataSent = 0;
+    std::string str;
+    sslSocket* ss = ssl_FindSocket(ssl_fd_.get());
+    if (!ss) {
+      return SECFailure;
+    }
+
+    /* Apply resumption SSL options (if any). */
+    if (resuming) {
+      /* Client options */
+      if (!cfg_.get<bool>("server")) {
+        auto resumeEchConfigList =
+            cfg_.get<std::string>("on-resume-ech-config-list");
+        if (!resumeEchConfigList.empty()) {
+          unsigned int binLen;
+          auto bin = ATOB_AsciiToData(resumeEchConfigList.c_str(), &binLen);
+          rv = SSLExp_SetClientEchConfigs(ssl_fd_.get(), bin, binLen);
+          if (rv != SECSuccess) {
+            PRErrorCode err = PR_GetError();
+            std::cerr << "Setting up resumption ECH configs failed with error="
+                      << err << FormatError(err) << std::endl;
+          }
+          free(bin);
+        }
+
+        str = cfg_.get<std::string>("on-resume-advertise-alpn");
+        if (!str.empty()) {
+          if (AdvertiseALPN(str) != SECSuccess) {
+            PRErrorCode err = PR_GetError();
+            std::cerr << "Setting up resumption ALPN failed with error=" << err
+                      << FormatError(err) << std::endl;
+          }
+        }
+      }
+
+    } else { /* Explicitly not on resume (on initial) */
+      /* Client options */
+      if (!cfg_.get<bool>("server")) {
+        str = cfg_.get<std::string>("on-initial-advertise-alpn");
+        if (!str.empty()) {
+          if (AdvertiseALPN(str) != SECSuccess) {
+            PRErrorCode err = PR_GetError();
+            std::cerr << "Setting up initial ALPN failed with error=" << err
+                      << FormatError(err) << std::endl;
+          }
+        }
+      }
+    }
+
+    /* If client send ClientHello. */
+    if (!cfg_.get<bool>("server")) {
+      ssl_Get1stHandshakeLock(ss);
+      rv = ssl_BeginClientHandshake(ss);
+      ssl_Release1stHandshakeLock(ss);
+      if (rv != SECSuccess) {
+        PRErrorCode err = PR_GetError();
+        std::cerr << "Handshake failed with error=" << err << FormatError(err)
+                  << std::endl;
+        return SECFailure;
+      }
+
+      /* If the client is resuming. */
+      if (ss->statelessResume) {
+        SSLPreliminaryChannelInfo pinfo;
+        rv = SSL_GetPreliminaryChannelInfo(ssl_fd_.get(), &pinfo,
+                                           sizeof(SSLPreliminaryChannelInfo));
+        if (rv != SECSuccess) {
+          PRErrorCode err = PR_GetError();
+          std::cerr << "SSL_GetPreliminaryChannelInfo failed with " << err
+                    << std::endl;
+          return SECFailure;
+        }
+
+        /* Check that the used ticket supports early data. */
+        if (cfg_.get<bool>("expect-ticket-supports-early-data")) {
+          if (!pinfo.ticketSupportsEarlyData) {
+            std::cerr << "Expected ticket to support EarlyData" << std::endl;
+            return SECFailure;
+          }
+        }
+
+        /* If the client should send EarlyData. */
+        if (cfg_.get<bool>("on-resume-shim-writes-first")) {
+          earlyDataSent =
+              ssl_SecureWrite(ss, kBogoDummyData, sizeof(kBogoDummyData));
+          if (earlyDataSent < 0) {
+            std::cerr << "Sending of EarlyData failed" << std::endl;
+            return SECFailure;
+          }
+        }
+
+        if (cfg_.get<bool>("expect-no-offer-early-data")) {
+          if (earlyDataSent) {
+            std::cerr << "Unexpectedly offered EarlyData" << std::endl;
+            return SECFailure;
+          }
+        }
+      }
+    }
+
+    /* As server start, as client continue handshake. */
+    rv = Handshake();
+
+    /* Retry config evaluation must be done before error handling since
+     * handshake failure is intended on ech_required tests. */
+    if (cfg_.get<bool>("expect-no-ech-retry-configs")) {
+      if (ss->xtnData.ech && ss->xtnData.ech->retryConfigsValid) {
+        std::cerr << "Unexpectedly received ECH retry configs" << std::endl;
+        return SECFailure;
+      }
+    }
+
+    /* If given, verify received retry configs before error handling. */
+    std::string expectedRCs64 =
+        cfg_.get<std::string>("expect-ech-retry-configs");
+    if (!expectedRCs64.empty()) {
+      SECItem receivedRCs;
+
+      /* Get received RetryConfigs. */
+      if (SSLExp_GetEchRetryConfigs(ssl_fd_.get(), &receivedRCs) !=
+          SECSuccess) {
+        std::cerr << "Failed to get ECH retry configs." << std::endl;
+        return SECFailure;
+      }
+
+      /* (Re-)Encode received configs to compare with expected ASCII string. */
+      std::string receivedRCs64(
+          BTOA_DataToAscii(receivedRCs.data, receivedRCs.len));
+      /* Remove newlines (for unknown reasons) added during b64 encoding. */
+      StringRemoveNewlines(receivedRCs64);
+
+      if (receivedRCs64 != expectedRCs64) {
+        std::cerr << "Received ECH retry configs did not match expected retry "
+                     "configs."
+                  << std::endl;
+        return SECFailure;
+      }
+    }
+
+    /* Check if handshake succeeded. */
     if (rv != SECSuccess) {
       PRErrorCode err = PR_GetError();
       std::cerr << "Handshake failed with error=" << err << FormatError(err)
                 << std::endl;
       return SECFailure;
+    }
+
+    /* If parts of data was sent as EarlyData make sure to send possibly
+     * unsent rest. This is required to pass bogo resumption tests. */
+    if (earlyDataSent && earlyDataSent < int(sizeof(kBogoDummyData))) {
+      int toSend = sizeof(kBogoDummyData) - earlyDataSent;
+      earlyDataSent =
+          ssl_SecureWrite(ss, &kBogoDummyData[earlyDataSent], toSend);
+      if (earlyDataSent != toSend) {
+        std::cerr
+            << "Could not send rest of EarlyData after handshake completion"
+            << std::endl;
+        return SECFailure;
+      }
     }
 
     if (cfg_.get<bool>("write-then-read")) {
@@ -539,28 +738,6 @@ class TestAgent {
         PRErrorCode err = PR_GetError();
         std::cerr << "ReadWrite failed with error=" << FormatError(err)
                   << std::endl;
-        return SECFailure;
-      }
-    }
-
-    auto alpn = cfg_.get<std::string>("expect-alpn");
-    if (!alpn.empty()) {
-      SSLNextProtoState state;
-      char chosen[256];
-      unsigned int chosen_len;
-      rv = SSL_GetNextProto(ssl_fd_.get(), &state,
-                            reinterpret_cast<unsigned char*>(chosen),
-                            &chosen_len, sizeof(chosen));
-      if (rv != SECSuccess) {
-        PRErrorCode err = PR_GetError();
-        std::cerr << "SSL_GetNextProto failed with error=" << FormatError(err)
-                  << std::endl;
-        return SECFailure;
-      }
-
-      assert(chosen_len <= sizeof(chosen));
-      if (std::string(chosen, chosen_len) != alpn) {
-        std::cerr << "Unexpected ALPN selection" << std::endl;
         return SECFailure;
       }
     }
@@ -591,13 +768,81 @@ class TestAgent {
     }
 
     if (cfg_.get<bool>("expect-hrr")) {
-      sslSocket* ss = ssl_FindSocket(ssl_fd_.get());
-      if (!ss) {
-        return SECFailure;
-      }
       if (!ss->ssl3.hs.helloRetry) {
         std::cerr << "Expected HRR" << std::endl;
         return SECFailure;
+      }
+    }
+
+    str = cfg_.get<std::string>("expect-alpn");
+    if (!str.empty()) {
+      if (CheckALPN(str) != SECSuccess) {
+        std::cerr << "Unexpected ALPN" << std::endl;
+        return SECFailure;
+      }
+    }
+
+    /* if resumed */
+    if (info.resumed) {
+      if (cfg_.get<bool>("expect-session-miss")) {
+        std::cerr << "Expected reject Resume" << std::endl;
+        return SECFailure;
+      }
+
+      if (cfg_.get<bool>("on-resume-expect-ech-accept")) {
+        if (!info.echAccepted) {
+          std::cerr << "Expected ECH on Resume" << std::endl;
+          return SECFailure;
+        }
+      }
+
+      if (cfg_.get<bool>("on-resume-expect-reject-early-data")) {
+        if (info.earlyDataAccepted) {
+          std::cerr << "Expected reject EarlyData" << std::endl;
+          return SECFailure;
+        }
+      }
+      if (cfg_.get<bool>("on-resume-expect-accept-early-data")) {
+        if (!info.earlyDataAccepted) {
+          std::cerr << "Expected accept EarlyData" << std::endl;
+          return SECFailure;
+        }
+      }
+
+      /* On successfully resumed connection. */
+      if (info.earlyDataAccepted) {
+        str = cfg_.get<std::string>("on-resume-expect-alpn");
+        if (!str.empty()) {
+          if (CheckALPN(str) != SECSuccess) {
+            std::cerr << "Unexpected ALPN on Resume" << std::endl;
+            return SECFailure;
+          }
+        } else { /* No real resume but new handshake on EarlyData rejection. */
+          /* On Retry... */
+          str = cfg_.get<std::string>("on-retry-expect-alpn");
+          if (!str.empty()) {
+            if (CheckALPN(str) != SECSuccess) {
+              std::cerr << "Unexpected ALPN on HRR" << std::endl;
+              return SECFailure;
+            }
+          }
+        }
+      }
+
+    } else { /* Explicitly not on resume */
+      if (cfg_.get<bool>("on-initial-expect-ech-accept")) {
+        if (!info.echAccepted) {
+          std::cerr << "Expected ECH accept on initial connection" << std::endl;
+          return SECFailure;
+        }
+      }
+
+      str = cfg_.get<std::string>("on-initial-expect-alpn");
+      if (!str.empty()) {
+        if (CheckALPN(str) != SECSuccess) {
+          std::cerr << "Unexpected ALPN on Initial" << std::endl;
+          return SECFailure;
+        }
       }
     }
 
@@ -634,16 +879,39 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   cfg->AddEntry<bool>("is-handshaker-supported", false);
   cfg->AddEntry<std::string>("handshaker-path", "");  // Ignore this
   cfg->AddEntry<std::string>("advertise-alpn", "");
+  cfg->AddEntry<std::string>("on-initial-advertise-alpn", "");
+  cfg->AddEntry<std::string>("on-resume-advertise-alpn", "");
   cfg->AddEntry<std::string>("expect-alpn", "");
+  cfg->AddEntry<std::string>("on-initial-expect-alpn", "");
+  cfg->AddEntry<std::string>("on-resume-expect-alpn", "");
+  cfg->AddEntry<std::string>("on-retry-expect-alpn", "");
   cfg->AddEntry<std::vector<int>>("signing-prefs", std::vector<int>());
   cfg->AddEntry<std::vector<int>>("verify-prefs", std::vector<int>());
   cfg->AddEntry<int>("expect-peer-signature-algorithm", 0);
   cfg->AddEntry<std::string>("nss-cipher", "");
   cfg->AddEntry<std::string>("host-name", "");
   cfg->AddEntry<std::string>("ech-config-list", "");
+  cfg->AddEntry<std::string>("on-resume-ech-config-list", "");
   cfg->AddEntry<bool>("expect-ech-accept", false);
   cfg->AddEntry<bool>("expect-hrr", false);
   cfg->AddEntry<bool>("enable-ech-grease", false);
+  cfg->AddEntry<bool>("enable-early-data", false);
+  cfg->AddEntry<bool>("on-resume-expect-reject-early-data", false);
+  cfg->AddEntry<bool>("on-resume-expect-accept-early-data", false);
+  cfg->AddEntry<bool>("expect-ticket-supports-early-data", false);
+  cfg->AddEntry<bool>("on-resume-shim-writes-first",
+                      false);  // Always means 0Rtt write
+  cfg->AddEntry<bool>("shim-writes-first",
+                      false);  // Unimplemented since not required so far
+  cfg->AddEntry<bool>("expect-session-miss", false);
+  cfg->AddEntry<std::string>("expect-ech-retry-configs", "");
+  cfg->AddEntry<bool>("expect-no-ech-retry-configs", false);
+  cfg->AddEntry<bool>("on-initial-expect-ech-accept", false);
+  cfg->AddEntry<bool>("on-resume-expect-ech-accept", false);
+  cfg->AddEntry<bool>("expect-no-offer-early-data", false);
+  /* NSS does not support earlydata rejection reason logging => Ignore. */
+  cfg->AddEntry<std::string>("on-resume-expect-early-data-reason", "none");
+  cfg->AddEntry<std::string>("on-retry-expect-early-data-reason", "none");
 
   auto rv = cfg->ParseArgs(argc, argv);
   switch (rv) {
@@ -659,9 +927,9 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   return std::move(cfg);
 }
 
-bool RunCycle(std::unique_ptr<const Config>& cfg) {
+bool RunCycle(std::unique_ptr<const Config>& cfg, bool resuming = false) {
   std::unique_ptr<TestAgent> agent(TestAgent::Create(*cfg));
-  return agent && agent->DoExchange() == SECSuccess;
+  return agent && agent->DoExchange(resuming) == SECSuccess;
 }
 
 int GetExitCode(bool success) {
@@ -704,7 +972,7 @@ int main(int argc, char** argv) {
   int resume_count = cfg->get<int>("resume-count");
   while (success && resume_count-- > 0) {
     std::cout << "Resuming" << std::endl;
-    success = RunCycle(cfg);
+    success = RunCycle(cfg, true);
   }
 
   SSL_ClearSessionCache();

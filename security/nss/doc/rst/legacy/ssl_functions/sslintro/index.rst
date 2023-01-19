@@ -29,7 +29,7 @@ sslintro
 
    SSL and related APIs allow compliant applications to configure sockets for authenticated,
    tamper-proof, and encrypted communications. This chapter introduces some of the basic SSL
-   functions. `Chapter 2, "Getting Started With SSL" <gtstd.html#1005439>`__ illustrates their use
+   functions. `Chapter 2, "Getting Started With SSL" <gtstd.html#1005439>`__ illustrates their use
    in sample client and server applications.
 
    An SSL application typically includes five parts:

@@ -43,9 +43,9 @@ NSS Certificate Download Specification
       :ref:`mozilla_projects_nss_certificate_download_specification#object_identifiers`). The
       ``content`` field is the following ASN.1 structure:
 
-   .. code:: eval
+   .. code::
 
-         CertificateSequence ::= SEQUENCE OF Certificate
+         CertificateSequence ::= SEQUENCE OF Certificate
 
    See the section below on
    :ref:`mozilla_projects_nss_certificate_download_specification#importing_certificate_chains` for
@@ -61,7 +61,7 @@ NSS Certificate Download Specification
    Any of the above :ref:`mozilla_projects_nss_certificate_download_specification#binary_formats`
    can also be imported in text form. The text form begins with the following line:
 
-   .. code:: eval
+   .. code::
 
          -----BEGIN CERTIFICATE-----
 
@@ -71,7 +71,7 @@ NSS Certificate Download Specification
    1113 <https://datatracker.ietf.org/doc/html/rfc1113>`__. Following the data should be the
    following line:
 
-   .. code:: eval
+   .. code::
 
          -----END CERTIFICATE-----
 
@@ -168,19 +168,19 @@ NSS Certificate Download Specification
 
    The base of all Netscape object ids is:
 
-   .. code:: eval
+   .. code::
 
-         netscape OBJECT IDENTIFIER ::= { 2 16 840 1 113730 }
+         netscape OBJECT IDENTIFIER ::= { 2 16 840 1 113730 }
 
    The hexadecimal byte value of this OID when DER encoded is:
 
-   .. code:: eval
+   .. code::
 
          0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x42
 
    The following OIDs are mentioned in this document:
 
-   .. code:: eval
+   .. code::
 
-         netscape-data-type     OBJECT IDENTIFIER :: = { netscape 2 }
-         netscape-cert-sequence OBJECT IDENTIFIER :: = { netscape-data-type 5 }
+         netscape-data-type     OBJECT IDENTIFIER :: = { netscape 2 }
+         netscape-cert-sequence OBJECT IDENTIFIER :: = { netscape-data-type 5 }

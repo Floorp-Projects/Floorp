@@ -31,12 +31,12 @@ NSS Tools pk12util
 .. container::
 
    **pk12util** ``-i p12File [-h tokenname] [-v] [common-options]``
-     or
+     or
    **pk12util**
    ``-o p12File -n certname [-c keyCipher] [-C certCipher] [-m | --key_len keyLen] [-n | --cert_key_len certKeyLen] [common-options]``
-     or
+     or
    **pk12util** ``-l p12File [-h tokenname] [-r] [common-options]``
-     where
+     where
    **[common-options]** =
    ``[-d dir] [-P dbprefix] [-k slotPasswordFile | -K slotPassword] [-w p12filePasswordFile | -W p12filePassword]``
 

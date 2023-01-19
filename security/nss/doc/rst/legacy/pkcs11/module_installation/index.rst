@@ -7,20 +7,20 @@ PKCS11 module installation
 
    `PKCS #11 </en-US/PKCS11>`__ modules are external modules which add to Firefox support for
    smartcard readers, biometric security devices, and external certificate stores. This article
-   covers the two methods for installing PKCS #11 modules into Firefox. Users can use the
+   covers the two methods for installing PKCS #11 modules into Firefox. Users can use the
    preferences dialog to install or remove PKCS #11 module. Extensions can programmatically manage
    PKCS #11 modules using the nsIPKCS11 programming interface.
 
    .. note::
 
-      **Note:** The information in this article is specific to Firefox 3.5 and newer. Older versions
+      **Note:** The information in this article is specific to Firefox 3.5 and newer. Older versions
       of Firefox may support the
       `window.pkcs11 <https://developer.mozilla.org/en-US/docs/Web/API/Window/pkcs11>`__ property
       for installing PKCS #11 modules.
 
 .. _using_the_firefox_preferences_to_install_pkcs_11_modules:
 
-`Using the Firefox preferences to install PKCS #11 modules <#using_the_firefox_preferences_to_install_pkcs_11_modules>`__
+`Using the Firefox preferences to install PKCS #11 modules <#using_the_firefox_preferences_to_install_pkcs_11_modules>`__
 -------------------------------------------------------------------------------------------------------------------------
 
 .. container::

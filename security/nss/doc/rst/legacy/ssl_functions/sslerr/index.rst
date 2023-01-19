@@ -92,18 +92,18 @@ sslerr
    |                                |                                | for authentication."           |
    |                                |                                |                                |
    |                                |                                | This error has many potential  |
-   |                                |                                | causes; for example:           |
+   |                                |                                | causes; for example:           |
    |                                |                                |                                |
    |                                |                                | Certificate or key not found   |
-   |                                |                                | in database.                   |
+   |                                |                                | in database.                   |
    |                                |                                |                                |
    |                                |                                | Certificate not marked trusted |
    |                                |                                | in database and Certificate's  |
    |                                |                                | issuer not marked trusted in   |
-   |                                |                                | database.                      |
+   |                                |                                | database.                      |
    |                                |                                |                                |
    |                                |                                | Wrong password for key         |
-   |                                |                                | database.                      |
+   |                                |                                | database.                      |
    |                                |                                |                                |
    |                                |                                | Missing database.              |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -197,7 +197,7 @@ sslerr
    |                                |                                | the matching rules specified   |
    |                                |                                | for                            |
    |                                |                                | `CERT_VerifyCertN              |
-   |                                |                                | ame <sslcrt.html#1050342>`__.  |
+   |                                |                                | ame <sslcrt.html#1050342>`__.  |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERROR_POST_WARNING         | -12275                         | (unused)                       |
    +--------------------------------+--------------------------------+--------------------------------+
@@ -361,7 +361,7 @@ sslerr
    |                                |                                | end the connection. The        |
    |                                |                                | receipt of this alert is an    |
    |                                |                                | error only if it occurs while  |
-   |                                |                                | a handshake is in progress.    |
+   |                                |                                | a handshake is in progress.    |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERR                        | -12210                         | "SSL Server attempted to use   |
    | OR_PUB_KEY_SIZE_LIMIT_EXCEEDED |                                | domestic-grade public key with |
@@ -461,7 +461,7 @@ sslerr
    +--------------------------------+--------------------------------+--------------------------------+
    | **Received a malformed (too    |                                |                                |
    | long or short or invalid       |                                |                                |
-   | content) SSL handshake: **     |                                |                                |
+   | content) SSL handshake: **     |                                |                                |
    |                                |                                |                                |
    | All the error codes in the     |                                |                                |
    | following block indicate that  |                                |                                |
@@ -470,7 +470,7 @@ sslerr
    | handshake message from the     |                                |                                |
    | remote peer. This probably     |                                |                                |
    | indicates a flaw in the remote |                                |                                |
-   | peer's implementation.         |                                |                                |
+   | peer's implementation.         |                                |                                |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ER                         | -12261                         | "SSL received a malformed      |
    | ROR_RX_MALFORMED_HELLO_REQUEST |                                | Hello Request handshake        |
@@ -489,7 +489,7 @@ sslerr
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERROR                      | -12257                         | "SSL received a malformed      |
-   | _RX_MALFORMED_SERVER_KEY_EXCH  |                                | Server Key Exchange handshake  |
+   | _RX_MALFORMED_SERVER_KEY_EXCH  |                                | Server Key Exchange handshake  |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_E                          | -12256                         | "SSL received a malformed      |
@@ -505,7 +505,7 @@ sslerr
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERROR                      | -12253                         | "SSL received a malformed      |
-   | _RX_MALFORMED_CLIENT_KEY_EXCH  |                                | Client Key Exchange handshake  |
+   | _RX_MALFORMED_CLIENT_KEY_EXCH  |                                | Client Key Exchange handshake  |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | S                              | -12252                         | "SSL received a malformed      |
@@ -525,7 +525,7 @@ sslerr
    | record from the remote peer.   |                                |                                |
    | This probably indicates a flaw |                                |                                |
    | in the remote peer's           |                                |                                |
-   | implementation.                |                                |                                |
+   | implementation.                |                                |                                |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ER                         | -12251                         | "SSL received a malformed      |
    | ROR_RX_MALFORMED_CHANGE_CIPHER |                                | Change Cipher Spec record."    |
@@ -537,7 +537,7 @@ sslerr
    | L_ERROR_RX_MALFORMED_HANDSHAKE |                                | Handshake record."             |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERROR_                     | -12248                         | "SSL received a malformed      |
-   | RX_MALFORMED_APPLICATION_DATA  |                                | Application Data record."      |
+   | RX_MALFORMED_APPLICATION_DATA  |                                | Application Data record."      |
    +--------------------------------+--------------------------------+--------------------------------+
    | **Received an SSL handshake    |                                |                                |
    | that was inappropriate for the |                                |                                |
@@ -554,7 +554,7 @@ sslerr
    | received a message from        |                                |                                |
    | another server. This probably  |                                |                                |
    | indicates a flaw in the remote |                                |                                |
-   | peer's implementation.         |                                |                                |
+   | peer's implementation.         |                                |                                |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERR                        | -12247                         | "SSL received an unexpected    |
    | OR_RX_UNEXPECTED_HELLO_REQUEST |                                | Hello Request handshake        |
@@ -573,7 +573,7 @@ sslerr
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERROR_                     | -12243                         | "SSL received an unexpected    |
-   | RX_UNEXPECTED_SERVER_KEY_EXCH  |                                | Server Key Exchange handshake  |
+   | RX_UNEXPECTED_SERVER_KEY_EXCH  |                                | Server Key Exchange handshake  |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ER                         | -12242                         | "SSL received an unexpected    |
@@ -589,7 +589,7 @@ sslerr
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERROR_                     | -12239                         | "SSL received an unexpected    |
-   | RX_UNEXPECTED_CLIENT_KEY_EXCH  |                                | Client Key Exchange handshake  |
+   | RX_UNEXPECTED_CLIENT_KEY_EXCH  |                                | Client Key Exchange handshake  |
    |                                |                                | message."                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SS                             | -12238                         | "SSL received an unexpected    |
@@ -612,7 +612,7 @@ sslerr
    | have sent this message. This   |                                |                                |
    | probably indicates a flaw in   |                                |                                |
    | the remote peer's              |                                |                                |
-   | implementation.                |                                |                                |
+   | implementation.                |                                |                                |
    +--------------------------------+--------------------------------+--------------------------------+
    | SSL_ERR                        | -12237                         | "SSL received an unexpected    |
    | OR_RX_UNEXPECTED_CHANGE_CIPHER |                                | Change Cipher Spec record."    |
@@ -1072,7 +1072,7 @@ sslerr
    |                                |                                | module can perform the         |
    |                                |                                | requested operation.           |
    +--------------------------------+--------------------------------+--------------------------------+
-   | SEC_ERROR_NO_TOKEN             | -8127                          | The security card or token     |
+   | SEC_ERROR_NO_TOKEN             | -8127                          | The security card or token     |
    |                                |                                | does not exist, needs to be    |
    |                                |                                | initialized, or has been       |
    |                                |                                | removed.                       |
@@ -1125,7 +1125,7 @@ sslerr
    |                                |                                | modes supported.               |
    +--------------------------------+--------------------------------+--------------------------------+
    | SEC_ERROR                      | -8110                          | Unable to import. File         |
-   | _PKCS12_CORRUPT_PFX_STRUCTURE  |                                | structure is corrupt.          |
+   | _PKCS12_CORRUPT_PFX_STRUCTURE  |                                | structure is corrupt.          |
    +--------------------------------+--------------------------------+--------------------------------+
    | SEC_ERROR_PK                   | -8109                          | Unable to import. Encryption   |
    | CS12_UNSUPPORTED_PBE_ALGORITHM |                                | algorithm not supported.       |
@@ -1171,7 +1171,7 @@ sslerr
    |                                |                                | nickname.                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SEC_ERRO                       | -8096                          | Unable to export. Private key  |
-   | R_PKCS12_UNABLE_TO_EXPORT_KEY  |                                | could not be located and       |
+   | R_PKCS12_UNABLE_TO_EXPORT_KEY  |                                | could not be located and       |
    |                                |                                | exported.                      |
    +--------------------------------+--------------------------------+--------------------------------+
    | SE                             | -8095                          | Unable to export. Unable to    |

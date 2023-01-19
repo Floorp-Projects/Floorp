@@ -2,20 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <memory>
 #include "nss.h"
 #include "pk11pub.h"
 #include "prerror.h"
 #include "cpputil.h"
 #include "nss_scoped_ptrs.h"
+#include "json_reader.h"
 
 #include "testvectors/curve25519-vectors.h"
 #include "gtest/gtest.h"
 
 namespace nss_test {
 
-class Pkcs11Curve25519Test
-    : public ::testing::TestWithParam<EcdhTestVectorStr> {
+class Pkcs11Curve25519TestBase {
  protected:
   void Derive(const uint8_t* pkcs8, size_t pkcs8_len, const uint8_t* spki,
               size_t spki_len, const uint8_t* secret, size_t secret_len,
@@ -105,22 +106,127 @@ class Pkcs11Curve25519Test
       rv = PK11_DeleteTokenPrivateKey(priv_key_tok, true);
       EXPECT_EQ(SECSuccess, rv);
     }
-  };
+  }
 
-  void Derive(const EcdhTestVectorStr testvector) {
+  void Derive(const EcdhTestVector& testvector) {
+    std::cout << "Running test: " << testvector.id << std::endl;
+
     Derive(testvector.private_key.data(), testvector.private_key.size(),
            testvector.public_key.data(), testvector.public_key.size(),
            testvector.secret.data(), testvector.secret.size(),
            testvector.valid);
-  };
+  }
 };
 
-TEST_P(Pkcs11Curve25519Test, TestVectors) { Derive(GetParam()); }
+class Pkcs11Curve25519Wycheproof : public Pkcs11Curve25519TestBase,
+                                   public ::testing::Test {
+ protected:
+  void RunGroup(JsonReader& r) {
+    std::vector<EcdhTestVector> tests;
+    while (r.NextItem()) {
+      std::string n = r.ReadLabel();
+      if (n == "") {
+        break;
+      }
+      if (n == "curve") {
+        ASSERT_EQ("curve25519", r.ReadString());
+      } else if (n == "type") {
+        ASSERT_EQ("XdhComp", r.ReadString());
+      } else if (n == "tests") {
+        WycheproofReadTests(r, &tests, ReadTestAttr, true,
+                            Pkcs11Curve25519Wycheproof::FilterInvalid);
+      } else {
+        FAIL() << "unknown group label: " << n;
+      }
+    }
 
-INSTANTIATE_TEST_SUITE_P(NSSTestVector, Pkcs11Curve25519Test,
+    for (auto& t : tests) {
+      Derive(t);
+    }
+  }
+
+ private:
+  static void FilterInvalid(EcdhTestVector& t, const std::string& result,
+                            const std::vector<std::string>& flags) {
+    static const std::vector<uint8_t> kNonCanonPublic1 = {
+        0x30, 0x39, 0x30, 0x14, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02,
+        0x01, 0x06, 0x09, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xda, 0x47, 0x0f, 0x01,
+        0x03, 0x21, 0x00, 0xda, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    };
+    static const std::vector<uint8_t> kNonCanonPublic2 = {
+        0x30, 0x39, 0x30, 0x14, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02,
+        0x01, 0x06, 0x09, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xda, 0x47, 0x0f, 0x01,
+        0x03, 0x21, 0x00, 0xdb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    };
+
+    if (result == "acceptable" &&
+        (std::find_if(flags.begin(), flags.end(),
+                      [](const std::string& flag) {
+                        return flag == "SmallPublicKey" ||
+                               flag == "ZeroSharedSecret";
+                      }) != flags.end() ||
+         t.public_key == kNonCanonPublic1 ||
+         t.public_key == kNonCanonPublic2)) {
+      t.valid = false;
+    }
+  }
+
+  static void ReadTestAttr(EcdhTestVector& t, const std::string& n,
+                           JsonReader& r) {
+    // Static PKCS#8 and SPKI wrappers for the raw keys from Wycheproof.
+    static const std::vector<uint8_t> kPrivatePrefix = {
+        0x30, 0x67, 0x02, 0x01, 0x00, 0x30, 0x14, 0x06, 0x07, 0x2a, 0x86, 0x48,
+        0xce, 0x3d, 0x02, 0x01, 0x06, 0x09, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xda,
+        0x47, 0x0f, 0x01, 0x04, 0x4c, 0x30, 0x4a, 0x02, 0x01, 0x01, 0x04, 0x20};
+    // The public key section of the PKCS#8 wrapper is filled up with 0's, which
+    // is not correct, but acceptable for the tests at this moment because
+    // validity of the public key is not checked.
+    // It's still necessary because of
+    // https://searchfox.org/nss/rev/7bc70a3317b800aac07bad83e74b6c79a9ec5bff/lib/pk11wrap/pk11pk12.c#171
+    static const std::vector<uint8_t> kPrivateSuffix = {
+        0xa1, 0x23, 0x03, 0x21, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    static const std::vector<uint8_t> kPublicPrefix = {
+        0x30, 0x39, 0x30, 0x14, 0x06, 0x07, 0x2a, 0x86, 0x48,
+        0xce, 0x3d, 0x02, 0x01, 0x06, 0x09, 0x2b, 0x06, 0x01,
+        0x04, 0x01, 0xda, 0x47, 0x0f, 0x01, 0x03, 0x21, 0x00};
+
+    if (n == "public") {
+      t.public_key = kPublicPrefix;
+      std::vector<uint8_t> pub = r.ReadHex();
+      t.public_key.insert(t.public_key.end(), pub.begin(), pub.end());
+    } else if (n == "private") {
+      t.private_key = kPrivatePrefix;
+      std::vector<uint8_t> priv = r.ReadHex();
+      t.private_key.insert(t.private_key.end(), priv.begin(), priv.end());
+      t.private_key.insert(t.private_key.end(), kPrivateSuffix.begin(),
+                           kPrivateSuffix.end());
+    } else if (n == "shared") {
+      t.secret = r.ReadHex();
+    } else {
+      FAIL() << "unsupported test case field: " << n;
+    }
+  }
+};
+
+TEST_F(Pkcs11Curve25519Wycheproof, Run) {
+  WycheproofHeader("x25519", "XDH", "xdh_comp_schema.json",
+                   [this](JsonReader& r) { RunGroup(r); });
+}
+
+class Pkcs11Curve25519ParamTest
+    : public Pkcs11Curve25519TestBase,
+      public ::testing::TestWithParam<EcdhTestVector> {};
+
+TEST_P(Pkcs11Curve25519ParamTest, TestVectors) { Derive(GetParam()); }
+
+INSTANTIATE_TEST_SUITE_P(NSSTestVector, Pkcs11Curve25519ParamTest,
                          ::testing::ValuesIn(kCurve25519Vectors));
-
-INSTANTIATE_TEST_SUITE_P(WycheproofTestVector, Pkcs11Curve25519Test,
-                         ::testing::ValuesIn(kCurve25519WycheproofVectors));
 
 }  // namespace nss_test

@@ -15,7 +15,7 @@ FC_CopyObject
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_CopyObject(
         CK_SESSION_HANDLE hSession,

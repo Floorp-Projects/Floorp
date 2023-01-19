@@ -61,7 +61,7 @@ NSS 3.50 release notes
    -  `Bug 1599603 <https://bugzilla.mozilla.org/show_bug.cgi?id=1599603>`__ - NIST SP800-108 KBKDF
       - PKCS#11 implementation
    -  `Bug 1606992 <https://bugzilla.mozilla.org/show_bug.cgi?id=1606992>`__ - Cache the most
-      recent PBKDF1 password hash, to speed up repeated SDR operations, important with the increased
+      recent PBKDF1 password hash, to speed up repeated SDR operations, important with the increased
       KDF iteration counts. NSS 3.49.1 sped up PBKDF2 operations, though PBKDF1 operations are also
       relevant for older NSS databases (also included in NSS 3.49.2)
    -  `Bug 1608895 <https://bugzilla.mozilla.org/show_bug.cgi?id=1608895>`__ - Gyp builds on

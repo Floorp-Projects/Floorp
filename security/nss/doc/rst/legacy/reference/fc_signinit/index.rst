@@ -15,7 +15,7 @@ FC_SignInit
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_SignInit(
         CK_SESSION_HANDLE hSession,

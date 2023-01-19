@@ -20,7 +20,7 @@ HTTP delegation
    an OSCP responder.
 
    This NSS feature is currently targeted to first appear in NSS version 3.11.1. More details can be
-   found in `bug 152426 <https://bugzilla.mozilla.org/show_bug.cgi?id=152426>`__.
+   found in `bug 152426 <https://bugzilla.mozilla.org/show_bug.cgi?id=152426>`__.
 
    In order to use the HTTP Delegation feature in your NSS-based application, you need to implement
    several callback functions. Your callback functions might be a full implementation of a HTTP
@@ -32,7 +32,7 @@ HTTP delegation
    with SEC_Http.
 
    To find an example implementation, you may look at
-   `bug 111384 <https://bugzilla.mozilla.org/show_bug.cgi?id=111384>`__, which tracks the
+   `bug 111384 <https://bugzilla.mozilla.org/show_bug.cgi?id=111384>`__, which tracks the
    implementation in Mozilla client applications.
 
 .. _instructions_for_specifying_an_ocsp_proxy:

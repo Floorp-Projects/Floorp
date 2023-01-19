@@ -50,7 +50,7 @@ NSS 3.17.4 release notes
 
    -  `Bug 1084986 <https://bugzilla.mozilla.org/show_bug.cgi?id=1084986>`__: If an SSL/TLS
       connection fails, because client and server don't have any common protocol version enabled,
-      NSS has been changed to report error code SSL_ERROR_UNSUPPORTED_VERSION (instead of reporting
+      NSS has been changed to report error code SSL_ERROR_UNSUPPORTED_VERSION (instead of reporting
       SSL_ERROR_NO_CYPHER_OVERLAP).
    -  `Bug 1112461 <https://bugzilla.mozilla.org/show_bug.cgi?id=1112461>`__: libpkix was fixed to
       prefer the newest certificate, if multiple certificates match.

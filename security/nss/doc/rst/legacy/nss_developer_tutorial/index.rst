@@ -74,7 +74,7 @@ NSS Developer Tutorial
       /*
        * Line1
        * Line2
-       */ 
+       */
 
    or
 
@@ -147,16 +147,16 @@ NSS Developer Tutorial
 
 .. container::
 
-   NSS requires C99.  However, not all features from C99 are equally available.
+   NSS requires C99.  However, not all features from C99 are equally available.
 
    -  Variables can be declared, at the point they are first used.
    -  The ``inline`` keyword can be used.
    -  Variadic macro arguments are permitted, but their use should be limited to using
       ``__VA_ARGS__``.
    -  The exact-width integer types in NSPR should be used, in preference to those declared in
-      ``<stdint.h>`` (which will be used by NSPR in the future).
+      ``<stdint.h>`` (which will be used by NSPR in the future).
    -  Universal character names are not permitted, as are wide character types (``char16_t`` and
-      ``char32_t``).  NSS source should only include ASCII text.  Escape non-printing characters
+      ``char32_t``).  NSS source should only include ASCII text.  Escape non-printing characters
       (with ``\x`` if there is no special escape such as \\r, \\n, and \\t) and avoid defining
       string literals that use non-ASCII characters.
    -  One line comments starting with ``//`` are permitted.
@@ -164,7 +164,7 @@ NSS Developer Tutorial
    Check with nss-dev@ before using a language feature not already used, if you are uncertain.
    Please update this list if you do.
 
-   These restrictions are different for C++ unit tests, which can use most C++11 features.  The
+   These restrictions are different for C++ unit tests, which can use most C++11 features.  The
    `Mozilla C++ language features
    guide <https://developer.mozilla.org/en-US/docs/Using_CXX_in_Mozilla_code>`__, and the `Chromium
    C++ usage guide <https://chromium-cpp.appspot.com/>`__, list C++ features that are known to be

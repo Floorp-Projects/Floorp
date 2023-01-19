@@ -23,18 +23,13 @@ if [ "$fuzz_oss" = 1 ]; then
   gyp_params+=(-Dno_zdefs=1 -Dfuzz_oss=1)
 else
   enable_sanitizer asan
+  enable_sanitizer fuzzer
   # Ubsan only builds on x64 for the moment.
   if [ "$target_arch" = "x64" ]; then
     enable_ubsan
   fi
-  enable_sancov
 fi
 
 if [ "$fuzz_tls" = 1 ]; then
   gyp_params+=(-Dfuzz_tls=1)
-fi
-
-if [ ! -f "/usr/lib/libFuzzingEngine.a" ]; then
-  echo "Cloning libFuzzer files ..."
-  run_verbose "$cwd"/fuzz/config/clone_libfuzzer.sh
 fi

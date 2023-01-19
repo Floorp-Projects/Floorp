@@ -142,6 +142,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
         return SECFailure;
     }
 
+    /* All fields MUST be zero initialized! */
     memset(&inf, 0, sizeof(inf));
     inf.length = PR_MIN(sizeof(inf), len);
 
@@ -154,19 +155,23 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
     /* We shouldn't be able to send early data if the handshake is done. */
     PORT_Assert(!ss->firstHsDone || !inf.canSendEarlyData);
 
-    if (ss->sec.ci.sid &&
-        (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
-         ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted)) {
-        if (ss->statelessResume) {
-            inf.maxEarlyDataSize =
-                ss->sec.ci.sid->u.ssl3.locked.sessionTicket.max_early_data_size;
-        } else if (ss->psk) {
-            /* We may have cleared the handshake list, so check the socket.
-             * This is permissable since we only support one EPSK at a time. */
-            inf.maxEarlyDataSize = ss->psk->maxEarlyData;
+    if (ss->sec.ci.sid) {
+        PRUint32 ticketMaxEarlyData =
+            ss->sec.ci.sid->u.ssl3.locked.sessionTicket.max_early_data_size;
+
+        /* Resumption token info. */
+        inf.ticketSupportsEarlyData = (ticketMaxEarlyData > 0);
+
+        if (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
+            ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted) {
+            if (ss->statelessResume) {
+                inf.maxEarlyDataSize = ticketMaxEarlyData;
+            } else if (ss->psk) {
+                /* We may have cleared the handshake list, so check the socket.
+                 * This is permissable since we only support one EPSK at a time. */
+                inf.maxEarlyDataSize = ss->psk->maxEarlyData;
+            }
         }
-    } else {
-        inf.maxEarlyDataSize = 0;
     }
     inf.zeroRttCipherSuite = ss->ssl3.hs.zeroRttSuite;
 

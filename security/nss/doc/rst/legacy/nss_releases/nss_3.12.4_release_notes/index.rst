@@ -5,7 +5,7 @@ NSS 3.12.4 release notes
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       2009-08-20
 
@@ -22,7 +22,7 @@ NSS 3.12.4 release notes
       :name: Distribution_Information
 
    This release is built from the source, at the CVS repository rooted at cvs.mozilla.org:/cvsroot,
-   with the CVS tag ``NSS_3_12_4_RTM``. 
+   with the CVS tag ``NSS_3_12_4_RTM``. 
 
    NSS 3.12.4 requires `NSPR 4.8 <https://www.mozilla.org/projects/nspr/release-notes/>`__. This is
    not a hard requirement. Our QA tested NSS 3.12.4 with NSPR 4.8, but it should work with NSPR
@@ -48,7 +48,7 @@ NSS 3.12.4 release notes
    -  NSS 3.12.4 is the version that we submitted to NIST for FIPS 140-2 validation.
       Currently NSS 3.12.4 is in the "Review Pending" state in the FIPS 140-2 pre-validation
       list at http://csrc.nist.gov/groups/STM/cmvp/documents/140-1/140InProcess.pdf
-   -  Added CRL Distribution Point support (see cert.h).
+   -  Added CRL Distribution Point support (see cert.h).
       **CERT_DecodeCRLIssuingDistributionPoint**
       **CERT_FindCRLIssuingDistPointExten**
    -  The old documentation of the expression matching syntax rules was
@@ -316,7 +316,7 @@ NSS 3.12.4 release notes
 
    NSS 3.12.4 shared libraries are backward compatible with all older NSS 3.x shared libraries. A
    program linked with older NSS 3.x shared libraries will work with NSS 3.12.4 shared libraries
-   without recompiling or relinking.  Furthermore, applications that restrict their use of NSS APIs
+   without recompiling or relinking.  Furthermore, applications that restrict their use of NSS APIs
    to the functions listed in `NSS Public Functions </ref/nssfunctions.html>`__ will remain
    compatible with future versions of the NSS shared libraries.
 

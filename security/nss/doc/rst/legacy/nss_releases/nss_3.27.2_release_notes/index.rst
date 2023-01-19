@@ -49,12 +49,12 @@ NSS 3.27.2 Release Notes
 .. container::
 
    The ``SSL_SetTrustAnchors()`` function is used to set the distinguished names that an NSS server
-   includes in its TLS CertificateRequest message.  If this function is not used, NSS will include
-   the distinguished names for all trust anchors installed in the database.  This can be a lengthy
+   includes in its TLS CertificateRequest message.  If this function is not used, NSS will include
+   the distinguished names for all trust anchors installed in the database.  This can be a lengthy
    list.
 
    Previous versions of NSS leaked the memory used to store distinguished names when
-   ``SSL_SetTrustAnchors()`` was used.  This release fixes that error.
+   ``SSL_SetTrustAnchors()`` was used.  This release fixes that error.
 
 .. _bugs_fixed_in_nss_3.27.2:
 

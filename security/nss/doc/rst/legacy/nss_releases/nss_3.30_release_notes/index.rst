@@ -72,7 +72,7 @@ NSS 3.30 release notes
 
    -  *in ciferfam.h*
 
-      -  **PKCS12_AES_CBC_128, PKCS12_AES_CBC_192, PKCS12_AES_CBC_256** - cipher family identifiers
+      -  **PKCS12_AES_CBC_128, PKCS12_AES_CBC_192, PKCS12_AES_CBC_256** - cipher family identifiers
          corresponding to the PKCS#5 v2.1 AES based encryption schemes used in the PKCS#12 support
          in NSS
 

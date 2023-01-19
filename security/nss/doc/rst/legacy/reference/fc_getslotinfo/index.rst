@@ -15,7 +15,7 @@ FC_GetSlotInfo
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_GetSlotInfo(
         CK_SLOT_ID slotID,

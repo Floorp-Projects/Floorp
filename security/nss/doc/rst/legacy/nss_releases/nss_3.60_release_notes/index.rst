@@ -114,7 +114,7 @@ NSS 3.60 release notes
    -  Bug 1678384 - Add a build flag to allow building nssckbi-testlib in m-c.
    -  Bug 1570539 - Remove -X alt-server-hello option from tstclnt.
    -  Bug 1675523 - Fix incorrect pkcs11t.h value CKR_PUBLIC_KEY_INVALID.
-   -  Bug 1642174 - Fix PowerPC ABI version 1 build failure.
+   -  Bug 1642174 - Fix PowerPC ABI version 1 build failure.
    -  Bug 1674819 - Fix undefined shift in fuzzer mode.
    -  Bug 1678990 - Fix ARM crypto extensions detection on macOS.
    -  Bug 1679290 - Fix lock order inversion and potential deadlock with libnsspem.

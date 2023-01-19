@@ -35,8 +35,8 @@ NSS 3.79.1 release notes
 .. container::
 
    - Bug 1366464 - compare signature and signatureAlgorithm fields in legacy certificate verifier.
-   - Bug 1771498 - Uninitialized value in cert_ComputeCertType. 
-   - Bug 1759794 - protect SFTKSlot needLogin with slotLock. 
+   - Bug 1771498 - Uninitialized value in cert_ComputeCertType.
+   - Bug 1759794 - protect SFTKSlot needLogin with slotLock.
    - Bug 1760998 - avoid data race on primary password change.
    - Bug 1330271 - check for null template in sec_asn1{d,e}_push_state.
 

@@ -423,6 +423,19 @@ tls13_ClientSendPreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         return SECSuccess;
     }
 
+    /* ...or if PSKs are incompatible with negotiated ciphersuites
+     * (different hash algorithms) on HRR.
+     *
+     * In addition, in its updated ClientHello, the client SHOULD NOT offer any
+     * pre-shared keys associated with a hash other than that of the selected
+     * cipher suite.  This allows the client to avoid having to compute partial
+     * hash transcripts for multiple hashes in the second ClientHello
+     * [RFC8446, Section 4.1.4]. */
+    if (ss->ssl3.hs.helloRetry &&
+        (psk->hash != ss->ssl3.hs.suite_def->prf_hash)) {
+        return SECSuccess;
+    }
+
     /* Save where this extension starts so that if we have to add padding, it
     * can be inserted before this extension. */
     PORT_Assert(buf->len >= 4);

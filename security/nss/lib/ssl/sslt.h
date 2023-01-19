@@ -447,6 +447,9 @@ typedef struct SSLPreliminaryChannelInfoStr {
      * should use the following hostname extracted from the ECHConfig. */
     const char* echPublicName;
 
+    /* The following field was added in NSS 3.85. */
+    PRBool ticketSupportsEarlyData;
+
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */
 } SSLPreliminaryChannelInfo;

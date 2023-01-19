@@ -87,7 +87,7 @@ Using JSS
       3.11.
 
       ================== ========= ==============
-      Component Versions           
+      Component Versions
       JSS Version        Component Tested Version
       JSS 4.2            NSPR      4.6.4
       \                  NSS       3.11.4
@@ -116,13 +116,13 @@ Using JSS
       You can put this directory in your classpath to run applications locally; or, you can package
       the class files into a JAR file for easier distribution:
 
-         .. code:: notranslate
+         .. code::
 
             cd mozilla/dist/classes[_dbg]
             zip -r ../jss42.jar .
 
       If you are downloading binaries, get jss42.jar
-      from http://ftp.mozilla.org/pub/mozilla.org/security/jss/releases/.
+      from http://ftp.mozilla.org/pub/mozilla.org/security/jss/releases/.
 
 .. _setup_your_runtime_environment:
 

@@ -39,7 +39,7 @@ NSS 3.78 release notes
    - Bug 1763120 - Add ECH Grease Support to tstclnt
    - Bug 1765003 - Add a strict variant of moz::pkix::CheckCertHostname.
    - Bug 1166338 - Change SSL_REUSE_SERVER_ECDHE_KEY default to false.
-   - Bug 1760813 - Make SEC_PKCS12EnableCipher succeed 
+   - Bug 1760813 - Make SEC_PKCS12EnableCipher succeed
    - Bug 1762489 - Update zlib in NSS to 1.2.12.
 
 

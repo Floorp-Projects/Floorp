@@ -45,7 +45,7 @@ NSS 3.15.5 release notes
       ALPN (or both) should be used for application layer protocol negotiation.
    -  Added the TLS `padding
       extension <https://datatracker.ietf.org/doc/html/draft-agl-tls-padding>`__. The extension type
-      value is 35655, which may change when an official extension type value is assigned by IANA.
+      value is 35655, which may change when an official extension type value is assigned by IANA.
       NSS automatically adds the padding extension to ClientHello when necessary.
    -  Added a new macro ``CERT_LIST_TAIL``, defined in ``certt.h``, for getting the tail of a
       ``CERTCertList``.
@@ -57,9 +57,9 @@ NSS 3.15.5 release notes
 
 .. container::
 
-   -  `Bug 950129 <https://bugzilla.mozilla.org/show_bug.cgi?id=950129>`__: Improve the OCSP
+   -  `Bug 950129 <https://bugzilla.mozilla.org/show_bug.cgi?id=950129>`__: Improve the OCSP
       fetching policy when verifying OCSP responses
-   -  `Bug 949060 <https://bugzilla.mozilla.org/show_bug.cgi?id=949060>`__: Validate the ``iov``
+   -  `Bug 949060 <https://bugzilla.mozilla.org/show_bug.cgi?id=949060>`__: Validate the ``iov``
       input argument (an array of ``PRIOVec`` structures) of ``ssl_WriteV`` (called via
       ``PR_Writev``). Applications should still take care when converting ``struct iov`` to
       ``PRIOVec`` because the ``iov_len`` members of the two structures have different types

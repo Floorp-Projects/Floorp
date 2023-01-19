@@ -34,9 +34,9 @@ NSS 3.76 release notes
 
 .. container::
 
-   - Bug 1755555 - Hold tokensLock through nssToken_GetSlot calls in nssTrustDomain_GetActiveSlots. r=rrelyea 
-   - Bug 1370866 - Check return value of PK11Slot_GetNSSToken. r=djackson 
-   - Bug 1747957 - Use Wycheproof JSON for RSASSA-PSS, r=nss-reviewers,bbeurdouche 
+   - Bug 1755555 - Hold tokensLock through nssToken_GetSlot calls in nssTrustDomain_GetActiveSlots. r=rrelyea
+   - Bug 1370866 - Check return value of PK11Slot_GetNSSToken. r=djackson
+   - Bug 1747957 - Use Wycheproof JSON for RSASSA-PSS, r=nss-reviewers,bbeurdouche
    - Bug 1679803 - Add SHA256 fingerprint comments to old certdata.txt entries. r=nss-reviewers,bbeurdouche
    - Bug 1753505 - Avoid truncating files in nss-release-helper.py. r=bbeurdouche
    - Bug 1751157 - Throw illegal_parameter alert for illegal extensions in handshake message. r=djackson

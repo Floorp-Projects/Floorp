@@ -6,7 +6,7 @@ CORE_DEPTH = ../..
 
 MODULE = nss
 
-REQUIRES = seccmd dbm softoken
+REQUIRES = 
 
 INCLUDES += -I$(CORE_DEPTH)/nss/lib/freebl
 
@@ -16,4 +16,3 @@ CSRCS = \
 	lowhashtest.c \
 	$(NULL)
 
-USE_STATIC_LIBS = 1

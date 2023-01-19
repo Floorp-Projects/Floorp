@@ -21,6 +21,6 @@ NSS Tools Man Pages - work in progress
 
    ssltap :ref:`mozilla_projects_nss_reference_nss_tools_:_ssltab`
 
-   This is still a work in progress and in early stages. 
+   This is still a work in progress and in early stages. 
 
    These man pages where generated from XML docbook files.

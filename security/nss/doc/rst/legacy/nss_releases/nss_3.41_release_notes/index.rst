@@ -130,7 +130,7 @@ NSS 3.41 release notes
       supported_signature_algorithms in Certificate Request in TLS 1.2
 
    -  `Bug 1485864 <https://bugzilla.mozilla.org/show_bug.cgi?id=1485864>`__ - Cache side-channel
-      variant of the Bleichenbacher attack (CVE-2018-12404)
+      variant of the Bleichenbacher attack (CVE-2018-12404)
 
    -  `Bug 1481271 <https://bugzilla.mozilla.org/show_bug.cgi?id=1481271>`__ - Resend the same
       ticket in ClientHello after HelloRetryRequest

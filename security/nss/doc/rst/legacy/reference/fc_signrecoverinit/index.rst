@@ -15,7 +15,7 @@ FC_SignRecoverInit
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_SignRecoverInit(
         CK_SESSION_HANDLE hSession,

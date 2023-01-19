@@ -58,7 +58,7 @@ NSS Code Coverage
    -  Example: Not tested (0/?/878).
 
       -  0 - tested blocks in file (always 0).
-      -   ? - total blocks in file (there is no trivial method to get this number without TCOV).
+      -   ? - total blocks in file (there is no trivial method to get this number without TCOV).
       -  878 - total lines in file (by wc -l command).
 
    .. rubric:: Numbers in total count

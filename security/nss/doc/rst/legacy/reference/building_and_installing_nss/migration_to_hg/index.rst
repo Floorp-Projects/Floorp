@@ -9,10 +9,10 @@ Migration to HG
      to
    | Mozilla's HG (Mercurial) server.
    | Each project now lives in its own separate space, they can be found at:
-   |    https://hg.mozilla.org/projects/nspr/
-   |    https://hg.mozilla.org/projects/nss/
-   |    https://hg.mozilla.org/projects/jss/
-   |   https://hg.mozilla.org/projects/python-nss/
+   |    https://hg.mozilla.org/projects/nspr/
+   |    https://hg.mozilla.org/projects/nss/
+   |    https://hg.mozilla.org/projects/jss/
+   |   https://hg.mozilla.org/projects/python-nss/
 
    | This migration has been used as an opportunity to change the layout of the
    | source directories.
@@ -33,14 +33,14 @@ Migration to HG
    | platform (this part hasn't changed).
    | However, below is a brief summary that shows how to checkout the
    | source code and build both NSPR and NSS:
-   |   mkdir workarea
-   |   cd workarea
-   |   hg clone https://hg.mozilla.org/projects/nspr
-   |   hg clone https://hg.mozilla.org/projects/nss
-   |   cd nss
-   |   # set USE_64=1 on 64 bit architectures
-   |   # set BUILD_OPT=1 to get an optimized build
-   |   make nss_build_all
+   |   mkdir workarea
+   |   cd workarea
+   |   hg clone https://hg.mozilla.org/projects/nspr
+   |   hg clone https://hg.mozilla.org/projects/nss
+   |   cd nss
+   |   # set USE_64=1 on 64 bit architectures
+   |   # set BUILD_OPT=1 to get an optimized build
+   |   make nss_build_all
    | Note that the JSS project has been given a private copy of the former
    | mozilla/security/coreconf directory, allowing it to remain stable,
    | and only update its build system as necessary.

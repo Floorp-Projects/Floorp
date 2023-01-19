@@ -19,6 +19,8 @@
         "Http*":"Test sends http string to socket before handshake. his data is interpreted as a record header and leads to different IO errors in NSS.",
         "V2ClientHello*":"Prefix data before V2 ClientHello leads to IO errors in NSS.",
         "Server-JDK11-NoWorkaround-3":"Unexpected Bogo crash.",
+        "Resume-Server-UnofferedCipher-TLS13":"Bogo rejects resumption if client offers previously not used ciphersuites with equal hash algorithm (no 0Rtt).",
+        "EarlyData-FirstTicket-Server-TLS13":"Bogo provides specific early data logging which is the only check in this test but not supported by NSS.",
 
         "*Ed25519*":"Add Ed25519 support (Bug 1325335)",
         "*NoSSL3*":"Test passes but only because of handshake failure, NSS only rejects SSL3 immediately in TLS1.3 clients/servers.",
@@ -36,7 +38,6 @@
         "TLS13-ExpectNoSessionTicketOnBadKEMode-Server":"NSS Server side bug. Don't send ticket when not permitted by KE modes (Bug 1317635)",
         "Resume-Server-OmitPSKsOnSecondClientHello":"NSS Server side bug. It does not detect ClientHello dropping of PSK extension (after HRR).",
         "Renegotiate-Client-Forbidden-1":"By default NSS allows renegotiation with extension contrary to bogo.",
-        "Server-TooLongSessionID*":"NSS does not check the length of the ClientHello sessionID.",
         "TrailingData*":"NSS does only check for trailing data on possible key change handshake messages in TLS 1.3",
         "Partial*":"See TrailingData* description.",
         "QUIC-ECH*":"NSS does not support QUIC.",
@@ -45,6 +46,9 @@
         "*ECH*NoSupportedConfigs*":"NSS throws error if unsupported but well formed retry configs could not be set on client, Bogo just does not offer ECH.",
         "*ECH*RandomHRR*":"NSS sends real ECH in CH2 after receiving HRR rejcting ECH formally, Bogo expects instant ech_required alert. Bug 1779357",
         "*ECH*UnsolicitedInnerServerNameAck":"NSS always sends SNI in CHInner, Bogo tests if the client detects an unsolicited SNI in SH if CHInner did not include it. Bug 1781224",
+        "CorruptTicket-TLS-TLS12":"NSS sends an alert on reception of a corrupted session ticket instead of falling back to full handshake. Bug 1783812",
+
+        "FalseStart-ALPN*":"TODO - Implementing TLS 1.2 only FalseStart has low priority.",
 
         "####################":"####################",
         "### TLS1/11 failures due to unsupported signature algorithms":"",
@@ -71,6 +75,10 @@
         "LooseInitialRecordVersion-TLS11":"",
         "*Certificate-TLS1":"",
         "*Certificate-TLS11":"",
+        "CorruptTicket*TLS1":"",
+        "CorruptTicket*TLS11":"",
+        "Resume-Server*TLS1-*":"",
+        "Resume-Server*TLS11-*":"",
         "BadRSAClientKeyExchange-*":"This is a TLS11 only test.",
         "RSAKeyUsage-Server-WantSignature-GotSignature-TLS1":"Only Server side of TLS 1 fails",
         "RSAKeyUsage-Server-WantSignature-GotSignature-TLS11":"Only Server side of TLS 11 fails",

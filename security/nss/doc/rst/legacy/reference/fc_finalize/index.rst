@@ -15,7 +15,7 @@ FC_Finalize
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_Finalize (CK_VOID_PTR pReserved);
 
@@ -62,7 +62,7 @@ FC_Finalize
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       #include <assert.h>
 

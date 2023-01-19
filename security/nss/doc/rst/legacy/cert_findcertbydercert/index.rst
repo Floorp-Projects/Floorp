@@ -12,7 +12,7 @@ CERT_FindCertByDERCert
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       #include <cert.h>
       CERTCertificate *CERT_FindCertByDERCert(
@@ -38,7 +38,7 @@ CERT_FindCertByDERCert
 
 .. container::
 
-   This function looks in the ?NSSCryptoContext? and the ?NSSTrustDomain? to find the certificate
+   This function looks in the ?NSSCryptoContext? and the ?NSSTrustDomain? to find the certificate
    that matches the DER-encoded certificate. A match is found when the issuer and serial number of
    the DER-encoded certificate are found on a certificate in the certificate database.
 

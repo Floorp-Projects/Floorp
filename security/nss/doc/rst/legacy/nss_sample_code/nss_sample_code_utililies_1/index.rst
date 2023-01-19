@@ -10,7 +10,7 @@ NSS Sample Code Utilities_1
 
 .. container::
 
-   This is a library of utilities used by many of the samples.  This code shows the following:
+   This is a library of utilities used by many of the samples.  This code shows the following:
 
    -  Extract seed from noise file
    -  Read DER encoding from a file
@@ -25,7 +25,7 @@ NSS Sample Code Utilities_1
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       #include <prlog.h>
       #include <termios.h>

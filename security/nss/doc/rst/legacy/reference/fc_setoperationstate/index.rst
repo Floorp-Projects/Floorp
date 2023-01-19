@@ -15,7 +15,7 @@ FC_SetOperationState
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_SetOperationState(
         CK_SESSION_HANDLE hSession,

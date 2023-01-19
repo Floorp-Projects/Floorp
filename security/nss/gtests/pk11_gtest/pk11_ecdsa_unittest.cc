@@ -10,14 +10,13 @@
 
 #include "cpputil.h"
 #include "gtest/gtest.h"
+#include "json_reader.h"
 #include "nss_scoped_ptrs.h"
+#include "testvectors/curve25519-vectors.h"
 
 #include "pk11_ecdsa_vectors.h"
 #include "pk11_signature_test.h"
 #include "pk11_keygen.h"
-#include "testvectors/p256ecdsa-sha256-vectors.h"
-#include "testvectors/p384ecdsa-sha384-vectors.h"
-#include "testvectors/p521ecdsa-sha512-vectors.h"
 
 namespace nss_test {
 
@@ -204,10 +203,60 @@ TEST_F(Pkcs11EcdsaSha256Test, ImportSpkiPointNotOnCurve) {
   EXPECT_EQ(handle, static_cast<decltype(handle)>(CK_INVALID_HANDLE));
 }
 
-class Pkcs11EcdsaWycheproofTest
-    : public ::testing::TestWithParam<EcdsaTestVector> {
+class Pkcs11EcdsaWycheproofTest : public ::testing::Test {
  protected:
-  void Derive(const EcdsaTestVector vec) {
+  void Run(const std::string& name) {
+    WycheproofHeader(name, "ECDSA", "ecdsa_verify_schema.json",
+                     [this](JsonReader& r) { RunGroup(r); });
+  }
+
+ private:
+  void RunGroup(JsonReader& r) {
+    std::vector<EcdsaTestVector> tests;
+    std::vector<uint8_t> public_key;
+    SECOidTag hash_oid = SEC_OID_UNKNOWN;
+
+    while (r.NextItem()) {
+      std::string n = r.ReadLabel();
+      if (n == "") {
+        break;
+      }
+
+      if (n == "key" || n == "keyPem") {
+        r.SkipValue();
+      } else if (n == "keyDer") {
+        public_key = r.ReadHex();
+      } else if (n == "sha") {
+        hash_oid = r.ReadHash();
+      } else if (n == "type") {
+        ASSERT_EQ("EcdsaVerify", r.ReadString());
+      } else if (n == "tests") {
+        WycheproofReadTests(r, &tests, ReadTestAttr);
+      } else {
+        FAIL() << "unknown label in group: " << n;
+      }
+    }
+
+    for (auto& t : tests) {
+      std::cout << "Running test " << t.id << std::endl;
+      t.public_key = public_key;
+      t.hash_oid = hash_oid;
+      Derive(t);
+    }
+  }
+
+  static void ReadTestAttr(EcdsaTestVector& t, const std::string& n,
+                           JsonReader& r) {
+    if (n == "msg") {
+      t.msg = r.ReadHex();
+    } else if (n == "sig") {
+      t.sig = r.ReadHex();
+    } else {
+      FAIL() << "unknown test key: " << n;
+    }
+  }
+
+  void Derive(const EcdsaTestVector& vec) {
     SECItem spki_item = {siBuffer, toUcharPtr(vec.public_key.data()),
                          static_cast<unsigned int>(vec.public_key.size())};
     SECItem sig_item = {siBuffer, toUcharPtr(vec.sig.data()),
@@ -234,19 +283,11 @@ class Pkcs11EcdsaWycheproofTest
   };
 };
 
-TEST_P(Pkcs11EcdsaWycheproofTest, Verify) { Derive(GetParam()); }
-
-INSTANTIATE_TEST_SUITE_P(WycheproofP256SignatureSha256Test,
-                         Pkcs11EcdsaWycheproofTest,
-                         ::testing::ValuesIn(kP256EcdsaSha256Vectors));
-
-INSTANTIATE_TEST_SUITE_P(WycheproofP384SignatureSha384Test,
-                         Pkcs11EcdsaWycheproofTest,
-                         ::testing::ValuesIn(kP384EcdsaSha384Vectors));
-
-INSTANTIATE_TEST_SUITE_P(WycheproofP521SignatureSha512Test,
-                         Pkcs11EcdsaWycheproofTest,
-                         ::testing::ValuesIn(kP521EcdsaSha512Vectors));
+TEST_F(Pkcs11EcdsaWycheproofTest, P256) { Run("ecdsa_secp256r1_sha256"); }
+TEST_F(Pkcs11EcdsaWycheproofTest, P256Sha512) { Run("ecdsa_secp256r1_sha512"); }
+TEST_F(Pkcs11EcdsaWycheproofTest, P384) { Run("ecdsa_secp384r1_sha384"); }
+TEST_F(Pkcs11EcdsaWycheproofTest, P384Sha512) { Run("ecdsa_secp384r1_sha512"); }
+TEST_F(Pkcs11EcdsaWycheproofTest, P521) { Run("ecdsa_secp521r1_sha512"); }
 
 class Pkcs11EcdsaRoundtripTest
     : public Pkcs11EcdsaTestBase,

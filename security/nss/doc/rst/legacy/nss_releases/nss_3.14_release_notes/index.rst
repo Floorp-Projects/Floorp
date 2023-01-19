@@ -132,7 +132,7 @@ NSS 3.14 release notes
 
 .. container::
 
-   -  `Bug 333601 <https://bugzilla.mozilla.org/show_bug.cgi?id=333601>`__ - Performance
+   -  `Bug 333601 <https://bugzilla.mozilla.org/show_bug.cgi?id=333601>`__ - Performance
       enhancements for Intel Macs
 
       When building for Intel Macs, NSS will now take advantage of optimized assembly code for

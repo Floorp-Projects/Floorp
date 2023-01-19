@@ -128,7 +128,7 @@ NSS 3.34 release notes
          -  SHA-256 Fingerprint:
             3C:FC:3C:14:D1:F6:84:FF:17:E3:8C:43:CA:44:0C:00:B9:67:EC:93:3E:8B:FE:06:4C:A1:D7:2C:90:F2:AD:B0
 
-      -  CN = CA 沃通根证书, O=WoSign CA Limited
+      -  CN = CA 沃通根证书, O=WoSign CA Limited
 
          -  SHA-256 Fingerprint:
             D6:F0:34:BD:94:AA:23:3F:02:97:EC:A4:24:5B:28:39:73:E4:47:AA:59:0F:31:0C:77:F4:8F:DF:83:11:22:54
@@ -178,7 +178,7 @@ NSS 3.34 release notes
          when the session was resumed.
       -  ``PRBool resumed`` is ``PR_TRUE`` when the session is resumed, and ``PR_FALSE`` otherwise.
 
-   -  RSA-PSS signatures are now supported on certificates.  Certificates with RSA-PSS or
+   -  RSA-PSS signatures are now supported on certificates.  Certificates with RSA-PSS or
       RSA-PKCS#1v1.5 keys can be used to create an RSA-PSS signature on a certificate, using the
       ``--pss-sign`` argument to ``certutil``.
 

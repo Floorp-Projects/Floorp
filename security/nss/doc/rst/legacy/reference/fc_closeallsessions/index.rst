@@ -15,7 +15,7 @@ FC_CloseAllSessions
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_CloseAllSessions(
         CK_SLOT_ID slotID

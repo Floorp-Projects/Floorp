@@ -15,7 +15,7 @@ FC_Verify
 
 .. container::
 
-   .. code:: eval
+   .. code::
 
       CK_RV FC_Verify(
         CK_SESSION_HANDLE hSession,

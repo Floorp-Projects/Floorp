@@ -40,7 +40,7 @@ NSS Tools certutil
 
    To run the Certificate Database Tool, type the command
 
-   .. code:: notranslate
+   .. code::
 
       certutil option [arguments ]
 
@@ -59,7 +59,7 @@ NSS Tools certutil
    Certificate Database Tool command options and their arguments are defined as follows:
 
    +-------------------------------------------------+-------------------------------------------------+
-   |  **Options**                                    |                                                 |
+   |  **Options**                                    |                                                 |
    +-------------------------------------------------+-------------------------------------------------+
    | ``-N``                                          | Create new certificate and key databases.       |
    +-------------------------------------------------+-------------------------------------------------+
@@ -278,17 +278,17 @@ NSS Tools certutil
    |                                                 | each category position use zero or more of the  |
    |                                                 | following attribute codes:                      |
    |                                                 |                                                 |
-   |                                                 | | ``p``    prohibited (explicitly distrusted)   |
-   |                                                 | | ``P``    Trusted peer                         |
-   |                                                 | | ``c``    Valid CA                             |
-   |                                                 | | ``T``    Trusted CA to issue client           |
+   |                                                 | | ``p``    prohibited (explicitly distrusted)   |
+   |                                                 | | ``P``    Trusted peer                         |
+   |                                                 | | ``c``    Valid CA                             |
+   |                                                 | | ``T``    Trusted CA to issue client           |
    |                                                 |   certificates (implies ``c``)                  |
-   |                                                 | | ``C``    Trusted CA to issue server           |
+   |                                                 | | ``C``    Trusted CA to issue server           |
    |                                                 |   certificates (SSL only)                       |
-   |                                                 | |       (implies ``c``)                         |
-   |                                                 | | ``u``    Certificate can be used for          |
+   |                                                 | |       (implies ``c``)                         |
+   |                                                 | | ``u``    Certificate can be used for          |
    |                                                 |   authentication or signing                     |
-   |                                                 | | ``w``    Send warning (use with other         |
+   |                                                 | | ``w``    Send warning (use with other         |
    |                                                 |   attributes to include a warning when the      |
    |                                                 |   certificate is used in that context)          |
    |                                                 |                                                 |
@@ -472,49 +472,49 @@ NSS Tools certutil
    options and arguments. Options and arguments in square brackets are optional, those without
    square brackets are required.
 
-   .. code:: notranslate
+   .. code::
 
-      -N [-d certdir ] 
+      -N [-d certdir ]
 
-   .. code:: notranslate
+   .. code::
 
       -S -k rsa|dsa -n certname -s subject
       [-c issuer |-x] -t trustargs [-h tokenname ]
       [-m serial-number ] [-v valid-months ] [-w offset-months ]
-      [-d certdir ] [-p phone ] [-f password-file ] [-1] [-2] [-3] [-4] 
+      [-d certdir ] [-p phone ] [-f password-file ] [-1] [-2] [-3] [-4]
 
-   .. code:: notranslate
+   .. code::
 
       -R -k rsa|dsa -s subject [-h tokenname ]
-      [-d certdir ] [-p phone ] [-o output-file ] [-f password-file ] 
+      [-d certdir ] [-p phone ] [-o output-file ] [-f password-file ]
 
-   .. code:: notranslate
+   .. code::
 
       -C -c issuer [-f password-file ]
       [-h tokenname ] -i cert-request-file -o output-file [-m serial-number ]
       [-v valid-months ] [-w offset-months ] [-d certdir ] [-1] [-2] [-3]
-      [-4] 
+      [-4]
 
-   .. code:: notranslate
+   .. code::
 
       -A -n certname -t trustargs [-h tokenname ] [-d certdir ] [-a]
-      [-i cert-request-file ] 
+      [-i cert-request-file ]
 
-   .. code:: notranslate
+   .. code::
 
-      -L [-n certname ] [-d certdir ] [-r] [-a] 
+      -L [-n certname ] [-d certdir ] [-r] [-a]
 
-   .. code:: notranslate
+   .. code::
 
-      -V -n certname -b validity-time -u certusage [-e] [-l] [-d certdir ] 
+      -V -n certname -b validity-time -u certusage [-e] [-l] [-d certdir ]
 
-   .. code:: notranslate
+   .. code::
 
-      -M -n certname -t trustargs [-d certdir ] 
+      -M -n certname -t trustargs [-d certdir ]
 
-   .. code:: notranslate
+   .. code::
 
-      -H 
+      -H
 
    -  Creating a new ``cert8.db`` file:
    -  Creating a new certificate and adding it to the database with one command:
@@ -540,7 +540,7 @@ NSS Tools certutil
 
    This example creates a new certificate database (``cert8.db`` file) in the specified directory:
 
-   .. code:: notranslate
+   .. code::
 
       certutil -N -d certdir
 
@@ -556,14 +556,14 @@ NSS Tools certutil
 
    This example lists all the certificates in the ``cert8.db`` file in the specified directory:
 
-   .. code:: notranslate
+   .. code::
 
       certutil -L -d certdir
 
    The Certificate Database Tool displays output similar to the following:
 
-   | ``Certificate Name              Trust Attributes``
-   | ``Uptime Group Plc. Class 1 CA        C,C,  VeriSign Class 1 Primary CA         ,C,  VeriSign Class 2 Primary CA         C,C,C  AT&T Certificate Services           C,C,  GTE CyberTrust Secure Server CA     C,,  Verisign/RSA Commercial CA          C,C,  AT&T Directory Services             C,C,  BelSign Secure Server CA            C,,  Verisign/RSA Secure Server CA       C,C,  GTE CyberTrust Root CA              C,C,  Uptime Group Plc. Class 4 CA        ,C,  VeriSign Class 3 Primary CA         C,C,C  Canada Post Corporation CA          C,C,  Integrion CA                        C,C,C  IBM World Registry CA               C,C,C  GTIS/PWGSC, Canada Gov. Web CA      C,C,  GTIS/PWGSC, Canada Gov. Secure CA   C,C,C  MCI Mall CA                         C,C,  VeriSign Class 4 Primary CA         C,C,C  KEYWITNESS, Canada CA               C,C,  BelSign Object Publishing CA        ,,C  BBN Certificate Services CA Root 1  C,C,  p    prohibited (explicitly distrusted)  P    Trusted peer  c    Valid CA  T    Trusted CA to issue client certs (implies c)  C    Trusted CA to issue server certs(for ssl only) (implies c)  u    User cert  w    Send warning``
+   | ``Certificate Name              Trust Attributes``
+   | ``Uptime Group Plc. Class 1 CA        C,C,  VeriSign Class 1 Primary CA         ,C,  VeriSign Class 2 Primary CA         C,C,C  AT&T Certificate Services           C,C,  GTE CyberTrust Secure Server CA     C,,  Verisign/RSA Commercial CA          C,C,  AT&T Directory Services             C,C,  BelSign Secure Server CA            C,,  Verisign/RSA Secure Server CA       C,C,  GTE CyberTrust Root CA              C,C,  Uptime Group Plc. Class 4 CA        ,C,  VeriSign Class 3 Primary CA         C,C,C  Canada Post Corporation CA          C,C,  Integrion CA                        C,C,C  IBM World Registry CA               C,C,C  GTIS/PWGSC, Canada Gov. Web CA      C,C,  GTIS/PWGSC, Canada Gov. Secure CA   C,C,C  MCI Mall CA                         C,C,  VeriSign Class 4 Primary CA         C,C,C  KEYWITNESS, Canada CA               C,C,  BelSign Object Publishing CA        ,,C  BBN Certificate Services CA Root 1  C,C,  p    prohibited (explicitly distrusted)  P    Trusted peer  c    Valid CA  T    Trusted CA to issue client certs (implies c)  C    Trusted CA to issue server certs(for ssl only) (implies c)  u    User cert  w    Send warning``
 
 .. _creating_a_certificate_request:
 
@@ -575,15 +575,15 @@ NSS Tools certutil
    This example generates a binary certificate request file named ``e95c.req`` in the specified
    directory:
 
-   .. code:: notranslate
+   .. code::
 
       certutil -R -s "CN=John Smith, O=Netscape, L=Mountain View, ST=California, C=US" -p "650-555-8888" -o mycert.req -d certdir
 
    Before it creates the request file, the Certificate Database Tool prompts you for a password:
 
-   .. code:: notranslate
+   .. code::
 
-      Enter Password or Pin for "Communicator Certificate DB": 
+      Enter Password or Pin for "Communicator Certificate DB":
 
 .. _creating_a_certificate:
 
@@ -597,7 +597,7 @@ NSS Tools certutil
    example creates a new binary, self-signed CA certificate named ``myissuer``, in the specified
    directory.
 
-   .. code:: notranslate
+   .. code::
 
       certutil -S -s "CN=My Issuer" -n myissuer -x -t "C,C,C" -1 -2 -5 -m 1234 -f password-file -d certdir
 
@@ -605,7 +605,7 @@ NSS Tools certutil
    certificate request named ``mycert.req``, in the specified directory. It is issued by the
    self-signed certificate created above, ``myissuer``.
 
-   .. code:: notranslate
+   .. code::
 
       certutil -C -m 2345 -i mycert.req -o mycert.crt -c myissuer -d certdir
 
@@ -618,21 +618,21 @@ NSS Tools certutil
 
    This example adds a certificate to the certificate database:
 
-   .. code:: notranslate
+   .. code::
 
       certutil -A -n jsmith@netscape.com -t "p,p,p" -i mycert.crt -d certdir
 
    You can see this certificate in the database with this command:
 
-   .. code:: notranslate
+   .. code::
 
       certutil -L -n jsmith@netscape.com -d certdir
 
    The Certificate Database Tool displays output similar to the following:
 
-   | ``Certificate:    Data:      Version: 3 (0x2)      Serial Number: 0 (0x0)      Signature Algorithm: PKCS #1 MD5 With RSA Encryption      Issuer: CN=John Smith, O=Netscape, L=Mountain View, ST=California, C=US      Validity:          Not Before: Thu Mar 12 00:10:40 1998          Not After: Sat Sep 12 00:10:40 1998  Subject: CN=John Smith, O=Netscape, L=Mountain View, ST=California, C=US``
-   | ``Subject Public Key Info:    Public Key Algorithm: PKCS #1 RSA Encryption    RSA Public Key:      Modulus:          00:da:53:23:58:00:91:6a:d1:a2:39:26:2f:06:3a:          38:eb:d4:c1:54:a3:62:00:b9:f0:7f:d6:00:76:aa:          18:da:6b:79:71:5b:d9:8a:82:24:07:ed:49:5b:33:          bf:c5:79:7c:f6:22:a7:18:66:9f:ab:2d:33:03:ec:          63:eb:9d:0d:02:1b:da:32:ae:6c:d4:40:95:9f:b3:          44:8b:8e:8e:a3:ae:ad:08:38:4f:2e:53:e9:e1:3f:          8e:43:7f:51:61:b9:0f:f3:a6:25:1e:0b:93:74:8f:          c6:13:a3:cd:51:40:84:0e:79:ea:b7:6b:d1:cc:6b:          78:d0:5d:da:be:2b:57:c2:6f      Exponent: 65537 (0x10001)  Signature Algorithm: PKCS #1 MD5 With RSA Encryption  Signature:    44:15:e5:ae:c4:30:2c:cd:60:89:f1:1d:22:ed:5e:5b:10:c8:    7e:5f:56:8c:b4:00:12:ed:5f:a4:6a:12:c3:0d:01:03:09:f2:    2f:e7:fd:95:25:47:80:ea:c1:25:5a:33:98:16:52:78:24:80:    c9:53:11:40:99:f5:bd:b8:e9:35:0e:5d:3e:38:6a:5c:10:d1:    c6:f9:54:af:28:56:62:f4:2f:b3:9b:50:e1:c3:a2:ba:27:ee:    07:9f:89:2e:78:5c:6d:46:b6:5e:99:de:e6:9d:eb:d9:ff:b2:    5f:c6:f6:c6:52:4a:d4:67:be:8d:fc:dd:52:51:8e:a2:d7:15:    71:3e``
-   | ``Certificate Trust Flags:    SSL Flags:      Valid CA      Trusted CA    Email Flags:      Valid CA      Trusted CA    Object Signing Flags:      Valid CA      Trusted CA``
+   | ``Certificate:    Data:      Version: 3 (0x2)      Serial Number: 0 (0x0)      Signature Algorithm: PKCS #1 MD5 With RSA Encryption      Issuer: CN=John Smith, O=Netscape, L=Mountain View, ST=California, C=US      Validity:          Not Before: Thu Mar 12 00:10:40 1998          Not After: Sat Sep 12 00:10:40 1998  Subject: CN=John Smith, O=Netscape, L=Mountain View, ST=California, C=US``
+   | ``Subject Public Key Info:    Public Key Algorithm: PKCS #1 RSA Encryption    RSA Public Key:      Modulus:          00:da:53:23:58:00:91:6a:d1:a2:39:26:2f:06:3a:          38:eb:d4:c1:54:a3:62:00:b9:f0:7f:d6:00:76:aa:          18:da:6b:79:71:5b:d9:8a:82:24:07:ed:49:5b:33:          bf:c5:79:7c:f6:22:a7:18:66:9f:ab:2d:33:03:ec:          63:eb:9d:0d:02:1b:da:32:ae:6c:d4:40:95:9f:b3:          44:8b:8e:8e:a3:ae:ad:08:38:4f:2e:53:e9:e1:3f:          8e:43:7f:51:61:b9:0f:f3:a6:25:1e:0b:93:74:8f:          c6:13:a3:cd:51:40:84:0e:79:ea:b7:6b:d1:cc:6b:          78:d0:5d:da:be:2b:57:c2:6f      Exponent: 65537 (0x10001)  Signature Algorithm: PKCS #1 MD5 With RSA Encryption  Signature:    44:15:e5:ae:c4:30:2c:cd:60:89:f1:1d:22:ed:5e:5b:10:c8:    7e:5f:56:8c:b4:00:12:ed:5f:a4:6a:12:c3:0d:01:03:09:f2:    2f:e7:fd:95:25:47:80:ea:c1:25:5a:33:98:16:52:78:24:80:    c9:53:11:40:99:f5:bd:b8:e9:35:0e:5d:3e:38:6a:5c:10:d1:    c6:f9:54:af:28:56:62:f4:2f:b3:9b:50:e1:c3:a2:ba:27:ee:    07:9f:89:2e:78:5c:6d:46:b6:5e:99:de:e6:9d:eb:d9:ff:b2:    5f:c6:f6:c6:52:4a:d4:67:be:8d:fc:dd:52:51:8e:a2:d7:15:    71:3e``
+   | ``Certificate Trust Flags:    SSL Flags:      Valid CA      Trusted CA    Email Flags:      Valid CA      Trusted CA    Object Signing Flags:      Valid CA      Trusted CA``
 
 .. _validating_a_certificate:
 
@@ -643,24 +643,24 @@ NSS Tools certutil
 
    This example validates a certificate:
 
-   .. code:: notranslate
+   .. code::
 
       certutil -V -n jsmith@netscape.com -b 9803201212Z -u SR -e -l -d certdir
 
    The Certificate Database Tool shows results similar to
 
-   .. code:: notranslate
+   .. code::
 
       Certificate:'jsmith@netscape.com' is valid.
 
    or
 
-   .. code:: notranslate
+   .. code::
 
       UID=jsmith, E=jsmith@netscape.com, CN=John Smith, O=Netscape Communications Corp., C=US : Expired certificate
 
    or
 
-   .. code:: notranslate
+   .. code::
 
       UID=jsmith, E=jsmith@netscape.com, CN=John Smith, O=Netscape Communications Corp., C=US : Certificate not approved for this operation

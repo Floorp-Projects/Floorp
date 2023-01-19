@@ -35,7 +35,7 @@ NSS 3.12.5 release_notes
          .. rubric:: Distribution Information
             :name: Distribution_Information
 
-         The CVS tag for the NSS 3.12.5 release is ``NSS_3_12_5_RTM``. 
+         The CVS tag for the NSS 3.12.5 release is ``NSS_3_12_5_RTM``. 
 
          NSS 3.12.5 requires `NSPR 4.8 <https://www.mozilla.org/projects/nspr/release-notes/>`__.
 
@@ -83,7 +83,7 @@ NSS 3.12.5 release_notes
             This default setting can also be changed within the application by using the following
             existing API functions:
 
-            -  
+            -
 
                -  SECStatus SSL_OptionSet(PRFileDesc \*fd, PRInt32 option, PRBool on)
                -  SECStatus SSL_OptionSetDefault(PRInt32 option, PRBool on)
@@ -267,7 +267,7 @@ NSS 3.12.5 release_notes
 
          NSS 3.12.5 shared libraries are backward compatible with all older NSS 3.x shared
          libraries. A program linked with older NSS 3.x shared libraries will work with NSS 3.12.5
-         shared libraries without recompiling or relinking.  Furthermore, applications that restrict
+         shared libraries without recompiling or relinking.  Furthermore, applications that restrict
          their use of NSS APIs to the functions listed in `NSS Public
          Functions <https://www.mozilla.org/projects/security/pki/nss/ref/nssfunctions.html>`__ will
          remain compatible with future versions of the NSS shared libraries.

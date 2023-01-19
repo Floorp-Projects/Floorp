@@ -28,15 +28,15 @@ JSS
 
       -  http://www.dogtagpki.org/wiki/JSS
 
-      **NOTE:  As much of the JSS documentation is sorely out-of-date, updated information will be a
+      **NOTE:  As much of the JSS documentation is sorely out-of-date, updated information will be a
       work in progress, and many portions of any legacy documentation will be re-written over the
-      course of time.  Stay tuned!**
+      course of time.  Stay tuned!**
 
       Legacy JSS information can still be found at:
 
       -  SOURCE: https://hg.mozilla.org/projects/jss
-      -  ISSUES:   https://bugzilla.mozilla.org/buglist.cgi?product=JSS
-      -  WIKI:        :ref:`mozilla_projects_nss_jss`
+      -  ISSUES:   https://bugzilla.mozilla.org/buglist.cgi?product=JSS
+      -  WIKI:        :ref:`mozilla_projects_nss_jss`
 
    Network Security Services for Java (JSS) is a Java interface to
    `NSS <https://developer.mozilla.org/en-US/docs/NSS>`__. JSS supports most of the security
@@ -96,7 +96,7 @@ JSS
    |    the SSL handshake.                           |                                                 |
    |                                                 | -  `Security <https:                            |
    | For information on downloading NSS releases,    | //developer.mozilla.org/en-US/docs/Security>`__ |
-   | see `NSS sources building                       |                                                 |
+   | see `NSS sources building                       |                                                 |
    | testing <NSS_Sources_Building_Te                |                                                 |
    | sting>`__\ `. <NSS_Sources_Building_Testing>`__ |                                                 |
    |                                                 |                                                 |

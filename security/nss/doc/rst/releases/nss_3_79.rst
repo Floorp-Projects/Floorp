@@ -8,7 +8,7 @@ NSS 3.79 release notes
 
 .. container::
 
-   Network Security Services (NSS) 3.79 was released on **31 May 2022**. NSS 3.79 is an ESR release. 
+   Network Security Services (NSS) 3.79 was released on **31 May 2022**. NSS 3.79 is an ESR release.
 
 
 .. _distribution_information:
@@ -46,7 +46,7 @@ NSS 3.79 release notes
    - Bug 1757075 - NSS does not properly import or export pkcs12 files with large passwords and pkcs5v2 encoding.
    - Bug 1766978 - improve error handling after nssCKFWInstance_CreateObjectHandle.
    - Bug 1767590 - Initialize pointers passed to NSS_CMSDigestContext_FinishMultiple.
-   - Bug 1769302 - NSS 3.79 should depend on NSPR 4.34   
+   - Bug 1769302 - NSS 3.79 should depend on NSPR 4.34
 
 
 `Compatibility <#compatibility>`__

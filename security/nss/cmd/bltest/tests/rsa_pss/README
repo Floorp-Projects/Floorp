@@ -1,0 +1,1 @@
+The test vectors in this folder are used to test the RSA-PSS code. The tests 0-17 use the SHA-1 hash function, the tests 18-19 use the SHA-256 hash function, the tests 20-21 use the SHA-384 hash function. 

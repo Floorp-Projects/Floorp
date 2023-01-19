@@ -43,14 +43,14 @@ NSS 3.44.1 release notes
 
 .. container::
 
-   -  
+   -
 
       .. container::
 
          `1546229 <https://bugzilla.mozilla.org/show_bug.cgi?id=1546229>`__ - Add IPSEC IKE support
          to softoken
 
-   -  
+   -
 
       .. container::
 
@@ -64,21 +64,21 @@ NSS 3.44.1 release notes
 
 .. container::
 
-   -  
+   -
 
       .. container::
 
          `1554336 <https://bugzilla.mozilla.org/show_bug.cgi?id=1554336>`__ - Optimize away unneeded
          loop in mpi.c
 
-   -  
+   -
 
       .. container::
 
          `1515342 <https://bugzilla.mozilla.org/show_bug.cgi?id=1515342>`__ - More thorough input
          checking (`CVE-2019-11729) <https://bugzilla.mozilla.org/show_bug.cgi?id=CVE-2019-11729>`__
 
-   -  
+   -
 
       .. container::
 
@@ -86,28 +86,28 @@ NSS 3.44.1 release notes
          strip leading 0's from key material during PKCS11 import
          (`CVE-2019-11719 <https://bugzilla.mozilla.org/show_bug.cgi?id=CVE-2019-11719>`__)
 
-   -  
+   -
 
       .. container::
 
          `1515236 <https://bugzilla.mozilla.org/show_bug.cgi?id=1515236>`__ - Add a SSLKEYLOGFILE
          enable/disable flag at `build.sh <http://build.sh>`__
 
-   -  
+   -
 
       .. container::
 
          `1473806 <https://bugzilla.mozilla.org/show_bug.cgi?id=1473806>`__ - Fix
          SECKEY_ConvertToPublicKey handling of non-RSA keys
 
-   -  
+   -
 
       .. container::
 
          `1546477 <https://bugzilla.mozilla.org/show_bug.cgi?id=1546477>`__ - Updates to testing for
          FIPS validation
 
-   -  
+   -
 
       .. container::
 
@@ -115,7 +115,7 @@ NSS 3.44.1 release notes
          RSASSA-PKCS1-v1_5 algorithms in TLS 1.3
          (`CVE-2019-11727 <https://bugzilla.mozilla.org/show_bug.cgi?id=CVE-2019-11727>`__)
 
-   -  
+   -
 
       .. container::
 

@@ -70,7 +70,7 @@ NSS 3.42 release notes
       -  `Bug 1508666 <https://bugzilla.mozilla.org/show_bug.cgi?id=1508666>`__ - Added AES-GCM test
          cases
 
-      -  
+      -
 
          .. container:: field indent
 
@@ -81,7 +81,7 @@ NSS 3.42 release notes
                   `Bug 1508673 <https://bugzilla.mozilla.org/show_bug.cgi?id=1508673>`__ - Added
                   ChaCha20-Poly1305 test cases
 
-      -  
+      -
 
          .. container:: field indent
 
@@ -110,7 +110,7 @@ NSS 3.42 release notes
       Poddebniak for the discovery and fixes.] Note: This was mistakenly not in release 3.42, and is
       instead in :ref:`mozilla_projects_nss_nss_3_42_1_release_notes`.
 
-   -  
+   -
 
       .. container:: field indent
 

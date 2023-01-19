@@ -42,7 +42,7 @@ NSS 3.46 release notes
 .. container::
 
    This release contains no significant new functionality, but concentrates on providing improved
-   performance, stability, and security.  Of particular note are significant improvements to AES-GCM
+   performance, stability, and security.  Of particular note are significant improvements to AES-GCM
    performance on ARM.
 
 .. _notable_changes_in_nss_3.46:
@@ -92,10 +92,10 @@ NSS 3.46 release notes
    will be released in October:
 
    -  `TLS 1.3 <https://datatracker.ietf.org/doc/html/rfc8446>`__ will be the default maximum TLS
-      version.  See `Bug 1573118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573118>`__ for
+      version.  See `Bug 1573118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573118>`__ for
       details.
    -  `TLS extended master secret <https://datatracker.ietf.org/doc/html/rfc7627>`__ will be enabled
-      by default, where possible.  See `Bug
+      by default, where possible.  See `Bug
       1575411 <https://bugzilla.mozilla.org/show_bug.cgi?id=1575411>`__ for details.
 
 .. _bugs_fixed_in_nss_3.46:

@@ -5352,6 +5352,14 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
             if (!suite || !ssl3_config_match(suite, ss->ssl3.policy, &vrange, ss)) {
                 sidOK = PR_FALSE;
             }
+
+            /* Check that no (valid) ECHConfigs are setup in combination with a
+             * (resumable) TLS < 1.3 session id. */
+            if (!PR_CLIST_IS_EMPTY(&ss->echConfigs)) {
+                /* If there are ECH configs, the client must not resume but
+                 * offer ECH. */
+                sidOK = PR_FALSE;
+            }
         }
 
         /* Check that we can recover the master secret. */
@@ -8844,7 +8852,9 @@ ssl3_HandleClientHelloPreamble(sslSocket *ss, PRUint8 **b, PRUint32 *length, SEC
 
     /* Grab the client's SID, if present. */
     rv = ssl3_ConsumeHandshakeVariable(ss, sidBytes, 1, b, length);
-    if (rv != SECSuccess) {
+    /* Check that the SID has the format: opaque legacy_session_id<0..32>, as
+     * specified in RFC8446, Section 4.1.2. */
+    if (rv != SECSuccess || sidBytes->len > SSL3_SESSIONID_BYTES) {
         return SECFailure; /* malformed */
     }
 
@@ -12372,9 +12382,7 @@ ssl3_FinishHandshake(sslSocket *ss)
     ss->ssl3.hs.canFalseStart = PR_FALSE; /* False Start phase is complete */
     ss->ssl3.hs.ws = idle_handshake;
 
-    ssl_FinishHandshake(ss);
-
-    return SECSuccess;
+    return ssl_FinishHandshake(ss);
 }
 
 SECStatus

@@ -10,7 +10,7 @@ NSS Sample Code sample3
 
 .. container::
 
-   .. code:: notranslate
+   .. code::
 
       /*
        * Demonstration program for hashing and MACs

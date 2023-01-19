@@ -386,14 +386,14 @@ NSS Tools crlutil
 
    The CRL Management Tool displays output similar to the following:
 
-   ``CRL Name              CRL Type``
+   ``CRL Name              CRL Type``
 
-   ``CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US  CRL   CN=John Smith,O=Netscape,L=Mountain View,ST=California,C=US  CRL``
+   ``CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US  CRL   CN=John Smith,O=Netscape,L=Mountain View,ST=California,C=US  CRL``
 
    | To view a particular CRL user should specify *-n nickname* parameter.
    | ``crlutil -L -d``\ *certdir*\ ``-n`` *nickname*
 
-   ``CRL Info:   :       Version: 2 (0x1)       Signature Algorithm: PKCS #1 MD5 With RSA Encryption       Issuer: "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US"       This Update: Wed Feb 23 12:08:38 2005       Entry (1):           Serial Number: 40 (0x28)           Revocation Date: Wed Feb 23 12:08:10 2005       Entry (2):           Serial Number: 42 (0x2a)           Revocation Date: Wed Feb 23 12:08:40 2005``
+   ``CRL Info:   :       Version: 2 (0x1)       Signature Algorithm: PKCS #1 MD5 With RSA Encryption       Issuer: "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US"       This Update: Wed Feb 23 12:08:38 2005       Entry (1):           Serial Number: 40 (0x28)           Revocation Date: Wed Feb 23 12:08:10 2005       Entry (2):           Serial Number: 42 (0x2a)           Revocation Date: Wed Feb 23 12:08:40 2005``
 
 .. _deleting_crl_from_a_database:
 

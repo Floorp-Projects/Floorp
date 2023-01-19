@@ -15,6 +15,7 @@
 #include "pk11func.h" /* for PK11_GenerateRandom */
 #include "nss.h"      /* for NSS_RegisterShutdown */
 #include "prinit.h"   /* for PR_CallOnceWithArg */
+#include "tls13ech.h"
 #include "tls13psk.h"
 
 /* Step through the handshake functions.
@@ -49,11 +50,34 @@ ssl_Do1stHandshake(sslSocket *ss)
     return rv;
 }
 
-void
+SECStatus
 ssl_FinishHandshake(sslSocket *ss)
 {
     PORT_Assert(ss->opt.noLocks || ssl_Have1stHandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
+    PORT_Assert(ss->ssl3.hs.echAccepted ||
+                (ss->opt.enableTls13BackendEch &&
+                 ss->xtnData.ech &&
+                 ss->xtnData.ech->receivedInnerXtn) ==
+                    ssl3_ExtensionNegotiated(ss, ssl_tls13_encrypted_client_hello_xtn));
+
+    /* If ECH was OFFERED to (echHpkeCtx is set on the client) DISABLED by the
+     * server through negotiation of a TLS version < 1.3, an 'ech_required'
+     * alert MUST be sent to inform the server about the intention / possible
+     * misconfiguration. */
+    if (!ss->sec.isServer && ss->ssl3.hs.echHpkeCtx && !ss->ssl3.hs.echAccepted) {
+        SSL3_SendAlert(ss, alert_fatal, ech_required);
+        /* "If [one, none] of the retry_configs contains a supported version,
+         * the client can regard ECH as securely [replaced, disabled] by the
+         * server." */
+        if (ss->xtnData.ech && ss->xtnData.ech->retryConfigs.len) {
+            PORT_SetError(SSL_ERROR_ECH_RETRY_WITH_ECH);
+            ss->xtnData.ech->retryConfigsValid = PR_TRUE;
+        } else {
+            PORT_SetError(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
+        }
+        return SECFailure;
+    }
 
     SSL_TRC(3, ("%d: SSL[%d]: handshake is completed", SSL_GETPID(), ss->fd));
 
@@ -69,6 +93,8 @@ ssl_FinishHandshake(sslSocket *ss)
     }
 
     ssl_FreeEphemeralKeyPairs(ss);
+
+    return SECSuccess;
 }
 
 /*
