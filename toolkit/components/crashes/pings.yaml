@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+crash:
+  description: >
+    A ping to report crash information. This information is sent as soon as
+    possible after a crash occurs (whether the crash is a background/content
+    process or the main process). It is expected to be used for crash report
+    analysis and to reduce blind spots in crash reporting.
+  include_client_id: true
+  send_if_empty: false
+  notification_emails:
+    - crash-reporting-wg@mozilla.org
+    - stability@mozilla.org
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+  reasons:
+    crash: >
+      A process crashed and a ping was immediately sent.
+    event_found: >
+      A process crashed and produced a crash event, which was later found and
+      sent in a ping.
