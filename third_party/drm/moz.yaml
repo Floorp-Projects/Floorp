@@ -20,7 +20,7 @@ origin:
 
   release: 0e2c7d05712d65903a9b77fb9f960ddff43bac64
 
-  revision: b9ca37b3134861048986b75896c0915cbf2e97f9
+  revision: 0e2c7d05712d65903a9b77fb9f960ddff43bac64
   # The codebase does not provide a LICENSE file!
   # https://docs.mesa3d.org/license.html#license-copyright-information
   # license-file: LICENSE
