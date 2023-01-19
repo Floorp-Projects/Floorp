@@ -7006,6 +7006,17 @@ static bool EmitBrOnCastCommon(FunctionCompiler& f, bool onSuccess) {
                           labelType, values);
 }
 
+static bool EmitRefAsStruct(FunctionCompiler& f) {
+  MDefinition* value;
+  if (!f.iter().readConversion(ValType(RefType::any()),
+                               ValType(RefType::struct_().asNonNullable()),
+                               &value)) {
+    return false;
+  }
+  f.iter().setResult(value);
+  return true;
+}
+
 static bool EmitExternInternalize(FunctionCompiler& f) {
   // extern.internalize is a no-op because anyref and extern share the same
   // representation
@@ -7643,6 +7654,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitBrOnCastCommon(f, /*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFail):
             CHECK(EmitBrOnCastCommon(f, /*onSuccess=*/false));
+          case uint32_t(GcOp::RefAsStruct):
+            CHECK(EmitRefAsStruct(f));
           case uint16_t(GcOp::ExternInternalize):
             CHECK(EmitExternInternalize(f));
           case uint16_t(GcOp::ExternExternalize):
