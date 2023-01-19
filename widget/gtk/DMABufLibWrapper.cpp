@@ -12,11 +12,16 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "WidgetUtilsGtk.h"
+#include "gfxConfig.h"
+#include "nsIGfxInfo.h"
+#include "mozilla/Components.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dlfcn.h>
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace widget {
@@ -224,23 +229,12 @@ nsDMABufDevice::~nsDMABufDevice() {
 int nsDMABufDevice::GetDRMFd() { return mDRMFd; }
 
 bool nsDMABufDevice::Configure(nsACString& aFailureId) {
-  LOGDMABUF(("nsDMABufDevice::Configure()"));
-
-  MOZ_ASSERT(!mInitialized);
-  mInitialized = true;
-
-  bool isDMABufUsed = (
-#ifdef NIGHTLY_BUILD
-      StaticPrefs::widget_dmabuf_textures_enabled() ||
-#endif
-      StaticPrefs::widget_dmabuf_webgl_enabled());
-
-  if (!isDMABufUsed) {
-    // Disabled by user, just quit.
-    LOGDMABUF(("IsDMABufEnabled(): Disabled by preferences."));
-    aFailureId = "FEATURE_FAILURE_NO_PREFS_ENABLED";
-    return false;
+  if (mInitialized) {
+    return true;
   }
+
+  LOGDMABUF(("nsDMABufDevice::Configure()"));
+  mInitialized = true;
 
   if (!nsGbmLib::IsAvailable()) {
     LOGDMABUF(("nsGbmLib is not available!"));
@@ -325,6 +319,14 @@ void nsDMABufDevice::ResetFormatsModifiers() {
 nsDMABufDevice* GetDMABufDevice() {
   static nsDMABufDevice dmaBufDevice;
   return &dmaBufDevice;
+}
+
+nsDMABufDevice* GetAndConfigureDMABufDevice() {
+  nsCString failureId;
+  if (GetDMABufDevice()->Configure(failureId)) {
+    return GetDMABufDevice();
+  }
+  return nullptr;
 }
 
 }  // namespace widget
