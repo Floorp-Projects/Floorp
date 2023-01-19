@@ -35,6 +35,8 @@ task-defaults:
             - name: public
               path: /builds/worker/artifacts
               type: directory
+        retry-exit-status: [20]
+
     treeherder:
         kind: test
         platform: 'focus-ui-test/opt'
