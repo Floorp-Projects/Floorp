@@ -3056,22 +3056,21 @@ function test_font_variations_transition(prop) {
 
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "\"wght\" 0, \"wdth\" 1.5", "");
-  // Note that computed-style returns the tags in sorted order.
-  is(cs.getPropertyValue(prop), "\"wdth\" 1.5, \"wght\" 0",
+  is(cs.getPropertyValue(prop), "\"wght\" 0, \"wdth\" 1.5",
      "font-variation-settings property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "\"wght\" 2, \"wdth\" 0.5", "");
-  is(cs.getPropertyValue(prop), "\"wdth\" 1.25, \"wght\" 0.5",
+  is(cs.getPropertyValue(prop), "\"wght\" 0.5, \"wdth\" 1.25",
      "font-variation-settings property " + prop + ": interpolation of font-variation-settings");
   check_distance(prop, "\"wght\" 0, \"wdth\" 1.5", "\"wght\" 0.5, \"wdth\" 1.25", "\"wght\" 2, \"wdth\" 0.5");
 
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "\"wght\" 2, \"wdth\" 0.5", "");
-  is(cs.getPropertyValue(prop), "\"wdth\" 0.5, \"wght\" 2",
+  is(cs.getPropertyValue(prop), "\"wght\" 2, \"wdth\" 0.5",
      "font-variation-settings property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "\"wght\" 0, \"wdth\" 1.5", "");
-  is(cs.getPropertyValue(prop), "\"wdth\" 0.75, \"wght\" 1.5",
+  is(cs.getPropertyValue(prop), "\"wght\" 1.5, \"wdth\" 0.75",
      "font-variation-settings property " + prop + ": interpolation of font-variation-settings");
   check_distance(prop, "\"wght\" 2, \"wdth\" 0.5", "\"wght\" 1.5, \"wdth\" 0.75", "\"wght\" 0, \"wdth\" 1.5");
 }
