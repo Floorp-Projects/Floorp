@@ -36,6 +36,9 @@ namespace sh
 namespace
 {
 
+constexpr const char kShaderStorageDeclarationString[] =
+    "// @@ SHADER STORAGE DECLARATION STRING @@";
+
 void GetBlockLayoutInfo(TIntermTyped *node,
                         bool rowMajorAlreadyAssigned,
                         TLayoutBlockStorage *storage,
@@ -503,9 +506,24 @@ void ShaderStorageBlockOutputHLSL::traverseSSBOAccess(TIntermTyped *node, SSBOMe
     loc->traverse(mOutputHLSL);
 }
 
-void ShaderStorageBlockOutputHLSL::writeShaderStorageBlocksHeader(TInfoSinkBase &out) const
+void ShaderStorageBlockOutputHLSL::writeShaderStorageBlocksHeader(GLenum shaderType,
+                                                                  TInfoSinkBase &out) const
 {
-    out << mResourcesHLSL->shaderStorageBlocksHeader(mReferencedShaderStorageBlocks);
+    if (mReferencedShaderStorageBlocks.empty())
+    {
+        return;
+    }
+
+    mResourcesHLSL->allocateShaderStorageBlockRegisters(mReferencedShaderStorageBlocks);
+    out << "// Shader Storage Blocks\n\n";
+    if (shaderType == GL_COMPUTE_SHADER)
+    {
+        out << mResourcesHLSL->shaderStorageBlocksHeader(mReferencedShaderStorageBlocks);
+    }
+    else
+    {
+        out << kShaderStorageDeclarationString << "\n";
+    }
     mSSBOFunctionHLSL->shaderStorageBlockFunctionHeader(out);
 }
 
@@ -562,7 +580,6 @@ TIntermTyped *ShaderStorageBlockOutputHLSL::traverseNode(TInfoSinkBase &out,
                 // We do not currently support indirect references to interface blocks
                 ASSERT(binaryNode->getLeft()->getBasicType() != EbtInterfaceBlock);
                 return writeEOpIndexDirectOrIndirectOutput(out, binaryNode, blockMemberInfo);
-                break;
             }
             case EOpIndexDirectStruct:
             {
@@ -573,7 +590,6 @@ TIntermTyped *ShaderStorageBlockOutputHLSL::traverseNode(TInfoSinkBase &out,
                 const TIntermConstantUnion *index = binaryNode->getRight()->getAsConstantUnion();
                 const TField *field               = structure->fields()[index->getIConst(0)];
                 return Add(createFieldOffset(field, blockMemberInfo), left);
-                break;
             }
             case EOpIndexDirectInterfaceBlock:
             {
@@ -584,7 +600,6 @@ TIntermTyped *ShaderStorageBlockOutputHLSL::traverseNode(TInfoSinkBase &out,
                 const TIntermConstantUnion *index = binaryNode->getRight()->getAsConstantUnion();
                 const TField *field               = interfaceBlock->fields()[index->getIConst(0)];
                 return createFieldOffset(field, blockMemberInfo);
-                break;
             }
             default:
                 return nullptr;

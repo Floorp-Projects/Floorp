@@ -19,7 +19,7 @@ namespace
 class Traverser : public TIntermTraverser
 {
   public:
-    ANGLE_NO_DISCARD static bool Apply(TCompiler *compiler, TIntermNode *root);
+    [[nodiscard]] static bool Apply(TCompiler *compiler, TIntermNode *root);
 
   private:
     Traverser();
@@ -91,8 +91,10 @@ bool Traverser::visitUnary(Visit visit, TIntermUnary *node)
     {
         one->setUConst(1u);
     }
-    TIntermConstantUnion *oneNode =
-        new TIntermConstantUnion(one, TType(opr->getBasicType(), opr->getPrecision(), EvqConst));
+    TType *oneType = new TType(opr->getType());
+    oneType->setQualifier(EvqConst);
+
+    TIntermConstantUnion *oneNode = new TIntermConstantUnion(one, *oneType);
     oneNode->setLine(opr->getLine());
 
     // ~(int) + 1

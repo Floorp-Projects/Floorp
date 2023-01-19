@@ -588,6 +588,26 @@ inline void Load32FTo16F(size_t width,
                          size_t outputRowPitch,
                          size_t outputDepthPitch);
 
+void LoadUNorm16To32F(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
+void LoadUNorm32To32F(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
 void LoadRGB32FToRGBA16F(size_t width,
                          size_t height,
                          size_t depth,
@@ -660,6 +680,29 @@ void LoadETC1RGB8ToRGBA8(size_t width,
                          uint8_t *output,
                          size_t outputRowPitch,
                          size_t outputDepthPitch);
+
+void LoadASTCToRGBA8Inner(size_t width,
+                          size_t height,
+                          size_t depth,
+                          uint32_t blockWidth,
+                          uint32_t blockHeight,
+                          const uint8_t *input,
+                          size_t inputRowPitch,
+                          size_t inputDepthPitch,
+                          uint8_t *output,
+                          size_t outputRowPitch,
+                          size_t outputDepthPitch);
+
+template <size_t blockWidth, size_t blockHeight>
+inline void LoadASTCToRGBA8(size_t width,
+                            size_t height,
+                            size_t depth,
+                            const uint8_t *input,
+                            size_t inputRowPitch,
+                            size_t inputDepthPitch,
+                            uint8_t *output,
+                            size_t outputRowPitch,
+                            size_t outputDepthPitch);
 
 void LoadETC1RGB8ToBC1(size_t width,
                        size_t height,
@@ -890,6 +933,41 @@ void LoadETC2SRGBA8ToSRGBA8(size_t width,
                             uint8_t *output,
                             size_t outputRowPitch,
                             size_t outputDepthPitch);
+
+void LoadYuvToNative(size_t width,
+                     size_t height,
+                     size_t depth,
+                     const uint8_t *input,
+                     size_t inputRowPitch,
+                     size_t inputDepthPitch,
+                     uint8_t *output,
+                     size_t outputRowPitch,
+                     size_t outputDepthPitch);
+
+void LoadPalettedToRGBA8Impl(size_t width,
+                             size_t height,
+                             size_t depth,
+                             uint32_t indexBits,
+                             uint32_t redBlueBits,
+                             uint32_t greenBits,
+                             uint32_t alphaBits,
+                             const uint8_t *input,
+                             size_t inputRowPitch,
+                             size_t inputDepthPitch,
+                             uint8_t *output,
+                             size_t outputRowPitch,
+                             size_t outputDepthPitch);
+
+template <uint32_t indexBits, uint32_t redBlueBits, uint32_t greenBits, uint32_t alphaBits>
+inline void LoadPalettedToRGBA8(size_t width,
+                                size_t height,
+                                size_t depth,
+                                const uint8_t *input,
+                                size_t inputRowPitch,
+                                size_t inputDepthPitch,
+                                uint8_t *output,
+                                size_t outputRowPitch,
+                                size_t outputDepthPitch);
 
 }  // namespace angle
 

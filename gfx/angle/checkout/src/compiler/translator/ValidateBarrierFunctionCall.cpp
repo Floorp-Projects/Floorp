@@ -46,7 +46,7 @@ class Traverser : public TIntermTraverser
 
     bool visitAggregate(Visit visit, TIntermAggregate *node) override
     {
-        if (node->getOp() != EOpBarrier)
+        if (node->getOp() != EOpBarrierTCS)
         {
             return true;
         }

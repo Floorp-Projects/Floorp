@@ -30,6 +30,7 @@ class ExternalImageSiblingImpl11 : public ExternalImageSiblingImpl
     bool isRenderable(const gl::Context *context) const override;
     bool isTexturable(const gl::Context *context) const override;
     bool isYUV() const override;
+    bool hasProtectedContent() const override;
     gl::Extents getSize() const override;
     size_t getSamples() const override;
 
@@ -40,6 +41,7 @@ class ExternalImageSiblingImpl11 : public ExternalImageSiblingImpl
                                             GLsizei samples,
                                             FramebufferAttachmentRenderTarget **rtOut) override;
     angle::Result initializeContents(const gl::Context *context,
+                                     GLenum binding,
                                      const gl::ImageIndex &imageIndex) override;
 
   private:
@@ -55,7 +57,6 @@ class ExternalImageSiblingImpl11 : public ExternalImageSiblingImpl
     bool mIsRenderable   = false;
     bool mIsTexturable   = false;
     bool mIsTextureArray = false;
-    bool mYUV            = false;
     EGLint mWidth        = 0;
     EGLint mHeight       = 0;
     GLsizei mSamples     = 0;

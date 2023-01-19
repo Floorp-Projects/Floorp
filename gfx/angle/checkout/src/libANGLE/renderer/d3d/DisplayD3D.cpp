@@ -371,11 +371,11 @@ std::string DisplayD3D::getVendorString()
     return std::string();
 }
 
-std::string DisplayD3D::getVersionString()
+std::string DisplayD3D::getVersionString(bool includeFullVersion)
 {
     if (mRenderer)
     {
-        return mRenderer->getVersionString();
+        return mRenderer->getVersionString(includeFullVersion);
     }
     return std::string();
 }
@@ -385,7 +385,7 @@ void DisplayD3D::generateCaps(egl::Caps *outCaps) const
     // Display must be initialized to generate caps
     ASSERT(mRenderer != nullptr);
 
-    outCaps->textureNPOT = mRenderer->getNativeExtensions().textureNPOTOES;
+    outCaps->textureNPOT = mRenderer->getNativeExtensions().textureNpotOES;
 }
 
 egl::Error DisplayD3D::waitClient(const gl::Context *context)
@@ -429,6 +429,11 @@ gl::Version DisplayD3D::getMaxConformantESVersion() const
     return mRenderer->getMaxConformantESVersion();
 }
 
+Optional<gl::Version> DisplayD3D::getMaxSupportedDesktopVersion() const
+{
+    return Optional<gl::Version>::Invalid();
+}
+
 void DisplayD3D::handleResult(HRESULT hr,
                               const char *message,
                               const char *file,
@@ -442,6 +447,11 @@ void DisplayD3D::handleResult(HRESULT hr,
                 << ":" << line << ". " << message;
 
     mStoredErrorString = errorStream.str();
+}
+
+void DisplayD3D::initializeFrontendFeatures(angle::FrontendFeatures *features) const
+{
+    mRenderer->initializeFrontendFeatures(features);
 }
 
 void DisplayD3D::populateFeatureList(angle::FeatureList *features)

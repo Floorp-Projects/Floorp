@@ -21,13 +21,25 @@
 
 namespace angle
 {
+// Given x, create 1 << x.
 template <typename BitsT, typename ParamT>
-constexpr static BitsT Bit(ParamT x)
+constexpr BitsT Bit(ParamT x)
 {
     // It's undefined behavior if the shift size is equal to or larger than the width of the type.
     ASSERT(static_cast<size_t>(x) < sizeof(BitsT) * 8);
 
     return (static_cast<BitsT>(1) << static_cast<size_t>(x));
+}
+
+// Given x, create (1 << x) - 1, i.e. a mask with x bits set.
+template <typename BitsT, typename ParamT>
+constexpr BitsT BitMask(ParamT x)
+{
+    if (static_cast<size_t>(x) == 0)
+    {
+        return 0;
+    }
+    return ((Bit<BitsT>(static_cast<ParamT>(static_cast<size_t>(x) - 1)) - 1) << 1) | 1;
 }
 
 template <size_t N, typename BitsT, typename ParamT = std::size_t>
@@ -114,7 +126,7 @@ class BitSetT final
     constexpr bool none() const;
     constexpr std::size_t count() const;
 
-    constexpr std::size_t size() const { return N; }
+    constexpr static std::size_t size() { return N; }
 
     constexpr BitSetT &operator&=(const BitSetT &other);
     constexpr BitSetT &operator|=(const BitSetT &other);
@@ -151,10 +163,7 @@ class BitSetT final
     constexpr ParamT last() const;
 
     // Produces a mask of ones up to the "x"th bit.
-    constexpr static BitsT Mask(std::size_t x)
-    {
-        return ((Bit<BitsT>(static_cast<ParamT>(x - 1)) - 1) << 1) + 1;
-    }
+    constexpr static BitsT Mask(std::size_t x) { return BitMask<BitsT>(static_cast<ParamT>(x)); }
 
   private:
     BitsT mBits;
@@ -176,8 +185,9 @@ constexpr BitSetT<N, BitsT, ParamT>::BitSetT(std::initializer_list<ParamT> init)
 {
     for (ParamT element : init)
     {
-        mBits |= Bit<BitsT>(element) & Mask(N);
+        mBits |= Bit<BitsT>(element);
     }
+    ASSERT(mBits == (mBits & Mask(N)));
 }
 
 template <size_t N, typename BitsT, typename ParamT>
@@ -279,14 +289,16 @@ constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::operator&=(BitsT
 template <size_t N, typename BitsT, typename ParamT>
 constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::operator|=(BitsT value)
 {
-    mBits |= value & Mask(N);
+    mBits |= value;
+    ASSERT(mBits == (mBits & Mask(N)));
     return *this;
 }
 
 template <size_t N, typename BitsT, typename ParamT>
 constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::operator^=(BitsT value)
 {
-    mBits ^= value & Mask(N);
+    mBits ^= value;
+    ASSERT(mBits == (mBits & Mask(N)));
     return *this;
 }
 
@@ -299,7 +311,7 @@ constexpr BitSetT<N, BitsT, ParamT> BitSetT<N, BitsT, ParamT>::operator<<(std::s
 template <size_t N, typename BitsT, typename ParamT>
 constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::operator<<=(std::size_t pos)
 {
-    mBits = (mBits << pos & Mask(N));
+    mBits = mBits << pos & Mask(N);
     return *this;
 }
 
@@ -312,7 +324,7 @@ constexpr BitSetT<N, BitsT, ParamT> BitSetT<N, BitsT, ParamT>::operator>>(std::s
 template <size_t N, typename BitsT, typename ParamT>
 constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::operator>>=(std::size_t pos)
 {
-    mBits = ((mBits >> pos) & Mask(N));
+    mBits = (mBits >> pos) & Mask(N);
     return *this;
 }
 
@@ -327,15 +339,16 @@ constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::set()
 template <size_t N, typename BitsT, typename ParamT>
 constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::set(ParamT pos, bool value)
 {
-    ASSERT(mBits == (mBits & Mask(N)));
+    ASSERT(static_cast<size_t>(pos) < N);
     if (value)
     {
-        mBits |= Bit<BitsT>(pos) & Mask(N);
+        mBits |= Bit<BitsT>(pos);
     }
     else
     {
         reset(pos);
     }
+    ASSERT(mBits == (mBits & Mask(N)));
     return *this;
 }
 
@@ -350,6 +363,7 @@ constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::reset()
 template <size_t N, typename BitsT, typename ParamT>
 constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::reset(ParamT pos)
 {
+    ASSERT(static_cast<size_t>(pos) < N);
     ASSERT(mBits == (mBits & Mask(N)));
     mBits &= ~Bit<BitsT>(pos);
     return *this;
@@ -366,8 +380,9 @@ constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::flip()
 template <size_t N, typename BitsT, typename ParamT>
 constexpr BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::flip(ParamT pos)
 {
+    ASSERT(static_cast<size_t>(pos) < N);
+    mBits ^= Bit<BitsT>(pos);
     ASSERT(mBits == (mBits & Mask(N)));
-    mBits ^= Bit<BitsT>(pos) & Mask(N);
     return *this;
 }
 
@@ -489,12 +504,13 @@ class BitSetArray final
 {
   public:
     using BaseBitSet = priv::BaseBitSetType;
-
-    BitSetArray();
-    BitSetArray(const BitSetArray<N> &other);
-
     using value_type = BaseBitSet::value_type;
     using param_type = BaseBitSet::param_type;
+
+    constexpr BitSetArray();
+    constexpr explicit BitSetArray(std::initializer_list<param_type> init);
+
+    BitSetArray(const BitSetArray<N> &other);
 
     class Reference final
     {
@@ -615,10 +631,10 @@ class BitSetArray final
         typename BaseBitSet::Iterator mCurrentIterator;
     };
 
-    constexpr std::size_t size() const { return N; }
+    constexpr static std::size_t size() { return N; }
     Iterator begin() const { return Iterator(*this, 0); }
     Iterator end() const { return Iterator(*this, kArraySize); }
-    unsigned long to_ulong() const
+    constexpr unsigned long to_ulong() const
     {
         // TODO(anglebug.com/5628): Handle serializing more than kDefaultBitSetSize
         for (std::size_t index = 1; index < kArraySize; index++)
@@ -629,45 +645,45 @@ class BitSetArray final
     }
 
     // Assignment operators
-    BitSetArray &operator=(const BitSetArray &other);
-    BitSetArray &operator&=(const BitSetArray &other);
-    BitSetArray &operator|=(const BitSetArray &other);
-    BitSetArray &operator^=(const BitSetArray &other);
+    constexpr BitSetArray &operator=(const BitSetArray &other);
+    constexpr BitSetArray &operator&=(const BitSetArray &other);
+    constexpr BitSetArray &operator|=(const BitSetArray &other);
+    constexpr BitSetArray &operator^=(const BitSetArray &other);
 
     // Bitwise operators
-    BitSetArray<N> operator&(const angle::BitSetArray<N> &other) const;
-    BitSetArray<N> operator|(const angle::BitSetArray<N> &other) const;
-    BitSetArray<N> operator^(const angle::BitSetArray<N> &other) const;
+    constexpr BitSetArray<N> operator&(const angle::BitSetArray<N> &other) const;
+    constexpr BitSetArray<N> operator|(const angle::BitSetArray<N> &other) const;
+    constexpr BitSetArray<N> operator^(const angle::BitSetArray<N> &other) const;
 
     // Relational Operators
-    bool operator==(const angle::BitSetArray<N> &other) const;
-    bool operator!=(const angle::BitSetArray<N> &other) const;
+    constexpr bool operator==(const angle::BitSetArray<N> &other) const;
+    constexpr bool operator!=(const angle::BitSetArray<N> &other) const;
 
     // Unary operators
-    BitSetArray operator~() const;
-    bool operator[](std::size_t pos) const;
-    Reference operator[](std::size_t pos)
+    constexpr BitSetArray operator~() const;
+    constexpr bool operator[](std::size_t pos) const;
+    constexpr Reference operator[](std::size_t pos)
     {
         ASSERT(pos < size());
         return Reference(*this, pos);
     }
 
     // Setter, getters and other helper methods
-    BitSetArray &set();
-    BitSetArray &set(std::size_t pos, bool value = true);
-    BitSetArray &reset();
-    BitSetArray &reset(std::size_t pos);
-    bool test(std::size_t pos) const;
-    bool all() const;
-    bool any() const;
-    bool none() const;
-    std::size_t count() const;
-    bool intersects(const BitSetArray &other) const;
-    BitSetArray<N> &flip();
-    param_type first() const;
-    param_type last() const;
+    constexpr BitSetArray &set();
+    constexpr BitSetArray &set(std::size_t pos, bool value = true);
+    constexpr BitSetArray &reset();
+    constexpr BitSetArray &reset(std::size_t pos);
+    constexpr bool test(std::size_t pos) const;
+    constexpr bool all() const;
+    constexpr bool any() const;
+    constexpr bool none() const;
+    constexpr std::size_t count() const;
+    constexpr bool intersects(const BitSetArray &other) const;
+    constexpr BitSetArray<N> &flip();
+    constexpr param_type first() const;
+    constexpr param_type last() const;
 
-    value_type bits(size_t index) const;
+    constexpr value_type bits(size_t index) const;
 
   private:
     static constexpr std::size_t kDefaultBitSetSizeMinusOne = priv::kDefaultBitSetSize - 1;
@@ -677,16 +693,29 @@ class BitSetArray final
         ((N + kDefaultBitSetSizeMinusOne) >> kShiftForDivision);
     constexpr static std::size_t kLastElementCount = (N & kDefaultBitSetSizeMinusOne);
     constexpr static std::size_t kLastElementMask  = priv::BaseBitSetType::Mask(
-        kLastElementCount == 0 ? priv::kDefaultBitSetSize : kLastElementCount);
+         kLastElementCount == 0 ? priv::kDefaultBitSetSize : kLastElementCount);
 
     std::array<BaseBitSet, kArraySize> mBaseBitSetArray;
 };
 
 template <std::size_t N>
-BitSetArray<N>::BitSetArray()
+constexpr BitSetArray<N>::BitSetArray()
 {
     static_assert(N > priv::kDefaultBitSetSize, "BitSetArray type can't support requested size.");
     reset();
+}
+
+template <std::size_t N>
+constexpr BitSetArray<N>::BitSetArray(std::initializer_list<param_type> init)
+{
+    reset();
+
+    for (param_type element : init)
+    {
+        size_t index  = element >> kShiftForDivision;
+        size_t offset = element & kDefaultBitSetSizeMinusOne;
+        mBaseBitSetArray[index].set(offset, true);
+    }
 }
 
 template <size_t N>
@@ -728,13 +757,14 @@ template <std::size_t N>
 typename BitSetArray<N>::Iterator &BitSetArray<N>::Iterator::operator++()
 {
     ++mCurrentIterator;
-    if (mCurrentIterator == mCurrentParent->mBaseBitSetArray[mIndex].end())
+    while (mCurrentIterator == mCurrentParent->mBaseBitSetArray[mIndex].end())
     {
         mIndex++;
-        if (mIndex < mCurrentParent->kArraySize)
+        if (mIndex >= mCurrentParent->kArraySize)
         {
-            mCurrentIterator = mCurrentParent->mBaseBitSetArray[mIndex].begin();
+            break;
         }
+        mCurrentIterator = mCurrentParent->mBaseBitSetArray[mIndex].begin();
     }
     return *this;
 }
@@ -758,7 +788,7 @@ std::size_t BitSetArray<N>::Iterator::operator*() const
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::operator=(const BitSetArray<N> &other)
+constexpr BitSetArray<N> &BitSetArray<N>::operator=(const BitSetArray<N> &other)
 {
     for (std::size_t index = 0; index < kArraySize; index++)
     {
@@ -768,7 +798,7 @@ BitSetArray<N> &BitSetArray<N>::operator=(const BitSetArray<N> &other)
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::operator&=(const BitSetArray<N> &other)
+constexpr BitSetArray<N> &BitSetArray<N>::operator&=(const BitSetArray<N> &other)
 {
     for (std::size_t index = 0; index < kArraySize; index++)
     {
@@ -778,7 +808,7 @@ BitSetArray<N> &BitSetArray<N>::operator&=(const BitSetArray<N> &other)
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::operator|=(const BitSetArray<N> &other)
+constexpr BitSetArray<N> &BitSetArray<N>::operator|=(const BitSetArray<N> &other)
 {
     for (std::size_t index = 0; index < kArraySize; index++)
     {
@@ -788,7 +818,7 @@ BitSetArray<N> &BitSetArray<N>::operator|=(const BitSetArray<N> &other)
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::operator^=(const BitSetArray<N> &other)
+constexpr BitSetArray<N> &BitSetArray<N>::operator^=(const BitSetArray<N> &other)
 {
     for (std::size_t index = 0; index < kArraySize; index++)
     {
@@ -798,7 +828,7 @@ BitSetArray<N> &BitSetArray<N>::operator^=(const BitSetArray<N> &other)
 }
 
 template <std::size_t N>
-BitSetArray<N> BitSetArray<N>::operator&(const angle::BitSetArray<N> &other) const
+constexpr BitSetArray<N> BitSetArray<N>::operator&(const angle::BitSetArray<N> &other) const
 {
     angle::BitSetArray<N> result(other);
     result &= *this;
@@ -806,7 +836,7 @@ BitSetArray<N> BitSetArray<N>::operator&(const angle::BitSetArray<N> &other) con
 }
 
 template <std::size_t N>
-BitSetArray<N> BitSetArray<N>::operator|(const angle::BitSetArray<N> &other) const
+constexpr BitSetArray<N> BitSetArray<N>::operator|(const angle::BitSetArray<N> &other) const
 {
     angle::BitSetArray<N> result(other);
     result |= *this;
@@ -814,7 +844,7 @@ BitSetArray<N> BitSetArray<N>::operator|(const angle::BitSetArray<N> &other) con
 }
 
 template <std::size_t N>
-BitSetArray<N> BitSetArray<N>::operator^(const angle::BitSetArray<N> &other) const
+constexpr BitSetArray<N> BitSetArray<N>::operator^(const angle::BitSetArray<N> &other) const
 {
     angle::BitSetArray<N> result(other);
     result ^= *this;
@@ -822,7 +852,7 @@ BitSetArray<N> BitSetArray<N>::operator^(const angle::BitSetArray<N> &other) con
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::operator==(const angle::BitSetArray<N> &other) const
+constexpr bool BitSetArray<N>::operator==(const angle::BitSetArray<N> &other) const
 {
     for (std::size_t index = 0; index < kArraySize; index++)
     {
@@ -835,13 +865,13 @@ bool BitSetArray<N>::operator==(const angle::BitSetArray<N> &other) const
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::operator!=(const angle::BitSetArray<N> &other) const
+constexpr bool BitSetArray<N>::operator!=(const angle::BitSetArray<N> &other) const
 {
     return !(*this == other);
 }
 
 template <std::size_t N>
-BitSetArray<N> BitSetArray<N>::operator~() const
+constexpr BitSetArray<N> BitSetArray<N>::operator~() const
 {
     angle::BitSetArray<N> result;
     for (std::size_t index = 0; index < kArraySize; index++)
@@ -855,14 +885,14 @@ BitSetArray<N> BitSetArray<N>::operator~() const
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::operator[](std::size_t pos) const
+constexpr bool BitSetArray<N>::operator[](std::size_t pos) const
 {
     ASSERT(pos < size());
     return test(pos);
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::set()
+constexpr BitSetArray<N> &BitSetArray<N>::set()
 {
     for (BaseBitSet &baseBitSet : mBaseBitSetArray)
     {
@@ -875,7 +905,7 @@ BitSetArray<N> &BitSetArray<N>::set()
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::set(std::size_t pos, bool value)
+constexpr BitSetArray<N> &BitSetArray<N>::set(std::size_t pos, bool value)
 {
     ASSERT(pos < size());
     // Get the index and offset, then set the bit
@@ -886,7 +916,7 @@ BitSetArray<N> &BitSetArray<N>::set(std::size_t pos, bool value)
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::reset()
+constexpr BitSetArray<N> &BitSetArray<N>::reset()
 {
     for (BaseBitSet &baseBitSet : mBaseBitSetArray)
     {
@@ -896,14 +926,14 @@ BitSetArray<N> &BitSetArray<N>::reset()
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::reset(std::size_t pos)
+constexpr BitSetArray<N> &BitSetArray<N>::reset(std::size_t pos)
 {
     ASSERT(pos < size());
     return set(pos, false);
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::test(std::size_t pos) const
+constexpr bool BitSetArray<N>::test(std::size_t pos) const
 {
     ASSERT(pos < size());
     // Get the index and offset, then test the bit
@@ -913,9 +943,9 @@ bool BitSetArray<N>::test(std::size_t pos) const
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::all() const
+constexpr bool BitSetArray<N>::all() const
 {
-    static priv::BaseBitSetType kLastElementBitSet = priv::BaseBitSetType(kLastElementMask);
+    constexpr priv::BaseBitSetType kLastElementBitSet = priv::BaseBitSetType(kLastElementMask);
 
     for (std::size_t index = 0; index < kArraySize - 1; index++)
     {
@@ -930,7 +960,7 @@ bool BitSetArray<N>::all() const
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::any() const
+constexpr bool BitSetArray<N>::any() const
 {
     for (const BaseBitSet &baseBitSet : mBaseBitSetArray)
     {
@@ -943,7 +973,7 @@ bool BitSetArray<N>::any() const
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::none() const
+constexpr bool BitSetArray<N>::none() const
 {
     for (const BaseBitSet &baseBitSet : mBaseBitSetArray)
     {
@@ -956,7 +986,7 @@ bool BitSetArray<N>::none() const
 }
 
 template <std::size_t N>
-std::size_t BitSetArray<N>::count() const
+constexpr std::size_t BitSetArray<N>::count() const
 {
     size_t count = 0;
     for (const BaseBitSet &baseBitSet : mBaseBitSetArray)
@@ -967,7 +997,7 @@ std::size_t BitSetArray<N>::count() const
 }
 
 template <std::size_t N>
-bool BitSetArray<N>::intersects(const BitSetArray<N> &other) const
+constexpr bool BitSetArray<N>::intersects(const BitSetArray<N> &other) const
 {
     for (std::size_t index = 0; index < kArraySize; index++)
     {
@@ -980,7 +1010,7 @@ bool BitSetArray<N>::intersects(const BitSetArray<N> &other) const
 }
 
 template <std::size_t N>
-BitSetArray<N> &BitSetArray<N>::flip()
+constexpr BitSetArray<N> &BitSetArray<N>::flip()
 {
     for (BaseBitSet &baseBitSet : mBaseBitSetArray)
     {
@@ -993,7 +1023,7 @@ BitSetArray<N> &BitSetArray<N>::flip()
 }
 
 template <std::size_t N>
-typename BitSetArray<N>::param_type BitSetArray<N>::first() const
+constexpr typename BitSetArray<N>::param_type BitSetArray<N>::first() const
 {
     ASSERT(any());
     for (size_t arrayIndex = 0; arrayIndex < kArraySize; ++arrayIndex)
@@ -1009,7 +1039,7 @@ typename BitSetArray<N>::param_type BitSetArray<N>::first() const
 }
 
 template <std::size_t N>
-typename BitSetArray<N>::param_type BitSetArray<N>::last() const
+constexpr typename BitSetArray<N>::param_type BitSetArray<N>::last() const
 {
     ASSERT(any());
     for (size_t arrayIndex = kArraySize; arrayIndex > 0; --arrayIndex)
@@ -1025,7 +1055,7 @@ typename BitSetArray<N>::param_type BitSetArray<N>::last() const
 }
 
 template <std::size_t N>
-typename BitSetArray<N>::value_type BitSetArray<N>::bits(size_t index) const
+constexpr typename BitSetArray<N>::value_type BitSetArray<N>::bits(size_t index) const
 {
     return mBaseBitSetArray[index].bits();
 }

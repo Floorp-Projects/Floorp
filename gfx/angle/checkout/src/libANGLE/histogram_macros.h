@@ -10,7 +10,7 @@
 #ifndef LIBANGLE_HISTOGRAM_MACROS_H_
 #define LIBANGLE_HISTOGRAM_MACROS_H_
 
-#include <platform/Platform.h>
+#include <platform/PlatformMethods.h>
 
 #define ANGLE_HISTOGRAM_TIMES(name, sample) ANGLE_HISTOGRAM_CUSTOM_TIMES(name, sample, 1, 10000, 50)
 
@@ -80,7 +80,7 @@
     SCOPED_ANGLE_HISTOGRAM_TIMER_UNIQUE(name, is_long, key)
 
 #define SCOPED_ANGLE_HISTOGRAM_TIMER_UNIQUE(name, is_long, key)                         \
-    class ScopedHistogramTimer##key                                                     \
+    class [[nodiscard]] ScopedHistogramTimer##key                                       \
     {                                                                                   \
       public:                                                                           \
         ScopedHistogramTimer##key()                                                     \

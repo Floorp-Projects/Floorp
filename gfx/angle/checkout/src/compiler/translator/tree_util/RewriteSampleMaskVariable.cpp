@@ -12,11 +12,11 @@
 #include "common/bitset_utils.h"
 #include "common/debug.h"
 #include "common/utilities.h"
+#include "compiler/translator/Compiler.h"
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/tree_util/BuiltIn.h"
 #include "compiler/translator/tree_util/IntermNode_util.h"
 #include "compiler/translator/tree_util/IntermTraverse.h"
-#include "compiler/translator/tree_util/RunAtTheBeginningOfShader.h"
 #include "compiler/translator/tree_util/RunAtTheEndOfShader.h"
 
 namespace sh
@@ -101,10 +101,10 @@ class GLSampleMaskRelatedReferenceTraverser : public TIntermTraverser
 
 }  // anonymous namespace
 
-ANGLE_NO_DISCARD bool RewriteSampleMask(TCompiler *compiler,
-                                        TIntermBlock *root,
-                                        TSymbolTable *symbolTable,
-                                        const TIntermTyped *numSamplesUniform)
+[[nodiscard]] bool RewriteSampleMask(TCompiler *compiler,
+                                     TIntermBlock *root,
+                                     TSymbolTable *symbolTable,
+                                     const TIntermTyped *numSamplesUniform)
 {
     const TIntermSymbol *redeclaredGLSampleMask = nullptr;
     GLSampleMaskRelatedReferenceTraverser indexTraverser(&redeclaredGLSampleMask,
@@ -126,8 +126,8 @@ ANGLE_NO_DISCARD bool RewriteSampleMask(TCompiler *compiler,
     else
     {
         // User defined not found, find in built-in table
-        glSampleMaskVar = static_cast<const TVariable *>(
-            symbolTable->findBuiltIn(ImmutableString("gl_SampleMask"), 320));
+        glSampleMaskVar = static_cast<const TVariable *>(symbolTable->findBuiltIn(
+            ImmutableString("gl_SampleMask"), compiler->getShaderVersion()));
     }
     if (!glSampleMaskVar)
     {
@@ -163,9 +163,9 @@ ANGLE_NO_DISCARD bool RewriteSampleMask(TCompiler *compiler,
     return RunAtTheEndOfShader(compiler, root, multiSampleOrNot, symbolTable);
 }
 
-ANGLE_NO_DISCARD bool RewriteSampleMaskIn(TCompiler *compiler,
-                                          TIntermBlock *root,
-                                          TSymbolTable *symbolTable)
+[[nodiscard]] bool RewriteSampleMaskIn(TCompiler *compiler,
+                                       TIntermBlock *root,
+                                       TSymbolTable *symbolTable)
 {
     const TIntermSymbol *redeclaredGLSampleMaskIn = nullptr;
     GLSampleMaskRelatedReferenceTraverser indexTraverser(&redeclaredGLSampleMaskIn,
@@ -180,7 +180,7 @@ ANGLE_NO_DISCARD bool RewriteSampleMaskIn(TCompiler *compiler,
     // Retrieve gl_SampleMaskIn variable reference
     const TVariable *glSampleMaskInVar = nullptr;
     glSampleMaskInVar                  = static_cast<const TVariable *>(
-        symbolTable->findBuiltIn(ImmutableString("gl_SampleMaskIn"), 320));
+        symbolTable->findBuiltIn(ImmutableString("gl_SampleMaskIn"), compiler->getShaderVersion()));
     if (!glSampleMaskInVar)
     {
         return false;

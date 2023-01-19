@@ -16,6 +16,51 @@ namespace egl
 {
 
 template <>
+ColorSpace FromEGLenum<ColorSpace>(EGLenum from)
+{
+    switch (from)
+    {
+        case EGL_COLORSPACE_sRGB:
+            return ColorSpace::sRGB;
+        case EGL_COLORSPACE_LINEAR:
+            return ColorSpace::Linear;
+        default:
+            return ColorSpace::InvalidEnum;
+    }
+}
+
+EGLenum ToEGLenum(ColorSpace from)
+{
+    switch (from)
+    {
+        case ColorSpace::sRGB:
+            return EGL_COLORSPACE_sRGB;
+        case ColorSpace::Linear:
+            return EGL_COLORSPACE_LINEAR;
+        default:
+            UNREACHABLE();
+            return 0;
+    }
+}
+
+std::ostream &operator<<(std::ostream &os, ColorSpace value)
+{
+    switch (value)
+    {
+        case ColorSpace::sRGB:
+            os << "EGL_COLORSPACE_sRGB";
+            break;
+        case ColorSpace::Linear:
+            os << "EGL_COLORSPACE_LINEAR";
+            break;
+        default:
+            os << "GL_INVALID_ENUM";
+            break;
+    }
+    return os;
+}
+
+template <>
 CompositorTiming FromEGLenum<CompositorTiming>(EGLenum from)
 {
     switch (from)
