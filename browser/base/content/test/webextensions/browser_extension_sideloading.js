@@ -48,15 +48,14 @@ function getAddonElement(managerWindow, addonId) {
   );
 }
 
-function assertSideloadedAddonElementState(addonElement, checked) {
+function assertSideloadedAddonElementState(addonElement, pressed) {
   const enableBtn = addonElement.querySelector('[action="toggle-disabled"]');
   is(
-    enableBtn.checked,
-    checked,
-    `The enable button is ${!checked ? " not " : ""} checked`
+    enableBtn.pressed,
+    pressed,
+    `The enable button is ${!pressed ? " not " : ""} pressed`
   );
-  is(enableBtn.localName, "input", "The enable button is an input");
-  is(enableBtn.type, "checkbox", "It's a checkbox");
+  is(enableBtn.localName, "moz-toggle", "The enable button is a toggle");
 }
 
 function clickEnableExtension(addonElement) {
