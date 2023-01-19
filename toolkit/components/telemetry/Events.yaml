@@ -1297,7 +1297,7 @@ pwmgr:
       not impact the sent object.
     objects: ["save", "update"]
     bug_numbers: [1650929, 1650941, 1678200, 1714252, 1754637]
-    expiry_version: "112"
+    expiry_version: "120"
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: [main]
