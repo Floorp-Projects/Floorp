@@ -67,7 +67,7 @@ use glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{ScalingInstance, SvgFilterInstance, CopyInstance};
-use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId, CompositorTransform};
+use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, CompositorTransform};
 use crate::internal_types::{TextureSource, TextureCacheCategory, FrameId};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
@@ -2777,7 +2777,6 @@ impl Renderer {
                         surface_rect.to_f32(),
                         // z-id is not relevant when updating a native compositor surface.
                         // TODO(gw): Support compositor surfaces without z-buffer, for memory / perf win here.
-                        ZBufferId(0),
                         color_space,
                         format,
                         channel_bit_depth,
@@ -2808,7 +2807,6 @@ impl Renderer {
                         surface_rect.cast_unit().to_f32(),
                         surface_rect.to_f32(),
                         PremultipliedColorF::WHITE,
-                        ZBufferId(0),
                         uv_rect,
                         CompositorTransform::identity(),
                     );
@@ -2881,7 +2879,6 @@ impl Renderer {
                         tile_rect,
                         clip_rect,
                         color.premultiplied(),
-                        tile.z_id,
                         transform,
                     );
                     let features = instance.get_rgb_features();
@@ -2896,7 +2893,6 @@ impl Renderer {
                         tile_rect,
                         clip_rect,
                         PremultipliedColorF::WHITE,
-                        tile.z_id,
                         transform,
                     );
                     let features = instance.get_rgb_features();
@@ -2937,7 +2933,6 @@ impl Renderer {
                                 CompositeInstance::new_yuv(
                                     tile_rect,
                                     clip_rect,
-                                    tile.z_id,
                                     color_space,
                                     format,
                                     channel_bit_depth,
@@ -2959,7 +2954,6 @@ impl Renderer {
                                 tile_rect,
                                 clip_rect,
                                 PremultipliedColorF::WHITE,
-                                tile.z_id,
                                 uv_rect,
                                 transform,
                             );
@@ -2984,7 +2978,6 @@ impl Renderer {
                         tile_rect,
                         clip_rect,
                         PremultipliedColorF::BLACK,
-                        tile.z_id,
                         transform,
                     );
                     let features = instance.get_rgb_features();

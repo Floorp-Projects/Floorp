@@ -160,7 +160,7 @@ void main(void) {
 #endif
 #endif
 
-    gl_Position = uTransform * vec4(clipped_world_pos, aParams.x /* z_id */, 1.0);
+    gl_Position = uTransform * vec4(clipped_world_pos, 0.0, 1.0);
 }
 #endif
 

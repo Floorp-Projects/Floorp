@@ -293,7 +293,7 @@ pub struct CompositeInstance {
     color: PremultipliedColorF,
 
     // Packed into a single vec4 (aParams)
-    z_id: f32,
+    _padding: f32,
     color_space_or_uv_type: f32, // YuvColorSpace for YUV;
                                  // UV coordinate space for RGB
     yuv_format: f32,            // YuvFormat
@@ -311,7 +311,6 @@ impl CompositeInstance {
         rect: PictureRect,
         clip_rect: DeviceRect,
         color: PremultipliedColorF,
-        z_id: ZBufferId,
         transform: CompositorTransform,
     ) -> Self {
         let uv = TexelRect::new(0.0, 0.0, 1.0, 1.0);
@@ -319,7 +318,7 @@ impl CompositeInstance {
             rect,
             clip_rect,
             color,
-            z_id: z_id.0 as f32,
+            _padding: 0.0,
             color_space_or_uv_type: pack_as_float(UV_TYPE_NORMALIZED),
             yuv_format: 0.0,
             yuv_channel_bit_depth: 0.0,
@@ -332,7 +331,6 @@ impl CompositeInstance {
         rect: PictureRect,
         clip_rect: DeviceRect,
         color: PremultipliedColorF,
-        z_id: ZBufferId,
         uv_rect: TexelRect,
         transform: CompositorTransform,
     ) -> Self {
@@ -340,7 +338,7 @@ impl CompositeInstance {
             rect,
             clip_rect,
             color,
-            z_id: z_id.0 as f32,
+            _padding: 0.0,
             color_space_or_uv_type: pack_as_float(UV_TYPE_UNNORMALIZED),
             yuv_format: 0.0,
             yuv_channel_bit_depth: 0.0,
@@ -352,7 +350,6 @@ impl CompositeInstance {
     pub fn new_yuv(
         rect: PictureRect,
         clip_rect: DeviceRect,
-        z_id: ZBufferId,
         yuv_color_space: YuvRangedColorSpace,
         yuv_format: YuvFormat,
         yuv_channel_bit_depth: u32,
@@ -363,7 +360,7 @@ impl CompositeInstance {
             rect,
             clip_rect,
             color: PremultipliedColorF::WHITE,
-            z_id: z_id.0 as f32,
+            _padding: 0.0,
             color_space_or_uv_type: pack_as_float(yuv_color_space as u32),
             yuv_format: pack_as_float(yuv_format as u32),
             yuv_channel_bit_depth: pack_as_float(yuv_channel_bit_depth),
