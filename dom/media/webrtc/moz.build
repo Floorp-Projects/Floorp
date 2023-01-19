@@ -89,6 +89,7 @@ if CONFIG["MOZ_WEBRTC_SIGNALING"]:
             "/third_party/drm/libdrm",
             "/third_party/gbm/",
             "/third_party/gbm/libgbm",
+            "/third_party/libepoxy/",
             "/third_party/pipewire/libpipewire",
         ]
 
