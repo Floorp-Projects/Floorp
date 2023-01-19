@@ -130,7 +130,7 @@ class ScreenOrientation::LockOrientationTask final : public nsIRunnable {
   RefPtr<ScreenOrientation> mScreenOrientation;
   RefPtr<Promise> mPromise;
   hal::ScreenOrientation mOrientationLock;
-  nsCOMPtr<Document> mDocument;
+  WeakPtr<Document> mDocument;
   bool mIsFullscreen;
 };
 
@@ -160,6 +160,11 @@ bool ScreenOrientation::LockOrientationTask::OrientationLockContains(
 NS_IMETHODIMP
 ScreenOrientation::LockOrientationTask::Run() {
   if (!mPromise) {
+    return NS_OK;
+  }
+
+  if (!mDocument) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     return NS_OK;
   }
 
@@ -203,6 +208,11 @@ ScreenOrientation::LockOrientationTask::Run() {
               // mPromise is already resolved or rejected by
               // DispatchChangeEventAndResolvePromise() or
               // AbortInProcessOrientationPromises().
+              return;
+            }
+
+            if (!self->mDocument) {
+              self->mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
               return;
             }
 
@@ -281,6 +291,112 @@ already_AddRefed<Promise> ScreenOrientation::Lock(
 
   return LockInternal(orientation, aRv);
 }
+
+// Wait for document entered fullscreen.
+class FullscreenWaitListener final : public nsIDOMEventListener {
+ private:
+  ~FullscreenWaitListener() = default;
+
+ public:
+  FullscreenWaitListener() = default;
+
+  NS_DECL_ISUPPORTS
+
+  // When we have pending fullscreen request, we will wait for the completion or
+  // cancel of it.
+  RefPtr<GenericPromise> Promise(Document* aDocument) {
+    if (aDocument->Fullscreen()) {
+      return GenericPromise::CreateAndResolve(true, __func__);
+    }
+
+    if (NS_FAILED(InstallEventListener(aDocument))) {
+      return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    }
+
+    MOZ_ASSERT(aDocument->HasPendingFullscreenRequests());
+    return mHolder.Ensure(__func__);
+  }
+
+  NS_IMETHODIMP HandleEvent(Event* aEvent) override {
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+
+    if (eventType.EqualsLiteral("pagehide")) {
+      mHolder.Reject(NS_ERROR_FAILURE, __func__);
+      CleanupEventListener();
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(eventType.EqualsLiteral("fullscreenchange") ||
+               eventType.EqualsLiteral("fullscreenerror") ||
+               eventType.EqualsLiteral("pagehide"));
+    if (mDocument->Fullscreen()) {
+      mHolder.Resolve(true, __func__);
+    } else {
+      mHolder.Reject(NS_ERROR_FAILURE, __func__);
+    }
+    CleanupEventListener();
+    return NS_OK;
+  }
+
+ private:
+  nsresult InstallEventListener(Document* aDoc) {
+    if (mDocument) {
+      return NS_OK;
+    }
+
+    mDocument = aDoc;
+    nsresult rv = aDoc->AddSystemEventListener(u"fullscreenchange"_ns, this,
+                                               /* aUseCapture = */ true);
+    if (NS_FAILED(rv)) {
+      CleanupEventListener();
+      return rv;
+    }
+
+    rv = aDoc->AddSystemEventListener(u"fullscreenerror"_ns, this,
+                                      /* aUseCapture = */ true);
+    if (NS_FAILED(rv)) {
+      CleanupEventListener();
+      return rv;
+    }
+
+    nsPIDOMWindowOuter* window = aDoc->GetWindow();
+    nsCOMPtr<EventTarget> target = do_QueryInterface(window);
+    if (!target) {
+      CleanupEventListener();
+      return NS_ERROR_FAILURE;
+    }
+    rv = target->AddSystemEventListener(u"pagehide"_ns, this,
+                                        /* aUseCapture = */ true,
+                                        /* aWantsUntrusted = */ false);
+    if (NS_FAILED(rv)) {
+      CleanupEventListener();
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  void CleanupEventListener() {
+    if (!mDocument) {
+      return;
+    }
+    RefPtr<FullscreenWaitListener> kungFuDeathGrip(this);
+    mDocument->RemoveSystemEventListener(u"fullscreenchange"_ns, this, true);
+    mDocument->RemoveSystemEventListener(u"fullscreenerror"_ns, this, true);
+    nsPIDOMWindowOuter* window = mDocument->GetWindow();
+    nsCOMPtr<EventTarget> target = do_QueryInterface(window);
+    if (target) {
+      target->RemoveSystemEventListener(u"pagehide"_ns, this, true);
+    }
+    mDocument = nullptr;
+  }
+
+  MozPromiseHolder<GenericPromise> mHolder;
+  RefPtr<Document> mDocument;
+};
+
+NS_IMPL_ISUPPORTS(FullscreenWaitListener, nsIDOMEventListener)
 
 void ScreenOrientation::AbortInProcessOrientationPromises(
     BrowsingContext* aBrowsingContext) {
@@ -380,12 +496,45 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
     return p.forget();
   }
 
-  nsCOMPtr<nsIRunnable> lockOrientationTask = new LockOrientationTask(
-      this, p, aOrientation, doc, perm == FULLSCREEN_LOCK_ALLOWED);
-  aRv = NS_DispatchToMainThread(lockOrientationTask);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
+  if (perm == LOCK_ALLOWED || doc->Fullscreen()) {
+    nsCOMPtr<nsIRunnable> lockOrientationTask = new LockOrientationTask(
+        this, p, aOrientation, doc, perm == FULLSCREEN_LOCK_ALLOWED);
+    aRv = NS_DispatchToMainThread(lockOrientationTask);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    return p.forget();
   }
+
+  MOZ_ASSERT(perm == FULLSCREEN_LOCK_ALLOWED);
+
+  // Full screen state is pending. We have to wait for the completion.
+  RefPtr<FullscreenWaitListener> listener = new FullscreenWaitListener();
+  RefPtr<Promise> promise = p;
+  listener->Promise(doc)->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self = RefPtr{this}, promise = std::move(promise), aOrientation,
+       document =
+           RefPtr{doc}](const GenericPromise::ResolveOrRejectValue& aValue) {
+        if (aValue.IsResolve()) {
+          nsCOMPtr<nsIRunnable> lockOrientationTask = new LockOrientationTask(
+              self, promise, aOrientation, document, true);
+          nsresult rv = NS_DispatchToMainThread(lockOrientationTask);
+          if (NS_SUCCEEDED(rv)) {
+            return;
+          }
+        }
+        // Pending full screen request is canceled or causes an error.
+        if (document->GetOrientationPendingPromise() != promise) {
+          // The document's pending promise is not associated with
+          // this promise.
+          return;
+        }
+        // pre-lock conditions aren't matched.
+        promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+        document->ClearOrientationPendingPromise();
+      });
 
   return p.forget();
 #endif
@@ -526,7 +675,9 @@ ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const {
   }
 
   // Other content must be fullscreen in order to lock orientation.
-  return doc->Fullscreen() ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
+  return doc->Fullscreen() || doc->HasPendingFullscreenRequests()
+             ? FULLSCREEN_LOCK_ALLOWED
+             : LOCK_DENIED;
 }
 
 Document* ScreenOrientation::GetResponsibleDocument() const {
