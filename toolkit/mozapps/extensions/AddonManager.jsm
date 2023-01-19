@@ -55,12 +55,14 @@ var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY
   ? PREF_EM_CHECK_COMPATIBILITY_BASE + ".nightly"
   : undefined;
 
-const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org"];
-const WEBAPI_TEST_INSTALL_HOSTS = [
-  "addons.allizom.org",
-  "addons-dev.allizom.org",
-  "example.com",
-];
+const WEBAPI_INSTALL_HOSTS =
+  AppConstants.MOZ_APP_NAME !== "thunderbird"
+    ? ["addons.mozilla.org"]
+    : ["addons.thunderbird.net"];
+const WEBAPI_TEST_INSTALL_HOSTS =
+  AppConstants.MOZ_APP_NAME !== "thunderbird"
+    ? ["addons.allizom.org", "addons-dev.allizom.org", "example.com"]
+    : ["addons-stage.thunderbird.net"];
 
 const AMO_ATTRIBUTION_ALLOWED_SOURCES = ["amo", "disco"];
 const AMO_ATTRIBUTION_DATA_KEYS = [

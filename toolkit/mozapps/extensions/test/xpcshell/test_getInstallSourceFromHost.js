@@ -3,9 +3,14 @@
  */
 
 add_task(function test_getInstallSourceFromHost_helpers() {
+  const test_hostname =
+    AppConstants.MOZ_APP_NAME !== "thunderbird"
+      ? "addons.allizom.org"
+      : "addons-stage.thunderbird.net";
+
   const sourceHostTestCases = [
     {
-      host: "addons.allizom.org",
+      host: test_hostname,
       installSourceFromHost: "test-host",
     },
     {
