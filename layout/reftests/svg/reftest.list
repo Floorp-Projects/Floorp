@@ -209,7 +209,7 @@ random == dynamic-use-nested-01b.svg dynamic-use-nested-01-ref.svg
 fuzzy(0-1,0-2) == fallback-color-04.svg pass.svg
 == fallback-color-05a.svg fallback-color-05-ref.svg
 == fallback-color-05b.svg fallback-color-05-ref.svg
-== fallback-color-06.svg fallback-color-06-ref.svg
+== fallback-color-06.svg pass.svg
 
 == filter-and-clip.svg filter-and-clip-ref.svg
 == filter-basic-01.svg pass.svg
