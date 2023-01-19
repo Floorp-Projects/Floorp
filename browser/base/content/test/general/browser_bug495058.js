@@ -13,7 +13,7 @@ const URIS = [
 add_task(async function() {
   for (let uri of URIS) {
     let tab = BrowserTestUtils.addTab(gBrowser);
-    BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     let win = gBrowser.replaceTabWithWindow(tab);

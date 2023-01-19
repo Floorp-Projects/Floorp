@@ -23,7 +23,7 @@ add_task(async function test_about_downloads() {
       "InitialDownloadsLoaded",
       true
     );
-    BrowserTestUtils.loadURI(browser, "about:downloads");
+    BrowserTestUtils.loadURIString(browser, "about:downloads");
     await downloadsLoaded;
     await SpecialPowers.spawn(browser, [], async function() {
       let box = content.document.getElementById("downloadsListBox");

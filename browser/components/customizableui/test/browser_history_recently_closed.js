@@ -73,7 +73,10 @@ add_task(async function testRecentlyClosedDisabled() {
   let loadedPromise = BrowserTestUtils.browserLoaded(
     newWin.gBrowser.selectedBrowser
   );
-  BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, "about:mozilla");
+  BrowserTestUtils.loadURIString(
+    newWin.gBrowser.selectedBrowser,
+    "about:mozilla"
+  );
   await loadedPromise;
   await BrowserTestUtils.closeWindow(newWin);
 

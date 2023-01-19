@@ -71,7 +71,7 @@ async function testPageBlockedByPolicy(page, policyJSON) {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {
-      BrowserTestUtils.loadURI(browser, page);
+      BrowserTestUtils.loadURIString(browser, page);
       await BrowserTestUtils.browserLoaded(browser, false, page, true);
       await SpecialPowers.spawn(browser, [page], async function(innerPage) {
         ok(

@@ -30,7 +30,7 @@ add_task(async function() {
     false,
     uriString
   );
-  BrowserTestUtils.loadURI(viewSourceBrowser, uriString);
+  BrowserTestUtils.loadURIString(viewSourceBrowser, uriString);
   let href = await promiseLoad;
   is(
     href,

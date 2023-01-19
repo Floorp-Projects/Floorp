@@ -13,13 +13,16 @@ add_task(async () => {
       const expectedIcon = testPath + "file_generic_favicon.ico";
       let faviconPromise = waitForLinkAvailable(browser);
 
-      BrowserTestUtils.loadURI(browser, testPath + "file_with_favicon.html");
+      BrowserTestUtils.loadURIString(
+        browser,
+        testPath + "file_with_favicon.html"
+      );
       await BrowserTestUtils.browserLoaded(browser);
 
       let iconURI = await faviconPromise;
       is(iconURI, expectedIcon, "Got correct icon.");
 
-      BrowserTestUtils.loadURI(browser, testPath + "blank.html");
+      BrowserTestUtils.loadURIString(browser, testPath + "blank.html");
       await BrowserTestUtils.browserLoaded(browser);
 
       is(browser.mIconURL, null, "Should have blanked the icon.");

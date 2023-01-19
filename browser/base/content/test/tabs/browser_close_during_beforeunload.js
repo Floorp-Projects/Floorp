@@ -21,7 +21,7 @@ add_task(async function() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   let browser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, "http://example.com/");
+  BrowserTestUtils.loadURIString(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
   await SpecialPowers.spawn(browser, [], () => {

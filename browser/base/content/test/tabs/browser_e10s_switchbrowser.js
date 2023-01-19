@@ -354,7 +354,7 @@ add_task(async function test_synchronous() {
   info("2");
   // Load another page
   info("Loading about:robots");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserStopped(gBrowser);
   is(
     gBrowser.selectedBrowser.isRemoteBrowser,
@@ -370,7 +370,7 @@ add_task(async function test_synchronous() {
   info("3");
   // Load the remote page again
   info("Loading http://example.org/" + DUMMY_PATH);
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     gBrowser.selectedBrowser,
     "http://example.org/" + DUMMY_PATH
   );

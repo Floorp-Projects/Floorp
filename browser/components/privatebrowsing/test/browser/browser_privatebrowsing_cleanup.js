@@ -15,7 +15,7 @@ add_task(async () => {
   });
 
   let privateTab = privateWindow.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(privateTab, TOP_PAGE);
+  BrowserTestUtils.loadURIString(privateTab, TOP_PAGE);
   await BrowserTestUtils.browserLoaded(privateTab);
 
   let observerExited = {

@@ -52,7 +52,7 @@ add_task(async function() {
   checkIdentityPopup("security-broken.svg");
 
   // check that a warning is shown even without mixed content
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     gBrowser.selectedBrowser,
     "https://self-signed.example.com"
   );

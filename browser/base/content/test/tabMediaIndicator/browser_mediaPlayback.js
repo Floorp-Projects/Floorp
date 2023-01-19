@@ -16,7 +16,7 @@ function wait_for_event(browser, event) {
 async function test_on_browser(url, browser) {
   info(`run test for ${url}`);
   const startPromise = wait_for_event(browser, "DOMAudioPlaybackStarted");
-  BrowserTestUtils.loadURI(browser, url);
+  BrowserTestUtils.loadURIString(browser, url);
   await startPromise;
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
 }

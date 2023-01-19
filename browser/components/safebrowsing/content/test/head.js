@@ -48,7 +48,7 @@ function promiseTabLoadEvent(tab, url, eventType = "load") {
   }
 
   if (url) {
-    BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
   }
 
   return loaded;

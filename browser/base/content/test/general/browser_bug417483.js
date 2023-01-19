@@ -5,7 +5,7 @@ add_task(async function() {
   );
   const htmlContent =
     "data:text/html, <iframe src='data:text/html,text text'></iframe>";
-  BrowserTestUtils.loadURI(gBrowser, htmlContent);
+  BrowserTestUtils.loadURIString(gBrowser, htmlContent);
   await loadedPromise;
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(arg) {

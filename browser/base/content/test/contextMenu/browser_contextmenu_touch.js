@@ -61,7 +61,7 @@ add_task(async function test_back_forward_button_contextmenu_touch() {
     let notDisabled = TestUtils.waitForCondition(
       () => !backbutton.hasAttribute("disabled")
     );
-    BrowserTestUtils.loadURI(browser, "http://example.org");
+    BrowserTestUtils.loadURIString(browser, "http://example.org");
     await notDisabled;
     await openAndCheckContextMenu(contextMenu, backbutton);
 

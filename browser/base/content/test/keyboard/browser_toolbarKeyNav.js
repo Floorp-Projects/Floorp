@@ -306,7 +306,7 @@ add_task(async function testArrowsDisabledButtons() {
       "ArrowLeft on Reload button when prior buttons disabled does nothing"
     );
 
-    BrowserTestUtils.loadURI(aBrowser, "https://example.com/2");
+    BrowserTestUtils.loadURIString(aBrowser, "https://example.com/2");
     await BrowserTestUtils.browserLoaded(aBrowser);
     await waitUntilReloadEnabled();
     startFromUrlBar();

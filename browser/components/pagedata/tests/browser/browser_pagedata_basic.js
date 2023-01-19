@@ -23,7 +23,7 @@ add_task(async function test_pagedata_no_data() {
     );
 
     promise = PageDataService.once("page-data");
-    BrowserTestUtils.loadURI(browser, TEST_URL2);
+    BrowserTestUtils.loadURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
     pageData = await promise;
     Assert.equal(

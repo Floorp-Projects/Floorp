@@ -178,7 +178,7 @@ add_task(async function pickButton_redirect() {
   await setDefaultEngine("Google");
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await withDNSRedirect("www.google.com", "/", async url => {
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
       await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
 
@@ -245,7 +245,7 @@ add_task(async function pickButton_persist() {
       false,
       SEARCH_SERP_URL
     );
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, SEARCH_SERP_URL);
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, SEARCH_SERP_URL);
     await browserLoadedPromise;
     await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.PERSIST, false);
 
@@ -422,7 +422,7 @@ add_task(async function clickInInput_redirect() {
   await setDefaultEngine("Google");
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await withDNSRedirect("www.google.com", "/", async url => {
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
       await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
 
@@ -485,7 +485,7 @@ add_task(async function clickInInput_persist() {
       false,
       SEARCH_SERP_URL
     );
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, SEARCH_SERP_URL);
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, SEARCH_SERP_URL);
     await browserLoadedPromise;
     await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.PERSIST, false);
 
@@ -556,7 +556,7 @@ add_task(async function openLocation_redirect() {
   await setDefaultEngine("Google");
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await withDNSRedirect("www.google.com", "/", async url => {
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
       await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
 
@@ -619,7 +619,7 @@ add_task(async function openLocation_persist() {
       false,
       SEARCH_SERP_URL
     );
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, SEARCH_SERP_URL);
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, SEARCH_SERP_URL);
     await browserLoadedPromise;
     await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.PERSIST, false);
 
@@ -726,7 +726,7 @@ add_task(async function notification() {
     // Give it a big persistence so it doesn't go away on page load.
     note.persistence = 100;
     await withDNSRedirect("www.google.com", "/", async url => {
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
       await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.NONE);
       box.removeNotification(note, true);
@@ -752,7 +752,7 @@ add_task(async function ignoreEndsEngagement() {
   await setDefaultEngine("Google");
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await withDNSRedirect("www.google.com", "/", async url => {
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
       await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.REDIRECT, false);
       // We're just looking for any target outside the Urlbar.

@@ -200,7 +200,7 @@ add_task(async function testBFCache() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
   await BrowserTestUtils.withNewTab("about:home", async function(browser) {
-    BrowserTestUtils.loadURI(browser, AUTOPLAY_PAGE);
+    BrowserTestUtils.loadURIString(browser, AUTOPLAY_PAGE);
     await blockedIconShown();
 
     gBrowser.goBack();
@@ -247,7 +247,7 @@ add_task(async function testChangingBlockingSettingDuringNavigation() {
 
   await BrowserTestUtils.withNewTab("about:home", async function(browser) {
     await blockedIconHidden();
-    BrowserTestUtils.loadURI(browser, AUTOPLAY_PAGE);
+    BrowserTestUtils.loadURIString(browser, AUTOPLAY_PAGE);
     await blockedIconShown();
     Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.ALLOWED);
 
@@ -300,7 +300,7 @@ add_task(async function testBlockedAll() {
 
   await BrowserTestUtils.withNewTab("about:home", async function(browser) {
     await blockedIconHidden();
-    BrowserTestUtils.loadURI(browser, MUTED_AUTOPLAY_PAGE);
+    BrowserTestUtils.loadURIString(browser, MUTED_AUTOPLAY_PAGE);
     await blockedIconShown();
 
     await openPermissionPopup();
@@ -340,7 +340,7 @@ add_task(async function testMultiplePlayNotificationsFromJS() {
 
     await blockedIconHidden();
 
-    BrowserTestUtils.loadURI(browser, AUTOPLAY_JS_PAGE);
+    BrowserTestUtils.loadURIString(browser, AUTOPLAY_JS_PAGE);
 
     await blockedIconShown();
 

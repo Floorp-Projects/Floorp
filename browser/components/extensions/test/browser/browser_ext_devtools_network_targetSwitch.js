@@ -14,7 +14,7 @@ const CONTENT_PROCESS_PAGE = "http://example.com/";
 async function testOnNavigatedEvent(uri, tab, toolbox, extension) {
   const onNavigated = extension.awaitMessage("network-onNavigated");
   const onSwitched = toolbox.commands.targetCommand.once("switched-target");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
   await onSwitched;
   const result = await onNavigated;
   is(result, uri, "devtools.network.onNavigated works correctly");

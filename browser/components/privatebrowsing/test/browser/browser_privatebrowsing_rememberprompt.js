@@ -52,7 +52,7 @@ add_task(async function test() {
     return (async function() {
       let win = await BrowserTestUtils.openNewBrowserWindow();
       let browser = win.gBrowser.selectedBrowser;
-      BrowserTestUtils.loadURI(browser, aURL);
+      BrowserTestUtils.loadURIString(browser, aURL);
       await BrowserTestUtils.browserLoaded(browser);
 
       await checkPrompt(aURL, aName, false, win);
@@ -61,7 +61,7 @@ add_task(async function test() {
         private: true,
       });
       let privateBrowser = privateWin.gBrowser.selectedBrowser;
-      BrowserTestUtils.loadURI(privateBrowser, aURL);
+      BrowserTestUtils.loadURIString(privateBrowser, aURL);
       await BrowserTestUtils.browserLoaded(privateBrowser);
 
       await checkPrompt(aURL, aName, true, privateWin);

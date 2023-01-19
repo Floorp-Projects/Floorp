@@ -254,7 +254,7 @@ add_task(async function test_item_shows_the_best_addon_icon() {
 add_task(async function test_panel_has_a_manage_extensions_button() {
   // Navigate away from the initial page so that about:addons always opens in a
   // new tab during tests.
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   await openExtensionsPanel(win);
@@ -453,7 +453,7 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
 
   // Navigate away from the initial page so that about:addons always opens in a
   // new tab during tests.
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   const { button } = win.gUnifiedExtensions;

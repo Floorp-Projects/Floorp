@@ -72,13 +72,19 @@ add_task(async () => {
     );
   });
 
-  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, "about:mozilla");
+  BrowserTestUtils.loadURIString(
+    newWindow.gBrowser.selectedBrowser,
+    "about:mozilla"
+  );
   await BrowserTestUtils.browserLoaded(
     newWindow.gBrowser.selectedBrowser,
     false,
     "about:mozilla"
   );
-  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, "about:about");
+  BrowserTestUtils.loadURIString(
+    newWindow.gBrowser.selectedBrowser,
+    "about:about"
+  );
   await BrowserTestUtils.browserLoaded(
     newWindow.gBrowser.selectedBrowser,
     false,
@@ -173,13 +179,19 @@ add_task(async () => {
     );
   });
 
-  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, "about:mozilla");
+  BrowserTestUtils.loadURIString(
+    newWindow.gBrowser.selectedBrowser,
+    "about:mozilla"
+  );
   await BrowserTestUtils.browserLoaded(
     newWindow.gBrowser.selectedBrowser,
     false,
     "about:mozilla"
   );
-  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, "about:about");
+  BrowserTestUtils.loadURIString(
+    newWindow.gBrowser.selectedBrowser,
+    "about:about"
+  );
   await BrowserTestUtils.browserLoaded(
     newWindow.gBrowser.selectedBrowser,
     false,

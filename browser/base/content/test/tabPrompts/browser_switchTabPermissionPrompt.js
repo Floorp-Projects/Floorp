@@ -9,7 +9,7 @@ add_task(async function test_check_file_prompt() {
     await BrowserTestUtils.switchTab(gBrowser, initialTab);
 
     let testHelper = async function(uri, expectedValue) {
-      BrowserTestUtils.loadURI(browser, uri);
+      BrowserTestUtils.loadURIString(browser, uri);
       await BrowserTestUtils.browserLoaded(browser, false, uri);
       let dialogFinishedShowing = TestUtils.topicObserved(
         "common-dialog-loaded"

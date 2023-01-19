@@ -29,7 +29,7 @@ function promiseTabLoadEvent(tab, url) {
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
 
   if (url) {
-    BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
   }
 
   return loaded;
@@ -426,7 +426,7 @@ add_task(async function() {
     gInvalidFormPopup,
     "popuphidden"
   );
-  BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
+  BrowserTestUtils.loadURIString(browser, "data:text/html,<div>hello!</div>");
   await BrowserTestUtils.browserLoaded(browser);
 
   await popupHiddenPromise;

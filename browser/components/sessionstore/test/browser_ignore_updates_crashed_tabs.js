@@ -22,7 +22,7 @@ add_task(async function test_update_crashed_tab_after_navigate_to_remote() {
     "browser is in the crashed set"
   );
 
-  BrowserTestUtils.loadURI(browser, "https://example.org/");
+  BrowserTestUtils.loadURIString(browser, "https://example.org/");
   await BrowserTestUtils.browserLoaded(browser, false, "https://example.org/");
   ok(
     !SessionStore.isBrowserInCrashedSet(browser),
@@ -55,7 +55,7 @@ add_task(async function test_update_crashed_tab_after_navigate_to_non_remote() {
     "browser is in the crashed set"
   );
 
-  BrowserTestUtils.loadURI(browser, "about:mozilla");
+  BrowserTestUtils.loadURIString(browser, "about:mozilla");
   await BrowserTestUtils.browserLoaded(browser, false, "about:mozilla");
   ok(
     !SessionStore.isBrowserInCrashedSet(browser),

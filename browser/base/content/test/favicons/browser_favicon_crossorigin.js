@@ -27,7 +27,7 @@ function run_test(root, shouldSucceed, description) {
       async browser => {
         const faviconPromise = waitForFaviconMessage(true, FAVICON_URL);
 
-        BrowserTestUtils.loadURI(browser, `${root}crossorigin.html`);
+        BrowserTestUtils.loadURIString(browser, `${root}crossorigin.html`);
         await BrowserTestUtils.browserLoaded(browser);
 
         if (shouldSucceed) {

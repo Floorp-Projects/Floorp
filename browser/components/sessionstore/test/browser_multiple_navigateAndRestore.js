@@ -15,9 +15,9 @@ add_task(async function() {
   ok(!browser.isRemoteBrowser, "Ensure browser is not remote");
   // Load a remote page, and then another remote page immediately
   // after.
-  BrowserTestUtils.loadURI(browser, PAGE_1);
+  BrowserTestUtils.loadURIString(browser, PAGE_1);
   browser.stop();
-  BrowserTestUtils.loadURI(browser, PAGE_2);
+  BrowserTestUtils.loadURIString(browser, PAGE_2);
   await BrowserTestUtils.browserLoaded(browser, false, PAGE_2);
 
   ok(browser.isRemoteBrowser, "Should have switched remoteness");

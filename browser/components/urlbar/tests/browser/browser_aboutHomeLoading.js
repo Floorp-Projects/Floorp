@@ -70,7 +70,7 @@ add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
       },
       { capture: true, once: true }
     );
-    BrowserTestUtils.loadURI(newTabBrowser, "about:preferences");
+    BrowserTestUtils.loadURIString(newTabBrowser, "about:preferences");
   });
   document.getElementById("home-button").click();
   await BrowserTestUtils.browserLoaded(

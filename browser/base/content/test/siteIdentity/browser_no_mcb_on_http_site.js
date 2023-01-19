@@ -71,7 +71,7 @@ add_task(async function test1() {
 
   // set up test 2
   let url = HTTP_TEST_ROOT + "test_no_mcb_on_http_site_font.html";
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 
@@ -95,7 +95,7 @@ add_task(async function test2() {
 
   // set up test 3
   let url = HTTP_TEST_ROOT + "test_no_mcb_on_http_site_font2.html";
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 

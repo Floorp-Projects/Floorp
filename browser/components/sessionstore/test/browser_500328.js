@@ -93,7 +93,7 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async function(browser) {
-      BrowserTestUtils.loadURI(browser, "http://example.com");
+      BrowserTestUtils.loadURIString(browser, "http://example.com");
       await BrowserTestUtils.browserLoaded(browser);
 
       // After these push/replaceState calls, the window should have three

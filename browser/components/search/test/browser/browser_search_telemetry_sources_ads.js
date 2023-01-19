@@ -346,7 +346,7 @@ add_task(async function test_track_ad_new_window() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   let url = getSERPUrl(getPageUrl(false, true));
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser,
     false,

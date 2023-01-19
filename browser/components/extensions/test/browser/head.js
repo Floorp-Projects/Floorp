@@ -994,7 +994,7 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
   let data = windowWatcher.awaitMessage("data");
 
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
 
   let details = await data;
   await windowWatcher.unload();

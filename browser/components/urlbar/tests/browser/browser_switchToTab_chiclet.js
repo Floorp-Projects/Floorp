@@ -12,7 +12,7 @@ const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
 add_task(async function test_with_oneoff_button() {
   info("Loading test page into first tab");
-  await BrowserTestUtils.loadURI(gBrowser, TEST_URL);
+  await BrowserTestUtils.loadURIString(gBrowser, TEST_URL);
 
   info("Opening a new tab");
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
@@ -65,7 +65,7 @@ add_task(async function test_with_oneoff_button() {
 
 add_task(async function test_with_keytype() {
   info("Loading test page into first tab");
-  await BrowserTestUtils.loadURI(gBrowser, TEST_URL);
+  await BrowserTestUtils.loadURIString(gBrowser, TEST_URL);
 
   info("Opening a new tab");
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);

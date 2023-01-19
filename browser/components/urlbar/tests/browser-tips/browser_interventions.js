@@ -276,7 +276,7 @@ add_task(async function pickHelpButton() {
     );
     EventUtils.synthesizeMouseAtCenter(helpButton, {});
 
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, helpUrl);
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, helpUrl);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);

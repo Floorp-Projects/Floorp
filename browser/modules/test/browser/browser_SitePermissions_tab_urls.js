@@ -47,7 +47,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
         false,
         principal.spec
       );
-      BrowserTestUtils.loadURI(browser, principal.spec);
+      BrowserTestUtils.loadURIString(browser, principal.spec);
       await loaded;
 
       SitePermissions.setForPrincipal(
@@ -64,7 +64,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
           false,
           principal2.URI.spec
         );
-        BrowserTestUtils.loadURI(browser, principal2.URI.spec);
+        BrowserTestUtils.loadURIString(browser, principal2.URI.spec);
         await loaded2;
 
         Assert.deepEqual(
@@ -86,7 +86,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
         false,
         principal.spec
       );
-      BrowserTestUtils.loadURI(browser, principal.spec);
+      BrowserTestUtils.loadURIString(browser, principal.spec);
       await loaded;
 
       SitePermissions.setForPrincipal(
@@ -111,7 +111,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
           false,
           principal2.URI.spec
         );
-        BrowserTestUtils.loadURI(browser, principal2.URI.spec);
+        BrowserTestUtils.loadURIString(browser, principal2.URI.spec);
         await loaded;
 
         if (principal2 != principal) {

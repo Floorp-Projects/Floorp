@@ -21,7 +21,7 @@ function makeTest(
 
     // Load the initial URL and make sure we are in the right initial process
     info("Loading initial URL");
-    BrowserTestUtils.loadURI(browser, startURL);
+    BrowserTestUtils.loadURIString(browser, startURL);
     await BrowserTestUtils.browserLoaded(browser, false, startURL);
 
     is(browser.currentURI.spec, startURL, "Shouldn't have been redirected");
@@ -114,7 +114,7 @@ var TRANSITIONS = [
   // Loads the new page by calling browser.loadURI directly
   async function loadURI(browser, uri) {
     info("Calling browser.loadURI");
-    BrowserTestUtils.loadURI(browser, uri);
+    BrowserTestUtils.loadURIString(browser, uri);
   },
 
   // Loads the new page by finding a link with the right href in the document and

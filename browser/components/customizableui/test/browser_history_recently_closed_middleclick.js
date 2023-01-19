@@ -14,7 +14,10 @@ async function setupTest() {
   // Navigate the initial tab to ensure that it won't be reused for the tab
   // that will be reopened.
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://example.com");
+  BrowserTestUtils.loadURIString(
+    gBrowser.selectedBrowser,
+    "https://example.com"
+  );
   await loadPromise;
 
   // Populate the recently closed tabs list.

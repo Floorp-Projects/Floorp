@@ -36,7 +36,7 @@ add_task(async function test_menu() {
     false
   );
   let browser = tab.linkedBrowser;
-  BrowserTestUtils.loadURI(browser, WEB_ROOT + "page_style_sample.html");
+  BrowserTestUtils.loadURIString(browser, WEB_ROOT + "page_style_sample.html");
   await promiseStylesheetsLoaded(tab, kStyleSheetsInPageStyleSample);
 
   let menuitems = fillPopupAndGetItems();

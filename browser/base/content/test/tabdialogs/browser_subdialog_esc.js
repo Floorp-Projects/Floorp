@@ -20,7 +20,10 @@ add_task(async function test_subdialog_esc_does_not_cancel_load() {
     browser
   ) {
     // Start loading a page
-    let loadStartedPromise = BrowserTestUtils.loadURI(browser, TEST_LOAD_PAGE);
+    let loadStartedPromise = BrowserTestUtils.loadURIString(
+      browser,
+      TEST_LOAD_PAGE
+    );
     let loadedPromise = BrowserTestUtils.browserLoaded(browser);
     await loadStartedPromise;
 

@@ -39,7 +39,10 @@ function test() {
     });
   });
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+  BrowserTestUtils.loadURIString(
+    gBrowser.selectedBrowser,
+    "http://example.com/"
+  );
 }
 
 function getLanguageExceptions() {

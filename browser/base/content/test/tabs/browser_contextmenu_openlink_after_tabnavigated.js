@@ -27,7 +27,7 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   info("Popup Shown");
 
   info("Navigate the tab with the opened context menu");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let awaitNewTabOpen = BrowserTestUtils.waitForNewTab(
