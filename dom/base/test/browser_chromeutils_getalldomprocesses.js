@@ -16,7 +16,7 @@ add_task(async function testParentProcess() {
 
 add_task(async function testContentProcesses() {
   info("Open a tab in a content process");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   info("Sanity checks against all returned elements of getAllDOMProcesses");

@@ -340,7 +340,7 @@ add_task(async function testMetadataAfterTabNavigation() {
   info(`navigate tab to blank page`);
   await Promise.all([
     new Promise(r => (tab.controller.ondeactivated = r)),
-    BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank"),
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:blank"),
   ]);
 
   info(`current media metadata should be reset`);

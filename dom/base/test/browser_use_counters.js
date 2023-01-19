@@ -188,7 +188,7 @@ add_task(async function() {
         throw `unexpected type ${test.type}`;
     }
 
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     if (test.waitForExplicitFinish) {

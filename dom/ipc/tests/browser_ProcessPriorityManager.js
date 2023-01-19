@@ -607,7 +607,7 @@ add_task(async function test_cross_group_navigate() {
       let dotOrgChildID = browsingContextChildID(browser.browsingContext);
 
       // Do a cross-group navigation.
-      BrowserTestUtils.loadURI(browser, coopPage);
+      BrowserTestUtils.loadURIString(browser, coopPage);
       await BrowserTestUtils.browserLoaded(browser);
 
       let coopChildID = browsingContextChildID(browser.browsingContext);
@@ -865,7 +865,7 @@ add_task(async function test_audio_background_tab() {
       "Loading a new tab should make it prioritized."
     );
     let loaded = BrowserTestUtils.browserLoaded(browser, false, page2);
-    BrowserTestUtils.loadURI(browser, page2);
+    BrowserTestUtils.loadURIString(browser, page2);
     await loaded;
 
     childID = browsingContextChildID(browser.browsingContext);

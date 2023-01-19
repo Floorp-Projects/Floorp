@@ -2,7 +2,7 @@
 
 async function doLoadAndGoBack(browser, ext) {
   let loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURI(browser, "https://example.com/");
+  BrowserTestUtils.loadURIString(browser, "https://example.com/");
   await ext.awaitMessage("redir-handled");
   await loaded;
 

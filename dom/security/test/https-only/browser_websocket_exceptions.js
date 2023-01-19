@@ -26,7 +26,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser);
 
-    BrowserTestUtils.loadURI(browser, WEBSOCKET_DOC_URL);
+    BrowserTestUtils.loadURIString(browser, WEBSOCKET_DOC_URL);
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function() {

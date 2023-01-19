@@ -35,7 +35,7 @@ async function runTest(url) {
     newTab,
     "true"
   );
-  BrowserTestUtils.loadURI(newBrowser, url);
+  BrowserTestUtils.loadURIString(newBrowser, url);
   await promise;
 
   // Put the tab in the background.

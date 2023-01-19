@@ -101,7 +101,7 @@ async function testPlayWithoutUserGesture() {
     window.gBrowser,
     "about:blank"
   );
-  BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   async function checkAutoplayKeyword() {
@@ -145,7 +145,7 @@ async function testPlayWithUserGesture(gesture) {
     window.gBrowser,
     "about:blank"
   );
-  BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- simulate user gesture -");

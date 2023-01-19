@@ -25,7 +25,7 @@ add_task(async function test1() {
 
   // Set database version for domain 1
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL1);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL1);
   await waitForMessage(11, gBrowser);
   gBrowser.removeCurrentTab();
 });
@@ -33,7 +33,7 @@ add_task(async function test1() {
 add_task(async function test2() {
   // Set database version for domain 2
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL2);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL2);
   await waitForMessage(11, gBrowser);
   gBrowser.removeCurrentTab();
 });
@@ -48,7 +48,7 @@ add_task(async function test3() {
 add_task(async function test4() {
   // Get database version for domain 1
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL3);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL3);
   await waitForMessage(11, gBrowser);
   gBrowser.removeCurrentTab();
 });
@@ -56,7 +56,7 @@ add_task(async function test4() {
 add_task(async function test5() {
   // Get database version for domain 2
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL4);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL4);
   await waitForMessage(1, gBrowser);
   gBrowser.removeCurrentTab();
 });

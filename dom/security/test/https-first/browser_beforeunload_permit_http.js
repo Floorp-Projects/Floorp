@@ -112,7 +112,7 @@ async function openPage() {
     { gBrowser, url: "about:blank" },
     async function(browser) {
       // Load http page
-      BrowserTestUtils.loadURI(
+      BrowserTestUtils.loadURIString(
         browser,
         `${TEST_PATH_HTTP}file_beforeunload_permit_http.html`
       );
@@ -129,8 +129,11 @@ async function openPage() {
 
       is(true, hasInteractedWith, "Simulated successfully user interaction");
       // And then navigate away to another site which proves that user won't be asked twice to permit a reload (otherwise the test get timed out)
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      BrowserTestUtils.loadURI(browser, "http://self-signed.example.com/");
+      BrowserTestUtils.loadURIString(
+        browser,
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+        "http://self-signed.example.com/"
+      );
       await BrowserTestUtils.browserLoaded(browser);
       Assert.ok(true, "Navigated successfully.");
     }
@@ -143,7 +146,7 @@ async function loadPageAndReload(testCase) {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async function(browser) {
-      BrowserTestUtils.loadURI(
+      BrowserTestUtils.loadURIString(
         browser,
         `${TEST_PATH_HTTP}file_beforeunload_permit_http.html`
       );
@@ -172,13 +175,13 @@ async function loadPagesAndUseBackButton() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async function(browser) {
-      BrowserTestUtils.loadURI(
+      BrowserTestUtils.loadURIString(
         browser,
         `${TEST_PATH_HTTP}file_beforeunload_permit_http.html`
       );
       await BrowserTestUtils.browserLoaded(browser);
 
-      BrowserTestUtils.loadURI(
+      BrowserTestUtils.loadURIString(
         browser,
         `${TEST_PATH_HTTP}file_beforeunload_permit_http.html?getASessionHistoryEntry`
       );

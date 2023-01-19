@@ -17,7 +17,7 @@ async function allow_play_for_played_video() {
     window.gBrowser,
     "about:blank"
   );
-  BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- simulate user-click to start video -");

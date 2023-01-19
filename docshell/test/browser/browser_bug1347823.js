@@ -23,7 +23,10 @@ add_task(async function testValidCache() {
       });
 
       // Load a random page.
-      BrowserTestUtils.loadURI(browser, "data:text/html;charset=utf-8,pageA2");
+      BrowserTestUtils.loadURIString(
+        browser,
+        "data:text/html;charset=utf-8,pageA2"
+      );
       await BrowserTestUtils.browserLoaded(browser);
 
       // Go back and verify text content.
@@ -60,7 +63,10 @@ add_task(async function testExpiredCache() {
       });
 
       // Load a random page.
-      BrowserTestUtils.loadURI(browser, "data:text/html;charset=utf-8,pageB2");
+      BrowserTestUtils.loadURIString(
+        browser,
+        "data:text/html;charset=utf-8,pageB2"
+      );
       await BrowserTestUtils.browserLoaded(browser);
 
       // Wait for 3 times of expiration timeout, hopefully it's evicted...

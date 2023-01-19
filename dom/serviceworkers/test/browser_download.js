@@ -90,7 +90,7 @@ function test() {
           return downloadList.addView(downloadListener);
         })
         .then(function() {
-          BrowserTestUtils.loadURI(gBrowser, url);
+          BrowserTestUtils.loadURIString(gBrowser, url);
         });
     }
   );
