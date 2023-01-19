@@ -1313,16 +1313,20 @@ gfxRect SVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 /* static */
 nscolor SVGUtils::GetFallbackOrPaintColor(
     const ComputedStyle& aStyle, StyleSVGPaint nsStyleSVG::*aFillOrStroke,
-    nscolor aDefaultFallbackColor) {
+    nscolor aDefaultContextFallbackColor) {
   const auto& paint = aStyle.StyleSVG()->*aFillOrStroke;
   nscolor color;
   switch (paint.kind.tag) {
     case StyleSVGPaintKind::Tag::PaintServer:
+      color = paint.fallback.IsColor()
+                  ? paint.fallback.AsColor().CalcColor(aStyle)
+                  : NS_RGBA(0, 0, 0, 0);
+      break;
     case StyleSVGPaintKind::Tag::ContextStroke:
     case StyleSVGPaintKind::Tag::ContextFill:
       color = paint.fallback.IsColor()
                   ? paint.fallback.AsColor().CalcColor(aStyle)
-                  : aDefaultFallbackColor;
+                  : aDefaultContextFallbackColor;
       break;
     default:
       color = paint.kind.AsColor().CalcColor(aStyle);
