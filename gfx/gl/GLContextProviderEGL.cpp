@@ -1125,71 +1125,64 @@ bool GLContextEGL::FindVisual(int* const out_visualId) {
 #endif
 
 /*static*/
-RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
-    const std::shared_ptr<EglDisplay> egl, const GLContextCreateDesc& desc,
-    const mozilla::gfx::IntSize& size, const bool useGles,
-    nsACString* const out_failureId) {
-  const EGLConfig config = ChooseConfig(*egl, desc, useGles);
-  if (config == EGL_NO_CONFIG) {
-    *out_failureId = "FEATURE_FAILURE_EGL_NO_CONFIG"_ns;
-    NS_WARNING("Failed to find a compatible config.");
-    return nullptr;
-  }
-
-  if (GLContext::ShouldSpew()) {
-    egl->DumpEGLConfig(config);
-  }
-
-  mozilla::gfx::IntSize pbSize(size);
-  EGLSurface surface = nullptr;
-#ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay()) {
-    surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
-  } else
-#endif
-  {
-    surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
-        *egl, config, LOCAL_EGL_NONE, pbSize);
-  }
-  if (!surface) {
-    *out_failureId = "FEATURE_FAILURE_EGL_POT"_ns;
-    NS_WARNING("Failed to create PBuffer for context!");
-    return nullptr;
-  }
-
-  auto fullDesc = GLContextDesc{desc};
-  fullDesc.isOffscreen = true;
-  RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
-      egl, fullDesc, config, surface, useGles, out_failureId);
-  if (!gl) {
-    NS_WARNING("Failed to create GLContext from PBuffer");
-    egl->fDestroySurface(surface);
-#if defined(MOZ_WAYLAND)
-    DeleteSavedGLSurface(surface);
-#endif
-    return nullptr;
-  }
-
-  return gl;
-}
-
-/*static*/
 RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
-    const std::shared_ptr<EglDisplay> display, const GLContextCreateDesc& desc,
+    const std::shared_ptr<EglDisplay> egl, const GLContextCreateDesc& desc,
     const mozilla::gfx::IntSize& size, nsACString* const out_failureId) {
+  const auto WithUseGles = [&](const bool useGles) -> RefPtr<GLContextEGL> {
+    const EGLConfig config = ChooseConfig(*egl, desc, useGles);
+    if (config == EGL_NO_CONFIG) {
+      *out_failureId = "FEATURE_FAILURE_EGL_NO_CONFIG"_ns;
+      NS_WARNING("Failed to find a compatible config.");
+      return nullptr;
+    }
+
+    if (GLContext::ShouldSpew()) {
+      egl->DumpEGLConfig(config);
+    }
+
+    mozilla::gfx::IntSize pbSize(size);
+    EGLSurface surface = nullptr;
+#ifdef MOZ_WAYLAND
+    if (GdkIsWaylandDisplay()) {
+      surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
+    } else
+#endif
+    {
+      surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
+          *egl, config, LOCAL_EGL_NONE, pbSize);
+    }
+    if (!surface) {
+      *out_failureId = "FEATURE_FAILURE_EGL_POT"_ns;
+      NS_WARNING("Failed to create PBuffer for context!");
+      return nullptr;
+    }
+
+    auto fullDesc = GLContextDesc{desc};
+    fullDesc.isOffscreen = true;
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
+        egl, fullDesc, config, surface, useGles, out_failureId);
+    if (!gl) {
+      NS_WARNING("Failed to create GLContext from PBuffer");
+      egl->fDestroySurface(surface);
+#if defined(MOZ_WAYLAND)
+      DeleteSavedGLSurface(surface);
+#endif
+      return nullptr;
+    }
+
+    return gl;
+  };
+
   bool preferGles;
 #if defined(MOZ_WIDGET_ANDROID)
   preferGles = true;
 #else
   preferGles = StaticPrefs::gfx_egl_prefer_gles_enabled_AtStartup();
 #endif  // defined(MOZ_WIDGET_ANDROID)
-
-  RefPtr<GLContextEGL> gl = CreateEGLPBufferOffscreenContextImpl(
-      display, desc, size, preferGles, out_failureId);
+  RefPtr<GLContextEGL> gl = WithUseGles(preferGles);
 #if !defined(MOZ_WIDGET_ANDROID)
   if (!gl) {
-    gl = CreateEGLPBufferOffscreenContextImpl(display, desc, size, !preferGles,
-                                              out_failureId);
+    gl = WithUseGles(!preferGles);
   }
 #endif  // !defined(MOZ_WIDGET_ANDROID)
   return gl;
