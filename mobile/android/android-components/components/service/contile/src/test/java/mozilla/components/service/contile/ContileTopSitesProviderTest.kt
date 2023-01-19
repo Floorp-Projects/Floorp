@@ -4,23 +4,31 @@
 
 package mozilla.components.service.contile
 
+import android.text.format.DateUtils
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Header
+import mozilla.components.concept.fetch.Headers
+import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Response
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.file.loadResourceAsString
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.anyLong
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -33,81 +41,96 @@ import java.util.Date
 class ContileTopSitesProviderTest {
 
     @Test
-    fun `GIVEN a successful status response WHEN top sites are fetched THEN response should contain top sites`() = runTest {
-        val client = prepareClient()
-        val provider = ContileTopSitesProvider(testContext, client)
-        val topSites = provider.getTopSites()
-        var topSite = topSites.first()
+    fun `GIVEN a successful status response WHEN top sites are fetched THEN response should contain top sites`() =
+        runTest {
+            val client = prepareClient()
+            val provider = ContileTopSitesProvider(testContext, client)
+            val topSites = provider.getTopSites()
+            var topSite = topSites.first()
 
-        assertEquals(2, topSites.size)
-        assertEquals(1L, topSite.id)
-        assertEquals("Firefox", topSite.title)
-        assertEquals("https://firefox.com", topSite.url)
-        assertEquals("https://firefox.com/click", topSite.clickUrl)
-        assertEquals("https://test.com/image1.jpg", topSite.imageUrl)
-        assertEquals("https://test.com", topSite.impressionUrl)
+            assertEquals(2, topSites.size)
+            assertEquals(1L, topSite.id)
+            assertEquals("Firefox", topSite.title)
+            assertEquals("https://firefox.com", topSite.url)
+            assertEquals("https://firefox.com/click", topSite.clickUrl)
+            assertEquals("https://test.com/image1.jpg", topSite.imageUrl)
+            assertEquals("https://test.com", topSite.impressionUrl)
 
-        topSite = topSites.last()
+            topSite = topSites.last()
 
-        assertEquals(2L, topSite.id)
-        assertEquals("Mozilla", topSite.title)
-        assertEquals("https://mozilla.com", topSite.url)
-        assertEquals("https://mozilla.com/click", topSite.clickUrl)
-        assertEquals("https://test.com/image2.jpg", topSite.imageUrl)
-        assertEquals("https://example.com", topSite.impressionUrl)
-    }
+            assertEquals(2L, topSite.id)
+            assertEquals("Mozilla", topSite.title)
+            assertEquals("https://mozilla.com", topSite.url)
+            assertEquals("https://mozilla.com/click", topSite.clickUrl)
+            assertEquals("https://test.com/image2.jpg", topSite.imageUrl)
+            assertEquals("https://example.com", topSite.impressionUrl)
+        }
 
     @Test(expected = IOException::class)
-    fun `GIVEN a 500 status response WHEN top sites are fetched THEN throw an exception`() = runTest {
-        val client = prepareClient(status = 500)
-        val provider = ContileTopSitesProvider(testContext, client)
-        provider.getTopSites()
-        Unit
-    }
+    fun `GIVEN a 500 status response WHEN top sites are fetched THEN throw an exception`() =
+        runTest {
+            val client = prepareClient(status = 500)
+            val provider = ContileTopSitesProvider(testContext, client)
+            provider.getTopSites()
+        }
 
     @Test
-    fun `GIVEN a cache configuration is allowed and not expired WHEN top sites are fetched THEN read from the disk cache`() = runTest {
-        val client = prepareClient()
-        val provider = spy(ContileTopSitesProvider(testContext, client))
+    fun `GIVEN a cache configuration is allowed and not expired WHEN top sites are fetched THEN read from the disk cache`() =
+        runTest {
+            val client = prepareClient()
+            val provider = spy(ContileTopSitesProvider(testContext, client))
 
-        provider.getTopSites(allowCache = false)
-        verify(provider, never()).readFromDiskCache()
+            provider.getTopSites(allowCache = false)
+            verify(provider, never()).readFromDiskCache()
 
-        whenever(provider.isCacheExpired()).thenReturn(true)
-        provider.getTopSites(allowCache = true)
-        verify(provider, never()).readFromDiskCache()
+            whenever(provider.isCacheExpired()).thenReturn(true)
+            provider.getTopSites(allowCache = true)
+            verify(provider, never()).readFromDiskCache()
 
-        whenever(provider.isCacheExpired()).thenReturn(false)
-        provider.getTopSites(allowCache = true)
-        verify(provider).readFromDiskCache()
-
-        Unit
-    }
+            whenever(provider.isCacheExpired()).thenReturn(false)
+            provider.getTopSites(allowCache = true)
+            verify(provider).readFromDiskCache()
+        }
 
     @Test
-    fun `GIVEN a cache configuration is allowed WHEN top sites are fetched THEN write response to cache`() = runTest {
-        val jsonResponse = loadResourceAsString("/contile/contile.json")
-        val client = prepareClient(jsonResponse)
-        val provider = spy(ContileTopSitesProvider(testContext, client))
-        val cachingProvider = spy(
-            ContileTopSitesProvider(
-                context = testContext,
-                client = client,
-                maxCacheAgeInMinutes = 1L,
-            ),
-        )
+    fun `GIVEN a cache max age is specified WHEN top sites are fetched THEN the cache max age is correctly set`() =
+        runTest {
+            val jsonResponse = loadResourceAsString("/contile/contile.json")
+            val client = prepareClient(jsonResponse)
+            val specifiedProvider = spy(
+                ContileTopSitesProvider(
+                    context = testContext,
+                    client = client,
+                    maxCacheAgeInSeconds = 60L,
+                ),
+            )
 
-        assertNull(provider.diskCacheLastModified)
-        assertNull(cachingProvider.diskCacheLastModified)
+            assertFalse(specifiedProvider.cacheState.shouldUseServerMaxAge)
 
-        provider.getTopSites()
-        verify(provider, never()).writeToDiskCache(jsonResponse)
-        assertNull(provider.diskCacheLastModified)
+            specifiedProvider.getTopSites()
+            verify(specifiedProvider).writeToDiskCache(anyLong(), any())
+            assertEquals(
+                specifiedProvider.cacheState.localCacheMaxAge,
+                specifiedProvider.cacheState.cacheMaxAge,
+            )
+        }
 
-        cachingProvider.getTopSites()
-        verify(cachingProvider).writeToDiskCache(jsonResponse)
-        assertNotNull(cachingProvider.diskCacheLastModified)
-    }
+    @Test
+    fun `GIVEN cache max age is not specified WHEN top sites are fetched THEN the cache max age is set from the response headers`() =
+        runTest {
+            val jsonResponse = loadResourceAsString("/contile/contile.json")
+            val client = prepareClient(jsonResponse)
+            val provider = spy(ContileTopSitesProvider(testContext, client))
+
+            assertTrue(provider.cacheState.shouldUseServerMaxAge)
+
+            provider.getTopSites()
+            verify(provider).writeToDiskCache(anyLong(), any())
+            assertEquals(
+                provider.cacheState.serverCacheMaxAge,
+                provider.cacheState.cacheMaxAge,
+            )
+        }
 
     @Test
     fun `WHEN the base cache file getter is called THEN return existing base cache file`() {
@@ -129,51 +152,27 @@ class ContileTopSitesProviderTest {
     }
 
     @Test
-    fun `GIVEN a max cache age WHEN the cache expiration is checked THEN return whether the cache is expired`() {
-        var provider =
-            spy(ContileTopSitesProvider(testContext, client = mock(), maxCacheAgeInMinutes = -1))
+    fun `WHEN the cache expiration is checked THEN return whether the cache is expired`() {
+        val provider =
+            spy(ContileTopSitesProvider(testContext, client = mock()))
 
-        whenever(provider.getCacheLastModified()).thenReturn(Date().time)
+        provider.cacheState =
+            ContileTopSitesProvider.CacheState(shouldUseServerMaxAge = false, isCacheValid = false)
         assertTrue(provider.isCacheExpired())
 
-        whenever(provider.getCacheLastModified()).thenReturn(-1)
+        provider.cacheState = ContileTopSitesProvider.CacheState(
+            shouldUseServerMaxAge = false,
+            isCacheValid = true,
+            localCacheMaxAge = Date().time - 60 * DateUtils.MINUTE_IN_MILLIS,
+        )
         assertTrue(provider.isCacheExpired())
 
-        provider =
-            spy(ContileTopSitesProvider(testContext, client = mock(), maxCacheAgeInMinutes = 10))
-
-        whenever(provider.getCacheLastModified()).thenReturn(-1)
-        assertTrue(provider.isCacheExpired())
-
-        whenever(provider.getCacheLastModified()).thenReturn(Date().time - 60 * MINUTE_IN_MS)
-        assertTrue(provider.isCacheExpired())
-
-        whenever(provider.getCacheLastModified()).thenReturn(Date().time)
+        provider.cacheState = ContileTopSitesProvider.CacheState(
+            shouldUseServerMaxAge = false,
+            isCacheValid = true,
+            localCacheMaxAge = Date().time + 60 * DateUtils.MINUTE_IN_MILLIS,
+        )
         assertFalse(provider.isCacheExpired())
-
-        whenever(provider.getCacheLastModified()).thenReturn(Date().time + 60 * MINUTE_IN_MS)
-        assertFalse(provider.isCacheExpired())
-    }
-
-    @Test
-    fun `WHEN the cache last modified time is fetched THEN the returned value is cached`() {
-        val provider = spy(ContileTopSitesProvider(testContext, prepareClient()))
-        val file = File(testContext.filesDir, CACHE_FILE_NAME)
-
-        assertNull(provider.diskCacheLastModified)
-
-        file.createNewFile()
-
-        assertTrue(file.exists())
-
-        var cacheLastModified = provider.getCacheLastModified()
-
-        assertEquals(cacheLastModified, provider.diskCacheLastModified)
-        assertTrue(file.delete())
-
-        cacheLastModified = provider.getCacheLastModified()
-
-        assertEquals(cacheLastModified, provider.diskCacheLastModified)
     }
 
     @Test
@@ -182,39 +181,57 @@ class ContileTopSitesProviderTest {
             ContileTopSitesProvider(
                 testContext,
                 client = prepareClient(),
-                maxCacheAgeInMinutes = 10,
+                maxCacheAgeInSeconds = 600,
             ),
         )
 
         whenever(provider.isCacheExpired()).thenReturn(false)
         provider.refreshTopSitesIfCacheExpired()
         verify(provider, never()).getTopSites(allowCache = false)
-
-        Unit
     }
 
     @Test
-    fun `GIVEN cache is expired WHEN top sites are refreshed THEN fetch and write new response to cache`() = runTest {
-        val jsonResponse = loadResourceAsString("/contile/contile.json")
-        val provider = spy(
-            ContileTopSitesProvider(
-                testContext,
-                client = prepareClient(jsonResponse),
-                maxCacheAgeInMinutes = 10,
-            ),
-        )
+    fun `GIVEN cache is expired WHEN top sites are refreshed THEN fetch and write new response to cache`() =
+        runTest {
+            val jsonResponse = loadResourceAsString("/contile/contile.json")
+            val provider = spy(
+                ContileTopSitesProvider(
+                    testContext,
+                    client = prepareClient(jsonResponse),
+                ),
+            )
+
+            whenever(provider.isCacheExpired()).thenReturn(true)
+
+            provider.refreshTopSitesIfCacheExpired()
+
+            verify(provider).getTopSites(allowCache = false)
+            verify(provider).writeToDiskCache(eq(300000L), any())
+        }
+
+    @Test
+    fun `GIVEN a NO_CONTENT status response WHEN top sites are fetched THEN cache is cleared`() = runTest {
+        val client = prepareClient(status = Response.NO_CONTENT)
+        val provider = spy(ContileTopSitesProvider(testContext, client))
+        val file = mock<File>()
 
         whenever(provider.isCacheExpired()).thenReturn(true)
-
+        whenever(provider.getBaseCacheFile()).thenReturn(file)
         provider.refreshTopSitesIfCacheExpired()
 
-        verify(provider).getTopSites(allowCache = false)
-        verify(provider).writeToDiskCache(jsonResponse)
+        verify(file).delete()
+        assertNull(provider.cacheState.cacheMaxAge)
     }
 
     private fun prepareClient(
         jsonResponse: String = loadResourceAsString("/contile/contile.json"),
         status: Int = 200,
+        headers: Headers = MutableHeaders(
+            listOf(
+                Header("cache-control", "max-age=100"),
+                Header("cache-control", "stale-if-error=200"),
+            ),
+        ),
     ): Client {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
@@ -223,8 +240,45 @@ class ContileTopSitesProviderTest {
         whenever(mockedBody.string(any())).thenReturn(jsonResponse)
         whenever(mockedResponse.body).thenReturn(mockedBody)
         whenever(mockedResponse.status).thenReturn(status)
+        whenever(mockedResponse.headers).thenReturn(headers)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
         return mockedClient
     }
+
+    @Test
+    fun `WHEN extracting top sites from a json object contains top sites THEN all top sites are correctly set`() {
+        val topSites = with(
+            TopSite.Provided(
+                1,
+                "firefox",
+                "www.mozilla.com",
+                "www.mozilla.com",
+                "www.mozilla.com",
+                "www.mozilla.com",
+                null,
+            ),
+        ) {
+            listOf(this, this.copy(id = 2))
+        }
+
+        val jsonObject = JSONObject(
+            mapOf(
+                CACHE_TOP_SITES_KEY to JSONArray().also { array ->
+                    topSites.map { it.toJsonObject() }.forEach { array.put(it) }
+                },
+            ),
+        )
+
+        assertEquals(topSites, jsonObject.getTopSites())
+    }
+
+    private fun TopSite.Provided.toJsonObject() =
+        JSONObject()
+            .put("id", id)
+            .put("name", title)
+            .put("url", url)
+            .put("click_url", clickUrl)
+            .put("image_url", imageUrl)
+            .put("impression_url", impressionUrl)
 }

@@ -429,7 +429,7 @@ class Core(
         ContileTopSitesProvider(
             context = context,
             client = client,
-            maxCacheAgeInMinutes = CONTILE_MAX_CACHE_AGE,
+            maxCacheAgeInSeconds = CONTILE_MAX_CACHE_AGE,
         )
     }
 
@@ -562,7 +562,7 @@ class Core(
         private const val KEY_STORAGE_NAME = "core_prefs"
         private const val RECENTLY_CLOSED_MAX = 10
         const val HISTORY_METADATA_MAX_AGE_IN_MS = 14 * 24 * 60 * 60 * 1000 // 14 days
-        private const val CONTILE_MAX_CACHE_AGE = 60L // 60 minutes
+        private const val CONTILE_MAX_CACHE_AGE = 3600L // 60 minutes
         const val HISTORY_SEARCH_ENGINE_ID = "history_search_engine_id"
         const val BOOKMARKS_SEARCH_ENGINE_ID = "bookmarks_search_engine_id"
         const val TABS_SEARCH_ENGINE_ID = "tabs_search_engine_id"

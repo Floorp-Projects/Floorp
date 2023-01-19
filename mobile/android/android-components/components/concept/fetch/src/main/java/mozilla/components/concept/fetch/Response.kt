@@ -143,6 +143,7 @@ data class Response(
         val SUCCESS_STATUS_RANGE = 200..299
         val CLIENT_ERROR_STATUS_RANGE = 400..499
         const val SUCCESS = 200
+        const val NO_CONTENT = 204
     }
 }
 
