@@ -81,13 +81,19 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
         return false;
       }
     }
-  }
+    UniqueChars funName;
+    if (script->function() && script->function()->displayAtom()) {
+      funName = AtomToPrintableString(cx, script->function()->displayAtom());
+    }
 
-  JitSpew(JitSpew_WarpTrialInlining,
-          "Trial inlining for %s script %s:%u:%u (%p) (inliningRoot=%p)",
-          (isRecursive ? "inner" : "outer"), script->filename(),
-          script->lineno(), script->column(), frame->script(), root);
-  JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
+    JitSpew(
+        JitSpew_WarpTrialInlining,
+        "Trial inlining for %s script '%s' (%s:%u:%u (%p)) (inliningRoot=%p)",
+        (isRecursive ? "inner" : "outer"),
+        funName ? funName.get() : "<unnamed>", script->filename(),
+        script->lineno(), script->column(), frame->script(), root);
+    JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
+  }
 
   TrialInliner inliner(cx, script, icScript);
   return inliner.tryInlining();
@@ -509,15 +515,25 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
 bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
                                 BytecodeLocation loc) {
 #ifdef JS_JITSPEW
-  BaseScript* baseScript =
-      target->hasBaseScript() ? target->baseScript() : nullptr;
-  JitSpew(JitSpew_WarpTrialInlining,
-          "Inlining candidate JSOp::%s (offset=%u): callee script %s:%u:%u",
-          CodeName(loc.getOp()), loc.bytecodeToOffset(script_),
-          baseScript ? baseScript->filename() : "<not-scripted>",
-          baseScript ? baseScript->lineno() : 0,
-          baseScript ? baseScript->column() : 0);
-  JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
+  if (JitSpewEnabled(JitSpew_WarpTrialInlining)) {
+    BaseScript* baseScript =
+        target->hasBaseScript() ? target->baseScript() : nullptr;
+
+    UniqueChars funName;
+    if (target->displayAtom()) {
+      funName = AtomToPrintableString(cx(), target->displayAtom());
+    }
+
+    JitSpew(JitSpew_WarpTrialInlining,
+            "Inlining candidate JSOp::%s (offset=%u): callee script '%s' "
+            "(%s:%u:%u)",
+            CodeName(loc.getOp()), loc.bytecodeToOffset(script_),
+            funName ? funName.get() : "<unnamed>",
+            baseScript ? baseScript->filename() : "<not-scripted>",
+            baseScript ? baseScript->lineno() : 0,
+            baseScript ? baseScript->column() : 0);
+    JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
+  }
 #endif
 
   if (!canInline(target, script_, loc)) {
