@@ -49,11 +49,12 @@ add_task(async function test() {
     value: "test",
   });
 
-  let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window);
-
-  while (!oneOffs.selectedButton) {
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-  }
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  ok(
+    UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton,
+    "a one off button is selected"
+  );
 
   Assert.equal(selectionCount, 4, "We selected the four elements in the view.");
   UrlbarProvidersManager.unregisterProvider(provider);

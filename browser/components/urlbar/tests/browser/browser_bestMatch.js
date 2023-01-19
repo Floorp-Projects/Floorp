@@ -87,44 +87,36 @@ add_task(async function keySelection() {
       hasHelpButton: true,
     });
 
-    // Test with the tab key vs. arrow keys and in order vs. reverse order.
-    for (let useTabKey of [false, true]) {
-      for (let reverse of [false, true]) {
-        info("Doing key selection: " + JSON.stringify({ useTabKey, reverse }));
+    // Test with the tab key in order vs. reverse order.
+    for (let reverse of [false, true]) {
+      info("Doing TAB key selection: " + JSON.stringify({ reverse }));
 
-        let classNames = [...expectedClassNames];
-        if (reverse) {
-          classNames.reverse();
-        }
+      let classNames = [...expectedClassNames];
+      if (reverse) {
+        classNames.reverse();
+      }
 
-        let sendKey = () => {
-          if (useTabKey) {
-            EventUtils.synthesizeKey("KEY_Tab", { shiftKey: reverse });
-          } else if (reverse) {
-            EventUtils.synthesizeKey("KEY_ArrowUp");
-          } else {
-            EventUtils.synthesizeKey("KEY_ArrowDown");
-          }
-        };
+      let sendKey = () => {
+        EventUtils.synthesizeKey("KEY_Tab", { shiftKey: reverse });
+      };
 
-        // Move selection through each expected element.
-        for (let className of classNames) {
-          info("Expecting selection: " + className);
-          sendKey();
-          Assert.ok(gURLBar.view.isOpen, "View remains open");
-          let { selectedElement } = gURLBar.view;
-          Assert.ok(selectedElement, "Selected element exists");
-          Assert.ok(
-            selectedElement.classList.contains(className),
-            "Expected element is selected"
-          );
-        }
+      // Move selection through each expected element.
+      for (let className of classNames) {
+        info("Expecting selection: " + className);
         sendKey();
+        Assert.ok(gURLBar.view.isOpen, "View remains open");
+        let { selectedElement } = gURLBar.view;
+        Assert.ok(selectedElement, "Selected element exists");
         Assert.ok(
-          gURLBar.view.isOpen,
-          "View remains open after keying through best match row"
+          selectedElement.classList.contains(className),
+          "Expected element is selected"
         );
       }
+      sendKey();
+      Assert.ok(
+        gURLBar.view.isOpen,
+        "View remains open after keying through best match row"
+      );
     }
 
     await UrlbarTestUtils.promisePopupClose(window);

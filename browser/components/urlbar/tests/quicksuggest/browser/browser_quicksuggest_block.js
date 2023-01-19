@@ -103,9 +103,9 @@ add_combo_task(async function basic_keyboard({ result, isBestMatch }) {
     result,
     isBestMatch,
     block: () => {
-      // Arrow down twice to select the block button: once to select the main
+      // TAB twice to select the block button: once to select the main
       // part of the row, once to select the block button.
-      EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
+      EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
       EventUtils.synthesizeKey("KEY_Enter");
     },
   });
@@ -268,7 +268,7 @@ add_task(async function blockMultiple() {
       });
 
       // Block it.
-      EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
+      EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
       EventUtils.synthesizeKey("KEY_Enter");
       Assert.ok(
         await QuickSuggest.blockedSuggestions.has(url),

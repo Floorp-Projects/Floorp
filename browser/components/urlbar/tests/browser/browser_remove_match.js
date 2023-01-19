@@ -105,7 +105,7 @@ add_task(async function test_remove_form_history() {
   }
   Assert.ok(index < count, "Result found");
 
-  EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: index });
   Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), index);
   EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
   await promiseRemoved;
@@ -266,13 +266,13 @@ add_task(async function blockButton() {
   let button = row.querySelector(".urlbarView-button-block");
   Assert.ok(button, "The row should have a block button");
 
-  info("Arrowing down to block button");
-  EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
+  info("Tabbing down to block button");
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
 
   Assert.equal(
     UrlbarTestUtils.getSelectedElement(window),
     button,
-    "The block button should be selected after arrowing down"
+    "The block button should be selected after tabbing down"
   );
 
   info("Pressing Enter on block button");
