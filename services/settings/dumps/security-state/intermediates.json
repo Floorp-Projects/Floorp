@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1674096494466,
+      "derHash": "OSWDVDuTsQ4FBt511pOZ/LvBRpyN45YGbHVgiLkiQdo=",
+      "subject": "CN=Apple Public Server RSA CA 1 - G1,O=Apple Inc.,C=US",
+      "subjectDN": "ME4xCzAJBgNVBAYTAlVTMRMwEQYDVQQKEwpBcHBsZSBJbmMuMSowKAYDVQQDEyFBcHBsZSBQdWJsaWMgU2VydmVyIFJTQSBDQSAxIC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "35b8ea0b8b208776616acd154fabbd1d3abade4a57f7a5e656ec072d1b474f8a",
+        "size": 1654,
+        "filename": "9Vw5Oz-M36bapAlDoz-njgwaF-AaQLrKSmhcZZnxAcY=.pem",
+        "location": "security-state-staging/intermediates/3b3e6534-12f9-4116-b098-a1615312a950.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "9Vw5Oz+M36bapAlDoz+njgwaF+AaQLrKSmhcZZnxAcY=",
+      "crlite_enrolled": false,
+      "id": "3f76b3f1-038f-407b-a950-741feea3c520",
+      "last_modified": 1674097023181
+    },
+    {
+      "schema": 1674096495364,
+      "derHash": "hxHuU550IT9fQS60oYqYw7WNpiC01D51sFQq/Dn8YDM=",
+      "subject": "CN=Apple IST CA 8 - G1,O=Apple Inc.,C=US",
+      "subjectDN": "MEAxHDAaBgNVBAMME0FwcGxlIElTVCBDQSA4IC0gRzExEzARBgNVBAoMCkFwcGxlIEluYy4xCzAJBgNVBAYTAlVT",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2cd6b163c464a522511c510d8e9b798eae4d6dbe7d90880114a485a3a0e1f2a7",
+        "size": 1142,
+        "filename": "4k-OjCGF2i9eiNRXnoF8R79ur7yFBfD5YP1aDfRHOtM=.pem",
+        "location": "security-state-staging/intermediates/5f8c8a43-dde5-4198-b41b-c7927bc414b7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4k+OjCGF2i9eiNRXnoF8R79ur7yFBfD5YP1aDfRHOtM=",
+      "crlite_enrolled": false,
+      "id": "d0b18316-bb49-4cec-b297-2a24c5a5e2e2",
+      "last_modified": 1674097023173
+    },
+    {
+      "schema": 1674096493557,
+      "derHash": "khi6uU59XR+B1i0Pwj4xyLvL7jVF0dfp0/0pswvBiMg=",
+      "subject": "CN=Apple IST CA 8 - G1,OU=Certification Authority,O=Apple Inc.,C=US",
+      "subjectDN": "MGIxHDAaBgNVBAMME0FwcGxlIElTVCBDQSA4IC0gRzExIDAeBgNVBAsMF0NlcnRpZmljYXRpb24gQXV0aG9yaXR5MRMwEQYDVQQKDApBcHBsZSBJbmMuMQswCQYDVQQGEwJVUw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0be6834a2b742f4b697c05091ee7071ce8419abe4ed8eed05d569d2e0029ffc6",
+        "size": 1187,
+        "filename": "4k-OjCGF2i9eiNRXnoF8R79ur7yFBfD5YP1aDfRHOtM=.pem",
+        "location": "security-state-staging/intermediates/a3476927-7931-4452-8215-9be907c01a5d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4k+OjCGF2i9eiNRXnoF8R79ur7yFBfD5YP1aDfRHOtM=",
+      "crlite_enrolled": false,
+      "id": "2cf92b30-6231-40cc-8aa7-532cddbda587",
+      "last_modified": 1674097023165
+    },
+    {
+      "schema": 1674096492687,
+      "derHash": "KvmI8m9u8Nq5BVaX8JQftOXEIkfKmCgmiV7ymYXTDNY=",
+      "subject": "CN=Apple Public Server ECC CA 1 - G1,O=Apple Inc.,C=US",
+      "subjectDN": "ME4xCzAJBgNVBAYTAlVTMRMwEQYDVQQKEwpBcHBsZSBJbmMuMSowKAYDVQQDEyFBcHBsZSBQdWJsaWMgU2VydmVyIEVDQyBDQSAxIC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9965d9b518d900e8daeab6fe08b6e6227a1114bb092251f35ffa9176cc753453",
+        "size": 1163,
+        "filename": "jT8fGVx6BA9z4arxOCBTK2xfhH6Uhco7diQx-k5Yo38=.pem",
+        "location": "security-state-staging/intermediates/d596ae35-7fd8-42ba-be66-58552ee1a68c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "jT8fGVx6BA9z4arxOCBTK2xfhH6Uhco7diQx+k5Yo38=",
+      "crlite_enrolled": false,
+      "id": "702fc2b4-8a5a-4ef1-a6ee-ecc543c98009",
+      "last_modified": 1674097023157
+    },
+    {
       "schema": 1673664491599,
       "derHash": "JQJv6+UyTurKiTdrE+25aZFZQRLDERINV5Nk48wEQvQ=",
       "subject": "CN=GeoTrust EV G5 TLS CN RSA4096 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
@@ -26983,5 +27055,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1673665023062
+  "timestamp": 1674097023181
 }
