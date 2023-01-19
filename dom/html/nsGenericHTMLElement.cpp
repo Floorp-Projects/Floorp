@@ -919,7 +919,8 @@ bool nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
       return true;
     }
 
-    if (aAttribute == nsGkAtoms::contenteditable) {
+    if (aAttribute == nsGkAtoms::contenteditable ||
+        aAttribute == nsGkAtoms::translate) {
       aResult.ParseAtom(aValue);
       return true;
     }
@@ -3076,4 +3077,16 @@ bool nsGenericHTMLElement::IsFormAssociatedCustomElements() const {
 void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) const {
   GetEnumAttr(nsGkAtoms::autocapitalize, nullptr, kDefaultAutocapitalize->tag,
               aValue);
+}
+
+bool nsGenericHTMLElement::Translate() const {
+  if (const nsAttrValue* attr = mAttrs.GetAttr(nsGkAtoms::translate)) {
+    if (attr->IsEmptyString() || attr->Equals(nsGkAtoms::yes, eIgnoreCase)) {
+      return true;
+    }
+    if (attr->Equals(nsGkAtoms::no, eIgnoreCase)) {
+      return false;
+    }
+  }
+  return nsGenericHTMLElementBase::Translate();
 }
