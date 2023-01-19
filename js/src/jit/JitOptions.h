@@ -53,6 +53,7 @@ struct DefaultJitOptions {
   bool disableLicm;
   bool disablePruning;
   bool disableInstructionReordering;
+  bool disableIteratorIndices;
   bool disableRangeAnalysis;
   bool disableRecoverIns;
   bool disableScalarReplacement;

@@ -11012,6 +11012,10 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.enableWatchtowerMegamorphic = false;
   }
 
+  if (op.getBoolOption("enable-iterator-indices")) {
+    jit::JitOptions.disableIteratorIndices = false;
+  }
+
 #if defined(JS_SIMULATOR_ARM)
   if (op.getBoolOption("arm-sim-icache-checks")) {
     jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
@@ -11748,6 +11752,8 @@ int main(int argc, char** argv) {
                         "Enable Watchtower optimizations") ||
       !op.addBoolOption('\0', "disable-watchtower",
                         "Disable Watchtower optimizations") ||
+      !op.addBoolOption('\0', "enable-iterator-indices",
+                        "Enable iterator indices optimization") ||
       !op.addBoolOption('\0', "scalar-replace-arguments",
                         "Use scalar replacement to optimize ArgumentsObject") ||
       !op.addStringOption(
