@@ -178,7 +178,8 @@
     }
 
     async setAlign() {
-      if (!this.parentElement || this.parentIsXULPanel()) {
+      const hostElement = this.parentElement || this.getRootNode().host;
+      if (!hostElement || this.parentIsXULPanel()) {
         // This could get called before we're added to the DOM.
         // Nothing to do in that case.
         //
@@ -188,9 +189,9 @@
 
       // Set the showing attribute to hide the panel until its alignment is set.
       this.setAttribute("showing", "true");
-      // Tell the parent node to hide any overflow in case the panel extends off
+      // Tell the host element to hide any overflow in case the panel extends off
       // the page before the alignment is set.
-      this.parentElement.style.overflow = "hidden";
+      hostElement.style.overflow = "hidden";
 
       // Wait for a layout flush, then find the bounds.
       let {
@@ -211,7 +212,7 @@
         requestAnimationFrame(() =>
           setTimeout(() => {
             let target = this.getTargetForEvent(this.triggeringEvent);
-            let anchorNode = target || this.parentElement;
+            let anchorElement = target || hostElement;
             // It's possible this is being used in a context where windowUtils is
             // not available. In that case, fallback to using the element.
             let getBounds = el =>
@@ -219,7 +220,7 @@
                 ? window.windowUtils.getBoundsWithoutFlushing(el)
                 : el.getBoundingClientRect();
             // Use y since top is reserved.
-            let anchorBounds = getBounds(anchorNode);
+            let anchorBounds = getBounds(anchorElement);
             let panelBounds = getBounds(this);
             resolve({
               anchorHeight: anchorBounds.height,
@@ -266,7 +267,7 @@
       // Set the alignments and show the panel.
       this.setAttribute("align", align);
       this.setAttribute("valign", valign);
-      this.parentElement.style.overflow = "";
+      hostElement.style.overflow = "";
 
       this.style.left = `${leftOffset + winScrollX}px`;
       this.style.top = `${topOffset + winScrollY}px`;

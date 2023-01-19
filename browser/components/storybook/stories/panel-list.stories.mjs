@@ -15,7 +15,12 @@ export default {
   },
 };
 
-const openMenu = e => document.querySelector("panel-list").toggle(e);
+const openMenu = e => {
+  e.target
+    .getRootNode()
+    .querySelector("panel-list")
+    .toggle(e);
+};
 
 const Template = ({ open, items }) =>
   html`
