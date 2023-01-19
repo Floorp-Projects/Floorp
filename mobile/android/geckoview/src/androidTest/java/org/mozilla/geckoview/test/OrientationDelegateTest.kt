@@ -127,10 +127,28 @@ class OrientationDelegateTest : BaseSessionTest() {
 
     @Test fun orientationLockedExistingOrientation() {
         goFullscreen()
+
+        val promise = mainSession.evaluatePromiseJS(
+            """
+            new Promise(resolve => {
+                if (screen.orientation.type == "landscape-primary") {
+                    resolve();
+                }
+                screen.orientation.addEventListener("change", e => {
+                    if (screen.orientation.type == "landscape-primary") {
+                        resolve();
+                    }
+                }, { once: true });
+            })
+            """.trimIndent()
+        )
+
         // Lock to landscape twice to verify successful locking to existing orientation
         activityRule.scenario.onActivity { activity ->
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
+        // Wait for orientation change by activity.requestedOrientation.
+        promise.value
         lockLandscape()
     }
 
