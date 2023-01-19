@@ -1573,6 +1573,13 @@ static inline StallSpecs GetStallSpecs() {
 }  // namespace MozAllocRetries
 
 using MozAllocRetries::MozVirtualAlloc;
+
+namespace mozilla {
+MOZ_JEMALLOC_API StallSpecs GetAllocatorStallSpecs() {
+  return ::MozAllocRetries::GetStallSpecs();
+}
+}  // namespace mozilla
+
 #endif  // XP_WIN
 
 // ***************************************************************************

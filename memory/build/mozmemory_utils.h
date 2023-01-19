@@ -10,6 +10,10 @@
 #include <optional>
 #include <type_traits>
 
+#if defined(MOZ_MEMORY) && defined(XP_WIN)
+#  include "mozmemory_wrap.h"
+#endif
+
 namespace mozilla {
 
 namespace detail {
@@ -61,6 +65,10 @@ struct StallSpecs {
     return std::nullopt;
   }
 };
+
+#if defined(MOZ_MEMORY) && defined(XP_WIN)
+MOZ_JEMALLOC_API StallSpecs GetAllocatorStallSpecs();
+#endif
 
 }  // namespace mozilla
 
