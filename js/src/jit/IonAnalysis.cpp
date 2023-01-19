@@ -4659,6 +4659,9 @@ bool jit::OptimizeIteratorIndices(MIRGenerator* mir, MIRGraph& graph) {
       } else if (ins->isMegamorphicLoadSlotByValue()) {
         receiver = ins->toMegamorphicLoadSlotByValue()->object();
         idVal = ins->toMegamorphicLoadSlotByValue()->idVal();
+      } else if (ins->isGetPropertyCache()) {
+        receiver = ins->toGetPropertyCache()->value();
+        idVal = ins->toGetPropertyCache()->idval();
       }
 
       if (!receiver) {
@@ -4699,7 +4702,8 @@ bool jit::OptimizeIteratorIndices(MIRGenerator* mir, MIRGraph& graph) {
       if (ins->isHasOwnCache() || ins->isMegamorphicHasProp()) {
         replacement = MConstant::New(graph.alloc(), BooleanValue(true));
       } else {
-        MOZ_ASSERT(ins->isMegamorphicLoadSlotByValue());
+        MOZ_ASSERT(ins->isMegamorphicLoadSlotByValue() ||
+                   ins->isGetPropertyCache());
         replacement =
             MLoadSlotByIteratorIndex::New(graph.alloc(), receiver, iter);
       }
