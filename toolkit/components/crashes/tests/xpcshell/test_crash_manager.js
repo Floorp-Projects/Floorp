@@ -26,6 +26,8 @@ function run_test() {
   do_get_profile();
   configureLogging();
   TelemetryArchiveTesting.setup();
+  // Initialize FOG for glean tests
+  Services.fog.initializeFOG();
   run_next_test();
 }
 
@@ -782,6 +784,66 @@ add_task(async function test_child_process_crash_ping() {
       "No telemetry ping must be submitted for invalid process types"
     );
   }
+});
+
+add_task(async function test_glean_crash_ping() {
+  let m = await getManager();
+
+  let id = await m.createDummyDump();
+
+  // Test bare minumum (with missing optional fields)
+  let submitted = false;
+  GleanPings.crash.testBeforeNextSubmit(_ => {
+    submitted = true;
+    const MINUTES = new Date(DUMMY_DATE);
+    MINUTES.setSeconds(0);
+    Assert.equal(Glean.crash.time.testGetValue().getTime(), MINUTES.getTime());
+    Assert.equal(
+      Glean.crash.processType.testGetValue(),
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT]
+    );
+    Assert.equal(Glean.crash.startup.testGetValue(), false);
+  });
+
+  await m.addCrash(
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+    m.CRASH_TYPE_CRASH,
+    id,
+    DUMMY_DATE,
+    {}
+  );
+
+  Assert.ok(submitted);
+
+  // Test with additional fields
+  submitted = false;
+  GleanPings.crash.testBeforeNextSubmit(reason => {
+    submitted = true;
+    const MINUTES = new Date(DUMMY_DATE_2);
+    MINUTES.setSeconds(0);
+    Assert.equal(Glean.crash.uptime.testGetValue(), 600.1 * 1000);
+    Assert.equal(Glean.crash.time.testGetValue().getTime(), MINUTES.getTime());
+    Assert.equal(
+      Glean.crash.processType.testGetValue(),
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT]
+    );
+    Assert.equal(Glean.crash.startup.testGetValue(), true);
+  });
+
+  await m.addCrash(
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+    m.CRASH_TYPE_CRASH,
+    id,
+    DUMMY_DATE_2,
+    {
+      StackTraces: stackTraces,
+      MinidumpSha256Hash: sha256Hash,
+      UptimeTS: "600.1",
+      StartupCrash: "1",
+    }
+  );
+
+  Assert.ok(submitted);
 });
 
 add_task(async function test_generateSubmissionID() {
