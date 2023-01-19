@@ -396,6 +396,9 @@ class ContentParent final : public PContentParent,
   }
   bool IsAlive() const override;
   bool IsInitialized() const;
+  bool IsSignaledImpendingShutdown() const {
+    return mIsSignaledImpendingShutdown;
+  }
   bool IsDead() const { return mLifecycleState == LifecycleState::DEAD; }
 
   bool IsForBrowser() const { return mIsForBrowser; }
