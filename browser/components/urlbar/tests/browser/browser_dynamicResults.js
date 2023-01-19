@@ -327,15 +327,15 @@ add_task(async function selection() {
       "row.result.type"
     );
 
-    // The heuristic result will be selected.  TAB from the heuristic through
-    // all the selectable elements in the dynamic result.
+    // The heuristic result will be selected.  Arrow down from the heuristic
+    // through all the selectable elements in the dynamic result.
     let selectables = ["selectable", "button1", "button2"];
     for (let name of selectables) {
       let element = row.querySelector(
         `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-${name}`
       );
       Assert.ok(element, "Sanity check element");
-      EventUtils.synthesizeKey("KEY_Tab");
+      EventUtils.synthesizeKey("KEY_ArrowDown");
       Assert.equal(
         UrlbarTestUtils.getSelectedElement(window),
         element,
@@ -349,8 +349,8 @@ add_task(async function selection() {
       Assert.equal(UrlbarTestUtils.getSelectedRow(window), row, "Row selected");
     }
 
-    // TAB again to select the result after the dynamic result.
-    EventUtils.synthesizeKey("KEY_Tab");
+    // Arrow down again to select the result after the dynamic result.
+    EventUtils.synthesizeKey("KEY_ArrowDown");
     Assert.equal(
       UrlbarTestUtils.getSelectedRowIndex(window),
       2,
@@ -362,13 +362,13 @@ add_task(async function selection() {
       "Row is not selected"
     );
 
-    // SHIFT+TAB back through the dynamic result.
+    // Arrow back up through the dynamic result.
     for (let name of selectables.reverse()) {
       let element = row.querySelector(
         `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-${name}`
       );
       Assert.ok(element, "Sanity check element");
-      EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+      EventUtils.synthesizeKey("KEY_ArrowUp");
       Assert.equal(
         UrlbarTestUtils.getSelectedElement(window),
         element,
@@ -382,8 +382,8 @@ add_task(async function selection() {
       Assert.equal(UrlbarTestUtils.getSelectedRow(window), row, "Row selected");
     }
 
-    // SHIFT+TAB again to select the heuristic result.
-    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+    // Arrow up again to select the heuristic result.
+    EventUtils.synthesizeKey("KEY_ArrowUp");
     Assert.equal(
       UrlbarTestUtils.getSelectedRowIndex(window),
       0,
@@ -422,13 +422,13 @@ add_task(async function pick() {
         "row.result.type"
       );
 
-      // The heuristic result will be selected.  TAB from the heuristic
+      // The heuristic result will be selected.  Arrow down from the heuristic
       // to the selectable element.
       let element = row.querySelector(
         `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-${selectable}`
       );
       Assert.ok(element, "Sanity check element");
-      EventUtils.synthesizeKey("KEY_Tab", { repeat: i + 1 });
+      EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: i + 1 });
       Assert.equal(
         UrlbarTestUtils.getSelectedElement(window),
         element,
@@ -483,13 +483,13 @@ add_task(async function shouldNavigate() {
       "row.result.type"
     );
 
-    // The heuristic result will be selected.  TAB from the heuristic
+    // The heuristic result will be selected.  Arrow down from the heuristic
     // to the selectable element.
     let element = row.querySelector(
       `.urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-selectable`
     );
     Assert.ok(element, "Sanity check element");
-    EventUtils.synthesizeKey("KEY_Tab", { repeat: 1 });
+    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 1 });
     Assert.equal(
       UrlbarTestUtils.getSelectedElement(window),
       element,

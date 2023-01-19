@@ -236,8 +236,8 @@ const tests = [
     info("Selecting a tip's main button, enter.");
     win.gURLBar.search("x");
     await UrlbarTestUtils.promiseSearchComplete(win);
-    EventUtils.synthesizeKey("KEY_Tab", {}, win);
-    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     unregisterTipProvider(tipProvider);
     return {
@@ -262,9 +262,9 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     win.gURLBar.search("x");
     await UrlbarTestUtils.promiseSearchComplete(win);
-    EventUtils.synthesizeKey("KEY_Tab", {}, win);
-    EventUtils.synthesizeKey("KEY_Tab", {}, win);
-    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     unregisterTipProvider(tipProvider);
