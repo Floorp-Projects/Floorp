@@ -18,9 +18,9 @@ origin:
   url: "https://github.com/anholt/libepoxy"
   license: MIT
 
-  release: 
+  release: '2df68f811fc1a5f0a6d372ecdb887333ad3f540f (2022-12-18T16:25:55Z)' 
 
-  revision:
+  revision: '2df68f811fc1a5f0a6d372ecdb887333ad3f540f'
   license-file: COPYING
 
 updatebot:
