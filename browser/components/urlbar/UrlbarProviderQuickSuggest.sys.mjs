@@ -221,11 +221,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return false;
     }
 
-    // Trim only the start of the search string because a trailing space can
-    // affect the suggestions.
-    this._searchString = queryContext.searchString.trimStart();
-
-    if (!this._searchString) {
+    if (!queryContext.searchString) {
       return !!lazy.QuickSuggest.weather.suggestion;
     }
     return (
@@ -313,9 +309,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
-    let searchString = this._searchString;
 
-    if (!searchString) {
+    if (!queryContext.searchString) {
       let result = this._makeWeatherResult();
       if (result) {
         addCallback(this, result);
@@ -323,6 +318,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
       }
       return;
     }
+
+    // Trim only the start of the search string because a trailing space can
+    // affect the suggestions.
+    let searchString = queryContext.searchString.trimStart();
 
     // There are two sources for quick suggest: remote settings and Merino.
     let promises = [];

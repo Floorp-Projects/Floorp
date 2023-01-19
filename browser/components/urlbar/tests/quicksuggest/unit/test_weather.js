@@ -522,6 +522,27 @@ add_task(async function locale_nonEnglish() {
   });
 });
 
+// Search strings with only spaces or that start with spaces should not trigger
+// a weather suggestion.
+add_task(async function spacesInSearchString() {
+  // Sanity check initial state.
+  assertEnabled({
+    message: "Sanity check initial state",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+
+  for (let searchString of [" ", "  ", "   ", " doesn't match anything"]) {
+    await check_results({
+      context: createContext(searchString, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [],
+    });
+  }
+});
+
 /**
  * Testing locales is tricky due to the weather feature's use of
  * `Services.locale.regionalPrefsLocales`. By default `regionalPrefsLocales`
