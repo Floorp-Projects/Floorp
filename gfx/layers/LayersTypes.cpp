@@ -69,5 +69,16 @@ RemoteTextureOwnerId RemoteTextureOwnerId::GetNext() {
   return RemoteTextureOwnerId{++sCounter};
 }
 
+/* static */
+GpuProcessTextureId GpuProcessTextureId::GetNext() {
+  if (!XRE_IsGPUProcess()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return GpuProcessTextureId{};
+  }
+
+  static std::atomic<uint64_t> sCounter = 0;
+  return GpuProcessTextureId{++sCounter};
+}
+
 }  // namespace layers
 }  // namespace mozilla

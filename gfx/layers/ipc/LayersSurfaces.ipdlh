@@ -25,13 +25,14 @@ using gfxImageFormat from "gfxTypes.h";
 using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
 using mozilla::layers::RemoteTextureId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::GpuProcessTextureId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
 
 [Comparable] struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
-  uint64_t? gpuProcessTextureId;
+  GpuProcessTextureId? gpuProcessTextureId;
   uint32_t arrayIndex;
   SurfaceFormat format;
   IntSize size;
