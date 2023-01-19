@@ -789,6 +789,10 @@ class XPCShellTestThread(Thread):
             self.env["PYTHON"] = sys.executable
             self.env["BREAKPAD_SYMBOLS_PATH"] = self.symbolsPath
 
+        if self.test_object.get("snap") == "true":
+            self.env["SNAP_NAME"] = "firefox"
+            self.env["SNAP_INSTANCE_NAME"] = "firefox"
+
         if self.test_object.get("subprocess") == "true":
             self.env["PYTHON"] = sys.executable
 

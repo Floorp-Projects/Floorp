@@ -190,15 +190,13 @@ static nsresult GetUnixSystemConfigDir(nsIFile** aFile) {
 #  if defined(ANDROID)
   return NS_ERROR_FAILURE;
 #  else
-  nsCOMPtr<nsIXULAppInfo> appInfo =
-      do_GetService("@mozilla.org/xre/app-info;1");
-  if (!appInfo) {
-    MOZ_CRASH("No appInfo");
-  }
-
   nsAutoCString appName;
-  nsresult rv = appInfo->GetName(appName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (nsCOMPtr<nsIXULAppInfo> appInfo =
+          do_GetService("@mozilla.org/xre/app-info;1")) {
+    MOZ_TRY(appInfo->GetName(appName));
+  } else {
+    appName.AssignLiteral(MOZ_APP_BASENAME);
+  }
 
   ToLowerCase(appName);
 
@@ -207,13 +205,9 @@ static nsresult GetUnixSystemConfigDir(nsIFile** aFile) {
   nsDependentCString sysConfigDir = nsDependentCString(
       mozSystemConfigDir ? mozSystemConfigDir : defaultSystemConfigDir);
 
-  rv = NS_NewNativeLocalFile(sysConfigDir, true, aFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  (*aFile)->AppendNative(appName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return rv;
+  MOZ_TRY(NS_NewNativeLocalFile(sysConfigDir, true, aFile));
+  MOZ_TRY((*aFile)->AppendNative(appName));
+  return NS_OK;
 #  endif
 }
 
