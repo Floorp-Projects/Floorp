@@ -42,7 +42,16 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
             "to-be-removed subdirectory must exist",
         )
 
-        # Cleanup happens via Sanitizer.onStartup
+        # Pending sanitization is added via Sanitizer.onStartup
+        # "offlineApps" corresponds to CLEAR_DOM_STORAGES
+        Wait(self.marionette).until(
+            lambda _: (
+                "offlineApps" in self.marionette.get_pref("privacy.sanitize.pending"),
+            ),
+            message="privacy.sanitize.pending must include offlineApps",
+        )
+
+        # Cleanup happens via Sanitizer.onStartup after restart
         self.marionette.restart(in_app=False)
 
         Wait(self.marionette).until(
