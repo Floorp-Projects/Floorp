@@ -1155,6 +1155,12 @@ interface nsINavHistoryService : nsISupports
   attribute boolean isFrecencyDecaying;
 
   /**
+   * This is set to true when a frecency is invalidated and can be polled
+   * periodically to start recalculation tasks.
+   */
+  attribute boolean shouldStartFrecencyRecalculation;
+
+  /**
    * The database connection used by Places.
    */
   readonly attribute mozIStorageConnection DBConnection;

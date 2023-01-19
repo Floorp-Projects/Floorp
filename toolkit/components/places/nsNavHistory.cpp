@@ -481,6 +481,7 @@ nsNavHistory::RecalculateOriginFrecencyStats(nsIObserver* aCallback) {
 Atomic<int64_t> nsNavHistory::sLastInsertedPlaceId(0);
 Atomic<int64_t> nsNavHistory::sLastInsertedVisitId(0);
 Atomic<bool> nsNavHistory::sIsFrecencyDecaying(false);
+Atomic<bool> nsNavHistory::sShouldStartFrecencyRecalculation(false);
 
 void  // static
 nsNavHistory::StoreLastInsertedId(const nsACString& aTable,
@@ -1804,6 +1805,19 @@ nsNavHistory::GetIsFrecencyDecaying(bool* _out) {
 NS_IMETHODIMP
 nsNavHistory::SetIsFrecencyDecaying(bool aVal) {
   nsNavHistory::sIsFrecencyDecaying = aVal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::GetShouldStartFrecencyRecalculation(bool* _out) {
+  NS_ENSURE_ARG_POINTER(_out);
+  *_out = nsNavHistory::sShouldStartFrecencyRecalculation;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::SetShouldStartFrecencyRecalculation(bool aVal) {
+  nsNavHistory::sShouldStartFrecencyRecalculation = aVal;
   return NS_OK;
 }
 

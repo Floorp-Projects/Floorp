@@ -1186,16 +1186,49 @@ IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
                                            nsIVariant** _result) {
   MOZ_ASSERT(aArgs);
 
+#ifdef DEBUG
   uint32_t numArgs;
-  nsresult rv = aArgs->GetNumEntries(&numArgs);
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ASSERT(numArgs == 0);
-
-  const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
-  NS_ENSURE_STATE(navHistory);
+  MOZ_ASSERT(NS_SUCCEEDED(aArgs->GetNumEntries(&numArgs)) && numArgs == 0);
+#endif
 
   RefPtr<nsVariant> result = new nsVariant();
-  rv = result->SetAsBool(nsNavHistory::sIsFrecencyDecaying);
+  nsresult rv = result->SetAsBool(nsNavHistory::sIsFrecencyDecaying);
+  NS_ENSURE_SUCCESS(rv, rv);
+  result.forget(_result);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// Should start frecency recalculation function
+
+/* static */
+nsresult SetShouldStartFrecencyRecalculationFunction::create(
+    mozIStorageConnection* aDBConn) {
+  RefPtr<SetShouldStartFrecencyRecalculationFunction> function =
+      new SetShouldStartFrecencyRecalculationFunction();
+  nsresult rv = aDBConn->CreateFunction(
+      "set_should_start_frecency_recalculation"_ns, 0, function);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(SetShouldStartFrecencyRecalculationFunction,
+                  mozIStorageFunction)
+
+NS_IMETHODIMP
+SetShouldStartFrecencyRecalculationFunction::OnFunctionCall(
+    mozIStorageValueArray* aArgs, nsIVariant** _result) {
+  MOZ_ASSERT(aArgs);
+
+#ifdef DEBUG
+  uint32_t numArgs;
+  MOZ_ASSERT(NS_SUCCEEDED(aArgs->GetNumEntries(&numArgs)) && numArgs == 0);
+#endif
+
+  nsNavHistory::sShouldStartFrecencyRecalculation = true;
+  RefPtr<nsVariant> result = new nsVariant();
+  nsresult rv = result->SetAsBool(true);
   NS_ENSURE_SUCCESS(rv, rv);
   result.forget(_result);
   return NS_OK;
