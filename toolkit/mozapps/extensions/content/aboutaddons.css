@@ -687,6 +687,13 @@ addon-permissions-list > .addon-detail-row {
   background-position-x: right 0;
 }
 
+/* justify the permission toggle */
+li.permission-info > label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* using a list-style-image prevents aligning the image */
 .addon-permissions-list > li.permission-checked {
   background-image: url("chrome://global/skin/icons/check.svg");

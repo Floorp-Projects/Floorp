@@ -6,11 +6,6 @@ import { html, ifDefined } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
 
 export default class MozToggle extends MozLitElement {
-  static shadowRootOptions = {
-    ...MozLitElement.shadowRootOptions,
-    delegatesFocus: true,
-  };
-
   static properties = {
     pressed: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
@@ -46,11 +41,6 @@ export default class MozToggle extends MozLitElement {
         composed: true,
       })
     );
-  }
-
-  // Delegate clicks on the host to the input element
-  click() {
-    this.buttonEl.click();
   }
 
   labelTemplate() {

@@ -96,8 +96,6 @@ toolkit.jar:
    content/global/elements/moz-button-group.mjs    (widgets/moz-button-group/moz-button-group.mjs)
    content/global/elements/moz-input-box.js    (widgets/moz-input-box.js)
    content/global/elements/moz-support-link.mjs    (widgets/moz-support-link/moz-support-link.mjs)
-   content/global/elements/moz-toggle.css      (widgets/moz-toggle/moz-toggle.css)
-   content/global/elements/moz-toggle.mjs      (widgets/moz-toggle/moz-toggle.mjs)
    content/global/elements/named-deck.js       (widgets/named-deck.js)
    content/global/elements/notificationbox.js  (widgets/notificationbox.js)
    content/global/elements/panel.js            (widgets/panel.js)
