@@ -1815,7 +1815,19 @@ const NativePanHandlerForMac = {
   delta: -50,
 };
 
+const NativePanHandlerForHeadless = {
+  beginPhase: SpecialPowers.DOMWindowUtils.PHASE_BEGIN,
+  updatePhase: SpecialPowers.DOMWindowUtils.PHASE_UPDATE,
+  endPhase: SpecialPowers.DOMWindowUtils.PHASE_END,
+  promiseNativePanEvent: promiseNativeTouchpadPanEventAndWaitForObserver,
+  delta: 50,
+};
+
 function getPanHandler() {
+  if (SpecialPowers.isHeadless) {
+    return NativePanHandlerForHeadless;
+  }
+
   switch (getPlatform()) {
     case "linux":
       return NativePanHandlerForLinux;
