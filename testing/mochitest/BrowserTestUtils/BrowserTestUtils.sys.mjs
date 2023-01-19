@@ -933,10 +933,21 @@ export var BrowserTestUtils = {
    * @param {string} uri
    *        The URI to load.
    */
-  loadURI(browser, uri) {
+  loadURIString(browser, uri) {
     browser.loadURI(uri, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
+  },
+
+  /**
+   * Compatibility shim. Should go away Very Soon.
+   * @param {xul:browser} browser
+   *        A xul:browser.
+   * @param {string} uri
+   *        The URI to load.
+   */
+  loadURI(browser, uri) {
+    return this.loadURIString(browser, uri);
   },
 
   /**
