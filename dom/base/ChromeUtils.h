@@ -284,8 +284,6 @@ class ChromeUtils {
   static bool IsDarkBackground(GlobalObject&, Element&);
 
   static double DateNow(GlobalObject&);
-
-  static void EnsureJSOracleStarted(GlobalObject&);
 };
 
 }  // namespace dom
