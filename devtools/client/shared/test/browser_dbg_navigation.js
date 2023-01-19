@@ -45,7 +45,7 @@ function testNavigate(target) {
       }
     });
 
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TAB2_URL);
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, TAB2_URL);
   });
 }
 

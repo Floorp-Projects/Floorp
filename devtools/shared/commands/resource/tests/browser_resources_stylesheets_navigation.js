@@ -184,7 +184,7 @@ add_task(async function() {
   );
   const previousBrowsingContextId = tab.linkedBrowser.browsingContext.id;
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await BrowserTestUtils.loadURI(
+  await BrowserTestUtils.loadURIString(
     tab.linkedBrowser,
     TEST_URI_NEW_BROWSING_CONTEXT
   );

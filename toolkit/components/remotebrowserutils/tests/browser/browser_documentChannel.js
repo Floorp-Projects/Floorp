@@ -148,7 +148,7 @@ async function loadAndGetProcessID(browser, target) {
       maybeErrorPage: true,
     },
     () => {
-      BrowserTestUtils.loadURI(browser, target);
+      BrowserTestUtils.loadURIString(browser, target);
     }
   );
 

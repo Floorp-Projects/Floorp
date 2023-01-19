@@ -15,7 +15,7 @@ function test() {
   );
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "bug540558.html");
+  BrowserTestUtils.loadURIString(gBrowser, TESTROOT + "bug540558.html");
 }
 
 function check_xpi_install(install, addon) {

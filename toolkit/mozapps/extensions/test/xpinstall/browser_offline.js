@@ -22,7 +22,7 @@ function test() {
     })
   );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     gBrowser,
     TESTROOT + "installtrigger.html?" + triggers
   );
@@ -64,7 +64,7 @@ function finish_test(count) {
         Harness.finish();
       }
     });
-    BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/");
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, "http://example.com/");
   }
 
   is(count, 0, "No add-ons should have been installed");

@@ -17,7 +17,7 @@ MockFilePicker.init(window);
 function test() {
   waitForExplicitFinish();
 
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     gBrowser,
     "http://mochi.test:8888/browser/toolkit/content/tests/browser/data/post_form_outer.sjs"
   );

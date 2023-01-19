@@ -267,7 +267,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
     "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticle.html";
-      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+      BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
     },
     () => !menuitem.hidden
   );
@@ -285,7 +285,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
     "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
-      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+      BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
     },
     () => menuitem.hidden
   );
@@ -303,7 +303,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
     "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticle.html";
-      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+      BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
     },
     () => !menuitem.hidden
   );
@@ -362,7 +362,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
     "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
-      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+      BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
     },
     () => menuitem.hidden
   );
@@ -377,7 +377,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
 add_task(async function test_reader_mode_lang() {
   let url = TEST_PATH + "readerModeArticle.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
 
   await promiseTabLoadEvent(tab, url);
   await TestUtils.waitForCondition(() => !readerButton.hidden);

@@ -45,7 +45,7 @@ add_task(async function testAlertForceClosed() {
     "DOMModalDialogClosed"
   );
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:newtab");
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:newtab");
 
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 

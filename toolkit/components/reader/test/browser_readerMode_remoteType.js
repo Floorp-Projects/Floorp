@@ -74,7 +74,7 @@ add_task(async function() {
         );
       }
 
-      BrowserTestUtils.loadURI(browser, aboutReaderURL);
+      BrowserTestUtils.loadURIString(browser, aboutReaderURL);
       await BrowserTestUtils.browserLoaded(browser);
 
       is(

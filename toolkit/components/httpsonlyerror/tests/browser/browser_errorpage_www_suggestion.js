@@ -26,7 +26,7 @@ add_task(async function() {
 
   let browser = gBrowser.selectedBrowser;
   let errorPageLoaded = BrowserTestUtils.waitForErrorPage(browser);
-  BrowserTestUtils.loadURI(browser, KICK_OF_REQUEST_WITH_SUGGESTION);
+  BrowserTestUtils.loadURIString(browser, KICK_OF_REQUEST_WITH_SUGGESTION);
   await errorPageLoaded;
 
   let pageShownPromise = BrowserTestUtils.waitForContentEvent(

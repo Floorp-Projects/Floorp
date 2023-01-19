@@ -48,7 +48,7 @@ function cleanupHSTS(aPartitionEnabled, aUseSite) {
 
 function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
   info("Wait for load tab event");
-  BrowserTestUtils.loadURI(aTab.linkedBrowser, aURL);
+  BrowserTestUtils.loadURIString(aTab.linkedBrowser, aURL);
   return BrowserTestUtils.browserLoaded(aTab.linkedBrowser, false, aFinalURL);
 }
 
@@ -225,7 +225,10 @@ add_task(async function test_includeSubDomains() {
       let certErrorLoaded = BrowserTestUtils.waitForErrorPage(
         tab.linkedBrowser
       );
-      BrowserTestUtils.loadURI(tab.linkedBrowser, unsecureNoCertSubEmptyURL);
+      BrowserTestUtils.loadURIString(
+        tab.linkedBrowser,
+        unsecureNoCertSubEmptyURL
+      );
       await certErrorLoaded;
 
       // Verify the error page has the 'badStsCert' in its query string

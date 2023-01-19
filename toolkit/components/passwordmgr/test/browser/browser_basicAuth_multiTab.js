@@ -47,7 +47,7 @@ async function openTabWithAuthPrompt(origin, authOptions) {
     url.toString()
   );
   info("Loading " + url.toString());
-  BrowserTestUtils.loadURI(tab.linkedBrowser, url.toString());
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, url.toString());
   return { origin, tab, authOptions, loadPromise, promptPromise };
 }
 
