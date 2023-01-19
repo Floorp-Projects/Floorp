@@ -3052,8 +3052,6 @@ void AppWindow::WindowActivated() {
 }
 
 void AppWindow::WindowDeactivated() {
-  nsCOMPtr<nsIAppWindow> appWindow(this);
-
   if (mDocShell) {
     if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow()) {
       if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {

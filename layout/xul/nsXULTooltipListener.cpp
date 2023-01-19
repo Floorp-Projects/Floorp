@@ -394,8 +394,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
 
       // listen for mousedown, mouseup, keydown, and mouse events at
       // document level
-      Document* doc = sourceNode->GetComposedDoc();
-      if (doc) {
+      if (Document* doc = sourceNode->GetComposedDoc()) {
         // Probably, we should listen to untrusted events for hiding tooltips
         // on content since tooltips might disturb something of web
         // applications.  If we don't specify the aWantsUntrusted of
@@ -620,8 +619,7 @@ nsresult nsXULTooltipListener::DestroyTooltip() {
     mCurrentTooltip = nullptr;
 
     // clear out the tooltip node on the document
-    nsCOMPtr<Document> doc = currentTooltip->GetComposedDoc();
-    if (doc) {
+    if (nsCOMPtr<Document> doc = currentTooltip->GetComposedDoc()) {
       // remove the mousedown and keydown listener from document
       doc->RemoveSystemEventListener(u"wheel"_ns, this, true);
       doc->RemoveSystemEventListener(u"mousedown"_ns, this, true);

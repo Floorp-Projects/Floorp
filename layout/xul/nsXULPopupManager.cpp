@@ -277,6 +277,17 @@ nsXULPopupManager* nsXULPopupManager::GetInstance() {
   return sInstance;
 }
 
+bool nsXULPopupManager::RollupTooltips() {
+  return RollupInternal(RollupKind::Tooltip, UINT32_MAX, false, nullptr,
+                        nullptr);
+}
+
+bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
+                               const LayoutDeviceIntPoint* aPos,
+                               nsIContent** aLastRolledUp) {
+  return RollupInternal(RollupKind::Menu, aCount, aFlush, aPos, aLastRolledUp);
+}
+
 bool nsXULPopupManager::RollupNativeMenu() {
   if (mNativeMenu) {
     RefPtr<NativeMenu> menu = mNativeMenu;
@@ -285,9 +296,10 @@ bool nsXULPopupManager::RollupNativeMenu() {
   return false;
 }
 
-bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
-                               const LayoutDeviceIntPoint* pos,
-                               nsIContent** aLastRolledUp) {
+bool nsXULPopupManager::RollupInternal(RollupKind aKind, uint32_t aCount,
+                                       bool aFlush,
+                                       const LayoutDeviceIntPoint* pos,
+                                       nsIContent** aLastRolledUp) {
   if (aLastRolledUp) {
     *aLastRolledUp = nullptr;
   }
@@ -301,131 +313,131 @@ bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
     return false;
   }
 
-  bool consume = false;
-
-  if (nsMenuChainItem* item = GetTopVisibleMenu()) {
-    if (aLastRolledUp) {
-      // We need to get the popup that will be closed last, so that widget can
-      // keep track of it so it doesn't reopen if a mousedown event is going to
-      // processed. Keep going up the menu chain to get the first level menu of
-      // the same type. If a different type is encountered it means we have,
-      // for example, a menulist or context menu inside a panel, and we want to
-      // treat these as distinct. It's possible that this menu doesn't end up
-      // closing because the popuphiding event was cancelled, but in that case
-      // we don't need to deal with the menu reopening as it will already still
-      // be open.
-      nsMenuChainItem* first = item;
-      while (first->GetParent()) {
-        nsMenuChainItem* parent = first->GetParent();
-        if (first->Frame()->PopupType() != parent->Frame()->PopupType() ||
-            first->IsContextMenu() != parent->IsContextMenu()) {
-          break;
-        }
-        first = parent;
+  nsMenuChainItem* item = GetRollupItem(aKind);
+  if (!item) {
+    return false;
+  }
+  if (aLastRolledUp) {
+    // We need to get the popup that will be closed last, so that widget can
+    // keep track of it so it doesn't reopen if a mousedown event is going to
+    // processed. Keep going up the menu chain to get the first level menu of
+    // the same type. If a different type is encountered it means we have,
+    // for example, a menulist or context menu inside a panel, and we want to
+    // treat these as distinct. It's possible that this menu doesn't end up
+    // closing because the popuphiding event was cancelled, but in that case
+    // we don't need to deal with the menu reopening as it will already still
+    // be open.
+    nsMenuChainItem* first = item;
+    while (first->GetParent()) {
+      nsMenuChainItem* parent = first->GetParent();
+      if (first->Frame()->PopupType() != parent->Frame()->PopupType() ||
+          first->IsContextMenu() != parent->IsContextMenu()) {
+        break;
       }
-
-      *aLastRolledUp = first->Content();
+      first = parent;
     }
 
-    ConsumeOutsideClicksResult consumeResult =
-        item->Frame()->ConsumeOutsideClicks();
-    consume = consumeResult == ConsumeOutsideClicks_True;
+    *aLastRolledUp = first->Content();
+  }
 
-    bool rollup = true;
+  ConsumeOutsideClicksResult consumeResult =
+      item->Frame()->ConsumeOutsideClicks();
+  bool consume = consumeResult == ConsumeOutsideClicks_True;
+  bool rollup = true;
 
-    // If norolluponanchor is true, then don't rollup when clicking the anchor.
-    // This would be used to allow adjusting the caret position in an
-    // autocomplete field without hiding the popup for example.
-    bool noRollupOnAnchor =
-        (!consume && pos &&
-         item->Frame()->GetContent()->AsElement()->AttrValueIs(
-             kNameSpaceID_None, nsGkAtoms::norolluponanchor, nsGkAtoms::_true,
-             eCaseMatters));
+  // If norolluponanchor is true, then don't rollup when clicking the anchor.
+  // This would be used to allow adjusting the caret position in an
+  // autocomplete field without hiding the popup for example.
+  bool noRollupOnAnchor =
+      (!consume && pos &&
+       item->Frame()->GetContent()->AsElement()->AttrValueIs(
+           kNameSpaceID_None, nsGkAtoms::norolluponanchor, nsGkAtoms::_true,
+           eCaseMatters));
 
-    // When ConsumeOutsideClicks_ParentOnly is used, always consume the click
-    // when the click was over the anchor. This way, clicking on a menu doesn't
-    // reopen the menu.
-    if ((consumeResult == ConsumeOutsideClicks_ParentOnly ||
-         noRollupOnAnchor) &&
-        pos) {
-      nsMenuPopupFrame* popupFrame = item->Frame();
-      CSSIntRect anchorRect = [&] {
-        if (popupFrame->IsAnchored()) {
-          // Check if the popup has a screen anchor rectangle. If not, get the
-          // rectangle from the anchor element.
-          auto r = popupFrame->GetScreenAnchorRect();
-          if (r.x != -1 && r.y != -1) {
-            return r;
-          }
+  // When ConsumeOutsideClicks_ParentOnly is used, always consume the click
+  // when the click was over the anchor. This way, clicking on a menu doesn't
+  // reopen the menu.
+  if ((consumeResult == ConsumeOutsideClicks_ParentOnly || noRollupOnAnchor) &&
+      pos) {
+    nsMenuPopupFrame* popupFrame = item->Frame();
+    CSSIntRect anchorRect = [&] {
+      if (popupFrame->IsAnchored()) {
+        // Check if the popup has a screen anchor rectangle. If not, get the
+        // rectangle from the anchor element.
+        auto r = popupFrame->GetScreenAnchorRect();
+        if (r.x != -1 && r.y != -1) {
+          return r;
         }
-        auto* anchor = Element::FromNodeOrNull(popupFrame->GetAnchor());
-        if (!anchor) {
-          return CSSIntRect();
-        }
+      }
+      auto* anchor = Element::FromNodeOrNull(popupFrame->GetAnchor());
+      if (!anchor) {
+        return CSSIntRect();
+      }
 
-        // Check if the anchor has indicated another node to use for checking
-        // for roll-up. That way, we can anchor a popup on anonymous content
-        // or an individual icon, while clicking elsewhere within a button or
-        // other container doesn't result in us re-opening the popup.
-        nsAutoString consumeAnchor;
-        anchor->GetAttr(nsGkAtoms::consumeanchor, consumeAnchor);
-        if (!consumeAnchor.IsEmpty()) {
-          if (Element* newAnchor =
-                  anchor->OwnerDoc()->GetElementById(consumeAnchor)) {
-            anchor = newAnchor;
-          }
+      // Check if the anchor has indicated another node to use for checking
+      // for roll-up. That way, we can anchor a popup on anonymous content
+      // or an individual icon, while clicking elsewhere within a button or
+      // other container doesn't result in us re-opening the popup.
+      nsAutoString consumeAnchor;
+      anchor->GetAttr(nsGkAtoms::consumeanchor, consumeAnchor);
+      if (!consumeAnchor.IsEmpty()) {
+        if (Element* newAnchor =
+                anchor->OwnerDoc()->GetElementById(consumeAnchor)) {
+          anchor = newAnchor;
         }
+      }
 
-        nsIFrame* f = anchor->GetPrimaryFrame();
-        if (!f) {
-          return CSSIntRect();
-        }
-        return f->GetScreenRect();
-      }();
+      nsIFrame* f = anchor->GetPrimaryFrame();
+      if (!f) {
+        return CSSIntRect();
+      }
+      return f->GetScreenRect();
+    }();
 
-      // It's possible that some other element is above the anchor at the same
-      // position, but the only thing that would happen is that the mouse
-      // event will get consumed, so here only a quick coordinates check is
-      // done rather than a slower complete check of what is at that location.
-      nsPresContext* presContext = item->Frame()->PresContext();
-      CSSIntPoint posCSSPixels = presContext->DevPixelsToIntCSSPixels(*pos);
-      if (anchorRect.Contains(posCSSPixels)) {
-        if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
-          consume = true;
-        }
+    // It's possible that some other element is above the anchor at the same
+    // position, but the only thing that would happen is that the mouse
+    // event will get consumed, so here only a quick coordinates check is
+    // done rather than a slower complete check of what is at that location.
+    nsPresContext* presContext = item->Frame()->PresContext();
+    CSSIntPoint posCSSPixels = presContext->DevPixelsToIntCSSPixels(*pos);
+    if (anchorRect.Contains(posCSSPixels)) {
+      if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
+        consume = true;
+      }
 
-        if (noRollupOnAnchor) {
-          rollup = false;
-        }
+      if (noRollupOnAnchor) {
+        rollup = false;
       }
     }
+  }
 
-    if (rollup) {
-      // if a number of popups to close has been specified, determine the last
-      // popup to close
-      nsIContent* lastPopup = nullptr;
-      if (aCount != UINT32_MAX) {
-        nsMenuChainItem* last = item;
-        while (--aCount && last->GetParent()) {
-          last = last->GetParent();
-        }
-        if (last) {
-          lastPopup = last->Content();
-        }
-      }
+  if (!rollup) {
+    return false;
+  }
 
-      nsPresContext* presContext = item->Frame()->PresContext();
-      RefPtr<nsViewManager> viewManager =
-          presContext->PresShell()->GetViewManager();
-
-      HidePopup(item->Content(), true, true, false, true, lastPopup);
-
-      if (aFlush) {
-        // The popup's visibility doesn't update until the minimize animation
-        // has finished, so call UpdateWidgetGeometry to update it right away.
-        viewManager->UpdateWidgetGeometry();
-      }
+  // if a number of popups to close has been specified, determine the last
+  // popup to close
+  nsIContent* lastPopup = nullptr;
+  if (aCount != UINT32_MAX) {
+    nsMenuChainItem* last = item;
+    while (--aCount && last->GetParent()) {
+      last = last->GetParent();
     }
+    if (last) {
+      lastPopup = last->Content();
+    }
+  }
+
+  nsPresContext* presContext = item->Frame()->PresContext();
+  RefPtr<nsViewManager> viewManager =
+      presContext->PresShell()->GetViewManager();
+
+  HidePopup(item->Content(), true, true, false, true, lastPopup);
+
+  if (aFlush) {
+    // The popup's visibility doesn't update until the minimize animation
+    // has finished, so call UpdateWidgetGeometry to update it right away.
+    viewManager->UpdateWidgetGeometry();
   }
 
   return consume;
@@ -667,10 +679,17 @@ nsMenuPopupFrame* nsXULPopupManager::GetPopupFrameForContent(
   return do_QueryFrame(aContent->GetPrimaryFrame());
 }
 
-nsMenuChainItem* nsXULPopupManager::GetTopVisibleMenu() {
+nsMenuChainItem* nsXULPopupManager::GetRollupItem(RollupKind aKind) {
   for (nsMenuChainItem* item = mPopups.get(); item; item = item->GetParent()) {
-    if (!item->IsNoAutoHide() &&
-        item->Frame()->PopupState() != ePopupInvisible) {
+    if (item->Frame()->PopupState() == ePopupInvisible) {
+      continue;
+    }
+    MOZ_ASSERT_IF(item->Frame()->PopupType() == ePopupTypeTooltip,
+                  item->IsNoAutoHide());
+    const bool valid = aKind == RollupKind::Tooltip
+                           ? item->Frame()->PopupType() == ePopupTypeTooltip
+                           : !item->IsNoAutoHide();
+    if (valid) {
       return item;
     }
   }
