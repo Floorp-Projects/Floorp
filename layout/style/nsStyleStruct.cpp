@@ -2191,7 +2191,7 @@ void StyleAnimation::SetInitialValues() {
   mDirection = dom::PlaybackDirection::Normal;
   mFillMode = dom::FillMode::None;
   mPlayState = StyleAnimationPlayState::Running;
-  mIterationCount = 1.0f;
+  mIterationCount = {1.0f};
   mComposition = dom::CompositeOperation::Replace;
   mTimeline = StyleAnimationTimeline::Auto();
 }
