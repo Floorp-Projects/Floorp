@@ -45,7 +45,7 @@ add_task(async function tipIsSecondResult() {
     "The first element should be selected."
   );
 
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Tab");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
       "urlbarView-button-0"
@@ -58,7 +58,7 @@ add_task(async function tipIsSecondResult() {
     "The first element should be selected."
   );
 
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Tab");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
       "urlbarView-button-help"
@@ -98,7 +98,7 @@ add_task(async function tipIsSecondResult() {
     "No results should be selected."
   );
 
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
       "urlbarView-button-help"
@@ -133,7 +133,7 @@ add_task(async function tipIsOnlyResult() {
     "The first and only result should be a tip."
   );
 
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Tab");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
       "urlbarView-button-0"
@@ -146,7 +146,7 @@ add_task(async function tipIsOnlyResult() {
     "The first element should be selected."
   );
 
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Tab");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
       "urlbarView-button-help"
@@ -166,7 +166,7 @@ add_task(async function tipIsOnlyResult() {
     "There should be no selection."
   );
 
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
       "urlbarView-button-help"

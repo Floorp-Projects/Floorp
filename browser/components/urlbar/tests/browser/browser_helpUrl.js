@@ -48,7 +48,7 @@ add_task(async function title_helpL10n() {
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
-// Arrows up and down through a result with a help button.  The result is the
+// (SHIFT+)TABs through a result with a help button.  The result is the
 // second result and has other results after it.
 add_task(async function keyboardSelection_secondResult() {
   let provider = registerTestProvider(1);
@@ -70,35 +70,35 @@ add_task(async function keyboardSelection_secondResult() {
   );
   await assertIsTestResult(1);
 
-  // Arrow down to the main part of the result.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  // TAB to the main part of the result.
+  EventUtils.synthesizeKey("KEY_Tab");
   assertMainPartSelected(1);
 
-  // Arrow down to the help button.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  // TAB to the help button.
+  EventUtils.synthesizeKey("KEY_Tab");
   assertHelpButtonSelected(2);
 
-  // Arrow down to the next (third) result.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  // TAB to the next (third) result.
+  EventUtils.synthesizeKey("KEY_Tab");
   assertOtherResultSelected(3, "next result");
 
-  // Arrow up to the help button.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  // SHIFT+TAB to the help button.
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertHelpButtonSelected(2);
 
-  // Arrow up to the main part of the result.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  // SHIFT+TAB to the main part of the result.
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertMainPartSelected(1);
 
-  // Arrow up to the previous (first) result.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  // SHIFT+TAB to the previous (first) result.
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertOtherResultSelected(0, "previous result");
 
   await UrlbarTestUtils.promisePopupClose(window);
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
-// Arrows up and down through a result with a help button.  The result is the
+// (SHIFT+)TABs through a result with a help button.  The result is the
 // last result.
 add_task(async function keyboardSelection_lastResult() {
   let provider = registerTestProvider(MAX_RESULTS - 1);
@@ -120,12 +120,12 @@ add_task(async function keyboardSelection_lastResult() {
   );
   await assertIsTestResult(MAX_RESULTS - 1);
 
-  // Arrow down to the main part of the result.
-  EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: MAX_RESULTS - 1 });
+  // TAB to the main part of the result.
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: MAX_RESULTS - 1 });
   assertMainPartSelected(MAX_RESULTS - 1);
 
-  // Arrow down to the help button.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  // TAB to the help button.
+  EventUtils.synthesizeKey("KEY_Tab");
   assertHelpButtonSelected(MAX_RESULTS);
 
   // Arrow down to the first one-off.  If this test is running alone, the
@@ -151,16 +151,16 @@ add_task(async function keyboardSelection_lastResult() {
     "No results should be selected."
   );
 
-  // Arrow up to the help button.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  // SHIFT+TAB to the help button.
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertHelpButtonSelected(MAX_RESULTS);
 
-  // Arrow up to the main part of the result.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  // SHIFT+TAB to the main part of the result.
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertMainPartSelected(MAX_RESULTS - 1);
 
-  // Arrow up to the previous result.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
+  // SHIFT+TAB to the previous result.
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertOtherResultSelected(MAX_RESULTS - 2, "previous result");
 
   await UrlbarTestUtils.promisePopupClose(window);
@@ -208,12 +208,12 @@ async function doPickTest({ pickHelpButton, useKeyboard }) {
 
     let clickTarget;
     if (useKeyboard) {
-      // Arrow down to the result.
+      // TAB to the result.
       if (pickHelpButton) {
-        EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index + 1 });
+        EventUtils.synthesizeKey("KEY_Tab", { repeat: index + 1 });
         assertHelpButtonSelected(index + 1);
       } else {
-        EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
+        EventUtils.synthesizeKey("KEY_Tab", { repeat: index });
         assertMainPartSelected(index);
       }
     } else {
