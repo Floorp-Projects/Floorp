@@ -100,23 +100,60 @@ using PropertyKeySet = GCHashSet<PropertyKey, DefaultHasher<PropertyKey>>;
 class PropertyEnumerator {
   RootedObject obj_;
   MutableHandleIdVector props_;
+  PropertyIndexVector* indices_;
 
   uint32_t flags_;
   Rooted<PropertyKeySet> visited_;
 
+  bool enumeratingProtoChain_ = false;
+
+  enum class IndicesState {
+    // Every property that has been enumerated so far can be represented as a
+    // PropertyIndex, but we are not currently producing a list of indices. If
+    // the state is Valid when we are done enumerating, then the resulting
+    // iterator can be marked as NativeIteratorIndices::AvailableOnRequest.
+    Valid,
+
+    // Every property that has been enumerated so far can be represented as a
+    // PropertyIndex, and |indices_| points to a PropertyIndexVector containing
+    // those indices. This is used when we want to create a NativeIterator with
+    // valid indices.
+    Allocating,
+
+    // It is not possible to represent every property of the object being
+    // enumerated as a PropertyIndex. For example, enumerated properties on the
+    // prototype chain are unsupported. We can transition to this state from
+    // either of the other two.
+    Unsupported
+  };
+  IndicesState indicesState_;
+
  public:
   PropertyEnumerator(JSContext* cx, JSObject* obj, uint32_t flags,
-                     MutableHandleIdVector props)
+                     MutableHandleIdVector props,
+                     PropertyIndexVector* indices = nullptr)
       : obj_(cx, obj),
         props_(props),
+        indices_(indices),
         flags_(flags),
-        visited_(cx, PropertyKeySet(cx)) {}
+        visited_(cx, PropertyKeySet(cx)),
+        indicesState_(indices ? IndicesState::Allocating
+                              : IndicesState::Valid) {}
 
   bool snapshot(JSContext* cx);
 
+  void markIndicesUnsupported() { indicesState_ = IndicesState::Unsupported; }
+  bool supportsIndices() const {
+    return indicesState_ != IndicesState::Unsupported;
+  }
+  bool allocatingIndices() const {
+    return indicesState_ == IndicesState::Allocating;
+  }
+
  private:
   template <bool CheckForDuplicates>
-  bool enumerate(JSContext* cx, jsid id, bool enumerable);
+  bool enumerate(JSContext* cx, jsid id, bool enumerable,
+                 PropertyIndex index = PropertyIndex::Invalid());
 
   bool enumerateExtraProperties(JSContext* cx);
 
@@ -132,10 +169,24 @@ class PropertyEnumerator {
 
   template <bool CheckForDuplicates>
   bool enumerateProxyProperties(JSContext* cx);
+
+  void reversePropsAndIndicesAfter(size_t initialLength) {
+    // We iterate through prop maps in descending order of property creation,
+    // but we need our return value to be in ascending order. If we are tracking
+    // property indices, make sure to keep them in sync.
+    MOZ_ASSERT(props_.begin() + initialLength <= props_.end());
+    MOZ_ASSERT_IF(allocatingIndices(), props_.length() == indices_->length());
+
+    std::reverse(props_.begin() + initialLength, props_.end());
+    if (allocatingIndices()) {
+      std::reverse(indices_->begin() + initialLength, indices_->end());
+    }
+  }
 };
 
 template <bool CheckForDuplicates>
-bool PropertyEnumerator::enumerate(JSContext* cx, jsid id, bool enumerable) {
+bool PropertyEnumerator::enumerate(JSContext* cx, jsid id, bool enumerable,
+                                   PropertyIndex index) {
   if (CheckForDuplicates) {
     // If we've already seen this, we definitely won't add it.
     PropertyKeySet::AddPtr p = visited_.lookupForAdd(id);
@@ -175,7 +226,24 @@ bool PropertyEnumerator::enumerate(JSContext* cx, jsid id, bool enumerable) {
     }
   }
 
-  return props_.append(id);
+  MOZ_ASSERT_IF(allocatingIndices(), indices_->length() == props_.length());
+  if (!props_.append(id)) {
+    return false;
+  }
+
+  if (!supportsIndices()) {
+    return true;
+  }
+  if (index.kind() == PropertyIndex::Kind::Invalid || enumeratingProtoChain_) {
+    markIndicesUnsupported();
+    return true;
+  }
+
+  if (allocatingIndices() && !indices_->append(index)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool PropertyEnumerator::enumerateExtraProperties(JSContext* cx) {
@@ -237,16 +305,17 @@ bool PropertyEnumerator::enumerateNativeProperties(JSContext* cx) {
     // Collect any dense elements from this object.
     size_t firstElemIndex = props_.length();
     size_t initlen = pobj->getDenseInitializedLength();
-    const Value* vp = pobj->getDenseElements();
+    const Value* elements = pobj->getDenseElements();
     bool hasHoles = false;
-    for (uint32_t i = 0; i < initlen; ++i, ++vp) {
-      if (vp->isMagic(JS_ELEMENTS_HOLE)) {
+    for (uint32_t i = 0; i < initlen; ++i) {
+      if (elements[i].isMagic(JS_ELEMENTS_HOLE)) {
         hasHoles = true;
       } else {
         // Dense arrays never get so large that i would not fit into an
         // integer id.
         if (!enumerate<CheckForDuplicates>(cx, PropertyKey::Int(i),
-                                           /* enumerable = */ true)) {
+                                           /* enumerable = */ true,
+                                           PropertyIndex::ForElement(i))) {
           return false;
         }
       }
@@ -369,21 +438,25 @@ bool PropertyEnumerator::enumerateNativeProperties(JSContext* cx) {
         continue;
       }
 
-      if (!enumerate<CheckForDuplicates>(cx, id, iter->enumerable())) {
+      PropertyIndex index = iter->isDataProperty()
+                                ? PropertyIndex::ForSlot(pobj, iter->slot())
+                                : PropertyIndex::Invalid();
+      if (!enumerate<CheckForDuplicates>(cx, id, iter->enumerable(), index)) {
         return false;
       }
     }
-    std::reverse(props_.begin() + initialLength, props_.end());
+    reversePropsAndIndicesAfter(initialLength);
 
     enumerateSymbols = symbolsFound && (flags_ & JSITER_SYMBOLS);
   }
 
   if (enumerateSymbols) {
     MOZ_ASSERT(iterShapeProperties);
+    MOZ_ASSERT(!allocatingIndices());
 
-    // Do a second pass to collect symbols. ES6 draft rev 25 (2014 May 22)
-    // 9.1.12 requires that all symbols appear after all strings in the
-    // result.
+    // Do a second pass to collect symbols. The spec requires that all symbols
+    // appear after all strings in [[OwnPropertyKeys]] for ordinary objects:
+    // https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
     size_t initialLength = props_.length();
     for (ShapePropertyIter<NoGC> iter(pobj->shape()); !iter.done(); iter++) {
       jsid id = iter->key();
@@ -393,7 +466,7 @@ bool PropertyEnumerator::enumerateNativeProperties(JSContext* cx) {
         }
       }
     }
-    std::reverse(props_.begin() + initialLength, props_.end());
+    reversePropsAndIndicesAfter(initialLength);
   }
 
   return true;
@@ -607,6 +680,8 @@ bool PropertyEnumerator::snapshot(JSContext* cx) {
 
   do {
     if (obj_->getClass()->getNewEnumerate()) {
+      markIndicesUnsupported();
+
       if (!enumerateExtraProperties(cx)) {
         return false;
       }
@@ -620,6 +695,7 @@ bool PropertyEnumerator::snapshot(JSContext* cx) {
     } else if (obj_->is<NativeObject>()) {
       // Give the object a chance to resolve all lazy properties
       if (JSEnumerateOp enumerateOp = obj_->getClass()->getEnumerate()) {
+        markIndicesUnsupported();
         if (!enumerateOp(cx, obj_.as<NativeObject>())) {
           return false;
         }
@@ -628,6 +704,7 @@ bool PropertyEnumerator::snapshot(JSContext* cx) {
         return false;
       }
     } else if (obj_->is<ProxyObject>()) {
+      markIndicesUnsupported();
       if (checkForDuplicates) {
         if (!enumerateProxyProperties<true>(cx)) {
           return false;
@@ -648,6 +725,7 @@ bool PropertyEnumerator::snapshot(JSContext* cx) {
     if (!GetPrototype(cx, obj_, &obj_)) {
       return false;
     }
+    enumeratingProtoChain_ = true;
 
     // The [[Prototype]] chain might be cyclic.
     if (!CheckForInterrupt(cx)) {
@@ -1028,6 +1106,56 @@ bool js::EnumerateProperties(JSContext* cx, HandleObject obj,
   return enumerator.snapshot(cx);
 }
 
+#ifdef DEBUG
+static bool IndicesAreValid(NativeObject* obj, HandleIdVector keys,
+                            const PropertyIndexVector& indices) {
+  if (keys.length() != indices.length()) {
+    return false;
+  }
+
+  size_t numDenseElements = obj->getDenseInitializedLength();
+  size_t numFixedSlots = obj->numFixedSlots();
+  const Value* elements = obj->getDenseElements();
+
+  for (uint32_t i = 0; i < keys.length(); i++) {
+    PropertyIndex index = indices[i];
+    switch (index.kind()) {
+      case PropertyIndex::Kind::Element:
+        // Verify that the dense element exists and is not a hole.
+        if (index.index() >= numDenseElements ||
+            elements[index.index()].isMagic(JS_ELEMENTS_HOLE)) {
+          return false;
+        }
+        break;
+      case PropertyIndex::Kind::FixedSlot: {
+        // Verify that the slot exists and is an enumerable data property with
+        // the expected key.
+        Maybe<PropertyInfo> prop = obj->lookupPure(keys[i]);
+        if (!prop.isSome() || !prop->hasSlot() || !prop->enumerable() ||
+            !prop->isDataProperty() || prop->slot() != index.index()) {
+          return false;
+        }
+        break;
+      }
+      case PropertyIndex::Kind::DynamicSlot: {
+        // Verify that the slot exists and is an enumerable data property with
+        // the expected key.
+        Maybe<PropertyInfo> prop = obj->lookupPure(keys[i]);
+        if (!prop.isSome() || !prop->hasSlot() || !prop->enumerable() ||
+            !prop->isDataProperty() ||
+            prop->slot() - numFixedSlots != index.index()) {
+          return false;
+        }
+        break;
+      }
+      case PropertyIndex::Kind::Invalid:
+        return false;
+    }
+  }
+  return true;
+}
+#endif
+
 JSObject* js::GetIterator(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
   MOZ_ASSERT(cx->compartment() == obj->compartment(),
@@ -1047,8 +1175,22 @@ JSObject* js::GetIterator(JSContext* cx, HandleObject obj) {
   }
 
   RootedIdVector keys(cx);
-  if (!EnumerateProperties(cx, obj, &keys)) {
-    return nullptr;
+  PropertyIndexVector indices(cx);
+  bool hasValidIndices = false;
+
+  if (MOZ_UNLIKELY(obj->is<ProxyObject>())) {
+    if (!Proxy::enumerate(cx, obj, &keys)) {
+      return nullptr;
+    }
+  } else {
+    uint32_t flags = 0;
+    PropertyEnumerator enumerator(cx, obj, flags, &keys, &indices);
+    if (!enumerator.snapshot(cx)) {
+      return nullptr;
+    }
+    hasValidIndices = enumerator.allocatingIndices();
+    MOZ_ASSERT_IF(hasValidIndices,
+                  IndicesAreValid(&obj->as<NativeObject>(), keys, indices));
   }
 
   // If the object has dense elements, mark the dense elements as
