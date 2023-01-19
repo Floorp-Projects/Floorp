@@ -19,33 +19,33 @@ const kTimeoutPref = "findbar.iteratorTimeout";
  * FinderIterator. See the documentation for the `start()` method to
  * learn more.
  */
-export function FinderIterator() {
-  this._listeners = new Map();
-  this._currentParams = null;
-  this._catchingUp = new Set();
-  this._previousParams = null;
-  this._previousRanges = [];
-  this._spawnId = 0;
-  this._timer = null;
-  this.ranges = [];
-  this.running = false;
-  this.useSubFrames = false;
-}
+export class FinderIterator {
+  constructor() {
+    this._listeners = new Map();
+    this._currentParams = null;
+    this._catchingUp = new Set();
+    this._previousParams = null;
+    this._previousRanges = [];
+    this._spawnId = 0;
+    this._timer = null;
+    this.ranges = [];
+    this.running = false;
+    this.useSubFrames = false;
+  }
 
-FinderIterator.prototype = {
-  _timeout: Services.prefs.getIntPref(kTimeoutPref),
+  _timeout = Services.prefs.getIntPref(kTimeoutPref);
 
   // Expose `kIterationSizeMax` to the outside world for unit tests to use.
   get kIterationSizeMax() {
     return kIterationSizeMax;
-  },
+  }
 
   get params() {
     if (!this._currentParams && !this._previousParams) {
       return null;
     }
     return Object.assign({}, this._currentParams || this._previousParams);
-  },
+  }
 
   /**
    * Start iterating the active Finder docShell, using the options below. When
@@ -201,7 +201,7 @@ FinderIterator.prototype = {
     this._findAllRanges(finder, ++this._spawnId);
 
     return promise;
-  },
+  }
 
   /**
    * Stop the currently running iterator as soon as possible and optionally cache
@@ -240,7 +240,7 @@ FinderIterator.prototype = {
     for (let [, { onEnd }] of this._listeners) {
       onEnd();
     }
-  },
+  }
 
   /**
    * Stops the iteration that currently running, if it is, and start a new one
@@ -262,7 +262,7 @@ FinderIterator.prototype = {
 
     this._findAllRanges(finder, ++this._spawnId);
     this._notifyListeners("restart", iterParams);
-  },
+  }
 
   /**
    * Reset the internal state of the iterator. Typically this would be called
@@ -291,7 +291,7 @@ FinderIterator.prototype = {
       onEnd();
     }
     this._listeners.clear();
-  },
+  }
 
   /**
    * Check if the currently running iterator parameters are the same as the ones
@@ -326,7 +326,7 @@ FinderIterator.prototype = {
       this._currentParams.word == word &&
       this._currentParams.useSubFrames == useSubFrames
     );
-  },
+  }
 
   /**
    * The default mode of operation of the iterator is to not accept duplicate
@@ -345,7 +345,7 @@ FinderIterator.prototype = {
       this._areParamsEqual(this._currentParams, paramSet) &&
       this._listeners.has(paramSet.listener)
     );
-  },
+  }
 
   /**
    * Safely notify all registered listeners that an event has occurred.
@@ -366,7 +366,7 @@ FinderIterator.prototype = {
         Cu.reportError("FinderIterator Error: " + ex);
       }
     }
-  },
+  }
 
   /**
    * Internal; check if an iteration request is available in the previous result
@@ -403,7 +403,7 @@ FinderIterator.prototype = {
       }) &&
       this._previousRanges.length
     );
-  },
+  }
 
   /**
    * Internal; compare if two sets of iterator parameters are equivalent.
@@ -427,7 +427,7 @@ FinderIterator.prototype = {
       paramSet1.useSubFrames === paramSet2.useSubFrames &&
       lazy.NLP.levenshtein(paramSet1.word, paramSet2.word) <= allowDistance
     );
-  },
+  }
 
   /**
    * Internal; iterate over a predefined set of ranges that have been collected
@@ -486,7 +486,7 @@ FinderIterator.prototype = {
 
     // Save the updated limit globally.
     this._listeners.set(listener, { limit, onEnd });
-  },
+  }
 
   /**
    * Internal; iterate over the set of previously found ranges. Meanwhile it'll
@@ -507,7 +507,7 @@ FinderIterator.prototype = {
     if (onEnd) {
       onEnd();
     }
-  },
+  }
 
   /**
    * Internal; iterate over the set of already found ranges. Meanwhile it'll
@@ -524,7 +524,7 @@ FinderIterator.prototype = {
     this._catchingUp.add(listener);
     await this._yieldResult(listener, this.ranges, window, false);
     this._catchingUp.delete(listener);
-  },
+  }
 
   /**
    * Internal; see the documentation of the start() method above.
@@ -622,7 +622,7 @@ FinderIterator.prototype = {
     // When the iterating has finished, make sure we reset and save the state
     // properly.
     this.stop(true);
-  },
+  }
 
   /**
    * Internal; basic wrapper around nsIFind that provides a generator yielding
@@ -672,7 +672,7 @@ FinderIterator.prototype = {
       startPt = retRange.cloneRange();
       startPt.collapse(false);
     }
-  },
+  }
 
   /**
    * Internal; helper method for the iterator that recursively collects all
@@ -708,7 +708,7 @@ FinderIterator.prototype = {
     }
 
     return frames;
-  },
+  }
 
   /**
    * Internal; helper method to extract the docShell reference from a Window or
@@ -726,7 +726,7 @@ FinderIterator.prototype = {
       window = windowOrRange.startContainer.ownerGlobal;
     }
     return window.docShell;
-  },
+  }
 
   /**
    * Internal; determines whether a range is inside a link.
@@ -766,5 +766,5 @@ FinderIterator.prototype = {
     } while (node);
 
     return isInsideLink;
-  },
-};
+  }
+}
