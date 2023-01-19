@@ -20,26 +20,26 @@ class NimbusMessagingController(
      * Called when a message is just about to be shown to the user.
      *
      * This updates the display count, and expires the message if necessary.
-     *
-     * Records glean events for messageShown and messageExpired.
      */
-    suspend fun processDisplayedMessage(oldMessage: Message): Message {
-        sendShownMessageTelemetry(oldMessage.id)
+    fun processDisplayedMessage(oldMessage: Message): Message {
         val newMetadata = oldMessage.metadata.copy(
             displayCount = oldMessage.metadata.displayCount + 1,
             lastTimeShown = now(),
         )
-        val newMessage = oldMessage.copy(
+        return oldMessage.copy(
             metadata = newMetadata,
         )
+    }
 
-        messagingStorage.updateMetadata(newMetadata)
-
-        if (newMessage.isExpired) {
-            sendExpiredMessageTelemetry(newMessage.id)
+    /**
+     * Records telemetry and metadata for a newly processed displayed message.
+     */
+    suspend fun onMessageDisplayed(message: Message) {
+        sendShownMessageTelemetry(message.id)
+        if (message.isExpired) {
+            sendExpiredMessageTelemetry(message.id)
         }
-
-        return newMessage
+        messagingStorage.updateMetadata(message.metadata)
     }
 
     /**

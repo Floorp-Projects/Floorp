@@ -73,15 +73,16 @@ class MessagingMiddleware(
         oldMessage: Message,
         context: AppStoreMiddlewareContext,
     ) {
+        val newMessage = controller.processDisplayedMessage(oldMessage)
+        val newMessages = if (!newMessage.isExpired) {
+            updateMessage(context, oldMessage, newMessage)
+        } else {
+            consumeMessageToShowIfNeeded(context, oldMessage)
+            removeMessage(context, oldMessage)
+        }
+        context.dispatch(UpdateMessages(newMessages))
         coroutineScope.launch {
-            val newMessage = controller.processDisplayedMessage(oldMessage)
-            val newMessages = if (!newMessage.isExpired) {
-                updateMessage(context, oldMessage, newMessage)
-            } else {
-                consumeMessageToShowIfNeeded(context, oldMessage)
-                removeMessage(context, oldMessage)
-            }
-            context.dispatch(UpdateMessages(newMessages))
+            controller.onMessageDisplayed(newMessage)
         }
     }
 

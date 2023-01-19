@@ -66,6 +66,7 @@ class NimbusMessagingControllerTest {
         assertEquals(0, message.metadata.displayCount)
 
         val updated = controller.processDisplayedMessage(message)
+        controller.onMessageDisplayed(updated)
 
         assertNotNull(Messaging.messageShown.testGetValue())
         val event = Messaging.messageShown.testGetValue()!!
@@ -83,6 +84,7 @@ class NimbusMessagingControllerTest {
         assertEquals(0, message.metadata.displayCount)
 
         val updated = controller.processDisplayedMessage(message)
+        controller.onMessageDisplayed(updated)
 
         assertNotNull(Messaging.messageShown.testGetValue())
         val shownEvent = Messaging.messageShown.testGetValue()!!
