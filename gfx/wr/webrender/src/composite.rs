@@ -6,7 +6,7 @@ use api::{ColorF, YuvRangedColorSpace, YuvFormat, ImageRendering, ExternalImageI
 use api::units::*;
 use api::ColorDepth;
 use crate::image_source::resolve_image;
-use euclid::{Box2D, Transform3D};
+use euclid::Box2D;
 use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
 use crate::internal_types::TextureSource;
@@ -638,7 +638,7 @@ impl CompositeState {
         gpu_cache: &mut GpuCache,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
-        let slice_transform = self.get_compositor_transform(tile_cache.transform_index).to_transform();
+        let slice_transform = self.get_compositor_transform(tile_cache.transform_index);
 
         let image_rendering = if self.low_quality_pinch_zoom {
             ImageRendering::Auto
@@ -807,7 +807,7 @@ impl CompositeState {
                     CompositeSurfaceDescriptor {
                         surface_id: external_surface.native_surface_id,
                         clip_rect,
-                        transform: self.get_compositor_transform(external_surface.transform_index).to_transform(),
+                        transform: self.get_compositor_transform(external_surface.transform_index),
                         image_dependencies: image_dependencies,
                         image_rendering: external_surface.image_rendering,
                         tile_descriptors: Vec::new(),
@@ -1072,8 +1072,7 @@ impl Default for WindowVisibility {
 // to avoid a bunch of noisy cast_unit calls and make it actually type-safe. May be difficult due
 // to pervasive use of Device-space nomenclature inside WR.
 // pub struct CompositorSurfacePixel;
-// pub type CompositorSurfaceTransform = Transform3D<f32, CompositorSurfacePixel, DevicePixel>;
-pub type CompositorSurfaceTransform = Transform3D<f32, DevicePixel, DevicePixel>;
+pub type CompositorSurfaceTransform = ScaleOffset;
 
 /// Defines an interface to a native (OS level) compositor. If supplied
 /// by the client application, then picture cache slices will be

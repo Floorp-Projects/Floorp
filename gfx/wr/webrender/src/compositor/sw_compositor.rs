@@ -72,7 +72,7 @@ impl SwTile {
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
         let bounds = self.local_bounds(surface);
-        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out();
+        let device_rect = transform.map_rect(&bounds.to_f32()).round_out();
         Some(device_rect.intersection(&clip_rect.to_f32())?.to_i32())
     }
 
@@ -101,16 +101,16 @@ impl SwTile {
         // Offset the valid rect to the appropriate surface origin.
         let valid = self.local_bounds(surface);
         // The destination rect is the valid rect transformed and then clipped.
-        let dest_rect = transform.outer_transformed_box2d(&valid.to_f32())?.round_out();
+        let dest_rect = transform.map_rect(&valid.to_f32()).round_out();
         if !dest_rect.intersects(&clip_rect.to_f32()) {
             return None;
         }
         // To get a valid source rect, we need to inverse transform the clipped destination rect to find out the effect
         // of the clip rect in source-space. After this, we subtract off the source-space valid rect origin to get
         // a source rect that is now relative to the surface origin rather than absolute.
-        let inv_transform = transform.inverse()?;
+        let inv_transform = transform.inverse();
         let src_rect = inv_transform
-            .outer_transformed_box2d(&dest_rect)?
+            .map_rect(&dest_rect)
             .round()
             .translate(-valid.min.to_vector().to_f32());
         // Ensure source and dest rects when transformed from Box2D to Rect formats will still fit in an i32.
@@ -120,7 +120,9 @@ impl SwTile {
            dest_rect.size().try_cast::<i32>().is_none() {
             return None;
         }
-        Some((src_rect.try_cast()?, dest_rect.try_cast()?, transform.m11 < 0.0, transform.m22 < 0.0))
+        let flip_x = transform.scale.x < 0.0;
+        let flip_y = transform.scale.y < 0.0;
+        Some((src_rect.try_cast()?, dest_rect.try_cast()?, flip_x, flip_y))
     }
 }
 
@@ -163,7 +165,7 @@ impl SwSurface {
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
         let bounds = self.local_bounds();
-        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out();
+        let device_rect = transform.map_rect(&bounds.to_f32()).round_out();
         Some(device_rect.intersection(&clip_rect.to_f32())?.to_i32())
     }
 }

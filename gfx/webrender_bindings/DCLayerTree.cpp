@@ -634,8 +634,11 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
 
   wr::DeviceIntPoint virtualOffset = surface->GetVirtualOffset();
 
-  gfx::Matrix transform(aTransform.m11, aTransform.m12, aTransform.m21,
-                        aTransform.m22, aTransform.m41, aTransform.m42);
+  float sx = aTransform.scale.x;
+  float sy = aTransform.scale.y;
+  float tx = aTransform.offset.x;
+  float ty = aTransform.offset.y;
+  gfx::Matrix transform(sx, 0.0, 0.0, sy, tx, ty);
 
   surface->PresentExternalSurface(transform);
 
