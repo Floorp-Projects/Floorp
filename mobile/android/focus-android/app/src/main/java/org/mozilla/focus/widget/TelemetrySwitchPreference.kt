@@ -32,6 +32,9 @@ internal class TelemetrySwitchPreference(context: Context, attrs: AttributeSet?)
             .setUploadEnabled(isChecked).isCollectionEnabled = isChecked
 
         Glean.setUploadEnabled(isChecked)
+        if (isChecked) {
+            TelemetryHolder.get().recordSessionStart()
+        }
     }
 
     override fun getDescription(): String {
