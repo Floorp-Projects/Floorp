@@ -585,7 +585,6 @@ rtc_library("desktop_capture") {
   }
 
   if (rtc_use_pipewire) {
-    if (!build_with_mozilla) {
     sources += [
       "linux/wayland/base_capturer_pipewire.cc",
       "linux/wayland/base_capturer_pipewire.h",
@@ -610,14 +609,20 @@ rtc_library("desktop_capture") {
       "linux/wayland/xdg_desktop_portal_utils.h",
       "linux/wayland/xdg_session_details.h",
     ]
-    } else {
-    sources += [
-      "linux/wayland/moz_base_capturer_pipewire.cc",
-      "linux/wayland/moz_base_capturer_pipewire.h",
+
+    if (build_with_mozilla) {
+    include_dirs += [
+      "/gfx/angle/checkout/include",
+      "/third_party/drm/drm",
+      "/third_party/drm/drm/include",
+      "/third_party/drm/drm/include/libdrm",
+      "/third_party/drm/libdrm",
+      "/third_party/gbm/gbm",
+      "/third_party/libepoxy/libepoxy/include",
     ]
     }
-
-    if (!build_with_mozilla) {
+  
+   if (!build_with_mozilla) {
     configs += [
       ":gio",
       ":pipewire",
