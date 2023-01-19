@@ -236,6 +236,114 @@ class MegamorphicCache {
   }
 };
 
+class MegamorphicSetPropCache {
+ public:
+  // We can get more hits if we increase this, but this seems to be around
+  // the sweet spot where we are getting most of the hits we would get with
+  // an infinitely sized cache
+  static constexpr size_t NumEntries = 256;
+  // log2(alignof(Shape))
+  static constexpr uint8_t ShapeHashShift1 = 3;
+  // ShapeHashShift1 + log2(NumEntries)
+  static constexpr uint8_t ShapeHashShift2 = ShapeHashShift1 + 8;
+
+  class Entry {
+    Shape* beforeShape_ = nullptr;
+    Shape* afterShape_ = nullptr;
+
+    // The atom or symbol property being accessed.
+    PropertyKey key_;
+
+    // This entry is valid iff the generation matches the cache's generation.
+    uint16_t generation_ = 0;
+
+    // Slot number of the data property.
+    static constexpr size_t MaxSlotNumber = UINT16_MAX;
+    uint16_t slot_ = 0;
+
+    friend class MegamorphicSetPropCache;
+
+   public:
+    void init(Shape* beforeShape, Shape* afterShape, PropertyKey key,
+              uint16_t generation, uint16_t slot) {
+      beforeShape_ = beforeShape;
+      afterShape_ = afterShape;
+      key_ = key;
+      generation_ = generation;
+      slot_ = slot;
+      MOZ_ASSERT(slot_ == slot, "slot must fit in slot_");
+    }
+    uint16_t slot() const { return slot_; }
+    Shape* afterShape() const { return afterShape_; }
+
+    static constexpr size_t offsetOfShape() {
+      return offsetof(Entry, beforeShape_);
+    }
+    static constexpr size_t offsetOfAfterShape() {
+      return offsetof(Entry, afterShape_);
+    }
+
+    static constexpr size_t offsetOfKey() { return offsetof(Entry, key_); }
+
+    static constexpr size_t offsetOfGeneration() {
+      return offsetof(Entry, generation_);
+    }
+
+    static constexpr size_t offsetOfSlot() { return offsetof(Entry, slot_); }
+  };
+
+ private:
+  mozilla::Array<Entry, NumEntries> entries_;
+
+  // Generation counter used to invalidate all entries.
+  uint16_t generation_ = 0;
+
+  Entry& getEntry(Shape* beforeShape, PropertyKey key) {
+    static_assert(mozilla::IsPowerOfTwo(NumEntries),
+                  "NumEntries must be a power-of-two for fast modulo");
+    uintptr_t hash = uintptr_t(beforeShape) >> ShapeHashShift1;
+    hash ^= uintptr_t(beforeShape) >> ShapeHashShift2;
+    hash += HashAtomOrSymbolPropertyKey(key);
+    return entries_[hash % NumEntries];
+  }
+
+ public:
+  void bumpGeneration() {
+    generation_++;
+    if (generation_ == 0) {
+      // Generation overflowed. Invalidate the whole cache.
+      for (size_t i = 0; i < NumEntries; i++) {
+        entries_[i].beforeShape_ = nullptr;
+      }
+    }
+  }
+  void set(Shape* beforeShape, Shape* afterShape, PropertyKey key,
+           uint32_t slot) {
+    if (slot > Entry::MaxSlotNumber) {
+      return;
+    }
+    Entry& entry = getEntry(beforeShape, key);
+    entry.init(beforeShape, afterShape, key, generation_, slot);
+  }
+
+#ifdef DEBUG
+  bool lookup(Shape* beforeShape, PropertyKey key, Entry** entryp) {
+    Entry& entry = getEntry(beforeShape, key);
+    *entryp = &entry;
+    return (entry.beforeShape_ == beforeShape && entry.key_ == key &&
+            entry.generation_ == generation_);
+  }
+#endif
+
+  static constexpr size_t offsetOfEntries() {
+    return offsetof(MegamorphicSetPropCache, entries_);
+  }
+
+  static constexpr size_t offsetOfGeneration() {
+    return offsetof(MegamorphicSetPropCache, generation_);
+  }
+};
+
 // Cache for AtomizeString, mapping JSLinearString* to the corresponding
 // JSAtom*. The cache has two different optimizations:
 //
@@ -335,6 +443,7 @@ class StringToAtomCache {
 class RuntimeCaches {
  public:
   MegamorphicCache megamorphicCache;
+  MegamorphicSetPropCache megamorphicSetPropCache;
   GSNCache gsnCache;
   UncompressedSourceCache uncompressedSourceCache;
   EvalCache evalCache;
@@ -363,6 +472,7 @@ class RuntimeCaches {
     evalCache.clear();
     stringToAtomCache.purge();
     megamorphicCache.bumpGeneration();
+    megamorphicSetPropCache.bumpGeneration();
     scopeCache.purge();
   }
 

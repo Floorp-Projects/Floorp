@@ -2193,6 +2193,15 @@
     object: WordSized
     index: BoxedValue
     value: BoxedValue
+  # On x86 we do not have enough registers to use 3 temps for this *and* take
+  # five words worth of operands. Since it's 32-bit, though, we get two
+  # registers from pushing `value`, which doesn't get used until the end
+  # anyway. This is somewhat klunky, but oh well.
+#ifdef JS_CODEGEN_X86
+  num_temps: 1
+#else
+  num_temps: 3
+#endif
   call_instruction: true
   mir_op: true
 

@@ -5085,6 +5085,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadMegamorphicCache(Register dest);
   void loadStringToAtomCacheLastLookups(Register dest);
+  void loadMegamorphicSetPropCache(Register dest);
 
   void loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
                                Register outHash, Label* cacheMiss);
@@ -5113,6 +5114,18 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                         Register scratch1, Register scratch2,
                                         Register scratch3, Register output,
                                         Label* cacheHit, bool hasOwn);
+#ifdef JS_CODEGEN_X86
+  // See MegamorphicSetElement in LIROps.yaml
+  void emitMegamorphicCachedSetSlot(
+      ValueOperand id, Register obj, Register scratch1, ValueOperand value,
+      Label* cacheHit,
+      void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
+#else
+  void emitMegamorphicCachedSetSlot(
+      ValueOperand id, Register obj, Register scratch1, Register scratch2,
+      Register scratch3, ValueOperand value, Label* cacheHit,
+      void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
+#endif
 
   void loadDOMExpandoValueGuardGeneration(
       Register obj, ValueOperand output,
