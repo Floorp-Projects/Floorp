@@ -70,6 +70,9 @@ with Files("pipewire/**"):
 with Files("drm/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
+with Files("libepoxy/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
 with Files('rlbox_wasm2c_sandbox/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 

@@ -1,0 +1,33 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LOCAL_INCLUDES += [
+    '/gfx/angle/checkout/include/',
+    'libepoxy/include',
+]
+
+EXPORTS.libepoxy += [
+    'libepoxy/include/epoxy/common.h',
+    'libepoxy/include/epoxy/egl_generated.h',
+    'libepoxy/include/epoxy/gl_generated.h',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+#NoVisibilityFlags()
+
+SOURCES += [
+    'libepoxy/src/dispatch_common.c',
+    'libepoxy/src/dispatch_egl.c',
+    'libepoxy/src/egl_generated_dispatch.c',
+    'libepoxy/src/gl_generated_dispatch.c',
+]
+
+CFLAGS += [
+        "-fvisibility=hidden",
+]
+
+FINAL_LIBRARY = 'xul'
+

@@ -1,0 +1,47 @@
+# Versio of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Core"
+  component: "WebRTC"
+
+# The source in this directory was copied from upstream by running the
+# update.py script from third_party/libepoxy. Any changes made relative to
+# upstream should be reflected in that script, e.g. by applying patch files
+# after the copy step.
+
+origin:
+  name: "libepoxy"
+  description: "Epoxy is a library for handling OpenGL function pointer management"
+
+  url: "https://github.com/anholt/libepoxy"
+  license: MIT
+
+  release: 
+
+  revision:
+  license-file: COPYING
+
+updatebot:
+  maintainer-phab: chew
+  maintainer-bz: ngrunbaum@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
+
+vendoring:
+  url: https://github.com/anholt/libepoxy
+  source-hosting: github
+  vendor-directory: third_party/libepoxy/libepoxy
+  skip-vendoring-steps: ['update-moz-build'] 
+  exclude:
+    - '.*'
+  keep:
+    - 'COPYING.md'
+  update-actions:
+    - action: run-script
+      script: ../update_libepoxy.sh
+      cwd: .
+
