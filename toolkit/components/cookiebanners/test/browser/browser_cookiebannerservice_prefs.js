@@ -162,6 +162,22 @@ add_task(async function test_enabled_pref() {
     Array.isArray(rules),
     "Rules getter should not throw but return an array."
   );
+
+  info("Enabling cookie banner service. MODE_DETECT_ONLY");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "cookiebanners.service.mode",
+        Ci.nsICookieBannerService.MODE_DETECT_ONLY,
+      ],
+    ],
+  });
+
+  rules = Services.cookieBanners.rules;
+  ok(
+    Array.isArray(rules),
+    "Rules getter should not throw but return an array."
+  );
 });
 
 /**
@@ -173,6 +189,7 @@ add_task(async function test_enabled_pref_pbm_combinations() {
     Ci.nsICookieBannerService.MODE_DISABLED,
     Ci.nsICookieBannerService.MODE_REJECT,
     Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
+    Ci.nsICookieBannerService.MODE_DETECT_ONLY,
   ];
 
   // Test all pref combinations

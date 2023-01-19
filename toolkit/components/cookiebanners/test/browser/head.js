@@ -434,8 +434,6 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
  * @param {*} options - Test options.
  * @param {nsICookieBannerService::Modes} options.mode - The cookie banner
  * service mode to test with.
- * @param {boolean} options.detectOnly - Whether the service should be enabled
- * in detection only mode, where it does not handle banners.
  * @param {function} options.initFn - Function to call for test initialization.
  * @param {function} options.triggerFn - Function to call to trigger the banner
  * handling feature.
@@ -444,21 +442,17 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
  * @returns {Promise} Resolves when the test completes, after cookie banner
  * events.
  */
-async function runEventTest({ mode, detectOnly, initFn, triggerFn, testURL }) {
+async function runEventTest({ mode, initFn, triggerFn, testURL }) {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["cookiebanners.service.mode", mode],
-      ["cookiebanners.service.detectOnly", detectOnly],
-    ],
+    set: [["cookiebanners.service.mode", mode]],
   });
 
   await initFn();
 
   let expectEventDetected = mode != Ci.nsICookieBannerService.MODE_DISABLED;
   let expectEventHandled =
-    !detectOnly &&
-    (mode == Ci.nsICookieBannerService.MODE_REJECT ||
-      mode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT);
+    mode == Ci.nsICookieBannerService.MODE_REJECT ||
+    mode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT;
 
   let eventObservedDetected = false;
   let eventObservedHandled = false;
