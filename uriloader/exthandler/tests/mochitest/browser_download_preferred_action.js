@@ -157,7 +157,7 @@ async function createDownloadTest(
   let downloadFinishedPromise = skipDownload
     ? null
     : promiseDownloadFinished(downloadList);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, file.url);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, file.url);
   if (action.id === Ci.nsIHandlerInfo.alwaysAsk) {
     info("Check Always Ask dialog.");
     let dialogWindow = await dialogWindowPromise;
@@ -249,7 +249,7 @@ add_task(async function test_download_preferred_action() {
     Services.prefs.clearUserPref(
       "browser.download.always_ask_before_handling_new_types"
     );
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:home");
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:home");
     for (const index in FILE_TYPES_TO_TEST) {
       let file = FILE_TYPES_TO_TEST[index];
       let mimeSettings = gMIMEService.getFromTypeAndExtension(
