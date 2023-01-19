@@ -131,8 +131,9 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
   MutexAutoLock lock(mSurfaceLock);
   RefPtr<VideoFrameSurface<LIBAV_VER>> videoSurface =
       GetFreeVideoFrameSurface();
-  RefPtr<DMABufSurfaceYUV> surface =
-      videoSurface ? videoSurface->GetDMABufSurface() : new DMABufSurfaceYUV();
+  RefPtr<DMABufSurfaceYUV> surface = videoSurface
+                                         ? videoSurface->GetDMABufSurface()
+                                         : RefPtr(new DMABufSurfaceYUV());
   if (!videoSurface) {
     DMABUF_LOG("Created new VA-API DMABufSurface UID %d", surface->GetUID());
     videoSurface = new VideoFrameSurface<LIBAV_VER>(surface);
