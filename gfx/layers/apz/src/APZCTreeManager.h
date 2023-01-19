@@ -110,6 +110,16 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
   using HitTestResult = IAPZHitTester::HitTestResult;
 
+  /**
+   * A result from APZCTreeManager::FindHandoffParent.
+   */
+  struct TargetApzcForNodeResult {
+    // The APZC to handoff overscroll to.
+    AsyncPanZoomController* mApzc;
+    // Targeting a document's root APZC from content fixed to the document.
+    bool mIsFixed;
+  };
+
   // Helper struct to hold some state while we build the hit-testing tree. The
   // sole purpose of this struct is to shorten the argument list to
   // UpdateHitTestingTree. All the state that we don't need to
@@ -604,8 +614,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   HitTestingTreeNode* FindTargetNode(HitTestingTreeNode* aNode,
                                      const ScrollableLayerGuid& aGuid,
                                      GuidComparator aComparator);
-  AsyncPanZoomController* GetTargetApzcForNode(const HitTestingTreeNode* aNode);
-  AsyncPanZoomController* FindHandoffParent(
+  TargetApzcForNodeResult GetTargetApzcForNode(const HitTestingTreeNode* aNode);
+  TargetApzcForNodeResult FindHandoffParent(
       const AsyncPanZoomController* aApzc);
   HitTestingTreeNode* FindRootNodeForLayersId(LayersId aLayersId) const;
   AsyncPanZoomController* FindRootContentApzcForLayersId(
