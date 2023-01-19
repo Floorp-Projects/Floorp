@@ -87,6 +87,8 @@ if CONFIG["MOZ_WEBRTC_SIGNALING"]:
         DIRS += [
             "/third_party/drm/",
             "/third_party/drm/libdrm",
+            "/third_party/gbm/",
+            "/third_party/gbm/libgbm",
             "/third_party/pipewire/libpipewire",
         ]
 
