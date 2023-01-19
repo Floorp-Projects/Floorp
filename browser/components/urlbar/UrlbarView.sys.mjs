@@ -1962,18 +1962,15 @@ export class UrlbarView {
     if (this.#selectedElement) {
       this.#selectedElement.toggleAttribute("selected", false);
       this.#selectedElement.removeAttribute("aria-selected");
-      this.#getSelectedRow()?.toggleAttribute("selected", false);
     }
-    let row = this.#getRowFromElement(element);
     if (element) {
       element.toggleAttribute("selected", true);
       element.setAttribute("aria-selected", "true");
-      row?.toggleAttribute("selected", true);
     }
     this.#setAccessibleFocus(setAccessibleFocus && element);
     this.#selectedElement = element;
 
-    let result = row?.result;
+    let result = this.#getRowFromElement(element)?.result;
     if (updateInput) {
       let urlOverride = null;
       if (element?.classList?.contains("urlbarView-button-help")) {
