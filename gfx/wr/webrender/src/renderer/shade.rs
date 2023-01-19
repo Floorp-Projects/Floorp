@@ -629,22 +629,7 @@ pub struct Shaders {
     pub ps_clear: LazilyCompiledShader,
     pub ps_copy: LazilyCompiledShader,
 
-    // Composite shaders.  These are very simple shaders used to composite
-    // picture cache tiles into the framebuffer on platforms that do not have an
-    // OS Compositor (or we cannot use it).  Such an OS Compositor (such as
-    // DirectComposite or CoreAnimation) handles the composition of the picture
-    // cache tiles at a lower level (e.g. in DWM for Windows); in that case we
-    // directly hand the picture cache surfaces over to the OS Compositor, and
-    // our own Composite shaders below never run.
-    // To composite external (RGB) surfaces we need various permutations of
-    // shaders with WR_FEATURE flags on or off based on the type of image
-    // buffer we're sourcing from (see IMAGE_BUFFER_KINDS).
-    pub composite_rgba: Vec<Option<LazilyCompiledShader>>,
-    // A faster set of rgba composite shaders that do not support UV clamping
-    // or color modulation.
-    pub composite_rgba_fast_path: Vec<Option<LazilyCompiledShader>>,
-    // The same set of composite shaders but with WR_FEATURE_YUV added.
-    pub composite_yuv: Vec<Option<LazilyCompiledShader>>,
+    pub composite: CompositorShaders,
 }
 
 impl Shaders {
@@ -669,16 +654,7 @@ impl Shaders {
         } else {
             TextureExternalVersion::ESSL1
         };
-        let mut shader_flags = match gl_type {
-            GlType::Gl => ShaderFeatureFlags::GL,
-            GlType::Gles => {
-                let texture_external_flag = match texture_external_version {
-                    TextureExternalVersion::ESSL3 => ShaderFeatureFlags::TEXTURE_EXTERNAL,
-                    TextureExternalVersion::ESSL1 => ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1,
-                };
-                ShaderFeatureFlags::GLES | texture_external_flag
-            }
-        };
+        let mut shader_flags = get_shader_feature_flags(gl_type, texture_external_version);
         shader_flags.set(ShaderFeatureFlags::ADVANCED_BLEND_EQUATION, use_advanced_blend_equation);
         shader_flags.set(ShaderFeatureFlags::DUAL_SOURCE_BLENDING, use_dual_source_blending);
         shader_flags.set(ShaderFeatureFlags::DITHERING, options.enable_dithering);
@@ -974,15 +950,9 @@ impl Shaders {
         let mut fast_path_features = Vec::new();
         let yuv_shader_num = IMAGE_BUFFER_KINDS.len();
         let mut brush_yuv_image = Vec::new();
-        let mut composite_yuv = Vec::new();
-        let mut composite_rgba = Vec::new();
-        let mut composite_rgba_fast_path = Vec::new();
         // PrimitiveShader is not clonable. Use push() to initialize the vec.
         for _ in 0 .. yuv_shader_num {
             brush_yuv_image.push(None);
-            composite_yuv.push(None);
-            composite_rgba.push(None);
-            composite_rgba_fast_path.push(None);
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
             if has_platform_support(*image_buffer_kind, &gl_type) {
@@ -1017,44 +987,7 @@ impl Shaders {
                         profile,
                     )?;
                     brush_yuv_image[index] = Some(brush_shader);
-
-                    let composite_yuv_shader = LazilyCompiledShader::new(
-                        ShaderKind::Composite,
-                        "composite",
-                        &yuv_features,
-                        device,
-                        options.precache_flags,
-                        &shader_list,
-                        profile,
-                    )?;
-                    composite_yuv[index] = Some(composite_yuv_shader);
                 }
-
-                let composite_rgba_shader = LazilyCompiledShader::new(
-                    ShaderKind::Composite,
-                    "composite",
-                    &rgba_features,
-                    device,
-                    options.precache_flags,
-                    &shader_list,
-                    profile,
-                )?;
-
-                let composite_rgba_fast_path_shader = LazilyCompiledShader::new(
-                    ShaderKind::Composite,
-                    "composite",
-                    &fast_path_features,
-                    device,
-                    options.precache_flags,
-                    &shader_list,
-                    profile,
-                )?;
-
-                let index = Self::get_compositing_shader_index(
-                    *image_buffer_kind,
-                );
-                composite_rgba[index] = Some(composite_rgba_shader);
-                composite_rgba_fast_path[index] = Some(composite_rgba_fast_path_shader);
 
                 yuv_features.clear();
                 rgba_features.clear();
@@ -1132,6 +1065,8 @@ impl Shaders {
             profile,
         )?;
 
+        let composite = CompositorShaders::new(device, options.precache_flags, gl_type)?;
+
         Ok(Shaders {
             cs_blur_a8,
             cs_blur_rgba8,
@@ -1162,9 +1097,7 @@ impl Shaders {
             ps_split_composite,
             ps_clear,
             ps_copy,
-            composite_rgba,
-            composite_rgba_fast_path,
-            composite_yuv,
+            composite,
         })
     }
 
@@ -1178,29 +1111,7 @@ impl Shaders {
         buffer_kind: ImageBufferKind,
         features: CompositeFeatures,
     ) -> &mut LazilyCompiledShader {
-        match format {
-            CompositeSurfaceFormat::Rgba => {
-                if features.contains(CompositeFeatures::NO_UV_CLAMP)
-                    && features.contains(CompositeFeatures::NO_COLOR_MODULATION)
-                {
-                    let shader_index = Self::get_compositing_shader_index(buffer_kind);
-                    self.composite_rgba_fast_path[shader_index]
-                        .as_mut()
-                        .expect("bug: unsupported rgba fast path shader requested")
-                } else {
-                    let shader_index = Self::get_compositing_shader_index(buffer_kind);
-                    self.composite_rgba[shader_index]
-                        .as_mut()
-                        .expect("bug: unsupported rgba shader requested")
-                }
-            }
-            CompositeSurfaceFormat::Yuv => {
-                let shader_index = Self::get_compositing_shader_index(buffer_kind);
-                self.composite_yuv[shader_index]
-                    .as_mut()
-                    .expect("bug: unsupported yuv shader requested")
-            }
-        }
+        self.composite.get(format, buffer_kind, features)
     }
 
     pub fn get_scale_shader(
@@ -1302,7 +1213,7 @@ impl Shaders {
         }
     }
 
-    pub fn deinit(self, device: &mut Device) {
+    pub fn deinit(mut self, device: &mut Device) {
         for shader in self.cs_scale {
             if let Some(shader) = shader {
                 shader.deinit(device);
@@ -1350,18 +1261,177 @@ impl Shaders {
         self.ps_split_composite.deinit(device);
         self.ps_clear.deinit(device);
         self.ps_copy.deinit(device);
+        self.composite.deinit(device);
+    }
+}
 
-        for shader in self.composite_rgba {
+pub type SharedShaders = Rc<RefCell<Shaders>>;
+
+pub struct CompositorShaders {
+    // Composite shaders. These are very simple shaders used to composite
+    // picture cache tiles into the framebuffer on platforms that do not have an
+    // OS Compositor (or we cannot use it).  Such an OS Compositor (such as
+    // DirectComposite or CoreAnimation) handles the composition of the picture
+    // cache tiles at a lower level (e.g. in DWM for Windows); in that case we
+    // directly hand the picture cache surfaces over to the OS Compositor, and
+    // our own Composite shaders below never run.
+    // To composite external (RGB) surfaces we need various permutations of
+    // shaders with WR_FEATURE flags on or off based on the type of image
+    // buffer we're sourcing from (see IMAGE_BUFFER_KINDS).
+    rgba: Vec<Option<LazilyCompiledShader>>,
+    // A faster set of rgba composite shaders that do not support UV clamping
+    // or color modulation.
+    rgba_fast_path: Vec<Option<LazilyCompiledShader>>,
+    // The same set of composite shaders but with WR_FEATURE_YUV added.
+    yuv: Vec<Option<LazilyCompiledShader>>,
+}
+
+impl CompositorShaders {
+    pub fn new(
+        device: &mut Device,
+        precache_flags: ShaderPrecacheFlags,
+        gl_type: GlType,
+    )  -> Result<Self, ShaderError>  {
+        // We have to pass a profile around a bunch but we aren't recording the initialization
+        // so use a dummy one.
+        let mut profile = TransactionProfile::new();
+
+        let mut yuv_features = Vec::new();
+        let mut rgba_features = Vec::new();
+        let mut fast_path_features = Vec::new();
+        let mut rgba = Vec::new();
+        let mut rgba_fast_path = Vec::new();
+        let mut yuv = Vec::new();
+
+        let texture_external_version = if device.get_capabilities().supports_image_external_essl3 {
+            TextureExternalVersion::ESSL3
+        } else {
+            TextureExternalVersion::ESSL1
+        };
+
+        let feature_flags = get_shader_feature_flags(gl_type, texture_external_version);
+        let shader_list = get_shader_features(feature_flags);
+
+        for _ in 0..IMAGE_BUFFER_KINDS.len() {
+            yuv.push(None);
+            rgba.push(None);
+            rgba_fast_path.push(None);
+        }
+
+        for image_buffer_kind in &IMAGE_BUFFER_KINDS {
+            if !has_platform_support(*image_buffer_kind, &gl_type) {
+                continue;
+            }
+
+            yuv_features.push("YUV");
+            fast_path_features.push("FAST_PATH");
+    
+            let index = Self::get_shader_index(*image_buffer_kind);
+
+            let feature_string = get_feature_string(
+                *image_buffer_kind,
+                texture_external_version,
+            );
+            if feature_string != "" {
+                yuv_features.push(feature_string);
+                rgba_features.push(feature_string);
+                fast_path_features.push(feature_string);
+            }
+
+            // YUV shaders are not compatible with ESSL1
+            if *image_buffer_kind != ImageBufferKind::TextureExternal ||
+                texture_external_version == TextureExternalVersion::ESSL3 {
+
+                yuv[index] = Some(LazilyCompiledShader::new(
+                    ShaderKind::Composite,
+                    "composite",
+                    &yuv_features,
+                    device,
+                    precache_flags,
+                    &shader_list,
+                    &mut profile,
+                )?);
+            }
+
+            rgba[index] = Some(LazilyCompiledShader::new(
+                ShaderKind::Composite,
+                "composite",
+                &rgba_features,
+                device,
+                precache_flags,
+                &shader_list,
+                &mut profile,
+            )?);
+
+            rgba_fast_path[index] = Some(LazilyCompiledShader::new(
+                ShaderKind::Composite,
+                "composite",
+                &fast_path_features,
+                device,
+                precache_flags,
+                &shader_list,
+                &mut profile,
+            )?);
+
+            yuv_features.clear();
+            rgba_features.clear();
+            fast_path_features.clear();
+        }
+
+        Ok(CompositorShaders {
+            rgba,
+            rgba_fast_path,
+            yuv,
+        })
+    }
+
+    pub fn get(
+        &mut self,
+        format: CompositeSurfaceFormat,
+        buffer_kind: ImageBufferKind,
+        features: CompositeFeatures,
+    ) -> &mut LazilyCompiledShader {
+        match format {
+            CompositeSurfaceFormat::Rgba => {
+                if features.contains(CompositeFeatures::NO_UV_CLAMP)
+                    && features.contains(CompositeFeatures::NO_COLOR_MODULATION)
+                {
+                    let shader_index = Self::get_shader_index(buffer_kind);
+                    self.rgba_fast_path[shader_index]
+                        .as_mut()
+                        .expect("bug: unsupported rgba fast path shader requested")
+                } else {
+                    let shader_index = Self::get_shader_index(buffer_kind);
+                    self.rgba[shader_index]
+                        .as_mut()
+                        .expect("bug: unsupported rgba shader requested")
+                }
+            }
+            CompositeSurfaceFormat::Yuv => {
+                let shader_index = Self::get_shader_index(buffer_kind);
+                self.yuv[shader_index]
+                    .as_mut()
+                    .expect("bug: unsupported yuv shader requested")
+            }
+        }
+    }
+
+    fn get_shader_index(buffer_kind: ImageBufferKind) -> usize {
+        buffer_kind as usize
+    }
+
+    pub fn deinit(&mut self, device: &mut Device) {
+        for shader in self.rgba.drain(..) {
             if let Some(shader) = shader {
                 shader.deinit(device);
             }
         }
-        for shader in self.composite_rgba_fast_path {
+        for shader in self.rgba_fast_path.drain(..) {
             if let Some(shader) = shader {
                 shader.deinit(device);
             }
         }
-        for shader in self.composite_yuv {
+        for shader in self.yuv.drain(..) {
             if let Some(shader) = shader {
                 shader.deinit(device);
             }
@@ -1369,4 +1439,15 @@ impl Shaders {
     }
 }
 
-pub type SharedShaders = Rc<RefCell<Shaders>>;
+fn get_shader_feature_flags(gl_type: GlType, texture_external_version: TextureExternalVersion) -> ShaderFeatureFlags {
+    match gl_type {
+        GlType::Gl => ShaderFeatureFlags::GL,
+        GlType::Gles => {
+            let texture_external_flag = match texture_external_version {
+                TextureExternalVersion::ESSL3 => ShaderFeatureFlags::TEXTURE_EXTERNAL,
+                TextureExternalVersion::ESSL1 => ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1,
+            };
+            ShaderFeatureFlags::GLES | texture_external_flag
+        }
+    }
+}
