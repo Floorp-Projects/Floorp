@@ -634,7 +634,8 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
 // https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
 // (steps 2.1 - 2.5)
 IntersectionOutput DOMIntersectionObserver::Intersect(
-    const IntersectionInput& aInput, Element& aTarget) {
+    const IntersectionInput& aInput, Element& aTarget,
+    IgnoreContentVisibility aIgnoreContentVisibility) {
   const bool isSimilarOrigin = SimilarOrigin(aTarget, aInput.mRootNode) ==
                                BrowsingContextOrigin::Similar;
   nsIFrame* targetFrame = aTarget.GetPrimaryFrame();
@@ -647,7 +648,12 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   // true even if both the root and the target elements are in the skipped
   // contents."
   // https://drafts.csswg.org/css-contain/#cv-notes
-  if (targetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
+  //
+  // Skip the intersection if the element is hidden, unless this is the
+  // DOMIntersectionObserver used specifically to track the visibility of
+  // `content-visibility: auto` elements.
+  if (aIgnoreContentVisibility == IgnoreContentVisibility::No &&
+      targetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return {isSimilarOrigin};
   }
 
@@ -707,11 +713,20 @@ void DOMIntersectionObserver::Update(Document* aDocument,
                                      DOMHighResTimeStamp time) {
   auto input = ComputeInput(*aDocument, mRoot, &mRootMargin);
 
+  // If this observer is used to determine content relevancy for
+  // `content-visiblity: auto` content, then do not skip intersection
+  // for content that is hidden by `content-visibility: auto`.
+  IgnoreContentVisibility ignoreContentVisibility =
+      aDocument->GetContentVisibilityObserver() == this
+          ? IgnoreContentVisibility::Yes
+          : IgnoreContentVisibility::No;
+
   // 2. For each target in observer’s internal [[ObservationTargets]] slot,
   // processed in the same order that observe() was called on each target:
   for (Element* target : mObservationTargets) {
     // 2.1 - 2.4.
-    IntersectionOutput output = Intersect(input, *target);
+    IntersectionOutput output =
+        Intersect(input, *target, ignoreContentVisibility);
 
     // 2.5. Let targetArea be targetRect’s area.
     int64_t targetArea = (int64_t)output.mTargetRect.Width() *
