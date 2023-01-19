@@ -102,7 +102,7 @@ jobs:
         cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
 
     - name: Set Display Version (schedule only)
-      if: github.event_name == "schedule"
+      if: github.event_name == 'schedule'
       run: |
         echo `cat browser/config/version_display.txt`-${{ github.sha }} > browser/config/version_display.txt
 
@@ -283,7 +283,7 @@ jobs:
         cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
 
     - name: Set Display Version (schedule only)
-      if: github.event_name == "schedule"
+      if: github.event_name == 'schedule'
       run: |
         echo `cat browser/config/version_display.txt`-${{ github.sha }} > browser/config/version_display.txt
 
