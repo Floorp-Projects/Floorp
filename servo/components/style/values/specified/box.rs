@@ -9,11 +9,13 @@ use crate::parser::{Parse, ParserContext};
 use crate::properties::{LonghandId, PropertyDeclarationId};
 use crate::properties::{PropertyId, ShorthandId};
 use crate::values::generics::box_::{
-    GenericLineClamp, GenericPerspective, GenericContainIntrinsicSize, GenericVerticalAlign,
-    VerticalAlignKeyword,
+    GenericAnimationIterationCount, GenericLineClamp, GenericPerspective,
+};
+use crate::values::generics::box_::{
+    GenericContainIntrinsicSize, GenericVerticalAlign, VerticalAlignKeyword,
 };
 use crate::values::specified::length::{LengthPercentage, NonNegativeLength};
-use crate::values::specified::{AllowQuirks, Integer, NonNegativeNumber};
+use crate::values::specified::{AllowQuirks, Integer, Number};
 use crate::values::{CustomIdent, KeyframesName, TimelineName};
 use crate::Atom;
 use cssparser::Parser;
@@ -661,19 +663,30 @@ impl Parse for VerticalAlign {
 }
 
 /// https://drafts.csswg.org/css-animations/#animation-iteration-count
-#[derive(Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem)]
-pub enum AnimationIterationCount {
-    /// A `<number>` value.
-    Number(NonNegativeNumber),
-    /// The `infinite` keyword.
-    Infinite,
+pub type AnimationIterationCount = GenericAnimationIterationCount<Number>;
+
+impl Parse for AnimationIterationCount {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut ::cssparser::Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        if input
+            .try_parse(|input| input.expect_ident_matching("infinite"))
+            .is_ok()
+        {
+            return Ok(GenericAnimationIterationCount::Infinite);
+        }
+
+        let number = Number::parse_non_negative(context, input)?;
+        Ok(GenericAnimationIterationCount::Number(number))
+    }
 }
 
 impl AnimationIterationCount {
     /// Returns the value `1.0`.
     #[inline]
     pub fn one() -> Self {
-        Self::Number(NonNegativeNumber::new(1.0))
+        GenericAnimationIterationCount::Number(Number::new(1.0))
     }
 }
 

@@ -1196,7 +1196,8 @@ inline bool StyleTextUnderlinePosition::IsRight() const {
 }
 
 struct StyleTransition {
-  StyleTransition() = default;
+  StyleTransition() { /* leaves uninitialized; see also SetInitialValues */
+  }
   explicit StyleTransition(const StyleTransition& aCopy);
 
   void SetInitialValues();
@@ -1206,8 +1207,8 @@ struct StyleTransition {
   const StyleComputedTimingFunction& GetTimingFunction() const {
     return mTimingFunction;
   }
-  const mozilla::StyleTime& GetDelay() const { return mDelay; }
-  const mozilla::StyleTime& GetDuration() const { return mDuration; }
+  float GetDelay() const { return mDelay; }
+  float GetDuration() const { return mDuration; }
   nsCSSPropertyID GetProperty() const { return mProperty; }
   nsAtom* GetUnknownProperty() const { return mUnknownProperty; }
 
@@ -1218,8 +1219,8 @@ struct StyleTransition {
 
  private:
   StyleComputedTimingFunction mTimingFunction;
-  mozilla::StyleTime mDuration{0.0};
-  mozilla::StyleTime mDelay{0.0};
+  float mDuration;
+  float mDelay;
   nsCSSPropertyID mProperty;
   RefPtr<nsAtom> mUnknownProperty;  // used when mProperty is
                                     // eCSSProperty_UNKNOWN or
@@ -1227,7 +1228,8 @@ struct StyleTransition {
 };
 
 struct StyleAnimation {
-  StyleAnimation() = default;
+  StyleAnimation() { /* leaves uninitialized; see also SetInitialValues */
+  }
   explicit StyleAnimation(const StyleAnimation& aCopy);
 
   void SetInitialValues();
@@ -1237,13 +1239,13 @@ struct StyleAnimation {
   const StyleComputedTimingFunction& GetTimingFunction() const {
     return mTimingFunction;
   }
-  const mozilla::StyleTime& GetDelay() const { return mDelay; }
-  const mozilla::StyleTime& GetDuration() const { return mDuration; }
+  float GetDelay() const { return mDelay; }
+  float GetDuration() const { return mDuration; }
   nsAtom* GetName() const { return mName; }
   dom::PlaybackDirection GetDirection() const { return mDirection; }
   dom::FillMode GetFillMode() const { return mFillMode; }
   StyleAnimationPlayState GetPlayState() const { return mPlayState; }
-  float GetIterationCount() const { return mIterationCount._0; }
+  float GetIterationCount() const { return mIterationCount; }
   dom::CompositeOperation GetComposition() const { return mComposition; }
   const StyleAnimationTimeline& GetTimeline() const { return mTimeline; }
 
@@ -1257,13 +1259,13 @@ struct StyleAnimation {
 
  private:
   StyleComputedTimingFunction mTimingFunction;
-  StyleTime mDuration{0.0f};
-  StyleTime mDelay{0.0f};
+  float mDuration;
+  float mDelay;
   RefPtr<nsAtom> mName;  // nsGkAtoms::_empty for 'none'
   dom::PlaybackDirection mDirection;
   dom::FillMode mFillMode;
   StyleAnimationPlayState mPlayState;
-  StyleAnimationIterationCount mIterationCount;
+  float mIterationCount;  // mozilla::PositiveInfinity<float>() means infinite
   dom::CompositeOperation mComposition;
   StyleAnimationTimeline mTimeline;
 };
@@ -1797,10 +1799,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
   }
-  const mozilla::StyleTime& GetTransitionDelay(uint32_t aIndex) const {
+  float GetTransitionDelay(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionDelayCount].GetDelay();
   }
-  const mozilla::StyleTime& GetTransitionDuration(uint32_t aIndex) const {
+  float GetTransitionDuration(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionDurationCount].GetDuration();
   }
   const mozilla::StyleComputedTimingFunction& GetTransitionTimingFunction(
@@ -1808,19 +1810,21 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
     return mTransitions[aIndex % mTransitionTimingFunctionCount]
         .GetTimingFunction();
   }
-  mozilla::StyleTime GetTransitionCombinedDuration(uint32_t aIndex) const {
+  float GetTransitionCombinedDuration(uint32_t aIndex) const {
     // https://drafts.csswg.org/css-transitions/#transition-combined-duration
-    return {std::max(GetTransitionDuration(aIndex).seconds, 0.0f) +
-            GetTransitionDelay(aIndex).seconds};
+    return std::max(
+               mTransitions[aIndex % mTransitionDurationCount].GetDuration(),
+               0.0f) +
+           mTransitions[aIndex % mTransitionDelayCount].GetDelay();
   }
 
   nsAtom* GetAnimationName(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationNameCount].GetName();
   }
-  const mozilla::StyleTime& GetAnimationDelay(uint32_t aIndex) const {
+  float GetAnimationDelay(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationDelayCount].GetDelay();
   }
-  const mozilla::StyleTime& GetAnimationDuration(uint32_t aIndex) const {
+  float GetAnimationDuration(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationDurationCount].GetDuration();
   }
   mozilla::dom::PlaybackDirection GetAnimationDirection(uint32_t aIndex) const {

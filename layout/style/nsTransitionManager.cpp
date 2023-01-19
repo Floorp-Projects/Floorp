@@ -86,7 +86,7 @@ bool nsTransitionManager::DoUpdateTransitions(
   for (uint32_t i = aStyle.mTransitionPropertyCount; i--;) {
     // We're not going to look at any further transitions, so we can just avoid
     // looking at this if we know it will not start any transitions.
-    if (i == 0 && aStyle.GetTransitionCombinedDuration(i).seconds <= 0.0f) {
+    if (i == 0 && aStyle.GetTransitionCombinedDuration(i) <= 0.0f) {
       continue;
     }
 
@@ -310,11 +310,10 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     return false;
   }
 
-  float delay = aStyle.GetTransitionDelay(transitionIdx).ToMilliseconds();
+  float delay = aStyle.GetTransitionDelay(transitionIdx);
 
   // The spec says a negative duration is treated as zero.
-  float duration = std::max(
-      aStyle.GetTransitionDuration(transitionIdx).ToMilliseconds(), 0.0f);
+  float duration = std::max(aStyle.GetTransitionDuration(transitionIdx), 0.0f);
 
   // If the combined duration of this transition is 0 or less don't start a
   // transition.
