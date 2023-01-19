@@ -24,6 +24,57 @@ class ArrayObject;
 class PlainObject;
 class PropertyIteratorObject;
 
+// A PropertyIndex stores information about the location of an own data
+// property in a format that can be stored in a NativeIterator and consumed by
+// jitcode to access properties without needing to use the megamorphic cache.
+struct PropertyIndex {
+ private:
+  uint32_t asBits_;
+
+ public:
+  enum class Kind : uint32_t { DynamicSlot, FixedSlot, Element, Invalid };
+
+  PropertyIndex(Kind kind, uint32_t index) : asBits_(encode(kind, index)) {}
+
+  static PropertyIndex Invalid() { return PropertyIndex(Kind::Invalid, 0); }
+
+  static PropertyIndex ForElement(uint32_t index) {
+    return PropertyIndex(Kind::Element, index);
+  }
+
+  static PropertyIndex ForSlot(NativeObject* obj, uint32_t index) {
+    if (index < obj->numFixedSlots()) {
+      return PropertyIndex(Kind::FixedSlot, index);
+    } else {
+      return PropertyIndex(Kind::DynamicSlot, index - obj->numFixedSlots());
+    }
+  }
+
+  static constexpr uint32_t KindBits = 2;
+
+  static constexpr uint32_t IndexBits = 32 - KindBits;
+  static constexpr uint32_t IndexLimit = 1 << IndexBits;
+  static constexpr uint32_t IndexMask = (1 << IndexBits) - 1;
+
+  static constexpr uint32_t KindShift = IndexBits;
+
+  static_assert(NativeObject::MAX_FIXED_SLOTS < IndexLimit);
+  static_assert(NativeObject::MAX_SLOTS_COUNT < IndexLimit);
+  static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < IndexLimit);
+
+ private:
+  uint32_t encode(Kind kind, uint32_t index) {
+    MOZ_ASSERT(index < IndexLimit);
+    return (uint32_t(kind) << KindShift) | index;
+  }
+
+ public:
+  Kind kind() const { return Kind(asBits_ >> KindShift); }
+  uint32_t index() const { return asBits_ & IndexMask; }
+};
+
+using PropertyIndexVector = js::Vector<PropertyIndex, 8, js::SystemAllocPolicy>;
+
 struct NativeIterator;
 
 class NativeIteratorListNode {
