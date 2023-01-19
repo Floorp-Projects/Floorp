@@ -64,37 +64,6 @@ newtab-unit-tests-ccov:
             node bin/try-runner.js
     run-on-projects: ["mozilla-central"]
 
-debugger-tests:
-    description: devtools debugger unit tests and flow type checks
-    platform: linux1804-64/opt
-    attributes:
-        code-review: true
-    treeherder:
-        symbol: node(debugger)
-        kind: test
-        tier: 1
-    worker-type: t-linux-xlarge-source
-    worker:
-        docker-image: {in-tree: "lint"}
-        max-run-time: 1800
-    run:
-        using: run-task
-        cache-dotcache: true
-        cwd: '{checkout}'
-        # Re-use rather than re-installing to avoid hitting/requiring
-        # nodejs servers for downloads
-        command: >
-            cp -r /build/node_modules_eslint node_modules &&
-            cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
-            ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
-            ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
-            cd devtools/client/debugger/ &&
-            yarn &&
-            node bin/try-runner.js
-    when:
-        files-changed:
-            - 'devtools/client/debugger/**'
-
 devtools-tests:
     description: devtools node-based tests (for instance jest)
     platform: linux1804-64/opt
@@ -123,6 +92,7 @@ devtools-tests:
             node devtools-node-test-runner.js --suite=aboutdebugging &&
             node devtools-node-test-runner.js --suite=accessibility &&
             node devtools-node-test-runner.js --suite=application &&
+            node devtools-node-test-runner.js --suite=debugger &&
             node devtools-node-test-runner.js --suite=compatibility &&
             node devtools-node-test-runner.js --suite=framework &&
             node devtools-node-test-runner.js --suite=netmonitor &&

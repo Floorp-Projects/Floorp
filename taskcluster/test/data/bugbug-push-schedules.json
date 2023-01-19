@@ -4475,7 +4475,6 @@
     "test-linux1804-64-qr/opt-mochitest-plain-3",
     "test-windows10-64-2004/debug-crashtest",
     "test-windows7-32-shippable/opt-raptor-tp6-firefox-cold-reddit",
-    "source-test-node-debugger-tests",
     "test-macosx1014-64/debug-mochitest-webgl2-ext-gli-4",
     "test-windows7-32/debug-firefox-ui-functional-remote",
     "test-android-hw-p2-8-0-android-aarch64-shippable/opt-browsertime-tp6m-geckoview-cold-google-maps",
