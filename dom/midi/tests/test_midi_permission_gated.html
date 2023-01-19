@@ -54,6 +54,7 @@
       // We expect the same states with and without sysex support.
       const expectedChangedStates = ["denied", "granted", "prompt"];
 
+      const results = [];
       for (let sysex of [false, true]) {
         let result = await navigator.permissions.query({ name: "midi", sysex });
         is(result?.state, "prompt", "expected 'prompt' permission status");
@@ -68,6 +69,7 @@
               "expected change event with sysex support"
             );
           };
+          results.push(result);
         } else {
           result.onchange = () => {
             is(
@@ -76,6 +78,7 @@
               "expected change event"
             );
           };
+          results.push(result);
         }
       }
 
@@ -168,6 +171,8 @@
       // Remove the permission.
       await SpecialPowers.removePermission("midi-sysex", document);
       await SpecialPowers.removePermission("midi", document);
+
+      results.forEach(result => result.onchange = null);
 
       SimpleTest.finish();
     }
