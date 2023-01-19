@@ -141,8 +141,11 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun <T> assertThat(reason: String, v: T, m: Matcher<in T>) = sessionRule.checkThat(reason, v, m)
     fun <T> assertInAutomationThat(reason: String, v: T, m: Matcher<in T>) =
-        if (sessionRule.env.isAutomation) assertThat(reason, v, m)
-        else assumeThat(reason, v, m)
+        if (sessionRule.env.isAutomation) {
+            assertThat(reason, v, m)
+        } else {
+            assumeThat(reason, v, m)
+        }
 
     init {
         if (!noErrorCollector) {
