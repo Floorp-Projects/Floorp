@@ -87,7 +87,9 @@ VideoFrameSurface<LIBAV_VER>::~VideoFrameSurface() {
 }
 
 VideoFramePool<LIBAV_VER>::VideoFramePool()
-    : mSurfaceLock("VideoFramePoolSurfaceLock") {}
+    : mSurfaceLock("VideoFramePoolSurfaceLock"), mSurfaceCopy(true) {
+  DMABUF_LOG("VideoFramePool::VideoFramePool() surface copy %d", mSurfaceCopy);
+}
 
 VideoFramePool<LIBAV_VER>::~VideoFramePool() {
   MutexAutoLock lock(mSurfaceLock);
@@ -129,32 +131,31 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
   MutexAutoLock lock(mSurfaceLock);
   RefPtr<VideoFrameSurface<LIBAV_VER>> videoSurface =
       GetFreeVideoFrameSurface();
+  RefPtr<DMABufSurfaceYUV> surface =
+      videoSurface ? videoSurface->GetDMABufSurface() : new DMABufSurfaceYUV();
   if (!videoSurface) {
-    RefPtr<DMABufSurfaceYUV> surface =
-        DMABufSurfaceYUV::CreateYUVSurface(aVaDesc, aWidth, aHeight);
-    if (!surface) {
-      return nullptr;
-    }
     DMABUF_LOG("Created new VA-API DMABufSurface UID %d", surface->GetUID());
-    RefPtr<VideoFrameSurface<LIBAV_VER>> surf =
-        new VideoFrameSurface<LIBAV_VER>(surface);
-    if (!mTextureCreationWorks) {
-      mTextureCreationWorks = Some(surface->VerifyTextureCreation());
-    }
+    videoSurface = new VideoFrameSurface<LIBAV_VER>(surface);
+    mDMABufSurfaces.AppendElement(videoSurface);
+  } else {
+    DMABUF_LOG("Reusing VA-API DMABufSurface UID %d", surface->GetUID());
+  }
+
+  if (!surface->UpdateYUVData(aVaDesc, aWidth, aHeight, mSurfaceCopy)) {
+    return nullptr;
+  }
+
+  if (MOZ_UNLIKELY(!mTextureCreationWorks)) {
+    mTextureCreationWorks = Some(surface->VerifyTextureCreation());
     if (!*mTextureCreationWorks) {
       DMABUF_LOG("  failed to create texture over DMABuf memory!");
       return nullptr;
     }
-    videoSurface = surf;
-    mDMABufSurfaces.AppendElement(std::move(surf));
-  } else {
-    RefPtr<DMABufSurfaceYUV> surface = videoSurface->GetDMABufSurface();
-    DMABUF_LOG("Reusing VA-API DMABufSurface UID %d", surface->GetUID());
-    if (!surface->UpdateYUVData(aVaDesc, aWidth, aHeight)) {
-      return nullptr;
-    }
   }
-  videoSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
+
+  if (!mSurfaceCopy) {
+    videoSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
+  }
   videoSurface->MarkAsUsed();
   return videoSurface;
 }
