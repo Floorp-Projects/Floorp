@@ -711,6 +711,10 @@ glean:
       type: "boolean"
       fallbackPref: "browser.newtabpage.ping.enabled"
       description: "Whether to submit the 'newtab' ping"
+    metricsDisabled:
+      type: json
+      description: >-
+        "A map of metric base-identifiers to booleans representing the state of the 'disabled' flag for that metric"
 
 majorRelease2022:
   description: Major Release 2022
