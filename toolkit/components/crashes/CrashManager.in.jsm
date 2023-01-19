@@ -472,7 +472,7 @@ CrashManager.prototype = Object.freeze({
       }
 
       if (this.isPingAllowed(processType)) {
-        this._sendCrashPing(id, processType, date, metadata);
+        this._sendCrashPing("crash", id, processType, date, metadata);
       }
     })();
 
@@ -707,7 +707,27 @@ CrashManager.prototype = Object.freeze({
     return filteredAnnotations;
   },
 
-  _sendCrashPing(crashId, type, date, metadata = {}) {
+  /**
+   * Submit a Glean crash ping with the given parameters.
+   *
+   * @param {string} reason - The reason for the crash ping, one of: "crash", "event_found"
+   * @param {string} type - the process type (from {@link processTypes})
+   * @param {DateTime} date - the time of the crash (or the closest time after it)
+   * @param {object} metadata - the object of Telemetry crash metadata
+   */
+  _submitGleanCrashPing(reason, type, date, metadata) {
+    if ("UptimeTS" in metadata) {
+      Glean.crash.uptime.setRaw(parseFloat(metadata.UptimeTS) * 1e3);
+    }
+    Glean.crash.processType.set(type);
+    Glean.crash.time.set(date.getTime() * 1000);
+    Glean.crash.startup.set(
+      "StartupCrash" in metadata && parseInt(metadata.StartupCrash) === 1
+    );
+    GleanPings.crash.submit(reason);
+  },
+
+  _sendCrashPing(reason, crashId, type, date, metadata = {}) {
     // If we have a saved environment, use it. Otherwise report
     // the current environment.
     let reportMeta = Cu.cloneInto(metadata, {});
@@ -724,6 +744,8 @@ CrashManager.prototype = Object.freeze({
 
     // Filter the remaining annotations to remove privacy-sensitive ones
     reportMeta = this._filterAnnotations(reportMeta);
+
+    this._submitGleanCrashPing(reason, type, date, reportMeta);
 
     this._pingPromise = lazy.TelemetryController.submitExternalPing(
       "crash",
@@ -775,6 +797,7 @@ CrashManager.prototype = Object.freeze({
           // by the crashreporter for this crash so we need to send one from
           // here.
           this._sendCrashPing(
+            "event_found",
             crashID,
             this.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
             date,

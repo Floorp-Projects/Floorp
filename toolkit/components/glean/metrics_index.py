@@ -23,6 +23,7 @@ gecko_metrics = [
     "netwerk/metrics.yaml",
     "netwerk/protocol/http/metrics.yaml",
     "toolkit/components/cookiebanners/metrics.yaml",
+    "toolkit/components/crashes/metrics.yaml",
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/pdfjs/metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
@@ -67,6 +68,7 @@ metrics_yamls = (
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 gecko_pings = [
     "dom/pings.yaml",
+    "toolkit/components/crashes/pings.yaml",
     "toolkit/components/glean/pings.yaml",
 ]
 
