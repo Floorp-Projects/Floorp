@@ -21,6 +21,9 @@ const { AddonManager } = ChromeUtils.import(
 const { OS } = ChromeUtils.import(
     "resource://gre/modules/osfile.jsm"
 );
+const { setTimeout, setInterval, clearTimeout, clearInterval } = ChromeUtils.import(
+    "resource://gre/modules/Timer.jsm"
+);
 
 // Check information about startup.
 let isFirstRun = false;
