@@ -1178,6 +1178,10 @@ var SessionStoreInternal = {
           return null;
         }
 
+        TelemetryStopwatch.start(
+          "FX_SESSION_RESTORE_COLLECT_SESSION_HISTORY_MS"
+        );
+
         let fromIndex = collectFull ? -1 : this._fromIndex;
         this._fromIndex = kNoIndex;
 
@@ -1197,6 +1201,10 @@ var SessionStoreInternal = {
             data: { historychange },
           });
         }
+
+        TelemetryStopwatch.finish(
+          "FX_SESSION_RESTORE_COLLECT_SESSION_HISTORY_MS"
+        );
 
         return historychange;
       }
