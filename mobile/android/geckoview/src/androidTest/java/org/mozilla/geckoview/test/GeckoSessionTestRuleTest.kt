@@ -1955,7 +1955,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
         mainSession.reload()
         mainSession.waitForPageStop()
-        mainSession.forCallbacksDuringWait(Runnable @AssertCalled(count = 1) {})
+        mainSession.forCallbacksDuringWait(Runnable @AssertCalled(count = 1) {}) // ktlint-disable annotation
 
         assertThat("Delegate should be unregistered after wait", delegate, nullValue())
     }

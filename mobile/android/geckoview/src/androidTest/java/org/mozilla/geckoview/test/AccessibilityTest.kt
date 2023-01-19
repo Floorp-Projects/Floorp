@@ -1305,16 +1305,19 @@ class AccessibilityTest : BaseSessionTest() {
             "#user2" to "bar",
             "#pass2" to "baz"
         ) +
-            if (Build.VERSION.SDK_INT >= 19) mapOf(
-                "#email1" to "a@b.c",
-                "#number1" to "24",
-                "#tel1" to "42"
-            )
-            else mapOf(
-                "#email1" to "bar",
-                "#number1" to "",
-                "#tel1" to "bar"
-            )
+            if (Build.VERSION.SDK_INT >= 19) {
+                mapOf(
+                    "#email1" to "a@b.c",
+                    "#number1" to "24",
+                    "#tel1" to "42"
+                )
+            } else {
+                mapOf(
+                    "#email1" to "bar",
+                    "#number1" to "",
+                    "#tel1" to "bar"
+                )
+            }
 
         // Set up promises to monitor the values changing.
         val promises = autoFills.flatMap { entry ->
@@ -1359,8 +1362,12 @@ class AccessibilityTest : BaseSessionTest() {
                 }
 
                 val args = Bundle(1)
-                val value = if (child.isPassword) "baz" else {
-                    if (Build.VERSION.SDK_INT < 19) "bar" else {
+                val value = if (child.isPassword) {
+                    "baz"
+                } else {
+                    if (Build.VERSION.SDK_INT < 19) {
+                        "bar"
+                    } else {
                         when (child.inputType) {
                             InputType.TYPE_CLASS_TEXT or
                                 InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> "a@b.c"
@@ -1378,7 +1385,9 @@ class AccessibilityTest : BaseSessionTest() {
                 }
                 val ACTION_SET_TEXT = if (Build.VERSION.SDK_INT >= 21) {
                     AccessibilityNodeInfo.ACTION_SET_TEXT
-                } else 0x200000
+                } else {
+                    0x200000
+                }
 
                 args.putCharSequence(ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value)
                 assertThat(
@@ -1415,14 +1424,19 @@ class AccessibilityTest : BaseSessionTest() {
         ): Int {
             val info = createNodeInfo(id)
             return (
-                if (cond(info) && info.className != "android.webkit.WebView") 1
-                else 0
+                if (cond(info) && info.className != "android.webkit.WebView") {
+                    1
+                } else {
+                    0
+                }
                 ) + (
                 if (info.childCount > 0) {
                     (0 until info.childCount).sumOf {
                         countAutoFillNodes(cond, info.getChildId(it))
                     }
-                } else 0
+                } else {
+                    0
+                }
                 )
         }
 
