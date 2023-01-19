@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="chrome://global/skin/tabprompts.css">
 
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-    <link rel="stylesheet" href="chrome://global/skin/in-content/toggle-button.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/shortcuts.css">
 
@@ -31,6 +30,7 @@
     <script defer src="chrome://mozapps/content/extensions/drag-drop-addon-installer.js"></script>
     <script defer src="chrome://mozapps/content/extensions/view-controller.js"></script>
     <script defer src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
+    <script type="module" src="chrome://global/content/elements/moz-toggle.mjs"></script>
   </head>
   <body>
     <drag-drop-addon-installer></drag-drop-addon-installer>
@@ -178,7 +178,7 @@
               </a>
               <div class="spacer"></div>
               <button class="theme-enable-button" action="toggle-disabled" hidden></button>
-              <input type="checkbox" class="toggle-button extension-enable-button" action="toggle-disabled" data-l10n-id="extension-enable-addon-button-label" hidden>
+              <moz-toggle class="extension-enable-button" action="toggle-disabled" data-l10n-id="extension-enable-addon-button-label" hidden></moz-toggle>
               <button
                 class="more-options-button"
                 action="more-options"

@@ -2153,17 +2153,10 @@ class AddonPermissionsList extends HTMLElement {
         let item = document.createElement("li");
         item.classList.add("permission-info");
 
-        let label = document.createElement("label");
-        label.textContent = msg;
-
-        let toggle = document.createElement("input");
+        let toggle = document.createElement("moz-toggle");
+        toggle.setAttribute("label", msg);
         toggle.id = `permission-${id}`;
-
-        label.setAttribute("for", toggle.id);
-        item.appendChild(label);
-
         toggle.setAttribute("permission-type", type);
-        toggle.setAttribute("type", "checkbox");
 
         let checked =
           grantedPerms.permissions.includes(perm) ||
@@ -2176,13 +2169,12 @@ class AddonPermissionsList extends HTMLElement {
           toggle.toggleAttribute("permission-all-sites", true);
         }
 
-        toggle.checked = checked;
+        toggle.pressed = checked;
         item.classList.toggle("permission-checked", checked);
 
         toggle.setAttribute("permission-key", perm);
         toggle.setAttribute("action", "toggle-permission");
-        toggle.classList.add("toggle-button");
-        label.appendChild(toggle);
+        item.appendChild(toggle);
         list.appendChild(item);
       }
     }
@@ -2682,12 +2674,6 @@ class AddonCard extends HTMLElement {
 
     if (e.type == "click") {
       switch (action) {
-        case "toggle-permission":
-          let permission = e.target.getAttribute("permission-key");
-          let type = e.target.getAttribute("permission-type");
-          let fname = e.target.checked ? "add" : "remove";
-          this.setAddonPermission(permission, type, fname);
-          break;
         case "toggle-disabled":
           this.recordActionEvent(addon.userDisabled ? "enable" : "disable");
           // Keep the checked state the same until the add-on's state changes.
@@ -2842,6 +2828,11 @@ class AddonCard extends HTMLElement {
           }
           break;
       }
+    } else if (e.type == "toggle" && action == "toggle-permission") {
+      let permission = e.target.getAttribute("permission-key");
+      let type = e.target.getAttribute("permission-type");
+      let fname = e.target.pressed ? "add" : "remove";
+      this.setAddonPermission(permission, type, fname);
     } else if (e.type == "change") {
       let { name } = e.target;
       let telemetryValue = e.target.getAttribute("data-telemetry-value");
@@ -2903,6 +2894,7 @@ class AddonCard extends HTMLElement {
     this.addEventListener("change", this);
     this.addEventListener("click", this);
     this.addEventListener("mousedown", this);
+    this.addEventListener("toggle", this);
     this.panel.addEventListener("shown", this);
     this.panel.addEventListener("hidden", this);
   }
@@ -2911,6 +2903,7 @@ class AddonCard extends HTMLElement {
     this.removeEventListener("change", this);
     this.removeEventListener("click", this);
     this.removeEventListener("mousedown", this);
+    this.removeEventListener("toggle", this);
     this.panel.removeEventListener("shown", this);
     this.panel.removeEventListener("hidden", this);
   }
@@ -2972,7 +2965,7 @@ class AddonCard extends HTMLElement {
         addon.type === "extension" ||
         addon.type === "sitepermission"
       ) {
-        toggleDisabledButton.checked = !addon.userDisabled;
+        toggleDisabledButton.pressed = !addon.userDisabled;
       }
     }
 
@@ -3233,7 +3226,7 @@ class AddonCard extends HTMLElement {
       let checked = !data.removed;
       if (target) {
         target.closest("li").classList.toggle("permission-checked", checked);
-        target.checked = checked;
+        target.pressed = checked;
       }
     }
     if (hasAllSites) {
@@ -3241,7 +3234,7 @@ class AddonCard extends HTMLElement {
       let target = document.querySelector("[permission-all-sites]");
       let checked = await AddonCard.optionalAllSitesGranted(this.addon.id);
       target.closest("li").classList.toggle("permission-checked", checked);
-      target.checked = checked;
+      target.pressed = checked;
     }
   }
 
