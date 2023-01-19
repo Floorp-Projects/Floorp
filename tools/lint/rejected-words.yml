@@ -332,7 +332,7 @@ avoid-blacklist-and-whitelist:
         - testing/web-platform/tests/docs/writing-tests/lint-tool.md
         - testing/web-platform/tests/tools/manifest/tests/test_manifest.py
         - toolkit/actors/RemotePageChild.jsm
-        - toolkit/actors/WebChannelChild.jsm
+        - toolkit/actors/WebChannelChild.sys.mjs
         - toolkit/components/aboutperformance/content/aboutPerformance.js
         - toolkit/components/antitracking/StorageAccessAPIHelper.cpp
         - toolkit/components/antitracking/PurgeTrackerService.jsm

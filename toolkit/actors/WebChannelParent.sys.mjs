@@ -3,16 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["WebChannelParent"];
-
-const { WebChannelBroker } = ChromeUtils.importESModule(
-  "resource://gre/modules/WebChannel.sys.mjs"
-);
+import { WebChannelBroker } from "resource://gre/modules/WebChannel.sys.mjs";
 
 const ERRNO_MISSING_PRINCIPAL = 1;
 const ERRNO_NO_SUCH_CHANNEL = 2;
 
-class WebChannelParent extends JSWindowActorParent {
+export class WebChannelParent extends JSWindowActorParent {
   receiveMessage(msg) {
     let data = msg.data.contentData;
     let sendingContext = {

@@ -3,16 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint no-unused-vars: ["error", {args: "none"}] */
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["WebChannelChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { ContentDOMReference } = ChromeUtils.importESModule(
-  "resource://gre/modules/ContentDOMReference.sys.mjs"
-);
+import { ContentDOMReference } from "resource://gre/modules/ContentDOMReference.sys.mjs";
 
 // Preference containing the list (space separated) of origins that are
 // allowed to send non-string values through a WebChannel, mainly for
@@ -31,7 +24,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   () => (_cachedWhitelist = null)
 );
 
-class WebChannelChild extends JSWindowActorChild {
+export class WebChannelChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type === "WebChannelMessageToChrome") {
       return this._onMessageToChrome(event);
