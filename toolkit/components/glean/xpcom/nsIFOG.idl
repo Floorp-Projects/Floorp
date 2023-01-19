@@ -103,6 +103,19 @@ interface nsIFOG : nsISupports
   jsval testGetExperimentData(in ACString aExperimentId);
 
   /**
+   * Set remote-configuration for metrics' disabled property.
+   *
+   * See [`glean_core::Glean::set_metrics_disabled_config`]
+   *
+   * Logs on error, but does not throw.
+   *
+   * @param aJsonConfig - The stringified JSON object in the form
+   *        {metric_base_identifier: boolean,}
+   *        which may contain multiple metric object entries.
+   */
+  void setMetricsFeatureConfig(in ACString aJsonConfig);
+
+  /**
    * ** Test-only Method **
    *
    * Flush all data from all child processes.

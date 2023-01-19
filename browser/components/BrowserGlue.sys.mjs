@@ -61,6 +61,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Corroborate: "resource://gre/modules/Corroborate.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   DoHController: "resource:///modules/DoHController.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -2713,6 +2714,15 @@ BrowserGlue.prototype = {
         name: "initializeFOG",
         task: () => {
           Services.fog.initializeFOG();
+
+          // Register Glean to listen for experiment updates releated to the
+          // "glean" feature defined in the t/c/nimbus/FeatureManifest.yaml
+          lazy.ExperimentAPI.on("update", { featureId: "glean" }, () => {
+            let cfg = lazy.NimbusFeatures.serverKnobs.getVariable(
+              "metricsDisabled"
+            );
+            Services.fog.setMetricsFeatureConfig(JSON.stringify(cfg));
+          });
         },
       },
 

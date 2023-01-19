@@ -264,6 +264,19 @@ FOG::TestGetExperimentData(const nsACString& aExperimentId, JSContext* aCx,
 }
 
 NS_IMETHODIMP
+FOG::SetMetricsFeatureConfig(const nsACString& aJsonConfig) {
+#ifdef MOZ_GLEAN_ANDROID
+  NS_WARNING(
+      "Don't set metric feature configs from Gecko in Android. Ignoring.");
+  return NS_OK;
+#else
+  MOZ_ASSERT(XRE_IsParentProcess());
+  glean::impl::fog_set_metrics_feature_config(&aJsonConfig);
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP
 FOG::TestFlushAllChildren(JSContext* aCx, mozilla::dom::Promise** aOutPromise) {
   MOZ_ASSERT(XRE_IsParentProcess());
   NS_ENSURE_ARG(aOutPromise);
