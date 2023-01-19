@@ -1426,22 +1426,16 @@ add_task(async function decayTest() {
     ],
   });
 
-  // The decay rate for a day is 0.975 defined in
-  // nsNavHistory::PREF_FREC_DECAY_RATE_DEF. Therefore, after 30 days, as
-  // use_count will be 0.975^30 = 0.468, we set the useCountThreshold 0.47 to not
-  // take the input history passed 30 days.
+  // The decay rate for a day is 0.975, as defined in PlacesFrecencyRecalculator
+  // Therefore, after 30 days, as use_count will be 0.975^30 = 0.468, we set the
+  // useCountThreshold 0.47 to not take the input history passed 30 days.
   UrlbarPrefs.set("autoFill.adaptiveHistory.useCountThreshold", 0.47);
 
   // Make 29 days later.
   for (let i = 0; i < 29; i++) {
-    PlacesUtils.history
-      .QueryInterface(Ci.nsIObserver)
-      .observe(null, "idle-daily", "");
-    await PlacesTestUtils.waitForNotification(
-      "pages-rank-changed",
-      () => true,
-      "places"
-    );
+    await Cc["@mozilla.org/places/frecency-recalculator;1"]
+      .getService(Ci.nsIObserver)
+      .wrappedJSObject.decay();
   }
   const midContext = createContext("exa", { isPrivate: false });
   await check_results({
@@ -1459,14 +1453,9 @@ add_task(async function decayTest() {
   });
 
   // Total 30 days later.
-  PlacesUtils.history
-    .QueryInterface(Ci.nsIObserver)
-    .observe(null, "idle-daily", "");
-  await PlacesTestUtils.waitForNotification(
-    "pages-rank-changed",
-    () => true,
-    "places"
-  );
+  await Cc["@mozilla.org/places/frecency-recalculator;1"]
+    .getService(Ci.nsIObserver)
+    .wrappedJSObject.decay();
   const context = createContext("exa", { isPrivate: false });
   await check_results({
     context,

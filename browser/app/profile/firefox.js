@@ -1153,6 +1153,9 @@ pref("accessibility.blockautorefresh", false);
 // Whether history is enabled or not.
 pref("places.history.enabled", true);
 
+// The default Places log level.
+pref("places.loglevel", "Error");
+
 // Whether or not diacritics must match in history text searches.
 pref("places.search.matchDiacritics", false);
 

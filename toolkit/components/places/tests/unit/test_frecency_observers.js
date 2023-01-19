@@ -57,14 +57,22 @@ add_task(async function test_clear() {
   await Promise.all([onRankingChanged(), PlacesUtils.history.clear()]);
 });
 
-// nsNavHistory::FixAndDecayFrecency
-add_task(async function test_nsNavHistory_FixAndDecayFrecency() {
-  // Fix and decay frecencies by making nsNavHistory observe the idle-daily
-  // notification.
-  PlacesUtils.history
-    .QueryInterface(Ci.nsIObserver)
-    .observe(null, "idle-daily", "");
+add_task(async function test_nsNavHistory_decayFrecency() {
+  let svc = Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  );
+  svc.observe(null, "idle-daily", "");
   await Promise.all([onRankingChanged()]);
+});
+
+add_task(async function test_nsNavHistory_decayFrecency() {
+  let svc = Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  );
+  await Promise.all([
+    onRankingChanged(),
+    svc.wrappedJSObject.recalculateAnyOutdatedFrecencies(),
+  ]);
 });
 
 function onRankingChanged() {
