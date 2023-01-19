@@ -490,48 +490,6 @@ add_task(async function test_overflowable_toolbar() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-/**
- * Tests that if Unified Extensions are disabled, all overflowed items
- * in the toolbar go to the default overflow panel.
- */
-add_task(async function test_overflowable_toolbar_legacy() {
-  let win = await promiseDisableUnifiedExtensions();
-
-  await withWindowOverflowed(win, {
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
-      // First, ensure that all default items are in the default overflow list.
-      // (though there might be more items from the nav-bar in there that
-      // already existed in the nav-bar before we put the default widgets in
-      // there as well).
-      const defaultListIDs = getChildrenIDs(defaultList);
-      for (const widgetID of DEFAULT_WIDGET_IDS) {
-        Assert.ok(
-          defaultListIDs.includes(widgetID),
-          `Default overflow list should have ${widgetID}`
-        );
-      }
-      // Next, ensure that all of the browser_action buttons from the
-      // WebExtensions are there as well.
-      for (const extensionID of extensionIDs) {
-        const widget = defaultList.querySelector(
-          `[data-extensionid='${extensionID}']`
-        );
-        Assert.ok(widget, `Default list should have ${extensionID}`);
-        await verifyExtensionWidget(win, widget, false);
-      }
-
-      Assert.equal(
-        unifiedExtensionList.children.length,
-        0,
-        "Unified Extension overflow list should be empty."
-      );
-    },
-  });
-
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
-});
-
 add_task(async function test_context_menu() {
   let win = await promiseEnableUnifiedExtensions();
 

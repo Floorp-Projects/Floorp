@@ -66,24 +66,6 @@ add_task(async function test_button_enabled_by_pref() {
   );
 });
 
-add_task(async function test_button_disabled_by_pref() {
-  const anotherWindow = await promiseDisableUnifiedExtensions();
-
-  const button = anotherWindow.document.getElementById(
-    "unified-extensions-button"
-  );
-  is(button.hidden, true, "expected button to be hidden");
-  ok(
-    !anotherWindow.document
-      .getElementById("nav-bar")
-      .hasAttribute("unifiedextensionsbuttonshown"),
-    "expected no attribute on nav-bar"
-  );
-
-  await BrowserTestUtils.closeWindow(anotherWindow);
-  await SpecialPowers.popPrefEnv();
-});
-
 add_task(async function test_open_panel_on_button_click() {
   const extensions = createExtensions([
     { name: "Extension #1" },

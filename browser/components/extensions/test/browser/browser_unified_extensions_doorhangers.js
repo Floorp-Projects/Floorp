@@ -128,12 +128,3 @@ const verifyPermissionsPrompt = async (win, expectedAnchorID) => {
 add_task(async function test_permissions_prompt_with_pref_enabled() {
   await verifyPermissionsPrompt(win, "unified-extensions-button");
 });
-
-add_task(async function test_permissions_prompt_with_pref_disabled() {
-  const anotherWindow = await promiseDisableUnifiedExtensions();
-
-  await verifyPermissionsPrompt(anotherWindow, "addons-notification-icon");
-
-  await BrowserTestUtils.closeWindow(anotherWindow);
-  await SpecialPowers.popPrefEnv();
-});

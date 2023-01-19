@@ -231,10 +231,6 @@ toolbar {
   list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 
-#add-ons-button {
-  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
-}
-
 #open-file-button {
   list-style-image: url("chrome://browser/skin/open.svg");
 }

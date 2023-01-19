@@ -33,17 +33,6 @@ add_task(async function testDetailsObjects() {
       green: getImageData("green"),
     };
 
-    const unifiedExtensionsEnabled = SpecialPowers.getBoolPref(
-      "extensions.unifiedExtensions.enabled",
-      false
-    );
-
-    // In each `iconDetails` entry below, and for a same resolution, we may
-    // expect different values (icon URLs) for `browserActionImageURL` and
-    // `pageActionImageURL` because browser actions use large icons (32px or
-    // 64px in 2x) and page actions use small icons (16px or 32px in 2x) when
-    // the unifiedExtensions pref is enabled.
-    //
     // eslint-disable indent, indent-legacy
     let iconDetails = [
       // Only paths.
@@ -103,9 +92,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "19": "a.png", "38": "a-x2.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/a-x2.png")
-              : browser.runtime.getURL("data/a.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -120,15 +107,11 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/a-32.png")
-              : browser.runtime.getURL("data/a-16.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a-32.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-16.png"),
           },
           "2": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/a-64.png")
-              : browser.runtime.getURL("data/a-32.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a-64.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-32.png"),
           },
         },
@@ -202,9 +185,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? imageData.green.url
-              : imageData.red.url,
+            browserActionImageURL: imageData.green.url,
             pageActionImageURL: imageData.red.url,
           },
           "2": {
@@ -225,9 +206,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? imageData.red.url
-              : browser.runtime.getURL("data/a.png"),
+            browserActionImageURL: imageData.red.url,
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -243,9 +222,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/a.png")
-              : imageData.red.url,
+            browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: imageData.red.url,
           },
           "2": {
@@ -263,9 +240,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? imageData.red.url
-              : browser.runtime.getURL("data/a.png"),
+            browserActionImageURL: imageData.red.url,
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -281,9 +256,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/a.png")
-              : imageData.red.url,
+            browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: imageData.red.url,
           },
           "2": {
@@ -298,9 +271,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "18": "a.png", "36": "a-x2.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/a-x2.png")
-              : browser.runtime.getURL("data/a.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -313,9 +284,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "16": "a.png", "30": "a-x2.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/a-x2.png")
-              : browser.runtime.getURL("data/a.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -328,9 +297,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "16": "16.png", "100": "100.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/100.png")
-              : browser.runtime.getURL("data/16.png"),
+            browserActionImageURL: browser.runtime.getURL("data/100.png"),
             pageActionImageURL: browser.runtime.getURL("data/16.png"),
           },
           "2": {
@@ -361,9 +328,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/18.svg")
-              : browser.runtime.getURL("data/16.svg"),
+            browserActionImageURL: browser.runtime.getURL("data/18.svg"),
             pageActionImageURL: browser.runtime.getURL("data/16.svg"),
           },
           "2": {
@@ -384,15 +349,11 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/36.png")
-              : browser.runtime.getURL("data/18.png"),
+            browserActionImageURL: browser.runtime.getURL("data/36.png"),
             pageActionImageURL: browser.runtime.getURL("data/18.png"),
           },
           "2": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/128.png")
-              : browser.runtime.getURL("data/36.png"),
+            browserActionImageURL: browser.runtime.getURL("data/128.png"),
             pageActionImageURL: browser.runtime.getURL("data/36.png"),
           },
         },
@@ -414,15 +375,11 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/32.png")
-              : browser.runtime.getURL("data/16.png"),
+            browserActionImageURL: browser.runtime.getURL("data/32.png"),
             pageActionImageURL: browser.runtime.getURL("data/16.png"),
           },
           "2": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/64.png")
-              : browser.runtime.getURL("data/32.png"),
+            browserActionImageURL: browser.runtime.getURL("data/64.png"),
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
         },
@@ -446,9 +403,7 @@ add_task(async function testDetailsObjects() {
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
           "2": {
-            browserActionImageURL: unifiedExtensionsEnabled
-              ? browser.runtime.getURL("data/128.png")
-              : browser.runtime.getURL("data/32.png"),
+            browserActionImageURL: browser.runtime.getURL("data/128.png"),
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
         },

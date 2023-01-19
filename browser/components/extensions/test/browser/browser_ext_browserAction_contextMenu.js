@@ -1028,19 +1028,3 @@ add_task(async function test_unified_extensions_item_no_pinning() {
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
 });
-
-add_task(async function test_non_unified_extensions_ui() {
-  Services.telemetry.clearEvents();
-  let win = await promiseDisableUnifiedExtensions();
-
-  await browseraction_popup_contextmenu_helper(win);
-  await browseraction_popup_contextmenu_hidden_items_helper(win);
-  await browseraction_popup_image_contextmenu_helper(win);
-  await browseraction_contextmenu_manage_extension_helper(win);
-  await browseraction_contextmenu_remove_extension_helper(win);
-  await browseraction_contextmenu_report_extension_helper(win);
-  await test_no_toolbar_pinning_on_builtin_helper(win);
-
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
-});

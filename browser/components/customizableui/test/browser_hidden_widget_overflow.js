@@ -15,10 +15,6 @@ const kWebExtensionButtonID2 = "fake-webextension-button-2";
 let gWin = null;
 
 add_setup(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.unifiedExtensions.enabled", true]],
-  });
-
   gWin = await BrowserTestUtils.openNewBrowserWindow();
 
   // To make it easier to write a test where we can control overflowing

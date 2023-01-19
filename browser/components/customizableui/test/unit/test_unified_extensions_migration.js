@@ -49,16 +49,6 @@ function loadState() {
  * forward migration.
  */
 function migrateForward() {
-  Services.prefs.setBoolPref("extensions.unifiedExtensions.enabled", true);
-  CustomizableUIInternal._updateForUnifiedExtensions();
-}
-
-/**
- * Disables the Unified Extensions UI pref and calls the function to perform
- * backward migration.
- */
-function migrateBackward() {
-  Services.prefs.setBoolPref("extensions.unifiedExtensions.enabled", false);
   CustomizableUIInternal._updateForUnifiedExtensions();
 }
 
@@ -417,14 +407,6 @@ add_task(async function test_migrating_back_with_items() {
   delete EXPECTED_STATE.placements[CustomizableUI.AREA_ADDONS];
 
   saveState(SAVED_STATE);
-
-  migrateBackward();
-
-  Assert.deepEqual(
-    loadState(),
-    EXPECTED_STATE,
-    "Migrating backward should append the addons items to the overflow panel."
-  );
 });
 
 /**
@@ -464,12 +446,4 @@ add_task(async function test_migrating_back_with_no_items() {
   delete EXPECTED_STATE.placements[CustomizableUI.AREA_ADDONS];
 
   saveState(SAVED_STATE);
-
-  migrateBackward();
-
-  Assert.deepEqual(
-    loadState(),
-    EXPECTED_STATE,
-    "Migrating backward should append the addons items to the overflow panel."
-  );
 });
