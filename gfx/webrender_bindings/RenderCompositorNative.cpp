@@ -410,11 +410,12 @@ void RenderCompositorNative::AddSurface(
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
   const Surface& surface = surfaceCursor->second;
 
-  gfx::Matrix4x4 transform(
-      aTransform.m11, aTransform.m12, aTransform.m13, aTransform.m14,
-      aTransform.m21, aTransform.m22, aTransform.m23, aTransform.m24,
-      aTransform.m31, aTransform.m32, aTransform.m33, aTransform.m34,
-      aTransform.m41, aTransform.m42, aTransform.m43, aTransform.m44);
+  float sx = aTransform.scale.x;
+  float sy = aTransform.scale.y;
+  float tx = aTransform.offset.x;
+  float ty = aTransform.offset.y;
+  gfx::Matrix4x4 transform(sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, 1.0,
+                           0.0, tx, ty, 0.0, 1.0);
 
   for (auto it = surface.mNativeLayers.begin();
        it != surface.mNativeLayers.end(); ++it) {
