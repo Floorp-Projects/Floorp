@@ -63,12 +63,6 @@ ShellService.register();
 
 let gIsLegacy = false;
 
-function simulateSnapEnvironment() {
-  Services.env.set("SNAP_INSTANCE_NAME", AppConstants.MOZ_APP_NAME);
-
-  gIsLegacy = true;
-}
-
 function enableLegacyProfiles() {
   Services.env.set("MOZ_LEGACY_PROFILES", "1");
 
@@ -579,7 +573,7 @@ function checkProfileService(
     }
   }
 
-  if (gIsLegacy) {
+  if (gIsLegacy || Services.env.get("SNAP_NAME")) {
     Assert.equal(
       service.defaultProfile,
       legacyProfile,

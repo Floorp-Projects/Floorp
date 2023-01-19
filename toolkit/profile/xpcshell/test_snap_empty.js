@@ -6,8 +6,6 @@
  */
 
 add_task(async () => {
-  simulateSnapEnvironment();
-
   let service = getProfileService();
   let { profile, didCreate } = selectStartupProfile();
   checkStartupReason("firstrun-created-default");
