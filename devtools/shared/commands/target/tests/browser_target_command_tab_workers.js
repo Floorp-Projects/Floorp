@@ -276,7 +276,7 @@ add_task(async function() {
   );
 
   info("Check that navigating away does destroy all targets");
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     tab.linkedBrowser,
     "data:text/html,<meta charset=utf8>Away"
   );

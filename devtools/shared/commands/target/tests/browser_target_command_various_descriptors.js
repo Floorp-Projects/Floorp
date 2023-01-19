@@ -151,7 +151,7 @@ async function testRemoteTab() {
 
   const browser = tab.linkedBrowser;
   const onLoaded = BrowserTestUtils.browserLoaded(browser);
-  await BrowserTestUtils.loadURI(browser, SECOND_TEST_URL);
+  await BrowserTestUtils.loadURIString(browser, SECOND_TEST_URL);
   await onLoaded;
 
   info("Wait for the new target");

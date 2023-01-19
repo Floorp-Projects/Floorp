@@ -17,7 +17,7 @@ function test() {
   );
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "triggerredirect.html");
+  BrowserTestUtils.loadURIString(gBrowser, TESTROOT + "triggerredirect.html");
 }
 
 function confirm_install(panel) {

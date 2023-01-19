@@ -52,7 +52,7 @@ function test() {
     })
   );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     gBrowser,
     TESTROOT + "installtrigger.html?" + triggers
   );

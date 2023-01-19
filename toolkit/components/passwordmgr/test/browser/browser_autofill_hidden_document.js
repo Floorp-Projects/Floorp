@@ -55,7 +55,7 @@ testUrlsWithForm.forEach(testUrl => {
     );
 
     let formProcessedPromise = listenForTestNotification("FormProcessed");
-    BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
+    BrowserTestUtils.loadURIString(tab1.linkedBrowser, testUrl);
     await formProcessedPromise;
     gBrowser.removeTab(tab1);
   });
@@ -88,7 +88,7 @@ testUrls.forEach(testUrl => {
     listenForTestNotification("FormProcessed").then(() => {
       formFilled = true;
     });
-    BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
+    BrowserTestUtils.loadURIString(tab1.linkedBrowser, testUrl);
 
     await TestUtils.waitForCondition(() => {
       let windowGlobal = tab1.linkedBrowser.browsingContext.currentWindowGlobal;
@@ -189,7 +189,7 @@ testUrlsWithForm.forEach(testUrl => {
     // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
     // to be observed
     let formProcessedPromise = listenForTestNotification("FormProcessed");
-    BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
+    BrowserTestUtils.loadURIString(tab1.linkedBrowser, testUrl);
     await Promise.all([formProcessedPromise, dialogObserved]);
 
     Assert.ok(

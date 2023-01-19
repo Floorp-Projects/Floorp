@@ -111,7 +111,7 @@ add_task(async function() {
   let browser = gBrowser.selectedBrowser;
 
   let errorPageLoaded = BrowserTestUtils.waitForErrorPage(browser);
-  BrowserTestUtils.loadURI(browser, BAD_CERT);
+  BrowserTestUtils.loadURIString(browser, BAD_CERT);
   await errorPageLoaded;
 
   is(

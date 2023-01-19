@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 async function openURLInWindow(window, url) {
   const { selectedBrowser } = window.gBrowser;
-  BrowserTestUtils.loadURI(selectedBrowser, url);
+  BrowserTestUtils.loadURIString(selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
 }
 

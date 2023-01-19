@@ -29,7 +29,7 @@ add_task(async function test() {
     }
     PlacesObservers.addListener(["page-visited"], onVisits);
   });
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URL);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, TEST_URL);
   await promiseVisit;
 
   is(

@@ -95,7 +95,7 @@ async function testNavigationToParentProcessDocument() {
   const onSwitchedTarget = targetCommand.once("switched-target");
   const browser = tab.linkedBrowser;
   const onLoaded = BrowserTestUtils.browserLoaded(browser);
-  await BrowserTestUtils.loadURI(browser, secondLocation);
+  await BrowserTestUtils.loadURIString(browser, secondLocation);
   await onLoaded;
   is(
     browser.browsingContext.currentWindowGlobal.osPid,
@@ -166,7 +166,7 @@ async function testNavigationToAboutBlankDocument() {
   const onSwitchedTarget = targetCommand.once("switched-target");
   const browser = tab.linkedBrowser;
   const onLoaded = BrowserTestUtils.browserLoaded(browser);
-  await BrowserTestUtils.loadURI(browser, secondLocation);
+  await BrowserTestUtils.loadURIString(browser, secondLocation);
   await onLoaded;
 
   if (isServerTargetSwitchingEnabled()) {
@@ -510,7 +510,7 @@ async function testTabFrames(mainRoot) {
 
   const browser = tab.linkedBrowser;
   const onLoaded = BrowserTestUtils.browserLoaded(browser);
-  await BrowserTestUtils.loadURI(browser, SECOND_PAGE_URL);
+  await BrowserTestUtils.loadURIString(browser, SECOND_PAGE_URL);
   await onLoaded;
 
   if (isFissionEnabled() || isEveryFrameTargetEnabled()) {

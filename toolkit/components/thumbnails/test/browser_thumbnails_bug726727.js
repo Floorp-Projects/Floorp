@@ -18,7 +18,7 @@ add_task(async function thumbnails_bg_bug726727() {
         null,
         true
       );
-      BrowserTestUtils.loadURI(browser, "http://127.0.0.1:1");
+      BrowserTestUtils.loadURIString(browser, "http://127.0.0.1:1");
       await errorPageLoaded;
       let result = await PageThumbs.shouldStoreThumbnail(browser);
       ok(!result, "we're not going to capture an error page");

@@ -14,7 +14,7 @@ add_task(async function test() {
   });
 
   let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     tab.linkedBrowser,
     "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs"
   );
