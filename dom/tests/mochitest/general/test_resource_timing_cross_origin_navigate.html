@@ -1,0 +1,73 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1789128
+-->
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<pre id="test">
+<script type="application/javascript">
+
+</script>
+</pre>
+
+<a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1789128"
+     title="Cross origin resource timing">
+    Bug #1789128 - Cross-Origin URL Steal is possible using performance.getEntries()
+</a>
+
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let domains = [
+  // resource_timing_location_navigate.html navigates via document.location
+  "https://example.org",
+  // resource_timing_meta_refresh.html redirects via meta refresh
+  "https://test2.example.org",
+  // resource_timing_redirect.html redirects via 302 redirect
+  "https://test1.example.org",
+  // embed_navigate.html navigates via document.location
+  "https://sub1.test1.example.org",
+  ];
+
+
+let redirectResolves = {};
+
+window.addEventListener("message", (event) => {
+  console.log("message", event);
+  redirectResolves[event.origin]();
+});
+
+// Wait for all iframes to navigate.
+Promise.all(domains.map(domain => {
+  return new Promise(resolve => {
+    redirectResolves[domain] = resolve;
+  })
+})).then(() => {
+  // Check resource timing for iframes.
+  for (let e of performance.getEntries()) {
+    ok(!e.name.includes("example.org"), `${e.name} cross origin should not be present in resource timing`)
+  }
+  SimpleTest.finish();
+});
+
+</script>
+
+<iframe src="resource_timing_location_navigate.html"></iframe>
+<iframe src="resource_timing_meta_refresh.html"></iframe>
+<iframe src="resource_timing_redirect.html"></iframe>
+<embed src="embed_navigate.html">
+
+</body>
+</html>
