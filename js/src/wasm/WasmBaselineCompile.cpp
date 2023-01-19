@@ -7298,6 +7298,13 @@ bool BaseCompiler::emitBrOnCastCommon(bool onSuccess) {
   return true;
 }
 
+bool BaseCompiler::emitRefAsStruct() {
+  Nothing nothing;
+  return iter_.readConversion(ValType(RefType::any()),
+                              ValType(RefType::struct_().asNonNullable()),
+                              &nothing);
+}
+
 bool BaseCompiler::emitExternInternalize() {
   // extern.internalize is a no-op because anyref and extern share the same
   // representation
@@ -9461,6 +9468,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFail):
             CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/false));
+          case uint32_t(GcOp::RefAsStruct):
+            CHECK_NEXT(emitRefAsStruct());
           case uint16_t(GcOp::ExternInternalize):
             CHECK_NEXT(emitExternInternalize());
           case uint16_t(GcOp::ExternExternalize):
