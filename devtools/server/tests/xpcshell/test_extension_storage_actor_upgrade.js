@@ -35,19 +35,10 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
 
 const { createAppInfo, promiseStartupManager } = AddonTestUtils;
 
-const EXTENSION_STORAGE_ENABLED_PREF =
-  "devtools.storage.extensionStorage.enabled";
-
 AddonTestUtils.init(this);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 ExtensionTestUtils.init(this);
-
-// This storage actor is gated behind a pref, so make sure it is enabled first
-Services.prefs.setBoolPref(EXTENSION_STORAGE_ENABLED_PREF, true);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(EXTENSION_STORAGE_ENABLED_PREF);
-});
 
 add_task(async function setup() {
   await promiseStartupManager();
