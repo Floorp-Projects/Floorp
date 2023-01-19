@@ -84,7 +84,11 @@ if CONFIG["MOZ_WEBRTC_SIGNALING"]:
     ]
 
     if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-        DIRS += ["/third_party/pipewire/libpipewire"]
+        DIRS += [
+            "/third_party/drm/",
+            "/third_party/drm/libdrm",
+            "/third_party/pipewire/libpipewire",
+        ]
 
     # Avoid warnings from third-party code that we can not modify.
     if CONFIG["CC_TYPE"] == "clang-cl":
