@@ -1977,6 +1977,29 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
     return true;
   }
 
+  Shape* receiverShape = obj->shape();
+  MegamorphicSetPropCache& cache = cx->caches().megamorphicSetPropCache;
+
+#ifdef DEBUG
+  MegamorphicSetPropCache::Entry* entry;
+  if (cache.lookup(receiverShape, key, &entry)) {
+    if (entry->afterShape() != nullptr) {  // AddProp
+      NativeObject* holder = nullptr;
+      PropertyResult prop;
+      MOZ_ASSERT(LookupPropertyPure(cx, obj, key, &holder, &prop));
+      MOZ_ASSERT(obj != holder);
+      MOZ_ASSERT_IF(prop.isFound(), prop.isNativeProperty() &&
+                                        prop.propertyInfo().isDataProperty() &&
+                                        prop.propertyInfo().writable());
+    } else {  // SetProp
+      mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(key);
+      MOZ_ASSERT(prop.isSome());
+      MOZ_ASSERT(prop->isDataProperty());
+      MOZ_ASSERT(prop->slot() == entry->slot());
+    }
+  }
+#endif
+
   // Fast path for changing a data property.
   uint32_t index;
   if (PropMap* map = obj->shape()->lookup(cx, key, &index)) {
@@ -1986,6 +2009,8 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
     }
     obj->setSlot(prop.slot(), value);
     *optimized = true;
+
+    cache.set(receiverShape, nullptr, key, prop.slot());
     return true;
   }
 
@@ -2033,7 +2058,19 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 
   *optimized = true;
   Rooted<PropertyKey> keyRoot(cx, key);
-  return AddDataPropertyToPlainObject(cx, obj, keyRoot, value);
+  Rooted<Shape*> receiverShapeRoot(cx, receiverShape);
+  uint32_t resultSlot = 0;
+  size_t numDynamic = obj->numDynamicSlots();
+  bool res = AddDataPropertyToPlainObject(cx, obj, keyRoot, value, &resultSlot);
+
+  if (res && obj->shape()->isShared() &&
+      resultSlot < SharedPropMap::MaxPropsForNonDictionary &&
+      (resultSlot < obj->numFixedSlots() ||
+       (resultSlot - obj->numFixedSlots()) < numDynamic)) {
+    cache.set(receiverShapeRoot, obj->shape(), keyRoot, resultSlot);
+  }
+
+  return res;
 }
 
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
