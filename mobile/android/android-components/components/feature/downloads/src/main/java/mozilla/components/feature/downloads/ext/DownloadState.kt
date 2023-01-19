@@ -47,6 +47,3 @@ internal fun DownloadState.withResponse(headers: Headers, stream: InputStream?):
         contentLength = contentLength ?: headers[CONTENT_LENGTH]?.toLongOrNull(),
     )
 }
-
-internal val DownloadState.realFilenameOrGuessed
-    get() = fileName ?: DownloadUtils.guessFileName(null, destinationDirectory, url, contentType)

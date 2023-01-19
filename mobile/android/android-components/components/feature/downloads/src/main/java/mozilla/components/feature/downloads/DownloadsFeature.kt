@@ -17,6 +17,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
@@ -24,7 +25,6 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
-import mozilla.components.feature.downloads.ext.realFilenameOrGuessed
 import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.manager.noop
@@ -41,43 +41,6 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.isSameOriginAs
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.utils.Browsers
-
-/**
- * The name of the file to be downloaded.
- */
-@JvmInline
-value class Filename(val value: String)
-
-/**
- * The size of the file to be downloaded expressed as the number of `bytes`.
- * The value will be `0` if the size is unknown.
- */
-@JvmInline
-value class ContentSize(val value: Long)
-
-/**
- * The list of all applications that can perform a download, including this application.
- */
-@JvmInline
-value class ThirdPartyDownloaderApps(val value: List<DownloaderApp>)
-
-/**
- * Callback for when the user picked a certain application with which to download the current file.
- */
-@JvmInline
-value class ThirdPartyDownloaderAppChosenCallback(val value: (DownloaderApp) -> Unit)
-
-/**
- * Callback for when the positive button of a download dialog was tapped.
- */
-@JvmInline
-value class PositiveActionCallback(val value: () -> Unit)
-
-/**
- * Callback for when the negative button of a download dialog was tapped.
- */
-@JvmInline
-value class NegativeActionCallback(val value: () -> Unit)
 
 /**
  * Feature implementation to provide download functionality for the selected
@@ -98,10 +61,6 @@ value class NegativeActionCallback(val value: () -> Unit)
  * @property promptsStyling styling properties for the dialog.
  * @property shouldForwardToThirdParties Indicates if downloads should be forward to third party apps,
  * if there are multiple apps a chooser dialog will shown.
- * @property customFirstPartyDownloadDialog An optional delegate for showing a dialog for a download
- * that will be processed by the current application.
- * @property customThirdPartyDownloadDialog An optional delegate for showing a dialog for a download
- * that can be processed by multiple installed applications including the current one.
  */
 @Suppress("LongParameterList", "LargeClass")
 class DownloadsFeature(
@@ -116,10 +75,6 @@ class DownloadsFeature(
     private val fragmentManager: FragmentManager? = null,
     private val promptsStyling: PromptsStyling? = null,
     private val shouldForwardToThirdParties: () -> Boolean = { false },
-    private val customFirstPartyDownloadDialog:
-        ((Filename, ContentSize, PositiveActionCallback, NegativeActionCallback) -> Unit)? = null,
-    private val customThirdPartyDownloadDialog:
-        ((ThirdPartyDownloaderApps, ThirdPartyDownloaderAppChosenCallback, NegativeActionCallback) -> Unit)? = null,
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadStopped: onDownloadStopped
@@ -206,45 +161,16 @@ class DownloadsFeature(
         val shouldShowAppDownloaderDialog = shouldForwardToThirdParties() && apps.size > 1
 
         return if (shouldShowAppDownloaderDialog) {
-            when (customThirdPartyDownloadDialog) {
-                null -> showAppDownloaderDialog(tab, download, apps)
-                else -> customThirdPartyDownloadDialog.invoke(
-                    ThirdPartyDownloaderApps(apps),
-                    ThirdPartyDownloaderAppChosenCallback {
-                        onDownloaderAppSelected(it, tab, download)
-                    },
-                    NegativeActionCallback {
-                        useCases.cancelDownloadRequest.invoke(tab.id, download.id)
-                    },
-                )
-            }
-
+            showAppDownloaderDialog(tab, download, apps)
             false
         } else {
             if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
-                when {
-                    customFirstPartyDownloadDialog != null && !download.skipConfirmation -> {
-                        customFirstPartyDownloadDialog.invoke(
-                            Filename(download.realFilenameOrGuessed),
-                            ContentSize(download.contentLength ?: 0),
-                            PositiveActionCallback {
-                                startDownload(download)
-                                useCases.consumeDownload.invoke(tab.id, download.id)
-                            },
-                            NegativeActionCallback {
-                                useCases.cancelDownloadRequest.invoke(tab.id, download.id)
-                            },
-                        )
-                        false
-                    }
-                    fragmentManager != null && !download.skipConfirmation -> {
-                        showDownloadDialog(tab, download)
-                        false
-                    }
-                    else -> {
-                        useCases.consumeDownload(tab.id, download.id)
-                        startDownload(download)
-                    }
+                if (fragmentManager != null && !download.skipConfirmation) {
+                    showDownloadDialog(tab, download)
+                    false
+                } else {
+                    useCases.consumeDownload(tab.id, download.id)
+                    startDownload(download)
                 }
             } else {
                 onNeedToRequestPermissions(downloadManager.permissions)
@@ -340,7 +266,25 @@ class DownloadsFeature(
     ) {
         appChooserDialog.setApps(apps)
         appChooserDialog.onAppSelected = { app ->
-            onDownloaderAppSelected(app, tab, download)
+            if (app.packageName == applicationContext.packageName) {
+                if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
+                    startDownload(download)
+                    useCases.consumeDownload(tab.id, download.id)
+                } else {
+                    onNeedToRequestPermissions(downloadManager.permissions)
+                }
+            } else {
+                try {
+                    applicationContext.startActivity(app.toIntent())
+                } catch (error: ActivityNotFoundException) {
+                    val errorMessage = applicationContext.getString(
+                        R.string.mozac_feature_downloads_unable_to_open_third_party_app,
+                        app.name,
+                    )
+                    Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
+                }
+                useCases.consumeDownload(tab.id, download.id)
+            }
         }
 
         appChooserDialog.onDismiss = {
@@ -349,29 +293,6 @@ class DownloadsFeature(
 
         if (!isAlreadyAppDownloaderDialog() && fragmentManager != null && !fragmentManager.isDestroyed) {
             appChooserDialog.showNow(fragmentManager, DownloadAppChooserDialog.FRAGMENT_TAG)
-        }
-    }
-
-    @VisibleForTesting
-    internal fun onDownloaderAppSelected(app: DownloaderApp, tab: SessionState, download: DownloadState) {
-        if (app.packageName == applicationContext.packageName) {
-            if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
-                startDownload(download)
-                useCases.consumeDownload(tab.id, download.id)
-            } else {
-                onNeedToRequestPermissions(downloadManager.permissions)
-            }
-        } else {
-            try {
-                applicationContext.startActivity(app.toIntent())
-            } catch (error: ActivityNotFoundException) {
-                val errorMessage = applicationContext.getString(
-                    R.string.mozac_feature_downloads_unable_to_open_third_party_app,
-                    app.name,
-                )
-                Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
-            }
-            useCases.consumeDownload(tab.id, download.id)
         }
     }
 
@@ -445,8 +366,7 @@ class DownloadsFeature(
 
     private val ActivityInfo.identifier: String get() = packageName + name
 
-    @VisibleForTesting
-    internal fun DownloaderApp.toIntent(): Intent {
+    private fun DownloaderApp.toIntent(): Intent {
         return Intent(Intent.ACTION_VIEW).apply {
             setDataAndTypeAndNormalize(url.toUri(), contentType)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
