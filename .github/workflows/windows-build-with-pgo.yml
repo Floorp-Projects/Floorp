@@ -1,6 +1,9 @@
 name: Windows x86_64 Build with PGO
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 21 * * *'
 
 jobs:
   build-with-enable-profile-generate:
@@ -97,6 +100,11 @@ jobs:
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
         cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
+
+    - name: Set Display Version (schedule only)
+      if: github.event_name == "schedule"
+      run: |
+        echo `cat browser/config/version_display.txt`-${{ github.sha }} > browser/config/version_display.txt
 
     - name: Build 🔨
       run: |
@@ -273,6 +281,11 @@ jobs:
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
         cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
+
+    - name: Set Display Version (schedule only)
+      if: github.event_name == "schedule"
+      run: |
+        echo `cat browser/config/version_display.txt`-${{ github.sha }} > browser/config/version_display.txt
 
     - name: Build 🔨
       run: |
