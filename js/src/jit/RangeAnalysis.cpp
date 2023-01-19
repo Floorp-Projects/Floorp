@@ -2475,9 +2475,11 @@ bool RangeAnalysis::addRangeAssertions() {
       }
 
       // MIsNoIter is fused with the MTest that follows it and emitted as
-      // LIsNoIterAndBranch. Skip it to avoid complicating MIsNoIter
+      // LIsNoIterAndBranch. Similarly, MIteratorHasIndices is fused to
+      // become LIteratorHasIndicesAndBranch. Skip them to avoid complicating
       // lowering.
-      if (ins->isIsNoIter()) {
+      if (ins->isIsNoIter() || ins->isIteratorHasIndices()) {
+        MOZ_ASSERT(ins->hasOneUse());
         continue;
       }
 
