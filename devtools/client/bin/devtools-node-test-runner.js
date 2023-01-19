@@ -50,6 +50,10 @@ const SUITES = {
     path: "../inspector/compatibility/test/node",
     type: TEST_TYPES.JEST,
   },
+  debugger: {
+    path: "../debugger",
+    type: TEST_TYPES.JEST,
+  },
   framework: {
     path: "../framework/test/node",
     type: TEST_TYPES.JEST,
