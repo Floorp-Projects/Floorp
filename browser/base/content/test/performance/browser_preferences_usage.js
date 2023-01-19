@@ -274,7 +274,7 @@ add_task(async function navigate_around() {
   for (let i = 0; i < 50; i++) {
     let url = urls[i % urls.length];
     info(`Navigating to ${url}...`);
-    BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url);
     info(`Loaded ${url}.`);
   }

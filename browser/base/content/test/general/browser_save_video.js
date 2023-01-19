@@ -12,7 +12,7 @@ add_task(async function() {
   var fileName;
 
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     gBrowser,
     "http://mochi.test:8888/browser/browser/base/content/test/general/web_video.html"
   );

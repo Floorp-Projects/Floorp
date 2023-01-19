@@ -14,7 +14,7 @@ function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
     let win = await BrowserTestUtils.openNewBrowserWindow({
       private: aIsPrivate,
     });
-    BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, aTest.url);
+    BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, aTest.url);
     await promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, aTest.url);
     // Mark the window with some unique data to be restored later on.
     ss.setCustomWindowValue(win, aTest.key, aTest.value);

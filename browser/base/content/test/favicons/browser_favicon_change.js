@@ -14,7 +14,7 @@ add_task(async function() {
     TEST_ROOT + "file_bug970276_favicon1.ico"
   );
 
-  BrowserTestUtils.loadURI(extraTab.linkedBrowser, TEST_URL);
+  BrowserTestUtils.loadURIString(extraTab.linkedBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(extraTab.linkedBrowser);
   await haveChanged;
 

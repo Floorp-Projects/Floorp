@@ -46,10 +46,10 @@ add_task(async function test_sender_url() {
 
   await BrowserTestUtils.withNewTab({ gBrowser }, async browser => {
     let newTab = awaitNewTab();
-    BrowserTestUtils.loadURI(browser, "about:newtab");
+    BrowserTestUtils.loadURIString(browser, "about:newtab");
     await newTab;
 
-    BrowserTestUtils.loadURI(browser, image);
+    BrowserTestUtils.loadURIString(browser, image);
     let url = await extension.awaitMessage("sender.url");
     is(url, image, `Correct sender.url: ${url}`);
 

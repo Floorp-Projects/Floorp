@@ -21,7 +21,7 @@ add_task(async function test_unsigned() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  BrowserTestUtils.loadURI(
+  BrowserTestUtils.loadURIString(
     gBrowser.selectedBrowser,
     `${BASE}/file_install_extensions.html`
   );

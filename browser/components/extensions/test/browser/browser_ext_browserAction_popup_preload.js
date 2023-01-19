@@ -290,7 +290,10 @@ add_task(async function testBrowserActionTabPopulation() {
   });
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "http://example.com/");
+  BrowserTestUtils.loadURIString(
+    win.gBrowser.selectedBrowser,
+    "http://example.com/"
+  );
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   // Make sure the mouse isn't hovering over the browserAction widget.

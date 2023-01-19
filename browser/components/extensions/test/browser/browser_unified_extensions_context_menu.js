@@ -244,7 +244,7 @@ add_task(async function test_manage_extension() {
 
   // Navigate away from the initial page so that about:addons always opens in a
   // new tab during tests.
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   const [extension] = createExtensions([{ name: "an extension" }]);

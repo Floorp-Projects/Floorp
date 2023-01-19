@@ -15,7 +15,7 @@ add_task(async function test_interactions_simple_load_and_navigate_away() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     Interactions._pageViewStartTime = Cu.now() - 10000;
 
-    BrowserTestUtils.loadURI(browser, TEST_URL2);
+    BrowserTestUtils.loadURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     await assertDatabaseValues([
@@ -27,7 +27,7 @@ add_task(async function test_interactions_simple_load_and_navigate_away() {
 
     Interactions._pageViewStartTime = Cu.now() - 20000;
 
-    BrowserTestUtils.loadURI(browser, "about:blank");
+    BrowserTestUtils.loadURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -48,7 +48,7 @@ add_task(async function test_interactions_simple_load_and_change_to_non_http() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     Interactions._pageViewStartTime = Cu.now() - 10000;
 
-    BrowserTestUtils.loadURI(browser, "about:support");
+    BrowserTestUtils.loadURIString(browser, "about:support");
     await BrowserTestUtils.browserLoaded(browser, false, "about:support");
 
     await assertDatabaseValues([
@@ -182,7 +182,7 @@ add_task(async function test_interactions_switch_windows() {
 
   let otherWin = await BrowserTestUtils.openNewBrowserWindow();
 
-  BrowserTestUtils.loadURI(otherWin.gBrowser.selectedBrowser, TEST_URL2);
+  BrowserTestUtils.loadURIString(otherWin.gBrowser.selectedBrowser, TEST_URL2);
   await BrowserTestUtils.browserLoaded(
     otherWin.gBrowser.selectedBrowser,
     false,
@@ -238,7 +238,7 @@ add_task(async function test_interactions_loading_in_unfocused_windows() {
 
   let otherWin = await BrowserTestUtils.openNewBrowserWindow();
 
-  BrowserTestUtils.loadURI(otherWin.gBrowser.selectedBrowser, TEST_URL);
+  BrowserTestUtils.loadURIString(otherWin.gBrowser.selectedBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(
     otherWin.gBrowser.selectedBrowser,
     false,
@@ -247,7 +247,7 @@ add_task(async function test_interactions_loading_in_unfocused_windows() {
 
   Interactions._pageViewStartTime = Cu.now() - 10000;
 
-  BrowserTestUtils.loadURI(otherWin.gBrowser.selectedBrowser, TEST_URL2);
+  BrowserTestUtils.loadURIString(otherWin.gBrowser.selectedBrowser, TEST_URL2);
   await BrowserTestUtils.browserLoaded(
     otherWin.gBrowser.selectedBrowser,
     false,
@@ -272,7 +272,7 @@ add_task(async function test_interactions_loading_in_unfocused_windows() {
 
   Interactions._pageViewStartTime = Cu.now() - 20000;
 
-  BrowserTestUtils.loadURI(tabInOriginalWindow.linkedBrowser, TEST_URL4);
+  BrowserTestUtils.loadURIString(tabInOriginalWindow.linkedBrowser, TEST_URL4);
   await BrowserTestUtils.browserLoaded(
     tabInOriginalWindow.linkedBrowser,
     false,
@@ -307,7 +307,10 @@ add_task(async function test_interactions_private_browsing() {
     private: true,
   });
 
-  BrowserTestUtils.loadURI(privateWin.gBrowser.selectedBrowser, TEST_URL2);
+  BrowserTestUtils.loadURIString(
+    privateWin.gBrowser.selectedBrowser,
+    TEST_URL2
+  );
   await BrowserTestUtils.browserLoaded(
     privateWin.gBrowser.selectedBrowser,
     false,

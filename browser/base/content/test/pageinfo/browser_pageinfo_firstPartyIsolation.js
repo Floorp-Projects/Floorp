@@ -70,7 +70,7 @@ async function test() {
     false,
     url
   );
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
   await loadPromise;
 
   // Pass a dummy imageElement, if there isn't an imageElement, pageInfo.js

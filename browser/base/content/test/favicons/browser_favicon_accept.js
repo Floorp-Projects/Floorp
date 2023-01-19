@@ -12,7 +12,7 @@ add_task(async () => {
     async browser => {
       let faviconPromise = waitForFaviconMessage(true, `${ROOT}accept.sjs`);
 
-      BrowserTestUtils.loadURI(browser, ROOT + "accept.html");
+      BrowserTestUtils.loadURIString(browser, ROOT + "accept.html");
       await BrowserTestUtils.browserLoaded(browser);
 
       try {

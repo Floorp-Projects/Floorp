@@ -11,7 +11,7 @@ async function installTrigger(filename) {
       ["xpinstall.userActivation.required", false],
     ],
   });
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, INSTALL_PAGE);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, INSTALL_PAGE);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   SpecialPowers.spawn(

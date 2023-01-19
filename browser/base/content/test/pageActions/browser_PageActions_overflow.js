@@ -22,7 +22,10 @@ add_task(async function test() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(win);
   Assert.greater(win.outerWidth, 700, "window is bigger than 700px");
-  BrowserTestUtils.loadURI(win.gBrowser, "data:text/html,<h1>A Page</h1>");
+  BrowserTestUtils.loadURIString(
+    win.gBrowser,
+    "data:text/html,<h1>A Page</h1>"
+  );
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   // The pageAction implementation enables the button at the next animation
@@ -85,7 +88,7 @@ add_task(async function bookmark() {
   const url = "data:text/html,<h1>A Page</h1>";
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(win);
-  BrowserTestUtils.loadURI(win.gBrowser, url);
+  BrowserTestUtils.loadURIString(win.gBrowser, url);
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   // The pageAction implementation enables the button at the next animation

@@ -457,7 +457,7 @@ add_task(async function test_switch_before_closing() {
       null,
       FINAL_URL
     );
-    BrowserTestUtils.loadURI(newTab.linkedBrowser, FINAL_URL);
+    BrowserTestUtils.loadURIString(newTab.linkedBrowser, FINAL_URL);
     await loadPromise;
 
     // Close the added tab

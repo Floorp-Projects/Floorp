@@ -18,7 +18,7 @@ add_task(async function findbar_test() {
     false,
     url
   );
-  BrowserTestUtils.loadURI(newTab.linkedBrowser, url);
+  BrowserTestUtils.loadURIString(newTab.linkedBrowser, url);
   await promise;
 
   await gFindBarPromise;

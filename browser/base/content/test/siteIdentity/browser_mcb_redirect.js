@@ -100,7 +100,7 @@ function test1() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkUIForTest1
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function testInsecure1() {
@@ -110,7 +110,7 @@ function testInsecure1() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkUIForTest1
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 async function checkUIForTest1() {
@@ -136,7 +136,7 @@ function test2() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkUIForTest2
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 async function checkUIForTest2() {
@@ -163,7 +163,7 @@ function test3() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkLoadEventForTest3
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function checkLoadEventForTest3() {
@@ -184,7 +184,7 @@ function test4() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkLoadEventForTest4
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function checkLoadEventForTest4() {
@@ -210,7 +210,7 @@ function test5() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkLoadEventForTest5
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function checkLoadEventForTest5() {
@@ -240,7 +240,7 @@ function test6() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkLoadEventForTest6
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function checkLoadEventForTest6() {
@@ -264,7 +264,7 @@ function test7() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkLoadEventForTest7
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function checkLoadEventForTest7() {
@@ -289,7 +289,7 @@ function test8() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkLoadEventForTest8
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function checkLoadEventForTest8() {
@@ -318,7 +318,7 @@ function test9() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     checkLoadEventForTest9
   );
-  BrowserTestUtils.loadURI(gTestBrowser, url);
+  BrowserTestUtils.loadURIString(gTestBrowser, url);
 }
 
 function checkLoadEventForTest9() {

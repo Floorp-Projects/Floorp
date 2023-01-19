@@ -35,7 +35,7 @@ add_task(async function() {
     ) {
       return loadedURL == "about:config";
     });
-    BrowserTestUtils.loadURI(browser, "about:config");
+    BrowserTestUtils.loadURIString(browser, "about:config");
     await didLoad;
 
     gBrowser.goBack();

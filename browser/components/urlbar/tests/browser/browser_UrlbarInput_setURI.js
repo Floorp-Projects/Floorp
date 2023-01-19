@@ -63,7 +63,10 @@ var tests = [
     loadTabInWindow(window, function(tab) {
       // Load a new URL and then immediately stop it, to simulate a page load
       // error.
-      BrowserTestUtils.loadURI(tab.linkedBrowser, "http://test1.example.com");
+      BrowserTestUtils.loadURIString(
+        tab.linkedBrowser,
+        "http://test1.example.com"
+      );
       tab.linkedBrowser.stop();
       is(
         gURLBar.value,

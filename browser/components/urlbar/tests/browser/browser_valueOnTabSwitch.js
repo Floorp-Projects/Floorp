@@ -46,9 +46,9 @@ add_task(async function() {
     false,
     testURL
   );
-  BrowserTestUtils.loadURI(deletedURLTab.linkedBrowser, testURL);
-  BrowserTestUtils.loadURI(fullURLTab.linkedBrowser, testURL);
-  BrowserTestUtils.loadURI(partialURLTab.linkedBrowser, testURL);
+  BrowserTestUtils.loadURIString(deletedURLTab.linkedBrowser, testURL);
+  BrowserTestUtils.loadURIString(fullURLTab.linkedBrowser, testURL);
+  BrowserTestUtils.loadURIString(partialURLTab.linkedBrowser, testURL);
   await Promise.all([loaded1, loaded2, loaded3]);
 
   testURL = BrowserUIUtils.trimURL(testURL);

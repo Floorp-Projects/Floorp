@@ -152,7 +152,7 @@ add_task(async function test_snippets_telemetry() {
       url: "about:blank",
     },
     async browser => {
-      await BrowserTestUtils.loadURI(browser, "about:home");
+      await BrowserTestUtils.loadURIString(browser, "about:home");
       await BrowserTestUtils.browserLoaded(browser);
       let text = await SpecialPowers.spawn(browser, [], async () => {
         await ContentTaskUtils.waitForCondition(

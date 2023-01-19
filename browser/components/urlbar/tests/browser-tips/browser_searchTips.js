@@ -367,7 +367,10 @@ add_task(async function noPersistTipInWindowWithNonSerpTab() {
     false,
     SEARCH_SERP_URL
   );
-  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, SEARCH_SERP_URL);
+  BrowserTestUtils.loadURIString(
+    newWindow.gBrowser.selectedBrowser,
+    SEARCH_SERP_URL
+  );
   await browserLoadedPromise;
 
   // Wait longer than the persist tip delay to check that the search tip
@@ -442,7 +445,7 @@ add_task(async function noSearchTipWhileAnotherPageLoads() {
 
   // Load a slow URI to cause an onStateChange event but
   // not an onLocationChange event.
-  BrowserTestUtils.loadURI(tab.linkedBrowser, SLOW_PAGE);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, SLOW_PAGE);
 
   // Wait roughly for the amount of time it would take for the
   // persist search tip to show.

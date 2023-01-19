@@ -26,7 +26,7 @@ const waitForRemoved = async doc => {
 
 async function openURLInWindow(window, url) {
   const { selectedBrowser } = window.gBrowser;
-  BrowserTestUtils.loadURI(selectedBrowser, url);
+  BrowserTestUtils.loadURIString(selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
 }
 
@@ -233,7 +233,7 @@ add_task(
       "Feature callout rendered when opening a new tab with PDF url"
     );
 
-    BrowserTestUtils.loadURI(win.gBrowser, "about:preferences");
+    BrowserTestUtils.loadURIString(win.gBrowser, "about:preferences");
     await BrowserTestUtils.waitForLocationChange(
       win.gBrowser,
       "about:preferences"

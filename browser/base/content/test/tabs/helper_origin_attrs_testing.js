@@ -96,7 +96,7 @@ async function openURIInPrivateTab(uri) {
   const browser = win.gBrowser.selectedTab.linkedBrowser;
   let prevRemoteType = browser.remoteType;
   let loaded = BrowserTestUtils.browserLoaded(browser, false, uri);
-  BrowserTestUtils.loadURI(browser, uri);
+  BrowserTestUtils.loadURIString(browser, uri);
   await loaded;
   let currRemoteType = browser.remoteType;
 

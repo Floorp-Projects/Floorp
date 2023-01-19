@@ -176,7 +176,7 @@ async function simulateRestart(
 
   info("Waiting for about:home to load");
   let loaded = BrowserTestUtils.browserLoaded(browser, false, "about:home");
-  BrowserTestUtils.loadURI(browser, "about:home");
+  BrowserTestUtils.loadURIString(browser, "about:home");
   await loaded;
   info("about:home loaded");
 }

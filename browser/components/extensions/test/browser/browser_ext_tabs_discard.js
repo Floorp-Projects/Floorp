@@ -74,7 +74,7 @@ add_task(async function test_discarded() {
     },
   });
 
-  BrowserTestUtils.loadURI(gBrowser.browsers[0], "http://example.com");
+  BrowserTestUtils.loadURIString(gBrowser.browsers[0], "http://example.com");
   await BrowserTestUtils.browserLoaded(gBrowser.browsers[0]);
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

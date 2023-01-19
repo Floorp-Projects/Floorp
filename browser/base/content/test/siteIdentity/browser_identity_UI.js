@@ -118,7 +118,10 @@ async function runTest(i, forward) {
     false,
     currentTest.location
   );
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, currentTest.location);
+  BrowserTestUtils.loadURIString(
+    gBrowser.selectedBrowser,
+    currentTest.location
+  );
   await loaded;
   await popupHidden;
   ok(

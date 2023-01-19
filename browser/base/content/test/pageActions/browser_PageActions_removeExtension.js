@@ -45,7 +45,7 @@ add_task(async function contextMenu_removeExtension_panel() {
   const url = "data:text/html,<h1>A Page</h1>";
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(win);
-  BrowserTestUtils.loadURI(win.gBrowser, url);
+  BrowserTestUtils.loadURIString(win.gBrowser, url);
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   info("Shrink the window if necessary, check the meatball menu is visible");
@@ -273,7 +273,7 @@ add_task(async function contextMenu_removeExtension_disabled_in_panel() {
   const url = "data:text/html,<h1>A Page</h1>";
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(win);
-  BrowserTestUtils.loadURI(win.gBrowser, url);
+  BrowserTestUtils.loadURIString(win.gBrowser, url);
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   info("Shrink the window if necessary, check the meatball menu is visible");

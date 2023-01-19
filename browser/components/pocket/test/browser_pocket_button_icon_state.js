@@ -122,7 +122,7 @@ test_runner(async function test_pocketButtonState_changeLocation({ sandbox }) {
   // Simulate a location change, and check the panel state.
   let browser = gBrowser.selectedBrowser;
   let loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURI(browser, "about:robots");
+  BrowserTestUtils.loadURIString(browser, "about:robots");
   await loaded;
   await pocketPanelHidden;
 

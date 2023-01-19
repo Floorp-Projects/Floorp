@@ -224,7 +224,7 @@ add_task(async function test_screenshot_enabled_or_disabled() {
     false,
     "about:blank"
   );
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
   await onLoaded;
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -308,7 +308,7 @@ add_task(async function test_screenshot() {
     set: [["screenshots.browser.component.enabled", true]],
   });
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, DUMMY_PAGE);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, DUMMY_PAGE);
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
@@ -478,7 +478,10 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      BrowserTestUtils.loadURIString(
+        gBrowser.selectedBrowser,
+        "http://example.com/"
+      );
       await onLoad;
     },
     uri: "about:addons",
@@ -493,7 +496,10 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      BrowserTestUtils.loadURIString(
+        gBrowser.selectedBrowser,
+        "http://example.com/"
+      );
       await onLoad;
     },
     uri: "about:addons",
@@ -508,7 +514,10 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      BrowserTestUtils.loadURIString(
+        gBrowser.selectedBrowser,
+        "http://example.com/"
+      );
       await onLoad;
     },
     uri: "about:addons",
@@ -523,7 +532,10 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      BrowserTestUtils.loadURIString(
+        gBrowser.selectedBrowser,
+        "http://example.com/"
+      );
       await onLoad;
     },
     uri: "about:addons",
@@ -600,7 +612,10 @@ add_task(async function test_viewsource() {
   );
 
   info("Check the button status of when the page is web content");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com");
+  BrowserTestUtils.loadURIString(
+    gBrowser.selectedBrowser,
+    "http://example.com"
+  );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,

@@ -51,7 +51,7 @@ add_task(async function check_default_bookmark_title() {
       url,
       isError
     );
-    BrowserTestUtils.loadURI(browser, url);
+    BrowserTestUtils.loadURIString(browser, url);
     await promiseLoaded;
 
     await checkBookmark(url, title);
@@ -81,7 +81,7 @@ add_task(async function check_default_bookmark_title() {
     null,
     true
   );
-  BrowserTestUtils.loadURI(browser, url);
+  BrowserTestUtils.loadURIString(browser, url);
   await promiseLoaded;
 
   // The offline mode test is only good if the page failed to load.

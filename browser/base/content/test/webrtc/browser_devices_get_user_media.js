@@ -900,7 +900,7 @@ var gTests = [
       await disableObserverVerification();
 
       let browser = gBrowser.selectedBrowser;
-      BrowserTestUtils.loadURI(
+      BrowserTestUtils.loadURIString(
         browser,
         browser.documentURI.spec.replace("https://", "http://")
       );
