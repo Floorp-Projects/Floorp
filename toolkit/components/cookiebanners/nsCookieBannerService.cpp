@@ -586,7 +586,10 @@ nsCookieBannerService::HasRuleForBrowsingContextTree(
 
     bool hasClickRule = false;
     bool hasCookieRule = false;
-    rv = HasRuleForBrowsingContextInternal(bc, hasClickRule, hasCookieRule);
+    // Pass ignoreDomainPref=true: when checking whether a suitable rule exists
+    // we don't care what the domain-specific user pref is set to.
+    rv = HasRuleForBrowsingContextInternal(bc, true, hasClickRule,
+                                           hasCookieRule);
     // If the method failed abort the walk. We will return the stored error
     // result when exiting the method.
     if (NS_FAILED(rv)) {
@@ -615,8 +618,8 @@ nsCookieBannerService::HasRuleForBrowsingContextTree(
 }
 
 nsresult nsCookieBannerService::HasRuleForBrowsingContextInternal(
-    mozilla::dom::BrowsingContext* aBrowsingContext, bool& aHasClickRule,
-    bool& aHasCookieRule) {
+    mozilla::dom::BrowsingContext* aBrowsingContext, bool aIgnoreDomainPref,
+    bool& aHasClickRule, bool& aHasCookieRule) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mIsInitialized);
   NS_ENSURE_ARG_POINTER(aBrowsingContext);
@@ -629,7 +632,8 @@ nsresult nsCookieBannerService::HasRuleForBrowsingContextInternal(
   // First, check if our current mode is disabled. If so there is no applicable
   // rule.
   nsICookieBannerService::Modes mode;
-  nsresult rv = GetServiceModeForBrowsingContext(aBrowsingContext, &mode);
+  nsresult rv = GetServiceModeForBrowsingContext(aBrowsingContext,
+                                                 aIgnoreDomainPref, &mode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mode == nsICookieBannerService::MODE_DISABLED ||
@@ -976,7 +980,7 @@ nsCookieBannerService::OnLocationChange(nsIWebProgress* aWebProgress,
   bool hasCookieRule = false;
 
   nsresult rv =
-      HasRuleForBrowsingContextInternal(bc, hasClickRule, hasCookieRule);
+      HasRuleForBrowsingContextInternal(bc, false, hasClickRule, hasCookieRule);
   NS_ENSURE_SUCCESS(rv, rv);
 
   hasClickRuleInData |= hasClickRule;
@@ -1033,7 +1037,7 @@ void nsCookieBannerService::DailyReportTelemetry() {
 }
 
 nsresult nsCookieBannerService::GetServiceModeForBrowsingContext(
-    dom::BrowsingContext* aBrowsingContext,
+    dom::BrowsingContext* aBrowsingContext, bool aIgnoreDomainPref,
     nsICookieBannerService::Modes* aMode) {
   MOZ_ASSERT(XRE_IsParentProcess());
   NS_ENSURE_ARG_POINTER(aBrowsingContext);
@@ -1050,6 +1054,16 @@ nsresult nsCookieBannerService::GetServiceModeForBrowsingContext(
     mode = StaticPrefs::cookiebanners_service_mode();
   }
 
+  // We can skip checking domain-specific prefs if passed the skip pref or if
+  // the mode pref disables the feature. Per-domain modes enabling the service
+  // sites while it's globally disabled is not supported.
+  if (aIgnoreDomainPref || mode == nsICookieBannerService::MODE_DISABLED) {
+    *aMode = static_cast<nsICookieBannerService::Modes>(mode);
+    return NS_OK;
+  }
+
+  // Check if there is a per-domain service mode, disabling the feature for a
+  // specific domain or overriding the mode.
   RefPtr<dom::WindowGlobalParent> topWGP =
       aBrowsingContext->Top()->Canonical()->GetCurrentWindowGlobal();
   NS_ENSURE_TRUE(topWGP, NS_ERROR_FAILURE);
@@ -1063,17 +1077,14 @@ nsresult nsCookieBannerService::GetServiceModeForBrowsingContext(
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(!baseDomain.IsEmpty(), NS_ERROR_FAILURE);
 
-  if (mode != nsICookieBannerService::MODE_DISABLED) {
-    // Get the domain preference for the top-level baseDomain, the domain
-    // preference takes precedence over the pref setting.
+  // Get the domain preference for the top-level baseDomain, the domain
+  // preference takes precedence over the global pref setting.
+  nsICookieBannerService::Modes domainPref;
+  rv = GetDomainPrefInternal(baseDomain, usePBM, &domainPref);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsICookieBannerService::Modes domainPref;
-    nsresult rv = GetDomainPrefInternal(baseDomain, usePBM, &domainPref);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (domainPref != nsICookieBannerService::MODE_UNSET) {
-      mode = domainPref;
-    }
+  if (domainPref != nsICookieBannerService::MODE_UNSET) {
+    mode = domainPref;
   }
 
   *aMode = static_cast<nsICookieBannerService::Modes>(mode);

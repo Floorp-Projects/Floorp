@@ -83,8 +83,8 @@ class nsCookieBannerService final : public nsIObserver,
       nsTArray<RefPtr<nsICookieRule>>& aCookies);
 
   nsresult HasRuleForBrowsingContextInternal(
-      mozilla::dom::BrowsingContext* aBrowsingContext, bool& aHasClickRule,
-      bool& aHasCookieRule);
+      mozilla::dom::BrowsingContext* aBrowsingContext, bool aIgnoreDomainPref,
+      bool& aHasClickRule, bool& aHasCookieRule);
 
   nsresult GetRuleForDomain(const nsACString& aDomain, bool aIsTopLevel,
                             nsICookieBannerRule** aRule,
@@ -118,7 +118,7 @@ class nsCookieBannerService final : public nsIObserver,
                          bool aReportTelemetry = false);
 
   nsresult GetServiceModeForBrowsingContext(
-      dom::BrowsingContext* aBrowsingContext,
+      dom::BrowsingContext* aBrowsingContext, bool aIgnoreDomainPref,
       nsICookieBannerService::Modes* aMode);
 
   nsresult RegisterWebProgressListener(nsISupports* aSubject);
