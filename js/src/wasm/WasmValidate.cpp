@@ -656,6 +656,11 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                 ValType(RefType::any()),
                 ValType(RefType::struct_().asNonNullable()), &nothing));
           }
+          case uint16_t(GcOp::BrOnNonStruct): {
+            uint32_t unusedRelativeDepth;
+            CHECK(iter.readBrOnNonStruct(&unusedRelativeDepth, &unusedType,
+                                         &nothings));
+          }
           case uint16_t(GcOp::ExternInternalize): {
             CHECK(iter.readRefConversion(RefType::extern_(), RefType::any(),
                                          &nothing));

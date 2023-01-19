@@ -7305,6 +7305,41 @@ bool BaseCompiler::emitRefAsStruct() {
                               &nothing);
 }
 
+bool BaseCompiler::emitBrOnNonStruct() {
+  MOZ_ASSERT(!hasLatentOp());
+
+  uint32_t labelRelativeDepth;
+  ResultType labelType;
+  BaseNothingVector unused_values{};
+  if (!iter_.readBrOnNonStruct(&labelRelativeDepth, &labelType,
+                               &unused_values)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  Control& target = controlItem(labelRelativeDepth);
+  target.bceSafeOnExit &= bceSafe_;
+
+  BranchState b(&target.label, target.stackHeight, InvertBranch(false),
+                labelType);
+  if (b.hasBlockResults()) {
+    needResultRegisters(b.resultType);
+  }
+  RegI32 condition = needI32();
+  masm.move32(Imm32(1), condition);
+  if (b.hasBlockResults()) {
+    freeResultRegisters(b.resultType);
+  }
+  if (!jumpConditionalWithResults(&b, Assembler::Equal, condition, Imm32(0))) {
+    return false;
+  }
+  freeI32(condition);
+  return true;
+}
+
 bool BaseCompiler::emitExternInternalize() {
   // extern.internalize is a no-op because anyref and extern share the same
   // representation
@@ -9470,6 +9505,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/false));
           case uint32_t(GcOp::RefAsStruct):
             CHECK_NEXT(emitRefAsStruct());
+          case uint32_t(GcOp::BrOnNonStruct):
+            CHECK_NEXT(emitBrOnNonStruct());
           case uint16_t(GcOp::ExternInternalize):
             CHECK_NEXT(emitExternInternalize());
           case uint16_t(GcOp::ExternExternalize):

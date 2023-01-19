@@ -199,6 +199,8 @@ enum class OpKind {
   RefTest,
   RefCast,
   BrOnCast,
+  BrOnCastFail,
+  BrOnNonStruct,
   RefConversion,
 #  ifdef ENABLE_WASM_SIMD
   ExtractLane,
@@ -747,10 +749,18 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readBrOnCast(uint32_t* labelRelativeDepth,
                                   uint32_t* castTypeIndex,
                                   ResultType* labelType, ValueVector* values);
+  [[nodiscard]] bool checkBrOnCastFailCommon(uint32_t labelRelativeDepth,
+                                             ValType castFromType,
+                                             ValType castToType,
+                                             ResultType* labelType,
+                                             ValueVector* values);
   [[nodiscard]] bool readBrOnCastFail(uint32_t* labelRelativeDepth,
                                       uint32_t* castTypeIndex,
                                       ResultType* labelType,
                                       ValueVector* values);
+  [[nodiscard]] bool readBrOnNonStruct(uint32_t* labelRelativeDepth,
+                                       ResultType* labelType,
+                                       ValueVector* values);
   [[nodiscard]] bool readRefConversion(RefType operandType, RefType resultType,
                                        Value* operandValue);
 #endif
@@ -3588,35 +3598,17 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* labelRelativeDepth,
 //
 // `values` will be nonempty after the call, and its last entry will be that
 // of the argument.
-
 template <typename Policy>
-inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,
-                                             uint32_t* castTypeIndex,
-                                             ResultType* labelType,
-                                             ValueVector* values) {
-  MOZ_ASSERT(Classify(op_) == OpKind::BrOnCast);
-
-  if (!readVarU32(labelRelativeDepth)) {
-    return fail("unable to read br_on_cast_fail depth");
-  }
-
-  if (!readGcTypeIndex(castTypeIndex)) {
-    return false;
-  }
-
-  // The casted from type is any subtype of eqref.
-  ValType anyrefType(RefType::any());
-
-  // The casted to type is a non-nullable reference to the type index
-  // specified as an immediate.
-  const TypeDef& castTypeDef = env_.types->type(*castTypeIndex);
-  ValType castType(RefType::fromTypeDef(&castTypeDef, false));
-
+inline bool OpIter<Policy>::checkBrOnCastFailCommon(uint32_t labelRelativeDepth,
+                                                    ValType castFromType,
+                                                    ValType castToType,
+                                                    ResultType* labelType,
+                                                    ValueVector* values) {
   // Get the branch target type, which will also determine the type of extra
   // values that are passed along with the casted type.  This validates
   // requirement (1).
   Control* block = nullptr;
-  if (!getControl(*labelRelativeDepth, &block)) {
+  if (!getControl(labelRelativeDepth, &block)) {
     return false;
   }
   *labelType = block->branchTargetType();
@@ -3637,13 +3629,60 @@ inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,
   // Validates the first half of (3), if we pretend that topType is eqref,
   // which it isn't really.
   Value ignored;
-  if (!popWithType(anyrefType, &ignored)) {
+  if (!popWithType(castFromType, &ignored)) {
     return false;
   }
 
   // The top result in the fallthrough case is the casted to type.
-  infalliblePush(castType);
+  infalliblePush(TypeAndValue(castToType, ignored));
   return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,
+                                             uint32_t* castTypeIndex,
+                                             ResultType* labelType,
+                                             ValueVector* values) {
+  MOZ_ASSERT(Classify(op_) == OpKind::BrOnCastFail);
+
+  if (!readVarU32(labelRelativeDepth)) {
+    return fail("unable to read br_on_cast_fail depth");
+  }
+
+  if (!readGcTypeIndex(castTypeIndex)) {
+    return false;
+  }
+
+  // The casted from type is any subtype of eqref.
+  ValType castFromType(RefType::any());
+
+  // The casted to type is a non-nullable reference to the type index
+  // specified as an immediate.
+  const TypeDef& castToTypeDef = env_.types->type(*castTypeIndex);
+  ValType castToType(RefType::fromTypeDef(&castToTypeDef, false));
+
+  return checkBrOnCastFailCommon(*labelRelativeDepth, castFromType, castToType,
+                                 labelType, values);
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readBrOnNonStruct(uint32_t* labelRelativeDepth,
+                                              ResultType* labelType,
+                                              ValueVector* values) {
+  MOZ_ASSERT(Classify(op_) == OpKind::BrOnNonStruct);
+
+  if (!readVarU32(labelRelativeDepth)) {
+    return fail("unable to read br_on_non_struct depth");
+  }
+
+  // The casted from type is any subtype of eqref.
+  ValType castFromType(RefType::any());
+
+  // The casted to type is a non-nullable reference to a struct.
+  ValType castToType(RefType::struct_().asNonNullable());
+
+  return checkBrOnCastFailCommon(*labelRelativeDepth, castFromType, castToType,
+                                 labelType, values);
 }
 
 template <typename Policy>
