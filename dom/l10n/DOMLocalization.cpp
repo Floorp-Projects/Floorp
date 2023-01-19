@@ -139,11 +139,6 @@ void DOMLocalization::ResumeObserving(ErrorResult& aRv) {
 void DOMLocalization::SetAttributes(
     JSContext* aCx, Element& aElement, const nsAString& aId,
     const Optional<JS::Handle<JSObject*>>& aArgs, ErrorResult& aRv) {
-  if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::datal10nid, aId,
-                            eCaseMatters)) {
-    aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::datal10nid, aId, true);
-  }
-
   if (aArgs.WasPassed() && aArgs.Value()) {
     nsAutoString data;
     JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*aArgs.Value()));
@@ -157,6 +152,11 @@ void DOMLocalization::SetAttributes(
     }
   } else {
     aElement.UnsetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, true);
+  }
+
+  if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::datal10nid, aId,
+                            eCaseMatters)) {
+    aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::datal10nid, aId, true);
   }
 }
 
