@@ -7555,26 +7555,33 @@ engine_tab:
         description: |
           Number of active tabs (with an engine session assigned) when the app
           went to the background.
+        type: string
       background_crashed_tabs:
         description: |
           Number of tabs marked as crashed when the app went to the background.
+        type: string
       background_total_tabs:
         description: |
           Number of total tabs when the app went to the background.
+        type: string
       foreground_active_tabs:
         description: |
           Number of active tabs (with an engine session assigned) when the
           app came back to the foreground.
+        type: string
       foreground_crashed_tabs:
         description: |
           Number of tabs marked as crashed when the app came back to the
           foreground.
+        type: string
       foreground_total_tabs:
         description: |
           Number of total tabs when the app came back to the foreground.
+        type: string
       time_in_background:
         description: |
           Time (in milliseconds) the app was in the background.
+        type: string
     metadata:
       tags:
         - Performance
