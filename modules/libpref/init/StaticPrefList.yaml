@@ -1096,6 +1096,25 @@
   value: 0
   mirror: always
 
+# Whether tooltips are enabled.
+- name: browser.chrome.toolbar_tips
+  type: bool
+  value: true
+  mirror: always
+
+# Whether tooltips are hidden on keydown.
+#  0: never
+#  1: always
+#  2: only on non-modifier keys
+- name: browser.chrome.toolbar_tips.hide_on_keydown
+  type: uint32_t
+#if defined(XP_WIN)
+  value: 0
+#else
+  value: 2
+#endif
+  mirror: always
+
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false

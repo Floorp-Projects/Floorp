@@ -11,7 +11,7 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "XULTreeElement.h"
+#include "Units.h"
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
 
@@ -22,7 +22,9 @@ namespace mozilla {
 namespace dom {
 class Event;
 class MouseEvent;
+class XULTreeElement;
 }  // namespace dom
+class WidgetKeyboardEvent;
 }  // namespace mozilla
 
 class nsXULTooltipListener final : public nsIDOMEventListener {
@@ -40,12 +42,12 @@ class nsXULTooltipListener final : public nsIDOMEventListener {
     return sInstance;
   }
 
+  static bool KeyEventHidesTooltip(const mozilla::WidgetKeyboardEvent&);
+  static bool ShowTooltips();
+
  protected:
   nsXULTooltipListener();
   ~nsXULTooltipListener();
-
-  // pref callback for when the "show tooltips" pref changes
-  static bool sShowTooltips;
 
   void KillTooltipTimer();
 
@@ -63,7 +65,6 @@ class nsXULTooltipListener final : public nsIDOMEventListener {
   nsresult GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip);
 
   static nsXULTooltipListener* sInstance;
-  static void ToolbarTipsPrefChanged(const char* aPref, void* aClosure);
 
   nsWeakPtr mSourceNode;
   nsWeakPtr mTargetNode;

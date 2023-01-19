@@ -7,6 +7,7 @@
 #include "nsXULTooltipListener.h"
 
 #include "XULButtonElement.h"
+#include "XULTreeElement.h"
 #include "nsXULElement.h"
 #include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
@@ -23,9 +24,9 @@
 #include "nsContentUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "mozilla/dom/MouseEvent.h"
@@ -45,26 +46,13 @@ nsXULTooltipListener::nsXULTooltipListener()
     : mTooltipShownOnce(false),
       mIsSourceTree(false),
       mNeedTitletip(false),
-      mLastTreeRow(-1) {
-  // FIXME(emilio): This can be faster, this should use static prefs.
-  //
-  // register the callback so we get notified of updates
-  Preferences::RegisterCallback(ToolbarTipsPrefChanged,
-                                "browser.chrome.toolbar_tips");
-
-  // Call the pref callback to initialize our state.
-  ToolbarTipsPrefChanged("browser.chrome.toolbar_tips", nullptr);
-}
+      mLastTreeRow(-1) {}
 
 nsXULTooltipListener::~nsXULTooltipListener() {
   MOZ_ASSERT(sInstance == this);
   sInstance = nullptr;
 
   HideTooltip();
-
-  // Unregister our pref observer
-  Preferences::UnregisterCallback(ToolbarTipsPrefChanged,
-                                  "browser.chrome.toolbar_tips");
 }
 
 NS_IMPL_ISUPPORTS(nsXULTooltipListener, nsIDOMEventListener)
@@ -125,7 +113,9 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
 }
 
 void nsXULTooltipListener::MouseMove(Event* aEvent) {
-  if (!sShowTooltips) return;
+  if (!ShowTooltips()) {
+    return;
+  }
 
   // stash the coordinates of the event so that we can still get back to it from
   // within the timer callback. On win32, we'll get a MouseMove event even when
@@ -248,10 +238,9 @@ nsXULTooltipListener::HandleEvent(Event* aEvent) {
   if (type.EqualsLiteral("keydown")) {
     // Hide the tooltip if a non-modifier key is pressed.
     WidgetKeyboardEvent* keyEvent = aEvent->WidgetEventPtr()->AsKeyboardEvent();
-    if (!keyEvent->IsModifierKeyEvent()) {
+    if (KeyEventHidesTooltip(*keyEvent)) {
       HideTooltip();
     }
-
     return NS_OK;
   }
 
@@ -289,17 +278,21 @@ nsXULTooltipListener::HandleEvent(Event* aEvent) {
 //////////////////////////////////////////////////////////////////////////
 //// nsXULTooltipListener
 
-// static
-void nsXULTooltipListener::ToolbarTipsPrefChanged(const char* aPref,
-                                                  void* aClosure) {
-  sShowTooltips =
-      Preferences::GetBool("browser.chrome.toolbar_tips", sShowTooltips);
+bool nsXULTooltipListener::ShowTooltips() {
+  return StaticPrefs::browser_chrome_toolbar_tips();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//// nsXULTooltipListener
-
-bool nsXULTooltipListener::sShowTooltips = false;
+bool nsXULTooltipListener::KeyEventHidesTooltip(
+    const WidgetKeyboardEvent& aEvent) {
+  switch (StaticPrefs::browser_chrome_toolbar_tips_hide_on_keydown()) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      return !aEvent.IsModifierKeyEvent();
+  }
+}
 
 void nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode) {
   MOZ_ASSERT(aNode);
@@ -411,10 +404,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
         doc->AddSystemEventListener(u"wheel"_ns, this, true);
         doc->AddSystemEventListener(u"mousedown"_ns, this, true);
         doc->AddSystemEventListener(u"mouseup"_ns, this, true);
-#ifndef XP_WIN
-        // On Windows, key events don't close tooltips.
         doc->AddSystemEventListener(u"keydown"_ns, this, true);
-#endif
       }
       mSourceNode = nullptr;
     }
@@ -636,9 +626,7 @@ nsresult nsXULTooltipListener::DestroyTooltip() {
       doc->RemoveSystemEventListener(u"wheel"_ns, this, true);
       doc->RemoveSystemEventListener(u"mousedown"_ns, this, true);
       doc->RemoveSystemEventListener(u"mouseup"_ns, this, true);
-#ifndef XP_WIN
       doc->RemoveSystemEventListener(u"keydown"_ns, this, true);
-#endif
     }
 
     // remove the popuphidden listener from tooltip
