@@ -18,8 +18,6 @@
 
 namespace mozilla::dom {
 
-constexpr auto kFlushTypeToObserve = FlushType::Layout;
-
 void ResizeObserverNotificationHelper::WillRefresh(TimeStamp aTime) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner, "Should've de-registered on-time!");
   mOwner->Notify();
@@ -52,8 +50,7 @@ void ResizeObserverNotificationHelper::Register() {
     return;
   }
 
-  refreshDriver->AddRefreshObserver(this, kFlushTypeToObserve,
-                                    "ResizeObserver");
+  refreshDriver->AddRefreshObserver(this, FlushType::Display, "ResizeObserver");
   mRegistered = true;
 }
 
@@ -67,7 +64,7 @@ void ResizeObserverNotificationHelper::Unregister() {
       refreshDriver,
       "We should not leave a dangling reference to the observer around");
 
-  bool rv = refreshDriver->RemoveRefreshObserver(this, kFlushTypeToObserve);
+  bool rv = refreshDriver->RemoveRefreshObserver(this, FlushType::Display);
   MOZ_DIAGNOSTIC_ASSERT(rv, "Should remove the observer successfully");
   Unused << rv;
 
