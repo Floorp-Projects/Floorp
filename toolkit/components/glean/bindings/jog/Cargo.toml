@@ -7,7 +7,7 @@ publish = false
 license = "MPL-2.0"
 
 [dependencies]
-firefox-on-glean = { path = "../../api" }
+fog = { path = "../../api" }
 log = "0.4"
 mozbuild = "0.1"
 nsstring = { path = "../../../../../xpcom/rust/nsstring", optional = true }
