@@ -408,10 +408,10 @@ async function runTipTests() {
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
 
-  info("Ensuring the help button is focused on tab");
+  info("Ensuring the help button is focused on down arrow");
   info("Also ensuring that the help button is a part of a labelled group");
   focused = waitForEvent(EVENT_FOCUS, isEventForTipButton);
-  EventUtils.synthesizeKey("KEY_Tab");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
 
@@ -421,9 +421,9 @@ async function runTipTests() {
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
 
-  info("Ensuring the help button is focused on shift+tab");
+  info("Ensuring the help button is focused on up arrow");
   focused = waitForEvent(EVENT_FOCUS, isEventForTipButton);
-  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
 

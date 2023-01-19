@@ -194,7 +194,7 @@ add_task(async function tip_onResultPicked_helpButton_url_enter() {
     ext.onMessage("onResultPicked received", () => {
       Assert.ok(false, "onResultPicked should not be called");
     });
-    EventUtils.synthesizeKey("KEY_Tab");
+    EventUtils.synthesizeKey("KEY_ArrowDown");
     EventUtils.synthesizeKey("KEY_Enter");
     await loadedPromise;
     Assert.equal(gBrowser.currentURI.spec, "http://example.com/");

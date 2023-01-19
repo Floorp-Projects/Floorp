@@ -183,6 +183,30 @@ export class UrlbarView {
     return this.#selectedElement.elementIndex;
   }
 
+  set selectedElementIndex(val) {
+    if (!this.isOpen) {
+      throw new Error(
+        "UrlbarView: Cannot select an item if the view isn't open."
+      );
+    }
+
+    if (val < 0) {
+      this.#selectElement(null);
+      return;
+    }
+
+    let selectableElement = this.#getFirstSelectableElement();
+    while (selectableElement && selectableElement.elementIndex != val) {
+      selectableElement = this.#getNextSelectableElement(selectableElement);
+    }
+
+    if (!selectableElement) {
+      throw new Error(`UrlbarView: Index ${val} is out of bounds.`);
+    }
+
+    this.#selectElement(selectableElement);
+  }
+
   /**
    * @returns {UrlbarResult}
    *   The currently selected result.
@@ -224,6 +248,22 @@ export class UrlbarView {
     let sum = 0;
     for (let row of this.#rows.children) {
       sum += Number(this.#isElementVisible(row));
+    }
+    return sum;
+  }
+
+  /**
+   * @returns {number}
+   *   The number of selectable elements in the view.
+   */
+  get visibleElementCount() {
+    let sum = 0;
+    let element = this.#getFirstSelectableElement();
+    while (element) {
+      if (this.#isElementVisible(element)) {
+        sum++;
+      }
+      element = this.#getNextSelectableElement(element);
     }
     return sum;
   }
@@ -291,37 +331,6 @@ export class UrlbarView {
       );
     }
 
-    // Freeze results as the user is interacting with them, unless we are
-    // deferring events while waiting for critical results.
-    if (!this.input.eventBufferer.isDeferringEvents) {
-      this.controller.cancelQuery();
-    }
-
-    if (!userPressedTab) {
-      let { selectedRowIndex } = this;
-      let end = this.visibleRowCount - 1;
-      if (selectedRowIndex == -1) {
-        this.selectedRowIndex = reverse ? end : 0;
-        return;
-      }
-      let endReached = selectedRowIndex == (reverse ? 0 : end);
-      if (endReached) {
-        if (this.allowEmptySelection) {
-          this.#selectElement(null);
-        } else {
-          this.selectedRowIndex = reverse ? end : 0;
-        }
-        return;
-      }
-      this.selectedRowIndex = Math.max(
-        0,
-        Math.min(end, selectedRowIndex + amount * (reverse ? -1 : 1))
-      );
-      return;
-    }
-
-    // Tab key handling below.
-
     // Do not set aria-activedescendant if the user is moving to a
     // tab-to-search result with the Tab key. If
     // accessibility.tabToSearch.announceResults is set, the tab-to-search
@@ -332,6 +341,7 @@ export class UrlbarView {
       let skipAnnouncement =
         selectedElt?.result?.providerName == "TabToSearch" &&
         !this.#announceTabToSearchOnSelection &&
+        userPressedTab &&
         lazy.UrlbarPrefs.get("accessibility.tabToSearch.announceResults");
       if (skipAnnouncement) {
         // Once we skip setting aria-activedescendant once, we should not skip
@@ -340,6 +350,12 @@ export class UrlbarView {
       }
       return skipAnnouncement;
     };
+
+    // Freeze results as the user is interacting with them, unless we are
+    // deferring events while waiting for critical results.
+    if (!this.input.eventBufferer.isDeferringEvents) {
+      this.controller.cancelQuery();
+    }
 
     let selectedElement = this.#selectedElement;
 
@@ -382,6 +398,9 @@ export class UrlbarView {
         : this.#getNextSelectableElement(selectedElement);
       if (!next) {
         break;
+      }
+      if (!this.#isElementVisible(next)) {
+        continue;
       }
       selectedElement = next;
     }
@@ -1919,7 +1938,7 @@ export class UrlbarView {
     if (!element || element.style.display == "none") {
       return false;
     }
-    let row = this.#getRowFromElement(element);
+    let row = element.closest(".urlbarView-row");
     return row && row.style.display != "none";
   }
 
@@ -1970,7 +1989,7 @@ export class UrlbarView {
     this.#setAccessibleFocus(setAccessibleFocus && element);
     this.#selectedElement = element;
 
-    let result = this.#getRowFromElement(element)?.result;
+    let result = element?.closest(".urlbarView-row")?.result;
     if (updateInput) {
       let urlOverride = null;
       if (element?.classList?.contains("urlbarView-button-help")) {
@@ -2059,7 +2078,7 @@ export class UrlbarView {
    *   last selectable element.
    */
   #getNextSelectableElement(element) {
-    let row = this.#getRowFromElement(element);
+    let row = element.closest(".urlbarView-row");
     if (!row) {
       return null;
     }
@@ -2091,7 +2110,7 @@ export class UrlbarView {
    *   the first selectable element.
    */
   #getPreviousSelectableElement(element) {
-    let row = this.#getRowFromElement(element);
+    let row = element.closest(".urlbarView-row");
     if (!row) {
       return null;
     }
