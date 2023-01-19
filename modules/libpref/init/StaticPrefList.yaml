@@ -1961,6 +1961,14 @@
   value: 0
   mirror: always
 
+# When set to true, cookie banners are detected and detection events are
+# dispatched, but they will not be handled. Requires the service to be enabled
+# for the desired mode via pref cookiebanners.service.mode*
+- name: cookiebanners.service.detectOnly
+  type: bool
+  value: false
+  mirror: always
+
 # Controls the cookie banner handling mode in private browsing. Same mode
 # options as the normal browsing pref above.
 - name: cookiebanners.service.mode.privateBrowsing

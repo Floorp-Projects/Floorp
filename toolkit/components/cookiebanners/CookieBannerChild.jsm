@@ -33,6 +33,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
+  "prefDetectOnly",
+  "cookiebanners.service.detectOnly",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
   "bannerClickingEnabled",
   "cookiebanners.bannerClicking.enabled",
   false
@@ -43,7 +49,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "cookiebanners.bannerClicking.timeout",
   3000
 );
-
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "testing",
@@ -124,10 +129,7 @@ class CookieBannerChild extends JSWindowActorChild {
     if (!this.#isEnabled) {
       return false;
     }
-    if (this.#isPrivateBrowsing) {
-      return lazy.serviceModePBM == Ci.nsICookieBannerService.MODE_DETECT_ONLY;
-    }
-    return lazy.serviceMode == Ci.nsICookieBannerService.MODE_DETECT_ONLY;
+    return lazy.prefDetectOnly;
   }
 
   /**
@@ -364,7 +366,7 @@ class CookieBannerChild extends JSWindowActorChild {
    * The function to perform the core logic of handing the cookie banner. It
    * will detect the banner and click the banner button whenever possible
    * according to the given click rules.
-   * If the service mode pref is set to MODE_DETECT_ONLY we will only attempt to
+   * If the service mode pref is set to detect only mode we will only attempt to
    * find the cookie banner element and return early.
    *
    * @returns A promise which resolves when it finishes auto clicking.
@@ -389,6 +391,8 @@ class CookieBannerChild extends JSWindowActorChild {
 
     // No rule with valid button to click. This can happen if we're in
     // MODE_REJECT and there are only opt-in buttons available.
+    // This also applies when detect-only mode is enabled. We only want to
+    // dispatch events matching the current service mode.
     if (rules.every(rule => rule.target == null)) {
       this.#telemetryStatus.success = false;
       this.#telemetryStatus.failReason = "no_rule_for_mode";
