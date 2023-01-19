@@ -181,8 +181,6 @@ class Registers {
       (1 << Registers::s4) | (1 << Registers::s5) | (1 << Registers::s6) |
       (1 << Registers::s7) | (1 << Registers::s8);
 
-  static const SetType SingleByteRegs = VolatileMask | NonVolatileMask;
-
   static const SetType NonAllocatableMask =
       (1 << Registers::zero) |  // Always be zero.
       (1 << Registers::t7) |    // First scratch register.

@@ -197,8 +197,6 @@ class Registers {
       (1 << Registers::x25) | (1 << Registers::x26) | (1 << Registers::x27) |
       (1 << Registers::x28) | (1 << Registers::x29) | (1 << Registers::x30);
 
-  static const SetType SingleByteRegs = VolatileMask | NonVolatileMask;
-
   static const SetType NonAllocatableMask =
       (1 << Registers::x28) |  // PseudoStackPointer.
       (1 << Registers::ip0) |  // First scratch register.
