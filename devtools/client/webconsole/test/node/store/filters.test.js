@@ -246,7 +246,7 @@ describe("Filtering", () => {
 
   describe("Combined filters", () => {
     // @TODO add test
-    it("filters");
+    it.todo("filters");
   });
 });
 

@@ -10,7 +10,9 @@ const {
   createFactory,
 } = require("resource://devtools/client/shared/vendor/react.js");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
-const Provider = createFactory(require("react-redux").Provider);
+const Provider = createFactory(
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
+);
 
 const actions = require("resource://devtools/client/webconsole/actions/index.js");
 const FilterButton = require("resource://devtools/client/webconsole/components/FilterBar/FilterButton.js");

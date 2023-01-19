@@ -164,7 +164,7 @@ class WebConsoleWrapper {
   }
 
   destroy() {
-    // This component can be instantiated from mocha test, in which case we don't have
+    // This component can be instantiated from jest test, in which case we don't have
     // a parentNode reference.
     if (this.parentNode) {
       ReactDOM.unmountComponentAtNode(this.parentNode);

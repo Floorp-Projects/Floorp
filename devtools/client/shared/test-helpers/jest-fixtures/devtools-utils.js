@@ -8,4 +8,6 @@ module.exports = {
   getTopWindow(win) {
     return win.top;
   },
+  defineLazyGetter() {},
+  makeInfallible: fn => fn,
 };

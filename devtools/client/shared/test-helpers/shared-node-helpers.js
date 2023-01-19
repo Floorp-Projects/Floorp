@@ -10,7 +10,17 @@
  * Adds mocks for browser-environment global variables/methods to Node global.
  */
 function setMocksInGlobal() {
-  global.Cc = {};
+  global.Cc = new Proxy(
+    {},
+    {
+      get(target, prop, receiver) {
+        if (prop.startsWith("@mozilla.org")) {
+          return { getService: () => ({}) };
+        }
+        return null;
+      },
+    }
+  );
   global.Ci = {
     // sw states from
     // mozilla-central/source/dom/interfaces/base/nsIServiceWorkerManager.idl
@@ -24,7 +34,10 @@ function setMocksInGlobal() {
       STATE_UNKNOWN: 6,
     },
   };
-  global.Cu = {};
+  global.Cu = {
+    isInAutomation: true,
+    now: () => {},
+  };
 
   global.Services = require("Services-mock");
   global.ChromeUtils = require("ChromeUtils-mock");
@@ -33,8 +46,19 @@ function setMocksInGlobal() {
 
   global.loader = {
     lazyGetter: (context, name, fn) => {
-      const module = fn();
-      global[name] = module;
+      if (global.hasOwnProperty(name)) {
+        return;
+      }
+
+      Object.defineProperty(global, name, {
+        get() {
+          delete global[name];
+          global[name] = fn.apply(global);
+          return global[name];
+        },
+        configurable: true,
+        enumerable: true,
+      });
     },
     lazyRequireGetter: (context, names, module, destructure) => {
       if (!Array.isArray(names)) {
@@ -42,17 +66,12 @@ function setMocksInGlobal() {
       }
 
       for (const name of names) {
-        Object.defineProperty(global, name, {
-          get() {
-            const value = destructure
-              ? require(module)[name]
-              : require(module || name);
-            return value;
-          },
-          configurable: true,
+        global.loader.lazyGetter(context, name, () => {
+          return destructure ? require(module)[name] : require(module || name);
         });
       }
     },
+    lazyServiceGetter: () => {},
   };
 
   global.define = function() {};
@@ -100,15 +119,13 @@ function setMocksInGlobal() {
     };
   }
 
-  global.indexedDB = function() {
-    const store = {};
-    return {
-      open: () => ({}),
-      getItem: async key => store[key],
-      setItem: async (key, value) => {
-        store[key] = value;
-      },
-    };
+  const store = {};
+  global.indexedDB = {
+    open: () => ({}),
+    getItem: async key => store[key],
+    setItem: async (key, value) => {
+      store[key] = value;
+    },
   };
 
   if (typeof global.TextEncoder === "undefined") {

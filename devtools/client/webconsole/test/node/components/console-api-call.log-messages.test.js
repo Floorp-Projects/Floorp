@@ -13,7 +13,9 @@ const {
 const {
   setupStore,
 } = require("resource://devtools/client/webconsole/test/node/helpers.js");
-const Provider = createFactory(require("react-redux").Provider);
+const Provider = createFactory(
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
+);
 
 // Components under test.
 const ConsoleApiCall = createFactory(

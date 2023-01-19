@@ -21,7 +21,7 @@ const {
 } = require("resource://devtools/client/webconsole/utils/prefs.js");
 const prefsService = getPrefsService({});
 const { PREFS } = require("resource://devtools/client/webconsole/constants.js");
-const Telemetry = require("resource://devtools/client/shared/telemetry.js");
+const Telemetry = require("resource://devtools/client/shared/test-helpers/jest-fixtures/telemetry.js");
 const {
   getSerializedPacket,
   parsePacketAndCreateFronts,

@@ -11,7 +11,9 @@ const sinon = require("sinon");
 const {
   createFactory,
 } = require("resource://devtools/client/shared/vendor/react.js");
-const Provider = createFactory(require("react-redux").Provider);
+const Provider = createFactory(
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
+);
 const {
   formatErrorTextWithCausedBy,
   setupStore,

@@ -30,7 +30,6 @@ const YARN_PROCESS = isWin ? "yarn.cmd" : "yarn";
 // Supported node test suites for DevTools
 const TEST_TYPES = {
   JEST: "jest",
-  MOCHA: "mocha",
   TYPESCRIPT: "typescript",
 };
 
@@ -69,7 +68,8 @@ const SUITES = {
   },
   webconsole: {
     path: "../webconsole/test/node",
-    type: TEST_TYPES.MOCHA,
+    type: TEST_TYPES.JEST,
+    dependencies: ["../debugger"],
   },
 };
 
@@ -89,8 +89,6 @@ function getErrors(suite, out, err) {
   switch (SUITES[suite].type) {
     case TEST_TYPES.JEST:
       return getJestErrors(out, err);
-    case TEST_TYPES.MOCHA:
-      return getMochaErrors(out, err);
     case TEST_TYPES.TYPESCRIPT:
       return getTypescriptErrors(out, err);
     default:
@@ -110,24 +108,6 @@ function getJestErrors(out, err) {
       .filter(l => l.includes("●"));
     return p.concat(failures);
   }, []);
-}
-
-function getMochaErrors(out, err) {
-  // With mocha tests, the command itself contains curly braces already so we need
-  // to find the first brace after the first line.
-  const firstRelevantBracket = out.indexOf("{", out.indexOf("--reporter json"));
-  const mochaJsonOut = out.substring(
-    firstRelevantBracket,
-    out.lastIndexOf("}") + 1
-  );
-  const results = JSON.parse(mochaJsonOut);
-  if (!results.failures) {
-    // No failures, return an empty array.
-    return [];
-  }
-  return results.failures.map(
-    failure => failure.fullTitle + " | " + failure.err.message
-  );
 }
 
 function getTypescriptErrors(out, err) {
@@ -150,8 +130,6 @@ function runTests() {
   }
 
   console.log("[devtools-node-test-runner] Found test suite: " + suite);
-  const testPath = path.join(__dirname, SUITES[suite].path);
-  chdir(testPath);
 
   console.log("[devtools-node-test-runner] Check `yarn` is available");
   try {
@@ -164,6 +142,20 @@ function runTests() {
     );
     return false;
   }
+
+  if (SUITES[suite].dependencies) {
+    console.log("[devtools-node-test-runner] Running `yarn` for dependencies");
+    for (const dep of SUITES[suite].dependencies) {
+      const depPath = path.join(__dirname, dep);
+      chdir(depPath);
+
+      console.log("[devtools-node-test-runner] Run `yarn` in " + depPath);
+      execOut(YARN_PROCESS);
+    }
+  }
+
+  const testPath = path.join(__dirname, SUITES[suite].path);
+  chdir(testPath);
 
   console.log("[devtools-node-test-runner] Run `yarn` in test folder");
   execOut(YARN_PROCESS);

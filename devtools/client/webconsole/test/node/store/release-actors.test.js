@@ -16,7 +16,7 @@ const expect = require("expect");
 describe("Release actor enhancer:", () => {
   let actions;
 
-  before(() => {
+  beforeAll(() => {
     actions = setupActions();
   });
 

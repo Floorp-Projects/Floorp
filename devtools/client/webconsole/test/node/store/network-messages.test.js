@@ -21,7 +21,7 @@ describe("Network message reducer:", () => {
   let getState;
   let dispatch;
 
-  before(() => {
+  beforeAll(() => {
     actions = setupActions();
   });
 
