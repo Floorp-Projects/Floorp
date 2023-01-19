@@ -19,8 +19,6 @@
       ]);
       for (let [kind, origin] of tests) {
         add_task(async function runTest() {
-          await SpecialPowers.pushPrefEnv({"set": [["dom.confirm_repost.testing.always_accept", true]]});
-
           info(`Submitting to ${origin}`);
 
           let win;
