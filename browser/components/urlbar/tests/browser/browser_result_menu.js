@@ -14,12 +14,21 @@ async function openResultMenuAndPressAccesskey(resultIndex, accesskey) {
     resultIndex
   );
   ok(menuButton, `found the menu button at result index ${resultIndex}`);
+  while (gURLBar.view.selectedRowIndex != resultIndex) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+  }
+  EventUtils.synthesizeKey("KEY_Tab");
+  is(
+    UrlbarTestUtils.getSelectedElement(window),
+    menuButton,
+    `selected the menu button at result index ${resultIndex}`
+  );
 
   let promiseMenuOpen = BrowserTestUtils.waitForEvent(
     gURLBar.view.resultMenu,
     "popupshown"
   );
-  await EventUtils.synthesizeMouseAtCenter(menuButton, {}, window);
+  EventUtils.synthesizeKey("KEY_Enter", {});
   info("waiting for the menu to open");
   await promiseMenuOpen;
 

@@ -149,10 +149,10 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
    * @returns {number}
    */
   get selectedViewIndex() {
-    return this.view.selectedElementIndex;
+    return this.view.selectedRowIndex;
   }
   set selectedViewIndex(val) {
-    this.view.selectedElementIndex = val;
+    this.view.selectedRowIndex = val;
   }
 
   /**
