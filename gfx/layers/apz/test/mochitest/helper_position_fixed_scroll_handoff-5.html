@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>APZ overscroll handoff for fixed elements in a subdoc</title>
+    <script type="application/javascript" src="apz_test_utils.js"></script>
+    <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+    <script src="/tests/SimpleTest/paint_listener.js"></script>
+    <meta name="viewport" content="width=device-width"/>
+    <style>
+      iframe {
+        width: 400px;
+        height: 400px;
+        border: solid 2px black;
+      }
+      #rootcontent {
+        height: 200vh;
+        background: yellow;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="subdoc" srcdoc="
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            #fixed {
+              position: fixed;
+              top: 0;
+              height: 100px;
+              width: 80%;
+              overflow: scroll;
+            }
+            #fixed-content {
+              background: red;
+            }
+            #rootcontent {
+              background: green;
+            }
+            .spacer {
+              height: 200vh;
+              width: 100%;
+            }
+          </style>
+        </head>
+        <body>
+          <div id='fixed'>
+            <div id='fixed-content' class='spacer'></div>
+          </div>
+          <div id='rootcontent' class='spacer'></div>
+        </body>
+      </html>
+    "></iframe>
+    <div id="rootcontent"></div>
+  </body>
+  <script>
+async function test() {
+  // Scroll to the bottom of the fixed position element to ensure that the following
+  // scroll does trigger overscroll handoff to the subdoc root scrollable element.
+  subdoc.contentWindow.fixed.scrollTop = subdoc.contentWindow.fixed.scrollHeight;
+
+  // After scrolling to bottom tick the refresh driver.
+  await promiseFrame();
+
+  let firstTransformEnd = promiseTransformEnd();
+
+  info("start scroll #1");
+
+  // Async scroll the fixed element by 200 pixels using the mouse-wheel. This should
+  // handoff the overscroll to the subdoc's root scrollable element.
+  await promiseMoveMouseAndScrollWheelOver(subdoc.contentWindow.fixed, 50, 50, false, 200);
+
+  info("After scroll #1: fixed=" + subdoc.contentWindow.fixed.scrollTop +
+       " subdoc window=" + subdoc.contentWindow.scrollY + " window=" + window.scrollY);
+
+  info("wait scroll #1");
+  await firstTransformEnd;
+
+  // Do not attempt the second scroll if we did scroll the root document.
+  // A scroll in this case would likely cause the test to timeout. The assertions at the
+  // end of the test will catch this.
+
+  // If we triggered a scroll handoff to the _root_ document from the subframe, do not
+  // make another attempt at a second scroll. The test has already failed.
+  if (window.scrollY == 0) {
+    let secondTransformEnd = promiseTransformEnd();
+
+    info("start scroll #2");
+
+    await promiseMoveMouseAndScrollWheelOver(subdoc.contentWindow.fixed, 50, 50, false, 200);
+
+    info("After scroll #2: fixed=" + subdoc.contentWindow.fixed.scrollTop +
+         " subdoc window=" + subdoc.contentWindow.scrollY + " window=" + window.scrollY);
+
+    info("wait scroll #2");
+    await secondTransformEnd;
+  }
+
+  // Ensure that the main element has not scrolled and overscroll was handed off to
+  // the subdocument root scrollable element.
+  is(window.scrollY, 0, "The overscroll should not handoff to the root window");
+  isnot(subdoc.contentWindow.scrollY, 0,
+        "The overscroll should handoff to the subdocument's root scrollable element");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+  </script>
+</html>
