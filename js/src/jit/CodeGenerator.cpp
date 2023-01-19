@@ -13995,8 +13995,11 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
   Register temp3 = ToRegister(lir->temp2());
 
   using Fn = PropertyIteratorObject* (*)(JSContext*, HandleObject);
-  OutOfLineCode* ool =
-      oolCallVM<Fn, GetIterator>(lir, ArgList(obj), StoreRegisterTo(iterObj));
+  OutOfLineCode* ool = (lir->mir()->wantsIndices())
+                           ? oolCallVM<Fn, GetIteratorWithIndices>(
+                                 lir, ArgList(obj), StoreRegisterTo(iterObj))
+                           : oolCallVM<Fn, GetIterator>(
+                                 lir, ArgList(obj), StoreRegisterTo(iterObj));
 
   masm.maybeLoadIteratorFromShape(obj, iterObj, temp, temp2, temp3,
                                   ool->entry());
@@ -14005,6 +14008,17 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
   masm.loadPrivate(
       Address(iterObj, PropertyIteratorObject::offsetOfIteratorSlot()),
       nativeIter);
+
+  if (lir->mir()->wantsIndices()) {
+    // At least one consumer of the output of this iterator has been optimized
+    // to use iterator indices. If the cached iterator doesn't include indices,
+    // but it was marked to indicate that we can create them if needed, then we
+    // do a VM call to replace the cached iterator with a fresh iterator
+    // including indices.
+    masm.branchNativeIteratorIndices(Assembler::Equal, nativeIter, temp2,
+                                     NativeIteratorIndices::AvailableOnRequest,
+                                     ool->entry());
+  }
 
   Address iterFlagsAddr(nativeIter, NativeIterator::offsetOfFlagsAndCount());
   masm.storePtr(
@@ -14025,6 +14039,24 @@ void CodeGenerator::visitValueToIterator(LValueToIterator* lir) {
 
   using Fn = PropertyIteratorObject* (*)(JSContext*, HandleValue);
   callVM<Fn, ValueToIterator>(lir);
+}
+
+void CodeGenerator::visitIteratorHasIndicesAndBranch(
+    LIteratorHasIndicesAndBranch* lir) {
+  Register iterObj = ToRegister(lir->iterObj());
+  Register temp = ToRegister(lir->temp());
+  Label* ifTrue = getJumpLabelForBranch(lir->ifTrue());
+  Label* ifFalse = getJumpLabelForBranch(lir->ifFalse());
+
+  Address nativeIterAddr(iterObj,
+                         PropertyIteratorObject::offsetOfIteratorSlot());
+  masm.loadPrivate(nativeIterAddr, temp);
+  masm.branchNativeIteratorIndices(Assembler::Equal, temp, temp,
+                                   NativeIteratorIndices::Valid, ifTrue);
+
+  if (!isNextBlock(lir->ifFalse()->lir())) {
+    masm.jump(ifFalse);
+  }
 }
 
 void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {

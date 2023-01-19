@@ -1036,6 +1036,19 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
+  if (opd->isIteratorHasIndices()) {
+    MOZ_ASSERT(opd->isEmittedAtUses());
+
+    MDefinition* input = opd->toIteratorHasIndices()->iterObj();
+    MOZ_ASSERT(input->type() == MIRType::Object);
+
+    LIteratorHasIndicesAndBranch* lir =
+        new (alloc()) LIteratorHasIndicesAndBranch(ifTrue, ifFalse,
+                                                   useRegister(input), temp());
+    add(lir, test);
+    return;
+  }
+
   switch (opd->type()) {
     case MIRType::Double:
       add(new (alloc()) LTestDAndBranch(useRegister(opd), ifTrue, ifFalse));
@@ -4907,6 +4920,11 @@ void LIRGenerator::visitValueToIterator(MValueToIterator* ins) {
   auto* lir = new (alloc()) LValueToIterator(useBoxAtStart(ins->value()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitIteratorHasIndices(MIteratorHasIndices* ins) {
+  MOZ_ASSERT(ins->hasOneUse());
+  emitAtUses(ins);
 }
 
 void LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins) {

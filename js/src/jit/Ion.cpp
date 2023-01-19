@@ -1037,6 +1037,18 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
+  if (!mir->compilingWasm()) {
+    if (!OptimizeIteratorIndices(mir, graph)) {
+      return false;
+    }
+    gs.spewPass("Iterator Indices");
+    AssertGraphCoherency(graph);
+
+    if (mir->shouldCancel("Iterator Indices")) {
+      return false;
+    }
+  }
+
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().scalarReplacementEnabled()) {
     JitSpewCont(JitSpew_Escape, "\n");

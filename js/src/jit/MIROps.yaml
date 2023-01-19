@@ -1888,17 +1888,18 @@
   gen_boilerplate: false
 
 - name: ObjectToIterator
-  operands:
-    object: Object
-  arguments:
-    enumeratorsAddr: NativeIteratorListHead*
-  result_type:
-    Object
+  gen_boilerplate: false
 
 - name: ValueToIterator
   operands:
     value: Value
   result_type: Object
+
+- name: IteratorHasIndices
+  operands:
+    iterObj: Object
+  result_type: Boolean
+  alias_set: custom
 
 # Load the private value expando from a DOM proxy. The target is stored in the
 # proxy object's private slot.

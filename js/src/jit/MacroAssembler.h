@@ -223,6 +223,8 @@ namespace js {
 class StaticStrings;
 class TypedArrayObject;
 
+enum class NativeIteratorIndices : uint32_t;
+
 namespace wasm {
 class CalleeDesc;
 class CallSiteDesc;
@@ -4832,6 +4834,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                       Label* label);
 
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
+  void branchNativeIteratorIndices(Condition cond, Register ni, Register temp,
+                                   NativeIteratorIndices kind, Label* label);
 
   void maybeLoadIteratorFromShape(Register obj, Register dest, Register temp,
                                   Register temp2, Register temp3,

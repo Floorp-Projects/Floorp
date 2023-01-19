@@ -2225,6 +2225,9 @@
   call_instruction: true
   mir_op: ValueToIterator
 
+- name: IteratorHasIndicesAndBranch
+  gen_boilerplate: false
+
 # Patchable jump to stubs generated for a SetProperty cache.
 - name: SetPropertyCache
   operands:

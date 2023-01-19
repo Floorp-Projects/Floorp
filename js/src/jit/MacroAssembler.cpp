@@ -5295,6 +5295,17 @@ void MacroAssembler::branchIfNativeIteratorNotReusable(Register ni,
                Imm32(NativeIterator::Flags::NotReusable), notReusable);
 }
 
+void MacroAssembler::branchNativeIteratorIndices(Condition cond, Register ni,
+                                                 Register temp,
+                                                 NativeIteratorIndices kind,
+                                                 Label* label) {
+  Address iterFlagsAddr(ni, NativeIterator::offsetOfFlagsAndCount());
+  load32(iterFlagsAddr, temp);
+  and32(Imm32(NativeIterator::IndicesMask), temp);
+  uint32_t shiftedKind = uint32_t(kind) << NativeIterator::IndicesShift;
+  branch32(cond, temp, Imm32(shiftedKind), label);
+}
+
 static void LoadNativeIterator(MacroAssembler& masm, Register obj,
                                Register dest) {
   MOZ_ASSERT(obj != dest);
