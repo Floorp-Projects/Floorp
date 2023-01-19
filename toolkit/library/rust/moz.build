@@ -21,7 +21,7 @@ for feature in gkrust_features:
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.
 RUST_TESTS = [
-    "firefox-on-glean",
+    "fog",
     "l10nregistry",
     "selectors",
     "servo_arc",

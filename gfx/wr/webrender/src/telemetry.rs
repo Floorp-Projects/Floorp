@@ -4,7 +4,7 @@
 
 use glean::TimerId;
 #[cfg(feature = "gecko")]
-use firefox_on_glean::metrics::wr;
+use fog::metrics::wr;
 use std::time::Duration;
 
 pub struct Telemetry;
