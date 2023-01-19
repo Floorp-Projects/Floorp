@@ -3789,6 +3789,9 @@ class Document : public nsINode,
   }
   DOMIntersectionObserver& EnsureLazyLoadImageObserver();
 
+  DOMIntersectionObserver* GetContentVisibilityObserver() const {
+    return mContentVisibilityObserver;
+  }
   DOMIntersectionObserver& EnsureContentVisibilityObserver();
   void ObserveForContentVisibility(Element&);
   void UnobserveForContentVisibility(Element&);

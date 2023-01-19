@@ -95,6 +95,9 @@ struct IntersectionInput {
   nsMargin mRootMargin;
   // If this is in an OOP iframe, the visible rect of the OOP frame.
   Maybe<nsRect> mRemoteDocumentVisibleRect;
+  // Whether this intersection is for the purposes of computing content
+  // relevancy for `content-visiblilty: auto`.
+  bool mIsForContentVisibility = false;
 };
 
 struct IntersectionOutput {
@@ -151,7 +154,11 @@ class DOMIntersectionObserver final : public nsISupports,
   static IntersectionInput ComputeInput(
       const Document& aDocument, const nsINode* aRoot,
       const StyleRect<LengthPercentage>* aRootMargin);
-  static IntersectionOutput Intersect(const IntersectionInput&, Element&);
+
+  enum class IgnoreContentVisibility : bool { No, Yes };
+  static IntersectionOutput Intersect(
+      const IntersectionInput&, Element&,
+      IgnoreContentVisibility = IgnoreContentVisibility::No);
   // Intersects with a given rect, already relative to the root frame.
   static IntersectionOutput Intersect(const IntersectionInput&, const nsRect&);
 
