@@ -283,6 +283,14 @@ size_t InterceptorFunction::sNumInstances = 0;
 
 constexpr uint8_t InterceptorFunction::sInterceptorTemplate[];
 
+class RedirectionResolver : public interceptor::WindowsDllPatcherBase<
+                                interceptor::VMSharingPolicyShared> {
+ public:
+  uintptr_t ResolveRedirectedAddressForTest(FARPROC aFunc) {
+    return ResolveRedirectedAddress(aFunc).GetAddress();
+  }
+};
+
 // Hook the function and optionally attempt calling it
 template <typename OrigFuncT, size_t N, typename PredicateT, typename... Args>
 bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
@@ -291,6 +299,28 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
       mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
   wchar_t dllW[N];
   std::copy(std::begin(dll), std::end(dll), std::begin(dllW));
+
+  HMODULE module = ::LoadLibraryW(dllW);
+  FARPROC funcAddr = ::GetProcAddress(module, func);
+  if (!funcAddr) {
+    printf(
+        "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to find %s from "
+        "%s\n",
+        func, dll);
+    fflush(stdout);
+    return false;
+  }
+
+#ifdef _M_X64
+
+  // Resolve what is the actual address of the code that will be detoured, as
+  // that's the code we want to compare with when we check for unwind
+  // information. Do that *before* detouring, although the address will only be
+  // used after detouring.
+  RedirectionResolver resolver;
+  auto detouredCodeAddr = resolver.ResolveRedirectedAddressForTest(funcAddr);
+
+#endif  // _M_X64
 
   bool successful = false;
   WindowsDllInterceptor TestIntercept;
@@ -308,37 +338,13 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
            dll);
     fflush(stdout);
 
-    // Test the DLL function we just hooked.
-    HMODULE module = ::LoadLibraryW(dllW);
-    FARPROC funcAddr = ::GetProcAddress(module, func);
-    if (!funcAddr) {
-      return false;
-    }
-
-// Check that unwind information has been added if and only if it was present
-// for the original function.
 #ifdef _M_X64
 
-    auto funcBytes = reinterpret_cast<uint8_t*>(funcAddr);
-
-    // If the function we are hooking is a jumper, we need to lookup the
-    // destination of the jump to find the unwind information.
-    auto realFuncAddr = reinterpret_cast<uintptr_t>(funcAddr);
-    // jmp qword ptr[rip+offset]
-    if (funcBytes[0] == 0xff && funcBytes[1] == 0x25) {
-      realFuncAddr = *reinterpret_cast<uintptr_t*>(
-          realFuncAddr + 6 + *reinterpret_cast<int32_t*>(realFuncAddr + 2));
-    }
-    // rex.jmp qword ptr[rip+offset]
-    else if (funcBytes[0] == 0x48 && funcBytes[1] == 0xff &&
-             funcBytes[2] == 0x25) {
-      realFuncAddr = *reinterpret_cast<uintptr_t*>(
-          realFuncAddr + 7 + *reinterpret_cast<int32_t*>(realFuncAddr + 3));
-    }
-
+    // Check that unwind information has been added if and only if it was
+    // present for the original detoured code.
     uintptr_t funcImageBase = 0;
     auto funcEntry =
-        RtlLookupFunctionEntry(realFuncAddr, &funcImageBase, nullptr);
+        RtlLookupFunctionEntry(detouredCodeAddr, &funcImageBase, nullptr);
     bool funcHasUnwindInfo = bool(funcEntry);
 
     uintptr_t stubImageBase = 0;
@@ -391,6 +397,7 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
       return true;
     }
 
+    // Test the DLL function we just hooked.
     return CheckHook(reinterpret_cast<OrigFuncT&>(funcAddr), dll, func,
                      std::forward<PredicateT>(aPred),
                      std::forward<Args>(aArgs)...);
