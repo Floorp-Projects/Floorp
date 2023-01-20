@@ -127,6 +127,8 @@
 
 #include <cstring>
 #include <cerrno>
+#include <optional>
+#include <type_traits>
 #ifdef XP_WIN
 #  include <io.h>
 #  include <windows.h>
@@ -150,7 +152,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RandomNum.h"
-#include "mozilla/Sprintf.h"
 // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
 // instead of the one defined here; use only MozTagAnonymousMemory().
 #include "mozilla/TaggedAnonymousMemory.h"
@@ -1473,6 +1474,60 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
 // On Windows, delay crashing on OOM.
 #ifdef XP_WIN
 
+namespace mozilla {
+
+namespace detail {
+// Helper for StallAndRetry error messages.
+template <typename T>
+constexpr bool is_std_optional = false;
+template <typename T>
+constexpr bool is_std_optional<std::optional<T>> = true;
+}  // namespace detail
+
+struct StallSpecs {
+  // Maximum number of retry-attempts before giving up.
+  size_t maxAttempts;
+  // Delay time between successive events.
+  size_t delayMs;
+
+  // Retry a fallible operation until it succeeds or until we've run out of
+  // retries.
+  //
+  // Note that this invokes `aDelayFunc` immediately upon being called! It's
+  // intended for use in the unhappy path, after an initial attempt has failed.
+  //
+  // The function type here may be read:
+  // ```
+  // fn StallAndRetry<R>(
+  //     delay_func: impl Fn(usize) -> (),
+  //     operation: impl Fn() -> Option<R>,
+  // ) -> Option<R>;
+  // ```
+  //
+  template <typename DelayFunc, typename OpFunc>
+  auto StallAndRetry(DelayFunc&& aDelayFunc, OpFunc&& aOperation) const
+      -> decltype(aOperation()) {
+    {
+      // Explicit typecheck for OpFunc, to provide an explicit error message.
+      using detail::is_std_optional;
+      static_assert(is_std_optional<decltype(aOperation())>,
+                    "aOperation() must return std::optional");
+
+      // (clang's existing error messages suffice for aDelayFunc.)
+    }
+
+    for (size_t i = 0; i < maxAttempts; ++i) {
+      aDelayFunc(delayMs);
+      if (const auto opt = aOperation()) {
+        return opt;
+      }
+    }
+    return std::nullopt;
+  }
+};
+
+}  // namespace mozilla
+
 // Implementation of VirtualAlloc wrapper (bug 1716727).
 namespace MozAllocRetries {
 
@@ -1482,10 +1537,7 @@ constexpr size_t kMaxAttempts = 10;
 // Microsoft's documentation for ::Sleep() for details.)
 constexpr size_t kDelayMs = 50;
 
-struct StallSpecs {
-  size_t maxAttempts;
-  size_t delayMs;
-};
+using StallSpecs = ::mozilla::StallSpecs;
 
 static constexpr StallSpecs maxStall = {.maxAttempts = kMaxAttempts,
                                         .delayMs = kDelayMs};
@@ -1505,7 +1557,8 @@ static inline StallSpecs GetStallSpecs() {
 
     // For all other process types, stall for at most half as long.
     default:
-      return {.maxAttempts = kMaxAttempts / 2, .delayMs = kDelayMs};
+      return {.maxAttempts = maxStall.maxAttempts / 2,
+              .delayMs = maxStall.delayMs};
   }
 #  endif
 }
@@ -1547,27 +1600,29 @@ static inline StallSpecs GetStallSpecs() {
   // Retry as many times as desired (possibly zero).
   const StallSpecs stallSpecs = GetStallSpecs();
 
-  for (size_t i = 0; i < stallSpecs.maxAttempts; ++i) {
-    ::Sleep(stallSpecs.delayMs);
-    void* ptr = ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
+  const auto ret =
+      stallSpecs.StallAndRetry(&::Sleep, [&]() -> std::optional<void*> {
+        void* ptr =
+            ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
 
-    if (ptr) {
-      // The OOM status has been handled, and should not be reported to
-      // telemetry.
-      if (IsOOMError()) {
-        ::SetLastError(lastError);
-      }
-      return ptr;
-    }
+        if (ptr) {
+          // The OOM status has been handled, and should not be reported to
+          // telemetry.
+          if (IsOOMError()) {
+            ::SetLastError(lastError);
+          }
+          return ptr;
+        }
 
-    // Failure for some reason other than OOM.
-    if (!IsOOMError()) {
-      return nullptr;
-    }
-  }
+        // Failure for some reason other than OOM.
+        if (!IsOOMError()) {
+          return nullptr;
+        }
 
-  // Ah, well. We tried.
-  return nullptr;
+        return std::nullopt;
+      });
+
+  return ret.value_or(nullptr);
 }
 }  // namespace MozAllocRetries
 
