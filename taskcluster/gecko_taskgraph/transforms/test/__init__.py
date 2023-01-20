@@ -151,7 +151,7 @@ test_description_schema = Schema(
         # seconds of runtime after which the task will be killed.  Like 'chunks',
         # this can be keyed by test platform, but also variant.
         Required("max-run-time"): optionally_keyed_by(
-            "test-platform", "subtest", "variant", int
+            "test-platform", "subtest", "variant", "app", int
         ),
         # the exit status code that indicates the task should be retried
         Optional("retry-exit-status"): [int],
