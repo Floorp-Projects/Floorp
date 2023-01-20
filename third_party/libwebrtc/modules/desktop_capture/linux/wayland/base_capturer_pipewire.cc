@@ -16,6 +16,7 @@
 #include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "screencast_portal.h"
 
 namespace webrtc {
 
@@ -27,12 +28,10 @@ using xdg_portal::SessionDetails;
 
 }  // namespace
 
-BaseCapturerPipeWire::BaseCapturerPipeWire(const DesktopCaptureOptions& options)
-    : BaseCapturerPipeWire(
-          options,
-          std::make_unique<ScreenCastPortal>(
-              ScreenCastPortal::CaptureSourceType::kAnyScreenContent,
-              this)) {
+BaseCapturerPipeWire::BaseCapturerPipeWire(const DesktopCaptureOptions& options,
+                                           CaptureType type)
+    : BaseCapturerPipeWire(options,
+                           std::make_unique<ScreenCastPortal>(type, this)) {
   is_screencast_portal_ = true;
 }
 

@@ -27,7 +27,7 @@ class BaseCapturerPipeWire : public DesktopCapturer,
                              public DelegatedSourceListController,
                              public ScreenCastPortal::PortalNotifier {
  public:
-  explicit BaseCapturerPipeWire(const DesktopCaptureOptions& options);
+  BaseCapturerPipeWire(const DesktopCaptureOptions& options, CaptureType type);
   BaseCapturerPipeWire(
       const DesktopCaptureOptions& options,
       std::unique_ptr<xdg_portal::ScreenCapturePortalInterface> portal);
