@@ -459,6 +459,8 @@ input:checked + .slider:dir(rtl)::before {
 #scrubber {
   width: 100%;
   direction: ltr;
+  background-color: transparent;
+  padding: 6px;
 }
 
 #scrubber::-moz-range-thumb {
