@@ -208,16 +208,15 @@ IPCResult FetchParent::RecvAbortFetchOp() {
   mIsDone = true;
 
   RefPtr<FetchParent> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [self]() mutable {
-        FETCH_LOG(("FetchParent::RecvAbortFetchOp Runnable"));
-        AssertIsOnMainThread();
-        if (self->mResponsePromises) {
-          RefPtr<FetchService> fetchService = FetchService::GetInstance();
-          MOZ_ASSERT(fetchService);
-          fetchService->CancelFetch(std::move(self->mResponsePromises));
-        }
-    });
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__, [self]() mutable {
+    FETCH_LOG(("FetchParent::RecvAbortFetchOp Runnable"));
+    AssertIsOnMainThread();
+    if (self->mResponsePromises) {
+      RefPtr<FetchService> fetchService = FetchService::GetInstance();
+      MOZ_ASSERT(fetchService);
+      fetchService->CancelFetch(std::move(self->mResponsePromises));
+    }
+  });
   MOZ_ALWAYS_SUCCEEDS(
       SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
