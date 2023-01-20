@@ -225,6 +225,17 @@ class nsTimer final : public nsITimer {
 // directly instruct its holder to forget the timer, avoiding list lookups.
 class nsTimerImplHolder {
  public:
+  void Forget(nsTimerImpl* aTimerImpl) {
+    if (MOZ_UNLIKELY(!mTimerImpl)) {
+      return;
+    }
+    MOZ_ASSERT(aTimerImpl == mTimerImpl);
+    mTimerImpl->mMutex.AssertCurrentThreadOwns();
+    mTimerImpl->SetHolder(nullptr);
+    mTimerImpl = nullptr;
+  }
+
+ protected:
   explicit nsTimerImplHolder(nsTimerImpl* aTimerImpl) : mTimerImpl(aTimerImpl) {
     if (mTimerImpl) {
       mTimerImpl->mMutex.AssertCurrentThreadOwns();
@@ -239,17 +250,6 @@ class nsTimerImplHolder {
     }
   }
 
-  void Forget(nsTimerImpl* aTimerImpl) {
-    if (MOZ_UNLIKELY(!mTimerImpl)) {
-      return;
-    }
-    MOZ_ASSERT(aTimerImpl == mTimerImpl);
-    mTimerImpl->mMutex.AssertCurrentThreadOwns();
-    mTimerImpl->SetHolder(nullptr);
-    mTimerImpl = nullptr;
-  }
-
- protected:
   RefPtr<nsTimerImpl> mTimerImpl;
 };
 
