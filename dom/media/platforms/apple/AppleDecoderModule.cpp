@@ -190,11 +190,17 @@ bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
     RefPtr<AppleVTDecoder> decoder =
         new AppleVTDecoder(info, nullptr, {}, nullptr, Nothing());
     MediaResult rv = decoder->InitializeSession();
-    // Removed decoder->IsHardwareAccelerated check to revert logic to before
-    // H264 support was implemented -- see bug 1806391 and
-    // revision db00f7fb1e9b13cff0ca6ed4ffdbc5897fa88e38
+    if (!NS_SUCCEEDED(rv)) {
+      return false;
+    }
+    nsAutoCString failureReason;
+    bool hwSupport = decoder->IsHardwareAccelerated(failureReason);
     decoder->Shutdown();
-    return NS_SUCCEEDED(rv);
+    if (!hwSupport) {
+      MOZ_LOG(sPDMLog, LogLevel::Debug,
+              ("Apple HW decode failure: '%s'", failureReason.BeginReading()));
+    }
+    return hwSupport;
   }
   return false;
 }
