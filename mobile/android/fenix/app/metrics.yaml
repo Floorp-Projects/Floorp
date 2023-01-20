@@ -555,7 +555,7 @@ events:
     expires: 121
     metadata:
       tags:
-        - Sharing
+        - Performance
 
 onboarding:
   syn_cfr_shown:
