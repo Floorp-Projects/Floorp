@@ -1,0 +1,6 @@
+# Tests need to be run with --setpref security.sandbox.content.win32k-disable=false
+# This is because the pref is not dynamic and is also the reason that these tests
+# can only be run manually. They are also DEBUG only.
+defaults pref(intl.compare_against_brokered_complex_line_breaks,true)
+load Lo_test_page_no_uniscribe_breaks.html
+load UDHR_Thai_test_page_long_sequences.html

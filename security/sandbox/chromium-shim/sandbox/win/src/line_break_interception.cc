@@ -49,6 +49,14 @@ ResultCode GetComplexLineBreaksProxy(const wchar_t* aText, uint32_t aLength,
       chunkEnd = textIterEnd;
     }
 
+    // Uniscribe seems to often (perhaps always) set the first element to a
+    // break, so we use chunk_start_reset to hold the known value of the first
+    // element of a chunk and reset it after Uniscribe processing. The only time
+    // we don't start from an already processed element is the first call, but
+    // resetting this to false is correct because whether we can break before
+    // the first character is decided by our caller.
+    uint8_t chunk_start_reset = *breakBeforeIter;
+
     uint32_t len = chunkEnd - textIter;
     // CountedBuffer takes a wchar_t* even though it doesn't change the buffer.
     CountedBuffer textBuf(const_cast<wchar_t*>(textIter),
@@ -66,23 +74,33 @@ ResultCode GetComplexLineBreaksProxy(const wchar_t* aText, uint32_t aLength,
       return SBOX_ERROR_GENERIC;
     }
 
+    *breakBeforeIter = chunk_start_reset;
+
     if (chunkEnd == textIterEnd) {
       break;
     }
 
-    // We couldn't process all of the text in one go, so back up by 32 chars
-    // and look for a break, then continue from that position.
+    // We couldn't process all of the text in one go, so back up by 32 chars and
+    // look for a break, then continue from that position. We back up 32 chars
+    // to try to avoid any false breaks at the end of the buffer caused by us
+    // splitting it into chunks.
     uint8_t* processedToEnd = breakBeforeIter + len;
     breakBeforeIter = processedToEnd - kBreakSearchRange;
     while (!*breakBeforeIter) {
       if (++breakBeforeIter == processedToEnd) {
+        // We haven't found a break in the search range, so go back to the start
+        // of our search range to try and ensure we don't get any false breaks
+        // at the start of the new chunk.
+        breakBeforeIter = processedToEnd - kBreakSearchRange;
+        // Make sure we don't split a surrogate pair.
+        if (IS_LOW_SURROGATE(
+                *(aText + (breakBeforeIter - aBreakBefore)))) {
+          ++breakBeforeIter;
+        }
         break;
       }
     }
   } while (true);
-
-  // Whether we can break before the first character is decided by our caller
-  aBreakBefore[0] = false;
 
   return SBOX_ALL_OK;
 }

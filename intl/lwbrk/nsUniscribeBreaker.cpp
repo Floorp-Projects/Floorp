@@ -19,7 +19,7 @@
 #  include "mozilla/sandboxTarget.h"
 #  include "nsXULAppAPI.h"
 
-#  if defined(ENABLE_TESTS)
+#  if defined(MOZ_DEBUG)
 #    include "mozilla/StaticPrefs_intl.h"
 #  endif
 #endif
@@ -100,7 +100,7 @@ void NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
     }
   }
 
-#if defined(ENABLE_TESTS) && defined(MOZ_SANDBOX)
+#if defined(MOZ_DEBUG) && defined(MOZ_SANDBOX)
   // When tests are enabled and pref is set, we compare the line breaks returned
   // from the Uniscribe breaker in the content process, with the ones returned
   // from the brokered call to the parent. If they differ we crash so we can
