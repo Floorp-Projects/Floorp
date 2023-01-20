@@ -990,29 +990,29 @@
 
     <!-- Promote SearchWidget Dialog -->
 
-    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Close</string>
 
-    !-- Content description (not visible, for screen readers etc.): This is the description for
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_picture_content_description">Search widget</string>
 
-    !-- This is the title of promote search widget dialog. -->
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Browsing history cleared! 🎉</string>
 
     <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
     <string name="cfr_for_start_browsing">Start your private browsing session, and we’ll block trackers and other bad stuff as you go.</string>
 
-    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. "Focus") -->
     <string name="promote_search_widget_dialog_subtitle">We’ll leave you to your private browsing, but get a quicker start next time with the %1$s widget on your Home screen.</string>
 
-    !-- This is te text from add search widget to home screen button .The button is located on
+    <!-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Add widget to home screen</string>
 
-    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. -->
     <string name="promote_search_widget_snackbar_message">Widget added to home screen</string>
 </resources>
