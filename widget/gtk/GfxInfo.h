@@ -89,7 +89,6 @@ class GfxInfo final : public GfxInfoBase {
   uint32_t mAdapterRAM;
   nsCString mOS;
   nsCString mOSRelease;
-  nsAutoCStringN<16> mDesktopEnvironment;
   nsCString mTestType;
 
   nsCString mSecondaryVendorId;

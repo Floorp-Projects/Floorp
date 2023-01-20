@@ -78,11 +78,6 @@ class ShutdownObserver : public nsIObserver {
       deviceFamily = nullptr;
     }
 
-    for (auto& desktop : GfxDriverInfo::sDesktopEnvironment) {
-      delete desktop;
-      desktop = nullptr;
-    }
-
     for (auto& windowProtocol : GfxDriverInfo::sWindowProtocol) {
       delete windowProtocol;
       windowProtocol = nullptr;
@@ -668,8 +663,6 @@ static bool BlocklistEntryToDriverInfo(const nsACString& aBlocklistEntry,
       aDriverInfo.mOperatingSystem = BlocklistOSToOperatingSystem(dataValue);
     } else if (key.EqualsLiteral("osversion")) {
       aDriverInfo.mOperatingSystemVersion = strtoul(value.get(), nullptr, 10);
-    } else if (key.EqualsLiteral("desktopEnvironment")) {
-      aDriverInfo.mDesktopEnvironment = dataValue;
     } else if (key.EqualsLiteral("windowProtocol")) {
       aDriverInfo.mWindowProtocol = dataValue;
     } else if (key.EqualsLiteral("vendor")) {
@@ -1074,11 +1067,6 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
       continue;
     }
 
-    if (!DoesDesktopEnvironmentMatch(info[i].mDesktopEnvironment,
-                                     desktopEnvironment)) {
-      continue;
-    }
-
     if (!DoesWindowProtocolMatch(info[i].mWindowProtocol, windowProtocol)) {
       continue;
     }
@@ -1235,15 +1223,6 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 void GfxInfoBase::SetFeatureStatus(nsTArray<gfx::GfxInfoFeatureStatus>&& aFS) {
   MOZ_ASSERT(!sFeatureStatus);
   InitFeatureStatus(new nsTArray<gfx::GfxInfoFeatureStatus>(std::move(aFS)));
-}
-
-bool GfxInfoBase::DoesDesktopEnvironmentMatch(
-    const nsAString& aBlocklistDesktop, const nsAString& aDesktopEnv) {
-  return aBlocklistDesktop.Equals(aDesktopEnv,
-                                  nsCaseInsensitiveStringComparator) ||
-         aBlocklistDesktop.Equals(
-             GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment::All),
-             nsCaseInsensitiveStringComparator);
 }
 
 bool GfxInfoBase::DoesWindowProtocolMatch(
