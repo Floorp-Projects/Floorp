@@ -96,6 +96,14 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
       }
     }
 
+    // Don't allow copies, otherwise which one would manage `IsInTimerThread`?
+    Entry(const Entry&) = delete;
+    Entry& operator=(const Entry&) = delete;
+
+    // Move-only.
+    Entry(Entry&&) = default;
+    Entry& operator=(Entry&&) = default;
+
     ~Entry() {
       if (mTimerImpl) {
         mTimerImpl->mMutex.AssertCurrentThreadOwns();
@@ -124,11 +132,10 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
       return mTimerImpl.forget();
     }
 
-    static bool UniquePtrLessThan(mozilla::UniquePtr<Entry>& aLeft,
-                                  mozilla::UniquePtr<Entry>& aRight) {
+    static bool UniquePtrLessThan(const Entry& aLeft, const Entry& aRight) {
       // This is reversed because std::push_heap() sorts the "largest" to
       // the front of the heap.  We want that to be the earliest timer.
-      return aRight->mTimeout < aLeft->mTimeout;
+      return aRight.mTimeout < aLeft.mTimeout;
     }
 
     const TimeStamp& Timeout() const { return mTimeout; }
@@ -138,7 +145,7 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
     TimeStamp mTimeout;
   };
 
-  nsTArray<mozilla::UniquePtr<Entry>> mTimers MOZ_GUARDED_BY(mMonitor);
+  nsTArray<Entry> mTimers MOZ_GUARDED_BY(mMonitor);
   // Set only at the start of the thread's Run():
   uint32_t mAllowedEarlyFiringMicroseconds MOZ_GUARDED_BY(mMonitor);
   ProfilerThreadId mProfilerThreadId MOZ_GUARDED_BY(mMonitor);
