@@ -22,5 +22,7 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
+A recent ANGLE vendoring update from <https://bugzilla.mozilla.org/show_bug.cgi?id=1753349> causes
+a failure like the following:
 
-Merge day clobber 2023-01-16
+> No rule to make target `/Users/jkew/mozdev/mozilla-unified/gfx/angle/checkout/src/compiler/translator/tree_ops/gl/RecordConstantPrecision.cpp
