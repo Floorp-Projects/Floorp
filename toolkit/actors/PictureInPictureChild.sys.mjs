@@ -162,13 +162,12 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
       );
     }
 
-    let scrubberPosition =
-      video.currentTime === 0 ? 0 : video.currentTime / video.duration;
-
     let timestamp = PictureInPictureChild.videoWrapper.formatTimestamp(
       video.currentTime,
       video.duration
     );
+    let scrubberPosition =
+      timestamp === undefined ? undefined : video.currentTime / video.duration;
 
     // All other requests to toggle PiP should open a new PiP
     // window
@@ -1722,13 +1721,21 @@ export class PictureInPictureChild extends JSWindowActorChild {
         let currentTime = event.target.currentTime;
         let duration = event.target.duration;
         let scrubberPosition = currentTime === 0 ? 0 : currentTime / duration;
-        this.sendAsyncMessage(
-          "PictureInPicture:SetTimestampAndScrubberPosition",
-          {
-            scrubberPosition,
-            timestamp: this.videoWrapper.formatTimestamp(currentTime, duration),
-          }
+        let timestamp = this.videoWrapper.formatTimestamp(
+          currentTime,
+          duration
         );
+        // There's no point in sending this message unless we have a
+        // reasonable timestamp.
+        if (timestamp !== undefined) {
+          this.sendAsyncMessage(
+            "PictureInPicture:SetTimestampAndScrubberPosition",
+            {
+              scrubberPosition,
+              timestamp,
+            }
+          );
+        }
         break;
       }
     }
@@ -2683,6 +2690,11 @@ class PictureInPictureChildVideoWrapper {
    * @returns {String} Formatted timestamp
    **/
   formatTimestamp(aCurrentTime, aDuration) {
+    // We can't format numbers that can't be represented as decimal digits.
+    if (!Number.isFinite(aCurrentTime) || !Number.isFinite(aDuration)) {
+      return undefined;
+    }
+
     return `${this.timeFromSeconds(aCurrentTime)} / ${this.timeFromSeconds(
       aDuration
     )}`;
