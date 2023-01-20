@@ -5851,48 +5851,7 @@ var SourceNode = sourceMap.SourceNode; // If any of these tokens are seen before
 // the rug, and handle the ambiguity by always assuming that it will be an
 // array literal.
 
-const PRE_ARRAY_LITERAL_TOKENS = {
-  typeof: true,
-  void: true,
-  delete: true,
-  case: true,
-  do: true,
-  "=": true,
-  in: true,
-  "{": true,
-  "*": true,
-  "/": true,
-  "%": true,
-  else: true,
-  ";": true,
-  "++": true,
-  "--": true,
-  "+": true,
-  "-": true,
-  "~": true,
-  "!": true,
-  ":": true,
-  "?": true,
-  ">>": true,
-  ">>>": true,
-  "<<": true,
-  "||": true,
-  "&&": true,
-  "<": true,
-  ">": true,
-  "<=": true,
-  ">=": true,
-  instanceof: true,
-  "&": true,
-  "^": true,
-  "|": true,
-  "==": true,
-  "!=": true,
-  "===": true,
-  "!==": true,
-  ",": true,
-  "}": true
-};
+const PRE_ARRAY_LITERAL_TOKENS = new Set(["typeof", "void", "delete", "case", "do", "=", "in", "{", "*", "/", "%", "else", ";", "++", "--", "+", "-", "~", "!", ":", "?", ">>", ">>>", "<<", "||", "&&", "<", ">", "<=", ">=", "instanceof", "&", "^", "|", "==", "!=", "===", "!==", ",", "}"]);
 /**
  * Determines if we think that the given token starts an array literal.
  *
@@ -5918,102 +5877,20 @@ function isArrayLiteral(token, lastToken) {
     return true;
   }
 
-  return !!PRE_ARRAY_LITERAL_TOKENS[lastToken.type.keyword || lastToken.type.label];
+  return PRE_ARRAY_LITERAL_TOKENS.has(lastToken.type.keyword || lastToken.type.label);
 } // If any of these tokens are followed by a token on a new line, we know that
 // ASI cannot happen.
 
 
-const PREVENT_ASI_AFTER_TOKENS = {
-  // Binary operators
-  "*": true,
-  "/": true,
-  "%": true,
-  "+": true,
-  "-": true,
-  "<<": true,
-  ">>": true,
-  ">>>": true,
-  "<": true,
-  ">": true,
-  "<=": true,
-  ">=": true,
-  instanceof: true,
-  in: true,
-  "==": true,
-  "!=": true,
-  "===": true,
-  "!==": true,
-  "&": true,
-  "^": true,
-  "|": true,
-  "&&": true,
-  "||": true,
-  ",": true,
-  ".": true,
-  "=": true,
-  "*=": true,
-  "/=": true,
-  "%=": true,
-  "+=": true,
-  "-=": true,
-  "<<=": true,
-  ">>=": true,
-  ">>>=": true,
-  "&=": true,
-  "^=": true,
-  "|=": true,
-  // Unary operators
-  delete: true,
-  void: true,
-  typeof: true,
-  "~": true,
-  "!": true,
-  new: true,
-  // Function calls and grouped expressions
-  "(": true
-}; // If any of these tokens are on a line after the token before it, we know
+const PREVENT_ASI_AFTER_TOKENS = new Set([// Binary operators
+"*", "/", "%", "+", "-", "<<", ">>", ">>>", "<", ">", "<=", ">=", "instanceof", "in", "==", "!=", "===", "!==", "&", "^", "|", "&&", "||", ",", ".", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", ">>>=", "&=", "^=", "|=", // Unary operators
+"delete", "void", "typeof", "~", "!", "new", // Function calls and grouped expressions
+"("]); // If any of these tokens are on a line after the token before it, we know
 // that ASI cannot happen.
 
-const PREVENT_ASI_BEFORE_TOKENS = {
-  // Binary operators
-  "*": true,
-  "/": true,
-  "%": true,
-  "<<": true,
-  ">>": true,
-  ">>>": true,
-  "<": true,
-  ">": true,
-  "<=": true,
-  ">=": true,
-  instanceof: true,
-  in: true,
-  "==": true,
-  "!=": true,
-  "===": true,
-  "!==": true,
-  "&": true,
-  "^": true,
-  "|": true,
-  "&&": true,
-  "||": true,
-  ",": true,
-  ".": true,
-  "=": true,
-  "*=": true,
-  "/=": true,
-  "%=": true,
-  "+=": true,
-  "-=": true,
-  "<<=": true,
-  ">>=": true,
-  ">>>=": true,
-  "&=": true,
-  "^=": true,
-  "|=": true,
-  // Function calls
-  "(": true
-};
+const PREVENT_ASI_BEFORE_TOKENS = new Set([// Binary operators
+"*", "/", "%", "<<", ">>", ">>>", "<", ">", "<=", ">=", "instanceof", "in", "==", "!=", "===", "!==", "&", "^", "|", "&&", "||", ",", ".", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", ">>>=", "&=", "^=", "|=", // Function calls
+"("]);
 /**
  * Determine if a token can look like an identifier. More precisely,
  * this determines if the token may end or start with a character from
@@ -6057,11 +5934,11 @@ function isASI(token, lastToken) {
     return true;
   }
 
-  if (PREVENT_ASI_AFTER_TOKENS[lastToken.type.label || lastToken.type.keyword]) {
+  if (PREVENT_ASI_AFTER_TOKENS.has(lastToken.type.label || lastToken.type.keyword)) {
     return false;
   }
 
-  if (PREVENT_ASI_BEFORE_TOKENS[token.type.label || token.type.keyword]) {
+  if (PREVENT_ASI_BEFORE_TOKENS.has(token.type.label || token.type.keyword)) {
     return false;
   }
 
@@ -6326,41 +6203,14 @@ function prependWhiteSpace(token, lastToken, addedNewline, addedSpace, write, op
 
   if (newlineAdded) {
     if (ttk == "case" || ttk == "default") {
-      write(repeat(options.indent, indentLevel - 1), token.loc.start.line, token.loc.start.column);
+      write(options.indent.repeat(indentLevel - 1), token.loc.start.line, token.loc.start.column);
     } else {
-      write(repeat(options.indent, indentLevel), token.loc.start.line, token.loc.start.column);
+      write(options.indent.repeat(indentLevel), token.loc.start.line, token.loc.start.column);
     }
   } else if (!spaceAdded && needsSpaceAfter(token, lastToken)) {
     write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
     spaceAdded = true;
   }
-}
-/**
- * Repeat the `str` string `n` times.
- *
- * @param String str
- *        The string to be repeated.
- * @param Number n
- *        The number of times to repeat the string.
- *
- * @returns String
- *          The repeated string.
- */
-
-
-function repeat(str, n) {
-  let result = "";
-
-  while (n > 0) {
-    if (n & 1) {
-      result += str;
-    }
-
-    n >>= 1;
-    str += str;
-  }
-
-  return result;
 }
 /**
  * Make sure that we output the escaped character combination inside string
@@ -6497,7 +6347,7 @@ function incrementsIndent(token) {
 
 
 function addComment(write, indentLevel, options, block, text, line, column, nextToken) {
-  const indentString = repeat(options.indent, indentLevel);
+  const indentString = options.indent.repeat(indentLevel);
   let needNewline = true;
   write(indentString, line, column);
 
