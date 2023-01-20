@@ -396,8 +396,8 @@ class nsWindow final : public nsBaseWidget {
     GTK_DECORATION_NONE,    // WM does not support CSD at all
   } GtkWindowDecoration;
   /**
-   * Get the support of Client Side Decoration by checking
-   * the XDG_CURRENT_DESKTOP environment variable.
+   * Get the support of Client Side Decoration by checking the desktop
+   * environment.
    */
   static GtkWindowDecoration GetSystemGtkWindowDecoration();
 

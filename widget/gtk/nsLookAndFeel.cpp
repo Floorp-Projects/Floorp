@@ -36,6 +36,7 @@
 #include "ScrollbarDrawing.h"
 
 #include "gtkdrawing.h"
+#include "nsString.h"
 #include "nsStyleConsts.h"
 #include "gfxFontConstants.h"
 #include "WidgetUtils.h"
@@ -2075,15 +2076,13 @@ bool nsLookAndFeel::GetDefaultDrawInTitlebar() {
     }
 
     // Don't hide titlebar when it's disabled on current desktop.
-    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    if (!currentDesktop || !sCSDAvailable) {
+    if (!sCSDAvailable) {
       return false;
     }
 
     // We hide system titlebar on Gnome/ElementaryOS without any restriction.
-    return strstr(currentDesktop, "GNOME-Flashback:GNOME") ||
-           strstr(currentDesktop, "GNOME") ||
-           strstr(currentDesktop, "Pantheon");
+    return IsGnomeDesktopEnvironment() ||
+           FindInReadable("pantheon"_ns, GetDesktopEnvironmentIdentifier());
   }();
   return drawInTitlebar;
 }

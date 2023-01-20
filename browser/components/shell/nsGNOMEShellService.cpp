@@ -82,8 +82,7 @@ nsresult nsGNOMEShellService::Init() {
   if (!giovfs && !gsettings) return NS_ERROR_NOT_AVAILABLE;
 
 #ifdef MOZ_ENABLE_DBUS
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  if (currentDesktop && strstr(currentDesktop, "GNOME") != nullptr &&
+  if (widget::IsGnomeDesktopEnvironment() &&
       Preferences::GetBool("browser.gnome-search-provider.enabled", false)) {
     mSearchProvider.Startup();
   }
@@ -334,19 +333,12 @@ NS_IMETHODIMP
 nsGNOMEShellService::GetCanSetDesktopBackground(bool* aResult) {
   // setting desktop background is currently only supported
   // for Gnome or desktops using the same GSettings keys
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  if (currentDesktop && strstr(currentDesktop, "GNOME") != nullptr) {
+  if (widget::IsGnomeDesktopEnvironment()) {
     *aResult = true;
     return NS_OK;
   }
 
-  const char* gnomeSession = getenv("GNOME_DESKTOP_SESSION_ID");
-  if (gnomeSession) {
-    *aResult = true;
-  } else {
-    *aResult = false;
-  }
-
+  *aResult = !!getenv("GNOME_DESKTOP_SESSION_ID");
   return NS_OK;
 }
 
