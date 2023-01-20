@@ -1081,6 +1081,12 @@ let cookieBannerSection = new (class {
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
+      "_serviceDetectOnly",
+      "cookiebanners.service.detectOnly",
+      false
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
       "_uiDisabled",
       "cookiebanners.ui.desktop.enabled",
       false
@@ -1180,6 +1186,10 @@ let cookieBannerSection = new (class {
     if (!this._uiDisabled) {
       return false;
     }
+    // Don't show UI for detect-only mode.
+    if (this._serviceDetectOnly) {
+      return false;
+    }
 
     let mode;
 
@@ -1191,10 +1201,7 @@ let cookieBannerSection = new (class {
 
     // Only show the section if the feature is enabled for the normal or PBM
     // window.
-    return (
-      mode != Ci.nsICookieBannerService.MODE_DISABLED &&
-      mode != Ci.nsICookieBannerService.MODE_DETECT_ONLY
-    );
+    return mode != Ci.nsICookieBannerService.MODE_DISABLED;
   }
 
   /**

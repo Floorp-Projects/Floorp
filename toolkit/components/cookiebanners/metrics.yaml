@@ -28,7 +28,6 @@ cookie.banners:
       - disabled
       - reject
       - reject_or_accept
-      - detect_only
       - invalid
     telemetry_mirror: COOKIE_BANNERS_NORMAL_WINDOW_SERVICE_MODE
   private_window_service_mode:
