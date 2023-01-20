@@ -9,13 +9,9 @@
 
 #include "base/thread.h"
 #include "base/message_loop.h"
+#include "mozilla/Monitor.h"
 
 namespace mozilla {
-
-namespace layers {
-class SynchronousTask;
-}
-
 namespace widget {
 
 struct WinCompositorWnds {
@@ -53,11 +49,12 @@ class WinCompositorWindowThread final {
 
  private:
   explicit WinCompositorWindowThread(base::Thread* aThread);
-  ~WinCompositorWindowThread();
+  ~WinCompositorWindowThread() {}
 
-  void ShutDownTask(layers::SynchronousTask* aTask);
+  void ShutDownTask();
 
-  base::Thread* const mThread;
+  UniquePtr<base::Thread> const mThread;
+  Monitor mMonitor;
 };
 
 }  // namespace widget
