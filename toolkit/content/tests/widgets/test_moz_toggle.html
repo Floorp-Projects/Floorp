@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozToggle tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <!-- TODO: Bug 1798404 - in-content/common.css can be removed once we have a better
+  solution for token variables for the new widgets -->
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+  <script type="module" src="chrome://global/content/elements/moz-toggle.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="max-width: fit-content">
+  <moz-toggle label="Label" description="Description" pressed="true"></moz-toggle>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  add_task(async function testMozToggleDisplay() {
+    const mozToggle = document.querySelector("moz-toggle");
+    ok(mozToggle, "moz-toggle is rendered");
+
+    const label = mozToggle.labelEl;
+    ok(label, "moz-toggle contains a label");
+    ok(label.textContent.includes("Label"), "The expected label text is shown");
+
+    const description = mozToggle.descriptionEl;
+    ok(description, "moz-toggle contains a description");
+    ok(description.textContent.includes("Description"), "The expected description text is shown");
+
+    const button = mozToggle.buttonEl;
+    ok(button, "moz-toggle contains a button");
+    is(button.getAttribute("aria-pressed"), "true", "The button is pressed");
+  });
+
+  add_task(async function testMozToggleInteraction() {
+    const mozToggle = document.querySelector("moz-toggle");
+    const button = mozToggle.buttonEl;
+    is(mozToggle.pressed, true, "moz-toggle is pressed initially");
+    is(button.getAttribute("aria-pressed"), "true", "aria-pressed reflects the pressed state");
+
+    synthesizeMouseAtCenter(button, {});
+    await mozToggle.updateComplete;
+
+    is(mozToggle.pressed, false, "The toggle pressed state changes on click");
+    is(button.getAttribute("aria-pressed"), "false", "aria-pressed reflects this change");
+
+    synthesizeMouseAtCenter(mozToggle.labelEl, {});
+    await mozToggle.updateComplete;
+
+    is(mozToggle.pressed, true, "The toggle pressed state changes on label click");
+    is(button.getAttribute("aria-pressed"), "true", "aria-pressed reflects this change");
+
+    mozToggle.focus();
+    synthesizeKey(" ", {});
+    await mozToggle.updateComplete;
+
+    is(mozToggle.pressed, false, "The toggle pressed state can be changed via space bar");
+    is(button.getAttribute("aria-pressed"), "false", "aria-pressed reflects this change");
+  });
+</script>
+</pre>
+</body>
+</html>
