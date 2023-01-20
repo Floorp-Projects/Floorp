@@ -779,12 +779,12 @@ TimeStamp TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault,
   AUTO_TIMERS_STATS(TimerThread_FindNextFireTimeForCurrentThread);
 
   for (const Entry& entry : mTimers) {
-    if (entry.Timeout() >= aDefault) {
-      return aDefault;
-    }
-
     const nsTimerImpl* timer = entry.Value();
     if (timer) {
+      if (entry.Timeout() > aDefault) {
+        return aDefault;
+      }
+
       // Don't yield to timers created with the *_LOW_PRIORITY type.
       if (!timer->IsLowPriority()) {
         bool isOnCurrentThread = false;
