@@ -121,7 +121,7 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
     // Called with the Monitor held, but not the TimerImpl's mutex
     already_AddRefed<nsTimerImpl> Take() {
-      if (mTimerImpl) {
+      if (MOZ_LIKELY(mTimerImpl)) {
         MOZ_ASSERT(mTimerImpl->IsInTimerThread());
         mTimerImpl->SetIsInTimerThread(false);
       }

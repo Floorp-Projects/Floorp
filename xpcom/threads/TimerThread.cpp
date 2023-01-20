@@ -429,16 +429,17 @@ nsresult TimerThread::Shutdown() {
     // See bug 422472.
     timers.SetCapacity(mTimers.Length());
     for (Entry& entry : mTimers) {
-      timers.AppendElement(entry.Take());
+      if (entry.Value()) {
+        timers.AppendElement(entry.Take());
+      }
     }
 
     mTimers.Clear();
   }
 
   for (const RefPtr<nsTimerImpl>& timer : timers) {
-    if (timer) {
-      timer->Cancel();
-    }
+    MOZ_ASSERT(timer);
+    timer->Cancel();
   }
 
   mThread->Shutdown();  // wait for the thread to die
