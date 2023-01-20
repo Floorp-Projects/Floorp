@@ -167,10 +167,6 @@ class Repository(object):
         """
 
     @abc.abstractmethod
-    def get_upstream(self):
-        """Reference to the upstream remote."""
-
-    @abc.abstractmethod
     def get_changed_files(self, diff_filter, mode="unstaged", rev=None):
         """Return a list of files that are changed in this repository's
         working copy.
@@ -430,9 +426,6 @@ class HgRepository(Repository):
             return None
         return match.group(1)
 
-    def get_upstream(self):
-        return "default"
-
     def _format_diff_filter(self, diff_filter, for_status=False):
         df = diff_filter.lower()
         assert all(f in self._valid_diff_filter for f in df)
@@ -628,15 +621,6 @@ class GitRepository(Repository):
         if not email:
             return None
         return email.strip()
-
-    def get_upstream(self):
-        ref = self._run("symbolic-ref", "-q", "HEAD").strip()
-        upstream = self._run("for-each-ref", "--format=%(upstream:short)", ref).strip()
-
-        if not upstream:
-            raise MissingUpstreamRepo("Could not detect an upstream repository.")
-
-        return upstream
 
     def get_changed_files(self, diff_filter="ADM", mode="unstaged", rev=None):
         assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
