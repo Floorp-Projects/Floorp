@@ -258,3 +258,40 @@ add_task(async function testVideoScrubber() {
     }
   );
 });
+
+/**
+ * Tests the behavior of the scrubber and position/duration indicator for a
+ * video with an invalid/non-finite duration.
+ */
+add_task(async function testInvalidDuration() {
+  await BrowserTestUtils.withNewTab(
+    {
+      url: TEST_PAGE_WITH_NAN_VIDEO_DURATION,
+      gBrowser,
+    },
+    async browser => {
+      const videoID = "nan-duration";
+
+      // This tests skips calling ensureVideosReady, because canplaythrough
+      // will never fire for the NaN duration video.
+
+      await SpecialPowers.pushPrefEnv({
+        set: [[IMPROVED_CONTROLS_ENABLED_PREF, true]],
+      });
+
+      // Open the video in PiP
+      let pipWin = await triggerPictureInPicture(browser, videoID);
+      ok(pipWin, "Got Picture-in-Picture window.");
+
+      // Both the scrubber and the duration should be hidden.
+      let timestampEl = pipWin.document.getElementById("timestamp");
+      ok(timestampEl.hidden, "Timestamp in the PIP window should be hidden.");
+
+      let scrubberEl = pipWin.document.getElementById("scrubber");
+      ok(
+        scrubberEl.hidden,
+        "Scrubber control in the PIP window should be hidden"
+      );
+    }
+  );
+});

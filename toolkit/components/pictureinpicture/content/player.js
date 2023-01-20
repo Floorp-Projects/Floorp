@@ -489,10 +489,12 @@ let Player = {
 
   setScrubberPosition(value) {
     this.scrubber.value = value;
+    this.scrubber.hidden = value === undefined;
   },
 
   setTimestamp(timestamp) {
     this.timestamp.textContent = timestamp;
+    this.timestamp.hidden = timestamp === undefined;
   },
 
   closePipWindow(closeData) {
