@@ -131,32 +131,11 @@ nsEventStatus SwipeTracker::ProcessEvent(
   }
 
   const bool computedSwipeSuccess = ComputeSwipeSuccess();
-
-  // The velocity component might push us over the success threshold, in which
-  // case we want to pass the success threshold in the event we send so that the
-  // UI draws as 100% opacity to indicate such. We don't want to include the
-  // velocity in the amount we put on the event if we aren't over the success
-  // threshold because that would lead to the opacity decreasing even if the
-  // user continues to increase the swipe distance. If we do compute swipe
-  // success here and the user does not lift their fingers and then decreases
-  // the total swipe so that we go below the success threshold the opacity would
-  // also decrease in that case but that seems okay.
-  // We don't want above tweak if we move the UI along with the opacity change
-  // since it forces the UI element jump to the last position and jump back to
-  // the original position if the navigation didn't happen.
   double eventAmount = mGestureAmount;
-  if (computedSwipeSuccess &&
-      StaticPrefs::browser_swipe_navigation_icon_move_distance() == 0) {
-    eventAmount = kSwipeSuccessThreshold;
-    if (mGestureAmount < 0.f) {
-      eventAmount = -eventAmount;
-    }
-  }
-
-  // If ComputeSwipeSuccess returned false because the users fingers were moving
-  // slightly away from the target direction then we do not want to display
-  // the UI as if we were at the success threshold as that would give a false
-  // indication that navigation would happen.
+  // If ComputeSwipeSuccess returned false because the users fingers were
+  // moving slightly away from the target direction then we do not want to
+  // display the UI as if we were at the success threshold as that would
+  // give a false indication that navigation would happen.
   if (!computedSwipeSuccess && (eventAmount >= kSwipeSuccessThreshold ||
                                 eventAmount <= -kSwipeSuccessThreshold)) {
     eventAmount = 0.999 * kSwipeSuccessThreshold;

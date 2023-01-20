@@ -1573,16 +1573,6 @@
   value: false
   mirror: always
 
-#
-- name: browser.swipe.navigation-icon-move-distance
-  type: uint32_t
-#if defined(XP_LINUX) || defined(XP_WIN)
-  value: 100
-#else
-  value: 0
-#endif
-  mirror: always
-
 # Whether we should draw the tabs on top of the titlebar.
 #
 # no (0), yes (1), or default (2), which is true everywhere except Linux.
