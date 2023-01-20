@@ -27,14 +27,19 @@
 }
 
 :-moz-native-anonymous .highlighter-container {
-  --highlighter-guide-color: hsl(200, 100%, 40%);
-  --highlighter-content-color: hsl(197, 71%, 73%);
+  --highlighter-accessibility-bounds-color: #6a5acd;
+  --highlighter-accessibility-bounds-opacity: 0.6;
+  --highlighter-box-border-color: #444444;
+  --highlighter-box-content-color: hsl(197, 71%, 73%);
+  --highlighter-box-margin-color: #edff64;
+  --highlighter-box-padding-color: #6a5acd;
   --highlighter-bubble-text-color: hsl(216, 33%, 97%);
   --highlighter-bubble-background-color: hsl(214, 13%, 24%);
   --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
   --highlighter-bubble-arrow-size: 8px;
   --highlighter-font-family: message-box;
   --highlighter-font-size: 11px;
+  --highlighter-guide-color: hsl(200, 100%, 40%);
   --highlighter-infobar-color: hsl(210, 30%, 85%);
   --highlighter-marker-color: #000;
 
@@ -91,19 +96,19 @@
 }
 
 :-moz-native-anonymous .box-model-content {
-  fill: var(--highlighter-content-color);
+  fill: var(--highlighter-box-content-color);
 }
 
 :-moz-native-anonymous .box-model-padding {
-  fill: #6a5acd;
+  fill: var(--highlighter-box-padding-color);
 }
 
 :-moz-native-anonymous .box-model-border {
-  fill: #444444;
+  fill: var(--highlighter-box-border-color);
 }
 
 :-moz-native-anonymous .box-model-margin {
-  fill: #edff64;
+  fill: var(--highlighter-box-margin-color);
 }
 
 :-moz-native-anonymous .box-model-content,
@@ -120,6 +125,32 @@
   stroke: var(--highlighter-guide-color);
   stroke-dasharray: 5 3;
   shape-rendering: crispEdges;
+}
+
+@media (prefers-reduced-motion) {
+  :-moz-native-anonymous .box-model-content,
+  :-moz-native-anonymous .box-model-padding,
+  :-moz-native-anonymous .box-model-border,
+  :-moz-native-anonymous .box-model-margin {
+    fill: none;
+    stroke-width: 3;
+  }
+
+  :-moz-native-anonymous .box-model-content {
+    stroke: var(--highlighter-box-content-color);
+  }
+
+  :-moz-native-anonymous .box-model-padding {
+    stroke: var(--highlighter-box-padding-color);
+  }
+
+  :-moz-native-anonymous .box-model-border {
+    stroke: var(--highlighter-box-border-color);
+  }
+
+  :-moz-native-anonymous .box-model-margin {
+    stroke: var(--highlighter-box-margin-color);
+  }
 }
 
 /* Highlighter - Infobar */
@@ -282,7 +313,7 @@
 /* CSS Transform Highlighter */
 
 :-moz-native-anonymous .css-transform-transformed {
-  fill: var(--highlighter-content-color);
+  fill: var(--highlighter-box-content-color);
   opacity: 0.8;
 }
 
@@ -317,7 +348,7 @@
 
 :-moz-native-anonymous .geometry-editor-current-node {
   stroke: var(--highlighter-guide-color);
-  fill: var(--highlighter-content-color);
+  fill: var(--highlighter-box-content-color);
   shape-rendering: crispEdges;
   opacity: 0.6;
 }
@@ -329,7 +360,7 @@
 
 :-moz-native-anonymous .geometry-editor-root circle {
   stroke: var(--highlighter-guide-color);
-  fill: var(--highlighter-content-color);
+  fill: var(--highlighter-box-content-color);
 }
 
 :-moz-native-anonymous .geometry-editor-handler-top,
@@ -909,8 +940,16 @@
 }
 
 :-moz-native-anonymous .accessible-bounds {
-  opacity: 0.6;
-  fill: #6a5acd;
+  fill: var(--highlighter-accessibility-bounds-color);
+  opacity: var(--highlighter-accessibility-bounds-opacity);
+}
+
+@media (prefers-reduced-motion) {
+  :-moz-native-anonymous .accessible-bounds {
+    fill: none;
+    stroke: var(--highlighter-accessibility-bounds-color);
+    stroke-width: 3;
+  }
 }
 
 :-moz-native-anonymous .accessible-infobar-name,
