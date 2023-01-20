@@ -806,12 +806,9 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
     return false;
   }
 
-  TimeStamp now = TimeStamp::Now();
-
   LogTimerEvent::LogDispatch(aTimer);
 
-  Entry* entry =
-      mTimers.EmplaceBack(mozilla::fallible, now, aTimer->mTimeout, aTimer);
+  Entry* entry = mTimers.EmplaceBack(mozilla::fallible, aTimer);
   if (!entry) {
     return false;
   }
