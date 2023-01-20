@@ -279,10 +279,7 @@ impl<'a> Error<'a> {
             Error::UnknownScalarType(ref bad_span) => ParseError {
                 message: format!("unknown scalar type: '{}'", &source[bad_span.clone()]),
                 labels: vec![(bad_span.clone(), "unknown scalar type".into())],
-                notes: vec!["Valid scalar types are f16, f32, f64, \
-                             i8, i16, i32, i64, \
-                             u8, u16, u32, u64, bool"
-                    .into()],
+                notes: vec!["Valid scalar types are f32, f64, i32, u32, bool".into()],
             },
             Error::BadTextureSampleType {
                 ref span,
@@ -1513,13 +1510,20 @@ impl Parser {
         lexer.span_from(initial)
     }
 
-    fn parse_switch_value<'a>(lexer: &mut Lexer<'a>, uint: bool) -> Result<i32, Error<'a>> {
-        let token_span = lexer.next();
-        match token_span.0 {
-            Token::Number(Ok(Number::U32(num))) if uint => Ok(num as i32),
-            Token::Number(Ok(Number::I32(num))) if !uint => Ok(num),
-            Token::Number(Err(e)) => Err(Error::BadNumber(token_span.1, e)),
-            _ => Err(Error::Unexpected(token_span.1, ExpectedToken::Integer)),
+    fn parse_switch_value<'a>(
+        lexer: &mut Lexer<'a>,
+        uint: bool,
+    ) -> Result<crate::SwitchValue, Error<'a>> {
+        match lexer.next() {
+            (Token::Word("default"), _) => Ok(crate::SwitchValue::Default),
+            (Token::Number(Ok(Number::U32(num))), _) if uint => {
+                Ok(crate::SwitchValue::Integer(num as i32))
+            }
+            (Token::Number(Ok(Number::I32(num))), _) if !uint => {
+                Ok(crate::SwitchValue::Integer(num))
+            }
+            (Token::Number(Err(e)), span) => Err(Error::BadNumber(span, e)),
+            (_, span) => Err(Error::Unexpected(span, ExpectedToken::Integer)),
         }
     }
 
@@ -1626,8 +1630,13 @@ impl Parser {
 
         let expression = match *ctx.resolve_type(value)? {
             crate::TypeInner::Scalar { kind, width } => crate::Expression::AtomicResult {
-                kind,
-                width,
+                ty: ctx.types.insert(
+                    crate::Type {
+                        name: None,
+                        inner: crate::TypeInner::Scalar { kind, width },
+                    },
+                    NagaSpan::UNDEFINED,
+                ),
                 comparison: false,
             },
             _ => return Err(Error::InvalidAtomicOperandType(value_span)),
@@ -1857,9 +1866,48 @@ impl Parser {
 
                     let expression = match *ctx.resolve_type(value)? {
                         crate::TypeInner::Scalar { kind, width } => {
+                            let bool_ty = ctx.types.insert(
+                                crate::Type {
+                                    name: None,
+                                    inner: crate::TypeInner::Scalar {
+                                        kind: crate::ScalarKind::Bool,
+                                        width: crate::BOOL_WIDTH,
+                                    },
+                                },
+                                NagaSpan::UNDEFINED,
+                            );
+                            let scalar_ty = ctx.types.insert(
+                                crate::Type {
+                                    name: None,
+                                    inner: crate::TypeInner::Scalar { kind, width },
+                                },
+                                NagaSpan::UNDEFINED,
+                            );
+                            let struct_ty = ctx.types.insert(
+                                crate::Type {
+                                    name: Some("__atomic_compare_exchange_result".to_string()),
+                                    inner: crate::TypeInner::Struct {
+                                        members: vec![
+                                            crate::StructMember {
+                                                name: Some("old_value".to_string()),
+                                                ty: scalar_ty,
+                                                binding: None,
+                                                offset: 0,
+                                            },
+                                            crate::StructMember {
+                                                name: Some("exchanged".to_string()),
+                                                ty: bool_ty,
+                                                binding: None,
+                                                offset: 4,
+                                            },
+                                        ],
+                                        span: 8,
+                                    },
+                                },
+                                NagaSpan::UNDEFINED,
+                            );
                             crate::Expression::AtomicResult {
-                                kind,
-                                width,
+                                ty: struct_ty,
                                 comparison: true,
                             }
                         }
@@ -3576,34 +3624,6 @@ impl Parser {
         Ok(())
     }
 
-    fn parse_switch_case_body<'a, 'out>(
-        &mut self,
-        lexer: &mut Lexer<'a>,
-        mut context: StatementContext<'a, '_, 'out>,
-    ) -> Result<(bool, crate::Block), Error<'a>> {
-        let mut body = crate::Block::new();
-        // Push a new lexical scope for the switch case body
-        context.symbol_table.push_scope();
-
-        lexer.expect(Token::Paren('{'))?;
-        let fall_through = loop {
-            // default statements
-            if lexer.skip(Token::Word("fallthrough")) {
-                lexer.expect(Token::Separator(';'))?;
-                lexer.expect(Token::Paren('}'))?;
-                break true;
-            }
-            if lexer.skip(Token::Paren('}')) {
-                break false;
-            }
-            self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
-        };
-        // Pop the switch case body lexical scope
-        context.symbol_table.pop_scope();
-
-        Ok((fall_through, body))
-    }
-
     fn parse_statement<'a, 'out>(
         &mut self,
         lexer: &mut Lexer<'a>,
@@ -3619,26 +3639,9 @@ impl Parser {
                 return Ok(());
             }
             (Token::Paren('{'), _) => {
-                self.push_rule_span(Rule::Block, lexer);
-                // Push a new lexical scope for the block statement
-                context.symbol_table.push_scope();
-
-                let _ = lexer.next();
-                let mut statements = crate::Block::new();
-                while !lexer.skip(Token::Paren('}')) {
-                    self.parse_statement(
-                        lexer,
-                        context.reborrow(),
-                        &mut statements,
-                        is_uniform_control_flow,
-                    )?;
-                }
-                // Pop the block statement lexical scope
-                context.symbol_table.pop_scope();
-
-                self.pop_rule_span(lexer);
-                let span = NagaSpan::from(self.pop_rule_span(lexer));
-                block.push(crate::Statement::Block(statements), span);
+                let body = self.parse_block(lexer, context, is_uniform_control_flow)?;
+                let span = self.pop_rule_span(lexer);
+                block.push(crate::Statement::Block(body), NagaSpan::from(span));
                 return Ok(());
             }
             (Token::Word(word), _) => {
@@ -3945,37 +3948,34 @@ impl Parser {
                                             break value;
                                         }
                                         cases.push(crate::SwitchCase {
-                                            value: crate::SwitchValue::Integer(value),
+                                            value,
                                             body: crate::Block::new(),
                                             fall_through: true,
                                         });
                                     };
 
-                                    let (fall_through, body) =
-                                        self.parse_switch_case_body(lexer, context.reborrow())?;
-
+                                    let body =
+                                        self.parse_block(lexer, context.reborrow(), false)?;
                                     cases.push(crate::SwitchCase {
-                                        value: crate::SwitchValue::Integer(value),
+                                        value,
                                         body,
-                                        fall_through,
+                                        fall_through: false,
                                     });
                                 }
                                 (Token::Word("default"), _) => {
                                     lexer.skip(Token::Separator(':'));
-                                    let (fall_through, body) =
-                                        self.parse_switch_case_body(lexer, context.reborrow())?;
+
+                                    let body =
+                                        self.parse_block(lexer, context.reborrow(), false)?;
                                     cases.push(crate::SwitchCase {
                                         value: crate::SwitchValue::Default,
                                         body,
-                                        fall_through,
+                                        fall_through: false,
                                     });
                                 }
                                 (Token::Paren('}'), _) => break,
-                                other => {
-                                    return Err(Error::Unexpected(
-                                        other.1,
-                                        ExpectedToken::SwitchItem,
-                                    ))
+                                (_, span) => {
+                                    return Err(Error::Unexpected(span, ExpectedToken::SwitchItem))
                                 }
                             }
                         }
@@ -3993,7 +3993,6 @@ impl Parser {
                                 lexer,
                                 context.as_expression(&mut body, &mut emitter),
                             )?;
-                            lexer.expect(Token::Paren('{'))?;
                             body.extend(emitter.finish(context.expressions));
                             Ok(condition)
                         })?;
@@ -4007,14 +4006,8 @@ impl Parser {
                             },
                             NagaSpan::from(span),
                         );
-                        // Push a lexical scope for the while loop body
-                        context.symbol_table.push_scope();
 
-                        while !lexer.skip(Token::Paren('}')) {
-                            self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
-                        }
-                        // Pop the while loop body lexical scope
-                        context.symbol_table.pop_scope();
+                        body.extend_block(self.parse_block(lexer, context.reborrow(), false)?);
 
                         Some(crate::Statement::Loop {
                             body,
@@ -4093,11 +4086,9 @@ impl Parser {
                             }
                             lexer.expect(Token::Paren(')'))?;
                         }
-                        lexer.expect(Token::Paren('{'))?;
 
-                        while !lexer.skip(Token::Paren('}')) {
-                            self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
-                        }
+                        body.extend_block(self.parse_block(lexer, context.reborrow(), false)?);
+
                         // Pop the for loop lexical scope
                         context.symbol_table.pop_scope();
 
@@ -4306,6 +4297,7 @@ impl Parser {
         })
     }
 
+    /// compound_statement
     fn parse_block<'a>(
         &mut self,
         lexer: &mut Lexer<'a>,
@@ -4326,7 +4318,7 @@ impl Parser {
                 is_uniform_control_flow,
             )?;
         }
-        //Pop the block lexical scope
+        // Pop the block lexical scope
         context.symbol_table.pop_scope();
 
         self.pop_rule_span(lexer);
