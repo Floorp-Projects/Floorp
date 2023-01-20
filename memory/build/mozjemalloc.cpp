@@ -1465,8 +1465,7 @@ static inline size_t GetChunkOffsetForPtr(const void* aPtr) {
 static inline const char* _getprogname(void) { return "<jemalloc>"; }
 
 // Fill the given range of memory with zeroes or junk depending on opt_junk and
-// opt_zero. Callers can force filling with zeroes through the aForceZero
-// argument.
+// opt_zero.
 static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
   if (opt_junk) {
     memset(aPtr, kAllocJunk, aSize);
