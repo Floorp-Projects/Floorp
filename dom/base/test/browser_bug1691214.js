@@ -79,3 +79,44 @@ add_task(async function bug1700871() {
     }
   );
 });
+
+add_task(async function bug1793829() {
+  await BrowserTestUtils.withNewTab(
+    BASE_URL + "file_bug1691214.html",
+    async function(browser) {
+      let win = await newFocusedWindow(function() {
+        return BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
+      });
+      is(Services.focus.focusedWindow, win, "New window should be focused");
+
+      info("re-focusing the original window");
+
+      {
+        let focusBack = BrowserTestUtils.waitForEvent(window, "focus", true);
+        window.focus();
+        await focusBack;
+        is(Services.focus.focusedWindow, window, "should focus back");
+      }
+
+      info("Trying to steal focus.");
+
+      await SpecialPowers.spawn(browser, [], function() {
+        content.document.clearUserGestureActivation();
+        content.document.getElementById("link-2").click();
+      });
+
+      // We need to test that nothing happened, which is hard without an
+      // arbitrary timeout.
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(c => setTimeout(c, 2000));
+
+      is(
+        Services.focus.focusedWindow,
+        window,
+        "Shouldn't steal focus without user gesture"
+      );
+
+      win.close();
+    }
+  );
+});
