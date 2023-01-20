@@ -5,6 +5,7 @@
 import asyncio
 import contextlib
 import time
+from urllib.parse import quote
 
 import webdriver
 
@@ -93,6 +94,9 @@ class Client:
             return "\ue03d"  # meta (command)
         else:
             return "\ue009"  # control
+
+    def inline(self, doc):
+        return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
     async def navigate(self, url, timeout=None, await_console_message=None):
         if timeout is not None:
