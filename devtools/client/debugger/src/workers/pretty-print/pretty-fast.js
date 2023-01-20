@@ -1,5 +1,3 @@
-/* eslint-disable file-header/file-header */
-/* eslint-disable complexity */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -252,7 +250,7 @@ function isLineDelimiter(token, stack) {
     return true;
   }
   const ttl = token.type.label;
-  const top = stack[stack.length - 1];
+  const top = stack.at(-1);
   return (
     (ttl == ";" && top != "(") ||
     ttl == "{" ||
@@ -285,83 +283,16 @@ function appendNewline(token, write, stack) {
 }
 
 /**
- * Determines if we need to add a space between the last token we added and
- * the token we are about to add.
+ * Determines if we need to add a space after the token we are about to add.
  *
  * @param Object token
  *        The token we are about to add to the pretty printed code.
- * @param Object lastToken
- *        The last token added to the pretty printed code.
+ * @param Object [lastToken]
+ *        Optional last token added to the pretty printed code.
  */
 function needsSpaceAfter(token, lastToken) {
-  if (lastToken) {
-    if (lastToken.type.isLoop) {
-      return true;
-    }
-    if (lastToken.type.isAssign) {
-      return true;
-    }
-    if (lastToken.type.binop != null) {
-      return true;
-    }
-
-    const ltt = lastToken.type.label;
-    if (ltt == "?") {
-      return true;
-    }
-    if (ltt == ":") {
-      return true;
-    }
-    if (ltt == ",") {
-      return true;
-    }
-    if (ltt == ";") {
-      return true;
-    }
-    if (ltt == "${") {
-      return true;
-    }
-    if (ltt == "num" && token.type.label == ".") {
-      return true;
-    }
-
-    const ltk = lastToken.type.keyword;
-    const ttl = token.type.label;
-    if (ltk != null && ttl != ".") {
-      if (ltk == "break" || ltk == "continue" || ltk == "return") {
-        return token.type.label != ";";
-      }
-      if (
-        ltk != "debugger" &&
-        ltk != "null" &&
-        ltk != "true" &&
-        ltk != "false" &&
-        ltk != "this" &&
-        ltk != "default"
-      ) {
-        return true;
-      }
-    }
-
-    if (
-      ltt == ")" &&
-      token.type.label != ")" &&
-      token.type.label != "]" &&
-      token.type.label != ";" &&
-      token.type.label != "," &&
-      token.type.label != "."
-    ) {
-      return true;
-    }
-
-    if (isIdentifierLike(token) && isIdentifierLike(lastToken)) {
-      // We must emit a space to avoid merging the tokens.
-      return true;
-    }
-
-    if (token.type.label == "{" && lastToken.type.label == "name") {
-      return true;
-    }
+  if (lastToken && needsSpaceBetweenTokens(token, lastToken)) {
+    return true;
   }
 
   if (token.type.isAssign) {
@@ -375,6 +306,131 @@ function needsSpaceAfter(token, lastToken) {
   }
 
   return false;
+}
+
+function needsSpaceBeforeLastToken(lastToken) {
+  if (lastToken.type.isLoop) {
+    return true;
+  }
+  if (lastToken.type.isAssign) {
+    return true;
+  }
+  if (lastToken.type.binop != null) {
+    return true;
+  }
+
+  const lastTokenTypeLabel = lastToken.type.label;
+  if (lastTokenTypeLabel == "?") {
+    return true;
+  }
+  if (lastTokenTypeLabel == ":") {
+    return true;
+  }
+  if (lastTokenTypeLabel == ",") {
+    return true;
+  }
+  if (lastTokenTypeLabel == ";") {
+    return true;
+  }
+  if (lastTokenTypeLabel == "${") {
+    return true;
+  }
+  return false;
+}
+
+function isBreakContinueOrReturnStatement(lastTokenKeyword) {
+  return (
+    lastTokenKeyword == "break" ||
+    lastTokenKeyword == "continue" ||
+    lastTokenKeyword == "return"
+  );
+}
+
+function needsSpaceBeforeLastTokenKeywordAfterNotDot(lastTokenKeyword) {
+  return (
+    lastTokenKeyword != "debugger" &&
+    lastTokenKeyword != "null" &&
+    lastTokenKeyword != "true" &&
+    lastTokenKeyword != "false" &&
+    lastTokenKeyword != "this" &&
+    lastTokenKeyword != "default"
+  );
+}
+
+function needsSpaceBeforeClosingParen(tokenTypeLabel) {
+  return (
+    tokenTypeLabel != ")" &&
+    tokenTypeLabel != "]" &&
+    tokenTypeLabel != ";" &&
+    tokenTypeLabel != "," &&
+    tokenTypeLabel != "."
+  );
+}
+
+/**
+ * Determines if we need to add a space between the last token we added and
+ * the token we are about to add.
+ *
+ * @param Object token
+ *        The token we are about to add to the pretty printed code.
+ * @param Object lastToken
+ *        The last token added to the pretty printed code.
+ */
+function needsSpaceBetweenTokens(token, lastToken) {
+  if (needsSpaceBeforeLastToken(lastToken)) {
+    return true;
+  }
+
+  const ltt = lastToken.type.label;
+  if (ltt == "num" && token.type.label == ".") {
+    return true;
+  }
+
+  const ltk = lastToken.type.keyword;
+  const ttl = token.type.label;
+  if (ltk != null && ttl != ".") {
+    if (isBreakContinueOrReturnStatement(ltk)) {
+      return ttl != ";";
+    }
+    if (needsSpaceBeforeLastTokenKeywordAfterNotDot(ltk)) {
+      return true;
+    }
+  }
+
+  if (ltt == ")" && needsSpaceBeforeClosingParen(ttl)) {
+    return true;
+  }
+
+  if (isIdentifierLike(token) && isIdentifierLike(lastToken)) {
+    // We must emit a space to avoid merging the tokens.
+    return true;
+  }
+
+  if (token.type.label == "{" && lastToken.type.label == "name") {
+    return true;
+  }
+
+  return false;
+}
+
+function needsSpaceBeforeClosingCurlyBracket(tokenTypeKeyword) {
+  return (
+    tokenTypeKeyword == "else" ||
+    tokenTypeKeyword == "catch" ||
+    tokenTypeKeyword == "finally"
+  );
+}
+
+function needsLineBreakBeforeClosingCurlyBracket(tokenTypeLabel) {
+  return (
+    tokenTypeLabel != "(" &&
+    tokenTypeLabel != ";" &&
+    tokenTypeLabel != "," &&
+    tokenTypeLabel != ")" &&
+    tokenTypeLabel != "." &&
+    tokenTypeLabel != "template" &&
+    tokenTypeLabel != "`"
+  );
 }
 
 /**
@@ -415,36 +471,28 @@ function prependWhiteSpace(
   const ttl = token.type.label;
   let newlineAdded = addedNewline;
   let spaceAdded = addedSpace;
-  const ltt = lastToken ? lastToken.type.label : null;
+  const ltt = lastToken?.type?.label;
 
   // Handle whitespace and newlines after "}" here instead of in
   // `isLineDelimiter` because it is only a line delimiter some of the
   // time. For example, we don't want to put "else if" on a new line after
   // the first if's block.
   if (lastToken && ltt == "}") {
-    if (ttk == "while" && stack[stack.length - 1] == "do") {
-      write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
-      spaceAdded = true;
-    } else if (ttk == "else" || ttk == "catch" || ttk == "finally") {
-      write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
-      spaceAdded = true;
-    } else if (
-      ttl != "(" &&
-      ttl != ";" &&
-      ttl != "," &&
-      ttl != ")" &&
-      ttl != "." &&
-      ttl != "template" &&
-      ttl != "`"
+    if (
+      (ttk == "while" && stack.at(-1) == "do") ||
+      needsSpaceBeforeClosingCurlyBracket(ttk)
     ) {
+      write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
+      spaceAdded = true;
+    } else if (needsLineBreakBeforeClosingCurlyBracket(ttl)) {
       write("\n", lastToken.loc.start.line, lastToken.loc.start.column);
       newlineAdded = true;
     }
   }
 
   if (
-    (ttl == ":" && stack[stack.length - 1] == "?") ||
-    (ttl == "}" && stack[stack.length - 1] == "${")
+    (ttl == ":" && stack.at(-1) == "?") ||
+    (ttl == "}" && stack.at(-1) == "${")
   ) {
     write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
     spaceAdded = true;
@@ -611,7 +659,7 @@ function belongsOnStack(token) {
 function shouldStackPop(token, stack) {
   const ttl = token.type.label;
   const ttk = token.type.keyword;
-  const top = stack[stack.length - 1];
+  const top = stack.at(-1);
   return (
     ttl == "]" ||
     ttl == ")" ||
@@ -626,9 +674,9 @@ function shouldStackPop(token, stack) {
  * indent level.
  */
 function decrementsIndent(tokenType, stack) {
+  const top = stack.at(-1);
   return (
-    (tokenType == "}" && stack[stack.length - 1] != "${") ||
-    (tokenType == "]" && stack[stack.length - 1] == "[\n")
+    (tokenType == "}" && top != "${") || (tokenType == "]" && top == "[\n")
   );
 }
 
@@ -782,9 +830,6 @@ export function prettyFast(input, options) {
   // Whether or not we added a space after we added the last token.
   let addedSpace = false;
 
-  // The current token we will be adding to the pretty printed code.
-  let token;
-
   // Shorthand for token.type.label, so we don't have to repeatedly access
   // properties.
   let ttl;
@@ -830,38 +875,15 @@ export function prettyFast(input, options) {
   // After this process, tokenQueue has the following token stream:
   //
   //     [ foo, '// a', '// b', bar]
-  const tokenQueue = [];
-
-  const tokens = acorn.tokenizer(input, {
-    locations: true,
-    sourceFile: options.url,
-    ecmaVersion: options.ecmaVersion || "latest",
-    onComment(block, text, start, end, startLoc, endLoc) {
-      tokenQueue.push({
-        type: {},
-        comment: true,
-        block,
-        text,
-        loc: { start: startLoc, end: endLoc },
-      });
-    },
-  });
-
-  for (;;) {
-    token = tokens.getToken();
-    tokenQueue.push(token);
-    if (token.type.label == "eof") {
-      break;
-    }
-  }
+  const tokenQueue = getTokens(input, options);
 
   for (let i = 0; i < tokenQueue.length; i++) {
-    token = tokenQueue[i];
+    const token = tokenQueue[i];
     const nextToken = tokenQueue[i + 1];
 
     if (token.comment) {
       let commentIndentLevel = indentLevel;
-      if (lastToken && lastToken.loc.end.line == token.loc.start.line) {
+      if (lastToken?.loc?.end?.line == token.loc.start.line) {
         commentIndentLevel = 0;
         write(" ");
       }
@@ -881,7 +903,7 @@ export function prettyFast(input, options) {
 
     ttk = token.type.keyword;
 
-    if (ttk && lastToken && lastToken.type.label == ".") {
+    if (ttk && lastToken?.type?.label == ".") {
       token.type = acorn.tokTypes.name;
     }
 
@@ -906,11 +928,7 @@ export function prettyFast(input, options) {
 
     if (decrementsIndent(ttl, stack)) {
       indentLevel--;
-      if (
-        ttl == "}" &&
-        stack.length > 1 &&
-        stack[stack.length - 2] == "switch"
-      ) {
+      if (ttl == "}" && stack.at(-2) == "switch") {
         indentLevel--;
       }
     }
@@ -940,7 +958,7 @@ export function prettyFast(input, options) {
 
     if (shouldStackPop(token, stack)) {
       stack.pop();
-      if (ttl == "}" && stack.length && stack[stack.length - 1] == "switch") {
+      if (ttl == "}" && stack.at(-1) == "switch") {
         stack.pop();
       }
     }
@@ -968,4 +986,44 @@ export function prettyFast(input, options) {
   }
 
   return result.toStringWithSourceMap({ file: options.url });
+}
+
+/**
+ * Returns the tokens computed with acorn.
+ *
+ * @param String input
+ *        The JS code we want the tokens of.
+ * @param Object options
+ * @param String options.url
+ *        The URL string of the ugly JS code.
+ * @param String options.ecmaVersion
+ * @returns Array<Object>
+ */
+function getTokens(input, options) {
+  const tokens = [];
+
+  const res = acorn.tokenizer(input, {
+    locations: true,
+    sourceFile: options.url,
+    ecmaVersion: options.ecmaVersion || "latest",
+    onComment(block, text, start, end, startLoc, endLoc) {
+      tokens.push({
+        type: {},
+        comment: true,
+        block,
+        text,
+        loc: { start: startLoc, end: endLoc },
+      });
+    },
+  });
+
+  for (;;) {
+    const token = res.getToken();
+    tokens.push(token);
+    if (token.type.label == "eof") {
+      break;
+    }
+  }
+
+  return tokens;
 }
