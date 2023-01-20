@@ -203,12 +203,20 @@ using namespace mozilla;
 #  define MALLOC_DECOMMIT
 #endif
 
+// Define MALLOC_RUNTIME_CONFIG depending on MOZ_DEBUG. Overriding this as
+// a build option allows us to build mozjemalloc/firefox without runtime asserts
+// but with runtime configuration. Making some testing easier.
+
+#ifdef MOZ_DEBUG
+#  define MALLOC_RUNTIME_CONFIG
+#endif
+
 // When MALLOC_STATIC_PAGESIZE is defined, the page size is fixed at
 // compile-time for better performance, as opposed to determined at
 // runtime. Some platforms can have different page sizes at runtime
 // depending on kernel configuration, so they are opted out by default.
 // Debug builds are opted out too, for test coverage.
-#ifndef MOZ_DEBUG
+#ifndef MALLOC_RUNTIME_CONFIG
 #  if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) &&       \
       !defined(__aarch64__) && !defined(__powerpc__) && !defined(XP_MACOSX) && \
       !defined(__loongarch__)
@@ -1384,7 +1392,7 @@ static detail::ThreadLocal<arena_t*, detail::ThreadLocalKeyStorage>
 const uint8_t kAllocJunk = 0xe4;
 const uint8_t kAllocPoison = 0xe5;
 
-#ifdef MOZ_DEBUG
+#ifdef MALLOC_RUNTIME_CONFIG
 static bool opt_junk = true;
 static bool opt_poison = true;
 static bool opt_zero = false;
@@ -4226,7 +4234,7 @@ static bool malloc_init_hard() {
               opt_dirty_max <<= 1;
             }
             break;
-#ifdef MOZ_DEBUG
+#ifdef MALLOC_RUNTIME_CONFIG
           case 'j':
             opt_junk = false;
             break;
