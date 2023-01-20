@@ -674,6 +674,10 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Need to remove leading canceled timers because we're about to assume that
+  // mTimers[0] is the next timer to fire.
+  RemoveLeadingCanceledTimersInternal();
+
   // Awaken the timer thread if:
   // - This is the new front timer, which may require the TimerThread to wake up
   //   earlier than previously planned. AND/OR
