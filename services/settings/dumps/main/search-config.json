@@ -4,6 +4,384 @@
       "params": {
         "searchUrlGetParams": [
           {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1673982797783,
+      "appliesTo": [
+        {
+          "included": {
+            "everywhere": true
+          }
+        },
+        {
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "t",
+              "value": "ftsa",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
+          "telemetryId": "ddg-esr"
+        }
+      ],
+      "extraParams": [
+        {
+          "name": "t",
+          "value": "ffab",
+          "purpose": "searchbar",
+          "condition": "purpose"
+        }
+      ],
+      "telemetryId": "ddg",
+      "webExtension": {
+        "id": "ddg@search.mozilla.org"
+      },
+      "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
+      "last_modified": 1674147734521
+    },
+    {
+      "schema": 1673982699337,
+      "appliesTo": [
+        {
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "application": {
+            "minVersion": "89.0a1"
+          },
+          "telemetryId": "amazondotcom-us",
+          "webExtension": {
+            "locales": [
+              "us"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "application": {
+            "maxVersion": "89.0a1"
+          }
+        },
+        {
+          "excluded": {
+            "regions": [
+              "at",
+              "au",
+              "be",
+              "ca",
+              "ch",
+              "cn",
+              "de",
+              "es",
+              "fr",
+              "gb",
+              "ie",
+              "in",
+              "it",
+              "jp",
+              "mc",
+              "nl",
+              "pt",
+              "se",
+              "sm",
+              "us",
+              "va"
+            ]
+          },
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "ar",
+                "az",
+                "bg",
+                "cak",
+                "cy",
+                "da",
+                "el",
+                "en-GB",
+                "en-US",
+                "eo",
+                "es-AR",
+                "eu",
+                "fa",
+                "ga-IE",
+                "gd",
+                "gl",
+                "gn",
+                "hr",
+                "hy-AM",
+                "ia",
+                "is",
+                "ka",
+                "km",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "nb-NO",
+                "nn-NO",
+                "pt-PT",
+                "ro",
+                "si",
+                "sq",
+                "sr",
+                "th",
+                "tl",
+                "trs",
+                "uz"
+              ]
+            }
+          }
+        }
+      ],
+      "telemetryId": "amazondotcom",
+      "webExtension": {
+        "id": "amazondotcom@search.mozilla.org"
+      },
+      "id": "071c671c-7c1b-469d-a771-ab16ff6e8beb",
+      "last_modified": 1674147734519
+    },
+    {
+      "schema": 1673982696406,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "bn",
+                "bn-IN",
+                "kn",
+                "gu-IN",
+                "mr",
+                "pa-IN",
+                "ta",
+                "te",
+                "ur"
+              ]
+            },
+            "regions": [
+              "in"
+            ]
+          },
+          "telemetryId": "amazon-in",
+          "webExtension": {
+            "locales": [
+              "in"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "fr",
+              "mc"
+            ]
+          },
+          "telemetryId": "amazon-france",
+          "webExtension": {
+            "locales": [
+              "france"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fr"
+              ]
+            },
+            "regions": [
+              "be"
+            ]
+          },
+          "telemetryId": "amazon-france",
+          "webExtension": {
+            "locales": [
+              "france"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "jp"
+            ]
+          },
+          "telemetryId": "amazon-jp",
+          "webExtension": {
+            "locales": [
+              "jp"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "it",
+              "sm",
+              "va"
+            ]
+          },
+          "telemetryId": "amazon-it",
+          "webExtension": {
+            "locales": [
+              "it"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "at",
+              "ch",
+              "de"
+            ]
+          },
+          "telemetryId": "amazon-de",
+          "webExtension": {
+            "locales": [
+              "de"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "gb",
+              "ie"
+            ]
+          },
+          "telemetryId": "amazon-en-GB",
+          "webExtension": {
+            "locales": [
+              "en-GB"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "au"
+            ]
+          },
+          "telemetryId": "amazon-au",
+          "webExtension": {
+            "locales": [
+              "au"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "ca"
+            ]
+          },
+          "telemetryId": "amazon-ca",
+          "webExtension": {
+            "locales": [
+              "ca"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "nl"
+            ]
+          },
+          "application": {
+            "minVersion": "89.0a1"
+          },
+          "telemetryId": "amazon-nl",
+          "webExtension": {
+            "locales": [
+              "nl"
+            ]
+          }
+        },
+        {
+          "excluded": {
+            "locales": {
+              "matches": [
+                "fr"
+              ]
+            }
+          },
+          "included": {
+            "regions": [
+              "be"
+            ]
+          },
+          "application": {
+            "minVersion": "89.0a1"
+          },
+          "telemetryId": "amazon-nl",
+          "webExtension": {
+            "locales": [
+              "nl"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "es",
+              "pt"
+            ]
+          },
+          "telemetryId": "amazon-es",
+          "webExtension": {
+            "locales": [
+              "spain"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "se"
+            ]
+          },
+          "telemetryId": "amazon-se",
+          "webExtension": {
+            "locales": [
+              "sweden"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "amazon@search.mozilla.org"
+      },
+      "id": "a620b506-c3ae-4332-97bb-190a73868580",
+      "last_modified": 1674147734517
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
             "name": "pc",
             "value": "MOZI"
           },
@@ -13,7 +391,7 @@
           }
         ]
       },
-      "schema": 1672351882248,
+      "schema": 1673964969394,
       "appliesTo": [
         {
           "included": {
@@ -308,102 +686,13 @@
               "MozillaOnline"
             ]
           }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000010"
-              },
-              {
-                "name": "pc",
-                "value": "MOZD"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "included": {
-            "everywhere": true
-          },
-          "experiment": "search-defaults-2021-1"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000011"
-              },
-              {
-                "name": "pc",
-                "value": "MOZD"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "experiment": "search-defaults-2021-2"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000012"
-              },
-              {
-                "name": "pc",
-                "value": "MOZD"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "included": {
-            "everywhere": true
-          },
-          "experiment": "search-defaults-2021-3"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000013"
-              },
-              {
-                "name": "pc",
-                "value": "MOZD"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "included": {
-            "everywhere": true
-          },
-          "experiment": "search-defaults-2021-4"
         }
       ],
       "webExtension": {
         "id": "bing@search.mozilla.org"
       },
       "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
-      "last_modified": 1672778333687
+      "last_modified": 1674147734514
     },
     {
       "params": {
@@ -1236,527 +1525,6 @@
       },
       "id": "ccb137f1-7733-464c-bb70-037be4ba2529",
       "last_modified": 1623330482152
-    },
-    {
-      "schema": 1623235243537,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "bn",
-                "bn-IN",
-                "kn",
-                "gu-IN",
-                "mr",
-                "pa-IN",
-                "ta",
-                "te",
-                "ur"
-              ]
-            },
-            "regions": [
-              "in"
-            ]
-          },
-          "telemetryId": "amazon-in",
-          "webExtension": {
-            "locales": [
-              "in"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "fr",
-              "mc"
-            ]
-          },
-          "telemetryId": "amazon-france",
-          "webExtension": {
-            "locales": [
-              "france"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "fr"
-              ]
-            },
-            "regions": [
-              "be"
-            ]
-          },
-          "telemetryId": "amazon-france",
-          "webExtension": {
-            "locales": [
-              "france"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "jp"
-            ]
-          },
-          "telemetryId": "amazon-jp",
-          "webExtension": {
-            "locales": [
-              "jp"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "it",
-              "sm",
-              "va"
-            ]
-          },
-          "telemetryId": "amazon-it",
-          "webExtension": {
-            "locales": [
-              "it"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "at",
-              "ch",
-              "de"
-            ]
-          },
-          "telemetryId": "amazon-de",
-          "webExtension": {
-            "locales": [
-              "de"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "de",
-                "dsb",
-                "hsb"
-              ]
-            }
-          },
-          "experiment": "amazon-de-adm",
-          "telemetryId": "amazon-de-adm",
-          "webExtension": {
-            "locales": [
-              "de-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        },
-        {
-          "included": {
-            "regions": [
-              "gb",
-              "ie"
-            ]
-          },
-          "telemetryId": "amazon-en-GB",
-          "webExtension": {
-            "locales": [
-              "en-GB"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            },
-            "regions": [
-              "gb"
-            ]
-          },
-          "experiment": "amazon-en-GB-adm",
-          "telemetryId": "amazon-en-GB-adm",
-          "webExtension": {
-            "locales": [
-              "en-GB-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cy",
-                "da",
-                "el",
-                "en-GB",
-                "eu",
-                "ga-IE",
-                "gd",
-                "gl",
-                "hr",
-                "nb-NO",
-                "nn-NO",
-                "pt-PT",
-                "sq",
-                "sr"
-              ]
-            }
-          },
-          "experiment": "amazon-en-GB-adm",
-          "telemetryId": "amazon-en-GB-adm",
-          "webExtension": {
-            "locales": [
-              "en-GB-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        },
-        {
-          "included": {
-            "regions": [
-              "au"
-            ]
-          },
-          "telemetryId": "amazon-au",
-          "webExtension": {
-            "locales": [
-              "au"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "ca"
-            ]
-          },
-          "telemetryId": "amazon-ca",
-          "webExtension": {
-            "locales": [
-              "ca"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "nl"
-            ]
-          },
-          "application": {
-            "minVersion": "89.0a1"
-          },
-          "telemetryId": "amazon-nl",
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
-        },
-        {
-          "excluded": {
-            "locales": {
-              "matches": [
-                "fr"
-              ]
-            }
-          },
-          "included": {
-            "regions": [
-              "be"
-            ]
-          },
-          "application": {
-            "minVersion": "89.0a1"
-          },
-          "telemetryId": "amazon-nl",
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "es",
-              "pt"
-            ]
-          },
-          "telemetryId": "amazon-es",
-          "webExtension": {
-            "locales": [
-              "spain"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "se"
-            ]
-          },
-          "telemetryId": "amazon-se",
-          "webExtension": {
-            "locales": [
-              "sweden"
-            ]
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "amazon@search.mozilla.org"
-      },
-      "id": "a620b506-c3ae-4332-97bb-190a73868580",
-      "last_modified": 1623330482149
-    },
-    {
-      "schema": 1623194745373,
-      "appliesTo": [
-        {
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
-          "application": {
-            "minVersion": "89.0a1"
-          },
-          "telemetryId": "amazondotcom-us",
-          "webExtension": {
-            "locales": [
-              "us"
-            ]
-          }
-        },
-        {
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
-          "application": {
-            "maxVersion": "89.0a1"
-          }
-        },
-        {
-          "excluded": {
-            "regions": [
-              "at",
-              "au",
-              "be",
-              "ca",
-              "ch",
-              "cn",
-              "de",
-              "es",
-              "fr",
-              "gb",
-              "ie",
-              "in",
-              "it",
-              "jp",
-              "mc",
-              "nl",
-              "pt",
-              "se",
-              "sm",
-              "us",
-              "va"
-            ]
-          },
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "cy",
-                "da",
-                "el",
-                "en-GB",
-                "en-US",
-                "eo",
-                "es-AR",
-                "eu",
-                "fa",
-                "ga-IE",
-                "gd",
-                "gl",
-                "gn",
-                "hr",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "nb-NO",
-                "nn-NO",
-                "pt-PT",
-                "ro",
-                "si",
-                "sq",
-                "sr",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            }
-          }
-        },
-        {
-          "excluded": {
-            "regions": [
-              "au",
-              "ca",
-              "es",
-              "fr",
-              "gb",
-              "se"
-            ]
-          },
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            }
-          },
-          "experiment": "amazondotcom-adm",
-          "telemetryId": "amazondotcom-adm",
-          "webExtension": {
-            "locales": [
-              "en-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        }
-      ],
-      "telemetryId": "amazondotcom",
-      "webExtension": {
-        "id": "amazondotcom@search.mozilla.org"
-      },
-      "id": "071c671c-7c1b-469d-a771-ab16ff6e8beb",
-      "last_modified": 1623330482145
-    },
-    {
-      "schema": 1619432100208,
-      "appliesTo": [
-        {
-          "included": {
-            "everywhere": true
-          }
-        }
-      ],
-      "extraParams": [
-        {
-          "name": "t",
-          "value": "ffcm",
-          "purpose": "contextmenu",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffab",
-          "purpose": "keyword",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffsb",
-          "purpose": "searchbar",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffhp",
-          "purpose": "homepage",
-          "condition": "purpose"
-        },
-        {
-          "name": "t",
-          "value": "ffnt",
-          "purpose": "newtab",
-          "condition": "purpose"
-        }
-      ],
-      "telemetryId": "ddg",
-      "webExtension": {
-        "id": "ddg@search.mozilla.org"
-      },
-      "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
-      "last_modified": 1619450717295
     },
     {
       "schema": 1613395976252,
@@ -2982,5 +2750,5 @@
       "last_modified": 1583937832210
     }
   ],
-  "timestamp": 1672778333687
+  "timestamp": 1674147734521
 }
