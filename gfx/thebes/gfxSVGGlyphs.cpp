@@ -13,7 +13,6 @@
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/FontTableURIProtocolHandler.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "nsError.h"
@@ -370,11 +369,9 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t* aBuffer,
   nsresult rv = CreateBufferedStream(aBuffer, aBufLen, stream);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We just need a dummy URI.
   nsCOMPtr<nsIURI> uri;
-  mozilla::dom::FontTableURIProtocolHandler::GenerateURIString(
-      mSVGGlyphsDocumentURI);
-
-  rv = NS_NewURI(getter_AddRefs(uri), mSVGGlyphsDocumentURI);
+  rv = NS_NewURI(getter_AddRefs(uri), "moz-svg-glyphs://"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> principal =
@@ -465,6 +462,5 @@ void gfxSVGGlyphsDocument::InsertGlyphId(Element* aGlyphElement) {
 size_t gfxSVGGlyphsDocument::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) +
-         mGlyphIdMap.ShallowSizeOfExcludingThis(aMallocSizeOf) +
-         mSVGGlyphsDocumentURI.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+         mGlyphIdMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }

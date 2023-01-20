@@ -9,10 +9,6 @@ var uris = [
     uri: "rstp://1.2.3.4/some_path?param=a",
     local: false,
   },
-  {
-    uri: "moz-fonttable://something",
-    local: true,
-  },
 ];
 
 function run_test() {
