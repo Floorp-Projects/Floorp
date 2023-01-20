@@ -339,7 +339,7 @@
       this._featureCallout = new FeatureCallout({
         win: window,
         prefName: "browser.pdfjs.feature-tour",
-        source: location.spec,
+        page: "chrome",
       });
     },
     _setupInitialBrowserAndTab() {

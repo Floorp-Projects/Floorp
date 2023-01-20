@@ -36,6 +36,7 @@ const launchFeatureTour = () => {
   let callout = new FeatureCallout({
     win: window,
     prefName: "browser.firefox-view.feature-tour",
+    page: "about:firefoxview",
   });
   callout.showFeatureCallout();
 };

@@ -166,7 +166,7 @@ add_task(async function feature_callout_closes_on_dismiss() {
         event: "CLICK_BUTTON",
         event_context: {
           source: "dismiss_button",
-          page: document.location.href,
+          page: "about:firefoxview",
         },
         message_id: sinon.match("FEATURE_CALLOUT_2"),
       });
@@ -174,7 +174,7 @@ add_task(async function feature_callout_closes_on_dismiss() {
         event: "DISMISS",
         event_context: {
           source: "dismiss_button",
-          page: document.location.href,
+          page: "about:firefoxview",
         },
         message_id: sinon.match("FEATURE_CALLOUT_2"),
       });
@@ -418,7 +418,7 @@ add_task(async function feature_callout_dismiss_on_page_click() {
           action: "DISMISS",
           reason: "CLICK",
           source: sinon.match(testClickSelector),
-          page: document.location.href,
+          page: "about:firefoxview",
         },
         message_id: screenId,
       });
@@ -428,7 +428,7 @@ add_task(async function feature_callout_dismiss_on_page_click() {
           source: sinon
             .match("PAGE_EVENT:")
             .and(sinon.match(testClickSelector)),
-          page: document.location.href,
+          page: "about:firefoxview",
         },
         message_id: screenId,
       });

@@ -14,13 +14,13 @@ const CONTAINER_ID = "root";
  * the parent page pointing to the element they describe.
  * @param {Window} Window in which messages will be rendered
  * @param {String} Name of the pref used to track progress through a given feature tour
- * @param {String} Optional string to pass as the source when checking for messages to show, 
- * defaults to this.doc.location.pathname.toLowerCase().
+ * @param {String} Optional string to pass as the page when checking for messages to show,
+ * in the case of the browser chrome the string "chrome" is used.
  * @param {Browser} browser
 
  */
 export class FeatureCallout {
-  constructor({ win, prefName, source, browser }) {
+  constructor({ win, prefName, page, browser }) {
     this.win = win || window;
     this.doc = win.document;
     this.browser = browser || this.win.docShell.chromeEventHandler;
@@ -32,7 +32,7 @@ export class FeatureCallout {
     this.ready = false;
     this.listenersRegistered = false;
     this.AWSetup = false;
-    this.source = source || this.doc.location.pathname.toLowerCase();
+    this.page = page;
     this.focusHandler = this._focusHandler.bind(this);
 
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -70,12 +70,10 @@ export class FeatureCallout {
       return this.win.pageEventManager;
     });
 
-    const inChrome =
-      this.win.location.toString() === "chrome://browser/content/browser.xhtml";
     // When the window is focused, ensure tour is synced with tours in
     // any other instances of the parent page. This does not apply when
     // the Callout is shown in the browser chrome.
-    if (!inChrome) {
+    if (this.page !== "chrome") {
       this.win.addEventListener(
         "visibilitychange",
         this._handlePrefChange.bind(this)
@@ -197,6 +195,8 @@ export class FeatureCallout {
       "hidden"
     );
     container.id = CONTAINER_ID;
+    // This value is reported as the "page" in about:welcome telemetry
+    container.dataset.page = this.page;
     container.setAttribute(
       "aria-describedby",
       `#${CONTAINER_ID} .welcome-text`
@@ -687,7 +687,7 @@ export class FeatureCallout {
       browser: this.browser,
       // triggerId and triggerContext
       id: "featureCalloutCheck",
-      context: { source: this.source },
+      context: { source: this.page },
     });
     this.loadingConfig = false;
 
@@ -789,7 +789,7 @@ export class FeatureCallout {
    * @param {Event} event Triggering event
    */
   _handlePageEventAction(action, event) {
-    const page = this.doc.location.href;
+    const page = this.page;
     const message_id = this.config?.id.toUpperCase();
     const source = this._getUniqueElementIdentifier(event.target);
     this.win.AWSendEventTelemetry?.({

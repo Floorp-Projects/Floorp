@@ -148,6 +148,8 @@ function renderMultistage(ready) {
 
   document.body.classList.add("onboardingContainer");
   document.body.id = "root";
+  // This value is reported as the "page" in telemetry
+  document.body.dataset.page = "spotlight";
 
   // Prevent applying the default modal shadow and margins because the content
   // handles styling, including its own modal shadowing.

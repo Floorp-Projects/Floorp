@@ -31,10 +31,10 @@ __webpack_require__.r(__webpack_exports__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-// If we're in a subdialog, then this is a spotlight modal.
-// Otherwise, this is about:welcome or a Feature Callout
-// in another "about" page and we should return the current page.
-const page = document.querySelector(":root[dialogroot=true]") ? "spotlight" : document.location.href;
+// If the container has a "page" data attribute, then this is
+// a Spotlight modal or Feature Callout. Otherwise, this is
+// about:welcome and we should return the current page.
+const page = document.querySelector("#root.onboardingContainer[data-page]") ? document.querySelector("#root[data-page]").dataset.page : document.location.href;
 const AboutWelcomeUtils = {
   handleUserAction(action) {
     window.AWSendToParent("SPECIAL_ACTION", action);
