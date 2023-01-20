@@ -835,8 +835,14 @@ bool TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer) {
     return false;
   }
   AUTO_TIMERS_STATS(TimerThread_RemoveTimerInternal_in_list);
-  aTimer->mHolder->Forget(aTimer);
-  return true;
+  for (auto& entry : mTimers) {
+    if (entry->Value() == aTimer) {
+      entry->Forget(aTimer);
+      return true;
+    }
+  }
+  MOZ_ASSERT(!aTimer->mHolder, "There is a holder, but timer is not in list!?");
+  return false;
 }
 
 void TimerThread::RemoveLeadingCanceledTimersInternal() {
