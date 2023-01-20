@@ -12,17 +12,30 @@
 #  include <windows.h>
 #  include "CrashAnnotations.h"
 #  include "mozilla/Attributes.h"
+#  include "mozilla/ProcessType.h"
 #  include "mozilla/Types.h"
 
 #  define HAS_DLL_BLOCKLIST
 
 enum DllBlocklistInitFlags {
   eDllBlocklistInitFlagDefault = 0,
-  eDllBlocklistInitFlagIsChildProcess = 1,
-  eDllBlocklistInitFlagWasBootstrapped = 2,
-  eDllBlocklistInitFlagIsUtilityProcess = 4,
-  eDllBlocklistInitFlagIsSocketProcess = 8
+  eDllBlocklistInitFlagIsChildProcess = 1 << 0,
+  eDllBlocklistInitFlagWasBootstrapped = 1 << 1,
+  eDllBlocklistInitFlagIsUtilityProcess = 1 << 2,
+  eDllBlocklistInitFlagIsSocketProcess = 1 << 3,
+  eDllBlocklistInitFlagIsGPUProcess = 1 << 4,
 };
+
+inline void SetDllBlocklistProcessTypeFlags(uint32_t& aFlags,
+                                            GeckoProcessType aProcessType) {
+  if (aProcessType == GeckoProcessType_Utility) {
+    aFlags |= eDllBlocklistInitFlagIsUtilityProcess;
+  } else if (aProcessType == GeckoProcessType_Socket) {
+    aFlags |= eDllBlocklistInitFlagIsSocketProcess;
+  } else if (aProcessType == GeckoProcessType_GPU) {
+    aFlags |= eDllBlocklistInitFlagIsGPUProcess;
+  }
+}
 
 // Only available from within firefox.exe
 #  if !defined(IMPL_MFBT) && !defined(MOZILLA_INTERNAL_API)

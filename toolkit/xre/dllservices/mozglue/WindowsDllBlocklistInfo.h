@@ -30,9 +30,10 @@ struct DllBlockInfoT {
   // If the USE_TIMESTAMP flag is set, then we use the timestamp from
   // the IMAGE_FILE_HEADER in lieu of a version number.
   //
-  // If the UTILITY_PROCESSES_ONLY or SOCKET_PROCESSES_ONLY flags are
-  // set, the dll will only be blocked for these specific child
-  // processes. Note that these are a subset of CHILD_PROCESSES_ONLY.
+  // If the UTILITY_PROCESSES_ONLY, SOCKET_PROCESSES_ONLY, or
+  // GPU_PROCESSES_ONLY flags are set, the dll will only be blocked
+  // for these specific child processes. Note that these are a subset
+  // of CHILD_PROCESSES_ONLY. These flags cannot be combined.
   enum Flags {
     FLAGS_DEFAULT = 0,
     BLOCK_WIN7_AND_OLDER = 1 << 0,
@@ -43,6 +44,7 @@ struct DllBlockInfoT {
     REDIRECT_TO_NOOP_ENTRYPOINT = 1 << 5,
     UTILITY_PROCESSES_ONLY = 1 << 6,
     SOCKET_PROCESSES_ONLY = 1 << 7,
+    GPU_PROCESSES_ONLY = 1 << 8,
   } mFlags;
 
   bool IsVersionBlocked(const uint64_t aOther) const {
