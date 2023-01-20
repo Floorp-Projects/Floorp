@@ -128,13 +128,11 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
       return mTimerImpl.forget();
     }
 
-    static bool UniquePtrLessThan(const Entry& aLeft, const Entry& aRight) {
-      // This is reversed because std::push_heap() sorts the "largest" to
-      // the front of the heap.  We want that to be the earliest timer.
-      return aRight.mTimeout < aLeft.mTimeout;
-    }
-
     const TimeStamp& Timeout() const { return mTimeout; }
+
+    // Comparisons to a timestamp, used to sort entries.
+    bool operator==(const TimeStamp& aRHS) const { return Timeout() == aRHS; }
+    bool operator<(const TimeStamp& aRHS) const { return Timeout() < aRHS; }
 
    private:
     TimeStamp mTimeout;

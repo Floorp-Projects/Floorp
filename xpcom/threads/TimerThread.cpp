@@ -727,74 +727,38 @@ TimeStamp TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault,
                                                         uint32_t aSearchBound) {
   MonitorAutoLock lock(mMonitor);
   AUTO_TIMERS_STATS(TimerThread_FindNextFireTimeForCurrentThread);
-  TimeStamp timeStamp = aDefault;
-  uint32_t index = 0;
 
-#ifdef DEBUG
-  TimeStamp firstTimeStamp;
-  Entry* initialFirstEntry = nullptr;
-  if (!mTimers.IsEmpty()) {
-    initialFirstEntry = &mTimers[0];
-    firstTimeStamp = mTimers[0].Timeout();
-  }
-#endif
+  for (const Entry& entry : mTimers) {
+    if (entry.Timeout() >= aDefault) {
+      return aDefault;
+    }
 
-  auto end = mTimers.end();
-  while (end != mTimers.begin()) {
-    nsTimerImpl* timer = mTimers[0].Value();
+    const nsTimerImpl* timer = entry.Value();
     if (timer) {
-      if (timer->mTimeout > aDefault) {
-        timeStamp = aDefault;
-        break;
-      }
-
       // Don't yield to timers created with the *_LOW_PRIORITY type.
       if (!timer->IsLowPriority()) {
         bool isOnCurrentThread = false;
         nsresult rv =
             timer->mEventTarget->IsOnCurrentThread(&isOnCurrentThread);
         if (NS_SUCCEEDED(rv) && isOnCurrentThread) {
-          timeStamp = timer->mTimeout;
-          break;
+          return entry.Timeout();
         }
       }
 
-      if (++index > aSearchBound) {
-        // Track the currently highest timeout so that we can bail out when we
-        // reach the bound or when we find a timer for the current thread.
+      if (aSearchBound == 0) {
+        // Return the currently highest timeout when we reach the bound.
         // This won't give accurate information if we stop before finding
         // any timer for the current thread, but at least won't report too
         // long idle period.
-        timeStamp = timer->mTimeout;
-        break;
+        return timer->mTimeout;
       }
-    }
 
-    std::pop_heap(mTimers.begin(), end, Entry::UniquePtrLessThan);
-    --end;
-  }
-
-  while (end != mTimers.end()) {
-    ++end;
-    std::push_heap(mTimers.begin(), end, Entry::UniquePtrLessThan);
-  }
-
-#ifdef DEBUG
-  if (!mTimers.IsEmpty()) {
-    if (firstTimeStamp != mTimers[0].Timeout()) {
-      TimeStamp now = TimeStamp::Now();
-      printf_stderr(
-          "firstTimeStamp %f, mTimers[0].Timeout() %f, "
-          "initialFirstTimer %p, current first %p\n",
-          (firstTimeStamp - now).ToMilliseconds(),
-          (mTimers[0].Timeout() - now).ToMilliseconds(), initialFirstEntry,
-          &mTimers[0]);
+      --aSearchBound;
     }
   }
-  MOZ_ASSERT_IF(!mTimers.IsEmpty(), firstTimeStamp == mTimers[0].Timeout());
-#endif
 
-  return timeStamp;
+  // No timers for this thread, return the default.
+  return aDefault;
 }
 
 // This function must be called from within a lock
@@ -809,14 +773,22 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
 
   LogTimerEvent::LogDispatch(aTimer);
 
-  Entry* entry = mTimers.EmplaceBack(mozilla::fallible, aTimer);
-  if (!entry) {
-    return false;
+  Entry entry{aTimer};
+  const size_t insertionIndex = mTimers.IndexOfFirstElementGt(aTimer->mTimeout);
+  if (insertionIndex < mTimers.Length()) {
+    if (!mTimers[insertionIndex].Value()) {
+      AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_overwrite);
+      mTimers[insertionIndex] = std::move(entry);
+      return true;
+    }
+    if (insertionIndex != 0 && !mTimers[insertionIndex - 1].Value()) {
+      AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_overwrite_before);
+      mTimers[insertionIndex - 1] = std::move(entry);
+      return true;
+    }
   }
-
-  std::push_heap(mTimers.begin(), mTimers.end(), Entry::UniquePtrLessThan);
-
-  return true;
+  return mTimers.InsertElementAt(insertionIndex, std::move(entry),
+                                 mozilla::fallible);
 }
 
 // This function must be called from within a lock
@@ -849,32 +821,18 @@ void TimerThread::RemoveLeadingCanceledTimersInternal() {
   mMonitor.AssertCurrentThreadOwns();
   AUTO_TIMERS_STATS(TimerThread_RemoveLeadingCanceledTimersInternal);
 
-  // Move all canceled timers from the front of the list to
-  // the back of the list using std::pop_heap().  We do this
-  // without actually removing them from the list so we can
-  // modify the nsTArray in a single bulk operation.
-  auto sortedEnd = mTimers.end();
-  while (sortedEnd != mTimers.begin() && !mTimers[0].Value()) {
-    std::pop_heap(mTimers.begin(), sortedEnd, Entry::UniquePtrLessThan);
-    --sortedEnd;
+  size_t toRemove = 0;
+  while (toRemove < mTimers.Length() && !mTimers[toRemove].Value()) {
+    ++toRemove;
   }
-
-  // If there were no canceled timers then we are done.
-  if (sortedEnd == mTimers.end()) {
-    return;
-  }
-
-  // Finally, remove the canceled timers from the back of the
-  // nsTArray.
-  mTimers.RemoveLastElements(mTimers.end() - sortedEnd);
+  mTimers.RemoveElementsAt(0, toRemove);
 }
 
 void TimerThread::RemoveFirstTimerInternal() {
   mMonitor.AssertCurrentThreadOwns();
   AUTO_TIMERS_STATS(TimerThread_RemoveFirstTimerInternal);
   MOZ_ASSERT(!mTimers.IsEmpty());
-  std::pop_heap(mTimers.begin(), mTimers.end(), Entry::UniquePtrLessThan);
-  mTimers.RemoveLastElement();
+  mTimers.RemoveElementAt(0);
 }
 
 void TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef) {
