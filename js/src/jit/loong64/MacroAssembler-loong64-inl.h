@@ -1221,7 +1221,22 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
 
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
                                                  Register dest, Label* fail) {
-  convertDoubleToInt32(src, dest, fail, false);
+  ScratchRegisterScope scratch(asMasm());
+  ScratchDoubleScope fpscratch(asMasm());
+
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
+  // In the case of overflow, the output is saturated.
+  // In the case of NaN and -0, the output is zero.
+  as_ftintrz_l_d(fpscratch, src);
+
+  // Fail on overflow cases.
+  as_movfcsr2gr(scratch);
+  as_bstrpick_w(scratch, scratch, Assembler::CauseO, Assembler::CauseO);
+  ma_b(scratch, Imm32(0), fail, Assembler::NotEqual);
+
+  moveFromDouble(fpscratch, dest);
+  // Sign-extend bit 31 to upper 32 bits.
+  as_slli_w(dest, dest, 0);
 }
 
 template <typename T>
