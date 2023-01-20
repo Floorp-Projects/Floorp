@@ -58,6 +58,18 @@ static const uint32_t MaxInlineMemoryFillLength = 0;
 // Keep wasm/gc/casting.js in sync with this constant.
 static const uint32_t MinSuperTypeVectorLength = 3;
 
+// An exported wasm function may have a 'jit entry' stub attached that can be
+// called using the JS JIT ABI. This relies on the pointer we store in the
+// `NativeJitInfoOrInterpretedScriptSlot` slot of JSFunction to have a
+// compatible representation with BaseScript/SelfHostedLazyScript so that
+// `masm.loadJitCodeRaw` works.
+//
+// We store jit entry pointers in an array (see wasm::JumpTable) and store the
+// pointer to a function's jit entry in the JSFunction slot. We rely on the
+// below offset of each entry in the jump table to be compatible with
+// BaseScript/SelfHostedLazyScript.
+static const uint32_t JumpTableJitEntryOffset = 0;
+
 }  // namespace wasm
 }  // namespace js
 
