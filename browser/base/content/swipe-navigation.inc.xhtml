@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file has an SVG icon for the swipe navigation. It's merged into
+# browser.xhtml at build time so that loading the SVG during browser starting
+# up can be avoided.
+#
+# Note that the real navigation icon is cloned and injected into the browserStack
+# <stack> element in each tab when needed, so the SVG here is being hidden.
+  <hbox hidden="true">
+#ifdef XP_MACOSX
+  <svg id="swipe-nav-icon" class="swipe-nav-icon"
+       width="26" height="50" viewBox="0 0 26 50" fill="none"
+       xmlns="http://www.w3.org/2000/svg">
+  <path d="M0.75 49L0.749999 49.25H1C14.3929 49.25 25.25 38.3929 25.25 25C25.25 11.6071 14.3929 0.75 1 0.75H0.75V1L0.75001 11.7794L0.75002 25L0.75 49Z" stroke-width="0.5"/>
+  <path d="M13.6481 24.9253H5.25779L8.44889 21.7341C8.53214 21.6465 8.57784 21.5298 8.57628 21.4089C8.57471 21.288 8.52599 21.1725 8.4405 21.087C8.35501 21.0015 8.23951 20.9528 8.11862 20.9512C7.99774 20.9496 7.88101 20.9954 7.79334 21.0786L3.74075 25.1334V25.6438L7.79408 29.6978C7.83697 29.741 7.88798 29.7753 7.94417 29.7987C8.00036 29.8221 8.06062 29.8341 8.12149 29.8341C8.18235 29.8341 8.24261 29.8221 8.2988 29.7987C8.35499 29.7753 8.406 29.741 8.44889 29.6978C8.53542 29.6107 8.58399 29.4929 8.58399 29.3701C8.58399 29.2473 8.53542 29.1294 8.44889 29.0423L5.25779 25.8512H13.6481C13.7709 25.8512 13.8887 25.8024 13.9755 25.7156C14.0623 25.6288 14.1111 25.511 14.1111 25.3882C14.1111 25.2654 14.0623 25.1477 13.9755 25.0609C13.8887 24.974 13.7709 24.9253 13.6481 24.9253Z" stroke-width="1"/>
+  </svg>
+#else
+#
+# To make the edges of the circle clear during the animations, there are two
+# <circle> elements and the lower one is used for the glowing effect.
+#
+  <svg id="swipe-nav-icon" class="swipe-nav-icon"
+       width="66" height="66" viewBox="0 0 66 66" fill="none"
+       xmlns="http://www.w3.org/2000/svg">
+  <circle cx="33" cy="33" r="30" />
+  <circle cx="33" cy="33" r="12" />
+  <path d="M37.6481 32.9253H29.2578L32.4489 29.7341C32.5321 29.6465 32.5778 29.5298 32.5763 29.4089C32.5747 29.288 32.526 29.1725 32.4405 29.087C32.355 29.0015 32.2395 28.9528 32.1186 28.9512C31.9977 28.9496 31.881 28.9954 31.7933 29.0786L27.7408 33.1334V33.6438L31.7941 37.6978C31.837 37.741 31.888 37.7753 31.9442 37.7987C32.0004 37.8221 32.0606 37.8341 32.1215 37.8341C32.1823 37.8341 32.2426 37.8221 32.2988 37.7987C32.355 37.7753 32.406 37.741 32.4489 37.6978C32.5354 37.6107 32.584 37.4929 32.584 37.3701C32.584 37.2473 32.5354 37.1294 32.4489 37.0423L29.2578 33.8512H37.6481C37.7709 33.8512 37.8887 33.8024 37.9755 33.7156C38.0623 33.6288 38.1111 33.511 38.1111 33.3882C38.1111 33.2654 38.0623 33.1477 37.9755 33.0609C37.8887 32.974 37.7709 32.9253 37.6481 32.9253Z" />
+  </svg>
+#endif
+  </hbox>

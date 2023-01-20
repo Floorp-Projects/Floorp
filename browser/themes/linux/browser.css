@@ -426,22 +426,3 @@ menuitem.bookmark-item {
     }
   }
 }
-
-#historySwipeAnimationPreviousArrow {
-  background: url("chrome://browser/skin/history-swipe-arrow.svg")
-              center left / 192px 192px no-repeat transparent;
-  will-change: transform;
-  -moz-context-properties: fill;
-}
-#historySwipeAnimationPreviousArrow:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-#historySwipeAnimationNextArrow {
-  background: url("chrome://browser/skin/history-swipe-arrow.svg")
-              center left / 192px 192px no-repeat transparent;
-  will-change: transform;
-  -moz-context-properties: fill;
-}
-#historySwipeAnimationNextArrow:-moz-locale-dir(ltr) {
-  transform: scaleX(-1);
-}

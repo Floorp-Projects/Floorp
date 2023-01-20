@@ -1,7 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="256" height="512" xmlns="http://www.w3.org/2000/svg">
-  <ellipse ry="256" rx="256" cy="256" cx="0" stroke-width="0" stroke="#000" fill="#38383d"/>
-  <path d="m181.335236,247.749695l-96.549957,0l35.774963,-35.774994a8.33333,8.33333 0 0 0 -11.783325,-11.783325l-49.999969,49.999954a8.33333,8.33333 0 0 0 0,11.782944l49.999969,50a8.33333,8.33333 0 0 0 11.783325,-11.783325l-35.774963,-35.774994l96.549957,0a8.33333,8.33333 0 0 0 0,-16.66626z" fill="rgba(249, 249, 250, .8)"/>
-</svg>
