@@ -473,11 +473,11 @@ RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
                         "We're missing screen?");
   return mScreenList[monitor];
 }
+#endif
 
 RefPtr<nsIScreen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
   return gScreenGetter->GetScreenForWindow(aWindow);
 }
-#endif
 
 gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum) {
   GdkScreen* screen = gdk_screen_get_default();
