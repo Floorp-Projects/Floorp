@@ -9,9 +9,11 @@ add_setup(clickTestSetup);
  * Triggers cookie banner clicking and tests the events dispatched.
  * @param {*} options - Test options.
  * @param {nsICookieBannerService::Modes} options.mode - The cookie banner service mode to test with.
+ * @param {boolean} options.detectOnly - Whether the service should be enabled
+ * in detection only mode, where it does not handle banners.
  * @param {*} options.openPageOptions - Options to overwrite for the openPageAndVerify call.
  */
-async function runTest({ mode, openPageOptions = {} }) {
+async function runTest({ mode, detectOnly = false, openPageOptions = {} }) {
   let initFn = () => {
     // Insert rules only if the feature is enabled.
     if (Services.cookieBanners.isEnabled) {
@@ -19,7 +21,8 @@ async function runTest({ mode, openPageOptions = {} }) {
     }
   };
 
-  let shouldHandleBanner = mode == Ci.nsICookieBannerService.MODE_REJECT;
+  let shouldHandleBanner =
+    mode == Ci.nsICookieBannerService.MODE_REJECT && !detectOnly;
   let testURL = openPageOptions.testURL || TEST_PAGE_A;
   let triggerFn = async () => {
     await openPageAndVerify({
@@ -33,7 +36,7 @@ async function runTest({ mode, openPageOptions = {} }) {
     });
   };
 
-  await runEventTest({ mode, initFn, triggerFn, testURL });
+  await runEventTest({ mode, detectOnly, initFn, triggerFn, testURL });
 
   // Clean up the test tab opened by openPageAndVerify.
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -47,19 +50,27 @@ add_task(async function test_events_mode_reject() {
 });
 
 /**
- * Test the banner clicking events with MODE_DETECT_ONLY.
+ * Test the banner clicking events with detect-only mode.
  */
 add_task(async function test_events_mode_detect_only() {
-  await runTest({ mode: Ci.nsICookieBannerService.MODE_DETECT_ONLY });
+  await runTest({
+    mode: Ci.nsICookieBannerService.MODE_REJECT,
+    detectOnly: true,
+  });
+  await runTest({
+    mode: Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
+    detectOnly: true,
+  });
 });
 
 /**
- * Test the banner clicking events with MODE_DETECT_ONLY with a click rule that
- * only supports opt-in..
+ * Test the banner clicking events with detect-only mode with a click rule that
+ * only supports opt-in.
  */
 add_task(async function test_events_mode_detect_only_opt_in_rule() {
   await runTest({
-    mode: Ci.nsICookieBannerService.MODE_DETECT_ONLY,
+    mode: Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
+    detectOnly: true,
     openPageOptions: {
       // We only have an opt-in rule for DOMAIN_B. This ensures we still fire
       // detection events for that case.
@@ -72,7 +83,7 @@ add_task(async function test_events_mode_detect_only_opt_in_rule() {
 });
 
 /**
- * Test the banner clicking events with MODE_DETECT_ONLY.
+ * Test the banner clicking events with detect-only mode.
  */
 add_task(async function test_events_mode_disabled() {
   await runTest({ mode: Ci.nsICookieBannerService.MODE_DISABLED });

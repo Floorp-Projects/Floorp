@@ -15,7 +15,6 @@ const {
   MODE_DISABLED,
   MODE_REJECT,
   MODE_REJECT_OR_ACCEPT,
-  MODE_DETECT_ONLY,
   MODE_UNSET,
 } = Ci.nsICookieBannerService;
 
@@ -37,20 +36,20 @@ const {
 function cookieBannerSectionIsVisible({
   featureMode,
   featureModePBM,
+  detectOnly,
   visibilityPref,
   testPBM,
 }) {
   if (!visibilityPref) {
     return false;
   }
+  if (detectOnly) {
+    return false;
+  }
 
   return (
-    (testPBM &&
-      featureModePBM != MODE_DISABLED &&
-      featureModePBM != MODE_DETECT_ONLY) ||
-    (!testPBM &&
-      featureMode != MODE_DISABLED &&
-      featureMode != MODE_DETECT_ONLY)
+    (testPBM && featureModePBM != MODE_DISABLED) ||
+    (!testPBM && featureMode != MODE_DISABLED)
   );
 }
 
@@ -162,21 +161,26 @@ add_task(async function test_section_visibility() {
       MODE_DISABLED,
       MODE_REJECT,
       MODE_REJECT_OR_ACCEPT,
-      MODE_DETECT_ONLY,
     ]) {
       for (let featureModePBM of [
         MODE_DISABLED,
         MODE_REJECT,
         MODE_REJECT_OR_ACCEPT,
-        MODE_DETECT_ONLY,
       ]) {
-        await testSectionVisibility({
-          win,
-          featureMode,
-          featureModePBM,
-          testPBM,
-          visibilityPref: true,
-        });
+        for (let detectOnly of [false, true]) {
+          // Testing detect only mode for normal browsing is sufficient.
+          if (detectOnly && featureModePBM != MODE_DISABLED) {
+            continue;
+          }
+          await testSectionVisibility({
+            win,
+            featureMode,
+            featureModePBM,
+            detectOnly,
+            testPBM,
+            visibilityPref: true,
+          });
+        }
       }
     }
 
