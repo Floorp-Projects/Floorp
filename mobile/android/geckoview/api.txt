@@ -449,7 +449,7 @@ package org.mozilla.geckoview {
 
   public static class ContentBlocking.CookieBannerMode {
     ctor protected CookieBannerMode();
-    field public static final int COOKIE_BANNER_MODE_DETECT_ONLY = 3;
+    field @Deprecated @DeprecationSchedule(id="cookie-banner-detect-only-mode",version=114) public static final int COOKIE_BANNER_MODE_DETECT_ONLY = 3;
     field public static final int COOKIE_BANNER_MODE_DISABLED = 0;
     field public static final int COOKIE_BANNER_MODE_REJECT = 1;
     field public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
@@ -522,6 +522,7 @@ package org.mozilla.geckoview {
 
   @AnyThread public static class ContentBlocking.Settings extends RuntimeSettings {
     method public int getAntiTrackingCategories();
+    method public boolean getCookieBannerDetectOnlyMode();
     method public int getCookieBannerMode();
     method public int getCookieBannerModePrivateBrowsing();
     method public int getCookieBehavior();
@@ -534,6 +535,7 @@ package org.mozilla.geckoview {
     method @NonNull public Collection<ContentBlocking.SafeBrowsingProvider> getSafeBrowsingProviders();
     method public boolean getStrictSocialTrackingProtection();
     method @NonNull public ContentBlocking.Settings setAntiTracking(int);
+    method @NonNull public ContentBlocking.Settings setCookieBannerDetectOnlyMode(boolean);
     method @NonNull public ContentBlocking.Settings setCookieBannerMode(int);
     method @NonNull public ContentBlocking.Settings setCookieBannerModePrivateBrowsing(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
@@ -551,6 +553,7 @@ package org.mozilla.geckoview {
   @AnyThread public static class ContentBlocking.Settings.Builder extends RuntimeSettings.Builder<ContentBlocking.Settings> {
     ctor public Builder();
     method @NonNull public ContentBlocking.Settings.Builder antiTracking(int);
+    method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingDetectOnlyMode(boolean);
     method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingMode(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingModePrivateBrowsing(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehavior(int);

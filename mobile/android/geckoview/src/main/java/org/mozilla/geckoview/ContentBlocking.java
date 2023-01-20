@@ -244,6 +244,18 @@ public class ContentBlocking {
         getSettings().setCookieBannerModePrivateBrowsing(mode);
         return this;
       }
+
+      /**
+       * When set to true, cookie banners are detected and detection events are dispatched, but they
+       * will not be handled.
+       *
+       * @param enabled A boolean indicating whether to enable cookie banner detect only mode.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder cookieBannerHandlingDetectOnlyMode(final boolean enabled) {
+        getSettings().setCookieBannerDetectOnlyMode(enabled);
+        return this;
+      }
     }
 
     /* package */ final Pref<String> mAt =
@@ -294,6 +306,9 @@ public class ContentBlocking {
         new Pref<Integer>(
             "cookiebanners.service.mode.privateBrowsing",
             CookieBannerMode.COOKIE_BANNER_MODE_REJECT);
+
+    /* package */ final Pref<Boolean> mChbDetectOnlyMode =
+        new Pref<Boolean>("cookiebanners.service.detectOnly", false);
 
     /* package */ final Pref<String> mSafeBrowsingMalwareTable =
         new Pref<>(
@@ -616,8 +631,33 @@ public class ContentBlocking {
      * @return This Settings instance.
      */
     public @NonNull Settings setCookieBannerMode(final @CBCookieBannerMode int mode) {
-      mCbhMode.commit(mode);
+      // This won't be needed when COOKIE_BANNER_MODE_DETECT_ONLY is removed.
+      if (mode != CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY) {
+        mCbhMode.commit(mode);
+      }
       return this;
+    }
+
+    /**
+     * When set to true, cookie banners are detected and detection events are dispatched, but they
+     * will not be handled. Requires the service to be enabled for the desired mode via
+     * setCookieBannerMode.
+     *
+     * @param enabled A boolean indicating whether to enable cookie banners.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setCookieBannerDetectOnlyMode(final boolean enabled) {
+      mChbDetectOnlyMode.commit(enabled);
+      return this;
+    }
+
+    /**
+     * Indicates if cookie banner handling detect only mode is enabled.
+     *
+     * @return boolean indicating if the cookie banner handling detect only mode setting is enabled.
+     */
+    public boolean getCookieBannerDetectOnlyMode() {
+      return mChbDetectOnlyMode.get();
     }
 
     /**
@@ -639,7 +679,10 @@ public class ContentBlocking {
      */
     public @NonNull Settings setCookieBannerModePrivateBrowsing(
         final @CBCookieBannerMode int mode) {
-      mCbhModePrivateBrowsing.commit(mode);
+      // This won't be needed when COOKIE_BANNER_MODE_DETECT_ONLY is removed.
+      if (mode != CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY) {
+        mCbhModePrivateBrowsing.commit(mode);
+      }
       return this;
     }
 
@@ -1640,6 +1683,8 @@ public class ContentBlocking {
     public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
 
     /** Detect cookie banners but do not handle them. */
+    @Deprecated
+    @DeprecationSchedule(id = "cookie-banner-detect-only-mode", version = 114)
     public static final int COOKIE_BANNER_MODE_DETECT_ONLY = 3;
 
     protected CookieBannerMode() {}

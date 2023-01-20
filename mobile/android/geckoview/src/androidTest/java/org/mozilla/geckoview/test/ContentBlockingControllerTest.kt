@@ -264,4 +264,39 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         assertThat("Initial value is correct", actualPrefs[0] as Int, equalTo(contentBlocking.cookieBannerMode))
         assertThat("Initial value is correct", actualPrefs[1] as Int, equalTo(contentBlocking.cookieBannerModePrivateBrowsing))
     }
+
+    @Test
+    fun cookieBannerHandlingDetectOnlyModeSettings() {
+        // Check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is off",
+            contentBlocking.cookieBannerDetectOnlyMode,
+            equalTo(false)
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "cookiebanners.service.detectOnly"
+        )
+
+        assertThat(
+            "Initial value is correct",
+            originalPrefs[0] as Boolean,
+            equalTo(contentBlocking.cookieBannerDetectOnlyMode)
+        )
+
+        contentBlocking.cookieBannerDetectOnlyMode = true
+
+        val actualPrefs = sessionRule.getPrefs(
+            "cookiebanners.service.detectOnly"
+        )
+
+        assertThat(
+            "Initial value is correct",
+            actualPrefs[0] as Boolean,
+            equalTo(contentBlocking.cookieBannerDetectOnlyMode)
+        )
+    }
 }
