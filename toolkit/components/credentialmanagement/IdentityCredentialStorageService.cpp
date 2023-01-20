@@ -4,25 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "IdentityCredentialStorageService.h"
 #include "ErrorList.h"
+#include "IdentityCredentialStorageService.h"
 #include "MainThreadUtils.h"
-#include "mozIStorageService.h"
-#include "mozIStorageConnection.h"
-#include "mozIStorageStatement.h"
-#include "mozStorageCID.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
+#include "mozIStorageService.h"
+#include "mozIStorageConnection.h"
+#include "mozIStorageStatement.h"
+#include "mozStorageCID.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIObserverService.h"
+#include "nsIWritablePropertyBag2.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 #include "prtime.h"
 
 #define ACCOUNT_STATE_FILENAME "credentialstate.sqlite"_ns
@@ -35,15 +40,13 @@ StaticRefPtr<IdentityCredentialStorageService>
     gIdentityCredentialStorageService;
 
 NS_IMPL_ISUPPORTS(IdentityCredentialStorageService,
-                  nsIIdentityCredentialStorageService, nsIObserver)
-
-IdentityCredentialStorageService::~IdentityCredentialStorageService() {
-  AssertIsOnMainThread();
-}
+                  nsIIdentityCredentialStorageService, nsIObserver,
+                  nsIAsyncShutdownBlocker)
 
 already_AddRefed<IdentityCredentialStorageService>
 IdentityCredentialStorageService::GetSingleton() {
   AssertIsOnMainThread();
+  MOZ_ASSERT(XRE_IsParentProcess());
   if (!gIdentityCredentialStorageService) {
     gIdentityCredentialStorageService = new IdentityCredentialStorageService();
     ClearOnShutdown(&gIdentityCredentialStorageService);
@@ -53,6 +56,166 @@ IdentityCredentialStorageService::GetSingleton() {
   RefPtr<IdentityCredentialStorageService> service =
       gIdentityCredentialStorageService;
   return service.forget();
+}
+
+NS_IMETHODIMP IdentityCredentialStorageService::GetName(nsAString& aName) {
+  aName = u"IdentityCredentialStorageService: Flushing data"_ns;
+  return NS_OK;
+}
+
+NS_IMETHODIMP IdentityCredentialStorageService::BlockShutdown(
+    nsIAsyncShutdownClient* aClient) {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsresult rv = WaitForInitialization();
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (mMemoryDatabaseConnection) {
+    Unused << mMemoryDatabaseConnection->Close();
+    mMemoryDatabaseConnection = nullptr;
+  }
+
+  RefPtr<IdentityCredentialStorageService> self = this;
+  mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction(
+          "IdentityCredentialStorageService::BlockShutdown",
+          [self]() {
+            MonitorAutoLock lock(self->mMonitor);
+
+            if (self->mDiskDatabaseConnection) {
+              Unused << self->mDiskDatabaseConnection->Close();
+              self->mDiskDatabaseConnection = nullptr;
+            }
+
+            self->mFinalized.Flip();
+            self->mMonitor.NotifyAll();
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "IdentityCredentialStorageService::BlockShutdown "
+                "- mainthread callback",
+                [self]() { self->Finalize(); }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IdentityCredentialStorageService::GetState(nsIPropertyBag** aBagOut) {
+  return NS_OK;
+}
+
+already_AddRefed<nsIAsyncShutdownClient>
+IdentityCredentialStorageService::GetAsyncShutdownBarrier() const {
+  nsresult rv;
+  nsCOMPtr<nsIAsyncShutdownService> svc = components::AsyncShutdown::Service();
+  MOZ_RELEASE_ASSERT(svc);
+
+  nsCOMPtr<nsIAsyncShutdownClient> client;
+  rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_RELEASE_ASSERT(client);
+  return client.forget();
+}
+
+nsresult IdentityCredentialStorageService::Init() {
+  AssertIsOnMainThread();
+  MonitorAutoLock lock(mMonitor);
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
+  nsCOMPtr<nsIAsyncShutdownClient> asc = GetAsyncShutdownBarrier();
+  if (!asc) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsresult rv = asc->AddBlocker(this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                                __LINE__, u""_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(mDatabaseFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDatabaseFile->AppendNative(nsLiteralCString(ACCOUNT_STATE_FILENAME));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Register the PBMode cleaner (IdentityCredentialStorageService::Observe) as
+  // an observer.
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
+  observerService->AddObserver(this, "last-pb-context-exited", false);
+
+  // rv = GetMemoryDatabaseConnection();
+  // if (NS_WARN_IF(NS_FAILED(rv))) {
+  //   mErrored.Flip();
+  //   return rv;
+  // }
+
+  NS_ENSURE_SUCCESS(
+      NS_CreateBackgroundTaskQueue("IdentityCredentialStorage",
+                                   getter_AddRefs(mBackgroundThread)),
+      NS_ERROR_FAILURE);
+
+  RefPtr<IdentityCredentialStorageService> self = this;
+
+  mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction("IdentityCredentialStorageService::Init",
+                             [self]() {
+                               MonitorAutoLock lock(self->mMonitor);
+                               //  nsresult rv =
+                               //  self->GetDiskDatabaseConnection(); if
+                               //  (NS_WARN_IF(NS_FAILED(rv))) {
+                               //    self->mErrored.Flip();
+                               //    self->mMonitor.Notify();
+                               //    return;
+                               //  }
+
+                               //  rv = self->LoadMemoryTableFromDisk();
+                               //  if (NS_WARN_IF(NS_FAILED(rv))) {
+                               //    self->mErrored.Flip();
+                               //    self->mMonitor.NotifyAll();
+                               //    return;
+                               //  }
+
+                               self->mInitialized.Flip();
+                               self->mMonitor.Notify();
+                             }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  return NS_OK;
+}
+
+nsresult IdentityCredentialStorageService::WaitForInitialization() {
+  MonitorAutoLock lock(mMonitor);
+  while (!mInitialized && !mErrored) {
+    mMonitor.Wait();
+  }
+  if (mErrored) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+void IdentityCredentialStorageService::Finalize() {
+  nsCOMPtr<nsIAsyncShutdownClient> asc = GetAsyncShutdownBarrier();
+  MOZ_ASSERT(asc);
+  DebugOnly<nsresult> rv = asc->RemoveBlocker(this);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+}
+
+// static
+nsresult IdentityCredentialStorageService::ValidatePrincipal(
+    nsIPrincipal* aPrincipal) {
+  // We add some constraints on the RP principal where it is provided to reduce
+  // edge cases in implementation. These are reasonable constraints with the
+  // semantics of the store: it must be a http or https content principal.
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_TRUE(aPrincipal->GetIsContentPrincipal(), NS_ERROR_FAILURE);
+  nsCString scheme;
+  nsresult rv = aPrincipal->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(scheme.Equals("http"_ns) || scheme.Equals("https"_ns),
+                 NS_ERROR_FAILURE);
+  return NS_OK;
 }
 
 nsresult createTable(mozIStorageConnection* aDatabase) {
@@ -123,39 +286,6 @@ nsresult getDiskDatabaseConnection(mozIStorageConnection** aDatabase) {
   bool ready = false;
   (*aDatabase)->GetConnectionReady(&ready);
   NS_ENSURE_TRUE(ready, NS_ERROR_UNEXPECTED);
-  return NS_OK;
-}
-
-nsresult IdentityCredentialStorageService::Init() {
-  AssertIsOnMainThread();
-  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
-    return NS_OK;
-  }
-
-  nsresult rv;
-  RefPtr<mozIStorageConnection> database;
-  rv = getDiskDatabaseConnection(getter_AddRefs(database));
-  NS_ENSURE_SUCCESS(rv, rv);
-  RefPtr<mozIStorageConnection> privateBrowsingDatabase;
-  rv = getMemoryDatabaseConnection(getter_AddRefs(privateBrowsingDatabase));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create the database table for memory and disk if it doesn't already exist
-  bool tableExists = false;
-  database->TableExists("identity"_ns, &tableExists);
-  if (!tableExists) {
-    rv = createTable(database);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Register the PBMode cleaner (IdentityCredentialStorageService::Observe) as
-  // an observer.
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
-  observerService->AddObserver(this, "last-pb-context-exited", false);
-
-  mInitialized.Flip();
   return NS_OK;
 }
 
@@ -591,22 +721,6 @@ IdentityCredentialStorageService::Observe(nsISupports* aSubject,
         nsLiteralCString("DELETE FROM identity;"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  return NS_OK;
-}
-
-// static
-nsresult IdentityCredentialStorageService::ValidatePrincipal(
-    nsIPrincipal* aPrincipal) {
-  // We add some constraints on the RP principal where it is provided to reduce
-  // edge cases in implementation. These are reasonable constraints with the
-  // semantics of the store: it must be a http or https content principal.
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-  NS_ENSURE_TRUE(aPrincipal->GetIsContentPrincipal(), NS_ERROR_FAILURE);
-  nsCString scheme;
-  nsresult rv = aPrincipal->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(scheme.Equals("http"_ns) || scheme.Equals("https"_ns),
-                 NS_ERROR_FAILURE);
   return NS_OK;
 }
 
