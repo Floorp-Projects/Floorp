@@ -33,6 +33,7 @@
 #ifndef ZYDIS_SHORTSTRING_H
 #define ZYDIS_SHORTSTRING_H
 
+#include "zydis/ZydisExportConfig.h"
 #include "zydis/Zycore/Defines.h"
 #include "zydis/Zycore/Types.h"
 
@@ -44,9 +45,7 @@ extern "C" {
 /* Enums and types                                                                                */
 /* ============================================================================================== */
 
-#if !(defined(ZYAN_AARCH64) && defined(ZYAN_APPLE))
-#   pragma pack(push, 1)
-#endif
+#pragma pack(push, 1)
 
 /**
  * Defines the `ZydisShortString` struct.
@@ -68,9 +67,7 @@ typedef struct ZydisShortString_
     ZyanU8 size;
 } ZydisShortString;
 
-#if !(defined(ZYAN_AARCH64) && defined(ZYAN_APPLE))
-#   pragma pack(pop)
-#endif
+#pragma pack(pop)
 
 /* ============================================================================================== */
 /* Macros                                                                                         */

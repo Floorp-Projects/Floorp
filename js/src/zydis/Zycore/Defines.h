@@ -136,12 +136,6 @@
 #   define ZYAN_ARM
 #elif defined(__EMSCRIPTEN__) || defined(__wasm__) || defined(__WASM__)
 #   define ZYAN_WASM
-#elif defined(__powerpc64__)
-#   define ZYAN_PPC64
-#elif defined(__powerpc__)
-#   define ZYAN_PPC
-#elif defined(__riscv) && __riscv_xlen == 64
-#   define ZYAN_RISCV64
 #else
 #   error "Unsupported architecture detected"
 #endif
@@ -277,7 +271,7 @@
 /**
  * Compiler-time assertion.
  */
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
+#if __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
 #   define ZYAN_STATIC_ASSERT(x) _Static_assert(x, #x)
 #elif (defined(__cplusplus) && __cplusplus >= 201103L) || \
       (defined(__cplusplus) && defined (_MSC_VER) && (_MSC_VER >= 1600)) || \
@@ -340,7 +334,7 @@
  * Intentional fallthrough.
  */
 #if defined(ZYAN_GCC) && __GNUC__ >= 7
-#   define ZYAN_FALLTHROUGH ; __attribute__((__fallthrough__))
+#   define ZYAN_FALLTHROUGH __attribute__((__fallthrough__))
 #else
 #   define ZYAN_FALLTHROUGH
 #endif

@@ -180,8 +180,8 @@ typedef const void* ZyanConstVoidPointer;
 /* Boolean                                                                                        */
 /* ---------------------------------------------------------------------------------------------- */
 
-#define ZYAN_FALSE 0u
-#define ZYAN_TRUE  1u
+#define ZYAN_FALSE 0
+#define ZYAN_TRUE  1
 
 /**
  * Defines the `ZyanBool` data-type.
