@@ -725,8 +725,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachPrimitiveSymbol(ValOperandId lhsId,
                                           ValOperandId rhsId);
-  AttachDecision tryAttachBoolStringOrNumber(ValOperandId lhsId,
-                                             ValOperandId rhsId);
+  AttachDecision tryAttachStringBoolean(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachBigIntInt32(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachBigIntNumber(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachBigIntString(ValOperandId lhsId, ValOperandId rhsId);

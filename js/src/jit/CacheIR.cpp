@@ -11284,31 +11284,25 @@ AttachDecision CompareIRGenerator::tryAttachPrimitiveSymbol(
   return AttachDecision::Attach;
 }
 
-AttachDecision CompareIRGenerator::tryAttachBoolStringOrNumber(
-    ValOperandId lhsId, ValOperandId rhsId) {
-  // Ensure Boolean x {String, Number}.
-  if (!(lhsVal_.isBoolean() && (rhsVal_.isString() || rhsVal_.isNumber())) &&
-      !(rhsVal_.isBoolean() && (lhsVal_.isString() || lhsVal_.isNumber()))) {
+AttachDecision CompareIRGenerator::tryAttachStringBoolean(ValOperandId lhsId,
+                                                          ValOperandId rhsId) {
+  // Ensure String x Boolean.
+  if (!(lhsVal_.isString() && rhsVal_.isBoolean()) &&
+      !(rhsVal_.isString() && lhsVal_.isBoolean())) {
     return AttachDecision::NoAction;
   }
 
   // Case should have been handled by tryAttachStrictDifferentTypes
   MOZ_ASSERT(op_ != JSOp::StrictEq && op_ != JSOp::StrictNe);
 
-  // Case should have been handled by tryAttachInt32
-  MOZ_ASSERT(!lhsVal_.isInt32() && !rhsVal_.isInt32());
-
   auto createGuards = [&](const Value& v, ValOperandId vId) {
     if (v.isBoolean()) {
       BooleanOperandId boolId = writer.guardToBoolean(vId);
       return writer.booleanToNumber(boolId);
     }
-    if (v.isString()) {
-      StringOperandId strId = writer.guardToString(vId);
-      return writer.guardStringToNumber(strId);
-    }
-    MOZ_ASSERT(v.isNumber());
-    return writer.guardIsNumber(vId);
+    MOZ_ASSERT(v.isString());
+    StringOperandId strId = writer.guardToString(vId);
+    return writer.guardStringToNumber(strId);
   };
 
   NumberOperandId lhsGuardedId = createGuards(lhsVal_, lhsId);
@@ -11316,7 +11310,7 @@ AttachDecision CompareIRGenerator::tryAttachBoolStringOrNumber(
   writer.compareDoubleResult(op_, lhsGuardedId, rhsGuardedId);
   writer.returnFromIC();
 
-  trackAttached("BoolStringOrNumber");
+  trackAttached("StringBoolean");
   return AttachDecision::Attach;
 }
 
@@ -11455,7 +11449,7 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
   TRY_ATTACH(tryAttachString(lhsId, rhsId));
 
   TRY_ATTACH(tryAttachStringNumber(lhsId, rhsId));
-  TRY_ATTACH(tryAttachBoolStringOrNumber(lhsId, rhsId));
+  TRY_ATTACH(tryAttachStringBoolean(lhsId, rhsId));
 
   TRY_ATTACH(tryAttachBigIntInt32(lhsId, rhsId));
   TRY_ATTACH(tryAttachBigIntNumber(lhsId, rhsId));
