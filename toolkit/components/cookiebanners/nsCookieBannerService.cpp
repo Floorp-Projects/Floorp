@@ -60,8 +60,6 @@ nsCString ConvertModeToStringForTelemetry(uint32_t aModes) {
       return "reject"_ns;
     case nsICookieBannerService::MODE_REJECT_OR_ACCEPT:
       return "reject_or_accept"_ns;
-    case nsICookieBannerService::MODE_DETECT_ONLY:
-      return "detect_only"_ns;
     default:
       // Fall back to return "invalid" if we got any unsupported service
       // mode. Note this this also includes MODE_UNSET.
@@ -357,7 +355,7 @@ nsCookieBannerService::GetCookiesForURI(
   // We don't need to check the domain preference if the cookie banner handling
   // service is disabled by pref.
   if (mode != nsICookieBannerService::MODE_DISABLED &&
-      mode != nsICookieBannerService::MODE_DETECT_ONLY) {
+      !StaticPrefs::cookiebanners_service_detectOnly()) {
     // Get the domain preference for the uri, the domain preference takes
     // precedence over the pref setting. Note that the domain preference is
     // supposed to stored only for top level URIs.
@@ -374,7 +372,7 @@ nsCookieBannerService::GetCookiesForURI(
   // preference), return empty array. Same for detect-only mode where no cookies
   // should be injected.
   if (mode == nsICookieBannerService::MODE_DISABLED ||
-      mode == nsICookieBannerService::MODE_DETECT_ONLY) {
+      StaticPrefs::cookiebanners_service_detectOnly()) {
     MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
             ("%s. Returning empty array. Got MODE_DISABLED for "
              "aIsPrivateBrowsing: %d.",
@@ -637,7 +635,7 @@ nsresult nsCookieBannerService::HasRuleForBrowsingContextInternal(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mode == nsICookieBannerService::MODE_DISABLED ||
-      mode == nsICookieBannerService::MODE_DETECT_ONLY) {
+      StaticPrefs::cookiebanners_service_detectOnly()) {
     return NS_OK;
   }
 
@@ -719,7 +717,7 @@ nsresult nsCookieBannerService::GetCookieRulesForDomainInternal(
   // No cookie rules if disabled or in detect-only mode. Cookie injection is not
   // supported for the detect-only mode.
   if (aMode == nsICookieBannerService::MODE_DISABLED ||
-      aMode == nsICookieBannerService::MODE_DETECT_ONLY) {
+      StaticPrefs::cookiebanners_service_detectOnly()) {
     return NS_OK;
   }
 
@@ -1023,8 +1021,10 @@ void nsCookieBannerService::DailyReportTelemetry() {
   nsCString modePBMStr = ConvertModeToStringForTelemetry(modePBM);
 
   nsTArray<nsCString> serviceModeLabels = {
-      "disabled"_ns,    "reject"_ns,  "reject_or_accept"_ns,
-      "detect_only"_ns, "invalid"_ns,
+      "disabled"_ns,
+      "reject"_ns,
+      "reject_or_accept"_ns,
+      "invalid"_ns,
   };
 
   // Record the service mode glean.
