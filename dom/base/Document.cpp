@@ -15765,7 +15765,7 @@ void Document::UpdateIntersectionObservations(TimeStamp aNowTime) {
       mIntersectionObservers);
   for (const auto& observer : observers) {
     if (observer) {
-      observer->Update(this, time);
+      observer->Update(*this, time);
     }
   }
 }

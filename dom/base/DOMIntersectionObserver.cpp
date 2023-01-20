@@ -709,15 +709,15 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
 
 // https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
 // (step 2)
-void DOMIntersectionObserver::Update(Document* aDocument,
+void DOMIntersectionObserver::Update(Document& aDocument,
                                      DOMHighResTimeStamp time) {
-  auto input = ComputeInput(*aDocument, mRoot, &mRootMargin);
+  auto input = ComputeInput(aDocument, mRoot, &mRootMargin);
 
   // If this observer is used to determine content relevancy for
   // `content-visiblity: auto` content, then do not skip intersection
   // for content that is hidden by `content-visibility: auto`.
   IgnoreContentVisibility ignoreContentVisibility =
-      aDocument->GetContentVisibilityObserver() == this
+      aDocument.GetContentVisibilityObserver() == this
           ? IgnoreContentVisibility::Yes
           : IgnoreContentVisibility::No;
 
