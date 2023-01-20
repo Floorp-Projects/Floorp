@@ -336,7 +336,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     return;
   }
 
-  if (aHTMLEditor.IsCSSEnabled() && EditorElementStyle::Align().IsCSSEditable(
+  if (aHTMLEditor.IsCSSEnabled() && EditorElementStyle::Align().IsCSSSettable(
                                         *maybeNonEditableBlockElement)) {
     // We are in CSS mode and we know how to align this element with CSS
     nsAutoString value;
@@ -379,7 +379,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
       return;
     }
 
-    if (EditorElementStyle::Align().IsCSSEditable(*containerElement)) {
+    if (EditorElementStyle::Align().IsCSSSettable(*containerElement)) {
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetSpecifiedProperty(
           *containerElement, *nsGkAtoms::textAlign, value);

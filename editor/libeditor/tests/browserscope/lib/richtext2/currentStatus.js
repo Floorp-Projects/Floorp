@@ -38,18 +38,23 @@ const knownFailures = {
     "AC-Proposed-FS:large_TEXT-1_SI-dM": true,
     "AC-Proposed-FS:large_TEXT-1_SI-body": true,
     "AC-Proposed-FS:large_TEXT-1_SI-div": true,
-    "C-Proposed-FN:c_FONTf:a-1_SI-dM": true,
-    "C-Proposed-FN:c_FONTf:a-1_SI-body": true,
-    "C-Proposed-FN:c_FONTf:a-1_SI-div": true,
-    "C-Proposed-FN:c_FONTf:a-2_SL-dM": true,
-    "C-Proposed-FN:c_FONTf:a-2_SL-body": true,
-    "C-Proposed-FN:c_FONTf:a-2_SL-div": true,
+
+    // Those tests expect that <font> elements can be nested, but they don't
+    // match with the other browsers' behavior.
+    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-dM": true,
+    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-body": true,
+    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-div": true,
+
     "C-Proposed-FS:1_SPAN.ass.s:fs:large-1_SW-dM": true,
     "C-Proposed-FS:1_SPAN.ass.s:fs:large-1_SW-body": true,
     "C-Proposed-FS:1_SPAN.ass.s:fs:large-1_SW-div": true,
-    "C-Proposed-FS:5_FONTsz:1.s:fs:xs-1_SW-dM": true,
-    "C-Proposed-FS:5_FONTsz:1.s:fs:xs-1_SW-body": true,
-    "C-Proposed-FS:5_FONTsz:1.s:fs:xs-1_SW-div": true,
+
+    // Those tests expect that <font> elements can be nested, but they don't
+    // match with the other browsers' behavior.
+    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-dM": true,
+    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-body": true,
+    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-div": true,
+
     "C-Proposed-FS:larger_FONTsz:4-dM": true,
     "C-Proposed-FS:larger_FONTsz:4-body": true,
     "C-Proposed-FS:larger_FONTsz:4-div": true,
@@ -80,12 +85,6 @@ const knownFailures = {
     "CC-Proposed-BC:gray_SPANs:bc:b-2_SR-dM": true,
     "CC-Proposed-BC:gray_SPANs:bc:b-2_SR-body": true,
     "CC-Proposed-BC:gray_SPANs:bc:b-2_SR-div": true,
-    "CC-Proposed-FN:c_FONTf:a-1_SI-dM": true,
-    "CC-Proposed-FN:c_FONTf:a-1_SI-body": true,
-    "CC-Proposed-FN:c_FONTf:a-1_SI-div": true,
-    "CC-Proposed-FN:c_FONTf:a-2_SL-dM": true,
-    "CC-Proposed-FN:c_FONTf:a-2_SL-body": true,
-    "CC-Proposed-FN:c_FONTf:a-2_SL-div": true,
     "CC-Proposed-FS:1_SPANs:fs:l-1_SW-dM": true,
     "CC-Proposed-FS:1_SPANs:fs:l-1_SW-body": true,
     "CC-Proposed-FS:1_SPANs:fs:l-1_SW-div": true,
@@ -677,24 +676,23 @@ const knownFailures = {
     "C-Proposed-U_S-U-1_SO-dM": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
     "C-Proposed-U_S-U-1_SO-body": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
     "C-Proposed-U_S-U-1_SO-div": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-dM": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-body": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-div": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FN:c_FONTf:a-1_SI-dM": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FN:c_FONTf:a-1_SI-body": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FN:c_FONTf:a-1_SI-div": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FN:c_FONTf:a-2_SL-dM": true,
-    "C-Proposed-FN:c_FONTf:a-2_SL-body": true,
-    "C-Proposed-FN:c_FONTf:a-2_SL-div": true,
+
+    // Those tests expect that <font> elements can be nested, but they don't
+    // match with the other browsers' behavior.
+    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-dM": true,
+    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-body": true,
+    "C-Proposed-FC:g_FONTc:b.sz:6-1_SI-div": true,
+
     "C-Proposed-FS:1_SPAN.ass.s:fs:large-1_SW-dM": true,
     "C-Proposed-FS:1_SPAN.ass.s:fs:large-1_SW-body": true,
     "C-Proposed-FS:1_SPAN.ass.s:fs:large-1_SW-div": true,
-    "C-Proposed-FS:5_FONTsz:1.s:fs:xs-1_SW-dM": true,
-    "C-Proposed-FS:5_FONTsz:1.s:fs:xs-1_SW-body": true,
-    "C-Proposed-FS:5_FONTsz:1.s:fs:xs-1_SW-div": true,
-    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-dM": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-body": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
-    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-div": !SpecialPowers.getBoolPref("editor.inline_style.range.compatible_with_the_other_browsers", true),
+
+    // Those tests expect that <font> elements can be nested, but they don't
+    // match with the other browsers' behavior.
+    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-dM": true,
+    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-body": true,
+    "C-Proposed-FS:2_FONTc:b.sz:6-1_SI-div": true,
+
     "C-Proposed-FS:larger_FONTsz:4-dM": true,
     "C-Proposed-FS:larger_FONTsz:4-body": true,
     "C-Proposed-FS:larger_FONTsz:4-div": true,
@@ -731,12 +729,6 @@ const knownFailures = {
     "CC-Proposed-BC:gray_SPANs:bc:b-2_SR-dM": true,
     "CC-Proposed-BC:gray_SPANs:bc:b-2_SR-body": true,
     "CC-Proposed-BC:gray_SPANs:bc:b-2_SR-div": true,
-    "CC-Proposed-FN:c_FONTf:a-1_SI-dM": true,
-    "CC-Proposed-FN:c_FONTf:a-1_SI-body": true,
-    "CC-Proposed-FN:c_FONTf:a-1_SI-div": true,
-    "CC-Proposed-FN:c_FONTf:a-2_SL-dM": true,
-    "CC-Proposed-FN:c_FONTf:a-2_SL-body": true,
-    "CC-Proposed-FN:c_FONTf:a-2_SL-div": true,
     "CC-Proposed-FS:1_SPANs:fs:l-1_SW-dM": true,
     "CC-Proposed-FS:1_SPANs:fs:l-1_SW-body": true,
     "CC-Proposed-FS:1_SPANs:fs:l-1_SW-div": true,

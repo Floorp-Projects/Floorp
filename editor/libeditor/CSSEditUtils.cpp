@@ -208,6 +208,11 @@ const CSSEditUtils::CSSEquivTable fontFaceEquivTable[] = {
      ProcessSameValue, nullptr, nullptr, nullptr},
     CSS_EQUIV_TABLE_NONE};
 
+const CSSEditUtils::CSSEquivTable fontSizeEquivTable[] = {
+    {CSSEditUtils::eCSSEditableProperty_font_size, true, false,
+     ProcessSameValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
+
 const CSSEditUtils::CSSEquivTable bgcolorEquivTable[] = {
     {CSSEditUtils::eCSSEditableProperty_background_color, true, false,
      ProcessSameValue, nullptr, nullptr, nullptr},
@@ -812,13 +817,17 @@ void CSSEditUtils::GetCSSDeclarations(
     if (!attributeOrStyle) {
       return nullptr;
     }
-    if (nsGkAtoms::font == htmlProperty &&
-        attributeOrStyle == nsGkAtoms::color) {
-      return fontColorEquivTable;
-    }
-    if (nsGkAtoms::font == htmlProperty &&
-        attributeOrStyle == nsGkAtoms::face) {
-      return fontFaceEquivTable;
+    if (nsGkAtoms::font == htmlProperty) {
+      if (attributeOrStyle == nsGkAtoms::color) {
+        return fontColorEquivTable;
+      }
+      if (attributeOrStyle == nsGkAtoms::face) {
+        return fontFaceEquivTable;
+      }
+      if (attributeOrStyle == nsGkAtoms::size) {
+        return fontSizeEquivTable;
+      }
+      MOZ_ASSERT(attributeOrStyle == nsGkAtoms::bgcolor);
     }
     if (attributeOrStyle == nsGkAtoms::bgcolor) {
       return bgcolorEquivTable;
@@ -877,7 +886,7 @@ Result<size_t, nsresult> CSSEditUtils::SetCSSEquivalentToStyle(
     WithTransaction aWithTransaction, HTMLEditor& aHTMLEditor,
     nsStyledElement& aStyledElement, const EditorElementStyle& aStyleToSet,
     const nsAString* aValue) {
-  MOZ_DIAGNOSTIC_ASSERT(aStyleToSet.IsCSSEditable(aStyledElement));
+  MOZ_DIAGNOSTIC_ASSERT(aStyleToSet.IsCSSSettable(aStyledElement));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
@@ -905,7 +914,7 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToStyle(
     WithTransaction aWithTransaction, HTMLEditor& aHTMLEditor,
     nsStyledElement& aStyledElement, const EditorElementStyle& aStyleToRemove,
     const nsAString* aValue) {
-  MOZ_DIAGNOSTIC_ASSERT(aStyleToRemove.IsCSSEditable(aStyledElement));
+  MOZ_DIAGNOSTIC_ASSERT(aStyleToRemove.IsCSSRemovable(aStyledElement));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
@@ -941,7 +950,8 @@ nsresult CSSEditUtils::GetCSSEquivalentTo(Element& aElement,
                                           StyleType aStyleType) {
   MOZ_ASSERT_IF(aStyle.IsInlineStyle(),
                 !aStyle.AsInlineStyle().IsStyleToClearAllInlineStyles());
-  MOZ_DIAGNOSTIC_ASSERT(aStyle.IsCSSEditable(aElement));
+  MOZ_DIAGNOSTIC_ASSERT(aStyle.IsCSSSettable(aElement) ||
+                        aStyle.IsCSSRemovable(aElement));
 
   aOutValue.Truncate();
   AutoTArray<CSSDeclaration, 4> cssDeclarations;
@@ -1130,6 +1140,27 @@ Result<bool, nsresult> CSSEditUtils::IsCSSEquivalentTo(
         isSet = true;
       }
       return isSet;
+    } else if (aStyle.IsStyleOfFontSize()) {
+      if (htmlValueString.IsEmpty()) {
+        return true;
+      }
+      switch (nsContentUtils::ParseLegacyFontSize(htmlValueString)) {
+        case 1:
+          return aInOutValue.EqualsLiteral("x-small");
+        case 2:
+          return aInOutValue.EqualsLiteral("small");
+        case 3:
+          return aInOutValue.EqualsLiteral("medium");
+        case 4:
+          return aInOutValue.EqualsLiteral("large");
+        case 5:
+          return aInOutValue.EqualsLiteral("x-large");
+        case 6:
+          return aInOutValue.EqualsLiteral("xx-large");
+        case 7:
+          return aInOutValue.EqualsLiteral("xxx-large");
+      }
+      return false;
     } else if (aStyle.mAttribute == nsGkAtoms::align) {
       isSet = true;
     } else {

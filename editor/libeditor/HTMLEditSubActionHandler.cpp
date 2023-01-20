@@ -6695,7 +6695,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
         nsStyledElement* styledListOrListItemElement =
             nsStyledElement::FromNode(listOrListItemElement);
         if (styledListOrListItemElement &&
-            EditorElementStyle::Align().IsCSSEditable(
+            EditorElementStyle::Align().IsCSSSettable(
                 *styledListOrListItemElement)) {
           // MOZ_KnownLive(*styledListOrListItemElement): An element of
           // aArrayOfContents which is array of OwningNonNull.
@@ -9219,7 +9219,7 @@ nsresult HTMLEditor::GetInlineStyles(
     if (property == nsGkAtoms::size) {
       isSet = HTMLEditUtils::IsInlineStyleSetByElement(aElement, style, nullptr,
                                                        &value);
-    } else if (style.IsCSSEditable(aElement)) {
+    } else if (style.IsCSSSettable(aElement)) {
       Result<bool, nsresult> isComputedCSSEquivalentToStyleOrError =
           CSSEditUtils::IsComputedCSSEquivalentTo(*this, aElement, style,
                                                   value);
@@ -9279,7 +9279,7 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     bool isFirst = false, isAny = false, isAll = false;
     nsAutoString currentValue;
     const EditorInlineStyle inlineStyle = styleCacheBeforeEdit.ToInlineStyle();
-    if (useCSS && inlineStyle.IsCSSEditable(*startContainerElement)) {
+    if (useCSS && inlineStyle.IsCSSSettable(*startContainerElement)) {
       // check computed style first in css case
       // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
       // and its instances are alive until shutting down.
