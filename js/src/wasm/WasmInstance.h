@@ -38,9 +38,6 @@ namespace js {
 class SharedArrayRawBuffer;
 class WasmBreakpointSite;
 
-class WasmStructObject;
-class WasmArrayObject;
-
 namespace wasm {
 
 using mozilla::Atomic;
@@ -51,7 +48,6 @@ class GlobalDesc;
 struct TableDesc;
 struct TableInstanceData;
 struct TagDesc;
-struct TypeDefInstanceData;
 class WasmFrameIter;
 
 // Instance represents a wasm instance and provides all the support for runtime
@@ -188,7 +184,7 @@ class alignas(16) Instance {
   MOZ_ALIGNED_DECL(16, char globalArea_);
 
   // Internal helpers:
-  TypeDefInstanceData* typeDefInstanceData(uint32_t typeIndex) const;
+  const void** addressOfTypeId(uint32_t typeIndex) const;
   const void* addressOfGlobalCell(const GlobalDesc& globalDesc) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
   TableInstanceData& tableInstanceData(const TableDesc& td) const;
@@ -342,9 +338,6 @@ class alignas(16) Instance {
   void constantGlobalGet(uint32_t globalIndex, MutableHandleVal result);
   [[nodiscard]] bool constantRefFunc(uint32_t funcIndex,
                                      MutableHandleFuncRef result);
-  WasmStructObject* constantStructNewDefault(JSContext* cx, uint32_t typeIndex);
-  WasmArrayObject* constantArrayNewDefault(JSContext* cx, uint32_t typeIndex,
-                                           uint32_t numElements);
 
   // Return the name associated with a given function index, or generate one
   // if none was given by the module.
@@ -453,18 +446,16 @@ class alignas(16) Instance {
   static void postBarrierPreciseWithOffset(Instance* instance, JSObject** base,
                                            uint32_t offset, JSObject* prev);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
-  static void* structNew(Instance* instance, TypeDefInstanceData* typeDefData);
+  static void* structNew(Instance* instance, const wasm::TypeDef* typeDef);
   static void* exceptionNew(Instance* instance, JSObject* tag);
   static int32_t throwException(Instance* instance, JSObject* exn);
   static void* arrayNew(Instance* instance, uint32_t numElements,
-                        TypeDefInstanceData* typeDefData);
+                        const wasm::TypeDef* typeDef);
   static void* arrayNewData(Instance* instance, uint32_t segByteOffset,
-                            uint32_t numElements,
-                            TypeDefInstanceData* typeDefData,
+                            uint32_t numElements, const wasm::TypeDef* typeDef,
                             uint32_t segIndex);
   static void* arrayNewElem(Instance* instance, uint32_t segElemIndex,
-                            uint32_t numElements,
-                            TypeDefInstanceData* typeDefData,
+                            uint32_t numElements, const wasm::TypeDef* typeDef,
                             uint32_t segIndex);
   static int32_t arrayCopy(Instance* instance, void* dstArray,
                            uint32_t dstIndex, void* srcArray, uint32_t srcIndex,

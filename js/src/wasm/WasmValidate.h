@@ -148,14 +148,9 @@ struct ModuleEnvironment {
     return funcImportsOffsetStart + funcIndex * sizeof(FuncImportInstanceData);
   }
 
-  uint32_t offsetOfTypeDefInstanceData(uint32_t typeIndex) const {
+  uint32_t offsetOfTypeId(uint32_t typeIndex) const {
     MOZ_ASSERT(typeIndex < types->length());
-    return typeIdsOffsetStart + typeIndex * sizeof(TypeDefInstanceData);
-  }
-
-  uint32_t offsetOfTypeDef(uint32_t typeIndex) const {
-    return offsetOfTypeDefInstanceData(typeIndex) +
-           offsetof(TypeDefInstanceData, typeDef);
+    return typeIdsOffsetStart + typeIndex * sizeof(void*);
   }
 };
 

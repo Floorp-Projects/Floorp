@@ -6336,25 +6336,12 @@ void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
 
 #ifdef ENABLE_WASM_GC
 
-RegPtr BaseCompiler::loadTypeDefInstanceData(uint32_t typeIndex) {
-  RegPtr rp = needPtr();
-#  ifndef RABALDR_PIN_INSTANCE
-  fr.loadInstancePtr(InstanceReg);
-#  endif
-  masm.computeEffectiveAddress(
-      Address(InstanceReg,
-              Instance::offsetOfGlobalArea() +
-                  moduleEnv_.offsetOfTypeDefInstanceData(typeIndex)),
-      rp);
-  return rp;
-}
-
 RegPtr BaseCompiler::loadTypeDef(uint32_t typeIndex) {
   RegPtr rp = needPtr();
 #  ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(InstanceReg);
 #  endif
-  masm.loadWasmGlobalPtr(moduleEnv_.offsetOfTypeDef(typeIndex), rp);
+  masm.loadWasmGlobalPtr(moduleEnv_.offsetOfTypeId(typeIndex), rp);
   return rp;
 }
 
@@ -6654,7 +6641,7 @@ bool BaseCompiler::emitStructNew() {
 
   // Allocate a default initialized struct. This requires the type definition
   // for the struct to be pushed on the stack. This will trap on OOM.
-  pushPtr(loadTypeDefInstanceData(typeIndex));
+  pushPtr(loadTypeDef(typeIndex));
   if (!emitInstanceCall(SASigStructNew)) {
     return false;
   }
@@ -6741,7 +6728,7 @@ bool BaseCompiler::emitStructNewDefault() {
 
   // Allocate a default initialized struct. This requires the type definition
   // for the struct to be pushed on the stack. This will trap on OOM.
-  pushPtr(loadTypeDefInstanceData(typeIndex));
+  pushPtr(loadTypeDef(typeIndex));
   return emitInstanceCall(SASigStructNew);
 }
 
@@ -6870,7 +6857,7 @@ bool BaseCompiler::emitArrayNew() {
 
   // Allocate a default initialized array. This requires the type definition
   // for the array to be pushed on the stack. This will trap on OOM.
-  pushPtr(loadTypeDefInstanceData(typeIndex));
+  pushPtr(loadTypeDef(typeIndex));
   if (!emitInstanceCall(SASigArrayNew)) {
     return false;
   }
@@ -6941,7 +6928,7 @@ bool BaseCompiler::emitArrayNewFixed() {
   // the required number of elements and the required type on, since the call
   // to SASigArrayNew will use them.
   pushI32(numElements);
-  pushPtr(loadTypeDefInstanceData(typeIndex));
+  pushPtr(loadTypeDef(typeIndex));
   if (!emitInstanceCall(SASigArrayNew)) {
     return false;
   }
@@ -7011,7 +6998,7 @@ bool BaseCompiler::emitArrayNewDefault() {
 
   // Allocate a default initialized array. This requires the type definition
   // for the array to be pushed on the stack. This will trap on OOM.
-  pushPtr(loadTypeDefInstanceData(typeIndex));
+  pushPtr(loadTypeDef(typeIndex));
   return emitInstanceCall(SASigArrayNew);
 }
 
@@ -7026,7 +7013,7 @@ bool BaseCompiler::emitArrayNewData() {
     return true;
   }
 
-  pushPtr(loadTypeDefInstanceData(typeIndex));
+  pushPtr(loadTypeDef(typeIndex));
   pushI32(int32_t(segIndex));
 
   // The call removes 4 items from the stack: the segment byte offset and
@@ -7046,7 +7033,7 @@ bool BaseCompiler::emitArrayNewElem() {
     return true;
   }
 
-  pushPtr(loadTypeDefInstanceData(typeIndex));
+  pushPtr(loadTypeDef(typeIndex));
   pushI32(int32_t(segIndex));
 
   // The call removes 4 items from the stack: the segment element offset and

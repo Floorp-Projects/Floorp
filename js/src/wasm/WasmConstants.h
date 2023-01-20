@@ -1036,6 +1036,14 @@ static const unsigned MaxFunctionBytes = 7654321;
 // These limits pertain to our WebAssembly implementation only, but may make
 // sense to get into the shared limits spec eventually.
 
+// See PackedTypeCode for exact bits available for these fields depending on
+// platform
+#ifdef JS_64BIT
+static const unsigned MaxTypeIndex = 1000000;
+#else
+static const unsigned MaxTypeIndex = 15000;
+#endif
+
 static const unsigned MaxRecGroups = 1000000;
 static const unsigned MaxSubTypingDepth = 31;
 static const unsigned MaxTags = 1000000;

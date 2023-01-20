@@ -1655,11 +1655,7 @@ struct BaseCompiler final {
     static void emitTrapSite(BaseCompiler* bc);
   };
 
-  // Load a pointer to the TypeDefInstanceData for a given type index
-  RegPtr loadTypeDefInstanceData(uint32_t typeIndex);
-  // Load a pointer to the TypeDef for a given type index
   RegPtr loadTypeDef(uint32_t typeIndex);
-
   // Branch to the label if the WasmGcObject `object` is/is not a subtype of
   // `typeIndex`.
   void branchGcObjectType(RegRef object, uint32_t typeIndex, Label* label,
