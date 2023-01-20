@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/quota/RemoteQuotaObjectParentTracker.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsTHashSet.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla::dom {
 
@@ -18,9 +18,7 @@ class FileSystemStreamCallbacks : public nsIInterfaceRequestor,
  public:
   FileSystemStreamCallbacks() = default;
 
-  bool HasNoRemoteQuotaObjectParents() const;
-
-  void SetRemoteQuotaObjectParentCallback(std::function<void()>&& aCallback);
+  void CloseAllRemoteQuotaObjectParents();
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -35,8 +33,7 @@ class FileSystemStreamCallbacks : public nsIInterfaceRequestor,
  private:
   virtual ~FileSystemStreamCallbacks() = default;
 
-  nsTHashSet<quota::RemoteQuotaObjectParent*> mRemoteQuotaObjectParents;
-  std::function<void()> mRemoteQuotaObjectParentCallback;
+  nsTObserverArray<quota::RemoteQuotaObjectParent*> mRemoteQuotaObjectParents;
 };
 
 }  // namespace mozilla::dom
