@@ -331,6 +331,8 @@ CHILD_PROCESSES += [
 ]
 
 GPU_PROCESSES += [
+    # MSI Nahimic audio driver causes crashes in the GPU process, bug 1804023
+    DllBlocklistEntry("nahimicosd.dll", (2, 2, 25, 0)),
 ]
 
 GPU_PROCESSES_TESTS += [
