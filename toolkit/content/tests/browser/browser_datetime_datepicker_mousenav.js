@@ -14,6 +14,27 @@ const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 }).format;
 
+/**
+ * Helper function to find and return a gridcell element
+ * for a specific day of the month
+ *
+ * @param {Number} day: A day of the month to find in the month grid
+ *
+ * @return {HTMLElement} A gridcell that represents the needed day of the month
+ */
+function getDayEl(dayNum) {
+  const dayEls = Array.from(
+    helper.getElement(DAYS_VIEW).querySelectorAll("td")
+  );
+  return dayEls.find(el => el.textContent === dayNum.toString());
+}
+
+/**
+ * Helper function to find and return a gridcell element
+ * for a specific day of the month
+ *
+ * @return {Array[String]} TextContent of each gridcell within a calendar grid
+ */
 function getCalendarText() {
   let calendarCells = [];
   for (const tr of helper.getChildren(DAYS_VIEW)) {
@@ -31,8 +52,8 @@ registerCleanupFunction(() => {
 });
 
 /**
- * When the prev month button is clicked, calendar should display the dates for
- * the previous month.
+ * When the previous month button is clicked, calendar should display the dates
+ * for the previous month.
  */
 add_task(async function test_datepicker_prev_month_btn() {
   const inputValue = "2016-12-15";
@@ -41,7 +62,11 @@ add_task(async function test_datepicker_prev_month_btn() {
   await helper.openPicker(
     `data:text/html, <input type="date" value="${inputValue}">`
   );
+
   helper.click(helper.getElement(BTN_PREV_MONTH));
+
+  // 2016-11-15:
+  const focusableDay = getDayEl(15);
 
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
@@ -95,6 +120,16 @@ add_task(async function test_datepicker_prev_month_btn() {
     ],
     "2016-11"
   );
+  Assert.equal(
+    focusableDay.textContent,
+    "15",
+    "The same day of the month is present within a calendar grid"
+  );
+  Assert.equal(
+    focusableDay,
+    helper.getElement(DAYS_VIEW).querySelector('[tabindex="0"]'),
+    "The same day of the month is focusable within a calendar grid"
+  );
 
   await helper.tearDown();
 });
@@ -110,7 +145,11 @@ add_task(async function test_datepicker_next_month_btn() {
   await helper.openPicker(
     `data:text/html, <input type="date" value="${inputValue}">`
   );
+
   helper.click(helper.getElement(BTN_NEXT_MONTH));
+
+  // 2017-01-15:
+  const focusableDay = getDayEl(15);
 
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
@@ -163,6 +202,16 @@ add_task(async function test_datepicker_next_month_btn() {
       "4",
     ],
     "2017-01"
+  );
+  Assert.equal(
+    focusableDay.textContent,
+    "15",
+    "The same day of the month is present within a calendar grid"
+  );
+  Assert.equal(
+    focusableDay,
+    helper.getElement(DAYS_VIEW).querySelector('[tabindex="0"]'),
+    "The same day of the month is focusable within a calendar grid"
   );
 
   await helper.tearDown();

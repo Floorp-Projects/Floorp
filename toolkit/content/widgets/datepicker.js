@@ -296,9 +296,11 @@ function DatePicker(context) {
               if (event.target == this.context.buttonPrev) {
                 event.target.classList.add("active");
                 this.state.setMonthByOffset(-1);
+                this.context.buttonPrev.focus();
               } else if (event.target == this.context.buttonNext) {
                 event.target.classList.add("active");
                 this.state.setMonthByOffset(1);
+                this.context.buttonNext.focus();
               }
               break;
             }
