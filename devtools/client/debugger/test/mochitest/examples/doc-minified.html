@@ -11,5 +11,10 @@
 
   <body>
     <script src="math.min.js"></script>
+    <script>
+      // This method will be called via invokeInTab.
+      function breakInNewFunction() {
+        new Function(`debugger;document.addEventListener("click", function(){debugger;})`)();
+      }</script>
   </body>
 </html>
