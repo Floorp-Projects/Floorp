@@ -35,9 +35,7 @@ async function openURLInNewTab(window, url) {
 }
 
 const pdfMatch = sinon.match(val => {
-  return (
-    val?.id === "featureCalloutCheck" && val?.context?.source === PDF_TEST_URL
-  );
+  return val?.id === "featureCalloutCheck" && val?.context?.source === "chrome";
 });
 
 const validateCalloutCustomPosition = (element, positionOverride, doc) => {
