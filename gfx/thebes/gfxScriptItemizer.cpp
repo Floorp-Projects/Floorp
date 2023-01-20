@@ -195,6 +195,13 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
       }
     }
 
+    // Both Hiragana and Katakana are shaped as OpenType 'kana'. Merge them
+    // here to avoid script-run breaks and allow kerning to apply between the
+    // two alphabets.
+    if (sc == Script::HIRAGANA) {
+      sc = Script::KATAKANA;
+    }
+
     if (SameScript(scriptCode, sc, ch)) {
       if (scriptCode == Script::COMMON) {
         // If we have not yet resolved a specific scriptCode for the run,
