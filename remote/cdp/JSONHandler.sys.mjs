@@ -49,7 +49,7 @@ export class JSONHandler {
   }
 
   getTargetList() {
-    return [...this.cdp.targetList];
+    return [...this.cdp.targetList].filter(x => x.type !== "browser");
   }
 
   // nsIHttpRequestHandler
