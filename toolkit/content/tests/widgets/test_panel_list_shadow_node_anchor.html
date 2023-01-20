@@ -61,13 +61,6 @@
       let testElement = document.getElementById("test-element");
       let panelList = document.getElementById("test-list");
 
-      // Bug 1808803 - We cannot create a panel-item either programmatically
-      // with createElement nor declaratively with <panel-item> in the markup
-      // without causing an "Operation not permitted" error to be emitted.
-      let panelItem = new (customElements.get("panel-item"));
-      panelItem.textContent = "An item";
-      panelList.appendChild(panelItem);
-
       let openPromise = new Promise(resolve => {
         panelList.addEventListener("shown", resolve, { once: true });
       });
@@ -93,6 +86,8 @@
 <div id="content">
   <test-element id="test-element">
     <panel-list id="test-list">
+      <panel-item>An item</panel-item>
+      <panel-item>Another item</panel-item>
     </panel-list>
   </test-element>
 </div>
