@@ -45,6 +45,7 @@
 #include "util/Memory.h"
 #include "vm/MutexIDs.h"
 #include "wasm/WasmBuiltins.h"
+#include "wasm/WasmCodegenConstants.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmConstants.h"
@@ -687,6 +688,11 @@ class JumpTables {
   TablePointer tiering_;
   TablePointer jit_;
   size_t numFuncs_;
+
+  static_assert(
+      JumpTableJitEntryOffset == 0,
+      "Each jit entry in table must have compatible layout with BaseScript and"
+      "SelfHostedLazyScript");
 
  public:
   bool init(CompileMode mode, const ModuleSegment& ms,
