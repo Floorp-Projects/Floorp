@@ -4205,6 +4205,51 @@ void nsWindow::OnEnterNotifyEvent(GdkEventCrossing* aEvent) {
   DispatchInputEvent(&event);
 }
 
+// Some window managers send a bogus top-level leave-notify event on every
+// click. That confuses our event handling code in ways that can break websites,
+// see bug 1805939 for details.
+//
+// Make sure to only check this on bogus environments, since for environments
+// with CSD, gdk_device_get_window_at_position could return the window even when
+// the pointer is in the decoration area.
+static bool IsBogusLeaveNotifyEvent(GdkWindow* aWindow,
+                                    GdkEventCrossing* aEvent) {
+  static bool sBogusWm = [] {
+    if (GdkIsWaylandDisplay()) {
+      return false;
+    }
+    const auto& desktopEnv = GetDesktopEnvironmentIdentifier();
+    return desktopEnv.EqualsLiteral("fluxbox") ||   // Bug 1805939 comment 0.
+           desktopEnv.EqualsLiteral("blackbox") ||  // Bug 1805939 comment 32.
+           StringBeginsWith(desktopEnv, "fvwm"_ns);
+  }();
+
+  const bool shouldCheck = [] {
+    switch (StaticPrefs::widget_gtk_ignore_bogus_leave_notify()) {
+      case 0:
+        return false;
+      case 1:
+        return true;
+      default:
+        return sBogusWm;
+    }
+  }();
+
+  if (!shouldCheck) {
+    return false;
+  }
+  GdkDevice* pointer = GdkGetPointer();
+  GdkWindow* winAtPt =
+      gdk_device_get_window_at_position(pointer, nullptr, nullptr);
+  if (!winAtPt) {
+    return false;
+  }
+  // We're still in the same top level window, ignore this leave notify event.
+  GdkWindow* topLevelAtPt = gdk_window_get_toplevel(winAtPt);
+  GdkWindow* topLevelWidget = gdk_window_get_toplevel(aWindow);
+  return topLevelAtPt == topLevelWidget;
+}
+
 void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
   LOG("leave notify (win=%p, sub=%p): %f, %f mode %d, detail %d\n",
       aEvent->window, aEvent->subwindow, aEvent->x, aEvent->y, aEvent->mode,
@@ -4222,16 +4267,20 @@ void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
     return;
   }
 
+  // The filter out for subwindows should make sure that this is targeted to
+  // this nsWindow.
+  const bool leavingTopLevel =
+      mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog;
+
+  if (leavingTopLevel && IsBogusLeaveNotifyEvent(mGdkWindow, aEvent)) {
+    return;
+  }
+
   WidgetMouseEvent event(true, eMouseExitFromWidget, this,
                          WidgetMouseEvent::eReal);
 
   event.mRefPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
   event.AssignEventTime(GetWidgetEventTime(aEvent->time));
-
-  // The filter out for subwindows should make sure that this is targeted to
-  // this nsWindow.
-  const bool leavingTopLevel =
-      mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog;
   event.mExitFrom = Some(leavingTopLevel ? WidgetMouseEvent::ePlatformTopLevel
                                          : WidgetMouseEvent::ePlatformChild);
 

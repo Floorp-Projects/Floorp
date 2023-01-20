@@ -14691,6 +14691,16 @@
   value: 2
   mirror: always
 
+# Whether we should try ignore bogus leave-notify events from the window
+# manager.
+#  0: Never
+#  1: Always
+#  2: Auto (depending on the system)
+- name: widget.gtk.ignore-bogus-leave-notify
+  type: int32_t
+  value: 2
+  mirror: always
+
 # Whether to use gtk high contrast themes to disable content styling like on
 # windows high contrast mode.
 - name: widget.content.gtk-high-contrast.enabled
