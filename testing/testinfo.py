@@ -404,7 +404,10 @@ class TestInfoReport(TestInfo):
             nextday = startday + datetime.timedelta(days=1)
             retries = 2
             done = False
-            if str(nextday) not in testrundata.keys():
+            if (
+                str(nextday) not in testrundata.keys()
+                or testrundata[str(nextday)] == {}
+            ):
                 while not done:
                     url = "https://treeherder.mozilla.org/api/groupsummary/"
                     url += "?startdate=%s&enddate=%s" % (
@@ -420,7 +423,15 @@ class TestInfoReport(TestInfo):
                         retries -= 1
                         if retries <= 0:
                             r.raise_for_status()
-                    testrundata[str(nextday.date())] = r.json()
+                    try:
+                        testrundata[str(nextday.date())] = r.json()
+                    except json.decoder.JSONDecodeError:
+                        print(
+                            "Warning unable to retrieve (from treeherder's groupsummary api) testrun data for date: %s, skipping for now"
+                            % nextday.date()
+                        )
+                        testrundata[str(nextday.date())] = {}
+                        continue
             startday = nextday
 
         return testrundata
