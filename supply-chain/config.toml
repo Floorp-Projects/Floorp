@@ -845,11 +845,6 @@ criteria = "safe-to-run"
 version = "0.0.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.naga]]
-version = "0.10.0@git:e7fc8e64f2f23397b149217ecce6e123c5aa5092"
-criteria = "safe-to-deploy"
-notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
-
 [[exemptions.net2]]
 version = "0.2.37"
 criteria = "safe-to-run"
@@ -1349,21 +1344,6 @@ criteria = "safe-to-deploy"
 [[exemptions.webrtc-sdp]]
 version = "0.3.9"
 criteria = "safe-to-deploy"
-
-[[exemptions.wgpu-core]]
-version = "0.14.0@git:186a29c34d54d8628bbebb998a537210ac565b71"
-criteria = "safe-to-deploy"
-notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
-
-[[exemptions.wgpu-hal]]
-version = "0.14.0@git:186a29c34d54d8628bbebb998a537210ac565b71"
-criteria = "safe-to-deploy"
-notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
-
-[[exemptions.wgpu-types]]
-version = "0.14.0@git:186a29c34d54d8628bbebb998a537210ac565b71"
-criteria = "safe-to-deploy"
-notes = "This is a temporary exemption to bootstrap precise audits for audit-as-crates-io imports."
 
 [[exemptions.winapi]]
 version = "0.3.9"
