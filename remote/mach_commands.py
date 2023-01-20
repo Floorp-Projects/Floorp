@@ -5,6 +5,7 @@
 import argparse
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -465,14 +466,17 @@ class PuppeteerRunner(MozbuildObject):
             expected_data = []
         # Filter expectation data for the selected browser,
         # headless or headful mode, and the operating system.
-        platform = os.uname().sysname.lower() if os.uname() else "win32"
+        expected_platform = platform.uname().system.lower()
+        if expected_platform == "windows":
+            expected_platform = "win32"
+
         expectations = filter(
             lambda el: product in el["parameters"]
             and (
                 (env["HEADLESS"] == "False" and "headless" not in el["parameters"])
                 or "headful" not in el["parameters"]
             )
-            and platform in el["platforms"],
+            and expected_platform in el["platforms"],
             expected_data,
         )
 
