@@ -773,22 +773,72 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
 
   LogTimerEvent::LogDispatch(aTimer);
 
-  Entry entry{aTimer};
   const size_t insertionIndex = mTimers.IndexOfFirstElementGt(aTimer->mTimeout);
-  if (insertionIndex < mTimers.Length()) {
-    if (!mTimers[insertionIndex].Value()) {
-      AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_overwrite);
-      mTimers[insertionIndex] = std::move(entry);
-      return true;
-    }
-    if (insertionIndex != 0 && !mTimers[insertionIndex - 1].Value()) {
-      AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_overwrite_before);
-      mTimers[insertionIndex - 1] = std::move(entry);
-      return true;
+
+  if (insertionIndex != 0 && !mTimers[insertionIndex - 1].Value()) {
+    // Very common scenario in practice: The timer just before the insertion
+    // point is canceled, overwrite it.
+    AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_overwrite_before);
+    mTimers[insertionIndex - 1] = Entry{aTimer};
+    return true;
+  }
+
+  const size_t length = mTimers.Length();
+  if (insertionIndex == length) {
+    // We're at the end (including it's the very first insertion), add new timer
+    // at the end.
+    AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_append);
+    return mTimers.AppendElement(Entry{aTimer}, mozilla::fallible);
+  }
+
+  if (!mTimers[insertionIndex].Value()) {
+    // The timer at the insertion point is canceled, overwrite it.
+    AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_overwrite);
+    mTimers[insertionIndex] = Entry{aTimer};
+    return true;
+  }
+
+  // The new timer has to be inserted.
+  AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_insert);
+  // The capacity should be checked first, because if it needs to be increased
+  // and the memory allocation fails, only the new timer should be lost.
+  if (length == mTimers.Capacity() && mTimers[length - 1].Value()) {
+    // We have reached capacity, and the last entry is not canceled, so we
+    // really want to increase the capacity in case the extra slot is required.
+    // To force-expand the array, append a canceled-timer entry with a timestamp
+    // far in the future.
+    // This empty Entry may be used below to receive the moved-from previous
+    // entry. If not, it may be used in a later call if we need to append a new
+    // timer at the end.
+    AUTO_TIMERS_STATS(TimerThread_AddTimerInternal_insert_expand);
+    if (!mTimers.AppendElement(
+            Entry{mTimers[length - 1].Timeout() +
+                  TimeDuration::FromSeconds(365.0 * 24.0 * 60.0 * 60.0)},
+            mozilla::fallible)) {
+      return false;
     }
   }
-  return mTimers.InsertElementAt(insertionIndex, std::move(entry),
-                                 mozilla::fallible);
+  // Extract the timer at the insertion point, and put the new timer in its
+  // place.
+  Entry extractedEntry = std::exchange(mTimers[insertionIndex], Entry{aTimer});
+  // Following entries can be pushed until we hit a canceled timer or the end.
+  for (size_t i = insertionIndex + 1; i < length; ++i) {
+    Entry& entryRef = mTimers[i];
+    if (!entryRef.Value()) {
+      // Canceled entry, overwrite it with the extracted entry from before.
+      COUNT_TIMERS_STATS(TimerThread_AddTimerInternal_insert_overwrite);
+      entryRef = std::move(extractedEntry);
+      return true;
+    }
+    // Write extracted entry from before, and extract current entry.
+    COUNT_TIMERS_STATS(TimerThread_AddTimerInternal_insert_shifts);
+    std::swap(entryRef, extractedEntry);
+  }
+  // We've reached the end of the list, with still one extracted entry to
+  // re-insert. We've checked the capacity above, this cannot fail.
+  COUNT_TIMERS_STATS(TimerThread_AddTimerInternal_insert_append);
+  mTimers.AppendElement(std::move(extractedEntry));
+  return true;
 }
 
 // This function must be called from within a lock

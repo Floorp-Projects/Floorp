@@ -93,6 +93,10 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
       aTimerImpl->SetIsInTimerThread(true);
     }
 
+    // Create an already-canceled entry with the given timeout.
+    explicit Entry(TimeStamp aTimeout)
+        : mTimeout(std::move(aTimeout)), mTimerImpl(nullptr) {}
+
     // Don't allow copies, otherwise which one would manage `IsInTimerThread`?
     Entry(const Entry&) = delete;
     Entry& operator=(const Entry&) = delete;
