@@ -12,7 +12,6 @@ import android.content.Intent
 import android.os.Build
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.Browsers
 import mozilla.components.support.utils.ext.navigateToDefaultBrowserAppsSettings
@@ -78,7 +77,7 @@ class DefaultOnboardingController(
                         try {
                             activityResultLauncher.launch(it.createRequestRoleIntent(RoleManager.ROLE_BROWSER))
                         } catch (e: ActivityNotFoundException) {
-                            Logger(BaseVoiceSearchActivity.TAG).error(
+                            Logger(TAG).error(
                                 "ActivityNotFoundException " +
                                     e.message.toString(),
                             )
@@ -93,5 +92,9 @@ class DefaultOnboardingController(
                 context.navigateToDefaultBrowserAppsSettings()
             }
         }
+    }
+
+    companion object {
+        const val TAG = "OnboardingController"
     }
 }
