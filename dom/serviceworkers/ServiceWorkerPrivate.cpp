@@ -1566,7 +1566,8 @@ RefPtr<FetchServicePromises> ServiceWorkerPrivate::SetupNavigationPreload(
     MOZ_ALWAYS_SUCCEEDS(
         aChannel->GetChannel(getter_AddRefs(underlyingChannel)));
     RefPtr<FetchService> fetchService = FetchService::GetInstance();
-    return fetchService->Fetch(std::move(preloadRequest), underlyingChannel);
+    return fetchService->Fetch(AsVariant(FetchService::NavigationPreloadArgs{
+        std::move(preloadRequest), underlyingChannel}));
   }
   return FetchService::NetworkErrorResponse(NS_ERROR_UNEXPECTED);
 }

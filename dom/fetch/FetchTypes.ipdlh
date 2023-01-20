@@ -35,8 +35,9 @@ struct ParentToParentStream {
   nsID uuid;
 };
 
-struct ParentToChildStream {
-  RemoteLazyInputStream stream;
+union ParentToChildStream {
+  RemoteLazyInputStream;
+  IPCStream;
 };
 
 struct ChildToParentStream {
@@ -86,6 +87,9 @@ struct InternalResponseMetadata {
   nsCString alternativeDataType;
   nsITransportSecurityInfo securityInfo;
   PrincipalInfo? principalInfo;
+  nsCString bodyBlobURISpec;
+  nsString bodyLocalPath;
+  RequestCredentials credentialsMode;
 };
 
 struct ParentToParentInternalResponse {
