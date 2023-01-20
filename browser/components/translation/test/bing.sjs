@@ -10,7 +10,7 @@ const BinaryInputStream = CC(
   "nsIBinaryInputStream",
   "setInputStream"
 );
-Cu.importGlobalProperties(["DOMParser"]);
+Cu.importGlobalProperties(["DOMParser", "TextEncoder"]);
 
 function handleRequest(req, res) {
   try {
@@ -82,14 +82,8 @@ function getRequestBody(req) {
 }
 
 function sha1(str) {
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  // `result` is an out parameter, `result.value` will contain the array length.
-  let result = {};
   // `data` is an array of bytes.
-  let data = converter.convertToByteArray(str, result);
+  let data = new TextEncoder().encode(str);
   let ch = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
   ch.init(ch.SHA1);
   ch.update(data, data.length);
