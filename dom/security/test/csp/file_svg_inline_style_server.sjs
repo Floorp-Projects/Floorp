@@ -21,18 +21,18 @@ function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "image/svg+xml", false);
 
-  if (query === "svg_inline_style_csp") {
+  if (query.includes("svg_inline_style_csp")) {
     response.setHeader("Content-Security-Policy", "default-src 'none'", false);
     response.write(SVG_IMG);
     return;
   }
 
-  if (query === "svg_inline_style") {
+  if (query.includes("svg_inline_style_nocsp")) {
     response.write(SVG_IMG);
     return;
   }
 
-  if (query === "svg_no_inline_style") {
+  if (query.includes("svg_no_inline_style")) {
     response.write(SVG_IMG_NO_INLINE_STYLE);
     return;
   }
