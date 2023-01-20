@@ -258,6 +258,7 @@
     </template>
 
     <template id="login-item-template">
+      <script type="module" src="chrome://browser/content/aboutlogins/components/login-timeline.mjs"></script>
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
@@ -360,9 +361,7 @@
               <button class="save-changes-button" type="submit"></button>
               <button class="cancel-button" data-l10n-id="login-item-cancel-button" type="button"></button>
             </moz-button-group>
-            <p class="time-created meta-info" data-l10n-id="login-item-time-created" data-l10n-args='{"timeCreated": 0}'></p>
-            <p class="time-changed meta-info" data-l10n-id="login-item-time-changed" data-l10n-args='{"timeChanged": 0}'></p>
-            <p class="time-used meta-info" data-l10n-id="login-item-time-used" data-l10n-args='{"timeUsed": 0}'></p>
+            <login-timeline hidden ></login-timeline>
           </form>
         </div>
       </div>

@@ -61,7 +61,7 @@ form {
 :host([data-editing]) .copy-button,
 :host([data-is-new-login]) .delete-button,
 :host([data-is-new-login]) .origin-saved-value,
-:host([data-is-new-login]) .meta-info,
+:host([data-is-new-login]) login-timeline,
 :host([data-is-new-login]) .login-item-title,
 :host(:not([data-is-new-login])) .new-login-title,
 :host(:not([data-editing])) .form-actions-row {
@@ -301,20 +301,6 @@ moz-button-group,
 
 .copied-button-text:dir(rtl) {
   background-position-x: right;
-}
-
-.meta-info {
-  font-size: smaller;
-  color: var(--in-content-deemphasized-text);
-  margin-block: 0 8px;
-}
-
-.meta-info:first-of-type::before {
-  content: "";
-  display: block;
-  margin-bottom: 20px;
-  border-top: 1px solid var(--in-content-border-color);
-  width: 40px;
 }
 
 input.password-display,
