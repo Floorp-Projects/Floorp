@@ -35,8 +35,63 @@ add_task(async function json_version() {
 add_task(async function check_routes() {
   for (const route of routes) {
     // Check request succeeded (200) and responded with valid JSON
+    info(`Checking ${route}`);
     await requestJSON(route);
+
+    info(`Checking ${route + "/"}`);
     await requestJSON(route + "/");
+  }
+});
+
+add_task(async function json_list({ client }) {
+  const { Target } = client;
+  const { targetInfos } = await Target.getTargets();
+
+  const json = await requestJSON("/json/list");
+  const jsonAlias = await requestJSON("/json");
+
+  Assert.deepEqual(json, jsonAlias, "/json/list and /json return the same");
+
+  ok(Array.isArray(json), "Target list is an array");
+
+  is(
+    json.length,
+    targetInfos.length,
+    "Targets as listed on /json/list are equal to Target.getTargets"
+  );
+
+  for (let i = 0; i < json.length; i++) {
+    const jsonTarget = json[i];
+    const wsTarget = targetInfos[i];
+
+    is(
+      jsonTarget.id,
+      wsTarget.targetId,
+      "Target id matches between HTTP and Target.getTargets"
+    );
+    is(
+      jsonTarget.type,
+      wsTarget.type,
+      "Target type matches between HTTP and Target.getTargets"
+    );
+    is(
+      jsonTarget.url,
+      wsTarget.url,
+      "Target url matches between HTTP and Target.getTargets"
+    );
+
+    // Ensure expected values specifically for JSON endpoint
+    // and that type is always "page" as main process target should not be included
+    is(
+      jsonTarget.type,
+      "page",
+      `Target (${jsonTarget.id}) from list has expected type (page)`
+    );
+    is(
+      jsonTarget.webSocketDebuggerUrl,
+      `ws://${RemoteAgent.debuggerAddress}/devtools/page/${wsTarget.targetId}`,
+      `Target (${jsonTarget.id}) from list has expected webSocketDebuggerUrl value`
+    );
   }
 });
 
