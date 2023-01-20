@@ -1187,20 +1187,23 @@ DevToolsStartup.prototype = {
     return this;
   },
 
-  // Keep `DevToolsStartup.helpInfo` synchronized with `BackgroundTasksManager.helpInfo`.
-  /* eslint-disable max-len */
-  helpInfo:
-    "  --jsconsole        Open the Browser Console.\n" +
-    "  --jsdebugger [<path>] Open the Browser Toolbox. Defaults to the local build\n" +
-    "                     but can be overridden by a firefox path.\n" +
-    "  --wait-for-jsdebugger Spin event loop until JS debugger connects.\n" +
-    "                     Enables debugging (some) application startup code paths.\n" +
-    "                     Only has an effect when `--jsdebugger` is also supplied.\n" +
-    "  --devtools         Open DevTools on initial load.\n" +
-    "  --start-debugger-server [ws:][ <port> | <path> ] Start the devtools server on\n" +
-    "                     a TCP port or Unix domain socket path. Defaults to TCP port\n" +
-    "                     6000. Use WebSocket protocol if ws: prefix is specified.\n",
-  /* eslint-disable max-len */
+  get jsdebuggerHelpInfo() {
+    return `  --jsdebugger [<path>] Open the Browser Toolbox. Defaults to the local build
+                     but can be overridden by a firefox path.
+  --wait-for-jsdebugger Spin event loop until JS debugger connects.
+                     Enables debugging (some) application startup code paths.
+                     Only has an effect when \`--jsdebugger\` is also supplied.
+  --start-debugger-server [ws:][ <port> | <path> ] Start the devtools server on
+                     a TCP port or Unix domain socket path. Defaults to TCP port
+                     6000. Use WebSocket protocol if ws: prefix is specified.
+`;
+  },
+
+  get helpInfo() {
+    return `  --jsconsole        Open the Browser Console.
+  --devtools         Open DevTools on initial load.
+${this.jsdebuggerHelpInfo}`;
+  },
 
   classID: Components.ID("{9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}"),
   QueryInterface: ChromeUtils.generateQI(["nsICommandLineHandler"]),

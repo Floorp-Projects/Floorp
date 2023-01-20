@@ -25,6 +25,12 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
+XPCOMUtils.defineLazyGetter(lazy, "DevToolsStartup", () => {
+  return Cc["@mozilla.org/devtools/startup-clh;1"].getService(
+    Ci.nsICommandLineHandler
+  ).wrappedJSObject;
+});
+
 // Map resource://testing-common/ to the shared test modules directory.  This is
 // a transliteration of `register_modules_protocol_handler` from
 // https://searchfox.org/mozilla-central/rev/f081504642a115cb8236bea4d8250e5cb0f39b02/testing/xpcshell/head.js#358-389.
@@ -108,18 +114,17 @@ function findBackgroundTaskModule(name) {
 }
 
 export class BackgroundTasksManager {
-  // Keep `BackgroundTasksManager.helpInfo` synchronized with `DevToolsStartup.helpInfo`.
-  /* eslint-disable max-len */
-  helpInfo =
-    "  --jsdebugger [<path>] Open the Browser Toolbox. Defaults to the local build\n" +
-    "                     but can be overridden by a firefox path.\n" +
-    "  --wait-for-jsdebugger Spin event loop until JS debugger connects.\n" +
-    "                     Enables debugging (some) application startup code paths.\n" +
-    "                     Only has an effect when `--jsdebugger` is also supplied.\n" +
-    "  --start-debugger-server [ws:][ <port> | <path> ] Start the devtools server on\n" +
-    "                     a TCP port or Unix domain socket path. Defaults to TCP port\n" +
-    "                     6000. Use WebSocket protocol if ws: prefix is specified.\n";
-  /* eslint-disable max-len */
+  get helpInfo() {
+    const bts = Cc["@mozilla.org/backgroundtasks;1"].getService(
+      Ci.nsIBackgroundTasks
+    );
+
+    if (bts.isBackgroundTaskMode) {
+      return lazy.DevToolsStartup.jsdebuggerHelpInfo;
+    }
+
+    return "";
+  }
 
   handle(commandLine) {
     const bts = Cc["@mozilla.org/backgroundtasks;1"].getService(
