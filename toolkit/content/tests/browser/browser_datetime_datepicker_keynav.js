@@ -130,7 +130,7 @@ add_task(async function test_datepicker_keyboard_nav() {
   let closed = helper.promisePickerClosed();
 
   // Close on Escape anywhere
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape", {});
 
   await closed;
 
@@ -156,7 +156,7 @@ add_task(async function test_datepicker_keyboard_nav() {
   //
   // This assumes en-US locale, which seems fine for testing purposes (as
   // DATE_FORMAT and other bits around do the same).
-  BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+  BrowserTestUtils.synthesizeKey("KEY_ArrowDown", {}, browser);
 
   // Toggle the picker on Space anywhere within the input
   BrowserTestUtils.synthesizeKey(" ", {}, browser);
@@ -198,7 +198,7 @@ add_task(async function test_datepicker_keyboard_nav() {
   closed = helper.promisePickerClosed();
 
   // Close on Escape and return the focus to the input field  (the month input in en-US locale)
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+  EventUtils.synthesizeKey("KEY_Escape", {}, window);
 
   await closed;
 
@@ -228,10 +228,10 @@ add_task(async function test_datepicker_keyboard_nav() {
   });
 
   // Move focus to the second field (the day input in en-US locale)
-  BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, browser);
+  BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, browser);
 
   // Change the day to 2016-12-16
-  BrowserTestUtils.synthesizeKey("VK_UP", {}, browser);
+  BrowserTestUtils.synthesizeKey("KEY_ArrowUp", {}, browser);
 
   ready = helper.waitForPickerReady();
 
@@ -264,7 +264,7 @@ add_task(async function test_datepicker_keyboard_nav() {
   closed = helper.promisePickerClosed();
 
   // Close on Escape and return the focus to the input field  (the day input in en-US locale)
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+  EventUtils.synthesizeKey("KEY_Escape", {}, window);
 
   await closed;
 
@@ -315,7 +315,7 @@ add_task(async function test_datepicker_keyboard_nav() {
   await testCalendarBtnAttribute("aria-expanded", "true");
 
   // Move focus from 2016-11-16 to 2016-11-17
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight", {});
 
   // Make a selection by pressing Space on date gridcell
   await EventUtils.synthesizeKey(" ", {});
@@ -396,7 +396,7 @@ add_task(async function test_datepicker_keyboard_arrows() {
   Assert.equal(helper.panel.state, "open", "Panel should be opened");
 
   // Move focus from 2016-12-10 to 2016-12-11:
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -405,7 +405,7 @@ add_task(async function test_datepicker_keyboard_arrows() {
   );
 
   // Move focus from 2016-12-11 to 2016-12-04:
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -414,7 +414,7 @@ add_task(async function test_datepicker_keyboard_arrows() {
   );
 
   // Move focus from 2016-12-04 to 2016-12-03:
-  EventUtils.synthesizeKey("VK_LEFT", {});
+  EventUtils.synthesizeKey("KEY_ArrowLeft", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -423,7 +423,7 @@ add_task(async function test_datepicker_keyboard_arrows() {
   );
 
   // Move focus from 2016-12-03 to 2016-11-26:
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -437,7 +437,7 @@ add_task(async function test_datepicker_keyboard_arrows() {
   );
 
   // Move focus from 2016-11-26 to 2016-12-03:
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   Assert.equal(
     pickerDoc.activeElement.textContent,
     "3",
@@ -450,7 +450,7 @@ add_task(async function test_datepicker_keyboard_arrows() {
   );
 
   // Move focus from 2016-12-03 to 2016-12-10:
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -477,7 +477,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   Assert.equal(helper.panel.state, "open", "Panel should be opened");
 
   // Move focus from 2016-12-15 to 2016-12-11 (in the en-US locale):
-  EventUtils.synthesizeKey("VK_HOME", {});
+  EventUtils.synthesizeKey("KEY_Home", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -486,7 +486,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   );
 
   // Move focus from 2016-12-11 to 2016-12-17 (in the en-US locale):
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -495,7 +495,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   );
 
   // Move focus from 2016-12-17 to 2016-12-31:
-  EventUtils.synthesizeKey("VK_END", { ctrlKey: true });
+  EventUtils.synthesizeKey("KEY_End", { ctrlKey: true });
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -504,7 +504,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   );
 
   // Move focus from 2016-12-31 to 2016-12-01:
-  EventUtils.synthesizeKey("VK_HOME", { ctrlKey: true });
+  EventUtils.synthesizeKey("KEY_Home", { ctrlKey: true });
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -513,7 +513,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   );
 
   // Move focus from 2016-12-01 to 2016-11-27 (in the en-US locale):
-  EventUtils.synthesizeKey("VK_HOME", {});
+  EventUtils.synthesizeKey("KEY_Home", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -527,7 +527,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   );
 
   // Move focus from 2016-11-27 to 2016-12-03 (in the en-US locale):
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End", {});
 
   Assert.equal(
     pickerDoc.activeElement.textContent,
@@ -546,11 +546,12 @@ add_task(async function test_datepicker_keyboard_home_end() {
 /**
  * Ensure calendar follows Page Up/Down key bindings appropriately.
  */
-add_task(async function test_datepicker_keyboard_home_end() {
+add_task(async function test_datepicker_keyboard_pgup_pgdown() {
   info("Ensure calendar follows Page Up/Down key bindings appropriately.");
 
   const inputValue = "2023-01-31";
   const prevMonth = "2022-12-31";
+  const prevYear = "2021-12-01";
   const nextMonth = "2023-01-31";
   const nextShortMonth = "2023-03-03";
   await helper.openPicker(
@@ -571,10 +572,11 @@ add_task(async function test_datepicker_keyboard_home_end() {
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
     DATE_FORMAT(new Date(prevMonth)),
-    "Page Up key updates the spinner to show the previous month"
+    "Page Up key updates the month-year button to show the previous month"
   );
 
-  // Move focus from 2022-12-31 to 2022-12-01:
+  // Move focus from 2022-12-31 to 2022-12-01
+  // (because 2022-11-31 does not exist):
   EventUtils.synthesizeKey("KEY_PageUp", {});
 
   Assert.equal(
@@ -586,11 +588,64 @@ add_task(async function test_datepicker_keyboard_home_end() {
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
     DATE_FORMAT(new Date(prevMonth)),
-    "Page Up key keeps the spinner to show the current month"
+    `When the same day does not exist in the previous month
+    Page Up key does not update the month-year button and shows the current month`
+  );
+
+  // Move focus from 2022-12-01 to 2021-12-01:
+  EventUtils.synthesizeKey("KEY_PageUp", { shiftKey: true });
+  Assert.equal(
+    pickerDoc.activeElement.textContent,
+    "1",
+    "Page Up with Shift key moves focus to the same day of the same month of the previous year"
+  );
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).textContent,
+    DATE_FORMAT(new Date(prevYear)),
+    "Page Up with Shift key updates the month-year button to show the same month of the previous year"
+  );
+
+  // Move focus from 2021-12-01 to 2022-12-01 month by month (bug 1806645):
+  EventUtils.synthesizeKey("KEY_PageDown", { repeat: 12 });
+  Assert.equal(
+    pickerDoc.activeElement.textContent,
+    "1",
+    "When repeated, Page Down key moves focus to the same day of the same month of the next year"
+  );
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).textContent,
+    DATE_FORMAT(new Date(prevMonth)),
+    "When repeated, Page Down key updates the month-year button to show the same month of the next year"
+  );
+
+  // Move focus from 2022-12-01 to 2021-12-01 month by month (bug 1806645):
+  EventUtils.synthesizeKey("KEY_PageUp", { repeat: 12 });
+  Assert.equal(
+    pickerDoc.activeElement.textContent,
+    "1",
+    "When repeated, Page Up moves focus to the same day of the same month of the previous year"
+  );
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).textContent,
+    DATE_FORMAT(new Date(prevYear)),
+    "When repeated, Page Up key updates the month-year button to show the same month of the previous year"
+  );
+
+  // Move focus from 2021-12-01 to 2022-12-01:
+  EventUtils.synthesizeKey("KEY_PageDown", { shiftKey: true });
+  Assert.equal(
+    pickerDoc.activeElement.textContent,
+    "1",
+    "Page Down with Shift key moves focus to the same day of the same month of the next year"
+  );
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).textContent,
+    DATE_FORMAT(new Date(prevMonth)),
+    "Page Down with Shift key updates the month-year button to show the same month of the next year"
   );
 
   // Move focus from 2016-12-01 to 2016-12-31:
-  EventUtils.synthesizeKey("VK_END", { ctrlKey: true });
+  EventUtils.synthesizeKey("KEY_End", { ctrlKey: true });
   // Move focus from 2022-12-31 to 2023-01-31:
   EventUtils.synthesizeKey("KEY_PageDown", {});
 
@@ -602,7 +657,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
     DATE_FORMAT(new Date(nextMonth)),
-    "Page Down key updates the spinner to show the next month"
+    "Page Down key updates the month-year button to show the next month"
   );
 
   // Move focus from 2023-01-31 to 2023-03-03:
@@ -617,7 +672,7 @@ add_task(async function test_datepicker_keyboard_home_end() {
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
     DATE_FORMAT(new Date(nextShortMonth)),
-    "Page Down key updates the spinner to show the month after"
+    "Page Down key updates the month-year button to show the month after"
   );
 
   await helper.tearDown();
