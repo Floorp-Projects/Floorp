@@ -1377,15 +1377,20 @@ static detail::ThreadLocal<arena_t*, detail::ThreadLocalKeyStorage>
 
 // *****************************
 // Runtime configuration options.
+//
+// Junk - write "junk" to freshly allocated cells.
+// Poison - write "poison" to cells upon deallocation.
 
 const uint8_t kAllocJunk = 0xe4;
 const uint8_t kAllocPoison = 0xe5;
 
 #ifdef MOZ_DEBUG
 static bool opt_junk = true;
+static bool opt_poison = true;
 static bool opt_zero = false;
 #else
 static const bool opt_junk = false;
+static const bool opt_poison = true;
 static const bool opt_zero = false;
 #endif
 static bool opt_randomize_small = true;
@@ -1463,6 +1468,12 @@ static inline size_t GetChunkOffsetForPtr(const void* aPtr) {
 }
 
 static inline const char* _getprogname(void) { return "<jemalloc>"; }
+
+static inline void MaybePoison(void* aPtr, size_t aSize) {
+  if (opt_poison) {
+    memset(aPtr, kAllocPoison, aSize);
+  }
+}
 
 // Fill the given range of memory with zeroes or junk depending on opt_junk and
 // opt_zero.
@@ -3580,7 +3591,7 @@ void arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr,
   MOZ_DIAGNOSTIC_ASSERT(uintptr_t(aPtr) >=
                         uintptr_t(run) + bin->mRunFirstRegionOffset);
 
-  memset(aPtr, kAllocPoison, size);
+  MaybePoison(aPtr, size);
 
   arena_run_reg_dalloc(run, bin, aPtr, size);
   run->mNumFree++;
@@ -3641,7 +3652,7 @@ void arena_t::DallocLarge(arena_chunk_t* aChunk, void* aPtr) {
   size_t pageind = (uintptr_t(aPtr) - uintptr_t(aChunk)) >> gPageSize2Pow;
   size_t size = aChunk->map[pageind].bits & ~gPageSizeMask;
 
-  memset(aPtr, kAllocPoison, size);
+  MaybePoison(aPtr, size);
   mStats.allocated_large -= size;
 
   DallocRun((arena_run_t*)aPtr, true);
@@ -3740,7 +3751,7 @@ void* arena_t::RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize) {
   // Try to avoid moving the allocation.
   if (aOldSize <= gMaxLargeClass && sizeClass.Size() == aOldSize) {
     if (aSize < aOldSize) {
-      memset((void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
+      MaybePoison((void*)(uintptr_t(aPtr) + aSize), aOldSize - aSize);
     }
     return aPtr;
   }
@@ -3749,7 +3760,7 @@ void* arena_t::RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize) {
     arena_chunk_t* chunk = GetChunkForPtr(aPtr);
     if (sizeClass.Size() < aOldSize) {
       // Fill before shrinking in order to avoid a race.
-      memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
+      MaybePoison((void*)((uintptr_t)aPtr + aSize), aOldSize - aSize);
       RallocShrinkLarge(chunk, aPtr, sizeClass.Size(), aOldSize);
       return aPtr;
     }
@@ -4031,7 +4042,7 @@ void* arena_t::RallocHuge(void* aPtr, size_t aSize, size_t aOldSize) {
       CHUNK_CEILING(aSize + gPageSize) == CHUNK_CEILING(aOldSize + gPageSize)) {
     size_t psize = PAGE_CEILING(aSize);
     if (aSize < aOldSize) {
-      memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
+      MaybePoison((void*)((uintptr_t)aPtr + aSize), aOldSize - aSize);
     }
     if (psize < aOldSize) {
       extent_node_t key;
@@ -4221,6 +4232,12 @@ static bool malloc_init_hard() {
             break;
           case 'J':
             opt_junk = true;
+            break;
+          case 'q':
+            opt_poison = false;
+            break;
+          case 'Q':
+            opt_poison = true;
             break;
           case 'z':
             opt_zero = false;
