@@ -28,6 +28,10 @@ function strip(s) {
     return s;
 }
 
+function striplines(s) {
+    return s.split('\n').map(strip).join('\n');
+}
+
 function spaces(s) {
     let t = '';
     let i = 0;

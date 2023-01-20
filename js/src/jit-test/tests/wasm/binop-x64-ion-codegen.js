@@ -205,7 +205,7 @@ for ( [imm, expect1, expect2] of
          ''],
         // in unsigned-32 range => imm in reg via movl
         ['0x87654321',
-         '41 bb 21 43 65 87   mov \\$0x87654321, %r11d',
+         '41 bb 21 43 65 87   mov \\$-0x789ABCDF, %r11d',
          '4c 85 d.            test %r11, %r..'], // rdi or rcx
         // not in either range => imm in reg via mov(absq)
         ['0x187654321',

@@ -34,6 +34,7 @@
 
 #include "zydis/Zycore/Defines.h"
 #include "zydis/Zycore/Types.h"
+#include "zydis/Zydis/Defines.h"
 #include "zydis/Zydis/SharedTypes.h"
 #include "zydis/Zydis/ShortString.h"
 
@@ -50,6 +51,45 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 
 #include "zydis/Zydis/Generated/EnumRegister.h"
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Register kinds                                                                                 */
+/* ---------------------------------------------------------------------------------------------- */
+
+/**
+ * Defines the `ZydisRegisterKind` enum.
+ *
+ * Please note that this enum does not contain a matching entry for all values of the
+ * `ZydisRegister` enum, but only for those registers where it makes sense to logically group them
+ * for decoding/encoding purposes.
+ *
+ * These are mainly the registers that can be identified by an id within their corresponding
+ * register-class.
+ */
+typedef enum ZydisRegisterKind_
+{
+    ZYDIS_REGKIND_INVALID,
+    ZYDIS_REGKIND_GPR,
+    ZYDIS_REGKIND_X87,
+    ZYDIS_REGKIND_MMX,
+    ZYDIS_REGKIND_VR,
+    ZYDIS_REGKIND_TMM,
+    ZYDIS_REGKIND_SEGMENT,
+    ZYDIS_REGKIND_TEST,
+    ZYDIS_REGKIND_CONTROL,
+    ZYDIS_REGKIND_DEBUG,
+    ZYDIS_REGKIND_MASK,
+    ZYDIS_REGKIND_BOUND,
+
+    /**
+     * Maximum value of this enum.
+     */
+    ZYDIS_REGKIND_MAX_VALUE = ZYDIS_REGKIND_BOUND,
+    /**
+     * The minimum number of bits required to represent all values of this enum.
+     */
+    ZYDIS_REGKIND_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_REGKIND_MAX_VALUE)
+} ZydisRegisterKind;
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Register classes                                                                               */
@@ -120,6 +160,10 @@ typedef enum ZydisRegisterClass_
      * Segment registers.
      */
     ZYDIS_REGCLASS_SEGMENT,
+    /**
+     * Table registers.
+    */
+    ZYDIS_REGCLASS_TABLE,
     /**
      * Test registers.
      */
