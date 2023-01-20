@@ -73,12 +73,6 @@ class SearchOneOffs {
 
     this.contextMenuPopup = this.querySelector(".search-one-offs-context-menu");
 
-    /**
-     * When a context menu is opened on a one-off button, this is set to the
-     * engine of that button for use with the context menu actions.
-     */
-    this._contextEngine = null;
-
     this._engineInfo = null;
 
     /**
@@ -545,18 +539,9 @@ class SearchOneOffs {
   _buttonIDForEngine(engine) {
     return (
       this.telemetryOrigin +
-      "-engine-one-off-item-" +
-      this._fixUpEngineNameForID(engine.name || engine.title)
+      "-engine-one-off-item-engine-" +
+      this._engineInfo.engines.indexOf(engine)
     );
-  }
-
-  _fixUpEngineNameForID(name) {
-    return name.replace(/ /g, "-");
-  }
-
-  _buttonForEngine(engine) {
-    let id = this._buttonIDForEngine(engine);
-    return this.document.getElementById(id);
   }
 
   getSelectableButtons(aIncludeNonEngineButtons) {
@@ -1048,8 +1033,8 @@ class SearchOneOffs {
     if (target.classList.contains("search-one-offs-context-open-in-new-tab")) {
       // Select the context-clicked button so that consumers can easily
       // tell which button was acted on.
-      this.selectedButton = this._buttonForEngine(this._contextEngine);
-      this.handleSearchCommand(event, this._contextEngine, true);
+      this.selectedButton = target.closest("menupopup")._triggerButton;
+      this.handleSearchCommand(event, this.selectedButton.engine, true);
     }
 
     const isPrivateButton = target.classList.contains(
@@ -1065,6 +1050,9 @@ class SearchOneOffs {
       let currentEngine = Services.search[engineType];
 
       const isPrivateWin = PrivateBrowsingUtils.isWindowPrivate(this.window);
+      let button = target.closest("menupopup")._triggerButton;
+      // We're about to replace this, so it must be stored now.
+      let newDefaultEngine = button.engine;
       if (
         !this.getAttribute("includecurrentengine") &&
         isPrivateButton == isPrivateWin
@@ -1072,8 +1060,6 @@ class SearchOneOffs {
         // Make the target button of the context menu reflect the current
         // search engine first. Doing this as opposed to rebuilding all the
         // one-off buttons avoids flicker.
-        let button = this._buttonForEngine(this._contextEngine);
-        button.id = this._buttonIDForEngine(currentEngine);
         let uri = "chrome://browser/skin/search-engine-placeholder.png";
         if (currentEngine.iconURI) {
           uri = currentEngine.iconURI.spec;
@@ -1083,7 +1069,7 @@ class SearchOneOffs {
         button.engine = currentEngine;
       }
 
-      Services.search[engineType] = this._contextEngine;
+      Services.search[engineType] = newDefaultEngine;
     }
   }
 
@@ -1124,10 +1110,11 @@ class SearchOneOffs {
       privateDefaultItem.hidden = true;
     }
 
+    // When a context menu is opened on a one-off button, this is set to the
+    // button to be used for the command.
+    this.contextMenuPopup._triggerButton = target;
     this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
     event.preventDefault();
-
-    this._contextEngine = target.engine;
   }
 
   _on_input(event) {
@@ -1144,6 +1131,5 @@ class SearchOneOffs {
 
   _on_popuphidden() {
     this.selectedButton = null;
-    this._contextEngine = null;
   }
 }
