@@ -20,11 +20,6 @@ git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 replace-with = "vendored-sources"
 
-[source."https://github.com/servo/rust-cssparser"]
-git = "https://github.com/servo/rust-cssparser"
-replace-with = "vendored-sources"
-rev = "722b30d2f1634714befab967ecae627813fa4cf0"
-
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 rev = "e98bd92"
@@ -118,6 +113,11 @@ replace-with = "vendored-sources"
 [source."https://github.com/rust-minidump/minidump-writer.git"]
 git = "https://github.com/rust-minidump/minidump-writer.git"
 rev = "7d76616d27b9dc87fe3a94639b8b4f947d52a6aa"
+replace-with = "vendored-sources"
+
+[source."https://github.com/servo/rust-cssparser"]
+git = "https://github.com/servo/rust-cssparser"
+rev = "722b30d2f1634714befab967ecae627813fa4cf0"
 replace-with = "vendored-sources"
 
 [source."https://github.com/smol-rs/async-task"]

@@ -39,6 +39,10 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 audit-as-crates-io = true
 notes = "Using non-crates.io revision because the color-4 changes has not been published yet."
 
+[policy.firefox-on-glean]
+audit-as-crates-io = false
+notes = "The crates.io version of this is just a placeholder to allow public crates to depend on firefox-on-glean."
+
 [policy.geckodriver]
 audit-as-crates-io = false
 criteria = "safe-to-run"
