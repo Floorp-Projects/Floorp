@@ -1259,6 +1259,21 @@ cookie.banners:
       - 'firefox'
     record_in_processes:
       - 'main'
+  service_detect_only:
+    bug_numbers:
+      - 1809700
+    description: >
+      Tracks the value of the cookiebanners.service.detectOnly pref.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - tihuang@mozilla.com
+      - pbz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
   rule_lookup_by_load:
     bug_numbers:
       - 1797073

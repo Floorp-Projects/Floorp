@@ -49,6 +49,19 @@ cookie.banners:
       - reject_or_accept
       - invalid
     telemetry_mirror: COOKIE_BANNERS_PRIVATE_WINDOW_SERVICE_MODE
+  service_detect_only:
+    type: boolean
+    description: >
+      Tracks the value of the cookiebanners.service.detectOnly pref.
+    bugs:
+      - https://bugzilla.mozilla.org/1809700
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1809700#c3
+    notification_emails:
+      - tihuang@mozilla.com
+      - pbz@mozilla.com
+    expires: never
+    telemetry_mirror: COOKIE_BANNERS_SERVICE_DETECT_ONLY
   rule_lookup_by_load:
     type: labeled_counter
     description: >
