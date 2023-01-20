@@ -35,12 +35,14 @@ const SEARCH_ENGINE_DETAILS = [
   },
   {
     alias: "d",
-    baseURL: "https://duckduckgo.com/?{code}q=foo",
+    baseURL: `https://duckduckgo.com/?{code}t=${
+      AppConstants.IS_ESR ? "ftsa" : "ffab"
+    }&q=foo`,
     codes: {
-      context: "t=ffcm&",
-      keyword: "t=ffab&",
-      newTab: "t=ffnt&",
-      submission: "t=ffsb&",
+      context: "",
+      keyword: "",
+      newTab: "",
+      submission: "",
     },
     name: "DuckDuckGo",
   },
