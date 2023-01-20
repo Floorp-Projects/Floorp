@@ -83,3 +83,11 @@ runTest([
 runTest([
   true, false,
 ]);
+
+// String inputs
+runTest([
+  "",
+  "0", "-0", "0.0", "0e100",
+  "1", "1.5", "-1234", "-1e0",
+  "Infinity", "NaN", "not-a-number",
+]);
