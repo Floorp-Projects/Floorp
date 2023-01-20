@@ -110,11 +110,10 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
     nsTimerImpl* Value() const { return mTimerImpl; }
 
-    void Forget(nsTimerImpl* aTimerImpl) {
-      if (MOZ_UNLIKELY(!aTimerImpl)) {
+    void Forget() {
+      if (MOZ_UNLIKELY(!mTimerImpl)) {
         return;
       }
-      MOZ_ASSERT(mTimerImpl == aTimerImpl);
       mTimerImpl->mMutex.AssertCurrentThreadOwns();
       mTimerImpl->SetIsInTimerThread(false);
       mTimerImpl = nullptr;
