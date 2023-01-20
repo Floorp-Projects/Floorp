@@ -239,7 +239,7 @@ impl BinaryHttp {
         if header_names.len() != header_values.len() {
             return Err(NS_ERROR_INVALID_ARG);
         }
-        for (name, value) in header_values.iter().zip(header_names.iter()) {
+        for (name, value) in header_names.iter().zip(header_values.iter()) {
             message.put_header(name.to_vec(), value.to_vec());
         }
         let mut content = ThinVec::new();

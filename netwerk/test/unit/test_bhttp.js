@@ -6,10 +6,6 @@
 // Unit tests for the binary http bindings.
 // Tests basic encoding and decoding of requests and responses.
 
-function stringToBytes(str) {
-  return Array.from(str, chr => chr.charCodeAt(0));
-}
-
 function BinaryHttpRequest(
   method,
   scheme,
@@ -30,17 +26,6 @@ function BinaryHttpRequest(
 
 BinaryHttpRequest.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIBinaryHttpRequest"]),
-};
-
-function BinaryHttpResponse(status, headerNames, headerValues, content) {
-  this.status = status;
-  this.headerNames = headerNames;
-  this.headerValues = headerValues;
-  this.content = content;
-}
-
-BinaryHttpResponse.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIBinaryHttpResponse"]),
 };
 
 function test_encode_request() {
@@ -207,9 +192,7 @@ function test_encode_response() {
   );
   let encoded = bhttp.encodeResponse(response);
   let expected = hexStringToBytes(
-    "0141a2180a746578742f706c61696e0c" +
-      "636f6e74656e742d747970650c49276d" +
-      "206120746561706f7400"
+    "0141a2180c636f6e74656e742d747970650a746578742f706c61696e0c49276d206120746561706f7400"
   );
   deepEqual(encoded, expected);
 
