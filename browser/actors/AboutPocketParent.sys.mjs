@@ -67,6 +67,13 @@ export class AboutPocketParent extends JSWindowActorParent {
         this.sendResponseMessageToPanel("PKT_getTags", lazy.pktApi.getTags());
         break;
       }
+      case "PKT_getRecentTags": {
+        this.sendResponseMessageToPanel(
+          "PKT_getRecentTags",
+          lazy.pktApi.getRecentTags()
+        );
+        break;
+      }
       case "PKT_getSuggestedTags": {
         // Ask for suggested tags based on passed url
         const result = await new Promise(resolve => {

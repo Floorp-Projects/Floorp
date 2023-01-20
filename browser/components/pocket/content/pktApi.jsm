@@ -619,6 +619,10 @@ var pktApi = (function() {
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function addTags(actionPart, tags, options) {
+    if (tags.length) {
+      addRecentTags(tags);
+    }
+
     // Tags add action
     var action = {
       action: "tags_add",
@@ -645,6 +649,54 @@ var pktApi = (function() {
     return {
       tags: tagsFromSettings(),
     };
+  }
+
+  /**
+   * Return all recent tags.
+   */
+  function getRecentTags() {
+    var tagsFromSettings = function() {
+      var tagsJSON = getSetting("recentTags");
+
+      if (typeof tagsJSON !== "undefined") {
+        let parsedTags;
+
+        try {
+          parsedTags = JSON.parse(tagsJSON);
+        } catch {
+          parsedTags = [];
+        }
+
+        return parsedTags;
+      }
+
+      return [];
+    };
+
+    return {
+      recentTags: tagsFromSettings(),
+    };
+  }
+
+  /**
+   * Store recently used tags.
+   * @param {Array}  tags   Newly used tags to store
+   */
+  function addRecentTags(tags) {
+    var newRecentTags = tags || [];
+    var cachedRecentTags = getRecentTags()?.recentTags;
+    var mergedRecentTags = [];
+
+    cachedRecentTags.forEach(tag => {
+      if (!newRecentTags.includes(tag)) {
+        mergedRecentTags.push(tag);
+      }
+    });
+
+    mergedRecentTags = [...newRecentTags, ...mergedRecentTags];
+
+    // update recent tags pref to store
+    setSetting("recentTags", JSON.stringify(mergedRecentTags));
   }
 
   /**
@@ -782,6 +834,7 @@ var pktApi = (function() {
     addTagsToItem,
     addTagsToURL,
     getTags,
+    getRecentTags,
     isPremiumUser,
     getSuggestedTagsForItem,
     getSuggestedTagsForURL,
