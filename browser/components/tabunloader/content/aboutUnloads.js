@@ -123,5 +123,5 @@ async function onLoad() {
 try {
   document.addEventListener("DOMContentLoaded", onLoad, { once: true });
 } catch (ex) {
-  Cu.reportError(ex);
+  console.error(ex);
 }

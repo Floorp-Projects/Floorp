@@ -41,7 +41,7 @@ class PromptCollection {
         "resendButton.label"
       );
     } catch (exception) {
-      Cu.reportError("Failed to get strings from appstrings.properties");
+      console.error("Failed to get strings from appstrings.properties");
       return false;
     }
 
@@ -88,7 +88,7 @@ class PromptCollection {
         "OnBeforeUnloadStayButton"
       );
     } catch (exception) {
-      Cu.reportError("Failed to get strings from dom.properties");
+      console.error("Failed to get strings from dom.properties");
       return false;
     }
 
@@ -98,7 +98,7 @@ class PromptCollection {
       (contentViewer && !contentViewer.isTabModalPromptAllowed) ||
       !browsingContext.ancestorsAreCurrent
     ) {
-      Cu.reportError("Can't prompt from inactive content viewer");
+      console.error("Can't prompt from inactive content viewer");
       return true;
     }
 
@@ -148,7 +148,7 @@ class PromptCollection {
         "FolderUploadPrompt.acceptButtonLabel"
       );
     } catch (exception) {
-      Cu.reportError("Failed to get strings from dom.properties");
+      console.error("Failed to get strings from dom.properties");
       return false;
     }
 

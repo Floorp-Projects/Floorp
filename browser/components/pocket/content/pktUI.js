@@ -475,7 +475,7 @@ var pktUI = (function() {
   function openTabWithUrl(url, aTriggeringPrincipal, aCsp) {
     let recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
     if (!recentWindow) {
-      Cu.reportError("Pocket: No open browser windows to openTabWithUrl");
+      console.error("Pocket: No open browser windows to openTabWithUrl");
       return;
     }
     closePanel();

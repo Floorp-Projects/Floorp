@@ -25,7 +25,7 @@ add_task(async function() {
       "No separator in the palette."
     );
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
     ok(false, "Shouldn't throw an exception moving an item to the navbar.");
   } finally {
     await endCustomizing();

@@ -273,7 +273,7 @@ var tests = [
           "Highlight should be shown after showHighlight() for fixed panel items"
         );
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
   function test_highlight_effect(done) {
     function waitForHighlightWithEffect(highlightEl, effect, next, error) {

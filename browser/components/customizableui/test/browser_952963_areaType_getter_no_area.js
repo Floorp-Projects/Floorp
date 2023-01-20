@@ -14,7 +14,7 @@ registerCleanupFunction(() => {
     CustomizableUI.destroyWidget(kTestWidget);
     CustomizableUI.destroyWidget(kUnregisterAreaTestWidget);
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
   }
 });
 

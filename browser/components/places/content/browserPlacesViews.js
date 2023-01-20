@@ -1486,7 +1486,7 @@ class PlacesToolbar extends PlacesViewBase {
 
     if (elt == this._rootElt) {
       // Container is the toolbar itself.
-      this._rebuild().catch(Cu.reportError);
+      this._rebuild().catch(console.error);
       return;
     }
 
@@ -1833,7 +1833,7 @@ class PlacesToolbar extends PlacesViewBase {
       PlacesControllerDragHelper.onDrop(
         dropPoint.ip,
         aEvent.dataTransfer
-      ).catch(Cu.reportError);
+      ).catch(console.error);
       aEvent.preventDefault();
     }
 

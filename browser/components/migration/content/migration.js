@@ -544,7 +544,7 @@ var MigrationWizard = {
           try {
             this.reportDataRecencyTelemetry();
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         }
         if (this._autoMigrate) {

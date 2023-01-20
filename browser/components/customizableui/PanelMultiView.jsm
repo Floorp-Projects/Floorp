@@ -234,7 +234,7 @@ var AssociatedToNode = class {
             // Any exception in the blocker will cancel the operation.
             blockers.add(
               promise.catch(ex => {
-                Cu.reportError(ex);
+                console.error(ex);
                 return true;
               })
             );
@@ -253,7 +253,7 @@ var AssociatedToNode = class {
           ]);
           cancel = cancel || results.some(result => result === false);
         } catch (ex) {
-          Cu.reportError(
+          console.error(
             new Error(`One of the blockers for ${eventName} timed out.`)
           );
           return true;
@@ -656,7 +656,7 @@ var PanelMultiView = class extends AssociatedToNode {
    *        subview when a "title" attribute is not specified.
    */
   showSubView(viewIdOrNode, anchor) {
-    this._showSubView(viewIdOrNode, anchor).catch(Cu.reportError);
+    this._showSubView(viewIdOrNode, anchor).catch(console.error);
   }
   async _showSubView(viewIdOrNode, anchor) {
     let viewNode =
@@ -664,19 +664,19 @@ var PanelMultiView = class extends AssociatedToNode {
         ? PanelMultiView.getViewNode(this.document, viewIdOrNode)
         : viewIdOrNode;
     if (!viewNode) {
-      Cu.reportError(new Error(`Subview ${viewIdOrNode} doesn't exist.`));
+      console.error(new Error(`Subview ${viewIdOrNode} doesn't exist.`));
       return;
     }
 
     if (!this.openViews.length) {
-      Cu.reportError(new Error(`Cannot show a subview in a closed panel.`));
+      console.error(new Error(`Cannot show a subview in a closed panel.`));
       return;
     }
 
     let prevPanelView = this.openViews[this.openViews.length - 1];
     let nextPanelView = PanelView.forNode(viewNode);
     if (this.openViews.includes(nextPanelView)) {
-      Cu.reportError(new Error(`Subview ${viewNode.id} is already open.`));
+      console.error(new Error(`Subview ${viewNode.id} is already open.`));
       return;
     }
 
@@ -753,7 +753,7 @@ var PanelMultiView = class extends AssociatedToNode {
    * Navigates backwards by sliding out the most recent subview.
    */
   goBack() {
-    this._goBack().catch(Cu.reportError);
+    this._goBack().catch(console.error);
   }
   async _goBack() {
     if (this.openViews.length < 2) {

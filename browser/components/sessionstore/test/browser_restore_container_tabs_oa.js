@@ -156,7 +156,7 @@ add_task(async function testRestore() {
       // calls, so we will just wait for the document to finish loadig.
       return SpecialPowers.spawn(regular_browser, [], () => {
         return content.document.readyState == "complete";
-      }).catch(Cu.reportError);
+      }).catch(console.error);
     });
     newWin.gBrowser.selectedTab = regular_tab;
     await TabStateFlusher.flush(regular_browser);

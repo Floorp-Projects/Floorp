@@ -1178,7 +1178,7 @@ export class UrlbarView {
       provider.getViewTemplate?.(result) ||
       UrlbarView.dynamicViewTemplatesByName.get(dynamicType);
     if (!viewTemplate) {
-      Cu.reportError(`No viewTemplate found for ${result.providerName}`);
+      console.error(`No viewTemplate found for ${result.providerName}`);
     }
     this.#buildViewForDynamicType(
       dynamicType,
@@ -1198,7 +1198,7 @@ export class UrlbarView {
       if (name == "id") {
         // We do not allow dynamic results to set IDs for their Nodes. IDs are
         // managed by the view to ensure they are unique.
-        Cu.reportError(
+        console.error(
           "Dynamic results are prohibited from setting their own IDs."
         );
         continue;
@@ -1700,7 +1700,7 @@ export class UrlbarView {
         if (attrName == "id") {
           // We do not allow dynamic results to set IDs for their Nodes. IDs are
           // managed by the view to ensure they are unique.
-          Cu.reportError(
+          console.error(
             "Dynamic results are prohibited from setting their own IDs."
           );
           continue;
@@ -2665,7 +2665,7 @@ export class UrlbarView {
             favicon.src = result.payload.icon || lazy.UrlbarUtils.ICON.DEFAULT;
           }
         } else {
-          Cu.reportError("An item is missing the action setter");
+          console.error("An item is missing the action setter");
         }
         item.removeAttribute("source");
       }
@@ -2937,7 +2937,7 @@ async function addDynamicStylesheet(window, stylesheetURL) {
     );
     window.windowUtils.addSheet(sheet, Ci.nsIDOMWindowUtils.AGENT_SHEET);
   } catch (ex) {
-    Cu.reportError(`Error adding dynamic stylesheet: ${ex}`);
+    console.error(`Error adding dynamic stylesheet: ${ex}`);
   }
 }
 
@@ -2957,6 +2957,6 @@ function removeDynamicStylesheet(window, stylesheetURL) {
       Ci.nsIDOMWindowUtils.AGENT_SHEET
     );
   } catch (ex) {
-    Cu.reportError(`Error removing dynamic stylesheet: ${ex}`);
+    console.error(`Error removing dynamic stylesheet: ${ex}`);
   }
 }

@@ -233,7 +233,7 @@ var SessionFileInternal = {
             // 1546847. Just in case there are problems in the format of
             // the parsed data, continue on. Favicons might be broken, but
             // the session will at least be recovered
-            Cu.reportError(e);
+            console.error(e);
           }
         }
 
@@ -246,12 +246,10 @@ var SessionFileInternal = {
           )
         ) {
           // Skip sessionstore files that we don't understand.
-          Cu.reportError(
-            "Cannot extract data from Session Restore file " +
-              path +
-              ". Wrong format/version: " +
-              JSON.stringify(parsed.version) +
-              "."
+          console.error(
+            "Cannot extract data from Session Restore file ",
+            path,
+            ". Wrong format/version: " + JSON.stringify(parsed.version) + "."
           );
           continue;
         }

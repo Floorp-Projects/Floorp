@@ -246,10 +246,10 @@ PlacesController.prototype = {
   doCommand: function PC_doCommand(aCommand) {
     switch (aCommand) {
       case "cmd_undo":
-        PlacesTransactions.undo().catch(Cu.reportError);
+        PlacesTransactions.undo().catch(console.error);
         break;
       case "cmd_redo":
-        PlacesTransactions.redo().catch(Cu.reportError);
+        PlacesTransactions.redo().catch(console.error);
         break;
       case "cmd_cut":
       case "placesCmd_cut":
@@ -261,14 +261,14 @@ PlacesController.prototype = {
         break;
       case "cmd_paste":
       case "placesCmd_paste":
-        this.paste().catch(Cu.reportError);
+        this.paste().catch(console.error);
         break;
       case "cmd_delete":
       case "placesCmd_delete":
-        this.remove("Remove Selection").catch(Cu.reportError);
+        this.remove("Remove Selection").catch(console.error);
         break;
       case "placesCmd_deleteDataHost":
-        this.forgetAboutThisSite().catch(Cu.reportError);
+        this.forgetAboutThisSite().catch(console.error);
         break;
       case "cmd_selectAll":
         this.selectAll();
@@ -295,19 +295,19 @@ PlacesController.prototype = {
         PlacesUIUtils.openNodeIn(this._view.selectedNode, "tab", this._view);
         break;
       case "placesCmd_new:folder":
-        this.newItem("folder").catch(Cu.reportError);
+        this.newItem("folder").catch(console.error);
         break;
       case "placesCmd_new:bookmark":
-        this.newItem("bookmark").catch(Cu.reportError);
+        this.newItem("bookmark").catch(console.error);
         break;
       case "placesCmd_new:separator":
-        this.newSeparator().catch(Cu.reportError);
+        this.newSeparator().catch(console.error);
         break;
       case "placesCmd_show:info":
         this.showBookmarkPropertiesForSelection();
         break;
       case "placesCmd_sortBy:name":
-        this.sortFolderByName().catch(Cu.reportError);
+        this.sortFolderByName().catch(console.error);
         break;
       case "placesCmd_createBookmark": {
         const nodes = this._view.selectedNodes.map(node => {
@@ -874,7 +874,7 @@ PlacesController.prototype = {
           Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY
       ) {
         // This is a uri node inside an history query.
-        await PlacesUtils.history.remove(node.uri).catch(Cu.reportError);
+        await PlacesUtils.history.remove(node.uri).catch(console.error);
         // History deletes are not undoable, so we don't have a transaction.
       } else if (
         node.itemId == -1 &&
@@ -885,7 +885,7 @@ PlacesController.prototype = {
         // This is a dynamically generated history query, like queries
         // grouped by site, time or both.  Dynamically generated queries don't
         // have an itemId even if they are descendants of a bookmark.
-        await this._removeHistoryContainer(node).catch(Cu.reportError);
+        await this._removeHistoryContainer(node).catch(console.error);
         // History deletes are not undoable, so we don't have a transaction.
       } else {
         // This is a common bookmark item.
@@ -944,7 +944,7 @@ PlacesController.prototype = {
         PlacesUtils.asQuery(node).queryOptions.queryType ==
           Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY
       ) {
-        await this._removeHistoryContainer(node).catch(Cu.reportError);
+        await this._removeHistoryContainer(node).catch(console.error);
       }
     }
 

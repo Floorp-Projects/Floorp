@@ -43,7 +43,7 @@ Bookmarks.prototype = {
     })().then(
       () => aCallback(true),
       e => {
-        Cu.reportError(e);
+        console.error(e);
         aCallback(false);
       }
     );
@@ -173,7 +173,7 @@ Bookmarks.prototype = {
           try {
             new URL(url);
           } catch (ex) {
-            Cu.reportError(
+            console.error(
               `Ignoring ${url} when importing from Safari because of exception: ${ex}`
             );
             return null;
@@ -242,7 +242,7 @@ History.prototype = {
             } catch (ex) {
               // Safari's History file may contain malformed URIs which
               // will be ignored.
-              Cu.reportError(ex);
+              console.error(ex);
               failedOnce = true;
             }
           }
@@ -260,7 +260,7 @@ History.prototype = {
           () => aCallback(false)
         );
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
         aCallback(false);
       }
     });
@@ -304,7 +304,7 @@ MainPreferencesPropertyList.prototype = {
           try {
             callback(aDict);
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         }
         this._callbacks.splice(0);

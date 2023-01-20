@@ -254,6 +254,6 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
         this.data = result;
         this._change(updateType);
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
 });

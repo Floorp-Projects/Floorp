@@ -310,7 +310,7 @@ export var UrlbarUtils = {
     try {
       entry = await lazy.PlacesUtils.keywords.fetch(keyword);
     } catch (ex) {
-      Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
+      console.error(`Unable to fetch Places keyword "${keyword}": ${ex}`);
     }
     if (!entry || !entry.url) {
       // This is not a Places keyword.
@@ -535,9 +535,9 @@ export var UrlbarUtils = {
       if (result.providerType == UrlbarUtils.PROVIDER_TYPE.EXTENSION) {
         return UrlbarUtils.RESULT_GROUP.HEURISTIC_EXTENSION;
       }
-      Cu.reportError(
-        "Returning HEURISTIC_FALLBACK for unrecognized heuristic result: " +
-          result
+      console.error(
+        "Returning HEURISTIC_FALLBACK for unrecognized heuristic result: ",
+        result
       );
       return UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK;
     }
@@ -1192,7 +1192,7 @@ export var UrlbarUtils = {
           let { type } = result.autofill;
           if (!type) {
             type = "other";
-            Cu.reportError(
+            console.error(
               new Error(
                 "`result.autofill.type` not set, falling back to 'other'"
               )
@@ -2064,7 +2064,7 @@ export class UrlbarProvider {
     try {
       return this[methodName](...args);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
     return undefined;
   }
@@ -2388,7 +2388,7 @@ export class SkippableTimer {
       this.logger.debug(line);
     }
     if (isError) {
-      Cu.reportError(line);
+      console.error(line);
     }
   }
 }
@@ -2476,8 +2476,9 @@ export class L10nCache {
     }
     let messages = await l10n.formatMessages([{ id, args }]);
     if (!messages?.length) {
-      Cu.reportError(
-        "l10n.formatMessages returned an unexpected value for ID: " + id
+      console.error(
+        "l10n.formatMessages returned an unexpected value for ID: ",
+        id
       );
       return;
     }
@@ -2661,7 +2662,7 @@ export class TaskQueue {
       let value = await callback();
       resolve(value);
     } catch (error) {
-      Cu.reportError(error);
+      console.error(error);
       reject(error);
     }
     this._queue.shift();

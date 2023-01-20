@@ -167,7 +167,7 @@ class MigrationUtils {
         aFunction.apply(null, arguments);
         success = true;
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       // Do not change this to call aCallback directly in try try & catch
       // blocks, because if aCallback throws, we may end up calling aCallback
@@ -234,7 +234,7 @@ class MigrationUtils {
           rows = await db.execute(selectQuery);
         } catch (ex) {
           if (previousException.message != ex.message) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
           previousException = ex;
         } finally {
@@ -342,7 +342,7 @@ class MigrationUtils {
     try {
       return migrator && (await migrator.isSourceAvailable()) ? migrator : null;
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       return null;
     }
   }
@@ -402,7 +402,7 @@ class MigrationUtils {
         key = "firefox";
       }
     } catch (ex) {
-      Cu.reportError("Could not detect default browser: " + ex);
+      console.error("Could not detect default browser: ", ex);
     }
 
     // "firefox" is the least useful entry here, and might just be because we've set
@@ -443,7 +443,7 @@ class MigrationUtils {
             // Save the value for future callers.
             gPreviousDefaultBrowserKey = key;
           } catch (ex) {
-            Cu.reportError(
+            console.error(
               "Could not convert old default browser value to description."
             );
           }
@@ -718,7 +718,7 @@ class MigrationUtils {
           );
         }
       },
-      ex => Cu.reportError(ex)
+      ex => console.error(ex)
     );
   }
 

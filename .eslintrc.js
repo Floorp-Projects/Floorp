@@ -208,11 +208,10 @@ module.exports = {
       // Bug 877389 - Gradually migrate from Cu.reportError to console.error.
       // Report as warnings where it is not yet passing.
       files: [
-        "browser/components/**",
         "dom/push/test/mockpushserviceparent.js",
+        "browser/components/extensions/**",
         "toolkit/**",
       ],
-      excludedFiles: ["browser/components/Browser*.*"],
       rules: {
         "mozilla/no-cu-reportError": "off",
       },

@@ -314,8 +314,9 @@ function getEdgeLocalDataFolder() {
       }
     }
   } catch (ex) {
-    Cu.reportError(
-      "Exception trying to find the Edge favorites directory: " + ex
+    console.error(
+      "Exception trying to find the Edge favorites directory: ",
+      ex
     );
   }
   return null;
@@ -391,7 +392,7 @@ Bookmarks.prototype = {
     })().then(
       () => aCallback(true),
       e => {
-        Cu.reportError(e);
+        console.error(e);
         aCallback(false);
       }
     );
@@ -479,13 +480,13 @@ Bookmarks.prototype = {
           }
         }
       } catch (ex) {
-        Cu.reportError(
-          "Unable to import " +
-            this.importedAppLabel +
-            " favorite (" +
-            entry.leafName +
-            "): " +
-            ex
+        console.error(
+          "Unable to import ",
+          this.importedAppLabel,
+          " favorite (",
+          entry.leafName,
+          "): ",
+          ex
         );
       }
     }
@@ -612,9 +613,7 @@ Cookies.prototype = {
           fileReader.removeEventListener("loadend", onLoadEnd);
 
           if (fileReader.readyState != fileReader.DONE) {
-            Cu.reportError(
-              "Could not read cookie contents: " + fileReader.error
-            );
+            console.error("Could not read cookie contents: ", fileReader.error);
             aCallback(false);
             return;
           }
@@ -623,7 +622,7 @@ Cookies.prototype = {
           try {
             this._parseCookieBuffer(fileReader.result);
           } catch (ex) {
-            Cu.reportError("Unable to migrate cookie: " + ex);
+            console.error("Unable to migrate cookie: ", ex);
             success = false;
           } finally {
             aCallback(success);
@@ -710,7 +709,7 @@ Cookies.prototype = {
           Number(expireTimeLo)
         );
       } catch (ex) {
-        Cu.reportError("Failed to get expiry time for cookie for " + host);
+        console.error("Failed to get expiry time for cookie for ", host);
       }
 
       Services.cookies.add(
@@ -778,7 +777,7 @@ function getTypedURLs(registryKeyPath) {
         try {
           urlTime = typedURLTimeKey.readBinaryValue(entryName);
         } catch (ex) {
-          Cu.reportError("Couldn't read url time for " + entryName);
+          console.error("Couldn't read url time for ", entryName);
         }
         if (urlTime.length == 8) {
           let urlTimeHex = [];
@@ -809,7 +808,7 @@ function getTypedURLs(registryKeyPath) {
       typedURLs.set(url, timeTyped * 1000);
     }
   } catch (ex) {
-    Cu.reportError("Error reading typed URL history: " + ex);
+    console.error("Error reading typed URL history: ", ex);
   } finally {
     if (typedURLKey) {
       typedURLKey.close();
@@ -967,7 +966,7 @@ WindowsVaultFormPasswords.prototype = {
           }
         } catch (e) {
           migrationSucceeded = false;
-          Cu.reportError(e);
+          console.error(e);
         } finally {
           // move to next item in the table returned by VaultEnumerateItems
           item = item.increment();
@@ -978,14 +977,14 @@ WindowsVaultFormPasswords.prototype = {
         await MigrationUtils.insertLoginsWrapper(logins);
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
       migrationSucceeded = false;
     } finally {
       if (successfulVaultOpen) {
         // close current vault
         error = ctypesVaultHelpers._functions.VaultCloseVault(vault);
         if (error == FREE_CLOSE_FAILED) {
-          Cu.reportError("Unable to close vault: " + error);
+          console.error("Unable to close vault: ", error);
         }
       }
       ctypesKernelHelpers.finalize();

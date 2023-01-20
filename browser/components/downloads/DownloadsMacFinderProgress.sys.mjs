@@ -46,8 +46,8 @@ export var DownloadsMacFinderProgress = {
     let path = download.target.path;
 
     finderProgress.init(path, () => {
-      download.cancel().catch(Cu.reportError);
-      download.removePartialData().catch(Cu.reportError);
+      download.cancel().catch(console.error);
+      download.removePartialData().catch(console.error);
     });
 
     if (download.hasProgress) {

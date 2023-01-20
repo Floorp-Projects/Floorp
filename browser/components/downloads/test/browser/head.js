@@ -336,7 +336,7 @@ function startServer() {
         aResponse.finish();
         info("Interruptible request finished.");
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   });
 }
 

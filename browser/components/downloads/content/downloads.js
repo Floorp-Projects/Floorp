@@ -609,7 +609,7 @@ var DownloadsPanel = {
     // do these checks on a background thread, and don't prevent the panel to
     // be displayed while these checks are being performed.
     for (let viewItem of DownloadsView._visibleViewItems.values()) {
-      viewItem.download.refresh().catch(Cu.reportError);
+      viewItem.download.refresh().catch(console.error);
     }
 
     DownloadsCommon.log("Opening downloads panel popup.");
@@ -1152,7 +1152,7 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
 
   downloadsCmd_unblockAndOpen() {
     DownloadsPanel.hidePanel();
-    this.unblockAndOpenDownload().catch(Cu.reportError);
+    this.unblockAndOpenDownload().catch(console.error);
   }
   downloadsCmd_unblockAndSave() {
     DownloadsPanel.hidePanel();
@@ -1216,7 +1216,7 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
     // So the remaining view item needs to be refreshed to hide the "Delete" option.
     // That example only concerns 2 duplicate view items but you can have an arbitrary number, so iterate over all items...
     for (let viewItem of DownloadsView._visibleViewItems.values()) {
-      viewItem.download.refresh().catch(Cu.reportError);
+      viewItem.download.refresh().catch(console.error);
     }
     // Don't use DownloadsPanel.hidePanel for this method because it will remove
     // the view item from the list, which is already sufficient feedback.

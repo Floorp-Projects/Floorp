@@ -77,7 +77,7 @@ Bookmarks.prototype = {
             try {
               new URL(url);
             } catch (ex) {
-              Cu.reportError(
+              console.error(
                 `Ignoring ${url} when importing from 360se because of exception: ${ex}`
               );
               continue;
@@ -106,7 +106,7 @@ Bookmarks.prototype = {
     })().then(
       () => aCallback(true),
       e => {
-        Cu.reportError(e);
+        console.error(e);
         aCallback(false);
       }
     );
@@ -124,7 +124,7 @@ export var Qihoo360seMigrationUtils = {
         let { lastModified } = await IOUtils.stat(bookmarksPath);
         lastModificationDate = new Date(lastModified);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 
@@ -144,7 +144,7 @@ export var Qihoo360seMigrationUtils = {
           lastModificationDate = new Date(lastModified);
           path = legacyBookmarksPath;
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
     }
@@ -181,7 +181,7 @@ export var Qihoo360seMigrationUtils = {
       parentFolder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       parentFolder.initWithPath(aParentFolder);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       return null;
     }
 

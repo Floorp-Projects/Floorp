@@ -275,7 +275,7 @@ export class MigratorBase {
               .getKeyedHistogramById(histogramId)
               .add(browserKey, accumulatedDelay);
           } catch (ex) {
-            Cu.reportError(histogramId + ": " + ex);
+            console.error(histogramId, ": ", ex);
           }
         }
       }
@@ -295,7 +295,7 @@ export class MigratorBase {
               lazy.MigrationUtils._importQuantities[resourceType]
             );
         } catch (ex) {
-          Cu.reportError(histogramId + ": " + ex);
+          console.error(histogramId, ": ", ex);
         }
       }
     };
@@ -374,7 +374,7 @@ export class MigratorBase {
           try {
             res.migrate(resourceDone);
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
             resourceDone(false);
           }
 
@@ -408,7 +408,7 @@ export class MigratorBase {
             replace: true,
             source: lazy.PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,
           }
-        ).catch(Cu.reportError);
+        ).catch(console.error);
 
         // We'll tell nsBrowserGlue we've imported bookmarks, but before that
         // we need to make sure we're going to know when it's finished
@@ -463,7 +463,7 @@ export class MigratorBase {
         exists = !!profiles.length;
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
     return exists;
   }

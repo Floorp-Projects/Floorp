@@ -669,7 +669,7 @@ class InteractionsStore {
         this.#timerResolve = resolve;
         this.#timer = lazy.setTimeout(() => {
           this.#updateDatabase()
-            .catch(Cu.reportError)
+            .catch(console.error)
             .then(resolve);
         }, lazy.saveInterval);
       });

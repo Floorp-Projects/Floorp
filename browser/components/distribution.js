@@ -93,7 +93,7 @@ DistributionCustomizer.prototype = {
         Services.prefs.clearUserPref(PREF_CACHED_FILE_EXISTENCE);
       } else {
         // Unable to parse INI.
-        Cu.reportError("Unable to parse distribution.ini");
+        console.error("Unable to parse distribution.ini");
       }
     }
     this.__defineGetter__("_ini", () => ini);
@@ -264,7 +264,7 @@ DistributionCustomizer.prototype = {
                 Services.scriptSecurityManager.getSystemPrincipal()
               );
             } catch (e) {
-              Cu.reportError(e);
+              console.error(e);
             }
           }
 

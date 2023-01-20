@@ -1849,7 +1849,7 @@ PlacesTreeView.prototype = {
     if (node.title != aText) {
       PlacesTransactions.EditTitle({ guid: node.bookmarkGuid, title: aText })
         .transact()
-        .catch(Cu.reportError);
+        .catch(console.error);
     }
   },
 

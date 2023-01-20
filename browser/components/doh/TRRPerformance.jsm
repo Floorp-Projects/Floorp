@@ -113,7 +113,7 @@ class DNSLookup {
         {}
       );
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   }
 
@@ -155,7 +155,7 @@ class LookupAggregator {
 
   run() {
     if (this._ran || this._aborted) {
-      Cu.reportError("Trying to re-run a LookupAggregator.");
+      console.error("Trying to re-run a LookupAggregator.");
       return;
     }
 
@@ -211,7 +211,7 @@ class LookupAggregator {
           domain.includes(lazy.kCanonicalDomain)
         )
       ) {
-        Cu.reportError("Expected known domain for reporting, got " + domain);
+        console.error("Expected known domain for reporting, got ", domain);
         return;
       }
 

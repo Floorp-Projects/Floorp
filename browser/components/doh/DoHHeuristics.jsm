@@ -361,7 +361,7 @@ async function platform() {
     indications = linkService.platformDNSIndications;
   } catch (e) {
     if (e.result != Cr.NS_ERROR_NOT_IMPLEMENTED) {
-      Cu.reportError(e);
+      console.error(e);
     }
   }
 

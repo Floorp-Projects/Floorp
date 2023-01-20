@@ -41,7 +41,7 @@ class UITourChild extends JSWindowActorChild {
           return true;
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
     return false;

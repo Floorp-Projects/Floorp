@@ -21,7 +21,7 @@ add_task(function() {
   try {
     CustomizableUI.destroyWidget(kWidget1Id);
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
     noError = false;
   }
   ok(
@@ -43,7 +43,7 @@ add_task(function() {
   try {
     CustomizableUI.destroyWidget(kWidget2Id);
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
     noError = false;
   }
   ok(

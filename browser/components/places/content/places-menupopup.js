@@ -448,7 +448,7 @@ function closingPopupEndsDrag(popup) {
         PlacesControllerDragHelper.onDrop(
           dropPoint.ip,
           event.dataTransfer
-        ).catch(Cu.reportError);
+        ).catch(console.error);
         event.preventDefault();
       }
 

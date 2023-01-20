@@ -572,7 +572,7 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       promise.then(function() {
         let otherWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (otherWindow.closed) {
-          Cu.reportError("Got a closed window!");
+          console.error("Got a closed window!");
         }
         if (otherWindow.PanicButtonNotifier) {
           otherWindow.PanicButtonNotifier.notify();

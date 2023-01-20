@@ -20,7 +20,7 @@ add_task(async function() {
     CustomizableUI.removeWidgetFromArea(kWidgetId);
   } catch (ex) {
     noError = false;
-    Cu.reportError(ex);
+    console.error(ex);
   }
   ok(noError, "Shouldn't throw an error removing a destroyed widget.");
 });
