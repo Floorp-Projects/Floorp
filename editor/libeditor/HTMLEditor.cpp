@@ -5747,7 +5747,7 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
     if (EditorElementStyle::IsHTMLStyle(aAttribute)) {
       const EditorElementStyle elementStyle =
           EditorElementStyle::Create(*aAttribute);
-      if (styledElement && elementStyle.IsCSSEditable(*styledElement)) {
+      if (styledElement && elementStyle.IsCSSRemovable(*styledElement)) {
         // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must
         // be guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
         nsresult rv = CSSEditUtils::RemoveCSSEquivalentToStyle(
@@ -5776,7 +5776,7 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
   if (EditorElementStyle::IsHTMLStyle(aAttribute)) {
     const EditorElementStyle elementStyle =
         EditorElementStyle::Create(*aAttribute);
-    if (styledElement && elementStyle.IsCSSEditable(*styledElement)) {
+    if (styledElement && elementStyle.IsCSSSettable(*styledElement)) {
       // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must
       // be guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
       Result<size_t, nsresult> count = CSSEditUtils::SetCSSEquivalentToStyle(
@@ -5863,7 +5863,7 @@ nsresult HTMLEditor::RemoveAttributeOrEquivalent(Element* aElement,
   if (IsCSSEnabled() && EditorElementStyle::IsHTMLStyle(aAttribute)) {
     const EditorElementStyle elementStyle =
         EditorElementStyle::Create(*aAttribute);
-    if (elementStyle.IsCSSEditable(*aElement)) {
+    if (elementStyle.IsCSSRemovable(*aElement)) {
       // XXX It might be keep handling attribute even if aElement is not
       //     an nsStyledElement instance.
       nsStyledElement* styledElement =
@@ -5970,7 +5970,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
                 *range.StartRef().ContainerAs<Text>(),
                 HTMLEditUtils::ClosestEditableBlockElement));
         if (!editableBlockStyledElement ||
-            !EditorElementStyle::BGColor().IsCSSEditable(
+            !EditorElementStyle::BGColor().IsCSSSettable(
                 *editableBlockStyledElement)) {
           continue;
         }
@@ -5995,7 +5995,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
         const RefPtr<nsStyledElement> styledElement =
             range.StartRef().GetContainerAs<nsStyledElement>();
         if (!styledElement ||
-            !EditorElementStyle::BGColor().IsCSSEditable(*styledElement)) {
+            !EditorElementStyle::BGColor().IsCSSSettable(*styledElement)) {
           continue;
         }
         Result<size_t, nsresult> result = CSSEditUtils::SetCSSEquivalentToStyle(
@@ -6026,7 +6026,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
                     *range.StartRef().GetChild(),
                     HTMLEditUtils::ClosestEditableBlockElement));
         if (!editableBlockStyledElement ||
-            !EditorElementStyle::BGColor().IsCSSEditable(
+            !EditorElementStyle::BGColor().IsCSSSettable(
                 *editableBlockStyledElement)) {
           continue;
         }
@@ -6087,7 +6087,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
         nsStyledElement* const blockStyledElement =
             nsStyledElement::FromNode(handledBlockParent);
         if (blockStyledElement &&
-            EditorElementStyle::BGColor().IsCSSEditable(*blockStyledElement)) {
+            EditorElementStyle::BGColor().IsCSSSettable(*blockStyledElement)) {
           // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent
           // whose type is RefPtr.
           Result<size_t, nsresult> result =
@@ -6118,7 +6118,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
         nsStyledElement* const blockStyledElement =
             nsStyledElement::FromNode(handledBlockParent);
         if (blockStyledElement &&
-            EditorElementStyle::BGColor().IsCSSEditable(*blockStyledElement)) {
+            EditorElementStyle::BGColor().IsCSSSettable(*blockStyledElement)) {
           // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent whose
           // type is RefPtr.
           Result<size_t, nsresult> result =
@@ -6150,7 +6150,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
         const RefPtr<nsStyledElement> blockStyledElement =
             nsStyledElement::FromNode(editableBlockElement);
         if (blockStyledElement &&
-            EditorElementStyle::BGColor().IsCSSEditable(*blockStyledElement)) {
+            EditorElementStyle::BGColor().IsCSSSettable(*blockStyledElement)) {
           Result<size_t, nsresult> result =
               CSSEditUtils::SetCSSEquivalentToStyle(
                   WithTransaction::Yes, *this, *blockStyledElement,

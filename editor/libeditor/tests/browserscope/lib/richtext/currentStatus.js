@@ -36,10 +36,6 @@ var knownFailures = {
     'fontsize-1' : true,
     'fontsize-2' : true,
   },
-  'c': {
-    'fontsize-1' : true,
-    'fontsize-2' : true,
-  },
 };
 
 function isKnownFailure(type, test, param) {
