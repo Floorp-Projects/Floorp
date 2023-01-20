@@ -2,7 +2,6 @@
 /* eslint-disable prefer-template */
 /* eslint-disable complexity */
 /* eslint-disable no-undef */
-/* eslint-disable no-shadow */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -761,7 +760,7 @@ export function prettyFast(input, options) {
     const buffer = [];
     let bufferLine = -1;
     let bufferColumn = -1;
-    return function write(str, line, column, ignoreNewline) {
+    return function innerWrite(str, line, column, ignoreNewline) {
       if (line != null && bufferLine === -1) {
         bufferLine = line;
       }
