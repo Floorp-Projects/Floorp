@@ -466,6 +466,53 @@ struct IntervalComparator {
 
 }  // namespace
 
+#ifdef DEBUG
+void TimerThread::VerifyTimerListConsistency() const {
+  mMonitor.AssertCurrentThreadOwns();
+
+  // Find the first non-canceled timer (and check its cached timeout if we find
+  // it).
+  const size_t timerCount = mTimers.Length();
+  size_t lastNonCanceledTimerIndex = 0;
+  while (lastNonCanceledTimerIndex < timerCount &&
+         !mTimers[lastNonCanceledTimerIndex].Value()) {
+    ++lastNonCanceledTimerIndex;
+  }
+  MOZ_ASSERT(lastNonCanceledTimerIndex == timerCount ||
+             mTimers[lastNonCanceledTimerIndex].Value());
+  MOZ_ASSERT(lastNonCanceledTimerIndex == timerCount ||
+             mTimers[lastNonCanceledTimerIndex].Value()->mTimeout ==
+                 mTimers[lastNonCanceledTimerIndex].Timeout());
+
+  // Verify that mTimers is sorted and the cached timeouts are consistent.
+  for (size_t timerIndex = lastNonCanceledTimerIndex + 1;
+       timerIndex < timerCount; ++timerIndex) {
+    if (mTimers[timerIndex].Value()) {
+      MOZ_ASSERT(mTimers[timerIndex].Timeout() ==
+                 mTimers[timerIndex].Value()->mTimeout);
+      MOZ_ASSERT(mTimers[timerIndex].Timeout() >=
+                 mTimers[lastNonCanceledTimerIndex].Timeout());
+      lastNonCanceledTimerIndex = timerIndex;
+    }
+  }
+}
+#endif
+
+size_t TimerThread::ComputeTimerInsertionIndex(const TimeStamp& timeout) const {
+  mMonitor.AssertCurrentThreadOwns();
+
+  const size_t timerCount = mTimers.Length();
+
+  size_t firstGtIndex = 0;
+  while (firstGtIndex < timerCount &&
+         (!mTimers[firstGtIndex].Value() ||
+          mTimers[firstGtIndex].Timeout() <= timeout)) {
+    ++firstGtIndex;
+  }
+
+  return firstGtIndex;
+}
+
 NS_IMETHODIMP
 TimerThread::Run() {
   MonitorAutoLock lock(mMonitor);
@@ -498,6 +545,10 @@ TimerThread::Run() {
     bool forceRunThisTimer = forceRunNextTimer;
     forceRunNextTimer = false;
 
+#ifdef DEBUG
+    VerifyTimerListConsistency();
+#endif
+
     if (mSleeping) {
       // Sleep for 0.1 seconds while not firing timers.
       uint32_t milliseconds = 100;
@@ -522,7 +573,6 @@ TimerThread::Run() {
 
           RefPtr<nsTimerImpl> timerRef(mTimers[0].Take());
           RemoveFirstTimerInternal();
-
           MOZ_LOG(GetTimerLog(), LogLevel::Debug,
                   ("Timer thread woke up %fms from when it was supposed to\n",
                    fabs((now - timerRef->mTimeout).ToMilliseconds())));
@@ -773,7 +823,8 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
 
   LogTimerEvent::LogDispatch(aTimer);
 
-  const size_t insertionIndex = mTimers.IndexOfFirstElementGt(aTimer->mTimeout);
+  const TimeStamp& timeout = aTimer->mTimeout;
+  const size_t insertionIndex = ComputeTimerInsertionIndex(timeout);
 
   if (insertionIndex != 0 && !mTimers[insertionIndex - 1].Value()) {
     // Very common scenario in practice: The timer just before the insertion
@@ -818,6 +869,7 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
       return false;
     }
   }
+
   // Extract the timer at the insertion point, and put the new timer in its
   // place.
   Entry extractedEntry = std::exchange(mTimers[insertionIndex], Entry{aTimer});

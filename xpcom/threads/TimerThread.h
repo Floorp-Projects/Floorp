@@ -134,15 +134,27 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
     const TimeStamp& Timeout() const { return mTimeout; }
 
-    // Comparisons to a timestamp, used to sort entries.
-    bool operator==(const TimeStamp& aRHS) const { return Timeout() == aRHS; }
-    bool operator<(const TimeStamp& aRHS) const { return Timeout() < aRHS; }
-
    private:
     TimeStamp mTimeout;
     RefPtr<nsTimerImpl> mTimerImpl;
   };
 
+  // Computes and returns the index in mTimers at which a new timer with the
+  // specified timeout should be inserted in order to maintain "sorted" order.
+  size_t ComputeTimerInsertionIndex(const TimeStamp& timeout) const
+      MOZ_REQUIRES(mMonitor);
+
+#ifdef DEBUG
+  // Checks mTimers to see if any entries are out of order or any cached
+  // timeouts are incorrect and will assert if any inconsistency is found. Has
+  // no side effects other than asserting so has no use in non-DEBUG builds.
+  void VerifyTimerListConsistency() const MOZ_REQUIRES(mMonitor);
+#endif
+
+  // mTimers is maintained in a "pseudo-sorted" order wrt the timeouts.
+  // Specifcally, mTimers is sorted according to the timeouts *if you ignore the
+  // cancelled entries* (those whose mTimerImpl is nullptr). Notably this means
+  // that you cannot use a binary search on this list.
   nsTArray<Entry> mTimers MOZ_GUARDED_BY(mMonitor);
   // Set only at the start of the thread's Run():
   uint32_t mAllowedEarlyFiringMicroseconds MOZ_GUARDED_BY(mMonitor);
