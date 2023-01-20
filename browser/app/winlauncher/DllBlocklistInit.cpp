@@ -142,11 +142,7 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     newFlags |= eDllBlocklistInitFlagIsChildProcess;
   }
 
-  if (aProcessType == GeckoProcessType_Utility) {
-    newFlags |= eDllBlocklistInitFlagIsUtilityProcess;
-  } else if (aProcessType == GeckoProcessType_Socket) {
-    newFlags |= eDllBlocklistInitFlagIsSocketProcess;
-  }
+  SetDllBlocklistProcessTypeFlags(newFlags, aProcessType);
 
   LauncherVoidResult writeResult =
       aTransferMgr.Transfer(&gBlocklistInitFlags, &newFlags, sizeof(newFlags));
