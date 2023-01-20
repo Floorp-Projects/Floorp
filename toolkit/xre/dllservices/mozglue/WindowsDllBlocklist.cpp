@@ -470,11 +470,6 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
         goto continue_loading;
       }
 
-      if ((info->mFlags & DllBlockInfo::GPU_PROCESSES_ONLY) &&
-          !(sInitFlags & eDllBlocklistInitFlagIsGPUProcess)) {
-        goto continue_loading;
-      }
-
       if ((info->mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
           (sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
         goto continue_loading;

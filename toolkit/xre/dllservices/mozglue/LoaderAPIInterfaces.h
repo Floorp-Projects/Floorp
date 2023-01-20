@@ -10,7 +10,6 @@
 #include "nscore.h"
 #include "mozilla/glue/SharedSection.h"
 #include "mozilla/ModuleLoadInfo.h"
-#include "mozilla/ProcessType.h"
 
 namespace mozilla {
 namespace nt {
@@ -97,7 +96,7 @@ class NS_NO_VTABLE LoaderAPI {
   virtual AllocatedUnicodeString GetSectionName(void* aSectionAddr) = 0;
 
   using InitDllBlocklistOOPFnPtr = LauncherVoidResultWithLineInfo (*)(
-      const wchar_t*, HANDLE, const IMAGE_THUNK_DATA*, const GeckoProcessType);
+      const wchar_t*, HANDLE, const IMAGE_THUNK_DATA*, const bool, const bool);
   using HandleLauncherErrorFnPtr = void (*)(const LauncherError&, const char*);
 
   /**
