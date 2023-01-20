@@ -95,9 +95,6 @@ struct IntersectionInput {
   nsMargin mRootMargin;
   // If this is in an OOP iframe, the visible rect of the OOP frame.
   Maybe<nsRect> mRemoteDocumentVisibleRect;
-  // Whether this intersection is for the purposes of computing content
-  // relevancy for `content-visiblilty: auto`.
-  bool mIsForContentVisibility = false;
 };
 
 struct IntersectionOutput {
@@ -162,7 +159,7 @@ class DOMIntersectionObserver final : public nsISupports,
   // Intersects with a given rect, already relative to the root frame.
   static IntersectionOutput Intersect(const IntersectionInput&, const nsRect&);
 
-  void Update(Document* aDocument, DOMHighResTimeStamp time);
+  void Update(Document& aDocument, DOMHighResTimeStamp time);
   MOZ_CAN_RUN_SCRIPT void Notify();
 
   static already_AddRefed<DOMIntersectionObserver> CreateLazyLoadObserver(
