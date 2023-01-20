@@ -309,7 +309,8 @@ add_task(async function test_datepicker_markup_refresh() {
       "Less than min date is programmatically disabled"
     );
 
-    // Change month view to check an updated markup
+    // Change month view from December 2016 to January 2017
+    // to check an updated markup
     helper.click(helper.getElement(BTN_NEXT_MONTH));
 
     const secondRowJan = helper.getChildren(DAYS_VIEW)[1].children;
@@ -337,10 +338,16 @@ add_task(async function test_datepicker_markup_refresh() {
       !secondRowJan[0].hasAttribute("aria-disabled"),
       "Day with the same as less than min date is not programmatically disabled"
     );
+    // 2016-12-05 was focused before the change, thus the same day of the month
+    // is expected to be focused now (2017-01-05):
     Assert.equal(
-      secondRowJan[0].getAttribute("tabindex"),
+      secondRowJan[4].getAttribute("tabindex"),
       "0",
-      "The first day of the month is made focusable"
+      "The same day of the month is made focusable"
+    );
+    Assert.ok(
+      !secondRowJan[0].hasAttribute("tabindex"),
+      "The first day of the month is not focusable"
     );
     Assert.ok(
       !secondRowJan[1].hasAttribute("tabindex"),
