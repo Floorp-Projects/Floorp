@@ -138,7 +138,7 @@ test64('(i64.and (i64.const 0xffffffffffffffff) (get_local 1))',
        1234n,5678n, 5678n);
 
 test32('(i32.or (i32.const 0xffffffff) (get_local 1))',
-       'b8 ff ff ff ff   mov \\$-0x01, %eax',
+       'b8 ff ff ff ff   mov \\$0xFFFFFFFF, %eax',
        1234,5678, -1/*0xffffffff*/);
 test64('(i64.or (i64.const 0xffffffffffffffff) (get_local 1))',
        '48 c7 c0 ff ff ff ff   mov \\$-0x01, %rax',
@@ -167,7 +167,7 @@ test64('(i64.and (get_local 0) (i64.const 0xffffffffffffffff))',
        1234n,5678n, 1234n, {no_prefix: true});
 
 test32('(i32.or (get_local 0) (i32.const 0xffffffff))',
-       'b8 ff ff ff ff   mov \\$-0x01, %eax',
+       'b8 ff ff ff ff   mov \\$0xFFFFFFFF, %eax',
        1234,5678, -1/*0xffffffff*/);
 test64('(i64.or (get_local 0) (i64.const 0xffffffffffffffff))',
        '48 c7 c0 ff ff ff ff   mov \\$-0x01, %rax',

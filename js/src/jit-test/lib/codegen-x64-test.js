@@ -156,20 +156,13 @@ function codegenTestX64_adhoc(module_text, export_name, expected, options = {}) 
         expected = x64_prefix + '\n' + expected;
     if (!options.no_suffix)
         expected = expected + '\n' + x64_suffix;
-    const expected_pretty = striplines(expected);
     expected = fixlines(expected);
-
-    const success = output.match(new RegExp(expected)) != null;
-    if (options.log || !success) {
-        print("Module text:")
+    if (options.log) {
         print(module_text);
-        print("Actual output:")
         print(output);
-        print("Expected output (easy-to-read and fully-regex'd):")
-        print(expected_pretty);
         print(expected);
     }
-    assertEq(success, true);
+    assertEq(output.match(new RegExp(expected)) != null, true);
 }
 
 // Internal code below this line
