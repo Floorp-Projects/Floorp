@@ -134,57 +134,25 @@ ModuleGenerator::~ModuleGenerator() {
   }
 }
 
-// This is the highest offset into Instance::globalArea that will not overflow
-// a signed 32-bit integer.
-static const uint32_t MaxGlobalDataOffset =
-    INT32_MAX - Instance::offsetOfGlobalArea();
-
 bool ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align,
                                           uint32_t* globalDataOffset) {
   CheckedInt<uint32_t> newGlobalDataLength(metadata_->globalDataLength);
 
-  // Adjust the current global data length so that it's aligned to `align`
   newGlobalDataLength +=
       ComputeByteAlignment(newGlobalDataLength.value(), align);
   if (!newGlobalDataLength.isValid()) {
     return false;
   }
 
-  // The allocated data is given by the aligned length
   *globalDataOffset = newGlobalDataLength.value();
-
-  // Advance the length for `bytes` being allocated
   newGlobalDataLength += bytes;
-  if (!newGlobalDataLength.isValid()) {
-    return false;
-  }
 
-  // Check that the highest offset into this allocated space would not overflow
-  // a signed 32-bit integer.
-  if (newGlobalDataLength.value() > MaxGlobalDataOffset + 1) {
+  if (!newGlobalDataLength.isValid()) {
     return false;
   }
 
   metadata_->globalDataLength = newGlobalDataLength.value();
   return true;
-}
-
-bool ModuleGenerator::allocateGlobalBytesN(uint32_t bytes, uint32_t align,
-                                           uint32_t count,
-                                           uint32_t* globalDataOffset) {
-  // The size of each allocation should be a multiple of alignment so that a
-  // contiguous array of allocations will be aligned
-  MOZ_ASSERT(bytes % align == 0);
-
-  // Compute the total bytes being allocated
-  CheckedInt<uint32_t> totalBytes = bytes;
-  totalBytes *= count;
-  if (!totalBytes.isValid()) {
-    return false;
-  }
-
-  // Allocate the bytes
-  return allocateGlobalBytes(totalBytes.value(), align, globalDataOffset);
 }
 
 bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
@@ -263,18 +231,19 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   // Allocate space in instance for declarations that need it
   MOZ_ASSERT(metadata_->globalDataLength == 0);
 
-  // Allocate space for type definitions
-  if (!allocateGlobalBytesN(
-          sizeof(TypeDefInstanceData), alignof(TypeDefInstanceData),
-          moduleEnv_->types->length(), &moduleEnv_->typeIdsOffsetStart)) {
+  // Allocate space for every type id
+  size_t typeIdsSize = moduleEnv_->types->length() * sizeof(void*);
+  if (!allocateGlobalBytes(typeIdsSize, sizeof(void*),
+                           &moduleEnv_->typeIdsOffsetStart)) {
     return false;
   }
   metadata_->typeIdsOffsetStart = moduleEnv_->typeIdsOffsetStart;
 
   // Allocate space for every function import
-  if (!allocateGlobalBytesN(
-          sizeof(FuncImportInstanceData), alignof(FuncImportInstanceData),
-          moduleEnv_->numFuncImports, &moduleEnv_->funcImportsOffsetStart)) {
+  size_t funcImportsSize =
+      sizeof(FuncImportInstanceData) * moduleEnv_->numFuncImports;
+  if (!allocateGlobalBytes(funcImportsSize, sizeof(void*),
+                           &moduleEnv_->funcImportsOffsetStart)) {
     return false;
   }
 

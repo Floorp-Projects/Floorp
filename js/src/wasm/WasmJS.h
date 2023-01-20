@@ -42,6 +42,7 @@
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmException.h"
 #include "wasm/WasmExprType.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmModuleTypes.h"
 #include "wasm/WasmTypeDecls.h"

@@ -241,29 +241,45 @@ bool WasmGcObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
 }
 
 /* static */
-WasmGcObject* WasmGcObject::create(JSContext* cx, const wasm::TypeDef* typeDef,
-                                   const AllocArgs& args) {
-  MOZ_ASSERT(IsWasmGcObjectClass(args.clasp));
-  MOZ_ASSERT(!args.clasp->isNativeObject());
+template <typename T>
+T* WasmGcObject::create(JSContext* cx, const wasm::TypeDef* typeDef,
+                        js::gc::AllocKind allocKind, js::gc::InitialHeap heap) {
+  const JSClass* clasp = &T::class_;
+  MOZ_ASSERT(IsWasmGcObjectClass(clasp));
+  MOZ_ASSERT(!clasp->isNativeObject());
 
-  debugCheckNewObject(args.shape, args.allocKind, args.initialHeap);
+  if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
+    allocKind = ForegroundToBackgroundAllocKind(allocKind);
+  }
 
-  WasmGcObject* obj = cx->newCell<WasmGcObject>(
-      args.allocKind, /* nDynamicSlots = */ 0, args.initialHeap, args.clasp);
-  if (!obj) {
+  Rooted<WasmGCShape*> shape(
+      cx, WasmGCShape::getShape(cx, clasp, cx->realm(), TaggedProto(),
+                                &typeDef->recGroup(), ObjectFlags()));
+  if (!shape) {
     return nullptr;
   }
 
-  obj->initShape(args.shape);
-  obj->typeDef_ = typeDef;
+  NewObjectKind newKind =
+      (heap == gc::TenuredHeap) ? TenuredObject : GenericObject;
+  heap = GetInitialHeap(newKind, clasp);
 
-  MOZ_ASSERT(args.clasp->shouldDelayMetadataBuilder());
-  cx->realm()->setObjectPendingMetadata(cx, obj);
+  debugCheckNewObject(shape, allocKind, heap);
 
-  js::gc::gcprobes::CreateObject(obj);
-  probes::CreateObject(cx, obj);
+  T* tobj = cx->newCell<T>(allocKind, /* nDynamicSlots = */ 0, heap, clasp);
+  if (!tobj) {
+    return nullptr;
+  }
 
-  return obj;
+  tobj->initShape(shape);
+  tobj->typeDef_ = typeDef;
+
+  MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
+  cx->realm()->setObjectPendingMetadata(cx, tobj);
+
+  js::gc::gcprobes::CreateObject(tobj);
+  probes::CreateObject(cx, tobj);
+
+  return tobj;
 }
 
 bool WasmGcObject::loadValue(JSContext* cx,
@@ -380,6 +396,30 @@ static void WriteValTo(const Val& val, FieldType ty, void* dest) {
   }
 }
 
+#define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Finalize, Moved, Flags)    \
+  static const JSClassOps Name##ClassOps = {                          \
+      nullptr, /* addProperty */                                      \
+      nullptr, /* delProperty */                                      \
+      nullptr, /* enumerate   */                                      \
+      WasmGcObject::obj_newEnumerate,                                 \
+      nullptr,  /* resolve     */                                     \
+      nullptr,  /* mayResolve  */                                     \
+      Finalize, /* finalize    */                                     \
+      nullptr,  /* call        */                                     \
+      nullptr,  /* construct   */                                     \
+      Trace,                                                          \
+  };                                                                  \
+  static const ClassExtension Name##ClassExt = {                      \
+      Moved /* objectMovedOp */                                       \
+  };                                                                  \
+  const JSClass Name::class_ = {                                      \
+      #Name,                                                          \
+      JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER | (Flags), \
+      &Name##ClassOps,                                                \
+      JS_NULL_CLASS_SPEC,                                             \
+      &Name##ClassExt,                                                \
+      &WasmGcObject::objectOps_}
+
 //=========================================================================
 // MemoryTracingVisitor (private to this file)
 
@@ -410,21 +450,11 @@ gc::AllocKind WasmArrayObject::allocKind() {
   return gc::GetGCObjectKindForBytes(sizeof(WasmArrayObject));
 }
 
-/* static */
+/*static*/
 WasmArrayObject* WasmArrayObject::createArray(JSContext* cx,
                                               const wasm::TypeDef* typeDef,
-                                              uint32_t numElements) {
-  WasmGcObject::AllocArgs args(cx);
-  if (!WasmGcObject::AllocArgs::compute(cx, typeDef, &args)) {
-    return nullptr;
-  }
-  return createArray(cx, typeDef, numElements, args);
-}
-
-/*static*/
-WasmArrayObject* WasmArrayObject::createArray(
-    JSContext* cx, const wasm::TypeDef* typeDef, uint32_t numElements,
-    const WasmGcObject::AllocArgs& args) {
+                                              uint32_t numElements,
+                                              gc::InitialHeap heap) {
   STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Array);
 
@@ -440,9 +470,6 @@ WasmArrayObject* WasmArrayObject::createArray(
     return nullptr;
   }
 
-  // Allocate the outline data before allocating the object so that we can
-  // infallibly initialize the pointer on the array object after it is
-  // allocated.
   uint8_t* outlineData = (uint8_t*)js_malloc(outlineBytes.value());
   if (!outlineData) {
     ReportOutOfMemory(cx);
@@ -451,7 +478,8 @@ WasmArrayObject* WasmArrayObject::createArray(
 
   Rooted<WasmArrayObject*> arrayObj(cx);
   AutoSetNewObjectMetadata metadata(cx);
-  arrayObj = (WasmArrayObject*)WasmGcObject::create(cx, typeDef, args);
+  arrayObj = WasmGcObject::create<WasmArrayObject>(
+      cx, typeDef, WasmArrayObject::allocKind(), heap);
   if (!arrayObj) {
     ReportOutOfMemory(cx);
     js_free(outlineData);
@@ -513,42 +541,12 @@ void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
   }
 }
 
-static const JSClassOps WasmArrayObjectClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    WasmGcObject::obj_newEnumerate,
-    nullptr,                       /* resolve     */
-    nullptr,                       /* mayResolve  */
-    WasmArrayObject::obj_finalize, /* finalize    */
-    nullptr,                       /* call        */
-    nullptr,                       /* construct   */
-    WasmArrayObject::obj_trace,
-};
-static const ClassExtension WasmArrayObjectClassExt = {
-    nullptr /* objectMovedOp */
-};
-const JSClass WasmArrayObject::class_ = {"WasmArrayObject",
-                                         JSClass::NON_NATIVE |
-                                             JSCLASS_DELAY_METADATA_BUILDER |
-                                             JSCLASS_BACKGROUND_FINALIZE,
-                                         &WasmArrayObjectClassOps,
-                                         JS_NULL_CLASS_SPEC,
-                                         &WasmArrayObjectClassExt,
-                                         &WasmGcObject::objectOps_};
+DEFINE_TYPEDOBJ_CLASS(WasmArrayObject, WasmArrayObject::obj_trace,
+                      WasmArrayObject::obj_finalize, nullptr,
+                      JSCLASS_BACKGROUND_FINALIZE);
 
 //=========================================================================
 // WasmStructObject
-
-/* static */
-const JSClass* js::WasmStructObject::classForTypeDef(
-    const wasm::TypeDef* typeDef) {
-  MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
-  size_t nbytes = typeDef->structType().size_;
-  return nbytes > WasmStructObject_MaxInlineBytes
-             ? &WasmStructObject::classOutline_
-             : &WasmStructObject::classInline_;
-}
 
 /* static */
 js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
@@ -570,28 +568,16 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
   return gc::GetGCObjectKindForBytes(nbytes);
 }
 
-/* static */
+/*static*/
 WasmStructObject* WasmStructObject::createStruct(JSContext* cx,
-                                                 const wasm::TypeDef* typeDef) {
-  WasmGcObject::AllocArgs args(cx);
-  if (!WasmGcObject::AllocArgs::compute(cx, typeDef, &args)) {
-    return nullptr;
-  }
-  return createStruct(cx, typeDef, args);
-}
-
-/* static */
-WasmStructObject* WasmStructObject::createStruct(
-    JSContext* cx, const wasm::TypeDef* typeDef,
-    const WasmGcObject::AllocArgs& args) {
+                                                 const wasm::TypeDef* typeDef,
+                                                 gc::InitialHeap heap) {
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
 
   uint32_t totalBytes = typeDef->structType().size_;
   uint32_t inlineBytes, outlineBytes;
   WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
 
-  // Allocate the outline data, if any, before allocating the object so that
-  // we can infallibly initialize the outline data of structs that require one.
   uint8_t* outlineData = nullptr;
   if (outlineBytes > 0) {
     outlineData = (uint8_t*)js_malloc(outlineBytes);
@@ -603,7 +589,8 @@ WasmStructObject* WasmStructObject::createStruct(
 
   Rooted<WasmStructObject*> structObj(cx);
   AutoSetNewObjectMetadata metadata(cx);
-  structObj = (WasmStructObject*)WasmGcObject::create(cx, typeDef, args);
+  structObj = WasmGcObject::create<WasmStructObject>(
+      cx, typeDef, WasmStructObject::allocKindForTypeDef(typeDef), heap);
   if (!structObj) {
     ReportOutOfMemory(cx);
     if (outlineData) {
@@ -612,14 +599,11 @@ WasmStructObject* WasmStructObject::createStruct(
     return nullptr;
   }
 
-  // Initialize the outline data field
   structObj->outlineData_ = outlineData;
-
-  // Default initialize the fields to zero
-  memset(&(structObj->inlineData_[0]), 0, inlineBytes);
   if (outlineBytes > 0) {
     memset(structObj->outlineData_, 0, outlineBytes);
   }
+  memset(&(structObj->inlineData_[0]), 0, inlineBytes);
 
   return structObj;
 }
@@ -673,52 +657,6 @@ void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
   WriteValTo(val, fieldType, data);
 }
 
-static const JSClassOps WasmStructObjectOutlineClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    WasmGcObject::obj_newEnumerate,
-    nullptr,                        /* resolve     */
-    nullptr,                        /* mayResolve  */
-    WasmStructObject::obj_finalize, /* finalize    */
-    nullptr,                        /* call        */
-    nullptr,                        /* construct   */
-    WasmStructObject::obj_trace,
-};
-static const ClassExtension WasmStructObjectOutlineClassExt = {
-    nullptr /* objectMovedOp */
-};
-const JSClass WasmStructObject::classOutline_ = {
-    "WasmStructObject",
-    JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER |
-        JSCLASS_BACKGROUND_FINALIZE,
-    &WasmStructObjectOutlineClassOps,
-    JS_NULL_CLASS_SPEC,
-    &WasmStructObjectOutlineClassExt,
-    &WasmGcObject::objectOps_};
-
-// Structs that only have inline data get a different class without a
-// finalizer. This class should otherwise be indentical to the class for
-// structs with outline data.
-static const JSClassOps WasmStructObjectInlineClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    WasmGcObject::obj_newEnumerate,
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    nullptr, /* finalize    */
-    nullptr, /* call        */
-    nullptr, /* construct   */
-    WasmStructObject::obj_trace,
-};
-static const ClassExtension WasmStructObjectInlineClassExt = {
-    nullptr /* objectMovedOp */
-};
-const JSClass WasmStructObject::classInline_ = {
-    "WasmStructObject",
-    JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER,
-    &WasmStructObjectInlineClassOps,
-    JS_NULL_CLASS_SPEC,
-    &WasmStructObjectInlineClassExt,
-    &WasmGcObject::objectOps_};
+DEFINE_TYPEDOBJ_CLASS(WasmStructObject, WasmStructObject::obj_trace,
+                      WasmStructObject::obj_finalize, nullptr,
+                      JSCLASS_BACKGROUND_FINALIZE);

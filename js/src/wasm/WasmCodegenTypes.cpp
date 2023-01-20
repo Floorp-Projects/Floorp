@@ -186,7 +186,7 @@ CallIndirectId CallIndirectId::forFuncType(const ModuleEnvironment& moduleEnv,
                           funcType.immediateTypeId());
   }
   return CallIndirectId(CallIndirectIdKind::Global,
-                        moduleEnv.offsetOfTypeDef(funcTypeIndex));
+                        moduleEnv.offsetOfTypeId(funcTypeIndex));
 }
 
 CalleeDesc CalleeDesc::function(uint32_t funcIndex) {
