@@ -830,7 +830,7 @@ bool TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer) {
     COUNT_TIMERS_STATS(TimerThread_RemoveTimerInternal_nullptr);
     return false;
   }
-  if (!aTimer->mHolder) {
+  if (!aTimer->IsInTimerThread()) {
     COUNT_TIMERS_STATS(TimerThread_RemoveTimerInternal_not_in_list);
     return false;
   }
@@ -841,7 +841,8 @@ bool TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer) {
       return true;
     }
   }
-  MOZ_ASSERT(!aTimer->mHolder, "There is a holder, but timer is not in list!?");
+  MOZ_ASSERT(!aTimer->IsInTimerThread(),
+             "Not found in the list but it should be!?");
   return false;
 }
 

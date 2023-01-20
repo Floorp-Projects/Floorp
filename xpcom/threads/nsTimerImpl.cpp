@@ -354,7 +354,7 @@ nsTimer::Release(void) {
 
 nsTimerImpl::nsTimerImpl(nsITimer* aTimer, nsIEventTarget* aTarget)
     : mEventTarget(aTarget),
-      mHolder(nullptr),
+      mIsInTimerThread(false),
       mType(0),
       mGeneration(0),
       mITimer(aTimer),
@@ -610,9 +610,8 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
     }
 
     // We modify mTimeout, so we must not be in the current TimerThread's
-    // mTimers list.  Adding to that list calls SetHolder(), so use mHolder
-    // as a proxy to know if we're in the list
-    MOZ_ASSERT(!mHolder);
+    // mTimers list.
+    MOZ_ASSERT(!mIsInTimerThread);
 
     ++mFiring;
     callbackDuringFire = mCallback;
@@ -777,8 +776,6 @@ void nsTimerImpl::GetName(nsACString& aName) {
   MutexAutoLock lock(mMutex);
   GetName(aName, lock);
 }
-
-void nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder) { mHolder = aHolder; }
 
 nsTimer::~nsTimer() = default;
 

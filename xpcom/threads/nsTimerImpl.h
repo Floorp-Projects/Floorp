@@ -30,7 +30,6 @@ extern mozilla::LogModule* GetTimerLog();
   }
 
 class nsIObserver;
-class nsTimerImplHolder;
 
 namespace mozilla {
 class LogModule;
@@ -41,7 +40,7 @@ class LogModule;
 // the nsTimer has let go of its last reference.
 class nsTimerImpl {
   ~nsTimerImpl() {
-    MOZ_ASSERT(!mHolder);
+    MOZ_ASSERT(!mIsInTimerThread);
 
     // The nsITimer interface requires that its users keep a reference to the
     // timers they use while those timers are initialized but have not yet
@@ -137,7 +136,10 @@ class nsTimerImpl {
 
   void GetName(nsACString& aName);
 
-  void SetHolder(nsTimerImplHolder* aHolder);
+  bool IsInTimerThread() const { return mIsInTimerThread; }
+  void SetIsInTimerThread(bool aIsInTimerThread) {
+    mIsInTimerThread = aIsInTimerThread;
+  }
 
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
@@ -147,15 +149,14 @@ class nsTimerImpl {
                                    const mozilla::TimeDuration& aDelay,
                                    uint32_t aType, const char* aNameString);
 
-  // This weak reference must be cleared by the nsTimerImplHolder by
-  // calling SetHolder(nullptr) before the holder is destroyed.  Take()
-  // also sets this to null, to indicate it's no longer in the
-  // TimerThread's list.  This Take() call is NOT made under the
-  // nsTimerImpl's mutex (all other SetHolder calls are under the mutex,
-  // and all references other than in the constructor or destructor of
-  // nsTimerImpl).  However, ALL uses and references to the holder are
-  // under the TimerThread's Monitor lock, so consistency is guaranteed by that.
-  nsTimerImplHolder* mHolder;
+  // Is this timer currently referenced from a TimerThread::Entry?
+  // Note: It is cleared before the Entry is destroyed.  Take() also sets it to
+  // false, to indicate it's no longer in the TimerThread's list. This Take()
+  // call is NOT made under the nsTimerImpl's mutex (all other
+  // SetIsInTimerThread calls are under the mutex).  However, ALL accesses to
+  // mIsInTimerThread are under the TimerThread's Monitor lock, so consistency
+  // is guaranteed by that.
+  bool mIsInTimerThread;
 
   // These members are set by the initiating thread, when the timer's type is
   // changed and during the period where it fires on that thread.
@@ -219,38 +220,6 @@ class nsTimer final : public nsITimer {
   // nsTimerImpl holds a strong ref to us. When our refcount goes to 1, we will
   // null this to break the cycle.
   RefPtr<nsTimerImpl> mImpl;
-};
-
-// A class that holds on to an nsTimerImpl.  This lets the nsTimerImpl object
-// directly instruct its holder to forget the timer, avoiding list lookups.
-class nsTimerImplHolder {
- public:
-  void Forget(nsTimerImpl* aTimerImpl) {
-    if (MOZ_UNLIKELY(!mTimerImpl)) {
-      return;
-    }
-    MOZ_ASSERT(aTimerImpl == mTimerImpl);
-    mTimerImpl->mMutex.AssertCurrentThreadOwns();
-    mTimerImpl->SetHolder(nullptr);
-    mTimerImpl = nullptr;
-  }
-
- protected:
-  explicit nsTimerImplHolder(nsTimerImpl* aTimerImpl) : mTimerImpl(aTimerImpl) {
-    if (mTimerImpl) {
-      mTimerImpl->mMutex.AssertCurrentThreadOwns();
-      mTimerImpl->SetHolder(this);
-    }
-  }
-
-  ~nsTimerImplHolder() {
-    if (mTimerImpl) {
-      mTimerImpl->mMutex.AssertCurrentThreadOwns();
-      mTimerImpl->SetHolder(nullptr);
-    }
-  }
-
-  RefPtr<nsTimerImpl> mTimerImpl;
 };
 
 #endif /* nsTimerImpl_h___ */
