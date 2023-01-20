@@ -7,8 +7,8 @@
  * Licensed under the New BSD license. See LICENSE.md or:
  * http://opensource.org/licenses/BSD-2-Clause
  */
-const prettyFast = require("./pretty-fast");
-const chalk = require("chalk");
+import { prettyFast } from "../pretty-fast";
+import { SourceMapConsumer } from "devtools/client/shared/vendor/source-map/source-map";
 
 const cases = [
   {
@@ -379,16 +379,13 @@ const cases = [
   },
 ];
 
-const sourceMap = this.sourceMap || require("source-map");
 const includesOnly = cases.find(({ only }) => only);
-
-let output = ``;
 
 for (const { name, input, only, skip } of cases) {
   if ((includesOnly && !only) || skip) {
     continue;
   }
-  test(name, () => {
+  test(name, async () => {
     const actual = prettyFast(input, {
       indent: "  ",
       url: "test.js",
@@ -396,11 +393,7 @@ for (const { name, input, only, skip } of cases) {
 
     expect(actual.code).toMatchSnapshot();
 
-    output += `${chalk.bold(name)}\n${chalk.yellow(input.trim())}\n${chalk.blue(
-      actual.code
-    )}\n`;
-    const smc = new sourceMap.SourceMapConsumer(actual.map.toJSON());
-
+    const smc = await new SourceMapConsumer(actual.map.toJSON());
     const mappings = [];
     smc.eachMapping(
       ({ generatedColumn, generatedLine, originalColumn, originalLine }) => {
@@ -412,10 +405,3 @@ for (const { name, input, only, skip } of cases) {
     expect(mappings).toMatchSnapshot();
   });
 }
-
-afterAll(() => {
-  // Enable to view the test run output
-  if (false) {
-    console.log(output);
-  }
-});
