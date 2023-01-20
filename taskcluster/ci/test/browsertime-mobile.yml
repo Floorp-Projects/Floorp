@@ -62,6 +62,17 @@ job-defaults:
 browsertime-tp6m:
     <<: &tp6m-defaults
         description: Raptor (browsertime) tp6 page-load tests on android
+        max-run-time:
+            by-subtest:
+                reddit:
+                    by-app:
+                        geckoview: 7200
+                        default: 3600
+                imdb:
+                    by-app:
+                        geckoview: 7200
+                        default: 3600
+                default: 3600
         mozharness:
             extra-options:
                 - --chimera
