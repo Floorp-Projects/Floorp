@@ -58,7 +58,7 @@ static bool CheckFrame(InterpreterFrame* fp) {
     return false;
   }
 
-  if (fp->isFunctionFrame() && fp->numActualArgs() > BASELINE_MAX_ARGS_LENGTH) {
+  if (fp->isFunctionFrame() && TooManyActualArguments(fp->numActualArgs())) {
     // Fall back to the interpreter to avoid running out of stack space.
     JitSpew(JitSpew_BaselineAbort, "Too many arguments (%u)",
             fp->numActualArgs());
@@ -384,7 +384,7 @@ template <BaselineTier Tier>
 MethodStatus jit::CanEnterBaselineMethod(JSContext* cx, RunState& state) {
   if (state.isInvoke()) {
     InvokeState& invoke = *state.asInvoke();
-    if (invoke.args().length() > BASELINE_MAX_ARGS_LENGTH) {
+    if (TooManyActualArguments(invoke.args().length())) {
       JitSpew(JitSpew_BaselineAbort, "Too many arguments (%u)",
               invoke.args().length());
       return Method_CantCompile;

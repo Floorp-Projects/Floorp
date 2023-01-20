@@ -91,10 +91,6 @@ inline bool IsIonInlinableOp(JSOp op) {
          IsIonInlinableGetterOrSetterOp(op);
 }
 
-inline bool TooManyActualArguments(unsigned nargs) {
-  return nargs > JitOptions.maxStackArgs;
-}
-
 inline bool TooManyFormalArguments(unsigned nargs) {
   return nargs >= SNAPSHOT_MAX_NARGS || TooManyActualArguments(nargs);
 }

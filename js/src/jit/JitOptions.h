@@ -158,6 +158,10 @@ inline bool IsBaselineInterpreterEnabled() {
   return HasJitBackend() && JitOptions.baselineInterpreter;
 }
 
+inline bool TooManyActualArguments(size_t nargs) {
+  return nargs > JitOptions.maxStackArgs;
+}
+
 }  // namespace jit
 
 extern mozilla::Atomic<bool> fuzzingSafe;

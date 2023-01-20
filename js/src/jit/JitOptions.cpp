@@ -205,7 +205,7 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(fullDebugChecks, true);
 
   // How many actual arguments are accepted on the C stack.
-  SET_DEFAULT(maxStackArgs, 4096);
+  SET_DEFAULT(maxStackArgs, 20'000);
 
   // How many times we will try to enter a script via OSR before
   // invalidating the script.
