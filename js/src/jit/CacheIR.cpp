@@ -11284,30 +11284,22 @@ AttachDecision CompareIRGenerator::tryAttachPrimitiveSymbol(
 
 AttachDecision CompareIRGenerator::tryAttachBigIntInt32(ValOperandId lhsId,
                                                         ValOperandId rhsId) {
-  // Ensure BigInt x {Int32, Boolean}.
-  if (!(lhsVal_.isBigInt() && (rhsVal_.isInt32() || rhsVal_.isBoolean())) &&
-      !(rhsVal_.isBigInt() && (lhsVal_.isInt32() || lhsVal_.isBoolean()))) {
+  // Ensure BigInt x {Int32, Boolean, Null}.
+  if (!(lhsVal_.isBigInt() && CanConvertToInt32ForToNumber(rhsVal_)) &&
+      !(rhsVal_.isBigInt() && CanConvertToInt32ForToNumber(lhsVal_))) {
     return AttachDecision::NoAction;
   }
 
   // Case should have been handled by tryAttachStrictDifferentTypes
   MOZ_ASSERT(op_ != JSOp::StrictEq && op_ != JSOp::StrictNe);
 
-  auto createGuards = [&](const Value& v, ValOperandId vId) {
-    if (v.isBoolean()) {
-      return writer.guardBooleanToInt32(vId);
-    }
-    MOZ_ASSERT(v.isInt32());
-    return writer.guardToInt32(vId);
-  };
-
   if (lhsVal_.isBigInt()) {
     BigIntOperandId bigIntId = writer.guardToBigInt(lhsId);
-    Int32OperandId intId = createGuards(rhsVal_, rhsId);
+    Int32OperandId intId = EmitGuardToInt32ForToNumber(writer, rhsId, rhsVal_);
 
     writer.compareBigIntInt32Result(op_, bigIntId, intId);
   } else {
-    Int32OperandId intId = createGuards(lhsVal_, lhsId);
+    Int32OperandId intId = EmitGuardToInt32ForToNumber(writer, lhsId, lhsVal_);
     BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
 
     writer.compareBigIntInt32Result(ReverseCompareOp(op_), bigIntId, intId);
@@ -11320,22 +11312,28 @@ AttachDecision CompareIRGenerator::tryAttachBigIntInt32(ValOperandId lhsId,
 
 AttachDecision CompareIRGenerator::tryAttachBigIntNumber(ValOperandId lhsId,
                                                          ValOperandId rhsId) {
-  // Ensure BigInt x Number.
-  if (!(lhsVal_.isBigInt() && rhsVal_.isNumber()) &&
-      !(rhsVal_.isBigInt() && lhsVal_.isNumber())) {
+  // Ensure BigInt x {Number, Undefined}.
+  if (!(lhsVal_.isBigInt() && CanConvertToDoubleForToNumber(rhsVal_)) &&
+      !(rhsVal_.isBigInt() && CanConvertToDoubleForToNumber(lhsVal_))) {
     return AttachDecision::NoAction;
   }
 
   // Case should have been handled by tryAttachStrictDifferentTypes
   MOZ_ASSERT(op_ != JSOp::StrictEq && op_ != JSOp::StrictNe);
 
+  // Case should have been handled by tryAttachBigIntInt32.
+  MOZ_ASSERT(!CanConvertToInt32ForToNumber(lhsVal_));
+  MOZ_ASSERT(!CanConvertToInt32ForToNumber(rhsVal_));
+
   if (lhsVal_.isBigInt()) {
     BigIntOperandId bigIntId = writer.guardToBigInt(lhsId);
-    NumberOperandId numId = writer.guardIsNumber(rhsId);
+    NumberOperandId numId =
+        EmitGuardToDoubleForToNumber(writer, rhsId, rhsVal_);
 
     writer.compareBigIntNumberResult(op_, bigIntId, numId);
   } else {
-    NumberOperandId numId = writer.guardIsNumber(lhsId);
+    NumberOperandId numId =
+        EmitGuardToDoubleForToNumber(writer, lhsId, lhsVal_);
     BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
 
     writer.compareBigIntNumberResult(ReverseCompareOp(op_), bigIntId, numId);
