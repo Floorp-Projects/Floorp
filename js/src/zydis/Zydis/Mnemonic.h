@@ -32,7 +32,7 @@
 #ifndef ZYDIS_MNEMONIC_H
 #define ZYDIS_MNEMONIC_H
 
-#include "zydis/Zycore/Types.h"
+#include "zydis/Zydis/Defines.h"
 #include "zydis/Zydis/ShortString.h"
 
 #ifdef __cplusplus
