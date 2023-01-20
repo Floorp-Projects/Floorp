@@ -591,10 +591,14 @@ var SignupOverlay = function (options) {
 
 
 function TagPicker(props) {
-  const [tags, setTags] = (0,react.useState)(props.tags);
+  const [tags, setTags] = (0,react.useState)(props.tags); // New tag group to store
+
+  const [allTags, setAllTags] = (0,react.useState)([]); // All tags ever used (in no particular order)
+
+  const [recentTags, setRecentTags] = (0,react.useState)([]); // Most recently used tags
+
   const [duplicateTag, setDuplicateTag] = (0,react.useState)(null);
-  const [inputValue, setInputValue] = (0,react.useState)("");
-  const [usedTags, setUsedTags] = (0,react.useState)([]); // Status be success, waiting, or error.
+  const [inputValue, setInputValue] = (0,react.useState)(""); // Status can be success, waiting, or error.
 
   const [{
     tagInputStatus,
@@ -603,8 +607,6 @@ function TagPicker(props) {
     tagInputStatus: "",
     tagInputErrorMessage: ""
   });
-  const inputToSubmit = inputValue.trim();
-  const tagsToSubmit = [...tags, ...(inputToSubmit ? [inputToSubmit] : [])];
 
   let handleKeyDown = e => {
     const enterKey = e.keyCode === 13;
@@ -617,24 +619,23 @@ function TagPicker(props) {
       e.preventDefault();
 
       if (inputValue) {
-        addTag();
+        addTag(inputValue.trim());
+        setInputValue(``); // Clear out input
       } else if (enterKey) {
         submitTags();
       }
     }
   };
 
-  let addTag = () => {
-    let newDuplicateTag = tags.find(item => item === inputToSubmit);
-
-    if (!inputToSubmit?.length) {
+  let addTag = tagToAdd => {
+    if (!tagToAdd?.length) {
       return;
     }
 
-    setInputValue(``); // Clear out input
+    let newDuplicateTag = tags.find(item => item === tagToAdd);
 
     if (!newDuplicateTag) {
-      setTags(tagsToSubmit);
+      setTags([...tags, tagToAdd]);
     } else {
       setDuplicateTag(newDuplicateTag);
       setTimeout(() => {
@@ -651,6 +652,17 @@ function TagPicker(props) {
   };
 
   let submitTags = () => {
+    let tagsToSubmit = [];
+
+    if (tags?.length) {
+      tagsToSubmit = tags;
+    } // Capture tags that have been typed in but not explicitly added to the tag collection
+
+
+    if (inputValue?.trim().length) {
+      tagsToSubmit.push(inputValue.trim());
+    }
+
     if (!props.itemUrl || !tagsToSubmit?.length) {
       return;
     }
@@ -682,7 +694,14 @@ function TagPicker(props) {
   };
 
   (0,react.useEffect)(() => {
-    messages.sendMessage("PKT_getTags", {}, resp => setUsedTags(resp?.data?.tags));
+    messages.sendMessage("PKT_getTags", {}, resp => {
+      setAllTags(resp?.data?.tags);
+    });
+  }, []);
+  (0,react.useEffect)(() => {
+    messages.sendMessage("PKT_getRecentTags", {}, resp => {
+      setRecentTags(resp?.data?.recentTags);
+    });
   }, []);
   return /*#__PURE__*/react.createElement("div", {
     className: "stp_tag_picker"
@@ -693,10 +712,10 @@ function TagPicker(props) {
     className: "stp_tag_picker_tags"
   }, tags.map((tag, i) => /*#__PURE__*/react.createElement("div", {
     className: `stp_tag_picker_tag${duplicateTag === tag ? ` stp_tag_picker_tag_duplicate` : ``}`
-  }, tag, /*#__PURE__*/react.createElement("button", {
+  }, /*#__PURE__*/react.createElement("button", {
     onClick: () => removeTag(i),
     className: `stp_tag_picker_tag_remove`
-  }, "X"))), /*#__PURE__*/react.createElement("div", {
+  }, "X"), tag)), /*#__PURE__*/react.createElement("div", {
     className: "stp_tag_picker_input_wrapper"
   }, /*#__PURE__*/react.createElement("input", {
     className: "stp_tag_picker_input",
@@ -708,15 +727,24 @@ function TagPicker(props) {
     maxlength: "25"
   }), /*#__PURE__*/react.createElement("datalist", {
     id: "tag-list"
-  }, usedTags.sort((a, b) => a.search(inputValue) - b.search(inputValue)).map(item => /*#__PURE__*/react.createElement("option", {
+  }, allTags.sort((a, b) => a.search(inputValue) - b.search(inputValue)).map(item => /*#__PURE__*/react.createElement("option", {
     key: item,
     value: item
   }))), /*#__PURE__*/react.createElement("button", {
     className: "stp_tag_picker_button",
-    disabled: !tagsToSubmit?.length,
+    disabled: !inputValue?.length,
     "data-l10n-id": "pocket-panel-saved-save-tags",
     onClick: () => submitTags()
-  })))), tagInputStatus === "waiting" && /*#__PURE__*/react.createElement("h3", {
+  }))), /*#__PURE__*/react.createElement("div", {
+    className: "recent_tags"
+  }, recentTags.slice(0, 3).filter(recentTag => {
+    return !tags.find(item => item === recentTag);
+  }).map(tag => /*#__PURE__*/react.createElement("div", {
+    className: "stp_tag_picker_tag"
+  }, /*#__PURE__*/react.createElement("button", {
+    className: "stp_tag_picker_tag_remove",
+    onClick: () => addTag(tag)
+  }, "+"), tag)))), tagInputStatus === "waiting" && /*#__PURE__*/react.createElement("h3", {
     className: "header_large",
     "data-l10n-id": "pocket-panel-saved-processing-tags"
   }), tagInputStatus === "success" && /*#__PURE__*/react.createElement("h3", {

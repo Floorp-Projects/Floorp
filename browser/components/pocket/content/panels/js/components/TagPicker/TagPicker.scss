@@ -33,8 +33,14 @@
     }
   }
 
+  .recent_tags .stp_tag_picker_tag {
+    margin-inline-end: 5px;
+  }
+
   .stp_tag_picker_tag_remove {
-    padding: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-inline-end: 5px;
     color: #5B5B66;
     font-weight: 400;
 
