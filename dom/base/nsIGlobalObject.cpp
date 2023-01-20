@@ -373,10 +373,6 @@ void nsIGlobalObject::SetByteLengthQueuingStrategySizeFunction(
   mByteLengthQueuingStrategySizeFunction = aFunction;
 }
 
-bool nsIGlobalObject::ShouldResistFingerprinting() const {
-  return nsContentUtils::ShouldResistFingerprinting();
-}
-
 mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
 nsIGlobalObject::GetStorageKey() {
   return mozilla::Err(NS_ERROR_NOT_AVAILABLE);
