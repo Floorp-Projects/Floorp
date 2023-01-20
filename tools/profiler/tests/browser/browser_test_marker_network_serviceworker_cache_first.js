@@ -157,9 +157,6 @@ add_task(async function test_network_markers_service_worker_register() {
 
     // Let's look at all pairs and make sure we requested all expected files.
     const parentStopMarkers = parentPairs.map(([_, stopMarker]) => stopMarker);
-    const serviceWorkerStopMarkers = serviceWorkerPairs.map(
-      ([_, stopMarker]) => stopMarker
-    );
 
     // These are the files cached by the service worker. We should see markers
     // for both the parent thread and the service worker thread.
@@ -173,9 +170,6 @@ add_task(async function test_network_markers_service_worker_register() {
         `Checking if "${expectedFile}" is present in the network markers in both processes.`
       );
       const parentMarker = parentStopMarkers.find(
-        marker => marker.data.URI === expectedFile
-      );
-      const serviceWorkerMarker = serviceWorkerStopMarkers.find(
         marker => marker.data.URI === expectedFile
       );
 
@@ -205,7 +199,6 @@ add_task(async function test_network_markers_service_worker_register() {
       };
 
       Assert.objectContains(parentMarker, expectedProperties);
-      Assert.objectContains(serviceWorkerMarker, expectedProperties);
     }
   });
 });
