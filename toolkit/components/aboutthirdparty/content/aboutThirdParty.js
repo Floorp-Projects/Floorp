@@ -183,18 +183,19 @@ async function confirmRestartPrompt() {
   return buttonIndex === 0;
 }
 
+let processingBlockRequest = false;
 async function onBlock(event) {
   const module = event.target.closest(".card").module;
   if (!module?.moduleName) {
     return;
   }
-
-  const allButtons = document.querySelectorAll(".button-block");
   // To avoid race conditions, don't allow any modules to be blocked/unblocked
   // until we've updated and written the blocklist.
-  allButtons.forEach(b => {
-    b.disabled = true;
-  });
+  if (processingBlockRequest) {
+    return;
+  }
+  processingBlockRequest = true;
+
   let updatedBlocklist = false;
   try {
     const wasBlocked = event.target.classList.contains("module-blocked");
@@ -213,10 +214,9 @@ async function onBlock(event) {
     updatedBlocklist = true;
   } catch (ex) {
     Cu.reportError("Failed to update the blocklist file - " + ex.result);
+  } finally {
+    processingBlockRequest = false;
   }
-  allButtons.forEach(b => {
-    b.disabled = false;
-  });
   if (updatedBlocklist && (await confirmRestartPrompt())) {
     let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
       Ci.nsISupportsPRBool
