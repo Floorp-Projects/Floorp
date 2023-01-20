@@ -2,7 +2,7 @@
   "name": "DuckDuckGo",
   "description": "Search DuckDuckGo",
   "manifest_version": 2,
-  "version": "1.2",
+  "version": "1.3",
   "browser_specific_settings": {
     "gecko": {
       "id": "ddg@search.mozilla.org"
@@ -21,39 +21,7 @@
       "name": "DuckDuckGo",
       "search_url": "https://duckduckgo.com/",
       "search_form": "https://duckduckgo.com/?q={searchTerms}",
-      "search_url_get_params": "q={searchTerms}",
-      "params": [
-        {
-          "name": "t",
-          "condition": "purpose",
-          "purpose": "contextmenu",
-          "value": "ffcm"
-        },
-        {
-          "name": "t",
-          "condition": "purpose",
-          "purpose": "keyword",
-          "value": "ffab"
-        },
-        {
-          "name": "t",
-          "condition": "purpose",
-          "purpose": "searchbar",
-          "value": "ffsb"
-        },
-        {
-          "name": "t",
-          "condition": "purpose",
-          "purpose": "homepage",
-          "value": "ffhp"
-        },
-        {
-          "name": "t",
-          "condition": "purpose",
-          "purpose": "newtab",
-          "value": "ffnt"
-        }
-      ],
+      "search_url_get_params": "t=ffab&q={searchTerms}",
       "suggest_url": "https://ac.duckduckgo.com/ac/",
       "suggest_url_get_params": "q={searchTerms}&type=list"
     }
