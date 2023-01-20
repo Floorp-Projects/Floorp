@@ -40,7 +40,7 @@ function DatePicker(context) {
       this._setDefaultState();
       this._createComponents();
       this._update();
-      this.components.calendar.focus();
+      this.components.calendar.focusDay();
       document.dispatchEvent(new CustomEvent("PickerReady"));
     },
 
@@ -141,7 +141,15 @@ function DatePicker(context) {
             calViewSize: CAL_VIEW_SIZE,
             locale: this.state.locale,
             setSelection: this.state.setSelection,
-            setMonthByOffset: this.state.setMonthByOffset,
+            // Year and month could be changed without changing a selection
+            setCalendarMonth: (year, month) => {
+              this.state.dateKeeper.setCalendarMonth({
+                year,
+                month,
+              });
+              this._update();
+              this._dispatchState();
+            },
             getDayString: this.state.getDayString,
             getWeekHeaderString: this.state.getWeekHeaderString,
           },
@@ -277,7 +285,7 @@ function DatePicker(context) {
                 event.stopPropagation();
                 event.preventDefault();
                 this.state.toggleMonthPicker();
-                this.components.calendar.focus();
+                this.components.calendar.focusDay();
                 break;
               }
               if (event.key == "Escape") {
@@ -287,12 +295,10 @@ function DatePicker(context) {
               }
               if (event.target == this.context.buttonPrev) {
                 event.target.classList.add("active");
-                this.state.dateKeeper.setMonthByOffset(-1);
-                this._update();
+                this.state.setMonthByOffset(-1);
               } else if (event.target == this.context.buttonNext) {
                 event.target.classList.add("active");
-                this.state.dateKeeper.setMonthByOffset(1);
-                this._update();
+                this.state.setMonthByOffset(1);
               }
               break;
             }
