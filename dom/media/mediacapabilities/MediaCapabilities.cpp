@@ -274,10 +274,13 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     RefPtr<layers::KnowsCompositor> compositor = GetCompositor();
     float frameRate =
         static_cast<float>(videoContainer->ExtendedType().GetFramerate().ref());
+    const bool shouldResistFingerprinting =
+        mParent->ShouldResistFingerprinting();
+
     // clang-format off
     promises.AppendElement(InvokeAsync(
         taskQueue, __func__,
-        [taskQueue, frameRate, compositor,
+        [taskQueue, frameRate, shouldResistFingerprinting, compositor,
          config = std::move(config)]() mutable -> RefPtr<CapabilitiesPromise> {
           // MediaDataDecoder keeps a reference to the config object, so we must
           // keep it alive until the decoder has been shutdown.
@@ -306,7 +309,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
           return AllocationWrapper::CreateDecoder(params, sVideoAllocPolicy)
               ->Then(
                   taskQueue, __func__,
-                  [taskQueue, frameRate, config = std::move(config)](
+                  [taskQueue, frameRate, shouldResistFingerprinting,
+                   config = std::move(config)](
                       AllocationWrapper::AllocateDecoderPromise::
                           ResolveOrRejectValue&& aValue) mutable {
                     if (aValue.IsReject()) {
@@ -320,6 +324,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
                     RefPtr<CapabilitiesPromise> p = decoder->Init()->Then(
                         taskQueue, __func__,
                         [taskQueue, decoder, frameRate,
+                         shouldResistFingerprinting,
                          config = std::move(config)](
                             MediaDataDecoder::InitPromise::
                                 ResolveOrRejectValue&& aValue) mutable {
@@ -327,7 +332,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
                           if (aValue.IsReject()) {
                             p = CapabilitiesPromise::CreateAndReject(
                                 std::move(aValue.RejectValue()), __func__);
-                          } else if (nsContentUtils::ShouldResistFingerprinting()) {
+                          } else if (shouldResistFingerprinting) {
                             p = CapabilitiesPromise::CreateAndResolve(
                                 MediaCapabilitiesInfo(true /* supported */,
                                 true /* smooth */, false /* power efficient */),
