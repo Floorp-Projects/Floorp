@@ -1118,8 +1118,8 @@ sitedata-option-block-cross-site-cookies =
     .label = Cross-site tracking cookies, and isolate other cross-site cookies
 sitedata-option-block-unvisited =
     .label = Cookies from unvisited websites
-sitedata-option-block-all-third-party =
-    .label = All third-party cookies (may cause websites to break)
+sitedata-option-block-all-cross-site-cookies =
+    .label = All cross-site cookies (may cause websites to break)
 sitedata-option-block-all =
     .label = All cookies (will cause websites to break)
 
@@ -1208,7 +1208,7 @@ content-blocking-social-media-trackers = Social media trackers
 content-blocking-all-cookies = All cookies
 content-blocking-unvisited-cookies = Cookies from unvisited sites
 content-blocking-all-windows-tracking-content = Tracking content in all windows
-content-blocking-all-third-party-cookies = All third-party cookies
+content-blocking-all-cross-site-cookies = All cross-site cookies
 content-blocking-cryptominers = Cryptominers
 content-blocking-fingerprinters = Fingerprinters
 
