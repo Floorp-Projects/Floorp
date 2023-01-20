@@ -333,6 +333,12 @@ ARCHIVE_FILES = {
             "base": "third_party/python/packaging",
             "pattern": "**",
         },
+        {
+            "source": buildconfig.topsrcdir,
+            "base": "python/mozbuild/mozbuild/action",
+            "pattern": "tooltool.py",
+            "dest": "external_tools",
+        },
     ],
     "reftest": [
         {"source": buildconfig.topobjdir, "base": "_tests", "pattern": "reftest/**"},

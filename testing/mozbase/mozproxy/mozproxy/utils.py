@@ -96,7 +96,7 @@ def tooltool_download(manifest, run_local, raptor_dir):
     tooltool_path = None
 
     for path in TOOLTOOL_PATHS:
-        if os.path.exists(os.path.dirname(path)):
+        if os.path.exists(path):
             tooltool_path = path
             break
     if tooltool_path is None:
