@@ -53,6 +53,7 @@ include protocol PVsync;
 include protocol PRemoteDecoderManager;
 include protocol PWebSocketConnection;
 include protocol PWebTransport;
+include protocol PFetch;
 
 include DOMTypes;
 include IPCBlob;
@@ -131,6 +132,7 @@ sync protocol PBackground
   manages PUDPSocket;
   manages PVerifySSLServerCert;
   manages PVsync;
+  manages PFetch;
 
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
@@ -321,6 +323,8 @@ parent:
   async PLockManager(ContentPrincipalInfo aPrincipalInfo, nsID aClientId);
 
   async PIPCClientCerts();
+
+  async PFetch();
 
 child:
   async PCache();

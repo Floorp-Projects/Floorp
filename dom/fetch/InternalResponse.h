@@ -57,6 +57,9 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   ParentToParentInternalResponse ToParentToParentInternalResponse();
 
+  ParentToChildInternalResponse ToParentToChildInternalResponse(
+      NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent);
+
   enum CloneType {
     eCloneInputStream,
     eDontCloneInputStream,
@@ -337,6 +340,8 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   SafeRefPtr<InternalResponse> Unfiltered();
 
+  InternalResponseMetadata GetMetadata();
+
   ~InternalResponse();
 
  private:
@@ -350,8 +355,6 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
 
   template <typename T>
   static SafeRefPtr<InternalResponse> FromIPCTemplate(const T& aIPCResponse);
-
-  InternalResponseMetadata GetMetadata();
 
   ResponseType mType;
   // A response has an associated url list (a list of zero or more fetch URLs).
