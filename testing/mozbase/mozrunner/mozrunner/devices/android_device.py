@@ -30,7 +30,7 @@ EMULATOR_AUTH_FILE = os.path.join(
     os.path.expanduser("~"), ".emulator_console_auth_token"
 )
 
-TOOLTOOL_PATH = "testing/mozharness/external_tools/tooltool.py"
+TOOLTOOL_PATH = "python/mozbuild/mozbuild/action/tooltool.py"
 
 TRY_URL = "https://hg.mozilla.org/try/raw-file/default"
 

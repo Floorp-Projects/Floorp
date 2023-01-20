@@ -4,5 +4,5 @@
 path:tools/lint/eslint/
 path:testing/performance
 path:testing/condprofile
-path:testing/mozharness/external_tools/tooltool.py
+path:python/mozbuild/mozbuild/action/tooltool.py
 glob:**/perftest_*.js
