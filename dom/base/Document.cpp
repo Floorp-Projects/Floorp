@@ -3745,7 +3745,9 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   // served with a CSP might block internally applied inline styles.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (loadInfo->GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_IMAGE) {
+          ExtContentPolicy::TYPE_IMAGE ||
+      loadInfo->GetExternalContentPolicyType() ==
+          ExtContentPolicy::TYPE_IMAGESET) {
     return NS_OK;
   }
 
