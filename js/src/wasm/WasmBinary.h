@@ -774,8 +774,7 @@ inline bool Decoder::readHeapType(const TypeContext& types,
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   if (features.functionReferences) {
     int32_t x;
-    if (!readVarS32(&x) || x < 0 || uint32_t(x) >= types.length() ||
-        uint32_t(x) >= MaxTypeIndex) {
+    if (!readVarS32(&x) || x < 0 || uint32_t(x) >= types.length()) {
       return fail("invalid heap type index");
     }
     const TypeDef* typeDef = &types.type(x);
