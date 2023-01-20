@@ -457,18 +457,3 @@ function hexStringToBytes(hex) {
   }
   return bytes;
 }
-
-function stringToBytes(str) {
-  return Array.from(str, chr => chr.charCodeAt(0));
-}
-
-function BinaryHttpResponse(status, headerNames, headerValues, content) {
-  this.status = status;
-  this.headerNames = headerNames;
-  this.headerValues = headerValues;
-  this.content = content;
-}
-
-BinaryHttpResponse.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIBinaryHttpResponse"]),
-};

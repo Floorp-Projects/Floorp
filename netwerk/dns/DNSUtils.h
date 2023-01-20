@@ -21,10 +21,9 @@ class TRR;
 
 class DNSUtils final {
  private:
-  friend class NetworkConnectivityService;
   friend class ODoHService;
-  friend class ObliviousHttpService;
   friend class TRR;
+  friend class NetworkConnectivityService;
   static nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
 };
 
