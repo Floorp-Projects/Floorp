@@ -16,8 +16,8 @@ namespace mozilla {
 template <>
 bool StyleColor::MaybeTransparent() const {
   // We know that the color is opaque when it's a numeric color with
-  // alpha == 255.
-  return !IsNumeric() || AsNumeric().alpha != 255;
+  // alpha == 1.0.
+  return !IsNumeric() || AsNumeric().alpha != 1.0f;
 }
 
 template <>

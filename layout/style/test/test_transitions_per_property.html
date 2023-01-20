@@ -1841,7 +1841,7 @@ function test_shape_or_url_equals(computedValStr, expected)
   if (expectedList.length == 0) {
     if (computedValStr == "") {
       return true;
-    } 
+    }
     ok(false, "expected basic shape");
     return false;
   }
@@ -2142,9 +2142,9 @@ function test_shadow_transition(prop) {
      "shadow-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "0px 0px 0px rgba(100, 100, 100, 0.5)", "");
-  // The alpha value, 0.5 * 1.2989961788069297 * 255, is clamped to 166 and then
-  // converted to 0.65.
-  is(cs.getPropertyValue(prop), "rgba(100, 100, 100, 0.65) 0px 0px 0px" + spreadStr,
+  // The alpha value, 0.5 * 1.2989961788069297 * 255, is 165.622012798, and then
+  // converted to 0.649.
+  is(cs.getPropertyValue(prop), "rgba(100, 100, 100, 0.649) 0px 0px 0px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation of shadows with " +
      "timing function which produces values greater than 1.0");
 

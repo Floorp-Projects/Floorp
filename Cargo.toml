@@ -161,6 +161,8 @@ minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git"
 # warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
 warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
 
+cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "722b30d2f1634714befab967ecae627813fa4cf0" }
+
 # application-services overrides to make updating them all simpler.
 interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }
 sql-support = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }

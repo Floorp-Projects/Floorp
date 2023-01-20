@@ -20,6 +20,11 @@ git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 replace-with = "vendored-sources"
 
+[source."https://github.com/servo/rust-cssparser"]
+git = "https://github.com/servo/rust-cssparser"
+replace-with = "vendored-sources"
+rev = "722b30d2f1634714befab967ecae627813fa4cf0"
+
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 rev = "e7fc8e6"
