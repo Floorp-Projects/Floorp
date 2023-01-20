@@ -59,12 +59,15 @@ export class JSONHandler {
       throw lazy.HTTP_404;
     }
 
-    if (!(request.path in this.routes)) {
+    // Trim trailing slashes to conform with expected routes
+    const path = request.path.replace(/\/+$/, "");
+
+    if (!(path in this.routes)) {
       throw lazy.HTTP_404;
     }
 
     try {
-      const body = this.routes[request.path]();
+      const body = this.routes[path]();
       const payload = JSON.stringify(
         body,
         null,
