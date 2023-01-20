@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "../vendor/lit.all.mjs";
-import { MozLitElement } from "../lit-utils.mjs";
+import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 export const PLATFORM_LINUX = "linux";
 export const PLATFORM_MACOS = "macosx";

@@ -10,6 +10,7 @@ Test the login-item component
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.mjs"></script>
   <script type="module" src="chrome://browser/content/aboutlogins/components/confirmation-dialog.mjs"></script>
+  <script type="module" src="chrome://browser/content/aboutlogins/components/login-timeline.mjs"></script>
   <script src="aboutlogins_common.js"></script>
 
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
@@ -58,6 +59,28 @@ TEST_BREACHES_MAP.set(TEST_LOGIN_1.guid, TEST_BREACH);
 const TEST_VULNERABLE_MAP = new Map();
 TEST_VULNERABLE_MAP.set(TEST_LOGIN_2.guid, true);
 
+const getLoginTimeline = loginItem =>
+  loginItem.shadowRoot.querySelector("login-timeline");
+
+const verifyTimelineActions = (actions, expectedActions) => {
+  is(
+    actions.length,
+    expectedActions.length,
+    `Number timeline actions length is correct. Actual: ${actions.length}. Expected: ${expectedActions.length}`
+  );
+
+  actions.forEach((point, index) => {
+    let actionId = document.l10n.getAttributes(point).id;
+    let expectedAction = expectedActions[index];
+
+    is(
+      actionId,
+      expectedAction,
+      `Rendered action is correct. Actual: ${actionId}. Expected: ${expectedAction}`
+    );
+  });
+};
+
 add_setup(async () => {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
@@ -78,10 +101,8 @@ add_task(async function test_empty_item() {
   is(gLoginItem._passwordInput.value, "", "password should be blank");
   ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected");
   is(gLoginItem._passwordDisplayInput.value, "", "password display should be blank");
-  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display input should be visible");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");
+  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display input should be visible")
+  ok(isHidden(getLoginTimeline(gLoginItem)), "Timeline should be hidden");
 });
 
 add_task(async function test_set_login() {
@@ -106,9 +127,15 @@ add_task(async function test_set_login() {
   is(passwordDisplayInput.value, " ".repeat(TEST_LOGIN_1.password.length), "password display should be populated");
   ok(!isHidden(passwordDisplayInput), "Password display input should be visible");
 
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
+  let timeline = getLoginTimeline(gLoginItem);
+  ok(!isHidden(timeline), "Timeline should be visible");
+  let actions = timeline.shadowRoot.querySelectorAll(".action");
+  verifyTimelineActions(actions, [
+    "login-item-timeline-action-created",
+    "login-item-timeline-action-updated",
+    "login-item-timeline-action-used",
+  ]);
+
   let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
   ok(copyButtons.every(button => !isHidden(button)), "The copy buttons should be visible when viewing a login");
 
@@ -204,9 +231,10 @@ add_task(async function test_edit_login() {
   is(usernameInput.placeholder, "", "there should be no placeholder on the username input in edit mode");
   is(gLoginItem._passwordInput.value, TEST_LOGIN_1.password, "password should be populated");
   is(gLoginItem._passwordDisplayInput.value, " ".repeat(TEST_LOGIN_1.password.length), "password display should be populated");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
+
+  let timeline = getLoginTimeline(gLoginItem);
+  ok(!isHidden(timeline), "Timeline should be visible");
+
   let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
   ok(copyButtons.every(button => isHidden(button)), "The copy buttons should be hidden when editing a login");
 
@@ -294,9 +322,10 @@ add_task(async function test_set_login_empty() {
   ok(!isHidden(gLoginItem._passwordInput), "Real password input should be visible in edit mode");
   ok(isHidden(gLoginItem._passwordDisplayInput), "Password display should be hidden in edit mode");
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");
+
+  let timeline = getLoginTimeline(gLoginItem);
+  ok(isHidden(timeline), "Timeline should be visible");
+
   let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
   ok(copyButtons.every(button => isHidden(button)), "The copy buttons should be hidden when creating a login");
 
@@ -351,10 +380,6 @@ add_task(async function test_different_login_modified() {
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
   ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected in masked non-edit mode");
   ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible in masked non-edit mode");
-
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
 });
 
 add_task(async function test_different_login_removed() {
@@ -369,9 +394,6 @@ add_task(async function test_different_login_removed() {
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
   ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected in masked non-edit mode");
   ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible in masked non-edit mode");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
 });
 
 add_task(async function test_login_modified() {
@@ -386,9 +408,6 @@ add_task(async function test_login_modified() {
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
   ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected in masked non-edit mode");
   ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible in masked non-edit mode");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, modifiedLogin.timeCreated, "time-created should be updated");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, modifiedLogin.timePasswordChanged, "time-changed should be updated");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, modifiedLogin.timeLastUsed, "time-used should be updated");
 });
 
 add_task(async function test_login_removed() {
@@ -400,9 +419,9 @@ add_task(async function test_login_removed() {
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be cleared");
   is(gLoginItem._passwordInput.value, "", "password should be cleared");
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
-  is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");
+
+  let timeline = getLoginTimeline(gLoginItem);
+  ok(isHidden(timeline), "Timeline should be visible");
 });
 
 add_task(async function test_login_long_username_scrollLeft_reset() {
