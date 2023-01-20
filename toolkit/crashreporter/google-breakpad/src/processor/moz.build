@@ -11,6 +11,12 @@ SOURCES += [
     'exploitability_win.cc',
 ]
 
+# clang -Wtautological-constant-in-range-compare implicitly enables
+# -Wtautological-value-range-compare, but we need to disable it to avoid
+# Breakpad bug https://bugs.chromium.org/p/google-breakpad/issues/detail?id=859
+if CONFIG["WARNINGS_CFLAGS"] and "-Wtautological-constant-in-range-compare" in CONFIG["WARNINGS_CFLAGS"]:
+    SOURCES['../third_party/libdisasm/ia32_invariant.c'].flags += ["-Wno-tautological-value-range-compare"]
+
 if CONFIG["CC_TYPE"] == "gcc" and int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
     SOURCES['../third_party/libdisasm/ia32_reg.c'].flags += ["-Wno-stringop-truncation"]
 
