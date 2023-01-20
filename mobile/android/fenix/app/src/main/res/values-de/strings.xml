@@ -297,14 +297,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Benachrichtigungen helfen Ihnen, mehr aus %s zu machen</string>
+    <string name="onboarding_home_enable_notifications_title">Benachrichtigungen helfen Ihnen, mehr aus %s zu machen</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Synchronisieren Sie Ihre Tabs zwischen Geräten, verwalten Sie Downloads, erhalten Sie Tipps, wie Sie den Datenschutz von %s am besten nutzen können, und mehr.</string>
+    <string name="onboarding_home_enable_notifications_description">Synchronisieren Sie Ihre Tabs zwischen Geräten, verwalten Sie Downloads, erhalten Sie Tipps, wie Sie den Datenschutz von %s am besten nutzen können, und mehr.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Fortsetzen</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Fortsetzen</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Nicht jetzt</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Nicht jetzt</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -362,8 +362,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Cookie-Banner reduzieren</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox versucht automatisch, Cookie-Anfragen auf Cookie-Bannern abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert Firefox möglicherweise alle Cookies, um das Banner zu schließen.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox versucht automatisch, Cookie-Anfragen auf Cookie-Bannern abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert Firefox möglicherweise alle Cookies, um das Banner zu schließen.</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s versucht automatisch, Cookie-Anforderungen auf Cookie-Bannern abzulehnen.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Für diese Website deaktiviert</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -375,12 +377,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s löscht die Cookies dieser Webseite und aktualisiert die Seite. Das Löschen aller Cookies kann Sie abmelden oder Warenkörbe leeren.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s kann versuchen, Cookie-Anfragen automatisch abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert %2$s möglicherweise alle Cookies, um das Banner zu schließen.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s kann versuchen, Cookie-Anfragen automatisch abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert %2$s möglicherweise alle Cookies, um das Banner zu schließen.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s kann versuchen, Cookie-Anfragen automatisch abzulehnen.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Weg mit Cookie-Bannern!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Cookie-Anfragen werden nach Möglichkeit automatisch abgelehnt. Andernfalls werden alle Cookies akzeptiert, um Cookie-Banner zu schließen.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Cookie-Anfragen werden nach Möglichkeit automatisch abgelehnt. Andernfalls werden alle Cookies akzeptiert, um Cookie-Banner zu schließen.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Cookie-Anfragen nach Möglichkeit automatisch ablehnen.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Nicht jetzt</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -390,22 +396,30 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Weniger Cookie-Pop-ups sehen</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Beantworten Sie automatisch Cookie-Popups, um ablenkungsfrei zu Surfen. %1$s wird nach Möglichkeit alle Anfragen ablehnen oder alle akzeptieren, wenn dies nicht möglich ist.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Beantworten Sie automatisch Cookie-Popups, um ablenkungsfrei zu Surfen. %1$s wird nach Möglichkeit alle Anfragen ablehnen oder alle akzeptieren, wenn dies nicht möglich ist.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Beantworten Sie automatisch Cookie-Popups, um ablenkungsfrei zu Surfen. %1$s wird nach Möglichkeit alle Anfragen ablehnen.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Pop-ups schließen</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reduzierung von Cookie-Bannern</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">%1$s erlauben, die Cookie-Zustimmungsanfrage einer Webseite nach Möglichkeit abzulehnen, oder den Cookie-Zugriff zu akzeptieren, wenn dies nicht möglich ist?</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">%1$s erlauben, die Cookie-Zustimmungsanfrage einer Webseite nach Möglichkeit abzulehnen, oder den Cookie-Zugriff zu akzeptieren, wenn dies nicht möglich ist?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">%1$s erlauben, die Cookie-Zustimmungsanfrage einer Website nach Möglichkeit abzulehnen?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Erlauben</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatisch versuchen, eine Verbindung zu Websites herzustellen, die das HTTPS-Verschlüsselungsprotokoll verwenden, um die Sicherheit zu erhöhen.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Ein</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Ein</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Aus</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">In allen Tabs aktiviert</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">In privaten Tabs aktiviert</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Weitere Informationen</string>
     <!-- Option for the https only setting -->
@@ -484,6 +498,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Benachrichtigungen</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Erlaubt</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Nicht erlaubt</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Benutzerdefinierte Add-on-Sammlung</string>
@@ -506,8 +525,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Kürzlich besucht</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Geschichten, die zum Nachdenken anregen</string>
@@ -766,6 +783,13 @@
     <string name="close_tabs_after_one_week_summary">Nach einer Woche schließen</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Nach einem Monat schließen</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Auf der Startseite öffnen</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Auf dem letzten Tab öffnen</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Nach vier Stunden auf der Startseite öffnen</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1039,10 +1063,16 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ausnahmen</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Ein</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Ein</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Aus</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Standard</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Streng</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Benutzerdefiniert</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Audio und Video erlauben</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1998,8 +2028,6 @@
     <string name="pocket_stories_categories_header">Geschichten nach Thema</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Mehr entdecken</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Bereitgestellt von Pocket</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Unterstützt durch %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

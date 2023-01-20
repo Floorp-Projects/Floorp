@@ -256,7 +256,7 @@
     <string name="search_suggestions_onboarding_text">%s va a compartir todo lo que escribas en la barra de direcciones con tu motor de búsqueda predeterminado.</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
-    <string name="search_engine_suggestions_title">Buscar %s</string>
+    <string name="search_engine_suggestions_title">Buscar en %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Buscar directamente desde la barra de direcciones</string>
 
@@ -264,7 +264,7 @@
     <string name="search_settings_menu_item">Configuración de búsqueda</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Esta vez buscá:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Esta vez buscar:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Esta vez, buscar en:</string>

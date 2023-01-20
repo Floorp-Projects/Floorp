@@ -181,7 +181,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Librarie</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Sît di scritori</string>
+    <string name="browser_menu_desktop_site">Sît par scritori</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Zonte a schermade principâl</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -283,6 +283,19 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Siere</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Lis notifichis ti judin a jessi plui produtîf cun %s</string>
+
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Sincronize lis tôs schedis tra i dispositîfs, gjestìs i discjariaments, oten conseis par sfrutâ miôr che si pues la protezion de riservatece di %s, e tant altri.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Continue</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">No cumò</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Vierç intune gnove schede in %1$s</string>
@@ -339,7 +352,7 @@
 
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox al cîr in automatic di refudâ lis richiestis dai cookies cuant che al ven visualizât un strisson pai cookies. Se la opzion par refudâju no je disponibile, Firefox al podarès acetâ ducj i cookies par sierâ il strisson.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox al cîr in automatic di refudâ lis richiestis dai cookies cuant che al ven visualizât un strisson pai cookies. Se la opzion par refudâju no je disponibile, Firefox al podarès acetâ ducj i cookies par sierâ il strisson.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Disative par chest sît</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -351,13 +364,37 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s al netarà vie i cookies di chest sît e al inzornarà la pagjine. Al è pussibil che netant vie ducj i cookies tu vegnis disconetût dal sît opûr che i carei des spesis a sedin disvuedâts.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s al pues cirî di refudâ in automatic lis richiestis dai cookies. Se no je disponibile une opzion par refudâju, %2$s al podarès acetâ ducj i cookies par sierâ il strisson.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s al pues cirî di refudâ in automatic lis richiestis dai cookies. Se no je disponibile une opzion par refudâju, %2$s al podarès acetâ ducj i cookies par sierâ il strisson.</string>
+
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Vonde strissons pai cookies!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Refude in automatic lis richiestis dai cookies, se pussibil. In câs contrari, acete ducj i cookies par sierâ il strisson dai cookies.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">No cumò</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Siere i strissons</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Tu viodarâs mancul richiestis di cookies</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Viôt mancul ricuadris a comparse pai cookies</string>
+
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Rispuint in automatic ai ricuadris a comparse pai cookies par vê une navigazion libare da lis distrazions. %1$s al refudarà dutis lis richiestis se pussibil, o lis acetarà dutis in câs contrari.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Siere i ricuadris a comparse</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Riduzion strisson pai cookies</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">Permeti a %1$s di refudâ la richieste di consens pai cookies de bande di un sît opûr acetâ l’acès ai cooki se chest nol fos pussibil?</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Permet</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Al cîr di conetisi in automatic ai sîts doprant il protocol di cifradure HTTPS par vê une sigurece miorade.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Ativade</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Ativade</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Disativave</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Plui informazions</string>
@@ -464,8 +501,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visitâts di resint</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
 
     <!-- Title for the customize home screen section with Pocket. -->
@@ -990,7 +1025,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ecezions</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Ativade</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Ativade</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Disativade</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -1916,8 +1951,6 @@
     <string name="pocket_stories_categories_header">Storiis par argoment</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Scuvierç altris storiis</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Cun tecnologjie Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Cun tecnologjie %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
