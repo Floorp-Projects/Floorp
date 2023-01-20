@@ -16,8 +16,6 @@ uint64_t GfxDriverInfo::allDriverVersions = ~(uint64_t(0));
 
 GfxDeviceFamily*
     GfxDriverInfo::sDeviceFamilies[static_cast<size_t>(DeviceFamily::Max)];
-nsAString* GfxDriverInfo::sDesktopEnvironment[static_cast<size_t>(
-    DesktopEnvironment::Max)];
 nsAString*
     GfxDriverInfo::sWindowProtocol[static_cast<size_t>(WindowProtocol::Max)];
 nsAString*
@@ -30,8 +28,6 @@ GfxDriverInfo::GfxDriverInfo()
       mOperatingSystemVersion(0),
       mScreen(ScreenSizeStatus::All),
       mBattery(BatteryStatus::All),
-      mDesktopEnvironment(
-          GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment::All)),
       mWindowProtocol(GfxDriverInfo::GetWindowProtocol(WindowProtocol::All)),
       mAdapterVendor(GfxDriverInfo::GetDeviceVendor(DeviceFamily::All)),
       mDriverVendor(GfxDriverInfo::GetDriverVendor(DriverVendor::All)),
@@ -48,17 +44,15 @@ GfxDriverInfo::GfxDriverInfo()
 
 GfxDriverInfo::GfxDriverInfo(
     OperatingSystem os, ScreenSizeStatus screen, BatteryStatus battery,
-    const nsAString& desktopEnv, const nsAString& windowProtocol,
-    const nsAString& vendor, const nsAString& driverVendor,
-    GfxDeviceFamily* devices, int32_t feature, int32_t featureStatus,
-    VersionComparisonOp op, uint64_t driverVersion, const char* ruleId,
-    const char* suggestedVersion /* = nullptr */, bool ownDevices /* = false */,
-    bool gpu2 /* = false */)
+    const nsAString& windowProtocol, const nsAString& vendor,
+    const nsAString& driverVendor, GfxDeviceFamily* devices, int32_t feature,
+    int32_t featureStatus, VersionComparisonOp op, uint64_t driverVersion,
+    const char* ruleId, const char* suggestedVersion /* = nullptr */,
+    bool ownDevices /* = false */, bool gpu2 /* = false */)
     : mOperatingSystem(os),
       mOperatingSystemVersion(0),
       mScreen(screen),
       mBattery(battery),
-      mDesktopEnvironment(desktopEnv),
       mWindowProtocol(windowProtocol),
       mAdapterVendor(vendor),
       mDriverVendor(driverVendor),
@@ -78,7 +72,6 @@ GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
       mOperatingSystemVersion(aOrig.mOperatingSystemVersion),
       mScreen(aOrig.mScreen),
       mBattery(aOrig.mBattery),
-      mDesktopEnvironment(aOrig.mDesktopEnvironment),
       mWindowProtocol(aOrig.mWindowProtocol),
       mAdapterVendor(aOrig.mAdapterVendor),
       mDriverVendor(aOrig.mDriverVendor),
@@ -574,50 +567,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
   }
 
   return deviceFamily;
-}
-
-// Macro for assigning a desktop environment to a string.
-#define DECLARE_DESKTOP_ENVIRONMENT_ID(name, desktopEnvId) \
-  case DesktopEnvironment::name:                           \
-    sDesktopEnvironment[idx]->AssignLiteral(desktopEnvId); \
-    break;
-
-const nsAString& GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment id) {
-  if (id >= DesktopEnvironment::Max) {
-    MOZ_ASSERT_UNREACHABLE("DesktopEnvironment id is out of range");
-    id = DesktopEnvironment::All;
-  }
-
-  auto idx = static_cast<size_t>(id);
-  if (sDesktopEnvironment[idx]) {
-    return *sDesktopEnvironment[idx];
-  }
-
-  sDesktopEnvironment[idx] = new nsString();
-
-  switch (id) {
-    DECLARE_DESKTOP_ENVIRONMENT_ID(GNOME, "gnome");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(KDE, "kde");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(XFCE, "xfce");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Cinnamon, "cinnamon");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Enlightenment, "enlightment");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(LXDE, "lxde");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Openbox, "openbox");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(i3, "i3");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Sway, "sway");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Mate, "mate");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Unity, "unity");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Pantheon, "pantheon");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(LXQT, "lxqt");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Deepin, "deepin");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Dwm, "dwm");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Budgie, "budgie");
-    DECLARE_DESKTOP_ENVIRONMENT_ID(Unknown, "unknown");
-    case DesktopEnvironment::Max:  // Suppress a warning.
-      DECLARE_DESKTOP_ENVIRONMENT_ID(All, "");
-  }
-
-  return *sDesktopEnvironment[idx];
 }
 
 // Macro for assigning a window protocol id to a string.
