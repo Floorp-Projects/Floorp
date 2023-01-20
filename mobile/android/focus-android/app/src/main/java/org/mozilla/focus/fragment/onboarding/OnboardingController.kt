@@ -15,12 +15,10 @@ import androidx.activity.result.ActivityResultLauncher
 import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.Browsers
-import mozilla.components.support.utils.ManufacturerCodes
 import mozilla.components.support.utils.ext.navigateToDefaultBrowserAppsSettings
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
-import org.mozilla.focus.utils.SupportUtils
 
 interface OnboardingController {
     fun handleFinishOnBoarding()
@@ -50,11 +48,6 @@ class DefaultOnboardingController(
     }
 
     override fun handleMakeFocusDefaultBrowserButtonClicked(activityResultLauncher: ActivityResultLauncher<Intent>) {
-        if (ManufacturerCodes.isHuawei) {
-            SupportUtils.openDefaultBrowserSumoPage(context)
-            handleFinishOnBoarding()
-            return
-        }
         val isDefault = Browsers.all(context).isDefaultBrowser
         if (isDefault) {
             handleFinishOnBoarding()
