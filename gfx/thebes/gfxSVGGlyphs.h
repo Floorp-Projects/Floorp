@@ -67,8 +67,6 @@ class gfxSVGGlyphsDocument final : public nsAPostRefreshObserver {
   RefPtr<mozilla::PresShell> mPresShell;
 
   nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
-
-  nsCString mSVGGlyphsDocumentURI;
 };
 
 /**
@@ -149,7 +147,7 @@ class gfxSVGGlyphs {
     mozilla::AutoSwap_PRUint16 mVersion;
     mozilla::AutoSwap_PRUint32 mDocIndexOffset;
     mozilla::AutoSwap_PRUint32 mColorPalettesOffset;
-  } * mHeader;
+  }* mHeader;
 
   struct IndexEntry {
     mozilla::AutoSwap_PRUint16 mStartGlyph;
@@ -161,7 +159,7 @@ class gfxSVGGlyphs {
   const struct DocIndex {
     mozilla::AutoSwap_PRUint16 mNumEntries;
     IndexEntry mEntries[1]; /* actual length = mNumEntries */
-  } * mDocIndex;
+  }* mDocIndex;
 
   static int CompareIndexEntries(const void* _a, const void* _b);
 };
