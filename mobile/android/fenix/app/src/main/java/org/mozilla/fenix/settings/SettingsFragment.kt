@@ -464,8 +464,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_start_profiler))
 
         with(requireContext().settings()) {
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_cookie_banner_settings))
-                ?.isVisible = shouldShowCookieBannerUI
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_nimbus_experiments),
             )?.isVisible = showSecretDebugMenuThisSession
@@ -481,6 +479,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceStartProfiler?.isVisible = showSecretDebugMenuThisSession &&
                 (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
         }
+        setupCookieBannerPreference()
         setupAmoCollectionOverridePreference(requireContext().settings())
         setupAllowDomesticChinaFxaServerPreference()
         setupHttpsOnlyPreferences()
@@ -630,6 +629,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     it.settings().useStrictTrackingProtection -> getString(R.string.tracking_protection_strict)
                     it.settings().useCustomTrackingProtection -> getString(R.string.tracking_protection_custom)
                     else -> null
+                }
+            }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setupCookieBannerPreference() {
+        with(requirePreference<Preference>(R.string.pref_key_cookie_banner_settings)) {
+            summary = context?.let {
+                isVisible = it.settings().shouldShowCookieBannerUI
+
+                if (it.settings().shouldUseCookieBanner) {
+                    getString(R.string.reduce_cookie_banner_option_on)
+                } else {
+                    getString(R.string.reduce_cookie_banner_option_off)
                 }
             }
         }

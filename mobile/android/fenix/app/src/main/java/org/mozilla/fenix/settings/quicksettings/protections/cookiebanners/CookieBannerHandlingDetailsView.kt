@@ -75,7 +75,7 @@ class CookieBannerHandlingDetailsView(
             if (isCookieBannerHandlingEnabled) {
                 R.string.reduce_cookie_banner_details_panel_description_off_for_site
             } else {
-                R.string.reduce_cookie_banner_details_panel_description_on_for_site_1
+                R.string.reduce_cookie_banner_details_panel_description_on_for_site_2
             }
         val appName = context.getString(R.string.app_name)
         binding.details.text = context.getString(stringID, appName)
