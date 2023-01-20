@@ -31,7 +31,8 @@ namespace mozilla {
 // Also, AArch64 has not been tested with this.
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    const IMAGE_THUNK_DATA*, const GeckProcessType aProcessType) {
+    const IMAGE_THUNK_DATA*, const bool aIsUtilityProcess,
+    const bool aIsSocketProcess) {
   return mozilla::Ok();
 }
 
@@ -46,8 +47,8 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
 
 static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     const wchar_t* aFullImagePath, nt::CrossExecTransferManager& aTransferMgr,
-    const IMAGE_THUNK_DATA* aCachedNtdllThunk,
-    const GeckoProcessType aProcessType) {
+    const IMAGE_THUNK_DATA* aCachedNtdllThunk, const bool aIsUtilityProcess,
+    const bool aIsSocketProcess) {
   CrossProcessDllInterceptor intcpt(aTransferMgr.RemoteProcess());
   intcpt.Init(L"ntdll.dll");
 
@@ -142,7 +143,12 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     newFlags |= eDllBlocklistInitFlagIsChildProcess;
   }
 
-  SetDllBlocklistProcessTypeFlags(newFlags, aProcessType);
+  if (aIsUtilityProcess) {
+    newFlags |= eDllBlocklistInitFlagIsUtilityProcess;
+  }
+  if (aIsSocketProcess) {
+    newFlags |= eDllBlocklistInitFlagIsSocketProcess;
+  }
 
   LauncherVoidResult writeResult =
       aTransferMgr.Transfer(&gBlocklistInitFlags, &newFlags, sizeof(newFlags));
@@ -155,8 +161,8 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    const IMAGE_THUNK_DATA* aCachedNtdllThunk,
-    const GeckoProcessType aProcessType) {
+    const IMAGE_THUNK_DATA* aCachedNtdllThunk, const bool aIsUtilityProcess,
+    const bool aIsSocketProcess) {
   nt::CrossExecTransferManager transferMgr(aChildProcess);
   if (!transferMgr) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
@@ -179,7 +185,8 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
   }
 
   return InitializeDllBlocklistOOPInternal(aFullImagePath, transferMgr,
-                                           aCachedNtdllThunk, aProcessType);
+                                           aCachedNtdllThunk, aIsUtilityProcess,
+                                           aIsSocketProcess);
 }
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
@@ -223,7 +230,7 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
     freestanding::gSharedSection.Reset(nullptr);
   });
   return InitializeDllBlocklistOOPInternal(aFullImagePath, transferMgr, nullptr,
-                                           GeckoProcessType_Default);
+                                           false, false);
 }
 
 #endif  // defined(MOZ_ASAN) || defined(_M_ARM64)

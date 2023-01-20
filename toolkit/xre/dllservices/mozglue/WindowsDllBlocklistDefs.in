@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file exposes six lists:
-# ALL_PROCESSES, BROWSER_PROCESS, CHILD_PROCESSES, GPU_PROCESSES,
-# UTILITY_PROCESSES, and SOCKET_PROCESSES
+# This file exposes five lists:
+# ALL_PROCESSES, BROWSER_PROCESS, CHILD_PROCESSES, UTILITY_PROCESSES,
+# and SOCKET_PROCESSES
 #
 # In addition, each of those lists supports a special variant for test-only
 # entries:
 # ALL_PROCESSES_TESTS, BROWSER_PROCESS_TESTS, CHILD_PROCESSES_TESTS,
-# GPU_PROCESSES_TESTS, UTILITY_PROCESSES_TESTS, and SOCKET_PROCESSES_TESTS
+# UTILITY_PROCESSES_TESTS, and SOCKET_PROCESSES_TESTS
 #
 # Choose the list that is applicable to the applicable process type(s) for your
 # DLL block.
@@ -328,16 +328,6 @@ CHILD_PROCESSES += [
 
     # Causes crashes in the content process with win32k lockdown, bug 1769309
     DllBlocklistEntry("hmpalert.dll", (3, 8, 8, 889)),
-]
-
-GPU_PROCESSES += [
-    # MSI Nahimic audio driver causes crashes in the GPU process, bug 1804023
-    DllBlocklistEntry("nahimicosd.dll", (2, 2, 25, 0)),
-]
-
-GPU_PROCESSES_TESTS += [
-    # DLLs used by TestDllBlocklist* gTests
-    DllBlocklistEntry("testdllblocklist_gpuprocessonly.dll", ALL_VERSIONS),
 ]
 
 SOCKET_PROCESSES += [
