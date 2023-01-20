@@ -662,17 +662,14 @@ class RangedChromeActions extends ChromeActions {
       done = this.dataListener.isDone;
 
       this.dataListener.onprogress = (loaded, total) => {
-        const chunk = this.dataListener.readData();
-
         this.domWindow.postMessage(
           {
             pdfjsLoadAction: "progressiveRead",
             loaded,
             total,
-            chunk,
+            chunk: this.dataListener.readData(),
           },
-          PDF_VIEWER_ORIGIN,
-          chunk ? [chunk.buffer] : null
+          PDF_VIEWER_ORIGIN
         );
       };
       this.dataListener.oncomplete = () => {
@@ -699,8 +696,7 @@ class RangedChromeActions extends ChromeActions {
         done,
         filename: this.contentDispositionFilename,
       },
-      PDF_VIEWER_ORIGIN,
-      data ? [data.buffer] : null
+      PDF_VIEWER_ORIGIN
     );
 
     return true;
@@ -718,15 +714,14 @@ class RangedChromeActions extends ChromeActions {
     // errors from chrome code for non-range requests, so this doesn't
     // seem high-pri
     this.networkManager.requestRange(begin, end, {
-      onDone: function RangedChromeActions_onDone({ begin, chunk }) {
+      onDone: function RangedChromeActions_onDone(aArgs) {
         domWindow.postMessage(
           {
             pdfjsLoadAction: "range",
-            begin,
-            chunk,
+            begin: aArgs.begin,
+            chunk: aArgs.chunk,
           },
-          PDF_VIEWER_ORIGIN,
-          chunk ? [chunk.buffer] : null
+          PDF_VIEWER_ORIGIN
         );
       },
       onProgress: function RangedChromeActions_onProgress(evt) {
@@ -790,8 +785,7 @@ class StandardChromeActions extends ChromeActions {
           errorCode,
           filename: this.contentDispositionFilename,
         },
-        PDF_VIEWER_ORIGIN,
-        data ? [data.buffer] : null
+        PDF_VIEWER_ORIGIN
       );
 
       this.dataListener = null;
