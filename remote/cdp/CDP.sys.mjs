@@ -87,10 +87,7 @@ export class CDP {
     lazy.logger.debug(`Waiting for initial application window`);
     await this.agent.browserStartupFinished;
 
-    this.agent.server.registerPrefixHandler(
-      "/json/",
-      new lazy.JSONHandler(this)
-    );
+    this.agent.server.registerPrefixHandler("/", new lazy.JSONHandler(this));
 
     this.targetList = new lazy.TargetList();
     this.targetList.on("target-created", (eventName, target) => {

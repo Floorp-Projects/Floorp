@@ -24,6 +24,7 @@ export class JSONHandler {
       "/json/version": this.getVersion.bind(this),
       "/json/protocol": this.getProtocol.bind(this),
       "/json/list": this.getTargetList.bind(this),
+      "/json": this.getTargetList.bind(this),
     };
   }
 
