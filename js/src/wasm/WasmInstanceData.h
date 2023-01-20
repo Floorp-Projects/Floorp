@@ -23,6 +23,7 @@
 
 #include "NamespaceImports.h"
 
+#include "gc/Allocator.h"
 #include "js/Utility.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmTypeDecls.h"
@@ -39,6 +40,23 @@ struct ExportArg {
 };
 
 using ExportFuncPtr = int32_t (*)(ExportArg*, Instance*);
+
+// TypeDefInstanceData describes the runtime information associated with a
+// module's type definition. This is accessed directly from JIT code and the
+// Instance.
+
+struct TypeDefInstanceData {
+  // The canonicalized pointer to this type definition. This is kept alive by
+  // the type context associated with the instance.
+  const wasm::TypeDef* typeDef;
+
+  // The following fields are only meaningful and used by structs and arrays.
+  // This must be kept in sync with WasmGcObject::AllocArgs.
+  GCPtr<Shape*> shape;
+  const JSClass* clasp;
+  gc::AllocKind allocKind;
+  gc::InitialHeap initialHeap;
+};
 
 // FuncImportInstanceData describes the region of wasm global memory allocated
 // in the instance's thread-local storage for a function import. This is
