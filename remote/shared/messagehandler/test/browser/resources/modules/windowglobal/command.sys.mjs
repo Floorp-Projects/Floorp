@@ -7,9 +7,7 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 class CommandModule extends Module {
   constructor(messageHandler) {
     super(messageHandler);
-    this._lastSessionDataUpdate = {};
     this._subscribedEvents = new Set();
-    this._testCategorySessionData = [];
 
     this._createdByMessageHandlerConstructor = this._isCreatedByMessageHandlerConstructor();
   }
@@ -21,9 +19,6 @@ class CommandModule extends Module {
 
   _applySessionData(params) {
     if (params.category === "testCategory") {
-      const added = [];
-      const removed = [];
-
       const filteredSessionData = params.sessionData.filter(item =>
         this.messageHandler.matchesContext(item.contextDescriptor)
       );
@@ -34,7 +29,6 @@ class CommandModule extends Module {
         // If there are no session items for this context, we should unsubscribe from the event.
         if (!hasSessionItem) {
           this._subscribedEvents.delete(event);
-          removed.push(event);
         }
       }
 
@@ -42,20 +36,8 @@ class CommandModule extends Module {
       for (const { value } of filteredSessionData) {
         if (!this._subscribedEvents.has(value)) {
           this._subscribedEvents.add(value);
-          added.push(value);
         }
       }
-
-      this._testCategorySessionData = this._testCategorySessionData
-        .concat(added)
-        .filter(value => !removed.includes(value));
-
-      this._lastSessionDataUpdate = {
-        addedData: added.join(", "),
-        removedData: removed.join(", "),
-        sessionData: this._testCategorySessionData.join(", "),
-        contextId: this.messageHandler.contextId,
-      };
     }
 
     if (params.category === "browser_session_data_browser_element") {
@@ -63,18 +45,6 @@ class CommandModule extends Module {
         contextId: this.messageHandler.contextId,
       });
     }
-
-    return {};
-  }
-
-  _getSessionDataUpdate(params) {
-    const lastUpdate = this._lastSessionDataUpdate;
-
-    // Each "lastUpdate" should only be returned once, so that the caller can
-    // assert when a SessionData update had no impact.
-    this._lastSessionDataUpdate = null;
-
-    return lastUpdate;
   }
 
   testWindowGlobalModule() {

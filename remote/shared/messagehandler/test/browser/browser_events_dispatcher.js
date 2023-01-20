@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { WindowGlobalMessageHandler } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs"
-);
-
 /**
  * Check the basic behavior of on/off.
  */
