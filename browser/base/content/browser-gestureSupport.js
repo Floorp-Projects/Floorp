@@ -668,15 +668,27 @@ var gHistorySwipeAnimation = {
       return;
     }
 
-    this.active = true;
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.history_swipe_animation.disabled",
+        false
+      )
+    ) {
+      this._icon = document.getElementById("swipe-nav-icon");
+      this._initPrefValues();
+      this._addPrefObserver();
+      this.active = true;
+    }
   },
 
   /**
    * Uninitializes the support for history swipe animations.
    */
   uninit: function HSA_uninit() {
+    this._removePrefObserver();
     this.active = false;
     this.isLTR = false;
+    this._icon = null;
     this._removeBoxes();
   },
 
@@ -736,82 +748,67 @@ var gHistorySwipeAnimation = {
    *
    * @param aVal
    *        A floating point value that represents the progress of the
-   *        swipe gesture.
+   *        swipe gesture. History navigation will be triggered if the absolute
+   *        value of this `aVal` is greater than or equal to 0.25.
    */
   updateAnimation: function HSA_updateAnimation(aVal) {
     if (!this.isAnimationRunning() || this._isStoppingAnimation) {
       return;
     }
 
-    const translateDistance = Services.prefs.getIntPref(
-      "browser.swipe.navigation-icon-move-distance",
-      0
-    );
-    // We use the following value to set the opacity (and translate on Windows)
-    // of the swipe arrows. Absolute values of 0.25 (or greater) trigger
-    // history navigation, hence the multiplier 4 to set the arrows to full
-    // opacity at 0.25 or greater.
-    let opacity = Math.abs(aVal) * 4;
+    // Convert `aVal` into [0, 1] range.
+    // Note that absolute values of 0.25 (or greater) trigger history
+    // navigation, hence we multiply the value by 4 here.
+    const progress = Math.min(Math.abs(aVal) * 4, 1.0);
 
-    // If we move the icon along with the opacity change, we make the opacity
-    // change 2x faster so that it will avoid appearing the icon suddenly away
-    // from the browser edge.
-    if (translateDistance > 0) {
-      opacity *= 2;
-    }
-
-    // The icon moves from -20% of |translateDistance| so that it will be
-    // partially out of the viewport.
+    // Compute the icon position based on preferences.
     let translate =
-      Math.abs(aVal) * 4 * translateDistance - 0.2 * translateDistance;
-
-    // Clamp inside [-20% of translateDistance, 80% of translateDistance].
-    translate = Math.min(
-      Math.max(-translateDistance * 0.2, translate),
-      translateDistance * 0.8
-    );
-
+      this.translateStartPosition +
+      progress * (this.translateEndPosition - this.translateStartPosition);
     if (!this.isLTR) {
       translate = -translate;
     }
 
+    // Compute the icon radius based on preferences.
+    const radius =
+      this.minRadius + progress * (this.maxRadius - this.minRadius);
     if ((aVal >= 0 && this.isLTR) || (aVal <= 0 && !this.isLTR)) {
       // The intention is to go back.
       if (this._canGoBack) {
         this._prevBox.collapsed = false;
         this._nextBox.collapsed = true;
-        this._prevBox.style.opacity = opacity > 1 ? 1 : opacity;
         this._prevBox.style.translate = `${translate}px 0px`;
+        if (radius >= 0) {
+          this._prevBox
+            .querySelectorAll("circle")[1]
+            .setAttribute("r", `${radius}`);
+        }
 
-        if (translateDistance > 0) {
-          if (Math.abs(aVal) >= 0.25) {
-            // Add a glow the same color as the circle surrounding the arrow.
-            // If the page background is too close to this color it won't be
-            // distinguishable, but hopefully that's not too common.
-            this._prevBox.style.fill = "rgb(56, 56, 61)";
-          } else {
-            // Hide the glow.
-            this._prevBox.style.fill = "rgba(0,0,0,0)";
-          }
+        if (Math.abs(aVal) >= 0.25) {
+          // If `aVal` goes above 0.25, it means history navigation will be
+          // triggered once after the user lifts their fingers, it's time to
+          // trigger __indicator__ animations by adding `will-navigate` class.
+          this._prevBox.querySelector("svg").classList.add("will-navigate");
+        } else {
+          this._prevBox.querySelector("svg").classList.remove("will-navigate");
         }
       }
     } else if (this._canGoForward) {
       // The intention is to go forward.
       this._nextBox.collapsed = false;
       this._prevBox.collapsed = true;
-      this._nextBox.style.opacity = opacity > 1 ? 1 : opacity;
       this._nextBox.style.translate = `${-translate}px 0px`;
+      if (radius >= 0) {
+        this._nextBox
+          .querySelectorAll("circle")[1]
+          .setAttribute("r", `${radius}`);
+      }
 
-      if (translateDistance > 0) {
-        if (Math.abs(aVal) >= 0.25) {
-          // Add a glow the same color as the circle surrounding the arrow.
-          // If the page background is too close to this color it won't be
-          // distinguishable, but hopefully that's not too common.
-          this._nextBox.style.fill = "rgb(56, 56, 61)";
-        } else {
-          // Hide the glow.
-          this._nextBox.style.fill = "rgba(0,0,0,0)";
-        }
+      if (Math.abs(aVal) >= 0.25) {
+        // Same as above "go back" case.
+        this._nextBox.querySelector("svg").classList.add("will-navigate");
+      } else {
+        this._nextBox.querySelector("svg").classList.remove("will-navigate");
       }
     }
   },
@@ -896,16 +893,20 @@ var gHistorySwipeAnimation = {
       "box"
     );
     this._prevBox.collapsed = true;
-    this._prevBox.style.opacity = 0;
     this._container.appendChild(this._prevBox);
+    let icon = this._icon.cloneNode(true);
+    icon.classList.add("swipe-nav-icon");
+    this._prevBox.appendChild(icon);
 
     this._nextBox = this._createElement(
       "historySwipeAnimationNextArrow",
       "box"
     );
     this._nextBox.collapsed = true;
-    this._nextBox.style.opacity = 0;
     this._container.appendChild(this._nextBox);
+    icon = this._icon.cloneNode(true);
+    icon.classList.add("swipe-nav-icon");
+    this._nextBox.appendChild(icon);
   },
 
   /**
@@ -933,5 +934,53 @@ var gHistorySwipeAnimation = {
     let element = document.createXULElement(aTagName);
     element.id = aID;
     return element;
+  },
+
+  observe(subj, topic, data) {
+    switch (topic) {
+      case "nsPref:changed":
+        this._initPrefValues();
+    }
+  },
+
+  _initPrefValues: function HSA__initPrefValues() {
+    this.translateStartPosition = Services.prefs.getIntPref(
+      "browser.swipe.navigation-icon-start-position",
+      0
+    );
+    this.translateEndPosition = Services.prefs.getIntPref(
+      "browser.swipe.navigation-icon-end-position",
+      0
+    );
+    this.minRadius = Services.prefs.getIntPref(
+      "browser.swipe.navigation-icon-min-radius",
+      -1
+    );
+    this.maxRadius = Services.prefs.getIntPref(
+      "browser.swipe.navigation-icon-max-radius",
+      -1
+    );
+  },
+
+  _addPrefObserver: function HSA__addPrefObserver() {
+    [
+      "browser.swipe.navigation-icon-start-position",
+      "browser.swipe.navigation-icon-end-position",
+      "browser.swipe.navigation-icon-min-radius",
+      "browser.swipe.navigation-icon-max-radius",
+    ].forEach(pref => {
+      Services.prefs.addObserver(pref, this);
+    });
+  },
+
+  _removePrefObserver: function HSA__removePrefObserver() {
+    [
+      "browser.swipe.navigation-icon-start-position",
+      "browser.swipe.navigation-icon-end-position",
+      "browser.swipe.navigation-icon-min-radius",
+      "browser.swipe.navigation-icon-max-radius",
+    ].forEach(pref => {
+      Services.prefs.removeObserver(pref, this);
+    });
   },
 };

@@ -73,12 +73,9 @@ add_task(async () => {
   let computedOpacity = window
     .getComputedStyle(gHistorySwipeAnimation._prevBox)
     .getPropertyValue("opacity");
-  ok(
-    0.98 < computedOpacity && computedOpacity < 0.99,
-    "opacity of prevbox is not quite 1"
-  );
+  is(computedOpacity, "1", "opacity of prevbox is 1");
   let opacity = gHistorySwipeAnimation._prevBox.style.opacity;
-  ok(0.98 < opacity && opacity < 0.99, "opacity of prevbox is not quite 1");
+  is(opacity, "", "opacity style isn't explicitly set");
 
   const translateDistance = Services.prefs.getIntPref(
     "browser.swipe.navigation-icon-move-distance",
@@ -200,12 +197,9 @@ add_task(async () => {
   let computedOpacity = window
     .getComputedStyle(gHistorySwipeAnimation._prevBox)
     .getPropertyValue("opacity");
-  ok(
-    0.98 < computedOpacity && computedOpacity < 0.99,
-    "opacity of prevbox is not quite 1"
-  );
+  is(computedOpacity, "1", "opacity of prevbox is 1");
   let opacity = gHistorySwipeAnimation._prevBox.style.opacity;
-  ok(0.98 < opacity && opacity < 0.99, "opacity of prevbox is not quite 1");
+  is(opacity, "", "opacity style isn't explicitly set");
 
   await panLeftToRightEnd(tab.linkedBrowser, 100, 100, 1.8);
 

@@ -2765,3 +2765,26 @@ pref("browser.pdfjs.feature-tour", "{\"screen\":\"\",\"complete\":false}");
 
 // Enables the cookie banner desktop UI.
 pref("cookiebanners.ui.desktop.enabled", false);
+
+// Parameters for the swipe-to-navigation icon.
+//
+// `navigation-icon-{start|end}-position` is the start or the end position of
+// the icon movement in response to the user's swipe gesture. `0` means the icon
+// positions at the left edge of the browser window. For example on Mac, when
+// the user started swipe gesture left to right, the icon appears at a point
+// where left side 20px of the icon is outside of the browser window's view.
+//
+// `navigation-icon-{min|max}-radius` is the minimum or the maximum radius of
+// the icon's outer circle size in response to the user's swipe gesture.  `-1`
+// means that the circle radius never changes.
+#ifdef XP_MACOSX
+  pref("browser.swipe.navigation-icon-start-position", -20);
+  pref("browser.swipe.navigation-icon-end-position", 0);
+  pref("browser.swipe.navigation-icon-min-radius", -1);
+  pref("browser.swipe.navigation-icon-max-radius", -1);
+#else
+  pref("browser.swipe.navigation-icon-start-position", -40);
+  pref("browser.swipe.navigation-icon-end-position", 60);
+  pref("browser.swipe.navigation-icon-min-radius", 12);
+  pref("browser.swipe.navigation-icon-max-radius", 20);
+#endif
