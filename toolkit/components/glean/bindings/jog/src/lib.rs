@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use fog::factory;
-use fog::private::traits::HistogramType;
-use fog::private::{CommonMetricData, Lifetime, MemoryUnit, TimeUnit};
+use firefox_on_glean::factory;
+use firefox_on_glean::private::traits::HistogramType;
+use firefox_on_glean::private::{CommonMetricData, Lifetime, MemoryUnit, TimeUnit};
 #[cfg(feature = "with_gecko")]
 use nsstring::{nsACString, nsAString, nsCString};
 use serde::Deserialize;
