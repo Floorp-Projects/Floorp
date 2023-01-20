@@ -96,6 +96,16 @@ var highlighterTestSpec = protocol.generateActorSpec({
         value: RetVal("string"),
       },
     },
+    getHighlighterComputedStyle: {
+      request: {
+        nodeID: Arg(0, "string"),
+        property: Arg(1, "string"),
+        actorID: Arg(2, "string"),
+      },
+      response: {
+        value: RetVal("string"),
+      },
+    },
     getHighlighterNodeTextContent: {
       request: {
         nodeID: Arg(0, "string"),
@@ -247,10 +257,9 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
   /**
    * Get a value for a given attribute name, on one of the elements of the box
    * model highlighter, given its ID.
-   * @param {Object} msg The msg.data part expects the following properties
-   * - {String} nodeID The full ID of the element to get the attribute for
-   * - {String} name The name of the attribute to get
-   * - {String} actorID The highlighter actor ID
+   * @param {String} nodeID The full ID of the element to get the attribute for
+   * @param {String} name The name of the attribute to get
+   * @param {String} actorID The highlighter actor ID
    * @return {String} The value, if found, null otherwise
    */
   getHighlighterAttribute(nodeID, name, actorID) {
@@ -261,6 +270,24 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
     }
 
     return helper.getAttributeForElement(nodeID, name);
+  },
+
+  /**
+   * Get the computed style for a given property, on one of the elements of the
+   * box model highlighter, given its ID.
+   * @param {String} nodeID The full ID of the element to get the attribute for
+   * @param {String} property The name of the property
+   * @param {String} actorID The highlighter actor ID
+   * @return {String} The computed style of the property
+   */
+  getHighlighterComputedStyle(nodeID, property, actorID) {
+    const helper = getHighlighterCanvasFrameHelper(this.conn, actorID);
+
+    if (!helper) {
+      throw new Error(`Highlighter not found`);
+    }
+
+    return helper.getElement(nodeID).computedStyle.getPropertyValue(property);
   },
 
   /**
@@ -545,6 +572,21 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
   getHighlighterNodeTextContent(nodeID, highlighter) {
     return super.getHighlighterNodeTextContent(
       nodeID,
+      (highlighter || this.highlighter).actorID
+    );
+  }
+
+  /**
+   * Get the computed style of a property on one of the highlighter's node.
+   * @param {String} nodeID The Id of the node in the highlighter.
+   * @param {String} property The name of the property.
+   * @param {Object} highlighter Optional custom highlighter to target
+   * @return {String} value
+   */
+  getHighlighterComputedStyle(nodeID, property, highlighter) {
+    return super.getHighlighterComputedStyle(
+      nodeID,
+      property,
       (highlighter || this.highlighter).actorID
     );
   }

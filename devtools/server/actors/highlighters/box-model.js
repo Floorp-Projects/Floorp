@@ -587,7 +587,12 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         "L" +
         p4.x +
         "," +
-        p4.y;
+        p4.y +
+        " " +
+        "L" +
+        p1.x +
+        "," +
+        p1.y;
     } else {
       // Otherwise, just draw the region itself, not a filled rectangle.
       const { p1: np1, p2: np2, p3: np3, p4: np4 } = nextBoxQuad;
