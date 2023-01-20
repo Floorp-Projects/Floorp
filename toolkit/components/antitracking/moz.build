@@ -94,5 +94,3 @@ XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 TEST_DIRS += ["test/gtest"]
 
 REQUIRES_UNIFIED_BUILD = True
-
-SPHINX_TREES["anti-tracking"] = "docs"
