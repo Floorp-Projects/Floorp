@@ -87,8 +87,6 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   bool mSleeping MOZ_GUARDED_BY(mMonitor);
 
   class Entry final : public nsTimerImplHolder {
-    const TimeStamp mTimeout;
-
    public:
     // Entries are created with the TimerImpl's mutex held.
     // nsTimerImplHolder() will call SetHolder()
@@ -115,7 +113,10 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
       return aRight->mTimeout < aLeft->mTimeout;
     }
 
-    TimeStamp Timeout() const { return mTimeout; }
+    const TimeStamp& Timeout() const { return mTimeout; }
+
+   private:
+    TimeStamp mTimeout;
   };
 
   nsTArray<mozilla::UniquePtr<Entry>> mTimers MOZ_GUARDED_BY(mMonitor);
