@@ -490,6 +490,9 @@
   customElements.define("panel-list", PanelList);
 
   class PanelItem extends HTMLElement {
+    #initialized = false;
+    #defaultSlot;
+
     static get observedAttributes() {
       return ["accesskey"];
     }
@@ -504,12 +507,6 @@
         ? "./panel-item.css"
         : "chrome://global/content/elements/panel-item.css";
 
-      // When click listeners are added to the panel-item it creates a node in
-      // the a11y tree for this element. This breaks the association between the
-      // menu and the button[role="menuitem"] in this shadow DOM and causes
-      // announcement issues with screen readers. (bug 995064)
-      this.setAttribute("role", "presentation");
-
       this.button = document.createElement("button");
       this.button.setAttribute("role", "menuitem");
       this.button.setAttribute("part", "button");
@@ -523,29 +520,37 @@
       let supportLinkSlot = document.createElement("slot");
       supportLinkSlot.name = "support-link";
 
-      let defaultSlot = document.createElement("slot");
-      defaultSlot.style.display = "none";
+      this.#defaultSlot = document.createElement("slot");
+      this.#defaultSlot.style.display = "none";
 
-      this.shadowRoot.append(style, this.button, supportLinkSlot, defaultSlot);
-
-      this.setLabelContents = () => {
-        this.label.textContent = defaultSlot
-          .assignedNodes()
-          .map(node => node.textContent)
-          .join("");
-      };
-      this.setLabelContents();
-
-      // When our content changes, move the text into the label. It doesn't work
-      // with a <slot>, unfortunately.
-      new MutationObserver(this.setLabelContents).observe(this, {
-        characterData: true,
-        childList: true,
-        subtree: true,
-      });
+      this.shadowRoot.append(
+        style,
+        this.button,
+        supportLinkSlot,
+        this.#defaultSlot
+      );
     }
 
     connectedCallback() {
+      if (!this.#initialized) {
+        this.#initialized = true;
+        // When click listeners are added to the panel-item it creates a node in
+        // the a11y tree for this element. This breaks the association between the
+        // menu and the button[role="menuitem"] in this shadow DOM and causes
+        // announcement issues with screen readers. (bug 995064)
+        this.setAttribute("role", "presentation");
+
+        this.#setLabelContents();
+
+        // When our content changes, move the text into the label. It doesn't work
+        // with a <slot>, unfortunately.
+        new MutationObserver(() => this.#setLabelContents()).observe(this, {
+          characterData: true,
+          childList: true,
+          subtree: true,
+        });
+      }
+
       this.panel = this.closest("panel-list");
 
       if (this.panel) {
@@ -588,6 +593,13 @@
           this._accessKey = null;
         }
       }
+    }
+
+    #setLabelContents() {
+      this.label.textContent = this.#defaultSlot
+        .assignedNodes()
+        .map(node => node.textContent)
+        .join("");
     }
 
     get disabled() {
