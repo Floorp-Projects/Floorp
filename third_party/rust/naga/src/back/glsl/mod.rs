@@ -1807,22 +1807,28 @@ impl<'a, W: Write> Writer<'a, W> {
                 for case in cases {
                     match case.value {
                         crate::SwitchValue::Integer(value) => {
-                            writeln!(self.out, "{}case {}{}:", l2, value, type_postfix)?
+                            write!(self.out, "{}case {}{}:", l2, value, type_postfix)?
                         }
-                        crate::SwitchValue::Default => writeln!(self.out, "{}default:", l2)?,
+                        crate::SwitchValue::Default => write!(self.out, "{}default:", l2)?,
+                    }
+
+                    let write_block_braces = !(case.fall_through && case.body.is_empty());
+                    if write_block_braces {
+                        writeln!(self.out, " {{")?;
+                    } else {
+                        writeln!(self.out)?;
                     }
 
                     for sta in case.body.iter() {
                         self.write_stmt(sta, ctx, l2.next())?;
                     }
 
-                    // Write fallthrough comment if the case is fallthrough,
-                    // otherwise write a break, if the case is not already
-                    // broken out of at the end of its body.
-                    if case.fall_through {
-                        writeln!(self.out, "{}/* fallthrough */", l2.next())?;
-                    } else if case.body.last().map_or(true, |s| !s.is_terminator()) {
+                    if !case.fall_through && case.body.last().map_or(true, |s| !s.is_terminator()) {
                         writeln!(self.out, "{}break;", l2.next())?;
+                    }
+
+                    if write_block_braces {
+                        writeln!(self.out, "{}}}", l2)?;
                     }
                 }
 
@@ -2519,7 +2525,7 @@ impl<'a, W: Write> Writer<'a, W> {
                             },
                         };
 
-                        write!(self.out, "({}", operator)?;
+                        write!(self.out, "{}(", operator)?;
                     }
                 }
 
@@ -3138,12 +3144,32 @@ impl<'a, W: Write> Writer<'a, W> {
             }
             // Otherwise write just the expression (and the 1D hack if needed)
             None => {
+                let uvec_size = match *ctx.info[coordinate].ty.inner_with(&self.module.types) {
+                    TypeInner::Scalar {
+                        kind: crate::ScalarKind::Uint,
+                        ..
+                    } => Some(None),
+                    TypeInner::Vector {
+                        size,
+                        kind: crate::ScalarKind::Uint,
+                        ..
+                    } => Some(Some(size as u32)),
+                    _ => None,
+                };
                 if tex_1d_hack {
                     write!(self.out, "ivec2(")?;
+                } else if uvec_size.is_some() {
+                    match uvec_size {
+                        Some(None) => write!(self.out, "int(")?,
+                        Some(Some(size)) => write!(self.out, "ivec{}(", size)?,
+                        _ => {}
+                    }
                 }
                 self.write_expr(coordinate, ctx)?;
                 if tex_1d_hack {
                     write!(self.out, ", 0)")?;
+                } else if uvec_size.is_some() {
+                    write!(self.out, ")")?;
                 }
             }
         }
@@ -3608,13 +3634,6 @@ impl<'a, W: Write> Writer<'a, W> {
                 continue;
             }
             match self.module.types[var.ty].inner {
-                crate::TypeInner::Struct { .. } => match var.space {
-                    crate::AddressSpace::Uniform | crate::AddressSpace::Storage { .. } => {
-                        let name = self.reflection_names_globals[&handle].clone();
-                        uniforms.insert(handle, name);
-                    }
-                    _ => (),
-                },
                 crate::TypeInner::Image { .. } => {
                     let tex_name = self.reflection_names_globals[&handle].clone();
                     match texture_mapping.entry(tex_name) {
@@ -3629,7 +3648,13 @@ impl<'a, W: Write> Writer<'a, W> {
                         }
                     }
                 }
-                _ => {}
+                _ => match var.space {
+                    crate::AddressSpace::Uniform | crate::AddressSpace::Storage { .. } => {
+                        let name = self.reflection_names_globals[&handle].clone();
+                        uniforms.insert(handle, name);
+                    }
+                    _ => (),
+                },
             }
         }
 
@@ -3717,6 +3742,7 @@ const fn glsl_built_in(
         Bi::VertexIndex => "uint(gl_VertexID)",
         // fragment
         Bi::FragDepth => "gl_FragDepth",
+        Bi::PointCoord => "gl_PointCoord",
         Bi::FrontFacing => "gl_FrontFacing",
         Bi::PrimitiveIndex => "uint(gl_PrimitiveID)",
         Bi::SampleIndex => "gl_SampleID",

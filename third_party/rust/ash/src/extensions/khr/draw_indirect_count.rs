@@ -51,7 +51,7 @@ impl DrawIndirectCount {
         max_draw_count: u32,
         stride: u32,
     ) {
-        (self.fp.cmd_draw_indexed_indirect_count_khr)(
+        (self.fp.cmd_draw_indirect_count_khr)(
             command_buffer,
             buffer,
             offset,
