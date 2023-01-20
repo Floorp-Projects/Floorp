@@ -509,14 +509,13 @@ static nsresult GetTableSelectionMode(const nsRange& aRange,
     return NS_OK;
   }
 
-  nsIContent* startContent = static_cast<nsIContent*>(startNode);
-  if (!(startNode->IsElement() && startContent->IsHTMLElement())) {
+  if (!startNode->IsHTMLElement()) {
     // Implies a check for being an element; if we ever make this work
     // for non-HTML, need to keep checking for elements.
     return NS_OK;
   }
 
-  if (startContent->IsHTMLElement(nsGkAtoms::tr)) {
+  if (startNode->IsHTMLElement(nsGkAtoms::tr)) {
     *aTableSelectionType = TableSelectionMode::Cell;
   } else  // check to see if we are selecting a table or row (column and all
           // cells not done yet)
