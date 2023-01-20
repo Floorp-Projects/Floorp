@@ -9,6 +9,7 @@
 
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsINetworkInterceptController.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/ConsoleReportCollector.h"
@@ -92,6 +93,7 @@ class AlternativeDataStreamListener;
 class FetchDriver final : public nsIStreamListener,
                           public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
+                          public nsINetworkInterceptController,
                           public nsIThreadRetargetableStreamListener,
                           public AbortFollower {
  public:
@@ -100,6 +102,7 @@ class FetchDriver final : public nsIStreamListener,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   FetchDriver(SafeRefPtr<InternalRequest> aRequest, nsIPrincipal* aPrincipal,
@@ -132,6 +135,8 @@ class FetchDriver final : public nsIStreamListener,
   // AbortFollower
   void RunAbortAlgorithm() override;
   void FetchDriverAbortActions(AbortSignalImpl* aSignalImpl);
+
+  void EnableNetworkInterceptControl();
 
  private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -181,6 +186,7 @@ class FetchDriver final : public nsIStreamListener,
   bool mResponseAvailableCalled;
   bool mFetchCalled;
 #endif
+  nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 
   friend class AlternativeDataStreamListener;
 

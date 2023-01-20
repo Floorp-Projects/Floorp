@@ -9,6 +9,7 @@
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/IPCBlob.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "nsContentUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -34,7 +35,12 @@ NotNull<nsCOMPtr<nsIInputStream>> ToInputStream(
 NotNull<nsCOMPtr<nsIInputStream>> ToInputStream(
     const ParentToChildStream& aStream) {
   MOZ_ASSERT(XRE_IsContentProcess());
-  nsCOMPtr<nsIInputStream> result = aStream.stream();
+  nsCOMPtr<nsIInputStream> result;
+  if (aStream.type() == ParentToChildStream::TRemoteLazyInputStream) {
+    result = aStream.get_RemoteLazyInputStream();
+  } else {
+    result = DeserializeIPCStream(aStream.get_IPCStream());
+  }
   return WrapNotNull(result);
 }
 
@@ -50,11 +56,20 @@ ParentToParentStream ToParentToParentStream(
 
 ParentToChildStream ToParentToChildStream(
     const NotNull<nsCOMPtr<nsIInputStream>>& aStream, int64_t aStreamSize,
-    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent) {
+    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent,
+    bool aSerializeAsLazy) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   ParentToChildStream result;
-  result.stream() = RemoteLazyInputStream::WrapStream(aStream.get());
+  if (aSerializeAsLazy) {
+    result = RemoteLazyInputStream::WrapStream(aStream.get());
+  } else {
+    nsCOMPtr<nsIInputStream> stream(aStream.get());
+    mozilla::ipc::IPCStream ipcStream;
+    Unused << NS_WARN_IF(
+        !mozilla::ipc::SerializeIPCStream(stream.forget(), ipcStream, false));
+    result = ipcStream;
+  }
   return result;
 }
 
