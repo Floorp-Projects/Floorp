@@ -5,16 +5,13 @@
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::fs;
-use std::io;
 use std::num::NonZeroU64;
 use std::path::Path;
 use std::str;
 use std::sync::RwLock;
 
-use crate::ErrorKind;
-
 use rkv::migrator::Migrator;
-use rkv::{MigrateError, StoreError, StoreOptions};
+use rkv::StoreOptions;
 
 /// Unwrap a `Result`s `Ok` value or do the specified action.
 ///
@@ -84,6 +81,8 @@ fn delete_lmdb_database(path: &Path) {
 /// without migrating data.
 /// This is a no-op if no LMDB database file exists.
 pub fn migrate(path: &Path, dst_env: &Rkv) {
+    use rkv::{MigrateError, StoreError};
+
     log::debug!("Migrating files in {}", path.display());
 
     // Shortcut if no data to migrate is around.
@@ -709,22 +708,7 @@ impl Database {
             writer.commit()?;
             Ok(())
         });
-
         if let Err(e) = res {
-            // We try to clear everything.
-            // If there was no data to begin with we encounter a `NotFound` error.
-            // There's no point in logging that.
-            if let ErrorKind::Rkv(StoreError::IoError(ioerr)) = e.kind() {
-                if let io::ErrorKind::NotFound = ioerr.kind() {
-                    log::debug!(
-                        "Could not clear store for lifetime {:?}: {:?}",
-                        lifetime,
-                        ioerr
-                    );
-                    return;
-                }
-            }
-
             log::warn!("Could not clear store for lifetime {:?}: {:?}", lifetime, e);
         }
     }
