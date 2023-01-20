@@ -41,7 +41,8 @@ class IdentityCredentialStorageService final
 
  private:
   IdentityCredentialStorageService()
-      : mMonitor("mozilla::IdentityCredentialStorageService::mMonitor"){};
+      : mMonitor("mozilla::IdentityCredentialStorageService::mMonitor"),
+        mPendingWrites(0){};
   ~IdentityCredentialStorageService() = default;
 
   // Spins up the service. This includes firing off async work in a worker
@@ -65,6 +66,27 @@ class IdentityCredentialStorageService final
   // Utility function to make sure a principal is an acceptable primary (RP)
   // principal
   static nsresult ValidatePrincipal(nsIPrincipal* aPrincipal);
+
+  // Helper functions to initialize the database connections. Also makes sure
+  // the tables are present and have up to date schemas.
+  nsresult GetMemoryDatabaseConnection();
+  nsresult GetDiskDatabaseConnection();
+  static nsresult GetDatabaseConnectionInternal(
+      mozIStorageConnection** aDatabase, nsIFile* aFile);
+
+  // Helper function for the Get*DatabaseConnection functions to ensure the
+  // tables are present and have up to date schemas.
+  static nsresult EnsureTable(mozIStorageConnection* aDatabase);
+
+  // Grab all data from the disk database and insert it into the memory
+  // database/ This is used at start up
+  nsresult LoadMemoryTableFromDisk();
+
+  // Used to (thread-safely) track how many operations have been launched to the
+  // worker thread so that we can wait for it to hit zero before close the disk
+  // database connection
+  void IncrementPendingWrites();
+  void DecrementPendingWrites();
 
   // Database connections. Guaranteed to be non-null and working once
   // initialized and not-yet finalized
@@ -90,6 +112,7 @@ class IdentityCredentialStorageService final
   FlippedOnce<false> mInitialized MOZ_GUARDED_BY(mMonitor);
   FlippedOnce<false> mErrored MOZ_GUARDED_BY(mMonitor);
   FlippedOnce<false> mFinalized MOZ_GUARDED_BY(mMonitor);
+  uint32_t mPendingWrites MOZ_GUARDED_BY(mMonitor);
 };
 
 }  // namespace mozilla

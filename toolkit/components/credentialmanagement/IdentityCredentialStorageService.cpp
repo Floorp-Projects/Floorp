@@ -117,7 +117,6 @@ IdentityCredentialStorageService::GetAsyncShutdownBarrier() const {
 
 nsresult IdentityCredentialStorageService::Init() {
   AssertIsOnMainThread();
-  MonitorAutoLock lock(mMonitor);
 
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
@@ -144,11 +143,12 @@ nsresult IdentityCredentialStorageService::Init() {
   NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
   observerService->AddObserver(this, "last-pb-context-exited", false);
 
-  // rv = GetMemoryDatabaseConnection();
-  // if (NS_WARN_IF(NS_FAILED(rv))) {
-  //   mErrored.Flip();
-  //   return rv;
-  // }
+  rv = GetMemoryDatabaseConnection();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MonitorAutoLock lock(mMonitor);
+    mErrored.Flip();
+    return rv;
+  }
 
   NS_ENSURE_SUCCESS(
       NS_CreateBackgroundTaskQueue("IdentityCredentialStorage",
@@ -161,20 +161,19 @@ nsresult IdentityCredentialStorageService::Init() {
       NS_NewRunnableFunction("IdentityCredentialStorageService::Init",
                              [self]() {
                                MonitorAutoLock lock(self->mMonitor);
-                               //  nsresult rv =
-                               //  self->GetDiskDatabaseConnection(); if
-                               //  (NS_WARN_IF(NS_FAILED(rv))) {
-                               //    self->mErrored.Flip();
-                               //    self->mMonitor.Notify();
-                               //    return;
-                               //  }
+                               nsresult rv = self->GetDiskDatabaseConnection();
+                               if (NS_WARN_IF(NS_FAILED(rv))) {
+                                 self->mErrored.Flip();
+                                 self->mMonitor.Notify();
+                                 return;
+                               }
 
-                               //  rv = self->LoadMemoryTableFromDisk();
-                               //  if (NS_WARN_IF(NS_FAILED(rv))) {
-                               //    self->mErrored.Flip();
-                               //    self->mMonitor.NotifyAll();
-                               //    return;
-                               //  }
+                               rv = self->LoadMemoryTableFromDisk();
+                               if (NS_WARN_IF(NS_FAILED(rv))) {
+                                 self->mErrored.Flip();
+                                 self->mMonitor.NotifyAll();
+                                 return;
+                               }
 
                                self->mInitialized.Flip();
                                self->mMonitor.Notify();
@@ -185,6 +184,8 @@ nsresult IdentityCredentialStorageService::Init() {
 }
 
 nsresult IdentityCredentialStorageService::WaitForInitialization() {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Must only wait for initialization in the main thread.");
   MonitorAutoLock lock(mMonitor);
   while (!mInitialized && !mErrored) {
     mMonitor.Wait();
@@ -218,74 +219,160 @@ nsresult IdentityCredentialStorageService::ValidatePrincipal(
   return NS_OK;
 }
 
-nsresult createTable(mozIStorageConnection* aDatabase) {
-  // Currently there is only one schema version, so we just need to create the
-  // table. The definition uses no explicit rowid column, instead primary keying
-  // on the tuple defined in the spec. We store two bits and some additional
-  // data to make integration with the ClearDataService easier/possible.
+nsresult IdentityCredentialStorageService::GetMemoryDatabaseConnection() {
+  return IdentityCredentialStorageService::GetDatabaseConnectionInternal(
+      getter_AddRefs(mMemoryDatabaseConnection), nullptr);
+}
+
+nsresult IdentityCredentialStorageService::GetDiskDatabaseConnection() {
+  NS_ENSURE_TRUE(mDatabaseFile, NS_ERROR_NULL_POINTER);
+  return IdentityCredentialStorageService::GetDatabaseConnectionInternal(
+      getter_AddRefs(mDiskDatabaseConnection), mDatabaseFile);
+}
+
+// static
+nsresult IdentityCredentialStorageService::GetDatabaseConnectionInternal(
+    mozIStorageConnection** aDatabase, nsIFile* aFile) {
+  NS_ENSURE_TRUE(aDatabase, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_STATE(!(*aDatabase));
+  nsCOMPtr<mozIStorageService> storage =
+      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+  nsresult rv;
+
+  if (aFile) {
+    rv = storage->OpenDatabase(aFile, mozIStorageService::CONNECTION_DEFAULT,
+                               aDatabase);
+    if (rv == NS_ERROR_FILE_CORRUPTED) {
+      rv = aFile->Remove(false);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = storage->OpenDatabase(aFile, mozIStorageService::CONNECTION_DEFAULT,
+                                 aDatabase);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    rv = storage->OpenSpecialDatabase(
+        kMozStorageMemoryStorageKey, "icsprivatedb"_ns,
+        mozIStorageService::CONNECTION_DEFAULT, aDatabase);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  NS_ENSURE_TRUE(*aDatabase, NS_ERROR_UNEXPECTED);
+  bool ready = false;
+  (*aDatabase)->GetConnectionReady(&ready);
+  NS_ENSURE_TRUE(ready, NS_ERROR_UNEXPECTED);
+  rv = EnsureTable(*aDatabase);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+// static
+nsresult IdentityCredentialStorageService::EnsureTable(
+    mozIStorageConnection* aDatabase) {
   NS_ENSURE_ARG_POINTER(aDatabase);
-  nsresult rv = aDatabase->SetSchemaVersion(SCHEMA_VERSION);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDatabase->ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE identity ("
-                       "rpOrigin TEXT NOT NULL"
-                       ",idpOrigin TEXT NOT NULL"
-                       ",credentialId TEXT NOT NULL"
-                       ",registered INTEGER"
-                       ",allowLogout INTEGER"
-                       ",modificationTime INTEGER"
-                       ",rpBaseDomain TEXT"
-                       ",PRIMARY KEY (rpOrigin, idpOrigin, credentialId)"
-                       ")"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult getMemoryDatabaseConnection(mozIStorageConnection** aDatabase) {
-  nsCOMPtr<mozIStorageService> storage =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
-  nsresult rv = storage->OpenSpecialDatabase(
-      kMozStorageMemoryStorageKey, "icsprivatedb"_ns,
-      mozIStorageService::CONNECTION_DEFAULT, aDatabase);
-  NS_ENSURE_SUCCESS(rv, rv);
-  bool ready = false;
-  (*aDatabase)->GetConnectionReady(&ready);
-  NS_ENSURE_TRUE(ready, NS_ERROR_UNEXPECTED);
   bool tableExists = false;
-  (*aDatabase)->TableExists("identity"_ns, &tableExists);
+  aDatabase->TableExists("identity"_ns, &tableExists);
   if (!tableExists) {
-    rv = createTable(*aDatabase);
+    // Currently there is only one schema version, so we just need to create the
+    // table. The definition uses no explicit rowid column, instead primary
+    // keying on the tuple defined in the spec. We store two bits and some
+    // additional data to make integration with the ClearDataService
+    // easier/possible.
+    nsresult rv = aDatabase->SetSchemaVersion(SCHEMA_VERSION);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDatabase->ExecuteSimpleSQL(
+        nsLiteralCString("CREATE TABLE identity ("
+                         "rpOrigin TEXT NOT NULL"
+                         ",idpOrigin TEXT NOT NULL"
+                         ",credentialId TEXT NOT NULL"
+                         ",registered INTEGER"
+                         ",allowLogout INTEGER"
+                         ",modificationTime INTEGER"
+                         ",rpBaseDomain TEXT"
+                         ",PRIMARY KEY (rpOrigin, idpOrigin, credentialId)"
+                         ")"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
 
-nsresult getDiskDatabaseConnection(mozIStorageConnection** aDatabase) {
-  // Create the file we store the database in.
-  nsCOMPtr<nsIFile> profileDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(profileDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = profileDir->AppendNative(nsLiteralCString(ACCOUNT_STATE_FILENAME));
+nsresult IdentityCredentialStorageService::LoadMemoryTableFromDisk() {
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "Must not load the table from disk in the main thread.");
+  auto constexpr selectAllQuery = nsLiteralCString(
+      "SELECT rpOrigin, idpOrigin, credentialId, registered, allowLogout, "
+      "modificationTime, rpBaseDomain FROM identity;");
+  auto constexpr insertQuery = nsLiteralCString(
+      "INSERT INTO identity(rpOrigin, idpOrigin, credentialId, registered, "
+      "allowLogout, modificationTime, rpBaseDomain) VALUES (?1, ?2, ?3, ?4, "
+      "?5, ?6, ?7);");
+
+  nsCOMPtr<mozIStorageStatement> writeStmt;
+  nsresult rv = mMemoryDatabaseConnection->CreateStatement(
+      insertQuery, getter_AddRefs(writeStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<mozIStorageService> storage =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
-  rv = storage->OpenDatabase(profileDir, mozIStorageService::CONNECTION_DEFAULT,
-                             aDatabase);
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    rv = profileDir->Remove(false);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = storage->OpenDatabase(
-        profileDir, mozIStorageService::CONNECTION_DEFAULT, aDatabase);
-  }
+  nsCOMPtr<mozIStorageStatement> readStmt;
+  rv = mDiskDatabaseConnection->CreateStatement(selectAllQuery,
+                                                getter_AddRefs(readStmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  bool ready = false;
-  (*aDatabase)->GetConnectionReady(&ready);
-  NS_ENSURE_TRUE(ready, NS_ERROR_UNEXPECTED);
+
+  bool hasResult;
+  while (NS_SUCCEEDED(readStmt->ExecuteStep(&hasResult)) && hasResult) {
+    int64_t registered, allowLogout, modificationTime;
+    nsCString rpOrigin, idpOrigin, credentialID, rpBaseDomain;
+    rv = readStmt->GetUTF8String(0, rpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(1, idpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(2, credentialID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetInt64(3, &registered);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetInt64(4, &allowLogout);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetInt64(5, &modificationTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(6, rpBaseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByIndex(0, rpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByIndex(1, idpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByIndex(2, credentialID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindInt64ByIndex(3, registered);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindInt64ByIndex(4, allowLogout);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindInt64ByIndex(5, modificationTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByIndex(6, rpBaseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+void IdentityCredentialStorageService::IncrementPendingWrites() {
+  MonitorAutoLock lock(mMonitor);
+  MOZ_ASSERT(mPendingWrites < std::numeric_limits<uint32_t>::max());
+  mPendingWrites++;
+}
+
+void IdentityCredentialStorageService::DecrementPendingWrites() {
+  MonitorAutoLock lock(mMonitor);
+  MOZ_ASSERT(mPendingWrites > 0);
+  mPendingWrites--;
+}
+
+// This only exists to let the code I'm going to delete compile
+nsresult getMemoryDatabaseConnection(mozIStorageConnection** aDatabase) {
+  return NS_OK;
+}
+// This only exists to let the code I'm going to delete compile
+nsresult getDiskDatabaseConnection(mozIStorageConnection** aDatabase) {
   return NS_OK;
 }
 
