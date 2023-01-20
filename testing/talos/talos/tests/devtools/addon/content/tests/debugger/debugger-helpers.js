@@ -92,7 +92,7 @@ function getCM(dbg) {
 }
 exports.getCM = getCM;
 
-function waitForText(dbg, url, text) {
+function waitForText(dbg, text) {
   return waitUntil(() => {
     // the welcome box is removed once text is displayed
     const welcomebox = dbg.win.document.querySelector(".welcomebox");
@@ -229,7 +229,7 @@ async function openDebuggerAndLog(label, expected) {
     const dbg = await createContext(panel);
     await waitForSource(dbg, expected.sourceURL);
     await selectSource(dbg, expected.file);
-    await waitForText(dbg, expected.file, expected.text);
+    await waitForText(dbg, expected.text);
     await waitForSymbols(dbg);
   };
 
@@ -248,7 +248,7 @@ async function reloadDebuggerAndLog(label, toolbox, expected) {
     const dbg = await createContext(panel);
     await waitForDispatch(dbg, "NAVIGATE");
     await waitForSources(dbg, expected.sources);
-    await waitForText(dbg, expected.file, expected.text);
+    await waitForText(dbg, expected.text);
     await waitForSymbols(dbg);
   };
   await reloadPageAndLog(`${label}.jsdebugger`, toolbox, onReload);
@@ -310,7 +310,7 @@ async function step(dbg, stepType) {
 exports.step = step;
 
 async function hoverOnToken(dbg, cx, textToWaitFor, textToHover) {
-  await waitForText(dbg, null, textToWaitFor);
+  await waitForText(dbg, textToWaitFor);
   const tokenElement = [
     ...dbg.win.document.querySelectorAll(".CodeMirror span"),
   ].find(el => el.textContent === "window");
