@@ -179,6 +179,8 @@ add_task(async function test_service_mode_telemetry() {
           `Has set label '${label}' to ${expected} for mode ${modePBM}.`
         );
       }
+
+      await SpecialPowers.popPrefEnv();
     }
   }
 });
@@ -737,4 +739,27 @@ add_task(async function test_reload_telemetry_iframe() {
 
   BrowserTestUtils.removeTab(tab);
   Services.fog.testResetFOG();
+});
+
+add_task(async function test_service_detectOnly_telemetry() {
+  let service = Cc["@mozilla.org/cookie-banner-service;1"].getService(
+    Ci.nsIObserver
+  );
+
+  for (let detectOnly of [true, false, true]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["cookiebanners.service.detectOnly", detectOnly]],
+    });
+
+    // Trigger the idle-daily on the cookie banner service.
+    service.observe(null, "idle-daily", null);
+
+    is(
+      Glean.cookieBanners.serviceDetectOnly.testGetValue(),
+      detectOnly,
+      `Has set detect-only metric to ${detectOnly}.`
+    );
+
+    await SpecialPowers.popPrefEnv();
+  }
 });
