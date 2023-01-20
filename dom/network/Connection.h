@@ -9,7 +9,6 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/NetworkInformationBinding.h"
-#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
@@ -42,7 +41,7 @@ class Connection : public DOMEventTargetHelper {
                                JS::Handle<JSObject*> aGivenProto) override;
 
   ConnectionType Type() const {
-    return nsContentUtils::ShouldResistFingerprinting()
+    return mShouldResistFingerprinting
                ? static_cast<ConnectionType>(ConnectionType::Unknown)
                : mType;
   }
