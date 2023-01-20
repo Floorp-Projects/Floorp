@@ -480,33 +480,12 @@ void FileSystemManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(!mActorDestroyed);
 
-  mActorDestroyed = true;
+  DEBUGONLY(mActorDestroyed = true);
 
-  if (!mStreamCallbacks || mStreamCallbacks->HasNoRemoteQuotaObjectParents()) {
-    CleanupAfterClose();
-  }
-}
-
-void FileSystemManagerParent::EnsureStreamCallbacks() {
   if (mStreamCallbacks) {
-    return;
+    mStreamCallbacks->CloseAllRemoteQuotaObjectParents();
+    mStreamCallbacks = nullptr;
   }
-
-  mStreamCallbacks = MakeRefPtr<FileSystemStreamCallbacks>();
-
-  mStreamCallbacks->SetRemoteQuotaObjectParentCallback([self = RefPtr(this)]() {
-    if (self->mActorDestroyed) {
-      self->CleanupAfterClose();
-    }
-  });
-}
-
-void FileSystemManagerParent::CleanupAfterClose() {
-  MOZ_ASSERT(mActorDestroyed);
-  MOZ_ASSERT_IF(mStreamCallbacks,
-                mStreamCallbacks->HasNoRemoteQuotaObjectParents());
-
-  mStreamCallbacks = nullptr;
 
   InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
               [self = RefPtr<FileSystemManagerParent>(this)]() {
@@ -516,6 +495,14 @@ void FileSystemManagerParent::CleanupAfterClose() {
 
                 return BoolPromise::CreateAndResolve(true, __func__);
               });
+}
+
+void FileSystemManagerParent::EnsureStreamCallbacks() {
+  if (mStreamCallbacks) {
+    return;
+  }
+
+  mStreamCallbacks = MakeRefPtr<FileSystemStreamCallbacks>();
 }
 
 }  // namespace mozilla::dom
