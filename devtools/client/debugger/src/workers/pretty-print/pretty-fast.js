@@ -1,7 +1,5 @@
 /* eslint-disable file-header/file-header */
-/* eslint-disable prefer-template */
 /* eslint-disable complexity */
-/* eslint-disable no-undef */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -543,14 +541,8 @@ const sanitize = (function() {
     "'": "\\'",
   };
 
-  const regExpString =
-    "(" +
-    Object.keys(escapeCharacters)
-      .map(function(c) {
-        return escapeCharacters[c];
-      })
-      .join("|") +
-    ")";
+  // eslint-disable-next-line prefer-template
+  const regExpString = "(" + Object.values(escapeCharacters).join("|") + ")";
   const escapeCharactersRegExp = new RegExp(regExpString, "g");
 
   return function(str) {
@@ -570,7 +562,7 @@ const sanitize = (function() {
 function addToken(token, write) {
   if (token.type.label == "string") {
     write(
-      "'" + sanitize(token.value) + "'",
+      `'${sanitize(token.value)}'`,
       token.loc.start.line,
       token.loc.start.column
     );
@@ -694,8 +686,8 @@ function addComment(
     // We must pass ignoreNewline in case the comment happens to be "\n".
     write(
       text
-        .split(new RegExp("/\n" + indentString + "/", "g"))
-        .join("\n" + indentString),
+        .split(new RegExp(`/\n${indentString}/`, "g"))
+        .join(`\n${indentString}`),
       null,
       null,
       true
