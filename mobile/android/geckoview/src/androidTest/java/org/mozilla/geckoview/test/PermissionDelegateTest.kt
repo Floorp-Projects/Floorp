@@ -185,9 +185,6 @@ class PermissionDelegateTest : BaseSessionTest() {
     }
 
     @Test fun geolocation() {
-        // Bug 1810736
-        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
-
         assertInAutomationThat(
             "Should have location permission",
             hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -638,6 +635,9 @@ class PermissionDelegateTest : BaseSessionTest() {
 
     @Test
     fun autoplayReject() {
+        // Bug 1810736
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
         // The profile used in automation sets this to false, so we need to hack it back to true here.
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
