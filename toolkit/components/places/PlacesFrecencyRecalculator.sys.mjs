@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
-  Log: "resource://gre/modules/Log.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   setInterval: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -25,17 +24,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", function() {
-  // It is necessary to initialize a logger before using
-  // getLoggerWithMessagePrefix().
-  let logger = lazy.Log.repository.getLogger("places");
-  logger.manageLevelFromPref("places.loglevel");
-  logger.addAppender(
-    new lazy.Log.ConsoleAppender(new lazy.Log.BasicFormatter())
-  );
-  return lazy.Log.repository.getLoggerWithMessagePrefix(
-    "places",
-    "FrecencyRecalculator :: "
-  );
+  return lazy.PlacesUtils.getLogger({ prefix: "FrecencyRecalculator" });
 });
 
 // Decay rate applied daily to frecency scores.

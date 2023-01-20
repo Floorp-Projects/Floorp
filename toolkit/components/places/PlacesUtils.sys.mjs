@@ -13,6 +13,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Bookmarks: "resource://gre/modules/Bookmarks.sys.mjs",
   History: "resource://gre/modules/History.sys.mjs",
+  Log: "resource://gre/modules/Log.sys.mjs",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
@@ -2005,6 +2006,34 @@ export var PlacesUtils = {
     return (
       Cu.isInAutomation || Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")
     );
+  },
+
+  /**
+   * Creates a logger.
+   * Logging level can be controlled through places.loglevel.
+   *
+   * @param {string} [prefix] Prefix to use for the logged messages, "::" will
+   *                 be appended automatically to the prefix.
+   * @returns {object} The logger.
+   */
+  getLogger({ prefix = "" } = {}) {
+    if (!this._logger) {
+      this._logger = lazy.Log.repository.getLogger("places");
+      this._logger.manageLevelFromPref("places.loglevel");
+      this._logger.addAppender(
+        new lazy.Log.ConsoleAppender(new lazy.Log.BasicFormatter())
+      );
+    }
+    if (prefix) {
+      // This is not an early return because it is necessary to invoke getLogger
+      // at least once before getLoggerWithMessagePrefix; it replaces a
+      // method of the original logger, rather than using an actual Proxy.
+      return lazy.Log.repository.getLoggerWithMessagePrefix(
+        "places",
+        prefix + " :: "
+      );
+    }
+    return this._logger;
   },
 };
 
