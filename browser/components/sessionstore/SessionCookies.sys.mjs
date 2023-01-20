@@ -55,7 +55,7 @@ var SessionCookiesInternal = {
           cookie.originAttributes || {}
         );
       } catch (ex) {
-        Cu.reportError(
+        console.error(
           `CookieService::CookieExists failed with error '${ex}' for '${JSON.stringify(
             cookie
           )}'.`
@@ -77,7 +77,7 @@ var SessionCookiesInternal = {
             cookie.schemeMap || Ci.nsICookie.SCHEME_HTTPS
           );
         } catch (ex) {
-          Cu.reportError(
+          console.error(
             `CookieService::Add failed with error '${ex}' for cookie ${JSON.stringify(
               cookie
             )}.`

@@ -2214,7 +2214,7 @@ var CustomizableUIInternal = {
       try {
         aWidget.onClick.call(null, aEvent);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     } else {
       // XXXunf Need to think this through more, and formalize.
@@ -2951,7 +2951,7 @@ var CustomizableUIInternal = {
           }
         },
         err => {
-          Cu.reportError(err);
+          console.error(err);
         }
       );
     }
@@ -3125,7 +3125,7 @@ var CustomizableUIInternal = {
           aArgs
         );
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
         return undefined;
       }
     };

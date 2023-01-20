@@ -2197,8 +2197,9 @@ var SessionStoreInternal = {
               try {
                 Services.obs.removeObserver(observer, topic);
               } catch (ex) {
-                Cu.reportError(
-                  "SessionStore: exception whilst flushing all windows: " + ex
+                console.error(
+                  "SessionStore: exception whilst flushing all windows: ",
+                  ex
                 );
               }
             };
@@ -4476,7 +4477,7 @@ var SessionStoreInternal = {
         return true;
       } catch (error) {
         // Can't setup speculative connection for this url.
-        Cu.reportError(error);
+        console.error(error);
         return false;
       }
     }
@@ -4671,7 +4672,7 @@ var SessionStoreInternal = {
     let browser = tab.linkedBrowser;
 
     if (TAB_STATE_FOR_BROWSER.has(browser)) {
-      Cu.reportError("Must reset tab before calling restoreTab.");
+      console.error("Must reset tab before calling restoreTab.");
       return;
     }
 
@@ -5968,7 +5969,7 @@ var SessionStoreInternal = {
     let previousState = TAB_STATE_FOR_BROWSER.get(browser);
 
     if (!previousState) {
-      Cu.reportError("Given tab is not restoring.");
+      console.error("Given tab is not restoring.");
       return;
     }
 
@@ -5998,7 +5999,7 @@ var SessionStoreInternal = {
     let browser = tab.linkedBrowser;
 
     if (!TAB_STATE_FOR_BROWSER.has(browser)) {
-      Cu.reportError("Given tab is not restoring.");
+      console.error("Given tab is not restoring.");
       return;
     }
 

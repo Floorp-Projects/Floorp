@@ -632,7 +632,7 @@ export class UrlbarInput {
         this,
         searchString,
         oneOffParams.engine.name
-      ).catch(Cu.reportError);
+      ).catch(console.error);
     } else {
       // Use the current value if we don't have a UrlbarResult e.g. because the
       // view is closed.
@@ -964,7 +964,7 @@ export class UrlbarInput {
           // We don't await for this, because a rejection should not interrupt
           // the load. Just reportError it.
           lazy.UrlbarUtils.addToInputHistory(url, searchString).catch(
-            Cu.reportError
+            console.error
           );
         }
 
@@ -1027,7 +1027,7 @@ export class UrlbarInput {
             this,
             result.payload.suggestion || result.payload.query,
             engine.name
-          ).catch(Cu.reportError);
+          ).catch(console.error);
         }
         break;
       }
@@ -1131,7 +1131,7 @@ export class UrlbarInput {
       if (input !== undefined) {
         // We don't await for this, because a rejection should not interrupt
         // the load. Just reportError it.
-        lazy.UrlbarUtils.addToInputHistory(url, input).catch(Cu.reportError);
+        lazy.UrlbarUtils.addToInputHistory(url, input).catch(console.error);
       }
     }
 
@@ -1691,7 +1691,7 @@ export class UrlbarInput {
       if (sourceName) {
         searchMode = { source };
       } else {
-        Cu.reportError(`Unrecognized source: ${source}`);
+        console.error(`Unrecognized source: ${source}`);
       }
     }
 
@@ -1731,7 +1731,7 @@ export class UrlbarInput {
           try {
             lazy.BrowserSearchTelemetry.recordSearchMode(searchMode);
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         }
       }
@@ -2049,7 +2049,7 @@ export class UrlbarInput {
     try {
       return Services.uriFixup.getFixupURIInfo(searchString, flags);
     } catch (ex) {
-      Cu.reportError(
+      console.error(
         `An error occured while trying to fixup "${searchString}": ${ex}`
       );
     }
@@ -2535,9 +2535,7 @@ export class UrlbarInput {
       );
       value = info.fixedURI.spec;
     } catch (ex) {
-      Cu.reportError(
-        `An error occured while trying to fixup "${value}": ${ex}`
-      );
+      console.error(`An error occured while trying to fixup "${value}": ${ex}`);
     }
 
     this.value = value;
@@ -2636,7 +2634,7 @@ export class UrlbarInput {
     } catch (ex) {
       // Things may go wrong when adding url to session history,
       // but don't let that interfere with the loading of the url.
-      Cu.reportError(ex);
+      console.error(ex);
     }
 
     // TODO: When bug 1498553 is resolved, we should be able to

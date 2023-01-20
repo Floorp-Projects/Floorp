@@ -115,7 +115,7 @@ TabListComponent.prototype = {
 
   onBookmarkTab(uri, title) {
     this._window.top.PlacesCommandHook.bookmarkLink(uri, title).catch(
-      Cu.reportError
+      console.error
     );
   },
 

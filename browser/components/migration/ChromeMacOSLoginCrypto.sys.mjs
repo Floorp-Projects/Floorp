@@ -113,7 +113,7 @@ export class ChromeMacOSLoginCrypto {
           ["decrypt", "encrypt"]
         );
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   }
 
   /**

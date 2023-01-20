@@ -61,7 +61,7 @@ function convertBookmarks(items, errorAccumulator) {
         itemsToInsert.push(folderItem);
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       errorAccumulator(ex);
     }
   }
@@ -175,7 +175,7 @@ export class ChromeProfileMigrator extends MigratorBase {
     } catch (e) {
       // Avoid reporting NotFoundErrors from trying to get local state.
       if (localState || e.name != "NotFoundError") {
-        Cu.reportError("Error detecting Chrome profiles: " + e);
+        console.error("Error detecting Chrome profiles: ", e);
       }
       // If we weren't able to detect any profiles above, fallback to the Default profile.
       let defaultProfilePath = PathUtils.join(chromeUserDataPath, "Default");
@@ -229,7 +229,7 @@ export class ChromeProfileMigrator extends MigratorBase {
           password_element, password_value, signon_realm, scheme, date_created,
           times_used FROM logins WHERE blacklisted_by_user = 0`
         ).catch(ex => {
-          Cu.reportError(ex);
+          console.error(ex);
           aCallback(false);
         });
         // If the promise was rejected we will have already called aCallback,
@@ -267,7 +267,7 @@ export class ChromeProfileMigrator extends MigratorBase {
           }
         } catch (ex) {
           // Handle the user canceling Keychain access or other OSCrypto errors.
-          Cu.reportError(ex);
+          console.error(ex);
           aCallback(false);
           return;
         }
@@ -333,7 +333,7 @@ export class ChromeProfileMigrator extends MigratorBase {
             }
             logins.push(loginInfo);
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
         try {
@@ -341,7 +341,7 @@ export class ChromeProfileMigrator extends MigratorBase {
             await MigrationUtils.insertLoginsWrapper(logins);
           }
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
         if (crypto.finalize) {
           crypto.finalize();
@@ -360,7 +360,7 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
     try {
       localState = await lazy.ChromeMigrationUtils.getLocalState("360 SE");
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
 
     let alternativeBookmarks = await lazy.Qihoo360seMigrationUtils.getAlternativeBookmarks(
@@ -484,7 +484,7 @@ async function GetHistoryResource(aProfileFolder) {
               ],
             });
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
 
@@ -496,7 +496,7 @@ async function GetHistoryResource(aProfileFolder) {
           aCallback(true);
         },
         ex => {
-          Cu.reportError(ex);
+          console.error(ex);
           aCallback(false);
         }
       );
@@ -520,7 +520,7 @@ async function GetCookiesResource(aProfileFolder) {
         "Chrome cookies",
         `PRAGMA table_info(cookies)`
       ).catch(ex => {
-        Cu.reportError(ex);
+        console.error(ex);
         aCallback(false);
       });
       // If the promise was rejected we will have already called aCallback,
@@ -546,7 +546,7 @@ async function GetCookiesResource(aProfileFolder) {
         FROM cookies
         WHERE length(encrypted_value) = 0`
       ).catch(ex => {
-        Cu.reportError(ex);
+        console.error(ex);
         aCallback(false);
       });
 
@@ -599,7 +599,7 @@ async function GetCookiesResource(aProfileFolder) {
             schemeType
           );
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
       }
       aCallback(true);

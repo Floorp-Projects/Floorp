@@ -89,13 +89,13 @@ function readTableFromEdgeDB(
       }
     }
   } catch (ex) {
-    Cu.reportError(
-      "Failed to extract items from table " +
-        tableName +
-        " in Edge database at " +
-        dbFile.path +
-        " due to the following error: " +
-        ex
+    console.error(
+      "Failed to extract items from table ",
+      tableName,
+      " in Edge database at ",
+      dbFile.path,
+      " due to the following error: ",
+      ex
     );
     // Deliberately make this fail so we expose failure in the UI:
     throw ex;
@@ -134,7 +134,7 @@ EdgeTypedURLMigrator.prototype = {
           continue;
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
         continue;
       }
 
@@ -178,7 +178,7 @@ EdgeTypedURLDBMigrator.prototype = {
     this._migrateTypedURLsFromDB().then(
       () => callback(true),
       ex => {
-        Cu.reportError(ex);
+        console.error(ex);
         callback(false);
       }
     );
@@ -237,7 +237,7 @@ EdgeTypedURLDBMigrator.prototype = {
           ],
         });
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
     await MigrationUtils.insertVisitsWrapper(pageInfos);
@@ -263,7 +263,7 @@ EdgeReadingListMigrator.prototype = {
     this._migrateReadingList(lazy.PlacesUtils.bookmarks.menuGuid).then(
       () => callback(true),
       ex => {
-        Cu.reportError(ex);
+        console.error(ex);
         callback(false);
       }
     );
@@ -364,7 +364,7 @@ EdgeBookmarksMigrator.prototype = {
     this._migrateBookmarks().then(
       () => callback(true),
       ex => {
-        Cu.reportError(ex);
+        console.error(ex);
         callback(false);
       }
     );
@@ -420,7 +420,7 @@ EdgeBookmarksMigrator.prototype = {
         try {
           new URL(bookmark.URL);
         } catch (ex) {
-          Cu.reportError(
+          console.error(
             `Ignoring ${bookmark.URL} when importing from Edge because of exception: ${ex}`
           );
           continue;

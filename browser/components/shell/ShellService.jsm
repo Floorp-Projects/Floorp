@@ -347,7 +347,7 @@ let ShellServiceInternal = {
       // await the result of setAsDefaultUserChoice() here, either, we just need
       // to fall back in case it fails.
       this.setAsDefaultUserChoice().catch(err => {
-        Cu.reportError(err);
+        console.error(err);
         this.shellService.setDefaultBrowser(claimAllTypes, forAllUsers);
       });
       return;
@@ -373,7 +373,7 @@ let ShellServiceInternal = {
       ShellService.setDefaultBrowser(claimAllTypes, false);
     } catch (ex) {
       setAsDefaultError = true;
-      Cu.reportError(ex);
+      console.error(ex);
     }
     // Here BROWSER_IS_USER_DEFAULT and BROWSER_SET_USER_DEFAULT_ERROR appear
     // to be inverse of each other, but that is only because this function is
@@ -463,7 +463,7 @@ let ShellServiceInternal = {
           this.macDockSupport.ensureAppIsPinnedToDock();
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   },

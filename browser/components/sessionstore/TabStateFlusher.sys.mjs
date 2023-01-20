@@ -192,7 +192,7 @@ var TabStateFlusherInternal = {
     }
 
     if (!success) {
-      Cu.reportError("Failed to flush browser: " + message);
+      console.error("Failed to flush browser: ", message);
     }
 
     // Resolve the request with the given id.
@@ -225,7 +225,7 @@ var TabStateFlusherInternal = {
     let { cancel } = this._requests.get(browser.permanentKey);
 
     if (!success) {
-      Cu.reportError("Failed to flush browser: " + message);
+      console.error("Failed to flush browser: ", message);
     }
 
     // Resolve all requests.

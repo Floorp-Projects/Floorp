@@ -1699,7 +1699,7 @@ var gMainPane = {
           preference.setElementValue(element);
         }
       }
-    })().catch(Cu.reportError);
+    })().catch(console.error);
   },
 
   /**
@@ -2912,7 +2912,7 @@ var gMainPane = {
    * response to the choice, if one is made.
    */
   chooseFolder() {
-    return this.chooseFolderTask().catch(Cu.reportError);
+    return this.chooseFolderTask().catch(console.error);
   },
   async chooseFolderTask() {
     let [title] = await document.l10n.formatValues([
@@ -2955,7 +2955,7 @@ var gMainPane = {
    * preferences.
    */
   displayDownloadDirPref() {
-    this.displayDownloadDirPrefTask().catch(Cu.reportError);
+    this.displayDownloadDirPrefTask().catch(console.error);
 
     // don't override the preference's value in UI
     return undefined;

@@ -370,7 +370,7 @@ async function withAwaitProvider(args, promise, callback) {
   try {
     await callback();
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
   } finally {
     UrlbarProvidersManager.unregisterProvider(provider);
   }

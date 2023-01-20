@@ -482,7 +482,7 @@ var BookmarkPropertiesPanel = {
 
       if (this._charSet) {
         PlacesUIUtils.setCharsetForPage(this._uri, this._charSet, window).catch(
-          Cu.reportError
+          console.error
         );
       }
 

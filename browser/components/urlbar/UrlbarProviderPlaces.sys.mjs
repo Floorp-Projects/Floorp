@@ -341,7 +341,7 @@ function makeUrlbarResult(tokens, info) {
           })
         );
       default:
-        Cu.reportError(`Unexpected action type: ${action.type}`);
+        console.error(`Unexpected action type: ${action.type}`);
         return null;
     }
   }

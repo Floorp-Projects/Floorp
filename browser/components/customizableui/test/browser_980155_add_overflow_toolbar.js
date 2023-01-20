@@ -17,7 +17,7 @@ add_task(async function addOverflowingToolbar() {
         CustomizableUI.destroyWidget(id);
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   });
 

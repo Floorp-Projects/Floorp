@@ -56,7 +56,7 @@ function getProviderListFromPref(prefName) {
     try {
       return JSON.parse(prefVal);
     } catch (e) {
-      Cu.reportError(`DoH provider list not a valid JSON array: ${prefName}`);
+      console.error(`DoH provider list not a valid JSON array: ${prefName}`);
     }
   }
   return undefined;

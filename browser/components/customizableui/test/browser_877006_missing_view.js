@@ -20,7 +20,7 @@ add_task(function testAddbrokenViewWidget() {
     CustomizableUI.createWidget(widgetSpec);
     CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_NAVBAR);
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
     noError = false;
   }
   ok(
@@ -32,7 +32,7 @@ add_task(function testAddbrokenViewWidget() {
   try {
     CustomizableUI.destroyWidget(kWidgetId);
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
     noError = false;
   }
   ok(

@@ -152,7 +152,7 @@ var gFontsDialog = {
           preference.setElementValue(element);
         }
       }
-    })().catch(Cu.reportError);
+    })().catch(console.error);
   },
 
   readFontLanguageGroup() {

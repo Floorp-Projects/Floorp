@@ -542,7 +542,7 @@ var UITour = {
 
       case "setDefaultSearchEngine": {
         let enginePromise = this.selectSearchEngine(data.identifier);
-        enginePromise.catch(Cu.reportError);
+        enginePromise.catch(console.error);
         break;
       }
 
@@ -603,7 +603,7 @@ var UITour = {
               searchbar.openSuggestionsPanel();
             }
           })
-          .catch(Cu.reportError);
+          .catch(console.error);
         break;
       }
 

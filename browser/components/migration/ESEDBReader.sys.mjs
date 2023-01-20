@@ -424,7 +424,7 @@ ESEDB.prototype = {
       try {
         this._close();
       } catch (innerException) {
-        Cu.reportError(innerException);
+        console.error(innerException);
       }
       // Make sure caller knows we failed.
       throw ex;
@@ -574,11 +574,11 @@ ESEDB.prototype = {
         // Deal with null values:
         buffer = null;
       } else {
-        Cu.reportError(
-          "Unexpected JET error: " +
-            err +
-            "; retrieving value for column " +
-            column.name
+        console.error(
+          "Unexpected JET error: ",
+          err,
+          "; retrieving value for column ",
+          column.name
         );
         throw new Error(convertESEError(err));
       }
@@ -591,8 +591,10 @@ ESEDB.prototype = {
     }
     if (column.type == "guid") {
       if (buffer.length != 16) {
-        Cu.reportError(
-          "Buffer size for guid field " + column.id + " should have been 16!"
+        console.error(
+          "Buffer size for guid field ",
+          column.id,
+          " should have been 16!"
         );
         return "";
       }
@@ -785,7 +787,7 @@ export let ESEDBReader = {
     const locked = await utils.isDbLocked(dbFile);
 
     if (locked) {
-      Cu.reportError(`ESE DB at ${dbFile.path} is locked.`);
+      console.error(`ESE DB at ${dbFile.path} is locked.`);
     }
 
     return locked;

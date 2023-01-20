@@ -981,7 +981,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         }
         return Promise.resolve();
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
 
   /**
@@ -1095,12 +1095,12 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     this.download.cancel().catch(() => {});
     this.download
       .removePartialData()
-      .catch(Cu.reportError)
+      .catch(console.error)
       .finally(() => this.download.target.refresh());
   },
 
   downloadsCmd_confirmBlock() {
-    this.download.confirmBlock().catch(Cu.reportError);
+    this.download.confirmBlock().catch(console.error);
   },
 
   downloadsCmd_open(openWhere = "tab") {
@@ -1153,7 +1153,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   cmd_delete() {
-    lazy.DownloadsCommon.deleteDownload(this.download).catch(Cu.reportError);
+    lazy.DownloadsCommon.deleteDownload(this.download).catch(console.error);
   },
 
   async downloadsCmd_deleteFile() {
@@ -1169,7 +1169,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     // mime-type and open using the system viewer
     lazy.DownloadsCommon.openDownload(this.download, {
       useSystemDefault: true,
-    }).catch(Cu.reportError);
+    }).catch(console.error);
   },
 
   downloadsCmd_alwaysOpenInSystemViewer() {
@@ -1200,7 +1200,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       mimeInfo.preferredAction = mimeInfo.handleInternally;
     }
     lazy.handlerSvc.store(mimeInfo);
-    lazy.DownloadsCommon.openDownload(this.download).catch(Cu.reportError);
+    lazy.DownloadsCommon.openDownload(this.download).catch(console.error);
   },
 
   downloadsCmd_alwaysOpenSimilarFiles() {
@@ -1215,7 +1215,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     if (mimeInfo.preferredAction !== mimeInfo.useSystemDefault) {
       mimeInfo.preferredAction = mimeInfo.useSystemDefault;
       lazy.handlerSvc.store(mimeInfo);
-      lazy.DownloadsCommon.openDownload(this.download).catch(Cu.reportError);
+      lazy.DownloadsCommon.openDownload(this.download).catch(console.error);
     } else {
       // Otherwise, if user unchecks this option after already enabling it from the
       // context menu, resort to saveToDisk.

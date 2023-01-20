@@ -119,7 +119,7 @@ export var DownloadsTaskbar = {
           this._summary = summary;
           return this._summary.addView(this);
         })
-        .catch(Cu.reportError);
+        .catch(console.error);
     }
   },
 

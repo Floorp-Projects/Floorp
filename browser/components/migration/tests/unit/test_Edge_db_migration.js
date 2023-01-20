@@ -365,7 +365,7 @@ let eseDBWritingHelpers = {
       try {
         this._close();
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   },
@@ -580,7 +580,7 @@ add_task(async function() {
   let migrateResult = await new Promise(resolve =>
     bookmarksMigrator.migrate(resolve)
   ).catch(ex => {
-    Cu.reportError(ex);
+    console.error(ex);
     Assert.ok(false, "Got an exception trying to migrate data! " + ex);
     return false;
   });
@@ -732,7 +732,7 @@ add_task(async function() {
   migrateResult = await new Promise(resolve =>
     readingListMigrator.migrate(resolve)
   ).catch(ex => {
-    Cu.reportError(ex);
+    console.error(ex);
     Assert.ok(false, "Got an exception trying to migrate data! " + ex);
     return false;
   });

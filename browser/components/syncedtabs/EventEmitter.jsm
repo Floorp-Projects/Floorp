@@ -33,7 +33,7 @@ EventEmitter.prototype = {
       try {
         listener.apply(this, args);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   },

@@ -178,7 +178,7 @@ HistoryDownloadElementShell.prototype = {
     if (!this._targetFileChecked) {
       this.download
         .refresh()
-        .catch(Cu.reportError)
+        .catch(console.error)
         .then(() => {
           // Do not try to check for existence again even if this failed.
           this._targetFileChecked = true;
@@ -732,7 +732,7 @@ DownloadsPlacesView.prototype = {
         .removeVisitsByFilter({
           transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
         })
-        .catch(Cu.reportError);
+        .catch(console.error);
     }
     // There may be no selection or focus change as a result
     // of these change, and we want the command updated immediately.

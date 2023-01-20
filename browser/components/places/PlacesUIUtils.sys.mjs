@@ -440,7 +440,7 @@ class BookmarkState {
         tag: this._newState.title,
       })
         .transact()
-        .catch(Cu.reportError);
+        .catch(console.error);
       return this._guid;
     }
 
@@ -640,7 +640,7 @@ export var PlacesUIUtils = {
         !bookmarkGuid &&
         topUndoEntry != lazy.PlacesTransactions.topUndoEntry
       ) {
-        await lazy.PlacesTransactions.undo().catch(Cu.reportError);
+        await lazy.PlacesTransactions.undo().catch(console.error);
       }
 
       this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);

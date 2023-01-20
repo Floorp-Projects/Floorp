@@ -121,7 +121,7 @@ var tests = [
           );
         });
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
   taskify(async function test_bookmarks_menu() {
     CustomizableUI.addWidgetToArea(

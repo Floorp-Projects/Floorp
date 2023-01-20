@@ -1078,7 +1078,7 @@ CustomizeMode.prototype = {
         try {
           item = this.unwrapToolbarItem(aWrapper);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
         resolve(item);
       });

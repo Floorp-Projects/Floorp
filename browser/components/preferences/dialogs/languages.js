@@ -33,7 +33,7 @@ var gLanguagesDialog = {
     );
 
     Preferences.get("intl.accept_languages").on("change", () =>
-      this._readAcceptLanguages().catch(Cu.reportError)
+      this._readAcceptLanguages().catch(console.error)
     );
 
     if (!this._availableLanguagesList.length) {
@@ -225,7 +225,7 @@ var gLanguagesDialog = {
     this._availableLanguages.selectedItem = null;
 
     // Rebuild the available list with the added item removed...
-    this._buildAvailableLanguageList().catch(Cu.reportError);
+    this._buildAvailableLanguageList().catch(console.error);
   },
 
   removeLanguage() {
@@ -253,7 +253,7 @@ var gLanguagesDialog = {
     var preference = Preferences.get("intl.accept_languages");
     preference.value = string;
 
-    this._buildAvailableLanguageList().catch(Cu.reportError);
+    this._buildAvailableLanguageList().catch(console.error);
   },
 
   _getLocaleName(localeCode) {

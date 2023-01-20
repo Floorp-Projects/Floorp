@@ -901,7 +901,7 @@ class Preferences {
     }
     if (!this.FIREFOX_SUGGEST_DEFAULT_PREFS.hasOwnProperty(scenario)) {
       scenario = "history";
-      Cu.reportError(`Unrecognized Firefox Suggest scenario "${scenario}"`);
+      console.error(`Unrecognized Firefox Suggest scenario "${scenario}"`);
     }
     return scenario;
   }
@@ -1011,7 +1011,7 @@ class Preferences {
       try {
         this[methodName](scenario);
       } catch (error) {
-        Cu.reportError(
+        console.error(
           `Error migrating Firefox Suggest prefs to version ${nextVersion}: ` +
             error
         );

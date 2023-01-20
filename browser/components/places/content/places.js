@@ -482,7 +482,7 @@ var PlacesOrganizer = {
         var { BookmarkHTMLUtils } = ChromeUtils.importESModule(
           "resource://gre/modules/BookmarkHTMLUtils.sys.mjs"
         );
-        BookmarkHTMLUtils.importFromURL(fp.fileURL.spec).catch(Cu.reportError);
+        BookmarkHTMLUtils.importFromURL(fp.fileURL.spec).catch(console.error);
       }
     };
 
@@ -505,7 +505,7 @@ var PlacesOrganizer = {
         var { BookmarkHTMLUtils } = ChromeUtils.importESModule(
           "resource://gre/modules/BookmarkHTMLUtils.sys.mjs"
         );
-        BookmarkHTMLUtils.exportToFile(fp.file.path).catch(Cu.reportError);
+        BookmarkHTMLUtils.exportToFile(fp.file.path).catch(console.error);
       }
     };
 
@@ -694,7 +694,7 @@ var PlacesOrganizer = {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
         // There is no OS.File version of the filepicker yet (Bug 937812).
         PlacesBackups.saveBookmarksToJSONFile(fp.file.path).catch(
-          Cu.reportError
+          console.error
         );
       }
     };

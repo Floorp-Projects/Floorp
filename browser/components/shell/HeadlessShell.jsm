@@ -38,7 +38,7 @@ function loadContentWindow(browser, url) {
     uri = Services.io.newURI(url);
   } catch (e) {
     let msg = `Invalid URL passed to loadContentWindow(): ${url}`;
-    Cu.reportError(msg);
+    console.error(msg);
     return Promise.reject(new Error(msg));
   }
 

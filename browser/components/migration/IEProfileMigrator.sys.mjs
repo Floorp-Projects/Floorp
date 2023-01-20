@@ -220,9 +220,7 @@ IE7FormPasswords.prototype = {
           });
         }
       } catch (e) {
-        Cu.reportError(
-          "Error while importing logins for " + uri.spec + ": " + e
-        );
+        console.error("Error while importing logins for ", uri.spec, ": ", e);
       }
     }
 
@@ -233,7 +231,7 @@ IE7FormPasswords.prototype = {
     // if the number of the imported values is less than the number of values in the key, it means
     // that not all the values were imported and an error should be reported
     if (successfullyDecryptedValues < key.valueCount) {
-      Cu.reportError(
+      console.error(
         "We failed to decrypt and import some logins. " +
           "This is likely because we didn't find the URLs where these " +
           "passwords were submitted in the IE history and which are needed to be used " +

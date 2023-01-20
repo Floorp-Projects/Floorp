@@ -111,7 +111,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       // Populate the table with the current cached tabs.
       for (let [userContextId, urls] of UrlbarProviderOpenTabs._openTabs) {
         for (let url of urls) {
-          await addToMemoryTable(url, userContextId).catch(Cu.reportError);
+          await addToMemoryTable(url, userContextId).catch(console.error);
         }
       }
     }
@@ -134,7 +134,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       UrlbarProviderOpenTabs._openTabs.set(userContextId, []);
     }
     UrlbarProviderOpenTabs._openTabs.get(userContextId).push(url);
-    await addToMemoryTable(url, userContextId).catch(Cu.reportError);
+    await addToMemoryTable(url, userContextId).catch(console.error);
   }
 
   /**
@@ -155,7 +155,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       let index = openTabs.indexOf(url);
       if (index != -1) {
         openTabs.splice(index, 1);
-        await removeFromMemoryTable(url, userContextId).catch(Cu.reportError);
+        await removeFromMemoryTable(url, userContextId).catch(console.error);
       }
     }
   }
