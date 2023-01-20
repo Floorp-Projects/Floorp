@@ -668,17 +668,10 @@ var gHistorySwipeAnimation = {
       return;
     }
 
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.history_swipe_animation.disabled",
-        false
-      )
-    ) {
-      this._icon = document.getElementById("swipe-nav-icon");
-      this._initPrefValues();
-      this._addPrefObserver();
-      this.active = true;
-    }
+    this._icon = document.getElementById("swipe-nav-icon");
+    this._initPrefValues();
+    this._addPrefObserver();
+    this.active = true;
   },
 
   /**
