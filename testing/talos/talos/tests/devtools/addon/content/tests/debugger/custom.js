@@ -186,7 +186,7 @@ async function testOpeningLargeMinifiedFile(tab, toolbox) {
   dump("Open minified.js (large minified file)\n");
   const test = runTest("custom.jsdebugger.open-large-minified-file.DAMP");
   await selectSource(dbg, file);
-  await waitForText(dbg, file, fileFirstChars);
+  await waitForText(dbg, fileFirstChars);
   test.done();
 
   dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [file]);
@@ -218,7 +218,7 @@ async function testPrettyPrint(toolbox) {
   dump("Click pretty-print button\n");
   prettyPrintButton.click();
   await waitForSource(dbg, formattedFileUrl);
-  await waitForText(dbg, formattedFileUrl, "!function (n) {\n");
+  await waitForText(dbg, "!function (n) {\n");
   test.done();
 
   await dbg.actions.toggleSourceMapsEnabled(true);
