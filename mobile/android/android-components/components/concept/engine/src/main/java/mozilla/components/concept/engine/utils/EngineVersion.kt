@@ -5,6 +5,16 @@
 package mozilla.components.concept.engine.utils
 
 /**
+ * Release type - as compiled - of the engine.
+ */
+enum class EngineReleaseChannel {
+    UNKNOWN,
+    NIGHTLY,
+    BETA,
+    RELEASE,
+}
+
+/**
  * Data class for engine versions using semantic versioning (major.minor.patch).
  *
  * @param major Major version number
@@ -12,12 +22,14 @@ package mozilla.components.concept.engine.utils
  * @param patch Patch version number
  * @param metadata Additional and optional metadata appended to the version number, e.g. for a version number of
  * "68.0a1" [metadata] will contain "a1".
+ * @param releaseChannel Additional property indicating the release channel of this version.
  */
 data class EngineVersion(
     val major: Int,
     val minor: Int,
     val patch: Long,
     val metadata: String? = null,
+    val releaseChannel: EngineReleaseChannel = EngineReleaseChannel.UNKNOWN,
 ) {
     operator fun compareTo(other: EngineVersion): Int {
         return when {
@@ -29,6 +41,7 @@ data class EngineVersion(
                 other.metadata == null -> 1
                 else -> metadata.compareTo(other.metadata)
             }
+            releaseChannel != other.releaseChannel -> releaseChannel.compareTo(other.releaseChannel)
             else -> 0
         }
     }
@@ -67,7 +80,7 @@ data class EngineVersion(
          * not be parsed successfully.
          */
         @Suppress("MagicNumber", "ReturnCount")
-        fun parse(version: String): EngineVersion? {
+        fun parse(version: String, releaseChannel: String? = null): EngineVersion? {
             val majorRegex = "([0-9]+)"
             val minorRegex = "\\.([0-9]+)"
             val patchRegex = "(?:\\.([0-9]+))?"
@@ -79,6 +92,12 @@ data class EngineVersion(
             val minor = result.groups[2]?.value ?: return null
             val patch = result.groups[3]?.value ?: "0"
             val metadata = result.groups[4]?.value
+            val engineReleaseChannel = when (releaseChannel) {
+                "nightly" -> EngineReleaseChannel.NIGHTLY
+                "beta" -> EngineReleaseChannel.BETA
+                "release" -> EngineReleaseChannel.RELEASE
+                else -> EngineReleaseChannel.UNKNOWN
+            }
 
             return try {
                 EngineVersion(
@@ -86,6 +105,7 @@ data class EngineVersion(
                     minor.toInt(),
                     patch.toLong(),
                     metadata,
+                    engineReleaseChannel,
                 )
             } catch (e: NumberFormatException) {
                 null

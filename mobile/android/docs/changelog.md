@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
 * **concept-engine**
+  * 🌟 Expose the release channel of GeckoView through a new `releaseChannel` property of `EngineVersion`. [bug #1811448](https://bugzilla.mozilla.org/show_bug.cgi?id=1811448).
+
+* **concept-engine**
   * 🆕 Added `Settings.cookieBannerHandlingDetectOnlyMode` which helps to detect cookie banner events without handle the banners + indicating the mode of the events, see [bug 1810743](https://bugzilla.mozilla.org/show_bug.cgi?id=1810743)
   * ⚠️ **This is a breaking change**: Removed `CookieBannerMode.MODE_DETECT_ONLY` use `Settings.cookieBannerHandlingDetectOnlyMode` instead.
 

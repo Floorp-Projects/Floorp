@@ -27,6 +27,7 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
+import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
@@ -1906,6 +1907,7 @@ class GeckoEngineTest {
 
         assertTrue(version.major >= 69)
         assertTrue(version.isAtLeast(69, 0, 0))
+        assertTrue(version.releaseChannel != EngineReleaseChannel.UNKNOWN)
     }
 
     @Test

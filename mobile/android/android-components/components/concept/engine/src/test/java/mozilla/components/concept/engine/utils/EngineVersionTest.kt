@@ -68,6 +68,100 @@ class EngineVersionTest {
         assertEquals("68.3.0esr", "68.3esr".toVersion().toString())
         assertEquals("68.0.0", "68.0".toVersion().toString())
     }
+
+    @Test
+    fun `GIVEN a nightly build of the engine WHEN parsing the version THEN add the correct release channel`() {
+        val result = EngineVersion.parse("0.0.1", "nightly")?.releaseChannel
+
+        assertEquals(EngineReleaseChannel.NIGHTLY, result)
+    }
+
+    @Test
+    fun `GIVEN a beta build of the engine WHEN parsing the version THEN add the correct release channel`() {
+        val result = EngineVersion.parse("0.0.1", "beta")?.releaseChannel
+
+        assertEquals(EngineReleaseChannel.BETA, result)
+    }
+
+    @Test
+    fun `GIVEN a release build of the engine WHEN parsing the version THEN add the correct release channel`() {
+        val result = EngineVersion.parse("0.0.1", "release")?.releaseChannel
+
+        assertEquals(EngineReleaseChannel.RELEASE, result)
+    }
+
+    @Test
+    fun `GIVEN a different build of the engine WHEN parsing the version THEN add the correct release channel`() {
+        val result = EngineVersion.parse("0.0.1", "aurora")?.releaseChannel
+
+        assertEquals(EngineReleaseChannel.UNKNOWN, result)
+    }
+
+    @Test
+    fun `GIVEN an unknown release type WHEN comparing to other versions THEN return a negative value`() {
+        val version = "0.0.1"
+        val unknown = EngineVersion.parse(version, "canary")
+
+        assertEquals(0, unknown!!.compareTo(unknown))
+        assertTrue(unknown < EngineVersion.parse(version, "nightly")!!)
+        assertTrue(unknown < EngineVersion.parse(version, "beta")!!)
+        assertTrue(unknown < EngineVersion.parse(version, "release")!!)
+    }
+
+    @Test
+    fun `GIVEN an nightly release type WHEN comparing to other versions THEN return the expected result`() {
+        val version = "0.0.1"
+        val nightly = EngineVersion.parse(version, "nightly")
+
+        assertEquals(0, nightly!!.compareTo(nightly))
+        assertTrue(nightly > EngineVersion.parse(version, "unknown")!!)
+        assertTrue(nightly < EngineVersion.parse(version, "beta")!!)
+        assertTrue(nightly < EngineVersion.parse(version, "release")!!)
+    }
+
+    @Test
+    fun `GIVEN an beta release type WHEN comparing to other versions THEN return the expected result`() {
+        val version = "0.0.1"
+        val beta = EngineVersion.parse(version, "beta")
+
+        assertEquals(0, beta!!.compareTo(beta))
+        assertTrue(beta > EngineVersion.parse(version, "unknown")!!)
+        assertTrue(beta > EngineVersion.parse(version, "nightly")!!)
+        assertTrue(beta < EngineVersion.parse(version, "release")!!)
+    }
+
+    @Test
+    fun `GIVEN a release type WHEN comparing to other versions THEN return the expected result`() {
+        val version = "0.0.1"
+        val release = EngineVersion.parse(version, "release")
+
+        assertEquals(0, release!!.compareTo(release))
+        assertTrue(release > EngineVersion.parse(version, "unknown")!!)
+        assertTrue(release > EngineVersion.parse(version, "nightly")!!)
+        assertTrue(release > EngineVersion.parse(version, "beta")!!)
+    }
+
+    @Test
+    fun `GIVEN a newer version of a less stable release WHEN comparing to other versions THEN return the expected result`() {
+        val debug = EngineVersion.parse("103.4567890", "test")
+        val nightly = EngineVersion.parse("102.1.0", "nightly")
+        val beta = EngineVersion.parse("101.0.0", "nightly")
+        val release = EngineVersion.parse("100.1.2", "release")
+
+        assertEquals(0, debug!!.compareTo(debug))
+        assertTrue(debug > nightly!!)
+        assertTrue(debug > beta!!)
+        assertTrue(debug > release!!)
+
+        assertEquals(0, nightly.compareTo(nightly))
+        assertTrue(nightly > beta)
+        assertTrue(nightly > release)
+
+        assertEquals(0, beta.compareTo(beta))
+        assertTrue(beta > release)
+
+        assertEquals(0, release.compareTo(release))
+    }
 }
 
 private fun String.toVersion() = EngineVersion.parse(this)!!

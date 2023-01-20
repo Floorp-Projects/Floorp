@@ -577,8 +577,10 @@ class GeckoEngine(
 
     override fun name(): String = "Gecko"
 
-    override val version: EngineVersion = EngineVersion.parse(org.mozilla.geckoview.BuildConfig.MOZILLA_VERSION)
-        ?: throw IllegalStateException("Could not determine engine version")
+    override val version: EngineVersion = EngineVersion.parse(
+        org.mozilla.geckoview.BuildConfig.MOZILLA_VERSION,
+        org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL,
+    ) ?: throw IllegalStateException("Could not determine engine version")
 
     /**
      * See [Engine.settings]
