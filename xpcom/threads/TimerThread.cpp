@@ -835,7 +835,7 @@ bool TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer) {
   AUTO_TIMERS_STATS(TimerThread_RemoveTimerInternal_in_list);
   for (auto& entry : mTimers) {
     if (entry.Value() == aTimer) {
-      entry.Forget(aTimer);
+      entry.Forget();
       return true;
     }
   }
