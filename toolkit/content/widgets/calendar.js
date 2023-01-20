@@ -14,7 +14,8 @@
  *          {Function} getDayString: Transform day number to string
  *          {Function} getWeekHeaderString: Transform day of week number to string
  *          {Function} setSelection: Set selection for dateKeeper
- *          {Function} setMonthByOffset: Update the month shown by the dateView
+ *          {Function} setCalendarMonth: Update the month shown by the dateView
+ *                     to a specific month of a specific year
  *        }
  * @param {Object} context
  *        {
@@ -29,9 +30,10 @@ function Calendar(options, context) {
     days: [],
     weekHeaders: [],
     setSelection: options.setSelection,
-    setMonthByOffset: options.setMonthByOffset,
+    setCalendarMonth: options.setCalendarMonth,
     getDayString: options.getDayString,
     getWeekHeaderString: options.getWeekHeaderString,
+    focusedDate: null,
   };
   this.elements = {
     weekHeaders: this._generateNodes(
@@ -95,9 +97,10 @@ Calendar.prototype = {
         items: weekHeaders,
         prevState: this.state.weekHeaders,
       });
-      // Update the state to current
+      // Update the state to current and place keyboard focus
       this.state.days = days;
       this.state.weekHeaders = weekHeaders;
+      this.focusDay();
     }
   },
 
@@ -111,9 +114,10 @@ Calendar.prototype = {
    *         }
    */
   _render({ elements, items, prevState }) {
-    let selectedEl;
-    let todayEl;
-    let firstDayEl;
+    let selected = {};
+    let today = {};
+    let sameDay = {};
+    let firstDay = {};
 
     for (let i = 0, l = items.length; i < l; i++) {
       let el = elements[i];
@@ -136,16 +140,32 @@ Calendar.prototype = {
         el.removeAttribute("aria-current");
 
         // Set new states and properties
+        if (
+          this.state.focusedDate &&
+          this._isSameDayOfMonth(items[i].dateObj, this.state.focusedDate) &&
+          !el.classList.contains("outside")
+        ) {
+          // When any other date was focused previously, send the focus
+          // to the same day of month, but only within the current month
+          sameDay.el = el;
+          sameDay.dateObj = items[i].dateObj;
+        }
         if (el.classList.contains("today")) {
           // Current date/today is communicated to assistive technology
           el.setAttribute("aria-current", "date");
-          todayEl = el;
+          if (!el.classList.contains("outside")) {
+            today.el = el;
+            today.dateObj = items[i].dateObj;
+          }
         }
         if (el.classList.contains("selection")) {
-          // Selection is included in the focus order, if from the current month
+          // Selection is communicated to assistive technology
+          // and may be included in the focus order when from the current month
           el.setAttribute("aria-selected", "true");
+
           if (!el.classList.contains("outside")) {
-            selectedEl = el;
+            selected.el = el;
+            selected.dateObj = items[i].dateObj;
           }
         } else if (el.classList.contains("out-of-range")) {
           // Dates that are outside of the range are not selected and cannot be
@@ -155,26 +175,36 @@ Calendar.prototype = {
           // Other dates are not selected, but could be
           el.setAttribute("aria-selected", "false");
         }
-        // When no selection or current day/today is present, make the first
-        // of the month focusable
-        if (el.textContent === "1" && !firstDayEl) {
-          let firstDay = new Date(items[i].dateObj);
-          firstDay.setUTCDate("1");
-          if (this._isSameDay(items[i].dateObj, firstDay)) {
-            firstDayEl = el;
+        if (el.textContent === "1" && !firstDay.el) {
+          // When no previous day, no selection, or no current day/today
+          // is present, make the first of the month focusable
+          firstDay.dateObj = items[i].dateObj;
+          firstDay.dateObj.setUTCDate("1");
+
+          if (this._isSameDay(items[i].dateObj, firstDay.dateObj)) {
+            firstDay.el = el;
+            firstDay.dateObj = items[i].dateObj;
           }
         }
       }
     }
 
-    // Selected date is always focusable on init, otherwise make focusable
-    // the current day/today or the first day of the month
-    if (selectedEl) {
-      selectedEl.setAttribute("tabindex", "0");
-    } else if (todayEl) {
-      todayEl.setAttribute("tabindex", "0");
-    } else if (firstDayEl) {
-      firstDayEl.setAttribute("tabindex", "0");
+    // The previously focused date (if the picker is updated and the grid still
+    // contains the date) is always focusable. The selected date on init is also
+    // always focusable. If neither exist, we make the current day or the first
+    // day of the month focusable.
+    if (sameDay.el) {
+      sameDay.el.setAttribute("tabindex", "0");
+      this.state.focusedDate = new Date(sameDay.dateObj);
+    } else if (selected.el) {
+      selected.el.setAttribute("tabindex", "0");
+      this.state.focusedDate = new Date(selected.dateObj);
+    } else if (today.el) {
+      today.el.setAttribute("tabindex", "0");
+      this.state.focusedDate = new Date(today.dateObj);
+    } else if (firstDay.el) {
+      firstDay.el.setAttribute("tabindex", "0");
+      this.state.focusedDate = new Date(firstDay.dateObj);
     }
   },
 
@@ -257,76 +287,58 @@ Calendar.prototype = {
             case "ArrowRight": {
               // Moves focus to the next day. If the next day is
               // out-of-range, update the view to show the next month
-              this._handleKeydownEvent(event.target, 1 * direction);
+              this._handleKeydownEvent(1 * direction);
               break;
             }
             case "ArrowLeft": {
               // Moves focus to the previous day. If the next day is
               // out-of-range, update the view to show the previous month
-              this._handleKeydownEvent(event.target, -1 * direction);
+              this._handleKeydownEvent(-1 * direction);
               break;
             }
             case "ArrowUp": {
               // Moves focus to the same day of the previous week. If the next
               // day is out-of-range, update the view to show the previous month
-              this._handleKeydownEvent(
-                event.target,
-                -1,
-                this.context.DAYS_IN_A_WEEK
-              );
+              this._handleKeydownEvent(-1 * this.context.DAYS_IN_A_WEEK);
               break;
             }
             case "ArrowDown": {
               // Moves focus to the same day of the next week. If the next
               // day is out-of-range, update the view to show the previous month
-              this._handleKeydownEvent(
-                event.target,
-                1,
-                this.context.DAYS_IN_A_WEEK
-              );
+              this._handleKeydownEvent(1 * this.context.DAYS_IN_A_WEEK);
               break;
             }
             case "Home": {
               // Moves focus to the first day (ie. Sunday) of the current week
-              let nextId;
               if (event.ctrlKey) {
                 // Moves focus to the first day of the current month
-                for (let i = 0; i < this.state.days.length; i++) {
-                  if (this.state.days[i].dateObj.getUTCDate() == 1) {
-                    nextId = i;
-                    break;
-                  }
-                }
+                this.state.focusedDate.setUTCDate(1);
+                this._updateKeyboardFocus();
               } else {
-                nextId =
-                  Number(event.target.dataset.id) -
-                  (Number(event.target.dataset.id) %
-                    this.context.DAYS_IN_A_WEEK);
-                nextId = this._updateViewIfOutside(nextId, -1);
+                this._handleKeydownEvent(
+                  this.state.focusedDate.getUTCDay() * -1
+                );
               }
-              this._updateKeyboardFocus(event.target, nextId);
               break;
             }
             case "End": {
               // Moves focus to the last day (ie. Saturday) of the current week
-              let nextId;
               if (event.ctrlKey) {
                 // Moves focus to the last day of the current month
-                for (let i = this.state.days.length - 1; i >= 0; i--) {
-                  if (this.state.days[i].dateObj.getUTCDate() == 1) {
-                    nextId = i - 1;
-                    break;
-                  }
-                }
+                let lastDateOfMonth = new Date(
+                  this.state.focusedDate.getUTCFullYear(),
+                  this.state.focusedDate.getUTCMonth() + 1,
+                  0
+                );
+                this.state.focusedDate = lastDateOfMonth;
+                this._updateKeyboardFocus();
               } else {
-                nextId =
-                  Number(event.target.dataset.id) +
-                  (this.context.DAYS_IN_A_WEEK - 1) -
-                  (Number(event.target.dataset.id) %
-                    this.context.DAYS_IN_A_WEEK);
-                nextId = this._updateViewIfOutside(nextId, 1);
+                this._handleKeydownEvent(
+                  this.context.DAYS_IN_A_WEEK -
+                    1 -
+                    this.state.focusedDate.getUTCDay()
+                );
               }
-              this._updateKeyboardFocus(event.target, nextId);
               break;
             }
             case "PageUp": {
@@ -334,23 +346,20 @@ Calendar.prototype = {
               // and sets focus on the same day.
               // If that day does not exist, then moves focus
               // to the same day of the same week.
-              let targetId = event.target.dataset.id;
-              let nextDate = this.state.days[targetId].dateObj;
               if (event.shiftKey) {
                 // Previous year
-                this.state.setMonthByOffset(-12);
-                nextDate.setYear(nextDate.getFullYear() - 1);
+                let prevYear = this.state.focusedDate.getUTCFullYear() - 1;
+                this.state.focusedDate.setUTCFullYear(prevYear);
               } else {
                 // Previous month
-                this.state.setMonthByOffset(-1);
-                nextDate.setMonth(nextDate.getMonth() - 1);
+                let prevMonth = this.state.focusedDate.getUTCMonth() - 1;
+                this.state.focusedDate.setUTCMonth(prevMonth);
               }
-              let nextId = this._calculateNextId(nextDate);
-              // Outside dates for the previous month (ie. when moving from
-              // the March 30th back to February where 30th does not exist)
-              // occur at the end of the month, thus month offset is 1
-              nextId = this._updateViewIfOutside(nextId, 1);
-              this._updateKeyboardFocus(event.target, nextId);
+              this.state.setCalendarMonth(
+                this.state.focusedDate.getUTCFullYear(),
+                this.state.focusedDate.getUTCMonth()
+              );
+              this._updateKeyboardFocus();
               break;
             }
             case "PageDown": {
@@ -358,20 +367,20 @@ Calendar.prototype = {
               // and sets focus on the same day.
               // If that day does not exist, then moves focus
               // to the same day of the same week.
-              let targetId = event.target.dataset.id;
-              let nextDate = this.state.days[targetId].dateObj;
               if (event.shiftKey) {
                 // Next year
-                this.state.setMonthByOffset(12);
-                nextDate.setYear(nextDate.getFullYear() + 1);
+                let nextYear = this.state.focusedDate.getUTCFullYear() + 1;
+                this.state.focusedDate.setUTCFullYear(nextYear);
               } else {
                 // Next month
-                this.state.setMonthByOffset(1);
-                nextDate.setMonth(nextDate.getMonth() + 1);
+                let nextMonth = this.state.focusedDate.getUTCMonth() + 1;
+                this.state.focusedDate.setUTCMonth(nextMonth);
               }
-              let nextId = this._calculateNextId(nextDate);
-              nextId = this._updateViewIfOutside(nextId, 1);
-              this._updateKeyboardFocus(event.target, nextId);
+              this.state.setCalendarMonth(
+                this.state.focusedDate.getUTCFullYear(),
+                this.state.focusedDate.getUTCMonth()
+              );
+              this._updateKeyboardFocus();
               break;
             }
           }
@@ -417,82 +426,60 @@ Calendar.prototype = {
   },
 
   /**
+   * Comparing two date objects to ensure they produce the same day of the month,
+   * while being on different months
+   * @param  {Date} dateObj1: Date object from the updated state
+   * @param  {Date} dateObj2: Date object from the previous state
+   * @return {Boolean} If two date objects are the same day of the month
+   */
+  _isSameDayOfMonth(dateObj1, dateObj2) {
+    return dateObj1.getUTCDate() == dateObj2.getUTCDate();
+  },
+
+  /**
    * Manage focus for the keyboard navigation for the daysView grid
-   * @param  {DOMElement} eTarget: The event.target day element
-   * @param  {Number} offsetDir: The direction where the focus should move,
-   *                             where a negative number (-1) moves backwards
-   * @param  {Number} offsetSize: The number of days to move the focus by.
+   * @param  {Number} offsetDays: The direction and the number of days to move
+   *                            the focus by, where a negative number (i.e. -1)
+   *                            moves the focus to the previous day
    */
-  _handleKeydownEvent(eTarget, offsetDir, offsetSize = 1) {
-    let offset = offsetDir * offsetSize;
-    let nextId = Number(eTarget.dataset.id) + offset;
-    if (!this.state.days[nextId]) {
-      nextId = this._updateViewIfUndefined(nextId, offset, eTarget.dataset.id);
+  _handleKeydownEvent(offsetDays) {
+    let newFocusedDay = this.state.focusedDate.getUTCDate() + offsetDays;
+    let newFocusedDate = new Date(this.state.focusedDate);
+    newFocusedDate.setUTCDate(newFocusedDay);
+
+    // Update the month, if the next focused element is outside
+    if (newFocusedDate.getUTCMonth() !== this.state.focusedDate.getUTCMonth()) {
+      this.state.setCalendarMonth(
+        newFocusedDate.getUTCFullYear(),
+        newFocusedDate.getUTCMonth()
+      );
     }
-    nextId = this._updateViewIfOutside(nextId, offsetDir);
-    this._updateKeyboardFocus(eTarget, nextId);
+    this.state.focusedDate.setUTCDate(newFocusedDate.getUTCDate());
+    this._updateKeyboardFocus();
   },
 
   /**
-   * Add gridcell attributes and move focus to the next dayView element
-   * @param {DOMElement} targetEl: Day element as an event.target
-   * @param {Number} nextId: The data-id of the next HTML day element to focus
+   * Update the daysView grid and send focus to the next day
+   * based on the current state fo the Calendar
    */
-  _updateKeyboardFocus(targetEl, nextId) {
-    const nextEl = this.elements.daysView[nextId];
-
-    targetEl.removeAttribute("tabindex");
-    nextEl.setAttribute("tabindex", "0");
-
-    nextEl.focus();
+  _updateKeyboardFocus() {
+    this._render({
+      elements: this.elements.daysView,
+      items: this.state.days,
+      prevState: this.state.days,
+    });
+    this.focusDay();
   },
 
   /**
-   * Find Data-id of the next element to focus on the daysView grid if
-   * the next element has "outside" class and belongs to another month
-   * @param  {Number} nextId: The data-id of the next HTML day element to focus
-   * @param  {Number} offset: The direction for the month view offset
-   * @return {Number} The data-id of the next HTML day element to focus
+   * Place keyboard focus on the calendar grid, when the datepicker is initiated or updated.
+   * A "tabindex" attribute is provided to only one date within the grid
+   * by the "render()" method and this focusable element will be focused.
    */
-  _updateViewIfOutside(nextId, offset) {
-    if (this.elements.daysView[nextId].classList.contains("outside")) {
-      let nextDate = this.state.days[nextId].dateObj;
-      this.state.setMonthByOffset(offset);
-      nextId = this._calculateNextId(nextDate);
-    }
-    return nextId;
-  },
-
-  /**
-   * Find Data-id of the next element to focus on the daysView grid if
-   * the next element is outside of the current daysView calendar
-   * @param  {Number} nextId: The data-id of the next HTML day element to focus
-   * @param  {Number} offset: The number of days to move by,
-   *                          where a negative number moves backwards.
-   * @param  {Number} targetId: The data-id for the event target day element
-   * @return {Number} The data-id of the next HTML day element to focus
-   */
-  _updateViewIfUndefined(nextId, offset, targetId) {
-    let targetDate = this.state.days[targetId].dateObj;
-    let nextDate = targetDate;
-    // Get the date that needs to be focused next:
-    nextDate.setDate(targetDate.getDate() + offset);
-    // Update the month view to include this date:
-    this.state.setMonthByOffset(Math.sign(offset));
-    // Find the "data-id" of the date element:
-    nextId = this._calculateNextId(nextDate);
-    return nextId;
-  },
-
-  /**
-   * Place keyboard focus on the calendar grid, when the datepicker is initiated.
-   * The selected day is what gets focused, if such a day exists. If it does not,
-   * today's date will be focused.
-   */
-  focus() {
-    const focus = this.context.daysView.querySelector('[tabindex="0"]');
-    if (focus) {
-      focus.focus();
+  focusDay() {
+    const focusable = this.context.daysView.querySelector('[tabindex="0"]');
+    if (focusable) {
+      focusable.focus();
     }
   },
 };
