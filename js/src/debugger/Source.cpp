@@ -212,7 +212,16 @@ class DebuggerSourceGetTextMatcher {
       return NewStringCopyZ<CanGC>(cx_, "[no source]");
     }
 
-    if (ss->isFunctionBody()) {
+    // In case of DOM event handler like <div onclick="foo()" the JS code is
+    // wrapped into
+    //   function onclick() {foo()}
+    // We want to only return `foo()` here.
+    // But only for event handlers, for `new Function("foo()")`, we want to
+    // return:
+    //   function anonymous() {foo()}
+    if (ss->hasIntroductionType() &&
+        strcmp(ss->introductionType(), "eventHandler") == 0 &&
+        ss->isFunctionBody()) {
       return ss->functionBodyString(cx_);
     }
 

@@ -12,6 +12,12 @@
 
 "use strict";
 
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
+);
+// This is step 9
+PromiseTestUtils.allowMatchingRejectionsGlobally(/doesntExists is not defined/);
+
 add_task(async function() {
   const dbg = await initDebugger("doc-exceptions.html", "exceptions.js");
   const source = findSource(dbg, "exceptions.js");
@@ -105,6 +111,22 @@ add_task(async function() {
   await resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 77);
+  await resume(dbg);
+
+  info("9. Pause in throwing new Function argument");
+  const onNewSource = waitForDispatch(dbg.store, "ADD_SOURCES");
+  invokeInTab("throwInNewFunctionArgument");
+  await waitForPaused(dbg);
+  const { sources } = await onNewSource;
+  is(sources.length, 1, "Got a unique source related to new Function source");
+  const newFunctionSource = sources[0];
+  is(
+    newFunctionSource.url,
+    null,
+    "This new source looks like the new function one as it has no url"
+  );
+  assertPausedAtSourceAndLine(dbg, newFunctionSource.id, 1, 0);
+  assertTextContentOnLine(dbg, 1, "function anonymous(f=doesntExists()");
   await resume(dbg);
 });
 
