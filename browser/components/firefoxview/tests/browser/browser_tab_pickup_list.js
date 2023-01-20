@@ -70,6 +70,55 @@ const syncedTabsData5 = [
   },
 ];
 
+const desktopTabs = [
+  {
+    type: "tab",
+    title: "Internet for people, not profits - Mozilla",
+    url: "https://www.mozilla.org/",
+    icon:
+      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    lastUsed: 1655730486, // Mon Jan 19 1970 22:55:30 GMT+0000
+  },
+  {
+    type: "tab",
+    title: "Firefox Privacy Notice",
+    url: "https://www.mozilla.org/en-US/privacy/firefox/",
+    icon:
+      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    lastUsed: 1673991540155, // Tue, 17 Jan 2023 16:39:00 GMT
+  },
+  {
+    type: "tab",
+    title: "Bugzilla Main Page",
+    url: "https://bugzilla.mozilla.org/",
+    icon: "https://bugzilla.mozilla.org/extensions/BMO/web/images/favicon.ico",
+    lastUsed: 1673513538000, // Thu, 12 Jan 2023 03:52:18 GMT
+  },
+];
+
+const mobileTabs = [
+  {
+    type: "tab",
+    title: "Internet for people, not profits - Mozilla",
+    url: "https://www.mozilla.org/",
+    icon:
+      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    lastUsed: 1606510800000, // Fri Nov 27 2020 16:00:00 GMT+0000
+  },
+  {
+    type: "tab",
+    title: "Firefox Privacy Notice",
+    url: "https://www.mozilla.org/en-US/privacy/firefox/",
+    icon:
+      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    lastUsed: 1606510800000, // Fri Nov 27 2020 16:00:00 GMT+0000
+  },
+];
+
+const syncedTabsData6 = structuredClone(syncedTabsData1);
+syncedTabsData6[0].tabs = desktopTabs;
+syncedTabsData6[1].tabs = mobileTabs;
+
 const NO_TABS_EVENTS = [
   ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "synced_tabs", "tabs", undefined, { count: "0" }],
@@ -599,6 +648,61 @@ add_task(async function test_keyboard_navigation() {
       summary,
       document.activeElement,
       "Summary element should be focused when shift tabbing away from list"
+    );
+
+    sandbox.restore();
+    cleanup_tab_pickup();
+  });
+});
+
+add_task(async function test_duplicate_tab_filter() {
+  const sandbox = setupRecentDeviceListMocks();
+  const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+  let mockTabs6 = getMockTabData(syncedTabsData6);
+  syncedTabsMock.callsFake(() => {
+    info(
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs6.length} tabs\n`
+    );
+    return Promise.resolve(mockTabs6);
+  });
+
+  await withFirefoxView({}, async browser => {
+    await setupListState(browser);
+
+    Assert.equal(
+      mockTabs6[0].title,
+      "Firefox Privacy Notice",
+      `First tab should be ${mockTabs6[0].title}`
+    );
+
+    Assert.equal(
+      mockTabs6[0].lastUsed,
+      1673991540155,
+      `First tab lastUsed value should be ${mockTabs6[0].lastUsed}`
+    );
+
+    Assert.equal(
+      mockTabs6[1].title,
+      "Bugzilla Main Page",
+      `Second tab should be ${mockTabs6[1].title}`
+    );
+
+    Assert.equal(
+      mockTabs6[1].lastUsed,
+      1673513538000,
+      `Second tab lastUsed value should be ${mockTabs6[1].lastUsed}`
+    );
+
+    Assert.equal(
+      mockTabs6[2].title,
+      "Internet for people, not profits - Mozilla",
+      `Third tab should be ${mockTabs6[2].title}`
+    );
+
+    Assert.equal(
+      mockTabs6[2].lastUsed,
+      1606510800000,
+      `Third tab lastUsed value should be ${mockTabs6[2].lastUsed}`
     );
 
     sandbox.restore();

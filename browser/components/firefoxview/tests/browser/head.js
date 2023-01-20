@@ -19,6 +19,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
+  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
 const MOBILE_PROMO_DISMISSED_PREF =
@@ -299,18 +300,7 @@ function setupRecentDeviceListMocks() {
 }
 
 function getMockTabData(clients) {
-  let tabs = [];
-
-  for (let client of clients) {
-    for (let tab of client.tabs) {
-      tab.device = client.name;
-      tab.deviceType = client.clientType;
-    }
-    tabs = [...tabs, ...client.tabs.reverse()];
-  }
-  tabs = tabs.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, 3);
-
-  return tabs;
+  return SyncedTabs._internal._createRecentTabsList(clients, 3);
 }
 
 async function setupListState(browser) {
