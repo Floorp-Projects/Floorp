@@ -201,7 +201,8 @@ class WasmArrayObject : public WasmGcObject {
 
 class WasmStructObject : public WasmGcObject {
  public:
-  static const JSClass class_;
+  static const JSClass classInline_;
+  static const JSClass classOutline_;
 
   // Owned pointer to a malloc'd block containing out-of-line fields, or
   // nullptr if none.  Note that MIR alias analysis assumes this is readonly
@@ -229,6 +230,7 @@ class WasmStructObject : public WasmGcObject {
     return n;
   }
 
+  static const JSClass* classForTypeDef(const wasm::TypeDef* typeDef);
   static js::gc::AllocKind allocKindForTypeDef(const wasm::TypeDef* typeDef);
 
   // Creates a new struct typed object initialized to zero. Reports if there
@@ -340,7 +342,8 @@ namespace js {
 
 inline bool IsWasmGcObjectClass(const JSClass* class_) {
   return class_ == &WasmArrayObject::class_ ||
-         class_ == &WasmStructObject::class_;
+         class_ == &WasmStructObject::classInline_ ||
+         class_ == &WasmStructObject::classOutline_;
 }
 
 }  // namespace js
@@ -348,6 +351,13 @@ inline bool IsWasmGcObjectClass(const JSClass* class_) {
 template <>
 inline bool JSObject::is<js::WasmGcObject>() const {
   return js::IsWasmGcObjectClass(getClass());
+}
+
+template <>
+inline bool JSObject::is<js::WasmStructObject>() const {
+  const JSClass* class_ = getClass();
+  return class_ == &js::WasmStructObject::classInline_ ||
+         class_ == &js::WasmStructObject::classOutline_;
 }
 
 #endif /* wasm_WasmGcObject_h */

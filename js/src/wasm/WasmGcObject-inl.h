@@ -38,7 +38,7 @@ inline bool WasmGcObject::AllocArgs::compute(JSContext* cx,
   gc::AllocKind allocKind;
   switch (typeDef->kind()) {
     case TypeDefKind::Struct: {
-      clasp = &WasmStructObject::class_;
+      clasp = WasmStructObject::classForTypeDef(typeDef);
       allocKind = WasmStructObject::allocKindForTypeDef(typeDef);
       break;
     }
