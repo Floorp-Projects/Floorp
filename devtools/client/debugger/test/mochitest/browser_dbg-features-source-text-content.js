@@ -25,6 +25,8 @@ const loadCounts = {};
  * Simple tests, asserting that we correctly display source text content in CodeMirror
  */
 const NAMED_EVAL_CONTENT = `function namedEval() {}; console.log('eval script'); //# sourceURL=named-eval.js`;
+const NEW_FUNCTION_CONTENT =
+  "console.log('new function'); //# sourceURL=new-function.js";
 const INDEX_PAGE_CONTENT = `<!DOCTYPE html>
     <html>
       <head>
@@ -52,6 +54,13 @@ const INDEX_PAGE_CONTENT = `<!DOCTYPE html>
             this.worker = new Worker("same-url.js");
             this.worker.postMessage("foo");
           };
+
+          this.newFunction = new Function("${NEW_FUNCTION_CONTENT}");
+
+          // This method will be called via invokeInTab.
+          function breakInNewFunction() {
+            new Function("a\\n", "b", "debugger;")();
+          }
         </script>
       </head>
       <body>
@@ -124,6 +133,7 @@ add_task(async function testSourceTextContent() {
     "normal-script.js",
     "slow-loading-script.js",
     "same-url.js",
+    "new-function.js",
   ];
 
   // With fission and EFT disabled, the structure of the source tree changes
@@ -141,8 +151,19 @@ add_task(async function testSourceTextContent() {
 
   await selectSourceFromSourceTree(
     dbg,
-    "normal-script.js",
+    "new-function.js",
     noFissionNoEFT ? 6 : 5,
+    "Select `new-function.js`"
+  );
+  is(
+    getCM(dbg).getValue(),
+    `function anonymous(\n) {\n${NEW_FUNCTION_CONTENT}\n}`
+  );
+
+  await selectSourceFromSourceTree(
+    dbg,
+    "normal-script.js",
+    noFissionNoEFT ? 7 : 6,
     "Select `normal-script.js`"
   );
   is(getCM(dbg).getValue(), `console.log("normal script")`);
@@ -150,7 +171,7 @@ add_task(async function testSourceTextContent() {
   await selectSourceFromSourceTree(
     dbg,
     "slow-loading-script.js",
-    noFissionNoEFT ? 8 : 7,
+    noFissionNoEFT ? 9 : 8,
     "Select `slow-loading-script.js`"
   );
   is(getCM(dbg).getValue(), `console.log("slow loading script")`);
@@ -174,7 +195,7 @@ add_task(async function testSourceTextContent() {
   await selectSourceFromSourceTree(
     dbg,
     "same-url.js",
-    noFissionNoEFT ? 7 : 6,
+    noFissionNoEFT ? 8 : 7,
     "Select `same-url.js` in the Main Thread"
   );
 
@@ -202,7 +223,7 @@ add_task(async function testSourceTextContent() {
     await closeTab(dbg, "same-url.js");
 
     info("Click on the iframe tree node to show sources in the iframe");
-    await clickElement(dbg, "sourceDirectoryLabel", 8);
+    await clickElement(dbg, "sourceDirectoryLabel", 9);
     await waitForSourcesInSourceTree(
       dbg,
       [
@@ -213,6 +234,7 @@ add_task(async function testSourceTextContent() {
         "same-url.js",
         "iframe.html",
         "same-url.js",
+        "new-function.js",
       ],
       {
         noExpand: true,
@@ -222,7 +244,7 @@ add_task(async function testSourceTextContent() {
     await selectSourceFromSourceTree(
       dbg,
       "same-url.js",
-      11,
+      12,
       "Select `same-url.js` in the iframe"
     );
 
@@ -258,7 +280,7 @@ add_task(async function testSourceTextContent() {
 
   info("Click on the worker tree node to show sources in the worker");
 
-  await clickElement(dbg, "sourceDirectoryLabel", noFissionNoEFT ? 9 : 12);
+  await clickElement(dbg, "sourceDirectoryLabel", noFissionNoEFT ? 10 : 13);
 
   const workerSources = [
     "index.html",
@@ -268,6 +290,7 @@ add_task(async function testSourceTextContent() {
     "same-url.js",
     "iframe.html",
     "same-url.js",
+    "new-function.js",
   ];
 
   if (!noFissionNoEFT) {
@@ -281,7 +304,7 @@ add_task(async function testSourceTextContent() {
   await selectSourceFromSourceTree(
     dbg,
     "same-url.js",
-    noFissionNoEFT ? 11 : 14,
+    noFissionNoEFT ? 12 : 15,
     "Select `same-url.js` in the worker"
   );
 
@@ -308,6 +331,17 @@ add_task(async function testSourceTextContent() {
     !sourceExists(dbg, "http-error-script.js"),
     "scripts with HTTP error code do not appear in the source list"
   );
+
+  const onNewSource = waitForDispatch(dbg.store, "ADD_SOURCES");
+  invokeInTab("breakInNewFunction");
+  await waitForPaused(dbg);
+  const { sources } = await onNewSource;
+  is(sources.length, 1, "Got a unique source related to new Function source");
+  const newFunctionSource = sources[0];
+  // We acknowledge the function header as well as the new line in the first argument
+  assertPausedAtSourceAndLine(dbg, newFunctionSource.id, 4, 0);
+  is(getCM(dbg).getValue(), "function anonymous(a\n,b\n) {\ndebugger;\n}");
+  await resume(dbg);
 
   // As we are loading the page while the debugger is already opened,
   // none of the resources are loaded twice.

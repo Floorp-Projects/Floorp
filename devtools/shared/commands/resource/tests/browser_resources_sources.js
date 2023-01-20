@@ -54,7 +54,7 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
       },
       sourceContent: {
         contentType: "text/javascript",
-        source: "return 42;",
+        source: "function anonymous(\n) {\nreturn 42;\n}",
       },
     },
     {

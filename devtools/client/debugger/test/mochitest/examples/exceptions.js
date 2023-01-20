@@ -77,6 +77,10 @@ function deepErrorThrowDifferent() {
   debugger;
 }
 
+function throwInNewFunctionArgument() {
+  new Function("f=doesntExists()", "return 42;")();
+}
+
 function inlineExc() {
   'abc'.push(1);
 }

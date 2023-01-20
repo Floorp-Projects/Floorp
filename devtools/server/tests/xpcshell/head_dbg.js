@@ -726,18 +726,6 @@ async function unBlackBox(sourceFront, range = null) {
 }
 
 /**
- * Perform a "source" RDP request with the given SourceFront to get the source
- * content and content type.
- *
- * @param SourceFront sourceFront
- * @returns Promise
- */
-function getSourceContent(sourceFront) {
-  dumpn("Getting source content for " + sourceFront.actor);
-  return sourceFront.source();
-}
-
-/**
  * Get a source at the specified url.
  *
  * @param ThreadFront threadFront
