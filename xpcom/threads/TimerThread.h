@@ -47,6 +47,10 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
       MOZ_REQUIRES(aTimer->mMutex);
   nsresult RemoveTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock)
       MOZ_REQUIRES(aTimer->mMutex);
+  // Considering only the first 'aSearchBound' timers (in firing order), returns
+  // the timeout of the first non-low-priority timer, on the current thread,
+  // that will fire before 'aDefault'. If no such timer exists, 'aDefault' is
+  // returned.
   TimeStamp FindNextFireTimeForCurrentThread(TimeStamp aDefault,
                                              uint32_t aSearchBound);
 
