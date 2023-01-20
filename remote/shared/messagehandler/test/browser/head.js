@@ -8,6 +8,10 @@ var { ContextDescriptorType } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs"
 );
 
+var { WindowGlobalMessageHandler } = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs"
+);
+
 var contextDescriptorAll = {
   type: ContextDescriptorType.All,
 };
@@ -184,3 +188,49 @@ async function installSidebarExtension() {
     sidebarBrowser,
   };
 }
+
+const SessionDataUpdateHelpers = {
+  getUpdates(rootMessageHandler, browsingContext) {
+    return rootMessageHandler.handleCommand({
+      moduleName: "sessiondataupdate",
+      commandName: "getSessionDataUpdates",
+      destination: {
+        id: browsingContext.id,
+        type: WindowGlobalMessageHandler.type,
+      },
+    });
+  },
+
+  createSessionDataUpdate(
+    values,
+    method,
+    category,
+    descriptor = { type: ContextDescriptorType.All }
+  ) {
+    return {
+      method,
+      values,
+      moduleName: "sessiondataupdate",
+      category,
+      contextDescriptor: descriptor,
+    };
+  },
+
+  assertUpdate(update, expectedValues, expectedCategory) {
+    is(
+      update.length,
+      expectedValues.length,
+      "Update has the expected number of values"
+    );
+
+    for (const item of update) {
+      info(`Check session data update item '${item.value}'`);
+      is(item.category, expectedCategory, "Item has the expected category");
+      is(
+        expectedValues[update.indexOf(item)],
+        item.value,
+        "Item has the expected value"
+      );
+    }
+  },
+};

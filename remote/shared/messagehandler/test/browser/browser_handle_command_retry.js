@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { WindowGlobalMessageHandler } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs"
-);
-
 // We are forcing the actors to shutdown while queries are unresolved.
 const { PromiseTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromiseTestUtils.sys.mjs"

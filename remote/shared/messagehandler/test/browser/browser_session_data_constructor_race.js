@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { WindowGlobalMessageHandler } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs"
-);
-
 const TEST_PAGE = "https://example.com/document-builder.sjs?html=tab";
 
 /**
