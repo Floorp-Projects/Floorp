@@ -31,7 +31,6 @@ add_task(async () => {
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
       ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
-      ["browser.swipe.navigation-icon-move-distance", 0],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 0 so we can exactly control the
@@ -77,11 +76,16 @@ add_task(async () => {
   let opacity = gHistorySwipeAnimation._prevBox.style.opacity;
   is(opacity, "", "opacity style isn't explicitly set");
 
-  const translateDistance = Services.prefs.getIntPref(
-    "browser.swipe.navigation-icon-move-distance",
-    0
-  );
-  if (translateDistance != 0) {
+  const isTranslatingIcon =
+    Services.prefs.getIntPref(
+      "browser.swipe.navigation-icon-start-position",
+      0
+    ) != 0 ||
+    Services.prefs.getIntPref(
+      "browser.swipe.navigation-icon-end-position",
+      0
+    ) != 0;
+  if (isTranslatingIcon != 0) {
     isnot(
       window
         .getComputedStyle(gHistorySwipeAnimation._prevBox)
@@ -125,7 +129,7 @@ add_task(async () => {
   opacity = gHistorySwipeAnimation._prevBox.style.opacity;
   ok(opacity == 0, "element.style opacity of prevbox 0");
 
-  if (translateDistance != 0) {
+  if (isTranslatingIcon) {
     // We don't have a transition for translate property so that we still have
     // some amount of translate.
     isnot(
@@ -155,7 +159,6 @@ add_task(async () => {
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
       ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
-      ["browser.swipe.navigation-icon-move-distance", 0],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 0 so we can exactly control the
@@ -252,7 +255,6 @@ add_task(async () => {
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
       ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
-      ["browser.swipe.navigation-icon-move-distance", 0],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 1 (default 0.05f) so velocity is a
