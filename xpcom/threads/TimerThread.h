@@ -86,22 +86,40 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   bool mNotified MOZ_GUARDED_BY(mMonitor);
   bool mSleeping MOZ_GUARDED_BY(mMonitor);
 
-  class Entry final : public nsTimerImplHolder {
+  class Entry final {
    public:
-    // Entries are created with the TimerImpl's mutex held.
-    // nsTimerImplHolder() will call SetHolder()
     Entry(const TimeStamp& aMinTimeout, const TimeStamp& aTimeout,
           nsTimerImpl* aTimerImpl)
-        : nsTimerImplHolder(aTimerImpl),
-          mTimeout(std::max(aMinTimeout, aTimeout)) {}
+        : mTimerImpl(aTimerImpl), mTimeout(std::max(aMinTimeout, aTimeout)) {
+      if (aTimerImpl) {
+        aTimerImpl->SetIsInTimerThread(true);
+      }
+    }
+
+    ~Entry() {
+      if (mTimerImpl) {
+        mTimerImpl->mMutex.AssertCurrentThreadOwns();
+        mTimerImpl->SetIsInTimerThread(false);
+      }
+    }
 
     nsTimerImpl* Value() const { return mTimerImpl; }
+
+    void Forget(nsTimerImpl* aTimerImpl) {
+      if (MOZ_UNLIKELY(!aTimerImpl)) {
+        return;
+      }
+      MOZ_ASSERT(mTimerImpl == aTimerImpl);
+      mTimerImpl->mMutex.AssertCurrentThreadOwns();
+      mTimerImpl->SetIsInTimerThread(false);
+      mTimerImpl = nullptr;
+    }
 
     // Called with the Monitor held, but not the TimerImpl's mutex
     already_AddRefed<nsTimerImpl> Take() {
       if (mTimerImpl) {
-        MOZ_ASSERT(mTimerImpl->mHolder == this);
-        mTimerImpl->SetHolder(nullptr);
+        MOZ_ASSERT(mTimerImpl->IsInTimerThread());
+        mTimerImpl->SetIsInTimerThread(false);
       }
       return mTimerImpl.forget();
     }
@@ -116,6 +134,7 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
     const TimeStamp& Timeout() const { return mTimeout; }
 
    private:
+    RefPtr<nsTimerImpl> mTimerImpl;
     TimeStamp mTimeout;
   };
 
