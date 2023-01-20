@@ -127,9 +127,6 @@ class GfxInfoBase : public nsIGfxInfo,
 
   virtual void DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> obj);
 
-  bool DoesDesktopEnvironmentMatch(const nsAString& aBlocklistDesktop,
-                                   const nsAString& aDesktopEnv);
-
   virtual bool DoesWindowProtocolMatch(
       const nsAString& aBlocklistWindowProtocol,
       const nsAString& aWindowProtocol);
