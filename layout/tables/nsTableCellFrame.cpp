@@ -1047,14 +1047,9 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsRect bgRect = GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
 
     // display background if we need to.
-    AppendedBackgroundType result = AppendedBackgroundType::None;
-    if (aBuilder->IsForEventDelivery() ||
-        !StyleBackground()->IsTransparent(this) ||
-        StyleDisplay()->HasAppearance()) {
-      result = nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, this, bgRect, aLists.BorderBackground());
-    }
-
+    const AppendedBackgroundType result =
+        nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+            aBuilder, this, bgRect, aLists.BorderBackground());
     if (result == AppendedBackgroundType::None) {
       aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
                                                    aLists.BorderBackground());

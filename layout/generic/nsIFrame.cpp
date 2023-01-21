@@ -2621,8 +2621,7 @@ auto nsIFrame::ComputeShouldPaintBackground() const -> ShouldPaintBackground {
 
 bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
                                               const nsDisplayListSet& aLists) {
-  const bool hitTesting = aBuilder->IsForEventDelivery();
-  if (hitTesting && !aBuilder->HitTestIsForVisibility()) {
+  if (aBuilder->IsForEventDelivery() && !aBuilder->HitTestIsForVisibility()) {
     // For hit-testing, we generally just need a light-weight data structure
     // like nsDisplayEventReceiver. But if the hit-testing is for visibility,
     // then we need to know the opaque region in order to determine whether to
@@ -2632,21 +2631,11 @@ bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
     return false;
   }
 
-  AppendedBackgroundType result = AppendedBackgroundType::None;
-  // Here we don't try to detect background propagation, canvas frame does its
-  // own thing.
-  if (hitTesting || !StyleBackground()->IsTransparent(this) ||
-      StyleDisplay()->HasAppearance() ||
-      // We do forcibly create a display item for background color animations
-      // even if the current background-color is transparent so that we can
-      // run the animations on the compositor.
-      EffectCompositor::HasAnimationsForCompositor(
-          this, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
-    result = nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-        aBuilder, this,
-        GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this),
-        aLists.BorderBackground());
-  }
+  const AppendedBackgroundType result =
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, this,
+          GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this),
+          aLists.BorderBackground());
 
   if (result == AppendedBackgroundType::None) {
     aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
