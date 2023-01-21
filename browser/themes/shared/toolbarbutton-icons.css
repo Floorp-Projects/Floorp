@@ -9,21 +9,22 @@
   --warning-icon-bgcolor: #FFA436;
 }
 
-:root:-moz-lwtheme {
+:root:-moz-lwtheme,
+:is(panel, toolbar, #urlbar, #searchbar):-moz-lwtheme {
   --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
 }
 
 :root[lwt-popup-brighttext] panel,
+:root[lwt-toolbar-field-brighttext] :is(#urlbar, #searchbar),
 toolbar[brighttext]:-moz-lwtheme {
   --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
   --warning-icon-bgcolor: #FFBD4F;
 }
 
 :root,
-/* Pick up the panel- and toolbar-specific --toolbarbutton-icon-fill-attention
+/* Pick up potentially diverging --toolbarbutton-icon-fill-attention
    values from above. */
-panel,
-toolbar {
+:is(panel, toolbar, #urlbar, #searchbar) {
   --toolbar-field-icon-fill-attention: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
 }
 
