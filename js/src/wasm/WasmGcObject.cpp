@@ -380,30 +380,6 @@ static void WriteValTo(const Val& val, FieldType ty, void* dest) {
   }
 }
 
-#define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Finalize, Moved, Flags)    \
-  static const JSClassOps Name##ClassOps = {                          \
-      nullptr, /* addProperty */                                      \
-      nullptr, /* delProperty */                                      \
-      nullptr, /* enumerate   */                                      \
-      WasmGcObject::obj_newEnumerate,                                 \
-      nullptr,  /* resolve     */                                     \
-      nullptr,  /* mayResolve  */                                     \
-      Finalize, /* finalize    */                                     \
-      nullptr,  /* call        */                                     \
-      nullptr,  /* construct   */                                     \
-      Trace,                                                          \
-  };                                                                  \
-  static const ClassExtension Name##ClassExt = {                      \
-      Moved /* objectMovedOp */                                       \
-  };                                                                  \
-  const JSClass Name::class_ = {                                      \
-      #Name,                                                          \
-      JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER | (Flags), \
-      &Name##ClassOps,                                                \
-      JS_NULL_CLASS_SPEC,                                             \
-      &Name##ClassExt,                                                \
-      &WasmGcObject::objectOps_}
-
 //=========================================================================
 // MemoryTracingVisitor (private to this file)
 
@@ -537,12 +513,42 @@ void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
   }
 }
 
-DEFINE_TYPEDOBJ_CLASS(WasmArrayObject, WasmArrayObject::obj_trace,
-                      WasmArrayObject::obj_finalize, nullptr,
-                      JSCLASS_BACKGROUND_FINALIZE);
+static const JSClassOps WasmArrayObjectClassOps = {
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate   */
+    WasmGcObject::obj_newEnumerate,
+    nullptr,                       /* resolve     */
+    nullptr,                       /* mayResolve  */
+    WasmArrayObject::obj_finalize, /* finalize    */
+    nullptr,                       /* call        */
+    nullptr,                       /* construct   */
+    WasmArrayObject::obj_trace,
+};
+static const ClassExtension WasmArrayObjectClassExt = {
+    nullptr /* objectMovedOp */
+};
+const JSClass WasmArrayObject::class_ = {"WasmArrayObject",
+                                         JSClass::NON_NATIVE |
+                                             JSCLASS_DELAY_METADATA_BUILDER |
+                                             JSCLASS_BACKGROUND_FINALIZE,
+                                         &WasmArrayObjectClassOps,
+                                         JS_NULL_CLASS_SPEC,
+                                         &WasmArrayObjectClassExt,
+                                         &WasmGcObject::objectOps_};
 
 //=========================================================================
 // WasmStructObject
+
+/* static */
+const JSClass* js::WasmStructObject::classForTypeDef(
+    const wasm::TypeDef* typeDef) {
+  MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
+  size_t nbytes = typeDef->structType().size_;
+  return nbytes > WasmStructObject_MaxInlineBytes
+             ? &WasmStructObject::classOutline_
+             : &WasmStructObject::classInline_;
+}
 
 /* static */
 js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
@@ -667,6 +673,52 @@ void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
   WriteValTo(val, fieldType, data);
 }
 
-DEFINE_TYPEDOBJ_CLASS(WasmStructObject, WasmStructObject::obj_trace,
-                      WasmStructObject::obj_finalize, nullptr,
-                      JSCLASS_BACKGROUND_FINALIZE);
+static const JSClassOps WasmStructObjectOutlineClassOps = {
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate   */
+    WasmGcObject::obj_newEnumerate,
+    nullptr,                        /* resolve     */
+    nullptr,                        /* mayResolve  */
+    WasmStructObject::obj_finalize, /* finalize    */
+    nullptr,                        /* call        */
+    nullptr,                        /* construct   */
+    WasmStructObject::obj_trace,
+};
+static const ClassExtension WasmStructObjectOutlineClassExt = {
+    nullptr /* objectMovedOp */
+};
+const JSClass WasmStructObject::classOutline_ = {
+    "WasmStructObject",
+    JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER |
+        JSCLASS_BACKGROUND_FINALIZE,
+    &WasmStructObjectOutlineClassOps,
+    JS_NULL_CLASS_SPEC,
+    &WasmStructObjectOutlineClassExt,
+    &WasmGcObject::objectOps_};
+
+// Structs that only have inline data get a different class without a
+// finalizer. This class should otherwise be indentical to the class for
+// structs with outline data.
+static const JSClassOps WasmStructObjectInlineClassOps = {
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate   */
+    WasmGcObject::obj_newEnumerate,
+    nullptr, /* resolve     */
+    nullptr, /* mayResolve  */
+    nullptr, /* finalize    */
+    nullptr, /* call        */
+    nullptr, /* construct   */
+    WasmStructObject::obj_trace,
+};
+static const ClassExtension WasmStructObjectInlineClassExt = {
+    nullptr /* objectMovedOp */
+};
+const JSClass WasmStructObject::classInline_ = {
+    "WasmStructObject",
+    JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER,
+    &WasmStructObjectInlineClassOps,
+    JS_NULL_CLASS_SPEC,
+    &WasmStructObjectInlineClassExt,
+    &WasmGcObject::objectOps_};
