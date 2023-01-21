@@ -294,14 +294,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Az értesítések segítségével még többet tehet a %s alkalmazással</string>
+    <string name="onboarding_home_enable_notifications_title">Az értesítések segítségével még többet tehet a %s alkalmazással</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Szinkronizálhatja lapjait az eszközök között, kezelheti a letöltéseket, tippeket kaphat a %s adatvédelmi funkcióinak maximális kihasználásához stb.</string>
+    <string name="onboarding_home_enable_notifications_description">Szinkronizálhatja lapjait az eszközök között, kezelheti a letöltéseket, tippeket kaphat a %s adatvédelmi funkcióinak maximális kihasználásához stb.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Folytatás</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Folytatás</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Most nem</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Most nem</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -358,8 +358,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">A sütibannerek számának csökkentése</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">A Firefox automatikusan megpróbálja elutasítani a sütibannereken megjelenő sütikéréseket. Ha nem áll rendelkezésre elutasítási lehetőség, akkor a Firefox minden sütit elfogadhat a banner elrejtéséhez.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">A Firefox automatikusan megpróbálja elutasítani a sütibannereken megjelenő sütikéréseket. Ha nem áll rendelkezésre elutasítási lehetőség, akkor a Firefox minden sütit elfogadhat a banner elrejtéséhez.</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">A %1$s automatikusan megpróbálja elutasítani a sütibannereken lévő sütikéréseket.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Kikapcsolva erre az oldalra</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -371,12 +373,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">A %1$s törli a webhely sütijeit, és frissíti az oldalt. Az összes süti törlésével kijelentkezhet, vagy kiürítheti a kosarait.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">A %1$s automatikusan megpróbálhatja elutasítani a sütikéréseket. Ha nem áll rendelkezésre elutasítási lehetőség, akkor a %2$s minden sütit elfogadhat a banner elrejtéséhez.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">A %1$s automatikusan megpróbálhatja elutasítani a sütikéréseket. Ha nem áll rendelkezésre elutasítási lehetőség, akkor a %2$s minden sütit elfogadhat a banner elrejtéséhez.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">A %1$s megpróbálhatja automatikusan elutasítani a sütikéréseket.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Elég a sütibannerekből!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Automatikusan elutasítja a sütikéréseket, ha az lehetséges. Ellenkező esetben elfogad minden sütit a sütibannerek eltüntetéséhez.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Automatikusan elutasítja a sütikéréseket, ha az lehetséges. Ellenkező esetben elfogad minden sütit a sütibannerek eltüntetéséhez.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">A sütikérések automatikus elutasítása, ha lehetséges.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Most nem</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -386,22 +392,30 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Lásson kevesebb sütikkel kapcsolatos felugró ablakot</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Automatikusan megválaszolja a sütik felugró ablakait a zavaró tényezőktől mentes böngészés érdekében. A %1$s elutasítja az összes kérést, ha az lehetséges, vagy elfogadja az összeset, ha nem.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Automatikusan megválaszolja a sütik felugró ablakait a zavaró tényezőktől mentes böngészés érdekében. A %1$s elutasítja az összes kérést, ha az lehetséges, vagy elfogadja az összeset, ha nem.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Automatikusan megválaszolja a sütik felugró ablakait a zavaró tényezőktől mentes böngészés érdekében. A %1$s elutasítja az összes kérést, ha az lehetséges.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Felugró ablakok eltüntetése</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Sütibannerek számának csökkentése</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Engedélyezi a %1$s számára, hogy ha lehetséges, akkor elutasítsa a webhelyek sütikhez való hozzájárulási kéréseit, vagy elfogadja azokat, ha ez nem lehetséges?</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">Engedélyezi a %1$s számára, hogy ha lehetséges, akkor elutasítsa a webhelyek sütikhez való hozzájárulási kéréseit, vagy elfogadja azokat, ha ez nem lehetséges?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Engedélyezi a %1$s számára, hogy elutasítsa egy webhely sütikérését, ha lehetséges?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Engedélyezés</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikusan HTTPS titkosítási protokoll használatával próbál meg csatlakozni a webhelyekhez a fokozott biztonság érdekében.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Be</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Be</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Ki</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Az összes lapon</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Csak privát lapokon</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">További tudnivalók</string>
     <!-- Option for the https only setting -->
@@ -480,6 +494,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Értesítések</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Engedélyezett</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Nem engedélyezett</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Egyéni kiegészítőgyűjtemény</string>
@@ -502,8 +521,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Nemrég felkeresett</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Elgondolkodtató történetek</string>
@@ -762,6 +779,13 @@
     <string name="close_tabs_after_one_week_summary">Bezárás egy hét után</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Bezárás egy hónap után</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Megnyitás a kezdőlapon</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Megnyitás az utolsó lapon</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Megnyitás a kezdőlapon négy óra után</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1029,10 +1053,16 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Kivételek</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Be</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Be</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ki</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Szokásos</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Szigorú</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Egyéni</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Hang és videó engedélyezése</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1976,8 +2006,6 @@
     <string name="pocket_stories_categories_header">Történetek téma szerint</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Folytassa a felfedezést</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">A motorháztető alatt: Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">A motorháztető alatt: %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

@@ -296,14 +296,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Upozornenia vám pomôžu vyťažiť a aplikácie %s ešte viac</string>
+    <string name="onboarding_home_enable_notifications_title">Upozornenia vám pomôžu vyťažiť a aplikácie %s ešte viac</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Synchronizujte svoje karty medzi zariadeniami, spravujte sťahovanie, získajte tipy, ako čo najlepšie využiť ochranu súkromia prehliadača %s a ďalšie.</string>
+    <string name="onboarding_home_enable_notifications_description">Synchronizujte svoje karty medzi zariadeniami, spravujte sťahovanie, získajte tipy, ako čo najlepšie využiť ochranu súkromia prehliadača %s a ďalšie.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Pokračovať</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Pokračovať</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Teraz nie</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Teraz nie</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -362,8 +362,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Znižovať počet bannerov súborov cookie</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox sa automaticky pokúša odmietnuť žiadosti o uloženie súborov cookie na informačných banneroch súborov cookie. Ak možnosť odmietnutia nie je k dispozícii, Firefox môže akceptovať všetky súbory cookie, aby oznámenie zavrel.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox sa automaticky pokúša odmietnuť žiadosti o uloženie súborov cookie na informačných banneroch súborov cookie. Ak možnosť odmietnutia nie je k dispozícii, Firefox môže akceptovať všetky súbory cookie, aby oznámenie zavrel.</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s sa automaticky pokúša odmietnuť žiadosti o súbory cookie na banneroch súborov cookie.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Vypnuté pre túto stránku</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -375,13 +377,17 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s vymaže súbory cookie tohto webu a obnoví stránku. Vymazanie všetkých súborov cookie vás môže odhlásiť zo stránky alebo vyprázdniť nákupné košíky.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s sa môže pokúsiť odmietnuť žiadosti o uloženie súborov cookie. Ak možnosť odmietnutia nie je k dispozícii, %2$s môže akceptovať všetky súbory cookie, aby oznámenie zavrel.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s sa môže pokúsiť odmietnuť žiadosti o uloženie súborov cookie. Ak možnosť odmietnutia nie je k dispozícii, %2$s môže akceptovať všetky súbory cookie, aby oznámenie zavrel.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s sa môže pokúsiť automaticky odmietnuť žiadosti o súbory cookie.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Bannery k súborom cookie sú preč!</string>
 
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Automaticky odmietajte žiadosti o súbory cookie, ak je to možné. V opačnom prípade akceptujte všetky súbory cookie, aby vás bannery súborov cookie viac neotravovali.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Automaticky odmietajte žiadosti o súbory cookie, ak je to možné. V opačnom prípade akceptujte všetky súbory cookie, aby vás bannery súborov cookie viac neotravovali.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Automaticky odmietať žiadosti o súbory cookie, ak je to možné.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Teraz nie</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -391,22 +397,30 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Uvidíte menej vyskakovacích okien súborov cookie</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Automaticky odpovedajte na vyskakovacie okná so súbormi cookie pre prehliadanie bez rozptyľovania. %1$s odmietne všetky žiadosti, ak je to možné, a ak nie je, tak ich prijme.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Automaticky odpovedajte na vyskakovacie okná so súbormi cookie pre prehliadanie bez rozptyľovania. %1$s odmietne všetky žiadosti, ak je to možné, a ak nie je, tak ich prijme.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Automaticky odpovedajte na vyskakovacie okná a bannery so žiadosťami o použitie súborov cookie a prehliadajte bez rozptyľovania. %1$s odmietne všetky žiadosti, kde to bude možné.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Zavrieť vyskakovacie okná</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Zníženie počtu bannerov súborov cookie</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Povoliť aplikácii %1$s odmietnuť žiadosť stránky o súhlas so súbormi cookie, ak je to možné, alebo akceptovať prístup k súborom cookie, ak to nie je možné?</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">Povoliť aplikácii %1$s odmietnuť žiadosť stránky o súhlas so súbormi cookie, ak je to možné, alebo akceptovať prístup k súborom cookie, ak to nie je možné?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Povoliť aplikácii %1$s odmietnuť žiadosť webu o súhlas so súbormi cookie, ak je to možné?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Povoliť</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automaticky sa pokúša pripojiť k stránkam pomocou šifrovacieho protokolu HTTPS na zvýšenie bezpečnosti.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Zapnutý</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Zapnutý</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Vypnutý</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Zapnuté na všetkých kartách</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Zapnuté na súkromných kartách</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Ďalšie informácie</string>
     <!-- Option for the https only setting -->
@@ -485,6 +499,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Upozornenia</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Povolené</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Zakázané</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Vlastná kolekcia doplnkov</string>
@@ -509,8 +528,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Nedávno navštívené</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Príbehy na zamyslenie</string>
@@ -767,6 +784,13 @@
     <string name="close_tabs_after_one_week_summary">Zavrieť po jednom týždni</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Zavrieť po jednom mesiaci</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Otvárať na domovskej stránke</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Otvoriť na naposledy použitej karte</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Po štyroch hodinách otvoriť na domovskej stránke</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1032,10 +1056,16 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Výnimky</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Zapnutá</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Zapnutá</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Vypnutá</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Štandardná</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Prísna</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Vlastná</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Povoliť zvuk a video</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1973,8 +2003,6 @@
     <string name="pocket_stories_categories_header">Príbehy podľa témy</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Objavte ďalšie</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Službu poskytuje Pocket</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Vďaka službe %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

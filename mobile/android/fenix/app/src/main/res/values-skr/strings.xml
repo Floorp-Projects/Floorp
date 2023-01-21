@@ -288,14 +288,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">اطلاع نامے %s نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
+    <string name="onboarding_home_enable_notifications_title">اطلاع نامے %s نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">آپݨے ٹیباں کوں ڈیوائساں دے درمیان ہم وقت بݨاؤ، ڈاؤن لوڈاں منیج کرو، %s دی رازداری حفاظت بارے گُر گھنو تے ٻیا ٻہوں کجھ۔</string>
+    <string name="onboarding_home_enable_notifications_description">آپݨے ٹیباں کوں ڈیوائساں دے درمیان ہم وقت بݨاؤ، ڈاؤن لوڈاں منیج کرو، %s دی رازداری حفاظت بارے گُر گھنو تے ٻیا ٻہوں کجھ۔</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">جاری</string>
+    <string name="onboarding_home_enable_notifications_positive_button">جاری</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
+    <string name="onboarding_home_enable_notifications_negative_button">ہݨ کائناں</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -353,8 +353,10 @@
     <string name="reduce_cookie_banner_option">کوکی بینراں کوں تھوڑا کرو</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">فائر فوکس آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کرینداے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں فائر فوکس ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">فائر فوکس آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کرینداے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں فائر فوکس ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s کوکی بینراں تے کوکی ارداساں کوں آپݨے آپ مسترد کرݨ دی کوشش کریندے۔</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ایں سائٹ کیتے بند کرو</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -368,12 +370,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ایں سائٹ دیاں کوکیاں صاف کریسی تے ورقہ تازہ کریسی۔ساریاں کوکیاں صاف کرݨ نال تساں سائن آوٹ تھی سڳدے ہو یا تہاݙی خریداری ریڑھی خالی تھی ویسی۔</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کریندا ہے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں %2$s ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کریندا ہے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں %2$s ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s آپݨے آپ کوکی ارداساں کوں مسترد کرݨ دی کوشش کر سڳدے۔</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">کوکی بینرز شروع تھی ڳئے!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">جہڑے ویلے ممکن ہووے، کوکی ارداساں کوں خود کار مسترد کر ݙیوو، نہ تاں ول، کوکی بینراں کوں برخاست کرݨ کیتے ساریاں کوکیاں قبول کرو۔</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">جہڑے ویلے ممکن ہووے، کوکی ارداساں کوں خود کار مسترد کر ݙیوو، نہ تاں ول، کوکی بینراں کوں برخاست کرݨ کیتے ساریاں کوکیاں قبول کرو۔</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">جݙݨ ممکن ہووے، آپݨے آپ کوکی ارداساں مسترد کرو۔</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">ہݨ نہ</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -383,22 +389,30 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">تھوڑیاں پوپ اپاں کوکی ݙیکھو</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">بدحواسی کنوں پاک براؤزنگ کیتے کوکی پوپ اپاں  دا خودکار جواب ݙیوو۔ جے ممکن ہوسی تاں %1$s ساریاں ارداساں مسترد کر ݙیسی، یا ممکن نہ ہوسی تاں ساریاں قبول کر گھنسی۔</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">بدحواسی کنوں پاک براؤزنگ کیتے کوکی پوپ اپاں  دا خودکار جواب ݙیوو۔ جے ممکن ہوسی تاں %1$s ساریاں ارداساں مسترد کر ݙیسی، یا ممکن نہ ہوسی تاں ساریاں قبول کر گھنسی۔</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">بدحواسی کنوں پاک براؤزنگ کیتے کوکی پوپ اپاں  دا خودکار جواب ݙیوو۔ جے ممکن ہوسی تاں %1$s ساریاں ارداساں مسترد کر ݙیسی۔ </string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">پوپ اپ فارغ کرو</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">کوکی بینر گھٹاوݨ</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">جے ممکن ہے تاں %1$s کوں سائٹ کوکی دی رضامندی ارداس دے انکار کرݨ دی اجازت ݙیووں یا ڄݙݨ ممکن نہ ہووے تاں کوکی تائیں رسائی قبول کروں؟</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">جے ممکن ہے تاں %1$s کوں سائٹ کوکی دی رضامندی ارداس دے انکار کرݨ دی اجازت ݙیووں یا ڄݙݨ ممکن نہ ہووے تاں کوکی تائیں رسائی قبول کروں؟</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">جے ممکن ہووے تاں %1$s کوں سائٹ دیاں کوکی رضامندی ارداس دا انکار کرݨ دی اجازت ݙیووں؟</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">اجازت ݙیوو</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">خودکار طور تے ودھدی ہوئی حفاظت کیتے ایچ ٹی ٹی پی ایس خفیہ کاری پروٹوکول ورتندے ہوئے سائٹاں کوں کنکٹ کرݨ دی کوشش کریندے۔</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">چالو</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">چالو</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">بند</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">ساریاں ٹیباں وچ تے</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">نجی ٹیباں وچ  تے</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ٻیا سِکھو</string>
     <!-- Option for the https only setting -->
@@ -476,6 +490,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">اطلاع نامے</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">اجازت ݙتے ہوئے</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">اجازت کائنی</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">من پسند ایڈ ــ آن مجموعہ</string>
@@ -501,8 +520,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">حالیہ ݙٹھے</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">پاکٹ</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">فکر انگیز کہاݨیاں</string>
     <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
@@ -768,6 +785,14 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ہک مہینے بعد بند کرو</string>
 
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">مکھ پنے تے کھولو</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">چھیکڑی ٹیب تے کھولو</string>
+
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">چار گھنٹیاں بعد مکھ پنے تے کھولو</string>
+
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">پراݨے ٹیب غیرفعال وچ ٹورو</string>
@@ -1032,9 +1057,15 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">استثنيات</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">چالو</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">چالو</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">بند</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">معیار</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">سخت</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">مخصوص</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">آڈیو تے وڈیو دی اجازت ݙیوو</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1980,8 +2011,6 @@
     <string name="pocket_stories_categories_header">موضوع دے لحاظ نال کہاݨیاں</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">ٻیاں لبھو</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">پاکٹ ولوں تکڑا تھیا</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">تکڑا تھیا %s ولوں.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

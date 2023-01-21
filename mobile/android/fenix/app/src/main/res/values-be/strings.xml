@@ -167,6 +167,8 @@
     <string name="browser_menu_stop">Спыніць</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Дадаткі</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Інфармацыя аб уліковым запісе</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Няма дадаткаў</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -290,14 +292,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Апавяшчэнні дапамогуць вам зрабіць больш з %s</string>
+    <string name="onboarding_home_enable_notifications_title">Апавяшчэнні дапамогуць вам зрабіць больш з %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Сінхранізуйце свае карткі паміж прыладамі, кіруйце сцягваннямі, атрымлівайце парады, як максімальна выкарыстоўваць ахову прыватнасці %s, і многае іншае.</string>
+    <string name="onboarding_home_enable_notifications_description">Сінхранізуйце свае карткі паміж прыладамі, кіруйце сцягваннямі, атрымлівайце парады, як максімальна выкарыстоўваць ахову прыватнасці %s, і многае іншае.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Працягнуць</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Працягнуць</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Не зараз</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Не зараз</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -353,8 +355,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Памяншаць колькасць банераў кукі</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox аўтаматычна спрабуе адхіліць запыты кукаў на банерах файлаў cookie. Калі выбар адхілення недаступны, Firefox можа прыняць усе кукі, каб закрыць банер.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox аўтаматычна спрабуе адхіліць запыты кукаў на банерах файлаў cookie. Калі выбар адхілення недаступны, Firefox можа прыняць усе кукі, каб закрыць банер.</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s аўтаматычна спрабуе адхіліць запыты файлаў кукі на банерах кукі.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Выключана для гэтага сайта</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -368,12 +372,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s выдаліць файлы кукі гэтага сайта і абновіць старонку. Выдаленне ўсіх файлаў кукі можа прывесці да выхаду з сістэмы або ачышчэння кошыка для пакупак.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s можа паспрабаваць аўтаматычна адхіліць запыты на файлы кукі. Калі варыянт адхілення недаступны, %2$s можа прыняць усе файлы кукі, каб закрыць банер.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s можа паспрабаваць аўтаматычна адхіліць запыты на файлы кукі. Калі варыянт адхілення недаступны, %2$s можа прыняць усе файлы кукі, каб закрыць банер.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s можа паспрабаваць аўтаматычна адхіляць запыты на файлы кукі.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Банеры з кукамі зніклі!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Аўтаматычна адхіляць запыты на файлы кукі, калі гэта магчыма. У адваротным выпадку прымаць усе файлы кукі, каб закрыць банеры файлаў кукі.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Аўтаматычна адхіляць запыты на файлы кукі, калі гэта магчыма. У адваротным выпадку прымаць усе файлы кукі, каб закрыць банеры файлаў кукі.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Аўтаматычна адхіляць запыты на кукі, калі гэта магчыма.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Не зараз</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -384,22 +392,30 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Бачыць менш выплыўных акон пра кукі</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Аўтаматычна адказваць на выплыўныя вокны файлаў кукі для прагляду сайтаў без адцягнення ўвагі. %1$s будзе адхіляць усе запыты, калі гэта магчыма, або прымаць усе, калі не.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Аўтаматычна адказваць на выплыўныя вокны файлаў кукі для прагляду сайтаў без адцягнення ўвагі. %1$s будзе адхіляць усе запыты, калі гэта магчыма, або прымаць усе, калі не.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Аўтаматычна адказваць на выплыўныя вокны файлаў кукі для прагляду сайтаў без адцягнення ўвагі. %1$s будзе адхіляць усе запыты, калі гэта магчыма.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Адхіліць выплыўныя вокны</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Памяншэнне колькасці банераў кукі</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Дазволіць %1$s адхіляць запыты сайтаў на згоду на кукі, калі гэта магчыма, або прымаць доступ да файлаў кукі, калі гэта немагчыма?</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">Дазволіць %1$s адхіляць запыты сайтаў на згоду на кукі, калі гэта магчыма, або прымаць доступ да файлаў кукі, калі гэта немагчыма?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Дазволіць %1$s адхіляць запыты сайтаў на згоду на кукі, калі гэта магчыма?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Дазволіць</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Аўтаматычна спрабуе падключацца да сайтаў з выкарыстаннем пратаколу шыфравання HTTPS для павышэння бяспекі.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Уключаны</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Уключаны</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Выключаны</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Уключана ва ўсіх картках</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Уключана ў прыватных картках</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Даведацца больш</string>
     <!-- Option for the https only setting -->
@@ -477,6 +493,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Абвесткі</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Дазволена</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Не дазволена</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Уласная калекцыя дадаткаў</string>
@@ -500,8 +521,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Нядаўна наведаныя</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Гісторыі, якія прымушаюць задумацца</string>
@@ -760,6 +779,13 @@
     <string name="close_tabs_after_one_week_summary">Закрываць праз тыдзень</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Закрываць праз месяц</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Адкрываць на хатняй старонцы</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Адкрываць на апошняй картцы</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Адкрываць на хатняй старонцы праз чатыры гадзіны</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1030,9 +1056,15 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Выняткі</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Уключана</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Уключана</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Выключана</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Стандартная</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Строгая</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Адмысловая</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Дазволіць гук і відэа</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1996,8 +2028,6 @@
     <string name="pocket_stories_categories_header">Гісторыі па тэмах</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Даведайцеся больш</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Працуе на Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Пры падтрымцы %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

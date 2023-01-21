@@ -291,14 +291,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Thông báo giúp bạn làm được nhiều việc hơn với %s</string>
+    <string name="onboarding_home_enable_notifications_title">Thông báo giúp bạn làm được nhiều việc hơn với %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Đồng bộ hóa các thẻ của bạn giữa các thiết bị, quản lý tải xuống, nhận các mẹo về cách tận dụng tối đa khả năng bảo vệ quyền riêng tư của %s và nhiều hơn nữa.</string>
+    <string name="onboarding_home_enable_notifications_description">Đồng bộ hóa các thẻ của bạn giữa các thiết bị, quản lý tải xuống, nhận các mẹo về cách tận dụng tối đa khả năng bảo vệ quyền riêng tư của %s và nhiều hơn nữa.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Tiếp tục</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Tiếp tục</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Không phải bây giờ</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Không phải bây giờ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -355,8 +355,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Giảm biểu ngữ cookie</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie. Nếu không có tùy chọn từ chối, Firefox có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie. Nếu không có tùy chọn từ chối, Firefox có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Tắt cho trang web này</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -368,12 +370,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s sẽ xóa cookie của trang web này và làm mới trang. Xóa tất cả cookie có thể khiến bạn đăng xuất hoặc làm trống giỏ hàng.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s có thể thử tự động từ chối yêu cầu cookie. Nếu không có tùy chọn từ chối, %2$s có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s có thể thử tự động từ chối yêu cầu cookie. Nếu không có tùy chọn từ chối, %2$s có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s có thể cố gắng tự động từ chối yêu cầu cookie.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Biểu ngữ cookie sẽ biến mất!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Tự động từ chối các yêu cầu cookie khi có thể. Nếu không, chấp nhận tất cả cookie để loại bỏ biểu ngữ cookie.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Tự động từ chối các yêu cầu cookie khi có thể. Nếu không, chấp nhận tất cả cookie để loại bỏ biểu ngữ cookie.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Tự động từ chối các yêu cầu cookie khi có thể.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Không phải bây giờ</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -383,22 +389,30 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Xem ít cửa sổ bật lên về cookie hơn</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Tự động trả lời các cửa sổ bật lên cookie để duyệt web không bị phân tâm. %1$s sẽ từ chối tất cả các yêu cầu nếu có thể hoặc chấp nhận tất cả nếu không.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Tự động trả lời các cửa sổ bật lên cookie để duyệt web không bị phân tâm. %1$s sẽ từ chối tất cả các yêu cầu nếu có thể hoặc chấp nhận tất cả nếu không.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Tự động trả lời các cửa sổ bật lên cookie để duyệt web không bị phân tâm. %1$s sẽ từ chối tất cả các yêu cầu nếu có thể.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Loại bỏ cửa sổ bật lên</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Giảm biểu ngữ cookie</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Cho phép %1$s từ chối yêu cầu chấp thuận cookie của trang web nếu có thể hoặc chấp nhận quyền truy cập cookie khi không thể?</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">Cho phép %1$s từ chối yêu cầu chấp thuận cookie của trang web nếu có thể hoặc chấp nhận quyền truy cập cookie khi không thể?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Cho phép %1$s từ chối yêu cầu chấp thuận cookie của một trang web nếu có thể?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Cho phép</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tự động cố gắng kết nối với các trang web bằng giao thức mã hóa HTTPS để tăng cường bảo mật.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Bật</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Bật</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Tắt</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Bật trong tất cả các thẻ</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Bật trong các thẻ riêng tư</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Tìm hiểu thêm</string>
     <!-- Option for the https only setting -->
@@ -476,6 +490,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Thông báo</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Đã cho phép</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Không cho phép</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Bộ sưu tập tiện ích tùy chỉnh</string>
@@ -498,8 +517,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Đã xem gần đây</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Những câu chuyện kích động tư tưởng</string>
@@ -754,6 +771,13 @@
     <string name="close_tabs_after_one_week_summary">Đóng sau một tuần</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Đóng sau một tháng</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Mở trên trang chủ</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Mở trên thẻ cuối cùng</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Mở trên trang chủ sau bốn giờ</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1019,9 +1043,15 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ngoại trừ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Bật</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Bật</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Tắt</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Tiêu chuẩn</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Nghiêm ngặt</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Tùy chỉnh</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Cho phép âm thanh và video</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1953,8 +1983,6 @@
     <string name="pocket_stories_categories_header">Các câu chuyện theo chủ đề</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Khám phá thêm nữa</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Được cung cấp bởi Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Được cung cấp bởi %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
