@@ -10,6 +10,7 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js
 
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-rest-mode.js", this);
 
 
 // This function is called when the floorp browser window is loaded. needs Delay.

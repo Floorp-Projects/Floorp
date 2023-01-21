@@ -17,3 +17,4 @@ browser.jar:
   content/browser/browser-undo-closed-tab.js    (content/browser-undo-closed-tab.js)
   content/browser/browser-floorp.css            (content/browser-floorp.css)
   content/browser/browser-pinned-tabs-title.js  (content/browser-pinned-tabs-title.js)
+  content/browser/browser-rest-mode.js          (content/browser-rest-mode.js)
