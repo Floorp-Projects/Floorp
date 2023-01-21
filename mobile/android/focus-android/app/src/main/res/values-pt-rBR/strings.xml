@@ -733,10 +733,15 @@
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string name="cfr_for_cookie_banner">O %1$s tenta rejeitar solicitações de cookies para descartar avisos chatos de cookies.\n\nGerencie as preferências de avisos de cookies nas configurações.</string>
+    <string moz:RemovedIn="111" name="cfr_for_cookie_banner" tools:ignore="UnusedResources">O %1$s tenta rejeitar solicitações de cookies para descartar avisos chatos de cookies.\n\nGerencie as preferências de avisos de cookies nas configurações.</string>
 
-    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings">configurações</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">O %1$s tenta rejeitar solicitações de cookies para descartar avisos chatos de cookies.\n\nGerencie as preferências de avisos de cookies nas %2$s.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string moz:RemovedIn="111" name="cfr_for_cookie_banner_underline_settings" tools:ignore="UnusedResources">configurações</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">configurações</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Reprodução automática</string>
