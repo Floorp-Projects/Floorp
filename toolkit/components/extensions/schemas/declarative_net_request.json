@@ -229,7 +229,7 @@
               "isUrlFilterCaseSensitive": {
                 "type": "boolean",
                 "optional": true,
-                "description": "Whether 'urlFilter' or 'regexFilter' is case-sensitive. Defaults to true."
+                "description": "Whether 'urlFilter' or 'regexFilter' is case-sensitive."
               },
               "initiatorDomains": {
                 "type": "array",

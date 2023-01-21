@@ -26,7 +26,7 @@ function makeDnrTestUtils() {
   }
   async function testMatchesUrlFilter({
     urlFilter,
-    isUrlFilterCaseSensitive = false,
+    isUrlFilterCaseSensitive,
     urls = [],
     urlsNonMatching = [],
   }) {
@@ -345,6 +345,60 @@ add_task(async function extreme_urlFilter_patterns() {
         [1, 4],
         "urlFilter with 1M and 10M wildcards matches URL"
       );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
+add_task(async function test_isUrlFilterCaseSensitive() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const { testMatchesUrlFilter } = dnrTestUtils;
+
+      await testMatchesUrlFilter({
+        urlFilter: "AbC",
+        isUrlFilterCaseSensitive: true,
+        urls: [
+          "http://true.example.com/AbC", // Exact match.
+        ],
+        urlsNonMatching: [
+          "http://true.example.com/abc", // All lower.
+          "http://true.example.com/ABC", // All upper.
+          "http://true.example.com/???", // ABC not present at all.
+          "http://true.AbC/", // When canonicalized, the host is lower case.
+        ],
+      });
+      await testMatchesUrlFilter({
+        urlFilter: "AbC",
+        isUrlFilterCaseSensitive: false,
+        urls: [
+          "http://false.example.com/AbC", // Exact match.
+          "http://false.example.com/abc", // All lower.
+          "http://false.example.com/ABC", // All upper.
+          "http://false.AbC/", // When canonicalized, the host is lower case.
+        ],
+        urlsNonMatching: [
+          "http://false.example.com/???", // ABC not present at all.
+        ],
+      });
+
+      // Chrome's initial DNR API specified isUrlFilterCaseSensitive to be true
+      // by default. Later, it became false by default.
+      // https://github.com/w3c/webextensions/issues/269
+      await testMatchesUrlFilter({
+        urlFilter: "AbC",
+        // isUrlFilterCaseSensitive: false, // is implied by default.
+        urls: [
+          "http://default.example.com/AbC", // Exact match.
+          "http://default.example.com/abc", // All lower.
+          "http://default.example.com/ABC", // All upper.
+          "http://default.AbC/", // When canonicalized, the host is lower case.
+        ],
+        urlsNonMatching: [
+          "http://default.example.com/???", // ABC not present at all.
+        ],
+      });
 
       browser.test.notifyPass();
     },
