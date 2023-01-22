@@ -9,7 +9,6 @@
 #include "CSS.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/HighlightRegistry.h"
 #include "mozilla/ServoBindings.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/Document.h"
@@ -35,28 +34,6 @@ bool CSS::Supports(const GlobalObject&, const nsACString& aCondition) {
 void CSS::Escape(const GlobalObject&, const nsAString& aIdent,
                  nsAString& aReturn) {
   nsStyleUtil::AppendEscapedCSSIdent(aIdent, aReturn);
-}
-
-/* static */
-HighlightRegistry* CSS::GetHighlights(const GlobalObject& aGlobal,
-                                      ErrorResult& aRv) {
-  nsCOMPtr<nsPIDOMWindowInner> window =
-      do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
-    aRv.ThrowUnknownError(
-        "There is no window associated to "
-        "this highlight registry object!");
-    return nullptr;
-  }
-
-  Document* doc = window->GetExtantDoc();
-  if (!doc) {
-    aRv.ThrowUnknownError(
-        "There is no document associated to "
-        "this highlight registry object!");
-    return nullptr;
-  }
-  return &doc->HighlightRegistry();
 }
 
 }  // namespace dom

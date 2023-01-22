@@ -61,8 +61,7 @@ class StaticRange final : public AbstractRange {
       const RangeBoundaryBase<EPT, ERT>& aEndBoundary, ErrorResult& aRv);
 
  protected:
-  explicit StaticRange(nsINode* aNode)
-      : AbstractRange(aNode, /* aIsDynamicRange = */ false) {}
+  explicit StaticRange(nsINode* aNode) : AbstractRange(aNode) {}
   virtual ~StaticRange() = default;
 
  public:
@@ -112,15 +111,6 @@ class StaticRange final : public AbstractRange {
 
   friend class AbstractRange;
 };
-
-inline StaticRange* AbstractRange::AsStaticRange() {
-  MOZ_ASSERT(IsStaticRange());
-  return static_cast<StaticRange*>(this);
-}
-inline const StaticRange* AbstractRange::AsStaticRange() const {
-  MOZ_ASSERT(IsStaticRange());
-  return static_cast<const StaticRange*>(this);
-}
 
 }  // namespace dom
 }  // namespace mozilla
