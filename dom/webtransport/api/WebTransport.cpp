@@ -9,6 +9,7 @@
 #include "nsUTF8Utils.h"
 #include "nsIURL.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PWebTransport.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -362,45 +363,66 @@ already_AddRefed<Promise> WebTransport::Closed() {
   return promise.forget();
 }
 
-void WebTransport::Close(const WebTransportCloseInfo& aOptions) {
+void WebTransport::Close(const WebTransportCloseInfo& aOptions,
+                         ErrorResult& aRv) {
   LOG(("Close() called"));
-  if (mState == WebTransportState::CONNECTED ||
-      mState == WebTransportState::CONNECTING) {
-    MOZ_ASSERT(mChild);
-    LOG(("Sending Close"));
-    // https://w3c.github.io/webtransport/#dom-webtransport-close
-    // Step 6: "Let reasonString be the maximal code unit prefix of
-    // closeInfo.reason where the length of the UTF-8 encoded prefix
-    // doesn’t exceed 1024."
-    // Take the maximal "code unit prefix" of mReason and limit to 1024 bytes
-
-    if (aOptions.mReason.Length() > 1024u) {
-      // We want to start looking for the previous code point at one past the
-      // limit, since if a code point ends exactly at the specified length, the
-      // next byte will be the start of a new code point. Note
-      // RewindToPriorUTF8Codepoint doesn't reduce the index if it points to the
-      // start of a code point. We know reason[1024] is accessible since
-      // Length() > 1024
-      mChild->SendClose(
-          aOptions.mCloseCode,
-          Substring(aOptions.mReason, 0,
-                    RewindToPriorUTF8Codepoint(aOptions.mReason.get(), 1024u)));
-    } else {
-      mChild->SendClose(aOptions.mCloseCode, aOptions.mReason);
-    }
-    mState = WebTransportState::CLOSED;
-
-    // This will abort any pulls for IncomingBidirectional/UnidirectionalStreams
-    mIncomingBidirectionalPromise->MaybeResolveWithUndefined();   // XXX
-    mIncomingUnidirectionalPromise->MaybeResolveWithUndefined();  // XXX
-
-    // The other side will call `Close()` for us now, make sure we don't call it
-    // in our destructor.
-    // This also causes IPC to drop the reference to us, allowing us to be
-    // GC'd (spec 5.8)
-    mChild->Shutdown();
-    mChild = nullptr;
+  // https://w3c.github.io/webtransport/#dom-webtransport-close
+  // Step 1 and Step 2: If transport.[[State]] is "closed" or "failed", then
+  // abort these steps.
+  if (mState == WebTransportState::CLOSED ||
+      mState == WebTransportState::FAILED) {
+    return;
   }
+  MOZ_ASSERT(mChild);
+  // Step 3: If transport.[[State]] is "connecting":
+  if (mState == WebTransportState::CONNECTING) {
+    // Step 3.1: Let error be the result of creating a WebTransportError with
+    // "session".
+    RefPtr<WebTransportError> error = new WebTransportError(
+        "close() called on WebTransport while connecting"_ns,
+        WebTransportErrorSource::Session);
+    // Step 3.2: Cleanup transport with error.
+    Cleanup(error, nullptr, aRv);
+    // Step 3.3: Abort these steps.
+    return;
+  }
+  LOG(("Sending Close"));
+  // Step 4: Let session be transport.[[Session]].
+  // Step 5: Let code be closeInfo.closeCode.
+  // Step 6: "Let reasonString be the maximal code unit prefix of
+  // closeInfo.reason where the length of the UTF-8 encoded prefix
+  // doesn’t exceed 1024."
+  // Take the maximal "code unit prefix" of mReason and limit to 1024 bytes
+  // Step 7: Let reason be reasonString, UTF-8 encoded.
+  // Step 8: In parallel, terminate session with code and reason.
+  if (aOptions.mReason.Length() > 1024u) {
+    // We want to start looking for the previous code point at one past the
+    // limit, since if a code point ends exactly at the specified length, the
+    // next byte will be the start of a new code point. Note
+    // RewindToPriorUTF8Codepoint doesn't reduce the index if it points to the
+    // start of a code point. We know reason[1024] is accessible since
+    // Length() > 1024
+    mChild->SendClose(
+        aOptions.mCloseCode,
+        Substring(aOptions.mReason, 0,
+                  RewindToPriorUTF8Codepoint(aOptions.mReason.get(), 1024u)));
+  } else {
+    mChild->SendClose(aOptions.mCloseCode, aOptions.mReason);
+  }
+
+  // Step 9: Cleanup transport with AbortError and closeInfo. (sets mState to
+  // Closed)
+  RefPtr<WebTransportError> error =
+      new WebTransportError("close()"_ns, WebTransportErrorSource::Session,
+                            DOMException_Binding::ABORT_ERR);
+  Cleanup(error, &aOptions, aRv);
+
+  // The other side will call `Close()` for us now, make sure we don't call it
+  // in our destructor.
+  // This also causes IPC to drop the reference to us, allowing us to be
+  // GC'd (spec 5.8)
+  mChild->Shutdown();
+  mChild = nullptr;
 }
 
 already_AddRefed<WebTransportDatagramDuplexStream> WebTransport::Datagrams() {
@@ -470,7 +492,6 @@ void WebTransport::Cleanup(WebTransportError* aError,
     return;
   }
 
-  // Ignoring errors if we're cleaning up; we don't want to stop
   for (const auto& stream : sendStreams) {
     RefPtr<WritableStreamDefaultController> controller = stream->Controller();
     WritableStreamDefaultControllerErrorIfNeeded(cx, controller, errorValue,
@@ -516,8 +537,8 @@ void WebTransport::Cleanup(WebTransportError* aError,
                                          IgnoreErrors());
   }
   // abort any pending pulls from Incoming*Streams (not in spec)
-  mIncomingUnidirectionalPromise->MaybeReject(errorValue);
-  mIncomingBidirectionalPromise->MaybeReject(errorValue);
+  mIncomingUnidirectionalPromise->MaybeResolveWithUndefined();
+  mIncomingBidirectionalPromise->MaybeResolveWithUndefined();
 }
 
 }  // namespace mozilla::dom

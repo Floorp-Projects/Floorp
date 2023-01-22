@@ -75,7 +75,8 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   WebTransportReliabilityMode Reliability();
   WebTransportCongestionControl CongestionControl();
   already_AddRefed<Promise> Closed();
-  void Close(const WebTransportCloseInfo& aOptions);
+  MOZ_CAN_RUN_SCRIPT void Close(const WebTransportCloseInfo& aOptions,
+                                ErrorResult& aRv);
   already_AddRefed<WebTransportDatagramDuplexStream> Datagrams();
   already_AddRefed<Promise> CreateBidirectionalStream(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
