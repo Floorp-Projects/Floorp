@@ -387,7 +387,7 @@ dictionary ChannelPixelLayout {
 
 typedef sequence<ChannelPixelLayout> ImagePixelLayout;
 
-enum ImageOrientation { "none", "flipY" };
+enum ImageOrientation { "none", "flipY", "from-image" };
 enum PremultiplyAlpha { "none", "premultiply", "default" };
 enum ColorSpaceConversion { "none", "default" };
 //enum ResizeQuality { "pixelated", "low", "medium", "high" };
