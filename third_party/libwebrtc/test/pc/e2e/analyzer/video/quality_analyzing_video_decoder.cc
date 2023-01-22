@@ -100,13 +100,15 @@ int32_t QualityAnalyzingVideoDecoder::Decode(const EncodedImage& input_image,
       delegate_->Decode(*origin_image, missing_frames, render_time_ms);
   if (result != WEBRTC_VIDEO_CODEC_OK) {
     // If delegate decoder failed, then cleanup data for this image.
+    VideoQualityAnalyzerInterface::DecoderStats stats;
     {
       MutexLock lock(&mutex_);
       timestamp_to_frame_id_.erase(input_image.Timestamp());
       decoding_images_.erase(input_image.Timestamp());
+      stats.decoder_name = codec_name_;
     }
-    analyzer_->OnDecoderError(peer_name_,
-                              out.id.value_or(VideoFrame::kNotSetId), result);
+    analyzer_->OnDecoderError(
+        peer_name_, out.id.value_or(VideoFrame::kNotSetId), result, stats);
   }
   return result;
 }

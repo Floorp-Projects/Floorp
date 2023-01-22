@@ -203,12 +203,6 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
                      &fake_metronome_,
                      time_controller_.GetMainThread()),
         h264_decoder_factory_(&mock_decoder_) {
-    if (UseMetronome()) {
-      fake_call_.SetFieldTrial("WebRTC-FrameBuffer3/arm:SyncDecoding/");
-    } else {
-      fake_call_.SetFieldTrial("WebRTC-FrameBuffer3/arm:FrameBuffer3/");
-    }
-
     // By default, mock decoder factory is backed by VideoDecoderProxyFactory.
     ON_CALL(mock_h264_decoder_factory_, CreateVideoDecoder)
         .WillByDefault(
@@ -270,7 +264,7 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
             time_controller_.GetTaskQueueFactory(), &fake_call_,
             kDefaultNumCpuCores, &packet_router_, config_.Copy(), &call_stats_,
             clock_, absl::WrapUnique(timing_), &nack_periodic_processor_,
-            GetParam() ? &decode_sync_ : nullptr, nullptr);
+            UseMetronome() ? &decode_sync_ : nullptr, nullptr);
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
     if (state)

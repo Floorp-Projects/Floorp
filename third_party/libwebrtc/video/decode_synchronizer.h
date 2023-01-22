@@ -45,7 +45,7 @@ namespace webrtc {
 // DecodeSynchronizer, it will instead be executed on the metronome during the
 // tick interval where `max_decode_time` occurs. For example, if a frame is
 // scheduled for decode in 50ms and the tick interval is 20ms, then the frame
-// will be released for decoding in 2 ticks. See below for illustation,
+// will be released for decoding in 2 ticks. See below for illustration,
 //
 // In the case where the decode time is in the past, or must occur before the
 // next metronome tick then the frame will be released right away, allowing a

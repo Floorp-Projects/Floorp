@@ -217,7 +217,6 @@ struct NetworkSimulationConfig {
   TimeDelta delay = TimeDelta::Zero();
   TimeDelta delay_std_dev = TimeDelta::Zero();
   double loss_rate = 0;
-  bool codel_active_queue_management = false;
   absl::optional<int> packet_queue_length_limit;
   DataSize packet_overhead = DataSize::Zero();
 };

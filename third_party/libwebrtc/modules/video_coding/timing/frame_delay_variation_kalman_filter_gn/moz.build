@@ -29,7 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/video_coding/timing/frame_delay_delta_kalman_filter.cc"
+    "/third_party/libwebrtc/modules/video_coding/timing/frame_delay_variation_kalman_filter.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -206,4 +206,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("frame_delay_delta_kalman_filter_gn")
+Library("frame_delay_variation_kalman_filter_gn")

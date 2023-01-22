@@ -334,6 +334,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // returned from the FEC generator.
   virtual std::vector<std::unique_ptr<RtpPacketToSend>> FetchFecPackets() = 0;
 
+  virtual void OnAbortedRetransmissions(
+      rtc::ArrayView<const uint16_t> sequence_numbers) = 0;
+
   virtual void OnPacketsAcknowledged(
       rtc::ArrayView<const uint16_t> sequence_numbers) = 0;
 

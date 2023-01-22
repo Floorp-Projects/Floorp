@@ -46,7 +46,6 @@ rtc_library("audio_channel") {
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../rtc_base:criticalsection",
-    "../../rtc_base:location",
     "../../rtc_base:logging",
     "../../rtc_base:refcount",
   ]

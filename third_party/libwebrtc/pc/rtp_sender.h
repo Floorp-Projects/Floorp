@@ -75,6 +75,13 @@ class RtpSenderInternal : public RtpSenderInterface {
   virtual RtpParameters GetParametersInternal() const = 0;
   virtual RTCError SetParametersInternal(const RtpParameters& parameters) = 0;
 
+  // GetParameters and SetParameters will remove deactivated simulcast layers
+  // and restore them on SetParameters. This is probably a Bad Idea, but we
+  // do not know who depends on this behavior
+  virtual RtpParameters GetParametersInternalWithAllLayers() const = 0;
+  virtual RTCError SetParametersInternalWithAllLayers(
+      const RtpParameters& parameters) = 0;
+
   // Returns an ID that changes every time SetTrack() is called, but
   // otherwise remains constant. Used to generate IDs for stats.
   // The special value zero means that no track is attached.
@@ -118,6 +125,9 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   // Allow access to get/set parameters without invalidating transaction id.
   RtpParameters GetParametersInternal() const override;
   RTCError SetParametersInternal(const RtpParameters& parameters) override;
+  RtpParameters GetParametersInternalWithAllLayers() const override;
+  RTCError SetParametersInternalWithAllLayers(
+      const RtpParameters& parameters) override;
 
   // Used to set the SSRC of the sender, once a local description has been set.
   // If `ssrc` is 0, this indiates that the sender should disconnect from the

@@ -26,6 +26,7 @@
 #include "api/transport/network_types.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
+#include "modules/pacing/prioritized_packet_queue.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -51,52 +52,15 @@ class PacingController {
     virtual std::vector<std::unique_ptr<RtpPacketToSend>> FetchFec() = 0;
     virtual std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePadding(
         DataSize size) = 0;
-  };
 
-  // Interface for class hanlding storage of and prioritization of packets
-  // pending to be sent by the pacer.
-  // Note that for the methods taking a Timestamp as parameter, the parameter
-  // will never decrease between two subsequent calls.
-  class PacketQueue {
-   public:
-    virtual ~PacketQueue() = default;
-
-    virtual void Push(Timestamp enqueue_time,
-                      std::unique_ptr<RtpPacketToSend> packet) = 0;
-    virtual std::unique_ptr<RtpPacketToSend> Pop() = 0;
-
-    virtual int SizeInPackets() const = 0;
-    bool Empty() const { return SizeInPackets() == 0; }
-    virtual DataSize SizeInPayloadBytes() const = 0;
-
-    // Total packets in the queue per media type (RtpPacketMediaType values are
-    // used as lookup index).
-    virtual const std::array<int, kNumMediaTypes>&
-    SizeInPacketsPerRtpPacketMediaType() const = 0;
-
-    // If the next packet, that would be returned by Pop() if called
-    // now, is an audio packet this method returns the enqueue time
-    // of that packet. If queue is empty or top packet is not audio,
-    // returns Timestamp::MinusInfinity().
-    virtual Timestamp LeadingAudioPacketEnqueueTime() const = 0;
-
-    // Enqueue time of the oldest packet in the queue,
-    // Timestamp::MinusInfinity() if queue is empty.
-    virtual Timestamp OldestEnqueueTime() const = 0;
-
-    // Average queue time for the packets currently in the queue.
-    // The queuing time is calculated from Push() to the last UpdateQueueTime()
-    // call - with any time spent in a paused state subtracted.
-    // Returns TimeDelta::Zero() for an empty queue.
-    virtual TimeDelta AverageQueueTime() const = 0;
-
-    // Called during packet processing or when pause stats changes. Since the
-    // AverageQueueTime() method does not look at the wall time, this method
-    // needs to be called before querying queue time.
-    virtual void UpdateAverageQueueTime(Timestamp now) = 0;
-
-    // Set the pause state, while `paused` is true queuing time is not counted.
-    virtual void SetPauseState(bool paused, Timestamp now) = 0;
+    // TODO(bugs.webrtc.org/11340): Make pure virtual once downstream projects
+    // have been updated.
+    virtual void OnAbortedRetransmissions(
+        uint32_t ssrc,
+        rtc::ArrayView<const uint16_t> sequence_numbers) {}
+    virtual absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t ssrc) const {
+      return absl::nullopt;
+    }
   };
 
   // Expected max pacer delay. If ExpectedQueueTime() is higher than
@@ -221,6 +185,12 @@ class PacingController {
 
   Timestamp CurrentTime() const;
 
+  // Helper methods for packet that may not be paced. Returns a finite Timestamp
+  // if a packet type is configured to not be paced and the packet queue has at
+  // least one packet of that type. Otherwise returns
+  // Timestamp::MinusInfinity().
+  Timestamp NextUnpacedSendTime() const;
+
   Clock* const clock_;
   PacketSender* const packet_sender_;
   const FieldTrialsView& field_trials_;
@@ -229,6 +199,7 @@ class PacingController {
   const bool send_padding_if_silent_;
   const bool pace_audio_;
   const bool ignore_transport_overhead_;
+  const bool fast_retransmissions_;
 
   TimeDelta min_packet_limit_;
   DataSize transport_overhead_per_packet_;
@@ -260,7 +231,7 @@ class PacingController {
   absl::optional<Timestamp> first_sent_packet_time_;
   bool seen_first_packet_;
 
-  std::unique_ptr<PacketQueue> packet_queue_;
+  PrioritizedPacketQueue packet_queue_;
 
   bool congested_;
 

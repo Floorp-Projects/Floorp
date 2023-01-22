@@ -43,28 +43,22 @@ constexpr absl::string_view kSkipRenderedFrameReasonDropped =
     "considered dropped";
 
 void LogFrameCounters(const std::string& name, const FrameCounters& counters) {
-  RTC_LOG(LS_INFO) << "[" << name << "] Captured    : " << counters.captured;
-  RTC_LOG(LS_INFO) << "[" << name << "] Pre encoded : " << counters.pre_encoded;
-  RTC_LOG(LS_INFO) << "[" << name << "] Encoded     : " << counters.encoded;
-  RTC_LOG(LS_INFO) << "[" << name << "] Received    : " << counters.received;
-  RTC_LOG(LS_INFO) << "[" << name << "] Decoded     : " << counters.decoded;
-  RTC_LOG(LS_INFO) << "[" << name << "] Rendered    : " << counters.rendered;
-  RTC_LOG(LS_INFO) << "[" << name << "] Dropped     : " << counters.dropped;
-}
-
-absl::string_view ToString(FrameDropPhase phase) {
-  switch (phase) {
-    case FrameDropPhase::kBeforeEncoder:
-      return "kBeforeEncoder";
-    case FrameDropPhase::kByEncoder:
-      return "kByEncoder";
-    case FrameDropPhase::kTransport:
-      return "kTransport";
-    case FrameDropPhase::kAfterDecoder:
-      return "kAfterDecoder";
-    case FrameDropPhase::kLastValue:
-      RTC_CHECK(false) << "FrameDropPhase::kLastValue mustn't be used";
-  }
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Captured         : " << counters.captured;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Pre encoded      : " << counters.pre_encoded;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Encoded          : " << counters.encoded;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Received         : " << counters.received;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Decoded          : " << counters.decoded;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Rendered         : " << counters.rendered;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Dropped          : " << counters.dropped;
+  RTC_LOG(LS_INFO) << "[" << name
+                   << "] Failed to decode : " << counters.failed_to_decode;
 }
 
 void LogStreamInternalStats(const std::string& name,
@@ -407,7 +401,7 @@ void DefaultVideoQualityAnalyzer::OnFrameDecoded(
       it->second.HasDecodeEndTime(peer_index)) {
     // It means this frame was decoded before, so we can skip it. It may happen
     // when we have multiple simulcast streams in one track and received
-    // the same picture from two different streams because SFU can't reliably
+    // the same frame from two different streams because SFU can't reliably
     // correlate two simulcast streams and started relaying the second stream
     // from the same frame it has relayed right before for the first stream.
     return;
@@ -544,9 +538,45 @@ void DefaultVideoQualityAnalyzer::OnEncoderError(
 
 void DefaultVideoQualityAnalyzer::OnDecoderError(absl::string_view peer_name,
                                                  uint16_t frame_id,
-                                                 int32_t error_code) {
+                                                 int32_t error_code,
+                                                 const DecoderStats& stats) {
   RTC_LOG(LS_ERROR) << "Decoder error for frame_id=" << frame_id
                     << ", code=" << error_code;
+
+  MutexLock lock(&mutex_);
+  RTC_CHECK_EQ(state_, State::kActive)
+      << "DefaultVideoQualityAnalyzer has to be started before use";
+
+  size_t peer_index = peers_->index(peer_name);
+
+  if (frame_id == VideoFrame::kNotSetId) {
+    frame_counters_.failed_to_decode++;
+    unknown_sender_frame_counters_[std::string(peer_name)].failed_to_decode++;
+    return;
+  }
+
+  auto it = captured_frames_in_flight_.find(frame_id);
+  if (it == captured_frames_in_flight_.end() ||
+      it->second.HasDecodeEndTime(peer_index)) {
+    // It means this frame was decoded before, so we can skip it. It may happen
+    // when we have multiple simulcast streams in one track and received
+    // the same frame from two different streams because SFU can't reliably
+    // correlate two simulcast streams and started relaying the second stream
+    // from the same frame it has relayed right before for the first stream.
+    return;
+  }
+  frame_counters_.failed_to_decode++;
+  InternalStatsKey key(it->second.stream(),
+                       stream_to_sender_.at(it->second.stream()), peer_index);
+  stream_frame_counters_.at(key).failed_to_decode++;
+  Timestamp now = Now();
+  StreamCodecInfo used_decoder;
+  used_decoder.codec_name = stats.decoder_name;
+  used_decoder.first_frame_id = frame_id;
+  used_decoder.last_frame_id = frame_id;
+  used_decoder.switched_on_at = now;
+  used_decoder.switched_from_at = now;
+  it->second.OnDecoderError(peer_index, used_decoder);
 }
 
 void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
@@ -614,6 +644,10 @@ void DefaultVideoQualityAnalyzer::UnregisterParticipantInCall(
         peer_index == stream_state.sender()) {
       continue;
     }
+
+    AddExistingFramesInFlightForStreamToComparator(stream_index, stream_state,
+                                                   *peer_index);
+
     stream_state.RemovePeer(*peer_index);
   }
 
@@ -660,7 +694,10 @@ void DefaultVideoQualityAnalyzer::Stop() {
     for (auto& state_entry : stream_states_) {
       const size_t stream_index = state_entry.first;
       StreamState& stream_state = state_entry.second;
-      for (size_t peer_index : peers_->GetPresentIndexes()) {
+
+      // Populate `last_rendered_frame_times` map for all peers that were met in
+      // call, not only for the currently presented ones.
+      for (size_t peer_index : peers_->GetAllIndexes()) {
         if (peer_index == stream_state.sender() &&
             !options_.enable_receive_own_stream) {
           continue;
@@ -679,25 +716,18 @@ void DefaultVideoQualityAnalyzer::Stop() {
               stats_key,
               stream_state.last_rendered_frame_time(peer_index).value());
         }
+      }
 
-        // Add frames in flight for this stream into frames comparator.
-        // Frames in flight were not rendered, so they won't affect stream's
-        // last rendered frame time.
-        while (!stream_state.IsEmpty(peer_index)) {
-          uint16_t frame_id = stream_state.PopFront(peer_index);
-          auto it = captured_frames_in_flight_.find(frame_id);
-          RTC_DCHECK(it != captured_frames_in_flight_.end());
-          FrameInFlight& frame = it->second;
-
-          frames_comparator_.AddComparison(
-              stats_key, /*captured=*/absl::nullopt,
-              /*rendered=*/absl::nullopt, FrameComparisonType::kFrameInFlight,
-              frame.GetStatsForPeer(peer_index));
-
-          if (frame.HaveAllPeersReceived()) {
-            captured_frames_in_flight_.erase(it);
-          }
+      // Push left frame in flight for analysis for the peers that are still in
+      // the call.
+      for (size_t peer_index : peers_->GetPresentIndexes()) {
+        if (peer_index == stream_state.sender() &&
+            !options_.enable_receive_own_stream) {
+          continue;
         }
+
+        AddExistingFramesInFlightForStreamToComparator(
+            stream_index, stream_state, peer_index);
       }
     }
   }
@@ -822,6 +852,28 @@ uint16_t DefaultVideoQualityAnalyzer::GetNextFrameId() {
     next_frame_id_ = 1;
   }
   return frame_id;
+}
+
+void DefaultVideoQualityAnalyzer::
+    AddExistingFramesInFlightForStreamToComparator(size_t stream_index,
+                                                   StreamState& stream_state,
+                                                   size_t peer_index) {
+  InternalStatsKey stats_key(stream_index, stream_state.sender(), peer_index);
+
+  // Add frames in flight for this stream into frames comparator.
+  // Frames in flight were not rendered, so they won't affect stream's
+  // last rendered frame time.
+  while (!stream_state.IsEmpty(peer_index)) {
+    uint16_t frame_id = stream_state.PopFront(peer_index);
+    auto it = captured_frames_in_flight_.find(frame_id);
+    RTC_DCHECK(it != captured_frames_in_flight_.end());
+    FrameInFlight& frame = it->second;
+
+    frames_comparator_.AddComparison(stats_key, /*captured=*/absl::nullopt,
+                                     /*rendered=*/absl::nullopt,
+                                     FrameComparisonType::kFrameInFlight,
+                                     frame.GetStatsForPeer(peer_index));
+  }
 }
 
 void DefaultVideoQualityAnalyzer::ReportResults() {
@@ -1010,7 +1062,8 @@ StatsKey DefaultVideoQualityAnalyzer::ToStatsKey(
 std::string DefaultVideoQualityAnalyzer::ToMetricName(
     const InternalStatsKey& key) const {
   const std::string& stream_label = streams_.name(key.stream);
-  if (peers_->size() <= 2 && key.sender != key.receiver) {
+  if (peers_->GetKnownSize() <= 2 && key.sender != key.receiver) {
+    // TODO(titovartem): remove this special case.
     return stream_label;
   }
   rtc::StringBuilder out;

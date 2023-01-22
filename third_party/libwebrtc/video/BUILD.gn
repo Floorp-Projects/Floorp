@@ -55,6 +55,7 @@ rtc_library("video") {
   deps = [
     ":frame_cadence_adapter",
     ":frame_dumping_decoder",
+    ":task_queue_frame_decode_scheduler",
     ":unique_timestamp_counter",
     ":video_stream_buffer_controller",
     ":video_stream_encoder_impl",
@@ -105,7 +106,6 @@ rtc_library("video") {
     "../rtc_base:checks",
     "../rtc_base:event_tracer",
     "../rtc_base:histogram_percentile_counter",
-    "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:mod_ops",
@@ -239,6 +239,7 @@ rtc_library("video_stream_buffer_controller") {
   ]
   deps = [
     ":decode_synchronizer",
+    ":frame_decode_scheduler",
     ":frame_decode_timing",
     ":task_queue_frame_decode_scheduler",
     ":video_receive_stream_timeout_tracker",
@@ -276,7 +277,10 @@ rtc_source_set("frame_decode_scheduler") {
     ":frame_decode_timing",
     "../api/units:timestamp",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("task_queue_frame_decode_scheduler") {
@@ -400,7 +404,6 @@ rtc_library("video_stream_encoder_impl") {
     "../rtc_base:checks",
     "../rtc_base:criticalsection",
     "../rtc_base:event_tracer",
-    "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:race_checker",

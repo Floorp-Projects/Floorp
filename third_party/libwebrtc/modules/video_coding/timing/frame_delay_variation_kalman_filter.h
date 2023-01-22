@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_DELTA_KALMAN_FILTER_H_
-#define MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_DELTA_KALMAN_FILTER_H_
+#ifndef MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_VARIATION_KALMAN_FILTER_H_
+#define MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_VARIATION_KALMAN_FILTER_H_
 
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
@@ -51,30 +51,34 @@ namespace webrtc {
 //    [(1 / bytes per ms)^2, ms^2].
 //  * The observation noise covariance (`r`) is a scalar [ms^2] that is
 //    determined externally to this class.
-class FrameDelayDeltaKalmanFilter {
+class FrameDelayVariationKalmanFilter {
  public:
-  FrameDelayDeltaKalmanFilter();
-  ~FrameDelayDeltaKalmanFilter() = default;
+  FrameDelayVariationKalmanFilter();
+  ~FrameDelayVariationKalmanFilter() = default;
 
   // Predicts and updates the filter, given a new pair of frame delay variation
   // and frame size variation.
   //
   // Inputs:
-  // `frame_delay_variation`:
+  // `frame_delay_variation_ms`:
   //    Frame delay variation as calculated by the `InterFrameDelay` estimator.
   //
   // `frame_size_variation_bytes`:
   //    Frame size variation, i.e., the current frame size minus the previous
   //    frame size (in bytes). Note that this quantity may be negative.
   //
-  // `max_frame_size`:
+  // `max_frame_size_bytes`:
   //    Filtered largest frame size received since the last reset.
   //
   // `var_noise`:
   //    Variance of the estimated random jitter.
-  void PredictAndUpdate(TimeDelta frame_delay_variation,
+  //
+  // TODO(bugs.webrtc.org/14381): For now use doubles as input parameters as
+  // units defined in api/units have insufficient underlying precision for
+  // jitter estimation.
+  void PredictAndUpdate(double frame_delay_variation_ms,
                         double frame_size_variation_bytes,
-                        DataSize max_frame_size,
+                        double max_frame_size_bytes,
                         double var_noise);
 
   // Given a frame size variation, returns the estimated frame delay variation
@@ -99,4 +103,4 @@ class FrameDelayDeltaKalmanFilter {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_DELTA_KALMAN_FILTER_H_
+#endif  // MODULES_VIDEO_CODING_TIMING_FRAME_DELAY_VARIATION_KALMAN_FILTER_H_

@@ -213,7 +213,6 @@ rtc_library("rtp_sender") {
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:event_tracer",
-    "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:race_checker",
@@ -325,7 +324,6 @@ rtc_library("call") {
     "../rtc_base:checks",
     "../rtc_base:copy_on_write_buffer",
     "../rtc_base:event_tracer",
-    "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:rate_limiter",
@@ -652,10 +650,7 @@ if (rtc_include_tests) {
   rtc_library("fake_network_pipe_unittests") {
     testonly = true
 
-    sources = [
-      "fake_network_pipe_unittest.cc",
-      "simulated_network_unittest.cc",
-    ]
+    sources = [ "fake_network_pipe_unittest.cc" ]
     deps = [
       ":fake_network",
       ":simulated_network",

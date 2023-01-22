@@ -340,21 +340,22 @@ class RtpReplayer final {
   // Replay a rtp dump with an optional json configuration.
   static void Replay(const std::string& replay_config_path,
                      const std::string& rtp_dump_path) {
+    webrtc::RtcEventLogNull event_log;
+    Call::Config call_config(&event_log);
+    call_config.trials = new FieldTrialBasedConfig();
+
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory =
-        webrtc::CreateDefaultTaskQueueFactory();
+        webrtc::CreateDefaultTaskQueueFactory(call_config.trials);
     auto worker_thread = task_queue_factory->CreateTaskQueue(
         "worker_thread", TaskQueueFactory::Priority::NORMAL);
     rtc::Event sync_event(/*manual_reset=*/false,
                           /*initially_signalled=*/false);
-    webrtc::RtcEventLogNull event_log;
-    Call::Config call_config(&event_log);
     call_config.task_queue_factory = task_queue_factory.get();
-    call_config.trials = new FieldTrialBasedConfig();
-    std::unique_ptr<Call> call;
-    std::unique_ptr<StreamState> stream_state;
 
     // Creation of the streams must happen inside a task queue because it is
     // resued as a worker thread.
+    std::unique_ptr<Call> call;
+    std::unique_ptr<StreamState> stream_state;
     worker_thread->PostTask([&]() {
       call.reset(Call::Create(call_config));
 
@@ -382,7 +383,7 @@ class RtpReplayer final {
         CreateRtpReader(rtp_dump_path);
 
     // Wait for streams creation.
-    sync_event.Wait(/*give_up_after_ms=*/10000);
+    sync_event.Wait(/*give_up_after=*/TimeDelta::Seconds(10));
 
     if (stream_state == nullptr || rtp_reader == nullptr) {
       return;
@@ -402,7 +403,7 @@ class RtpReplayer final {
       call.reset();
       sync_event.Set();
     });
-    sync_event.Wait(/*give_up_after_ms=*/10000);
+    sync_event.Wait(/*give_up_after=*/TimeDelta::Seconds(10));
   }
 
  private:
@@ -612,7 +613,7 @@ class RtpReplayer final {
                                                  /* packet_time_us */ -1);
         event.Set();
       });
-      event.Wait(/*give_up_after_ms=*/10000);
+      event.Wait(/*give_up_after=*/TimeDelta::Seconds(10));
       switch (result) {
         case PacketReceiver::DELIVERY_OK:
           break;

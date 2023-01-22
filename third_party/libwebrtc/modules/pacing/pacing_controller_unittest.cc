@@ -128,6 +128,14 @@ class MockPacingControllerCallback : public PacingController::PacketSender {
               (),
               (override));
   MOCK_METHOD(size_t, SendPadding, (size_t target_size));
+  MOCK_METHOD(void,
+              OnAbortedRetransmissions,
+              (uint32_t, rtc::ArrayView<const uint16_t>),
+              (override));
+  MOCK_METHOD(absl::optional<uint32_t>,
+              GetRtxSsrcForMedia,
+              (uint32_t),
+              (const, override));
 };
 
 // Mock callback implementing the raw api.
@@ -147,6 +155,14 @@ class MockPacketSender : public PacingController::PacketSender {
               GeneratePadding,
               (DataSize target_size),
               (override));
+  MOCK_METHOD(void,
+              OnAbortedRetransmissions,
+              (uint32_t, rtc::ArrayView<const uint16_t>),
+              (override));
+  MOCK_METHOD(absl::optional<uint32_t>,
+              GetRtxSsrcForMedia,
+              (uint32_t),
+              (const, override));
 };
 
 class PacingControllerPadding : public PacingController::PacketSender {
@@ -176,6 +192,12 @@ class PacingControllerPadding : public PacingController::PacketSender {
       padding_sent_ += kPaddingPacketSize;
     }
     return packets;
+  }
+
+  void OnAbortedRetransmissions(uint32_t,
+                                rtc::ArrayView<const uint16_t>) override {}
+  absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t) const override {
+    return absl::nullopt;
   }
 
   size_t padding_sent() { return padding_sent_; }
@@ -218,6 +240,12 @@ class PacingControllerProbing : public PacingController::PacketSender {
       target_size -= padding_size;
     }
     return packets;
+  }
+
+  void OnAbortedRetransmissions(uint32_t,
+                                rtc::ArrayView<const uint16_t>) override {}
+  absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t) const override {
+    return absl::nullopt;
   }
 
   int packets_sent() const { return packets_sent_; }
@@ -2059,6 +2087,32 @@ TEST_F(PacingControllerTest, RespectsQueueTimeLimit) {
   // We're back in a normal state - pacing rate should be back to previous
   // levels.
   EXPECT_EQ(pacer.pacing_rate(), kNominalPacingRate);
+}
+
+TEST_F(PacingControllerTest, BudgetDoesNotAffectRetransmissionInsTrial) {
+  const DataSize kPacketSize = DataSize::Bytes(1000);
+
+  EXPECT_CALL(callback_, SendPadding).Times(0);
+  const test::ExplicitKeyValueConfig trials(
+      "WebRTC-Pacer-FastRetransmissions/Enabled/");
+  PacingController pacer(&clock_, &callback_, trials);
+  pacer.SetPacingRates(kTargetRate, /*padding_rate=*/DataRate::Zero());
+
+  // Send a video packet so that we have a bit debt.
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kVideoSsrc,
+                                  /*sequence_number=*/1,
+                                  /*capture_time=*/1, kPacketSize.bytes()));
+  EXPECT_CALL(callback_, SendPacket);
+  pacer.ProcessPackets();
+  EXPECT_GT(pacer.NextSendTime(), clock_.CurrentTime());
+
+  // A retransmission packet should still be immediately processed.
+  EXPECT_CALL(callback_, SendPacket);
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kRetransmission,
+                                  kVideoSsrc,
+                                  /*sequence_number=*/1,
+                                  /*capture_time=*/1, kPacketSize.bytes()));
+  pacer.ProcessPackets();
 }
 
 }  // namespace

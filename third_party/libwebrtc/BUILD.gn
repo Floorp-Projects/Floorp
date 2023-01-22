@@ -52,6 +52,7 @@ if (!build_with_chromium && !build_with_mozilla) {
         ":voip_unittests",
         ":webrtc_nonparallel_tests",
         ":webrtc_perf_tests",
+        "api/test/metrics:metrics_unittests",
         "common_audio:common_audio_unittests",
         "common_video:common_video_unittests",
         "examples:examples_unittests",
@@ -325,9 +326,15 @@ config("common_config") {
     defines += [ "WEBRTC_EXCLUDE_AUDIO_PROCESSING_MODULE" ]
   }
 
-  # TODO(webrtc:13219): Fix -Wshadow instances and enable.
   if (is_clang) {
-    cflags += [ "-Wno-shadow" ]
+    cflags += [
+      # TODO(webrtc:13219): Fix -Wshadow instances and enable.
+      "-Wno-shadow",
+
+      # See https://reviews.llvm.org/D56731 for details about this
+      # warning.
+      "-Wctad-maybe-unsupported",
+    ]
   }
 
   if (build_with_chromium) {
@@ -478,6 +485,7 @@ if (!build_with_chromium) {
       "api/rtc_event_log:rtc_event_log_factory",
       "api/task_queue",
       "api/task_queue:default_task_queue_factory",
+      "api/test/metrics",
       "audio",
       "call",
       "common_audio",

@@ -346,6 +346,7 @@ rtc_library("desktop_capture") {
     "cropped_desktop_frame.h",
     "cropping_window_capturer.cc",
     "cropping_window_capturer.h",
+    "delegated_source_list_controller.h",
     "desktop_and_cursor_composer.cc",
     "desktop_and_cursor_composer.h",
     "desktop_capture_metrics_helper.cc",
@@ -689,6 +690,7 @@ if (is_mac) {
     # this target as private.
     visibility = [ ":desktop_capture" ]
     sources = [
+      "delegated_source_list_controller.h",
       "desktop_capture_options.h",
       "desktop_capturer.h",
       "full_screen_application_handler.h",

@@ -387,7 +387,6 @@ rtc_library("video_coding_legacy") {
     "../../modules/rtp_rtcp:rtp_video_header",
     "../../rtc_base:checks",
     "../../rtc_base:event_tracer",
-    "../../rtc_base:location",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:one_time_event",
@@ -445,6 +444,7 @@ rtc_library("video_coding_utility") {
     "utility/simulcast_rate_allocator.h",
     "utility/simulcast_utility.cc",
     "utility/simulcast_utility.h",
+    "utility/vp8_constants.h",
     "utility/vp8_header_parser.cc",
     "utility/vp8_header_parser.h",
     "utility/vp9_constants.h",
@@ -1137,7 +1137,10 @@ if (rtc_include_tests) {
     if (is_android) {
       sources += [ "codecs/test/videocodec_test_mediacodec.cc" ]
 
-      deps += [ ":android_codec_factory_helper" ]
+      deps += [
+        ":android_codec_factory_helper",
+        "../../rtc_base:stringutils",
+      ]
     }
 
     if (is_ios || is_mac) {
@@ -1266,7 +1269,6 @@ if (rtc_include_tests) {
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:histogram_percentile_counter",
-      "../../rtc_base:location",
       "../../rtc_base:platform_thread",
       "../../rtc_base:random",
       "../../rtc_base:refcount",

@@ -23,8 +23,6 @@ rtc_library("pacing") {
     "packet_router.h",
     "prioritized_packet_queue.cc",
     "prioritized_packet_queue.h",
-    "round_robin_packet_queue.cc",
-    "round_robin_packet_queue.h",
     "rtp_packet_pacer.h",
     "task_queue_paced_sender.cc",
     "task_queue_paced_sender.h",
@@ -48,7 +46,6 @@ rtc_library("pacing") {
     "../../logging:rtc_event_pacing",
     "../../rtc_base:checks",
     "../../rtc_base:event_tracer",
-    "../../rtc_base:location",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:rtc_numerics",
@@ -91,7 +88,6 @@ if (rtc_include_tests) {
       "pacing_controller_unittest.cc",
       "packet_router_unittest.cc",
       "prioritized_packet_queue_unittest.cc",
-      "round_robin_packet_queue_unittest.cc",
       "task_queue_paced_sender_unittest.cc",
     ]
     deps = [

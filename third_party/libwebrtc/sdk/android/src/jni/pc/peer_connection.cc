@@ -516,7 +516,7 @@ static ScopedJavaLocalRef<jobject> JNI_PeerConnection_GetLocalDescription(
   // must do this odd dance.
   std::string sdp;
   std::string type;
-  pc->signaling_thread()->Invoke<void>(RTC_FROM_HERE, [pc, &sdp, &type] {
+  pc->signaling_thread()->BlockingCall([pc, &sdp, &type] {
     const SessionDescriptionInterface* desc = pc->local_description();
     if (desc) {
       RTC_CHECK(desc->ToString(&sdp)) << "got so far: " << sdp;
@@ -535,7 +535,7 @@ static ScopedJavaLocalRef<jobject> JNI_PeerConnection_GetRemoteDescription(
   // must do this odd dance.
   std::string sdp;
   std::string type;
-  pc->signaling_thread()->Invoke<void>(RTC_FROM_HERE, [pc, &sdp, &type] {
+  pc->signaling_thread()->BlockingCall([pc, &sdp, &type] {
     const SessionDescriptionInterface* desc = pc->remote_description();
     if (desc) {
       RTC_CHECK(desc->ToString(&sdp)) << "got so far: " << sdp;

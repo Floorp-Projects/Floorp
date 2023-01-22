@@ -17,6 +17,7 @@
 
 #include "api/array_view.h"
 #include "api/test/simulated_network.h"
+#include "api/units/time_delta.h"
 #include "call/simulated_packet_receiver.h"
 #include "call/video_send_stream.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
@@ -26,7 +27,7 @@
 #include "test/gtest.h"
 
 namespace {
-const int kShortTimeoutMs = 500;
+constexpr webrtc::TimeDelta kShortTimeout = webrtc::TimeDelta::Millis(500);
 }
 
 namespace webrtc {
@@ -45,10 +46,10 @@ class RtpRtcpObserver {
 
   virtual bool Wait() {
     if (field_trial::IsEnabled("WebRTC-QuickPerfTest")) {
-      observation_complete_.Wait(kShortTimeoutMs);
+      observation_complete_.Wait(kShortTimeout);
       return true;
     }
-    return observation_complete_.Wait(timeout_ms_);
+    return observation_complete_.Wait(timeout_);
   }
 
   virtual Action OnSendRtp(const uint8_t* packet, size_t length) {
@@ -69,13 +70,12 @@ class RtpRtcpObserver {
 
  protected:
   RtpRtcpObserver() : RtpRtcpObserver(TimeDelta::Zero()) {}
-  explicit RtpRtcpObserver(TimeDelta event_timeout)
-      : timeout_ms_(event_timeout.ms()) {}
+  explicit RtpRtcpObserver(TimeDelta event_timeout) : timeout_(event_timeout) {}
 
   rtc::Event observation_complete_;
 
  private:
-  const int timeout_ms_;
+  const TimeDelta timeout_;
 };
 
 class PacketTransport : public test::DirectTransport {

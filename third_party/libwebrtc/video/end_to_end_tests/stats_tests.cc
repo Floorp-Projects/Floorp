@@ -308,7 +308,7 @@ TEST_F(StatsEndToEndTest, GetStats) {
 
         int64_t time_until_timeout_ms = stop_time_ms - now_ms;
         if (time_until_timeout_ms > 0)
-          check_stats_event_.Wait(time_until_timeout_ms);
+          check_stats_event_.Wait(TimeDelta::Millis(time_until_timeout_ms));
         now_ms = clock->TimeInMilliseconds();
       }
 

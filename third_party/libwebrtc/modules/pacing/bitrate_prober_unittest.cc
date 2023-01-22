@@ -170,6 +170,30 @@ TEST(BitrateProberTest, VerifyProbeSizeOnHighBitrate) {
             kHighBitrate * TimeDelta::Millis(1));
 }
 
+TEST(BitrateProberTest, ProbeSizeCanBeSetWithFieldTrial) {
+  const test::ExplicitKeyValueConfig trials(
+      "WebRTC-Bwe-ProbingBehavior/min_probe_delta:20ms/");
+  BitrateProber prober(trials);
+  prober.SetEnabled(true);
+
+  const DataRate kHighBitrate = DataRate::KilobitsPerSec(10000);  // 10 Mbps
+
+  prober.CreateProbeCluster({.at_time = Timestamp::Zero(),
+                             .target_data_rate = kHighBitrate,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
+  EXPECT_EQ(prober.RecommendedMinProbeSize(),
+            kHighBitrate * TimeDelta::Millis(20));
+
+  prober.OnIncomingPacket(DataSize::Bytes(1000));
+  // Next time to send probe should be "min_probe_delta" if the recommended
+  // number of bytes has been sent.
+  prober.ProbeSent(Timestamp::Zero(), prober.RecommendedMinProbeSize());
+  EXPECT_EQ(prober.NextProbeTime(Timestamp::Zero()),
+            Timestamp::Zero() + TimeDelta::Millis(20));
+}
+
 TEST(BitrateProberTest, MinumumNumberOfProbingPackets) {
   const FieldTrialBasedConfig config;
   BitrateProber prober(config);

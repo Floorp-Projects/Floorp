@@ -27,6 +27,14 @@ RTC_OBJC_EXPORT
 
 - (id<RTC_OBJC_TYPE(RTCI420Buffer)>)toI420;
 
+@optional
+- (id<RTC_OBJC_TYPE(RTCVideoFrameBuffer)>)cropAndScaleWith:(int)offsetX
+                                                   offsetY:(int)offsetY
+                                                 cropWidth:(int)cropWidth
+                                                cropHeight:(int)cropHeight
+                                                scaleWidth:(int)scaleWidth
+                                               scaleHeight:(int)scaleHeight;
+
 @end
 
 NS_ASSUME_NONNULL_END

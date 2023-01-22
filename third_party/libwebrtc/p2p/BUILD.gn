@@ -18,6 +18,8 @@ group("p2p") {
 rtc_library("rtc_p2p") {
   visibility = [ "*" ]
   sources = [
+    "base/active_ice_controller_factory_interface.h",
+    "base/active_ice_controller_interface.h",
     "base/async_stun_tcp_socket.cc",
     "base/async_stun_tcp_socket.h",
     "base/basic_async_resolver_factory.cc",
@@ -38,6 +40,7 @@ rtc_library("rtc_p2p") {
     "base/dtls_transport_factory.h",
     "base/dtls_transport_internal.cc",
     "base/dtls_transport_internal.h",
+    "base/ice_agent_interface.h",
     "base/ice_controller_factory_interface.h",
     "base/ice_controller_interface.cc",
     "base/ice_controller_interface.h",
@@ -117,7 +120,6 @@ rtc_library("rtc_p2p") {
     "../rtc_base:checks",
     "../rtc_base:event_tracer",
     "../rtc_base:ip_address",
-    "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:net_helpers",
@@ -271,6 +273,8 @@ if (rtc_include_tests) {
       "../api:mock_async_dns_resolver",
       "../api:packet_socket_factory",
       "../api:scoped_refptr",
+      "../api/task_queue",
+      "../api/task_queue:pending_task_safety_flag",
       "../api/transport:stun_types",
       "../api/units:time_delta",
       "../rtc_base",
@@ -280,7 +284,6 @@ if (rtc_include_tests) {
       "../rtc_base:copy_on_write_buffer",
       "../rtc_base:gunit_helpers",
       "../rtc_base:ip_address",
-      "../rtc_base:location",
       "../rtc_base:logging",
       "../rtc_base:macromagic",
       "../rtc_base:net_helpers",

@@ -55,7 +55,6 @@
 #include "pc/usage_pattern.h"
 #include "pc/webrtc_session_description_factory.h"
 #include "rtc_base/helpers.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/ssl_stream_adapter.h"
@@ -479,7 +478,7 @@ RTCError UpdateSimulcastLayerStatusInSender(
     const std::vector<SimulcastLayer>& layers,
     rtc::scoped_refptr<RtpSenderInternal> sender) {
   RTC_DCHECK(sender);
-  RtpParameters parameters = sender->GetParametersInternal();
+  RtpParameters parameters = sender->GetParametersInternalWithAllLayers();
   std::vector<std::string> disabled_layers;
 
   // The simulcast envelope cannot be changed, only the status of the streams.
@@ -498,7 +497,7 @@ RTCError UpdateSimulcastLayerStatusInSender(
     encoding.active = !iter->is_paused;
   }
 
-  RTCError result = sender->SetParametersInternal(parameters);
+  RTCError result = sender->SetParametersInternalWithAllLayers(parameters);
   if (result.ok()) {
     result = sender->DisableEncodingLayers(disabled_layers);
   }
@@ -524,7 +523,7 @@ bool SimulcastIsRejected(const ContentInfo* local_content,
 RTCError DisableSimulcastInSender(
     rtc::scoped_refptr<RtpSenderInternal> sender) {
   RTC_DCHECK(sender);
-  RtpParameters parameters = sender->GetParametersInternal();
+  RtpParameters parameters = sender->GetParametersInternalWithAllLayers();
   if (parameters.encodings.size() <= 1) {
     return RTCError::OK();
   }
@@ -610,7 +609,7 @@ cricket::MediaDescriptionOptions GetMediaDescriptionOptionsForTransceiver(
   // The following sets up RIDs and Simulcast.
   // RIDs are included if Simulcast is requested or if any RID was specified.
   RtpParameters send_parameters =
-      transceiver->sender_internal()->GetParametersInternal();
+      transceiver->sender_internal()->GetParametersInternalWithAllLayers();
   bool has_rids = std::any_of(send_parameters.encodings.begin(),
                               send_parameters.encodings.end(),
                               [](const RtpEncodingParameters& encoding) {
@@ -691,13 +690,12 @@ rtc::scoped_refptr<webrtc::DtlsTransport> LookupDtlsTransportByMid(
     JsepTransportController* controller,
     const std::string& mid) {
   // TODO(tommi): Can we post this (and associated operations where this
-  // function is called) to the network thread and avoid this Invoke?
+  // function is called) to the network thread and avoid this BlockingCall?
   // We might be able to simplify a few things if we set the transport on
   // the network thread and then update the implementation to check that
   // the set_ and relevant get methods are always called on the network
   // thread (we'll need to update proxy maps).
-  return network_thread->Invoke<rtc::scoped_refptr<webrtc::DtlsTransport>>(
-      RTC_FROM_HERE,
+  return network_thread->BlockingCall(
       [controller, &mid] { return controller->LookupDtlsTransportByMid(mid); });
 }
 
@@ -801,7 +799,6 @@ class SdpOfferAnswerHandler::RemoteDescriptionOperation {
   void ReportOfferAnswerUma() {
     RTC_DCHECK(ok());
     if (type_ == SdpType::kOffer || type_ == SdpType::kAnswer) {
-      handler_->pc_->ReportSdpFormatReceived(*desc_.get());
       handler_->pc_->ReportSdpBundleUsage(*desc_.get());
     }
   }
@@ -1221,7 +1218,7 @@ void SdpOfferAnswerHandler::Initialize(
   webrtc_session_desc_factory_ =
       std::make_unique<WebRtcSessionDescriptionFactory>(
           context, this, pc_->session_id(), pc_->dtls_enabled(),
-          std::move(dependencies.cert_generator), certificate,
+          std::move(dependencies.cert_generator), std::move(certificate),
           [this](const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
             RTC_DCHECK_RUN_ON(signaling_thread());
             transport_controller_s()->SetLocalCertificate(certificate);
@@ -1488,10 +1485,10 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(desc);
 
-  // Invalidate the legacy stats cache to make sure that it gets updated next
-  // time getStats() gets called, as updating the session description affects
-  // the stats.
-  pc_->legacy_stats()->InvalidateCache();
+  // Invalidate the stats caches to make sure that they get
+  // updated the next time getStats() gets called, as updating the session
+  // description affects the stats.
+  pc_->ClearStatsCache();
 
   // Take a reference to the old local description since it's used below to
   // compare against the new local description. When setting the new local
@@ -1813,7 +1810,7 @@ RTCError SdpOfferAnswerHandler::ReplaceRemoteDescription(
   ReportSimulcastApiVersion(kSimulcastVersionApplyRemoteDescription,
                             *session_desc);
 
-  // NOTE: This will perform an Invoke() to the network thread.
+  // NOTE: This will perform a BlockingCall() to the network thread.
   return transport_controller_s()->SetRemoteDescription(sdp_type, session_desc);
 }
 
@@ -1823,10 +1820,10 @@ void SdpOfferAnswerHandler::ApplyRemoteDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(operation->description());
 
-  // Invalidate the [legacy] stats cache to make sure that it gets updated next
-  // time getStats() gets called, as updating the session description affects
-  // the stats.
-  pc_->legacy_stats()->InvalidateCache();
+  // Invalidate the stats caches to make sure that they get
+  // updated next time getStats() gets called, as updating the session
+  // description affects the stats.
+  pc_->ClearStatsCache();
 
   if (!operation->ReplaceRemoteDescriptionAndCheckEror())
     return;
@@ -2200,10 +2197,8 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
 
     // TODO(deadbeef): We already had to hop to the network thread for
     // MaybeStartGathering...
-    context_->network_thread()->Invoke<void>(
-        RTC_FROM_HERE, [this] { port_allocator()->DiscardCandidatePool(); });
-    // Make UMA notes about what was agreed to.
-    ReportNegotiatedSdpSemantics(*local_description());
+    context_->network_thread()->BlockingCall(
+        [this] { port_allocator()->DiscardCandidatePool(); });
   }
 
   observer->OnSetLocalDescriptionComplete(RTCError::OK());
@@ -2404,10 +2399,8 @@ void SdpOfferAnswerHandler::SetRemoteDescriptionPostProcess(bool was_answer) {
   if (was_answer) {
     // TODO(deadbeef): We already had to hop to the network thread for
     // MaybeStartGathering...
-    context_->network_thread()->Invoke<void>(
-        RTC_FROM_HERE, [this] { port_allocator()->DiscardCandidatePool(); });
-    // Make UMA notes about what was agreed to.
-    ReportNegotiatedSdpSemantics(*remote_description());
+    context_->network_thread()->BlockingCall(
+        [this] { port_allocator()->DiscardCandidatePool(); });
   }
 
   pc_->NoteUsageEvent(UsageEvent::SET_REMOTE_DESCRIPTION_SUCCEEDED);
@@ -3831,8 +3824,7 @@ void SdpOfferAnswerHandler::GetOptionsForOffer(
   session_options->rtcp_cname = rtcp_cname_;
   session_options->crypto_options = pc_->GetCryptoOptions();
   session_options->pooled_ice_credentials =
-      context_->network_thread()->Invoke<std::vector<cricket::IceParameters>>(
-          RTC_FROM_HERE,
+      context_->network_thread()->BlockingCall(
           [this] { return port_allocator()->GetPooledIceCredentials(); });
   session_options->offer_extmap_allow_mixed =
       pc_->configuration()->offer_extmap_allow_mixed;
@@ -4095,8 +4087,7 @@ void SdpOfferAnswerHandler::GetOptionsForAnswer(
   session_options->rtcp_cname = rtcp_cname_;
   session_options->crypto_options = pc_->GetCryptoOptions();
   session_options->pooled_ice_credentials =
-      context_->network_thread()->Invoke<std::vector<cricket::IceParameters>>(
-          RTC_FROM_HERE,
+      context_->network_thread()->BlockingCall(
           [this] { return port_allocator()->GetPooledIceCredentials(); });
 }
 
@@ -4525,8 +4516,8 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
   RTC_DCHECK(sdesc);
 
   if (ConfiguredForMedia()) {
-    // Note: This will perform an Invoke over to the worker thread, which we'll
-    // also do in a loop below.
+    // Note: This will perform a BlockingCall over to the worker thread, which
+    // we'll also do in a loop below.
     if (!UpdatePayloadTypeDemuxingState(source, bundle_groups_by_mid)) {
       // Note that this is never expected to fail, since RtpDemuxer doesn't
       // return an error when changing payload type demux criteria, which is all
@@ -4570,7 +4561,7 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
     for (const auto& entry : channels) {
       std::string error;
       bool success =
-          context_->worker_thread()->Invoke<bool>(RTC_FROM_HERE, [&]() {
+          context_->worker_thread()->BlockingCall([&]() {
             return (source == cricket::CS_LOCAL)
                        ? entry.first->SetLocalContent(entry.second, type, error)
                        : entry.first->SetRemoteContent(entry.second, type,
@@ -4700,30 +4691,6 @@ void SdpOfferAnswerHandler::RemoveUnusedChannels(
     error.set_error_detail(RTCErrorDetailType::DATA_CHANNEL_FAILURE);
     DestroyDataChannelTransport(error);
   }
-}
-
-void SdpOfferAnswerHandler::ReportNegotiatedSdpSemantics(
-    const SessionDescriptionInterface& answer) {
-  SdpSemanticNegotiated semantics_negotiated;
-  switch (answer.description()->msid_signaling()) {
-    case 0:
-      semantics_negotiated = kSdpSemanticNegotiatedNone;
-      break;
-    case cricket::kMsidSignalingMediaSection:
-      semantics_negotiated = kSdpSemanticNegotiatedUnifiedPlan;
-      break;
-    case cricket::kMsidSignalingSsrcAttribute:
-      semantics_negotiated = kSdpSemanticNegotiatedPlanB;
-      break;
-    case cricket::kMsidSignalingMediaSection |
-        cricket::kMsidSignalingSsrcAttribute:
-      semantics_negotiated = kSdpSemanticNegotiatedMixed;
-      break;
-    default:
-      RTC_DCHECK_NOTREACHED();
-  }
-  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.SdpSemanticNegotiated",
-                            semantics_negotiated, kSdpSemanticNegotiatedMax);
 }
 
 void SdpOfferAnswerHandler::UpdateEndedRemoteMediaStreams() {
@@ -4918,7 +4885,7 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
 
 bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  if (!context_->network_thread()->Invoke<bool>(RTC_FROM_HERE, [this, &mid] {
+  if (!context_->network_thread()->BlockingCall([this, &mid] {
         RTC_DCHECK_RUN_ON(context_->network_thread());
         return pc_->SetupDataChannelTransport_n(mid);
       })) {
@@ -4940,7 +4907,7 @@ void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
   if (has_sctp)
     data_channel_controller()->OnTransportChannelClosed(error);
 
-  context_->network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
+  context_->network_thread()->BlockingCall([this] {
     RTC_DCHECK_RUN_ON(context_->network_thread());
     pc_->TeardownDataChannelTransport_n();
   });
@@ -5174,7 +5141,7 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
                                         pt_demuxing_has_been_used_video_;
 
   // Gather all updates ahead of time so that all channels can be updated in a
-  // single Invoke; necessary due to thread guards.
+  // single BlockingCall; necessary due to thread guards.
   std::vector<std::pair<bool, cricket::ChannelInterface*>> channels_to_update;
   for (const auto& transceiver : transceivers()->ListInternal()) {
     cricket::ChannelInterface* channel = transceiver->channel();
@@ -5226,22 +5193,21 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
     return true;
   }
 
-  // TODO(bugs.webrtc.org/11993): This Invoke() will also invoke on the network
-  // thread for every demuxer sink that needs to be updated. The demuxer state
-  // needs to be fully (and only) managed on the network thread and once that's
-  // the case, there's no need to stop by on the worker. Ideally we could also
-  // do this without blocking.
-  return context_->worker_thread()->Invoke<bool>(
-      RTC_FROM_HERE, [&channels_to_update]() {
-        for (const auto& it : channels_to_update) {
-          if (!it.second->SetPayloadTypeDemuxingEnabled(it.first)) {
-            // Note that the state has already been irrevocably changed at this
-            // point. Is it useful to stop the loop?
-            return false;
-          }
-        }
-        return true;
-      });
+  // TODO(bugs.webrtc.org/11993): This BlockingCall() will also block on the
+  // network thread for every demuxer sink that needs to be updated. The demuxer
+  // state needs to be fully (and only) managed on the network thread and once
+  // that's the case, there's no need to stop by on the worker. Ideally we could
+  // also do this without blocking.
+  return context_->worker_thread()->BlockingCall([&channels_to_update]() {
+    for (const auto& it : channels_to_update) {
+      if (!it.second->SetPayloadTypeDemuxingEnabled(it.first)) {
+        // Note that the state has already been irrevocably changed at this
+        // point. Is it useful to stop the loop?
+        return false;
+      }
+    }
+    return true;
+  });
 }
 
 bool SdpOfferAnswerHandler::ConfiguredForMedia() const {

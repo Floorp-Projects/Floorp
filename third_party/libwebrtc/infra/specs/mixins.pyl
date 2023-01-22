@@ -124,13 +124,6 @@
       }
     }
   },
-  'linux': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Ubuntu'
-      }
-    }
-  },
   'linux-bionic': {
     'swarming': {
       'dimensions': {
@@ -150,13 +143,6 @@
       }]
     }
   },
-  'mac': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Mac'
-      }
-    }
-  },
   'mac-m1-cpu': {
     'swarming': {
       'dimensions': {
@@ -171,17 +157,18 @@
       }
     }
   },
-  'mac11_or_mac12': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Mac-11|Mac-12'
-      }
-    }
-  },
-  'mac_12_beta_arm64': {
+  'mac_12_arm64': {
     'swarming': {
       'dimensions': {
         'cpu': 'arm64',
+        'os': 'Mac-12'
+      }
+    }
+  },
+  'mac_12_x64': {
+    'swarming': {
+      'dimensions': {
+        'cpu': 'x86-64',
         'os': 'Mac-12'
       }
     }
@@ -219,7 +206,7 @@
   },
   'perf-low-bandwidth-audio-perf-test': {
     'merge': {
-      'script': '//tools_webrtc/perf/process_perf_results_py2.py',
+      'script': '//tools_webrtc/perf/process_perf_results.py',
       'args': ['--test-suite', 'low_bandwidth_audio_perf_test']
     }
   },
@@ -240,7 +227,7 @@
   },
   'perf-webrtc-perf-tests': {
     'merge': {
-      'script': '//tools_webrtc/perf/process_perf_results_py2.py',
+      'script': '//tools_webrtc/perf/process_perf_results.py',
       'args': ['--test-suite', 'webrtc_perf_tests']
     },
     '$mixin_append': {
@@ -315,17 +302,17 @@
       'args': ['--xctest', '--undefok=enable-run-ios-unittests-with-xctest']
     }
   },
-  'win': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Windows'
-      }
-    }
-  },
   'win10': {
     'swarming': {
       'dimensions': {
         'os': 'Windows-10-19042'
+      }
+    }
+  },
+  'win10-any': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Windows-10'
       }
     }
   },

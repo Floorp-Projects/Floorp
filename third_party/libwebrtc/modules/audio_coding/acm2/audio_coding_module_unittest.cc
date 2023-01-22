@@ -479,9 +479,7 @@ class AudioCodingModuleMtTestOldApi : public AudioCodingModuleTestOldApi {
     insert_packet_thread_.Finalize();
   }
 
-  bool RunTest() {
-    return test_complete_.Wait(10 * 60 * 1000);  // 10 minutes' timeout.
-  }
+  bool RunTest() { return test_complete_.Wait(TimeDelta::Minutes(10)); }
 
   virtual bool TestDone() {
     if (packet_cb_.num_calls() > kNumPackets) {
@@ -736,9 +734,7 @@ class AcmReRegisterIsacMtTestOldApi : public AudioCodingModuleTestOldApi {
     codec_registration_thread_.Finalize();
   }
 
-  bool RunTest() {
-    return test_complete_.Wait(10 * 60 * 1000);  // 10 minutes' timeout.
-  }
+  bool RunTest() { return test_complete_.Wait(TimeDelta::Minutes(10)); }
 
   bool CbReceiveImpl() {
     SleepMs(1);

@@ -335,7 +335,7 @@ RTCLocalIceCandidateStats::RTCLocalIceCandidateStats(std::string&& id,
     : RTCIceCandidateStats(std::move(id), timestamp_us, false) {}
 
 std::unique_ptr<RTCStats> RTCLocalIceCandidateStats::copy() const {
-  return std::unique_ptr<RTCStats>(new RTCLocalIceCandidateStats(*this));
+  return std::make_unique<RTCLocalIceCandidateStats>(*this);
 }
 
 const char* RTCLocalIceCandidateStats::type() const {
@@ -353,7 +353,7 @@ RTCRemoteIceCandidateStats::RTCRemoteIceCandidateStats(std::string&& id,
     : RTCIceCandidateStats(std::move(id), timestamp_us, true) {}
 
 std::unique_ptr<RTCStats> RTCRemoteIceCandidateStats::copy() const {
-  return std::unique_ptr<RTCStats>(new RTCRemoteIceCandidateStats(*this));
+  return std::make_unique<RTCRemoteIceCandidateStats>(*this);
 }
 
 const char* RTCRemoteIceCandidateStats::type() const {

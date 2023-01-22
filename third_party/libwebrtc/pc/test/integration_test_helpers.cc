@@ -77,7 +77,7 @@ TaskQueueMetronome::~TaskQueueMetronome() {
     tick_task_.Stop();
     stop_event.Set();
   });
-  stop_event.Wait(1000);
+  stop_event.Wait(TimeDelta::Seconds(1));
 }
 
 void TaskQueueMetronome::AddListener(TickListener* listener) {

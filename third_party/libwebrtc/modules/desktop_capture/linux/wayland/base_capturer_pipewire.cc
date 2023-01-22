@@ -16,8 +16,7 @@
 #include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/random.h"
-#include "rtc_base/time_utils.h"
+#include "screencast_portal.h"
 
 namespace webrtc {
 
@@ -29,12 +28,10 @@ using xdg_portal::SessionDetails;
 
 }  // namespace
 
-BaseCapturerPipeWire::BaseCapturerPipeWire(const DesktopCaptureOptions& options)
-    : BaseCapturerPipeWire(
-          options,
-          std::make_unique<ScreenCastPortal>(
-              ScreenCastPortal::CaptureSourceType::kAnyScreenContent,
-              this)) {
+BaseCapturerPipeWire::BaseCapturerPipeWire(const DesktopCaptureOptions& options,
+                                           CaptureType type)
+    : BaseCapturerPipeWire(options,
+                           std::make_unique<ScreenCastPortal>(type, this)) {
   is_screencast_portal_ = true;
 }
 
@@ -44,8 +41,7 @@ BaseCapturerPipeWire::BaseCapturerPipeWire(
     : options_(options),
       is_screencast_portal_(false),
       portal_(std::move(portal)) {
-  Random random(rtc::TimeMicros());
-  source_id_ = static_cast<SourceId>(random.Rand(1, INT_MAX));
+  source_id_ = RestoreTokenManager::GetInstance().GetUnusedId();
 }
 
 BaseCapturerPipeWire::~BaseCapturerPipeWire() {}
@@ -53,6 +49,11 @@ BaseCapturerPipeWire::~BaseCapturerPipeWire() {}
 void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
                                                      uint32_t stream_node_id,
                                                      int fd) {
+  is_portal_open_ = false;
+
+  // Reset the value of capturer_failed_ in case we succeed below. If we fail,
+  // then it'll set it to the right value again soon enough.
+  capturer_failed_ = false;
   if (result != RequestResponse::kSuccess ||
       !options_.screencast_stream()->StartScreenCastStream(
           stream_node_id, fd, options_.get_width(), options_.get_height())) {
@@ -64,6 +65,24 @@ void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
       RestoreTokenManager::GetInstance().AddToken(
           source_id_, screencast_portal->RestoreToken());
     }
+  }
+
+  if (!delegated_source_list_observer_)
+    return;
+
+  switch (result) {
+    case RequestResponse::kUnknown:
+      RTC_DCHECK_NOTREACHED();
+      break;
+    case RequestResponse::kSuccess:
+      delegated_source_list_observer_->OnSelection();
+      break;
+    case RequestResponse::kUserCancelled:
+      delegated_source_list_observer_->OnCancelled();
+      break;
+    case RequestResponse::kError:
+      delegated_source_list_observer_->OnError();
+      break;
   }
 }
 
@@ -95,11 +114,15 @@ void BaseCapturerPipeWire::Start(Callback* callback) {
     }
   }
 
+  is_portal_open_ = true;
   portal_->Start();
 }
 
 void BaseCapturerPipeWire::CaptureFrame() {
   if (capturer_failed_) {
+    // This could be recoverable if the source list is re-summoned; but for our
+    // purposes this is fine, since it requires intervention to resolve and
+    // essentially starts a new capture.
     callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
   }
@@ -144,6 +167,40 @@ bool BaseCapturerPipeWire::SelectSource(SourceId id) {
   // Screen selection is handled by the xdg-desktop-portal.
   selected_source_id_ = id;
   return id == PIPEWIRE_ID;
+}
+
+DelegatedSourceListController*
+BaseCapturerPipeWire::GetDelegatedSourceListController() {
+  return this;
+}
+
+void BaseCapturerPipeWire::Observe(Observer* observer) {
+  RTC_DCHECK(!delegated_source_list_observer_ || !observer);
+  delegated_source_list_observer_ = observer;
+}
+
+void BaseCapturerPipeWire::EnsureVisible() {
+  RTC_DCHECK(callback_);
+  if (is_portal_open_)
+    return;
+
+  // Clear any previously selected state/capture
+  portal_->Stop();
+  options_.screencast_stream()->StopScreenCastStream();
+
+  // Get a new source id to reflect that the source has changed.
+  source_id_ = RestoreTokenManager::GetInstance().GetUnusedId();
+
+  is_portal_open_ = true;
+  portal_->Start();
+}
+
+void BaseCapturerPipeWire::EnsureHidden() {
+  if (!is_portal_open_)
+    return;
+
+  is_portal_open_ = false;
+  portal_->Stop();
 }
 
 SessionDetails BaseCapturerPipeWire::GetSessionDetails() {

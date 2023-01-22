@@ -21,12 +21,33 @@
 #include "p2p/base/port_allocator.h"
 #include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace cricket {
+
+namespace {
+
+bool ResolveStunHostnameForFamily(const webrtc::FieldTrialsView& field_trials) {
+  // Bug fix for STUN hostname resolution on IPv6.
+  // Field trial key reserved in bugs.webrtc.org/14334
+  static constexpr char field_trial_name[] =
+      "WebRTC-IPv6NetworkResolutionFixes";
+  if (!field_trials.IsEnabled(field_trial_name)) {
+    return false;
+  }
+
+  webrtc::FieldTrialParameter<bool> resolve_stun_hostname_for_family(
+      "ResolveStunHostnameForFamily", /*default_value=*/false);
+  webrtc::ParseFieldTrial({&resolve_stun_hostname_for_family},
+                          field_trials.Lookup(field_trial_name));
+  return resolve_stun_hostname_for_family;
+}
+
+}  // namespace
 
 // TODO(?): Move these to a common place (used in relayport too)
 const int RETRY_TIMEOUT = 50 * 1000;  // 50 seconds
@@ -142,9 +163,7 @@ void UDPPort::AddressResolver::Resolve(
       done_(it->first, it->second->result().GetError());
     }
   };
-  // Bug fix for STUN hostname resolution on IPv6.
-  // Field trial key reserved in bugs.webrtc.org/14334
-  if (field_trials.IsEnabled("WebRTC-IPv6NetworkResolutionFixes")) {
+  if (ResolveStunHostnameForFamily(field_trials)) {
     resolver_ptr->Start(address, family, std::move(callback));
   } else {
     resolver_ptr->Start(address, std::move(callback));

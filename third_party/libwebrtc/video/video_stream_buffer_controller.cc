@@ -29,6 +29,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/trace_event.h"
+#include "video/frame_decode_scheduler.h"
 #include "video/frame_decode_timing.h"
 #include "video/task_queue_frame_decode_scheduler.h"
 #include "video/video_receive_stream_timeout_tracker.h"
@@ -71,67 +72,7 @@ Timestamp ReceiveTime(const EncodedFrame& frame) {
   return *ts;
 }
 
-enum class FrameBufferArm {
-  kFrameBuffer3,
-  kSyncDecode,
-};
-
-constexpr const char* kFrameBufferFieldTrial = "WebRTC-FrameBuffer3";
-
-FrameBufferArm ParseFrameBufferFieldTrial(const FieldTrialsView& field_trials) {
-  webrtc::FieldTrialEnum<FrameBufferArm> arm(
-      "arm", FrameBufferArm::kFrameBuffer3,
-      {
-          {"FrameBuffer3", FrameBufferArm::kFrameBuffer3},
-          {"SyncDecoding", FrameBufferArm::kSyncDecode},
-      });
-  ParseFieldTrial({&arm}, field_trials.Lookup(kFrameBufferFieldTrial));
-  return arm.Get();
-}
-
 }  // namespace
-
-std::unique_ptr<VideoStreamBufferController>
-VideoStreamBufferController::CreateFromFieldTrial(
-    Clock* clock,
-    TaskQueueBase* worker_queue,
-    VCMTiming* timing,
-    VCMReceiveStatisticsCallback* stats_proxy,
-    FrameSchedulingReceiver* receiver,
-    TimeDelta max_wait_for_keyframe,
-    TimeDelta max_wait_for_frame,
-    DecodeSynchronizer* decode_sync,
-    const FieldTrialsView& field_trials) {
-  switch (ParseFrameBufferFieldTrial(field_trials)) {
-    case FrameBufferArm::kSyncDecode: {
-      std::unique_ptr<FrameDecodeScheduler> scheduler;
-      if (decode_sync) {
-        scheduler = decode_sync->CreateSynchronizedFrameScheduler();
-      } else {
-        RTC_LOG(LS_ERROR) << "In FrameBuffer with sync decode trial, but "
-                             "no DecodeSynchronizer was present!";
-        // Crash in debug, but in production use the task queue scheduler.
-        RTC_DCHECK_NOTREACHED();
-        scheduler = std::make_unique<TaskQueueFrameDecodeScheduler>(
-            clock, worker_queue);
-      }
-      return std::make_unique<VideoStreamBufferController>(
-          clock, worker_queue, timing, stats_proxy, receiver,
-          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
-          field_trials);
-    }
-    case FrameBufferArm::kFrameBuffer3:
-      ABSL_FALLTHROUGH_INTENDED;
-    default: {
-      auto scheduler =
-          std::make_unique<TaskQueueFrameDecodeScheduler>(clock, worker_queue);
-      return std::make_unique<VideoStreamBufferController>(
-          clock, worker_queue, timing, stats_proxy, receiver,
-          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
-          field_trials);
-    }
-  }
-}
 
 VideoStreamBufferController::VideoStreamBufferController(
     Clock* clock,

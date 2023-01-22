@@ -491,10 +491,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider {
   // `desc` can be null. This means that all channels are deleted.
   void RemoveUnusedChannels(const cricket::SessionDescription* desc);
 
-  // Report inferred negotiated SDP semantics from a local/remote answer to the
-  // UMA observer.
-  void ReportNegotiatedSdpSemantics(const SessionDescriptionInterface& answer);
-
   // Finds remote MediaStreams without any tracks and removes them from
   // `remote_streams_` and notifies the observer that the MediaStreams no longer
   // exist.

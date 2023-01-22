@@ -140,9 +140,8 @@ class TestAudioDeviceModule : public AudioDeviceModule {
   bool Playing() const override = 0;
   bool Recording() const override = 0;
 
-  // Blocks until the Recorder stops producing data.
-  // Returns false if `timeout_ms` passes before that happens.
-  virtual bool WaitForRecordingEnd() = 0;
+  // Blocks forever until the Recorder stops producing data.
+  virtual void WaitForRecordingEnd() = 0;
 };
 
 }  // namespace webrtc

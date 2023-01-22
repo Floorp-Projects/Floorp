@@ -11,6 +11,7 @@
 #include "media/engine/internal_decoder_factory.h"
 
 #include "absl/strings/match.h"
+#include "api/video_codecs/av1_profile.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
 #include "media/base/codec.h"
@@ -50,10 +51,16 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
   for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
     formats.push_back(h264_format);
 
-  //if (kIsLibaomAv1DecoderSupported ||
-  //    (kDav1dIsIncluded && !field_trial::IsDisabled(kDav1dFieldTrial))) {
-  //  formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
-  //}
+//  bool isDav1dEnabled =
+//      kDav1dIsIncluded && !field_trial::IsDisabled(kDav1dFieldTrial);
+//  if (kIsLibaomAv1DecoderSupported || isDav1dEnabled) {
+//    formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
+//  }
+//  if (isDav1dEnabled) {
+//    formats.push_back(SdpVideoFormat(
+//        cricket::kAv1CodecName,
+//        {{kAV1FmtpProfile, AV1ProfileToString(AV1Profile::kProfile1).data()}}));
+//  }
 
   return formats;
 }
