@@ -374,6 +374,7 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   // effect whenever its containing document does.
   nsPresContext* presContext = aItem->Frame()->PresContext();
   const bool hasScrollLinkedEffect =
+      !StaticPrefs::apz_disable_for_scroll_linked_effects() &&
       presContext->Document()->HasScrollLinkedEffect();
 
   return Some(mBuilder->DefineScrollLayer(
