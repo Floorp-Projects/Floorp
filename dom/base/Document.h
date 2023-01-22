@@ -249,6 +249,7 @@ class FeaturePolicy;
 class FontFaceSet;
 class FrameRequestCallback;
 class ImageTracker;
+class HighlightRegistry;
 class HTMLAllCollection;
 class HTMLBodyElement;
 class HTMLInputElement;
@@ -1181,8 +1182,8 @@ class Document : public nsINode,
    * method is responsible for calling BeginObservingDocument() on the
    * presshell if the presshell should observe document mutations.
    */
-  already_AddRefed<PresShell> CreatePresShell(nsPresContext* aContext,
-                                              nsViewManager* aViewManager);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<PresShell> CreatePresShell(
+      nsPresContext* aContext, nsViewManager* aViewManager);
   void DeletePresShell();
 
   PresShell* GetPresShell() const {
@@ -4115,6 +4116,12 @@ class Document : public nsINode,
 
   bool DidHitCompleteSheetCache() const { return mDidHitCompleteSheetCache; }
 
+  /**
+   * Get the `HighlightRegistry` which contains all highlights associated
+   * with this document.
+   */
+  HighlightRegistry& HighlightRegistry();
+
   bool ShouldResistFingerprinting() const {
     return mShouldResistFingerprinting;
   }
@@ -5363,6 +5370,9 @@ class Document : public nsINode,
   // The OOP counterpart to nsDocLoader::mChildrenInOnload.
   // Not holding strong refs here since we don't actually use the BBCs.
   nsTArray<const BrowserBridgeChild*> mOOPChildrenLoading;
+
+  // Registry of custom highlight definitions associated with this document.
+  RefPtr<class HighlightRegistry> mHighlightRegistry;
 
  public:
   // Needs to be public because the bindings code pokes at it.

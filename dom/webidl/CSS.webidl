@@ -6,6 +6,7 @@
  * The origin of this IDL file is
  * http://dev.w3.org/csswg/css3-conditional/
  * http://dev.w3.org/csswg/cssom/#the-css.escape%28%29-method
+ * https://www.w3.org/TR/css-highlight-api-1/#registration
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -20,4 +21,10 @@ namespace CSS {
 // http://dev.w3.org/csswg/cssom/#the-css.escape%28%29-method
 partial namespace CSS {
   DOMString escape(DOMString ident);
+};
+
+// https://www.w3.org/TR/css-highlight-api-1/#registration
+partial namespace CSS {
+  [Pref="dom.customHighlightAPI.enabled", GetterThrows]
+  readonly attribute HighlightRegistry highlights;
 };
