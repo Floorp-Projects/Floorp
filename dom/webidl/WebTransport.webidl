@@ -71,7 +71,7 @@ interface WebTransport {
   readonly attribute WebTransportReliabilityMode reliability;
   readonly attribute WebTransportCongestionControl congestionControl;
   readonly attribute Promise<WebTransportCloseInfo> closed;
-  undefined close(optional WebTransportCloseInfo closeInfo = {});
+  [Throws] undefined close(optional WebTransportCloseInfo closeInfo = {});
 
   readonly attribute WebTransportDatagramDuplexStream datagrams;
 
