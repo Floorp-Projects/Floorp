@@ -12,7 +12,9 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PWebTransport.h"
 #include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/WebTransportDatagramDuplexStream.h"
+#include "mozilla/dom/WebTransportError.h"
 #include "mozilla/dom/WebTransportLog.h"
 #include "mozilla/dom/WritableStream.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -301,6 +303,91 @@ already_AddRefed<Promise> WebTransport::CreateUnidirectionalStream(
 
 already_AddRefed<ReadableStream> WebTransport::IncomingUnidirectionalStreams() {
   return do_AddRef(mIncomingUnidirectionalStreams);
+}
+
+// Can be invoked with "error", "error, error, and true/false", or "error and
+// closeInfo", but reason and abruptly are never used, and it does use closeinfo
+void WebTransport::Cleanup(WebTransportError* aError,
+                           const WebTransportCloseInfo* aCloseInfo,
+                           ErrorResult& aRv) {
+  // https://w3c.github.io/webtransport/#webtransport-cleanup
+  // Step 1: Let sendStreams be a copy of transport.[[SendStreams]]
+  // Step 2: Let receiveStreams be a copy of transport.[[ReceiveStreams]]
+  // Step 3: Let ready be transport.[[Ready]]  -> (mReady)
+  // Step 4: Let closed be transport.[[Closed]] -> (mClosed)
+  // Step 5: Let incomingBidirectionalStreams be
+  // transport.[[IncomingBidirectionalStreams]].
+  // Step 6: Let incomingUnidirectionalStreams be
+  // transport.[[IncomingUnidirectionalStreams]].
+  // Step 7: Set transport.[[SendStreams]] to an empty set.
+  // Step 8: Set transport.[[ReceiveStreams]] to an empty set.
+  nsTArray<RefPtr<WritableStream>> sendStreams;
+  sendStreams.SwapElements(mSendStreams);
+  nsTArray<RefPtr<ReadableStream>> receiveStreams;
+  receiveStreams.SwapElements(mReceiveStreams);
+
+  // Step 9: If closeInfo is given, then set transport.[[State]] to "closed".
+  // Otherwise, set transport.[[State]] to "failed".
+  mState = aCloseInfo ? WebTransportState::CLOSED : WebTransportState::FAILED;
+
+  // Step 10: For each sendStream in sendStreams, error sendStream with error.
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mGlobal)) {
+    aRv.ThrowUnknownError("Internal error");
+    return;
+  }
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> errorValue(cx);
+  bool ok = ToJSValue(cx, aError, &errorValue);
+  if (!ok) {
+    aRv.ThrowUnknownError("Internal error");
+    return;
+  }
+
+  // Ignoring errors if we're cleaning up; we don't want to stop
+  for (const auto& stream : sendStreams) {
+    RefPtr<WritableStreamDefaultController> controller = stream->Controller();
+    WritableStreamDefaultControllerErrorIfNeeded(cx, controller, errorValue,
+                                                 IgnoreErrors());
+  }
+  // Step 11: For each receiveStream in receiveStreams, error receiveStream with
+  // error.
+  for (const auto& stream : receiveStreams) {
+    RefPtr<ReadableStreamDefaultController> controller =
+        stream->Controller()->AsDefault();
+    // XXX replace with ErrorNative() when bug 1809895 lands
+    ReadableStreamDefaultControllerError(cx, controller, errorValue,
+                                         IgnoreErrors());
+  }
+  // Step 12:
+  if (aCloseInfo) {
+    // 12.1: Resolve closed with closeInfo.
+    mClosed->MaybeResolve(aCloseInfo);
+    // 12.2: Assert: ready is settled.
+    MOZ_ASSERT(mReady->State() != Promise::PromiseState::Pending);
+    // 12.3: Close incomingBidirectionalStreams
+    RefPtr<ReadableStream> stream = mIncomingBidirectionalStreams;
+    stream->CloseNative(cx, IgnoreErrors());
+    // 12.4: Close incomingUnidirectionalStreams
+    stream = mIncomingUnidirectionalStreams;
+    stream->CloseNative(cx, IgnoreErrors());
+  } else {
+    // Step 13
+    // 13.1: Reject closed with error
+    mClosed->MaybeReject(errorValue);
+    // 13.2: Reject ready with error
+    mReady->MaybeReject(errorValue);
+    // 13.3: Error incomingBidirectionalStreams with error
+    RefPtr<ReadableStreamDefaultController> controller =
+        mIncomingBidirectionalStreams->Controller()->AsDefault();
+    // XXX replace with ErrorNative() when bug 1809895 lands
+    ReadableStreamDefaultControllerError(cx, controller, errorValue,
+                                         IgnoreErrors());
+    // 13.4: Error incomingUnidirectionalStreams with error
+    controller = mIncomingUnidirectionalStreams->Controller()->AsDefault();
+    ReadableStreamDefaultControllerError(cx, controller, errorValue,
+                                         IgnoreErrors());
+  }
 }
 
 }  // namespace mozilla::dom

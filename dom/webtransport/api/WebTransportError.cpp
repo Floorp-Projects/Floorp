@@ -22,9 +22,4 @@ already_AddRefed<WebTransportError> WebTransportError::Constructor(
   return error.forget();
 }
 
-WebTransportErrorSource WebTransportError::Source() {
-  // XXX Not implemented
-  return WebTransportErrorSource::Stream;
-}
-
 }  // namespace mozilla::dom

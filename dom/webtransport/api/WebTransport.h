@@ -15,6 +15,7 @@
 
 namespace mozilla::dom {
 
+class WebTransportError;
 class WebTransportDatagramDuplexStream;
 class ReadableStream;
 class WritableStream;
@@ -34,6 +35,9 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
                                 WebTransportChild* aChild);
   void RejectWaitingConnection(nsresult aRv);
   bool ParseURL(const nsAString& aURL) const;
+  MOZ_CAN_RUN_SCRIPT void Cleanup(WebTransportError* aError,
+                                  const WebTransportCloseInfo* aCloseInfo,
+                                  ErrorResult& aRv);
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
