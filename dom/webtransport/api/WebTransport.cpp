@@ -51,9 +51,27 @@ WebTransport::~WebTransport() {
   MOZ_ASSERT(mReceiveStreams.IsEmpty());
   // If this WebTransport was destroyed without being closed properly, make
   // sure to clean up the channel.
+  // Since child has a raw ptr to us, we MUST call Shutdown() before we're
+  // destroyed
   if (mChild) {
     mChild->Shutdown();
   }
+}
+
+// From parent
+void WebTransport::NewBidirectionalStream(
+    const RefPtr<mozilla::ipc::DataPipeReceiver>& aIncoming,
+    const RefPtr<mozilla::ipc::DataPipeSender>& aOutgoing) {
+  // XXX
+}
+
+void WebTransport::NewUnidirectionalStream(
+    const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream) {
+  // Create a Unidirectional stream and push it into the
+  // IncomingUnidirectionalStreams stream. Must be added to the ReceiveStreams
+  // array
+  //    RefPtr<ReadableStream> stream = CreateReadableByteStream(cx, global,
+  //    algorithm, aRV);
 }
 
 // WebIDL Boilerplate
@@ -165,7 +183,7 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   MOZ_ALWAYS_SUCCEEDS(
       PWebTransport::CreateEndpoints(&parentEndpoint, &childEndpoint));
 
-  RefPtr<WebTransportChild> child = new WebTransportChild();
+  RefPtr<WebTransportChild> child = new WebTransportChild(this);
   if (!childEndpoint.Bind(child)) {
     return;
   }
@@ -380,6 +398,7 @@ void WebTransport::Close(const WebTransportCloseInfo& aOptions) {
     // in our destructor.
     // This also causes IPC to drop the reference to us, allowing us to be
     // GC'd (spec 5.8)
+    mChild->Shutdown();
     mChild = nullptr;
   }
 }

@@ -10,8 +10,10 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportChild.h"
+#include "mozilla/ipc/DataPipe.h"
 
 namespace mozilla::dom {
 
@@ -48,6 +50,14 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
       WebTransportError* aError, const WebTransportCloseInfo* aCloseInfo,
       ErrorResult& aRv);
 
+  // From Parent
+  void NewBidirectionalStream(
+      const RefPtr<mozilla::ipc::DataPipeReceiver>& aIncoming,
+      const RefPtr<mozilla::ipc::DataPipeSender>& aOutgoing);
+
+  void NewUnidirectionalStream(
+      const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
+
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
 
@@ -80,6 +90,8 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   ~WebTransport();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  // We are the owner of WebTransportChild.  We must call Shutdown() on it
+  // before we're destroyed.
   RefPtr<WebTransportChild> mChild;
 
   // Spec in 5.8 says it can't be GC'd while CONNECTING or CONNECTED.  We won't

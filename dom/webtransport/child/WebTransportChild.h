@@ -7,35 +7,37 @@
 #ifndef DOM_WEBTRANSPORT_WEBTRANSPORTCHILD_H_
 #define DOM_WEBTRANSPORT_WEBTRANSPORTCHILD_H_
 
-#include "mozilla/dom/PWebTransportChild.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/dom/PWebTransportChild.h"
+#include "mozilla/ipc/DataPipe.h"
 
 namespace mozilla::dom {
+
+class WebTransport;
 
 class WebTransportChild : public PWebTransportChild {
  public:
   NS_INLINE_DECL_REFCOUNTING(WebTransportChild)
+  explicit WebTransportChild(WebTransport* aTransport)
+      : mTransport(aTransport) {}
 
-  virtual void CloseAll() {
-    // XXX need impl
-  }
+  virtual void CloseAll();
 
-  virtual void Shutdown() {
-    if (!CanSend()) {
-      return;
-    }
+  virtual void Shutdown();
 
-    Close();
-  }
+  ::mozilla::ipc::IPCResult RecvCloseAll(CloseAllResolver&& aResolver);
 
-  ::mozilla::ipc::IPCResult RecvCloseAll(CloseAllResolver&& aResolver) {
-    CloseAll();
-    aResolver(NS_OK);
-    return IPC_OK();
-  }
+  ::mozilla::ipc::IPCResult RecvIncomingBidirectionalStream(
+      const RefPtr<mozilla::ipc::DataPipeReceiver>& aIncoming,
+      const RefPtr<mozilla::ipc::DataPipeSender>& aOutgoing);
+
+  ::mozilla::ipc::IPCResult RecvIncomingUnidirectionalStream(
+      const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
 
  protected:
-  virtual ~WebTransportChild() = default;
+  WebTransport* mTransport;  // WebTransport holds a strong reference to us, and
+                             // calls Shutdown() before releasing it
+  virtual ~WebTransportChild() { MOZ_ASSERT(!mTransport); }
 };
 
 }  // namespace mozilla::dom
