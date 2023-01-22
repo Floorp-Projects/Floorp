@@ -406,6 +406,11 @@ lepton-sidebar-preferences = Sidebar
 floorp-lepton-enable-overlap-sidebar =
     .label = Show Sidebar Overlap main Viewer
 
+floorp-home-mode-choice-default =
+    .label = Floorp Home (Default)
+floorp-home-prefs-content-header = Floorp Home Content
+floorp-home-prefs-content-description = Choose what content you want on your Floorp Home screen.
+
 ## tool attribute
 ################################################################### browser ###############################################################
 
