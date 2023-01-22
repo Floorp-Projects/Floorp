@@ -8,6 +8,10 @@ EXPORTS.mozilla.dom += [
     "WebTransportChild.h",
 ]
 
+UNIFIED_SOURCES += [
+    "WebTransportChild.cpp",
+]
+
 FINAL_LIBRARY = "xul"
 
 include("/ipc/chromium/chromium-config.mozbuild")
