@@ -59,6 +59,7 @@ add_task(async function test_webtransport_create() {
 
   const wt = new WebTransport("https://" + host + "/success");
   await wt.ready;
+  dump("**** ready\n");
 
   wt.close();
 });
